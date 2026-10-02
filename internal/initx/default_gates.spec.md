@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DFGTD
-  updated_at: 2026-10-01
+  updated_at: 2026-10-02
   layer: infra
 -->
 # DefaultGates — the gates a project is born with, by artifact and by project age, and the canonical gate catalog
@@ -70,6 +70,7 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 | `DFGTD-B15` | The gate names registered for the vocabulary check (`RegisterGateNames`) are the full catalog, in catalog order. |
 | `DFGTD-B16` | Choosing specs seeds `header-valid`, informative, on specs and features: the artifacts whose identity lives in the `@anchors` header. A bare `- name: header-valid` in a configuration inherits that `on:`. |
 | `DFGTD-B17` | `no-duplication` is seeded as the native `duplication` check on code files, needing `npx`: one verdict per file read from jscpd's report, not a project-wide command judged by its exit code. |
+| `DFGTD-B18` | The mock gates name the field each one reads: `mock-detect-covers-dialect` and `mock-stamped` presuppose `derived.mock_detect`, `mock-typed` presupposes `derived.mock_contract`; where it is not declared nothing is asked or measured (GTENG-B29), and the doctor names it (DCTRO-B27). |
 
 ## Invariants
 

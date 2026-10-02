@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MCTYM
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @MCTYM
@@ -41,7 +41,8 @@ Feature: MockTyped — every test double must derive from the module it replaces
     Given a project that declares no tie shape
     And a test carrying a loose double
     When the gate confronts it
-    Then it returns Skip naming what has to be declared
+    Then it returns Pending naming `mock_contract` and the opt-out
+    And with `mock_contract` in `dialect.opt_out` it returns Skip
 
   @MCTYM-B06 @unit-level
   Scenario: An artifact that is not a test leaves without a verdict
@@ -101,11 +102,11 @@ Feature: MockTyped — every test double must derive from the module it replaces
       convention, and follows the project on its own
 
   @MCTYM-I02 @unit-level
-  Scenario: An undeclared tie shape skips instead of guessing one
+  Scenario: An undeclared tie shape is pending instead of guessing one
     Given a test carrying a loose double of a governed module
     And a project that declares no tie shape
     When the gate confronts it
-    Then it returns Skip and not Pass, because inferring the TypeScript form would report
+    Then it returns Pending and not Pass, because inferring the TypeScript form would report
       green over what was never checked in any other ecosystem
 
   @MCTYM-I03 @unit-level
@@ -134,8 +135,9 @@ Feature: MockTyped — every test double must derive from the module it replaces
     Given a project in an ecosystem where a double is a satisfied interface and no call to detect
     And neither a tie shape nor a detection dialect declared
     When the gate confronts a test of that project
-    Then it returns Skip, because the right verdict is that the gate does not apply —
-      not a green over an unchecked file
+    Then it returns Pending, never Pass, because nothing was checked
+    And with `mock_contract` in `dialect.opt_out` it returns Skip, because the project said
+      the gate does not apply
 
   @MCTYM-X04 @unit-level
   Scenario: The gate does not charge third-party library doubles

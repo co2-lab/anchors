@@ -175,3 +175,9 @@ Feature: Doctor — the global health check that hunts the systemic loose ends o
     When the signals are checked
     Then the warning says the ingested report reached no test file and names the `file` attribute
     And with no spec proven the warning is the one to run the ingest
+
+  @DCTRO-B27 @unit-level
+  Scenario: A gate declared over a field the project neither declares nor waives is named
+    Given mock-stamped presupposing derived.mock_detect, mock-typed presupposing derived.mock_contract waived, and a gate presupposing nothing
+    When the configuration is diagnosed
+    Then there is one warning, on mock-stamped, naming derived.mock_detect

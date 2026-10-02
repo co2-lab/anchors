@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:ce224f2fa5d3da42 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:ca88a30e0d14ef41 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2252,6 +2252,8 @@ teste prova.
 
 - [Under --index a file the index does not have is not judged](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B88`
 
+- [A check with no phase leaves out a gate declared for manual alone](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B89`
+
 - [The scenarios of one spec are listed as proven or not](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 
 - [A code another unit owns, cited in prose, is not a declared scenario](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B02`
@@ -2835,6 +2837,8 @@ teste prova.
 - [A project-wide severity is the default of its blocking gates](layers/config.md#cnfgo-b56--a-project-wide-severity-is-the-default-of-its-blocking-gates) `CNFGO-B56`
 
 - [Coverage floors are percentages, and each one says why](layers/config.md#cnfgo-b57--coverage-floors-are-percentages-and-each-one-says-why) `CNFGO-B57`
+
+- [A field is declared when its path holds a value](layers/config.md#cnfgo-b58--a-field-is-declared-when-its-path-holds-a-value) `CNFGO-B58`
 
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
@@ -3742,6 +3746,8 @@ teste prova.
 
 - [Under an index source no gate reads the tree](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I05`
 
+- [A gate presupposing an undeclared field asks nothing](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B29`
+
 - [A layer the Estrutura does not have fails](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B01`
 
 - [A layer that differs only in case fails naming both](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B02`
@@ -4052,7 +4058,7 @@ teste prova.
 
 - [What is governed is decided by the graph, never by a prefix list](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-I01`
 
-- [An undeclared tie shape skips instead of guessing one](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-I02`
+- [An undeclared tie shape is pending instead of guessing one](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-I02`
 
 - [The verdict counts the loose doubles, not just names them](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-I03`
 
@@ -5712,6 +5718,8 @@ teste prova.
 
 - [An ingested report that reached no test is told apart from no report](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B26`
 
+- [A gate declared over a field the project neither declares nor waives is named](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B27`
+
 - [A spec with two open decisions gives one warning carrying the count](layers/infra.md#pndcp--pendingdecisions--the-doctor-lists-the-specs-that-still-hold-open-decisions-the-heaviest-first) `PNDCP-B01`
 
 - [A section closed with none is not pending](layers/infra.md#pndcp--pendingdecisions--the-doctor-lists-the-specs-that-still-hold-open-decisions-the-heaviest-first) `PNDCP-B02`
@@ -5867,6 +5875,8 @@ teste prova.
 - [Choosing plans adds only gates that run on plans](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-I04`
 
 - [No default gate writes Portuguese into the project](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-X02`
+
+- [The mock dialect judgment presupposes the pattern it asks about](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B18`
 
 - [The local board page is the published page](layers/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B01`
 

@@ -278,6 +278,32 @@ func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, 
 	return r
 }
 
+// presupposedMissing answers for a gate whose presupposed fields are not all declared:
+// Pending naming the missing ones, or Skip when every missing one is waived in
+// `dialect.opt_out`. A judgment gate answered here queues no question — its question would
+// state a premise the project does not hold.
+func presupposedMissing(g config.Gate, cfg *config.Config) (Verdict, string, bool) {
+	var missing, waived []string
+	for _, p := range g.Presupposes {
+		if cfg.Declares(p) {
+			continue
+		}
+		field := p[strings.LastIndex(p, ".")+1:]
+		if cfg != nil && cfg.DialectFor().WaivedField(field) {
+			waived = append(waived, p)
+			continue
+		}
+		missing = append(missing, p)
+	}
+	switch {
+	case len(missing) > 0:
+		return Pending, i18n.T("gate.presupposed_missing", strings.Join(missing, ", ")), true
+	case len(waived) > 0:
+		return Skip, i18n.T("gate.presupposed_waived", strings.Join(waived, ", ")), true
+	}
+	return "", "", false
+}
+
 // runOne executa um gate contra um alvo — despacha para interno ou externo.
 func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) (r Result) {
 	r = Result{Gate: g.Name, Regra: idDoGate(g), Target: n.ID, Blocking: g.IsBlocking()}
@@ -286,6 +312,10 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 	// The project declared that this gate has nothing to measure on this target, and why.
 	if reason, ok := g.NoSignalFor(n.ID); ok {
 		r.Verdict, r.Detail = Skip, i18n.T("gate.no_signal", reason)
+		return r
+	}
+	if v, msg, ok := presupposedMissing(g, cfg); ok {
+		r.Verdict, r.Detail = v, msg
 		return r
 	}
 	switch {

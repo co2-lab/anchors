@@ -151,9 +151,10 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
 
   @CNFGO-B20 @unit-level
   Scenario: A gate with no phases runs in every phase
-    Given a gate with no phases and a gate declaring only "manual"
+    Given a gate with no phases, a gate declaring only "manual", and a gate declaring "manual" and "ci"
     When each is asked about the pre-commit, manual and unnamed phases
-    Then the first runs in all of them, and the second only in manual and the unnamed phase
+    Then the first runs in all of them, and the second only in manual
+    And the third runs in manual and in the unnamed phase
 
   @CNFGO-B21 @unit-level
   Scenario: A gate participates in every perspective unless skip_on excludes it
@@ -395,3 +396,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     When the configuration is loaded
     Then each is refused naming the gate and the field
     And a floor of 40 with its why loads
+
+  @CNFGO-B58 @unit-level
+  Scenario: A field is declared when its path holds a value
+    Given a configuration with derived.mock_detect set and derived.mock_contract empty
+    When each path is asked
+    Then derived.mock_detect is declared, derived.mock_contract and an unknown path are not

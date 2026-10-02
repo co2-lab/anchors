@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CGPCH
-  updated_at: 2026-09-30
+  updated_at: 2026-10-02
   layer: comando
 -->
 # CheckGatePipeline — confronts the map's nodes against the declared gates, records the verdicts and reports the profile
@@ -67,6 +67,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | Effect | Description |
 | --- | --- |
 | `CGPCH-B07` | Only the gates of the requested phase and category are charged; when none is left, the check says so and runs nothing. |
+| `CGPCH-B89` | A check with no phase leaves out a gate declared for `manual` alone (CNFGO-B20): it runs, and a judgment gate queues its questions, only under `--phase manual`. |
 | `CGPCH-B08` | A gate that declares no perspective to skip runs both on the full sweep and on changed files. |
 | `CGPCH-B09` | A gate that declares it skips the change perspective is not charged on changed files and is charged on the full sweep. |
 | `CGPCH-B10` | A gate that declares it skips the full-sweep perspective is charged on changed files and not on the full sweep. |

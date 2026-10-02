@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GTENG
-#   updated_at: 2026-10-01
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @GTENG
@@ -244,3 +244,11 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a project whose index holds one content, and every registered internal checker
     When each runs with the tree full of other text, and again with the tree equal to the index
     Then no verdict moves between the two runs
+
+  @GTENG-B29 @unit-level
+  Scenario: A gate presupposing an undeclared field asks nothing
+    Given a judgment gate that presupposes derived.mock_detect
+    When it is run over a test with no mock_detect declared
+    Then it is Pending naming derived.mock_detect, and no judgment is asked
+    And with mock_detect in dialect.opt_out it is Skip
+    And with mock_detect declared it awaits its judgment

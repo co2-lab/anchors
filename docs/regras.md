@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:7d8ca42a8b5d9b8e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:71f2d5470d7bd6e7 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2299,6 +2299,8 @@ abra a página dela em `camadas/`.
 
 - [CGPCH-B07 — Only the gates of the requested phase and category are charged; when none is left, the check says so and runs nothing.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
+- [CGPCH-B89 — A check with no phase leaves out a gate declared for `manual` alone (CNFGO-B20): it runs, and a judgment gate queues its questions, only under `--phase manual`.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
 - [CGPCH-B08 — A gate that declares no perspective to skip runs both on the full sweep and on changed files.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B09 — A gate that declares it skips the change perspective is not charged on changed files and is charged on the full sweep.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
@@ -3029,6 +3031,8 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B57 — A gate's `min_coverage` and each `coverage_floors` floor is a percentage from 0 to 100, and every floor carries a `why`; anything else is refused at load, naming the gate and the field.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
+- [CNFGO-B58 — `Declares` says whether the configuration holds a non-empty value at a dotted path of anchors.yaml (`derived.mock_detect`); a gate entry with no `presupposes` takes the canonical one, with the question it presupposes for.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B14 — A gate the framework's catalog knows inherits, from the catalog's declaration, every field the project omitted, severity included (`SetCanonicalGateResolver`).](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
@@ -3043,7 +3047,7 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B19 — The scope is one run per target unless `batch` or `project` is declared; in a full scan the gate uses `scope_full` only when it is `batch` or `project`, and its ordinary scope otherwise (`EffectiveScope`, `ScopeForScan`).](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
-- [CNFGO-B20 — A gate with no phases runs in every phase, and an unnamed phase admits every gate; a gate with phases runs only in those it lists (`RunsIn`).](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+- [CNFGO-B20 — A gate with no phases runs in every phase; a gate with phases runs only in those it lists (`RunsIn`); an unnamed phase admits every gate except one declared for `manual` alone (`OnlyManual`), which runs only when the manual phase is asked for.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B21 — A gate takes part in both perspectives (change and all) unless `skip_on` lists the perspective (`SkipsOn`).](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -4077,6 +4081,8 @@ abra a página dela em `camadas/`.
 
 - [GTENG-B28 — A gate that breaks while measuring fails on that target, saying it broke and that the defect is Anchors'; the other gates and targets are still measured. (`runOne`, `runAggregate`, `recoverGate`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
+- [GTENG-B29 — A gate whose `presupposes` names a configuration field the project does not declare is Pending on every target, naming the field and the opt-out, and a judgment gate queues no question; when every missing field is in `dialect.opt_out` it is Skip; with all declared it runs as usual. (`presupposedMissing`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
 - [GTENG-B06 — An UNREADABLE target does not apply: better to stop charging than to charge blind.](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B07 — A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check.](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
@@ -4393,7 +4399,7 @@ abra a página dela em `camadas/`.
 
 - [MCSTM-B07 — `StampSnippet` delimits the window by the declared line count: a change beyond it is not reached, and one inside it is. The reach stays in plain sight of whoever reads, and the gate needs no per-language parser to find where the block ends.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
-- [MCSTM-B08 — Without the dialect declared by the project the gate goes quiet: adopting the stamp is the project's decision.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
+- [MCSTM-B08 — Without `derived.mock_detect` declared the gate is Pending, naming the field and the opt-out: it did not check, and saying so is what puts it in the pending items and the doctor; with `mock_detect` in `dialect.opt_out` the project decided, and the gate skips.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
 - [MCSTM-B09 — A double of a module the project does not govern is not charged.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
@@ -4421,7 +4427,7 @@ abra a página dela em `camadas/`.
 
 - [MCSTM-I02 — The double and the stamp are tied by the module's PATH, matched by suffix without extension. The specifier and the stamped path describe the same file through alias and disk path, and a per-ecosystem alias resolver would be needed otherwise.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
-- [MCSTM-I03 — A configuration fault fails; a project decision skips. Compiling error and missing capture group are Fail, an undeclared dialect is Skip — the difference is whether somebody CHOSE the silence.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
+- [MCSTM-I03 — A configuration fault fails; a project decision skips; nothing decided is pending. Compiling error and missing capture group are Fail, an undeclared pattern is Pending, a waived one is Skip — the difference is whether somebody CHOSE the silence.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
 - [MCSTM-X01 — Does not interpret the code of the stamped module.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
@@ -4445,7 +4451,7 @@ abra a página dela em `camadas/`.
 
 - [MCTYM-B04 — A double with no factory is not charged: the automock derives from the real module by construction, so it cannot drift, and charging it would be noise one learns to ignore.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
-- [MCTYM-B05 — Without the tie shape declared by the project the gate goes quiet, naming what has to be declared.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
+- [MCTYM-B05 — Without `derived.mock_contract` declared the gate is Pending, naming the field and the opt-out; with `mock_contract` in `dialect.opt_out` it skips.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
 - [MCTYM-B06 — An artifact that is not a test leaves without a verdict.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
@@ -4465,7 +4471,7 @@ abra a página dela em `camadas/`.
 
 - [MCTYM-I01 — What is governed is decided by the GRAPH, never by a prefix list in the config. That asks for no new configuration, assumes no alias convention — which varies per ecosystem — and follows the project on its own: code that is born enters the map and starts being charged.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
-- [MCTYM-I02 — An undeclared tie shape SKIPS instead of guessing one. Inferring the TypeScript form would assume the ecosystem and report GREEN over what was never checked in any other — the worst possible failure in a measuring device.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
+- [MCTYM-I02 — An undeclared tie shape is PENDING instead of guessing one. Inferring the TypeScript form would assume the ecosystem and report GREEN over what was never checked in any other — the worst possible failure in a measuring device.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
 - [MCTYM-I03 — The verdict COUNTS the loose doubles, not just names them. Naming one without saying how many leaves the reader unable to tell whether the others are on the list too.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
@@ -4479,7 +4485,7 @@ abra a página dela em `camadas/`.
 
 - [MCTYM-X05 — When the tie is a type on the factory (the form carries `{{module}}`), does not charge a double with no factory — an automock (no second argument) or an options object such as Vitest's `{ spy: true }`. When the tie is an option on the call (`autospec=True`), the bare call is still charged: Python's `patch` without it is a `MagicMock`, not the module.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
-- [MCTYM-E01 — REF[MCTYM-B05]: with no configuration or no tie shape declared, B05 answers that the gate goes quiet naming what to declare](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
+- [MCTYM-E01 — REF[MCTYM-B05]: with no configuration or no tie shape declared, B05 answers Pending naming what to declare](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
 - [MCTYM-E02 — No map has been built and the test mocks modules.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
@@ -6291,6 +6297,8 @@ abra a página dela em `camadas/`.
 
 - [DCTRO-B26 — Tests with no result when a JUnit report WAS ingested — the specs hold scenarios it proved — are the warning that the report reached no test file, saying the report names no file the map knows and how to make it; with no report ingested, the warning is the one to run the ingest.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
 
+- [DCTRO-B27 — A declared gate whose `presupposes` names a field the project neither declares nor waives in `dialect.opt_out` is a warning `premissa-ausente` on the gate, naming the field and how to declare or waive it.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
+
 - [DCTRO-B25 — Code with no mutation signal is an informational `sinal-ausente`; code where only some files have it is an informational `sinal-ausente` on the partial mutation, carrying how many of how many.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
 
 - [DCTRO-I01 — A project with nothing wrong gives the doctor no warning: each check that finds nothing adds nothing.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
@@ -6462,6 +6470,8 @@ abra a página dela em `camadas/`.
 - [DFGTD-B16 — Choosing specs seeds `header-valid`, informative, on specs and features: the artifacts whose identity lives in the `@anchors` header. A bare `- name: header-valid` in a configuration inherits that `on:`.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-B17 — `no-duplication` is seeded as the native `duplication` check on code files, needing `npx`: one verdict per file read from jscpd's report, not a project-wide command judged by its exit code.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
+
+- [DFGTD-B18 — The mock gates name the field each one reads: `mock-detect-covers-dialect` and `mock-stamped` presuppose `derived.mock_detect`, `mock-typed` presupposes `derived.mock_contract`; where it is not declared nothing is asked or measured (GTENG-B29), and the doctor names it (DCTRO-B27).](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-I01 — The list of seeded gates, and its order, does not change with the age of the project; only the maturation state does.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 

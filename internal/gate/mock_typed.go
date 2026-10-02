@@ -47,7 +47,11 @@ func checkMockTyped(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 		// Sem a forma declarada não há o que procurar. Inferir uma (`Partial<typeof …>`)
 		// seria assumir TypeScript e reportar VERDE sobre o que não se conferiu em
 		// qualquer outro ecossistema — a pior falha possível num medidor.
-		return Skip, i18n.T("gate.mock_typed.skip_no_mock_contract")
+		// Pending until someone decides, as `mock-stamped`: the opt-out is the decision.
+		if cfg != nil && cfg.DialectFor().WaivedField("mock_contract") {
+			return Skip, i18n.T("gate.mock_typed.skip_opt_out")
+		}
+		return Pending, i18n.T("gate.mock_typed.pending_no_mock_contract")
 	}
 
 	todos := declaredDoubles(content, cfg, forma)

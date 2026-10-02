@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DFGTD
-#   updated_at: 2026-10-01
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @DFGTD
@@ -156,3 +156,9 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     Given every default gate of every artifact
     When its question, measure and install hint are read
     Then none carries Portuguese letters or words
+
+  @DFGTD-B18 @unit-level
+  Scenario: The mock dialect judgment presupposes the pattern it asks about
+    Given the default gates of a project with tests
+    When the mock gates are inspected
+    Then mock-detect-covers-dialect and mock-stamped presuppose derived.mock_detect, and mock-typed presupposes derived.mock_contract

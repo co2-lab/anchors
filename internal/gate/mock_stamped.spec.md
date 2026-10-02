@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCSTM
-  updated_at: 2026-10-01
+  updated_at: 2026-10-02
   layer: gate
 -->
 # MockStamped — the double carries the mark of the snippet it replaces, and the gate RECOMPUTES it
@@ -55,7 +55,7 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-B05` | An anchor that vanished — renamed, removed or rewritten — fails with its own message: it is a finding, not a tool error, because the double is certainly out of date. |
 | `MCSTM-B06` | An anchor occurring more than once fails as ambiguous: a stamp pointing at "one of the two" proves nothing, and the gate reports rather than choosing. |
 | `MCSTM-B07` | `StampSnippet` delimits the window by the declared line count: a change beyond it is not reached, and one inside it is. The reach stays in plain sight of whoever reads, and the gate needs no per-language parser to find where the block ends. |
-| `MCSTM-B08` | Without the dialect declared by the project the gate goes quiet: adopting the stamp is the project's decision. |
+| `MCSTM-B08` | Without `derived.mock_detect` declared the gate is Pending, naming the field and the opt-out: it did not check, and saying so is what puts it in the pending items and the doctor; with `mock_detect` in `dialect.opt_out` the project decided, and the gate skips. |
 | `MCSTM-B09` | A double of a module the project does not govern is not charged. |
 | `MCSTM-B10` | A stamp whose module no longer exists on disk is a finding with its own message, not a crash. |
 | `MCSTM-B11` | The ABSENCE of a stamp on a governed double is accused, not skipped — and this is the most important half of the gate. |
@@ -74,7 +74,7 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | --- | --- | --- |
 | `MCSTM-I01` | The gate RECOMPUTES the hash against the real module; it never validates the stamp's format alone. A stamp nobody confronts would certify itself, because whoever edits the test regenerates it to match their own mock. | changes the real module without touching the stamp and verifies the verdict turns |
 | `MCSTM-I02` | The double and the stamp are tied by the module's PATH, matched by suffix without extension. The specifier and the stamped path describe the same file through alias and disk path, and a per-ecosystem alias resolver would be needed otherwise. | declares the double through an alias and the stamp through the disk path, and verifies the charge is satisfied |
-| `MCSTM-I03` | A configuration fault fails; a project decision skips. Compiling error and missing capture group are Fail, an undeclared dialect is Skip — the difference is whether somebody CHOSE the silence. | confronts the three configurations and verifies Fail, Fail and Skip |
+| `MCSTM-I03` | A configuration fault fails; a project decision skips; nothing decided is pending. Compiling error and missing capture group are Fail, an undeclared pattern is Pending, a waived one is Skip — the difference is whether somebody CHOSE the silence. | confronts the four configurations and verifies Fail, Fail, Pending and Skip |
 
 ## Constraints
 

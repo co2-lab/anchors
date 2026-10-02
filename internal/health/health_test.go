@@ -679,3 +679,16 @@ func TestMissingSignals_ingestedButUnmatched(t *testing.T) {
 		t.Errorf("with no report ingested the warning asks to ingest: %q", d)
 	}
 }
+
+func TestPresupposedFieldsAreNamed(t *testing.T) {
+	t.Run("DCTRO-B27: A gate declared over a field the project neither declares nor waives is a warning naming both", func(t *testing.T) {})
+	cfg := &config.Config{Gates: []config.Gate{
+		{Name: "mock-stamped", Presupposes: []string{"derived.mock_detect"}},
+		{Name: "mock-typed", Presupposes: []string{"derived.mock_contract"}},
+		{Name: "plain"},
+	}, Dialect: &config.Dialect{OptOut: []string{"mock_contract"}}}
+	fs := checkPresupposedFields(cfg)
+	if len(fs) != 1 || fs[0].Subject != "mock-stamped" || fs[0].Severity != Warn || !strings.Contains(fs[0].Detail, "derived.mock_detect") {
+		t.Errorf("only the undeclared, unwaived field is named: %+v", fs)
+	}
+}

@@ -77,6 +77,7 @@ patterns a spec governs.
 | `CNFGO-B55` | Each verdict level of a gate — `fail`, `divergence`, `pending` — takes a state under `severity`: `block`, `inform` or `ignore`; unset, a blocking gate blocks its failures and informs its divergences and pending items, and an informative gate informs all three. A level stronger than a more serious one (pending ≤ divergence ≤ fail) or an unknown state fails the load naming the gate. (`ActionFor`) |
 | `CNFGO-B56` | A project-wide `severity` is the default of every blocking gate: each level a gate entry does not declare takes the project's state, and a level the entry declares keeps its own; informative gates are not touched. The project default is refused if it names an unknown state or breaks the order, and a gate whose merged levels break the order fails the load naming it. (`applyProjectSeverity`) |
 | `CNFGO-B57` | A gate's `min_coverage` and each `coverage_floors` floor is a percentage from 0 to 100, and every floor carries a `why`; anything else is refused at load, naming the gate and the field. |
+| `CNFGO-B58` | `Declares` says whether the configuration holds a non-empty value at a dotted path of anchors.yaml (`derived.mock_detect`); a gate entry with no `presupposes` takes the canonical one, with the question it presupposes for. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 
 ### Canonical gate declarations
@@ -94,7 +95,7 @@ patterns a spec governs.
 | --- | --- |
 | `CNFGO-B18` | A gate whose severity nobody declared does not block (`IsBlocking`). |
 | `CNFGO-B19` | The scope is one run per target unless `batch` or `project` is declared; in a full scan the gate uses `scope_full` only when it is `batch` or `project`, and its ordinary scope otherwise (`EffectiveScope`, `ScopeForScan`). |
-| `CNFGO-B20` | A gate with no phases runs in every phase, and an unnamed phase admits every gate; a gate with phases runs only in those it lists (`RunsIn`). |
+| `CNFGO-B20` | A gate with no phases runs in every phase; a gate with phases runs only in those it lists (`RunsIn`); an unnamed phase admits every gate except one declared for `manual` alone (`OnlyManual`), which runs only when the manual phase is asked for. |
 | `CNFGO-B21` | A gate takes part in both perspectives (change and all) unless `skip_on` lists the perspective (`SkipsOn`). |
 | `CNFGO-B22` | The mutation report format is read from the `mutation-score` gate only, trimmed and lower-cased, and is the Mutation Testing Elements format when none is declared (`MutationFormat`). |
 | `CNFGO-B23` | A gate checks the language of section titles unless it declares that check off (`ChecksSectionLanguage`). |

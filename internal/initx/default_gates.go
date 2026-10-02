@@ -544,6 +544,9 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			config.Gate{
 				Name: "mock-detect-covers-dialect", ID: "mock-detect-covers-dialect", On: []string{"test"},
 				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
+				// The question asserts the pattern is declared; asked where it is not, the
+				// evaluator judged a premise the project never held.
+				Presupposes: []string{"derived.mock_detect"},
 				Ask: "The project declares `derived.mock_detect` — the regex that recognises a " +
 					"test double in this ecosystem. Read this test file and answer: does the " +
 					"declared pattern reach EVERY form of double it uses? Fail it if there is a " +
@@ -556,12 +559,12 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			},
 			config.Gate{
 				Name: "mock-stamped", ID: "mock-stamped", On: []string{"test"}, Check: "mock-stamped",
-				Blocking: config.Bool(false),
+				Blocking: config.Bool(false), Presupposes: []string{"derived.mock_detect"},
 				Measures: "the double's stamp matches the real snippet (recomputed, not just validated)",
 			},
 			config.Gate{
 				Name: "mock-typed", ID: "mock-typed", On: []string{"test"}, Check: "mock-typed",
-				Blocking: config.Bool(false),
+				Blocking: config.Bool(false), Presupposes: []string{"derived.mock_contract"},
 				Measures: "the test double derives from the real module (not a frozen copy of the contract)",
 			},
 			config.Gate{

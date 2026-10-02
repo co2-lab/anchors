@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:7d016697c4d21368 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:c4fe1e892b1ea2ba — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 75 unidades e 1271 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 75 unidades e 1272 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## BRCOV — BranchCoverage — the tests take the branches the code has
@@ -1309,6 +1309,8 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 
 - **GTENG-B28** — A gate that breaks while measuring fails on that target, saying it broke and that the defect is Anchors'; the other gates and targets are still measured. (`runOne`, `runAggregate`, `recoverGate`)
 
+- **GTENG-B29** — A gate whose `presupposes` names a configuration field the project does not declare is Pending on every target, naming the field and the opt-out, and a judgment gate queues no question; when every missing field is in `dialect.opt_out` it is Skip; with all declared it runs as usual. (`presupposedMissing`)
+
 - **GTENG-B06** — An UNREADABLE target does not apply: better to stop charging than to charge blind.
 
 - **GTENG-B07** — A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check.
@@ -1804,7 +1806,7 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 
 - **MCSTM-B07** — `StampSnippet` delimits the window by the declared line count: a change beyond it is not reached, and one inside it is. The reach stays in plain sight of whoever reads, and the gate needs no per-language parser to find where the block ends.
 
-- **MCSTM-B08** — Without the dialect declared by the project the gate goes quiet: adopting the stamp is the project's decision.
+- **MCSTM-B08** — Without `derived.mock_detect` declared the gate is Pending, naming the field and the opt-out: it did not check, and saying so is what puts it in the pending items and the doctor; with `mock_detect` in `dialect.opt_out` the project decided, and the gate skips.
 
 - **MCSTM-B09** — A double of a module the project does not govern is not charged.
 
@@ -1832,7 +1834,7 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 
 - **MCSTM-I02** — The double and the stamp are tied by the module's PATH, matched by suffix without extension. The specifier and the stamped path describe the same file through alias and disk path, and a per-ecosystem alias resolver would be needed otherwise.
 
-- **MCSTM-I03** — A configuration fault fails; a project decision skips. Compiling error and missing capture group are Fail, an undeclared dialect is Skip — the difference is whether somebody CHOSE the silence.
+- **MCSTM-I03** — A configuration fault fails; a project decision skips; nothing decided is pending. Compiling error and missing capture group are Fail, an undeclared pattern is Pending, a waived one is Skip — the difference is whether somebody CHOSE the silence.
 
 - **MCSTM-X01** — Does not interpret the code of the stamped module.
 
@@ -1884,7 +1886,7 @@ there is no structural type to lean on.
 
 - **MCTYM-B04** — A double with no factory is not charged: the automock derives from the real module by construction, so it cannot drift, and charging it would be noise one learns to ignore.
 
-- **MCTYM-B05** — Without the tie shape declared by the project the gate goes quiet, naming what has to be declared.
+- **MCTYM-B05** — Without `derived.mock_contract` declared the gate is Pending, naming the field and the opt-out; with `mock_contract` in `dialect.opt_out` it skips.
 
 - **MCTYM-B06** — An artifact that is not a test leaves without a verdict.
 
@@ -1904,7 +1906,7 @@ there is no structural type to lean on.
 
 - **MCTYM-I01** — What is governed is decided by the GRAPH, never by a prefix list in the config. That asks for no new configuration, assumes no alias convention — which varies per ecosystem — and follows the project on its own: code that is born enters the map and starts being charged.
 
-- **MCTYM-I02** — An undeclared tie shape SKIPS instead of guessing one. Inferring the TypeScript form would assume the ecosystem and report GREEN over what was never checked in any other — the worst possible failure in a measuring device.
+- **MCTYM-I02** — An undeclared tie shape is PENDING instead of guessing one. Inferring the TypeScript form would assume the ecosystem and report GREEN over what was never checked in any other — the worst possible failure in a measuring device.
 
 - **MCTYM-I03** — The verdict COUNTS the loose doubles, not just names them. Naming one without saying how many leaves the reader unable to tell whether the others are on the list too.
 
@@ -1918,7 +1920,7 @@ there is no structural type to lean on.
 
 - **MCTYM-X05** — When the tie is a type on the factory (the form carries `{{module}}`), does not charge a double with no factory — an automock (no second argument) or an options object such as Vitest's `{ spy: true }`. When the tie is an option on the call (`autospec=True`), the bare call is still charged: Python's `patch` without it is a `MagicMock`, not the module.
 
-- **MCTYM-E01** — REF[MCTYM-B05]: with no configuration or no tie shape declared, B05 answers that the gate goes quiet naming what to declare
+- **MCTYM-E01** — REF[MCTYM-B05]: with no configuration or no tie shape declared, B05 answers Pending naming what to declare
 
 - **MCTYM-E02** — No map has been built and the test mocks modules.
 

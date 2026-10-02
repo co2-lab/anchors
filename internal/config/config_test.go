@@ -821,8 +821,12 @@ func TestGate_runsIn(t *testing.T) {
 	if manual.RunsIn(PhasePreCommit) {
 		t.Error("a manual-only gate must not run in pre-commit")
 	}
-	if !manual.RunsIn(PhaseManual) || !manual.RunsIn("") {
-		t.Error("a manual-only gate runs in manual and in the unnamed phase")
+	if !manual.RunsIn(PhaseManual) || manual.RunsIn("") {
+		t.Error("a manual-only gate runs in manual and nowhere else, the unnamed phase included")
+	}
+	both := Gate{When: []string{PhaseManual, PhaseCI}}
+	if !both.RunsIn("") || !both.RunsIn(PhaseManual) {
+		t.Error("a gate declared for manual and ci runs in the unnamed phase too")
 	}
 }
 
@@ -1619,5 +1623,24 @@ func TestCoverageFloorsAreValidated(t *testing.T) {
 	}
 	if _, err := load(t, gate("    coverage_floors:\n      \"cmd/**\": {min: 40, why: \"boot wiring, proven by the smoke test\"}\n")); err != nil {
 		t.Errorf("a floor with its why loads, got %v", err)
+	}
+}
+
+func TestDeclaresAFieldByPath(t *testing.T) {
+	t.Run("CNFGO-B58: A field is declared when its path holds a value", func(t *testing.T) {})
+	c := &Config{Derived: &Derived{MockDetect: `x(\w+)`}}
+	if !c.Declares("derived.mock_detect") || c.Declares("derived.mock_contract") || c.Declares("nope.field") {
+		t.Errorf("declared: mock_detect only, got %v %v %v", c.Declares("derived.mock_detect"), c.Declares("derived.mock_contract"), c.Declares("nope.field"))
+	}
+	var none *Config
+	if none.Declares("derived.mock_detect") {
+		t.Error("no configuration declares nothing")
+	}
+	base := Gate{Name: "g", Ask: "q", Presupposes: []string{"derived.mock_detect"}}
+	prev := canonicalGate
+	t.Cleanup(func() { canonicalGate = prev })
+	canonicalGate = func(name string) (Gate, bool) { return base, name == "g" }
+	if got := mergeCanonical(Gate{Name: "g"}).Presupposes; len(got) != 1 {
+		t.Errorf("an entry with no presupposes takes the canonical one, got %v", got)
 	}
 }

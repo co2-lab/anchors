@@ -833,6 +833,14 @@ type Gate struct {
 	// Vazio = sem restrição, para que o silêncio nunca desligue gate existente.
 	Requires string `yaml:"requires,omitempty"`
 
+	// Presupposes — the configuration fields this gate takes as declared, by their path in
+	// anchors.yaml (`derived.mock_detect`). A judgment gate's question can assert one ("The
+	// project declares `derived.mock_detect` — …"); asked where it is not declared, the
+	// evaluator gets a false premise (reported from baas-proxy). With a presupposed field
+	// missing the gate is Pending naming it — no question is queued —, and Skip when the
+	// project waived it in `dialect.opt_out`.
+	Presupposes []string `yaml:"presupposes,omitempty"`
+
 	// NeedsTool é o BINÁRIO externo sem o qual este gate não tem como medir nada.
 	//
 	// Sem ele, ferramenta ausente virava REPROVAÇÃO: o `sh` sai 127, o gate não produz
@@ -1329,9 +1337,17 @@ const (
 //
 // `manual` é a exceção deliberada: declarar `when: [manual]` tira o gate das fases
 // automáticas (é como se declara "isto é caro demais para o loop, rode sob demanda").
+//
+// That includes a check with NO phase: the unnamed phase admitted every gate, so a gate
+// declared for manual alone ran in every local `check --all` — a judgment gate kept for an
+// independent reviewer queued its questions on every run (reported from baas-proxy). A
+// gate declared only for manual runs only when `--phase manual` asks for it.
 func (g Gate) RunsIn(phase string) bool {
-	if phase == "" || len(g.When) == 0 {
+	if len(g.When) == 0 {
 		return true
+	}
+	if phase == "" {
+		return !g.OnlyManual()
 	}
 	for _, w := range g.When {
 		if w == phase {
@@ -1339,6 +1355,20 @@ func (g Gate) RunsIn(phase string) bool {
 		}
 	}
 	return false
+}
+
+// OnlyManual says the gate is declared for the manual phase and no other: it runs on
+// demand, never in a check that did not ask for that phase.
+func (g Gate) OnlyManual() bool {
+	if len(g.When) == 0 {
+		return false
+	}
+	for _, w := range g.When {
+		if w != PhaseManual {
+			return false
+		}
+	}
+	return true
 }
 
 // Os custos declaráveis.
@@ -2100,6 +2130,11 @@ func mergeCanonical(g Gate) Gate {
 	if g.Ask == "" {
 		g.Ask = base.Ask
 	}
+	// The premise travels with the question: a project inheriting the canonical `ask`
+	// inherits what the question presupposes.
+	if len(g.Presupposes) == 0 {
+		g.Presupposes = base.Presupposes
+	}
 	// A ferramenta exigida vem do canônico junto com o `run:` que a usa — os dois
 	// descrevem o MESMO comando, e herdar um sem o outro produziria o pior estado
 	// possível: o gate roda o comando canônico e reprova com "command not found",
@@ -2135,6 +2170,42 @@ func mergeCanonical(g Gate) Gate {
 		g.Blocking = base.Blocking
 	}
 	return g
+}
+
+// Declares says whether the configuration declares the field at a dotted path of
+// anchors.yaml (`derived.mock_detect`): present, and not empty.
+func (c *Config) Declares(path string) bool {
+	if c == nil {
+		return false
+	}
+	b, err := yaml.Marshal(c)
+	if err != nil {
+		return false
+	}
+	var node any
+	if yaml.Unmarshal(b, &node) != nil {
+		return false
+	}
+	for _, seg := range strings.Split(path, ".") {
+		m, ok := node.(map[string]any)
+		if !ok {
+			return false
+		}
+		if node, ok = m[seg]; !ok {
+			return false
+		}
+	}
+	switch v := node.(type) {
+	case nil:
+		return false
+	case string:
+		return strings.TrimSpace(v) != ""
+	case []any:
+		return len(v) > 0
+	case map[string]any:
+		return len(v) > 0
+	}
+	return true
 }
 
 // Save escreve o anchors.yaml.

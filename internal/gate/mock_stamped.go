@@ -43,7 +43,14 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 		return Fail, fmt.Sprintf(i18n.T("gate.mock_stamped.fail_mock_detect_compile"), err)
 	}
 	if detector == nil {
-		return Skip, i18n.T("gate.mock_stamped.skip_no_mock_detect")
+		// Pending, not Skip, when nobody decided: the gate did NOT check, and an
+		// indeterminate answer kept it out of the pending items and of the doctor — a
+		// project with 43 tests never learned the field was missing (reported from
+		// baas-proxy). The opt-out is the decision that makes it a Skip.
+		if cfg != nil && cfg.DialectFor().WaivedField("mock_detect") {
+			return Skip, i18n.T("gate.mock_stamped.skip_opt_out")
+		}
+		return Pending, i18n.T("gate.mock_stamped.pending_no_mock_detect")
 	}
 
 	carimbos := declaredStamps(content)

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MCSTM
-#   updated_at: 2026-09-29
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @MCSTM
@@ -60,8 +60,8 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
   Scenario: Without the dialect declared the gate goes quiet
     Given a project that declares no double-detection dialect
     When the gate confronts a test carrying a stamp
-    Then it returns Skip naming what has to be declared, because adopting the stamp is
-      the project's decision
+    Then it returns Pending naming `mock_detect` and the opt-out, because it did not check
+    And with `mock_detect` in `dialect.opt_out` it returns Skip, because the project decided
 
   @MCSTM-B09 @unit-level
   Scenario: A double of a module the project does not govern is not charged
@@ -131,10 +131,10 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
 
   @MCSTM-I03 @unit-level
   Scenario: A configuration fault fails and a project decision skips
-    Given a pattern that does not compile, a pattern with no capture group, and no pattern at all
+    Given a pattern that does not compile, a pattern with no capture group, no pattern at all, and a waived pattern
     When the gate confronts a test under each of them
-    Then the first two return Fail and the third returns Skip, because the difference is
-      whether somebody CHOSE the silence
+    Then the first two return Fail, the third Pending and the fourth Skip, because the
+      difference is whether somebody CHOSE the silence
 
   @MCSTM-X01 @unit-level
   Scenario: The gate does not interpret the code of the stamped module
@@ -148,7 +148,7 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
     Given a project in an ecosystem where a double is not written as a detectable call
     And no double-detection dialect declared
     When the gate confronts a test that doubles a governed module
-    Then it returns Skip rather than Pass, because reporting green over what was never
+    Then it returns Pending rather than Pass, because reporting green over what was never
       checked is the worst possible failure in a measuring device
 
   @MCSTM-X03 @unit-level

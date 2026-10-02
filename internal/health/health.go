@@ -65,6 +65,7 @@ func Diagnose(g *mapx.Graph, cfg *config.Config, root string) Report {
 	r.Findings = append(r.Findings, checkGateCoverage(g, cfg)...)
 	r.Findings = append(r.Findings, checkSkipOnValid(cfg)...)
 	r.Findings = append(r.Findings, checkMissingTools(cfg)...)
+	r.Findings = append(r.Findings, checkPresupposedFields(cfg)...)
 	r.Findings = append(r.Findings, checkGitMissing(cfg, root)...)
 	r.Findings = append(r.Findings, checkGitHubEnv(cfg, root)...)
 	r.Findings = append(r.Findings, checkPlanNeeds(g)...)
@@ -439,6 +440,33 @@ func checkMissingTools(cfg *config.Config) []Finding {
 			msg += " — " + gt.InstallHint
 		}
 		out = append(out, Finding{"ferramenta-ausente", Warn, gt.Name, msg})
+	}
+	return out
+}
+
+// checkPresupposedFields names the gates declared over a configuration field the project
+// does not declare (`presupposes`), and has not waived in `dialect.opt_out`.
+//
+// The gate itself answers Pending on every target, which the check counts; what nobody saw
+// is WHICH field, once, for the whole project — a project with 43 tests learned only from
+// a person asking why (reported from baas-proxy). Warn, like a missing tool: the gate the
+// project declares measures nothing until the field is declared or waived.
+func checkPresupposedFields(cfg *config.Config) []Finding {
+	if cfg == nil {
+		return nil
+	}
+	var out []Finding
+	for _, gt := range cfg.Gates {
+		var missing []string
+		for _, p := range gt.Presupposes {
+			if cfg.Declares(p) || cfg.DialectFor().WaivedField(p[strings.LastIndex(p, ".")+1:]) {
+				continue
+			}
+			missing = append(missing, p)
+		}
+		if len(missing) > 0 {
+			out = append(out, Finding{"premissa-ausente", Warn, gt.Name, i18n.T("health.presupposed_missing", gt.Name, strings.Join(missing, ", "))})
+		}
 	}
 	return out
 }

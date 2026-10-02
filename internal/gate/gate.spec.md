@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTENG
-  updated_at: 2026-10-01
+  updated_at: 2026-10-02
   layer: gate
 -->
 # GateEngine — which gates reach which node, and what the run concludes
@@ -13,7 +13,7 @@
 > `anchors doctor --fix` replaces whole. Decided by the user: those files are upstream-owned.
 >
 > **Revises:** `B22`
-> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B13`, `B14`, `B15`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `B24`, `B25`, `B26`, `B27`, `B28`, `I01`, `I02`, `I03`, `I05`, `X01`, `X02`, `X03`, `E01`
+> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B13`, `B14`, `B15`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `B24`, `B25`, `B26`, `B27`, `B28`, `B29`, `I01`, `I02`, `I03`, `I05`, `X01`, `X02`, `X03`, `E01`
 
 ## Overview
 
@@ -88,6 +88,7 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-B26` | The gates read the project's files through the source set with `SetFileSource` — the git index in the commit hook —, and from the tree when none is set; the function it returns restores the previous source. |
 | `GTENG-B27` | Whether a file has changes not yet committed is asked through the source set with `SetChangedSource` — the staged changes in the commit hook —, and of the tree when none is set; `updated-at-current` reads it, so a file edited and not staged is judged by its last commit. |
 | `GTENG-B28` | A gate that breaks while measuring fails on that target, saying it broke and that the defect is Anchors'; the other gates and targets are still measured. (`runOne`, `runAggregate`, `recoverGate`) |
+| `GTENG-B29` | A gate whose `presupposes` names a configuration field the project does not declare is Pending on every target, naming the field and the opt-out, and a judgment gate queues no question; when every missing field is in `dialect.opt_out` it is Skip; with all declared it runs as usual. (`presupposedMissing`) |
 | `GTENG-B06` | An UNREADABLE target does not apply: better to stop charging than to charge blind. |
 | `GTENG-B07` | A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check. |
 | `GTENG-B08` | A gate whose required binary is absent steps aside and never fails — the gate did not measure, and the missing piece is the tool. |

@@ -175,11 +175,15 @@ func TestMockCarimbado_semDeclaracaoPula(t *testing.T) {
 	teste := "// @contract: src/mod.ts | " + ancora + " | 5 | deadbeef"
 
 	v, msg := checkMockStamped(teste, n, root, &mapx.Graph{}, &config.Config{})
-	if v != Skip {
-		t.Errorf("sem declaração não há o que confrontar: %v", v)
+	if v != Pending {
+		t.Errorf("with nothing declared the gate did not check, and says so: %v", v)
 	}
-	if !strings.Contains(msg, "mock_detect") {
-		t.Errorf("a mensagem deve dizer o que declarar: %s", msg)
+	if !strings.Contains(msg, "mock_detect") || !strings.Contains(msg, "opt_out") {
+		t.Errorf("the message names the field and the opt-out: %s", msg)
+	}
+	waived := &config.Config{Dialect: &config.Dialect{OptOut: []string{"mock_detect"}}}
+	if v, _ := checkMockStamped(teste, n, root, &mapx.Graph{}, waived); v != Skip {
+		t.Errorf("a waived field is the project's decision, and skips: %v", v)
 	}
 }
 
@@ -375,7 +379,8 @@ func TestMockCarimbado_configDefeituosaReprovaEscolhaPula(t *testing.T) {
 	}{
 		{"regex que não compila", &config.Config{Derived: &config.Derived{MockDetect: `jest\.mock\(([`}}, Fail},
 		{"regex sem captura", &config.Config{Derived: &config.Derived{MockDetect: `jest\.mock`}}, Fail},
-		{"dialeto não declarado", &config.Config{Derived: &config.Derived{}}, Skip},
+		{"dialeto não declarado", &config.Config{Derived: &config.Derived{}}, Pending},
+		{"dialeto dispensado", &config.Config{Derived: &config.Derived{}, Dialect: &config.Dialect{OptOut: []string{"mock_detect"}}}, Skip},
 	}
 	for _, c := range casos {
 		if v, msg := checkMockStamped(teste, n, root, grafoComMod(), c.cfg); v != c.quer {
@@ -414,8 +419,8 @@ func TestMockCarimbado_semDialetoPulaEmVezDePassar(t *testing.T) {
 	n := mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest}
 
 	v, _ := checkMockStamped(teste, n, root, grafoComMod(), &config.Config{})
-	if v != Skip {
-		t.Fatalf("sem dialeto declarado o gate se cala; verde seria mentira: %v", v)
+	if v != Pending {
+		t.Fatalf("with no dialect declared the gate is pending; green would be a lie: %v", v)
 	}
 	// E com o dialeto declarado, o MESMO arquivo é cobrado — prova de que o Skip
 	// vem da ausência de declaração, não da ausência de dublê.

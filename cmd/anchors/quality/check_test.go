@@ -2748,3 +2748,23 @@ func TestStagedMap_readsTheIndex(t *testing.T) {
 		t.Error("a map outside the project is not the commit's")
 	}
 }
+
+// A judgment gate kept for an independent reviewer is declared `when: [manual]`; a local
+// `check --all` queued its questions anyway (reported from baas-proxy).
+func TestFilterGatesLeavesManualOnlyGatesToTheManualPhase(t *testing.T) {
+	t.Run("CGPCH-B89: A check with no phase leaves out a gate declared for manual alone", func(t *testing.T) {})
+	gates := []config.Gate{{Name: "rule-fulfilled", When: []string{config.PhaseManual}}, {Name: "always"}}
+	names := func(gs []config.Gate) []string {
+		var out []string
+		for _, g := range gs {
+			out = append(out, g.Name)
+		}
+		return out
+	}
+	if got := names(filterGates(gates, "", "", false, "", gate.Waiver{})); strings.Join(got, ",") != "always" {
+		t.Errorf("no phase: %v, want [always]", got)
+	}
+	if got := names(filterGates(gates, config.PhaseManual, "", false, "", gate.Waiver{})); strings.Join(got, ",") != "rule-fulfilled,always" {
+		t.Errorf("--phase manual: %v, want both", got)
+	}
+}

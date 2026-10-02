@@ -104,11 +104,14 @@ func TestMockTipado_semContratoDeclaradoPula(t *testing.T) {
 	t.Run("MCTYM-B05: Without the tie shape declared the gate goes quiet", func(t *testing.T) {})
 	src := `jest.mock('a', () => ({ f: jest.fn() }))`
 	v, msg := rodaMock(t, src, &config.Config{})
-	if v != Skip {
-		t.Errorf("sem contrato declarado o gate não tem o que cobrar: %v", v)
+	if v != Pending {
+		t.Errorf("with no tie shape declared the gate did not check, and says so: %v", v)
 	}
-	if !strings.Contains(msg, "mock_contract") {
-		t.Errorf("a mensagem deve dizer o que declarar: %s", msg)
+	if !strings.Contains(msg, "mock_contract") || !strings.Contains(msg, "opt_out") {
+		t.Errorf("the message names the field and the opt-out: %s", msg)
+	}
+	if v, _ := rodaMock(t, src, &config.Config{Dialect: &config.Dialect{OptOut: []string{"mock_contract"}}}); v != Skip {
+		t.Errorf("a waived field is the project's decision, and skips: %v", v)
 	}
 	// testa com config nil
 	if c := mockContract(nil); c != "" {
@@ -255,8 +258,8 @@ func TestMockTipado_formaNaoDeclaradaPulaEmVezDeAdivinhar(t *testing.T) {
 	src := `jest.mock('src/a', () => ({ f: jest.fn() }))`
 	// Sem forma declarada: Skip.
 	v, _ := rodaMock(t, src, &config.Config{Derived: &config.Derived{}})
-	if v != Skip {
-		t.Fatalf("sem forma declarada o gate se cala; obteve %v", v)
+	if v != Pending {
+		t.Fatalf("with no shape declared the gate is pending, never guessing; got %v", v)
 	}
 	// Com a forma declarada: o MESMO arquivo é cobrado. Prova de que o Skip vem da
 	// ausência de declaração, não da ausência de dublê solto.
@@ -321,11 +324,12 @@ func (repoFalso) Listar() []int { return nil }
 func TestX(t *testing.T) { usar(repoFalso{}) }`
 	v, msg := checkMockTyped(src, mapx.Node{ID: "x_test.go", Kind: mapx.KindTest},
 		"", grafoDoProjeto(), &config.Config{Derived: &config.Derived{}})
-	if v != Skip {
-		t.Fatalf("sem forma nem dialeto declarados o gate não se aplica; obteve %v (%s)", v, msg)
+	if v != Pending {
+		t.Fatalf("with no shape and no dialect the gate is pending until the project decides; got %v (%s)", v, msg)
 	}
-	if v == Pass {
-		t.Error("verde sobre o que não se conferiu é a pior falha de um medidor")
+	waived := &config.Config{Derived: &config.Derived{}, Dialect: &config.Dialect{OptOut: []string{"mock_contract"}}}
+	if v, _ := checkMockTyped(src, mapx.Node{ID: "x_test.go", Kind: mapx.KindTest}, "", grafoDoProjeto(), waived); v != Skip {
+		t.Errorf("the project said the gate does not apply: Skip, got %v", v)
 	}
 }
 

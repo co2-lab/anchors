@@ -1349,3 +1349,23 @@ func TestIndexInvariant_noGateReadsTheTree(t *testing.T) {
 		t.Fatalf("only %d confrontations ran — the walk over the checkers broke", len(onIndex))
 	}
 }
+
+// The question of `mock-detect-covers-dialect` asserts `derived.mock_detect` is declared;
+// asked where it is not, the evaluator judged a false premise (reported from baas-proxy).
+func TestRunOne_presupposedFieldMissingAsksNothing(t *testing.T) {
+	t.Run("GTENG-B29: A gate presupposing an undeclared field asks nothing", func(t *testing.T) {})
+	g := config.Gate{Name: "mock-detect-covers-dialect", Measures: config.MeasuresJudgment, Presupposes: []string{"derived.mock_detect"}}
+	n := mapx.Node{ID: "a_test.go", Kind: mapx.KindTest}
+	r := runOne(g, n, t.TempDir(), &mapx.Graph{}, &config.Config{})
+	if r.Verdict != Pending || !strings.Contains(r.Detail, "derived.mock_detect") || !strings.Contains(r.Detail, "opt_out") {
+		t.Errorf("undeclared: %v (%s), want Pending naming the field and the opt-out", r.Verdict, r.Detail)
+	}
+	waived := &config.Config{Dialect: &config.Dialect{OptOut: []string{"mock_detect"}}}
+	if r := runOne(g, n, t.TempDir(), &mapx.Graph{}, waived); r.Verdict != Skip {
+		t.Errorf("waived: %v, want Skip", r.Verdict)
+	}
+	declared := &config.Config{Derived: &config.Derived{MockDetect: `jest\.mock\('([^']+)'`}}
+	if r := runOne(g, n, t.TempDir(), &mapx.Graph{}, declared); r.Verdict != Judge {
+		t.Errorf("declared: %v, want the judgment asked", r.Verdict)
+	}
+}

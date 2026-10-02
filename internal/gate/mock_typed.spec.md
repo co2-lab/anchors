@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCTYM
-  updated_at: 2026-10-01
+  updated_at: 2026-10-02
   layer: gate
 -->
 # MockTyped — every test double must DERIVE from the module it replaces
@@ -54,7 +54,7 @@ there is no structural type to lean on.
 | `MCTYM-B02` | A double whose factory carries the declared tie passes: the annotation is what makes the compiler check name, signature and return against the real module. |
 | `MCTYM-B03` | The charge is per MODULE, not per file: one loose double among several is enough to fail, and the verdict counts only the loose ones. |
 | `MCTYM-B04` | A double with no factory is not charged: the automock derives from the real module by construction, so it cannot drift, and charging it would be noise one learns to ignore. |
-| `MCTYM-B05` | Without the tie shape declared by the project the gate goes quiet, naming what has to be declared. |
+| `MCTYM-B05` | Without `derived.mock_contract` declared the gate is Pending, naming the field and the opt-out; with `mock_contract` in `dialect.opt_out` it skips. |
 | `MCTYM-B06` | An artifact that is not a test leaves without a verdict. |
 | `MCTYM-B07` | A test that doubles nobody leaves without a verdict — Skip and not Pass, because nothing was checked and a Pass would inflate the count of greens with nothing. |
 | `MCTYM-B08` | Another runner of the same ecosystem is recognised the same way: the double is the double regardless of which library spells it. |
@@ -69,7 +69,7 @@ there is no structural type to lean on.
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `MCTYM-I01` | What is governed is decided by the GRAPH, never by a prefix list in the config. That asks for no new configuration, assumes no alias convention — which varies per ecosystem — and follows the project on its own: code that is born enters the map and starts being charged. | doubles a module through an alias, a relative path and a bare name, and verifies all three are charged because all three resolve |
-| `MCTYM-I02` | An undeclared tie shape SKIPS instead of guessing one. Inferring the TypeScript form would assume the ecosystem and report GREEN over what was never checked in any other — the worst possible failure in a measuring device. | runs with no declared shape over a file carrying a loose double and verifies Skip |
+| `MCTYM-I02` | An undeclared tie shape is PENDING instead of guessing one. Inferring the TypeScript form would assume the ecosystem and report GREEN over what was never checked in any other — the worst possible failure in a measuring device. | runs with no declared shape over a file carrying a loose double and verifies Pending |
 | `MCTYM-I03` | The verdict COUNTS the loose doubles, not just names them. Naming one without saying how many leaves the reader unable to tell whether the others are on the list too. | confronts a file with one tied double and one loose, and verifies the count is one |
 
 ## Constraints
@@ -78,7 +78,7 @@ there is no structural type to lean on.
 | --- | --- | --- |
 | `MCTYM-X01` | Does not check whether the annotated type actually MATCHES the real module. | Whoever checks that is the language's compiler, which already does it and does it better. Here the ruler is that the tie WAS WRITTEN — deterministic, and enough, because writing it is what hands the check to the compiler. |
 | `MCTYM-X02` | Does not cover drift of BEHAVIOUR — only drift of SHAPE: name, signature, return type. | If the real module starts throwing in one case, or changes semantics while keeping the signature, the double goes on lying and no compiler sees it. For that remainder there is judgement and integration testing at the edge; promising more than the shape would be selling a green this gate does not give. |
-| `MCTYM-X03` | Carries no built-in tie shape and no built-in ecosystem. | The shape comes from `derived.mock_contract` and the dialect from `derived.mock_detect`, both in the project's Structure. The gate is language-agnostic BY DESIGN: in Go there is no call to detect at all, because the double is a satisfied interface, and the right verdict there is that the gate does not apply — not a green over an unchecked file. |
+| `MCTYM-X03` | Carries no built-in tie shape and no built-in ecosystem. | The shape comes from `derived.mock_contract` and the dialect from `derived.mock_detect`, both in the project's Structure. The gate is language-agnostic BY DESIGN: in Go there is no call to detect at all, because the double is a satisfied interface, and the right verdict there is that the gate does not apply — not a green over an unchecked file. The project says so with `dialect.opt_out: [mock_contract]` (a Skip); until it does, the gate is Pending. |
 | `MCTYM-X04` | Does not charge third-party library doubles. | The drift it pursues is "the neighbour changed and the double did not know", and the neighbour that changes every week is the own module: an external dependency has its version pinned in the lockfile, and its double usually swaps a component for a stub instead of reproducing a contract. There is a harder, measured reason: in the reference app the gate accused 305 files at once, 245 of them third-party doubles. A gate that accuses everything is not read — it is switched off, and it takes the legitimate findings with it. |
 | `MCTYM-X05` | When the tie is a type on the factory (the form carries `{{module}}`), does not charge a double with no factory — an automock (no second argument) or an options object such as Vitest's `{ spy: true }`. When the tie is an option on the call (`autospec=True`), the bare call is still charged: Python's `patch` without it is a `MagicMock`, not the module. | Both derive from the real module BY CONSTRUCTION: the automock mirrors its exports and the spy mock IS the module with spies, so there is no hand-written contract to go stale and nothing a `Partial<typeof X>` could bind. `derived.mock_detect` says what a DOUBLE is — a project declares it for `mock-stamped` too — and it must not decide what needs a type: measured in the project that declared it, 38 tests failed at once on 51 doubles, 42 automocks and 9 spy mocks, not one hand-written factory. |
 
@@ -88,7 +88,7 @@ Each failure the code handles is already stated as a rule of another letter; the
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `MCTYM-E01` | REF[MCTYM-B05]: with no configuration or no tie shape declared, B05 answers that the gate goes quiet naming what to declare | — | — |
+| `MCTYM-E01` | REF[MCTYM-B05]: with no configuration or no tie shape declared, B05 answers Pending naming what to declare | — | — |
 | `MCTYM-E02` | No map has been built and the test mocks modules. | `Pending` with the no-map message. | Which doubles are the project's is decided by the map (`MCTYM-I01`): without it, "only mocks modules outside the project" would be a cause nobody measured. |
 
 ## Dependencies

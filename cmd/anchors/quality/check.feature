@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CGPCH
-#   updated_at: 2026-09-29
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @CGPCH
@@ -600,3 +600,10 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a map on disk with a node for a file that was never committed and is gone from the tree
     When the check runs over everything, over the tree and with --index
     Then over the tree the gate cannot read the file, and with --index the node is not judged
+
+  @CGPCH-B89 @unit-level
+  Scenario: A check with no phase leaves out a gate declared for manual alone
+    Given a gate declared for manual alone and a gate with no phase
+    When the gates are filtered for a check with no phase, then for --phase manual
+    Then the first check keeps only the gate with no phase
+    And the manual check keeps both
