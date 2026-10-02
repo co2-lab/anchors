@@ -189,7 +189,7 @@ func TestGitMarkerAsFileIsReady(t *testing.T) {
 }
 
 // The seeded .gitignore covers what Anchors ITSELF generates. It does not guess the
-// stack: at this point of init the preset has not been chosen yet.
+// stack: at this point of init the language has not been read yet.
 func TestGitignoreCoversWhatAnchorsGenerates(t *testing.T) {
 	t.Run("GTSTG-B10: The seeded ignore list covers what Anchors generates", func(t *testing.T) {})
 	t.Run("GTSTG-X01: The seeded ignore list does not guess the stack", func(t *testing.T) {})
@@ -208,7 +208,7 @@ func TestGitignoreCoversWhatAnchorsGenerates(t *testing.T) {
 	}
 	for _, stack := range []string{"node_modules", "target/", "vendor/"} {
 		if strings.Contains(GitignorePadrão, stack) {
-			t.Errorf(".gitignore must not guess the stack (%q): the preset has not been chosen yet", stack)
+			t.Errorf(".gitignore must not guess the stack (%q): the language has not been read yet", stack)
 		}
 	}
 }

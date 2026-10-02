@@ -125,7 +125,7 @@ func OfferAction(e GitState) bool {
 
 // GitignorePadrão é o .gitignore semeado no primeiro commit. Cobre o que o próprio
 // Anchors gera e o lixo de sistema — NÃO tenta adivinhar a stack (node_modules, target,
-// …): o preset ainda não foi escolhido neste ponto do init, e um .gitignore com regras
+// …): a linguagem ainda não foi lida neste ponto do init, e um .gitignore com regras
 // de uma stack errada é pior que um curto.
 //
 // In English, like everything Anchors writes into a project's files.

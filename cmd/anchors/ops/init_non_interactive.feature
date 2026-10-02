@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: ININT
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @ININT
@@ -48,12 +48,6 @@ Feature: InitNonInteractive — the init that an agent answers with flags: it as
     When init runs with --defaults only
     Then it writes a configuration that loads
 
-  @ININT-B07 @unit-level
-  Scenario: A stack preset fills the code layers
-    Given a project with a src/modules directory, with and without code in it
-    When init runs with --preset=node-ts --artifacts=spec
-    Then the configuration has the modules, core and common layers
-
   @ININT-B08 @unit-level
   Scenario: Layers prunes the other code layers
     Given a project with code in src/api and src/web
@@ -91,3 +85,11 @@ Feature: InitNonInteractive — the init that an agent answers with flags: it as
     Given an empty project
     When init runs with --governs guides/STYLE.md=backend,web and --governs guides/API.md=backend
     Then the written anchors.yaml has the governs rules API.md=backend, STYLE.md=backend and STYLE.md=web
+
+  @ININT-B11 @unit-level
+  Scenario: CONTRIBUTING.md is seeded when absent, and an existing one is left as it is
+    Given a project with no CONTRIBUTING.md
+    When init runs with --artifacts=spec
+    Then CONTRIBUTING.md exists, names the spec-first order, and the success JSON says it was written
+    And in a project whose CONTRIBUTING.md says "ours", the file still says only "ours" and the success JSON carries the section that would be added
+    And with --contributing=false no CONTRIBUTING.md is written

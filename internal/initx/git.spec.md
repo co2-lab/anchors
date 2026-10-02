@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTSTG
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: infra
 -->
 # GitState — classify the project's versioning before `init` scans it, and say what to do about it
@@ -61,7 +61,7 @@ classification can be proven on any machine.
 
 | Rule | Boundary | Why |
 | --- | --- | --- |
-| `GTSTG-X01` | Does not guess the project's stack in the seeded ignore list. | The preset has not been chosen yet at this point of `init`, and an ignore list with rules of the wrong stack is worse than a short one. |
+| `GTSTG-X01` | Does not guess the project's stack in the seeded ignore list. | The language has not been read yet at this point of `init`, and an ignore list with rules of the wrong stack is worse than a short one. |
 | `GTSTG-X02` | Does not look up the git program itself; the caller says whether it is installed. | The suite must cover the "no git" case even on a machine that has git. |
 
 ## Errors

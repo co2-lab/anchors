@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ININT
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: comando
 -->
 # InitNonInteractive — the init that an agent answers with flags: it asks in JSON, and writes only a complete, valid set of answers
@@ -20,8 +20,11 @@ configuration.
 An answer counts only when its flag was actually given, so a deliberate "no" or an empty
 value is honored rather than replaced by a default; `--defaults` is the explicit way to
 accept every inferred answer. One invalid answer refuses the whole set, because writing the
-valid ones would produce a file nobody fully decided. A stack preset fills the code layers
-from the stack's structure, and the code layers are pruned only when the agent chose them.
+valid ones would produce a file nobody fully decided. The code layers are the project's own
+folders that hold code, as inference proposed them, and they are pruned only when the agent
+chose them. A CONTRIBUTING.md is seeded from the written configuration when the project has
+none; one it already has is never touched, and the section that would be added comes back in
+the answer for the agent to show.
 The success document names the written file, echoes the accepted answers, and says what comes
 next: the DISCOVER phase when the project has nothing to learn from yet, otherwise building
 the map.
@@ -44,10 +47,10 @@ the map.
 | `ININT-B04` | The github workflow writes the mode with the repository and the labels. |
 | `ININT-B05` | One refused answer refuses the whole set: the command prints JSON with `escrito: false`, every answer's status and the error, fails, and writes nothing. |
 | `ININT-B06` | `--defaults` with no other answer writes the configuration from the inferred defaults. |
-| `ININT-B07` | A stack preset fills the code layers of that stack, whether or not the project already has code. |
 | `ININT-B08` | `--layers` keeps only the chosen code layers and prunes the others; without it, no layer is pruned. |
 | `ININT-B09` | The success JSON has `escrito: true`, the written file, the answers' status and the next step: the DISCOVER phase when the project needs it, otherwise `anchors map build`. |
 | `ININT-B10` | Each `--governs GUIDE=tag1,tag2` rule is written to the configuration as one governs rule per non-blank tag, guides in sorted order. |
+| `ININT-B11` | With the contributing answer yes (the default), a project with no `CONTRIBUTING.md` gets one rendered from the written configuration, and the success JSON says it was written; an existing one stays byte for byte, and the success JSON carries the section that would be added. `--contributing=false` touches nothing. |
 
 ## Invariants
 
@@ -72,7 +75,7 @@ the map.
 
 | Code | File | Method | Layer |
 | --- | --- | --- | --- |
-| DEP1 | `internal/initx` | `Infer`, `Questions`, `ValidateAnswers`, `TudoAceito`, `PrecisaDescobrir`, `ApplyPreset`, `ApplyArtifactChoice`, `ApplyColocation`, `PruneCodeLayers`, `DefaultGates`, `RenderHeaderGuide` | apoio — the init questions and how each answer shapes the config |
+| DEP1 | `internal/initx` | `Infer`, `Questions`, `ValidateAnswers`, `TudoAceito`, `PrecisaDescobrir`, `ApplyArtifactChoice`, `ApplyColocation`, `PruneCodeLayers`, `DefaultGates`, `RenderHeaderGuide`, `RenderContributing`, `ContributingSection` | apoio — the init questions and how each answer shapes the config |
 | DEP2 | `internal/config/config.go` | `Save`, the workflow modes | config — the written file |
 
 ## Open Decisions

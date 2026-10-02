@@ -17,7 +17,7 @@ command -v syft >/dev/null 2>&1 || {
 
 mkdir -p reports
 OUT=reports/sbom-cyclonedx.json
-syft scan dir:cli --output "cyclonedx-json=$OUT" -q 2>/dev/null || {
+syft scan dir:. --exclude './site/**' --exclude './**/node_modules/**' --exclude './.claude/**' --output "cyclonedx-json=$OUT" -q 2>/dev/null || {
   echo "syft falhou. Gate PULADO (não aprovado)."
   exit 0
 }

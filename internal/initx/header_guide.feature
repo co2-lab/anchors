@@ -1,18 +1,18 @@
 # language: en
 # @anchors
 #   ref: HDGDH
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @HDGDH
-Feature: HeaderGuide — render the project's header guide in the stack's comment dialect, passing the gate that init itself declares
+Feature: HeaderGuide — render the project's header guide in the language's comment dialect, passing the gate that init itself declares
 
   @HDGDH-B01 @unit-level
-  Scenario: The comment dialect follows the preset
-    Given every preset of the catalog
+  Scenario: The comment dialect follows the language family
+    Given the families python, ruby, go, ts, java and none
     When the header guide is rendered for each
-    Then django, fastapi, python-lib, rails and phoenix show "# @anchors"
-    And every other preset shows "// @anchors"
+    Then python and ruby show "# @anchors"
+    And every other family, and none, shows "// @anchors"
 
   @HDGDH-B02 @unit-level
   Scenario: The grouping example names the first module, or auth
@@ -30,22 +30,22 @@ Feature: HeaderGuide — render the project's header guide in the stack's commen
 
   @HDGDH-B04 @unit-level
   Scenario: The essentials are always present
-    Given no preset and no modules
+    Given no family and no modules
     When the header guide is rendered
     Then it mentions "code:", "updated_at:", "header-valid" and "anchors guide header"
 
   @HDGDH-B05 @unit-level
   Scenario: The compliance-points section is always present with five points
-    Given no preset and no modules
+    Given no family and no modules
     When the header guide is rendered
     Then it has a section titled with the compliance-points title of the current language
     And it lists the points CK1, CK2, CK3, CK4 and CK5
 
   @HDGDH-B06 @unit-level
   Scenario: The title falls back to project
-    Given a preset with the title "Next.js (App Router)" and a preset with no title
+    Given the family go and no family
     When the header guide is rendered for each
-    Then the first is titled "Header guide — Next.js (App Router)"
+    Then the first is titled "Header guide — go project"
     And the second is titled "Header guide — project"
 
   @HDGDH-I01 @unit-level

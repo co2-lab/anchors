@@ -7,7 +7,7 @@ import (
 	"github.com/co2-lab/anchors/internal/i18n"
 )
 
-// CommentStyle é o dialeto de comentário de uma stack, para os exemplos do
+// CommentStyle é o dialeto de comentário de uma linguagem, para os exemplos do
 // HEADER_GUIDE semeado. A maioria usa `//`; scripts/config usam `#`; markdown `<!--`.
 type CommentStyle struct {
 	Line  string // prefixo de comentário de linha (ex: "//", "#")
@@ -15,25 +15,24 @@ type CommentStyle struct {
 	Close string // fechamento de bloco (ex: "-->")
 }
 
-// commentStyleFor deduz o dialeto principal de um preset pela stack. Conservador:
-// `//` para as linguagens C-like (JS/TS/Go/Java/C#/Rust/Dart/PHP/C++), `#` para
-// Python/Ruby/Elixir/shell. É só para o EXEMPLO no guide — o Anchors lê qualquer
-// comentário em runtime, independente disto.
-func commentStyleFor(preset Preset) CommentStyle {
-	switch preset.Name {
-	case "django", "fastapi", "python-lib", "rails", "phoenix":
+// commentStyleFor is a language family's comment dialect: `#` for Python and Ruby, `//`
+// for every other family. It only shapes the EXAMPLE in the guide — Anchors reads any
+// comment at run time, whatever this says.
+func commentStyleFor(family string) CommentStyle {
+	switch family {
+	case "python", "ruby":
 		return CommentStyle{Line: "#"}
-	default: // node-ts, nextjs, angular, nuxt, expo-rn, spring, dotnet-clean, laravel, go, rust, flutter, cpp…
+	default: // go, ts, java, kotlin, csharp, php, rust, and an unknown family
 		return CommentStyle{Line: "//"}
 	}
 }
 
 // RenderHeaderGuide gera o HEADER_GUIDE.md concreto para o projeto — a régua embutida
-// (a doutrina) instanciada com o dialeto de comentário da stack e as features/módulos
-// reais detectados. `moduleNames` são as features do projeto (para o exemplo de
+// (a doutrina) instanciada com o dialeto de comentário da família da linguagem e as
+// features/módulos reais. `moduleNames` são as features do projeto (para o exemplo de
 // @feature). Vazio → exemplo genérico.
-func RenderHeaderGuide(preset Preset, moduleNames []string) string {
-	cs := commentStyleFor(preset)
+func RenderHeaderGuide(family string, moduleNames []string) string {
+	cs := commentStyleFor(family)
 	c := cs.Line
 
 	feat := "auth"
@@ -42,13 +41,13 @@ func RenderHeaderGuide(preset Preset, moduleNames []string) string {
 	}
 
 	var b strings.Builder
-	b.WriteString("# Header guide — " + presetTitleOr(preset) + "\n\n")
+	b.WriteString("# Header guide — " + projectTitle(family) + "\n\n")
 	b.WriteString("> The annotation block at the top of EVERY file in this project. Seeded by\n")
 	b.WriteString("> `anchors init`; it is the built-in ruler (`anchors guide header`) instantiated for\n")
-	b.WriteString("> the stack here. Mandatory: a file without this header is invisible to what\n")
+	b.WriteString("> the language here. Mandatory: a file without this header is invisible to what\n")
 	b.WriteString("> Anchors does best.\n\n")
 
-	b.WriteString("## The block, in this stack's dialect\n\n")
+	b.WriteString("## The block, in this language's dialect\n\n")
 	b.WriteString("In CODE/test/feature (references the spec unit):\n\n```\n")
 	fmt.Fprintf(&b, "%s @anchors\n", c)
 	fmt.Fprintf(&b, "%s   ref: LGNN             # references the owning unit (the spec); NOT ownership\n", c)
@@ -115,9 +114,10 @@ func RenderHeaderGuide(preset Preset, moduleNames []string) string {
 	return b.String()
 }
 
-func presetTitleOr(p Preset) string {
-	if p.Title != "" {
-		return p.Title
+// projectTitle is the guide's title: the family's project, or "project" with no family.
+func projectTitle(family string) string {
+	if family != "" {
+		return family + " project"
 	}
 	return "project"
 }

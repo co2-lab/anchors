@@ -1,7 +1,7 @@
 package initx
 
 import (
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -22,11 +22,14 @@ func (p *Proposal) buildConfig() *config.Config {
 	// derived, que servem de default para as perguntas de granularidade.
 
 	// layers de código — uma por diretório-raiz detectado, com tag pelo nome
-	excl := []string{"**/*.spec.md", "**/*.feature", "**/*.test.*"}
+	// The tests are excluded by the convention the project's own test files follow — a
+	// `_test.go` read as code by a fixed `**/*.test.*` was the defect.
+	excl := append([]string{"**/*.spec.md", "**/*.feature"}, p.testExcludes()...)
+	names := layerNames(p.CodeDirs)
 	for _, dir := range p.CodeDirs {
-		layerName := LayerNameFor(dir)
+		layerName := names[dir]
 		c.Layers[layerName] = config.Layer{
-			Pattern: dir + "/**/*." + globExts(p.CodeExts),
+			Pattern: dirGlob(dir, p.CodeDirs) + globExts(p.CodeExts),
 			Kind:    "code",
 			Tags:    []string{layerName},
 			Exclude: excl,
@@ -42,7 +45,11 @@ func (p *Proposal) buildConfig() *config.Config {
 			files["feature"] = config.Padroes{"{{dir}}/{{name}}.feature"}
 		}
 		if p.HasTest {
-			files["test"] = config.Padroes{"{{dir}}/{{name}}.test.{{ext}}"}
+			t := p.TestTemplate()
+			if t == "" {
+				t = "{{dir}}/{{name}}.test.{{ext}}" // no convention known: the generic form
+			}
+			files["test"] = config.Padroes{t}
 		}
 		c.Derived = &config.Derived{Anchor: "spec", Files: files}
 	}
@@ -59,15 +66,58 @@ func (p *Proposal) buildConfig() *config.Config {
 		c.Derived.TestHandle = p.TestHandle
 	}
 
+	// The dialect: the family the manifest or the code says, so the gates read this
+	// language's tests, exports and comments from the first check.
+	if p.Family != "" {
+		c.Dialect = &config.Dialect{Family: p.Family}
+	}
+
 	// governs fica VAZIO — é a parte semântica, preenchida na P&R (guide↔tag).
 	return c
 }
 
 // LayerNameFor deriva um nome de layer legível de um diretório (apps/mobile →
-// "mobile-code"; packages/backend → "backend-code").
+// "mobile-code"; packages/backend → "backend-code"; the root → "root-code").
 func LayerNameFor(dir string) string {
-	base := filepath.Base(dir)
-	return base + "-code"
+	if dir == "." || dir == "" {
+		return "root-code"
+	}
+	return path.Base(dir) + "-code"
+}
+
+// layerNames names each code folder's layer by its last segment, and by its whole path
+// when two folders share that segment (src/handlers and lib/handlers): one name for both
+// made the second layer overwrite the first.
+func layerNames(dirs []string) map[string]string {
+	count := map[string]int{}
+	for _, d := range dirs {
+		count[LayerNameFor(d)]++
+	}
+	out := map[string]string{}
+	for _, d := range dirs {
+		n := LayerNameFor(d)
+		if count[n] > 1 {
+			n = strings.ReplaceAll(d, "/", "-") + "-code"
+		}
+		out[d] = n
+	}
+	return out
+}
+
+// dirGlob is the part of a code layer's pattern before the extensions: every file under
+// the folder, or only its own files when another code folder sits beneath it, so no file
+// falls in two layers.
+func dirGlob(dir string, dirs []string) string {
+	prefix := dir + "/"
+	if dir == "." {
+		prefix = ""
+	}
+	for _, o := range dirs {
+		if o != dir && (prefix == "" || strings.HasPrefix(o, prefix)) {
+			return prefix + "*."
+		}
+	}
+	return prefix + "**/*."
 }
 
 // globExts monta um glob de extensões a partir das extensões de código detectadas.
@@ -84,4 +134,25 @@ func joinExts(exts []string) string {
 		bare = append(bare, strings.TrimPrefix(e, "."))
 	}
 	return strings.Join(bare, ",")
+}
+
+// TestPattern is the pattern of the project's test layer: its conventions, joined; the
+// generic `**/*.test.*` only when no convention is known.
+func (p *Proposal) TestPattern() string {
+	gs := p.TestGlobs()
+	switch len(gs) {
+	case 0:
+		return "**/*.test.*"
+	case 1:
+		return gs[0]
+	}
+	return "{" + strings.Join(gs, ",") + "}"
+}
+
+// testExcludes are the test globs a code layer leaves out.
+func (p *Proposal) testExcludes() []string {
+	if gs := p.TestGlobs(); len(gs) > 0 {
+		return gs
+	}
+	return []string{"**/*.test.*"}
 }

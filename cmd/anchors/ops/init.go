@@ -11,7 +11,6 @@ import (
 
 	"github.com/co2-lab/anchors/internal/i18n"
 
-	"github.com/bmatcuk/doublestar/v4"
 	"github.com/charmbracelet/huh"
 	"github.com/co2-lab/anchors/cmd/anchors/governance"
 	"github.com/co2-lab/anchors/internal/config"
@@ -31,6 +30,9 @@ Structure, and confirms/adjusts it with you through questions — arriving at a 
 anchors.yaml. The bulk is inferred; the questions cover only the human decisions
 (co-location, layer granularity, and which guides govern which tags).`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Flags().Changed("preset") {
+				return errors.New(i18n.T("init.preset_removed"))
+			}
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
@@ -47,8 +49,12 @@ anchors.yaml. The bulk is inferred; the questions cover only the human decisions
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().BoolVar(&naoInterativo, "non-interactive", false, "no TUI: with no answers, emit the questions as JSON; with answers in flags, apply them")
 	cmd.Flags().BoolVar(&aceitarDefaults, "defaults", false, "with --non-interactive and no answers: accept the defaults inferred from disk")
-	cmd.Flags().StringVar(&f.preset, "preset", "", "stack preset (see --questions)")
+	// --preset was removed: Anchors proposes no structure. Kept hidden so whoever still
+	// passes it learns why, instead of reading "unknown flag".
+	cmd.Flags().StringVar(&f.preset, "preset", "", "removed: init reads the project's own folders as layers")
+	_ = cmd.Flags().MarkHidden("preset")
 	cmd.Flags().BoolVar(&f.header, "header", true, "seed guides/HEADER_GUIDE.md")
+	cmd.Flags().BoolVar(&f.contributing, "contributing", true, "seed CONTRIBUTING.md when the project has none")
 	cmd.Flags().StringSliceVar(&f.artifacts, "artifacts", nil, "anchor kinds of the project (spec,feature,test,…)")
 	cmd.Flags().BoolVar(&f.gates, "gates", true, "seed the default gates (informational)")
 	cmd.Flags().BoolVar(&f.colocation, "colocation", false, "derived files next to the code")
@@ -117,26 +123,11 @@ func runInit(root string) error {
 		fmt.Println(i18n.T("init.empty_project"))
 	}
 
-	// 0.5) PRESET DE STACK — oferece uma estrutura consagrada. Opcional: "nenhum"
-	// mantém a inferência/edição manual. Se escolhido, preenche as layers de código
-	// e, para presets modulares, deduz os prefixos de módulo (liga na identidade).
-	chosenPreset, presetOK := askPreset()
-	var presetModules []string
-	if presetOK {
-		presetModules = detectModules(root, chosenPreset)
-		prefixes := initx.ApplyPreset(cfg, chosenPreset, presetModules)
-		fmt.Printf("Preset '%s' applied (%s, %d layers).\n", chosenPreset.Title, chosenPreset.Pattern, len(chosenPreset.Layers))
-		if chosenPreset.Modular && len(prefixes) > 0 {
-			fmt.Printf("Detected modules and their identity prefixes (Layer 1):\n")
-			for m, pfx := range prefixes {
-				fmt.Printf("  %-20s → %s\n", m, pfx)
-			}
-		} else if chosenPreset.Modular {
-			fmt.Printf("(modular preset: the module prefixes will be deduced when there are modules in %s)\n", chosenPreset.ModuleGlob)
-		}
-		if chosenPreset.CoverageHint != "" {
-			fmt.Printf("\nTest signals (for `anchors ingest` to measure real coverage):\n  %s\n", chosenPreset.CoverageHint)
-		}
+	// 0.5) DIALETO — a língua decide como o teste é nomeado e como emite os relatórios
+	// que o ingest lê; a estrutura, não: as camadas candidatas são as pastas do próprio
+	// projeto, e o init não propõe layout nenhum.
+	if hint := initx.CoverageHint(p.Family); hint != "" {
+		fmt.Printf("Test signals (for `anchors ingest` to measure real coverage):\n  %s\n\n", hint)
 	}
 
 	var headerDest, headerRel, headerBody string
@@ -144,10 +135,6 @@ func runInit(root string) error {
 	// @anchors, instanciada com o dialeto de comentário da stack e as features reais).
 	// É o padrão MANDATÓRIO de cabeçalho; o init o materializa para o projeto seguir.
 	if askConfirmDefault("Seed guides/HEADER_GUIDE.md (the @anchors header standard of the files)?", true) {
-		var moduleBasenames []string
-		for _, m := range presetModules {
-			moduleBasenames = append(moduleBasenames, filepath.Base(m))
-		}
 		guideDir := p.GuideDir
 		if guideDir == "" {
 			guideDir = "guides"
@@ -156,8 +143,13 @@ func runInit(root string) error {
 		// seeded here, the guide stayed behind every aborted run.
 		headerDest = filepath.Join(root, guideDir, "HEADER_GUIDE.md")
 		headerRel = filepath.Join(guideDir, "HEADER_GUIDE.md")
-		headerBody = initx.RenderHeaderGuide(chosenPreset, moduleBasenames)
+		headerBody = initx.RenderHeaderGuide(p.Family, nil)
 	}
+
+	// 0.7) CONTRIBUTING — o guia de quem chega, lido da configuração que este init grava.
+	// Num projeto que já tem o seu, nada é tocado: o trecho que seria acrescentado é
+	// mostrado para quem quiser colá-lo.
+	seedContributing := askConfirmDefault("Seed "+initx.ContributingFile+" (how work flows here, from this configuration)?", true)
 
 	// 1) ARTEFATOS — SEMPRE perguntado. Pré-marca os detectados; num projeto vazio,
 	// o usuário marca o que PRETENDE usar. As layers de artefato são (re)construídas
@@ -168,7 +160,7 @@ func runInit(root string) error {
 	initx.ApplyArtifactChoice(cfg, chosenArtifacts, map[string]string{
 		"guide": p.GuideDir,
 		"plan":  p.PlanDir,
-	})
+	}, p.TestPattern())
 
 	// 1.5) GATES PADRÃO — o ciclo nasce com os gates dos artefatos escolhidos
 	// (spec-completa, tests-green, scenario-coverage, …), todos INFORMATIVOS. É o que
@@ -197,10 +189,11 @@ func runInit(root string) error {
 		title = "I detected the derivatives next to the code (co-location). Use that convention?"
 	}
 	useColocation := askConfirmDefault(title, p.Colocated)
-	initx.ApplyColocation(cfg, useColocation, chosenArtifacts)
+	initx.ApplyColocation(cfg, useColocation, chosenArtifacts, p.TestTemplate())
 
 	// 3) CAMADAS DE CÓDIGO — sempre perguntado se há dirs detectados; se vazio, avisa.
 	if names := initx.CodeLayerNames(cfg); len(names) > 0 {
+		fmt.Println(i18n.T("init.layers_note"))
 		keep := askMultiSelect("Which code directories to treat as layers?", names)
 		initx.PruneCodeLayers(cfg, keep)
 	} else if empty {
@@ -262,6 +255,9 @@ func runInit(root string) error {
 			os.WriteFile(destSpec, []byte(governance.RenderSpecGuide(cfg, "")), 0o644) == nil {
 			fmt.Printf("Spec guide seeded: %s\n", filepath.Join(p.GuideDir, "SPEC_GUIDE.md"))
 		}
+	}
+	if seedContributing {
+		reportContributing(root, cfg, p.GuideDir)
 	}
 	fmt.Printf("\n✓ %s written (%d layers, %d governs rules)\n", config.DefaultFile, len(cfg.Layers), len(cfg.Governs))
 	fmt.Println("  review it and run: anchors map build")
@@ -405,54 +401,6 @@ func askGovernAnswers(guides, tags []string) map[string]string {
 	return answers
 }
 
-// askPreset oferece o menu de presets de stack (+ "nenhum"). Devolve o preset
-// escolhido e ok=false se o usuário optou por não usar nenhum.
-func askPreset() (initx.Preset, bool) {
-	const none = "none (infer / edit by hand)"
-	opts := []string{none}
-	for _, p := range initx.Presets {
-		opts = append(opts, p.Title)
-	}
-	var choice string
-	if err := runPrompt(huh.NewSelect[string]().
-		Title("Use a project structure preset (established stack)?").
-		Options(huh.NewOptions(opts...)...).
-		Value(&choice)); err != nil {
-		erroDePrompt = true
-	}
-	if choice == none || choice == "" {
-		return initx.Preset{}, false
-	}
-	for _, p := range initx.Presets {
-		if p.Title == choice {
-			return p, true
-		}
-	}
-	return initx.Preset{}, false
-}
-
-// detectModules lista os diretórios de módulo existentes sob o ModuleGlob de um
-// preset modular (ex.: os subdirs de src/features/). Vazio para presets não-modulares
-// ou projeto novo — nesse caso os prefixos são deduzidos depois, quando os módulos
-// nascerem. Usa doublestar para casar o glob de diretório.
-func detectModules(root string, p initx.Preset) []string {
-	if !p.Modular || p.ModuleGlob == "" {
-		return nil
-	}
-	glob := strings.TrimRight(p.ModuleGlob, "/")
-	matches, err := doublestar.Glob(os.DirFS(root), glob)
-	if err != nil {
-		return nil
-	}
-	var mods []string
-	for _, m := range matches {
-		if fi, err := os.Stat(filepath.Join(root, m)); err == nil && fi.IsDir() {
-			mods = append(mods, m)
-		}
-	}
-	return mods
-}
-
 func printFindings(p *initx.Proposal) {
 	fmt.Println("\nFound:")
 	if p.HasSpecMD {
@@ -462,7 +410,10 @@ func printFindings(p *initx.Proposal) {
 		fmt.Println("  • features (*.feature)")
 	}
 	if p.HasTest {
-		fmt.Println("  • tests (*.test.*)")
+		fmt.Printf("  • tests (%s)\n", p.TestPattern())
+	}
+	if p.Family != "" {
+		fmt.Printf("  • language: %s\n", p.Family)
 	}
 	if p.GuideDir != "" {
 		fmt.Printf("  • %d guides in %s/\n", len(p.GuideFiles), p.GuideDir)
@@ -474,4 +425,18 @@ func printFindings(p *initx.Proposal) {
 		fmt.Println("  • co-location: derivatives next to the code")
 	}
 	fmt.Println()
+}
+
+// reportContributing seeds CONTRIBUTING.md when the project has none, and otherwise leaves
+// the project's own untouched and shows the section that would be added.
+func reportContributing(root string, cfg *config.Config, guideDir string) {
+	dest := filepath.Join(root, initx.ContributingFile)
+	if _, err := os.Stat(dest); err == nil {
+		fmt.Printf("%s already exists — left untouched. The section Anchors would add:\n\n%s\n",
+			initx.ContributingFile, initx.ContributingSection(cfg, guideDir))
+		return
+	}
+	if os.WriteFile(dest, []byte(initx.RenderContributing(cfg, guideDir)), 0o644) == nil {
+		fmt.Printf("Contributing guide seeded: %s\n", initx.ContributingFile)
+	}
 }

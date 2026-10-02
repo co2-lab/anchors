@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INWZN
-#   updated_at: 2026-09-27
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @INWZN
@@ -60,7 +60,7 @@ Feature: InitWizard — the interactive init walks a person from an unconfigured
   Scenario: The findings report only what exists on disk
     Given a repository with specs, features, tests, guides and code, and an empty proposal
     When the findings are printed
-    Then the first lists specs, features, tests, guides and code
+    Then the first lists specs, features, tests by their pattern, the language, guides and code
     And the empty proposal lists none of them
 
   @INWZN-B09 @unit-level
@@ -91,25 +91,11 @@ Feature: InitWizard — the interactive init walks a person from an unconfigured
     Then "y" runs the tool in the project root with the interview prompt as its one argument
     And "n" prints the step-by-step
 
-  @INWZN-B13 @unit-level
-  Scenario: A modular preset finds the module directories
-    Given src/modules/users, src/modules/billing and the file src/modules/README.md
-    When the modules of the node-ts preset are detected
-    Then they are src/modules/billing and src/modules/users
-    And and a non-modular preset has none
-
   @INWZN-B14 @unit-level
   Scenario: Non-interactive routes to the JSON mode
     Given an empty directory
     When init runs with --non-interactive
     Then it prints the questions as JSON
-
-  @INWZN-B15 @unit-level
-  Scenario: A stack preset picked from the menu is applied and announced
-    Given a repository with code and every question answered
-    When the express-ts preset is picked from the menu
-    Then the init announces the preset by title
-    And its code layers are in the written anchors.yaml
 
   @INWZN-B16 @unit-level
   Scenario: The header guide is seeded in guides/ when the project has no guide directory
@@ -172,3 +158,29 @@ Feature: InitWizard — the interactive init walks a person from an unconfigured
     When init runs in a repository with code
     Then it fails naming --non-interactive
     And no anchors.yaml and no header guide were written
+
+  @INWZN-B21 @unit-level
+  Scenario: --preset is refused with the reason, and nothing is written
+    Given an empty project
+    When init runs with --preset=go, interactive and non-interactive
+    Then each fails saying Anchors proposes no structure
+    And no anchors.yaml is written
+
+  @INWZN-B22 @unit-level
+  Scenario: The code-layer question is preceded by the note on layers
+    Given a repository with code and every question answered
+    When the init reaches the code-layer question
+    Then it has said that each candidate is a folder of the project and that Anchors proposes no structure
+
+  @INWZN-B23 @unit-level
+  Scenario: CONTRIBUTING.md is seeded when absent, and an existing one is shown, not touched
+    Given a repository with code and every question answered, the contributing guide accepted
+    When the init writes
+    Then CONTRIBUTING.md exists and names the declared code layers
+    And in a repository whose CONTRIBUTING.md says "ours", it still says only "ours" and the init printed the section it would add
+
+  @INWZN-B24 @unit-level
+  Scenario: The family's coverage hint is printed
+    Given a repository with a go.mod and every question answered
+    When the init runs
+    Then it prints how go tests emit the reports ingest reads

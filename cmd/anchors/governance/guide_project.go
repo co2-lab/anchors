@@ -122,8 +122,8 @@ The structural pattern and the paradigm: layered, clean/hexagonal, feature-slice
 Object-oriented, functional, procedural? Vertical modules per feature or horizontal
 layers? Where does the domain live?
 This is what becomes the ` + "`layers:`" + ` of anchors.yaml — the answer here is not academic,
-it decides the glob of each layer. Check the presets: ` + "`anchors init`" + ` offers
-established structures per stack, and matching a preset saves work and error.
+it decides the glob of each layer. Anchors proposes no structure: it asks only that the
+layers be kept apart, and ` + "`anchors init`" + ` reads the project's own folders as layers.
 Conclude with: pattern, paradigm, organization (modular or layered), boundaries.
 
 ### Stage 4 — Macro structure and file conventions
@@ -233,7 +233,7 @@ whoever reopens it does not know whether the option they are proposing was alrea
 ## After writing
 
 1. ` + "`anchors init`" + ` — now it has something to infer. The answers of stages 3, 4 and 5
-   are exactly what it asks (preset, layers, co-location, test pattern);
+   are exactly what it asks (layers, co-location, test pattern);
    answer with what is in PROJECT.md, without renegotiating.
 2. ` + "`anchors map build`" + ` — the two new files enter the map.
 3. Move on to PLANNING (` + "`anchors guide plan`" + `): the first plan decides which specs

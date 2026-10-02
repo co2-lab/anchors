@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -204,7 +203,7 @@ func TestRunInitRefusesToWriteAConfigBuiltFromFailedPrompts(t *testing.T) {
 		t.Error("anchors.yaml was written from answers nobody gave")
 	}
 	// The findings come from the disk, not from the prompts: they are printed anyway.
-	for _, want := range []string{"specs (*.spec.md)", "features (*.feature)", "tests (*.test.*)", "guides in guides/", "code in:"} {
+	for _, want := range []string{"specs (*.spec.md)", "features (*.feature)", "tests (**/*.test.ts)", "language: ts", "guides in guides/", "code in:"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the findings do not report %q:\n%s", want, out)
 		}
@@ -264,37 +263,6 @@ func TestPromptHelpersFlagTheFailureAndReturnNoChoice(t *testing.T) {
 	got := askGovernAnswers([]string{"guides/A_GUIDE.md"}, []string{"backend"})
 	if _, ok := got["guides/A_GUIDE.md"]; !ok || !erroDePrompt {
 		t.Errorf("askGovernAnswers = %v, flag = %v; want an entry per guide, flagged", got, erroDePrompt)
-	}
-	resetPromptError(t)
-	if p, ok := askPreset(); ok || p.Name != "" || !erroDePrompt {
-		t.Errorf("askPreset = (%q, %v), flag = %v; want no preset, flagged", p.Name, ok, erroDePrompt)
-	}
-}
-
-// The module prefixes of a modular preset come from the module directories that EXIST
-// under its glob. Files there are not modules, and a non-modular preset has none.
-func TestDetectModulesListsOnlyTheModuleDirectories(t *testing.T) {
-	t.Run("INWZN-B13: A modular preset finds the module directories", func(t *testing.T) {})
-	root := t.TempDir()
-	writeFile(t, root, "src/modules/users/users.service.ts", "")
-	writeFile(t, root, "src/modules/billing/billing.service.ts", "")
-	writeFile(t, root, "src/modules/README.md", "")
-
-	var nodeTS initx.Preset
-	for _, p := range initx.Presets {
-		if p.Name == "node-ts" {
-			nodeTS = p
-		}
-	}
-	if !nodeTS.Modular {
-		t.Fatal("the node-ts preset is expected to be modular")
-	}
-	got := strings.Join(detectModules(root, nodeTS), ",")
-	if got != "src/modules/billing,src/modules/users" {
-		t.Errorf("modules = %q, want the two directories (and not README.md)", got)
-	}
-	if m := detectModules(root, initx.Preset{Name: "flat"}); m != nil {
-		t.Errorf("a non-modular preset must have no modules, got %v", m)
 	}
 }
 
@@ -475,18 +443,6 @@ func driveLineMode(t *testing.T, steps []promptStep, fn func()) (string, []strin
 	return screen.String(), unmet
 }
 
-// presetNumber is the menu number of a preset in the preset prompt: "none" is 1.
-func presetNumber(t *testing.T, name string) (string, initx.Preset) {
-	t.Helper()
-	for i, p := range initx.Presets {
-		if p.Name == name {
-			return strconv.Itoa(i + 2), p
-		}
-	}
-	t.Fatalf("no preset %q", name)
-	return "", initx.Preset{}
-}
-
 // repoWithCode is a repository whose only commit holds ten code files and a spec.
 func repoWithCode(t *testing.T) string {
 	t.Helper()
@@ -504,40 +460,46 @@ func repoWithCode(t *testing.T) string {
 	return root
 }
 
-// The path where every question gets an answer: the only one that writes. It proves the
-// yes of the overwrite, the preset picked from the menu, the header guide landing in
-// guides/ when the project has no guide directory, and the accepted gates in the file.
-func TestRunInitWritesWhatTheAnswersChose(t *testing.T) {
-	t.Run("INWZN-B01: An existing config is kept when the overwrite is not confirmed", func(t *testing.T) {})
-	t.Run("INWZN-B15: A stack preset picked from the menu is applied and announced", func(t *testing.T) {})
-	t.Run("INWZN-B16: The header guide is seeded in guides/ when the project has no guide directory", func(t *testing.T) {})
-	t.Run("INWZN-B17: The default gates are offered only when the chosen artifacts have any, and accepted ones are written", func(t *testing.T) {})
-	resetPromptError(t)
-	root := repoWithCode(t)
-	const original = "version: 1\n# mine\n"
-	writeFile(t, root, config.DefaultFile, original)
-	number, preset := presetNumber(t, "express-ts")
-
-	var runErr error
-	out, unmet := driveLineMode(t, []promptStep{
+// answerEverything is the scripted terminal of an init where every question gets an
+// answer: the only path that writes.
+func answerEverything() []promptStep {
+	return []promptStep{
 		{"already exists. Overwrite?", "y"},
-		{"Use a project structure preset", number},
 		{"Seed guides/HEADER_GUIDE.md", "y"},
+		{"Seed CONTRIBUTING.md", "y"},
 		{"Which anchor kinds", "0"},
 		{"default gate(s)", "y"},
 		{"derivatives", "n"},
 		{"Which code directories", "0"},
 		{"work queue live in GitHub", "n"},
 		{"write its findings as files", "y"},
-	}, func() { runErr = runInit(root) })
+	}
+}
+
+// The path where every question gets an answer: the only one that writes. It proves the
+// yes of the overwrite, the header guide landing in guides/ when the project has no guide
+// directory, the accepted gates in the file, the note on layers and the seeded
+// CONTRIBUTING.md.
+func TestRunInitWritesWhatTheAnswersChose(t *testing.T) {
+	t.Run("INWZN-B01: An existing config is kept when the overwrite is not confirmed", func(t *testing.T) {})
+	t.Run("INWZN-B16: The header guide is seeded in guides/ when the project has no guide directory", func(t *testing.T) {})
+	t.Run("INWZN-B17: The default gates are offered only when the chosen artifacts have any, and accepted ones are written", func(t *testing.T) {})
+	t.Run("INWZN-B22: The code-layer question is preceded by the note on layers", func(t *testing.T) {})
+	t.Run("INWZN-B23: CONTRIBUTING.md is seeded when absent, and an existing one is shown, not touched", func(t *testing.T) {})
+	t.Run("INWZN-B24: The family's coverage hint is printed", func(t *testing.T) {})
+	resetPromptError(t)
+	root := repoWithCode(t)
+	writeFile(t, root, "go.mod", "module x\n")
+	const original = "version: 1\n# mine\n"
+	writeFile(t, root, config.DefaultFile, original)
+
+	var runErr error
+	out, unmet := driveLineMode(t, answerEverything(), func() { runErr = runInit(root) })
 	if runErr != nil {
 		t.Fatalf("init with every question answered failed: %v\n%s", runErr, out)
 	}
 	if len(unmet) > 0 {
 		t.Errorf("prompts that never showed: %q\n%s", unmet, out)
-	}
-	if !strings.Contains(out, "Preset '"+preset.Title+"' applied") {
-		t.Errorf("the chosen preset was not applied:\n%s", out)
 	}
 	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
 	if err != nil {
@@ -546,20 +508,65 @@ func TestRunInitWritesWhatTheAnswersChose(t *testing.T) {
 	if len(cfg.Gates) == 0 {
 		t.Errorf("the accepted default gates are not in anchors.yaml")
 	}
-	// Only the code layers: the artifact layers are rebuilt from the artifact choice.
-	for _, l := range preset.Layers {
-		if l.Kind != "code" {
-			continue
-		}
-		if _, ok := cfg.Layers[l.Name]; !ok {
-			t.Errorf("layer %q of the chosen preset is not in anchors.yaml", l.Name)
-		}
+	if _, ok := cfg.Layers["app-code"]; !ok {
+		t.Errorf("the project's own folder src/app is not a code layer: %v", cfg.Layers)
 	}
 	if _, err := os.Stat(filepath.Join(root, "guides", "HEADER_GUIDE.md")); err != nil {
 		t.Errorf("the header guide is not in guides/: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(root, "HEADER_GUIDE.md")); err == nil {
 		t.Error("the header guide was written at the root")
+	}
+	note := i18n.T("init.layers_note")
+	if at, q := strings.Index(out, note), strings.Index(out, "Which code directories"); at < 0 || at > q {
+		t.Errorf("the note on layers should come before the code-layer question:\n%s", out)
+	}
+	if b, err := os.ReadFile(filepath.Join(root, "CONTRIBUTING.md")); err != nil || !strings.Contains(string(b), "`app-code`") {
+		t.Errorf("CONTRIBUTING.md should be seeded naming the code layers: %v\n%s", err, b)
+	}
+	if !strings.Contains(out, initx.CoverageHint("go")) {
+		t.Errorf("the go coverage hint was not printed:\n%s", out)
+	}
+}
+
+// A CONTRIBUTING.md the project already has is the project's: init shows what it would
+// add and writes nothing into it.
+func TestRunInitLeavesAnExistingContributingAlone(t *testing.T) {
+	t.Run("INWZN-B23: CONTRIBUTING.md is seeded when absent, and an existing one is shown, not touched", func(t *testing.T) {})
+	resetPromptError(t)
+	root := repoWithCode(t)
+	writeFile(t, root, config.DefaultFile, "version: 1\n")
+	writeFile(t, root, "CONTRIBUTING.md", "ours\n")
+	var runErr error
+	out, _ := driveLineMode(t, answerEverything(), func() { runErr = runInit(root) })
+	if runErr != nil {
+		t.Fatalf("init: %v\n%s", runErr, out)
+	}
+	if b, _ := os.ReadFile(filepath.Join(root, "CONTRIBUTING.md")); string(b) != "ours\n" {
+		t.Errorf("the project's CONTRIBUTING.md was touched:\n%s", b)
+	}
+	if !strings.Contains(out, "already exists — left untouched") || !strings.Contains(out, "## Working with Anchors") {
+		t.Errorf("the init should print the section it would add:\n%s", out)
+	}
+}
+
+// --preset proposed a stack's structure; the flag is gone, and whoever still passes it is
+// told why instead of reading "unknown flag".
+func TestInitRefusesThePresetFlag(t *testing.T) {
+	t.Run("INWZN-B21: --preset is refused with the reason, and nothing is written", func(t *testing.T) {})
+	for _, mode := range [][]string{nil, {"--non-interactive"}} {
+		root := t.TempDir()
+		cmd := newInitCmd()
+		cmd.SetArgs(append([]string{"--root", root, "--preset=go"}, mode...))
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		err := cmd.Execute()
+		if err == nil || !strings.Contains(err.Error(), "proposes no project structure") {
+			t.Errorf("%v: --preset should be refused with the reason, got %v", mode, err)
+		}
+		if _, serr := os.Stat(filepath.Join(root, config.DefaultFile)); serr == nil {
+			t.Errorf("%v: --preset wrote anchors.yaml", mode)
+		}
 	}
 }
 

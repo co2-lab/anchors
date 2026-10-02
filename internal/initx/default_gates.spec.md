@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DFGTD
-  updated_at: 2026-09-27
+  updated_at: 2026-10-01
   layer: infra
 -->
 # DefaultGates — the gates a project is born with, by artifact and by project age, and the canonical gate catalog
@@ -28,9 +28,10 @@ configuration, so it is written in English.
 
 The age of the project decides the maturation state. In an existing project a gate is born informative,
 because a real project almost never meets on day one the threshold it wants to reach, and blocking at once
-would stop the work. Five gates are the exception and are born blocking whatever the age, because what they
-catch cannot be matured into: a leaked secret, a contracted document that does not mention the unit that
-triggers it, and the grammar, completeness and existence of flag scenarios. In a new project the premise
+would stop the work. Two gates are the exception and are born blocking whatever the age, because what they
+catch cannot be matured into: a leaked secret, and a contracted document that does not mention the unit that
+triggers it. The flag-scenario gates follow the age like the rest: an existing project's flags were written
+before the grammar was asked of them, and that is debt to mature, not a leak. In a new project the premise
 inverts: there is no debt to accommodate, so every gate is born blocking and stops the first deviation,
 when fixing costs least. The exception there is the gates that read an ingested report (tests, coverage,
 mutation, scenario coverage, and the external-tool checks of dependencies, duplication, licences, cycles,
@@ -57,7 +58,7 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 | `DFGTD-B03` | The gates that cross spec and feature (spec-feature match, feature-spec match and scenario coverage) are seeded only when both are chosen, and the test-feature match only when test and feature are both chosen. |
 | `DFGTD-B04` | Choosing only guides seeds only the guide checklist gate. |
 | `DFGTD-B05` | The parent gate is seeded when spec, plan or code is chosen, and confronts exactly the chosen ones among them. |
-| `DFGTD-B06` | In an existing project every gate is born informative, except five born blocking by nature: the leaked-secret, contracted-document and the three flag-scenario grammar, completeness and existence gates. |
+| `DFGTD-B06` | In an existing project every gate is born informative, except two born blocking by nature: the leaked-secret and the contracted-document gates. |
 | `DFGTD-B07` | In a new project every gate is born blocking, except the gates that read an ingested report. |
 | `DFGTD-B08` | A gate that reads an ingested report (tests, coverage, mutation, scenario coverage, and the external-tool checks) stays informative even in a new project. |
 | `DFGTD-B09` | Every judgment gate that asks about the code or a test carries the @TBD instruction; the one that asks about the proof of a permanent test waiver does not. |

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ARCHR
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: infra
 -->
 # ArtifactChoice — turns the artifacts the user chose at init into artifact layers and colocation
@@ -14,7 +14,7 @@ what they intend to use, not only what already exists. Inference only decides wh
 pre-checked. This unit holds the offered artifacts and applies the answer to the configuration.
 
 The offered artifacts are spec, feature, test, guide, plan and code, always in that order. Code is a choice
-with no layer of its own: the code layers come from inference and the preset, one per directory, and the
+with no layer of its own: the code layers come from inference, one per folder that holds code, and the
 choice is what brings the gates that run on code and puts the code beside the spec in colocation. The
 artifacts that inference found are pre-checked — code when inference found a code directory — and nothing
 else is. Applying the choice rebuilds the artifact layers:
@@ -48,8 +48,10 @@ the colocation declaration is removed.
 | `ARCHR-B06` | The guide and plan layers take the detected folder when there is one, and the default pattern otherwise. |
 | `ARCHR-B07` | Colocation (`ApplyColocation`) is declared with the spec as anchor, the chosen code, feature and test beside it, and the spec is never a derivative. |
 | `ARCHR-B08` | No colocation is declared when it is not wanted, when the spec is not chosen, or when nothing derives from the spec. |
-| `ARCHR-B09` | Choosing code creates no layer and leaving it out removes none: the code layers stay as inference, the preset and the user left them. |
+| `ARCHR-B09` | Choosing code creates no layer and leaving it out removes none: the code layers stay as inference and the user left them. |
 | `ARCHR-B10` | Colocation writes only its own part of `derived` (the anchor and the file templates): the rest — the test handle the inference found — is kept, with colocation on and off. |
+| `ARCHR-B11` | A test layer created by the choice takes the project's test pattern when one is given (BLCNB-B08), and the default `**/*.test.*` otherwise. |
+| `ARCHR-B12` | The colocated test template is the project's when one is given (BLCNB-B06), and `{{dir}}/{{name}}.test.{{ext}}` otherwise. |
 
 ## Invariants
 

@@ -12,8 +12,8 @@ type ArtifactLayer struct {
 	Pattern string
 }
 
-// KnownArtifactLayers são os tipos de âncora que o init oferece por padrão.
-// (Presets de stack — patterns específicos por linguagem — virão depois.)
+// KnownArtifactLayers são os tipos de âncora que o init oferece por padrão. O padrão do
+// teste é o genérico: o init passa o da convenção que o projeto segue (ApplyArtifactChoice).
 var KnownArtifactLayers = []ArtifactLayer{
 	{Name: "spec", Kind: "spec", Pattern: "**/*.spec.md"},
 	{Name: "feature", Kind: "feature", Pattern: "**/*.feature"},
@@ -26,8 +26,8 @@ var KnownArtifactLayers = []ArtifactLayer{
 }
 
 // CodeArtifact is the artifact choice for the project's CODE. It is offered with the
-// artifact layers but has no layer of its own: the code layers come from inference and
-// the preset (one per directory), and PruneCodeLayers decides which stay.
+// artifact layers but has no layer of its own: the code layers come from inference (one
+// per folder of the project that holds code), and PruneCodeLayers decides which stay.
 //
 // Without it among the options, `anchors init` could never seed the gates that run on
 // code (no-secret-leaked, layer-boundary, the external-tool checks), `--artifacts=code`
@@ -65,7 +65,7 @@ func (p *Proposal) DetectedArtifacts() map[string]bool {
 // e remove as não escolhidas. Preserva pattern inferido quando havia. `dirs` traz o
 // diretório detectado para as layers baseadas em pasta (guide, plan) — quando vazio,
 // usa o pattern default. Puro.
-func ApplyArtifactChoice(cfg *config.Config, chosen map[string]bool, dirs map[string]string) {
+func ApplyArtifactChoice(cfg *config.Config, chosen map[string]bool, dirs map[string]string, testPattern string) {
 	if cfg.Layers == nil {
 		cfg.Layers = map[string]config.Layer{}
 	}
@@ -76,6 +76,10 @@ func ApplyArtifactChoice(cfg *config.Config, chosen map[string]bool, dirs map[st
 				// guide/plan são baseados em pasta: respeita o dir detectado.
 				if dir := dirs[a.Name]; dir != "" && (a.Name == "guide" || a.Name == "plan") {
 					pattern = dir + "/*.md"
+				}
+				// The test layer follows the project's own naming convention.
+				if a.Name == "test" && testPattern != "" {
+					pattern = testPattern
 				}
 				cfg.Layers[a.Name] = config.Layer{Pattern: pattern, Kind: a.Kind, Tags: []string{a.Name}}
 			}
@@ -105,7 +109,7 @@ func ArtifactNames() []string {
 // A extensão do código é declarada, não inferida: `{{ext}}` valia quando o código ancorava
 // (a extensão vinha dele), e da spec não há de onde tirá-la. `ext` é o que o projeto
 // decidiu no PROJECT.md.
-func ApplyColocation(cfg *config.Config, use bool, chosenArtifacts map[string]bool) {
+func ApplyColocation(cfg *config.Config, use bool, chosenArtifacts map[string]bool, testTemplate string) {
 	// Only the colocation part of `derived` is this function's. The rest — the test
 	// handle the inference found — was dropped with it, and never reached anchors.yaml.
 	prev := cfg.Derived
@@ -128,7 +132,12 @@ func ApplyColocation(cfg *config.Config, use bool, chosenArtifacts map[string]bo
 		files["feature"] = config.Padroes{"{{dir}}/{{name}}.feature"}
 	}
 	if chosenArtifacts["test"] {
-		files["test"] = config.Padroes{"{{dir}}/{{name}}.test.{{ext}}"}
+		// Where the project's own convention puts a unit's test (`{{name}}_test.go`,
+		// `test_{{name}}.py`); the generic form only when no convention is known.
+		if testTemplate == "" {
+			testTemplate = "{{dir}}/{{name}}.test.{{ext}}"
+		}
+		files["test"] = config.Padroes{testTemplate}
 	}
 	if len(files) == 0 {
 		keepRest()

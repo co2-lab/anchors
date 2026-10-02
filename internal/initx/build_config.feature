@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: BLCNB
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @BLCNB
@@ -13,18 +13,25 @@ Feature: BuildConfig — builds the configuration that inference proposes as the
     When the proposal is built
     Then the layers mobile-code and backend-code exist, each a code layer tagged with its own name
     And their patterns are apps/mobile/**/*.ts and packages/backend/**/*.ts
+    And code directories src/handlers and lib/handlers are named src-handlers-code and lib-handlers-code
+    And the root code directory is named root-code
 
   @BLCNB-B02 @unit-level
   Scenario: With several detected extensions the pattern lists them as a set
     Given an inference that found the code directory a/b with the extensions .ts and .tsx
     When the proposal is built
     Then the pattern of b-code is a/b/**/*.{ts,tsx}
+    And with src and src/handlers detected, src covers only its own files, src/*.go, and src/handlers covers src/handlers/**/*.go
+    And the root covers only its own files, *.go
 
   @BLCNB-B03 @unit-level
   Scenario: A proposed code layer excludes specs, features and test files
     Given an inference that found code directories
     When the proposal is built
     Then each code layer excludes spec markdown, feature and test files
+    And a project whose tests follow `_test.go` excludes **/*_test.go
+    And a Python project with no test yet excludes **/test_*.py
+    And with no convention and no family the test files excluded are **/*.test.*
 
   @BLCNB-B04 @unit-level
   Scenario: Colocation is proposed only when detected, with templates only for the detected kinds
@@ -48,3 +55,25 @@ Feature: BuildConfig — builds the configuration that inference proposes as the
     When the proposal is built
     Then the only layer is app-code
     And there is no governs rule
+
+  @BLCNB-B06 @unit-level
+  Scenario: The colocated test template follows the project's test convention
+    Given an inference that detected colocation with tests following `_test.go`
+    When the proposal is built
+    Then the test template is {{dir}}/{{name}}_test.go
+    And with tests of no known convention it is {{dir}}/{{name}}.test.{{ext}}
+
+  @BLCNB-B07 @unit-level
+  Scenario: The proposal's dialect is the family inference found
+    Given an inference that found the family go
+    When the proposal is built
+    Then the dialect family is go
+    And an inference with no family proposes no dialect
+
+  @BLCNB-B08 @unit-level
+  Scenario: The test layer's pattern is the project's test convention
+    Given tests following `.spec.ts` and `.test.ts`
+    When the test pattern is asked
+    Then it is {**/*.spec.ts,**/*.test.ts}
+    And a Go project with no test yet gets **/*_test.go
+    And with no convention and no family it is **/*.test.*

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INWZN
-  updated_at: 2026-09-27
+  updated_at: 2026-10-01
   layer: comando
 -->
 # InitWizard — the interactive init walks a person from an unconfigured directory to a reviewed anchors.yaml, and writes nothing on answers nobody gave
@@ -9,8 +9,13 @@
 
 ## Overview
 
-`init` scans the project without AI, proposes a structure, and confirms it with the person
-through questions; the bulk is inferred, and the questions cover only human decisions. Three
+`init` scans the project without AI, proposes a configuration, and confirms it with the person
+through questions; the bulk is inferred, and the questions cover only human decisions. It
+proposes no project structure: the code layers it offers are the project's own folders that
+hold code, and the layer kinds it names (entry points, use cases, domain, repositories,
+infrastructure, presentation) are illustration of keeping layers apart, never a layout to move
+files into. The language is dialect only — how tests are named, how the test runner emits the
+reports ingest reads. Three
 files make the wizard, and this spec states how they behave together: the command and its
 questions (init), the git step that runs first (init git), and the DISCOVER step that runs
 right after the scan (init discover).
@@ -56,19 +61,21 @@ the file, which is a successful no.
 | `INWZN-B05` | Accepting the git offer leaves a repository with HEAD: it initializes the repository only when missing, seeds a `.gitignore`, stages everything and makes the first commit. |
 | `INWZN-B06` | An existing `.gitignore` is never overwritten by the git step. |
 | `INWZN-B07` | A git initialization that fails is reported with its cause and does not stop the init; a missing author identity is reported with the `git config` commands that fix it. |
-| `INWZN-B08` | After the scan, the init prints what it found on disk (specs, features, tests, guides, code directories, co-location), and only what it found. |
+| `INWZN-B08` | After the scan, the init prints what it found on disk (specs, features, tests by the pattern they follow, the language family, guides, code directories, co-location), and only what it found. |
 | `INWZN-B09` | When the project has code, specs or a PROJECT.md, the DISCOVER step prints nothing and the init goes on. |
 | `INWZN-B10` | In a project with nothing to infer from, an AI operator gets the DISCOVER work order and the init goes on. |
 | `INWZN-B11` | A person with no known AI tool gets the step-by-step with the whole interview prompt, wrapped at the width without losing a word, and the init goes on. |
 | `INWZN-B12` | A person with a detected AI tool is offered to open it: accepting runs the tool in the project root with the interview prompt as one argument, without a shell; declining prints the step-by-step. |
-| `INWZN-B13` | A modular stack preset takes its module prefixes from the module directories that exist under its glob; files there are not modules. |
 | `INWZN-B14` | `--non-interactive` routes the command to the JSON mode instead of the prompts. |
-| `INWZN-B15` | A stack preset picked from the menu writes its code layers into the configuration, and the init announces it by title. |
 | `INWZN-B16` | Accepting the header guide seeds `HEADER_GUIDE.md` in the project's guide directory, or in `guides/` when the project has none. |
 | `INWZN-B17` | The default gates are offered only when the chosen artifacts yield at least one, and accepting them writes them into `anchors.yaml`. |
 | `INWZN-B18` | A project with no code, spec, feature or test is announced as new before the questions; a project with any of them is not. |
 | `INWZN-B19` | The code-layer question is asked only when the configuration has code layers; a new project without any is told to declare them once they exist. |
 | `INWZN-B20` | Each guide found on disk gets a question asking which tag it governs. |
+| `INWZN-B21` | `--preset`, in either mode, is refused before anything runs, with an error saying Anchors proposes no structure and init reads the project's own folders; nothing is written. |
+| `INWZN-B22` | Before the code-layer question the init says that each candidate is a folder of the project, that Anchors proposes no structure, and gives layer kinds as illustration. |
+| `INWZN-B23` | Accepting the contributing guide seeds `CONTRIBUTING.md` from the written configuration when the project has none; an existing one stays byte for byte, and the init prints the section that would be added. |
+| `INWZN-B24` | When the language family has a coverage hint, the init prints how its tests emit the reports `anchors ingest` reads. |
 
 ## Invariants
 
@@ -94,7 +101,7 @@ the file, which is a successful no.
 
 | Code | File | Method | Layer |
 | --- | --- | --- | --- |
-| DEP1 | `internal/initx` | `Infer`, `DetectGit`, `AvisoGit`, `OfferAction`, `PrecisaDescobrir`, `DetectOperator`, `AgentName`, `CommandToOpenAI`, `PromptDescobrir`, `Presets`, `ApplyPreset` | apoio — the inference, the git states, the operator and the presets |
+| DEP1 | `internal/initx` | `Infer`, `DetectGit`, `AvisoGit`, `OfferAction`, `PrecisaDescobrir`, `DetectOperator`, `AgentName`, `CommandToOpenAI`, `PromptDescobrir`, `CoverageHint`, `RenderContributing`, `ContributingSection` | apoio — the inference, the git states, the operator, the dialect and the contributing guide |
 | DEP2 | `cmd/anchors/ops/init_non_interactive.go` | `runInitNonInteractive` | comando — ININT |
 | DEP3 | `internal/config/config.go` | `Save`, `DefaultFile` | config — the written file |
 | DEP4 | `cmd/anchors/governance` | `RenderSpecGuide` | comando — the seeded spec guide |

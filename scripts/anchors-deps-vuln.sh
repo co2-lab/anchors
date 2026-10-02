@@ -17,7 +17,7 @@ command -v osv-scanner >/dev/null 2>&1 || {
 }
 
 TMP=$(mktemp)
-osv-scanner scan source --lockfile cli/go.mod --format json > "$TMP" 2>/dev/null
+osv-scanner scan source --lockfile go.mod --format json > "$TMP" 2>/dev/null
 python3 - "$TMP" <<'PY'
 import json, sys, collections
 try:
@@ -38,7 +38,7 @@ for r in d.get('results', []):
 
 tot = sum(sev.values())
 if tot == 0:
-    print("nenhuma vulnerabilidade conhecida em cli/go.mod")
+    print("nenhuma vulnerabilidade conhecida em go.mod")
     raise SystemExit(0)
 
 ordem = ['CRITICAL', 'HIGH', 'MODERATE', 'LOW', 'UNKNOWN']

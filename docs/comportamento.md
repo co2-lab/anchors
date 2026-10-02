@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d5f15775d141054d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:6755d00c54648c84 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1766,8 +1766,6 @@ teste prova.
 
 - [Defaults writes when asked to](camadas/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B06`
 
-- [A stack preset fills the code layers](camadas/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B07`
-
 - [Layers prunes the other code layers](camadas/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B08`
 
 - [The success document names the file and the next step](camadas/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B09`
@@ -1779,6 +1777,8 @@ teste prova.
 - [A malformed governs rule is refused with the expected form](camadas/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-E01`
 
 - [The governs rules reach the configuration, one rule per tag](camadas/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B10`
+
+- [CONTRIBUTING.md is seeded when absent, and an existing one is left as it is](camadas/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B11`
 
 - [An existing config is kept when the overwrite is not confirmed](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B01`
 
@@ -1804,11 +1804,7 @@ teste prova.
 
 - [A detected AI is opened in the root with the prompt, or declined for the step-by-step](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B12`
 
-- [A modular preset finds the module directories](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B13`
-
 - [Non-interactive routes to the JSON mode](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B14`
-
-- [A stack preset picked from the menu is applied and announced](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B15`
 
 - [The header guide is seeded in guides/ when the project has no guide directory](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B16`
 
@@ -1827,6 +1823,14 @@ teste prova.
 - [The no-terminal error offers the non-interactive mode](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-E01`
 
 - [End of input in line mode is refused, not taken as the defaults](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-E02`
+
+- [--preset is refused with the reason, and nothing is written](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B21`
+
+- [The code-layer question is preceded by the note on layers](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B22`
+
+- [CONTRIBUTING.md is seeded when absent, and an existing one is shown, not touched](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B23`
+
+- [The family's coverage hint is printed](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B24`
 
 - [The hooks go where git looks for them](camadas/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B01`
 
@@ -5720,24 +5724,6 @@ teste prova.
 
 - [Specs missing on disk are left out of the counts](camadas/infra.md#spscs--specsections--the-doctor-tells-when-most-specs-of-a-layer-lack-a-section-a-gate-needs-to-see) `SPSCS-E01`
 
-- [Applying a preset adds its layers and keeps the layers of other names](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-B01`
-
-- [A layer with the same name as a preset layer is replaced by the preset's](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-B02`
-
-- [Each module receives a two-letter prefix keyed by its directory name](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-B03`
-
-- [A colliding prefix keeps its first letter and takes the first free second letter](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-B04`
-
-- [Applying a preset returns the prefix deduced for each detected module](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-B05`
-
-- [The same modules in any order give the same prefixes](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-I01`
-
-- [Prefixes are deduced from the given paths without reading the disk](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-X01`
-
-- [Modules sharing a folder name are each keyed by their path, with distinct prefixes](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-B06`
-
-- [No two modules ever share a prefix while a free one exists](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-I02`
-
 - [The artifact options are spec, feature, test, guide, plan and code, in that order](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B01`
 
 - [Each artifact inference found is pre-checked, and nothing else](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B02`
@@ -5758,6 +5744,10 @@ teste prova.
 
 - [Colocation keeps the rest of derived](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B10`
 
+- [A created test layer takes the project's test pattern](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B11`
+
+- [The colocated test template is the project's](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B12`
+
 - [Each detected code directory becomes a code layer named after its last segment](camadas/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B01`
 
 - [With several detected extensions the pattern lists them as a set](camadas/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B02`
@@ -5769,6 +5759,30 @@ teste prova.
 - [The test handle is proposed only when inference found one](camadas/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B05`
 
 - [The proposal creates no artifact layer and no governs rule](camadas/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-X01`
+
+- [The colocated test template follows the project's test convention](camadas/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B06`
+
+- [The proposal's dialect is the family inference found](camadas/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B07`
+
+- [The test layer's pattern is the project's test convention](camadas/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B08`
+
+- [The whole guide is a title, a seeding note and the section](camadas/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B01`
+
+- [The section states the order of the work](camadas/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B02`
+
+- [Where each piece lives](camadas/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B03`
+
+- [The declared code layers, or that there are none](camadas/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B04`
+
+- [The queue the daily commands name](camadas/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B05`
+
+- [What blocks and what informs](camadas/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B06`
+
+- [The project's guide folder](camadas/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B07`
+
+- [The guide never names what the configuration does not hold](camadas/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-I01`
+
+- [Rendering writes nothing to disk](camadas/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-X01`
 
 - [The code layer names are listed sorted, and only code layers](camadas/infra.md#indcn--initdecisions--the-pure-decisions-of-init-over-the-proposed-configuration-code-layers-tags-and-governs-rules) `INDCN-B01`
 
@@ -5792,7 +5806,7 @@ teste prova.
 
 - [The parent gate confronts exactly the chosen artifacts among spec, plan and code](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B05`
 
-- [An existing project is born with its gates informative, except the five blocking by nature](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B06`
+- [An existing project is born with its gates informative, except the two blocking by nature](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B06`
 
 - [A new project is born with its gates blocking](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B07`
 
@@ -5898,21 +5912,21 @@ teste prova.
 
 - [Whether git is installed comes from the caller](camadas/infra.md#gtstg--gitstate--classify-the-projects-versioning-before-init-scans-it-and-say-what-to-do-about-it) `GTSTG-X02`
 
-- [The comment dialect follows the preset](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-stacks-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B01`
+- [The comment dialect follows the language family](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B01`
 
-- [The grouping example names the first module, or auth](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-stacks-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B02`
+- [The grouping example names the first module, or auth](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B02`
 
-- [The module list appears only when there are modules](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-stacks-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B03`
+- [The module list appears only when there are modules](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B03`
 
-- [The essentials are always present](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-stacks-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B04`
+- [The essentials are always present](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B04`
 
-- [The compliance-points section is always present with five points](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-stacks-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B05`
+- [The compliance-points section is always present with five points](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B05`
 
-- [The title falls back to project](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-stacks-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B06`
+- [The title falls back to project](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B06`
 
-- [The seeded guide passes the checklist heading in every language](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-stacks-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-I01`
+- [The seeded guide passes the checklist heading in every language](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-I01`
 
-- [Rendering writes nothing to disk](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-stacks-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-X01`
+- [Rendering writes nothing to disk](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-X01`
 
 - [Dependency, build and tool directories are not walked](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B01`
 
@@ -5922,7 +5936,7 @@ teste prova.
 
 - [The first guides directory is detected with every guide file in it](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B04`
 
-- [A code directory is a top directory of up to two segments holding at least ten code files, ordered by volume](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B05`
+- [Every folder holding code is a candidate code directory, with no minimum, ordered by volume](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B05`
 
 - [The code extensions are the five most frequent, most frequent first](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B06`
 
@@ -5940,21 +5954,29 @@ teste prova.
 
 - [The same tree always gives the same code extensions and code directories, ties included](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-I02`
 
-- [A preset layer with no kind becomes a code layer](camadas/infra.md#inctn--initcatalogs--the-stack-preset-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B01`
+- [The language family comes from the root manifest, or from the most frequent extension](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B11`
 
-- [Looking up a preset by an unknown name finds nothing](camadas/infra.md#inctn--initcatalogs--the-stack-preset-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B02`
+- [The test conventions are the forms the project's tests follow, most followed first](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B12`
 
-- [The preset names are listed in catalog order](camadas/infra.md#inctn--initcatalogs--the-stack-preset-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B03`
+- [The @TBD instruction forbids pass, orders a waiver naming the absence, and names the piece asked about](camadas/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B04`
 
-- [The @TBD instruction forbids pass, orders a waiver naming the absence, and names the piece asked about](camadas/infra.md#inctn--initcatalogs--the-stack-preset-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B04`
+- [A file is a test when its name carries a convention's prefix and suffix](camadas/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B06`
 
-- [A modular preset declares the directory of its modules](camadas/infra.md#inctn--initcatalogs--the-stack-preset-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B05`
+- [A convention gives its glob and its template](camadas/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B07`
 
-- [Every preset has a unique name, a title, patterned layers and a test layer](camadas/infra.md#inctn--initcatalogs--the-stack-preset-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-I01`
+- [A test file's unit name drops the convention's prefix and suffix](camadas/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B08`
 
-- [The @TBD instruction demands checking that the @TBD is still true](camadas/infra.md#inctn--initcatalogs--the-stack-preset-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-I02`
+- [With no convention read, the family default is used](camadas/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B09`
 
-- [No preset layer carries an identity prefix](camadas/infra.md#inctn--initcatalogs--the-stack-preset-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-X01`
+- [A family's coverage hint names the reports ingest reads](camadas/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B10`
+
+- [The @TBD instruction demands checking that the @TBD is still true](camadas/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-I02`
+
+- [No convention of the catalog is shadowed by a shorter one](camadas/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-I03`
+
+- [Every family default is a convention of the catalog](camadas/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-I04`
+
+- [The catalog names no folder](camadas/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-X02`
 
 - [A known agent variable makes the operator an AI even with a terminal](camadas/infra.md#opdtp--operatordetection--tell-whether-a-person-or-an-ai-is-running-init-and-whether-the-discovery-phase-is-still-to-be-done) `OPDTP-B01`
 
@@ -6000,7 +6022,7 @@ teste prova.
 
 - [The defaults come from the inference](camadas/infra.md#inqsn--initquestions--describe-the-human-decisions-of-init-so-an-agent-can-answer-them-without-the-terminal-ui-and-judge-every-answer) `INQSN-B03`
 
-- [The preset and the work-queue mode have their choices and defaults](camadas/infra.md#inqsn--initquestions--describe-the-human-decisions-of-init-so-an-agent-can-answer-them-without-the-terminal-ui-and-judge-every-answer) `INQSN-B04`
+- [The work-queue mode has its choices and default](camadas/infra.md#inqsn--initquestions--describe-the-human-decisions-of-init-so-an-agent-can-answer-them-without-the-terminal-ui-and-judge-every-answer) `INQSN-B04`
 
 - [Every question gets a verdict and unanswered ones take the default](camadas/infra.md#inqsn--initquestions--describe-the-human-decisions-of-init-so-an-agent-can-answer-them-without-the-terminal-ui-and-judge-every-answer) `INQSN-B05`
 

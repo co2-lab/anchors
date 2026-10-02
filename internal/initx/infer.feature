@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INPRN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @INPRN
@@ -33,10 +33,10 @@ Feature: InferProposal — walks the project and proposes its structure determin
     Then the guides folder is guides, with two guide files
 
   @INPRN-B05 @unit-level
-  Scenario: A code directory is a top directory of up to two segments holding at least ten code files, ordered by volume
-    Given nine code files under small/x, ten under mid/y and fifteen under big/z
+  Scenario: Every folder holding code is a candidate code directory, with no minimum, ordered by volume
+    Given fifteen code files in big/z, ten in mid/y/deep, two in small/x/deep and one at the root
     When the project is inferred
-    Then the code directories are big/z then mid/y
+    Then the code directories are big/z, mid/y, small/x and the root, in that order
 
   @INPRN-B06 @unit-level
   Scenario: The code extensions are the five most frequent, most frequent first
@@ -78,7 +78,7 @@ Feature: InferProposal — walks the project and proposes its structure determin
 
   @INPRN-B10 @unit-level
   Scenario: A test named in any known dialect pairs with the code of the same stem
-    Given three Go files each beside its `_test.go`, and the same with `_test.py` and `.spec.ts`
+    Given three Go files each beside its `_test.go`, and the same with `_test.py`, `test_*.py`, `.spec.ts` and `Test.java`
     When each project is inferred
     Then each is detected as having tests and as colocated
 
@@ -88,3 +88,17 @@ Feature: InferProposal — walks the project and proposes its structure determin
     When the project is inferred twenty times
     Then every run lists the extensions and the directories in name order
     And the layer pattern lists the extensions in name order
+
+  @INPRN-B11 @unit-level
+  Scenario: The language family comes from the root manifest, or from the most frequent extension
+    Given a project with go.mod at the root and mostly TypeScript files
+    When the project is inferred
+    Then the family is go
+    And a project with no manifest and mostly Python files has the family python
+    And a project with no manifest and no known code has no family
+
+  @INPRN-B12 @unit-level
+  Scenario: The test conventions are the forms the project's tests follow, most followed first
+    Given three `.spec.tsx` tests and one `.test.ts` test
+    When the project is inferred
+    Then the conventions are `.spec.tsx` then `.test.ts`

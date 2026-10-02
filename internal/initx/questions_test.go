@@ -10,7 +10,7 @@ import (
 )
 
 func testQuestions() []Question {
-	return Questions(&Proposal{Config: nil}, []string{"go", "nextjs"})
+	return Questions(&Proposal{Config: nil})
 }
 
 // verdictOf returns the verdict of one question, failing the test when it is missing.
@@ -49,7 +49,7 @@ func TestQuestionsCarryWhatTheAgentNeedsToDecide(t *testing.T) {
 // decided in silence by the default, in a file the user thinks they decided.
 func TestQuestionsFollowTheTUIOrder(t *testing.T) {
 	t.Run("INQSN-B01: The questions come in the order of the terminal UI", func(t *testing.T) {})
-	want := []string{"preset", "header", "artifacts", "gates", "colocation", "layers",
+	want := []string{"header", "contributing", "artifacts", "gates", "colocation", "layers",
 		"workflow", "repo", "labels", "governs"}
 	var got []string
 	for _, q := range testQuestions() {
@@ -73,7 +73,7 @@ func TestQuestionsDefaultsComeFromTheInference(t *testing.T) {
 		}},
 	}
 	byID := map[string]Question{}
-	for _, q := range Questions(p, nil) {
+	for _, q := range Questions(p) {
 		byID[q.ID] = q
 	}
 	if byID["colocation"].Default != true {
@@ -88,7 +88,7 @@ func TestQuestionsDefaultsComeFromTheInference(t *testing.T) {
 	}
 
 	// No proposal at all: empty defaults, and no panic.
-	for _, q := range Questions(nil, nil) {
+	for _, q := range Questions(nil) {
 		switch q.ID {
 		case "colocation":
 			if q.Default != false {
@@ -105,14 +105,11 @@ func TestQuestionsDefaultsComeFromTheInference(t *testing.T) {
 // The work-queue mode is a HUMAN decision (where the queue lives) and `init` did not make
 // it: every project was born `local` by omission, and whoever wanted `github` had to find
 // the field and edit the YAML by hand.
-func TestQuestionsPresetAndWorkflowChoices(t *testing.T) {
-	t.Run("INQSN-B04: The preset and the work-queue mode have their choices and defaults", func(t *testing.T) {})
+func TestQuestionsWorkflowChoices(t *testing.T) {
+	t.Run("INQSN-B04: The work-queue mode has its choices and default", func(t *testing.T) {})
 	byID := map[string]Question{}
 	for _, q := range testQuestions() {
 		byID[q.ID] = q
-	}
-	if p := byID["preset"]; !reflect.DeepEqual(p.Opcoes, []string{"nenhum", "go", "nextjs"}) || p.Default != "nenhum" {
-		t.Errorf("preset = %v (default %v)", p.Opcoes, p.Default)
 	}
 	if w := byID["workflow"]; !reflect.DeepEqual(w.Opcoes, []string{"local", "manual", "github"}) || w.Default != "local" {
 		t.Errorf("workflow = %v (default %v)", w.Opcoes, w.Default)
@@ -127,22 +124,22 @@ func TestQuestionsInvalidAnswerRefusesEverything(t *testing.T) {
 	t.Run("INQSN-B09: One refused answer refuses the whole set", func(t *testing.T) {})
 	t.Run("INQSN-X01: An invalid answer is not corrected", func(t *testing.T) {})
 	qs := testQuestions()
-	bad := "preset-que-nao-existe"
+	bad := "fila-que-nao-existe"
 
-	st := ValidateAnswers(qs, Respostas{Preset: &bad})
+	st := ValidateAnswers(qs, Respostas{Workflow: &bad})
 
 	if TudoAceito(st) {
-		t.Fatal("a nonexistent preset should refuse the set")
+		t.Fatal("a nonexistent mode should refuse the set")
 	}
 	// And the verdict must say WHICH failed and why — "something went wrong" is not enough.
-	s := verdictOf(t, st, "preset")
+	s := verdictOf(t, st, "workflow")
 	if s.Aceita {
-		t.Error("the invalid preset was accepted")
+		t.Error("the invalid mode was accepted")
 	}
 	if s.Valor != bad {
 		t.Errorf("the invalid value must be kept as given, got %v", s.Valor)
 	}
-	if !strings.Contains(s.Detalhe, "nenhum, go, nextjs") {
+	if !strings.Contains(s.Detalhe, "local, manual, github") {
 		t.Errorf("the message should list the valid values: %s", s.Detalhe)
 	}
 
@@ -206,7 +203,7 @@ func TestQuestionsVerdictCoversEveryAnswer(t *testing.T) {
 // and a zero-value bool does not tell them apart.
 func TestQuestionsNotAnsweredIsNotAnsweredEmpty(t *testing.T) {
 	t.Run("INQSN-B10: An answer given empty is not the default", func(t *testing.T) {})
-	qs := Questions(&Proposal{}, nil)
+	qs := Questions(&Proposal{})
 	empty := []string{}
 
 	unanswered := verdictOf(t, ValidateAnswers(qs, Respostas{}), "artifacts")
@@ -297,7 +294,7 @@ func TestQuestionsAcceptCodeAsAnArtifact(t *testing.T) {
 	// The detected ones come pre-checked in a stable order, code among them.
 	p := &Proposal{CodeDirs: []string{"src"}, HasTest: true, HasSpecMD: true}
 	for range 10 {
-		for _, q := range Questions(p, nil) {
+		for _, q := range Questions(p) {
 			if q.ID == "artifacts" && !reflect.DeepEqual(q.Default, []string{"code", "spec", "test"}) {
 				t.Fatalf("detected artifacts default = %v, want [code spec test] in name order", q.Default)
 			}
@@ -311,18 +308,24 @@ func TestQuestionsSpeakTheProjectLanguage(t *testing.T) {
 	t.Cleanup(func() { _ = i18n.Set(i18n.Default) })
 	bad := "x"
 	for lang, want := range map[string][3]string{
-		"en":    {"Which stack preset to use?", "the preset fills", "unknown preset; accepted:"},
-		"pt-BR": {"Qual preset de stack usar?", "o preset preenche", "preset desconhecido; aceitos:"},
-		"es":    {"¿Qué preset de stack usar?", "el preset llena", "preset desconocido; aceptados:"},
+		"en":    {"Which code directories to treat as layers?", "each option is a folder", "unknown mode; accepted:"},
+		"pt-BR": {"Quais diretórios de código tratar como camadas?", "cada opção é uma pasta", "modo desconhecido; aceitos:"},
+		"es":    {"¿Qué directorios de código tratar como capas?", "cada opción es una carpeta", "modo desconocido; aceptados:"},
 	} {
 		if err := i18n.Set(lang); err != nil {
 			t.Fatal(err)
 		}
 		qs := testQuestions()
-		if qs[0].Texto != want[0] || !strings.HasPrefix(qs[0].PorQue, want[1]) {
-			t.Errorf("%s: preset question = %q / %q", lang, qs[0].Texto, qs[0].PorQue)
+		var layers Question
+		for _, q := range qs {
+			if q.ID == "layers" {
+				layers = q
+			}
 		}
-		if d := verdictOf(t, ValidateAnswers(qs, Respostas{Preset: &bad}), "preset").Detalhe; !strings.HasPrefix(d, want[2]) {
+		if layers.Texto != want[0] || !strings.HasPrefix(layers.PorQue, want[1]) {
+			t.Errorf("%s: layers question = %q / %q", lang, layers.Texto, layers.PorQue)
+		}
+		if d := verdictOf(t, ValidateAnswers(qs, Respostas{Workflow: &bad}), "workflow").Detalhe; !strings.HasPrefix(d, want[2]) {
 			t.Errorf("%s: refusal detail = %q", lang, d)
 		}
 		for _, q := range qs {

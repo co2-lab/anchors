@@ -17,16 +17,17 @@ import (
 // que distingue "não respondi" (vale o default inferido do disco) de "respondi vazio"
 // (`--artifacts=""`, nenhum artefato) — dois casos com resultados opostos.
 type flagsInit struct {
-	preset     string
-	header     bool
-	artifacts  []string
-	gates      bool
-	colocation bool
-	layers     []string
-	governs    []string
-	workflow   string
-	repo       string
-	labels     []string
+	preset       string
+	header       bool
+	contributing bool
+	artifacts    []string
+	gates        bool
+	colocation   bool
+	layers       []string
+	governs      []string
+	workflow     string
+	repo         string
+	labels       []string
 }
 
 // flagAnswers converte as flags em Respostas, consultando quais foram REALMENTE
@@ -34,8 +35,8 @@ type flagsInit struct {
 // com uma escolha deliberada de `false`.
 func flagAnswers(cmd *cobra.Command, f *flagsInit) (initx.Respostas, error) {
 	var r initx.Respostas
-	if cmd.Flags().Changed("preset") {
-		r.Preset = &f.preset
+	if cmd.Flags().Changed("contributing") {
+		r.Contributing = &f.contributing
 	}
 	if cmd.Flags().Changed("header") {
 		r.Header = &f.header
@@ -90,7 +91,7 @@ func runInitNonInteractive(cmd *cobra.Command, root string, f *flagsInit, aceita
 	if err != nil {
 		return fmt.Errorf("inference: %w", err)
 	}
-	qs := initx.Questions(p, initx.PresetNames())
+	qs := initx.Questions(p)
 
 	r, err := flagAnswers(cmd, f)
 	if err != nil {
@@ -129,28 +130,33 @@ func runInitNonInteractive(cmd *cobra.Command, root string, f *flagsInit, aceita
 		return fmt.Errorf("invalid answers; nothing was written")
 	}
 
-	if err := applyAnswers(root, p, status); err != nil {
+	var contributing map[string]any
+	if err := applyAnswers(root, p, status, &contributing); err != nil {
 		return err
 	}
-	return emitJSON(map[string]any{
+	out := map[string]any{
 		"escrito":       true,
 		"arquivo":       filepath.Join(root, config.DefaultFile),
 		"respostas":     status,
 		"proximo_passo": nextStepAfter(root, p),
-	})
+	}
+	if contributing != nil {
+		out["contributing"] = contributing
+	}
+	return emitJSON(out)
 }
 
 // answeredSomething diz se veio ao menos uma resposta. É o que separa "quero as perguntas"
 // de "aqui estão as respostas" — sem precisar de uma flag para cada intenção.
 func answeredSomething(r initx.Respostas) bool {
-	return r.Preset != nil || r.Header != nil || r.Artifacts != nil || r.Gates != nil ||
+	return r.Header != nil || r.Contributing != nil || r.Artifacts != nil || r.Gates != nil ||
 		r.Colocation != nil || r.Layers != nil || len(r.Governs) > 0 ||
 		r.Workflow != nil || r.Repo != nil || r.Labels != nil
 }
 
 // applyAnswers monta o anchors.yaml a partir dos status já validados, na mesma ordem
 // da TUI — cada decisão restringe a seguinte.
-func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta) error {
+func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta, contributing *map[string]any) error {
 	cfg := p.Config
 	valor := func(id string) any {
 		for _, s := range status {
@@ -161,16 +167,6 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta)
 		return nil
 	}
 
-	if nome, _ := valor("preset").(string); nome != "" && nome != "nenhum" {
-		for _, pr := range initx.Presets {
-			if pr.Name == nome {
-				preset := pr
-				initx.ApplyPreset(cfg, preset, detectModules(root, preset))
-				break
-			}
-		}
-	}
-
 	artefatos := map[string]bool{}
 	for _, a := range asList(valor("artifacts")) {
 		artefatos[a] = true
@@ -178,7 +174,7 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta)
 	initx.ApplyArtifactChoice(cfg, artefatos, map[string]string{
 		"guide": p.GuideDir,
 		"plan":  p.PlanDir,
-	})
+	}, p.TestPattern())
 
 	if sim, _ := valor("gates").(bool); sim {
 		// Projeto novo (sem código nem artefato no disco) nasce com os gates
@@ -187,13 +183,10 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta)
 		cfg.Gates = initx.DefaultGates(artefatos, novo)
 	}
 	colocado, _ := valor("colocation").(bool)
-	initx.ApplyColocation(cfg, colocado, artefatos)
+	initx.ApplyColocation(cfg, colocado, artefatos, p.TestTemplate())
 
-	// Only an ANSWERED `--layers` prunes. The default of the question was inferred from
-	// the disk BEFORE the preset was applied: pruning with it, in a project with code,
-	// dropped the preset's `core` and `common` and left only the inferred `*-code` — while
-	// the TUI, which asks after the preset, keeps them all. The untouched default means
-	// "keep every code layer", which is the TUI's pre-selection.
+	// Only an ANSWERED `--layers` prunes. The untouched default means "keep every code
+	// layer", which is the TUI's pre-selection.
 	if l := asList(valor("layers")); len(l) > 0 && !usedDefault(status, "layers") {
 		keep := map[string]bool{}
 		for _, n := range l {
@@ -246,9 +239,20 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta)
 			guideDir = "guides"
 		}
 		dest := filepath.Join(root, guideDir, "HEADER_GUIDE.md")
-		body := initx.RenderHeaderGuide(initx.Preset{}, nil)
+		body := initx.RenderHeaderGuide(p.Family, nil)
 		if os.MkdirAll(filepath.Dir(dest), 0o755) == nil {
 			_ = os.WriteFile(dest, []byte(body), 0o644)
+		}
+	}
+
+	// CONTRIBUTING.md: seeded when the project has none; one it already has is never
+	// touched, and the section that would be added goes back in the answer instead.
+	if sim, _ := valor("contributing").(bool); sim {
+		dest := filepath.Join(root, initx.ContributingFile)
+		if _, err := os.Stat(dest); err == nil {
+			*contributing = map[string]any{"escrito": false, "motivo": "exists", "trecho": initx.ContributingSection(cfg, p.GuideDir)}
+		} else if os.WriteFile(dest, []byte(initx.RenderContributing(cfg, p.GuideDir)), 0o644) == nil {
+			*contributing = map[string]any{"escrito": true, "arquivo": initx.ContributingFile}
 		}
 	}
 	return nil

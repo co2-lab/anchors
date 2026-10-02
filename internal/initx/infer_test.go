@@ -34,7 +34,7 @@ func writeFixture(t *testing.T, dir string) {
 		// noise: must be ignored
 		"node_modules/react/index.js": "module.exports = {}",
 	}
-	// ensures enough code mass (codeRoots demands >=10 per dir): fills the backend
+	// more code in the backend and in mobile
 	for i := range 12 {
 		files["packages/backend/gen/f"+itoa(i)+".ts"] = "export const x = 1"
 	}
@@ -198,23 +198,26 @@ func TestInfer_planWinsOverGuide(t *testing.T) {
 	}
 }
 
-func TestInfer_codeDirNeedsTenFiles(t *testing.T) {
-	t.Run("INPRN-B05: A code directory is a top directory of up to two segments holding at least ten code files, ordered by volume", func(t *testing.T) {})
+// A layered project keeps a layer in a folder of two files as readily as in one of fifty.
+// The old minimum of ten dropped those layers from the proposal.
+func TestInfer_everyFolderWithCodeIsACandidate(t *testing.T) {
+	t.Run("INPRN-B05: Every folder holding code is a candidate code directory, with no minimum, ordered by volume", func(t *testing.T) {})
 	dir := t.TempDir()
-	files := codeFiles("small/x/deep", ".go", "", 9)
+	files := codeFiles("small/x/deep", ".go", "", 2)
 	for k, v := range codeFiles("mid/y/deep", ".go", "", 10) {
 		files[k] = v
 	}
 	for k, v := range codeFiles("big/z", ".go", "", 15) {
 		files[k] = v
 	}
+	files["main.go"] = ""
 	writeTree(t, dir, files)
 	p, err := Infer(dir)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !reflect.DeepEqual(p.CodeDirs, []string{"big/z", "mid/y"}) {
-		t.Errorf("CodeDirs = %v, want [big/z mid/y]", p.CodeDirs)
+	if !reflect.DeepEqual(p.CodeDirs, []string{"big/z", "mid/y", "small/x", "."}) {
+		t.Errorf("CodeDirs = %v, want [big/z mid/y small/x .]", p.CodeDirs)
 	}
 }
 
@@ -312,16 +315,18 @@ func TestInfer_walkFailure(t *testing.T) {
 // never meets `foo.go` and a colocated Go project reads as a separate tree.
 func TestInfer_testOfEveryDialectPairsWithItsCode(t *testing.T) {
 	t.Run("INPRN-B10: A test named in any known dialect pairs with the code of the same stem", func(t *testing.T) {})
-	for _, c := range []struct{ code, test string }{
-		{".go", "_test.go"},
-		{".py", "_test.py"},
-		{".ts", ".spec.ts"},
+	for _, c := range []struct{ code, prefix, test string }{
+		{".go", "", "_test.go"},
+		{".py", "", "_test.py"},
+		{".py", "test_", ".py"},
+		{".ts", "", ".spec.ts"},
+		{".java", "", "Test.java"},
 	} {
 		dir := t.TempDir()
 		files := map[string]string{}
 		for _, stem := range []string{"a", "b", "c"} {
 			files["pkg/"+stem+c.code] = ""
-			files["pkg/"+stem+c.test] = ""
+			files["pkg/"+c.prefix+stem+c.test] = ""
 		}
 		writeTree(t, dir, files)
 		p, err := Infer(dir)
@@ -329,7 +334,7 @@ func TestInfer_testOfEveryDialectPairsWithItsCode(t *testing.T) {
 			t.Fatal(err)
 		}
 		if !p.HasTest || !p.Colocated {
-			t.Errorf("%s beside %s: HasTest=%v Colocated=%v, want both true", c.test, c.code, p.HasTest, p.Colocated)
+			t.Errorf("%s*%s beside %s: HasTest=%v Colocated=%v, want both true", c.prefix, c.test, c.code, p.HasTest, p.Colocated)
 		}
 	}
 }
@@ -360,4 +365,57 @@ func TestInfer_tiesGiveTheSameProposalOnEveryRun(t *testing.T) {
 			t.Fatalf("layer pattern = %q, want the extensions in name order", got)
 		}
 	}
+}
+
+func TestInfer_familyFromManifestOrExtension(t *testing.T) {
+	t.Run("INPRN-B11: The language family comes from the root manifest, or from the most frequent extension", func(t *testing.T) {})
+	for _, c := range []struct {
+		name  string
+		files map[string]string
+		want  string
+	}{
+		{"manifest wins over extensions", merge(map[string]string{"go.mod": "module x"}, codeFiles("web", ".ts", "", 5)), "go"},
+		{"no manifest: the most frequent extension", merge(codeFiles("app", ".py", "", 3), codeFiles("tools", ".go", "", 1)), "python"},
+		{"neither", map[string]string{"README.md": "# x"}, ""},
+	} {
+		dir := t.TempDir()
+		writeTree(t, dir, c.files)
+		p, err := Infer(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if p.Family != c.want {
+			t.Errorf("%s: Family = %q, want %q", c.name, p.Family, c.want)
+		}
+	}
+}
+
+func TestInfer_testConventionsByUse(t *testing.T) {
+	t.Run("INPRN-B12: The test conventions are the forms the project's tests follow, most followed first", func(t *testing.T) {})
+	dir := t.TempDir()
+	writeTree(t, dir, map[string]string{
+		"src/a.spec.tsx": "", "src/b.spec.tsx": "", "src/c.spec.tsx": "",
+		"src/d.test.ts": "",
+	})
+	p, err := Infer(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, c := range p.TestConventions {
+		got = append(got, c.Prefix+"*"+c.Suffix)
+	}
+	if !reflect.DeepEqual(got, []string{"*.spec.tsx", "*.test.ts"}) {
+		t.Errorf("conventions = %v, want [*.spec.tsx *.test.ts]", got)
+	}
+}
+
+func merge(ms ...map[string]string) map[string]string {
+	out := map[string]string{}
+	for _, m := range ms {
+		for k, v := range m {
+			out[k] = v
+		}
+	}
+	return out
 }

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: ARCHR
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @ARCHR
@@ -76,3 +76,17 @@ Feature: ArtifactChoice — turns the artifacts the user chose at init into arti
     Given an inferred test handle in the derived block
     When colocation is applied, on or off
     Then the test handle is still in the derived block
+
+  @ARCHR-B11 @unit-level
+  Scenario: A created test layer takes the project's test pattern
+    Given test chosen with the project's test pattern **/*_test.go
+    When the choice is applied
+    Then the test layer's pattern is **/*_test.go
+    And with no pattern given it is **/*.test.*
+
+  @ARCHR-B12 @unit-level
+  Scenario: The colocated test template is the project's
+    Given colocation wanted with spec and test chosen and the template {{dir}}/{{name}}_test.go
+    When colocation is applied
+    Then the test derivative is {{dir}}/{{name}}_test.go
+    And with no template given it is {{dir}}/{{name}}.test.{{ext}}

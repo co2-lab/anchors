@@ -1,31 +1,11 @@
 # language: en
 # @anchors
 #   ref: INCTN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @INCTN
-Feature: InitCatalogs — the stack preset catalog and the @TBD instruction that init seeds into judgment gates
-
-  @INCTN-B01 @unit-level
-  Scenario: A preset layer with no kind becomes a code layer
-    Given a preset with a layer that declares no kind and a test layer with pattern t/** and one tag
-    When the preset is turned into configuration layers
-    Then the layer with no kind is a code layer
-    And the test layer keeps its kind, pattern and tag
-
-  @INCTN-B02 @unit-level
-  Scenario: Looking up a preset by an unknown name finds nothing
-    Given the preset catalog
-    When the presets go and no-such-stack are looked up
-    Then go is found
-    And no-such-stack is not found and the returned preset is empty
-
-  @INCTN-B03 @unit-level
-  Scenario: The preset names are listed in catalog order
-    Given the preset catalog
-    When the preset names are listed
-    Then there is one name per preset, in the order of the catalog
+Feature: InitCatalogs — the language dialect catalog and the @TBD instruction that init seeds into judgment gates
 
   @INCTN-B04 @unit-level
   Scenario: The @TBD instruction forbids pass, orders a waiver naming the absence, and names the piece asked about
@@ -34,18 +14,38 @@ Feature: InitCatalogs — the stack preset catalog and the @TBD instruction that
     Then the English text mentions @TBD, the `waived` answer and the naming of the absence, and forbids `pass`
     And the instruction produced for the test names the test
 
-  @INCTN-B05 @unit-level
-  Scenario: A modular preset declares the directory of its modules
-    Given the preset catalog
-    When each modular preset is inspected
-    Then every modular preset has a module directory
+  @INCTN-B06 @unit-level
+  Scenario: A file is a test when its name carries a convention's prefix and suffix
+    Given the names foo_test.go, test_foo.py, Login.spec.tsx, UserTest.java, _test.go and foo.go
+    When each is matched against the catalog
+    Then foo_test.go, test_foo.py, Login.spec.tsx and UserTest.java are tests
+    And _test.go, with nothing besides the suffix, and foo.go are not
 
-  @INCTN-I01 @unit-level
-  Scenario: Every preset has a unique name, a title, patterned layers and a test layer
-    Given the preset catalog
-    When every preset is inspected
-    Then no name repeats, every preset has a title and layers
-    And every layer has a pattern and every preset has a test layer
+  @INCTN-B07 @unit-level
+  Scenario: A convention gives its glob and its template
+    Given the conventions `_test.go` and `test_*.py`
+    When their glob and template are asked
+    Then they are **/*_test.go with {{dir}}/{{name}}_test.go, and **/test_*.py with {{dir}}/test_{{name}}.py
+
+  @INCTN-B08 @unit-level
+  Scenario: A test file's unit name drops the convention's prefix and suffix
+    Given the test files test_foo.py and foo_test.go
+    When their unit names are asked
+    Then both are foo
+
+  @INCTN-B09 @unit-level
+  Scenario: With no convention read, the family default is used
+    Given a Python project with no test file
+    When its conventions are asked
+    Then the convention is `test_*.py`
+    And a project with no test file and no family has no convention and no template
+
+  @INCTN-B10 @unit-level
+  Scenario: A family's coverage hint names the reports ingest reads
+    Given the families go and python
+    When their coverage hints are asked
+    Then the go hint names lcov and junit, and the python hint names pytest
+    And a family with no hint, and no family, get none
 
   @INCTN-I02 @unit-level
   Scenario: The @TBD instruction demands checking that the @TBD is still true
@@ -53,8 +53,20 @@ Feature: InitCatalogs — the stack preset catalog and the @TBD instruction that
     When its @TBD instruction is produced
     Then the text tells the judge that a marker whose piece already exists is out of date
 
-  @INCTN-X01 @unit-level
-  Scenario: No preset layer carries an identity prefix
-    Given the preset catalog
-    When every preset layer is inspected
-    Then no layer carries a code prefix
+  @INCTN-I03 @unit-level
+  Scenario: No convention of the catalog is shadowed by a shorter one
+    Given the convention catalog
+    When every pair of conventions is compared
+    Then a longer form always comes before a shorter form it contains
+
+  @INCTN-I04 @unit-level
+  Scenario: Every family default is a convention of the catalog
+    Given the family defaults
+    When each is looked up in the catalog
+    Then each is found, with its own family
+
+  @INCTN-X02 @unit-level
+  Scenario: The catalog names no folder
+    Given the conventions, the family defaults and the manifests
+    When each is inspected
+    Then none carries a directory separator

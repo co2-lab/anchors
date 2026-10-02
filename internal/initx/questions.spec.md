@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INQSN
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: infra
 -->
 # InitQuestions — describe the human decisions of `init` so an agent can answer them without the terminal UI, and judge every answer
@@ -35,17 +35,16 @@ file conclude that the integration is active.
 | Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
 | the inference proposal | the result of the disk inference, possibly with no configuration built, or nothing | — | this unit: a missing proposal or configuration gives empty defaults, never a crash |
-| the preset names | the names of the preset catalog | — | the caller, which passes the catalog |
 | the answers | for each question, a value or nothing (not answered) | values outside the question's options; `github` mode without repository or labels; a repository outside `github` mode | this unit: each is refused in its verdict |
 
 ## Effects
 
 | Effect | Description |
 | --- | --- |
-| `INQSN-B01` | The questions are, in this order: preset, header, artifacts, gates, colocation, layers, workflow, repo, labels, governs. |
+| `INQSN-B01` | The questions are, in this order: header, contributing, artifacts, gates, colocation, layers, workflow, repo, labels, governs. |
 | `INQSN-B02` | Every question carries its identifier, its text, its answer type and what the answer changes; every single-choice question carries its options. |
 | `INQSN-B03` | The defaults come from the inference: the artifacts detected on disk (in name order), whether the project is colocated, and the code layers of the inferred configuration as both the options and the default of the layers question; with no proposal or no configuration, those defaults are empty. |
-| `INQSN-B04` | The preset is chosen among "none" and the catalog, "none" by default; the work queue among `local`, `manual` and `github`, `local` by default. |
+| `INQSN-B04` | The work queue is chosen among `local`, `manual` and `github`, `local` by default. |
 | `INQSN-B05` | The verdict (`ValidateAnswers`) has one entry per question, in the questions' order; an answer not given takes the question's default and is marked as default. |
 | `INQSN-B06` | An answer outside the question's options is refused, and the verdict lists the accepted values; a multiple-choice question with no declared options accepts any value. |
 | `INQSN-B07` | In `github` mode, a missing or empty repository and a missing or empty label list are each refused. |

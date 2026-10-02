@@ -41,16 +41,16 @@ type Question struct {
 // A distinção entre "não respondi" e "respondi vazio" é o motivo dos ponteiros: para um
 // `--artifacts=""` deliberado (nenhum artefato) não ser confundido com a flag ausente.
 type Respostas struct {
-	Preset     *string
-	Header     *bool
-	Artifacts  *[]string
-	Gates      *bool
-	Colocation *bool
-	Layers     *[]string
-	Governs    map[string][]string
-	Workflow   *string
-	Repo       *string
-	Labels     *[]string
+	Header       *bool
+	Contributing *bool
+	Artifacts    *[]string
+	Gates        *bool
+	Colocation   *bool
+	Layers       *[]string
+	Governs      map[string][]string
+	Workflow     *string
+	Repo         *string
+	Labels       *[]string
 }
 
 // StatusResposta é o veredito de UMA resposta, na saída da segunda chamada. O agente
@@ -66,7 +66,7 @@ type StatusResposta struct {
 // Questions monta a lista a partir do que foi inferido do disco. A ordem é a mesma da
 // TUI: cada resposta restringe a seguinte, e apresentá-las fora de ordem faria o agente
 // decidir camadas antes de saber se há co-location.
-func Questions(p *Proposal, presets []string) []Question {
+func Questions(p *Proposal) []Question {
 	artefatosDetectados := []string{}
 	if p != nil {
 		for nome, sim := range p.DetectedArtifacts() {
@@ -95,19 +95,18 @@ func Questions(p *Proposal, presets []string) []Question {
 	// in the project's `lang:`. They were hard-coded in Portuguese.
 	qs := []Question{
 		{
-			ID:      "preset",
-			Texto:   i18n.T("init.question.preset.text"),
-			Tipo:    "select",
-			Opcoes:  append([]string{"nenhum"}, presets...),
-			Default: "nenhum",
-			PorQue:  i18n.T("init.question.preset.why"),
-		},
-		{
 			ID:      "header",
 			Texto:   i18n.T("init.question.header.text"),
 			Tipo:    "confirm",
 			Default: true,
 			PorQue:  i18n.T("init.question.header.why"),
+		},
+		{
+			ID:      "contributing",
+			Texto:   i18n.T("init.question.contributing.text"),
+			Tipo:    "confirm",
+			Default: true,
+			PorQue:  i18n.T("init.question.contributing.why"),
 		},
 		{
 			ID:      "artifacts",
@@ -184,18 +183,10 @@ func ValidateAnswers(qs []Question, r Respostas) []StatusResposta {
 	for _, q := range qs {
 		st := StatusResposta{ID: q.ID, Aceita: true}
 		switch q.ID {
-		case "preset":
-			if r.Preset == nil {
-				st.Valor, st.UsouPada = q.Default, true
-			} else {
-				st.Valor = *r.Preset
-				if !contem(q.Opcoes, *r.Preset) {
-					st.Aceita = false
-					st.Detalhe = i18n.T("init.question.detail.unknown_preset", strings.Join(q.Opcoes, ", "))
-				}
-			}
 		case "header":
 			st.Valor, st.UsouPada = valorBool(r.Header, q.Default)
+		case "contributing":
+			st.Valor, st.UsouPada = valorBool(r.Contributing, q.Default)
 		case "gates":
 			st.Valor, st.UsouPada = valorBool(r.Gates, q.Default)
 		case "colocation":

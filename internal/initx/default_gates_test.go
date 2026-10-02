@@ -37,10 +37,9 @@ func TestDefaultGates(t *testing.T) {
 	}
 }
 
-// blockingByNature are the five gates born blocking whatever the age (DFGTD-B06).
+// blockingByNature are the two gates born blocking whatever the age (DFGTD-B06).
 var blockingByNature = map[string]bool{
 	"no-secret-leaked": true, "doc-required": true,
-	"flag-scenario-grammar": true, "flag-scenarios-complete": true, "flag-scenario-exists": true,
 }
 
 func TestDefaultGatesNoScenarioWithoutSpec(t *testing.T) {
@@ -228,7 +227,7 @@ func TestNewProjectIsBornWithBlockingGates(t *testing.T) {
 }
 
 func TestExistingProjectIsBornInformative(t *testing.T) {
-	t.Run("DFGTD-B06: An existing project is born with its gates informative, except the five blocking by nature", func(t *testing.T) {})
+	t.Run("DFGTD-B06: An existing project is born with its gates informative, except the two blocking by nature", func(t *testing.T) {})
 	all := map[string]bool{"spec": true, "feature": true, "test": true, "code": true, "guide": true, "plan": true}
 	got := map[string]bool{}
 	for _, g := range DefaultGates(all, false) {

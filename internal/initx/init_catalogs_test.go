@@ -5,85 +5,98 @@ import (
 	"testing"
 )
 
-func TestCatalogIsWellFormed(t *testing.T) {
-	t.Run("INCTN-I01: Every preset has a unique name, a title, patterned layers and a test layer", func(t *testing.T) {})
-	t.Run("INCTN-B05: A modular preset declares the directory of its modules", func(t *testing.T) {})
-	if len(Presets) == 0 {
-		t.Fatal("empty preset catalog")
+func TestTestConventionOf(t *testing.T) {
+	t.Run("INCTN-B06: A file is a test when its name carries a convention's prefix and suffix", func(t *testing.T) {})
+	for name, want := range map[string]bool{
+		"foo_test.go": true, "test_foo.py": true, "Login.spec.tsx": true, "UserTest.java": true,
+		"_test.go": false, "foo.go": false,
+	} {
+		if _, got := testConventionOf(name); got != want {
+			t.Errorf("%s: test = %v, want %v", name, got, want)
+		}
 	}
-	seen := map[string]bool{}
-	for _, p := range Presets {
-		if p.Name == "" || p.Title == "" {
-			t.Errorf("preset with no name/title: %+v", p)
-		}
-		if seen[p.Name] {
-			t.Errorf("duplicate preset name: %s", p.Name)
-		}
-		seen[p.Name] = true
-		if len(p.Layers) == 0 {
-			t.Errorf("preset %s has no layers", p.Name)
-		}
-		hasTest := false
-		for _, l := range p.Layers {
-			if l.Pattern == "" {
-				t.Errorf("preset %s: layer %s has no pattern", p.Name, l.Name)
+	if c, _ := testConventionOf("Login.spec.tsx"); c.Suffix != ".spec.tsx" {
+		t.Errorf("Login.spec.tsx follows %q, want .spec.tsx", c.Suffix)
+	}
+}
+
+func TestConventionGlobAndTemplate(t *testing.T) {
+	t.Run("INCTN-B07: A convention gives its glob and its template", func(t *testing.T) {})
+	t.Run("INCTN-B08: A test file's unit name drops the convention's prefix and suffix", func(t *testing.T) {})
+	goC := TestConvention{Suffix: "_test.go"}
+	py := TestConvention{Prefix: "test_", Suffix: ".py"}
+	if goC.Glob() != "**/*_test.go" || goC.Template() != "{{dir}}/{{name}}_test.go" {
+		t.Errorf("go: %s %s", goC.Glob(), goC.Template())
+	}
+	if py.Glob() != "**/test_*.py" || py.Template() != "{{dir}}/test_{{name}}.py" {
+		t.Errorf("python: %s %s", py.Glob(), py.Template())
+	}
+	if py.stemOfTest("test_foo.py") != "foo" || goC.stemOfTest("foo_test.go") != "foo" {
+		t.Error("the unit name should be foo")
+	}
+}
+
+func TestConventionsFallBackToTheFamily(t *testing.T) {
+	t.Run("INCTN-B09: With no convention read, the family default is used", func(t *testing.T) {})
+	if got := (&Proposal{Family: "python"}).TestGlobs(); len(got) != 1 || got[0] != "**/test_*.py" {
+		t.Errorf("python with no test: %v", got)
+	}
+	p := &Proposal{}
+	if len(p.TestGlobs()) != 0 || p.TestTemplate() != "" {
+		t.Errorf("no family, no test: %v %q", p.TestGlobs(), p.TestTemplate())
+	}
+}
+
+func TestCoverageHintByFamily(t *testing.T) {
+	t.Run("INCTN-B10: A family's coverage hint names the reports ingest reads", func(t *testing.T) {})
+	if h := CoverageHint("go"); !strings.Contains(h, "lcov") || !strings.Contains(h, "junit") {
+		t.Errorf("go hint = %q", h)
+	}
+	if h := CoverageHint("python"); !strings.Contains(h, "pytest") {
+		t.Errorf("python hint = %q", h)
+	}
+	if CoverageHint("php") != "" || CoverageHint("") != "" {
+		t.Error("a family with no hint, or no family, gets none")
+	}
+}
+
+func TestNoConventionIsShadowed(t *testing.T) {
+	t.Run("INCTN-I03: No convention of the catalog is shadowed by a shorter one", func(t *testing.T) {})
+	for i, a := range testConventions {
+		for _, b := range testConventions[i+1:] {
+			// b is shadowed when every name b matches is also matched by a, listed first.
+			if strings.HasSuffix(b.Suffix, a.Suffix) && strings.HasPrefix(b.Prefix, a.Prefix) && a != b {
+				t.Errorf("%s*%s comes before %s*%s and shadows it", a.Prefix, a.Suffix, b.Prefix, b.Suffix)
 			}
-			if l.Kind == "test" {
-				hasTest = true
-			}
-		}
-		if !hasTest {
-			t.Errorf("preset %s: no test layer", p.Name)
-		}
-		if p.Modular && p.ModuleGlob == "" {
-			t.Errorf("modular preset %s has no ModuleGlob", p.Name)
 		}
 	}
 }
 
-func TestCatalogLeavesCodePrefixEmpty(t *testing.T) {
-	t.Run("INCTN-X01: No preset layer carries an identity prefix", func(t *testing.T) {})
-	for _, p := range Presets {
-		for _, l := range p.Layers {
-			if l.CodePrefix != "" {
-				t.Errorf("preset %s layer %s carries code prefix %q; it is deduced per module at init",
-					p.Name, l.Name, l.CodePrefix)
+func TestFamilyDefaultsAreInTheCatalog(t *testing.T) {
+	t.Run("INCTN-I04: Every family default is a convention of the catalog", func(t *testing.T) {})
+	for fam, d := range familyDefault {
+		found := false
+		for _, c := range testConventions {
+			if c == d && c.Family == fam {
+				found = true
 			}
+		}
+		if !found {
+			t.Errorf("the default of %s (%s*%s) is not in the catalog", fam, d.Prefix, d.Suffix)
 		}
 	}
 }
 
-func TestToLayersDefaultsKindToCode(t *testing.T) {
-	t.Run("INCTN-B01: A preset layer with no kind becomes a code layer", func(t *testing.T) {})
-	p := Preset{Layers: []PresetLayer{
-		{Name: "a", Pattern: "a/**", Kind: ""}, // no kind → code
-		{Name: "t", Pattern: "t/**", Kind: "test", Tags: []string{"x"}},
-	}}
-	layers := p.ToLayers()
-	if layers["a"].Kind != "code" {
-		t.Errorf("an empty kind should become code, got %q", layers["a"].Kind)
+func TestCatalogNamesNoFolder(t *testing.T) {
+	t.Run("INCTN-X02: The catalog names no folder", func(t *testing.T) {})
+	for _, c := range testConventions {
+		if strings.Contains(c.Prefix+c.Suffix, "/") {
+			t.Errorf("convention %s*%s names a folder", c.Prefix, c.Suffix)
+		}
 	}
-	if layers["t"].Kind != "test" || layers["t"].Pattern != "t/**" || len(layers["t"].Tags) != 1 {
-		t.Errorf("a declared kind, pattern and tags should be preserved, got %+v", layers["t"])
-	}
-}
-
-func TestPresetLookup(t *testing.T) {
-	t.Run("INCTN-B02: Looking up a preset by an unknown name finds nothing", func(t *testing.T) {})
-	t.Run("INCTN-B03: The preset names are listed in catalog order", func(t *testing.T) {})
-	if p, ok := PresetByName("go"); !ok || p.Name != "go" {
-		t.Errorf("the go preset should be found, got %+v %v", p, ok)
-	}
-	if p, ok := PresetByName("no-such-stack"); ok || p.Name != "" || len(p.Layers) != 0 {
-		t.Errorf("an unknown name should give (zero, false), got %+v %v", p, ok)
-	}
-	names := PresetNames()
-	if len(names) != len(Presets) {
-		t.Fatalf("PresetNames has %d names for %d presets", len(names), len(Presets))
-	}
-	for i, p := range Presets {
-		if names[i] != p.Name {
-			t.Errorf("name %d is %q, catalog order says %q", i, names[i], p.Name)
+	for _, m := range manifestFamily {
+		if strings.Contains(m.file, "/") {
+			t.Errorf("manifest %s names a folder", m.file)
 		}
 	}
 }

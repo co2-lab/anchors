@@ -416,7 +416,7 @@ derived:
     - code: INCTN   # InitCatalogs
       files:
         code:
-          - "internal/initx/presets.go"
+          - "internal/initx/language.go"
           - "internal/initx/tbd_instruction.go"
         feature:
           - "internal/initx/init_catalogs.feature"

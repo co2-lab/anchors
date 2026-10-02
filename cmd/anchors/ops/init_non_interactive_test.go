@@ -193,29 +193,6 @@ func TestNonInteractiveDefaultsWritesWhenAskedTo(t *testing.T) {
 	loadWritten(t, root)
 }
 
-// A stack preset fills the code layers from the stack's structure.
-//
-// The project has a module DIRECTORY but no code yet. The case with code on disk is
-// TestNonInteractivePresetWithCodeKeepsThePresetLayers.
-func TestNonInteractivePresetFillsTheCodeLayers(t *testing.T) {
-	t.Run("ININT-B07: A stack preset fills the code layers", func(t *testing.T) {})
-	root := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(root, "src", "modules", "users"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	err, doc, out := runNonInteractive(t, root, "--preset=node-ts", "--artifacts=spec",
-		"--governs", "guides/STYLE.md=backend,web")
-	if err != nil || doc["escrito"] != true {
-		t.Fatalf("init: %v\n%s", err, out)
-	}
-	names := layerNames(loadWritten(t, root))
-	for _, want := range []string{"modules", "core", "common"} {
-		if !containsStr(names, want) {
-			t.Errorf("the preset layer %q is missing: %v", want, names)
-		}
-	}
-}
-
 // --layers keeps only the chosen code layers: the others are pruned from the file.
 func TestNonInteractiveLayersPrunesTheOthers(t *testing.T) {
 	t.Run("ININT-B08: Layers prunes the other code layers", func(t *testing.T) {})
@@ -276,29 +253,43 @@ func containsStr(list []string, s string) bool {
 	return false
 }
 
-// A stack preset in a project that ALREADY has code keeps the preset's code layers when
-// `--layers` is not passed. The default of the `layers` question is inferred BEFORE the
-// preset; pruning with it dropped `core` and `common` and left `modules` renamed — while
-// the TUI, which asks after the preset, keeps them all.
-func TestNonInteractivePresetWithCodeKeepsThePresetLayers(t *testing.T) {
-	t.Run("ININT-B07: A stack preset fills the code layers", func(t *testing.T) {})
-	t.Run("ININT-B08: Layers prunes the other code layers", func(t *testing.T) {})
+// A contributor arrives and does not know the spec comes first: the seeded guide says it
+// from the configuration just written. A guide the project already has is the project's.
+func TestNonInteractiveSeedsContributingOnlyWhenAbsent(t *testing.T) {
+	t.Run("ININT-B11: CONTRIBUTING.md is seeded when absent, and an existing one is left as it is", func(t *testing.T) {})
 	root := t.TempDir()
-	for i := 0; i < 10; i++ {
-		n := string(rune('a' + i))
-		writeFile(t, root, filepath.Join("src", "modules", "users", n+".service.ts"), "export const x = 1\n")
-		writeFile(t, root, filepath.Join("src", "core", n+".ts"), "export const y = 1\n")
-		writeFile(t, root, filepath.Join("src", "common", n+".ts"), "export const z = 1\n")
-	}
-	err, doc, out := runNonInteractive(t, root, "--preset=node-ts", "--artifacts=spec")
+	err, doc, out := runNonInteractive(t, root, "--artifacts=spec")
 	if err != nil || doc["escrito"] != true {
 		t.Fatalf("init: %v\n%s", err, out)
 	}
-	names := layerNames(loadWritten(t, root))
-	for _, want := range []string{"modules", "core", "common"} {
-		if !containsStr(names, want) {
-			t.Errorf("the preset layer %q is missing: %v", want, names)
-		}
+	b, rerr := os.ReadFile(filepath.Join(root, "CONTRIBUTING.md"))
+	if rerr != nil || !strings.Contains(string(b), "The spec is the anchor") {
+		t.Errorf("CONTRIBUTING.md was not seeded from the configuration: %v\n%s", rerr, b)
+	}
+	if c, _ := doc["contributing"].(map[string]any); c["escrito"] != true {
+		t.Errorf("the success JSON does not say CONTRIBUTING.md was written: %v", doc["contributing"])
+	}
+
+	ours := t.TempDir()
+	writeFile(t, ours, "CONTRIBUTING.md", "ours\n")
+	err, doc, out = runNonInteractive(t, ours, "--artifacts=spec")
+	if err != nil || doc["escrito"] != true {
+		t.Fatalf("init: %v\n%s", err, out)
+	}
+	if b, _ := os.ReadFile(filepath.Join(ours, "CONTRIBUTING.md")); string(b) != "ours\n" {
+		t.Errorf("the project's CONTRIBUTING.md was touched:\n%s", b)
+	}
+	c, _ := doc["contributing"].(map[string]any)
+	if trecho, _ := c["trecho"].(string); c["escrito"] != false || !strings.Contains(trecho, "## Working with Anchors") {
+		t.Errorf("the success JSON should carry the section that would be added: %v", doc["contributing"])
+	}
+
+	none := t.TempDir()
+	if err, _, out := runNonInteractive(t, none, "--artifacts=spec", "--contributing=false"); err != nil {
+		t.Fatalf("init: %v\n%s", err, out)
+	}
+	if _, serr := os.Stat(filepath.Join(none, "CONTRIBUTING.md")); serr == nil {
+		t.Error("--contributing=false wrote CONTRIBUTING.md")
 	}
 }
 

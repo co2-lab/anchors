@@ -20,7 +20,7 @@ command -v semgrep >/dev/null 2>&1 || {
 # Sem argumento, varre o projeto inteiro (é o modo `scope_full`); com, só os arquivos
 # passados pelo motor.
 ALVO=("$@")
-[ ${#ALVO[@]} -eq 0 ] && ALVO=("cli/")
+[ ${#ALVO[@]} -eq 0 ] && ALVO=(".")
 
 TMP=$(mktemp)
 semgrep --config=p/gosec --json --quiet "${ALVO[@]}" > "$TMP" 2>/dev/null

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:c03c9d2dc596b88e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:d44be8b96037d733 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -425,11 +425,11 @@ abra a página dela em `camadas/`.
 
 ### [SPSCS — SpecSections — the doctor tells when most specs of a layer lack a section a gate needs to see](camadas/infra.md#spscs--specsections--the-doctor-tells-when-most-specs-of-a-layer-lack-a-section-a-gate-needs-to-see)
 
-### [APPRP — ApplyPreset — writes a stack preset's layers into the configuration and deduces one identity prefix per module](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module)
-
 ### [ARCHR — ArtifactChoice — turns the artifacts the user chose at init into artifact layers and colocation](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation)
 
 ### [BLCNB — BuildConfig — builds the configuration that inference proposes as the default for the init questions](camadas/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
+
+### [CNGDC — ContributingGuide — render the project's CONTRIBUTING.md from the configuration init writes](camadas/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 
 ### [INDCN — InitDecisions — the pure decisions of init over the proposed configuration: code layers, tags and governs rules](camadas/infra.md#indcn--initdecisions--the-pure-decisions-of-init-over-the-proposed-configuration-code-layers-tags-and-governs-rules)
 
@@ -439,11 +439,11 @@ abra a página dela em `camadas/`.
 
 ### [GTSTG — GitState — classify the project's versioning before `init` scans it, and say what to do about it](camadas/infra.md#gtstg--gitstate--classify-the-projects-versioning-before-init-scans-it-and-say-what-to-do-about-it)
 
-### [HDGDH — HeaderGuide — render the project's header guide in the stack's comment dialect, passing the gate that init itself declares](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-stacks-comment-dialect-passing-the-gate-that-init-itself-declares)
+### [HDGDH — HeaderGuide — render the project's header guide in the language's comment dialect, passing the gate that init itself declares](camadas/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares)
 
 ### [INPRN — InferProposal — walks the project and proposes its structure deterministically, for init to confirm](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm)
 
-### [INCTN — InitCatalogs — the stack preset catalog and the @TBD instruction that init seeds into judgment gates](camadas/infra.md#inctn--initcatalogs--the-stack-preset-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates)
+### [INCTN — InitCatalogs — the language dialect catalog and the @TBD instruction that init seeds into judgment gates](camadas/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates)
 
 ### [OPDTP — OperatorDetection — tell whether a person or an AI is running `init`, and whether the discovery phase is still to be done](camadas/infra.md#opdtp--operatordetection--tell-whether-a-person-or-an-ai-is-running-init-and-whether-the-discovery-phase-is-still-to-be-done)
 

@@ -7,6 +7,7 @@ package initx
 import (
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -31,6 +32,12 @@ type Proposal struct {
 	// marca nada (um backend, uma lib): aí os gates de inventário de handle não têm
 	// o que confrontar e pulam, em vez de acusar o repositório inteiro.
 	TestHandle string
+	// Family is the project's dialect family (`go`, `ts`, `python`…), from the manifest at
+	// its root or its most common code extension; empty when neither says.
+	Family string
+	// TestConventions are the test-naming conventions the project's own test files
+	// follow, most used first.
+	TestConventions []TestConvention
 }
 
 // knownHandles — os atributos de ancoragem de teste dos ecossistemas correntes,
@@ -51,6 +58,7 @@ func Infer(root string) (*Proposal, error) {
 	dirCode := map[string]int{}           // diretório-raiz (1º nível relevante) → nº de arquivos de código
 	stems := map[string]map[string]bool{} // stem → conjunto de tipos (code/spec/feature/test)
 	handleCount := map[string]int{}       // atributo de ancoragem → ocorrências na amostra
+	conventionCount := map[TestConvention]int{}
 	lidosParaHandle := 0
 
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
@@ -80,6 +88,9 @@ func Infer(root string) (*Proposal, error) {
 			mark(stems, stemOf(rel), "feature")
 		case isTest(name):
 			p.HasTest = true
+			if c, ok := testConventionOf(name); ok {
+				conventionCount[c]++
+			}
 			mark(stems, stemOf(rel), "test")
 		case isPlan(rel):
 			if p.PlanDir == "" {
@@ -118,6 +129,8 @@ func Infer(root string) (*Proposal, error) {
 	p.CodeDirs = codeRoots(dirCode)
 	p.Colocated = detectColocation(stems)
 	p.TestHandle = handleDominante(handleCount)
+	p.Family = detectFamily(root, extCount)
+	p.TestConventions = rankConventions(conventionCount)
 	sort.Strings(p.GuideFiles)
 
 	p.Config = p.buildConfig()
@@ -169,19 +182,18 @@ func detectColocation(stems map[string]map[string]bool) bool {
 	return hits >= 3 // alguns casos = padrão, não coincidência
 }
 
-// testSuffixes are the file endings that mark a test, in every dialect inference knows.
-// isTest and stemOf read the SAME list: stemOf kept a shorter copy without `_test.go`,
-// `_test.py` and `.spec.ts`, so `foo_test.go` reduced to `foo_test` instead of `foo`,
-// never met `foo.go`, and a colocated Go project was never detected as colocated.
-var testSuffixes = []string{".test.ts", ".test.tsx", ".test.js", ".test.go", "_test.go", ".test.py", "_test.py", ".spec.ts"}
-
 func stemOf(rel string) string {
 	dir := filepath.Dir(rel)
 	base := filepath.Base(rel)
-	for _, suf := range append([]string{".spec.md", ".feature"}, testSuffixes...) {
+	for _, suf := range []string{".spec.md", ".feature"} {
 		if cut, ok := strings.CutSuffix(base, suf); ok {
 			return filepath.Join(dir, cut)
 		}
+	}
+	// A test's stem is its unit's: `foo_test.go`, `test_foo.py` and `foo.test.ts` are all
+	// `foo`, the same stem as `foo.go` — the conventions are the same list isTest reads.
+	if c, ok := testConventionOf(base); ok {
+		return filepath.Join(dir, c.stemOfTest(base))
 	}
 	if i := strings.LastIndex(base, "."); i >= 0 {
 		base = base[:i]
@@ -190,12 +202,8 @@ func stemOf(rel string) string {
 }
 
 func isTest(name string) bool {
-	for _, s := range testSuffixes {
-		if strings.HasSuffix(name, s) {
-			return true
-		}
-	}
-	return false
+	_, ok := testConventionOf(name)
+	return ok
 }
 
 func isGuide(rel string) bool {
@@ -224,22 +232,26 @@ func isCode(name string) bool {
 	return codeExts[filepath.Ext(name)]
 }
 
-// topDir devolve o segmento raiz relevante de um caminho (até 2 níveis, para
-// distinguir apps/mobile de packages/backend).
+// topDir is the folder a code file belongs to as a layer candidate: its directory, cut at
+// two segments (apps/mobile, src/handlers); "." for a file at the root.
 func topDir(rel string) string {
 	// Barra normal dos dois lados: o rel chega normalizado e o resultado vira entrada de
 	// config ("apps/mobile"), que é a mesma em toda máquina. Com filepath.Separator o
-	// Split não separava nada no Windows — cada arquivo virava um diretório distinto e
-	// nenhum alcançava a massa mínima, deixando o init sem camada de código nenhuma.
-	parts := strings.Split(rel, "/")
-	if len(parts) >= 2 {
-		return parts[0] + "/" + parts[1]
+	// Split não separava nada no Windows — cada arquivo virava um diretório distinto.
+	dir := path.Dir(rel)
+	if dir == "." {
+		return "."
 	}
-	return parts[0]
+	parts := strings.Split(dir, "/")
+	if len(parts) > 2 {
+		parts = parts[:2]
+	}
+	return strings.Join(parts, "/")
 }
 
-// codeRoots devolve os diretórios com massa relevante de código (≥ 10 arquivos),
-// ordenados por volume.
+// codeRoots are the project's own folders that hold code, each a candidate layer,
+// ordered by volume. There is no minimum: a folder of two files is as much the project's
+// decision as one of fifty, and a threshold dropped the small layers of a layered project.
 func codeRoots(dirCode map[string]int) []string {
 	type kv struct {
 		dir string
@@ -247,7 +259,7 @@ func codeRoots(dirCode map[string]int) []string {
 	}
 	var kvs []kv
 	for d, n := range dirCode {
-		if n >= 10 {
+		if n > 0 {
 			kvs = append(kvs, kv{d, n})
 		}
 	}

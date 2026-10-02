@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DFGTD
-#   updated_at: 2026-09-27
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @DFGTD
@@ -42,10 +42,10 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     And a project that chose only feature and test has no parent-valid
 
   @DFGTD-B06 @unit-level
-  Scenario: An existing project is born with its gates informative, except the five blocking by nature
+  Scenario: An existing project is born with its gates informative, except the two blocking by nature
     Given an existing project that chose every artifact
     When the default gates are seeded
-    Then the blocking gates are exactly no-secret-leaked, doc-required, flag-scenario-grammar, flag-scenarios-complete and flag-scenario-exists
+    Then the blocking gates are exactly no-secret-leaked and doc-required
 
   @DFGTD-B07 @unit-level
   Scenario: A new project is born with its gates blocking

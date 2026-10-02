@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INQSN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @INQSN
@@ -11,7 +11,7 @@ Feature: InitQuestions — describe the human decisions of `init` so an agent ca
   Scenario: The questions come in the order of the terminal UI
     Given an inference proposal with no configuration
     When the questions are built
-    Then their identifiers are preset, header, artifacts, gates, colocation, layers, workflow, repo, labels, governs in that order
+    Then their identifiers are header, contributing, artifacts, gates, colocation, layers, workflow, repo, labels, governs in that order
 
   @INQSN-B02 @unit-level
   Scenario: Every question carries what the agent needs to decide
@@ -30,11 +30,10 @@ Feature: InitQuestions — describe the human decisions of `init` so an agent ca
     And with no proposal the colocation default is no and the layers are empty
 
   @INQSN-B04 @unit-level
-  Scenario: The preset and the work-queue mode have their choices and defaults
-    Given the preset catalog "go" and "nextjs"
+  Scenario: The work-queue mode has its choices and default
+    Given the questions of a project
     When the questions are built
-    Then the preset offers "nenhum", "go", "nextjs" with "nenhum" by default
-    And the workflow offers "local", "manual", "github" with "local" by default
+    Then the workflow offers "local", "manual", "github" with "local" by default
 
   @INQSN-B05 @unit-level
   Scenario: Every question gets a verdict and unanswered ones take the default
@@ -45,9 +44,9 @@ Feature: InitQuestions — describe the human decisions of `init` so an agent ca
 
   @INQSN-B06 @unit-level
   Scenario: An answer outside the options is refused with the accepted values
-    Given the answer "preset-que-nao-existe" for the preset and "code" for the artifacts
+    Given the answer "fila-que-nao-existe" for the workflow and "docs" for the artifacts
     When the answers are validated
-    Then the preset and the artifacts verdicts are refused
+    Then the workflow and the artifacts verdicts are refused
     And each detail lists the accepted values after "aceitos:"
     And a free label "whatever" for the labels question is accepted
 
@@ -66,7 +65,7 @@ Feature: InitQuestions — describe the human decisions of `init` so an agent ca
 
   @INQSN-B09 @unit-level
   Scenario: One refused answer refuses the whole set
-    Given a set whose only invalid answer is the preset
+    Given a set whose only invalid answer is the workflow
     When the set is judged
     Then the whole set is refused
 
@@ -86,9 +85,9 @@ Feature: InitQuestions — describe the human decisions of `init` so an agent ca
 
   @INQSN-X01 @unit-level
   Scenario: An invalid answer is not corrected
-    Given the answer "preset-que-nao-existe" for the preset
+    Given the answer "fila-que-nao-existe" for the workflow
     When the answers are validated
-    Then the preset verdict keeps "preset-que-nao-existe" as its value and is refused
+    Then the workflow verdict keeps "fila-que-nao-existe" as its value and is refused
 
   @INQSN-B11 @unit-level
   Scenario: The artifacts question offers the artifact options, code included
@@ -101,6 +100,6 @@ Feature: InitQuestions — describe the human decisions of `init` so an agent ca
   @INQSN-B12 @unit-level
   Scenario: The question texts, their reasons and the refusal details are in the project's language
     Given the project language set to English, then Portuguese, then Spanish
-    When the questions are asked and an unknown preset is answered
-    Then the preset question, its reason and the refusal detail are written in that language
+    When the questions are asked and an unknown mode is answered
+    Then the layers question, its reason and the refusal detail are written in that language
     And no question shows a bare catalog key

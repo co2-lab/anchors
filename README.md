@@ -93,7 +93,7 @@ go install ./cmd/anchors
 Num projeto qualquer:
 
 ```sh
-anchors init            # configura o anchors.yaml (por P&R; sugere presets de stack)
+anchors init            # configura o anchors.yaml (por P&R; lê as pastas do projeto como camadas)
 anchors map build       # constrói o mapa de dependências a partir dos arquivos
 anchors doctor          # saúde do ecossistema: órfãos, colisões, buracos de cobertura
 anchors check --all     # roda os gates de qualidade; abre issues; carimba o mapa
@@ -128,7 +128,7 @@ feature→testar…). A IA não precisa lembrar o que vem depois; a fila diz.
 
 | área | comandos | o que entrega |
 |---|---|---|
-| **Estrutura** | `init` | configura o `anchors.yaml`; presets de estrutura para ~17 stacks |
+| **Estrutura** | `init` | configura o `anchors.yaml` a partir das pastas e da linguagem do projeto, sem propor estrutura; semeia o `CONTRIBUTING.md` |
 | **Mapa** | `map build`, `map show`, `governs` | o grafo de dependências; quem rege quem |
 | **Propagação** | `impact`, `stale` | a onda de uma mudança; o que ficou desatualizado |
 | **Fila** | `watch`, `queue`, `next`, `done`, `drop`, `reclaim` | o watcher em background enfileira; a IA puxa |

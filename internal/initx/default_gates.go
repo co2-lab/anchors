@@ -291,19 +291,22 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "revision-orphans", Blocking: config.Bool(false),
 			Measures: "the revision names the sibling rules that speak of the same subject",
 		})
+		// The flag gates follow the project's age: an existing project's flags were written
+		// before the grammar was asked of them, and blocking every one on day one stopped the
+		// work for a debt that is matured, not a defect that leaks.
 		gates = append(gates, config.Gate{
 			Name: "flag-scenario-grammar", ID: "flag-scenario-grammar", On: []string{"flag"},
-			Check: "flag-scenario-grammar", Blocking: config.Bool(true),
+			Check: "flag-scenario-grammar", Blocking: config.Bool(projetoNovo),
 			Measures: "each scenario's condition is written in the grammar",
 		})
 		gates = append(gates, config.Gate{
 			Name: "flag-scenarios-complete", ID: "flag-scenarios-complete", On: []string{"flag"},
-			Check: "flag-scenarios-complete", Blocking: config.Bool(true),
+			Check: "flag-scenarios-complete", Blocking: config.Bool(projetoNovo),
 			Measures: "the flag declares the ABSENT case",
 		})
 		gates = append(gates, config.Gate{
 			Name: "flag-scenario-exists", ID: "flag-scenario-exists", On: []string{"spec"},
-			Check: "flag-scenario-exists", Blocking: config.Bool(true),
+			Check: "flag-scenario-exists", Blocking: config.Bool(projetoNovo),
 			Measures: "the scenario the spec cites with `@gated-by` exists",
 		})
 		// The WAY BACK of the previous one: that one confronts the spec citing a scenario
