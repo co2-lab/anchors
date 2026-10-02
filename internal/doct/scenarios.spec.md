@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GSRGH
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: apoio
 -->
 # GherkinScenarioReader — the scenarios of a unit's feature, with their steps, for the documentation
@@ -9,7 +9,7 @@
 
 ## Overview
 
-The feature is the one artifact of the triad written to be read by people who do not program,
+The feature is the one artifact of the unit written to be read by people who do not program,
 and it answers the question the spec does not: the spec states the rule in the abstract, the
 scenario says what happens. Leaving scenarios out of the documentation would keep the system's
 observable behaviour in files only the development team opens.

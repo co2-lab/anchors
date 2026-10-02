@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCASS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: gate
 -->
 # ScenarioAsserts — scenario outcome steps must assert concrete verifiable outcomes
@@ -59,7 +59,7 @@ This gate operates in distinct territory from neighbouring gates:
 | --- | --- | --- |
 | `SCASS-X01` | Does not evaluate the semantic accuracy or elegance of prose beyond the mechanical removal of linking words. | Subjective stylistic judgment belongs to human review and language models, while structural gates remain deterministic. |
 | `SCASS-X02` | Does not inspect setup and action steps for requirement code references. | Setup and trigger steps legitimately reference requirement context without needing to assert system outcomes. |
-| `SCASS-X03` | Does not enforce the presence of scenarios or tests. | Scenario presence is governed by feature-to-spec alignment gates and triad completeness rules. |
+| `SCASS-X03` | Does not enforce the presence of scenarios or tests. | Scenario presence is governed by feature-to-spec alignment gates and unit completeness rules. |
 
 ## Errors
 

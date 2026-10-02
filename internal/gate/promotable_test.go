@@ -39,7 +39,7 @@ func TestGateInformativoLimpoEhPromovivel(t *testing.T) {
 func TestGateQueReprovaNaoEhPromovivel(t *testing.T) {
 	t.Run("PRGTP-B03: An informative gate with failures is excluded from promotion", func(t *testing.T) {})
 	p := perfil(map[string]GateSummary{
-		"triad-complete": {Pass: 8, Fail: 3, Blocking: false},
+		"unit-complete": {Pass: 8, Fail: 3, Blocking: false},
 	})
 
 	if prom := PromotableGates(p); len(prom) != 0 {

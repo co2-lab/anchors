@@ -161,7 +161,7 @@ func TestDocRequired_camadaSemGatilhoNaoCobra(t *testing.T) {
 }
 
 // O gate parte da SPEC. Partir do código faria a mesma unidade ser cobrada uma vez por
-// arquivo — três avisos idênticos para uma trinca, e quem lê aprende a passar por cima.
+// arquivo — três avisos idênticos para uma unidade, e quem lê aprende a passar por cima.
 func TestDocRequired_partiDaSpecNaoDoCodigo(t *testing.T) {
 	t.Run("DCRQD-I01: The duty starts from the spec, not from the code", func(t *testing.T) {})
 	n := noDeLambda()

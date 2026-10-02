@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: WTCHA
-#   updated_at: 2026-09-28
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @WTCHA
@@ -79,10 +79,10 @@ Feature: Watch — the background watcher that turns "a file changed" into "ther
     Then nothing is queued
 
   @WTCHA-B12 @unit-level
-  Scenario: A delivery record triggers the review when the triad closes
+  Scenario: A delivery record triggers the review when the unit closes
     Given the record "changes/a.md" for the unit "src/pricing.ts"
     When it is handled with no code, with code only, and with code and test
-    Then the first says "the review waits for the triad to close", the second queues nothing, and the third queues "changes/a.md→review"
+    Then the first says "the review waits for the unit to close", the second queues nothing, and the third queues "changes/a.md→review"
     And the plan record "changes/plan.md" queues "review-plan", and "changes/reviewed/old.md" queues nothing
 
   @WTCHA-B13 @unit-level

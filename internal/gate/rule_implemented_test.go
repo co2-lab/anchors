@@ -115,7 +115,7 @@ func TestUnidadeAnteriorAPraticaEhPendencia(t *testing.T) {
 	}
 }
 
-// Sem código no disco quem acusa é o `trinca-completa`; duplicar a cobrança faria dois
+// Sem código no disco quem acusa é o `unit-complete`; duplicar a cobrança faria dois
 // gates apontando o mesmo dedo.
 func TestSemCodigoNaoEhAssunto(t *testing.T) {
 	t.Run("RLIMR-B05: A spec with no linked code is not this gate's subject", func(t *testing.T) {})

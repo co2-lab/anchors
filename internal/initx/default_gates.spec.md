@@ -66,7 +66,7 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 | `DFGTD-B11` | Loading a configuration completes a canonical gate declared by name alone with the catalog's declaration. |
 | `DFGTD-B12` | The gate is of the BLOCKING class: a new project is born with it blocking, and an existing one takes it through the same maturation as every structural gate — informative until the project promotes it. It never depends on an ingested signal, so it can block from day one. |
 | `DFGTD-B13` | Choosing every artifact `anchors init` offers (ARCHR-B01) seeds every gate of the catalog, the code gates included. |
-| `DFGTD-B14` | The gates that run on specs, features and tests — documentation, doctrine, flags, failures, the way back of the triad, the contracted document and the justified change — are seeded without plans; the justified-change gate then runs on specs alone, and the gates that run only on plans are not seeded. |
+| `DFGTD-B14` | The gates that run on specs, features and tests — documentation, doctrine, flags, failures, the way back of the unit, the contracted document and the justified change — are seeded without plans; the justified-change gate then runs on specs alone, and the gates that run only on plans are not seeded. |
 | `DFGTD-B15` | The gate names registered for the vocabulary check (`RegisterGateNames`) are the full catalog, in catalog order. |
 | `DFGTD-B16` | Choosing specs seeds `header-valid`, informative, on specs and features: the artifacts whose identity lives in the `@anchors` header. A bare `- name: header-valid` in a configuration inherits that `on:`. |
 | `DFGTD-B17` | `no-duplication` is seeded as the native `duplication` check on code files, needing `npx`: one verdict per file read from jscpd's report, not a project-wide command judged by its exit code. |
@@ -77,7 +77,7 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 | --- | --- | --- |
 | `DFGTD-I01` | The list of seeded gates, and its order, does not change with the age of the project; only the maturation state does. | seeds the same artifacts as a new and as an existing project and compares the lists name by name |
 | `DFGTD-I02` | Every gate of the full catalog has a unique name, and its id is its name. | seeds every artifact and checks names for repetition and id equality |
-| `DFGTD-I03` | Every canonical name the format migration renames a legacy gate to is a gate of the full catalog. | walks every rename of the migration steps and looks each target up in the catalog |
+| `DFGTD-I03` | Every name the format migration renames a legacy gate to, followed through the later steps that rename it again, is a gate of the full catalog. | walks every rename of the migration steps, follows each target through the later steps, and looks the name it lands on up in the catalog |
 | `DFGTD-I04` | Choosing plans adds only gates that run on plans. | seeds two choices with and without plans and checks every added gate runs on plans |
 
 ## Constraints

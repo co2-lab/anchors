@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCCVD
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: gate
 -->
 # DocsCovered — every spec must reach some page of the compiled documentation
@@ -15,7 +15,7 @@ reflects the spec it came from; it cannot see a spec that no page asks for.
 
 That is the silent defect this gate exists for. The templates select specs by filter (by layer,
 for instance), so a spec that no filter selects compiles to nowhere, and nothing complains: every
-page that exists is correct, and the unit has a complete triad and passes every relational gate.
+page that exists is correct, and the unit has a complete unit and passes every relational gate.
 The first spec of a new layer drops out of the documentation without a word, exactly when the
 project grows and nobody is watching.
 

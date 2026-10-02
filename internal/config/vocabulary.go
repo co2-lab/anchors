@@ -9,7 +9,7 @@ package config
 //
 // A TABELA DE ALIAS QUE VIVIA AQUI FOI REMOVIDA.
 //
-// Ela aceitava os nomes em português — `regra-cumprida`, `trinca-completa`, `spec-completa`
+// Ela aceitava os nomes em português — `regra-cumprida`, `unit-complete`, `spec-completa`
 // e outros dezoito — e os convertia na carga, para sempre. Isso resolve e não fecha: o
 // arquivo nunca se conserta, e o mapa acumula carimbos nos DOIS formatos.
 //

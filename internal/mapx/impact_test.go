@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// graph: a guide governs the Login spec AND the Home spec (a shared ruler). The Login triad is
+// graph: a guide governs the Login spec AND the Home spec (a shared ruler). The Login unit is
 // complete. It proves that climbing from Login reaches the guide (validate), but does NOT go
 // down from the guide to Home (climbing does not re-propagate).
 func impactGraph() *Graph {
@@ -54,7 +54,7 @@ func TestAnalyzeImpact_specChange(t *testing.T) {
 	}
 }
 
-// Changing the CODE (a leaf of the triad): propagates to nobody (nothing below depends on the
+// Changing the CODE (a leaf of the unit): propagates to nobody (nothing below depends on the
 // code); validates upward against the spec and the guide.
 func TestAnalyzeImpact_codeChange(t *testing.T) {
 	t.Run("IMANM-B03: Changing code is validated upward against its spec and the spec's guide", func(t *testing.T) {})

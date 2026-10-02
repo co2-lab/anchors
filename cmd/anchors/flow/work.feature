@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: WRPRW
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @WRPRW
@@ -30,7 +30,7 @@ Feature: WorkPrompt — compose the work prompt of one stage over one target, fr
     And it has no "## Procedure"
 
   @WRPRW-B04 @unit-level
-  Scenario: A declarative layer has no triad piece
+  Scenario: A declarative layer has no unit piece
     Given the declarative layer "dao"
     When the test prompt of "daos/user.ts" is composed
     Then it has "## STOP" and "declared as RECOGNIZED"
@@ -166,4 +166,4 @@ Feature: WorkPrompt — compose the work prompt of one stage over one target, fr
     Given a project whose gates include open-questions-resolved on specs and rule-implemented on code
     When the spec, code and test prompts of "src/pricing.ts" and the feature and spec prompts of the waiving "models/user.ts" are composed
     Then the spec prompt names "## Open Decisions" and "none" in both the procedure and the gates' demands, and never "Decisões em aberto" nor "nenhuma"
-    And the prompts cite "optional_triad_edges", "rule-implemented" and "tests-pass", and never "trinca_opcional", "regra-implementada" nor "testes-passam"
+    And the prompts cite "optional_unit_edges", "rule-implemented" and "tests-pass", and never "trinca_opcional", "regra-implementada" nor "testes-passam"

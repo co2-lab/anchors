@@ -46,7 +46,7 @@ type Change struct {
 	// do `anchors work`, para o revisor saber que régua se aplica.
 	Stage string
 	// Unit é o alvo: o arquivo de CÓDIGO que identifica a unidade de propósito. É por ele
-	// que o revisor alcança a trinca inteira.
+	// que o revisor alcança a unidade inteira.
 	Unit string
 	// Files são os arquivos tocados nesta entrega.
 	Files []string

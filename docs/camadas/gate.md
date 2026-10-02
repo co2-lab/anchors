@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:a84261ec964e23a4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:a123f4df080498a8 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
@@ -434,13 +434,13 @@
 
 
 
-## TRCMT — TriadComplete — the pieces that realize a spec EXIST
-
-
-
-
-
 ## TRDCT — TriggerDeclared — cited compliance triggers and obligations must exist in the declared vocabulary
+
+
+
+
+
+## UNTCP — UnitComplete — the pieces that realize a spec EXIST
 
 
 

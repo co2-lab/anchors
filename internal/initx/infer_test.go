@@ -9,12 +9,12 @@ import (
 	"testing"
 )
 
-// writeFixture creates a toy project in dir: a colocated triad in mobile, code in the
+// writeFixture creates a toy project in dir: a colocated unit in mobile, code in the
 // backend, guides, and noise to ignore (node_modules).
 func writeFixture(t *testing.T, dir string) {
 	t.Helper()
 	files := map[string]string{
-		// colocated triad (a screen in mobile)
+		// colocated unit (a screen in mobile)
 		"apps/mobile/src/screens/Login.tsx":      "export const Login = () => null // LOGIX-A01",
 		"apps/mobile/src/screens/Login.spec.md":  "> **Código**: `LOGIX`\n### LOGIX-A01: entrar",
 		"apps/mobile/src/screens/Login.feature":  "@LOGIX-A01\nCenário: entrar",
@@ -25,7 +25,7 @@ func writeFixture(t *testing.T, dir string) {
 		"apps/mobile/src/screens/Home.test.tsx": "it('HOMEX-S01', () => {})",
 		"apps/mobile/src/screens/Prof.tsx":      "export const Prof = () => null",
 		"apps/mobile/src/screens/Prof.spec.md":  "> **Código**: `PROF`",
-		// backend (code only, no triad)
+		// backend (code only, no unit)
 		"packages/backend/handlers/auth.ts": "export function auth() {}",
 		"packages/backend/repos/user.ts":    "export function getUser() {}",
 		// guides
@@ -71,7 +71,7 @@ func TestInfer(t *testing.T) {
 			p.HasSpecMD, p.HasFeature, p.HasTest)
 	}
 	if !p.Colocated {
-		t.Error("should detect colocation (there is a triad beside the code)")
+		t.Error("should detect colocation (there is a unit beside the code)")
 	}
 	if p.GuideDir != "guides" {
 		t.Errorf("GuideDir = %q, want \"guides\"", p.GuideDir)

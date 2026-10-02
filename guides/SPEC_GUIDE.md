@@ -104,7 +104,7 @@ is one case of, before the fix.
 ## What NOT to do
 
 - **A rule with no code.** With no identity, the feature and the test have nothing to
-  cite — the triad does not close and the relational gates are left without a target.
+  cite — the unit does not close and the relational gates are left without a target.
 - **Describing implementation.** The spec states the BEHAVIOUR; the function's name and
   the library change without the rule changing.
 - **Repeating the copy.** The text shown to the user lives once (in the messages

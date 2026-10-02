@@ -1,5 +1,5 @@
 // Superfícies CONSUMIDORAS do testID: onde procurar quem se apoia no handle — o teste
-// ligado pela trinca, o teste vizinho (compartilhado ou do pai) e os flows de ponta a
+// ligado pela unidade, o teste vizinho (compartilhado ou do pai) e os flows de ponta a
 // ponta, que vivem fora do grafo.
 //
 // Este arquivo já foi `testid_honored.go`. O gate foi aposentado por `testid-coerente`

@@ -32,7 +32,7 @@ func IsGenericBasename(name string) bool {
 //     leva o código "limpo" depende da ordem de criação (o primeiro fica com o
 //     canônico, o segundo recebe a variação). Um desempate SIMÉTRICO (ambos
 //     prefixados) exigiria reescrever o código do primeiro — uma operação de RENAME
-//     (recode) que propaga por toda a trinca. Isso é uma feature própria (planejada à
+//     (recode) que propaga por toda a unidade. Isso é uma feature própria (planejada à
 //     parte), não um efeito colateral da geração. Aqui ficamos no cego determinístico.
 //
 // Quando a layer TEM code_prefix declarado, o chamador passa o prefixo e NÃO usa esta

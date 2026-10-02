@@ -127,7 +127,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 				bruto = os.Getenv("ANCHORS_SKIP_RULES")
 			}
 			dispensa, erros := gate.ParseWaiver(bruto)
-			// A MENSAGEM DE COMMIT também dispensa: `[skip-trinca-completa@WRKSP: motivo]`.
+			// A MENSAGEM DE COMMIT também dispensa: `[skip-unit-complete@WRKSP: motivo]`.
 			//
 			// O caminho vem por `--commit-msg`, e não de `.git/COMMIT_EDITMSG`: MEDIDO, o
 			// git NÃO grava esse arquivo antes do `pre-commit` — nem com `-m`. Lê-lo ali
@@ -786,7 +786,7 @@ func selectNodes(g *mapx.Graph, cfg *config.Config, all bool, changed []string, 
 	// Antes o `--changed` aceitava um arquivo, e quem tinha muitos (o pre-commit) era
 	// obrigado a chamar o binário N vezes — recarregando config e mapa a cada volta,
 	// ~1,2s por arquivo. Pior que lento: os gates relacionais (feature-test-match,
-	// trinca-completa) confrontam a UNIDADE, então rodavam repetidos sobre o mesmo
+	// unit-complete) confrontam a UNIDADE, então rodavam repetidos sobre o mesmo
 	// conjunto, uma vez por peça dela.
 	vistos := map[string]bool{}
 	var ordem []string
@@ -878,7 +878,7 @@ func impactOf(g *mapx.Graph, cfg *config.Config, changed, root string) ([]string
 		}
 		return nil, fmt.Errorf("%q is GOVERNED (a `layers:` layer) but is not in the map — "+
 			"run `anchors map build` first (it is the step that registers the new file). "+
-			"While it stays out of the map, NO gate confronts it: the triad is not "+
+			"While it stays out of the map, NO gate confronts it: the unit is not "+
 			"enforced and the pipeline certifies work that was never verified", target)
 	}
 	imp := g.AnalyzeImpact(target)
@@ -1140,7 +1140,7 @@ func printLegenda(p gate.Profile, w counterWidths) {
 //
 // Para quem está adotando o framework, isso lê como "está tudo certo". Medido ao pôr o
 // Anchors no próprio Anchors: declarei 8 gates, o cabeçalho anunciou "8 gates", a tabela
-// mostrou 2 e o rodapé deu ✓. Os 6 ausentes eram os de trinca, e o projeto tem 0 spec e 0
+// mostrou 2 e o rodapé deu ✓. Os 6 ausentes eram os de unidade, e o projeto tem 0 spec e 0
 // feature — a informação útil ("declarei regra para artefato que não existe aqui") era
 // exatamente a que não aparecia.
 //
@@ -1844,7 +1844,7 @@ func pendingCount(p gate.Profile, gateName string) int {
 	return n
 }
 
-// unitPieces devolve os caminhos das outras peças da trinca de um alvo — spec,
+// unitPieces devolve os caminhos das outras peças da unidade de um alvo — spec,
 // feature, teste e código. É a vizinhança que a IDENTIDADE define, e não a que as arestas
 // registram: as duas costumam coincidir, mas a segunda depende de o mapa já ter ligado as
 // pontas, e o `check` precisa funcionar antes disso.

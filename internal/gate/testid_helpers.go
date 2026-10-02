@@ -2,7 +2,7 @@
 // (JSX/atributo) e a spec (tabela de inventário).
 //
 // Este arquivo já foi `testid_declared.go`, sede do gate homônimo. O gate foi
-// aposentado por `testid-coerente`, que confronta a trinca inteira em vez de duas
+// aposentado por `testid-coerente`, que confronta a unidade inteira em vez de duas
 // pontas; os reconhecedores continuam aqui porque são dele que todos partem.
 package gate
 

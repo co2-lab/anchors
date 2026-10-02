@@ -165,7 +165,7 @@ func checkFlagScenarioExists(content string, n mapx.Node, root string, g *mapx.G
 // the flag anyway — what is missing is the record of who depends on it, and keeping that
 // record is exactly what this axis exists for.
 //
-// It is the same asymmetric pair the two directions of the triad showed, and that the
+// It is the same asymmetric pair the two directions of the unit showed, and that the
 // documentation stamp had shown before: asking only the forward question leaves the rest
 // invisible.
 //

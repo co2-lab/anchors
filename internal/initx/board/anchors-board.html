@@ -302,7 +302,7 @@
      explica a indentação das issues abaixo. Sem ele o recuo ficaria órfão. */
   .g-rot.grupo { font-weight: 600; color: var(--fg); }
   .g-rot.item { color: var(--fraco); }
-  /* A FASE NÃO É TRABALHO: é uma seção do documento do plano, sem issue e sem trinca.
+  /* A FASE NÃO É TRABALHO: é uma seção do documento do plano, sem issue e sem unidade.
      Nenhum agente a pega porque não há o que pegar — e desenhá-la como os cards sugere
      que ela espera alguém.
 
@@ -1489,11 +1489,11 @@ function ordenaPorHierarquia(linhas, d, PASSADO) {
       // A FASE NÃO É TRABALHO, e o desenho precisa dizer isso.
       //
       // Um `## FNDTN-W01 — o CI` é uma SEÇÃO dentro do arquivo do plano, não um artefato:
-      // não tem issue, não tem trinca, e nenhum agente a pega porque não há o que pegar.
+      // não tem issue, não tem unidade, e nenhum agente a pega porque não há o que pegar.
       // Medido: as 86 fases do projeto de referência, todas sem card.
       //
       // O plano, ao contrário, É trabalho — `plans/0014-alertas-incidentes.md` é um arquivo
-      // regido, com card próprio e trinca a cumprir. Desenhar os dois igual sugere que a
+      // regido, com card próprio e unidade a cumprir. Desenhar os dois igual sugere que a
       // fase espera alguém, e ninguém virá.
       //
       // A distinção é `l`: o nó SEM card é o que não existe como issue.

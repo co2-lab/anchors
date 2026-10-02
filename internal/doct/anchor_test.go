@@ -315,7 +315,7 @@ func TestLayerDeps_aggregatesByLayer(t *testing.T) {
 		// An edge leaving the specs is not a layer arrow: a plan is not a layer, and drawing
 		// it would produce an arrow from a node the page does not show.
 		{From: "plans/0001.md", To: "a/S1.spec.md", Type: "needs"},
-		// Nor is an edge of another type: `tested-by` is the triad, not a dependency.
+		// Nor is an edge of another type: `tested-by` is the unit, not a dependency.
 		{From: "a/S1.spec.md", To: "b/H1.spec.md", Type: "tested-by"},
 		// Nor one inside a layer: a loop on one node says nothing about the architecture.
 		{From: "a/S1.spec.md", To: "a/S2.spec.md", Type: "depends-on"},

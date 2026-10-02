@@ -382,7 +382,7 @@ func firstWord(s string) string {
 // impactFiles traduz os nós do caminho de impacto nos ARQUIVOS que fazem sentido
 // para cada comando. A filtragem por kind não é opinião sobre a stack: passar um
 // `.spec.md` para um runner de teste ou para um mutador não significa nada, e o
-// caminho de impacto do Anchors carrega a trinca inteira (spec, feature, teste, código).
+// caminho de impacto do Anchors carrega a unidade inteira (spec, feature, teste, código).
 //
 //   - test:     código e teste — é o que `--findRelatedTests` e equivalentes esperam.
 //   - mutation: só código — mutação altera a REGRA; mutar o teste inverteria o

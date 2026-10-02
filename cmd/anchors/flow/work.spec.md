@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WRPRW
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: comando
 -->
 # WorkPrompt — compose the work prompt of one stage over one target, from what the project declares
@@ -11,7 +11,7 @@
 
 `anchors guide` teaches the doctrine — what a spec is, how a test is written — permanent and without a
 target. Whoever executes ONE stage over ONE file needs something else: what to read now and in what
-order, which layer the target is in and what it demands, where the pieces of the triad are born, what
+order, which layer the target is in and what it demands, where the pieces of the unit are born, what
 is not the stage's scope, and how to verify and record the work. Without it every orchestrator rewrote
 that prompt by hand and it came out different each time.
 
@@ -22,7 +22,7 @@ reviews — of a unit, of a whole plan, and of a plan draft — which produce fi
 
 The target is the unit, the code file; pointing at a derived piece is the predictable mistake (it is
 the file that already exists), so the command redirects it and says so. When the stage's piece is one
-the layer waives, or the layer is declarative and the stage is a triad piece, the prompt is only a
+the layer waives, or the layer is declarative and the stage is a unit piece, the prompt is only a
 STOP: a production script under a heading that forbids the piece made workers create it anyway.
 
 ## Domain
@@ -81,7 +81,7 @@ STOP: a production script under a heading that forbids the piece made workers cr
 | Rule | Boundary | Why |
 | --- | --- | --- |
 | `WRPRW-X01` | Composing the prompt writes nothing to the project. | The prompt describes work for someone else; a prompt that created files would do part of the stage behind the worker's back. |
-| `WRPRW-X02` | Wherever the prompt cites the open-decisions section it uses one title and one "none" value, the catalogue's; and it cites configuration keys and checks by their current names (`optional_triad_edges`, `rule-implemented`, `tests-pass`). | A prompt that names the same section two ways, or a key no configuration accepts, sends the worker to write what no gate reads. |
+| `WRPRW-X02` | Wherever the prompt cites the open-decisions section it uses one title and one "none" value, the catalogue's; and it cites configuration keys and checks by their current names (`optional_unit_edges`, `rule-implemented`, `tests-pass`). | A prompt that names the same section two ways, or a key no configuration accepts, sends the worker to write what no gate reads. |
 
 ## Errors
 

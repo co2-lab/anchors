@@ -69,7 +69,7 @@ func TestRefResolvesCodeMissingFromTheProject(t *testing.T) {
 	}
 }
 
-// The distinction from `triad-complete` holds: infra with no sibling spec is legitimate,
+// The distinction from `unit-complete` holds: infra with no sibling spec is legitimate,
 // as long as the `ref:` points at a REAL identity. Failing here would steal the other
 // gate's finding.
 func TestRefResolvesNoSiblingSpecButCodeExists(t *testing.T) {
@@ -173,7 +173,7 @@ func TestRefResolvesSemRefEhDoHeaderConforme(t *testing.T) {
 	}
 }
 
-// Cada gate acusa UMA coisa: sem spec irmã, quem cobra é o trinca-completa. Dois gates
+// Cada gate acusa UMA coisa: sem spec irmã, quem cobra é o unit-complete. Dois gates
 // sobre o mesmo defeito viram ruído e o usuário desliga os dois.
 func TestRefResolvesSemSpecIrmaEhDoOutroGate(t *testing.T) {
 	t.Run("RFRSR-B06: With no sibling spec the gate goes quiet", func(t *testing.T) {})
@@ -335,12 +335,12 @@ func TestRefResolvesNaoCobraAusenciaDoCampo(t *testing.T) {
 	}
 }
 
-// Fronteira com o trinca-completa: a unidade sem spec nenhuma não é acusada aqui.
+// Fronteira com o unit-complete: a unidade sem spec nenhuma não é acusada aqui.
 func TestRefResolvesNaoCobraAusenciaDaSpec(t *testing.T) {
 	t.Run("RFRSR-X02: The gate does not charge the absence of the sibling spec", func(t *testing.T) {})
 	v, d := rodaRefResolves(t, "Orfao.ts", "// @anchors\n//   ref: ALVOX\n", "", "")
 	if v != Skip {
-		t.Fatalf("ausência da spec é do trinca-completa, foi %s (%s)", v, d)
+		t.Fatalf("ausência da spec é do unit-complete, foi %s (%s)", v, d)
 	}
 }
 

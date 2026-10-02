@@ -26,7 +26,7 @@ relações `specifies` (spec → código, co-location), `covered-by` (spec → f
 co-location), `tested-by` (feature → teste, co-location) e `references` (por código
 de cenário — identidade).
 
-As arestas conferem com a realidade (ex.: a trinca `LoginScreen.spec.md` →
+As arestas conferem com a realidade (ex.: a unidade `LoginScreen.spec.md` →
 `.tsx`/`.feature`, e `.feature` → `.test.tsx`).
 
 ## Arquitetura
@@ -316,7 +316,7 @@ O `map build` NÃO hardcoda nada sobre a estrutura do projeto. Ele lê o
   **`tags`** (rótulos de agrupamento transversais). O CLI classifica cada arquivo
   pela layer cujo pattern casa (mais específico vence).
 - **`derived`** — a co-location: os templates (`{{dir}}/{{name}}.spec.md`…) que
-  ligam a trinca de um target. A âncora casa por `kind`.
+  ligam a unidade de um target. A âncora casa por `kind`.
 - **`governs`** — a dimensão vertical, **sempre por tag**: `{from: <guide>,
   governs: <tag>}`. O guide rege os nós de todas as layers com aquela tag. O escopo
   vem dos patterns das layers (DRY — nenhum glob duplicado). Sem produto cartesiano:

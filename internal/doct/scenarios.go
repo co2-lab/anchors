@@ -10,7 +10,7 @@ import (
 
 // --- os CENÁRIOS entram na documentação ---
 //
-// A feature é o único artefato da trinca escrito para ser lido por gente que não programa:
+// A feature é o único artefato da unidade escrito para ser lido por gente que não programa:
 // Gherkin existe para isso. E é o que responde a pergunta que a spec não responde — a spec
 // diz a REGRA ("dívida aberta bloqueia"), o cenário diz o que acontece ("dado uma dívida
 // aberta, quando confiro a régua, então não libera").

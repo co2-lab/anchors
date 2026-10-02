@@ -55,7 +55,7 @@ func TestNewSpecIsBornWithAFreeCode(t *testing.T) {
 	t.Run("NWARN-B12: The artifact is written where out says and never overwritten", func(t *testing.T) {})
 	root := t.TempDir()
 	taken := code.Generate("Login")
-	writeFile(t, root, "anchors.graph.yaml", "version: 5\nnodes:\n    - id: x/Login.spec.md\n      kind: spec\n      code: "+taken+"\nedges: []\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 6\nnodes:\n    - id: x/Login.spec.md\n      kind: spec\n      code: "+taken+"\nedges: []\n")
 	err, out := runNew(t, "spec", "Login", "--root", root, "--out", "src/auth/Login.spec.md", "--with", "errors", "--without", "overview")
 	if err != nil {
 		t.Fatalf("new spec: %v", err)
@@ -530,8 +530,8 @@ func TestNewHelpTellsTheTruth(t *testing.T) {
 func TestNewArtifactEntersTheMap(t *testing.T) {
 	t.Run("NWARN-B17: The new artifact enters the map at once", func(t *testing.T) {})
 	root := t.TempDir()
-	writeFile(t, root, "anchors.yaml", "version: 5\nlayers:\n  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n")
-	writeFile(t, root, "anchors.graph.yaml", "version: 5\nnodes: []\nedges: []\n")
+	writeFile(t, root, "anchors.yaml", "version: 6\nlayers:\n  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 6\nnodes: []\nedges: []\n")
 	err, out := runNew(t, "spec", "Pay", "--root", root, "--out", "src/Pay.spec.md")
 	if err != nil {
 		t.Fatalf("new spec: %v", err)

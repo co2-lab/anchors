@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPFRM
-  updated_at: 2026-09-28
+  updated_at: 2026-10-01
   layer: mapa
 -->
 # MapFormat — the map's format number decides whether this binary may read it
@@ -48,7 +48,7 @@ ignores.
 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
-| `MPFRM-I01` | The binary writes format 5 and reads only format 5 — format 5 renamed the letters of plans, flows and actions in the project's own files, and a project not migrated would be read by half; every other format is refused. | walks every format from below the range to above it and checks accept or refuse for each |
+| `MPFRM-I01` | The binary writes format 6 and reads only format 6 — format 6 renamed the gate `triad-complete` to `unit-complete`, and a project not migrated would declare a gate this binary does not know, its pieces charged by nothing; every other format is refused. | walks every format from below the range to above it and checks accept or refuse for each |
 
 ## Constraints
 

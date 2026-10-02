@@ -18,12 +18,12 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-// watchCfg: `logic` keeps the whole triad; `model` waives the feature and the test.
+// watchCfg: `logic` keeps the whole unit; `model` waives the feature and the test.
 func watchCfg() *config.Config {
 	return &config.Config{
 		Layers: map[string]config.Layer{
 			"logic":   {Pattern: "src/**/*.ts", Kind: "code"},
-			"model":   {Pattern: "models/**/*.ts", Kind: "code", OptionalTriadEdges: []string{"covered-by", "tested-by"}},
+			"model":   {Pattern: "models/**/*.ts", Kind: "code", OptionalUnitEdges: []string{"covered-by", "tested-by"}},
 			"spec":    {Pattern: "**/*.spec.md", Kind: "spec"},
 			"feature": {Pattern: "**/*.feature", Kind: "feature"},
 			"test":    {Pattern: "src/**/*.test.ts", Kind: "test"},
@@ -142,7 +142,7 @@ func TestHandleChange_whatIsNotWorkIsNotQueued(t *testing.T) {
 // A delivery record triggers the review — but only once the unit has code AND test, and a
 // plan's record triggers the review of the whole.
 func TestHandleChange_deliveryRecordsTriggerTheReview(t *testing.T) {
-	t.Run("WTCHA-B12: A delivery record triggers the review when the triad closes", func(t *testing.T) {})
+	t.Run("WTCHA-B12: A delivery record triggers the review when the unit closes", func(t *testing.T) {})
 	root := t.TempDir()
 	cfg := watchCfg()
 	useIgnore(t, root, cfg)
@@ -150,14 +150,14 @@ func TestHandleChange_deliveryRecordsTriggerTheReview(t *testing.T) {
 
 	writeFile(t, root, "changes/a.md", "stage: spec\nunit: src/pricing.ts\n")
 	out := stdoutOf(t, func() { handleChange(root, cfg, g, "changes/a.md") })
-	if len(queued(t, root)) != 0 || !strings.Contains(out, "the review waits for the triad to close") {
+	if len(queued(t, root)) != 0 || !strings.Contains(out, "the review waits for the unit to close") {
 		t.Fatalf("with no code yet the review must wait:\n%s", out)
 	}
 
 	writeFile(t, root, "src/pricing.ts", "x\n")
 	stdoutOf(t, func() { handleChange(root, cfg, g, "changes/a.md") })
 	if len(queued(t, root)) != 0 {
-		t.Fatal("code without test: the triad is still open")
+		t.Fatal("code without test: the unit is still open")
 	}
 
 	writeFile(t, root, "src/pricing.test.ts", "x\n")
@@ -188,7 +188,7 @@ func TestMissingPieceToReview(t *testing.T) {
 	cfg := watchCfg()
 	writeFile(t, root, "models/user.ts", "x\n")
 	if missingPieceToReview(root, "models/user.ts", cfg) {
-		t.Error("the test is waived in `model`: the code alone closes the triad")
+		t.Error("the test is waived in `model`: the code alone closes the unit")
 	}
 	if missingPieceToReview(root, "", cfg) {
 		t.Error("a record with no readable unit does not hold the review")
@@ -196,7 +196,7 @@ func TestMissingPieceToReview(t *testing.T) {
 	writeFile(t, root, "svc/handler.go", "x\n")
 	writeFile(t, root, "svc/handler_test.go", "x\n")
 	if missingPieceToReview(root, "svc/handler.go", nil) {
-		t.Error("a Go test next to the code closes the triad")
+		t.Error("a Go test next to the code closes the unit")
 	}
 }
 
@@ -485,7 +485,7 @@ func TestWatchRun_needsConfigAndMap(t *testing.T) {
 		t.Errorf("without anchors.yaml, got %v", err)
 	}
 	writeFile(t, root, "anchors.yaml", "version: 1\nlayers:\n  logic:\n    pattern: \"src/**/*.ts\"\n    kind: code\n")
-	writeFile(t, root, "anchors.graph.yaml", "version: 5\nnodes: [\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 6\nnodes: [\n")
 	if _, err := runWatchSub(t, "run", "--root", root); err == nil || !strings.Contains(err.Error(), "load map") {
 		t.Errorf("with a broken map, got %v", err)
 	}

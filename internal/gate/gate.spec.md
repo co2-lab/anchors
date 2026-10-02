@@ -8,7 +8,7 @@
 > **Code**: `GTENG`
 
 > **GTENG-R0001:** routing learned about VENDORED files. A pipeline Anchors seeded and still
-> owns (it carries the template marker) had every internal ruler charging it a triad and a
+> owns (it carries the template marker) had every internal ruler charging it a unit and a
 > code — measured in the reference app, where the project was asked to own, and to specify, files
 > `anchors doctor --fix` replaces whole. Decided by the user: those files are upstream-owned.
 >
@@ -101,10 +101,10 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-B16` | Only the obligations gate produces ASSUMED DEBT, and only that pending item carries a deadline into the record. |
 | `GTENG-B17` | The engine reconfigures the code grammar from the project's vocabulary before running anything. |
 | `GTENG-B18` | `Run` is the entry point that confronts the gates with the map alone, delegating with no Structure — the relational checkers then read absence as "no mapping declared". |
-| `GTENG-B19` | `RunWithConfig` is the same entry point carrying the Structure, which the relational checkers need to read the regimes and the surfaces of the triad. |
+| `GTENG-B19` | `RunWithConfig` is the same entry point carrying the Structure, which the relational checkers need to read the regimes and the surfaces of the unit. |
 | `GTENG-B20` | `RunFull` is the one that also knows whether the sweep is the WHOLE project, which is the only thing that lets a gate able to sweep on its own run ONCE instead of receiving thousands of targets in batches. |
 | `GTENG-B21` | `RunWithWaiver` is the one that honours a waiver BY TARGET, which cannot be served by filtering the gate out of the list. |
-| `GTENG-B22` | A vendored file — a pipeline Anchors seeded that still carries its template marker — is out of every internal ruler, whose triad, header and identity live upstream; an external command still reaches it, because what the file does in this repository is the project's concern. |
+| `GTENG-B22` | A vendored file — a pipeline Anchors seeded that still carries its template marker — is out of every internal ruler, whose unit, header and identity live upstream; an external command still reaches it, because what the file does in this repository is the project's concern. |
 | `GTENG-B23` | A gate declared with `run:` executes the custom runner, even when the canonical declaration specifies `check:`. |
 | `GTENG-B24` | A target the gate's `no_signal` declares is skipped, naming the declared reason, and the gate's check does not run on it. |
 

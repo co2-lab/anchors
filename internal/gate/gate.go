@@ -99,7 +99,7 @@ func applies(g config.Gate, n mapx.Node, root string) bool {
 	if !slices.Contains(g.On, string(n.Kind)) {
 		return false
 	}
-	// A VENDORED file is out of every internal ruler. Its triad, header and identity live
+	// A VENDORED file is out of every internal ruler. Its unit, header and identity live
 	// upstream, in the Anchors project that seeded it: charging them here asks the project
 	// to write a spec for a file it does not own, and the only way to comply is fiction.
 	// An external command (`run:` — secrets, vulnerable patterns) still reaches it: what the
@@ -156,7 +156,7 @@ func Run(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph)
 }
 
 // RunWithConfig é o Run que também recebe a config completa — necessária aos checkers
-// relacionais que consultam a Estrutura (de-para de regimes, superfícies da trinca).
+// relacionais que consultam a Estrutura (de-para de regimes, superfícies da unidade).
 // `Run` delega a ela com cfg nil (checkers relacionais tratam nil como sem-de-para).
 func RunWithConfig(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) []Result {
 	return RunFull(gates, nodes, root, graph, cfg, false)
@@ -176,7 +176,7 @@ func RunFull(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Gr
 // A dispensa por regra era aplicada FILTRANDO o gate da lista, e isso bastava enquanto
 // ela valia para tudo. Uma dispensa restrita a caminhos não pode sair por ali: o gate
 // precisa RODAR e confrontar os outros alvos — senão dispensar 4 specs novas apagaria o
-// gate para o repositório inteiro, e uma trinca quebrada por descuido passaria junto.
+// gate para o repositório inteiro, e uma unidade quebrada por descuido passaria junto.
 func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Waiver) []Result {
 	// A gramática do código de cenário segue o vocabulário do projeto (`rule_types`).
 	SetRuleLetters(cfg.RuleLetters())

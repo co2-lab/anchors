@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRBLG
-  updated_at: 2026-09-29
+  updated_at: 2026-10-01
   layer: mapa
 -->
 # GraphBuild — projecting the declared structure onto the scanned files: one node per file, and the relations between them
@@ -24,7 +24,7 @@ seeded and still owns gets no local identity at all.
 
 Relations come from four sources:
 - Co-location. From each anchor file, the configured path templates give where its derived files live,
-  and the triad is linked: the spec specifies the code (every file it matches), is covered by the feature,
+  and the unit is linked: the spec specifies the code (every file it matches), is covered by the feature,
   which is tested by the test; with no feature, the spec is tested by the test directly. A template can be
   overridden per layer of the UNIT (the layer the spec declares, not the layer its own file matched), or
   replaced whole for one identity code. The anchor's directory and name are data and are matched

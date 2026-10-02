@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PCBPR
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: gate
 -->
 # ProofCrossesBoundary — when a rule claims a relation, the proof must reach the other side
@@ -9,7 +9,7 @@
 
 ## Overview
 
-Confronts a spec against the question the whole triad leaves open: **a rule says it mirrors
+Confronts a spec against the question the whole unit leaves open: **a rule says it mirrors
 another unit — does the governed code actually IMPORT that unit, or is the claim prose while
 the proof stays local?**
 
@@ -23,7 +23,7 @@ thing, each side had its own test, and each test confronted its OWN copy.
 | balance filter | `=== 'statement'` in the app, `!== 'invoice'` in the backend |
 | minimum boundary | `<=` on two screens, `<` on the third and in the audit |
 
-In every one of them 53 gates stayed green — correctly, by the rulers they had. The triad
+In every one of them 53 gates stayed green — correctly, by the rulers they had. The unit
 was complete: rule declared, scenario written, test whose title matched. What no gate
 asked was whether the PROOF reaches the other side.
 
@@ -34,7 +34,7 @@ and the test does `expect(SEAT_PRICE.individual).toBe(15)`. It proves it is 15; 
 not prove it is the same the backend charges. Changing the backend to 18 keeps everything
 green.
 
-**What separates it from its neighbours:** `triad-complete` asks whether the test exists,
+**What separates it from its neighbours:** `unit-complete` asks whether the test exists,
 `feature-test-match` confronts scenario against test case, `rule-implemented` asks whether
 the rule reached the code — all three answer "yes" about a rule whose proof never leaves
 its own file. And like `dependency-honored`, this gate charges only what the spec DECLARED:
@@ -64,7 +64,7 @@ it does not go hunting duplicated concepts across the project.
 | `PCBPR-B07` | A rule carrying the OWNER stamp is not charged: the owner does not mirror anybody — it IS the source, and there is nothing to import. |
 | `PCBPR-B08` | A relation claimed in PROSE, with no declared mark, is reported as a suspicion — it teaches the convention instead of barring the delivery on the first encounter. |
 | `PCBPR-B09` | The declared mark WITHOUT a target on the line is reported too: the mark says "I mirror something", and with no something there is nothing to confront. |
-| `PCBPR-B10` | A target declared by RULE CODE is resolved through the map to the files of that triad, so the rule carries stable identity instead of a path that moves. |
+| `PCBPR-B10` | A target declared by RULE CODE is resolved through the map to the files of that unit, so the rule carries stable identity instead of a path that moves. |
 | `PCBPR-B11` | A rule code that resolves to no unit is reported as unresolved, not silently dropped: a rule pointing at nothing warns nobody. |
 | `PCBPR-B12` | A rule code of the unit ITSELF is not a target: self-reference is not the other side of a boundary. |
 | `PCBPR-B13` | A rule with no relation claim at all leaves without a verdict — there was nothing to charge. |

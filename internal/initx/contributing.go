@@ -101,7 +101,7 @@ func ContributingSection(cfg *config.Config, guideDir string) string {
 	return b.String()
 }
 
-// artifactLines are the triad's patterns, one line per declared artifact layer, and the
+// artifactLines are the unit's patterns, one line per declared artifact layer, and the
 // colocation templates when the project declares colocation.
 func artifactLines(cfg *config.Config) []string {
 	if cfg == nil {

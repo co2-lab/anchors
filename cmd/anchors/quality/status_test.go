@@ -118,7 +118,7 @@ func TestStatusLocalShowsTheLocalQueue(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 2\nlayers: {}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "anchors.graph.yaml"), []byte("version: 5\nnodes: []\nedges: []\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "anchors.graph.yaml"), []byte("version: 6\nnodes: []\nedges: []\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 

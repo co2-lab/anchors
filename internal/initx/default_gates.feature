@@ -95,8 +95,9 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
   @DFGTD-I03 @unit-level
   Scenario: Every canonical name the migration renames a legacy gate to is a default gate
     Given the legacy-to-canonical gate renames of every migration step
-    When each target is looked up in the full catalog
-    Then every target is found
+    When each target is followed through the later steps and looked up in the full catalog
+    Then every name a target lands on is found
+    And format 2's `trinca-completa` lands on `unit-complete` through format 6
 
   @DFGTD-X01 @unit-level
   Scenario: No default gate carries a legacy name
@@ -146,7 +147,7 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
 
   @DFGTD-I04 @unit-level
   Scenario: Choosing plans adds only gates that run on plans
-    Given the triad, and the triad with code and guides
+    Given the unit, and the unit with code and guides
     When each is seeded with and without plans
     Then every gate that plans added runs on plans
 

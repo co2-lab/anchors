@@ -61,7 +61,7 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 	}
 	alvo, achou := specTargetOnDisk(root, n.ID)
 	if !achou {
-		// Sem código, quem acusa é o `trinca-completa` — este gate confronta o código que
+		// Sem código, quem acusa é o `unit-complete` — este gate confronta o código que
 		// existe, e duplicar a cobrança produziria dois gates apontando o mesmo dedo.
 		return Skip, i18n.T("gate.rule_implemented.skip_target_missing")
 	}

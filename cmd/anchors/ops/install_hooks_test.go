@@ -463,7 +463,7 @@ func TestHooksRunOnARealCommit(t *testing.T) {
 		}
 	}
 	gates := func(runLine string) string {
-		return "version: 5\nlayers:\n  notes:\n    pattern: \"*.txt\"\n    kind: code\n" +
+		return "version: 6\nlayers:\n  notes:\n    pattern: \"*.txt\"\n    kind: code\n" +
 			"gates:\n  - name: must-pass\n    on: [code]\n    blocking: true\n    run: \"" + runLine + "\"\n"
 	}
 	must("git", "init", "-q")

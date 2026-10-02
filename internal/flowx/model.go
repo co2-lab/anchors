@@ -13,7 +13,7 @@
 // these three". The rule stops depending on memory and becomes the only way out.
 //
 // It is the same inversion the gates already perform on the artifact ("remember to write
-// the test" becomes `triad-complete`), applied to the PROCESS.
+// the test" becomes `unit-complete`), applied to the PROCESS.
 //
 // The GRAPH lives in the same file as the map (`anchors.graph.yaml`), under a separate key
 // — see `mapx.FlowGraph`, where the reasons for both decisions are written. Here lives the

@@ -100,7 +100,7 @@ func TestMigrateBringsBothFilesAndListsTheKeysSorted(t *testing.T) {
 	if code < 0 || gerado < 0 || julg < 0 || code > gerado || gerado > julg {
 		t.Errorf("the map's keys are not listed in alphabetical order:\n%s", out)
 	}
-	if b, _ := os.ReadFile(cfgPath); !strings.Contains(string(b), "optional_triad_edges: true") ||
+	if b, _ := os.ReadFile(cfgPath); !strings.Contains(string(b), "optional_unit_edges: true") ||
 		!strings.Contains(string(b), fmt.Sprintf("version: %d", mapx.FormatoAtual)) {
 		t.Errorf("anchors.yaml was not migrated:\n%s", b)
 	}

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGSTM
-  updated_at: 2026-09-28
+  updated_at: 2026-10-01
   layer: apoio
 -->
 # MigrationSteps — the registered steps, one per format, take any project from format 1 to the current format
@@ -47,6 +47,7 @@ The steps, and why each exists:
 | `MGSTM-B02` | Format 2 renames the Portuguese gate names to their English names as the value of `gate` in the map and of `name`, `id` and `check` in the configuration. |
 | `MGSTM-B03` | Format 3 renames the eight remaining Portuguese gate names — among them `regra-implementada` to `rule-implemented` and `header-conforme` to `header-valid` — as the value of `name` and `check` in the configuration. |
 | `MGSTM-B05` | Format 5 renames no key: it renames code letters by kind of unit — a plan's phase `F` to `W`, a flow's step `P` to `T`, a result `R` to `O`, of an action or of a flow fitted as a piece —, applied by the command over the project's files; a file migrated to 5 only gets the new `version:`. |
+| `MGSTM-B06` | Format 6 renames the gate `triad-complete` to `unit-complete` as the value of `gate` in the map and of `name`, `id` and `check` in the configuration, and the configuration key `optional_triad_edges` to `optional_unit_edges`. |
 | `MGSTM-B04` | Format 4 renames the configuration keys `auto_judgment`, `triad_optional`, `requires_code` and `rule_marking` to `enable_auto_judgment`, `optional_triad_edges`, `sections_require_code` and `rule_marking_policy`. |
 
 ## Invariants
@@ -54,7 +55,7 @@ The steps, and why each exists:
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `MGSTM-I01` | The registered steps form an unbroken chain from format 1 to the current format: each format has exactly one step, and every step says what it changed. | asks the chain for the steps from 1 to the current format and checks one step per format, each with its reason |
-| `MGSTM-I02` | A key renamed by two formats ends under its latest name: a configuration on format 1 with `trinca_opcional` ends with `optional_triad_edges`, keeping its value. | migrates such a configuration from format 1 to the current format through the real steps |
+| `MGSTM-I02` | A key renamed by several formats ends under its latest name: a configuration on format 1 with `trinca_opcional` ends with `optional_unit_edges`, keeping its value. | migrates such a configuration from format 1 to the current format through the real steps |
 
 ## Constraints
 

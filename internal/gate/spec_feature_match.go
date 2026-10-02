@@ -12,8 +12,8 @@ import (
 
 // spec-feature-match: todo REQUISITO declarado na spec tem ao menos um CENÁRIO na feature.
 //
-// É a ponta que faltava na trinca. O `feature-test-match` confronta feature→teste; o
-// `trinca-completa` confronta que as PEÇAS existem. Ninguém confrontava spec→feature — e
+// É a ponta que faltava na unidade. O `feature-test-match` confronta feature→teste; o
+// `unit-complete` confronta que as PEÇAS existem. Ninguém confrontava spec→feature — e
 // é aí que mora um buraco silencioso: a spec declara `XXXXX-X02`, a feature não tem
 // cenário nenhum com essa tag, e o requisito atravessa o pipeline inteiro sem que nada o
 // verifique. Todos os gates ficam verdes: a spec tem código, a feature existe, a feature
@@ -50,7 +50,7 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		}
 	}
 	if len(features) == 0 {
-		// Ausência de feature é problema do `trinca-completa`, não deste gate — cada um
+		// Ausência de feature é problema do `unit-complete`, não deste gate — cada um
 		// acusa uma coisa, senão o mesmo defeito aparece duas vezes no relatório.
 		return Skip, i18n.T("gate.spec_feature.skip_no_feature")
 	}
@@ -67,7 +67,7 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	// `@no-scenario` de uma linha e deixar o `@no-feature`, e aí a spec afirma duas coisas
 	// contraditórias. Uma decisão, um lugar.
 	//
-	// O `trinca-completa` já faz esse mesmo arrasto para o teste (`@no-feature` implica
+	// O `unit-complete` já faz esse mesmo arrasto para o teste (`@no-feature` implica
 	// `@no-test`, porque sem cenário não há o que provar); aqui ele se completa.
 	if unitWaiver(noFeatureRE, content) {
 		return Skip, i18n.T("gate.spec_feature.skip_waived")

@@ -98,11 +98,11 @@ func TestEveryOfferedArtifactSeedsTheFullCatalog(t *testing.T) {
 }
 
 // The gates over specs, features and tests used to sit inside the `plan` block: a project
-// with the triad and no plans was born without them.
-func TestTriadGatesAreSeededWithoutPlans(t *testing.T) {
+// with the unit and no plans was born without them.
+func TestUnitGatesAreSeededWithoutPlans(t *testing.T) {
 	t.Run("DFGTD-B14: The gates that run on specs, features and tests are seeded without plans", func(t *testing.T) {})
-	triad := map[string]bool{"spec": true, "feature": true, "test": true}
-	gates := DefaultGates(triad, false)
+	unit := map[string]bool{"spec": true, "feature": true, "test": true}
+	gates := DefaultGates(unit, false)
 	names := gateNames(gates)
 	for _, want := range []string{
 		"docs-fresh", "doctrine-realized", "spec-doctrine-exists", "feature-spec-match",
@@ -113,7 +113,7 @@ func TestTriadGatesAreSeededWithoutPlans(t *testing.T) {
 		"doc-required", "doc-self-contained", "plan-change-justified",
 	} {
 		if !names[want] {
-			t.Errorf("%q runs on the triad and must be seeded without plans", want)
+			t.Errorf("%q runs on the unit and must be seeded without plans", want)
 		}
 	}
 	for _, planOnly := range []string{"plan-seeds-valid", "plan-source-declared", "plan-doctrine-exists", "plan-revised", "phase-ordered"} {
@@ -153,7 +153,7 @@ func TestChoosingPlansAddsOnlyPlanGates(t *testing.T) {
 }
 
 // The vocabulary check confronts the migration's renames against the registered names;
-// with only the triad's gates registered, a rename to a code, plan or guide gate read as
+// with only the unit's gates registered, a rename to a code, plan or guide gate read as
 // a rename to nothing.
 func TestRegisteredGateNamesAreTheFullCatalog(t *testing.T) {
 	t.Run("DFGTD-B15: The gate names registered for the vocabulary check are the full catalog", func(t *testing.T) {})
@@ -454,20 +454,33 @@ func TestDefaultGateNamesAreUnique(t *testing.T) {
 
 // The migration's legacy-to-canonical table must point at gates that EXIST.
 //
-// The table lives in the `1→2` step (`internal/migra/formato_2.go`) and converts the
-// legacy name to the canonical one. A target that matches no gate would convert the
-// project to a name that does not exist — and the gate would vanish from `check` with
-// nothing reporting it, which is worse than the old name.
+// Each step's table converts a legacy name to the one of its format, and a later step may
+// rename it again (format 2 made `trinca-completa` into `triad-complete`, format 6 made that
+// `unit-complete`). So a target is followed through the later steps to where a project
+// migrated today lands, and THAT must be a gate. A name that matches no gate would convert
+// the project to a gate that does not exist — and it would vanish from `check` with nothing
+// reporting it, which is worse than the old name.
 func TestLegacyVocabularyPointsAtAnExistingGate(t *testing.T) {
 	t.Run("DFGTD-I03: Every canonical name the migration renames a legacy gate to is a default gate", func(t *testing.T) {})
 	existing := gateNames(DefaultGates(allArtifacts(), false))
-	for _, step := range migra.AllSteps() {
+	steps := migra.AllSteps()
+	// landing follows a renamed value through the steps after the one that wrote it.
+	landing := func(from int, file, key, name string) string {
+		for _, later := range steps[from+1:] {
+			if next, ok := later.RenameValues[file][key][name]; ok {
+				name = next
+			}
+		}
+		return name
+	}
+	for i, step := range steps {
 		for file, keys := range step.RenameValues {
 			for key, table := range keys {
 				if key != "id" && key != "gate" {
 					continue // `check:` points at an internal checker, not at a gate
 				}
-				for old, canonical := range table {
+				for old, target := range table {
+					canonical := landing(i, file, key, target)
 					if !existing[canonical] {
 						t.Errorf("%s/%s: %q → %q, and gate %q does not exist in the defaults",
 							file, key, old, canonical, canonical)

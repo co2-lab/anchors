@@ -18,7 +18,7 @@ func workCfg() *config.Config {
 		Layers: map[string]config.Layer{
 			"logic": {Pattern: "src/**/*.ts", Kind: "code", Tags: []string{"backend"}, Regime: "comportamental",
 				Work: map[string][]string{"code": {"run the migrations before the handler"}}},
-			"model":   {Pattern: "models/**/*.ts", Kind: "code", OptionalTriadEdges: []string{"covered-by"}},
+			"model":   {Pattern: "models/**/*.ts", Kind: "code", OptionalUnitEdges: []string{"covered-by"}},
 			"handler": {Pattern: "lambdas/**/*.ts", Kind: "code"},
 			"dao":     {Pattern: "daos/**/*.ts", Kind: "code", Regime: "declarativo"},
 			"spec":    {Pattern: "**/*.spec.md", Kind: "spec"},
@@ -177,7 +177,7 @@ func TestComposeWorkPrompt_speaksTheCurrentVocabulary(t *testing.T) {
 		prompt(t, t.TempDir(), "src/pricing.ts", "test", cfg) +
 		prompt(t, t.TempDir(), "models/user.ts", "feature", cfg) +
 		prompt(t, t.TempDir(), "models/user.ts", "spec", cfg)
-	wantAll(t, all, "`optional_triad_edges` in anchors.yaml", "the check `rule-implemented` confronts it",
+	wantAll(t, all, "`optional_unit_edges` in anchors.yaml", "the check `rule-implemented` confronts it",
 		"the check `tests-pass` reads from here")
 	wantNone(t, all, "trinca_opcional", "regra-implementada", "testes-passam")
 }
@@ -189,15 +189,15 @@ func TestComposeWorkPrompt_waivedPieceStops(t *testing.T) {
 	wantAll(t, out, "## STOP", "the layer **model** WAIVES the piece `feature`", "Do not create the feature.")
 	wantNone(t, out, "You are going to produce", "## Procedure")
 
-	// and in the triad listing of another stage, the waived piece says so
+	// and in the unit listing of another stage, the waived piece says so
 	spec := prompt(t, t.TempDir(), "models/user.ts", "spec", workCfg())
-	wantAll(t, spec, "`models/user.feature` — feature  ← WAIVED by this layer (`optional_triad_edges`): do NOT create")
+	wantAll(t, spec, "`models/user.feature` — feature  ← WAIVED by this layer (`optional_unit_edges`): do NOT create")
 }
 
-// A recognized (declarative) layer has no triad: the triad stages stop, and the code
+// A recognized (declarative) layer has no unit: the unit stages stop, and the code
 // stage gets the declarative procedure.
 func TestComposeWorkPrompt_declarativeLayer(t *testing.T) {
-	t.Run("WRPRW-B04: A declarative layer has no triad piece", func(t *testing.T) {})
+	t.Run("WRPRW-B04: A declarative layer has no unit piece", func(t *testing.T) {})
 	stop := prompt(t, t.TempDir(), "daos/user.ts", "test", workCfg())
 	wantAll(t, stop, "## STOP", "declared as RECOGNIZED", "Do not create the test.")
 
@@ -363,7 +363,7 @@ func TestComposeWorkPrompt_writesNothing(t *testing.T) {
 
 // "(already exists)" is about the PROJECT's files: `anchors work --root X` run from
 // anywhere else must still see what exists under X.
-func TestWriteTriadPaths_alreadyExistsIsCheckedUnderTheRoot(t *testing.T) {
+func TestWriteUnitPaths_alreadyExistsIsCheckedUnderTheRoot(t *testing.T) {
 	root := t.TempDir()
 	writeFile(t, root, "src/billing/charge.spec.md", "# spec\n")
 	out := prompt(t, root, "src/billing/charge.ts", "code", workCfg())
@@ -466,7 +466,7 @@ func cfgWithDeclarative() *config.Config {
 			"logic": {Pattern: "backend/business-logic/**/*.ts", Kind: "code"},
 			"spec":  {Pattern: "**/*.spec.md", Kind: "spec"},
 		},
-		// `derived:` resolves the triad's paths; without it the prompt has nothing to
+		// `derived:` resolves the unit's paths; without it the prompt has nothing to
 		// derive (and says so). The fixture needs it to exercise the common path.
 		Derived: &config.Derived{
 			Anchor: "code",
@@ -498,15 +498,15 @@ func TestWork_declarativeLayerAsksForNoSpec(t *testing.T) {
 	}
 }
 
-// The GOVERNED layer keeps the triad and the normal procedure — the fix must not have
+// The GOVERNED layer keeps the unit and the normal procedure — the fix must not have
 // emptied the common path.
-func TestWork_governedLayerKeepsTheTriad(t *testing.T) {
+func TestWork_governedLayerKeepsTheUnit(t *testing.T) {
 	out, err := composeWorkPrompt(t.TempDir(), "backend/business-logic/recurrence.ts", "code", cfgWithDeclarative(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out, "recurrence.spec.md") {
-		t.Errorf("a governed layer should list the triad's spec:\n%s", out)
+		t.Errorf("a governed layer should list the unit's spec:\n%s", out)
 	}
 	if !strings.Contains(out, "Read the whole spec") {
 		t.Errorf("a governed layer should keep the normal procedure")

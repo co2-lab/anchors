@@ -281,7 +281,7 @@ func TestNomeDeGateEmIngles(t *testing.T) {
 	emPortugues := []string{
 		"cenario", "regra", "conforme", "coerente", "consultado", "preenchido",
 		"existe", "implementada", "identidade", "declarada", "alinhado", "dominio",
-		"fase", "prova", "trinca", "promovivel", "progresso", "idioma", "carimbado",
+		"fase", "prova", "unidade", "promovivel", "progresso", "idioma", "carimbado",
 		"tipado", "ancorado", "valor", "codigo", "teste", "rastreavel",
 	}
 	todos := map[string]bool{}
@@ -1103,14 +1103,14 @@ func TestScenarioCoverage_provenPasses(t *testing.T) {
 }
 
 // A LAYER THAT DISPENSES `tested-by` has no tests by declaration, and `scenario-coverage`
-// honours it as `triad-complete` does. In the reference app every schema-model spec failed "scenario with
+// honours it as `unit-complete` does. In the reference app every schema-model spec failed "scenario with
 // no green test" although the Structure says those tests do not exist. A layer without the
 // opt-out is still charged.
 func TestScenarioCoverage_honoursTheLayersTestedByOptOut(t *testing.T) {
 	t.Run("INCHN-B22: Scenario coverage honours a layer that dispenses tested-by", func(t *testing.T) {})
 	root, g := rootWithTest(t, "package credx\n")
 	cfg := &config.Config{Layers: map[string]config.Layer{
-		"schema-model": {Kind: "spec", OptionalTriadEdges: []string{"covered-by", "tested-by"}},
+		"schema-model": {Kind: "spec", OptionalUnitEdges: []string{"covered-by", "tested-by"}},
 		"service":      {Kind: "spec"},
 	}}
 	optedOut := specNodeCoverage()

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DTAUI
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: comando
 -->
 # Audit — the dossier of everything pending on one file, for fixing it in one pass
@@ -11,7 +11,7 @@
 
 `anchors audit <file>` gathers in one place everything pending on a target: the quality gates that apply to its kind, which is what `check` would run, and the systemic findings of `doctor` that cite it. It exists for parallel sweeping. One agent takes one file, reads the whole dossier, fixes every pending item at once — header, spec, identity, coverage — and moves on, instead of opening the same file again for each gate.
 
-By default the scope is the file alone. With `--impact` the scope grows to the impact path of the target: the rest of its unit and what it propagates to or is validated by, so a single worker can fix the whole triad.
+By default the scope is the file alone. With `--impact` the scope grows to the impact path of the target: the rest of its unit and what it propagates to or is validated by, so a single worker can fix the whole unit.
 
 The dossier separates what is actionable from what is only shown. A failing gate and a warning finding are work for whoever holds the file; a gate waiting for judgment or data, and an informational finding, are shown so they are not forgotten but are not counted as items to fix.
 

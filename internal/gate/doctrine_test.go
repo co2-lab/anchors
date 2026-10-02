@@ -41,7 +41,7 @@ const doctrineRule = "### LIMIT-R03 — o limite de credito nunca e excedido em 
 // The defect this whole axis exists to eliminate: the spec COPIES the doctrine's text
 // instead of referencing it. Two texts saying the same thing diverge at the first change,
 // and no other gate sees it — both are well-formed, both catalogue their rules, both have
-// a complete triad.
+// a complete unit.
 func TestDoctrineNotDuplicated_copyFails(t *testing.T) {
 	t.Run("DCTRN-B21: A spec rule that copies the doctrine rule it realizes fails, naming both and the score", func(t *testing.T) {})
 	root, g, n := projectWithDoctrine(t, doctrineRule)

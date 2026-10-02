@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MGSTM
-#   updated_at: 2026-09-28
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @MGSTM
@@ -50,7 +50,7 @@ Feature: MigrationSteps — the registered steps, one per format, take any proje
   Scenario: A key renamed by two formats ends under its latest name
     Given a format 1 configuration with "trinca_opcional: [tested-by]"
     When it is migrated to the current format
-    Then it has "optional_triad_edges: [tested-by]" and neither "trinca_opcional" nor "triad_optional"
+    Then it has "optional_unit_edges: [tested-by]" and none of "trinca_opcional", "triad_optional" and "optional_triad_edges"
 
   @MGSTM-X01 @unit-level
   Scenario: Format 3 leaves the map's gate and the configuration's id alone
@@ -63,3 +63,11 @@ Feature: MigrationSteps — the registered steps, one per format, take any proje
     Given a format 3 map with the keys "auto_judgment" and "rule_marking"
     When it is migrated to format 4
     Then both keys are unchanged and only the version line changed
+
+  @MGSTM-B06 @unit-level
+  Scenario: Format 6 renames the triad to the unit
+    Given a format 5 configuration with "name: triad-complete", "id: triad-complete", "check: triad-complete" and "optional_triad_edges: [tested-by]"
+    And a format 5 map with a judgment of the gate "triad-complete"
+    When both are migrated to format 6
+    Then the configuration has "name: unit-complete", "id: unit-complete", "check: unit-complete" and "optional_unit_edges: [tested-by]"
+    And the map's judgment is of the gate "unit-complete"

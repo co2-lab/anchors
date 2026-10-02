@@ -33,7 +33,7 @@ What passes and what is barred, when the file is not in the map:
   • NOT GOVERNED (matches no layer of 'layers:' — package.json, lockfile, CI):
     ignored. Anchors has no jurisdiction over it.
   • GOVERNED but outside the map (new file, 'map build' did not run): BARS. Outside the
-    map no gate confronts it — the triad is not charged and the commit would go on to
+    map no gate confronts it — the unit is not charged and the commit would go on to
     certify work that nobody verified. Run 'anchors map build'.
 
 Incremental: it validates only what the commit touches. It does not write to the map nor open issues
@@ -394,7 +394,7 @@ STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 
 # DISPENSA — na MENSAGEM DO COMMIT:
 #
-#   [skip-trinca-completa@WRKSP: a feature ainda e um card]
+#   [skip-unit-complete@WRKSP: a feature ainda e um card]
 #
 # O alvo e o CODIGO do artefato, e so ele fica dispensado: os outros continuam sendo
 # confrontados. Dispensar a regra inteira apagaria o gate para o repositorio todo, e uma
@@ -406,7 +406,7 @@ STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 #
 # ANCHORS_SKIP_RULES="id=motivo" ainda funciona, para um CI que nao controla a mensagem.
 #
-# E POR REGRA, e nao por commit: dispensar trinca-completa deixa passar a spec que
+# E POR REGRA, e nao por commit: dispensar unit-complete deixa passar a spec que
 # nasce sozinha, e os outros gates continuam barrando. Um bypass global calaria também o
 # gate que achou defeito de verdade.
 #
@@ -416,7 +416,7 @@ STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 FAIL=0
 # Uma invocação para TODOS os arquivos staged: config e mapa carregam uma vez, e os
 # gates relacionais confrontam a unidade uma vez (antes, o loop por arquivo repetia
-# o mesmo trabalho a cada peça da mesma trinca).
+# o mesmo trabalho a cada peça da mesma unidade).
 #
 # O código 3 é "não tenho jurisdição sobre isto" — NENHUM arquivo staged casa uma
 # camada do 'layers:'. Não é reprovação, e barrar aí impediria commitar mudança só

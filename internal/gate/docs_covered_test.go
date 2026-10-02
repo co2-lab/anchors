@@ -31,7 +31,7 @@ func projectWithOrphan(t *testing.T) (string, *mapx.Graph) {
 	return root, g
 }
 
-// The defect this gate exists to catch: the unit has a spec, a triad, passes every
+// The defect this gate exists to catch: the unit has a spec, a unit, passes every
 // relational gate — and is documented nowhere.
 func TestDocsCovered_flagsASpecOutsideTheTemplates(t *testing.T) {
 	t.Run("DCCVD-B03: A spec no template reaches fails, naming the spec", func(t *testing.T) {})

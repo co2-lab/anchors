@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SAIDA
-  updated_at: 2026-09-20
+  updated_at: 2026-10-01
 -->
 # Declared ways out — how a gate goes quiet, and what the silence means
 
@@ -16,7 +16,7 @@ But "silencing the gate" is not one thing. It is **two different assertions**, a
 confusing them costs the gate the most valuable information it holds: the difference
 between *I decided it is not needed* and *I have not done it yet*.
 
-This doctrine is cross-cutting by construction. It belongs to neither `triad-complete` nor
+This doctrine is cross-cutting by construction. It belongs to neither `unit-complete` nor
 `plan-doctrine-exists` nor `doctrine-realized` — it holds for all three, and for every
 gate that comes to offer a way out. Until now it lived duplicated in each one's comments,
 which is exactly the divergence the product axis exists to end.
@@ -37,9 +37,9 @@ it is paid.
 
 ### SAIDA-R03 — debt NEVER becomes `Pass`
 
-Measured in this repository before the fix: `triad-complete` threw `@TBD` into the same
+Measured in this repository before the fix: `unit-complete` threw `@TBD` into the same
 bucket as `@no-*`, and a spec with `@TBD: code,feature,test` came out **green**,
-indistinguishable from a complete triad. The work that remained disappeared from the radar
+indistinguishable from a complete unit. The work that remained disappeared from the radar
 because of the honest declaration of whoever assumed it — the worst possible incentive.
 
 ### SAIDA-R04 — a bare marker waives nothing    @TBD: the reason is checked per gate, and no spec catalogues it as its own rule yet
@@ -55,7 +55,7 @@ A marker on a line waives that line; in the header, the unit. There is no waiver
 holds for the whole project written in a distant file — the decision stays where whoever
 reads will find it.
 
-### SAIDA-R06 — a marker inside backticks is a MENTION, not a declaration    @TBD: implemented in `triad-complete` and in the doctrine axis, not yet catalogued as a spec rule
+### SAIDA-R06 — a marker inside backticks is a MENTION, not a declaration    @TBD: implemented in `unit-complete` and in the doctrine axis, not yet catalogued as a spec rule
 
 A revision explaining the removal of a waiver cites the marker (*"the `@TBD: code` waiver
 is gone"*), and without this distinction the citation **reactivates** the waiver the text

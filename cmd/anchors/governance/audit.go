@@ -33,7 +33,7 @@ func newAuditCmd() *cobra.Command {
   • the systemic findings from 'doctor' that cite it (collision, orphan, identity…)
 
 Default: the file itself only. With --impact, includes the nodes on the impact path
-(the unit's triad and what the target propagates/validates) — to fix the whole unit.
+(the unit's pieces and what the target propagates/validates) — to fix the whole unit.
 
 Designed for PARALLEL sweeping: one agent per file, 'anchors audit <file>',
 fixes all the pending items at once (header, spec, identity, coverage…).`,

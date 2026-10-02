@@ -82,7 +82,7 @@ waiting to be written.
 ### Does the rule state the INTENT, or the mechanism?
 
 A rule that describes how the code does it ("the body ends at the first closer") is
-proven by any test of that code, right or wrong: the triad stays green and wrong
+proven by any test of that code, right or wrong: the unit stays green and wrong
 together. The rule states what must hold ("the body is everything the test runs"). And a
 FIX carries its rule: the defect is a rule that was not written, so the PR that fixes it
 adds the rule — and the invariant it is one case of — with its scenario and its test.
@@ -158,13 +158,13 @@ correct. Whether reading actually happened, and what it found, is yours.
 
 ### Do two rules of the same unit contradict each other?
 
-The gates confront each rule ON ITS OWN: the sections, the code, the scenario, the triad.
+The gates confront each rule ON ITS OWN: the sections, the code, the scenario, the unit.
 Two rules asserting opposite things both pass, because each one is well-formed.
 
 Measured in the reference app, and it is what makes this yours: a spec whose title said
 the choice lives on the DEVICE and whose body still said there is nowhere to store it; and
 another where one rule listed the device token inside the backup scope and its sibling
-named that very classification as the wrong one. Both had complete triads and a green
+named that very classification as the wrong one. Both had complete units and a green
 suite. Both surfaced MONTHS later, as decisions that had to escalate.
 
 When a revision is what changed the meaning, ` + "`revision-orphans`" + ` catches it. When there was never a

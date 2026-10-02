@@ -20,8 +20,8 @@ import (
 // wrong card, which is worse than closing none.
 func TestMarkerIsExactAndNotAPrefix(t *testing.T) {
 	t.Run("GHIGT-B01: A card whose marker only starts with the key is not the issue's", func(t *testing.T) {})
-	otherBody := fmt.Sprintf(KeyMarker, "trinca-completa:packages/Foo.spec.md:violation")
-	wanted := fmt.Sprintf(KeyMarker, "trinca-completa:packages/Foo.spec.md")
+	otherBody := fmt.Sprintf(KeyMarker, "unit-complete:packages/Foo.spec.md:violation")
+	wanted := fmt.Sprintf(KeyMarker, "unit-complete:packages/Foo.spec.md")
 
 	// The other card's marker CONTAINS the wanted prefix, and still must not match: they are
 	// findings of different targets.
@@ -42,8 +42,8 @@ func TestTitleSaysWhatItIsWithoutTheKey(t *testing.T) {
 		Stale:     "Desatualizado",
 		Conflict:  "Conflito",
 	} {
-		got := g.title(Issue{Kind: kind, Gate: "triad-complete", Target: "a/b.spec.md"})
-		if got != "[triad-complete] "+want+" @ a/b.spec.md" {
+		got := g.title(Issue{Kind: kind, Gate: "unit-complete", Target: "a/b.spec.md"})
+		if got != "[unit-complete] "+want+" @ a/b.spec.md" {
 			t.Errorf("the title of %s = %q, want the gate, %q and the target", kind, got, want)
 		}
 	}
@@ -76,7 +76,7 @@ func cardJSON(number int, state, key string) string {
 	return fmt.Sprintf(`{"number":%d,"state":%q,"body":%s}`, number, state, body)
 }
 
-var ghFinding = Issue{Kind: Violation, Gate: "triad-complete", Target: "a/Foo.spec.md", Detail: "no feature", Date: "2026-09-26"}
+var ghFinding = Issue{Kind: Violation, Gate: "unit-complete", Target: "a/Foo.spec.md", Detail: "no feature", Date: "2026-09-26"}
 
 func TestGitHubOpen_createsCardWithLabels(t *testing.T) {
 	t.Run("GHIGT-B01: A card whose marker only starts with the key is not the issue's", func(t *testing.T) {})
@@ -101,7 +101,7 @@ func TestGitHubOpen_createsCardWithLabels(t *testing.T) {
 		t.Errorf("search call = %q", got[0])
 	}
 	for _, frag := range []string{
-		"issue create --title [triad-complete] Violação @ a/Foo.spec.md",
+		"issue create --title [unit-complete] Violação @ a/Foo.spec.md",
 		fmt.Sprintf(KeyMarker, key),
 		"--label anchors --label " + initx.LabelToDo + " --label " + initx.LabelNeedsUser + " --repo acme/x",
 	} {

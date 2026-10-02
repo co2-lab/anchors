@@ -199,10 +199,10 @@ workers in parallel — but there are two rules that avoid waste:
 1. ONE FILE AT A TIME, ALL ITS PENDING ITEMS. If you are going to open a file, fix
    EVERYTHING pending in it at once — not just the header. Use:
      anchors audit <file>            ITS pending items (gates + doctor)
-     anchors audit <file> --impact   the whole UNIT (the triad spec↔code↔feature↔
+     anchors audit <file> --impact   the whole UNIT (the unit spec↔code↔feature↔
                                      test) — fixes the unit in a single worker.
    It is a waste for one worker to touch the .spec header and another the sibling .tsx;
-   take the unit (--impact) and resolve the whole triad at once.
+   take the unit (--impact) and resolve the whole unit at once.
 
 2. TOP DOWN THE TREE. Fixing a CHILD and then the PARENT (which governs it)
    forces redoing the child. Process in topological order — rulers/specs (parents)

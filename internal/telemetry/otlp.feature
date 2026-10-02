@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: TLEMT
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @TLEMT
@@ -52,7 +52,7 @@ Feature: TelemetryEmitter — decision events leave as OTLP logs, never block th
 
   @TLEMT-B08 @unit-level
   Scenario: With NoCodes a unit or rule code never leaves in an attribute
-    Given an event with the attributes unit "RLSGR", rule "RLSGR-B01", gate "triad-complete", card_state "in-progress" and n 3
+    Given an event with the attributes unit "RLSGR", rule "RLSGR-B01", gate "unit-complete", card_state "in-progress" and n 3
     When it is built by an emitter with NoCodes, and by one without
     Then the first carries only gate, card_state and n, and the second carries all five
 

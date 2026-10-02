@@ -631,7 +631,7 @@ pegado, quando, e que foi liberado por inatividade e não por decisão.
 ### 7.7 A identidade do trabalho: o código no título
 
 Todo artefato do Anchors (spec, plano, feature, teste) carrega um **código gerado** — é a
-identidade que amarra a trinca. As issues **registram esse código no título**:
+identidade que amarra a unidade. As issues **registram esse código no título**:
 
 ```
 [XXXXX-001] Implementar tal coisa

@@ -17,7 +17,7 @@ checkers whose whole answer is reading text.
 **Why it is a registry and not a switch.** The checkers do not all have the same
 signature, and the difference is not style. One reads only the content of the target.
 One also needs the project ROOT, because it has to invoke the version control system to
-answer. One needs the GRAPH, because the question crosses the triad — a feature against
+answer. One needs the GRAPH, because the question crosses the unit — a feature against
 the test linked to it. One needs the declaring GATE itself, because the question is
 parameterised: a generic gate only knows what to look for after reading its own
 configuration, and a project declares several instances of it. Four registries, and the
@@ -93,7 +93,7 @@ looked at.
 | `INCHN-B19` | `non-empty` passes a feature only when it declares a scenario, and a scenario opens with any keyword of the official Gherkin table, in any language and synonyms included; the examples table of an outline is not a scenario. |
 | `INCHN-B20` | `scenario-coverage` charges only the requirements the spec DEFINES: a code the spec merely cites in its prose is never charged, and a defined requirement with no proven scenario still fails, named. |
 | `INCHN-B21` | `scenario-coverage` tells a requirement no test names apart from one a test names but no ingested execution proved, even when no execution was ingested at all, and the verdict says which of the two each one is; a requirement an ingested execution proved is not charged. |
-| `INCHN-B22` | A spec whose layer dispenses `tested-by` is skipped by `scenario-coverage`, saying so, as `triad-complete` does; a layer without that opt-out is still charged. |
+| `INCHN-B22` | A spec whose layer dispenses `tested-by` is skipped by `scenario-coverage`, saying so, as `unit-complete` does; a layer without that opt-out is still charged. |
 | `INCHN-B23` | `mutation-score` passes a file whose score reaches the acceptable threshold — the threshold itself included, and a run that ignored every mutant — and fails one below it, naming how many mutants survived and the threshold. |
 | `INCHN-B24` | With no mutation signal ingested, or with one measured at another revision of the file below the floor or under load, `mutation-score` is pending, saying what to ingest or that the signal is stale; a stale score that met the floor, measured without load, does not block — mutation is not remeasured on every change —, and says how to measure it again. The revision is the mutation's own. |
 | `INCHN-B25` | A score between the acceptable and the desirable threshold is a divergence the project's threshold accepts — it informs and never bars; to make it bar, the project raises the acceptable threshold —, naming both ranges and how far the desirable one is; at or above the desirable it passes clean; with no desirable threshold, or one not above the acceptable, the acceptable threshold alone decides. |

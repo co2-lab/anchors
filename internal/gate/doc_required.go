@@ -144,7 +144,7 @@ func checkDocRequiredAggregate(_ config.Gate, root string, graph *mapx.Graph, cf
 func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	// Parte da SPEC, e não do código: a spec é a âncora, tem a layer no header e o código
 	// de identidade. Partir do código faria a mesma unidade ser cobrada uma vez por
-	// arquivo — três avisos idênticos para uma trinca.
+	// arquivo — três avisos idênticos para uma unidade.
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.doc_required.skip_not_spec")
 	}

@@ -199,7 +199,7 @@ func mutationNotMeasured(root, unit string) string {
 		}
 	}
 	if !temTeste {
-		return "" // sem teste, o assunto é outro (e o trinca-completa já cobra)
+		return "" // sem teste, o assunto é outro (e o unit-complete já cobra)
 	}
 	g, err := mapx.Load(filepath.Join(root, mapx.DefaultPath))
 	if err != nil {

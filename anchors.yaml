@@ -12,7 +12,7 @@ lang: en
 # interativo, ou inferir do escaneamento que ele mesmo acabou de fazer (ele JÁ detectou
 # "código em: [cli/internal cli/cmd]" — e não usou; os caminhos daquele dia tinham o
 # prefixo `cli/`, que saiu quando o `go.mod` foi para a raiz).
-version: 5
+version: 6
 # The version floor: `mode: manual` (below) exists from 0.1.190 on. An older binary would
 # refuse to load this file; with the floor it asks to be updated instead.
 min_version: 0.1.190
@@ -51,7 +51,7 @@ layers:
 
   # PRODUCT DOCTRINE — the rule that cuts across targets.
   #
-  # Every spec has a TARGET, and co-location ties the triad to one directory. A rule that
+  # Every spec has a TARGET, and co-location ties the unit to one directory. A rule that
   # holds for several units belongs to none of them: it was either duplicated (and
   # diverged at the first change) or lived in an arbitrary spec that the others
   # referenced implicitly. Here it has a place, and the spec points at it with
@@ -129,7 +129,7 @@ layers:
   # queue decides the atomic claim and the reclaim window, similarity the identical /
   # borderline / divergent verdicts, initx which gates a project is born with, testsig
   # how a mutation report is scored. Declarative, `anchors new spec` refused their spec
-  # and every triad gate skipped them — rules nobody could state, let alone prove.
+  # and every unit gate skipped them — rules nobody could state, let alone prove.
   infra:
     pattern: "internal/{change,changelog,checklog,code,daemon,gitmeta,health,initx,issue,pack,queue,recode,shell,similarity,suggestion,testlist,testsig}/*.go"
     kind: code
@@ -148,7 +148,7 @@ layers:
     tags: [apoio]
     exclude: ["**/*_test.go"]
 
-  # ── A TRINCA ────────────────────────────────────────────────────────────────────
+  # ── A UNIDADE ────────────────────────────────────────────────────────────────────
   teste:
     pattern: "**/*_test.go"
     kind: test
@@ -237,16 +237,16 @@ governs:
 # ATRITO 3 — `anchors init` não semeia NENHUM gate, e `anchors check` morre com "nenhum
 # gate declarado". Quem adota sai do init com um arquivo que não permite rodar o comando
 # principal do framework: init → map build → check → erro. O init deveria semear ao menos
-# o conjunto mínimo (os que não exigem trinca), ou dizer o que falta.
+# o conjunto mínimo (os que não exigem unidade), ou dizer o que falta.
 #
 # A ordem aqui é deliberada: primeiro os que medem a ESTRUTURA (valem desde o dia zero,
-# sem escrever spec nenhuma), depois os da trinca — que só passam a fazer sentido conforme
+# sem escrever spec nenhuma), depois os da unidade — que só passam a fazer sentido conforme
 # as specs nascem. Ligar tudo de uma vez num projeto existente produz centenas de issues
 # no primeiro dia e ninguém lê a lista.
-# ── A TRINCA: ONDE CADA PEÇA NASCE ───────────────────────────────────────────────
-# ATRITO 5 — sem este bloco, a trinca NÃO EXISTE para o mapa. O `triadEdges` abre com
+# ── A UNIDADE: ONDE CADA PEÇA NASCE ───────────────────────────────────────────────
+# ATRITO 5 — sem este bloco, a unidade NÃO EXISTE para o mapa. O `unitEdges` abre com
 # `if cfg.Derived == nil { return nil }`, então um projeto sem `derived:` nunca ganha
-# aresta `specifies`/`tested-by` — e os oito gates da trinca ficam declarados e cegos,
+# aresta `specifies`/`tested-by` — e os oito gates da unidade ficam declarados e cegos,
 # reportados como "sem nada para medir". O sintoma é perfeitamente enganoso: parece
 # faltar spec, e o que falta é a CONVENÇÃO que diz onde a spec mora.
 #
@@ -436,6 +436,7 @@ derived:
           - "internal/migra/format_3.go"
           - "internal/migra/format_4.go"
           - "internal/migra/format_5.go"
+          - "internal/migra/format_6.go"
         feature: ["{{dir}}/{{name}}.feature"]
         test: ["{{dir}}/{{name}}_test.go"]
 
@@ -540,8 +541,8 @@ gates:
   - name: code-reference-valid
     blocking: true
 
-  # TRINCA — agora cobertos pelas specs do framework
-  - name: triad-complete
+  # UNIDADE — agora cobertos pelas specs do framework
+  - name: unit-complete
     blocking: true
 
   - name: spec-has-code
@@ -554,8 +555,8 @@ gates:
     blocking: true
 
   # ── OS TRES QUE FECHAM O CIRCUITO CENARIO↔TESTE ─────────────────────────────────
-  # Sem eles a trinca fecha ESTRUTURALMENTE e ninguem confere se os cenarios tem prova:
-  # o `triad-complete` responde "as tres pecas existem", e nao "elas dizem a mesma
+  # Sem eles a unidade fecha ESTRUTURALMENTE e ninguem confere se os cenarios tem prova:
+  # o `unit-complete` responde "as tres pecas existem", e nao "elas dizem a mesma
   # coisa". Uma feature com onze cenarios e um teste que prova dois passa igual.
   #
   # O cenario esta implementado no teste ligado? Confronta por CODIGO (reprova se
@@ -703,7 +704,7 @@ gates:
   - name: doctrine-not-duplicated
     blocking: true
 
-  # THE WAY BACK OF EACH PAIR OF THE TRIAD. `spec-feature-match` and `feature-test-match`
+  # THE WAY BACK OF EACH PAIR OF THE UNIT. `spec-feature-match` and `feature-test-match`
   # walk the ORIGIN looking for the destination; these walk the destination asking whether
   # the origin still exists — which is what catches what a revert leaves behind.
   - name: feature-spec-match

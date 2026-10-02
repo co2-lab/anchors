@@ -59,7 +59,7 @@ func NewRuleID(gate, regra string) RuleID {
 // o relatório diz o que foi pulado E por quê — e quem ler depois não precisa adivinhar.
 type Waiver struct {
 	// PorRegra mapeia o ID (`spec-completa/sem-placeholder`) ou o nome do gate inteiro
-	// (`trinca-completa`) para o motivo.
+	// (`unit-complete`) para o motivo.
 	PorRegra map[string]string
 	// MotivoPorAlvo guarda o motivo de CADA alvo, quando a dispensa nomeia vários.
 	//
@@ -70,8 +70,8 @@ type Waiver struct {
 	MotivoPorAlvo map[string]string
 	// Alvos restringe a dispensa a caminhos específicos, por ID de regra.
 	//
-	// Sem isso, dispensar `trinca-completa` para commitar 4 specs novas apagava o gate
-	// para o REPOSITÓRIO INTEIRO — e uma trinca que quebrou por descuido noutro lugar
+	// Sem isso, dispensar `unit-complete` para commitar 4 specs novas apagava o gate
+	// para o REPOSITÓRIO INTEIRO — e uma unidade que quebrou por descuido noutro lugar
 	// passava junto, sem que nada acusasse. O mascaramento que a dispensa por regra
 	// existe para evitar, um nível acima.
 	//
@@ -223,7 +223,7 @@ var markerInMessage = regexp.MustCompile(
 
 // WaiverFromMessage lê as dispensas declaradas na MENSAGEM DE COMMIT.
 //
-// A forma é `[skip-trinca-completa@WRKSP: spec nova do plano 0007]`, e ela é melhor que a
+// A forma é `[skip-unit-complete@WRKSP: spec nova do plano 0007]`, e ela é melhor que a
 // variável de ambiente por três razões que só aparecem no uso:
 //
 //   - a variável NÃO FICA NO HISTÓRICO. A dispensa some junto com o shell, e quem ler o

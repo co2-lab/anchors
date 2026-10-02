@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RFRSR
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @RFRSR
@@ -45,7 +45,7 @@ Feature: RefResolves — the reference points at the spec that really describes 
   Scenario: With no sibling spec the gate goes quiet
     Given a code file with a reference and no spec co-located with it
     When the gate confronts it
-    Then it returns Skip, because the missing piece is the triad gate's charge and two
+    Then it returns Skip, because the missing piece is the unit gate's charge and two
       gates on one defect become noise
 
   @RFRSR-B07 @unit-level
@@ -148,7 +148,7 @@ Feature: RefResolves — the reference points at the spec that really describes 
   Scenario: The gate does not charge the absence of the sibling spec
     Given a code file whose unit has no spec anywhere in the project
     When the gate confronts it
-    Then it returns Skip, because the missing piece of a triad is the triad gate's charge
+    Then it returns Skip, because the missing piece of a unit is the unit gate's charge
 
   @RFRSR-X03 @unit-level
   Scenario: The gate does not consult the map to resolve the reference

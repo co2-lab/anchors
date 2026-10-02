@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RVMTR
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @RVMTR
@@ -65,7 +65,7 @@ Feature: ReverseMatch — every scenario still has its rule, and every proven co
   Scenario: test-feature-match skips what is not a test, and a test no feature exercises
     Given a feature node, and in turn a test of unit UNITX that no feature exercises
     When test-feature-match confronts each
-    Then both are skipped, the second saying the link is the triad's to charge
+    Then both are skipped, the second saying the link is the unit's to charge
 
   @RVMTR-B11 @unit-level
   Scenario: A linked feature with no coded scenario leaves test-feature-match Pending

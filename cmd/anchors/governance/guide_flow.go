@@ -18,7 +18,7 @@ A FLOW inverts the burden. Instead of "here are eight approaches, choose", it an
 becomes the only way out.
 
 It is the same inversion the gates already perform on the artifact ("remember to write
-the test" became 'triad-complete'), applied to the PROCESS.
+the test" became 'unit-complete'), applied to the PROCESS.
 
 ## Two artifacts, and the difference is the whole idea
 

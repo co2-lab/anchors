@@ -104,7 +104,7 @@ func TestCodigoCatalogado_semCodigoLigadoPula(t *testing.T) {
 	v, _ := checkCodeCataloged("| `X-B01` | x |", mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec},
 		t.TempDir(), g, nil)
 	if v != Skip {
-		t.Errorf("ausência de código é do trinca-completa: %v", v)
+		t.Errorf("ausência de código é do unit-complete: %v", v)
 	}
 }
 
@@ -296,7 +296,7 @@ func TestCodeCatalogedNaoConheceLinguagem(t *testing.T) {
 	}
 }
 
-// A ausência de código é do `trinca-completa`. Acusar nos dois duplicaria o débito, e
+// A ausência de código é do `unit-complete`. Acusar nos dois duplicaria o débito, e
 // quem consertasse um continuaria vendo o outro.
 func TestCodeCatalogedNaoCobraAusenciaDeCodigo(t *testing.T) {
 	t.Run("CDCTC-X04: The gate does not charge the absence of code", func(t *testing.T) {})

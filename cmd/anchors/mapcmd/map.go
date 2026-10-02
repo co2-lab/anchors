@@ -259,7 +259,7 @@ func printEdgeSummary(g *mapx.Graph) {
 		return
 	}
 	fmt.Println(i18n.T("map.edges_by_type"))
-	// The ORDER is the triad's (the path the reader walks), and everything else follows
+	// The ORDER is the unit's (the path the reader walks), and everything else follows
 	// alphabetically.
 	//
 	// It used to be a FIXED list of five types, and whatever was not on it stayed

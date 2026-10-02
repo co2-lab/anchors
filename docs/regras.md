@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:d44be8b96037d733 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:86c3af5a501aefbc — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -385,9 +385,9 @@ abra a página dela em `camadas/`.
 
 ### [TQETS — TestidQueriedExists — every handle queried by an E2E flow must exist in code](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-### [TRCMT — TriadComplete — the pieces that realize a spec EXIST](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist)
-
 ### [TRDCT — TriggerDeclared — cited compliance triggers and obligations must exist in the declared vocabulary](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary)
+
+### [UNTCP — UnitComplete — the pieces that realize a spec EXIST](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist)
 
 ### [VLANV — ValueAnchored — a replicated key is declared where it is used, and every copy carries the same value](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value)
 

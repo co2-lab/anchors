@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSTRT
-  updated_at: 2026-09-27
+  updated_at: 2026-10-01
   layer: gate
 -->
 # TestTraceable — a test linked to a feature must declare what scenario it proves
@@ -18,7 +18,7 @@ To every relational gate, such a test is invisible:
 - `feature-test-match` checks scenario-to-test alignment by scenario code: without a code in the test,
   it reports the scenarios as unimplemented, mistakenly blaming the feature rather than identifying
   the untraceable test;
-- `triad-complete` verifies file presence on disk and marks the test piece satisfied;
+- `unit-complete` verifies file presence on disk and marks the test piece satisfied;
 - `tests-green` executes the test suite and verifies assertions pass.
 
 The outcome is the worst of both worlds: the engineering work was completed and verified, yet the
@@ -36,7 +36,7 @@ What separates this gate from neighbouring gates:
   In contrast, `test-traceable` applies the weakest possible threshold: finding at least ONE valid
   scenario code anywhere in the test file satisfies the gate. The question here is simply: "does this
   test declare itself?"
-- `triad-complete`: checks only that the four triad files exist on disk, regardless of whether their
+- `unit-complete`: checks only that the four unit files exist on disk, regardless of whether their
   internal contents establish traceability.
 - `tests-green`: compiles and executes test suites to ensure zero failures, but remains completely
   agnostic to requirement traceability codes.

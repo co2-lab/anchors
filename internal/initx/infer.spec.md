@@ -18,7 +18,7 @@ not the project's. Each remaining file is classified once, in a fixed order: spe
 their name; plans by living in a plans folder, before guides, so a plan kept under a guides folder is still a
 plan; guides by living in a guides folder; code by its extension. From that classification the proposal
 records which artifacts exist, where plans and guides live, which folders hold code, the most frequent code
-extensions, whether the triad sits beside the code, which attribute the project uses to mark elements for
+extensions, whether the unit sits beside the code, which attribute the project uses to mark elements for
 tests, the project's language family and how its test files are named.
 
 Inference proposes no structure. Every folder that holds code is a candidate layer, because where the

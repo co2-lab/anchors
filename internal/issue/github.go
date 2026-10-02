@@ -15,7 +15,7 @@ import (
 // `doing/` → `done/`), e é assim que se pega trabalho sem GitHub.
 //
 // No modo github isso é duplicação — e a parte grave não é o arquivo sobrando, é o que
-// NÃO acontece: medido no projeto de referência, 11 achados de gate (`trinca-completa`,
+// NÃO acontece: medido no projeto de referência, 11 achados de gate (`unit-complete`,
 // `rule-types`, `guide-checklist`) foram para arquivo local e NENHUM virou card. O board
 // mostrava o trabalho planejado e escondia o que os gates encontraram, e quem olhasse o
 // board concluiria que não havia nada a corrigir.

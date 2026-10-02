@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MPFRM
-#   updated_at: 2026-09-28
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @MPFRM
@@ -38,10 +38,10 @@ Feature: MapFormat — the map's format number decides whether this binary may r
     Then the newer map's message does not contain anchors migrate
 
   @MPFRM-I01 @unit-level
-  Scenario: Exactly format 5 is readable
+  Scenario: Exactly format 6 is readable
     Given every format from -1 to 7
     When each format is checked
-    Then format 5 is accepted and every other one is refused
+    Then format 6 is accepted and every other one is refused
 
   @MPFRM-X01 @unit-level
   Scenario: Format 1 is migrated, not read

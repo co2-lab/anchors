@@ -141,13 +141,13 @@ func TestSpecFeatureMatchNoFeatureNuNaoArrasta(t *testing.T) {
 	}
 }
 
-// Cada gate acusa UMA coisa: a ausência da feature é do trinca-completa. Acusar aqui
+// Cada gate acusa UMA coisa: a ausência da feature é do unit-complete. Acusar aqui
 // também faria o mesmo defeito aparecer duas vezes no relatório.
 func TestSpecFeatureMatchSemFeatureEhDoOutroGate(t *testing.T) {
 	t.Run("SFMSP-B10: A spec with no feature returns Skip", func(t *testing.T) {})
 	spec := "# Spec\n\n### AAAAX-B01 — x\n"
 	if v, d := rodaSpecFeature(t, spec, ""); v != Skip {
-		t.Fatalf("spec sem feature deveria ser Skip (é do trinca-completa), foi %s (%s)", v, d)
+		t.Fatalf("spec sem feature deveria ser Skip (é do unit-complete), foi %s (%s)", v, d)
 	}
 }
 
@@ -288,14 +288,14 @@ func TestSpecFeatureMatchTodaDispensaExigeRazao(t *testing.T) {
 	}
 }
 
-// Cada gate acusa UMA coisa: a feature ausente e do trinca-completa. Aqui e Skip, e
+// Cada gate acusa UMA coisa: a feature ausente e do unit-complete. Aqui e Skip, e
 // o par positivo garante que o Skip nao e incondicional.
 func TestSpecFeatureMatchCadaGateAcusaUmaCoisa(t *testing.T) {
 	t.Run("SFMSP-I02: Each gate accuses one thing", func(t *testing.T) {})
 	spec := "# Spec\n\n### AAAAX-B01 — x\n"
 
 	if v, d := rodaSpecFeature(t, spec, ""); v != Skip {
-		t.Fatalf("feature ausente e do trinca-completa; veio %s (%s)", v, d)
+		t.Fatalf("feature ausente e do unit-complete; veio %s (%s)", v, d)
 	}
 	// COM feature e sem cenario, o mesmo requisito reprova — o Skip acima e da
 	// ausencia da feature, nao um Skip incondicional.

@@ -37,8 +37,8 @@ var checkersWithRoot = map[string]func(content string, n mapx.Node, root string)
 
 // checkersWithGraph são checkers RELACIONAIS: confrontam um nó contra seus vizinhos no
 // mapa (arestas). Recebem o grafo, a raiz (para ler os arquivos vizinhos) e a config (p/
-// o de-para de regimes e as superfícies da trinca — STRUCTURE §2.3). É a classe de gates
-// que atravessa a trinca — ex.: feature↔test (cada cenário da feature está implementado
+// o de-para de regimes e as superfícies da unidade — STRUCTURE §2.3). É a classe de gates
+// que atravessa a unidade — ex.: feature↔test (cada cenário da feature está implementado
 // no teste ligado, roteado pelo regime do cenário?).
 var checkersWithGraph = map[string]func(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string){
 	"mutation-score":                  checkMutationScoreUnderLoad,
@@ -101,7 +101,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"dependency-honored":       checkDependencyHonored,
 	"contract-status-declared": checkContractStatusDeclared,
 	"proof-crosses-boundary":   checkProofCrossesBoundary,
-	"triad-complete":           checkTriadComplete,
+	"unit-complete":            checkUnitComplete,
 	"plan-seeds-valid":         checkPlanSeedsValid,
 	"plan-source-declared":     checkPlanSourceDeclared,
 	"phase-ordered":            checkPhaseOrdered,
@@ -188,7 +188,7 @@ func runInternalAggregate(g config.Gate, root string, graph *mapx.Graph, cfg *co
 //
 // Measured in the reference app: 12 features under `services/` with exactly that shape —
 // eight lines, zero scenarios — all approved by this gate while it was blocking. The
-// empty shell crossed the pipeline looking like coverage: the triad had its three pieces,
+// empty shell crossed the pipeline looking like coverage: the unit had its three pieces,
 // and the middle one said nothing.
 //
 // What counts as substance depends on the artifact, and for a feature it is the SCENARIO
@@ -287,7 +287,7 @@ func checkUpdatedAt(content string, n mapx.Node, root string) (Verdict, string) 
 var headerBlockRE = regexp.MustCompile(`@anchors\b`)
 
 // identidade no header: `code:` (posse — o dono, ex.: a spec) OU `ref:` (referência —
-// o resto da trinca aponta o código da unidade que realiza/cobre/prova). Um dos dois
+// o resto da unidade aponta o código da unidade que realiza/cobre/prova). Um dos dois
 // é obrigatório para camadas REGIDAS; qual depende do papel do arquivo. Camadas
 // RECONHECIDAS (sem spec) usam `layer:` como identidade mínima (ver `anchors guide header`).
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
@@ -339,7 +339,7 @@ func isRecognizedLayer(n mapx.Node, content string) bool {
 	//
 	// Medido no projeto de referência: `packages/infra/` é CDK COM regra — três unidades
 	// com 19 regras e invariantes somados, 61 testes, toda mutação detectada — e o
-	// `triad-complete` respondia INDETERMINADO nas três, por causa do NOME da layer. Nem
+	// `unit-complete` respondia INDETERMINADO nas três, por causa do NOME da layer. Nem
 	// passa nem acusa, e parece cobertura.
 	if n.Regime != "" {
 		return false
@@ -365,7 +365,7 @@ func isRecognizedLayer(n mapx.Node, content string) bool {
 //
 // Medido: `packages/infra/` do projeto de referência é CDK COM regra — três unidades, 19
 // regras e invariantes somados, 61 testes —, o projeto declarou `regime: comportamental`
-// na layer, e o `triad-complete` seguiu respondendo INDETERMINADO. Nem passa nem acusa, e
+// na layer, e o `unit-complete` seguiu respondendo INDETERMINADO. Nem passa nem acusa, e
 // parece cobertura.
 func isRecognizedLayerCfg(n mapx.Node, content string, cfg *config.Config) bool {
 	if n.Regime == "declarativo" {
@@ -760,8 +760,8 @@ var checklistItemRE = regexp.MustCompile(`(?m)\bCK\d+\b`)
 // existir teste, cada requisito precisa estar provado. Pending se nada foi ingerido.
 func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	// THE LAYER'S OPT-OUT HOLDS HERE TOO. A layer that declares `tested-by` in
-	// `optional_triad_edges` has no tests by declaration — "the model declares; the unit
-	// that consumes it is what proves it" — and `triad-complete` honours that. This gate
+	// `optional_unit_edges` has no tests by declaration — "the model declares; the unit
+	// that consumes it is what proves it" — and `unit-complete` honours that. This gate
 	// ignored it and charged a green test for every rule: in the reference app, every schema-model spec
 	// failed (about 130 findings) over tests the Structure says do not exist. Where the
 	// rules of such a layer must be proven, the proof belongs to the unit that consumes it,

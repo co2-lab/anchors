@@ -11,7 +11,7 @@ import "strings"
 // O buraco é real e depende do tipo de projeto. Uma API tem um contrato que vive fora do
 // código — o OpenAPI — e um endpoint novo que não entra nele é invisível para quem
 // consome. Um design system tem o catálogo de componentes. Um projeto com banco tem o
-// esquema. Nada disso o gate de trinca alcança, porque não é arquivo da unidade: é o
+// esquema. Nada disso o gate de unidade alcança, porque não é arquivo da unidade: é o
 // artefato AGREGADO que várias unidades alimentam.
 //
 // E há um que todo projeto tem: a ARQUITETURA. O Anchors já regula a estrutura — as

@@ -261,7 +261,7 @@ spec consumidora para o **arquivo** referenciado, carregando o **método** como
 metadado. É por essas arestas que a Propagação **desce** pelas camadas de dados: mudou
 a spec do repository → as telas que o consomem ficam stale (a onda de reúso). É o
 trilho que faltava para a propagação de dados descrita em `PROPAGATION.md` §7 fluir
-para além da trinca de uma única unidade.
+para além da unidade de uma única unidade.
 
 > Profundidade variável por projeto. A cadeia de dependência tem o comprimento que a
 > Estrutura daquele projeto declara: um projeto vai `tela → repository/service` direto;

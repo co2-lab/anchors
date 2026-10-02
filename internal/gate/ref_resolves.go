@@ -26,7 +26,7 @@ import (
 //
 // A régua: se existe uma spec IRMÃ (a que a Estrutura co-loca com este arquivo), o `ref:`
 // tem de ser o `code:` dela. Sem spec irmã, o gate se cala — quem cobra a ausência da
-// peça é o `trinca-completa`, e dois gates acusando o mesmo defeito viram ruído.
+// peça é o `unit-complete`, e dois gates acusando o mesmo defeito viram ruído.
 func checkRefResolves(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	switch n.Kind {
 	case mapx.KindCode, mapx.KindFeature, mapx.KindTest:
@@ -51,7 +51,7 @@ func checkRefResolves(content string, n mapx.Node, root string, g *mapx.Graph, c
 		// is, 42% of the corpus fell into Skip. A hand-made `ref: KYBD`, pointing at a code
 		// that exists nowhere, was measured landing on `~1` and not on `✗1`.
 		//
-		// The distinction from `triad-complete` holds: that one charges the ABSENCE of the
+		// The distinction from `unit-complete` holds: that one charges the ABSENCE of the
 		// sibling spec; this one, the identity the `ref:` INVENTS. An infra file with no
 		// spec (legitimate) still passes — what does not pass is citing a phantom code.
 		if g != nil && !codeExistsInGraph(g, ref) {

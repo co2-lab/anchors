@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RLIMR
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @RLIMR
@@ -44,7 +44,7 @@ Feature: RuleImplemented — the spec catalogues rules, and the code shows it re
     Given a spec that no code realises yet
     When the gate confronts it
     Then it returns Skip, because without the piece on the other side there is no
-      confrontation to make — and who accuses the absence is the triad gate
+      confrontation to make — and who accuses the absence is the unit gate
 
   @RLIMR-B06 @unit-level
   Scenario: A waiver with no named rule covers every rule of the spec

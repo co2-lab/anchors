@@ -198,7 +198,7 @@ No modo local, o achado de gate vira arquivo em `issues/` e o protocolo é mover
 pasta à mão: `todo/` → `doing/` → `done/`. É assim que se pega trabalho sem GitHub.
 
 No modo github isso é duplicação — e a parte grave não é o arquivo sobrando.
-Medido: **onze achados** (`trinca-completa`, `rule-types`, `guide-checklist`)
+Medido: **onze achados** (`unit-complete`, `rule-types`, `guide-checklist`)
 existiam só em arquivo local, e **nenhum** virou card. O board mostrava o trabalho
 planejado e escondia o que os gates tinham encontrado. Quem olhasse o board
 concluiria que não havia nada a corrigir.

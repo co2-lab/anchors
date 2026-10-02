@@ -11,7 +11,7 @@
 
 What inference found is turned into a proposed configuration, which the interactive init then confirms or
 adjusts part by part. The proposal only pre-fills what inference can decide from what is there: the code
-layers, the colocation of the triad, the attribute the project uses to mark elements for tests, and the
+layers, the colocation of the unit, the attribute the project uses to mark elements for tests, and the
 language family.
 
 Each detected code directory becomes one code layer, named after the last segment of the directory with a

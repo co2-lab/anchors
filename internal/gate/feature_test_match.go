@@ -13,7 +13,7 @@ import (
 	"github.com/co2-lab/anchors/internal/testlist"
 )
 
-// checkFeatureTestMatch — gate RELACIONAL da trinca (STRUCTURE/TRACEABILITY): confronta
+// checkFeatureTestMatch — gate RELACIONAL da unidade (STRUCTURE/TRACEABILITY): confronta
 // uma `.feature` contra o(s) teste(s) que a realizam (arestas `tested-by`). Garante que
 // cada CENÁRIO documentado na feature está IMPLEMENTADO no teste — por CÓDIGO e por
 // DESCRIÇÃO. Pega o agente que pula um cenário, renomeia ou muda os passos, divergindo
@@ -53,7 +53,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	}
 	testPaths = realTests(g, testPaths)
 	if len(testPaths) == 0 {
-		// sem teste ligado: se a feature declara cenários, isto é uma lacuna da trinca —
+		// sem teste ligado: se a feature declara cenários, isto é uma lacuna da unidade —
 		// mas quem cobra a EXISTÊNCIA do teste é a co-location/tested-by; aqui só
 		// confrontamos correspondência quando há teste. Pending para não duplicar.
 		return Pending, i18n.T("gate.feature_test_match.pending_no_linked_tests")

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CDCTC
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @CDCTC
@@ -51,7 +51,7 @@ Feature: CodeCataloged — what the code exports must be in the spec, or waived 
   Scenario: With no code linked the gate leaves without a verdict
     Given a spec with no code file linked to it in the map
     When the gate confronts it
-    Then it returns Skip, because the absence belongs to the triad gate and accusing it
+    Then it returns Skip, because the absence belongs to the unit gate and accusing it
       in both places would duplicate the debt
 
   @CDCTC-B08 @unit-level

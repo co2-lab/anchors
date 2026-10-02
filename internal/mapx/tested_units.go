@@ -13,7 +13,7 @@ import (
 // TestedUnits maps each test file of the map to the code files it tests, found by the
 // project's own derivation (`derived.files` and the overrides of the code's layer).
 //
-// The map links a unit's test only through the triad: a spec, its feature, the feature's
+// The map links a unit's test only through the unit: a spec, its feature, the feature's
 // test. A unit with no spec — a util, a model, what a `regime: declarativo` layer holds —
 // has no edge to its test at all, and a gate asking "what does this test test?" had no
 // answer (in the reference app, 130 tests with no feature had 12 edges among them). The

@@ -61,12 +61,12 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// promover" sobre trabalho que não existe. Este gate pergunta o oposto: as
 			// peças EXISTEM? Nasce informativo porque quase todo projeto tem débito.
 			config.Gate{
-				Name: "triad-complete", ID: "triad-complete", On: []string{"spec"}, Check: "triad-complete",
+				Name: "unit-complete", ID: "unit-complete", On: []string{"spec"}, Check: "unit-complete",
 				Blocking: config.Bool(false), Measures: "the spec has code, feature and test that realise it",
 			},
 			// A metade que o determinístico NÃO alcança.
 			//
-			// O `trinca-completa` confere que a referência do `@no-test` RESOLVE: existe
+			// O `unit-complete` confere que a referência do `@no-test` RESOLVE: existe
 			// um teste que menciona aquele código. Isso é binário e ele decide sozinho.
 			//
 			// O que sobra é julgamento — aquele teste prova mesmo ESTE comportamento? A
@@ -152,7 +152,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// caminho emite é código morto no cliente, e some sem ninguém notar.
 			// Os três achados MAIS GRAVES da mesma auditoria tinham forma idêntica:
 			// dois lados definiam a mesma coisa, cada um tinha teste, e cada teste
-			// confrontava a PRÓPRIA cópia. A trinca ficava completa e os gates verdes
+			// confrontava a PRÓPRIA cópia. A unidade ficava completa e os gates verdes
 			// porque nenhum perguntava se a PROVA alcança o outro lado. Este gate
 			// cobra: regra que afirma "espelha"/"fonte única" com um arquivo citado
 			// exige que o código IMPORTE aquele arquivo.
@@ -205,7 +205,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	// Each gate below is seeded by the artifacts it RUNS ON, not by `plan`. They used to
 	// sit inside the `plan` block, so a project that chose spec, feature and test without
 	// plans was born without ~20 gates over its own specs (docs, doctrine, flags, failure,
-	// the way back of the triad) — and `anchors init` never offered them.
+	// the way back of the unit) — and `anchors init` never offered them.
 	if chosen["spec"] {
 		// A DOC COMPILADA envelhece em silêncio. O conteúdo mora na spec; o `docs/*.md`
 		// é derivado dela por template, e quem altera uma regra e esquece de recompilar
@@ -251,7 +251,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// O EIXO DAS FEATURE FLAGS. Uma flag multiplica os caminhos do codigo sem
 		// multiplicar a spec, e os tres custos (revisao, teste, remocao) sao silencios que
 		// nenhum outro gate enxerga.
-		// THE WAY BACK OF EACH PAIR OF THE TRIAD.
+		// THE WAY BACK OF EACH PAIR OF THE UNIT.
 		//
 		// `spec-feature-match` and `feature-test-match` walk the ORIGIN looking for the
 		// destination. These walk the destination asking whether the origin still exists —
@@ -524,7 +524,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			},
 			// O PAR que ataca PROVA FALSA, e não ausência de prova: um dublê que não
 			// deriva do módulo real segue verde depois que o módulo muda. `tests-green`
-			// diz que passou, `feature-test-match` que o cenário casa, `trinca-completa`
+			// diz que passou, `feature-test-match` que o cenário casa, `unit-complete`
 			// que o teste existe — os três respondem "sim" sobre um teste que mente.
 			//
 			// São camadas, não alternativas. O `mock-carimbado` é o AGNÓSTICO: hash de
@@ -704,7 +704,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Blocking: config.Bool(false), Measures: "the spec has no open question — implementing is not guessing",
 		})
 	}
-	// spec-feature-match fecha a ponta que faltava na trinca: feature→test já era
+	// spec-feature-match fecha a ponta que faltava na unidade: feature→test já era
 	// confrontado, spec→feature não. Um requisito declarado e sem cenário atravessa o
 	// pipeline com TODOS os gates verdes — a spec tem código, a feature existe, a feature
 	// bate com o teste. Medido: 43 specs de um projeto real.
@@ -756,7 +756,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	// detecta sozinho o que há no projeto. Um gate de licença ficaria de fora aqui: as
 	// ferramentas de licença são todas atadas a um gerenciador de pacotes.
 	//
-	// `on: [code]` porque é o kind que todo projeto tem, qualquer que seja a trinca
+	// `on: [code]` porque é o kind que todo projeto tem, qualquer que seja a unidade
 	// escolhida — e o escopo é o projeto, então o `on` só decide SE roda, não sobre o quê.
 	if chosen["code"] {
 		gates = append(gates,

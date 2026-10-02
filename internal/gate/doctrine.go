@@ -17,7 +17,7 @@ import (
 
 // --- the VERTICAL AXIS: product doctrine and whoever realizes it ---
 //
-// Every spec has a TARGET, and co-location ties the triad to one directory. A business
+// Every spec has a TARGET, and co-location ties the unit to one directory. A business
 // rule that holds for three screens belongs to none of the three — it lives in
 // `product/<name>.doctrine.md`, and the spec points at it with `@realizes`.
 //
@@ -44,7 +44,7 @@ import (
 // A BARE marker does not count: the pattern demands the `:` and text after it. Debt with
 // no written reason is the silence the gates exist to end.
 //
-// The BACKTICK guard comes from `triad-complete`, where the lesson was already paid for:
+// The BACKTICK guard comes from `unit-complete`, where the lesson was already paid for:
 // a revision EXPLAINING the removal of a waiver cites the marker ("the `@TBD: ...` waiver
 // is gone"), and without the guard that citation REACTIVATES it. An active marker is
 // never inside backticks — it is the declaration, not a mention of one.
@@ -306,7 +306,7 @@ const minCopyScore = 0.5
 // because it reads well — each spec is complete on its own.
 //
 // And it is invisible to every other gate: both texts are well-formed, both catalogue
-// their rules, both have a complete triad. Nothing compares one against the other.
+// their rules, both have a complete unit. Nothing compares one against the other.
 //
 // The ruler is SIMILARITY, not equality: whoever copies almost always adjusts a word.
 // Exact comparison would catch only the laziest case and report green on the rest.
@@ -525,7 +525,7 @@ func checkSpecRealizesDoctrine(content string, n mapx.Node, root string, g *mapx
 // Two routes, and the second is not redundancy: the `specifies` edge only exists AFTER
 // the code is born, and at the `spec` step it is not. Without resolving by PATH the gate
 // would be blind exactly in the window where the author is writing the spec — which is
-// when the demand matters most. The lesson is the same one `triad-complete` already paid
+// when the demand matters most. The lesson is the same one `unit-complete` already paid
 // for, in the comment above its own second route.
 func layerRequiresDoctrine(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) bool {
 	tags := append([]string{}, n.Tags...)

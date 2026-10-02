@@ -44,7 +44,7 @@ Example (markdown, in the owning SPEC) — the spec OWNS the code:
 
 The block opens with '@anchors' and the following lines are the markers. What does not
 apply, omit — but every file in the graph needs IDENTITY: 'code:' if it is the owner
-(the spec), 'ref:' if it references (the rest of the triad), OR 'layer:' if it belongs to a
+(the spec), 'ref:' if it references (the rest of the unit), OR 'layer:' if it belongs to a
 RECOGNIZED layer with no spec (infra/dao/presentation/domain vocabulary — see below).
 
 ## The markers
@@ -68,7 +68,7 @@ ONE unit; the files that revolve around it either OWN it or REFERENCE it:
 Why it matters: putting 'code:' in a test would say the test OWNS the code — but it only
 references it (it proves the spec's unit). Swapping ownership for reference crosses the
 traceability and produces a false identity collision. When in doubt: the spec has 'code:'; the
-rest of the triad has 'ref:'.
+rest of the unit has 'ref:'.
 
 ### RECOGNIZED layers: identity by 'layer:' (and 'dep:' for dependencies)
 

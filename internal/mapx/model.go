@@ -19,7 +19,7 @@ const (
 	KindPlan    Kind = "plan"
 	// KindProduct — a DOUTRINA DE PRODUTO: a regra que atravessa alvos.
 	//
-	// Toda spec tem um alvo, e a co-locacao amarra a triade ao mesmo diretorio. E' a
+	// Toda spec tem um alvo, e a co-locacao amarra a unidade ao mesmo diretorio. E' a
 	// forca do modelo e tambem o seu limite: uma regra de negocio que vale para tres
 	// telas nao pertence a nenhuma das tres. Sem lugar para ela, so' havia duplicar (e
 	// divergir na primeira mudanca) ou eleger uma dona arbitraria.
@@ -79,7 +79,7 @@ const (
 	//
 	// E' 1 para MUITOS: uma regra de produto e' realizada por varias specs, e e'
 	// justamente isso que o conceito existe para permitir. Por isso nenhum gate daqui
-	// pode cobrar PARIDADE de contagem, ao contrario do `triad-complete`, que conta
+	// pode cobrar PARIDADE de contagem, ao contrario do `unit-complete`, que conta
 	// 1:1:1 — a pergunta certa e' "ha' ao menos um realizador?".
 	//
 	// A direcao e' da spec para o produto porque a spec e' quem SABE que esta' realizando
@@ -184,7 +184,7 @@ type Node struct {
 	// Upstream — the file is a vendored copy Anchors seeded and still owns (a pipeline
 	// under `.github/workflows/` carrying the template marker). Its rules and its spec live
 	// upstream: the node carries no local code, and the internal gates do not charge it a
-	// triad the project could never honestly write.
+	// unit the project could never honestly write.
 	Upstream bool `yaml:"upstream,omitempty"`
 	// Support: a file of a test layer that serves the tests without being one (the layer's
 	// `support:` list). It stays in the map for impact; the gates that judge a test skip it.

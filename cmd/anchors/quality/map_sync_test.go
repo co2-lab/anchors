@@ -37,7 +37,7 @@ func newSyncRepo(t *testing.T, trackMap bool) syncRepo {
 		return string(out)
 	}
 	git("init", "-q")
-	yaml := "version: 5\nlayers:\n  spec:\n    pattern: \"src/*.spec.md\"\n    kind: spec\n  code:\n    pattern: \"src/*.ts\"\n    kind: code\nderived:\n  anchor: code\n  files:\n    spec: [\"{{dir}}/{{name}}.spec.md\"]\n"
+	yaml := "version: 6\nlayers:\n  spec:\n    pattern: \"src/*.spec.md\"\n    kind: spec\n  code:\n    pattern: \"src/*.ts\"\n    kind: code\nderived:\n  anchor: code\n  files:\n    spec: [\"{{dir}}/{{name}}.spec.md\"]\n"
 	touchWrite(t, root, "anchors.yaml", yaml)
 	touchWrite(t, root, "src/pay.spec.md", "<!-- @anchors\n  code: PAYMX\n  updated_at: 2026-09-01\n-->\n# Pay\n\n### PAYMX-B01 — charges\n")
 	touchWrite(t, root, "src/pay.ts", "export const pay = 1\n")

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCSTM
-  updated_at: 2026-09-29
+  updated_at: 2026-10-01
   layer: gate
 -->
 # MockStamped — the double carries the mark of the snippet it replaces, and the gate RECOMPUTES it
@@ -27,7 +27,7 @@ per-language extractor.
 resistant to whoever writes it. A stamp nobody confronts is theatre: whoever edits the test
 would regenerate it to match their own mock, and it would start certifying itself.
 
-**What separates it from its neighbours:** `triad-complete` asks whether the test exists,
+**What separates it from its neighbours:** `unit-complete` asks whether the test exists,
 `feature-test-match` confronts scenario against case, `tests-green` reads the run — all three
 answer "yes" about a double that froze a contract which no longer exists. `mock-typed` demands
 the TIE to the real module; this gate demands the recomputable MARK of the snippet.

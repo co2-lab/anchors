@@ -11,7 +11,7 @@
 
 `anchors init` works from two fixed catalogs that are data rather than decisions: the dialect of each
 language it reads, and the instruction text it appends to the question of a judgment gate that asks about a
-piece of the triad. This spec states what those catalogs must hold, and how they are read.
+piece of the unit. This spec states what those catalogs must hold, and how they are read.
 
 The dialect catalog holds what a language decides that the map needs: how a test file is named, and which
 family a manifest or a code extension belongs to. It holds no structure. Where a project keeps each layer is

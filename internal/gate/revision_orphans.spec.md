@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RVORP
-  updated_at: 2026-09-30
+  updated_at: 2026-10-01
   layer: gate
 -->
 # RevisionOrphans — the rules a revision changed the meaning of, without saying so
@@ -15,7 +15,7 @@ A rule does not live alone. It shares vocabulary with its siblings, and it is th
 
 Measured in the reference app, and it is what produced this gate. The `NTCNN-R0002` changed the notification badge from a COUNT to a DOT, and named the rules it rewrote: `B03`, `B04`, `B07`. The invariant `I02` was not named — and it is titled *"the badge never COUNTS what the list does not show"*, with a body reading *"the NUMBER on the bell matches what appears on opening"*. The invariant governed arithmetic the revision had abolished.
 
-**Nothing accused it.** The `B03` was correct, the `I02` was well-formed, the triad complete, the suite green. The contradiction surfaced MONTHS later, when another agent went to implement and could not tell which of the two to follow — and it became a decision that had to escalate to the user, with nobody left remembering the context. Seven contradictions of this exact shape surfaced in a single batch.
+**Nothing accused it.** The `B03` was correct, the `I02` was well-formed, the unit complete, the suite green. The contradiction surfaced MONTHS later, when another agent went to implement and could not tell which of the two to follow — and it became a decision that had to escalate to the user, with nobody left remembering the context. Seven contradictions of this exact shape surfaced in a single batch.
 
 The ruler is ONE shared domain word, and the threshold was measured in both directions. Requiring two failed the very case that produced the gate: the `I02` shares exactly one word with what the revision rewrote — `badge` — and that word carries the whole contradiction. What makes one word enough is CLEANING the title, not counting: with negations and waiver comments in, the same spec accused three rules (`B01` and `B05` entered on "não" alone); with them out, it accuses one — the target.
 

@@ -315,7 +315,7 @@ func TestFlush_nilDoesNotPanic(t *testing.T) {
 // a rule code (`RLSGR-B01`) sent it with the switch on.
 func TestEmit_noCodesDropsUnitCodes(t *testing.T) {
 	t.Run("TLEMT-B08: With NoCodes a unit or rule code never leaves in an attribute", func(t *testing.T) {
-		attrs := map[string]any{"unit": "RLSGR", "rule": "RLSGR-B01", "gate": "triad-complete", "card_state": "in-progress", "n": 3}
+		attrs := map[string]any{"unit": "RLSGR", "rule": "RLSGR-B01", "gate": "unit-complete", "card_state": "in-progress", "n": 3}
 		keys := func(cfg Config) map[string]bool {
 			body, err := NewEmitter(cfg, "v").build(New(CheckFinished, attrs, fixedClock))
 			if err != nil {

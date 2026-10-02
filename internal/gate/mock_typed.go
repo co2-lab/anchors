@@ -20,7 +20,7 @@ import (
 // e ninguém vai procurar defeito onde há teste verde.
 //
 // Os outros gates da família não alcançam isto:
-//   - `trinca-completa` pergunta se o teste EXISTE — e ele existe;
+//   - `unit-complete` pergunta se o teste EXISTE — e ele existe;
 //   - `feature-test-match` confronta cenário contra caso de teste — e eles casam;
 //   - `tests-green` lê o resultado da execução — e ela passou.
 //
@@ -88,7 +88,7 @@ func checkMockTyped(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 
 // mockContract lê a forma de amarra declarada pelo projeto.
 func mockContract(cfg *config.Config) string {
-	// `Derived` é opcional na config — um projeto que não declara superfície de trinca
+	// `Derived` é opcional na config — um projeto que não declara superfície de unidade
 	// o deixa nil, e desreferenciá-lo derrubaria o check inteiro em vez de pular.
 	if cfg == nil || cfg.Derived == nil {
 		return ""

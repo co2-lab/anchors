@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: TSQUT
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @TSQUT
@@ -80,7 +80,7 @@ Feature: TaskQueue — the file-backed queue between "something changed" and "so
     Then they are spec, review-plan-draft, code, test, feature, review, review and triage, each with a reason
 
   @TSQUT-B13 @unit-level
-  Scenario: The suggestions of the triad kinds are composable by the work command
+  Scenario: The suggestions of the unit kinds are composable by the work command
     Given the kinds plan-draft, plan, spec, feature, code, test and guide
     When the next step is suggested for each
     Then every suggestion is a verb the work command accepts, with a reason

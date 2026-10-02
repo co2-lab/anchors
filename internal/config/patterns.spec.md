@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DRPTD
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: config
 -->
 # DerivedPatterns — a derived file declared as one pattern or as a list of them
@@ -13,7 +13,7 @@ A layer's derived files tie a spec to the files it governs, one pattern per kind
 One pattern covers the ordinary unit: a screen, a handler, a component. It does not cover a
 configuration spec, which describes several files spread across the packages (six project
 configuration files, a workspace file and four package manifests). With a single pattern the
-triad of such a spec never closes, and the gate fails forever on work that is done,
+unit of such a spec never closes, and the gate fails forever on work that is done,
 teaching people to waive by habit.
 
 This unit is the value of such a field in the configuration file: it accepts either one

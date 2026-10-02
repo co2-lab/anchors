@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FTMFT
-  updated_at: 2026-09-30
+  updated_at: 2026-10-01
   layer: gate
 -->
 # FeatureTestMatch — scenarios in feature must be implemented in test by code and description
@@ -24,8 +24,8 @@ The gate enforces a critical **TWO-TIER VERDICT**:
    a hard failure: the gate issues a non-blocking **Pending** warning so teams can realign descriptions
    without blocking delivery of verified code.
 
-Neighbouring gates govern other dimensions of the triad: `triad-complete` checks the physical presence
-of the triad artifacts; `spec-feature-match` ensures requirements defined in specs are covered by feature
+Neighbouring gates govern other dimensions of the unit: `unit-complete` checks the physical presence
+of the unit artifacts; `spec-feature-match` ensures requirements defined in specs are covered by feature
 scenarios. `feature-test-match` specifically guarantees that documented scenarios are faithfully realized
 in automated test suites.
 
@@ -35,7 +35,7 @@ in automated test suites.
 | --- | --- | --- | --- |
 | the confronted artifact | a node of kind `feature` | any node that is not a feature (returns Skip) | the gate engine, routing by the declared `on:` |
 | the graph | a built dependency graph | a nil graph (returns Pending) | this unit: with no map the confrontation cannot resolve linked tests |
-| the linked tests | test files reached via `tested-by` edges | features with no linked tests (returns Pending) | the map and triad discovery |
+| the linked tests | test files reached via `tested-by` edges | features with no linked tests (returns Pending) | the map and unit discovery |
 | the test surface regimes | scenarios mapped to `unit` or `integration` surfaces | scenarios scoped strictly to `e2e` or `vr` surfaces | this unit, resolving regime mappings from configuration |
 | the test content | test source code stripped of comments for code presence, and with comments for description match | code in external packages or unrelated files | this unit, reading and parsing linked test files |
 

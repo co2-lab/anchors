@@ -659,7 +659,7 @@ var DefaultRuleLetters = "SRVAXBNMDEIQWGP"
 // Era FIXO — e trocar o número fixo de 4 para 5 (ou o contrário) só move o problema de
 // lugar: o engine passa a servir apenas os projetos que escolheram o mesmo tamanho. Medido:
 // o app de referência tem **4046 códigos de 4 caracteres** e zero de 5; com o engine em `{5}`, nenhum
-// deles é reconhecido — as trincas ficam invisíveis e os gates de identidade não têm o que
+// deles é reconhecido — as unidades ficam invisíveis e os gates de identidade não têm o que
 // confrontar, sem que nada acuse a causa.
 //
 // O comprimento é do PROJETO, como o vocabulário de letras (`rule_types`) já é. Um projeto
@@ -1325,14 +1325,14 @@ type Layer struct {
 	// ligação do gerador de identidade com a ESTRUTURA — o módulo do arquivo (auth,
 	// ir, family…) define seu prefixo, em vez de uma tabela hardcoded.
 	CodePrefix string `yaml:"code_prefix,omitempty"`
-	// OptionalTriadEdges: peças da trinca que ESTA camada dispensa, por aresta
+	// OptionalUnitEdges: peças da unidade que ESTA camada dispensa, por aresta
 	// (`specifies` | `covered-by` | `tested-by`). É o opt-out HONESTO do gate
-	// `trinca-completa`: fica declarado na Estrutura, à vista, em vez de escondido
+	// `unit-complete`: fica declarado na Estrutura, à vista, em vez de escondido
 	// num Skip do gate. Ex.: uma camada provada só por teste de integração central
-	// declara `trinca_opcional: [tested-by]`.
-	// A chave é `optional_triad_edges`: `lang` traduz o que se LÊ, e uma chave de YAML é
+	// declara `optional_unit_edges: [tested-by]`.
+	// A chave é `optional_unit_edges`: `lang` traduz o que se LÊ, e uma chave de YAML é
 	// identificador, não prosa.
-	OptionalTriadEdges []string `yaml:"optional_triad_edges,omitempty"`
+	OptionalUnitEdges []string `yaml:"optional_unit_edges,omitempty"`
 	// RequiresDoctrine: as regras das specs DESTA camada têm de declarar `@realizes`,
 	// apontando a doutrina de produto que concretizam.
 	//
@@ -1357,7 +1357,7 @@ type Layer struct {
 	SectionTitles SectionTitles `yaml:"section_titles,omitempty"`
 }
 
-// Derived — a superfície da trinca (STRUCTURE.md §2.2): onde as peças derivadas de um
+// Derived — a superfície da unidade (STRUCTURE.md §2.2): onde as peças derivadas de um
 // "anchor" (spec/feature/test) DEVEM morar. Por default é co-location (partilham o stem
 // {{dir}}/{{name}}); `overrides` declara padrões de localização por camada-âncora quando
 // a peça NÃO é co-localizada (ex.: testes centralizados num backend). A ligação material
@@ -1366,20 +1366,20 @@ type Layer struct {
 // (extensão da âncora), {{module}} (o dir-pai — útil quando o basename é genérico, ex.
 // `handler` em functions/<module>/handler.ts → o módulo é <module>).
 type Derived struct {
-	// Anchor é o KIND que ancora a trinca. É `spec`, e a doutrina não admite outro: "a
+	// Anchor é o KIND que ancora a unidade. É `spec`, e a doutrina não admite outro: "a
 	// spec é a ORIGEM DA VERDADE de uma unidade… da spec nascem o código, a feature e o
 	// teste" (`anchors guide spec`).
 	//
 	// Até a v0.1 isto era `code`, e o efeito era o oposto do declarado: a spec aparecia
 	// como DERIVADA do código, e um projeto com 200 arquivos e zero specs tinha 200 nós
-	// ancorados — o mapa afirmava trinca onde não havia origem.
+	// ancorados — o mapa afirmava unidade onde não havia origem.
 	//
 	// Com `spec`, um projeto sem spec não tem aresta de co-location. É o comportamento
-	// correto: sem spec não há trinca, e o mapa dizer isso é honesto. O `doctor` já
+	// correto: sem spec não há unidade, e o mapa dizer isso é honesto. O `doctor` já
 	// reporta o código sem spec como órfão.
 	Anchor string `yaml:"anchor"` // a camada-âncora (canônico: "spec")
 	// Files: camada-derivada → padrão de caminho. `code`, `feature` e `test` são as três
-	// pontas da trinca, e cada uma diz onde aquela peça mora.
+	// pontas da unidade, e cada uma diz onde aquela peça mora.
 	//
 	// A chave `patterns` é RESERVADA e não é uma camada: ela declara o CONJUNTO de
 	// arquivos que a spec governa, e substitui `code` quando presente. Ver ChavePatterns.
@@ -2371,7 +2371,7 @@ var RenamedKey func(string) bool
 // Espelha o `mapx.FormatoAtual` e vive aqui para evitar o ciclo de import (o `mapx` usa
 // tipos do `config`). Os dois sobem juntos: uma migração que muda o mapa e a config é um
 // passo só.
-const FormatoAtualDeConfig = 5
+const FormatoAtualDeConfig = 6
 
 // fileVersionRE lê o `version:` de topo sem passar pelo parser — que é justamente
 // quem acabou de recusar o arquivo.

@@ -139,7 +139,7 @@ func SuggestNext(kind string) (next, reason string) {
 		return "feature", "the code changed — describe the behaviour in scenarios " +
 			"(`anchors work feature --for <target>`), which is where the tests are born"
 	case "test":
-		// O teste é a ÚLTIMA peça da trinca a nascer: quando ele muda, a unidade está
+		// O teste é a ÚLTIMA peça da unidade a nascer: quando ele muda, a unidade está
 		// completa e é exatamente aí que o trabalho PARECE pronto. Por isso a cadeia não
 		// termina em `verify-tests` — ela chama o REVIEW.
 		//
@@ -148,7 +148,7 @@ func SuggestNext(kind string) (next, reason string) {
 		// contradição entre duas regras da mesma spec) passaram com TODOS os gates verdes.
 		// Nenhum foi achado por gate; os 7 saíram de revisão adversarial. O gate confronta
 		// o que é DECLARÁVEL; o que sobra precisa de alguém atacando de fora.
-		return "review", "the triad closed — run the suite, `anchors ingest` the signals, and then " +
+		return "review", "the unit closed — run the suite, `anchors ingest` the signals, and then " +
 			"REVIEW the whole unit (`anchors work review --for <target>`): green gates " +
 			"do not prove it is right"
 	case "guide":

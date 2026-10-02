@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:6755d00c54648c84 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b8425a38b58950d9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -389,6 +389,8 @@ teste prova.
 - [Format 3 leaves the map's gate and the configuration's id alone](camadas/apoio.md#mgstm--migrationsteps--the-registered-steps-one-per-format-take-any-project-from-format-1-to-the-current-format) `MGSTM-X01`
 
 - [Format 4 renames nothing in the map](camadas/apoio.md#mgstm--migrationsteps--the-registered-steps-one-per-format-take-any-project-from-format-1-to-the-current-format) `MGSTM-X02`
+
+- [Format 6 renames the triad to the unit](camadas/apoio.md#mgstm--migrationsteps--the-registered-steps-one-per-format-take-any-project-from-format-1-to-the-current-format) `MGSTM-B06`
 
 - [Steps registered out of order are kept sorted](camadas/apoio.md#mscmg--migrationstepchain--one-step-per-format-version-chained-in-order-and-a-hole-in-the-chain-is-an-error) `MSCMG-B01`
 
@@ -1050,7 +1052,7 @@ teste prova.
 
 - [What is not work is not queued](camadas/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue) `WTCHA-B11`
 
-- [A delivery record triggers the review when the triad closes](camadas/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue) `WTCHA-B12`
+- [A delivery record triggers the review when the unit closes](camadas/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue) `WTCHA-B12`
 
 - [A waived test, a Go test, and a record with no unit do not hold the review](camadas/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue) `WTCHA-B13`
 
@@ -1080,7 +1082,7 @@ teste prova.
 
 - [A waived piece stops the prompt](camadas/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares) `WRPRW-B03`
 
-- [A declarative layer has no triad piece](camadas/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares) `WRPRW-B04`
+- [A declarative layer has no unit piece](camadas/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares) `WRPRW-B04`
 
 - [The heading and the role follow the stage](camadas/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares) `WRPRW-B05`
 
@@ -1432,7 +1434,7 @@ teste prova.
 
 - [A lost judgment stamp is reported per gate](camadas/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-B03`
 
-- [The edge summary shows every type, the triad's first](camadas/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-B04`
+- [The edge summary shows every type, the unit's first](camadas/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-B04`
 
 - [The layer ambiguity warning is grouped by pair of layers](camadas/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-B05`
 
@@ -5262,40 +5264,6 @@ teste prova.
 
 - [An unreadable flow or source leaves the verdict pending](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-E02`
 
-- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B01`
-
-- [A recognised layer leaves without a verdict](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B02`
-
-- [Without a map the verdict is undetermined](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B03`
-
-- [A spec with the three pieces linked passes](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B04`
-
-- [A spec missing a piece is failed, and the verdict names which](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B05`
-
-- [The layer may waive a piece for every spec in it](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B06`
-
-- [The unit may waive a piece in its own spec, with a written reason](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B07`
-
-- [The test is reached in two hops, through the feature](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-I01`
-
-- [Waiving the test while the feature carries a scenario is a contradiction](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-I02`
-
-- [Waiving the test demands saying where the proof is, and the place must exist](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-I03`
-
-- [A waiver covers only the piece it declares](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-I04`
-
-- [The gate does not confront whether the pieces MATCH one another](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-X01`
-
-- [A per-rule waiver in a table row does not waive the unit](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B09`
-
-- [A piece declared TO BE DEVELOPED leaves the verdict undetermined](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B08`
-
-- [The gate does not judge the QUALITY of any piece](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-X02`
-
-- [A test missing from disk does not orphan a reference another test resolves](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-E01`
-
-- [A feature missing from disk does not hide the scenario of the covered feature](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-E02`
-
 - [Non-spec artifacts skip confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B01`
 
 - [Specifications without cited triggers skip confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B02`
@@ -5339,6 +5307,40 @@ teste prova.
 - [Unquoted prose text is not evaluated as symbol citations](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X04`
 
 - [A declared pack that does not load leaves the verdict pending](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-E02`
+
+- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B01`
+
+- [A recognised layer leaves without a verdict](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B02`
+
+- [Without a map the verdict is undetermined](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B03`
+
+- [A spec with the three pieces linked passes](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B04`
+
+- [A spec missing a piece is failed, and the verdict names which](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B05`
+
+- [The layer may waive a piece for every spec in it](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B06`
+
+- [The unit may waive a piece in its own spec, with a written reason](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B07`
+
+- [The test is reached in two hops, through the feature](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I01`
+
+- [Waiving the test while the feature carries a scenario is a contradiction](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I02`
+
+- [Waiving the test demands saying where the proof is, and the place must exist](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I03`
+
+- [A waiver covers only the piece it declares](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I04`
+
+- [The gate does not confront whether the pieces MATCH one another](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-X01`
+
+- [A per-rule waiver in a table row does not waive the unit](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B09`
+
+- [A piece declared TO BE DEVELOPED leaves the verdict undetermined](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B08`
+
+- [The gate does not judge the QUALITY of any piece](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-X02`
+
+- [A test missing from disk does not orphan a reference another test resolves](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-E01`
+
+- [A feature missing from disk does not hide the scenario of the covered feature](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-E02`
 
 - [A declaration matching its code line passes](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B01`
 
@@ -6196,7 +6198,7 @@ teste prova.
 
 - [The next step follows the kind that changed](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B12`
 
-- [The suggestions of the triad kinds are composable by the work command](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B13`
+- [The suggestions of the unit kinds are composable by the work command](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B13`
 
 - [A task whose target is an absolute path that exists is kept](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B15`
 
@@ -6538,7 +6540,7 @@ teste prova.
 
 - [Only a header marks the identity as declared](camadas/mapa.md#grblg-b06--only-a-header-marks-the-identity-as-declared) `GRBLG-B06`
 
-- [The triad of one unit is linked](camadas/mapa.md#grblg-b07--the-triad-of-one-unit-is-linked) `GRBLG-B07`
+- [The pieces of one unit are linked](camadas/mapa.md#grblg-b07--the-pieces-of-one-unit-are-linked) `GRBLG-B07`
 
 - [With the code as anchor, the relations still go down from the spec](camadas/mapa.md#grblg-b08--with-the-code-as-anchor-the-relations-still-go-down-from-the-spec) `GRBLG-B08`
 
@@ -6610,7 +6612,7 @@ teste prova.
 
 - [The newer-map refusal never names the migration command](camadas/mapa.md#mpfrm-b05--the-newer-map-refusal-never-names-the-migration-command) `MPFRM-B05`
 
-- [Exactly format 5 is readable](camadas/mapa.md#mpfrm-i01--exactly-format-5-is-readable) `MPFRM-I01`
+- [Exactly format 6 is readable](camadas/mapa.md#mpfrm-i01--exactly-format-6-is-readable) `MPFRM-I01`
 
 - [Format 1 is migrated, not read](camadas/mapa.md#mpfrm-x01--format-1-is-migrated-not-read) `MPFRM-X01`
 

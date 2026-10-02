@@ -101,7 +101,7 @@ func BuildPlan(root string, cfg *config.Config, old, new string) (*Plan, error) 
 		if oldTID != "" {
 			newContent, tn = RewriteTestIDs(newContent, oldTID, newTID)
 			plan.TestIDs += tn
-			// aviso de legado: só olhamos arquivos DA TRINCA (que têm header/scenario do
+			// aviso de legado: só olhamos arquivos DA UNIDADE (que têm header/scenario do
 			// código) — se este arquivo tem testIDs mas o prefixo esperado não bateu, é
 			// um prefixo divergente (recode manual anterior). Não conhecemos o prefixo
 			// antigo; só que o esperado sumiu e há testIDs. Conta independente das

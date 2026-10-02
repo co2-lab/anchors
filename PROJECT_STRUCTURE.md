@@ -27,7 +27,7 @@ O repositório é governado pelas camadas declaradas em [`anchors.yaml`](./ancho
 | **`doutrina`** | `*.md` | `guide` | `[doutrina, guide]` | Os documentos canônicos que definem o framework (`CONCEPT.md`, `STRUCTURE.md`, `SPEC.md`, etc.). Governam as camadas de código. |
 | **`doc`** | `{README,PLANNING,PROJECT_STRUCTURE}.md` | `doc` | `[doc]` | Documentação operacional, visão geral e mapa estrutural do repositório. |
 | **`comando`** | `cmd/anchors/**/*.go` | `code` | `[cli, comando]` | Ponto de entrada do usuário/agente (Cobra CLI), dividido por domínios funcionais. |
-| **`gate`** | `internal/gate/*.go` | `code` | `[regra, gate]` | Implementação dos gates de qualidade (segurança, integridade, rastreabilidade, trinca). |
+| **`gate`** | `internal/gate/*.go` | `code` | `[regra, gate]` | Implementação dos gates de qualidade (segurança, integridade, rastreabilidade, unidade). |
 | **`config`** | `internal/config/*.go` | `code` | `[nucleo, config]` | Configuração do projeto, marcadores de comentário por linguagem, resolução de raízes. |
 | **`scan`** | `internal/scan/*.go` | `code` | `[nucleo, scan]` | Varredura do repositório lendo texto puro; extração de identidades e anotações. |
 | **`mapa`** | `internal/mapx/*.go` | `code` | `[nucleo, mapa]` | Grafo de dependências (`anchors.graph.yaml`), construção de arestas e persistência. |
@@ -122,7 +122,7 @@ Os pacotes em [`internal/`](./internal/) compõem a biblioteca privada do Anchor
 - **`mapx`**: Estrutura do grafo de dependências (`anchors.graph.yaml`), nós, arestas (`specifies`, `covered-by`, `tested-by`, `references`, `convention`), montagem e serialização.
 
 ### 4.2 Regras de Qualidade e Gates
-- **`gate`**: Mecanismo de execução e catálogo de gates (`secret-nao-vazado`, `layer-boundary`, `testid-coerente`, `trinca-completa`, `fase-ordenada`, etc.), gerando diagnósticos e perfis de veredito (`Pass`, `Fail`, `Pending`, `Skip`).
+- **`gate`**: Mecanismo de execução e catálogo de gates (`secret-nao-vazado`, `layer-boundary`, `testid-coerente`, `unit-complete`, `fase-ordenada`, etc.), gerando diagnósticos e perfis de veredito (`Pass`, `Fail`, `Pending`, `Skip`).
 
 ### 4.3 Infraestrutura e Suporte
 - **`board`**: Servidor embutido para renderização do quadro Kanban/progresso no navegador.

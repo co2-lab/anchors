@@ -11,7 +11,7 @@ import (
 	"github.com/co2-lab/anchors/internal/scan"
 )
 
-// trinca-completa: uma spec de camada REGIDA precisa das três peças que a realizam —
+// unit-complete: uma spec de camada REGIDA precisa das três peças que a realizam —
 // o CÓDIGO (`specifies`), a FEATURE (`covered-by`) e o TESTE (`tested-by`).
 //
 // Existe porque os gates relacionais FALHAM ABERTO por construção: sem teste ligado, o
@@ -25,23 +25,23 @@ import (
 //
 // NÃO se aplica a:
 //   - camadas RECONHECIDAS (regime declarativo — dao/infra/resource): não têm spec nem
-//     trinca por definição;
+//     unidade por definição;
 //   - specs cuja camada dispensa alguma peça por de-para do projeto (ex.: repository, que
 //     no app de referência é provado por teste de integração central, não por teste co-localizado).
-//     Isso é declarado com `trinca_opcional` na camada do anchors.yaml.
-func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+//     Isso é declarado com `optional_unit_edges` na camada do anchors.yaml.
+func checkUnitComplete(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, i18n.T("gate.triad.skip_not_spec")
+		return Skip, i18n.T("gate.unit.skip_not_spec")
 	}
 	if g == nil {
 		return pendingNoMap()
 	}
-	// Camada RECONHECIDA não tem trinca a cobrar.
+	// Camada RECONHECIDA não tem unidade a cobrar.
 	if isRecognizedLayerCfg(n, content, cfg) {
-		return Skip, i18n.T("gate.triad.skip_recognized")
+		return Skip, i18n.T("gate.unit.skip_recognized")
 	}
 
-	// A trinca NÃO é uma estrela: a spec aponta o código (`specifies`) e a feature
+	// A unidade NÃO é uma estrela: a spec aponta o código (`specifies`) e a feature
 	// (`covered-by`), mas quem aponta o teste é a FEATURE (`tested-by`, ver mapx.Build).
 	// Então o teste se alcança em DOIS saltos — spec → feature → teste. Verificar
 	// `tested-by` direto na spec acusaria falta de teste em todo o projeto.
@@ -63,21 +63,21 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 		peca  string
 		ondeE string
 	}{
-		{mapx.EdgeSpecifies, i18n.T("gate.triad.code_piece"), i18n.T("gate.triad.code_desc")},
-		{mapx.EdgeCoveredBy, i18n.T("gate.triad.feature_piece"), i18n.T("gate.triad.feature_desc")},
-		{mapx.EdgeTestedBy, i18n.T("gate.triad.test_piece"), i18n.T("gate.triad.test_desc")},
+		{mapx.EdgeSpecifies, i18n.T("gate.unit.code_piece"), i18n.T("gate.unit.code_desc")},
+		{mapx.EdgeCoveredBy, i18n.T("gate.unit.feature_piece"), i18n.T("gate.unit.feature_desc")},
+		{mapx.EdgeTestedBy, i18n.T("gate.unit.test_piece"), i18n.T("gate.unit.test_desc")},
 	}
 	optional := optionalPieces(n, cfg, g)
 	// Dispensa POR UNIDADE, declarada na própria spec (`@no-test:`/`@no-feature:`).
 	//
-	// A dispensa por CAMADA (`trinca_opcional`) isenta em bloco: ou toda `service`
+	// A dispensa por CAMADA (`optional_unit_edges`) isenta em bloco: ou toda `service`
 	// precisa de teste, ou nenhuma. Mas dentro da mesma camada convivem o gateway de
 	// 9 linhas que só repassa a chamada e o módulo de 150 com regra de verdade —
 	// isentar os dois junto apaga a cobrança justamente onde ela vale.
 	//
 	// Aqui a decisão é da UNIDADE e fica escrita nela, com razão obrigatória: quem lê
 	// a spec vê por que aquele arquivo não tem teste, em vez de descobrir num
-	// `trinca_opcional` distante que removeu a exigência da camada inteira.
+	// `optional_unit_edges` distante que removeu a exigência da camada inteira.
 	waived := specWaivers(content)
 	for peca := range waived {
 		optional[peca] = true
@@ -89,7 +89,7 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 	//
 	// Until now the two shared a bucket and both became Pass. The effect was to erase
 	// from the radar exactly what remains to be done: a spec with `@TBD: code,feature,test`
-	// came out green, indistinguishable from a complete triad.
+	// came out green, indistinguishable from a complete unit.
 	//
 	// Now the deferred piece does not fail (it was declared, with a written reason) but
 	// does not pass either: it becomes Pending, which keeps showing up until someone
@@ -101,7 +101,7 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 	// duas afirmações não podem conviver: ou o cenário é real e alguém precisa
 	// prová-lo, ou ele não deveria existir.
 	//
-	// Sem esta checagem a contradição fica MUDA — o `trinca-completa` passa (a
+	// Sem esta checagem a contradição fica MUDA — o `unit-complete` passa (a
 	// dispensa o satisfaz) e o `feature-test-match` também (ele exige teste só
 	// quando há teste a confrontar). O resultado é um cenário escrito que ninguém
 	// prova, com o pipeline inteiro verde.
@@ -114,16 +114,16 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 	if unitWaiver(noTestRE, content) && !unitWaiver(noFeatureRE, content) {
 		alvo, temRef := proofPointedByNoTest(content)
 		if !temRef {
-			return Fail, i18n.T("gate.triad.no_test_no_pointer")
+			return Fail, i18n.T("gate.unit.no_test_no_pointer")
 		}
 		if _, achou := provingTest(alvo, root, g); !achou {
-			return Fail, i18n.T("gate.triad.no_test_unresolved", alvo)
+			return Fail, i18n.T("gate.unit.no_test_unresolved", alvo)
 		}
 	}
 
 	if waived[string(mapx.EdgeTestedBy)] {
 		if qtd, feat := linkedFeatureScenarios(n, root, g); qtd > 0 {
-			return Fail, i18n.T("gate.triad.no_test_conflict", feat, qtd)
+			return Fail, i18n.T("gate.unit.no_test_conflict", feat, qtd)
 		}
 	}
 
@@ -141,17 +141,17 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 	}
 	if len(missing) > 0 {
 		sort.Strings(missing)
-		return Fail, i18n.T("gate.triad.incomplete", strings.Join(missing, "; "))
+		return Fail, i18n.T("gate.unit.incomplete", strings.Join(missing, "; "))
 	}
 	if len(owed) > 0 {
 		sort.Strings(owed)
-		return Diverge, i18n.T("gate.triad.to_be_developed", len(owed), strings.Join(owed, ", ")) + " " + DeclaredMarker
+		return Diverge, i18n.T("gate.unit.to_be_developed", len(owed), strings.Join(owed, ", ")) + " " + DeclaredMarker
 	}
 	return Pass, ""
 }
 
-// optionalPieces lê da camada do nó quais peças da trinca o projeto dispensa
-// (`trinca_opcional: [tested-by]`, por exemplo). É o opt-out HONESTO: fica declarado na
+// optionalPieces lê da camada do nó quais peças da unidade o projeto dispensa
+// (`optional_unit_edges: [tested-by]`, por exemplo). É o opt-out HONESTO: fica declarado na
 // Estrutura, não escondido num Skip do gate.
 func optionalPieces(n mapx.Node, cfg *config.Config, g *mapx.Graph) map[string]bool {
 	out := map[string]bool{}
@@ -178,7 +178,7 @@ func optionalPieces(n mapx.Node, cfg *config.Config, g *mapx.Graph) map[string]b
 		if !ok {
 			continue
 		}
-		for _, p := range l.OptionalTriadEdges {
+		for _, p := range l.OptionalUnitEdges {
 			out[p] = true
 		}
 	}
@@ -198,7 +198,7 @@ func optionalPieces(n mapx.Node, cfg *config.Config, g *mapx.Graph) map[string]b
 				if layer == "" {
 					continue
 				}
-				if disp := cfg.Layers[layer].OptionalTriadEdges; len(disp) > 0 {
+				if disp := cfg.Layers[layer].OptionalUnitEdges; len(disp) > 0 {
 					for _, p := range disp {
 						out[p] = true
 					}
@@ -359,7 +359,7 @@ func provingTest(codigo, root string, g *mapx.Graph) (arquivo string, achou bool
 // (`### CODE-S01: … @no-code: …`) or its bullet — is that RULE's (the per-rule shape
 // `rule-implemented` reads), not the unit's. Matching the whole spec turned every per-rule
 // `@no-code:` into a waiver of code, feature and test for the unit: measured in the reference app, 293 of
-// 308 triad failures were table rows, and 7 of the rest were rule headings.
+// 308 unit failures were table rows, and 7 of the rest were rule headings.
 func unitWaiver(re *regexp.Regexp, content string) bool {
 	defines := definesRuleRE()
 	for _, line := range strings.Split(content, "\n") {

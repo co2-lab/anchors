@@ -48,11 +48,11 @@ economy. Wait for the second consumer.
 - Separate the PURE LOGIC (framework-free) into its own place. Pure domain functions,
   with no UI/IO dependency, are the easiest to test — and the most reused.
 
-## The co-located triad
+## The co-located unit
 
 Every code artifact is born with its spec, its feature and its test beside it. Writing
 code without all three leaves the unit with no ruler, no coverage and no proof. (It is
-the core of Anchors — the map expects the triad.)
+the core of Anchors — the map expects the unit.)
 
 ## Real violation vs. sanctioned exception
 
@@ -77,7 +77,7 @@ defect had already shipped — ` + "`anchors guide work`" + `, "When what you de
 - A feature importing from another feature → promote the common part to the shared layer.
 - Abstracting on first use → wait for the second consumer.
 - A reusable block that fetches its own data → pass the data by parameter.
-- Code without the triad (spec/feature/test) → the unit is orphaned in the map.
+- Code without the unit (spec/feature/test) → the unit is orphaned in the map.
 
 ## Project specialization
 

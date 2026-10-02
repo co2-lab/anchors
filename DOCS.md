@@ -1,6 +1,6 @@
 # Anchors — A Documentação
 
-> A trinca cobre o que está **dentro** de uma unidade. Este documento é sobre o que fica
+> A unidade cobre o que está **dentro** de uma unidade. Este documento é sobre o que fica
 > **fora** dela: os artefatos agregados que várias unidades alimentam e nenhuma possui.
 
 ## 1. Por que a documentação precisa de mecanismo
@@ -129,7 +129,7 @@ que o time escreveu, que é justamente a parte não gerada.
 
 ### 4.1 Os cenários entram na documentação
 
-A feature é o único artefato da trinca escrito para ser lido por quem não programa —
+A feature é o único artefato da unidade escrito para ser lido por quem não programa —
 Gherkin existe para isso. E é ela que responde o que a spec não responde: a spec diz a
 **regra** ("dívida aberta bloqueia"), o cenário diz o que **acontece** ("dado uma dívida
 aberta, quando confiro a régua, então não libera").
@@ -143,7 +143,7 @@ organize os arquivos de outro jeito continua funcionando.
 
 ## 5. As documentações específicas do tipo de projeto
 
-O que a trinca não alcança são os artefatos **agregados**. Uma API tem um contrato que vive
+O que a unidade não alcança são os artefatos **agregados**. Uma API tem um contrato que vive
 fora do código — o OpenAPI — e um endpoint que não entra nele é invisível para quem
 consome. Um projeto com banco tem o esquema. Um design system tem o catálogo.
 
@@ -257,7 +257,7 @@ sozinha os conhece. O nível 3 vem dos contêineres declarados.
 
 O C4 **não tem gatilho por camada**, e não é esquecimento: ele não muda quando uma unidade
 muda — muda quando a estrutura muda (um contêiner novo, uma fonte externa nova, uma
-fronteira que se desloca). Por isso não é trabalho de card de trinca, e sim de issue própria.
+fronteira que se desloca). Por isso não é trabalho de card de unidade, e sim de issue própria.
 
 ## 6. O gate `docs-fresh` é informativo
 

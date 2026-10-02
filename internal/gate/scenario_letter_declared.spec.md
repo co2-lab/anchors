@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCLTR
-  updated_at: 2026-09-30
+  updated_at: 2026-10-01
   layer: gate
 -->
 # ScenarioLetterDeclared — the letter of a scenario code exists in the vocabulary
@@ -15,7 +15,7 @@ carries mean anything?**
 The project declares which letters it recognises, and a sibling gate charges the spec's
 SECTIONS for using the right ones. Nobody charged the same of the code a SCENARIO carries
 — and an invented letter passes every other gate. The code matches itself across feature
-and test, the triad is complete, the relational gates find both ends of the edge, and
+and test, the unit is complete, the relational gates find both ends of the edge, and
 nothing notices that the letter means nothing.
 
 Measured in the project that originated this gate: **18 codes carrying five undeclared

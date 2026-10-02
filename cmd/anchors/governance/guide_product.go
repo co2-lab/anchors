@@ -5,7 +5,7 @@ package governance
 const productGuide = `# Product doctrine guide (the rule that cuts across targets)
 
 Every spec in Anchors has a TARGET: it describes one unit, and co-location ties the four
-ends of the triad to the same directory. That is the model's strength — every rule has an
+ends of the unit to the same directory. That is the model's strength — every rule has an
 address, and the gate knows where to confront it.
 
 It is also its limit. In a real application many business rules **cut across targets**:
@@ -63,7 +63,7 @@ spec to change format.
 
 **It is 1 to MANY**: several specs realize the same rule, and one spec realizes several.
 That is exactly what the concept exists to allow, and it is why no gate here demands
-parity of counts the way ` + "`triad-complete`" + ` does.
+parity of counts the way ` + "`unit-complete`" + ` does.
 
 ## What the spec writes, and what it does NOT
 

@@ -206,7 +206,7 @@ func TestRecode_dialectReportsTestIDsAndRenames(t *testing.T) {
 	}
 }
 
-// The dialect's testID prefix is absent but the triad's files carry testIDs with another
+// The dialect's testID prefix is absent but the unit's files carry testIDs with another
 // prefix: a previous manual rename. The recode does not guess, and says so.
 func TestRecode_dialectWarnsAboutDivergentTestIDs(t *testing.T) {
 	t.Run("RCDEO-B08: The plan warns when the files carry testIDs with a prefix other than the dialect's", func(t *testing.T) {})

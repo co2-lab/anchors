@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CRVCD
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: gate
 -->
 # CodeReferenceValid — cross-referenced requirement codes must resolve to existing units
@@ -20,7 +20,7 @@ This gate enforces referential truth by extracting every requirement token shape
 This gate operates in distinct territory from neighbouring gates:
 - Unlike `dependency-honored`, which inspects dependency tables to confirm that promised Go symbols and methods appear in code, this gate validates requirement codes against the project identity universe. A unit can legitimately consume existing Go packages while citing non-existent requirement codes.
 - Unlike `code-cataloged`, which ensures that exported code symbols are catalogued within their own unit specification, this gate governs external references pointing to other specifications.
-- Unlike `triad-complete`, which enforces local triad structure within a single unit, this gate maintains referential integrity across the collective graph of specifications.
+- Unlike `unit-complete`, which enforces local unit structure within a single unit, this gate maintains referential integrity across the collective graph of specifications.
 
 ## Domain
 

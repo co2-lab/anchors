@@ -116,10 +116,10 @@ func TestStampLossWarning(t *testing.T) {
 	})
 }
 
-// The summary shows the triad's types first and EVERY other type after, alphabetically —
+// The summary shows the unit's types first and EVERY other type after, alphabetically —
 // a fixed list used to hide `realizes`, `depends-on`, and the rest.
 func TestPrintEdgeSummary_showsTypesOutsideTheKnownList(t *testing.T) {
-	t.Run("MPCMM-B04: The edge summary shows every type, the triad's first", func(t *testing.T) {})
+	t.Run("MPCMM-B04: The edge summary shows every type, the unit's first", func(t *testing.T) {})
 	useEnglish(t)
 	g := &mapx.Graph{Edges: []mapx.Edge{
 		{Type: mapx.EdgeType("realizes")},
@@ -133,7 +133,7 @@ func TestPrintEdgeSummary_showsTypesOutsideTheKnownList(t *testing.T) {
 		t.Fatalf("a type is missing from the summary:\n%s", out)
 	}
 	if !(iSpec < iDep && iDep < iReal) {
-		t.Errorf("order must be the triad first, then alphabetical:\n%s", out)
+		t.Errorf("order must be the unit first, then alphabetical:\n%s", out)
 	}
 	if got := capturaStdout(t, func() { printEdgeSummary(&mapx.Graph{}) }); got != "" {
 		t.Errorf("no edges, no summary: %q", got)

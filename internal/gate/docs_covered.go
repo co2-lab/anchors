@@ -20,7 +20,7 @@ import (
 // São defeitos diferentes, e este é o silencioso. Os templates em `doct/` filtram por
 // camada (`{{range specs "layer=gate"}}`), então uma spec que nenhum filtro seleciona
 // compila para lugar nenhum. E nada acusa — porque todas as páginas que existem estão
-// corretas, e `docs-fresh` confere exatamente isso. A unidade existe, tem trinca
+// corretas, e `docs-fresh` confere exatamente isso. A unidade existe, tem unidade
 // completa, passa por todos os gates relacionais, e não está documentada.
 //
 // Medido neste repositório ao escrever o gate: 51 specs, 51 documentadas, zero órfãs. É

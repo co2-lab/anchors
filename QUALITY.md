@@ -773,7 +773,7 @@ resposta, e o projeto decide se ela barra o merge. Existe uma terceira situaçã
 natureza diferente: o gate **não tem como saber**, porque o insumo depende de uma
 capacidade que o projeto pode legitimamente não ter.
 
-O caso concreto: o Anchors pode exigir que a spec decida, que a trinca exista, que a
+O caso concreto: o Anchors pode exigir que a spec decida, que a unidade exista, que a
 dependência prometida seja honrada — tudo isso ele lê do repositório. Não pode exigir
 que o projeto rode uma ferramenta de **mutação**, emita **JUnit XML** ou gere **lcov**.
 Isso depende de stack, de linguagem, de tempo de CI. Exigir seria o framework decidindo

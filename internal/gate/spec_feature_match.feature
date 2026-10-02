@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SFMSP
-#   updated_at: 2026-09-27
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @SFMSP
@@ -79,7 +79,7 @@ Feature: SpecFeatureMatch — every requirement the spec defines has at least on
   Scenario: A spec with no feature returns Skip
     Given a spec defining a requirement and no feature linked to it
     When the gate confronts it
-    Then it returns Skip, because that absence is the ruler of the triad gate and
+    Then it returns Skip, because that absence is the ruler of the unit gate and
       accusing it here would print the same defect twice
 
   @SFMSP-B11 @unit-level
@@ -119,7 +119,7 @@ Feature: SpecFeatureMatch — every requirement the spec defines has at least on
   Scenario: Each gate accuses one thing
     Given a spec with a defined requirement and no feature at all
     When the gate confronts it
-    Then it skips rather than failing, because the missing feature belongs to the triad
+    Then it skips rather than failing, because the missing feature belongs to the unit
       gate and reporting it here would print the same defect twice
 
   @SFMSP-X01 @unit-level

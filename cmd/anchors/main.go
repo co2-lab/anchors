@@ -49,7 +49,7 @@ func main() {
 		// "não é regido" sai com código PRÓPRIO: quem automatiza (pre-commit, CI)
 		// precisa distinguir "não tenho jurisdição sobre este arquivo" de "este
 		// arquivo reprovou". Sem isso, só resta grepar a mensagem — e foi assim que
-		// o pre-commit passou a deixar arquivo regido novo escapar sem trinca.
+		// o pre-commit passou a deixar arquivo regido novo escapar sem unidade.
 		var nr common.ErrNotGoverned
 		if errors.As(err, &nr) {
 			common.FlushTelemetry()

@@ -126,7 +126,7 @@ a rule nobody wrote. So do not stop at the first draft — write it in four pass
        ✗ "the test's body ends at the first closer back at its indentation"
        ✓ "the test's body is everything the test runs"
      A rule that describes the mechanism is proven by any test of that mechanism,
-     right or wrong: the triad stays green and wrong together.
+     right or wrong: the unit stays green and wrong together.
    - From this rule alone, could someone who never saw the code say what must happen
      in a case you did not think of?
    - Is it silent about the rest? "Narrows to the changed files" says nothing of the

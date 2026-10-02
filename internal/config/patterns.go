@@ -13,7 +13,7 @@ import (
 //
 // Não cobre a spec de CONFIGURAÇÃO. `TypeScriptConfig` descreve seis `tsconfig.json`
 // espalhados pelos pacotes; `Workspace` descreve o `pnpm-workspace.yaml` e quatro
-// `package.json`. Com um padrão só, a trinca dessas specs nunca fecha — e o gate reprova
+// `package.json`. Com um padrão só, a unidade dessas specs nunca fecha — e o gate reprova
 // para sempre um trabalho que ESTÁ feito, ensinando a dispensar por hábito.
 //
 // Daí `Padroes`: o mesmo campo aceita string (a forma de sempre) ou lista.

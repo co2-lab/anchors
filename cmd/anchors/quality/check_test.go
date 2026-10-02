@@ -2598,7 +2598,7 @@ func TestRecordCheckKeepsWhatAnotherProcessWrote(t *testing.T) {
 func TestCheck_indexOutsideARepository(t *testing.T) {
 	t.Run("CGPCH-B85: The index flag reads what the commit records", func(t *testing.T) {})
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 5\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 6\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := runQ(t, newCheckCmd(), "--root", dir, "--all", "--no-record", "--index"); err == nil || !strings.Contains(err.Error(), "read the git index") {
@@ -2606,7 +2606,7 @@ func TestCheck_indexOutsideARepository(t *testing.T) {
 	}
 }
 
-const indexYAML = "version: 5\nlayers:\n  code:\n    pattern: \"src/*.ts\"\n    kind: code\ngates:\n  - name: updated-at-atual\n    check: updated-at-atual\n    on: [code]\n    blocking: true\n"
+const indexYAML = "version: 6\nlayers:\n  code:\n    pattern: \"src/*.ts\"\n    kind: code\ngates:\n  - name: updated-at-atual\n    check: updated-at-atual\n    on: [code]\n    blocking: true\n"
 
 // indexRepo is a project (at `sub` below the repository's top when `below`) with two files
 // committed in the past, dated as committed, and a map built from them.

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WTCHA
-  updated_at: 2026-09-28
+  updated_at: 2026-10-01
   layer: comando
 -->
 # Watch — the background watcher that turns "a file changed" into "there is work in the queue"
@@ -62,8 +62,8 @@ unless the unit's layer waives the test.
 | `WTCHA-B09` | A change in a governed file queues the next piece of its unit's chain, skipping a piece that already exists, and reports the task and the queue's size. |
 | `WTCHA-B10` | A piece the unit's layer waives is skipped to the next step of the chain; the layer is the one of the unit's code file, even when the change is in a derived piece. |
 | `WTCHA-B11` | A file outside the structure, a file already gone, a file the project's ignore list covers and an editor's temporary queue nothing. |
-| `WTCHA-B12` | A delivery record at the root of `changes/` for a plan queues the review of the whole plan; for a unit it queues the review only once the unit has code and a test, and otherwise says the review waits for the triad to close; a record under `changes/reviewed/` queues nothing. |
-| `WTCHA-B13` | A unit whose layer waives the test is reviewed as soon as its code exists, a test beside the code in any supported language closes the triad, and a record with no readable unit does not hold the review. |
+| `WTCHA-B12` | A delivery record at the root of `changes/` for a plan queues the review of the whole plan; for a unit it queues the review only once the unit has code and a test, and otherwise says the review waits for the unit to close; a record under `changes/reviewed/` queues nothing. |
+| `WTCHA-B13` | A unit whose layer waives the test is reviewed as soon as its code exists, a test beside the code in any supported language closes the unit, and a record with no readable unit does not hold the review. |
 | `WTCHA-B14` | A delivery record is any `.md` directly under `changes/`; one without a unit line is still a delivery. |
 | `WTCHA-B15` | A task's id is the path's slug, the step and a short hash: the same path and step give the same id, another step another id, and no id holds a `/`. |
 | `WTCHA-B16` | A governed file the map does not have enters it the moment the watcher sees it — read alone, with its unit —, and the watcher's copy of the map is reloaded; without a map on disk, nothing is written. |

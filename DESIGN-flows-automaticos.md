@@ -110,7 +110,7 @@ sugestão hoje vive na prosa da mensagem, onde depende de alguém ler e lembrar.
 
 O veredito real do `spec-feature-match`:
 
-    1 declared requirement(s) without scenario in feature: TRCMT-B08.
+    1 declared requirement(s) without scenario in feature: UNTCP-B08.
     Write scenario, OR waive on requirement line with `@no-scenario: <reason>`
 
 Duas reações. Nenhuma automática, nenhuma arbitrária — e nenhuma no fluxo. Medido no

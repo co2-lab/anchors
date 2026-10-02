@@ -165,8 +165,9 @@ func TestSteps_aKeyRenamedTwiceEndsUnderItsLatestName(t *testing.T) {
 		t.Fatal(err)
 	}
 	text := string(mustRead(t, p))
-	if !strings.Contains(text, "optional_triad_edges: [tested-by]") ||
-		strings.Contains(text, "trinca_opcional") || strings.Contains(text, "triad_optional:") {
+	if !strings.Contains(text, "optional_unit_edges: [tested-by]") ||
+		strings.Contains(text, "trinca_opcional") || strings.Contains(text, "triad_optional:") ||
+		strings.Contains(text, "optional_triad_edges") {
 		t.Errorf("expected the key under its latest name only:\n%s", text)
 	}
 }
@@ -198,5 +199,38 @@ func TestFormat4Step_renamesNothingInTheMap(t *testing.T) {
 	}
 	if len(r.Replaced) != 0 || string(mustRead(t, p)) != "version: 4\nauto_judgment: true\nrule_marking: required\n" {
 		t.Errorf("format 4 touched the map: %+v\n%s", r, mustRead(t, p))
+	}
+}
+
+func TestFormat6Step_renamesTheTriadToTheUnit(t *testing.T) {
+	t.Run("MGSTM-B06: Format 6 renames the triad to the unit", func(t *testing.T) {})
+	dir := t.TempDir()
+	cfg := escreve(t, dir, "anchors.yaml", `version: 5
+layers:
+    service:
+        kind: code
+        optional_triad_edges: [tested-by]
+gates:
+    - name: triad-complete
+      id: triad-complete
+      check: triad-complete
+`)
+	graph := escreve(t, dir, "anchors.graph.yaml", "version: 5\nedges:\n    - judgments:\n        - gate: triad-complete\n")
+	for _, p := range []string{cfg, graph} {
+		if _, err := MigrateFile(p, 6, false); err != nil {
+			t.Fatal(err)
+		}
+	}
+	text := string(mustRead(t, cfg))
+	for _, want := range []string{"name: unit-complete", "id: unit-complete", "check: unit-complete", "optional_unit_edges: [tested-by]", "version: 6"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("the configuration should have %q:\n%s", want, text)
+		}
+	}
+	if strings.Contains(text, "triad") {
+		t.Errorf("the configuration still names the triad:\n%s", text)
+	}
+	if g := string(mustRead(t, graph)); !strings.Contains(g, "gate: unit-complete") || strings.Contains(g, "triad-complete") {
+		t.Errorf("the map's judgment should be of unit-complete:\n%s", g)
 	}
 }

@@ -155,7 +155,7 @@ func TestTestFeatureMatch_skips(t *testing.T) {
 		t.Errorf("not a test and the verdict was %v", v)
 	}
 	noEdge := &mapx.Graph{Nodes: []mapx.Node{testNodeRev()}}
-	if v, msg := checkTestFeatureMatch("it('x')", testNodeRev(), t.TempDir(), noEdge, nil); v != Skip || !strings.Contains(msg, "triad") {
+	if v, msg := checkTestFeatureMatch("it('x')", testNodeRev(), t.TempDir(), noEdge, nil); v != Skip || !strings.Contains(msg, "unit") {
 		t.Errorf("with no linked feature there is nothing to confront, got %v: %s", v, msg)
 	}
 }
@@ -402,7 +402,7 @@ func TestTestFeatureMatch_DeclarativeUnit(t *testing.T) {
 			t.Errorf("%s: want %v, got %v (%s)", id, want, v, msg)
 		}
 		// the declarative unit's test is skipped for being one; the others because the link is
-		// the triad's to charge
+		// the unit's to charge
 		if wantDecl := id == "utils/fmt.test.ts"; strings.Contains(msg, "declarativo") != wantDecl {
 			t.Errorf("%s: only the declarative unit's skip says it is declarative, got %s", id, msg)
 		}

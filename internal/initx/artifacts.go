@@ -104,7 +104,7 @@ func ArtifactNames() []string {
 //
 // A spec não aparece entre os derivados — ela é a origem, e da origem nascem o código, a
 // feature e o teste. Sem `spec` escolhido não há âncora, e a co-location não se declara:
-// um projeto sem spec não tem trinca a localizar.
+// um projeto sem spec não tem unidade a localizar.
 //
 // A extensão do código é declarada, não inferida: `{{ext}}` valia quando o código ancorava
 // (a extensão vinha dele), e da spec não há de onde tirá-la. `ext` é o que o projeto

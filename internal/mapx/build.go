@@ -235,7 +235,7 @@ func seedEdges(files []scan.File) []Edge {
 }
 
 // colocationEdges liga os derivados co-localizados usando os templates de
-// config.Derived. Agrupa por stem (o {{dir}}/{{name}} da âncora) e liga a trinca.
+// config.Derived. Agrupa por stem (o {{dir}}/{{name}} da âncora) e liga a unidade.
 func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 	if cfg.Derived == nil {
 		return nil
@@ -278,7 +278,7 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 			//
 			// Medido: as camadas de UI do projeto de referência exigem `.tsx` no pattern,
 			// o `derived.files` global diz `.ts`, e o override que reconciliava os dois
-			// não era aplicado. O `triad-complete` respondia "falta o código" com o
+			// não era aplicado. O `unit-complete` respondia "falta o código" com o
 			// arquivo no disco.
 			if ov.Code != "" || ov.When != layerOfUnit(f) {
 				continue
@@ -301,7 +301,7 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 			// As camadas que ele NÃO declara ficam com o default. Antes ele zerava o mapa
 			// inteiro, e um override que nomeava só `code:` perdia a feature e o teste da
 			// unidade em silêncio — por isso os overrides do anchors.yaml repetiam a
-			// trinca à mão.
+			// unidade à mão.
 			for layer, tmpl := range ov.PadroesDe() {
 				tmpls[layer] = tmpl
 			}
@@ -312,7 +312,7 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 		// Uma camada pode ter VÁRIOS padrões: a spec de configuração governa vários
 		// arquivos (`TypeScriptConfig` descreve seis `tsconfig.json`), e ligar só o
 		// primeiro deixaria os outros órfãos no mapa.
-		derived := map[string]string{} // camada → PRIMEIRO caminho existente (a trinca)
+		derived := map[string]string{} // camada → PRIMEIRO caminho existente (a unidade)
 		todos := map[string][]string{} // camada → TODOS os que existem (as arestas)
 		for layer, padroes := range tmpls {
 			for _, tmpl := range padroes {
@@ -382,7 +382,7 @@ func scenarioEdges(files []scan.File, colo []Edge) []Edge {
 	// Medido no projeto de referência: 40 arestas `tested-by` para um único
 	// `AreaStatus.test.ts`, vindas de specs que só o mencionavam em prosa. O `RateLimiting`
 	// aparecia testado por ele e NÃO pelo próprio `RateLimiting.test.ts` — e o
-	// `triad-complete` ficava indeterminado, que é o pior resultado: nem passa nem acusa.
+	// `unit-complete` ficava indeterminado, que é o pior resultado: nem passa nem acusa.
 	//
 	// É a terceira porta do mesmo defeito que a v0.1.57 fechou nas outras duas (o dado de
 	// teste lido como declaração, e o derivado sem âncora).
@@ -784,7 +784,7 @@ func expandePadrao(padrao string, byPath map[string]scan.File) []string {
 // pattern. The template's own wildcards (`packages/*/tsconfig.json`) are the author's; the
 // directory and name of the anchor are data. Unescaped, a Next.js route directory
 // `app/selo/[slug]/` turned `[slug]` into a character class that matches one letter, so
-// the spec there found neither its code nor its feature and `triad-complete` reported
+// the spec there found neither its code nor its feature and `unit-complete` reported
 // both missing (reported from the reference app, 2026-09-25).
 func globEscape(s string) string {
 	var b strings.Builder

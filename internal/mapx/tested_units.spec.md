@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSUNT
-  updated_at: 2026-09-27
+  updated_at: 2026-10-01
   layer: mapa
 -->
 # TestedUnits — which code a test tests, found by the project's own derivation
@@ -9,7 +9,7 @@
 
 ## Overview
 
-The map links a unit's test only through the triad: a spec, its feature, the feature's test. A unit
+The map links a unit's test only through the unit: a spec, its feature, the feature's test. A unit
 with no spec — a util, a model, what a `regime: declarativo` layer holds — has no edge to its test,
 and a gate asking "what does this test test?" had no answer: in the reference app, 130 tests with no
 feature had 12 edges among them. The project's derivation answers it without the engine assuming

@@ -25,7 +25,7 @@ import (
 //	filtro do saldo  `=== 'statement'` no app, `!== 'invoice'` no backend
 //	fronteira mínimo `<=` em duas telas, `<` na terceira e na auditoria
 //
-// Em todos, 53 gates ficavam verdes — corretamente, pelas réguas que tinham. A trinca
+// Em todos, 53 gates ficavam verdes — corretamente, pelas réguas que tinham. A unidade
 // estava completa: regra declarada, cenário escrito, teste com o título casando. O que
 // nenhum gate perguntava era se a PROVA alcança o outro lado.
 //
@@ -324,7 +324,7 @@ func unitRule(regra string) string {
 }
 
 // unitFiles resolve um código de unidade (`PPAO`) para os arquivos de CÓDIGO
-// daquela trinca. É o que permite o alvo ser declarado por código de regra em vez de
+// daquela unidade. É o que permite o alvo ser declarado por código de regra em vez de
 // caminho de arquivo — o código é identidade estável, o caminho não.
 //
 // O caminho é via SPEC: só a spec carrega `code:` no header (o arquivo de código

@@ -1468,11 +1468,11 @@ func TestTravaRespeitaOCardDescartado(t *testing.T) {
 // A FASE PRECISA SE DISTINGUIR DO CARD no roadmap.
 //
 // Um `## FNDTN-W01 — o CI` é uma SEÇÃO dentro do arquivo do plano: não tem issue, não tem
-// trinca, e nenhum agente a pega porque não há o que pegar. Medido no projeto de referência:
+// unidade, e nenhum agente a pega porque não há o que pegar. Medido no projeto de referência:
 // 43 fases, TODAS sem card.
 //
 // O plano, ao contrário, É trabalho — `plans/0014-alertas-incidentes.md` é um arquivo regido,
-// com card próprio e trinca a cumprir; 18 deles existem, 2 já fechados por agentes.
+// com card próprio e unidade a cumprir; 18 deles existem, 2 já fechados por agentes.
 //
 // Desenhar os dois igual sugere que a fase espera alguém, e ninguém virá.
 func TestBoardDistingueFaseDeCard(t *testing.T) {

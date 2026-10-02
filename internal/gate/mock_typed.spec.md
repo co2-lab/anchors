@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCTYM
-  updated_at: 2026-09-30
+  updated_at: 2026-10-01
   layer: gate
 -->
 # MockTyped — every test double must DERIVE from the module it replaces
@@ -20,7 +20,7 @@ lies:
 
 | gate | what it asks | its answer |
 | --- | --- | --- |
-| `triad-complete` | does the test EXIST? | it does |
+| `unit-complete` | does the test EXIST? | it does |
 | `feature-test-match` | does the scenario match a test case? | it does |
 | `tests-green` | did the run pass? | it did |
 

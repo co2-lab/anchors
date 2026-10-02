@@ -30,7 +30,7 @@ func kindList() string {
 	return strings.Join(kinds, ", ")
 }
 
-// `anchors new <kind> <nome>` emite o ESQUELETO de um artefato da trinca (spec,
+// `anchors new <kind> <nome>` emite o ESQUELETO de um artefato da unidade (spec,
 // feature, test) já com o cabeçalho @anchors e a identidade (code/ref) resolvidos —
 // o piso que o `check` exige. O anchors "não gera conteúdo", mas gerar a MOLDURA
 // correta (header + seções obrigatórias) é estrutura, não conteúdo: tira o atrito de
@@ -46,7 +46,7 @@ func newNewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "new <kind> <name>",
 		Short: "Emit the skeleton of an artifact (spec, feature, test, plan…) per the ruler",
-		Long: `Generates the frame of a triad artifact with the @anchors header and the
+		Long: `Generates the frame of a unit artifact with the @anchors header and the
 identity already resolved:
 
   anchors new spec Login --out src/screens/Login.spec.md      → new code + default sections
@@ -90,7 +90,7 @@ the identity by hand.`,
 			// construção: gerar um código NOVO para uma feature faz o `ref:` apontar para
 			// uma spec que não existe. Aconteceu — `anchors new feature metadataVersioning`
 			// cunhou `MTVA` em vez de referenciar a spec irmã, que declarava `MTVR`. Quem
-			// confiasse no scaffold criaria a peça já desconectada da trinca.
+			// confiasse no scaffold criaria a peça já desconectada da unidade.
 			//
 			// Então: para feature/test, a identidade é LIDA da spec irmã (o `--out` diz
 			// onde a peça nasce; a spec correspondente está no lugar que a Estrutura
@@ -114,12 +114,12 @@ the identity by hand.`,
 				// A condicao era `kind != "spec"`, e acusava tambem o `plan` e a
 				// `product` — dois artefatos que POSSUEM identidade (`code:`) e nao
 				// apontam para spec nenhuma. O texto dizia "a product referencia a spec
-				// (`ref:`); sem spec ela nasce ORFA e o trinca-completa vai acusar", tres
-				// afirmacoes falsas sobre uma doutrina de produto, que nao tem triade.
+				// (`ref:`); sem spec ela nasce ORFA e o unit-complete vai acusar", tres
+				// afirmacoes falsas sobre uma doutrina de produto, que nao tem unidade.
 				if tpl.idField == "ref" {
 					fmt.Printf("warning: no spec found for this target — I generated the code `%s`.\n"+
 						"  A %s references the spec (`ref:`); without a spec, it is born ORPHANED and the\n"+
-						"  trinca-completa gate will flag it. Check the --out, or create the spec first.\n", id, kind)
+						"  unit-complete gate will flag it. Check the --out, or create the spec first.\n", id, kind)
 				}
 			}
 

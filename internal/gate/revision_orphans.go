@@ -22,7 +22,7 @@ import (
 // list does not show", with a body saying "the NUMBER on the bell matches what appears on
 // opening". The invariant governed arithmetic the revision had abolished.
 //
-// NOTHING ACCUSED IT. `B03` was correct, `I02` well-formed, the triad complete, the suite
+// NOTHING ACCUSED IT. `B03` was correct, `I02` well-formed, the unit complete, the suite
 // green. The contradiction surfaced MONTHS later, when another agent went to implement and
 // could not tell which of the two to follow — and it became a decision that had to
 // escalate to the user, with nobody left remembering the context. Seven contradictions of

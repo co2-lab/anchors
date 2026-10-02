@@ -26,7 +26,7 @@ daqui são 3, 4 ou 8"*. A IA não precisa LEMBRAR da regra dos dois ataques — 
 única saída disponível.
 
 É a mesma inversão que o Anchors já faz com os gates: em vez de "lembre de escrever o
-teste", o `triad-complete` torna a ausência visível. O que falta é a mesma inversão para o
+teste", o `unit-complete` torna a ausência visível. O que falta é a mesma inversão para o
 PROCESSO, e não só para o artefato.
 
 ## O que já existe, e por que não basta

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SFMSP
-  updated_at: 2026-09-27
+  updated_at: 2026-10-01
   layer: gate
 -->
 # SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario
@@ -9,10 +9,10 @@
 
 ## Overview
 
-Confronts the edge of the triad that had no watcher: **the spec declares a requirement —
+Confronts the edge of the unit that had no watcher: **the spec declares a requirement —
 is there any scenario that exercises it?**
 
-`feature-test-match` confronts feature→test; `triad-complete` confronts that the PIECES
+`feature-test-match` confronts feature→test; `unit-complete` confronts that the PIECES
 exist. Nobody confronted spec→feature — and that is where a silent hole lives: the spec
 declares a constraint rule, the feature has no scenario carrying its tag, and the requirement
 crosses the whole pipeline with nothing verifying it. **Every gate stays green**: the spec
@@ -39,7 +39,7 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 | the confronted artifact | any map node | — (the gate does not choose the target) | the gate engine, routing by the declared `on:` — a node that is not a spec leaves without a verdict |
 | the spec's content | any text, with or without requirements | — (a spec that defines nothing is a case, not an error) | this unit: with no defined requirement the confrontation is skipped |
 | the defined requirement | a code at the start of a line, a list item, a section title, or in a table's FIRST cell | a code cited in prose or in a Dependency Table, which contracts nothing | this unit, by the same "defines" grammar the `rule-types` gate uses |
-| the linked features | the features reached by the `covered-by` edge, one or more | — (no feature is the ruler of `triad-complete`) | this unit: with no feature it skips, so the same defect is not reported twice |
+| the linked features | the features reached by the `covered-by` edge, one or more | — (no feature is the ruler of `unit-complete`) | this unit: with no feature it skips, so the same defect is not reported twice |
 | the waiver | the per-requirement marker (`no-scenario`) or the whole-spec one (`no-feature`), each prefixed with `@`, followed by a colon and a written reason | a bare marker with nothing after it | this unit: a waiver with no why does not waive |
 | the map | a built graph, or none | — | this unit: with no graph the verdict is Pending, never Pass |
 
@@ -56,7 +56,7 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 | `SFMSP-B07` | The whole-spec marker (`no-feature`) with a reason DRAGS the waiver to every requirement: the spec has no feature, so no requirement of it can have a scenario. |
 | `SFMSP-B08` | Without that tag the same uncovered requirements keep failing — the drag cannot become a silent way of muting the gate. |
 | `SFMSP-B09` | A bare whole-spec marker drags nothing, or the marker would be a switch that turns the gate off without accounting for it. |
-| `SFMSP-B10` | A spec with NO feature returns Skip: that absence is the ruler of `triad-complete`. |
+| `SFMSP-B10` | A spec with NO feature returns Skip: that absence is the ruler of `unit-complete`. |
 | `SFMSP-B11` | A spec covered by SEVERAL features has its requirements looked for across all of them — the requirement only needs to be in some. |
 | `SFMSP-B12` | An artifact that is not a spec returns Skip: the gate has no jurisdiction over code, test or feature. |
 | `SFMSP-B13` | A rule written as an ALIAS of another rule of the same spec — `REF[CODE-B05]: <reason>` on its line — needs no scenario of its own: the target's scenario is the proof. It is how a rule is catalogued under one letter (a failure, `-E`) while its behaviour is already stated under another, without writing the decision twice. |
@@ -68,7 +68,7 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `SFMSP-I01` | Every waiver requires a written REASON — both the per-requirement marker and the whole-spec one. A bare marker is a switch with no accounting, and silence without a why is what the gate exists to end. | confronts both bare markers and verifies each still fails |
-| `SFMSP-I02` | Each gate accuses ONE thing. The missing feature belongs to `triad-complete` and the missing test to `feature-test-match`; accusing them here would print the same defect twice in the report. | confronts a spec with no feature and verifies it skips instead of failing |
+| `SFMSP-I02` | Each gate accuses ONE thing. The missing feature belongs to `unit-complete` and the missing test to `feature-test-match`; accusing them here would print the same defect twice in the report. | confronts a spec with no feature and verifies it skips instead of failing |
 
 ## Constraints
 

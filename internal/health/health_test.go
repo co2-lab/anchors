@@ -207,7 +207,7 @@ func TestCheckDuplicateCodes_unitAndOptOut(t *testing.T) {
 			{ID: "Login.tsx", Kind: mapx.KindCode, Code: "LOGIN"},
 		}}
 		if fs := checkDuplicateCodes(g); len(fs) != 0 {
-			t.Fatalf("one unit's triad is one owner: %+v", fs)
+			t.Fatalf("one unit's pieces are one owner: %+v", fs)
 		}
 	})
 	t.Run("DCTRO-B11: A file that declares a shared code is not an owner", func(t *testing.T) {

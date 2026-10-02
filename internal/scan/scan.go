@@ -94,7 +94,7 @@ type File struct {
 	//
 	// Medido: o `derived.overrides` com `when: screen` nunca casava para uma spec, porque
 	// comparava contra o `Layer` — e o mapa procurava `{{name}}.ts` numa camada cujo
-	// pattern exige `.tsx`. O `triad-complete` respondia "falta o código" com o arquivo no
+	// pattern exige `.tsx`. O `unit-complete` respondia "falta o código" com o arquivo no
 	// disco.
 	HeaderLayer   string
 	NoPropagation bool  // o texto contém a anotação @noPropagation

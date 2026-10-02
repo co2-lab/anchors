@@ -1526,9 +1526,9 @@ func TestReaders_nilConfigAnswersDefaults(t *testing.T) {
 
 func TestFileFormat_crlf(t *testing.T) {
 	t.Run("CNFGO-B54: The declared format is read from a CRLF file", func(t *testing.T) {})
-	for _, src := range []string{"version: 5\r\nlayers: {}\r\n", "version: 5  # current\r\n", "version: 5\n"} {
-		if got := fileFormat([]byte(src)); got != 5 {
-			t.Errorf("%q: want 5, got %d", src, got)
+	for _, src := range []string{"version: 6\r\nlayers: {}\r\n", "version: 6  # current\r\n", "version: 6\n"} {
+		if got := fileFormat([]byte(src)); got != 6 {
+			t.Errorf("%q: want 6, got %d", src, got)
 		}
 	}
 }

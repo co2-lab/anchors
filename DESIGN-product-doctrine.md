@@ -6,7 +6,7 @@
 ## O problema
 
 Toda spec do Anchors tem um ALVO: ela descreve uma unidade, e a co-locação amarra as
-quatro pontas da tríade ao mesmo diretório. Isso é a força do modelo — cada regra tem
+quatro pontas da unidade ao mesmo diretório. Isso é a força do modelo — cada regra tem
 endereço, e o gate sabe onde confrontar.
 
 E é também o limite. Numa aplicação real, muita regra de negócio **atravessa alvos**:
@@ -124,14 +124,14 @@ Sobrevive a mudança de formato de tabela, e vale nas TRÊS formas de regra cata
 (cabeçalho, linha de tabela, bullet-negrito) — uma coluna só existiria na do meio, e a
 spec teria de trocar de formato para poder referenciar.
 
-### D3 — Tem tríade? NÃO, E NÃO TEM PARIDADE
+### D3 — Tem unidade? NÃO, E NÃO TEM PARIDADE
 
 É 1 para MUITOS: uma regra de doutrina é realizada por várias specs, e é justamente isso
 que o conceito existe para permitir.
 
 A consequência importa para os gates: nenhum deles pode cobrar paridade de contagem.
-`triad-complete` conta 1:1:1 entre spec, feature e teste; `product-realized` conta
-"≥ 1 realizador", que é uma pergunta diferente. Quem prova a regra é a tríade de cada
+`unit-complete` conta 1:1:1 entre spec, feature e teste; `product-realized` conta
+"≥ 1 realizador", que é uma pergunta diferente. Quem prova a regra é a unidade de cada
 spec que a realiza — duplicar teste aqui seria provar duas vezes a mesma coisa.
 
 ### D4 — A tag `@feature` migra? NÃO — a implementação mudou a resposta

@@ -24,7 +24,7 @@ import (
 // Por que existe: o `anchors guide` ensina a DOUTRINA (o que é uma spec, como se escreve
 // um teste) — é a régua, permanente e agnóstica de alvo. Mas quem vai executar UMA etapa
 // sobre UM arquivo precisa de outra coisa: o que ler AGORA, nesta ordem; qual é a camada
-// deste alvo e o que ela exige; onde nascem as peças da trinca; o que NÃO é escopo desta
+// deste alvo e o que ela exige; onde nascem as peças da unidade; o que NÃO é escopo desta
 // etapa; e como verificar no fim.
 //
 // Sem isso, cada orquestrador reescreve esse prompt à mão a cada vez — e sai diferente
@@ -131,19 +131,19 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 
 	// PAPEL + a recusa antecipada. Uma camada RECONHECIDA não tem spec — dizer isso
 	// AQUI evita a rodada de descoberta (e o arquivo errado nascendo).
-	// A recusa vale para TODA peça da trinca, não só a spec. Antes cobria apenas `spec`, e
+	// A recusa vale para TODA peça da unidade, não só a spec. Antes cobria apenas `spec`, e
 	// `anchors work feature --for <arquivo declarativo>` abria com "Você vai produzir
 	// feature" para, duas seções abaixo, dizer "não tem spec, feature nem teste próprios"
 	// — e prescrever a verificação de um arquivo que o mesmo prompt proíbe criar. Medido
 	// num E2E real: a task teve de ser descartada à mão.
-	// PARE também quando a PEÇA desta etapa é dispensada pela camada (`trinca_opcional`),
+	// PARE também quando a PEÇA desta etapa é dispensada pela camada (`optional_unit_edges`),
 	// ainda que a camada seja REGIDA. Antes o prompt abria com "Você vai produzir
 	// **feature**" e o roteiro completo de produção, e a dispensa aparecia quatro linhas
 	// abaixo, como item de uma lista. Um worker que segue a manchete cria o arquivo
 	// proibido — e a régua tinha dito as duas coisas.
 	if hasLayer && waivedPieces(layer, cfg)[artifact] {
 		fmt.Fprintf(&b, "## STOP\n\n`%s` — the layer **%s** WAIVES the piece `%s` "+
-			"(`optional_triad_edges` in anchors.yaml).\n\nThe waiver is declared, not an "+
+			"(`optional_unit_edges` in anchors.yaml).\n\nThe waiver is declared, not an "+
 			"oversight: this layer does not prove behavior with this piece. Creating it "+
 			"would produce the empty artifact the declaration exists to avoid.\n\n"+
 			"Do not create the %s. If the queue gave you this task, it is noise — discard it "+
@@ -156,7 +156,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 			"(`regime: declarativo`) in anchors.yaml.\n\nSuch layers **have no spec, feature "+
 			"or test of their own**: they do not originate rules (they only translate/configure), so there is "+
 			"nothing to specify and nothing to prove in a scenario. What proves the behavior is the layer "+
-			"that DECIDES, with its own triad.\n\nDo not create the %s. If there is a DECISION to document, "+
+			"that DECIDES, with its own unit.\n\nDo not create the %s. If there is a DECISION to document, "+
 			"it belongs to the layer that decides — report the contradiction to whoever asked for this stage.\n",
 			rel, layer, peca)
 		return b.String(), nil
@@ -211,9 +211,9 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 			"Follow the dialect of the neighbors and record the gap.\n")
 	}
 
-	// TRINCA: onde nascem as peças, derivado do `derived:`.
+	// UNIDADE: onde nascem as peças, derivado do `derived:`.
 	//
-	// Camada RECONHECIDA (`regime: declarativo`) não tem trinca: listar spec/feature/test
+	// Camada RECONHECIDA (`regime: declarativo`) não tem unidade: listar spec/feature/test
 	// ali contradizia a própria linha de cima do prompt, que declara o regime. Um agente
 	// que confiasse nesta seção criaria a spec que a camada proíbe — e o `anchors new`
 	// depois a recusaria, sem que nada explicasse a contradição.
@@ -222,7 +222,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 		// do confronto. E vê o registro de entrega, que dá escopo e traz a intenção
 		// declarada pelo autor para ser confrontada contra o disco.
 		b.WriteString("\n## What you are going to confront\n\n")
-		writeTriadPaths(&b, root, rel, artifact, layer, cfg, g)
+		writeUnitPaths(&b, root, rel, artifact, layer, cfg, g)
 		writeDeliveryRecord(&b, root, rel, cfg)
 	} else if hasLayer && l.Regime == "declarativo" {
 		b.WriteString("\n## The pieces and where they are born\n\n")
@@ -234,7 +234,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 			"the decision is missing there — not that this layer needs one.\n")
 	} else {
 		b.WriteString("\n## The pieces and where they are born\n\n")
-		writeTriadPaths(&b, root, rel, artifact, layer, cfg, g)
+		writeUnitPaths(&b, root, rel, artifact, layer, cfg, g)
 	}
 
 	// REGIMES: as tags de nível que os cenários da feature DEVEM declarar. Estão no
@@ -507,9 +507,9 @@ func guidesFor(l config.Layer, cfg *config.Config, artifact string) []string {
 	return out
 }
 
-// writeTriadPaths mostra onde cada peça da trinca nasce para este alvo, usando o
+// writeUnitPaths mostra onde cada peça da unidade nasce para este alvo, usando o
 // `derived:` do projeto (co-location por padrão, overrides por camada).
-func writeTriadPaths(b *strings.Builder, root, rel, artifact, layer string, cfg *config.Config, g *mapx.Graph) {
+func writeUnitPaths(b *strings.Builder, root, rel, artifact, layer string, cfg *config.Config, g *mapx.Graph) {
 	if cfg.Derived == nil {
 		b.WriteString("> The project does not declare `derived:` — confirm where the pieces live " +
 			"by looking at the layer neighbors.\n")
@@ -539,13 +539,13 @@ func writeTriadPaths(b *strings.Builder, root, rel, artifact, layer string, cfg 
 		if overridden[k] {
 			note = "  ← layer override (not co-located)"
 		}
-		// A camada pode DISPENSAR uma peça (`trinca_opcional`), e o prompt tem de dizer
+		// A camada pode DISPENSAR uma peça (`optional_unit_edges`), e o prompt tem de dizer
 		// isso: listá-la como "onde nasce" faz o executor obediente criar exatamente o
 		// artefato que a régua declarou não querer. Aconteceu num E2E real — a camada
 		// dizia "opt-out honesto, em vez de 49 features/testes vazios", e o mesmo prompt
 		// mandava criar os dois.
 		if dispensadas[k] {
-			fmt.Fprintf(b, "  `%s` — %s  ← WAIVED by this layer (`optional_triad_edges`): "+
+			fmt.Fprintf(b, "  `%s` — %s  ← WAIVED by this layer (`optional_unit_edges`): "+
 				"do NOT create\n", p, k)
 			continue
 		}
@@ -972,7 +972,7 @@ func gateRequirements(artifact string, cfg *config.Config) []string {
 			"a marker on the wrong test creates false traceability, and every relational gate starts " +
 			"confronting the wrong pair with everything green.",
 		"non-empty":          "The file **cannot be an empty skeleton**.",
-		"triad-complete":     "The unit needs the **complete triad** (spec + feature + test).",
+		"unit-complete":      "The spec needs its **complete unit** (code + feature + test).",
 		"ref-resolves":       "The `ref:` must point to the **`code:` of the sibling spec** — not to another.",
 		"pagination-honored": "A function that promises a set **does not return the first page** in silence.",
 		"layer-boundary":     "Respect the **layer boundaries** declared in `boundaries:`.",
@@ -1078,7 +1078,7 @@ func writeDeliveryRecord(b *strings.Builder, root, rel string, cfg *config.Confi
 		"a way to confront what he THINKS he did against what he did. Record that in the report.\n")
 }
 
-// derivedPaths resolve, para um alvo e sua camada, ONDE cada peça da trinca nasce —
+// derivedPaths resolve, para um alvo e sua camada, ONDE cada peça da unidade nasce —
 // aplicando co-location e os overrides do `derived:`, com os placeholders já substituídos.
 //
 // Existe separada porque duas coisas precisam da mesma resposta: a seção que MOSTRA os
@@ -1103,7 +1103,7 @@ func derivedPaths(rel, layer string, cfg *config.Config) (map[string]string, map
 	//
 	// `filepath.Ext("X.spec.md")` é `.md`, então cortar por ela deixa `X.spec` — e o
 	// prompt passava a mandar criar `X.spec.ts` e `X.spec.test.ts`, enquanto o mapa (que
-	// usa `StemOfAnchor`) liga a trinca por `X`. Duas implementações do mesmo corte, e a
+	// usa `StemOfAnchor`) liga a unidade por `X`. Duas implementações do mesmo corte, e a
 	// deste comando estava errada: quem seguisse o prompt criaria arquivo que nenhum gate
 	// encontra.
 	name, _ := mapx.StemOfAnchor(rel)
@@ -1161,7 +1161,7 @@ func verificationTarget(rel, artifact, layer string, cfg *config.Config) string 
 	return rel
 }
 
-// waivedPieces traduz o `trinca_opcional` da camada (declarado por ARESTA) para as
+// waivedPieces traduz o `optional_unit_edges` da camada (declarado por ARESTA) para as
 // PEÇAS que ele dispensa. `covered-by` é a aresta spec→feature, logo dispensa a feature;
 // `tested-by` é feature→test, logo dispensa o teste.
 func waivedPieces(layer string, cfg *config.Config) map[string]bool {
@@ -1174,7 +1174,7 @@ func waivedPieces(layer string, cfg *config.Config) map[string]bool {
 		return out
 	}
 	porAresta := map[string]string{"covered-by": "feature", "tested-by": "test", "specifies": "spec"}
-	for _, aresta := range l.OptionalTriadEdges {
+	for _, aresta := range l.OptionalUnitEdges {
 		if peca := porAresta[aresta]; peca != "" {
 			out[peca] = true
 		}

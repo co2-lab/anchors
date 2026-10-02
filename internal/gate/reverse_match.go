@@ -12,7 +12,7 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// --- THE RETURN LEG OF EACH TRIAD PAIR ---
+// --- THE RETURN LEG OF EACH UNIT PAIR ---
 //
 // `spec-feature-match` asks "does every rule have a scenario?" and `feature-test-match`
 // asks "does every scenario have a test?". Both walk the ORIGIN looking for the
@@ -231,7 +231,7 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		if testsDeclarativeUnit(n, g, cfg) {
 			return Skip, i18n.T("gate.test_feature.skip_declarative_unit")
 		}
-		// Nothing to confront: the link itself is `triad-complete`'s to charge. A Pending here
+		// Nothing to confront: the link itself is `unit-complete`'s to charge. A Pending here
 		// would block the promotion over a question this gate does not ask.
 		return Skip, i18n.T("gate.test_feature.skip_no_feature")
 	}

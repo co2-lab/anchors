@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCRQA
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: config
 -->
 # DocsRequired — which aggregate documentation a change of a unit obliges to touch
@@ -12,7 +12,7 @@
 Anchors always charged what lives INSIDE a unit: the spec, the feature, the test, the code.
 Some documentation lives outside every unit and is fed by many of them: the API contract,
 the component catalogue, the data schema, the architecture. A new endpoint that never
-reaches the API contract is invisible to whoever consumes it, and no triad gate sees that,
+reaches the API contract is invisible to whoever consumes it, and no unit gate sees that,
 because the contract is not a file of the unit.
 
 The project declares these documents, and declaring is the act: a project that declares

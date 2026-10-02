@@ -26,13 +26,13 @@ func TestCheckFormat_acceptsOnlyTheRangeItReads(t *testing.T) {
 // Every format from below the range to above it gets the answer the range dictates — the
 // endpoints alone would leave an off-by-one inside or outside unnoticed.
 func TestCheckFormat_everyFormatAgainstTheRange(t *testing.T) {
-	t.Run("MPFRM-I01: Exactly format 5 is readable", func(t *testing.T) {})
-	if FormatoAtual != 5 || FormatoMinimoLegivel != 5 {
-		t.Fatalf("the spec states the binary writes 5 and reads from 5; got %d and %d", FormatoAtual, FormatoMinimoLegivel)
+	t.Run("MPFRM-I01: Exactly format 6 is readable", func(t *testing.T) {})
+	if FormatoAtual != 6 || FormatoMinimoLegivel != 6 {
+		t.Fatalf("the spec states the binary writes 6 and reads from 6; got %d and %d", FormatoAtual, FormatoMinimoLegivel)
 	}
 	for v := -1; v <= FormatoAtual+2; v++ {
 		err := ConfereFormato("m.yaml", v)
-		readable := v == 5
+		readable := v == 6
 		if readable && err != nil {
 			t.Errorf("format %d is inside the range and was refused: %v", v, err)
 		}

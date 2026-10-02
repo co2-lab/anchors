@@ -15,7 +15,7 @@ import (
 // O `rule_types` declara as letras que o projeto reconhece, e o `rule-types` cobra que
 // as SEÇÕES da spec usem as certas. Ninguém cobrava o mesmo do código que o cenário
 // carrega — e uma letra inventada passa por todos os outros gates: o código casa
-// consigo mesmo entre feature e teste, a trinca está completa, e nada percebe que
+// consigo mesmo entre feature e teste, a unidade está completa, e nada percebe que
 // `-SG06` não significa nada.
 //
 // Medido no projeto que originou o gate: 18 códigos com cinco letras não declaradas

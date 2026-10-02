@@ -318,7 +318,7 @@ que medem *governo e completude*, não outra dimensão:
 | **spec-first honrada** | a spec descreve o quê (não o como), sem código? | segunda fonte de verdade |
 | **cobertura declarada** | tudo que a spec declara (estados, regras) virou identidade rastreável? | requisito que a spec promete mas não ancora |
 
-A **trinca completa** (spec + código + prova) é cobrada pelo mesmo modelo, com dois
+A **unidade completa** (spec + código + prova) é cobrada pelo mesmo modelo, com dois
 opt-outs que dizem coisas diferentes: `@no-test`/`@no-feature` para a peça que **não
 existirá**, e `@TBD` para a que **ainda não foi escrita** (§6). O segundo vence
 sozinho quando a peça nasce; o primeiro é permanente.

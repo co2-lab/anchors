@@ -309,7 +309,7 @@ func TestSuggestNext(t *testing.T) {
 		// be `specify`/`implement`/`verify`, which `work` refuses.
 		"plan":       "spec",
 		"plan-draft": "review-plan-draft", "spec": "code", "feature": "test",
-		// `test` closes the triad — and that is where the work LOOKS done. The chain does not
+		// `test` closes the unit — and that is where the work LOOKS done. The chain does not
 		// end in verifying: it calls the REVIEW. Measured in three rounds of a real E2E, 7
 		// serious defects passed with every gate green; none was found by a gate.
 		"code": "feature", "test": "review", "guide": "review",
@@ -385,7 +385,7 @@ func TestReclaimWithoutStampReturns(t *testing.T) {
 // Whoever pulled the task could not compose the prompt and had to translate the verbs on
 // their own — the only point where the cycle did not route itself.
 func TestQueueSuggestionIsComposableByWork(t *testing.T) {
-	t.Run("TSQUT-B13: The suggestions of the triad kinds are composable by the work command", func(t *testing.T) {})
+	t.Run("TSQUT-B13: The suggestions of the unit kinds are composable by the work command", func(t *testing.T) {})
 	// every mapped kind must suggest a verb `work` accepts; only an unmapped kind gets
 	// `triage`, the queue's marker for "decide by hand". `guide` used to suggest
 	// `review-governed`, which `work` refuses.

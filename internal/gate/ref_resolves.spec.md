@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RFRSR
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: gate
 -->
 # RefResolves — the reference points at the spec that REALLY describes the unit
@@ -35,7 +35,7 @@ updated. The 49 kept pointing at the whole schema, and nothing raised a hand.
 
 **The ruler**: if a SIBLING spec exists — the one the Structure co-locates with this file —
 the reference must be that spec's own identity. With no sibling spec the gate goes quiet:
-charging the absence of the piece is the triad gate's job, and two gates accusing the same
+charging the absence of the piece is the unit gate's job, and two gates accusing the same
 defect become noise.
 
 ## Domain
@@ -57,7 +57,7 @@ defect become noise.
 | `RFRSR-B03` | A reference equal to the sibling spec's identity passes. |
 | `RFRSR-B04` | A spec is not confronted: it OWNS an identity, it does not reference one. |
 | `RFRSR-B05` | An artifact with no reference declared leaves without a verdict — the absence is the header gate's charge, not this one's. |
-| `RFRSR-B06` | With no sibling spec on disk the gate goes quiet: the missing piece is the triad gate's charge, and two gates on one defect become noise. |
+| `RFRSR-B06` | With no sibling spec on disk the gate goes quiet: the missing piece is the unit gate's charge, and two gates on one defect become noise. |
 | `RFRSR-B07` | A sibling spec that exists and declares no identity of its own counts as no sibling: there is nothing to compare against. |
 | `RFRSR-B08` | The sibling is found by NAME convention — same stem, same directory, spec suffix. |
 | `RFRSR-B09` | The test suffix of each supported language is stripped before the stem is computed, so a test file finds the same sibling its code does. |
@@ -82,7 +82,7 @@ defect become noise.
 | Rule | Boundary | Why |
 | --- | --- | --- |
 | `RFRSR-X01` | Does not charge the ABSENCE of the reference field. | That is the header gate's ruler, and it already states it. Two gates on the same defect produce two messages for one fix — the reader turns both off. |
-| `RFRSR-X02` | Does not charge the absence of the sibling spec. | The missing piece of a triad is the triad gate's charge. Here the absence is simply a case where there is nothing to compare. |
+| `RFRSR-X02` | Does not charge the absence of the sibling spec. | The missing piece of a unit is the unit gate's charge. Here the absence is simply a case where there is nothing to compare. |
 | `RFRSR-X03` | Does not consult the map when a sibling spec is present on disk. | The co-located file takes precedence so stale graph builds cannot override the filesystem truth. When no sibling spec exists, the map is queried solely to prevent references to phantom identities. |
 | `RFRSR-X04` | Does not judge whether the sibling spec DESCRIBES the unit well. | The ruler here is identity: which spec owns this file. Whether the spec's content matches the code is judgement, and judgement belongs to another class of gate. |
 

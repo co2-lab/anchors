@@ -216,7 +216,7 @@ func grafoComMod() *mapx.Graph {
 // A metade mais importante do gate: AUSÊNCIA de carimbo é acusada, não pulada.
 //
 // Carimbo divergente ACUSA; carimbo ausente é SILÊNCIO — o mesmo "falha aberto" que o
-// `trinca-completa` existe para fechar. Se a ausência passasse, o carimbo viraria
+// `unit-complete` existe para fechar. Se a ausência passasse, o carimbo viraria
 // opcional na prática e o mecanismo protegeria só quem já escolheu ser protegido.
 func TestMockCarimbado_ausenciaDeCarimboReprova(t *testing.T) {
 	t.Run("MCSTM-B11: The absence of a stamp on a governed double is accused", func(t *testing.T) {})

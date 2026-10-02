@@ -708,7 +708,7 @@ func printBoardWork(root string, card *board.Card, agent string) {
 	//
 	// Um card em `in-review` está com a revisão por fazer — e as instruções de
 	// implementação ali mandam refazer o que já foi entregue. Medido: o card #321, com a
-	// trinca completa, recebeu "ENTREGÁVEL: código + feature + teste + documentação" e o
+	// unidade completa, recebeu "ENTREGÁVEL: código + feature + teste + documentação" e o
 	// agente foi conferir se tinha esquecido algo. O trabalho que faltava era outro.
 	if card.State == board.StateInReview {
 		printReviewWork(root, card, agent)

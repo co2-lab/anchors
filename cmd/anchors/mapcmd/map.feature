@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MPCMM
-#   updated_at: 2026-09-27
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @MPCMM
@@ -28,7 +28,7 @@ Feature: MapCommand — builds the dependency map from the project and answers q
     And with no loss, or with a gain, it says nothing
 
   @MPCMM-B04 @unit-level
-  Scenario: The edge summary shows every type, the triad's first
+  Scenario: The edge summary shows every type, the unit's first
     Given a map with edges of types realizes, depends-on twice and specifies
     When the edge summary is printed
     Then specifies comes first, then "depends-on  2", then "realizes    1"

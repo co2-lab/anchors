@@ -227,10 +227,10 @@ func TestNodeCode_upstreamHasNone(t *testing.T) {
 // ── Co-location ─────────────────────────────────────────────────────────────────────────────
 
 func TestBuild_colocation(t *testing.T) {
-	t.Run("GRBLG-B07: The triad of one unit is linked", func(t *testing.T) {})
+	t.Run("GRBLG-B07: The pieces of one unit are linked", func(t *testing.T) {})
 	g := Build(testFiles(), testCfg(), nil)
 
-	// the triad links: spec→code (specifies), spec→feature (covered-by), feature→test
+	// the unit links: spec→code (specifies), spec→feature (covered-by), feature→test
 	cases := []struct {
 		from, to string
 		typ      EdgeType
@@ -358,7 +358,7 @@ func TestLayerOfUnit_theHeaderBeatsTheFile(t *testing.T) {
 }
 
 // And the effect on the MAP: a screen's derived code is `.tsx`, because the override matches.
-// Measured in the reference project: `triad-complete` answered "the code is missing" with the
+// Measured in the reference project: `unit-complete` answered "the code is missing" with the
 // file on disk.
 func TestBuild_layerOverrideReachesTheSpec(t *testing.T) {
 	t.Run("GRBLG-B10: A layer override reaches the spec through the layer it declares", func(t *testing.T) {})
@@ -458,7 +458,7 @@ func TestBuild_codeOverrideReplacesTheTemplates(t *testing.T) {
 
 // A directory with brackets (a Next.js route `app/selo/[slug]/`) is a literal path, not a
 // character class: the spec there finds its code, feature and test. Unescaped, `[slug]` matched
-// one letter and `triad-complete` reported code and feature missing (reported from the reference app,
+// one letter and `unit-complete` reported code and feature missing (reported from the reference app,
 // 2026-09-25).
 func TestBuild_colocationInABracketDirectory(t *testing.T) {
 	t.Run("GRBLG-B12: A bracketed directory is literal and a template wildcard expands", func(t *testing.T) {})

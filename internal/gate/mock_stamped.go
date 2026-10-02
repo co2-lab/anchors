@@ -52,7 +52,7 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 	// gate.
 	//
 	// Um carimbo divergente ACUSA; um carimbo ausente é SILÊNCIO, que é o mesmo "falha
-	// aberto" que o `trinca-completa` existe para fechar. Se a ausência passasse, o
+	// aberto" que o `unit-complete` existe para fechar. Se a ausência passasse, o
 	// carimbo viraria opcional na prática: quem não põe nunca é cobrado, e o mecanismo
 	// protegeria apenas quem já escolheu ser protegido — isso é convenção, não gate.
 	//

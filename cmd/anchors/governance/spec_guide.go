@@ -126,7 +126,7 @@ func RenderSpecGuide(cfg *config.Config, exemploCode string) string {
 	b.WriteString("is one case of, before the fix.\n\n")
 	b.WriteString("## What NOT to do\n\n")
 	b.WriteString("- **A rule without a code.** Without identity, the feature and the test have nothing to cite —\n")
-	b.WriteString("  the triad does not close and the relational gates are left with no target.\n")
+	b.WriteString("  the unit does not close and the relational gates are left with no target.\n")
 	b.WriteString("- **Describing implementation.** The spec states the BEHAVIOUR; the function name and the\n")
 	b.WriteString("  library change without the rule changing.\n")
 	b.WriteString("- **Repeating the copy.** The user-facing text lives once (in the messages section); the\n")

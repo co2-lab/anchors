@@ -160,7 +160,7 @@ func crossDomain(owners []string) bool {
 }
 
 // unitStem devolve a identidade da UNIDADE de um arquivo: o caminho sem os sufixos de
-// artefato (.spec.md, .feature, .test.*) e sem a extensão de código. A trinca
+// artefato (.spec.md, .feature, .test.*) e sem a extensão de código. A unidade
 // Login.spec.md / Login.feature / Login.test.tsx / Login.tsx colapsa em ".../Login".
 func unitStem(id string) string {
 	// Junta sempre com barra normal: o retorno é identidade de unidade, comparada contra

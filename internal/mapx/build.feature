@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GRBLG
-#   updated_at: 2026-09-29
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @GRBLG
@@ -44,7 +44,7 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Then the spec's node is marked declared and the test's node is not
 
   @GRBLG-B07 @unit-level
-  Scenario: The triad of one unit is linked
+  Scenario: The pieces of one unit are linked
     Given Login code, spec, feature and test in one directory, with templates for spec, feature and test
     When the graph is built
     Then the spec specifies the code, the spec is covered by the feature, and the feature is tested by the test
@@ -78,7 +78,7 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
   Scenario: A bracketed directory is literal and a template wildcard expands
     Given a SeloClient unit inside the directory app/selo/[slug], and a spec whose template expands to two tsconfig.json files
     When the graph is built
-    Then the SeloClient triad is linked, and the spec specifies both tsconfig.json files
+    Then the SeloClient unit is linked, and the spec specifies both tsconfig.json files
 
   @GRBLG-B13 @unit-level
   Scenario: A shared own code links spec and test across directories only

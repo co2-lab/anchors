@@ -25,7 +25,7 @@
 | `<Unidade>.test.*` | você | a prova executável, citando o código no nome do caso |
 | `.anchors/` | o CLI | fila de trabalho, espelho da última verificação, issues. Não versionado |
 
-A TRINCA é `spec` + `feature` + `test` amarradas pelo mesmo código de identidade. É o que
+A UNIDADE é `spec` + `feature` + `test` amarradas pelo mesmo código de identidade. É o que
 permite perguntar "esta regra tem cenário? tem teste? o teste passou?" sem ler o código.
 
 ## 2. Começando num projeto
@@ -46,7 +46,7 @@ anchors doctor        # saúde sistêmica: órfãos, camadas frouxas, arestas mo
 ```
 
 Num projeto que JÁ EXISTE, não tente conformar tudo de uma vez. Ligue os gates de
-ESTRUTURA primeiro (eles medem o código como está, sem exigir spec), deixe os de trinca
+ESTRUTURA primeiro (eles medem o código como está, sem exigir spec), deixe os de unidade
 informativos, e promova conforme as specs nascem. Ligar tudo de uma vez produz centenas de
 issues no primeiro dia e ninguém lê a lista.
 
@@ -128,7 +128,7 @@ Quatro vereditos, e a diferença importa:
 | `trigger-declared` | um gatilho de obrigação CITADO tem de existir |
 | `no-duplication` | nenhum arquivo de código tem bloco copiado de outro lugar — lê o relatório do jscpd e dá um veredito por arquivo, nomeando o outro lado de cada clone; a calibragem é o `.jscpd.json` (`minLines`, `ignore`, `threshold`) |
 | `header-valid` | o header `@anchors` da spec e da feature carrega a identidade do artefato |
-| `trinca-completa` | uma spec de camada REGIDA precisa das três peças que a realizam — |
+| `unit-complete` | uma spec de camada REGIDA precisa das três peças que a realizam — |
 | `updated-at-atual` | o `updated_at` do header bate com a data do ÚLTIMO COMMIT que |
 | `vr-baseline` | o cenário de regressão VISUAL prometido tem imagem de referência |
 | `test-level-codes` | cada cenário referencia só códigos que o seu nível de teste aceita (`levels` do próprio gate: `allow`/`exclude`) |

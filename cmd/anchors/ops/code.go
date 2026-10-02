@@ -224,7 +224,7 @@ reports it, and here it becomes visible for free.`,
 			// regeneração marcaria os 659 códigos do app de referência como errados.
 			//
 			// Comprimento é diferente: é INVARIANTE, não estética. Código fora do
-			// `code_lengths` não é reconhecido pelo engine — a trinca fica invisível e os
+			// `code_lengths` não é reconhecido pelo engine — a unidade fica invisível e os
 			// gates de identidade não têm o que confrontar, sem nada acusar a causa. Foi o
 			// que custou uma investigação hoje (o mapa do app de referência tinha 8 códigos para 275
 			// specs) e o que deixou 105 testes vermelhos no Anchors.

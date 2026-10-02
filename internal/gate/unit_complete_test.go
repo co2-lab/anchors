@@ -13,7 +13,7 @@ import (
 
 // grafo mínimo: spec → código (specifies), spec → feature (covered-by),
 // feature → teste (tested-by). O teste se alcança em DOIS saltos a partir da spec.
-func trincaGraph(withCode, withFeature, withTest bool) *mapx.Graph {
+func unitGraph(withCode, withFeature, withTest bool) *mapx.Graph {
 	g := &mapx.Graph{
 		Nodes: []mapx.Node{
 			{ID: "x.spec.md", Kind: mapx.KindSpec},
@@ -49,28 +49,28 @@ func raizComProva(t *testing.T, codigo string) string {
 	return root
 }
 
-func TestTrincaCompleta_trincaInteiraPassa(t *testing.T) {
-	t.Run("TRCMT-B04: A spec with the three pieces linked passes", func(t *testing.T) {})
-	g := trincaGraph(true, true, true)
-	if v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{}); v != Pass {
-		t.Errorf("trinca completa deveria passar: %v (%s)", v, msg)
+func TestUnitComplete_unitWholePassa(t *testing.T) {
+	t.Run("UNTCP-B04: A spec with the three pieces linked passes", func(t *testing.T) {})
+	g := unitGraph(true, true, true)
+	if v, msg := checkUnitComplete("", specNode(), "", g, &config.Config{}); v != Pass {
+		t.Errorf("unidade completa deveria passar: %v (%s)", v, msg)
 	}
 }
 
-func TestTrincaCompleta_testeAlcancadoEmDoisSaltos(t *testing.T) {
-	t.Run("TRCMT-I01: The test is reached in two hops, through the feature", func(t *testing.T) {})
+func TestUnitComplete_testeAlcancadoEmDoisSaltos(t *testing.T) {
+	t.Run("UNTCP-I01: The test is reached in two hops, through the feature", func(t *testing.T) {})
 	// A regressão que eu mesmo introduzi: procurar `tested-by` DIRETO na spec acusa
 	// falta de teste em todo projeto, porque a aresta nasce na FEATURE.
-	g := trincaGraph(true, true, true)
-	v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{})
+	g := unitGraph(true, true, true)
+	v, msg := checkUnitComplete("", specNode(), "", g, &config.Config{})
 	if v != Pass {
 		t.Fatalf("teste ligado à feature deveria contar p/ a spec: %v (%s)", v, msg)
 	}
 }
 
-func TestTrincaCompleta_semTesteReprova(t *testing.T) {
-	g := trincaGraph(true, true, false)
-	v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{})
+func TestUnitComplete_semTesteReprova(t *testing.T) {
+	g := unitGraph(true, true, false)
+	v, msg := checkUnitComplete("", specNode(), "", g, &config.Config{})
 	if v != Fail {
 		t.Fatalf("sem teste deveria reprovar, got %v", v)
 	}
@@ -79,11 +79,11 @@ func TestTrincaCompleta_semTesteReprova(t *testing.T) {
 	}
 }
 
-func TestTrincaCompleta_specSozinhaReprovaCitandoAsTresPecas(t *testing.T) {
-	t.Run("TRCMT-B05: A spec missing a piece is failed, and the verdict names which", func(t *testing.T) {})
+func TestUnitComplete_specSozinhaReprovaCitandoAsTresPecas(t *testing.T) {
+	t.Run("UNTCP-B05: A spec missing a piece is failed, and the verdict names which", func(t *testing.T) {})
 	// o caso que motivou o gate: spec sem nada atravessava TODOS os gates.
-	g := trincaGraph(false, false, false)
-	v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{})
+	g := unitGraph(false, false, false)
+	v, msg := checkUnitComplete("", specNode(), "", g, &config.Config{})
 	if v != Fail {
 		t.Fatalf("spec sozinha deveria reprovar, got %v", v)
 	}
@@ -94,97 +94,97 @@ func TestTrincaCompleta_specSozinhaReprovaCitandoAsTresPecas(t *testing.T) {
 	}
 }
 
-func TestTrincaCompleta_camadaReconhecidaPula(t *testing.T) {
-	t.Run("TRCMT-B02: A recognised layer leaves without a verdict", func(t *testing.T) {})
+func TestUnitComplete_camadaReconhecidaPula(t *testing.T) {
+	t.Run("UNTCP-B02: A recognised layer leaves without a verdict", func(t *testing.T) {})
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"dao"}}
-	g := trincaGraph(false, false, false)
-	if v, _ := checkTriadComplete("", n, "", g, &config.Config{}); v != Skip {
-		t.Errorf("camada reconhecida não tem trinca a cobrar, esperava Skip, got %v", v)
+	g := unitGraph(false, false, false)
+	if v, _ := checkUnitComplete("", n, "", g, &config.Config{}); v != Skip {
+		t.Errorf("camada reconhecida não tem unidade a cobrar, esperava Skip, got %v", v)
 	}
 }
 
-func TestTrincaCompleta_trincaOpcionalDispensaPeca(t *testing.T) {
-	t.Run("TRCMT-B06: The layer may waive a piece for every spec in it", func(t *testing.T) {})
+func TestUnitComplete_optionalUnitEdgesDispensaPeca(t *testing.T) {
+	t.Run("UNTCP-B06: The layer may waive a piece for every spec in it", func(t *testing.T) {})
 	// opt-out HONESTO: declarado na Estrutura, não escondido num Skip.
 	cfg := &config.Config{Layers: map[string]config.Layer{
-		"repository": {OptionalTriadEdges: []string{"tested-by"}},
+		"repository": {OptionalUnitEdges: []string{"tested-by"}},
 	}}
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"repository"}}
-	g := trincaGraph(true, true, false) // sem teste
-	if v, msg := checkTriadComplete("", n, "", g, cfg); v != Pass {
+	g := unitGraph(true, true, false) // sem teste
+	if v, msg := checkUnitComplete("", n, "", g, cfg); v != Pass {
 		t.Errorf("camada que dispensa tested-by deveria passar: %v (%s)", v, msg)
 	}
 }
 
-func TestTrincaCompleta_naoSpecPula(t *testing.T) {
-	t.Run("TRCMT-B01: An artifact that is not a spec leaves without a verdict", func(t *testing.T) {})
+func TestUnitComplete_naoSpecPula(t *testing.T) {
+	t.Run("UNTCP-B01: An artifact that is not a spec leaves without a verdict", func(t *testing.T) {})
 	n := mapx.Node{ID: "x.ts", Kind: mapx.KindCode}
-	if v, _ := checkTriadComplete("", n, "", trincaGraph(false, false, false), &config.Config{}); v != Skip {
-		t.Errorf("a trinca é cobrada da spec, esperava Skip p/ código, got %v", v)
+	if v, _ := checkUnitComplete("", n, "", unitGraph(false, false, false), &config.Config{}); v != Skip {
+		t.Errorf("a unidade é cobrada da spec, esperava Skip p/ código, got %v", v)
 	}
 }
 
-func TestTrincaCompleta_noTestDispensaPorUnidade(t *testing.T) {
-	t.Run("TRCMT-B07: The unit may waive a piece in its own spec, with a written reason", func(t *testing.T) {})
+func TestUnitComplete_noTestDispensaPorUnidade(t *testing.T) {
+	t.Run("UNTCP-B07: The unit may waive a piece in its own spec, with a written reason", func(t *testing.T) {})
 	// A dispensa por CAMADA isenta em bloco; esta é da UNIDADE e fica escrita nela.
 	// Serve para o caso real: dentro de `services` convivem o gateway de 9 linhas
 	// que só repassa a chamada e o módulo de 150 com regra — isentar os dois junto
 	// apagaria a cobrança justamente onde ela vale.
-	g := trincaGraph(true, true, false) // sem teste
+	g := unitGraph(true, true, false) // sem teste
 	root := raizComProva(t, "AAAAX-B01")
 	spec := "@no-test: gateway de 1 linha sobre apiCall; provado por `AAAAX-B01`\n"
-	if v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{}); v != Pass {
+	if v, msg := checkUnitComplete(spec, specNode(), root, g, &config.Config{}); v != Pass {
 		t.Errorf("`@no-test` com razão dispensa o teste daquela unidade: %v (%s)", v, msg)
 	}
 }
 
-func TestTrincaCompleta_dispensaExigeRazao(t *testing.T) {
+func TestUnitComplete_dispensaExigeRazao(t *testing.T) {
 	// Marcador NU não dispensa — senão `@no-test` viraria um jeito silencioso de
 	// calar o gate, que é o oposto do opt-out honesto.
-	g := trincaGraph(true, true, false)
+	g := unitGraph(true, true, false)
 	for _, nu := range []string{"@no-test\n", "@no-test:\n", "@no-test:   \n"} {
-		if v, _ := checkTriadComplete(nu, specNode(), "", g, &config.Config{}); v != Fail {
+		if v, _ := checkUnitComplete(nu, specNode(), "", g, &config.Config{}); v != Fail {
 			t.Errorf("marcador sem razão (%q) NÃO pode dispensar: %v", nu, v)
 		}
 	}
 }
 
-func TestTrincaCompleta_noFeatureArrastaOTeste(t *testing.T) {
+func TestUnitComplete_noFeatureArrastaOTeste(t *testing.T) {
 	// Sem feature não há cenário a provar: cobrar o teste seria exigir a prova de
 	// algo que ninguém especificou.
-	g := trincaGraph(true, false, false)
+	g := unitGraph(true, false, false)
 	spec := "@no-feature: wiring de infraestrutura, sem regra observável\n"
-	if v, msg := checkTriadComplete(spec, specNode(), "", g, &config.Config{}); v != Pass {
+	if v, msg := checkUnitComplete(spec, specNode(), "", g, &config.Config{}); v != Pass {
 		t.Errorf("`@no-feature` dispensa feature E teste: %v (%s)", v, msg)
 	}
 }
 
-func TestTrincaCompleta_dispensaNaoApagaOCodigo(t *testing.T) {
-	t.Run("TRCMT-I04: A waiver covers only the piece it declares", func(t *testing.T) {})
+func TestUnitComplete_dispensaNaoApagaOCodigo(t *testing.T) {
+	t.Run("UNTCP-I04: A waiver covers only the piece it declares", func(t *testing.T) {})
 	// O CÓDIGO nunca é dispensável: uma spec sem o arquivo que ela descreve é a
 	// própria situação que este gate existe para pegar.
-	g := trincaGraph(false, true, true)
+	g := unitGraph(false, true, true)
 	spec := "@no-test: qualquer razão\n@no-feature: qualquer razão\n"
-	if v, _ := checkTriadComplete(spec, specNode(), "", g, &config.Config{}); v != Fail {
+	if v, _ := checkUnitComplete(spec, specNode(), "", g, &config.Config{}); v != Fail {
 		t.Errorf("a dispensa não pode apagar a exigência do código: %v", v)
 	}
 }
 
-func TestTrincaCompleta_noTestComCenarioNaFeatureEhContradicao(t *testing.T) {
-	t.Run("TRCMT-I02: Waiving the test while the feature carries a scenario is a contradiction", func(t *testing.T) {})
+func TestUnitComplete_noTestComCenarioNaFeatureEhContradicao(t *testing.T) {
+	t.Run("UNTCP-I02: Waiving the test while the feature carries a scenario is a contradiction", func(t *testing.T) {})
 	// `@no-test` diz "não há o que provar"; um cenário diz "prova-se assim". As duas
 	// afirmações não convivem — e sem esta checagem a contradição fica MUDA: a
-	// dispensa satisfaz o trinca-completa e o feature-test-match só cobra quando há
+	// dispensa satisfaz o unit-complete e o feature-test-match só cobra quando há
 	// teste a confrontar. Resultado: cenário escrito que ninguém prova, tudo verde.
 	root := raizComProva(t, "AAAAX-B01")
 	if err := os.WriteFile(filepath.Join(root, "x.feature"),
 		[]byte("Funcionalidade: X\n\n  Cenário: faz algo\n    Dado a\n    Quando b\n    Então c\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	g := trincaGraph(true, true, false)
+	g := unitGraph(true, true, false)
 	spec := "@no-test: gateway de uma linha, provado por `AAAAX-B01`\n"
 
-	v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{})
+	v, msg := checkUnitComplete(spec, specNode(), root, g, &config.Config{})
 	if v != Fail {
 		t.Fatalf("dispensa + cenário é contradição e deve reprovar: %v", v)
 	}
@@ -193,7 +193,7 @@ func TestTrincaCompleta_noTestComCenarioNaFeatureEhContradicao(t *testing.T) {
 	}
 }
 
-func TestTrincaCompleta_noTestSemCenarioPassa(t *testing.T) {
+func TestUnitComplete_noTestSemCenarioPassa(t *testing.T) {
 	// Feature com cabeçalho e NENHUM cenário (esqueleto) não contradiz a dispensa —
 	// não há afirmação de comportamento a provar.
 	root := raizComProva(t, "AAAAX-B01")
@@ -201,9 +201,9 @@ func TestTrincaCompleta_noTestSemCenarioPassa(t *testing.T) {
 		[]byte("Funcionalidade: X\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	g := trincaGraph(true, true, false)
+	g := unitGraph(true, true, false)
 	spec := "@no-test: gateway de uma linha, provado por `AAAAX-B01`\n"
-	if v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{}); v != Pass {
+	if v, msg := checkUnitComplete(spec, specNode(), root, g, &config.Config{}); v != Pass {
 		t.Errorf("feature sem cenário não contradiz a dispensa: %v (%s)", v, msg)
 	}
 }
@@ -211,13 +211,13 @@ func TestTrincaCompleta_noTestSemCenarioPassa(t *testing.T) {
 // A referência do `@no-test` tem de RESOLVER: um código que nenhum teste menciona é
 // uma promessa vazia. Pior que a ausência — ela passa a impressão de que a prova foi
 // conferida por alguém.
-func TestTrincaCompleta_noTestComReferenciaOrfaReprova(t *testing.T) {
-	t.Run("TRCMT-I03: Waiving the test demands saying where the proof is, and the place must exist", func(t *testing.T) {})
+func TestUnitComplete_noTestComReferenciaOrfaReprova(t *testing.T) {
+	t.Run("UNTCP-I03: Waiving the test demands saying where the proof is, and the place must exist", func(t *testing.T) {})
 	root := raizComProva(t, "AAAAX-B01") // o teste prova B01…
-	g := trincaGraph(true, true, false)
+	g := unitGraph(true, true, false)
 	spec := "@no-test: provado por `AAAAX-B99`\n" // …mas a spec alega B99
 
-	v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{})
+	v, msg := checkUnitComplete(spec, specNode(), root, g, &config.Config{})
 	if v != Fail {
 		t.Fatalf("referência que não resolve deve reprovar: %v", v)
 	}
@@ -228,12 +228,12 @@ func TestTrincaCompleta_noTestComReferenciaOrfaReprova(t *testing.T) {
 
 // Razão em PROSA, sem código, não basta: é exatamente o "provado na integração" que
 // ninguém consegue conferir. É a regra que este gate passou a cobrar.
-func TestTrincaCompleta_noTestSemReferenciaReprova(t *testing.T) {
+func TestUnitComplete_noTestSemReferenciaReprova(t *testing.T) {
 	root := raizComProva(t, "AAAAX-B01")
-	g := trincaGraph(true, true, false)
+	g := unitGraph(true, true, false)
 	spec := "@no-test: gateway de uma linha, provado no teste de integração central\n"
 
-	if v, _ := checkTriadComplete(spec, specNode(), root, g, &config.Config{}); v != Fail {
+	if v, _ := checkUnitComplete(spec, specNode(), root, g, &config.Config{}); v != Fail {
 		t.Errorf("prosa sem código não é referência verificável: %v", v)
 	}
 }
@@ -241,11 +241,11 @@ func TestTrincaCompleta_noTestSemReferenciaReprova(t *testing.T) {
 // `@no-feature` NÃO precisa de referência: ele afirma que não há comportamento
 // observável, e não existe prova a apontar. Exigir o endereço de algo que a spec acabou
 // de dizer que não existe seria incoerente — e travaria todo gateway sem regra.
-func TestTrincaCompleta_noFeatureNaoExigeReferencia(t *testing.T) {
-	g := trincaGraph(true, false, false)
+func TestUnitComplete_noFeatureNaoExigeReferencia(t *testing.T) {
+	g := unitGraph(true, false, false)
 	spec := "@no-feature: wiring de infraestrutura, sem regra observável\n"
 
-	if v, msg := checkTriadComplete(spec, specNode(), t.TempDir(), g, &config.Config{}); v != Pass {
+	if v, msg := checkUnitComplete(spec, specNode(), t.TempDir(), g, &config.Config{}); v != Pass {
 		t.Errorf("`@no-feature` dispensa sem exigir referência: %v (%s)", v, msg)
 	}
 }
@@ -304,8 +304,8 @@ func TestSemTBDNadaEhDispensado(t *testing.T) {
 // `@TBD: code,feature,test` do cabeçalho SAIU" — e sem a guarda a citação a REATIVA. A
 // spec passaria a declarar uma ausência que o texto ao lado diz ter deixado de existir.
 //
-// Medido ao remover o `@TBD` de três specs com as trincas completas: o gate continuou
-// lendo a dispensa, agora do texto da própria revisão que a removia — e o `triad-complete`
+// Medido ao remover o `@TBD` de três specs com as unidades completas: o gate continuou
+// lendo a dispensa, agora do texto da própria revisão que a removia — e o `unit-complete`
 // voltou a INDETERMINADO, que é o pior resultado (nem passa nem acusa, e parece cobertura).
 func TestPiecesToDevelop_citacaoEntreCrasesNaoDispensa(t *testing.T) {
 	casos := []struct {
@@ -348,7 +348,7 @@ func TestPiecesToDevelop_aDeclaracaoAtivaNomeiaAsPecas(t *testing.T) {
 //     nunca chegava.
 //
 // Medido: `packages/infra/` do projeto de referência é CDK COM regra — três unidades, 19
-// regras e invariantes somados, 61 testes, toda mutação detectada — e o `triad-complete`
+// regras e invariantes somados, 61 testes, toda mutação detectada — e o `unit-complete`
 // respondia INDETERMINADO nas três. Nem passa nem acusa, e parece cobertura.
 func TestIsRecognizedLayerCfg_oRegimeDeclaradoVence(t *testing.T) {
 	spec := mapx.Node{Kind: mapx.KindSpec, Layer: "spec", Tags: []string{"spec"}}
@@ -367,7 +367,7 @@ func TestIsRecognizedLayerCfg_oRegimeDeclaradoVence(t *testing.T) {
 	if !isRecognizedLayerCfg(spec, header, semDeclaracao) {
 		t.Error("sem regime declarado, `infra` cai no fallback por nome")
 	}
-	// Declarado comportamental, a trinca é COBRADA.
+	// Declarado comportamental, a unidade é COBRADA.
 	if isRecognizedLayerCfg(spec, header, comRegra) {
 		t.Error("o projeto declarou `comportamental` e o gate dispensou pelo NOME da camada")
 	}
@@ -402,9 +402,9 @@ func TestSpecWaivers_noCode(t *testing.T) {
 // SEM MAPA o veredito é INDETERMINADO, nunca aprovação. As peças são arestas, e sem o
 // grafo não há o que olhar — aprovar aqui seria afirmar o que não se mediu, que é o
 // defeito que este gate existe para fechar, cometido por ele próprio.
-func TestTrincaCompleta_semMapaEhIndeterminado(t *testing.T) {
-	t.Run("TRCMT-B03: Without a map the verdict is undetermined", func(t *testing.T) {})
-	if v, msg := checkTriadComplete("", specNode(), "", nil, &config.Config{}); v != Pending {
+func TestUnitComplete_semMapaEhIndeterminado(t *testing.T) {
+	t.Run("UNTCP-B03: Without a map the verdict is undetermined", func(t *testing.T) {})
+	if v, msg := checkUnitComplete("", specNode(), "", nil, &config.Config{}); v != Pending {
 		t.Errorf("sem mapa o gate tem de ficar indeterminado, não aprovar: %v (%s)", v, msg)
 	}
 }
@@ -412,11 +412,11 @@ func TestTrincaCompleta_semMapaEhIndeterminado(t *testing.T) {
 // O gate responde "as peças EXISTEM?", não "elas casam?". Casar é trabalho dos gates
 // relacionais — e este existe justamente porque eles falham ABERTO quando a peça falta.
 // Fazer os dois aqui duplicaria a régua em dois lugares que divergiriam.
-func TestTrincaCompleta_naoConfrontaSeAsPecasCasam(t *testing.T) {
-	t.Run("TRCMT-X01: The gate does not confront whether the pieces MATCH one another", func(t *testing.T) {})
+func TestUnitComplete_naoConfrontaSeAsPecasCasam(t *testing.T) {
+	t.Run("UNTCP-X01: The gate does not confront whether the pieces MATCH one another", func(t *testing.T) {})
 	// As três peças ligadas, e nada afirmado sobre o CONTEÚDO de nenhuma delas.
-	g := trincaGraph(true, true, true)
-	if v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{}); v != Pass {
+	g := unitGraph(true, true, true)
+	if v, msg := checkUnitComplete("", specNode(), "", g, &config.Config{}); v != Pass {
 		t.Errorf("o gate foi além da existência das peças: %v (%s)", v, msg)
 	}
 }
@@ -424,10 +424,10 @@ func TestTrincaCompleta_naoConfrontaSeAsPecasCasam(t *testing.T) {
 // A régua aqui é a EXISTÊNCIA. Uma feature sem cenário e um teste vazio satisfazem este
 // gate, e é correto: quem confronta o conteúdo é outro gate, e confundir os dois faria
 // este reprovar por um critério que não sabe medir.
-func TestTrincaCompleta_naoJulgaAQualidadeDasPecas(t *testing.T) {
-	t.Run("TRCMT-X02: The gate does not judge the QUALITY of any piece", func(t *testing.T) {})
-	g := trincaGraph(true, true, true)
-	if v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{}); v != Pass {
+func TestUnitComplete_naoJulgaAQualidadeDasPecas(t *testing.T) {
+	t.Run("UNTCP-X02: The gate does not judge the QUALITY of any piece", func(t *testing.T) {})
+	g := unitGraph(true, true, true)
+	if v, msg := checkUnitComplete("", specNode(), "", g, &config.Config{}); v != Pass {
 		t.Errorf("o gate julgou a qualidade das peças, e a régua é a existência: %v (%s)", v, msg)
 	}
 }
@@ -439,34 +439,34 @@ func TestTrincaCompleta_naoJulgaAQualidadeDasPecas(t *testing.T) {
 // debt, and the gate stays Pending, visible until someone pays it.
 //
 // Until they were separated both shared a bucket and became Pass: a spec with
-// `@TBD: code,feature,test` came out GREEN, indistinguishable from a complete triad —
+// `@TBD: code,feature,test` came out GREEN, indistinguishable from a complete unit —
 // erasing from the radar exactly the work that remains.
-func TestTriadComplete_tbdIsDebtNotWaiver(t *testing.T) {
-	t.Run("TRCMT-B08: A piece declared TO BE DEVELOPED leaves the verdict undetermined", func(t *testing.T) {})
+func TestUnitComplete_tbdIsDebtNotWaiver(t *testing.T) {
+	t.Run("UNTCP-B08: A piece declared TO BE DEVELOPED leaves the verdict undetermined", func(t *testing.T) {})
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec}}}
 	n := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
 
 	tbd := "<!-- @anchors\n  @TBD: code,feature,test — o handler vem na fase 2\n-->\n# X\n"
-	v, msg := checkTriadComplete(tbd, n, t.TempDir(), g, nil)
+	v, msg := checkUnitComplete(tbd, n, t.TempDir(), g, nil)
 	if v != Diverge {
 		t.Errorf("@TBD devia ser Pending (divida), veio %v (%s)", v, msg)
 	}
 
 	naoVaiTer := "<!-- @anchors\n  @no-code: e configuracao pura\n  @no-feature: sem comportamento observavel\n" +
 		"  @no-test: provado por `OUTRO-B01`\n-->\n# X\n"
-	if v, msg := checkTriadComplete(naoVaiTer, n, t.TempDir(), g, nil); v != Pass {
+	if v, msg := checkUnitComplete(naoVaiTer, n, t.TempDir(), g, nil); v != Pass {
 		t.Errorf("@no-* devia ser Pass (dispensa), veio %v (%s)", v, msg)
 	}
 
-	if v, _ := checkTriadComplete("# X\n", n, t.TempDir(), g, nil); v != Fail {
+	if v, _ := checkUnitComplete("# X\n", n, t.TempDir(), g, nil); v != Fail {
 		t.Errorf("sem declaracao nenhuma devia ser Fail, veio %v", v)
 	}
 }
 
 // A per-rule waiver lives in the rule's TABLE ROW; reading it as the unit's waived code,
-// feature and test for the whole unit (reference app: 293 of 308 triad failures).
+// feature and test for the whole unit (reference app: 293 of 308 unit failures).
 func TestSpecWaivers_tableRowIsTheRulesNotTheUnits(t *testing.T) {
-	t.Run("TRCMT-B09: a per-rule waiver in a table row does not waive the unit", func(t *testing.T) {})
+	t.Run("UNTCP-B09: a per-rule waiver in a table row does not waive the unit", func(t *testing.T) {})
 	spec := "| Rule | What |\n| --- | --- |\n" +
 		"| `CMTC-X01` | NÃO faz aviso de duplicata — @no-code: satisfeita pela AUSÊNCIA |\n" +
 		"| `CMTC-B02` | @no-test: provado pelo tsc |\n"
@@ -484,31 +484,31 @@ func TestSpecWaivers_tableRowIsTheRulesNotTheUnits(t *testing.T) {
 	}
 }
 
-func TestTriadComplete_Errors(t *testing.T) {
-	t.Run("TRCMT-E01: A test missing from disk does not orphan a reference another test resolves", func(t *testing.T) {
+func TestUnitComplete_Errors(t *testing.T) {
+	t.Run("UNTCP-E01: A test missing from disk does not orphan a reference another test resolves", func(t *testing.T) {
 		root := raizComProva(t, "AAAAX-B01")
 		if err := os.WriteFile(filepath.Join(root, "x.feature"), []byte("Feature: X\n"), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		g := trincaGraph(true, true, false)
+		g := unitGraph(true, true, false)
 		g.Nodes = append([]mapx.Node{{ID: "gone.test.ts", Kind: mapx.KindTest}}, g.Nodes...)
 		spec := "@no-test: one-line gateway, proven by `AAAAX-B01`\n"
-		if v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{}); v != Pass {
+		if v, msg := checkUnitComplete(spec, specNode(), root, g, &config.Config{}); v != Pass {
 			t.Fatalf("the test on disk must still resolve the reference, got %v: %s", v, msg)
 		}
 	})
 
-	t.Run("TRCMT-E02: A feature missing from disk does not hide the scenario of the covered feature", func(t *testing.T) {
+	t.Run("UNTCP-E02: A feature missing from disk does not hide the scenario of the covered feature", func(t *testing.T) {
 		root := raizComProva(t, "AAAAX-B01")
 		if err := os.WriteFile(filepath.Join(root, "x.feature"),
 			[]byte("Feature: X\n\n  Scenario: does something\n    Given a\n    When b\n    Then c\n"), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		g := trincaGraph(true, true, false)
+		g := unitGraph(true, true, false)
 		g.Nodes = append(g.Nodes, mapx.Node{ID: "a-gone.feature", Kind: mapx.KindFeature})
 		g.Edges = append(g.Edges, mapx.Edge{From: "x.spec.md", To: "a-gone.feature", Type: mapx.EdgeCoveredBy})
 		spec := "@no-test: one-line gateway, proven by `AAAAX-B01`\n"
-		v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{})
+		v, msg := checkUnitComplete(spec, specNode(), root, g, &config.Config{})
 		if v != Fail || !strings.Contains(msg, "x.feature") {
 			t.Fatalf("the scenario of the feature on disk must contradict the waiver, got %v: %s", v, msg)
 		}
@@ -517,9 +517,9 @@ func TestTriadComplete_Errors(t *testing.T) {
 
 func TestOptionalPieces_resolvesTheLayerOfTheTarget(t *testing.T) {
 	cfg := &config.Config{Layers: map[string]config.Layer{
-		"dao":    {Pattern: "models/**/*.ts", Kind: "code", OptionalTriadEdges: []string{"tested-by"}},
+		"dao":    {Pattern: "models/**/*.ts", Kind: "code", OptionalUnitEdges: []string{"tested-by"}},
 		"lib":    {Pattern: "screens/**/*.ts", Kind: "code"},
-		"screen": {Pattern: "screens/**/*.tsx", Kind: "code", OptionalTriadEdges: []string{"covered-by"}},
+		"screen": {Pattern: "screens/**/*.tsx", Kind: "code", OptionalUnitEdges: []string{"covered-by"}},
 	}}
 	keys := func(m map[string]bool) string {
 		var out []string
@@ -530,7 +530,7 @@ func TestOptionalPieces_resolvesTheLayerOfTheTarget(t *testing.T) {
 		return strings.Join(out, ",")
 	}
 
-	t.Run("TRCMT-B06: The layer may waive a piece as a block, reached by the specifies edge", func(t *testing.T) {
+	t.Run("UNTCP-B06: The layer may waive a piece as a block, reached by the specifies edge", func(t *testing.T) {
 		spec := mapx.Node{ID: "docs/user.spec.md", Kind: mapx.KindSpec}
 		g := &mapx.Graph{
 			Nodes: []mapx.Node{spec,
@@ -552,7 +552,7 @@ func TestOptionalPieces_resolvesTheLayerOfTheTarget(t *testing.T) {
 		}
 	})
 
-	t.Run("TRCMT-B06: Before the code exists, the layer is resolved by the target's path", func(t *testing.T) {
+	t.Run("UNTCP-B06: Before the code exists, the layer is resolved by the target's path", func(t *testing.T) {
 		if got := keys(optionalPieces(mapx.Node{ID: "models/user.spec.md", Kind: mapx.KindSpec}, cfg, nil)); got != "tested-by" {
 			t.Errorf("models/user.ts is a dao: %q", got)
 		}
@@ -567,7 +567,7 @@ func TestOptionalPieces_resolvesTheLayerOfTheTarget(t *testing.T) {
 }
 
 func TestReferenceInBlock_findsTheCodeAmongOtherQuotes(t *testing.T) {
-	t.Run("TRCMT-I03: Waiving the test requires saying where the proof is", func(t *testing.T) {
+	t.Run("UNTCP-I03: Waiving the test requires saying where the proof is", func(t *testing.T) {
 		code, ok := referenceInBlock("@no-test: proven by the `handler` test, scenario `SGHBX-B01`")
 		if !ok || code != "SGHBX-B01" {
 			t.Errorf("the code is found after a quote that is not one: %q %v", code, ok)

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GHIGT
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @GHIGT
@@ -15,7 +15,7 @@ Feature: GitHubIssues — the issue lifecycle on the repository's cards, when th
 
   @GHIGT-B02 @unit-level
   Scenario: The title names the gate, the kind and the target
-    Given findings of each kind for the gate "triad-complete" on "a/b.spec.md"
+    Given findings of each kind for the gate "unit-complete" on "a/b.spec.md"
     When their card titles are built
     Then each names the gate, its kind's word and the target
 

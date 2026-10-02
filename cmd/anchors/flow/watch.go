@@ -430,14 +430,14 @@ func handleChange(root string, cfg *config.Config, g *mapx.Graph, rel string) {
 		// completo funcionou; o orquestrador teve de segurar o review na mão).
 		//
 		// Então a entrega de uma peça isolada REGISTRA e espera; o review entra quando a
-		// trinca fecha. O sinal de que fechou é a peça que nasce por último: o TESTE.
+		// unidade fecha. O sinal de que fechou é a peça que nasce por último: o TESTE.
 		if missingPieceToReview(root, unidade, cfg) {
-			fmt.Printf("● %s [change] — delivery recorded; the review waits for the triad to close "+
+			fmt.Printf("● %s [change] — delivery recorded; the review waits for the unit to close "+
 				"(code and/or test missing in `%s`)\n", rel, unidade)
 			return
 		}
 		enqueueTask(root, rel, "change", "review",
-			"a delivery was recorded and the TRIAD CLOSED — REVIEW the unit `"+unidade+"`: "+
+			"a delivery was recorded and the UNIT CLOSED — REVIEW the unit `"+unidade+"`: "+
 				"green gates do not prove it is right. Attack by execution (mutate the rule "+
 				"and see if the test falls; run with edge input), not by reading.")
 		return
@@ -464,7 +464,7 @@ func handleChange(root string, cfg *config.Config, g *mapx.Graph, rel string) {
 	updateNodeRev(g, root, rel)
 
 	next, reason := queue.SuggestNext(kind)
-	// A camada pode DISPENSAR a peça que a fila sugere (`trinca_opcional`). Enfileirá-la
+	// A camada pode DISPENSAR a peça que a fila sugere (`optional_unit_edges`). Enfileirá-la
 	// é a fila contradizendo o `anchors work`, que para o mesmo alvo responde `PARE — NÃO
 	// crie`. Medido em duas execuções: tasks de `feature` para camada `dao` e para
 	// `schema-model`, descartadas à mão pelo orquestrador.
@@ -629,7 +629,7 @@ func missingPieceToReview(root, unidade string, cfg *config.Config) bool {
 	if _, err := os.Stat(filepath.Join(root, unidade)); err != nil {
 		return true // o código da unidade ainda não existe
 	}
-	// A camada pode DISPENSAR o teste (`trinca_opcional: [tested-by]`). Ali a trinca
+	// A camada pode DISPENSAR o teste (`optional_unit_edges: [tested-by]`). Ali a unidade
 	// nunca fecha pelo sinal do teste — e esperar por ele significa que a unidade NUNCA é
 	// revisada.
 	//
@@ -640,14 +640,14 @@ func missingPieceToReview(root, unidade string, cfg *config.Config) bool {
 	// únicas que o ciclo não alcançava.
 	if cfg != nil {
 		if layer, _ := scan.Classify(unidade, cfg); layer != "" {
-			for _, aresta := range cfg.Layers[layer].OptionalTriadEdges {
+			for _, aresta := range cfg.Layers[layer].OptionalUnitEdges {
 				if aresta == "tested-by" {
 					return false // o código existe e o teste é dispensado: pode revisar
 				}
 			}
 		}
 	}
-	// o teste é a peça que nasce por último — é o sinal de que a trinca fechou.
+	// o teste é a peça que nasce por último — é o sinal de que a unidade fechou.
 	base := strings.TrimSuffix(unidade, filepath.Ext(unidade))
 	for _, suf := range []string{".test.ts", ".test.tsx", ".spec.ts", "_test.go", "_test.py", "_spec.rb", ".test.js"} {
 		if _, err := os.Stat(filepath.Join(root, base+suf)); err == nil {

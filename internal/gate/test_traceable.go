@@ -17,7 +17,7 @@ import (
 //
 //   - `feature-test-match` confronta cenário↔teste POR CÓDIGO: sem código no teste, ele
 //     reporta os cenários como não implementados, acusando o arquivo errado;
-//   - `trinca-completa` vê o arquivo e dá a peça por presente;
+//   - `unit-complete` vê o arquivo e dá a peça por presente;
 //   - `tests-green` vê a execução passar.
 //
 // O resultado é o pior dos dois mundos: o trabalho foi feito e o pipeline diz que não.

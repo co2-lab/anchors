@@ -102,7 +102,7 @@ func TestApplyColocation(t *testing.T) {
 	}
 
 	// With no spec chosen there is no anchor, and colocation is not declared: a project
-	// with no spec has no triad to locate.
+	// with no spec has no unit to locate.
 	semSpec := &config.Config{}
 	ApplyColocation(semSpec, true, map[string]bool{"code": true, "test": true}, "")
 	if semSpec.Derived != nil {

@@ -305,7 +305,7 @@ abrir"*.
 
 O invariante governava uma aritmética que a revisão havia abolido. A spec passou a
 afirmar as duas coisas ao mesmo tempo, e **nada acusou**: a `B03` estava correta, a
-`I02` estava bem-formada, a tríade completa, a suíte verde. A contradição só apareceu
+`I02` estava bem-formada, a unidade completa, a suíte verde. A contradição só apareceu
 **meses depois**, quando outro agente foi implementar e não soube qual das duas seguir
 — e virou uma decisão que teve de subir para o usuário, sem que ninguém lembrasse do
 contexto.

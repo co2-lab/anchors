@@ -131,7 +131,7 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given gates, nodes, a map and a loaded Structure
     When the entry point carrying the Structure is called
     Then the relational checkers receive it, because the regimes and the surfaces of
-      the triad are declared there
+      the unit are declared there
 
   @GTENG-B20 @unit-level
   Scenario: The entry point that knows the sweep kind honours the full-sweep scope

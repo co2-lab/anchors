@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCTRN
-  updated_at: 2026-09-30
+  updated_at: 2026-10-01
   layer: gate
 -->
 # Doctrine — the vertical axis: product doctrine exists, is realized, and is never copied
@@ -9,7 +9,7 @@
 
 ## Overview
 
-Co-location ties a triad to one directory, but a business rule that holds for three screens belongs
+Co-location ties a unit to one directory, but a business rule that holds for three screens belongs
 to none of them. It lives in a product doctrine file, and each spec that concretises it points at the
 doctrine rule with a `@realizes` tag. This unit holds the five gates of that vertical axis; each one
 catches a silence the others cannot see.

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CDCTC
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: gate
 -->
 # CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -53,7 +53,7 @@ knowing how to read, the gate goes quiet; it never approves.**
 | `CDCTC-B04` | `@no-rule: <reason>` on the symbol waives it: not every export deserves a rule, and the waiver is what makes the noise manageable without lying. |
 | `CDCTC-B05` | A BARE marker, with no written reason, does not waive — it would be a silent way to quiet the gate, and the trace that a decision was taken would vanish. |
 | `CDCTC-B06` | A spec cataloguing every exported symbol passes. |
-| `CDCTC-B07` | With no code linked the gate leaves without a verdict: the absence belongs to `triad-complete`, and accusing it in both places would duplicate the debt. |
+| `CDCTC-B07` | With no code linked the gate leaves without a verdict: the absence belongs to `unit-complete`, and accusing it in both places would duplicate the debt. |
 | `CDCTC-B08` | Without a declared export pattern the gate SKIPS and says it skipped, naming how to enable it. It never approves what it cannot read. |
 | `CDCTC-B09` | With the pattern declared the gate confronts for real, in any language — the project's own `export_detect` is the ruler. |
 | `CDCTC-B10` | The declared dialect family also supplies the pattern: a Go project needs only name its family. |
@@ -74,7 +74,7 @@ knowing how to read, the gate goes quiet; it never approves.**
 | `CDCTC-X01` | Does not judge whether the catalogued rule DESCRIBES the symbol well. | The search is coarse on purpose: it asks whether the spec names the symbol. Judging whether the rule says the right thing about it is judgement, and judgement belongs to another class of gate. |
 | `CDCTC-X02` | Does not decide which symbols deserve a rule. | That is the project's call, and the waiver is where it records it — with a written reason. Deciding here would take away exactly the calibration that makes a granular gate usable. |
 | `CDCTC-X03` | Does not know any language: whoever declares what is public is the project. | Recognising a public symbol depends on the language, and Anchors does not presume. The built-in TypeScript pattern is only ever a SUGGESTION to a project that has not declared its own, never a silent default. |
-| `CDCTC-X04` | Does not charge the absence of code — that belongs to `triad-complete`. | Accusing the same debt in two gates would duplicate the finding, and whoever fixed one would still see the other. |
+| `CDCTC-X04` | Does not charge the absence of code — that belongs to `unit-complete`. | Accusing the same debt in two gates would duplicate the finding, and whoever fixed one would still see the other. |
 
 ## Errors
 
