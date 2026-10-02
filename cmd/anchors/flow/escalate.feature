@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SCLTE
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @SCLTE
@@ -149,3 +149,29 @@ Feature: Escalate — open the right card for a change the plan, the spec or the
     When `anchors escalate --card 44 --for-user "which currency?"` runs
     Then the command succeeds
     And the output says "could not label card #44" and not "stopped until the decision"
+
+  @SCLTE-B18 @unit-level
+  Scenario: A bug in Anchors is reported to Anchors, once per title
+    Given a platform where co2-lab/anchors has no open issue with the title, and another where it has one
+    When `anchors escalate --card 44 --bug --upstream --about plan.md "gate misreads a file"` runs on each
+    Then the first creates an issue in co2-lab/anchors and the second comments on the open one
+    And the project's bug card receives a comment "Reported to Anchors"
+
+  @SCLTE-B19 @unit-level
+  Scenario: In local mode the bug goes to Anchors alone
+    Given a project in local mode
+    When `anchors escalate --bug --upstream "gate misreads a file"` runs
+    Then an issue is created in co2-lab/anchors and the command succeeds
+
+  @SCLTE-X02 @unit-level
+  Scenario: The report to Anchors carries nothing of the project
+    Given origin card 44
+    When `anchors escalate --card 44 --bug --upstream --about secret/plan.md "gate misreads a file"` runs
+    Then the call to co2-lab/anchors names neither secret/plan.md nor card 44
+    And `--upstream` without `--bug` is refused
+
+  @SCLTE-E03 @unit-level
+  Scenario: A refused report to Anchors leaves a link to file it
+    Given a platform that refuses to create in co2-lab/anchors
+    When `anchors escalate --card 44 --bug --upstream "gate misreads a file"` runs
+    Then the command succeeds and the output carries the issues/new link

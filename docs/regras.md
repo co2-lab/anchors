@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:4bc2dc687f77373d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:72af22e4892f4fc2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -889,11 +889,19 @@ abra a página dela em `camadas/`.
 
 - [SCLTE-B17 — `--card` accepts the card as `44` or `#44`: the `#` is dropped before any use, so the label is `under-44` and the origin card touched is 44.](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
 
+- [SCLTE-B18 — With `--upstream`, a bug is also reported at `co2-lab/anchors`: an OPEN issue there with the same title receives a comment saying it was seen again, with the release and the platform, instead of a second issue; otherwise an issue is created with the bug's title and a body of the reason, the release and the platform. The project's bug card receives a comment with the address, and the output says "reported to Anchors" or "already reported to Anchors".](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
+
+- [SCLTE-B19 — In local mode, `--upstream` reports to Anchors alone — there is no project queue to open a card in — and the command succeeds.](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
+
 - [SCLTE-I01 — Without an origin card, no card other than the new one is labelled or commented.](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
 
 - [SCLTE-X01 — A bug never carries needs-user — neither the new card nor the origin card it blocks.](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
 
+- [SCLTE-X02 — The report to Anchors carries neither `--about` nor the card, and `--upstream` is refused without `--bug`.](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
+
 - [SCLTE-E01 — The platform refuses to create the new card.](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
+
+- [SCLTE-E03 — The platform refuses the report to Anchors.](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
 
 - [SCLTE-E02 — The origin card cannot be labelled as stopped.](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
 

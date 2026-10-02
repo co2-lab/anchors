@@ -1198,15 +1198,15 @@ nodes:
         ingested_at: "2026-10-02T10:22:47-03:00"
     - id: cmd/anchors/flow/escalate.feature
       kind: feature
-      rev: 44ca90a32fd3
-      updated_at: "2026-09-26"
+      rev: 9aa4cfce993b
+      updated_at: "2026-10-02"
       code: SCLTE
       layer: feature
       tags:
         - feature
     - id: cmd/anchors/flow/escalate.go
       kind: code
-      rev: 5da340b86b6f
+      rev: 5fbc8f0e9ad5
       updated_at: "2026-10-02"
       code: SCLTE
       layer: comando
@@ -1214,23 +1214,24 @@ nodes:
         - cli
         - comando
       signal:
-        covered_lines: 433
-        total_lines: 445
-        line_coverage: 97.30337078651685
+        covered_lines: 485
+        total_lines: 497
+        line_coverage: 97.58551307847083
+        prev_line_coverage: 97.30337078651685
         coverage_by_suite:
             .anchors/lcov.info:
-                instrumented: 48-119,125-129,134-148,159-166,168,170,204-214,217-238,250-255,257-276,280-287,301-323,328-405,409-437,439-460,463-481,485-487,494-523,525-537,539-550,556-576,584-593,595,607-621
-                covered: 48-113,116-117,125,134-148,159-166,168,170,204-214,217-238,250-255,257-258,261-262,265-276,280-287,301-323,328-405,409-437,439-460,463-481,485-487,494-523,525-537,539-550,556-576,584-593,595,607-621
-                covered_lines: 433
-                total_lines: 445
-                at_rev: 5da340b86b6f
-        coverage_rev: 5da340b86b6f
-        at_rev: 5da340b86b6f
-        ingested_at: "2026-10-02T08:35:30-03:00"
+                instrumented: 50-129,135-139,144-156,159-168,179-186,188,190,224-234,237-258,270-275,277-296,300-307,321-343,348-425,429-457,459-487,490,493-513,517-519,526-555,557-569,571-582,588-608,624-637,640-651,659-668,670,682-696
+                covered: 50-123,126-127,135,144-156,159-168,179-186,188,190,224-234,237-258,270-275,277-278,281-282,285-296,300-307,321-343,348-425,429-457,459-487,490,493-513,517-519,526-555,557-569,571-582,588-608,624-637,640-651,659-668,670,682-696
+                covered_lines: 485
+                total_lines: 497
+                at_rev: 5fbc8f0e9ad5
+        coverage_rev: 5fbc8f0e9ad5
+        at_rev: 5fbc8f0e9ad5
+        ingested_at: "2026-10-02T10:22:47-03:00"
     - id: cmd/anchors/flow/escalate.spec.md
       kind: spec
-      rev: 70c94f6b491d
-      updated_at: "2026-09-26"
+      rev: e1a540d7fd23
+      updated_at: "2026-10-02"
       code: SCLTE
       layer: spec
       code_declared: true
@@ -1255,10 +1256,14 @@ nodes:
             - SCLTE-B15
             - SCLTE-B16
             - SCLTE-B17
+            - SCLTE-B18
+            - SCLTE-B19
             - SCLTE-E01
             - SCLTE-E02
+            - SCLTE-E03
             - SCLTE-I01
             - SCLTE-X01
+            - SCLTE-X02
         proven_by_suite:
             .anchors/junit.xml:
                 - SCLTE-B01
@@ -1278,14 +1283,18 @@ nodes:
                 - SCLTE-B15
                 - SCLTE-B16
                 - SCLTE-B17
+                - SCLTE-B18
+                - SCLTE-B19
                 - SCLTE-E01
                 - SCLTE-E02
+                - SCLTE-E03
                 - SCLTE-I01
                 - SCLTE-X01
+                - SCLTE-X02
         proven_rev_by_suite:
-            .anchors/junit.xml: 70c94f6b491d
-        at_rev: 70c94f6b491d
-        ingested_at: "2026-10-02T08:35:30-03:00"
+            .anchors/junit.xml: e1a540d7fd23
+        at_rev: e1a540d7fd23
+        ingested_at: "2026-10-02T10:22:47-03:00"
     - id: cmd/anchors/flow/escalate_dup.feature
       kind: feature
       rev: b3531029f7ca
@@ -1368,21 +1377,21 @@ nodes:
         ingested_at: "2026-10-02T10:22:47-03:00"
     - id: cmd/anchors/flow/escalate_test.go
       kind: test
-      rev: ea3d623128f8
+      rev: 91dc5f782b99
       updated_at: "2026-10-02"
       code: SCLTE
       layer: teste
       tags:
         - test
       signal:
-        passed: 47
+        passed: 55
         by_layer:
             unit:
-                passed: 47
+                passed: 55
         seconds_by_suite:
-            .anchors/junit.xml: 3.55
-        at_rev: ea3d623128f8
-        ingested_at: "2026-10-02T08:35:30-03:00"
+            .anchors/junit.xml: 4.840000000000001
+        at_rev: 91dc5f782b99
+        ingested_at: "2026-10-02T10:22:47-03:00"
     - id: cmd/anchors/flow/gh_script_test.go
       kind: test
       rev: e7f3b4c4ce8d
@@ -3083,14 +3092,14 @@ nodes:
         coverage_omitted: 9eba1ef0ee63
     - id: cmd/anchors/governance/guide_work.go
       kind: code
-      rev: 813afa22fe17
+      rev: af47c485e1ca
       updated_at: "2026-10-02"
       layer: comando
       tags:
         - cli
         - comando
       signal:
-        coverage_omitted: 813afa22fe17
+        coverage_omitted: af47c485e1ca
     - id: cmd/anchors/governance/register.go
       kind: code
       rev: 8873555ca2e9

@@ -116,7 +116,7 @@ ninguém documentou, um arquivo no lugar errado.
 de você.
 
 ```sh
-anchors escalate "<o que está errado>" --sobre <arquivo> --card <este card>
+anchors escalate "<o que está errado>" --about <arquivo> --card <este card>
 ```
 
 O achado nasce com a label `anchors:sob-<n>`, e os dois se entregam no **mesmo
@@ -133,11 +133,30 @@ quê`). Abrir card para trocar uma palavra é burocracia.
 Se a mudança **impacta a direção do projeto** — ou se você tem dúvida:
 
 ```sh
-anchors escalate "<o que precisa mudar>" --sobre <arquivo> --para-usuario
+anchors escalate "<o que precisa mudar>" --about <arquivo> --for-user
 ```
 
 Isso vira decisão de quem planejou, e **o card para até ela sair**. A
 interpretação do impacto é sua: você é quem tem o contexto do que descobriu.
+
+### Quando a ferramenta está errada
+
+Se o que está errado é o pipeline ou a ferramenta — um workflow semeado calcula
+errado, um comando `anchors` escolhe o card errado, um gate lê mal um arquivo —
+não há o que decidir, e a correção mora onde você não edita:
+
+```sh
+anchors escalate "<o que está errado, com a medição>" --about <arquivo> --bug [--blocking]
+```
+
+**Quando é o próprio Anchors** — um comando, um gate, o mapa, um arquivo que o
+Anchors semeia — e não a configuração do projeto, acrescente `--upstream`. O bug
+também é reportado em [github.com/co2-lab/anchors](https://github.com/co2-lab/anchors/issues),
+e a correção chega a todo projeto que usa o Anchors; uma issue aberta com o mesmo
+título recebe um comentário "visto de novo" em vez de uma duplicata. Funciona
+também no modo local. Esse repositório é **público**: escreva o motivo nos termos
+do Anchors — o comando, o gate, o que ele fez e o que deveria fazer, um caso
+mínimo —, nunca o código, os nomes ou os dados do projeto.
 
 ## 5. Abra o PR — sem inventar a sintaxe
 

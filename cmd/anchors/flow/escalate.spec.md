@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCLTE
-  updated_at: 2026-09-26
+  updated_at: 2026-10-02
   layer: comando
 -->
 # Escalate — open the right card for a change the plan, the spec or the tool needs, and stop the work only when it must
@@ -80,6 +80,13 @@ day.
 | `SCLTE-B16` | The number of the new card is read from the address the platform answers only when its last segment is all digits; otherwise no blocked-by label is made. |
 | `SCLTE-B17` | `--card` accepts the card as `44` or `#44`: the `#` is dropped before any use, so the label is `under-44` and the origin card touched is 44. |
 
+### A bug in Anchors itself
+
+| Effect | Description |
+| --- | --- |
+| `SCLTE-B18` | With `--upstream`, a bug is also reported at `co2-lab/anchors`: an OPEN issue there with the same title receives a comment saying it was seen again, with the release and the platform, instead of a second issue; otherwise an issue is created with the bug's title and a body of the reason, the release and the platform. The project's bug card receives a comment with the address, and the output says "reported to Anchors" or "already reported to Anchors". |
+| `SCLTE-B19` | In local mode, `--upstream` reports to Anchors alone — there is no project queue to open a card in — and the command succeeds. |
+
 ## Invariants
 
 | Rule | Always holds | How it is proven |
@@ -91,12 +98,14 @@ day.
 | Rule | Boundary | Why |
 | --- | --- | --- |
 | `SCLTE-X01` | A bug never carries needs-user — neither the new card nor the origin card it blocks. | A bug waits for a fix, not for a person to choose; needs-user would list it under "waiting for you". |
+| `SCLTE-X02` | The report to Anchors carries neither `--about` nor the card, and `--upstream` is refused without `--bug`. | The Anchors repository is public: a project's file path or card is the project's, not Anchors'; and only a bug in Anchors belongs there. |
 
 ## Errors
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `SCLTE-E01` | The platform refuses to create the new card. | The command fails with "open the issue" and the platform's answer. | Nothing was recorded; saying it worked would lose the finding. |
+| `SCLTE-E03` | The platform refuses the report to Anchors. | A warning says it could not, and prints the prefilled new-issue link; the command succeeds. | The finding is already recorded in the project; failing would hide that, and the link lets a person file it. |
 | `SCLTE-E02` | The origin card cannot be labelled as stopped. | A warning says to label it by hand; the command succeeds and does not announce the card as stopped. | The new card exists; failing would hide it, and staying silent would let another agent take the card and redo the path. |
 
 ## Dependencies

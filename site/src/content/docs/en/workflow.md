@@ -115,7 +115,7 @@ documented, a file in the wrong place.
 you.
 
 ```sh
-anchors escalate "<what's wrong>" --sobre <file> --card <this card>
+anchors escalate "<what's wrong>" --about <file> --card <this card>
 ```
 
 The finding is born with the `anchors:sob-<n>` label, and both ship in the
@@ -132,12 +132,31 @@ Opening a card to change one word is bureaucracy.
 If the change **affects the project's direction** — or if you're unsure:
 
 ```sh
-anchors escalate "<what must change>" --sobre <file> --para-usuario
+anchors escalate "<what must change>" --about <file> --for-user
 ```
 
 That becomes a decision for whoever planned it, and **the card stops until it
 comes**. Judging the impact is your call: you're the one holding the context of
 what you found.
+
+### When the tool is wrong
+
+If what is wrong is the pipeline or the tool — a seeded workflow computes the
+wrong thing, an `anchors` command picks the wrong card, a gate misreads a file —
+there is nothing to decide, and the fix lives where you do not edit:
+
+```sh
+anchors escalate "<what is wrong, with the measurement>" --about <file> --bug [--blocking]
+```
+
+**When it is Anchors itself** — a command, a gate, the map, a file Anchors
+seeds — and not this project's configuration, add `--upstream`. The bug is also
+reported at [github.com/co2-lab/anchors](https://github.com/co2-lab/anchors/issues),
+so the fix reaches every project that uses Anchors; an open issue with the same
+title gets a "seen again" comment instead of a duplicate. It works in local mode
+too. That repository is **public**: write the reason in Anchors' terms — the
+command, the gate, what it did and what it should do, a minimal case — never the
+project's code, names or data.
 
 ## 5. Open the PR — without inventing the syntax
 

@@ -576,3 +576,79 @@ func TestCardDoPR_noRepoOrPRAsksNothing(t *testing.T) {
 		t.Errorf("a failed read yields no card, got %q", got)
 	}
 }
+
+const upstreamURL = "https://github.com/co2-lab/anchors/issues/77"
+
+func TestEscalateCmd_upstreamReportsABugInAnchorsOncePerTitle(t *testing.T) {
+	t.Run("SCLTE-B18: A bug in Anchors is reported to Anchors, once per title", func(t *testing.T) {})
+	t.Run("SCLTE-X02: The report to Anchors carries nothing of the project", func(t *testing.T) {})
+	out, _, err, calls := runEscalate(t, []ghRule{{match: "issue create --repo co2-lab/anchors *", out: upstreamURL}},
+		"--card", "44", "--bug", "--upstream", "--about", "secret/plan.md", "gate misreads a file")
+	if err != nil {
+		t.Fatal(err)
+	}
+	up := onlyCall(t, calls, "issue create --repo co2-lab/anchors")
+	if !strings.Contains(up, "--title [bug] gate misreads a file") || !strings.Contains(up, "anchors ") {
+		t.Errorf("the report carries the bug's title and the release: %s", up)
+	}
+	if strings.Contains(up, "secret/plan.md") || strings.Contains(up, "44") {
+		t.Errorf("the report to a public repository carries nothing of the project: %s", up)
+	}
+	if !strings.Contains(onlyCall(t, calls, "issue comment 900"), "Reported to Anchors — "+upstreamURL) {
+		t.Error("the project's bug card links the report")
+	}
+	if !strings.Contains(out, "reported to Anchors: "+upstreamURL) {
+		t.Errorf("the output names the report:\n%s", out)
+	}
+
+	// The same title already open: a comment on it, no second issue.
+	out, _, err, calls = runEscalate(t, []ghRule{{match: "issue list --repo co2-lab/anchors *", out: "[bug] gate misreads a file\t" + upstreamURL}},
+		"--card", "44", "--bug", "--upstream", "gate misreads a file")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(callsWith(calls, "issue create --repo co2-lab/anchors")) != 0 {
+		t.Errorf("an open issue with the title is not opened twice: %v", calls)
+	}
+	if !strings.Contains(onlyCall(t, calls, "issue comment "+upstreamURL), "Seen again") || !strings.Contains(out, "already reported to Anchors") {
+		t.Errorf("the open issue is told it was seen again:\n%s\n%v", out, calls)
+	}
+}
+
+func TestEscalateCmd_upstreamGoesWithBug(t *testing.T) {
+	_, _, err, calls := runEscalate(t, nil, "--card", "44", "--upstream", "x")
+	if err == nil || !strings.Contains(err.Error(), "`--upstream` goes with `--bug`") {
+		t.Errorf("--upstream without --bug is refused, got %v", err)
+	}
+	if len(callsWith(calls, "issue create")) != 0 {
+		t.Errorf("nothing is created: %v", calls)
+	}
+}
+
+func TestEscalateCmd_upstreamInLocalModeReportsAlone(t *testing.T) {
+	t.Run("SCLTE-B19: In local mode the bug goes to Anchors alone", func(t *testing.T) {})
+	root := localProject(t)
+	calls := scriptedGH(t, ghRule{match: "issue create --repo co2-lab/anchors *", out: upstreamURL})
+	cmd := newEscalateCmd()
+	cmd.SetArgs([]string{"--root", root, "--bug", "--upstream", "gate misreads a file"})
+	var err error
+	out := stdoutOf(t, func() { err = cmd.Execute() })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(callsWith(calls(), "issue create")) != 1 || !strings.Contains(out, "reported to Anchors") {
+		t.Errorf("local mode reports to Anchors alone:\n%s\n%v", out, calls())
+	}
+}
+
+func TestEscalateCmd_refusedUpstreamLeavesALink(t *testing.T) {
+	t.Run("SCLTE-E03: A refused report to Anchors leaves a link to file it", func(t *testing.T) {})
+	out, _, err, _ := runEscalate(t, []ghRule{{match: "issue create --repo co2-lab/anchors *", out: "HTTP 403", code: 1}},
+		"--card", "44", "--bug", "--upstream", "gate misreads a file")
+	if err != nil {
+		t.Fatalf("a refused report does not fail the command: %v", err)
+	}
+	if !strings.Contains(out, "could not report to Anchors") || !strings.Contains(out, "https://github.com/co2-lab/anchors/issues/new?") {
+		t.Errorf("the output carries the link to file it by hand:\n%s", out)
+	}
+}

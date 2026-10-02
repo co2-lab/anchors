@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1419038c1944cdac — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8a1617e5a6253ca6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -811,6 +811,14 @@ teste prova.
 - [A card the platform refuses to create fails the command](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must) `SCLTE-E01`
 
 - [A card that cannot be stopped is warned about](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must) `SCLTE-E02`
+
+- [A bug in Anchors is reported to Anchors, once per title](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must) `SCLTE-B18`
+
+- [In local mode the bug goes to Anchors alone](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must) `SCLTE-B19`
+
+- [The report to Anchors carries nothing of the project](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must) `SCLTE-X02`
+
+- [A refused report to Anchors leaves a link to file it](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must) `SCLTE-E03`
 
 - [Without a target or a label the board is not asked](layers/comando.md#esdps--escalateduplicate--find-the-open-cards-that-already-deal-with-the-target-of-an-escalation) `ESDPS-B01`
 

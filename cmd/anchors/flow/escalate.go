@@ -5,10 +5,12 @@ package flow
 
 import (
 	"fmt"
+	neturl "net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
@@ -47,7 +49,7 @@ import (
 // claim. Este é o por JUÍZO: ninguém está travado, alguém percebeu algo.
 func newEscalateCmd() *cobra.Command {
 	var root, sobre, card, revisandoPR string
-	var paraUsuario, incerto, bug, bloqueante bool
+	var paraUsuario, incerto, bug, bloqueante, upstream bool
 	cmd := &cobra.Command{
 		Use:   "escalate <reason>",
 		Short: "Open the issue for a change needed in the plan or the spec",
@@ -96,6 +98,14 @@ it is an ordinary card: there is no choice to make, only work.
                    not hand it out. It is NOT a decision: do not use '--for-user' for it.
   --blocking   with '--bug': your card cannot go on until the bug is fixed. The card
                    waits for it ('anchors:blocked-by-<n>'); without it, the card goes on.
+  --upstream   with '--bug', when what is wrong is ANCHORS ITSELF (a command, a gate, the
+                   map, a file Anchors seeds) and not this project's configuration: it
+                   is also reported at github.com/co2-lab/anchors, so the fix reaches
+                   every project. An open issue with the same title gets a comment
+                   instead of a second issue. That repository is PUBLIC: write the
+                   reason in Anchors' terms — the command, the gate, a minimal case —
+                   never this project's code, names or data; the report carries neither
+                   '--about' nor the card. In local mode, it is the only thing done.
 
 AND IF YOU DO NOT KNOW, use '--unsure' instead of '--for-user'. The cost of
 escalating for safety does not show up for whoever escalates: each card in
@@ -139,6 +149,16 @@ card to change one word is bureaucracy.`,
 			if bloqueante && !bug {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("`--blocking` goes with `--bug` (a decision already stops the card)")
+			}
+			if upstream && !bug {
+				cmd.SilenceUsage = true
+				return fmt.Errorf("`--upstream` goes with `--bug`: only a bug in Anchors is reported to Anchors")
+			}
+			// UPSTREAM WORKS IN EVERY MODE: a bug in Anchors is Anchors' whether or not the
+			// project keeps its queue on GitHub.
+			if upstream && !cfg.GitHubMode() {
+				reportUpstream(strings.Join(args, " "))
+				return nil
 			}
 			if !cfg.GitHubMode() {
 				cmd.SilenceUsage = true
@@ -457,6 +477,16 @@ card to change one word is bureaucracy.`,
 					"--body", "📋 Plan change recorded from this work — "+url,
 				).Run()
 			}
+			if upstream {
+				if up := reportUpstream(motivo); up != "" {
+					if n := numeroDaIssue(url); n != "" {
+						_ = exec.Command("gh", "issue", "comment", n,
+							"--repo", cfg.Workflow.Repo,
+							"--body", "Reported to Anchors — "+up,
+						).Run()
+					}
+				}
+			}
 			return nil
 		},
 	}
@@ -473,6 +503,8 @@ card to change one word is bureaucracy.`,
 		"the PIPELINE or the TOOL is wrong (a seeded workflow, an anchors command, a gate): not a decision")
 	cmd.Flags().BoolVar(&bloqueante, "blocking", false,
 		"with --bug: your card cannot go on until the bug is fixed, and it waits for it")
+	cmd.Flags().BoolVar(&upstream, "upstream", false,
+		"with --bug: the bug is in Anchors itself — also report it at "+upstreamRepo+" (public: no project code, names or data)")
 	common.AliasDeFlag(cmd, "about", "sobre")
 	common.AliasDeFlag(cmd, "for-user", "para-usuario")
 	cmd.PreRunE = func(c *cobra.Command, _ []string) error {
@@ -574,6 +606,49 @@ func bugBody(motivo, sobre, card string, bloqueante bool) string {
 		b.WriteString(fmt.Sprintf("\nFound during card #%s, which goes on.\n", card))
 	}
 	return b.String()
+}
+
+// upstreamRepo is where Anchors' own bugs are reported.
+const upstreamRepo = "co2-lab/anchors"
+
+// reportUpstream reports a bug in Anchors to Anchors, and returns the issue's address, or
+// empty when it could not.
+//
+// It looks for an OPEN issue with the same title first: the same defect met by several
+// projects is one issue with one comment per sighting — each saying the release and the
+// platform it was seen on —, not one issue per project.
+//
+// The report carries the reason, the release and the platform, and nothing of the project:
+// the repository is public. A refusal does not fail the command — the finding is already
+// recorded where it was found — and it prints the prefilled link a person can open.
+func reportUpstream(motivo string) string {
+	titulo := "[bug] " + firstLineOfReason(motivo)
+	seen := fmt.Sprintf("anchors %s · %s/%s", common.Version, runtime.GOOS, runtime.GOARCH)
+	if out, err := exec.Command("gh", "issue", "list", "--repo", upstreamRepo, "--state", "open",
+		"--search", firstLineOfReason(motivo)+" in:title", "--json", "url,title",
+		"--jq", `.[] | .title + "\t" + .url`).Output(); err == nil {
+		for _, l := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+			t, u, ok := strings.Cut(l, "\t")
+			if ok && strings.EqualFold(strings.TrimSpace(t), titulo) {
+				_ = exec.Command("gh", "issue", "comment", u, "--repo", upstreamRepo,
+					"--body", "Seen again — "+seen+".").Run()
+				fmt.Printf("already reported to Anchors: %s (a comment says it was seen again)\n", u)
+				return u
+			}
+		}
+	}
+	corpo := motivo + "\n\n---\n" + seen + "\n\nReported by `anchors escalate --bug --upstream`.\n"
+	out, err := exec.Command("gh", "issue", "create", "--repo", upstreamRepo,
+		"--title", titulo, "--body", corpo).CombinedOutput()
+	if err != nil {
+		q := neturl.Values{"title": {titulo}, "body": {corpo}}
+		fmt.Printf("· warning: could not report to Anchors (%s) — open it by hand:\n  https://github.com/%s/issues/new?%s\n",
+			strings.TrimSpace(string(out)), upstreamRepo, q.Encode())
+		return ""
+	}
+	u := strings.TrimSpace(string(out))
+	fmt.Printf("reported to Anchors: %s\n", u)
+	return u
 }
 
 // numeroDaIssue tira o número da URL que o `gh issue create` imprime.
