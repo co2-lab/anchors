@@ -168,7 +168,7 @@ func runInit(root string) error {
 	// `empty` é o projeto SEM código, spec, feature nem teste — e é ele que decide o
 	// estado de maturação: num projeto novo os gates nascem BLOQUEANTES, porque não há
 	// débito a acomodar e o primeiro desvio é o mais barato de impedir (ver DefaultGates).
-	if gates := initx.DefaultGates(chosenArtifacts, empty); len(gates) > 0 {
+	if gates := initx.SeedFor(cfg, initx.DefaultGates(chosenArtifacts, empty), chosenArtifacts); len(gates) > 0 {
 		names := make([]string, len(gates))
 		for i, g := range gates {
 			names[i] = g.Name

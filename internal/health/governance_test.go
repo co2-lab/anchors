@@ -1,6 +1,7 @@
 package health
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -174,5 +175,34 @@ func TestCheckGovernanceOpportunities_adoptedIsNotSuggested(t *testing.T) {
 	}
 	if fs := checkGovernanceOpportunities(g, cfg); len(fs) != 0 {
 		t.Fatalf("a project that adopted everything gets no suggestion: %+v", fs)
+	}
+}
+
+func TestCheckGovernanceOpportunities_applicableCatalogGates(t *testing.T) {
+	t.Run("GVOPG-B08: Every applicable undeclared catalog gate is suggested", func(t *testing.T) {})
+	prev := config.SetGateCatalog(func() []config.Gate {
+		return []config.Gate{
+			{Name: "feature-test-match", On: []string{"feature"}, Measures: "every scenario is implemented"},
+			{Name: "scenario-letter-declared", On: []string{"feature"}, Presupposes: []string{"rule_types"}, Measures: "letters are declared"},
+		}
+	})
+	t.Cleanup(func() { config.SetGateCatalog(prev) })
+	cfg := &config.Config{Layers: map[string]config.Layer{"feature": {Kind: "feature"}}}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.feature", Kind: mapx.KindFeature}}}
+	var ftm, sld *Finding
+	fs := checkGovernanceOpportunities(g, cfg)
+	for i := range fs {
+		switch fs[i].Subject {
+		case "feature-test-match":
+			ftm = &fs[i]
+		case "scenario-letter-declared":
+			sld = &fs[i]
+		}
+	}
+	if ftm == nil || ftm.Severity != Info || !strings.Contains(ftm.Detail, "- name: feature-test-match") {
+		t.Errorf("feature-test-match is suggested with how to declare it: %+v", ftm)
+	}
+	if sld == nil || !strings.Contains(sld.Detail, "rule_types") {
+		t.Errorf("scenario-letter-declared's suggestion names rule_types: %+v", sld)
 	}
 }

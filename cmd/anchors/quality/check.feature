@@ -614,3 +614,10 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     When the review line is printed
     Then it says one target is to review and how to list them
     And with nothing due it prints nothing
+
+  @CGPCH-B91 @unit-level
+  Scenario: A full sweep names the catalog gates missing over the declared layers
+    Given a project whose layers two undeclared catalog gates cover
+    When the catalog line is printed
+    Then it names both and points to the doctor
+    And with every applicable gate declared it prints nothing

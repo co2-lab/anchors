@@ -2213,10 +2213,10 @@ func TestCheckSaysHowManyJudgmentsItQueued(t *testing.T) {
 func TestCheckWithoutGovernanceTipsPrintsNoPointer(t *testing.T) {
 	t.Run("CGPCH-B74: With no governance tip the full sweep prints neither a tip nor the pointer to the doctor", func(t *testing.T) {})
 	englishOutput(t)
-	// a project of specs only: no code, no test, nothing the tips ask about
-	yaml := "version: 2\nlayers:\n  spec:\n    kind: spec\n    pattern: \"*.spec.md\"\ngates:\n  - name: spec-ok\n    on: [spec]\n    run: \"true\"\n"
+	// a project of a kind no catalog gate covers: no code, no test, nothing the tips ask about
+	yaml := "version: 2\nlayers:\n  notes:\n    kind: note\n    pattern: \"*.spec.md\"\ngates:\n  - name: spec-ok\n    on: [note]\n    run: \"true\"\n"
 	dir := qProject(t, yaml, map[string]string{"a.spec.md": "# A\n"},
-		&mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec}}})
+		&mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: "note"}}})
 	out, err := runQ(t, newCheckCmd(), "--root", dir, "--all", "--no-record")
 	if err != nil {
 		t.Fatal(err)
@@ -2779,5 +2779,23 @@ func TestPrintReviewsDue_countsTheScope(t *testing.T) {
 	}
 	if out := captureStdout(t, func() { printReviewsDue(&config.Config{}, g, t.TempDir(), g.Nodes) }); strings.TrimSpace(out) != "" {
 		t.Errorf("nothing due prints nothing:\n%s", out)
+	}
+}
+
+func TestPrintCatalogUndeclared(t *testing.T) {
+	t.Run("CGPCH-B91: A full sweep names the catalog gates missing over the declared layers", func(t *testing.T) {})
+	englishOutput(t)
+	prev := config.SetGateCatalog(func() []config.Gate {
+		return []config.Gate{{Name: "feature-test-match", On: []string{"feature"}}, {Name: "scenario-identity", On: []string{"feature"}}}
+	})
+	t.Cleanup(func() { config.SetGateCatalog(prev) })
+	cfg := &config.Config{Layers: map[string]config.Layer{"feature": {Kind: "feature"}}}
+	out := captureStdout(t, func() { printCatalogUndeclared(cfg) })
+	if !strings.Contains(out, "feature-test-match") || !strings.Contains(out, "anchors doctor") {
+		t.Errorf("the line names the missing gates and points to the doctor:\n%s", out)
+	}
+	none := &config.Config{Layers: map[string]config.Layer{"notes": {Kind: "note"}}}
+	if out := captureStdout(t, func() { printCatalogUndeclared(none) }); strings.TrimSpace(out) != "" {
+		t.Errorf("nothing missing prints nothing:\n%s", out)
 	}
 }

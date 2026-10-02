@@ -184,7 +184,7 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta,
 		// Projeto novo (sem código nem artefato no disco) nasce com os gates
 		// BLOQUEANTES — ver DefaultGates para o porquê da distinção.
 		novo := len(p.CodeDirs) == 0 && !p.HasSpecMD && !p.HasFeature && !p.HasTest
-		cfg.Gates = initx.DefaultGates(artefatos, novo)
+		cfg.Gates = initx.SeedFor(cfg, initx.DefaultGates(artefatos, novo), artefatos)
 	}
 	colocado, _ := valor("colocation").(bool)
 	initx.ApplyColocation(cfg, colocado, artefatos, p.TestTemplate())

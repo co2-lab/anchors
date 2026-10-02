@@ -168,3 +168,17 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     Given the default gates of a project with specs and code
     When rule-fulfilled is inspected
     Then it measures by judgment and declares a review with its own question
+
+  @DFGTD-B20 @unit-level
+  Scenario: The catalog carries the checkers that measure the unit's kinds
+    Given every artifact chosen
+    When the default gates are listed
+    Then evidence-fresh, feature-test-match, rule-implemented, scenario-identity, scenario-letter-declared, placeholder-filled and updated-at-atual are among them
+    And scenario-letter-declared presupposes rule_types, and route-declared is scoped by the screen tag
+
+  @DFGTD-B21 @unit-level
+  Scenario: Init seeds what relates to the project and has its premise
+    Given a project with spec, feature and test layers and no rule_types, that chose code with no code layer yet
+    When the default gates are filtered for it
+    Then feature-test-match and the security gates over code are seeded
+    And scenario-letter-declared, presupposing rule_types, and route-declared, scoped by the screen tag, are not

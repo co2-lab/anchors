@@ -409,3 +409,10 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     When their review questions are asked
     Then the first asks "look again", the second asks its gate's ask, and the third has none
     And an entry with no review takes the canonical gate's
+    And a judgment gate is described by the first sentence of its question, any other by what it measures
+
+  @CNFGO-B60 @unit-level
+  Scenario: A gate relates to the declared layers, and the catalog names what is missing
+    Given a project with a spec layer and a code layer tagged backend, declaring the gate a-spec-gate
+    When the catalog holds a-spec-gate, b-code-gate, c-test-gate and d-screen-gate scoped by the screen tag
+    Then b-code-gate relates and is undeclared, a-spec-gate relates and is declared, and c-test-gate and d-screen-gate do not relate

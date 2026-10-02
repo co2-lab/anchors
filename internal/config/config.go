@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 
@@ -1145,6 +1146,19 @@ type Review struct {
 	Ask string `yaml:"ask,omitempty"`
 }
 
+// Describe is what the gate measures, in a sentence: its `measures`, or, for a judgment
+// gate — whose `measures` is the word `judgment` —, the first sentence of its question.
+func (g Gate) Describe() string {
+	if g.Measures != MeasuresJudgment || g.Ask == "" {
+		return g.Measures
+	}
+	s := g.Ask
+	if i := strings.Index(s, ". "); i > 0 {
+		s = s[:i+1]
+	}
+	return s
+}
+
 // ReviewAsk is the question a reviewer of this gate's targets answers.
 func (g Gate) ReviewAsk() string {
 	switch {
@@ -1764,6 +1778,67 @@ var canonicalGate func(name string) (Gate, bool)
 
 // SetCanonicalGateResolver registra a fonte das declarações canônicas de gate.
 func SetCanonicalGateResolver(f func(name string) (Gate, bool)) { canonicalGate = f }
+
+// gateCatalog lists every canonical gate; injected by the package that owns the catalog,
+// for the same reason as canonicalGate.
+var gateCatalog func() []Gate
+
+// SetGateCatalog registers the list of canonical gates, and returns the one it replaces.
+func SetGateCatalog(f func() []Gate) (previous func() []Gate) {
+	previous, gateCatalog = gateCatalog, f
+	return previous
+}
+
+// Relates says whether a gate has to do with the layers this project declares: a layer of
+// a kind the gate measures and, for a gate scoped by tags, a layer carrying one of them.
+// It is the one test of "related" — init seeds by it, and the doctor and the check name
+// by it the catalog gates a project is missing.
+func (c *Config) Relates(g Gate) bool {
+	if c == nil {
+		return false
+	}
+	for _, l := range c.Layers {
+		if !slices.Contains(g.On, l.Kind) {
+			continue
+		}
+		if len(g.Tags) == 0 {
+			return true
+		}
+		for _, t := range g.Tags {
+			if slices.Contains(l.Tags, t) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// declaresGate says whether the project declares the gate, by its name or by the checker
+// it runs: a project that names `scenario-coverage` differently still has it.
+func (c *Config) declaresGate(g Gate) bool {
+	for _, d := range c.Gates {
+		if d.Name == g.Name || (g.Check != "" && d.Check == g.Check) {
+			return true
+		}
+	}
+	return false
+}
+
+// ApplicableUndeclared are the catalog gates that relate to the project's layers and that
+// the project does not declare, in catalog order. Each still says what it presupposes, so
+// whoever lists them can name the field a gate needs before it measures anything.
+func (c *Config) ApplicableUndeclared() []Gate {
+	if c == nil || gateCatalog == nil {
+		return nil
+	}
+	var out []Gate
+	for _, g := range gateCatalog() {
+		if c.Relates(g) && !c.declaresGate(g) {
+			out = append(out, g)
+		}
+	}
+	return out
+}
 
 // Load lê o anchors.yaml da raiz do projeto.
 func Load(path string) (*Config, error) {

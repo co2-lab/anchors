@@ -4,6 +4,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"strings"
 )
 
 // checkGovernanceOpportunities identifica oportunidades de governança e configurações
@@ -100,6 +101,25 @@ func checkGovernanceOpportunities(g *mapx.Graph, cfg *config.Config) []Finding {
 				Detail:   i18n.T("health.opportunity.tests_junit"),
 			})
 		}
+	}
+
+	// 6. Every other catalog gate that relates to a declared layer and is not declared: the
+	// four above were the only ones named, and a project whose layers eight more checks
+	// cover never learned they existed (reported from baas-proxy). Each says what it
+	// measures and, when it needs a field first, which.
+	named := map[string]bool{}
+	for _, f := range out {
+		named[f.Subject] = true
+	}
+	for _, gt := range cfg.ApplicableUndeclared() {
+		if named[gt.Name] {
+			continue
+		}
+		detail := i18n.T("health.opportunity.catalog", strings.TrimRight(gt.Describe(), ". "), gt.Name)
+		if len(gt.Presupposes) > 0 {
+			detail += i18n.T("health.opportunity.catalog_presupposes", strings.Join(gt.Presupposes, ", "))
+		}
+		out = append(out, Finding{Check: "sugestao-gate", Severity: Info, Subject: gt.Name, Detail: detail})
 	}
 
 	return out

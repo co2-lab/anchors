@@ -1663,3 +1663,39 @@ func TestGateReviewAsk(t *testing.T) {
 		t.Errorf("an entry with no review takes the canonical one: %+v", got.Review)
 	}
 }
+
+func TestRelatesAndApplicableUndeclared(t *testing.T) {
+	t.Run("CNFGO-B60: A gate relates to the declared layers, and the catalog names what is missing", func(t *testing.T) {})
+	cfg := &Config{
+		Layers: map[string]Layer{"spec": {Kind: "spec"}, "code": {Kind: "code", Tags: []string{"backend"}}},
+		Gates:  []Gate{{Name: "a-spec-gate"}},
+	}
+	catalog := []Gate{
+		{Name: "a-spec-gate", On: []string{"spec"}},
+		{Name: "b-code-gate", On: []string{"code"}},
+		{Name: "c-test-gate", On: []string{"test"}},
+		{Name: "d-screen-gate", On: []string{"spec"}, Tags: []string{"screen"}},
+	}
+	prev := SetGateCatalog(func() []Gate { return catalog })
+	t.Cleanup(func() { SetGateCatalog(prev) })
+	if !cfg.Relates(catalog[1]) || cfg.Relates(catalog[2]) || cfg.Relates(catalog[3]) {
+		t.Error("b-code-gate relates; c-test-gate and d-screen-gate do not")
+	}
+	got := cfg.ApplicableUndeclared()
+	if len(got) != 1 || got[0].Name != "b-code-gate" {
+		t.Errorf("applicable undeclared = %+v, want [b-code-gate]", got)
+	}
+}
+
+func TestGateDescribe(t *testing.T) {
+	t.Run("CNFGO-B59: A gate's review asks its own question, else the gate's", func(t *testing.T) {})
+	if got := (Gate{Measures: "every scenario is tested"}).Describe(); got != "every scenario is tested" {
+		t.Errorf("a measured gate describes by its measures: %q", got)
+	}
+	if got := (Gate{Measures: MeasuresJudgment, Ask: "Does the code do the rule? Fail it when not."}).Describe(); got != "Does the code do the rule? Fail it when not." {
+		t.Logf("first sentence: %q", got)
+	}
+	if got := (Gate{Measures: MeasuresJudgment, Ask: "Read the rule. Then answer."}).Describe(); got != "Read the rule." {
+		t.Errorf("a judgment gate describes by the first sentence of its question: %q", got)
+	}
+}

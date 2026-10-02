@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GVOPG
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @GVOPG
@@ -60,3 +60,10 @@ Feature: GovernanceOpportunities — the doctor suggests the canonical gates and
     Given a map with code and tests, every suggested gate declared with the secret gate blocking, and a suite with JUnit output
     When the opportunities are checked
     Then there is no finding
+
+  @GVOPG-B08 @unit-level
+  Scenario: Every applicable undeclared catalog gate is suggested
+    Given a project with a feature layer and a catalog holding feature-test-match and scenario-letter-declared presupposing rule_types
+    When the governance opportunities are read
+    Then both are suggested as informational, with what they measure and how to declare them
+    And scenario-letter-declared's suggestion names rule_types

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:e41ba49df957f981 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:edb1fbbc2c35a5f6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2319,6 +2319,8 @@ abra a página dela em `camadas/`.
 
 - [CGPCH-B90 — After the table, the check says how many targets of its scope are to review (RVDUR-B01), as a line of its own that informs and never blocks, and says nothing when none is due.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
+- [CGPCH-B91 — A full sweep names, in one line, the catalog gates that cover the declared layers and are not declared, at most six by name, and points to the doctor; with none it says nothing.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
 - [CGPCH-B08 — A gate that declares no perspective to skip runs both on the full sweep and on changed files.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B09 — A gate that declares it skips the change perspective is not charged on changed files and is charged on the full sweep.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
@@ -3051,7 +3053,9 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B58 — `Declares` says whether the configuration holds a non-empty value at a dotted path of anchors.yaml (`derived.mock_detect`); a gate entry with no `presupposes` takes the canonical one, with the question it presupposes for.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
-- [CNFGO-B59 — A gate may declare `review:` apart from how it measures; its review question (`ReviewAsk`) is the review's own `ask`, else the gate's `ask`, else what it `measures`, and a gate with no `review:` has none; an entry with no `review:` takes the canonical one.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+- [CNFGO-B59 — A gate may declare `review:` apart from how it measures; its review question (`ReviewAsk`) is the review's own `ask`, else the gate's `ask`, else what it `measures`, and a gate with no `review:` has none; an entry with no `review:` takes the canonical one. What a gate measures, in a sentence (`Describe`), is its `measures`, or for a judgment gate the first sentence of its question.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -6273,6 +6277,8 @@ abra a página dela em `camadas/`.
 
 - [GVOPG-B07 — `QuickGovernanceHints`: The quick hints are the first two opportunities in order, or all of them when there are fewer.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
+- [GVOPG-B08 — Every catalog gate that relates to a declared layer and that the project does not declare, beyond the ones above, is an informational `sugestao-gate` on it, saying what it measures, how to declare it, and the field it presupposes when it has one.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
+
 - [GVOPG-I01 — Every opportunity is informational: this unit never raises a warning.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
 - [GVOPG-X01 — A gate the project already declares (blocking, for the secret gate) is never suggested again, and a project with JUnit output is not told to add it.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
@@ -6506,6 +6512,10 @@ abra a página dela em `camadas/`.
 - [DFGTD-B18 — The mock gates name the field each one reads: `mock-detect-covers-dialect` and `mock-stamped` presuppose `derived.mock_detect`, `mock-typed` presupposes `derived.mock_contract`; where it is not declared nothing is asked or measured (GTENG-B29), and the doctor names it (DCTRO-B27).](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-B19 — `rule-fulfilled` is judged and also marked to review: the marks it judges were put by the agents who wrote the code, and a second look is a different thing from their judgment.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
+
+- [DFGTD-B20 — The catalog carries the checkers that measure a kind of the unit and had no canonical gate — among them `evidence-fresh`, `feature-test-match`, `rule-implemented`, `scenario-identity`, `scenario-letter-declared`, `placeholder-filled` and `updated-at-atual` — each on the kinds it measures, with the field it presupposes when it needs one, and the UI ones scoped by the `screen` and `component` tags.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
+
+- [DFGTD-B21 — Init seeds (`SeedFor`) the default gates related to the project — a declared layer of a kind they measure, with their tags, or a kind the project chose and has no layer of yet — whose presupposed fields the configuration declares; a gate over an undeclared field is not seeded.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-I01 — The list of seeded gates, and its order, does not change with the age of the project; only the maturation state does.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 

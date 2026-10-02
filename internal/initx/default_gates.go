@@ -895,6 +895,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Blocking: config.Bool(false), Measures: "the guide has the conformance-points section (CKn)",
 		})
 	}
+	gates = append(gates, catalogChecks(chosen, projetoNovo)...)
 	if projetoNovo {
 		for i := range gates {
 			if !dependOnIngestedSignal[gates[i].Name] {
@@ -903,6 +904,110 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		}
 	}
 	return gates
+}
+
+// SeedFor is what init seeds of the default gates: the gates related to the project —
+// a declared layer of a kind they measure (with their tags, when tag-scoped), or a kind the
+// project chose and has no layer of yet, as a new project's code — whose presupposed
+// fields the configuration declares. A gate over a field nobody declared would be born
+// pending everywhere; the doctor names it instead, with the field (reported from
+// baas-proxy).
+func SeedFor(cfg *config.Config, gates []config.Gate, chosen map[string]bool) []config.Gate {
+	var out []config.Gate
+	for _, g := range gates {
+		related := cfg.Relates(g)
+		if !related && len(g.Tags) == 0 {
+			for _, k := range g.On {
+				if chosen[k] {
+					related = true
+				}
+			}
+		}
+		if !related {
+			continue
+		}
+		presupposed := true
+		for _, p := range g.Presupposes {
+			if !cfg.Declares(p) {
+				presupposed = false
+			}
+		}
+		if presupposed {
+			out = append(out, g)
+		}
+	}
+	return out
+}
+
+// catalogChecks are the checkers that measure a kind of the unit and had no canonical
+// gate: init never seeded them, and a project whose layers they cover never learned they
+// existed (reported from baas-proxy: eight of them missing over spec, feature, code and
+// test). Each says the kind it measures, and what it presupposes when it needs a field to
+// measure anything — so init seeds it only where that field is declared, and the doctor
+// names the field where it is not.
+//
+// The UI-only ones are scoped by tag (`screen`, `component`): they relate only to a
+// project whose layers carry those tags. Two checkers stay out: `test-level-codes` is
+// declared on its own gate entry (`levels`), and `trigger-declared` reads obligations or
+// packs — both opt-in by design.
+func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
+	var out []config.Gate
+	add := func(kind string, g config.Gate) {
+		if !chosen[kind] {
+			return
+		}
+		g.ID = g.Name
+		if g.Check == "" {
+			g.Check = g.Name
+		}
+		if g.Blocking == nil {
+			g.Blocking = config.Bool(false)
+		}
+		out = append(out, g)
+	}
+	ui := []string{"screen", "component"}
+	add("test", config.Gate{Name: "evidence-fresh", On: []string{"test"},
+		Measures: "the test's last green run still holds: neither the test nor any file in its closure changed since it ran"})
+	if chosen["test"] {
+		add("feature", config.Gate{Name: "feature-test-match", On: []string{"feature"},
+			Measures: "every scenario of the feature is implemented in the linked test, by code and by description"})
+	}
+	add("feature", config.Gate{Name: "scenario-identity", On: []string{"feature"},
+		Measures: "each scenario code identifies one scenario: no code repeated and no body copied under another title"})
+	add("feature", config.Gate{Name: "scenario-letter-declared", On: []string{"feature"},
+		Presupposes: []string{"rule_types"},
+		Measures:    "every scenario code's letter is a letter declared in `rule_types`"})
+	add("feature", config.Gate{Name: "scenario-type-aligned", On: []string{"feature"},
+		Presupposes: []string{"rule_types"},
+		Measures:    "a scenario's nature tag agrees with the letter of its code"})
+	add("feature", config.Gate{Name: "vr-baseline", On: []string{"feature"}, Tags: ui,
+		Measures: "every visual-regression scenario has its baseline image"})
+	add("spec", config.Gate{Name: "placeholder-filled", On: []string{"spec", "feature"},
+		Measures: "no generator placeholder remains in a value position: header field, table cell, rule or title line"})
+	if chosen["code"] {
+		add("spec", config.Gate{Name: "rule-implemented", On: []string{"spec"},
+			Measures: "every rule the spec catalogs is marked in its code target, unless waived on its line with `@no-mark: <reason>`"})
+	}
+	add("spec", config.Gate{Name: "identity-consistent", On: []string{"spec"}, Presupposes: []string{"derived.test_handle"},
+		Measures: "the spec's code is the only identity across its surfaces: testID prefixes and visual baselines"})
+	add("spec", config.Gate{Name: "testid-consistent", On: []string{"spec"}, Presupposes: []string{"derived.test_handle"},
+		Measures: "the spec's testID inventory, the IDs the code exposes, and the tests that query them agree"})
+	add("spec", config.Gate{Name: "route-declared", On: []string{"spec"}, Tags: []string{"screen"},
+		Measures: "a screen spec declares its route and names its neighbour screens"})
+	add("spec", config.Gate{Name: "route-exists", On: []string{"spec"}, Tags: []string{"screen"}, Presupposes: []string{"route_registry"},
+		Measures: "the route the spec declares is registered where the app registers its routes"})
+	add("test", config.Gate{Name: "testid-queried-exists", On: []string{"test"}, Scope: config.ScopeProject,
+		Presupposes: []string{"derived.test_handle"},
+		Measures:    "every handle an end-to-end flow queries is exposed somewhere in the code"})
+	add("code", config.Gate{Name: "region-pair-honored", On: []string{"code", "test"},
+		Measures: "every `#region [CODE]` closes, and closes with its own code"})
+	add("code", config.Gate{Name: "value-anchored", On: []string{"code"}, Presupposes: []string{"derived.value_anchor"},
+		Measures: "each declared value anchor matches the code below it, its spec rule's value, and every other declaration of the same key"})
+	add("code", config.Gate{Name: "updated-at-atual", On: []string{"spec", "feature", "code", "test"},
+		Measures: "the header's `updated_at` is the day of the file's last commit"})
+	add("plan", config.Gate{Name: "progress-honest", On: []string{"plan"},
+		Measures: "the plan's progress file tells the truth about the disk"})
+	return out
 }
 
 // CanonicalGate devolve a declaração canônica de um gate pelo nome, se existir.
@@ -937,7 +1042,10 @@ func canonicalCatalog() []config.Gate {
 // qualquer setup. Um comando que esquecesse de registrar leria a config sem o merge e se
 // comportaria diferente dos outros, que é o tipo de divergência silenciosa que o merge
 // existe para eliminar.
-func init() { config.SetCanonicalGateResolver(CanonicalGate) }
+func init() {
+	config.SetCanonicalGateResolver(CanonicalGate)
+	config.SetGateCatalog(canonicalCatalog)
+}
 
 // init liga a lista de nomes de gate ao pacote `config`, para o teste que confronta o
 // de-para do vocabulário antigo contra os gates que existem de verdade.

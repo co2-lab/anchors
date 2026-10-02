@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a2dd931a7813cf35 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f5b2df926b75b972 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2270,6 +2270,8 @@ teste prova.
 
 - [The check says how many targets of its scope are to review](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B90`
 
+- [A full sweep names the catalog gates missing over the declared layers](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B91`
+
 - [The scenarios of one spec are listed as proven or not](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 
 - [A code another unit owns, cited in prose, is not a declared scenario](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B02`
@@ -2857,6 +2859,8 @@ teste prova.
 - [A field is declared when its path holds a value](layers/config.md#cnfgo-b58--a-field-is-declared-when-its-path-holds-a-value) `CNFGO-B58`
 
 - [A gate's review asks its own question, else the gate's](layers/config.md#cnfgo-b59--a-gates-review-asks-its-own-question-else-the-gates) `CNFGO-B59`
+
+- [A gate relates to the declared layers, and the catalog names what is missing](layers/config.md#cnfgo-b60--a-gate-relates-to-the-declared-layers-and-the-catalog-names-what-is-missing) `CNFGO-B60`
 
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
@@ -5690,6 +5694,8 @@ teste prova.
 
 - [What the project already adopted is not suggested](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-X01`
 
+- [Every applicable undeclared catalog gate is suggested](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B08`
+
 - [The report is sorted by check then subject, and counts the map](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B01`
 
 - [Warnings keeps only the warnings](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B02`
@@ -5907,6 +5913,10 @@ teste prova.
 - [The mock dialect judgment presupposes the pattern it asks about](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B18`
 
 - [rule-fulfilled is judged and marked to review](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B19`
+
+- [The catalog carries the checkers that measure the unit's kinds](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B20`
+
+- [Init seeds what relates to the project and has its premise](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B21`
 
 - [The local board page is the published page](layers/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B01`
 

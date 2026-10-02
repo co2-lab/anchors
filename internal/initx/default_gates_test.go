@@ -574,3 +574,42 @@ func TestRuleFulfilledIsJudgedAndReviewed(t *testing.T) {
 	}
 	t.Fatal("rule-fulfilled is not among the default gates")
 }
+
+func TestCatalogCarriesTheUnitCheckers(t *testing.T) {
+	t.Run("DFGTD-B20: The catalog carries the checkers that measure the unit's kinds", func(t *testing.T) {})
+	byName := map[string]config.Gate{}
+	for _, g := range DefaultGates(allArtifacts(), false) {
+		byName[g.Name] = g
+	}
+	for _, want := range []string{"evidence-fresh", "feature-test-match", "rule-implemented", "scenario-identity", "scenario-letter-declared", "placeholder-filled", "updated-at-atual"} {
+		if _, ok := byName[want]; !ok {
+			t.Errorf("%s is not in the catalog", want)
+		}
+	}
+	if g := byName["scenario-letter-declared"]; len(g.Presupposes) != 1 || g.Presupposes[0] != "rule_types" {
+		t.Errorf("scenario-letter-declared presupposes %v", g.Presupposes)
+	}
+	if g := byName["route-declared"]; len(g.Tags) != 1 || g.Tags[0] != "screen" {
+		t.Errorf("route-declared tags %v", g.Tags)
+	}
+}
+
+func TestSeedForRelatesAndPresupposes(t *testing.T) {
+	t.Run("DFGTD-B21: Init seeds what relates to the project and has its premise", func(t *testing.T) {})
+	chosen := map[string]bool{"spec": true, "feature": true, "test": true, "code": true}
+	cfg := &config.Config{Layers: map[string]config.Layer{"spec": {Kind: "spec"}, "feature": {Kind: "feature"}, "test": {Kind: "test"}}}
+	seeded := map[string]bool{}
+	for _, g := range SeedFor(cfg, DefaultGates(chosen, false), chosen) {
+		seeded[g.Name] = true
+	}
+	for _, want := range []string{"feature-test-match", "no-secret-leaked"} {
+		if !seeded[want] {
+			t.Errorf("%s should be seeded", want)
+		}
+	}
+	for _, not := range []string{"scenario-letter-declared", "route-declared"} {
+		if seeded[not] {
+			t.Errorf("%s should not be seeded", not)
+		}
+	}
+}

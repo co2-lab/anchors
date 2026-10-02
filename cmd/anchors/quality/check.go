@@ -343,6 +343,9 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 				}
 				fmt.Printf("  %s\n", i18n.T("check.doctor_learn_more"))
 			}
+			if all {
+				printCatalogUndeclared(cfg)
+			}
 
 			if !profile.Passed {
 				// `os.Exit` não roda os `defer`: sem fechar aqui, o espelho perderia
@@ -374,6 +377,25 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 	cmd.Flags().BoolVar(&showDrift, "show-drift", false, "lists ALL the pending items (⚠) with the address of each one; without the flag, only the table counter")
 	cmd.Flags().BoolVar(&showTiming, "timing", false, "measures how long each gate took, and names the slowest targets — to find what makes a scan expensive")
 	return cmd
+}
+
+// printCatalogUndeclared says, in one line, which catalog gates cover the project's
+// declared layers without being declared — the doctor says what each measures.
+func printCatalogUndeclared(cfg *config.Config) {
+	gs := cfg.ApplicableUndeclared()
+	if len(gs) == 0 {
+		return
+	}
+	names := make([]string, 0, len(gs))
+	for i, g := range gs {
+		if i == 6 {
+			names = append(names, "…")
+			break
+		}
+		names = append(names, g.Name)
+	}
+	fmt.Println()
+	fmt.Println(i18n.T("check.catalog_undeclared", len(gs), strings.Join(names, ", ")))
 }
 
 // printReviewsDue says how many targets of this check's scope are to review, apart from
