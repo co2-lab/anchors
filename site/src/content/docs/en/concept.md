@@ -1,6 +1,39 @@
 ---
 title: Concept
+description: "The essential Anchors guide — what an anchor is, how the framework solves AI amnesia, and how core concepts connect."
 ---
+
+If you are new to **Anchors**, welcome!
+
+**Anchors** is a framework designed to solve the biggest challenge of software development with artificial intelligence: **structural amnesia**. AI is remarkable at generating code in the moment, but loses context between sessions, drifts away from architectural patterns, and quietly breaks business rules.
+
+Anchors solves this by driving **[Anchors](/docs/concepts/anchor/)** into your repository — artifacts that point the route forward, hold the safety rope through automated [gates](/docs/concepts/gates-and-verdicts/) to prevent regressions, and mark the entire history with end-to-end traceability.
+
+---
+
+## 🗺️ Core Concepts Quick Map
+
+Every central concept in Anchors has its own dedicated page, written to be clear, direct, and accessible:
+
+| Concept | What you will learn | Where to read |
+| :--- | :--- | :--- |
+| **What is an Anchor?** | The climbing metaphor: how anchors point, hold the safepoint, and mark the trail. | [Read about Anchors](/docs/concepts/anchor/) |
+| **The Unit** | The indivisible unit: Spec + Feature + Test + Code working in synchrony. | [Read about The Unit](/docs/concepts/unit/) |
+| **The Graph & Map** | How Anchors maps all project connections into `anchors.graph.yaml`. | [Read about the Graph](/docs/concepts/graph-and-map/) |
+| **Layers & Regimes** | The house blueprint: Governed Layers (business) vs. Recognized Layers (infra/types). | [Read about Layers](/docs/layers/) |
+| **Gates & Verdicts** | Automated quality checkers (`OK`, `FAIL`, `WARN`, `SKIP`) and Advisory vs. Blocking. | [Read about Gates](/docs/concepts/gates-and-verdicts/) |
+| **Traceability & Codes** | How short codes like `AUTH-B01` connect specs to source code without brittle paths. | [Read about Traceability](/docs/concepts/traceability-and-codes/) |
+| **Propagation & Impact** | The change wave: how Anchors detects what became stale when an anchor moves. | [Read about Propagation](/docs/concepts/propagation-and-impact/) |
+| **Product Doctrine** | Enforcing cross-cutting business rules across multiple screens with `@realizes`. | [Read about Doctrine](/docs/concepts/doctrine/) |
+| **Feature Flags** | Governing conditional scenarios and flags without duplicating specs via `@gated-by`. | [Read about Feature Flags](/docs/concepts/feature-flags/) |
+| **AI Judgment** | Semantic AI-judged quality gates evaluated and recorded via `anchors judge`. | [Read about AI Judgment](/docs/concepts/ai-judgment/) |
+| **Maturity & Health** | The `anchors doctor` audit and the roadmap to turn a fragile project into a fortress. | [Read about Maturity](/docs/concepts/maturity-and-health/) |
+
+---
+
+## 1. The Complete Theory
+
+> The following sections present the rigorous architectural formulation of Anchors, detailing the mathematical and structural foundations common to all pillars.
 
 > **Anchors** is a continuity framework for AI-assisted development.
 > This document defines the **concept**: what an anchor is, how anchors
@@ -65,30 +98,30 @@ pillar is a specialized application of that mechanism.
 
 Pillars named so far, in route order (from origin to finish):
 
-- **Project Structure** — [`STRUCTURE.md`](/en/docs/estrutura/). The blueprint
+- **Project Structure** — [`STRUCTURE.md`](/docs/structure/). The blueprint
   of the house: defines which layers exist, their order/dependency, and
   where each anchor lives. It's the template on which the other pillars
   operate — the meta-level that declares the layers before any spec fills
   them.
-- **Planning** — [`PLANNING.md`](/en/docs/planejamento/). The origin of
+- **Planning** — [`PLANNING.md`](/docs/planning/). The origin of
   *movement*: seeds the starting specs (never code), is the input of the
   flow and carries the compass between sessions (where we're going, in
   what order, where we stopped). Without it, the project reacts but
   doesn't advance with direction.
-- **Spec** — [`SPEC.md`](/en/docs/spec/). The origin of *truth*: the
+- **Spec** — [`SPEC.md`](/docs/spec/). The origin of *truth*: the
   base-anchor, the safepoint from which everything hangs. The spec-first
   discipline ties the other pillars together — it's the wellspring of
   Traceability, the pivot of Propagation, and the ruler of Quality.
-- **Traceability** — [`TRACEABILITY.md`](/en/docs/rastreabilidade/). The glue,
+- **Traceability** — [`TRACEABILITY.md`](/docs/traceability/). The glue,
   in two halves: gives each requirement a continuous identity across its
   forms (spec → feature → test → code) and maintains the dependency map
   between files, ensuring no piece becomes an island. It's the soil the
   other pillars take root in.
-- **Propagation** — [`PROPAGATION.md`](/en/docs/propagacao/). The engine:
+- **Propagation** — [`PROPAGATION.md`](/docs/propagation/). The engine:
   makes a change at one point run through the organism via Traceability,
   marking what became stale, until everything is coherent again. It's the
   propagation of changes that makes development advance.
-- **Quality** — [`QUALITY.md`](/en/docs/qualidade/). Without *measured*
+- **Quality** — [`QUALITY.md`](/docs/quality/). Without *measured*
   quality, "well done" is a feeling that doesn't survive between sessions.
   Defines gates that measure whether the work reached a threshold, and how
   those gates compose maturity.
@@ -327,7 +360,7 @@ changed, or the target changed, or the edge was never validated.
 Detecting staleness without revalidating the entire project, and making a
 change run through the graph until everything is coherent again, is the
 system's **dynamic** — and it is its own pillar: **Propagation**, specified
-in [`PROPAGATION.md`](/en/docs/propagacao/).
+in [`PROPAGATION.md`](/docs/propagation/).
 
 Here it's enough to retain the structure: **the synchrony stamp lives on
 the edge** (not the node), because "being up to date" is a property of a

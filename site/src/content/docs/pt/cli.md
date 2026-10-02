@@ -1,304 +1,54 @@
 ---
-title: O CLI
-description: A referência de todos os comandos, agrupados pelo que você está tentando fazer.
+title: "O CLI do Anchors"
+description: "A ferramenta de linha de comando oficial para pair programming com IA e governança contínua spec-first."
 ---
 
-CLI único do framework Anchors, em Go. É a ferramenta que uma IA opera para
-exercitar o ciclo — a IA não precisa saber o Anchors de cor, ela pergunta ao
-binário (`anchors guide`), aprende o fluxo, e opera com os comandos.
+O **CLI do Anchors** (`anchors`) é um binário rápido e estático escrito em Go que sustenta a governança contínua de software desenvolvido com inteligência artificial.
 
-O Anchors **não embute IA**: ele é a ferramenta que a IA usa, em qualquer
-cliente.
-
-O CLI só lê **texto** — nunca parseia código. As anotações que ele entende vivem
-em comentários, e os marcadores por linguagem são configuráveis. É assim que ele
-é agnóstico de stack.
-
-## Instalação
-
-```sh
-brew install co2-lab/tap/anchors
-```
-
-Ou compilando:
-
-```sh
-git clone https://github.com/co2-lab/anchors.git
-cd anchors/cli && go install ./cmd/anchors
-anchors --help
-```
-
-## Os primeiros cinco minutos
-
-```sh
-anchors init            # configura o anchors.yaml, por perguntas e respostas
-anchors install-hooks   # instala os hooks de pre-commit e pre-push
-anchors map build       # constrói o mapa a partir dos arquivos
-anchors status          # onde o projeto está, e o próximo passo
-```
-
-O `status` é o comando a rodar quando você não sabe o que fazer. Ele responde
-onde o projeto está no ciclo e **qual é o próximo passo** — não é um relatório,
-é uma instrução.
+Em vez de embutir IA dentro da ferramenta, o Anchors foi desenhado como **a ferramenta que os agentes de IA operam**:
+- A IA não precisa decorar o framework: ela consulta o binário (`anchors guide`), entende a rota e opera através dos comandos.
+- Totalmente agnóstico ao cliente: funciona com Claude Code, Cursor, Windsurf, Copilot, Gemini CLI ou desenvolvedores humanos no terminal.
+- Opera estritamente sobre texto e contratos de arquivos — sem servidores ocultos ou dependências pesadas.
 
 ---
 
-## Começar um projeto
+## 🚀 Navegação Rápida
 
-| comando | o que faz |
-| --- | --- |
-| `anchors init` | gera o `anchors.yaml` por P&R, sugerindo preset conforme a stack |
-| `anchors install-hooks` | instala o `pre-commit`, o `commit-msg` e o `pre-push` |
-| `anchors map build` | constrói o `anchors.graph.yaml` a partir dos arquivos |
+- [**Guia de Instalação**](/pt/docs/cli/installation/) — Instale via Homebrew, script shell, Go, Windows, Docker e CI/CD.
+- [**Referência de Comandos**](/pt/docs/cli/commands/) — Índice completo e pesquisável dos 55 comandos do CLI.
+- [**O fluxo de trabalho**](/pt/docs/workflow/) — Como operar o ciclo no dia a dia, da spec ao merge seguro.
+- [**O anchors.yaml**](/pt/docs/anchors-yaml/) — O arquivo central de configuração do seu projeto.
 
-O `init` tem modo não-interativo, para script e CI:
+---
 
-```sh
-anchors init --non-interactive                              # devolve as decisões em JSON
-anchors init --non-interactive --artifacts=spec,test --colocation
+## 🛠️ Comandos Essenciais
+
+```bash
+# 1. Inicializa um novo projeto ou configura uma base existente
+anchors init
+
+# 2. Diagnostica a saúde e maturidade estrutural do repositório
+anchors doctor
+
+# 3. Constrói e consulta o grafo de dependências
+anchors map build
+anchors impact src/services/auth/login.spec.md
+
+# 4. Executa os gates de qualidade contra o stage ou projeto inteiro
+anchors check
+anchors check --all
+
+# 5. Inicia o monitor de tarefas em background para IAs
+anchors watch
 ```
 
 ---
 
-## Saber onde você está
+## 🧭 Guias Detalhados de Comandos
 
-| comando | responde |
-| --- | --- |
-| `anchors status` | onde o projeto está no ciclo, e o próximo passo |
-| `anchors doctor` | o raio-X: órfãos, colisões, sinais ausentes, buracos |
-| `anchors coverage` | cobertura por cenário, por linha, e mutação |
-| `anchors stale` | o que mudou e ainda não foi reconfrontado |
-| `anchors impact <arquivo>` | o que uma alteração aqui atinge |
-| `anchors governs` | quem cada guia rege, e quantos |
-| `anchors compliance` | o estado de cada dever regulatório |
-
-O `doctor` é o que dizer para alguém que herdou o projeto. Ele não mede
-qualidade de código — mede se o **ecossistema** está saudável: spec sem código,
-código sem spec, sinal que ninguém ingeriu, gate declarado que não protege nada.
-
----
-
-## Escrever
-
-| comando | o que faz |
-| --- | --- |
-| `anchors guide <artefato>` | a régua de como escrever (spec, code, feature, test, plan, review, work) |
-| `anchors new <kind> <nome>` | emite o esqueleto conforme a régua |
-| `anchors code` | gera um código de identidade único |
-| `anchors recode <de> <para>` | renomeia um código e propaga por todo o projeto |
-| `anchors renumber [specs...]` | no rebase, renumera as revisões (`-R000N`) que o branch adicionou e que colidem com a base |
-| `anchors work <etapa> --for <alvo>` | emite o prompt de trabalho de uma etapa |
-
-Os guias são a documentação **executável**: em vez de a IA decorar o Anchors,
-ela pergunta.
-
-```sh
-anchors guide work      # a régua de quem pegou um card
-anchors guide spec      # como escrever uma spec
-anchors guide review    # a régua de quem revisa um PR
-```
-
----
-
-## Confrontar
-
-| comando | o que faz |
-| --- | --- |
-| `anchors check --changed <arq>` | roda os gates sobre o que mudou |
-| `anchors check --all` | roda sobre o projeto inteiro |
-| `anchors verify --phase <fase>` | roda TUDO o que a fase cobra (gates + ferramentas externas) |
-| `anchors audit <arquivo>` | o dossiê de pendências de um arquivo, para correção em lote |
-| `anchors judge <alvo> --gate <g>` | registra o veredito de um gate de julgamento |
-| `anchors suggest` | lista, aplica e decide as correções propostas |
-
-### `--changed` vs `--all`
-
-O `--changed` entrega o **raio de impacto**: o arquivo e tudo que depende dele.
-É o certo para quase todo gate — quem quebrou por tabela precisa ser
-confrontado.
-
-O `--all` é a foto do projeto inteiro, e é o que o CI roda.
-
-### `--no-record`
-
-Roda os gates **sem** gravar no mapa. É o que o CI usa: ele confronta, mas não
-deve produzir um mapa diferente do que foi commitado.
-
----
-
-## Os sinais de teste
-
-| comando | o que faz |
-| --- | --- |
-| `anchors test` | roda as suítes declaradas e ingere os relatórios |
-| `anchors mutation` | roda as suítes de mutação e ingere os relatórios |
-| `anchors ingest --junit <x> --lcov <y>` | ingere relatórios que o projeto já gerou |
-
-**Prefira `anchors test` a `anchors ingest`.** Os dois numa operação só é o que
-garante que o mapa reflete o que **acabou de rodar** — ingerir à mão pode amarrar
-ao mapa o resultado de uma execução anterior, e nada acusaria.
-
-O Anchors não roda mutação nem conhece ferramenta: ele consome o formato aberto
-**Mutation Testing Elements** (`schemaVersion 1.x`), que Stryker, PIT, Infection
-e mutmut emitem.
-
-### Quais arquivos uma rodada pega
-
-Por padrão, `anchors test` e `anchors mutation` rodam só os arquivos cujo último resultado está
-**defasado e abaixo do mínimo**, mais os nunca medidos: o que é conhecido e atual é pulado, e a
-rodada do dia a dia fica leve. Cada flag abre um lado do quadrado:
-
-| | atual | defasado |
-| --- | --- | --- |
-| **passando** | `--include-fresh --include-passing` | `--include-passing` |
-| **abaixo do mínimo** | `--include-fresh` | roda por padrão |
-
-`--skip-unmeasured` deixa de fora os nunca medidos; `--all` roda tudo pelo `run:` da suíte. Um
-arquivo de teste está defasado quando ele ou o código que ele exercita mudou; um resultado de
-mutação medido sob carga conta como defasado. Uma suíte sem `run_changed:` não roda um recorte e
-roda inteira. `--budget` vale sobre os arquivos selecionados.
-
-Num monorepo, cada suíte diz quais arquivos são dela com `paths:` (globs a partir da raiz), e um
-arquivo fora deles nunca é entregue a ela — nem pela seleção, nem pelo `--budget`, nem pelo
-`--changed`:
-
-```yaml
-mutation:
-  - workspace: mobile
-    layer: unit
-    run: "bash scripts/mutation.sh mobile"
-    run_changed: "bash scripts/mutation.sh mobile {{files}}"
-    paths: ["apps/mobile/**"]
-```
-
-`{{files}}` recebe caminhos **absolutos**, com barras normais; `{{target}}` recebe o que foi
-passado em `--target`, como veio.
-
-### `--budget`: o máximo que cabe num tempo
-
-`anchors test --budget 60s` e `anchors mutation --budget 10m` rodam os arquivos **do mais
-rápido para o mais lento**, em lotes pelo `run_changed:` da suíte, até o tempo acabar; o que
-não coube fica para uma próxima rodada — um smoke do que cabe. O lote que ainda roda quando o
-tempo acaba é parado inteiro, com os processos que ele criou.
-
-A ordem vem dos tempos que as rodadas anteriores gravaram no mapa, por suíte: o de um arquivo
-de teste vem dos casos do JUnit; o de um arquivo de código, do Anchors cronometrando a mutação
-dele — por isso a mutação com orçamento roda um arquivo por vez. Arquivo que nunca foi
-cronometrado vai por último, e a rodada dele é que grava o tempo.
-
-**Cortar um lote.** Quando o tempo acaba, o grupo de processos do lote em curso recebe um
-`TERM`, e o que ainda estiver rodando 10 segundos depois recebe um `KILL`. Uma ferramenta de
-mutação que trabalha **no lugar** (reescreve o código e o restaura no fim, como o Stryker com
-`inPlace`) precisa restaurar o arquivo no `TERM` — capture-o no script do `run_changed:` se a
-ferramenta não o fizer — ou um lote cortado deixa código mutado na árvore. No Windows não há
-`TERM`: o lote é morto na hora, e uma ferramenta no lugar pode ser cortada no meio de um mutante.
-
----
-
-## O trabalho (modo GitHub)
-
-| comando | o que faz |
-| --- | --- |
-| `anchors escalate "..."` | abre a issue de uma mudança necessária no plano ou na spec |
-| `anchors pr-body` | escreve as linhas que fecham os cards, na sintaxe da plataforma |
-| `anchors deliver` | registra a entrega de uma etapa — o gatilho do review |
-| `anchors task-status` | o relato da rodada: onde o card está, o veredito dos checks, e o que vem |
-
-Ver [O fluxo de trabalho](/docs/fluxo-de-trabalho/) para como esses comandos se
-encaixam num dia de trabalho.
-
-### `escalate`: as duas saídas
-
-```sh
-anchors escalate "<o que está errado>" --sobre <arquivo> --card <n>
-anchors escalate "<o que precisa mudar>" --sobre <arquivo> --para-usuario
-```
-
-A primeira abre um achado que se entrega junto com o card. A segunda abre uma
-**decisão**, e o card para até ela sair.
-
-A escolha entre as duas é sua, e o critério é um só: **isto muda a direção do
-projeto?** Se muda, ou se você tem dúvida, é decisão de quem planejou.
-
----
-
-## A fila (modo local)
-
-| comando | o que faz |
-| --- | --- |
-| `anchors watch` | o watcher em background: vê mudanças e ENFILEIRA trabalho |
-| `anchors queue` | lista as tasks vivas |
-| `anchors next` | puxa e reivindica a próxima |
-| `anchors done` | fecha task(s) reivindicada(s) |
-| `anchors drop` | descarta uma task sem concluí-la |
-| `anchors reclaim` | devolve à fila as tasks presas (worker morto) |
-
-O watcher **enfileira**, a IA **puxa**. É o que impede a conversa de ficar presa
-esperando o trabalho terminar.
-
----
-
-## Parar tudo
-
-| comando | o que faz |
-| --- | --- |
-| `anchors freeze --motivo "..."` | congela o projeto inteiro |
-| `anchors thaw` | libera |
-
-Ver [Congelar o projeto](/docs/congelar/).
-
----
-
-## Changelog
-
-`anchors changelog` monta o changelog **técnico** a partir dos commits entre duas tags:
-
-| seção | vem de |
-| --- | --- |
-| Mudanças incompatíveis | um `!` depois do tipo, ou o rodapé `BREAKING CHANGE:` |
-| Funcionalidades | `feat` |
-| Bugs corrigidos | `fix` com o rodapé `Bug:` — um defeito que chegou a ser lançado |
-| Correções | `fix` sem ele — correção de algo que nunca chegou a ninguém |
-
-`refactor`, `test`, `chore` e os outros tipos internos ficam de fora.
-
-```sh
-anchors changelog                   # a última versão
-anchors changelog --from v0.2.0     # todas as versões depois da v0.2.0
-anchors changelog --all --unreleased
-anchors changelog --write           # no(s) arquivo(s) que o bloco `changelog:` indica
-```
-
-O `--write` acrescenta só as versões que o arquivo ainda não tem, e mantém o resto como
-está — uma entrada editada à mão continua editada. Os títulos seguem o `lang`.
-
-É o changelog de quem trabalha no código, não as notas de versão do produto. Para essas,
-peça a um agente que sintetize um **changelog de produto** a partir dele — mudanças
-incompatíveis, as funcionalidades que o usuário vê, os bugs corrigidos; sem as correções
-simples, sem chores a não ser que o produto as sinta. `anchors guide changelog` é a régua
-das duas.
-
----
-
-## Relatórios
-
-```sh
-anchors report all       # gera os relatórios em docs/anchors/
-```
-
-Recortes do que o Anchors mede, por perspectiva — para quem precisa do estado
-sem rodar comando.
-
----
-
-## Códigos de saída
-
-| código | significa |
-| --- | --- |
-| `0` | passou |
-| `1` | um gate bloqueante reprovou, ou há julgamento pendente |
-| `3` | **não regido**: nenhum arquivo casa uma camada do `layers:` |
-
-O `3` existe para o hook distinguir "reprovou" de "não tenho jurisdição sobre
-isto". Tratá-lo como falha impediria commitar mudança só de configuração — que é
-trabalho legítimo que a Estrutura deliberadamente não rege.
+- [**anchors check & verify**](/pt/docs/cli/commands/check/) — Avaliação de gates, modo estrito e filtros.
+- [**anchors doctor & audit**](/pt/docs/cli/commands/doctor/) — Raio-X do ecossistema, artefatos órfãos e auditoria de arquivos.
+- [**anchors map & impact**](/pt/docs/cli/commands/map/) — Grafo de dependências, raio de impacto e recodificação.
+- [**anchors init & new**](/pt/docs/cli/commands/init/) — Assistente de setup, descoberta de camadas e geração de artefatos.
+- [**anchors flow & queue**](/pt/docs/cli/commands/flow/) — Watcher em background, fila de tarefas e entregas autônomas.
+- [**anchors freeze & thaw**](/pt/docs/cli/commands/freeze/) — Bloqueio de releases e congelamento de governança.

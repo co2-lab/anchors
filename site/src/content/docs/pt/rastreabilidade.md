@@ -3,7 +3,7 @@ title: Rastreabilidade
 ---
 
 > Este documento define o **pilar de Rastreabilidade** (Traceability) do Anchors.
-> Ele pressupõe o mecanismo geral de [`CONCEPT.md`](/docs/conceito/) — âncora, grafo,
+> Ele pressupõe o mecanismo geral de [`CONCEPT.md`](/pt/docs/concept/) — âncora, grafo,
 > sincronia, issues — e o especializa para um propósito: garantir que cada peça do
 > projeto tenha uma **identidade contínua** e esteja **conectada**, de modo que o
 > projeto seja um organismo único, não um monte de arquivos que por acaso moram na

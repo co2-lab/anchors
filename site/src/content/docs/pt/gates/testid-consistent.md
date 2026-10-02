@@ -1,0 +1,90 @@
+---
+title: "Gate: testid-consistent"
+description: "Garante o contrato de testID: o código expõe, a spec declara e o teste consome exatamente o mesmo identificador."
+---
+
+> **Identificador do Gate:** `testid-consistent` / `testid-coerente`  
+> **Código Interno:** `TICTS`  
+> **Categoria:** [Apresentação e Telas](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `UI` `Telas` `Componentes` |
+| **Alvos Avaliados (`on`)** | `spec` `code` `test` |
+| **Tipo de Verificação** | `Relacional com Grafo` |
+| **Modo Recomendado** | Sim (`blocking: true`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Garante o contrato de testID: o código expõe, a spec declara e o teste consome exatamente o mesmo identificador.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Elimina testes quebrados por erro de digitação no nome do testID.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Valida as quatro pontas do testID no grafo de dependências.
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** Contrato de testID íntegro entre código, spec e teste.
+- **`✗ Fail` (Reprovado):** TestID consumido no teste não é exposto pelo código ou não consta na spec.
+- **`~ Indeterminado/Pending`:** Não se aplica.
+- **`Skip` (Dispensado):** Não se aplica.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: testid-consistent
+    blocking: true
+    measures: "contrato de testID coerente entre spec, código e testes" 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Bloqueante para testes E2E e de integração visual.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Corrija o nome do testID no teste para bater com o exposto no componente.
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

@@ -3,8 +3,8 @@ title: Propagation
 ---
 
 > This document defines the Anchors **Propagation pillar**. It presupposes
-> the general mechanism from [`CONCEPT.md`](/en/docs/conceito/) — anchor,
-> graph, issues — and the [`TRACEABILITY.md`](/en/docs/rastreabilidade/)
+> the general mechanism from [`CONCEPT.md`](/docs/concept/) — anchor,
+> graph, issues — and the [`TRACEABILITY.md`](/docs/traceability/)
 > pillar, on which it operates. Propagation is the engine: it's what makes
 > a change at one point run through the organism, and it's what makes
 > development advance.

@@ -1,0 +1,92 @@
+---
+title: "Gate: unit-complete"
+description: "Verifica se a especificação possui todas as peças que a realizam: código, feature e teste."
+---
+
+> **Identificador do Gate:** `unit-complete` (antes `triad-complete`; o `anchors migrate` o renomeia)  
+> **Código Interno:** `UNTCP`  
+> **Categoria:** [A Unidade e Estrutura](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `Camadas Regidas` `usecase` `service` `domain` `comando` |
+| **Alvos Avaliados (`on`)** | `spec` |
+| **Tipo de Verificação** | `Relacional com Grafo` |
+| **Modo Recomendado** | Sim (`blocking: true`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Verifica se a especificação possui todas as peças que a realizam: código, feature e teste.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Gates relacionais falham aberto se não houver teste ou código ligado. Uma spec sozinha passaria por todos os gates sem acusar nada. Este gate fecha esse buraco exigindo as peças materiais.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Confronta o nó da spec no grafo de dependências e verifica se existem arestas 'governs' (para o código), 'covered-by' (para a feature) e 'tested-by' (para o teste).
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** A spec está ligada ao arquivo de código, à feature e ao teste correspondentes.
+- **`✗ Fail` (Reprovado):** Falta qualquer uma das peças da unidade no repositório, ou a ligação foi feita sem código de identidade.
+- **`~ Indeterminado/Pending`:** O grafo de dependências ainda não foi construído ou uma das peças está declarada como pendente (@TBD).
+- **`Skip` (Dispensado):** O nó pertence a uma Camada Reconhecida (regime declarativo) ou a camada declarou dispensa em bloco.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: unit-complete
+    on: [spec]
+    check: unit-complete
+    blocking: true
+    measures: "a spec tem código, feature e teste que a realizam" 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Ligue como bloqueante assim que suas primeiras unidades estiverem semeadas. É o gate mais fundamental do Anchors.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Crie os arquivos que faltam (ex: a feature ou o teste) na mesma pasta ou declare dispensa honesta na spec com motivo (@no-test: motivo).
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

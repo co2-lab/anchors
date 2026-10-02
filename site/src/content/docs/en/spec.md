@@ -3,7 +3,7 @@ title: Spec
 ---
 
 > This document defines the Anchors **Spec pillar**. It presupposes the
-> mechanism from [`CONCEPT.md`](/en/docs/conceito/) and connects to all the
+> mechanism from [`CONCEPT.md`](/docs/concept/) and connects to all the
 > other pillars — because the spec is where they tie together. The Spec is
 > the **base-anchor**: the origin of truth and the point of support from
 > which the rest hangs.
@@ -130,7 +130,7 @@ itself. This links Spec to **Project Structure** (`STRUCTURE.md`): the
 *template types* correspond to the *layers the Structure declares*.
 Typically one layer corresponds to one spec type and one template — but
 the relationship isn't always 1:1 (a layer can yield two types, one type
-can cover two files; see [`SPEC_TYPES.md`](/en/docs/tipos-de-spec/)). The
+can cover two files; see [`SPEC_TYPES.md`](/docs/spec-types/)). The
 Structure says "layer X exists"; the Spec provides the template(s) for X.
 
 The reference proof of concept proves the three levels: it has one spec guide
@@ -177,7 +177,7 @@ that fills input/output/contract:
 That's why the guide defines **one base template** and the types are
 **thin overlays** on top of it — not N templates from scratch. The
 concrete list of types and the content of each variation block lives in a
-separate catalog ([`SPEC_TYPES.md`](/en/docs/tipos-de-spec/)), because it
+separate catalog ([`SPEC_TYPES.md`](/docs/spec-types/)), because it
 grows per project/language and would bloat the pillar.
 
 ---
@@ -337,7 +337,7 @@ rope's weight is trusted to it.
   templates; the templates govern the specs. Template types correspond to
   the layers the Structure declares. The template is **common skeleton +
   one variation block** per type — not N structures from scratch.
-  (Type catalog in [`SPEC_TYPES.md`](/en/docs/tipos-de-spec/).)
+  (Type catalog in [`SPEC_TYPES.md`](/docs/spec-types/).)
 - **Two regimes: behavioral and declarative.** The regime is **per
   requirement** (tag, like level/priority), not for the whole spec — a
   mixed spec (e.g.: entity) has requirements with different regimes. The

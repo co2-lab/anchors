@@ -1,0 +1,94 @@
+---
+title: "Gate: deadcode"
+description: "Identifica funções, tipos, exports e arquivos órfãos não consumidos."
+---
+
+> **Identificador do Gate:** `deadcode` / `codigo-morto`  
+> **Código Interno:** `EXCMX`  
+> **Categoria:** [Fronteiras Arquiteturais](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `Todas as Camadas` `code` |
+| **Alvos Avaliados (`on`)** | `code` |
+| **Tipo de Verificação** | `Externo (run)` |
+| **Modo Recomendado** | Informativo no início (`blocking: false`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Identifica funções, tipos, exports e arquivos órfãos não consumidos.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Código morto gera débito técnico, confunde IAs e aumenta o tempo de compilação sem agregar valor.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Executa ferramentas como `deadcode` (Go), `knip` (TS/JS) ou `vulture` (Python).
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** Nenhum export ou código órfão encontrado.
+- **`✗ Fail` (Reprovado):** Código morto detectado.
+- **`~ Indeterminado/Pending`:** Ferramenta não instalada.
+- **`Skip` (Dispensado):** Não se aplica.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: deadcode
+    on: [code]
+    scope: project
+    run: "deadcode ./..."
+    needs_tool: deadcode
+    blocking: false
+    when: [ci] 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Informativo no início; limpe os órfãos periodicamente.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Apague as funções e exports não utilizados ou consuma-os onde for necessário.
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

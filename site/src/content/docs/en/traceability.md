@@ -3,7 +3,7 @@ title: Traceability
 ---
 
 > This document defines the Anchors **Traceability pillar**. It
-> presupposes the general mechanism from [`CONCEPT.md`](/en/docs/conceito/) —
+> presupposes the general mechanism from [`CONCEPT.md`](/docs/concept/) —
 > anchor, graph, synchrony, issues — and specializes it for one purpose:
 > guaranteeing that every piece of the project has a **continuous
 > identity** and is **connected**, such that the project is a single

@@ -1,0 +1,90 @@
+---
+title: "Gate: value-anchored"
+description: "Garante que constantes ou chaves replicadas em vários arquivos carregam exatamente o mesmo valor."
+---
+
+> **Identificador do Gate:** `value-anchored` / `valor-ancorado`  
+> **Código Interno:** `VLANV`  
+> **Categoria:** [Uso de Regras e Contratos](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `Todas as Camadas` |
+| **Alvos Avaliados (`on`)** | `code` `spec` |
+| **Tipo de Verificação** | `Relacional com Grafo` |
+| **Modo Recomendado** | Sim (`blocking: true`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Garante que constantes ou chaves replicadas em vários arquivos carregam exatamente o mesmo valor.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Impede bugs onde uma chave de evento ou header HTTP é copiado com letras minúsculas num arquivo e maiúsculas noutro.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Busca chaves ancoradas marcadas e valida a igualdade exata de valor em todas as cópias do projeto.
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** Todas as cópias do valor possuem conteúdo idêntico.
+- **`✗ Fail` (Reprovado):** Foi encontrada divergência de valor entre arquivos que deveriam compartilhar a mesma chave.
+- **`~ Indeterminado/Pending`:** Não se aplica.
+- **`Skip` (Dispensado):** Não se aplica.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: value-anchored
+    blocking: true
+    measures: "chaves replicadas carregam o mesmo valor em todo o projeto" 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Bloqueante para integrações e contratos distribuídos.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Sincronize os valores ou unifique a definição em um módulo compartilhado.
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

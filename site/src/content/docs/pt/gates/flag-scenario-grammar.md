@@ -1,0 +1,92 @@
+---
+title: "Gate: flag-scenario-grammar"
+description: "Garante que os cenários declarados em arquivos de feature flags seguem a gramática correta."
+---
+
+> **Identificador do Gate:** `flag-scenario-grammar` / `gramatica-de-flag`  
+> **Código Interno:** `FLSCF`  
+> **Categoria:** [Doutrina e Feature Flags](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `flags` |
+| **Alvos Avaliados (`on`)** | `flag` |
+| **Tipo de Verificação** | `Relacional com Grafo` |
+| **Modo Recomendado** | Sim (`blocking: true`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Garante que os cenários declarados em arquivos de feature flags seguem a gramática correta.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Padroniza os nomes de estados de flags (ex: ON, OFF, ROLLOUT) para que ferramentas possam consumi-los.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Analisa o cabeçalho e os subtítulos do arquivo `flags/*.flag.md` contra o padrão de gramática de flags.
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** A flag segue o formato padrão de declaração.
+- **`✗ Fail` (Reprovado):** Arquivo de flag mal formatado.
+- **`~ Indeterminado/Pending`:** Não se aplica.
+- **`Skip` (Dispensado):** Não se aplica.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: flag-scenario-grammar
+    on: [flag]
+    check: flag-scenario-grammar
+    blocking: true
+    measures: "cenários de flag seguem a gramática correta" 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Bloqueante imediato para arquivos de flag.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Siga o formato padrão de cabeçalho `### ON — Descrição` no arquivo de flag.
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

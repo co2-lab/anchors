@@ -1,12 +1,10 @@
 ---
-// Override do Header do Starlight — mesma composição, sem ThemeSelect (a
-// landing não tem toggle de tema; as docs seguem o mesmo padrão) e com o
-// seletor de idioma como lista inline (PT · EN), igual à landing, em vez de
-// dropdown.
+// Override do Header do Starlight — inclui Search, SocialIcons, ThemeSelect e LanguageSelect inline.
 import config from 'virtual:starlight/user-config';
 import Search from 'virtual:starlight/components/Search';
 import SiteTitle from 'virtual:starlight/components/SiteTitle';
 import SocialIcons from 'virtual:starlight/components/SocialIcons';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
 
 const shouldRenderSearch =
 	config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
@@ -14,12 +12,18 @@ const shouldRenderSearch =
 const locales = Object.entries(config.locales ?? {});
 const currentLocale = Astro.locals.starlightRoute.locale ?? 'root';
 
-// Troca só o segmento de locale no início do path: `/en/docs/x` <-> `/docs/x`.
-// O locale raiz não tem prefixo (ver astro.config.mjs: defaultLocale: 'root').
+// Troca só o segmento de locale no início do path: `/pt/docs/x` <-> `/docs/x`.
+// O locale raiz é o inglês e não tem prefixo (defaultLocale: 'root').
 function localizedPathname(locale: string): string {
 	const path = Astro.url.pathname;
-	const withoutLocale = path.replace(new RegExp(`^/(${Object.keys(config.locales ?? {}).filter((l) => l !== 'root').join('|')})/`), '/');
-	return locale === 'root' ? withoutLocale : `/${locale}${withoutLocale}`;
+	const nonRootLocales = Object.keys(config.locales ?? {}).filter((l) => l !== 'root');
+	const regex = new RegExp(`^/(${nonRootLocales.join('|')})(/|$)`);
+	const withoutLocale = path.replace(regex, '/');
+	const cleanWithout = withoutLocale.startsWith('/') ? withoutLocale : `/${withoutLocale}`;
+	if (locale === 'root') {
+		return cleanWithout;
+	}
+	return `/${locale}${cleanWithout.replace(/\/$/, '')}/`;
 }
 ---
 
@@ -30,20 +34,24 @@ function localizedPathname(locale: string): string {
 	<div class="sl-flex print:hidden">
 		{shouldRenderSearch && <Search />}
 	</div>
-	<div class="sl-hidden md:sl-flex print:hidden right-group">
-		<div class="sl-flex social-icons">
+	<div class="sl-flex print:hidden right-group">
+		<div class="sl-hidden sm:sl-flex social-icons">
 			<SocialIcons />
 		</div>
+		<ThemeSelect />
 		{locales.length > 1 && (
 			<span class="lang-list">
-				{locales.map(([code], i) => (
-					<>
-						{i > 0 && ' · '}
-						<a href={localizedPathname(code)} class={code === currentLocale ? 'active' : ''}>
-							{(code === 'root' ? config.defaultLocale?.lang ?? code : code).slice(0, 2).toUpperCase()}
-						</a>
-					</>
-				))}
+				{locales.map(([code], i) => {
+					const label = code === 'root' ? 'EN' : code.toUpperCase();
+					return (
+						<>
+							{i > 0 && ' · '}
+							<a href={localizedPathname(code)} class={code === currentLocale ? 'active' : ''}>
+								{label}
+							</a>
+						</>
+					);
+				})}
 			</span>
 		)}
 	</div>
@@ -65,12 +73,12 @@ function localizedPathname(locale: string): string {
 	}
 	.right-group,
 	.social-icons {
-		gap: 1rem;
+		gap: 0.75rem;
 		align-items: center;
 	}
 	.social-icons::after {
 		content: '';
-		height: 2rem;
+		height: 1.5rem;
 		border-inline-end: 1px solid var(--sl-color-hairline);
 	}
 	.lang-list {
@@ -78,10 +86,15 @@ function localizedPathname(locale: string): string {
 		color: var(--text-faint);
 		font-family: var(--font-mono);
 		white-space: nowrap;
+		display: inline-flex;
+		align-items: center;
 	}
 	.lang-list a {
 		color: var(--text-faint);
+		text-decoration: none;
 		border-bottom: none;
+		padding: 0.1rem 0.2rem;
+		border-radius: var(--radius-sm);
 	}
 	.lang-list a:hover {
 		color: var(--text-primary);

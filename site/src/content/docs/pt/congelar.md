@@ -1,6 +1,6 @@
 ---
 title: Congelar o projeto
-description: O botão de pânico — como parar todo o trabalho quando um problema precisa ser resolvido antes.
+description: "O botão de pânico — como parar todo o trabalho quando um problema precisa ser resolvido antes."
 ---
 
 Às vezes um problema aparece e **ninguém deve trabalhar até ele ser resolvido**:

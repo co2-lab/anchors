@@ -3,8 +3,8 @@ title: Propagação
 ---
 
 > Este documento define o **pilar de Propagação** do Anchors. Ele pressupõe o
-> mecanismo geral de [`CONCEPT.md`](/docs/conceito/) — âncora, grafo, issues — e o
-> pilar de [`TRACEABILITY.md`](/docs/rastreabilidade/), sobre o qual opera. A Propagação
+> mecanismo geral de [`CONCEPT.md`](/pt/docs/concept/) — âncora, grafo, issues — e o
+> pilar de [`TRACEABILITY.md`](/pt/docs/traceability/), sobre o qual opera. A Propagação
 > é o motor: é ela que faz uma alteração num ponto percorrer o organismo e é ela
 > que faz o desenvolvimento avançar.
 >

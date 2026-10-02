@@ -3,7 +3,7 @@ title: Planning
 ---
 
 > This document defines the Anchors **Planning pillar**. It presupposes
-> the mechanism from [`CONCEPT.md`](/en/docs/conceito/) — anchor (in the
+> the mechanism from [`CONCEPT.md`](/docs/concept/) — anchor (in the
 > climbing metaphor), graph, propagation, issues. Planning is the
 > **origin**: the anchor that points the route, the input of the workflow,
 > where the first change comes from.

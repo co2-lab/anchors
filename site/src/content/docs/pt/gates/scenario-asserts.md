@@ -1,0 +1,92 @@
+---
+title: "Gate: scenario-asserts"
+description: "Garante que o passo de desfecho (Then/Então) afirma um resultado observável concreto."
+---
+
+> **Identificador do Gate:** `scenario-asserts` / `cenario-afirma`  
+> **Código Interno:** `SCASS`  
+> **Categoria:** [A Unidade e Estrutura](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `Camadas Regidas` `Feature` |
+| **Alvos Avaliados (`on`)** | `feature` |
+| **Tipo de Verificação** | `Relacional com Grafo` |
+| **Modo Recomendado** | Sim (`blocking: true`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Garante que o passo de desfecho (Then/Então) afirma um resultado observável concreto.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Um passo Then que diz 'o sistema funciona' é uma tautologia que não prova nada. Este gate exige asserções concretas.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Analisa as frases dos passos Then/Então procurando verbos e substantivos de validação observável.
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** O passo final expressa uma asserção verificável (ex: 'deve retornar status 200', 'o botão fica desabilitado').
+- **`✗ Fail` (Reprovado):** O passo de resultado é vago ou tautológico.
+- **`~ Indeterminado/Pending`:** Não se aplica.
+- **`Skip` (Dispensado):** Não se aplica.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: scenario-asserts
+    on: [feature]
+    check: scenario-asserts
+    blocking: true
+    measures: "o passo Então afirma algo observável" 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Bloqueante para manter o rigor dos cenários em Gherkin.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Reescreva o passo Então com um resultado claro e mensurável.
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

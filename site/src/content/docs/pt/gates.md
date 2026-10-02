@@ -1,346 +1,210 @@
 ---
-title: Os gates
-description: O catálogo completo, como configurar, e o que ligar em cada tipo de projeto.
+title: Catálogo e Índice de Gates
+description: "O índice pesquisável e completo de todos os gates do Anchors, com tags de camadas, tipos de alvo e recomendações de uso."
 ---
 
-Um **gate** é uma pergunta que o projeto faz a si mesmo, e cuja resposta o
-Anchors registra. A [Qualidade](/docs/qualidade/) explica a doutrina; esta
-página é a referência prática: quais gates existem, o que cada um mede, e quais
-ligar no seu projeto.
+Seja bem-vindo ao **Catálogo Geral de Gates** do Anchors.
 
-## Como um gate é declarado
+Um **gate** é uma pergunta objetiva que o projeto faz a si mesmo em momentos-chave (como antes de commitar ou no CI), e cuja resposta o Anchors confronta de forma rigorosa. Para entender a filosofia por trás dos gates, leia [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/).
 
-```yaml
-gates:
-    - name: trinca-completa      # como ele aparece na saída
-      on: [spec]                 # em que kind de arquivo ele roda
-      check: trinca-completa     # o verificador interno que o realiza
-      blocking: true             # reprovar BARRA o commit/CI?
-      measures: 'a spec tem código, feature e teste que a realizam'
-```
-
-| campo | o que decide |
-| --- | --- |
-| `on` | os `kind` de arquivo em que o gate roda |
-| `check` | o verificador **interno** (determinístico) |
-| `run` | um comando **externo**, quando o gate é uma ferramenta do projeto |
-| `blocking` | `true` barra; `false` informa |
-| `measures` | o que ele mede, em uma frase — aparece na saída |
-| `requires` | roda só nos alvos cujo conteúdo contém este texto |
-| `when` | as fases em que ele roda: `pre-commit`, `pre-push`, `ci` |
-| `ask` | a pergunta de um gate de **julgamento por IA** |
-
-### Os três desfechos
-
-| símbolo | significa |
-| --- | --- |
-| `✓` | passou |
-| `✗` | reprovou — vira issue; barra se `blocking: true` |
-| `~` | **indeterminado**: o gate não teve o que confrontar |
-
-O `~` não é falha. Um gate de cobertura num arquivo sem teste não reprova — ele
-não mede. Confundir os dois faz alguém "consertar" o que não está quebrado.
+> [!TIP]
+> **Pesquisa Rápida:** Você pode usar o atalho `Ctrl+K` ou `Cmd+K` para buscar qualquer gate pelo nome (ex: [`unit-complete`](/pt/docs/gates///unit-complete/), [`mutation-score`](/pt/docs/gates///mutation-score/), [`layer-boundary`](/pt/docs/gates///layer-boundary/)) em todo o portal de documentação.
 
 ---
 
-## Comece informativo
+## 🏷️ Navegação Rápida por Camada
 
-**Todo gate novo deve nascer com `blocking: false`.**
+Descubra quais gates fazem sentido para o seu tipo de trabalho:
 
-Não é timidez: é a única forma de saber o que ele vai acusar antes de ele barrar
-o trabalho de alguém. Um gate que nasce bloqueante num projeto que já tem
-débito reprova tudo no primeiro dia, e a saída barata vira desligá-lo — o que é
-pior que nunca tê-lo ligado.
-
-O caminho é: liga informativo → mede uma semana → conserta o que ele achou →
-promove a bloqueante.
+- **[Camadas Regidas (usecase, service, domain, comando)](/pt/docs/layers/):** Exigem a [Unidade](/pt/docs/concepts/unidade/) completa ([`unit-complete`](/pt/docs/gates///unit-complete/), [`spec-feature-match`](/pt/docs/gates///spec-feature-match/), [`feature-test-match`](/pt/docs/gates///feature-test-match/), [`code-cataloged`](/pt/docs/gates///code-cataloged/)).
+- **[Camadas Reconhecidas (infra, dao, types, doc)](/pt/docs/layers/):** Dispensam spec completa e focam em higiene e fronteiras ([`layer-boundary`](/pt/docs/gates///layer-boundary/), [`header-valid`](/pt/docs/gates///header-valid/)).
+- **[Interface e Telas (UI, screen, componentes)](/pt/docs/layers/):** Focam em acessibilidade, visual e rotas ([`presentation-exhaustive`](/pt/docs/gates///presentation-exhaustive/), [`vr-baseline`](/pt/docs/gates///vr-baseline/), [`route-declared`](/pt/docs/gates///route-declared/), [`testid-consistent`](/pt/docs/gates///testid-consistent/)).
+- **[Segurança e Governança Externa](/pt/docs/gates///#segurança-e-higiene-externa):** Bloqueiam segredos vazados e dependências com CVEs em todas as camadas ([`no-secret-leaked`](/pt/docs/gates///no-secret-leaked/), [`dependency-vulnerable`](/pt/docs/gates///dependency-vulnerable/)).
 
 ---
 
-## O catálogo
+## 📚 Índice Completo de Gates por Categoria
 
-### A trinca — a spec tem as peças que a realizam?
+### A Unidade e Estrutura
 
-| gate | mede |
-| --- | --- |
-| `trinca-completa` | a spec tem código, feature e teste ligados |
-| `spec-tem-codigo` | a spec carrega um código de identidade |
-| `spec-completa` | a spec tem ao menos uma regra, sem placeholder |
-| `spec-feature-match` | cada regra da spec tem cenário na feature |
-| `feature-nao-vazia` | a feature tem cenário de verdade |
-| `rule-uses-declared` | toda regra diz o que usa (Validações, Validações de apresentação, Uso das regras) |
-| `rule-uses-resolve` | o que a regra diz usar existe na spec — um campo declarado, uma linha de dependência |
-| `rule-uses-implemented` | os campos que a regra diz usar aparecem no código que a spec governa — nenhuma regra órfã de código |
-| `contract-impact` | um campo alterado desde o último commit nomeia as regras que o usam e seus testes — o `anchors test` os roda |
-| `presentation-exhaustive` | todo valor de um prop ou estado lido pela apresentação tem aparência decidida |
-| `presentation-conflict` | um prop e uma condição não levam a duas aparências |
-| `presentation-copy-single-source` | o texto que a apresentação mostra é um código de mensagem, não texto repetido na regra |
-| `presentation-observable` | o que a apresentação muda é um elemento que um teste consegue apontar |
-| `scenario-identity` | cada cenário é distinguível: código próprio, e passos que não são os de outro sob título novo |
+| Gate | Alvo (`on`) | Camadas Compatíveis | Modo Recomendado | O que mede |
+| :--- | :---: | :--- | :---: | :--- |
+| [`unit-complete`](/pt/docs/gates///unit-complete/) | `spec` | `Camadas Regidas`, `usecase`... | **Bloqueante** | Verifica se a especificação possui todas as peças que a realizam: código, feature e teste. |
+| [`has-code`](/pt/docs/gates///has-code/) | `spec`, `feature` | `Camadas Regidas`, `Todas as Camadas` | **Bloqueante** | Garante que o arquivo possui um código de identidade de cenário e regra. |
+| [`spec-sections`](/pt/docs/gates///spec-sections/) | `spec` | `Camadas Regidas`, `Spec` | **Bloqueante** | Verifica se a spec cataloga regras estruturadas (em cabeçalho, tabela ou lista) e usa o idioma correto. |
+| [`non-empty`](/pt/docs/gates///non-empty/) | `feature`, `spec`, `doc` | `Camadas Regidas`, `Feature`... | **Bloqueante** | Garante que o arquivo não é um esqueleto vazio e que a feature possui cenários de verdade. |
+| [`spec-feature-match`](/pt/docs/gates///spec-feature-match/) | `spec` | `Camadas Regidas` | **Bloqueante** | Garante que toda regra catalogada na spec possui ao menos um cenário correspondente na feature. |
+| [`feature-test-match`](/pt/docs/gates///feature-test-match/) | `feature` | `Camadas Regidas`, `Feature`... | **Bloqueante** | Garante que cada cenário da feature está implementado no teste por código e descrição. |
+| [`scenario-identity`](/pt/docs/gates///scenario-identity/) | `feature` | `Camadas Regidas`, `Feature` | **Bloqueante** | Garante que cada cenário é distinguível, com código próprio e passos que não são cópias de outro. |
+| [`scenario-asserts`](/pt/docs/gates///scenario-asserts/) | `feature` | `Camadas Regidas`, `Feature` | **Bloqueante** | Garante que o passo de desfecho (Then/Então) afirma um resultado observável concreto. |
+| [`scenario-type-aligned`](/pt/docs/gates///scenario-type-aligned/) | `feature` | `Camadas Regidas`, `Feature` | **Bloqueante** | Garante que as tags de classificação do cenário batem com a letra do código (ex: @unit para regra B). |
+| [`scenario-letter-declared`](/pt/docs/gates///scenario-letter-declared/) | `feature` | `Camadas Regidas`, `Feature` | **Bloqueante** | Verifica se a letra usada no código do cenário existe no vocabulário declarado do projeto. |
+| [`code-reference-valid`](/pt/docs/gates///code-reference-valid/) | `spec`, `feature`, `code`, `test` | `Todas as Camadas` | **Bloqueante** | Garante que referências cruzadas a códigos de outras regras apontam para regras que realmente existem. |
+| [`code-cataloged`](/pt/docs/gates///code-cataloged/) | `code` | `Camadas Regidas`, `code` | **Bloqueante** | Garante que todo símbolo público (função, tipo, export) exportado pelo código está catalogado na spec. |
+| [`placeholder-filled`](/pt/docs/gates///placeholder-filled/) | `spec`, `plan`, `feature`, `doc` | `Todas as Camadas` | **Bloqueante** | Verifica se os placeholders deixados por geradores ou templates foram preenchidos. |
 
-O `trinca-completa` é o que impede o defeito mais silencioso do Anchors: uma
-spec sozinha atravessa **todos** os gates relacionais — eles falham *aberto*,
-sem teste ligado não há o que confrontar — e o pipeline conclui "pode promover"
-sobre trabalho que não existe.
+### Uso de Regras e Contratos
 
-### A identidade — dá para achar a regra?
+| Gate | Alvo (`on`) | Camadas Compatíveis | Modo Recomendado | O que mede |
+| :--- | :---: | :--- | :---: | :--- |
+| [`rule-uses-declared`](/pt/docs/gates///rule-uses-declared/) | `spec` | `Camadas Regidas` | Informativo | Verifica se cada regra declara explicitamente quais campos, validações e dependências utiliza. |
+| [`rule-uses-resolve`](/pt/docs/gates///rule-uses-resolve/) | `spec` | `Camadas Regidas` | Informativo | Garante que o que a regra diz usar realmente existe declarado na spec. |
+| [`rule-uses-implemented`](/pt/docs/gates///rule-uses-implemented/) | `spec` | `Camadas Regidas` | Informativo | Verifica se os campos que a regra diz usar aparecem e são consumidos no código governado. |
+| [`contract-impact`](/pt/docs/gates///contract-impact/) | `spec` | `Camadas Regidas` | Informativo | Quando um campo de contrato é alterado, identifica as regras que o usam e roda seus testes. |
+| [`contract-status-declared`](/pt/docs/gates///contract-status-declared/) | `spec`, `code` | `Camadas Regidas`, `API`... | **Bloqueante** | Garante que o contrato lista os códigos de status que o código realmente retorna, e apenas esses. |
+| [`domain-declared`](/pt/docs/gates///domain-declared/) | `spec` | `Camadas Regidas` | **Bloqueante** | Verifica se a spec declara o que a unidade aceita e quem bloqueia entradas inválidas. |
+| [`count-honored`](/pt/docs/gates///count-honored/) | `spec`, `code` | `Camadas Regidas` | Informativo | Garante que asserções numéricas escritas na spec batem com os números reais no código. |
+| [`pagination-honored`](/pt/docs/gates///pagination-honored/) | `spec`, `code` | `Camadas Regidas`, `API`... | Informativo | Garante que funções ou telas que prometem conjuntos paginados não retornam apenas a primeira página em silêncio. |
+| [`route-declared`](/pt/docs/gates///route-declared/) | `spec` | `UI`, `Telas`... | **Bloqueante** | Garante que uma tela ou endpoint declara como se chega nela e nomeia seus vizinhos de navegação. |
+| [`route-exists`](/pt/docs/gates///route-exists/) | `spec` | `UI`, `Telas`... | **Bloqueante** | Verifica se a rota declarada na especificação existe no registro de rotas da aplicação. |
+| [`dependency-honored`](/pt/docs/gates///dependency-honored/) | `spec`, `code` | `Camadas Regidas` | **Bloqueante** | Verifica se os métodos prometidos na tabela de dependências da spec são realmente consumidos no código. |
+| [`trigger-declared`](/pt/docs/gates///trigger-declared/) | `spec` | `Camadas Regidas` | **Bloqueante** | Garante que triggers de conformidade e eventos citados existem no vocabulário declarado do projeto. |
+| [`value-anchored`](/pt/docs/gates///value-anchored/) | `code`, `spec` | `Todas as Camadas` | **Bloqueante** | Garante que constantes ou chaves replicadas em vários arquivos carregam exatamente o mesmo valor. |
 
-| gate | mede |
-| --- | --- |
-| `codigo-catalogado` | todo símbolo exportado tem regra na spec, ou dispensa escrita |
-| `code-reference-valid` | as referências a códigos apontam para regras que existem |
-| `rule-types` | as letras dos códigos estão no vocabulário declarado |
-| `teste-rastreavel` | o teste cita o código do cenário que prova |
-| `scenario-asserts` | o cenário afirma algo, em vez de só executar |
-| `region-pair-honored` | os marcadores `#region` e `#endregion` fecham com o mesmo código |
+### Fronteiras Arquiteturais
 
-### O planejamento — o plano ainda descreve a realidade?
+| Gate | Alvo (`on`) | Camadas Compatíveis | Modo Recomendado | O que mede |
+| :--- | :---: | :--- | :---: | :--- |
+| [`layer-boundary`](/pt/docs/gates///layer-boundary/) | `code` | `Todas as Camadas`, `code` | **Bloqueante** | Garante que nenhuma camada importa ou acessa módulos que a planta da casa proíbe. |
+| [`sibling-guard`](/pt/docs/gates///sibling-guard/) | `code` | `Todas as Camadas`, `code` | **Bloqueante** | Impede que módulos irmãos tratem parâmetros iguais de forma inconsistente ou se alcancem por caminhos proibidos. |
+| [`proof-crosses-boundary`](/pt/docs/gates///proof-crosses-boundary/) | `spec`, `test` | `Camadas Regidas` | Informativo | Garante que quando uma regra afirma relação entre módulos, a prova de teste alcança a outra ponta. |
+| [`circular`](/pt/docs/gates///circular/) | `code` | `Todas as Camadas`, `code` | **Bloqueante** | Detecta dependências circulares entre módulos do projeto. |
+| [`deadcode`](/pt/docs/gates///deadcode/) | `code` | `Todas as Camadas`, `code` | Informativo | Identifica funções, tipos, exports e arquivos órfãos não consumidos. |
 
-| gate | mede |
-| --- | --- |
-| `fase-existe` | as fases citadas existem no plano |
-| `fase-ordenada` | a ordem declarada entre fases é coerente |
-| `plan-seeds-valid` | as specs semeadas pelo plano existem |
-| `plano-alterado-justificado` | um plano/spec que MUDOU declara por quê |
-| `plano-revisado` | a revisão está numerada e explicada |
-| `parent-valido` | o `parent:` aponta para uma fase que existe |
-| `open-questions-resolved` | as decisões em aberto foram decididas |
+### Prova e Execução
 
-O `plano-alterado-justificado` merece nota. Ele olha o **diff**, não o conteúdo,
-porque a deriva é silenciosa por construção: um plano corrigido em silêncio fica
-perfeitamente válido — a inconsistência foi removida. O que denuncia não é o
-estado do arquivo, é a mudança sem justificativa.
+| Gate | Alvo (`on`) | Camadas Compatíveis | Modo Recomendado | O que mede |
+| :--- | :---: | :--- | :---: | :--- |
+| [`tests-pass`](/pt/docs/gates///tests-pass/) | `test` | `Todas as Camadas`, `test` | **Bloqueante** | Verifica se a suíte de testes passou com zero falhas no relatório ingerido. |
+| [`evidence-fresh`](/pt/docs/gates///evidence-fresh/) | `test`, `spec` | `Camadas Regidas` | **Bloqueante** | Garante que o placar do teste continua fresco e foi medido contra o código atual. |
+| [`line-coverage`](/pt/docs/gates///line-coverage/) | `code` | `Camadas Regidas`, `code` | Informativo | Verifica se a cobertura de linhas do arquivo atinge o piso mínimo exigido (ex: >= 70%). |
+| [`coverage-delta`](/pt/docs/gates///coverage-delta/) | `code` | `Camadas Regidas`, `code` | **Bloqueante** | Garante que a alteração atual não reduziu a cobertura de linhas em relação ao baseline. |
+| [`mutation-score`](/pt/docs/gates///mutation-score/) | `code` | `Camadas Regidas`, `code` | Informativo | Mede quantos mutantes injetados no código foram eliminados pela suíte de testes. |
+| [`scenario-coverage`](/pt/docs/gates///scenario-coverage/) | `spec` | `Camadas Regidas` | **Bloqueante** | Garante que cada cenário declarado na spec tem um teste correspondente que rodou e passou. |
+| [`single-test-per-unit`](/pt/docs/gates///single-test-per-unit/) | `code` | `Camadas Regidas` | **Bloqueante** | Garante que uma unidade tem um único arquivo de teste por camada de teste (ou declara divisão com @split-test). |
+| [`test-level-codes`](/pt/docs/gates///test-level-codes/) | `feature` | `Camadas Regidas`, `Feature` | **Bloqueante** | Garante que cada nível de teste referencia apenas códigos permitidos para seu escopo. |
+| [`test-traceable`](/pt/docs/gates///test-traceable/) | `test` | `Camadas Regidas`, `test` | **Bloqueante** | Garante que todo teste ligado a uma feature declara no título o código do cenário que prova. |
 
-### A prova — o teste prova, ou só executa?
+### Apresentação e Telas
 
-| gate | mede |
-| --- | --- |
-| `tests-green` | a suíte passa |
-| `evidence-fresh` | o placar do teste continua fresco (o código/fecho não avançou) |
-| `line-coverage` | a linha executou durante o teste |
-| `coverage-delta` | a cobertura não caiu com esta mudança |
-| `mutation-score` | se a linha mudasse, algum teste quebraria |
-| `scenario-coverage` | cada cenário da spec tem teste verde |
-| `feature-test-match` | todo teste que cita o código de um cenário fala desse cenário, não só o primeiro |
-| `single-test-per-unit` | uma unidade tem um arquivo de teste por camada de teste, ou declara a divisão com `@split-test` |
+| Gate | Alvo (`on`) | Camadas Compatíveis | Modo Recomendado | O que mede |
+| :--- | :---: | :--- | :---: | :--- |
+| [`presentation-exhaustive`](/pt/docs/gates///presentation-exhaustive/) | `spec` | `UI`, `Telas`... | **Bloqueante** | Garante que todo valor de prop ou estado lido pela apresentação tem aparência explicitamente decidida. |
+| [`presentation-conflict`](/pt/docs/gates///presentation-conflict/) | `spec` | `UI`, `Telas`... | **Bloqueante** | Garante que um prop e uma condição não levam a duas aparências conflitantes. |
+| [`presentation-copy-single-source`](/pt/docs/gates///presentation-copy-single-source/) | `spec` | `UI`, `Telas` | **Bloqueante** | Garante que o texto exibido na apresentação vem de um código de mensagem central, e não de texto repetido. |
+| [`presentation-observable`](/pt/docs/gates///presentation-observable/) | `spec` | `UI`, `Telas`... | **Bloqueante** | Garante que o elemento alterado pela apresentação possui identificador que testes conseguem apontar. |
+| [`identity-consistent`](/pt/docs/gates///identity-consistent/) | `spec`, `code` | `UI`, `Telas`... | **Bloqueante** | Garante que a identidade da spec bate com o testID exposto e a imagem de baseline visual. |
+| [`testid-consistent`](/pt/docs/gates///testid-consistent/) | `spec`, `code`, `test` | `UI`, `Telas`... | **Bloqueante** | Garante o contrato de testID: o código expõe, a spec declara e o teste consome exatamente o mesmo identificador. |
+| [`testid-queried-exists`](/pt/docs/gates///testid-queried-exists/) | `test` | `UI`, `E2E`... | **Bloqueante** | Garante que todo testID buscado por um roteiro de fluxo E2E existe de verdade no código. |
+| [`vr-baseline`](/pt/docs/gates///vr-baseline/) | `feature`, `test` | `UI`, `Telas`... | **Bloqueante** | Garante que cenários de regressão visual (-VR) possuem imagens de baseline capturadas. |
 
-**Cobertura e mutação não são a mesma coisa**, e confundi-las é o defeito que o
-`mutation-score` existe para pegar. Um projeto medido recentemente tinha **100%
-de cobertura de linha** e 47 mutantes sobreviventes — 47 alterações no código
-que nenhum teste percebia.
+### Dublês e Mocks
 
-### As fronteiras — quem conhece quem
+| Gate | Alvo (`on`) | Camadas Compatíveis | Modo Recomendado | O que mede |
+| :--- | :---: | :--- | :---: | :--- |
+| [`mock-stamped`](/pt/docs/gates///mock-stamped/) | `test` | `Camadas Regidas`, `test` | **Bloqueante** | Garante que todo dublê de teste carrega a marca @contract do snippet que substitui, e o gate a recomputa. |
+| [`mock-typed`](/pt/docs/gates///mock-typed/) | `test` | `Camadas Regidas`, `test` | **Bloqueante** | Garante que todo dublê de teste implementa ou deriva formalmente do tipo do módulo que substitui. |
+| [`mock-detect-cobre-o-dialeto`](/pt/docs/gates///mock-detect-cobre-o-dialeto/) | `test` | `Camadas Regidas`, `test` | Informativo | Avalia se a regex declarada para detectar dublês alcança todas as formas que o projeto usa. |
 
-| gate | mede |
-| --- | --- |
-| `layer-boundary` | ninguém importa quem a camada proíbe |
-| `sibling-guard` | um módulo não alcança o irmão pelo caminho errado |
-| `prova-cruza-fronteira` | o teste que cruza fronteira a declara |
-| `dependency-honored` | a dependência declarada é a que existe |
+### Planejamento e Progresso
 
-### Os dublês — o mock diz a verdade?
+| Gate | Alvo (`on`) | Camadas Compatíveis | Modo Recomendado | O que mede |
+| :--- | :---: | :--- | :---: | :--- |
+| [`phase-exists`](/pt/docs/gates///phase-exists/) | `plan` | `Planos`, `doc` | **Bloqueante** | Garante que as fases citadas nas tarefas e dependências existem no plano. |
+| [`phase-ordered`](/pt/docs/gates///phase-ordered/) | `plan` | `Planos`, `doc` | **Bloqueante** | Garante que a ordem e dependências entre fases do plano são consistentes e sem ciclos. |
+| [`parent-valid`](/pt/docs/gates///parent-valid/) | `plan` | `Planos`, `doc` | **Bloqueante** | Garante que o campo parent aponta para uma fase ou plano pai existente. |
+| [`plan-seeds-valid`](/pt/docs/gates///plan-seeds-valid/) | `plan` | `Planos`, `doc` | **Bloqueante** | Garante que as specs semeadas pelo plano miram camadas governadas válidas. |
+| [`plan-source-declared`](/pt/docs/gates///plan-source-declared/) | `plan` | `Planos`, `doc` | **Bloqueante** | Garante que um plano que cita uma fonte externa declara explicitamente quem a constrói. |
+| [`plan-revised`](/pt/docs/gates///plan-revised/) | `plan` | `Planos`, `doc` | **Bloqueante** | Garante visibilidade mútua de revisão entre planos substituídos e planos revisores. |
+| [`plan-change-justified`](/pt/docs/gates///plan-change-justified/) | `plan`, `spec` | `Planos`, `Spec` | **Bloqueante** | Garante que um plano ou spec modificado declare no diff por que a mudança aconteceu. |
+| [`open-questions-resolved`](/pt/docs/gates///open-questions-resolved/) | `spec`, `plan` | `Camadas Regidas`, `Planos` | **Bloqueante** | Garante que especificações com perguntas ou decisões em aberto não sejam liberadas para implementação. |
+| [`progress-honest`](/pt/docs/gates///progress-honest/) | `plan`, `doc` | `Planos`, `doc` | **Bloqueante** | Garante que o arquivo de progresso (ex: checklist de tarefas) diz a verdade sobre os arquivos presentes no disco. |
+| [`revision-orphans`](/pt/docs/gates///revision-orphans/) | `spec` | `Camadas Regidas` | **Bloqueante** | Identifica regras cujo significado mudou em uma revisão sem que isso tenha sido declarado formalmente. |
+| [`revision-renumber`](/pt/docs/gates///revision-renumber/) | `spec`, `plan` | `Camadas Regidas`, `Planos` | **Bloqueante** | Renumera revisões em branch para evitar conflito quando a branch base já utilizou o mesmo número. |
 
-| gate | mede |
-| --- | --- |
-| `mock-carimbado` | todo dublê declara o que ele finge ser |
-| `mock-tipado` | o dublê respeita o contrato do que substitui |
-| `mock-detect-cobre-o-dialeto` | o regex que reconhece dublê alcança as formas que o projeto usa |
+### Doutrina e Feature Flags
 
-### Segurança, conformidade e governança externa
+| Gate | Alvo (`on`) | Camadas Compatíveis | Modo Recomendado | O que mede |
+| :--- | :---: | :--- | :---: | :--- |
+| [`spec-doctrine-exists`](/pt/docs/gates///spec-doctrine-exists/) | `spec` | `Camadas Regidas` | **Bloqueante** | Garante que a doutrina referenciada pela spec com @realizes realmente existe no projeto. |
+| [`doctrine-realized`](/pt/docs/gates///doctrine-realized/) | `product` | `produto`, `doutrina` | Informativo | Garante que as regras da doutrina de produto foram concretizadas em código e specs do projeto. |
+| [`doctrine-not-duplicated`](/pt/docs/gates///doctrine-not-duplicated/) | `spec` | `Camadas Regidas` | **Bloqueante** | Garante que regras de produto não foram duplicadas no corpo de specs locais. |
+| [`spec-realizes-doctrine`](/pt/docs/gates///spec-realizes-doctrine/) | `spec` | `Camadas Regidas` | **Bloqueante** | Garante que a spec declara e comprova como ela realiza a doutrina. |
+| [`flag-scenario-grammar`](/pt/docs/gates///flag-scenario-grammar/) | `flag` | `flags` | **Bloqueante** | Garante que os cenários declarados em arquivos de feature flags seguem a gramática correta. |
+| [`flag-scenarios-complete`](/pt/docs/gates///flag-scenarios-complete/) | `flag` | `flags` | **Bloqueante** | Garante que todos os valores possíveis da feature flag possuem cenários documentados. |
+| [`flag-scenario-exists`](/pt/docs/gates///flag-scenario-exists/) | `spec` | `Camadas Regidas` | **Bloqueante** | Garante que uma regra que cita @gated-by aponta para uma flag e cenário que realmente existem. |
+| [`flag-scenario-governs`](/pt/docs/gates///flag-scenario-governs/) | `flag` | `flags` | **Bloqueante** | Garante que a flag governa as regras corretas na especificação. |
+| [`flag-covered`](/pt/docs/gates///flag-covered/) | `flag` | `flags` | Informativo | Garante que cenários governados por flags possuem testes em todos os seus ramos. |
 
-| gate | tipo | mede |
-| --- | --- | --- |
-| `no-secret-leaked` | externo (`run`) | nenhum segredo entra no repositório |
-| `dependency-vulnerable` | externo (`run`) | quantas CVEs conhecidas as dependências carregam |
-| `sbom-generated` | externo (`run`) | o inventário CycloneDX/SPDX de dependências está publicado |
-| `license-compatible` | externo (`run`) | ausência de dependências com copyleft forte ou incompatível |
-| `no-duplication` | externo (`run`) | nenhum bloco de código aparece copiado em dois lugares |
-| `spellcheck` | externo (`run`) | sem erros de grafia no texto e nos identificadores |
-| `circular` | externo (`run`) | não há dependência circular entre módulos do projeto |
-| `deadcode` | externo (`run`) | não há funções, exports ou arquivos órfãos sem consumidor |
-| `obligation-honored` | interno | os deveres regulatórios declarados são cumpridos |
-| `contract-status-declared` | interno | o status de cada contrato externo está dito |
+### Falhas e Governança
+
+| Gate | Alvo (`on`) | Camadas Compatíveis | Modo Recomendado | O que mede |
+| :--- | :---: | :--- | :---: | :--- |
+| [`failure-declared`](/pt/docs/gates///failure-declared/) | `spec` | `Camadas Regidas` | **Bloqueante** | Garante que possíveis falhas da unidade estão declaradas na especificação. |
+| [`failure-handled`](/pt/docs/gates///failure-handled/) | `spec`, `code` | `Camadas Regidas` | **Bloqueante** | Garante que toda falha declarada na spec é tratada no código fonte. |
+| [`failure-logged`](/pt/docs/gates///failure-logged/) | `code` | `Camadas Regidas`, `code` | Informativo | Garante que falhas tratadas emitem log adequado com contexto. |
+| [`region-pair-honored`](/pt/docs/gates///region-pair-honored/) | `code` | `Todas as Camadas`, `code` | **Bloqueante** | Garante que todo bloco #region no código fecha com um #endregion carregando o mesmo código. |
+| [`rule-types`](/pt/docs/gates///rule-types/) | `spec`, `feature` | `Todas as Camadas` | **Bloqueante** | Garante que os prefixos e letras de códigos seguem a declaração de tipos de regras do projeto. |
+| [`rule-implemented`](/pt/docs/gates///rule-implemented/) | `spec`, `code` | `Camadas Regidas` | **Bloqueante** | Garante que uma spec cataloga regras e o código mostra que as realizou. |
+| [`code-language`](/pt/docs/gates///code-language/) | `code` | `Todas as Camadas`, `code` | **Bloqueante** | Garante que o código não mistura idiomas de identificadores e comentários. |
+| [`marker-parity`](/pt/docs/gates///marker-parity/) | `code`, `spec` | `Todas as Camadas` | **Bloqueante** | Garante que a mesma regra aparece em ambas as pontas que a realizam (ex: frontend e backend). |
+| [`obligation-honored`](/pt/docs/gates///obligation-honored/) | `spec`, `code` | `Todas as Camadas` | **Bloqueante** | Garante que deveres regulatórios declarados fora da unidade são cumpridos. |
+| [`header-valid`](/pt/docs/gates///header-valid/) | `spec`, `feature`, `code`, `test`, `doc` | `Todas as Camadas` | **Bloqueante** | Garante que o arquivo possui o bloco de cabeçalho @anchors com identidade mínima. |
+| [`updated-at-atual`](/pt/docs/gates///updated-at-atual/) | `spec`, `feature`, `code`, `test`, `doc` | `Todas as Camadas` | **Bloqueante** | Garante que o campo updated_at no cabeçalho reflete a data real da alteração ou commit. |
+| [`guide-has-checklist`](/pt/docs/gates///guide-has-checklist/) | `guide` | `doutrina`, `guide` | **Bloqueante** | Garante que guias de governança destilam suas regras em uma seção de checklist com itens CK1, CK2... |
+| [`docs-fresh`](/pt/docs/gates///docs-fresh/) | `doc` | `doc`, `docs` | **Bloqueante** | Garante que a documentação compilada reflete as especificações atuais sem defasagem. |
+| [`docs-covered`](/pt/docs/gates///docs-covered/) | `spec` | `Camadas Regidas` | Informativo | Garante que toda spec alcança alguma página da documentação compilada. |
+| [`doc-required`](/pt/docs/gates///doc-required/) | `spec` | `Camadas Regidas` | Informativo | Garante que a unidade alimenta o documento agregado obrigatório do projeto. |
+| [`doc-self-contained`](/pt/docs/gates///doc-self-contained/) | `spec` | `Camadas Regidas` | **Bloqueante** | Garante que a spec é autossuficiente e compreensível sem depender de contextos orais ou implícitos. |
+
+### Segurança e Higiene Externa
+
+| Gate | Alvo (`on`) | Camadas Compatíveis | Modo Recomendado | O que mede |
+| :--- | :---: | :--- | :---: | :--- |
+| [`no-secret-leaked`](/pt/docs/gates///no-secret-leaked/) | `code`, `test`, `doc`, `spec`, `feature`, `guide`, `plan` | `Todas as Camadas` | **Bloqueante** | Garante que nenhum segredo, token, senha ou chave privada entre no histórico do repositório. |
+| [`dependency-vulnerable`](/pt/docs/gates///dependency-vulnerable/) | `code` | `Todas as Camadas`, `code` | **Bloqueante** | Audita dependências e lockfiles contra bases públicas de vulnerabilidades conhecidas (CVEs). |
+| [`sbom-generated`](/pt/docs/gates///sbom-generated/) | `code` | `Todas as Camadas`, `code` | **Bloqueante** | Gera o inventário de software SBOM (CycloneDX ou SPDX) para compliance e auditorias. |
+| [`license-compatible`](/pt/docs/gates///license-compatible/) | `code` | `Todas as Camadas`, `code` | **Bloqueante** | Impede a inclusão de dependências com licenças incompatíveis ou copyleft forte (como AGPL). |
+| [`no-duplication`](/pt/docs/gates///no-duplication/) | `code` | `Todas as Camadas`, `code` | Informativo | Detecta blocos de código idênticos ou quase idênticos copiados em múltiplos arquivos. |
+| [`spellcheck`](/pt/docs/gates///spellcheck/) | `code`, `doc`, `spec`, `feature` | `Todas as Camadas` | Informativo | Elimina erros de digitação e ortografia em identificadores, comentários e textos. |
 
 ### Julgamento por IA
 
-Três gates não têm resposta determinística — eles **perguntam**:
-
-| gate | pergunta |
-| --- | --- |
-| `regra-cumprida` | o trecho marcado REALIZA o que a regra descreve? |
-| `no-test-prova-real` | a prova apontada pelo `@no-test` exercita mesmo o comportamento? |
-| `mock-detect-cobre-o-dialeto` | o padrão declarado alcança todos os dublês? |
-
-O veredito é gravado com `anchors judge`, e tem três valores:
-
-```sh
-anchors judge <alvo> --gate <g> --verdict pass|fail|dispensado --reason "..."
-```
-
-O **`dispensado`** existe porque os outros dois mentem quando o alvo não existe.
-Uma spec que declara `@TBD: code` afirma que o código ainda não foi escrito — e
-aí `pass` afirmaria que ele realiza a regra, e `fail` reprovaria trabalho que
-ninguém errou.
+| Gate | Alvo (`on`) | Camadas Compatíveis | Modo Recomendado | O que mede |
+| :--- | :---: | :--- | :---: | :--- |
+| [`regra-cumprida`](/pt/docs/gates///regra-cumprida/) | `spec`, `code` | `Camadas Regidas` | Informativo | Pergunta ao modelo se o trecho marcado no código realmente realiza o que a regra descreve. |
+| [`no-test-prova-real`](/pt/docs/gates///no-test-prova-real/) | `spec` | `Camadas Regidas` | Informativo | Avalia se a justificativa apontada para uma dispensa @no-test é real e legítima. |
 
 ---
 
-## O que ligar em cada tipo de projeto
+## 🚀 Como Escolher Gates para o seu Projeto
 
-Não existe conjunto universal. O que segue são pontos de partida medidos em
-projetos reais.
+Não existe um conjunto universal estático. O Anchors recomenda pontos de partida medidos em projetos reais:
 
-### Projeto novo, começando pela spec
+### 1. Projeto Novo (Começando pela Spec)
+Ligue **tudo como informativo** (`blocking: false`) na primeira semana para observar o que o projeto tem:
+- [`has-code`](/pt/docs/gates///has-code/) — Garante identidade nas specs.
+- [`spec-sections`](/pt/docs/gates///spec-sections/) — Impede templates vazios.
+- [`phase-exists`](/pt/docs/gates///phase-exists/) — Mantém o plano consistente.
 
-Ligue **tudo como informativo** e não promova nada na primeira semana. Você
-precisa ver o que o projeto tem antes de decidir o que barrar.
+### 2. Backend e Microsserviços
+O foco principal é **fronteiras arquiteturais** e **segurança**:
+- [`layer-boundary`](/pt/docs/gates///layer-boundary/) (`blocking: true`) — Garante isolamento entre camadas.
+- [`no-secret-leaked`](/pt/docs/gates///no-secret-leaked/) (`blocking: true`) — Impede vazamento de chaves e senhas.
+- [`unit-complete`](/pt/docs/gates///unit-complete/) (`blocking: true`) — Garante a unidade completa em camadas regidas.
+- [`code-cataloged`](/pt/docs/gates///code-cataloged/) (`blocking: true`) — Todos os endpoints documentados.
+- [`mutation-score`](/pt/docs/gates///mutation-score/) (`blocking: false` até estabilizar).
 
-Os primeiros a promover, quando o projeto tiver 3–4 specs:
+### 3. Aplicações com Interface Visual (Web e Mobile)
+Acrescente gates que confrontam o que a tela promete:
+- [`presentation-exhaustive`](/pt/docs/gates///presentation-exhaustive/) (`blocking: true`) — Todos os estados de UI decididos.
+- [`testid-consistent`](/pt/docs/gates///testid-consistent/) (`blocking: true`) — Handles consistentes para testes E2E.
+- [`vr-baseline`](/pt/docs/gates///vr-baseline/) (`blocking: true`) — Baselines visuais capturados.
+- [`route-declared`](/pt/docs/gates///route-declared/) (`blocking: true`) — Telas com rotas mapeadas.
 
-```yaml
-- name: spec-tem-codigo      # sem identidade, nada é rastreável
-- name: spec-completa        # spec com placeholder não decide nada
-- name: fase-existe          # o plano aponta para fase que existe
-```
+### 4. Sistemas Regulados (LGPD, Saúde, Financeiro)
+- [`obligation-honored`](/pt/docs/gates///obligation-honored/) (`blocking: true`) — Cumprimento de deveres legais.
+- [`marker-parity`](/pt/docs/gates///marker-parity/) (`blocking: true`) — A mesma regra refletida no frontend e no backend.
+- [`license-compatible`](/pt/docs/gates///license-compatible/) (`blocking: true`) — Sem contaminação por licenças copyleft.
 
-### Backend / serverless (o caso do app de referência)
-
-O que importa é **fronteira** e **segredo** — as duas coisas que quebram em
-produção e não aparecem em teste.
-
-```yaml
-- name: layer-boundary            blocking: true   # o contrato não conhece quem o consome
-- name: secret-nao-vazado         blocking: true   when: [pre-commit, pre-push, ci]
-- name: licenca-compativel        blocking: true   when: [pre-push, ci]
-- name: trinca-completa           blocking: true
-- name: codigo-catalogado         blocking: true
-- name: mutation-score            blocking: false  # informativo até saber quanto o projeto tem
-- name: dependencia-vulneravel    blocking: false
-```
-
-O `mutation-score` fica informativo **de propósito**: exigir 80% antes de saber
-quanto o projeto tem hoje produziria um número escolhido no escuro.
-
-### Aplicação com interface
-
-Acrescente os que confrontam o que a tela promete:
-
-```yaml
-- name: contract-status-declared  blocking: true   # a tela declara o estado de cada dado
-- name: domain-declared           blocking: true   # o valor que chega errado tem tratamento
-- name: pagination-honored        blocking: false  # a lista que pagina, pagina de verdade
-- name: count-honored             blocking: false  # a contagem exibida é a contagem real
-```
-
-### Projeto com dado regulado (LGPD, saúde, financeiro)
-
-```yaml
-- name: obligation-honored        blocking: true
-- name: marker-parity             blocking: true   # a mesma regra aparece nas DUAS pontas
-- name: secret-nao-vazado         blocking: true
-```
-
-O `marker-parity` é o que impede a divergência mais cara desse tipo de projeto:
-a tela promete apagar um dado, o backend apaga outro, e nada acusa — porque cada
-lado está internamente coerente.
-
-### Biblioteca / CLI
-
-Fronteira importa menos; **prova** importa mais.
-
-```yaml
-- name: tests-green               blocking: true
-- name: mutation-score            blocking: false → true quando estabilizar
-- name: codigo-catalogado         blocking: true
-- name: sem-duplicacao            blocking: false
-```
-
----
-
-## Gates externos: quando a ferramenta é do projeto
-
-Nem todo gate é interno ao binário do Anchors. O Anchors é **estritamente agnóstico de linguagem**: ele decide **quando** avaliar (`when`), o **escopo** (`batch` vs `project`) e se a falha **barra** o commit ou PR (`blocking`), enquanto o seu projeto fornece a ferramenta adequada via `run:`.
-
-```yaml
-- name: license-compatible
-  on: [code]
-  scope: project
-  run: 'go-licenses check ./... --disallowed_types=forbidden,restricted'
-  needs_tool: go-licenses
-  install_hint: 'go install github.com/google/go-licenses@latest'
-  blocking: false
-  when: [ci]
-```
-
-O `needs_tool` e o `install_hint` são essenciais: sem a ferramenta na máquina, o Anchors emite **`Skip`** e o `anchors doctor` avisa o que falta instalar, em vez de quebrar a execução com erro críptico de shell.
-
----
-
-### Guia de ferramentas por linguagem
-
-A tabela a seguir resume as ferramentas recomendadas para cada gate externo nas principais plataformas:
-
-| Gate | Universal (Binário Nativo) | Go | Node.js / TypeScript | Python | Rust |
-|---|---|---|---|---|---|
-| `no-secret-leaked` | `gitleaks` | `gitleaks` | `gitleaks` | `detect-secrets` | `gitleaks` |
-| `dependency-vulnerable` | `osv-scanner` / `trivy` | `govulncheck` | `pnpm audit` / `osv-scanner` | `pip-audit` | `cargo-audit` |
-| `sbom-generated` | `syft` | `syft` / `cyclonedx-gomod` | `syft` / `@cyclonedx/cyclonedx-npm` | `cyclonedx-py` | `cargo-cyclonedx` |
-| `no-duplication` | `pmd cpd` | `dupl` | `jscpd` | `pylint --enable=similarities` | `flcl` / `pmd cpd` |
-| `spellcheck` | `typos` | `typos` | `typos` ou `cspell` | `typos` ou `codespell` | `typos` |
-| `license-compatible` | — | `go-licenses` | `license-checker` | `pip-licenses` | `cargo-deny` |
-| `circular` | — | Compilador Go / `go vet` | `madge` | `import-linter` | Compilador Rust |
-| `deadcode` | — | `deadcode` (x/tools) | `knip` | `vulture` | `cargo-udeps` |
-
-#### 1. `no-secret-leaked` (Segredos no código)
-Bloqueante desde o primeiro dia — segredo commitado entra para a eternidade do histórico git.
-- **Universal (Recomendado)**: `gitleaks git --no-banner --redact -v` (`brew install gitleaks`)
-
-#### 2. `dependency-vulnerable` (Vulnerabilidades nas dependências)
-Audita lockfiles contra bases de CVEs conhecidas.
-- **Universal (Recomendado)**: `osv-scanner scan source -r .` (`brew install osv-scanner`)
-- **Go**: `govulncheck ./...`
-- **Node / TS**: `pnpm audit --prod` ou `npm audit --omit=dev`
-- **Python**: `pip-audit`
-- **Rust**: `cargo-audit`
-
-#### 3. `sbom-generated` (Inventário de Software)
-Gera o inventário CycloneDX/SPDX para auditorias e compliance.
-- **Universal (Recomendado)**: `syft scan dir:. -o cyclonedx-json=sbom.json -q` (`brew install syft`)
-- **Go**: `cyclonedx-gomod app -json -output sbom.json`
-- **Node / TS**: `npx @cyclonedx/cyclonedx-npm --output-file sbom.json`
-
-#### 4. `no-duplication` (Detecção de copy-paste)
-Pega blocos de lógica idênticos duplicados entre múltiplos arquivos.
-- **Universal**: `pmd cpd --minimum-tokens 70 --dir . --language <lang>` (`brew install pmd`)
-- **Node / TS / Multi-lang**: `npx --yes jscpd . --reporters console --silent`
-- **Go**: `dupl -t 70`
-
-#### 5. `spellcheck` (Erros ortográficos)
-Elimina erros de digitação em texto, mensagens e identificadores de código (camelCase, snake_case).
-- **Universal (Recomendado)**: `typos` (`brew install typos`) — binário nativo ultra-rápido em Rust, sem dependência de Node ou Python.
-- **Node / TS**: `npx cspell --no-progress --no-summary {{files}}`
-
-#### 6. `license-compatible` (Conformidade de licenças)
-Impede inclusão acidental de dependências com copyleft forte (AGPL/SSPL) em projetos proprietários.
-- **Go**: `go-licenses check ./... --disallowed_types=forbidden,restricted`
-- **Node / TS**: `npx license-checker --production --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC'`
-- **Python**: `pip-licenses`
-- **Rust**: `cargo-deny check bans licenses`
-
-#### 7. `circular` (Dependências circulares)
-Detecta ciclos no grafo de módulos ou imports.
-- **Node / TS**: `npx madge --circular --extensions ts,tsx src/`
-- **Python**: `lint-imports` (via `import-linter`)
-- **Go / Rust**: Garantido nativamente pelo compilador da linguagem.
-
-#### 8. `deadcode` (Código morto)
-Identifica exports, funções, tipos e arquivos órfãos não consumidos.
-- **Go**: `deadcode ./...` (`go install golang.org/x/tools/cmd/deadcode@latest`)
-- **Node / TS**: `npx knip`
-- **Python**: `vulture src/`
-- **Rust**: `cargo +nightly udeps`
-
-> **Consulte o guia completo:** Veja [`guides/GATES_ECOSYSTEM_GUIDE.md`](https://github.com/co2-lab/anchors/blob/main/guides/GATES_ECOSYSTEM_GUIDE.md) no repositório para comandos de instalação detalhados, exemplos de allowlists e arquivos de configuração.
-
-> **Um gate declarado que nunca roda é pior que gate nenhum**, porque consta na
-> configuração como se protegesse. Se o gate declara `when: [ci]` e o seu CI não
-> o executa, ele é decoração. Confira com `anchors doctor`.
+Para mais detalhes sobre como configurar cada bloco, veja [O anchors.yaml](/pt/docs/anchors-yaml///).

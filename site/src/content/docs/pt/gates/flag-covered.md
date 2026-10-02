@@ -1,0 +1,92 @@
+---
+title: "Gate: flag-covered"
+description: "Garante que cenários governados por flags possuem testes em todos os seus ramos."
+---
+
+> **Identificador do Gate:** `flag-covered` / `flag-coberta`  
+> **Código Interno:** `FLSCF`  
+> **Categoria:** [Doutrina e Feature Flags](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `flags` |
+| **Alvos Avaliados (`on`)** | `flag` |
+| **Tipo de Verificação** | `Relacional com Grafo` |
+| **Modo Recomendado** | Informativo no início (`blocking: false`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Garante que cenários governados por flags possuem testes em todos os seus ramos.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Testar apenas o caminho ON e nunca o OFF leva a quebras graves quando a flag for desligada.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Verifica se há testes automatizados cobrindo as regras associadas a cada estado da flag.
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** Todos os ramos da flag possuem testes verdes correspondentes.
+- **`✗ Fail` (Reprovado):** Um dos ramos da flag não possui teste automatizado.
+- **`~ Indeterminado/Pending`:** Relatório de testes pendente.
+- **`Skip` (Dispensado):** Não se aplica.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: flag-covered
+    on: [flag]
+    check: flag-covered
+    blocking: false
+    measures: "todos os ramos da flag possuem testes" 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Informativo no início; promova a bloqueante ao estabilizar a funcionalidade.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Escreva testes cobrindo tanto o comportamento da flag ativada quanto desativada.
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

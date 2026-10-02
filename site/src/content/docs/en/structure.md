@@ -3,7 +3,7 @@ title: Project Structure
 ---
 
 > This document defines the Anchors **Project Structure pillar**. It
-> presupposes the mechanism from [`CONCEPT.md`](/en/docs/conceito/) and is the
+> presupposes the mechanism from [`CONCEPT.md`](/docs/concept/) and is the
 > **template** on which the other pillars operate: it defines which layers
 > the project has, how they're organized, and in what order they relate.
 >

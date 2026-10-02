@@ -2,7 +2,7 @@
 title: Catálogo de Tipos de Spec
 ---
 
-> Catálogo de referência que acompanha o pilar de [`SPEC.md`](/docs/spec/). Enquanto o
+> Catálogo de referência que acompanha o pilar de [`SPEC.md`](/pt/docs/spec///). Enquanto o
 > SPEC.md define o **modelo** (guide → template → spec; esqueleto comum + bloco de
 > variação; regime comportamental/declarativo), este catálogo levanta os **tipos
 > concretos** de spec por família de projeto e o que o bloco de variação de cada um
@@ -38,7 +38,7 @@ Independente do tipo, toda spec tem este esqueleto. O que muda entre tipos é s�
 ## 2. Os regimes (ortogonal ao tipo)
 
 Cada tipo tende a um regime, mas o eixo é ortogonal — um artefato pode ter partes
-dos dois (ver [`SPEC.md`](/docs/spec/) §6).
+dos dois (ver [`SPEC.md`](/pt/docs/spec///) §6).
 
 - **Comportamental** — descreve ação ("dado X, acontece Y"); propaga para
   features → testes (Gherkin).
@@ -263,7 +263,7 @@ spec consumidora para o **arquivo** referenciado, carregando o **método** como
 metadado. É por essas arestas que a Propagação **desce** pelas camadas de dados: mudou
 a spec do repository → as telas que o consomem ficam stale (a onda de reúso). É o
 trilho que faltava para a propagação de dados descrita em `PROPAGATION.md` §7 fluir
-para além da trinca de uma única unidade.
+para além da unidade de uma única unidade.
 
 > Profundidade variável por projeto. A cadeia de dependência tem o comprimento que a
 > Estrutura daquele projeto declara: um projeto vai `tela → repository/service` direto;

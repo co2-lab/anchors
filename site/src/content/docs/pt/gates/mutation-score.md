@@ -1,0 +1,92 @@
+---
+title: "Gate: mutation-score"
+description: "Mede quantos mutantes injetados no código foram eliminados pela suíte de testes."
+---
+
+> **Identificador do Gate:** `mutation-score` / `escore-de-mutacao`  
+> **Código Interno:** `PRJTS`  
+> **Categoria:** [Prova e Execução](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `Camadas Regidas` `code` |
+| **Alvos Avaliados (`on`)** | `code` |
+| **Tipo de Verificação** | `Relacional com Grafo` |
+| **Modo Recomendado** | Informativo no início (`blocking: false`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Mede quantos mutantes injetados no código foram eliminados pela suíte de testes.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Cobertura de linha só prova que o código executou, não que foi verificado. A mutação prova se o teste realmente detecta erros.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Lê o relatório de teste de mutação (.anchors/mutation.json) gerado por ferramentas como gremlins ou Stryker.
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** Score de mutação acima do limiar configurado (low/high).
+- **`✗ Fail` (Reprovado):** Mutantes sobreviveram sem que nenhum teste quebrasse.
+- **`~ Indeterminado/Pending`:** Ferramenta de mutação não executada.
+- **`Skip` (Dispensado):** Arquivos sem lógica condicional.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: mutation-score
+    on: [code]
+    check: mutation-score
+    blocking: false
+    measures: "se a linha mudasse, algum teste quebraria" 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Informativo até que a base atinja estabilidade; rode com `anchors mutation`.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Adicione asserções específicas nos testes que verifiquem o comportamento das linhas onde o mutante sobreviveu.
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

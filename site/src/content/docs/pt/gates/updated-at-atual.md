@@ -1,0 +1,90 @@
+---
+title: "Gate: updated-at-atual"
+description: "Garante que o campo updated_at no cabeçalho reflete a data real da alteração ou commit."
+---
+
+> **Identificador do Gate:** `updated-at-atual`  
+> **Código Interno:** `INCHN`  
+> **Categoria:** [Falhas e Governança](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `Todas as Camadas` |
+| **Alvos Avaliados (`on`)** | `spec` `feature` `code` `test` `doc` |
+| **Tipo de Verificação** | `Com Root / Git` |
+| **Modo Recomendado** | Sim (`blocking: true`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Garante que o campo updated_at no cabeçalho reflete a data real da alteração ou commit.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Impede que o cabeçalho minta sobre quando o arquivo foi modificado pela última vez.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Compara a data `updated_at: YYYY-MM-DD` com a data do sistema (se houver alteração não commitada) ou a data do último commit Git.
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** A data declarada bate com a data da alteração ou commit.
+- **`✗ Fail` (Reprovado):** Data desatualizada em relação à data da alteração.
+- **`~ Indeterminado/Pending`:** Arquivo sem commits prévios.
+- **`Skip` (Dispensado):** Ambientes sem Git ou arquivos sem updated_at declarado.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: updated-at-atual
+    blocking: true
+    measures: "o updated_at do cabeçalho bate com a data do commit" 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Bloqueante; use `anchors check --fix` para atualizar a data automaticamente.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Atualize a linha `updated_at: AAAA-MM-DD` no cabeçalho para a data de hoje, ou rode `anchors check --fix`.
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

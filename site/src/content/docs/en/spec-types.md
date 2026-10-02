@@ -2,7 +2,7 @@
 title: Spec Types Catalog
 ---
 
-> A reference catalog accompanying the [`SPEC.md`](/en/docs/spec/) pillar.
+> A reference catalog accompanying the [`SPEC.md`](/docs/spec/) pillar.
 > While SPEC.md defines the **model** (guide → template → spec; common
 > skeleton + variation block; behavioral/declarative regime), this catalog
 > surveys the **concrete types** of spec by project family and what each
@@ -40,7 +40,7 @@ types is only the **vocabulary** that fills input/output/contract, and the
 ## 2. The regimes (orthogonal to the type)
 
 Each type tends toward a regime, but the axis is orthogonal — an artifact
-can have parts of both (see [`SPEC.md`](/en/docs/spec/) §6).
+can have parts of both (see [`SPEC.md`](/docs/spec/) §6).
 
 - **Behavioral** — describes action ("given X, Y happens"); propagates to
   features → tests (Gherkin).

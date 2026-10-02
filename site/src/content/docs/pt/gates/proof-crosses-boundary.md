@@ -1,0 +1,90 @@
+---
+title: "Gate: proof-crosses-boundary"
+description: "Garante que quando uma regra afirma relação entre módulos, a prova de teste alcança a outra ponta."
+---
+
+> **Identificador do Gate:** `proof-crosses-boundary` / `prova-cruza-fronteira`  
+> **Código Interno:** `PCBPR`  
+> **Categoria:** [Fronteiras Arquiteturais](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `Camadas Regidas` |
+| **Alvos Avaliados (`on`)** | `spec` `test` |
+| **Tipo de Verificação** | `Relacional com Grafo` |
+| **Modo Recomendado** | Informativo no início (`blocking: false`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Garante que quando uma regra afirma relação entre módulos, a prova de teste alcança a outra ponta.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Evita testes que mockam a outra ponta sem verificar se o contrato do vizinho ainda aceita aquela chamada.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Verifica se testes com anotação de fronteira exercitam a interação ou usam dublês carimbados.
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** A interação com a outra ponta é comprovada.
+- **`✗ Fail` (Reprovado):** A regra afirma relação com outro módulo mas o teste não alcança a fronteira.
+- **`~ Indeterminado/Pending`:** Não se aplica.
+- **`Skip` (Dispensado):** Testes puramente unitários isolados.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: proof-crosses-boundary
+    blocking: false
+    measures: "teste que cruza fronteira a declara e comprova" 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Informativo em suítes de integração.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Adicione um teste de integração ou utilize um mock com contrato verificado.
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

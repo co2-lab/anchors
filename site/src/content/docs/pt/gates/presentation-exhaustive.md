@@ -1,0 +1,92 @@
+---
+title: "Gate: presentation-exhaustive"
+description: "Garante que todo valor de prop ou estado lido pela apresentação tem aparência explicitamente decidida."
+---
+
+> **Identificador do Gate:** `presentation-exhaustive` / `apresentacao-exaustiva`  
+> **Código Interno:** `PRSNT`  
+> **Categoria:** [Apresentação e Telas](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `UI` `Telas` `Componentes` |
+| **Alvos Avaliados (`on`)** | `spec` |
+| **Tipo de Verificação** | `Relacional com Grafo` |
+| **Modo Recomendado** | Sim (`blocking: true`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Garante que todo valor de prop ou estado lido pela apresentação tem aparência explicitamente decidida.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Evita telas quebradas quando um prop inesperado (ex: estado de carregamento ou lista vazia) é recebido.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Cruza os estados e props da interface com as variantes visuais catalogadas na spec.
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** Todos os estados e combinações possuem aparência documentada.
+- **`✗ Fail` (Reprovado):** Prop ou estado da tela sem comportamento visual catalogado.
+- **`~ Indeterminado/Pending`:** Não se aplica.
+- **`Skip` (Dispensado):** Camadas que não são de apresentação.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: presentation-exhaustive
+    on: [spec]
+    check: presentation-exhaustive
+    blocking: true
+    measures: "todo valor de prop ou estado tem aparência decidida" 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Bloqueante em frontend e mobile.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Descreva o comportamento visual para todos os estados na spec (carregando, vazio, sucesso, erro).
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

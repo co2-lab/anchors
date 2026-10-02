@@ -1,19 +1,41 @@
 ---
 title: Conceito
+description: "O guia essencial do Anchors — o que é uma âncora, como o framework resolve a amnésia de IA e como os conceitos se conectam."
 ---
 
-> **Anchors** é um framework de continuidade para desenvolvimento assistido por IA.
-> Este documento define o **conceito**: o que é uma âncora, como as âncoras se
-> relacionam, como o sistema sabe o que está em dia, e como a dessincronia é
-> tratada. É teoria pura — independente de qualquer ferramenta.
->
-> Existe uma ferramenta que implementa o Anchors, e uma prova de conceito
-> real onde o conceito é validado na prática. Ambas aparecem aqui apenas
-> como instâncias — o Anchors não depende de nenhuma delas.
+Se você nunca ouviu falar do **Anchors**, seja bem-vindo!
+
+O **Anchors** é um framework projetado para resolver o maior problema do desenvolvimento de software com inteligência artificial: a **amnésia estrutural**. A IA é ótima para gerar código no momento, mas esquece o contexto entre sessões, quebra padrões arquiteturais e destrói regras de negócio silenciosamente.
+
+O Anchors resolve isso cravando **[Âncoras](/pt/docs/concepts/ancora/)** no seu repositório — artefatos que apontam o caminho a seguir, seguram a corda através de [gates](/pt/docs/concepts/gates-e-vereditos/) automatizados para impedir regressões, e demarcam todo o histórico com rastreabilidade total.
 
 ---
 
-## 1. O problema
+## 🗺️ Mapa Rápido dos Conceitos
+
+Cada conceito central do Anchors possui sua própria página detalhada, escrita de forma simples, direta e acessível:
+
+| Conceito | O que você vai aprender | Onde ler |
+| :--- | :--- | :--- |
+| **O que é uma Âncora?** | A metáfora da escalada: como as âncoras apontam, seguram o safepoint e demarcam o rastro. | [Ler sobre Âncoras](/pt/docs/concepts/ancora/) |
+| **A Unidade (The Unit)** | A unidade indivisível: Spec + Feature + Teste + Código trabalhando em sincronia. | [Ler sobre A Unidade](/pt/docs/concepts/unidade/) |
+| **O Grafo e o Mapa** | Como o Anchors mapeia todas as conexões do projeto em `anchors.graph.yaml`. | [Ler sobre o Grafo](/pt/docs/concepts/grafo-e-mapa/) |
+| **Camadas e Regimes** | A planta da casa: diferença entre Camadas Regidas (negócio) e Reconhecidas (infra/doc). | [Ler sobre Camadas](/pt/docs/layers/) |
+| **Gates e Vereditos** | Os verificadores de qualidade (`✓` Pass, `✗` Fail, `~` Indeterminado, `Skip`) e Informativo vs Bloqueante. | [Ler sobre Gates](/pt/docs/concepts/gates-e-vereditos/) |
+| **Rastreabilidade e Códigos** | Como códigos como `AUTH-B01` conectam a spec ao código fonte sem depender de caminhos. | [Ler sobre Rastreabilidade](/pt/docs/concepts/rastreabilidade-e-codigos/) |
+| **Propagação e Impacto** | A onda de alterações: como o Anchors detecta o que ficou desatualizado (`stale`). | [Ler sobre Propagação](/pt/docs/concepts/propagacao-e-impacto/) |
+| **Doutrina de Produto** | Como governar regras de negócio transversais que cortam múltiplas telas com `@realizes`. | [Ler sobre Doutrina](/pt/docs/concepts/doutrina-de-produto/) |
+| **Feature Flags** | Como governar cenários alternativos e flags sem duplicar especificações com `@gated-by`. | [Ler sobre Feature Flags](/pt/docs/concepts/feature-flags/) |
+| **Julgamento por IA** | Como funcionam os gates semânticos avaliados por IA e registrados com `anchors judge`. | [Ler sobre Julgamento](/pt/docs/concepts/julgamento-ia/) |
+| **Maturidade e Saúde** | O comando `anchors doctor` e o roteiro para transformar um projeto frágil em maduro. | [Ler sobre Maturidade](/pt/docs/concepts/maturidade-e-saude/) |
+
+---
+
+## 1. A Teoria Completa
+
+> O texto a seguir apresenta a formulação conceitual rigorosa do Anchors, detalhando os fundamentos matemáticos e estruturais comuns a todos os pilares.
+
+### 1.1 O problema
 
 Todo trabalho assistido por IA sofre de **amnésia estrutural**. Uma sessão de IA
 é sem estado entre invocações: a sessão acaba, o contexto some, e a próxima
@@ -33,7 +55,7 @@ têm, como não apodrecem, e como uma sessão futura é obrigada a respeitá-los
 
 ---
 
-## 1.1 Maturidade: o conceito guarda-chuva
+### 1.2 [Maturidade](/pt/docs/concepts/maturidade-e-saude/): o conceito guarda-chuva
 
 Entregar não é só construir a coisa certa — é entregar com um nível de qualidade
 que a torne efetiva. Um projeto pode *funcionar* e ainda assim ser inefetivo:
@@ -48,40 +70,40 @@ medido num artefato isolado — é a **presença e o vigor dos pilares** no proj
 como um todo.
 
 Isso não é só descritivo: a maturidade é **medida** pelo **validador de saúde do
-ecossistema** (`QUALITY.md` §5.2) — um meta-gate de visão global (materializado num
-comando de CLI, tipo `anchors doctor`) que varre o estado dos pilares e as pontas
+ecossistema** ([`QUALITY.md`](/pt/docs/quality/)) — um meta-gate de visão global (materializado no
+comando [`anchors doctor`](/pt/docs/cli///)) que varre o estado dos pilares e as pontas
 sistêmicas, e responde "o framework aplicado a este projeto está íntegro e maduro?".
 É o que transforma "presença e vigor dos pilares" de uma noção num veredito.
 
 Os pilares são os mecanismos estruturais que o Anchors define. Este documento
-especifica o mecanismo comum a todos eles — a **âncora** (§2), o **grafo** (§3),
+especifica o mecanismo comum a todos eles — a **[âncora](/pt/docs/concepts/ancora/)** (§2), o **[grafo](/pt/docs/concepts/grafo-e-mapa/)** (§3),
 a **sincronia incremental** (§4), o **rastreio de dessincronia** (§5) e a
 **separação vivo/histórico** (§6). Cada pilar temático é uma aplicação
 especializada desse mecanismo.
 
 Pilares nomeados até agora, na ordem da rota (da origem ao acabamento):
 
-- **Estrutura de Projeto** — [`STRUCTURE.md`](/docs/estrutura/). A planta da casa:
+- **Estrutura de Projeto** — [`STRUCTURE.md`](/pt/docs/structure/). A planta da casa:
   define quais camadas existem, sua ordem/dependência e onde cada âncora mora. É o
   gabarito sobre o qual os outros pilares operam — o meta-nível que declara as
   camadas antes de qualquer spec preenchê-las.
-- **Planejamento** — [`PLANNING.md`](/docs/planejamento/). A origem do *movimento*: semeia
+- **Planejamento** — [`PLANNING.md`](/pt/docs/planning/). A origem do *movimento*: semeia
   as specs de partida (nunca código), é o input do fluxo e carrega o norte entre
   sessões (para onde vamos, em que ordem, onde paramos). Sem ele, o projeto reage
   mas não avança com direção.
-- **Spec** — [`SPEC.md`](/docs/spec/). A origem da *verdade*: a âncora-base, o
+- **Spec** — [`SPEC.md`](/pt/docs/spec///). A origem da *verdade*: a âncora-base, o
   safepoint do qual tudo pende. A disciplina spec-first amarra os outros pilares —
   é nascente da Rastreabilidade, pivô da Propagação e régua da Qualidade.
-- **Rastreabilidade** — [`TRACEABILITY.md`](/docs/rastreabilidade/). A cola, em duas
+- **Rastreabilidade** — [`TRACEABILITY.md`](/pt/docs/traceability/). A cola, em duas
   metades: dá a cada requisito uma identidade contínua através de suas formas (spec →
   feature → teste → código) e mantém o mapa de dependências entre os arquivos,
   garantindo que nenhuma peça vira uma ilha. É o solo em que os outros pilares
   fincam raiz.
-- **Propagação** — [`PROPAGATION.md`](/docs/propagacao/). O motor: faz uma alteração
+- **Propagação** — [`PROPAGATION.md`](/pt/docs/propagation/). O motor: faz uma alteração
   num ponto percorrer o organismo pela Rastreabilidade, marcando o que ficou stale,
   até tudo voltar a ser coerente. É a propagação das alterações que faz o
   desenvolvimento avançar.
-- **Qualidade** — [`QUALITY.md`](/docs/qualidade/). Sem qualidade *medida*, o "bem
+- **Qualidade** — [`QUALITY.md`](/pt/docs/quality/). Sem qualidade *medida*, o "bem
   feito" é uma sensação que não sobrevive entre sessões. Define gates que medem se
   o trabalho atingiu um limiar, e como esses gates compõem a maturidade.
 
@@ -308,7 +330,7 @@ confronto — a âncora mudou, ou o alvo mudou, ou a aresta nunca foi validada.
 
 Detectar staleness sem revalidar o projeto inteiro, e fazer uma mudança percorrer
 o grafo até tudo voltar a ser coerente, é a **dinâmica** do sistema — e ela é um
-pilar próprio: a **Propagação**, especificada em [`PROPAGATION.md`](/docs/propagacao/).
+pilar próprio: a **Propagação**, especificada em [`PROPAGATION.md`](/pt/docs/propagation/).
 
 Aqui basta reter a estrutura: **o carimbo de sincronia vive na aresta** (não no
 nó), porque "estar em dia" é propriedade de uma *relação*, não de um arquivo — a

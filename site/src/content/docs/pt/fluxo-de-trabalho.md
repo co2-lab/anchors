@@ -1,6 +1,6 @@
 ---
 title: O fluxo de trabalho
-description: Como um dia de trabalho acontece com o Anchors — do pedido de trabalho ao merge.
+description: "Como um dia de trabalho acontece com o Anchors — do pedido de trabalho ao merge."
 ---
 
 Os pilares dizem **o que** o Anchors defende. Esta página diz **o que você faz**,

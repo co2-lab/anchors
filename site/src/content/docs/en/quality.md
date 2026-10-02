@@ -3,7 +3,7 @@ title: Quality
 ---
 
 > This document defines the Anchors **Quality pillar**. It presupposes the
-> general mechanism established in [`CONCEPT.md`](/en/docs/conceito/) —
+> general mechanism established in [`CONCEPT.md`](/docs/concept/) —
 > anchor, graph, incremental synchrony, issues, and the living/historical
 > split — and specializes it for one purpose: making sure the work isn't
 > just well done, but that "well done" is **measured**.
@@ -34,7 +34,7 @@ property of the artifact**, which any future session can reassess.
 That's why it's named as its own pillar: to reinforce that quality isn't
 diluted into the other mechanisms nor handled carelessly. Without this
 pillar well structured, the project isn't mature (see
-[`CONCEPT.md` §1.1](/en/docs/conceito/)).
+[`CONCEPT.md` §1.1](/docs/concept/)).
 
 ---
 

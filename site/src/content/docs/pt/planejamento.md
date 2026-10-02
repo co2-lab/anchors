@@ -3,7 +3,7 @@ title: Planejamento
 ---
 
 > Este documento define o **pilar de Planejamento** do Anchors. Ele pressupõe o
-> mecanismo de [`CONCEPT.md`](/docs/conceito/) — âncora (na metáfora da escalada),
+> mecanismo de [`CONCEPT.md`](/pt/docs/concept/) — âncora (na metáfora da escalada),
 > grafo, propagação, issues. O Planejamento é a **origem**: a âncora que aponta a
 > rota, o input do fluxo de trabalho, de onde vem a primeira alteração.
 >

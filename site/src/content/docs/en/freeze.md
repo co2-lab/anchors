@@ -1,6 +1,6 @@
 ---
 title: Freezing the project
-description: The panic button — how to stop all work when a problem must be solved first.
+description: "The panic button — how to stop all work when a problem must be solved first."
 ---
 
 Sometimes a problem appears and **nobody should work until it's solved**: the

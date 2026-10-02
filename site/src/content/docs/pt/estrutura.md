@@ -3,7 +3,7 @@ title: Estrutura de Projeto
 ---
 
 > Este documento define o **pilar de Estrutura de Projeto** do Anchors. Ele
-> pressupõe o mecanismo de [`CONCEPT.md`](/docs/conceito/) e é o **gabarito** sobre o
+> pressupõe o mecanismo de [`CONCEPT.md`](/pt/docs/concept/) e é o **gabarito** sobre o
 > qual os outros pilares operam: define quais camadas o projeto tem, como se
 > organizam e em que ordem se relacionam.
 >
@@ -97,9 +97,9 @@ dessas regras sobre os arquivos reais, e serve para traçar o **caminho mínimo*
 impacto quando um arquivo altera (`TRACEABILITY.md` §4). A Estrutura dá o esqueleto;
 o mapa dá o caminho.
 
-## 2.2 A superfície da trinca: onde as peças *devem* morar
+## 2.2 A superfície da unidade: onde as peças *devem* morar
 
-O grafo virtual diz que uma âncora *deveria* ter sua trinca ao redor — spec, feature,
+O grafo virtual diz que uma âncora *deveria* ter sua unidade ao redor — spec, feature,
 teste. Mas **onde** essas peças moram é uma decisão de layout do projeto, e há duas
 convenções legítimas:
 
@@ -114,13 +114,13 @@ Em ambos os casos, **a ligação material continua sendo por CÓDIGO** (`TRACEAB
 "o código é a chave, não o nome do arquivo") — quem realiza qual requisito é o
 scenario-code compartilhado, não a localização. O que muda é a **descoberta**: quando
 não é co-localizado, o framework precisa saber *onde esperar* cada peça para poder
-**confrontar a ausência**. É aí que entra o **padrão de localização da trinca**.
+**confrontar a ausência**. É aí que entra o **padrão de localização da unidade**.
 
 > **O caminho não é identidade — mas deve respeitar um padrão.** O caminho de um
 > arquivo nunca identifica a unidade (isso é o código). Porém ele **precisa obedecer a
 > um padrão estrutural declarado**: a spec de tal camada mora *aqui*, a feature *ali*,
 > o teste *acolá*. Esse padrão é a **superfície de validação** dos gates de estrutura —
-> a régua contra a qual se pergunta "as peças da trinca desta unidade estão nos lugares
+> a régua contra a qual se pergunta "as peças da unidade desta unidade estão nos lugares
 > que o padrão manda?". Um teste que existe e liga por código, mas mora fora do padrão,
 > é um **achado de estrutura** (não um furo de rastreabilidade, mas uma violação de
 > layout) — a Qualidade decide se acusa.
@@ -130,7 +130,7 @@ co-localizado (o default), **padrões de localização por camada-âncora**: par
 âncora daquela camada, o teste/feature *deve* casar tal template de região. O template
 pode capturar partes do caminho da âncora (ex.: o **módulo** — o diretório-pai quando o
 arquivo é um `handler.ts`) para compor a região esperada. Assim o grafo virtual sabe a
-forma esperada da trinca mesmo quando ela não é co-localizada, e o gate tem superfície
+forma esperada da unidade mesmo quando ela não é co-localizada, e o gate tem superfície
 para confrontar — sem jamais tratar o caminho como identidade.
 
 > É o mesmo classificador do gate "camada declarada" (§6): perguntar "a que camada
@@ -138,7 +138,7 @@ para confrontar — sem jamais tratar o caminho como identidade.
 
 ## 2.3 Regimes de verificação: cada cenário confronta a superfície do seu regime
 
-A "peça de teste" da trinca não é uma só — um requisito pode ser verificado em **regimes
+A "peça de teste" da unidade não é uma só — um requisito pode ser verificado em **regimes
 de teste** diferentes, e cada regime vive numa **superfície** própria:
 
 | Regime (canônico) | O que verifica | Superfície típica |

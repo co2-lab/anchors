@@ -1,0 +1,94 @@
+---
+title: "Gate: no-duplication"
+description: "Detecta blocos de código idênticos ou quase idênticos copiados em múltiplos arquivos."
+---
+
+> **Identificador do Gate:** `no-duplication` / `sem-duplicacao`  
+> **Código Interno:** `DUPLC`  
+> **Categoria:** [Segurança e Higiene Externa](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `Todas as Camadas` `code` |
+| **Alvos Avaliados (`on`)** | `code` |
+| **Tipo de Verificação** | `Externo (run)` |
+| **Modo Recomendado** | Informativo no início (`blocking: false`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Detecta blocos de código idênticos ou quase idênticos copiados em múltiplos arquivos.
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Código copiado e colado multiplica bugs: ao corrigir em um lugar, os outros continuam vulneráveis.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Executa ferramentas como `jscpd`, `pmd cpd` ou `dupl` com limiar de tokens duplicados.
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** Nenhum bloco duplicado acima do limiar encontrado.
+- **`✗ Fail` (Reprovado):** Bloco duplicado copiado em dois ou mais arquivos.
+- **`~ Indeterminado/Pending`:** Ferramenta não instalada.
+- **`Skip` (Dispensado):** Não se aplica.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: no-duplication
+    on: [code]
+    scope: project
+    run: "npx --yes jscpd . --reporters console --silent"
+    needs_tool: jscpd
+    blocking: false
+    when: [ci] 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Informativo no início; promova a bloqueante após refatorar trechos repetidos.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Extraia o bloco duplicado para uma função auxiliar ou módulo compartilhado.
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

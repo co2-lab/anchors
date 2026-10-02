@@ -10,7 +10,7 @@ export const languages = {
 	zh: '简体中文',
 } as const;
 
-export const defaultLang = 'pt';
+export const defaultLang = 'en';
 
 export type Lang = keyof typeof languages;
 

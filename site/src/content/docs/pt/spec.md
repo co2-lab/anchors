@@ -3,7 +3,7 @@ title: Spec
 ---
 
 > Este documento define o **pilar de Spec** do Anchors. Ele pressupõe o mecanismo
-> de [`CONCEPT.md`](/docs/conceito/) e se conecta a todos os outros pilares — porque
+> de [`CONCEPT.md`](/pt/docs/concept/) e se conecta a todos os outros pilares — porque
 > a spec é onde eles se amarram. A Spec é a **âncora-base**: a origem da verdade e
 > o ponto de sustentação do qual o resto pende.
 >
@@ -114,7 +114,7 @@ grafo (`CONCEPT.md` §3), aplicado dentro do próprio pilar. Isso liga a Spec à
 **Estrutura de Projeto** (`STRUCTURE.md`): os *tipos de template* correspondem às
 *camadas que a Estrutura declara*. Tipicamente uma camada corresponde a um tipo de
 spec e um template — mas a relação nem sempre é 1:1 (uma camada pode render dois
-tipos, um tipo pode cobrir dois arquivos; ver [`SPEC_TYPES.md`](/docs/tipos-de-spec/)). A
+tipos, um tipo pode cobrir dois arquivos; ver [`SPEC_TYPES.md`](/pt/docs/spec/-types/)). A
 Estrutura diz "existe a camada X"; a Spec provê o(s) template(s) para X.
 
 A prova de conceito de referência prova os três níveis: tem um guide de spec e dois
@@ -160,7 +160,7 @@ entrada/saída/contrato**:
 
 Por isso o guide define **um template base** e os tipos são **overlays finos** sobre
 ele — não N templates do zero. A lista concreta de tipos e o conteúdo de cada bloco
-de variação vive num catálogo à parte ([`SPEC_TYPES.md`](/docs/tipos-de-spec/)), porque
+de variação vive num catálogo à parte ([`SPEC_TYPES.md`](/pt/docs/spec/-types/)), porque
 cresce por projeto/linguagem e incharia o pilar.
 
 ---
@@ -304,7 +304,7 @@ da Estrutura e do Planejamento): é o safepoint que se crava antes de confiar o 
 - **Três níveis: guide → template → spec.** O guide rege os templates; os templates
   regem as specs. Os tipos de template correspondem às camadas que a Estrutura
   declara. O template é **esqueleto comum + um bloco de variação** por tipo — não N
-  estruturas do zero. (Catálogo de tipos em [`SPEC_TYPES.md`](/docs/tipos-de-spec/).)
+  estruturas do zero. (Catálogo de tipos em [`SPEC_TYPES.md`](/pt/docs/spec/-types/).)
 - **Dois regimes: comportamental e declarativo.** O regime é **por requisito** (tag,
   como nível/prioridade), não da spec inteira — uma spec mista (ex.: entity) tem
   requisitos de regimes diferentes. O regime muda como propaga: comportamental →

@@ -1,6 +1,6 @@
 ---
 title: The anchors.yaml
-description: The complete configuration reference — what each block decides, and why.
+description: "The complete configuration reference — what each block decides, and why."
 ---
 
 `anchors.yaml` is where a project declares **its own rules**. Anchors ships no
@@ -8,7 +8,7 @@ built-in standard for how your code should be organized — it ships the
 mechanism, and this file says how to apply it here.
 
 You don't write this file from scratch: `anchors init` generates it through
-questions and answers, suggesting a preset based on the stack it finds on disk.
+questions and answers, reading the project's own folders as layers and its language as dialect — it proposes no structure.
 
 > **An unknown key is an ERROR, not silence.** Anchors refuses to load an
 > `anchors.yaml` with a key it doesn't know, naming the key and the line.
@@ -116,7 +116,7 @@ derived:
 ```
 
 It's by naming convention: the spec `AreaStatus.spec.md` looks for an
-`AreaStatus.ts` beside it. That's what lets the triad be checked without anyone
+`AreaStatus.ts` beside it. That's what lets the unit be checked without anyone
 declaring edges by hand.
 
 ### `overrides` — when the convention doesn't fit
@@ -137,7 +137,7 @@ derived:
 ```
 
 Without this, the spec stays forever "with no code linked" and the
-`trinca-completa` gate rightly fails — the file exists, but nothing connects
+`unit-complete` gate rightly fails — the file exists, but nothing connects
 them.
 
 ---
@@ -176,17 +176,31 @@ first reaction of whoever hits it is to remove it.
 
 ## `gates` — what gets confronted
 
-This block has [its own page](/en/docs/gates/), being the longest. The minimal
+This block has [its own page](/docs/gates/), being the longest. The minimal
 form:
 
 ```yaml
 gates:
-    - name: trinca-completa
+    - name: unit-complete
       on: [spec]
-      check: trinca-completa
+      check: unit-complete
       blocking: true
-      measures: 'the spec has code, feature and test fulfilling it'
+      measures: 'the spec has the pieces of its unit: code, feature and test'
 ```
+
+A canonical gate needs only its name — `- name: unit-complete` — and inherits the rest. Fields a gate entry can also declare:
+
+| Field | What it does |
+| --- | --- |
+| `when: [manual]` | the gate runs only under `anchors check --phase manual`; a check with no phase leaves it out |
+| `severity:` | what each verdict level does (`fail`, `divergence`, `pending` → `block`, `inform`, `ignore`); with none, a blocking gate blocks only its failures. A top-level `severity:` is the project's default |
+| `presupposes:` | the configuration fields the gate takes as declared (`derived.mock_detect`); with one missing the gate is pending and asks nothing, and with it in `dialect.opt_out` it skips |
+| `review:` | the gate's targets are also marked to review, apart from its verdict (`review: {ask: "..."}`) — see [judgment and review](/docs/concepts/ai-judgment/) |
+| `min_coverage:` | for `line-coverage`: the floor, 70 when undeclared |
+| `coverage_floors:` | for `line-coverage`: a floor per glob, each with its `why` — `{"cmd/**": {min: 40, why: "..."}}` |
+| `no_signal:` | targets with nothing to measure, each with its reason |
+
+`anchors doctor` names every catalog gate that covers your layers and is not declared, and `anchors check --all` says how many in one line.
 
 ---
 
@@ -223,7 +237,7 @@ enabled: false
 freeze_reason: 'plan 0002 points at a spec that does not exist — see #42'
 ```
 
-Freezes the whole project. See [Freezing the project](/en/docs/congelar/).
+Freezes the whole project. See [Freezing the project](/docs/freeze/).
 
 **An absent field means ENABLED.** Only an explicit `false` freezes — otherwise
 every project that never declared the field would be born stopped.

@@ -1,167 +1,54 @@
 ---
-title: The CLI
+title: "The Anchors CLI"
+description: "The official command-line toolchain for AI pair programming and spec-first continuous governance."
 ---
 
-A single CLI for the Anchors framework, written in Go. It's the tool an AI
-operates to exercise the cycle — the AI doesn't need to know Anchors by
-heart, it asks the binary (`anchors guide`), learns the flow, and operates
-with the commands. Anchors **does not embed AI**: it is the tool that the AI
-uses, in any client (Claude Code, GPT, Gemini…).
+The **Anchors CLI** (`anchors`) is a fast, standalone binary written in Go that enforces continuous governance for AI-assisted software development.
 
-## Installation
+Rather than trying to embed AI inside the tool, Anchors is designed from the ground up as **the tool that AI agents operate**:
+- The AI does not need to memorize the entire framework; it queries the binary (`anchors guide`), learns what needs to be done, and executes commands.
+- It is completely client-agnostic: it works with Claude Code, Cursor, Windsurf, Copilot, Gemini CLI, or human terminal developers.
+- It operates strictly on text and filesystem contracts — no hidden runtime servers or heavy dependencies.
 
-```sh
-git clone https://github.com/co2-lab/anchors.git
-cd anchors/cli
-go build -o anchors ./cmd/anchors
-./anchors --help
+---
+
+## 🚀 Quick Navigation
+
+- [**Installation Guide**](/docs/cli/installation/) — Install via Homebrew, shell installer, Go toolchain, Windows, Docker, and CI/CD.
+- [**Commands Reference**](/docs/cli/commands/) — Complete searchable index of all 55 CLI commands.
+- [**The Workflow**](/docs/workflow/) — How to operate the daily cycle from spec to merge.
+- [**The anchors.yaml**](/docs/anchors-yaml/) — Configuration schema and layer definitions.
+
+---
+
+## 🛠️ Essential Commands at a Glance
+
+```bash
+# 1. Initialize a new project or configure an existing one
+anchors init
+
+# 2. Check project health and structural maturity
+anchors doctor
+
+# 3. Build and query the dependency graph
+anchors map build
+anchors impact src/services/auth/login.spec.md
+
+# 4. Run automated quality gates against staged files or whole project
+anchors check
+anchors check --all
+
+# 5. Start background AI task coordination
+anchors watch
 ```
 
-## Use in a project
+---
 
-```sh
-anchors init            # configures anchors.yaml (via Q&A; suggests stack presets)
-anchors map build       # builds the dependency map from the files
-anchors doctor          # ecosystem health: orphans, collisions, coverage holes
-anchors check --all     # runs the quality gates; opens issues; stamps the map
-anchors report all      # generates the reports in docs/anchors/
-```
+## 🧭 Deep Dive Command Guides
 
-The CLI only reads **text** — it never parses code. The annotations it
-understands (identity, `@noPropagation`…) live in comments; the
-per-language markers are configurable. This is what makes it stack-agnostic.
-
-## The flow, driven by the AI
-
-The AI reads `anchors guide` and operates this cycle — the watcher
-**enqueues** the work, the AI **pulls** from the queue (the conversation
-never gets stuck):
-
-```
-  plan ──▶ specify ──▶ map ──▶ implement ──▶ test ──▶ confront
-    │          │          │          │           │          │
-plan guide  .spec.md   map build  code+feature  tests   check / doctor
-                                                              │
-                                        issue ◀── divergence the AI doesn't resolve
-```
-
-Every saved file makes the watcher enqueue the next task (spec→implement,
-feature→test…). The AI doesn't need to remember what comes next; the queue
-tells it.
-
-## What the CLI does today
-
-| area | commands | what it delivers |
-|---|---|---|
-| **Structure** | `init` | configures `anchors.yaml`; structure presets for ~17 stacks |
-| **Map** | `map build`, `map show`, `governs` | the dependency graph; who governs whom |
-| **Propagation** | `impact`, `stale` | the wave of a change; what became out of date |
-| **Queue** | `watch`, `queue`, `next`, `done`, `drop`, `reclaim` | the background watcher enqueues; the AI pulls |
-| **Reporting** | `task-status`, `pr-body` | the round's state: card, PR, checks, what's parked |
-| **Quality** | `check`, `judge`, `doctor` | deterministic gates **and AI-judgment gates**; systemic health |
-| **Identity** | `code` | generates/validates a unique scenario code (avoids collisions) |
-| **Confidence** | `ingest`, `coverage` | ingests JUnit/lcov from the runner; coverage by **scenario**, by the **diff**, and **delta** |
-| **Reports** | `report` | 6 perspectives under `docs/`: tests, quality, structure, config, issues, inconsistencies |
-| **The AI bridge** | `guide` (+ `guide plan/spec/code/feature/test/guide`) | the playbook and embedded rulers the AI reads to operate |
-
-### What gives confidence in the deliverable
-
-The best indicator of a successful cycle is **not having bugs at the end**.
-Beyond requiring tests, Anchors measures their *quality* from the artifact
-the runner already produces:
-
-- **by scenario** — does each requirement in the spec (`SPCR-V01`…) have a
-  test that **passed**? (semantic, not line coverage)
-- **from the diff** — are the lines you **changed** covered? (catches the
-  bug in the new line)
-- **delta** — has coverage **dropped** since the last measurement? (catches
-  regression)
-
-And gates that a script cannot compute ("does this screen respect the
-architecture?") become **AI-judgment gates**: the AI reads the guide's
-*conformance points*, confronts the target item by item, and the verdict
-enters the same mechanics (stamp + issue) — aging if the target changes.
-
-## Which files a run takes
-
-By default `anchors test` and `anchors mutation` run only the files whose last result is
-**stale and below the minimum**, plus the ones never measured: what is known and current is
-skipped, so the everyday run is light. Each flag opens one side of the square:
-
-| | fresh | stale |
-| --- | --- | --- |
-| **passing** | `--include-fresh --include-passing` | `--include-passing` |
-| **below the minimum** | `--include-fresh` | runs by default |
-
-`--skip-unmeasured` leaves out the files never measured; `--all` runs everything through the
-suite's `run:`. A test file is stale when it or the code it exercises changed; a mutation
-result measured under load counts as stale. A suite with no `run_changed:` cannot run a subset
-and runs whole. `--budget` applies to the selected files.
-
-In a monorepo, each suite says which files are its own with `paths:` (globs from the root), and
-a file outside them is never handed to it — not by the selection, `--budget` or `--changed`:
-
-```yaml
-mutation:
-  - workspace: mobile
-    layer: unit
-    run: "bash scripts/mutation.sh mobile"
-    run_changed: "bash scripts/mutation.sh mobile {{files}}"
-    paths: ["apps/mobile/**"]
-```
-
-`{{files}}` receives **absolute** paths with forward slashes; `{{target}}` receives what was
-passed to `--target`, as given.
-
-## `--budget`: as much as fits in a time
-
-`anchors test --budget 60s` and `anchors mutation --budget 10m` run the files **fastest
-first**, in batches through the suite's `run_changed:`, until the time is spent; what did not
-fit is left for a later run — a smoke run of whatever fits. A batch still running when the time
-is up is stopped whole, with the processes it started.
-
-The order comes from the times earlier runs recorded in the map, per suite: a test file's from
-its JUnit cases, a code file's from Anchors timing its mutation run — which is why a mutation
-budget runs one file at a time. A file never timed goes last, and its run is what times it.
-
-**Cutting a batch.** When the time is up, the running batch's process group gets a `TERM`,
-and whatever is still running 10 seconds later gets a `KILL`. A mutation tool that works **in
-place** (it rewrites the source and restores it at the end, like Stryker with `inPlace`) must
-restore the file on `TERM` — trap it in the `run_changed:` script if the tool does not — or a
-cut batch leaves mutated source in the tree. On Windows there is no `TERM`: the batch is
-killed at once, and an in-place tool can be cut mid-mutant.
-
-## The changelog
-
-`anchors changelog` builds the **technical** changelog from the commits between two tags:
-
-| section | from |
-| --- | --- |
-| Breaking changes | a `!` after the type, or a `BREAKING CHANGE:` footer |
-| Features | `feat` |
-| Bugs fixed | `fix` with a `Bug:` footer — a defect that shipped |
-| Fixes | `fix` without it — a correction of work that never reached anyone |
-
-`refactor`, `test`, `chore` and the other internal types are left out.
-
-```sh
-anchors changelog                   # the latest release
-anchors changelog --from v0.2.0     # every release after v0.2.0
-anchors changelog --all --unreleased
-anchors changelog --write           # into the file(s) the `changelog:` block names
-```
-
-`--write` adds only the releases the file does not hold yet, and keeps the rest as it is —
-edit an entry by hand and a later write leaves it alone. The headings follow `lang`.
-
-It is a changelog for whoever works on the code, not the product's release notes. For
-those, have an agent synthesize a **product changelog** from it — breaking changes, the
-features a user sees, the bugs fixed; no plain fixes, no chores unless the product feels
-them. `anchors guide changelog` is the ruler for both.
-
-## Project status
-
-Under construction, and honest about it. The **doctrine** of the 6 pillars
-is written and reviewed; the **CLI** exercises the whole cycle and has been
-validated against a real-world proof of concept — a mobile app with a
-serverless backend, with a non-trivial graph.
+- [**anchors check & verify**](/docs/cli/commands/check/) — Pipeline evaluation, strict modes, and gate filtering.
+- [**anchors doctor & audit**](/docs/cli/commands/doctor/) — Ecosystem health, orphaned artifacts, and single-file audits.
+- [**anchors map & impact**](/docs/cli/commands/map/) — Dependency DAG analysis, blast radius calculation, and code renaming.
+- [**anchors init & new**](/docs/cli/commands/init/) — Project setup wizard, layer discovery, and artifact scaffolding.
+- [**anchors flow & queue**](/docs/cli/commands/flow/) — Background watcher, task claiming, and autonomous stage deliveries.
+- [**anchors freeze & thaw**](/docs/cli/commands/freeze/) — Release baseline locking and security freezes.

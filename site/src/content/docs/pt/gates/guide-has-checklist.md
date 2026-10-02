@@ -1,0 +1,92 @@
+---
+title: "Gate: guide-has-checklist"
+description: "Garante que guias de governança destilam suas regras em uma seção de checklist com itens CK1, CK2..."
+---
+
+> **Identificador do Gate:** `guide-has-checklist` / `guia-tem-checklist`  
+> **Código Interno:** `INCHN`  
+> **Categoria:** [Falhas e Governança](/pt/docs/gates//)
+
+| Propriedade | Valor |
+| --- | --- |
+| **Camadas Aplicáveis** | `doutrina` `guide` |
+| **Alvos Avaliados (`on`)** | `guide` |
+| **Tipo de Verificação** | `Interno Determinístico` |
+| **Modo Recomendado** | Sim (`blocking: true`) |
+
+---
+
+## 🎯 O que este gate mede?
+
+Garante que guias de governança destilam suas regras em uma seção de checklist com itens CK1, CK2...
+
+Em termos simples: este gate garante que o seu software não cometa erros por descuido ou falta de sincronização. Se você ou uma inteligência artificial alterar um arquivo coberto por este gate, ele inspeciona o trabalho imediatamente.
+
+---
+
+## 🛡️ Por que isso é importante?
+
+Guias que são apenas prosa não fornecem critérios objetivos para que agentes de IA façam checagens.
+
+Sem este gate ativo, esse tipo de defeito passa despercebido pelos testes comuns e só estoura em produção ou durante refatorações dolorosas semanas depois.
+
+---
+
+## ⚙️ Como funciona por baixo dos panos?
+
+Verifica a presença do título '## Pontos de conformidade' (ou equivalente em inglês/espanhol) e itens com formato `CK1`, `CK2`.
+
+### Condições dos Vereditos:
+
+- **`✓ Pass` (Aprovado):** O guia contém a seção de pontos de conformidade e itens CK.
+- **`✗ Fail` (Reprovado):** Guia sem seção de conformidade ou sem itens CK.
+- **`~ Indeterminado/Pending`:** Não se aplica.
+- **`Skip` (Dispensado):** Arquivos que não são do kind `guide`.
+
+---
+
+## 📋 Exemplo de Configuração no `anchors.yaml`
+
+Para ativar este gate no seu projeto, adicione o bloco abaixo na seção `gates:` do seu [`anchors.yaml`](/pt/docs/anchors-yaml//):
+
+```yaml
+gates:
+  - name: guide-has-checklist
+    on: [guide]
+    check: guide-has-checklist
+    blocking: true
+    measures: "um guia de governança destila regras em pontos CK" 
+```
+
+---
+
+## 💡 Recomendações de Uso
+
+- **Quando ativar:** Bloqueante para documentos que regem o projeto.
+- **Fase de execução:** Configure em `when: [pre-commit, ci]` para verificações rápidas, ou `when: [pre-push, ci]` para gates que rodam ferramentas mais pesadas.
+- **Transição de maturidade:** Comece com `blocking: false` para avaliar o estado atual do repositório com `anchors check`. Quando zerar as ocorrências, altere para `blocking: true`.
+
+---
+
+## 🔧 Como corrigir quando este gate reprovar?
+
+Se o `anchors check` acusar falha (`✗`) neste gate:
+
+1. Adicione a seção `## Compliance points` com itens `- CK1: ...` ao final do guia.
+2. Reexecute a verificação no terminal:
+   ```sh
+   anchors check
+   ```
+3. Se o gate suportar correção automática, você pode tentar o comando:
+   ```sh
+   anchors check --fix
+   ```
+
+---
+
+## 🔗 Conceitos Relacionados
+
+- [Guia Completo de Camadas](/pt/docs/layers/): Entenda quais camadas exigem este gate.
+- [A Unidade (The Unit)](/pt/docs/concepts/unidade/): A relação entre Spec, Feature, Teste e Código.
+- [Gates e Vereditos](/pt/docs/concepts/gates-e-vereditos/): A mecânica completa de avaliação do Anchors.
+- [Catálogo Completo de Gates](/pt/docs/gates//): Retornar ao índice pesquisável de todos os gates.

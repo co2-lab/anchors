@@ -1,6 +1,6 @@
 ---
 title: The workflow
-description: How a working day happens with Anchors — from claiming work to merge.
+description: "How a working day happens with Anchors — from claiming work to merge."
 ---
 
 The pillars say **what** Anchors stands for. This page says **what you do**, in

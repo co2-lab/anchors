@@ -3,7 +3,7 @@ title: Qualidade
 ---
 
 > Este documento define o **pilar de Qualidade** do Anchors. Ele pressupõe o
-> mecanismo geral estabelecido em [`CONCEPT.md`](/docs/conceito/) — âncora, grafo,
+> mecanismo geral estabelecido em [`CONCEPT.md`](/pt/docs/concept/) — âncora, grafo,
 > sincronia incremental, issues, e a separação vivo/histórico — e o especializa
 > para um propósito: fazer com que o trabalho não seja apenas bem feito, mas que
 > esse "bem feito" seja **medido**.
@@ -33,7 +33,7 @@ O pilar de Qualidade transforma essa sensação em uma **propriedade medida e
 versionada do artefato**, que qualquer sessão futura pode reavaliar. É por isso
 que ele é nomeado pilar isoladamente: para reforçar que qualidade não é diluída
 nos outros mecanismos nem tratada com descuido. Sem esse pilar bem estruturado, o
-projeto não é maduro (ver [`CONCEPT.md` §1.1](/docs/conceito/)).
+projeto não é maduro (ver [`CONCEPT.md` §1.1](/pt/docs/concept/)).
 
 ---
 

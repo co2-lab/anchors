@@ -1,6 +1,6 @@
 ---
 title: O anchors.yaml
-description: A referência completa do arquivo de configuração — o que cada bloco decide, e por quê.
+description: "A referência completa do arquivo de configuração — o que cada bloco decide, e por quê."
 ---
 
 O `anchors.yaml` é onde o projeto declara **as suas próprias regras**. O Anchors
@@ -8,7 +8,7 @@ não traz um padrão embutido de como o seu código deve ser organizado — ele 
 o mecanismo, e este arquivo diz como aplicá-lo aqui.
 
 Você não escreve este arquivo do zero: `anchors init` o gera por perguntas e
-respostas, e sugere um preset conforme a stack que encontrar no disco.
+respostas, lendo as pastas do próprio projeto como camadas e a linguagem como dialeto — sem propor estrutura.
 
 > **Chave desconhecida é ERRO, não silêncio.** O Anchors recusa carregar um
 > `anchors.yaml` com uma chave que não conhece, dizendo o nome e a linha.
@@ -98,7 +98,7 @@ layers:
 ```
 
 Eles continuam no mapa, então mudar um helper ainda alcança todo teste que o usa. Os gates
-que julgam um teste como teste (`tests-pass`, `test-feature-match`, `test-traceable`)
+que julgam um teste como teste ([`tests-pass`](/pt/docs/gates///tests-pass/), `test-feature-match`, [`test-traceable`](/pt/docs/gates///test-traceable/))
 os pulam, e eles não contam como teste que nomeia um cenário.
 
 ---
@@ -118,7 +118,7 @@ derived:
 ```
 
 É por convenção de nome: a spec `AreaStatus.spec.md` procura um `AreaStatus.ts`
-ao lado. É o que faz a trinca ser conferida sem ninguém declarar aresta à mão.
+ao lado. É o que faz a unidade ser conferida sem ninguém declarar aresta à mão.
 
 ### `overrides` — quando a convenção não serve
 
@@ -137,7 +137,7 @@ derived:
                   - 'packages/*/tsconfig.json'
 ```
 
-Sem isto, a spec fica eternamente "sem código ligado" e o gate `trinca-completa`
+Sem isto, a spec fica eternamente "sem código ligado" e o gate [`unit-complete`](/pt/docs/gates/unit-complete/)
 reprova com razão — o arquivo existe, mas nada os liga.
 
 ---
@@ -168,7 +168,7 @@ boundaries:
       because: 'o contrato não conhece quem o consome'
 ```
 
-O `because` não é enfeite: é o texto que aparece quando o gate `layer-boundary`
+O `because` não é enfeite: é o texto que aparece quando o gate [`layer-boundary`](/pt/docs/gates///layer-boundary/)
 reprova. Uma fronteira sem razão escrita vira "regra que alguém pôs", e a
 primeira reação de quem esbarra nela é removê-la.
 
@@ -176,17 +176,31 @@ primeira reação de quem esbarra nela é removê-la.
 
 ## `gates` — o que é confrontado
 
-Este bloco tem [página própria](/docs/gates/), porque é o mais extenso. O
+Este bloco tem [página própria](/pt/docs/gates///), porque é o mais extenso. O
 formato mínimo:
 
 ```yaml
 gates:
-    - name: trinca-completa
+    - name: unit-complete
       on: [spec]
-      check: trinca-completa
+      check: unit-complete
       blocking: true
-      measures: 'a spec tem código, feature e teste que a realizam'
+      measures: 'a spec tem as peças da sua unidade: código, feature e teste'
 ```
+
+Um gate canônico precisa só do nome — `- name: unit-complete` — e herda o resto. Campos que uma entrada de gate também pode declarar:
+
+| Campo | O que faz |
+| --- | --- |
+| `when: [manual]` | o gate roda só com `anchors check --phase manual`; um check sem fase o deixa de fora |
+| `severity:` | o que cada nível de veredito faz (`fail`, `divergence`, `pending` → `block`, `inform`, `ignore`); sem ele, um gate bloqueante barra só as falhas. Um `severity:` no topo é o padrão do projeto |
+| `presupposes:` | os campos de configuração que o gate dá como declarados (`derived.mock_detect`); faltando um, o gate fica pendente e não pergunta nada, e com ele em `dialect.opt_out` é pulado |
+| `review:` | os alvos do gate também ficam marcados para revisão, à parte do veredito (`review: {ask: "..."}`) — veja [julgamento e review](/pt/docs/concepts/ai-judgment/) |
+| `min_coverage:` | para o `line-coverage`: o piso, 70 quando não declarado |
+| `coverage_floors:` | para o `line-coverage`: um piso por glob, cada um com o seu `why` — `{"cmd/**": {min: 40, why: "..."}}` |
+| `no_signal:` | alvos sem nada a medir, cada um com o motivo |
+
+O `anchors doctor` lista todo gate do catálogo que cobre suas camadas e não está declarado, e o `anchors check --all` diz quantos numa linha.
 
 ---
 
@@ -223,7 +237,7 @@ enabled: false
 freeze_reason: 'o plano 0002 aponta para uma spec que não existe — ver #42'
 ```
 
-Congela o projeto inteiro. Ver [Congelar o projeto](/docs/congelar/).
+Congela o projeto inteiro. Ver [Congelar o projeto](/pt/docs/freeze/).
 
 **A ausência do campo significa HABILITADO.** Só o `false` explícito congela —
 senão todo projeto que nunca declarou o campo nasceria parado.
@@ -232,8 +246,8 @@ senão todo projeto que nunca declarou o campo nasceria parado.
 
 ## `dialect.tests` — como os seus testes são escritos
 
-Os gates que leem o título de um teste (`feature-test-match`, `test-traceable`,
-`scenario-coverage`, `flag-covered`) precisam saber como um teste abre na sua biblioteca de
+Os gates que leem o título de um teste ([`feature-test-match`](/pt/docs/gates///feature-test-match/), [`test-traceable`](/pt/docs/gates///test-traceable/),
+[`scenario-coverage`](/pt/docs/gates///scenario-coverage/), [`flag-covered`](/pt/docs/gates///flag-covered/)) precisam saber como um teste abre na sua biblioteca de
 teste. Esse conhecimento é do projeto, não do Anchors, então você o declara — com um padrão
 fixo ou com um script, o que servir melhor:
 
