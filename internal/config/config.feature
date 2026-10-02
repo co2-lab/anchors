@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CNFGO
-#   updated_at: 2026-10-01
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @CNFGO
@@ -388,3 +388,10 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a project declaring divergence and pending block, a blocking gate that declares nothing, one that declares pending inform, an informative gate, and a project default naming an unknown state
     When each configuration is loaded
     Then the first gate blocks all three levels, the second informs its pending items, the informative gate informs, and the unknown state fails the load
+
+  @CNFGO-B57 @unit-level
+  Scenario: Coverage floors are percentages, and each one says why
+    Given gates declaring min_coverage 120, a floor of -1, and a floor with no why
+    When the configuration is loaded
+    Then each is refused naming the gate and the field
+    And a floor of 40 with its why loads

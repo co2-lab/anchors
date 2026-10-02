@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INCHN
-#   updated_at: 2026-10-01
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @INCHN
@@ -311,3 +311,10 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given a file listed by the mutation report at its revision with no mutant, one listed so at an older revision, and one never listed
     When mutation-score confronts each
     Then the first is skipped, and the others are pending
+
+  @INCHN-B38 @unit-level
+  Scenario: Line coverage is held to the gate's floor, or a glob's floor with its reason
+    Given a code file with 60% line coverage
+    When line-coverage confronts it with no floor declared, then with min_coverage 50
+    Then it fails against 70%, then passes
+    And with coverage_floors "cmd/**" at 80 because "the entry point is proven by the boot test", a file under cmd/ at 60% fails naming the glob and the reason

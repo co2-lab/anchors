@@ -324,7 +324,13 @@ func checkGateCoverage(g *mapx.Graph, cfg *config.Config) []Finding {
 func checkMissingSignals(g *mapx.Graph) []Finding {
 	var códigos, testes int
 	var comExec, comCov, comMut int
+	// ingerido: a JUnit report WAS ingested — its proven scenarios are on the specs —
+	// whatever it matched of the test files.
+	ingerido := false
 	for _, n := range g.Nodes {
+		if n.Signal != nil && len(n.Signal.ProvenBySuite) > 0 {
+			ingerido = true
+		}
 		switch n.Kind {
 		case mapx.KindCode:
 			códigos++
@@ -343,9 +349,16 @@ func checkMissingSignals(g *mapx.Graph) []Finding {
 	}
 
 	var out []Finding
+	// "Nothing ingested" and "ingested, nothing matched" have different fixes: the first is
+	// to run the ingest, the second is the report's shape. Saying the first for the second
+	// sent a project to ingest again, and again, the report it had just ingested (reported
+	// from baas-proxy).
 	if testes > 0 && comExec == 0 {
-		out = append(out, Finding{"sinal-ausente", Warn, "execução (JUnit)",
-			i18n.T("health.missing_signal.junit", testes)})
+		key := "health.missing_signal.junit"
+		if ingerido {
+			key = "health.missing_signal.junit_unmatched"
+		}
+		out = append(out, Finding{"sinal-ausente", Warn, "execução (JUnit)", i18n.T(key, testes)})
 	}
 	if códigos > 0 && comCov == 0 {
 		out = append(out, Finding{"sinal-ausente", Warn, "cobertura (lcov)",

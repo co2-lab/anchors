@@ -1602,3 +1602,22 @@ func TestProjectSeverity_isTheBlockingGatesDefault(t *testing.T) {
 		t.Errorf("a gate whose merged levels break the order fails naming it, got %v", err)
 	}
 }
+
+func TestCoverageFloorsAreValidated(t *testing.T) {
+	t.Run("CNFGO-B57: Coverage floors are percentages, and each one says why", func(t *testing.T) {})
+	gate := func(body string) string {
+		return fmt.Sprintf("version: %d\nlayers: {}\ngates:\n  - name: line-coverage\n    check: line-coverage\n%s", FormatoAtualDeConfig, body)
+	}
+	for _, c := range []struct{ body, field string }{
+		{"    min_coverage: 120\n", "min_coverage"},
+		{"    coverage_floors:\n      \"cmd/**\": {min: -1, why: x}\n", "coverage_floors.cmd/**"},
+		{"    coverage_floors:\n      \"cmd/**\": {min: 40}\n", "cmd/**"},
+	} {
+		if _, err := load(t, gate(c.body)); err == nil || !strings.Contains(err.Error(), "line-coverage") || !strings.Contains(err.Error(), c.field) {
+			t.Errorf("%q should be refused naming the gate and %s, got %v", c.body, c.field, err)
+		}
+	}
+	if _, err := load(t, gate("    coverage_floors:\n      \"cmd/**\": {min: 40, why: \"boot wiring, proven by the smoke test\"}\n")); err != nil {
+		t.Errorf("a floor with its why loads, got %v", err)
+	}
+}

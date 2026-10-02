@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: TSRCH
-#   updated_at: 2026-09-28
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @TSRCH
@@ -54,3 +54,11 @@ Feature: TestReach — a test reaches the unit it says it tests
     Given a test that copies the unit and carries @no-unit-import with a reason, and one with a bare @no-unit-import
     When each is confronted
     Then the first passes and the second fails
+
+  @TSRCH-B09 @unit-level
+  Scenario: A member of the test's own type is not a copy of the unit's
+    Given a Go unit with the interface Pinger, the method GormPinger.Ping and ReadyHandler
+    When a test defines fakePinger.Ping and calls ReadyHandler with it
+    Then the test reaches the unit and copies nothing
+    And a test that defines GormPinger.Ping again copies "GormPinger.Ping"
+    And a Python test whose FakePinger class defines ping, beside the unit's DbPinger.ping, copies nothing

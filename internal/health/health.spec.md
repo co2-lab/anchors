@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCTRO
-  updated_at: 2026-09-26
+  updated_at: 2026-10-02
   layer: infra
 -->
 # Doctor — the global health check that hunts the systemic loose ends of a project
@@ -102,6 +102,7 @@ same diagnosis and sorted into the same report.
 | Effect | Description |
 | --- | --- |
 | `DCTRO-B24` | Tests in the map with no ingested result at all, and code with no ingested coverage at all, are each a warning `sinal-ausente`. One node with the signal is enough. |
+| `DCTRO-B26` | Tests with no result when a JUnit report WAS ingested — the specs hold scenarios it proved — are the warning that the report reached no test file, saying the report names no file the map knows and how to make it; with no report ingested, the warning is the one to run the ingest. |
 | `DCTRO-B25` | Code with no mutation signal is an informational `sinal-ausente`; code where only some files have it is an informational `sinal-ausente` on the partial mutation, carrying how many of how many. |
 
 ## Invariants

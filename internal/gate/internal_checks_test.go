@@ -1742,7 +1742,8 @@ func TestLineCoverage_nothingToCover(t *testing.T) {
 	listed := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: &mapx.TestSignal{CoverageRev: "r1"}}
 	omitted := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: &mapx.TestSignal{CoverageOmitted: "r1"}}
 	oldOmission := mapx.Node{Kind: mapx.KindCode, Rev: "r2", Signal: &mapx.TestSignal{CoverageOmitted: "r1"}}
-	for _, check := range []func(string, mapx.Node) (Verdict, string){checkLineCoverage, checkCoverageDelta} {
+	lineCoverage := func(c string, n mapx.Node) (Verdict, string) { return checkLineCoverage(c, n, "", nil, nil) }
+	for _, check := range []func(string, mapx.Node) (Verdict, string){lineCoverage, checkCoverageDelta} {
 		if v, _ := check("", listed); v != Skip {
 			t.Errorf("listed with no line is skipped, got %v", v)
 		}
@@ -1770,5 +1771,32 @@ func TestMutationScore_nothingToMutate(t *testing.T) {
 	}
 	if v, _ := checkMutationScore("", mapx.Node{Kind: mapx.KindCode, Rev: "r1"}); v != Pending {
 		t.Errorf("never listed is pending, got %v", v)
+	}
+}
+
+func TestLineCoverage_theGatesFloor(t *testing.T) {
+	t.Run("INCHN-B38: Line coverage is held to the gate's floor, or a glob's floor with its reason", func(t *testing.T) {})
+	node := func(id string) mapx.Node {
+		return mapx.Node{ID: id, Kind: mapx.KindCode, Signal: &mapx.TestSignal{TotalLines: 10, CoveredLines: 6, LineCoverage: 60}}
+	}
+	with := func(g config.Gate) *config.Config {
+		g.Name, g.Check = "line-coverage", "line-coverage"
+		return &config.Config{Gates: []config.Gate{g}}
+	}
+	if v, msg := checkLineCoverage("", node("src/a.go"), "", nil, nil); v != Fail || !strings.Contains(msg, "70") {
+		t.Errorf("no floor declared fails against 70%%, got %v: %s", v, msg)
+	}
+	if v, _ := checkLineCoverage("", node("src/a.go"), "", nil, with(config.Gate{MinCoverage: 50})); v != Pass {
+		t.Errorf("min_coverage 50 passes 60%%, got %v", v)
+	}
+	floors := with(config.Gate{MinCoverage: 50, CoverageFloors: map[string]config.CoverageFloor{
+		"cmd/**": {Min: 80, Why: "the entry point is proven by the boot test"},
+	}})
+	v, msg := checkLineCoverage("", node("cmd/server/main.go"), "", nil, floors)
+	if v != Fail || !strings.Contains(msg, "cmd/**") || !strings.Contains(msg, "boot test") {
+		t.Errorf("a file under a glob's floor fails naming the glob and why, got %v: %s", v, msg)
+	}
+	if v, _ := checkLineCoverage("", node("src/a.go"), "", nil, floors); v != Pass {
+		t.Errorf("a file no glob matches keeps the gate's floor, got %v", v)
 	}
 }

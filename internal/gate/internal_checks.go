@@ -23,7 +23,6 @@ var internalCheckers = map[string]func(content string, n mapx.Node) (Verdict, st
 	"non-empty":           checkNonEmpty,
 	"has-code":            checkHasScenarioCode,
 	"guide-has-checklist": checkGuideHasChecklist,
-	"line-coverage":       checkLineCoverage,
 	"coverage-delta":      checkCoverageDelta,
 	"tests-pass":          checkTestsPass,
 	"route-declared":      checkRouteDeclared,
@@ -41,6 +40,7 @@ var checkersWithRoot = map[string]func(content string, n mapx.Node, root string)
 // que atravessa a unidade — ex.: feature↔test (cada cenário da feature está implementado
 // no teste ligado, roteado pelo regime do cenário?).
 var checkersWithGraph = map[string]func(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string){
+	"line-coverage":                   checkLineCoverage,
 	"mutation-score":                  checkMutationScoreUnderLoad,
 	"progress-honest":                 checkProgressHonest,
 	"plan-doctrine-exists":            checkPlanDoctrineExists,
@@ -944,9 +944,10 @@ func coverageAbsence(n mapx.Node) (Verdict, string, bool) {
 	return "", "", false
 }
 
-// line-coverage: a cobertura de linha do nó de código está >= 70%? (limiar fixo por
-// ora — poderia vir da config). Pending se não ingerida.
-func checkLineCoverage(_ string, n mapx.Node) (Verdict, string) {
+// line-coverage: a cobertura de linha do nó de código alcança o piso? O piso é o do gate
+// (`min_coverage`, 70% sem declaração), ou o de um glob de `coverage_floors` que case o
+// arquivo, com a razão escrita — e a reprovação a cita. Pending se não ingerida.
+func checkLineCoverage(_ string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if v, msg, ok := coverageAbsence(n); ok {
 		return v, msg
 	}
@@ -956,9 +957,13 @@ func checkLineCoverage(_ string, n mapx.Node) (Verdict, string) {
 	if n.SignalStale() {
 		return Pending, i18n.T("gate.stale_coverage")
 	}
-	const threshold = 70.0
+	threshold, glob, why := gateEntry(cfg, "line-coverage").CoverageFloorFor(n.ID)
 	if n.Signal.LineCoverage < threshold {
-		return Fail, i18n.T("gate.line_coverage_low", n.Signal.LineCoverage, threshold)
+		msg := i18n.T("gate.line_coverage_low", n.Signal.LineCoverage, threshold)
+		if glob != "" {
+			msg += i18n.T("gate.line_coverage_floor", glob, why)
+		}
+		return Fail, msg
 	}
 	return Pass, ""
 }

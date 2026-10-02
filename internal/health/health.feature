@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DCTRO
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @DCTRO
@@ -168,3 +168,10 @@ Feature: Doctor — the global health check that hunts the systemic loose ends o
     Given a code file with no spec
     When the doctor diagnoses the project
     Then no finding names that file
+
+  @DCTRO-B26 @unit-level
+  Scenario: An ingested report that reached no test is told apart from no report
+    Given tests with no result and a spec holding scenarios a suite proved
+    When the signals are checked
+    Then the warning says the ingested report reached no test file and names the `file` attribute
+    And with no spec proven the warning is the one to run the ingest

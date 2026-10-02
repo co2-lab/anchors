@@ -331,7 +331,10 @@ var dialectFamilies = map[string]Dialect{
 		// The standard library: a test names its cases with `t.Run("title", …)`.
 		Tests: &TestsSource{Pattern: `\bt\.Run\(`, Assertion: `\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b`},
 		// Functions, methods and types, at the top level.
-		Definition: `(?m)^(?:func\s+(?:\([^)]*\)\s+)?|type\s+)(\w+)`,
+		// A method is named WITH its receiver's type (the `owner` group): a test's fake that
+		// implements an interface defines `fakePinger.Ping`, and the unit's `GormPinger.Ping`
+		// is another definition — the same bare name read them as a copy.
+		Definition: `(?m)^(?:func\s+\(\s*(?:\w+\s+)?\*?(?P<owner>\w+)(?:\[[^\]]*\])?\s*\)\s+(\w+)|func\s+(\w+)|type\s+(\w+))`,
 	},
 	"python": {
 		// Sem palavra-chave de exportação: convenção é o underscore inicial marcar o

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNFGO
-  updated_at: 2026-10-01
+  updated_at: 2026-10-02
   layer: config
 -->
 # Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default
@@ -76,6 +76,7 @@ patterns a spec governs.
 | `CNFGO-B54` | The file's declared format is read from a `version:` line ending in `\r\n` as from one ending in `\n`, trailing comment included. |
 | `CNFGO-B55` | Each verdict level of a gate — `fail`, `divergence`, `pending` — takes a state under `severity`: `block`, `inform` or `ignore`; unset, a blocking gate blocks its failures and informs its divergences and pending items, and an informative gate informs all three. A level stronger than a more serious one (pending ≤ divergence ≤ fail) or an unknown state fails the load naming the gate. (`ActionFor`) |
 | `CNFGO-B56` | A project-wide `severity` is the default of every blocking gate: each level a gate entry does not declare takes the project's state, and a level the entry declares keeps its own; informative gates are not touched. The project default is refused if it names an unknown state or breaks the order, and a gate whose merged levels break the order fails the load naming it. (`applyProjectSeverity`) |
+| `CNFGO-B57` | A gate's `min_coverage` and each `coverage_floors` floor is a percentage from 0 to 100, and every floor carries a `why`; anything else is refused at load, naming the gate and the field. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 
 ### Canonical gate declarations

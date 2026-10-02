@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d852d7cbaa83cea7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:dda419830fba6628 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1391,6 +1391,8 @@ teste prova.
 - [A report's signals are kept under its path from the root](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B15`
 
 - [A suite's whole coverage run marks the files it left out](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B18`
+
+- [A JUnit case with no file finds its test by its class's folder and the one file defining its test](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B19`
 
 - [The legacy spelling of the waiver is a waiver all the way to the stamp](layers/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B01`
 
@@ -2828,6 +2830,8 @@ teste prova.
 
 - [A project-wide severity is the default of its blocking gates](layers/config.md#cnfgo-b56--a-project-wide-severity-is-the-default-of-its-blocking-gates) `CNFGO-B56`
 
+- [Coverage floors are percentages, and each one says why](layers/config.md#cnfgo-b57--coverage-floors-are-percentages-and-each-one-says-why) `CNFGO-B57`
+
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](layers/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -3867,6 +3871,8 @@ teste prova.
 - [A file with nothing to cover is not pending](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B36`
 
 - [A file the mutation tool measured with no mutant has nothing to mutate](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B37`
+
+- [Line coverage is held to the gate's floor, or a glob's floor with its reason](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B38`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -5130,6 +5136,8 @@ teste prova.
 
 - [A declared way to reach the unit passes](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B08`
 
+- [A member of the test's own type is not a copy of the unit's](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B09`
+
 - [Non-test artifacts skip confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B01`
 
 - [Confrontation without a dependency graph returns Pending](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B02`
@@ -5697,6 +5705,8 @@ teste prova.
 - [A healthy project has no warnings](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-I01`
 
 - [Code without a spec is not reported](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-X01`
+
+- [An ingested report that reached no test is told apart from no report](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B26`
 
 - [A spec with two open decisions gives one warning carrying the count](layers/infra.md#pndcp--pendingdecisions--the-doctor-lists-the-specs-that-still-hold-open-decisions-the-heaviest-first) `PNDCP-B01`
 

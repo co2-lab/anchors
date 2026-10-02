@@ -82,7 +82,7 @@ func TestTestReach_shortNamesAreAnyones(t *testing.T) {
 	t.Run("TSRCH-B04: Short names are anyone's", func(t *testing.T) {})
 	def := definitionOf(reachCfg())
 	names := definedNames("function ok() {}\nfunction pay() {}\n", def)
-	if names["ok"] || !names["pay"] || len(names) != 1 {
+	if _, ok := names["ok"]; ok || len(names) != 1 || names["pay"].bare != "pay" {
 		t.Errorf("a two-letter name is left out and a three-letter one kept, got %v", names)
 	}
 	if v, msg := exercise(t, reachCfg(), "function ok() {}\ntest('a', () => ok())\n"); v != Fail || strings.Contains(msg, "its own copy") {
@@ -185,5 +185,31 @@ func TestTestReach_declared(t *testing.T) {
 	}
 	if v, _ := exercise(t, reachCfg(), "// @no-unit-import:\n"+copied); v != Fail {
 		t.Errorf("a bare waiver waives nothing, got %v", v)
+	}
+}
+
+// A fake that implements the unit's interface defines a method with the unit's method name.
+// That is the test's own type, not a copy of the unit (reported from baas-proxy: a
+// `fakePinger.Ping` beside the unit's `GormPinger.Ping` failed as "defines Ping again").
+func TestTestReach_aFakeImplementingTheInterfaceIsNotACopy(t *testing.T) {
+	t.Run("TSRCH-B09: A member of the test's own type is not a copy of the unit's", func(t *testing.T) {})
+	root := t.TempDir()
+	goCfg := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	writeFile(t, root, "src/handlers/probes.go", "package handlers\n\ntype Pinger interface{ Ping(ctx context.Context) error }\n\ntype GormPinger struct{ db *gorm.DB }\n\nfunc (g GormPinger) Ping(ctx context.Context) error { return nil }\n\nfunc ReadyHandler(p Pinger) http.HandlerFunc { return nil }\n")
+	fake := "package handlers\n\ntype fakePinger struct{ err error }\n\nfunc (f fakePinger) Ping(ctx context.Context) error { return f.err }\n\nfunc TestReady(t *testing.T) { ReadyHandler(fakePinger{}) }\n"
+	if r := reachOf(fake, "src/handlers/probes.go", root, goCfg, definitionOf(goCfg), nil); len(r.Copied) != 0 || !r.Reached {
+		t.Errorf("a fake implementing the interface reaches the unit and copies nothing, got %+v", r)
+	}
+	// The SAME method of the SAME type defined again is still a copy.
+	again := "package handlers_test\n\nfunc (g GormPinger) Ping(ctx context.Context) error { return nil }\n"
+	if r := reachOf(again, "src/handlers/probes.go", root, goCfg, definitionOf(goCfg), nil); len(r.Copied) != 1 || r.Copied[0] != "GormPinger.Ping" {
+		t.Errorf("the unit's own method defined again is a copy, got %+v", r)
+	}
+	// Python: a method indented under the test's fake class is a member, not a copy.
+	pyCfg := &config.Config{Dialect: &config.Dialect{Family: "python"}}
+	writeFile(t, root, "app/probes.py", "class DbPinger:\n    def ping(self):\n        return True\n\ndef ready(pinger):\n    return pinger.ping()\n")
+	pyFake := "class FakePinger:\n    def ping(self):\n        return False\n\ndef test_ready():\n    assert not ready(FakePinger())\n"
+	if r := reachOf(pyFake, "app/probes.py", root, pyCfg, definitionOf(pyCfg), nil); len(r.Copied) != 0 || !r.Reached {
+		t.Errorf("a python fake's method is a member, not a copy, got %+v", r)
 	}
 }

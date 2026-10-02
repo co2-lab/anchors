@@ -41,19 +41,48 @@ import (
 // name (`T`, `ok`) is anyone's.
 const minDefinedName = 3
 
-// definedNames are the names the text defines, by the dialect's `definition`: the first
-// non-empty capture group of each match.
-func definedNames(text string, def *regexp.Regexp) map[string]bool {
-	out := map[string]bool{}
-	for _, m := range def.FindAllStringSubmatch(text, -1) {
-		for _, g := range m[1:] {
-			if g != "" {
-				if len(g) >= minDefinedName {
-					out[g] = true
-				}
-				break
+// definedName is one definition: the name a reader writes to use it, and whether it is a
+// MEMBER of a type.
+type definedName struct {
+	bare   string
+	member bool
+}
+
+// definedNames are the names the text defines, by the dialect's `definition`, keyed by
+// identity: the first non-empty capture group of each match, qualified by the group named
+// `owner` when the dialect captures one (Go's method receiver: `GormPinger.Ping`).
+//
+// A MEMBER is a definition that belongs to a type — one with an owner, or one indented
+// under its type (a Python method). A test that implements an interface with a fake of its
+// own defines a member with the unit's method name (`fakePinger.Ping` beside
+// `GormPinger.Ping`); that is the test's type, not a copy of the unit (reported from
+// baas-proxy). An owner tells the two apart, so a Go method is a copy only when the test
+// defines it for the SAME type; an indented member with no owner is never read as a copy.
+func definedNames(text string, def *regexp.Regexp) map[string]definedName {
+	out := map[string]definedName{}
+	ownerIdx := def.SubexpIndex("owner")
+	for _, loc := range def.FindAllStringSubmatchIndex(text, -1) {
+		owner, name := "", ""
+		for g := 1; g*2 < len(loc); g++ {
+			if loc[2*g] < 0 {
+				continue
+			}
+			v := text[loc[2*g]:loc[2*g+1]]
+			if g == ownerIdx {
+				owner = v
+			} else if name == "" && v != "" {
+				name = v
 			}
 		}
+		if len(name) < minDefinedName {
+			continue
+		}
+		indented := loc[0] < len(text) && (text[loc[0]] == ' ' || text[loc[0]] == '\t')
+		key := name
+		if owner != "" {
+			key = owner + "." + name
+		}
+		out[key] = definedName{bare: name, member: owner != "" || indented}
 	}
 	return out
 }
@@ -79,12 +108,14 @@ func reachOf(test, unit, root string, cfg *config.Config, def *regexp.Regexp, in
 		return r // @resilient: an unreadable unit defines nothing this reading can name; the map notices a missing file
 	}
 	own := definedNames(test, def)
-	for name := range definedNames(string(b), def) {
-		if own[name] {
-			r.Copied = append(r.Copied, name)
+	for key, d := range definedNames(string(b), def) {
+		// A copy is the same definition again: the same name with the same owner. An
+		// indented member with no owner can be anyone's type, and is not read as one.
+		if t, ok := own[key]; ok && !(t.member && !strings.Contains(key, ".")) {
+			r.Copied = append(r.Copied, key)
 			continue
 		}
-		if !r.Reached && regexp.MustCompile(`\b`+regexp.QuoteMeta(name)+`\b`).MatchString(test) {
+		if !r.Reached && regexp.MustCompile(`\b`+regexp.QuoteMeta(d.bare)+`\b`).MatchString(test) {
 			r.Reached = true
 		}
 	}

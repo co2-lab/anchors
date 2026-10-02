@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -117,7 +118,11 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 			// (`gates: - name: mutation-score / format: gremlins`). Vazio = o canônico
 			// Mutation Testing Elements, que é o default para todo projeto existente.
 			mutationFormat := config.FormatMTE
+			// The project's configuration, kept for the execution ingest: the dialect says
+			// how a test file defines its tests (`caseFileResolver`).
+			var projectCfg *config.Config
 			if cfg, cerr := config.Load(filepath.Join(absRoot, config.DefaultFile)); cerr == nil {
+				projectCfg = cfg
 				testsig.SetRuleLetters(cfg.RuleLetters())
 				// The code length too, when the project DECLARES one: reading JUnit is
 				// permissive by default (4 and 5), and a `[6]` project's cases were never
@@ -160,7 +165,14 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 					return fmt.Errorf("parse JUnit: %w", err)
 				}
 				byFile := map[string]mapx.ExecByFile{}
+				fileOf := caseFileResolver(g, projectCfg, absRoot)
 				for _, c := range rep.Cases {
+					if c.File == "" {
+						// A reporter with no `file` attribute (Go's): the file is found from the
+						// case's class and its top-level test name, when exactly one test file
+						// of the project defines it.
+						c.File = fileOf(c.Class, c.Name)
+					}
 					if c.File == "" {
 						continue // sem arquivo, não dá para amarrar ao nó
 					}
@@ -209,7 +221,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				fmt.Printf("execution: %d case(s), %d test file(s) matched, %d scenario(s) proven\n",
 					len(rep.Cases), mf, mc)
 				if len(byFile) > 0 && mf == 0 {
-					fmt.Println("  warning: no test file matched — does the JUnit have the 'file' attribute? (use a reporter that emits it)")
+					fmt.Println("  warning: no test file matched — the report names no file the map knows: use a reporter that writes the 'file' attribute, or check that each case's class names its test's folder and that one test file there defines the top-level test")
 				}
 				dropExternal(g, key, partial)
 			}
@@ -276,6 +288,88 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 			fmt.Println("signals written into the map. See them with `anchors coverage`.")
 			return nil
 		}
+	}
+}
+
+// caseFileResolver finds the test file of a JUnit case whose reporter emits no `file`.
+//
+// Go's reporters write the package import path as the class
+// (`github.com/acme/app/src/handlers`) and `TestX/subtest` as the name, and nothing
+// else: with no file, no case reached its node, and the ingest said "0 test file(s)
+// matched" over a green suite (reported from baas-proxy; this repository was the same).
+//
+// Read without knowing the language: the class names a project folder by path SUFFIX —
+// leading segments are dropped until one exists under the root, which takes a module
+// prefix off —, and the case's file is the one test file of that folder that DEFINES the
+// top-level test (the name before `/`), by the dialect's `definition`. A class that names
+// no folder, a name no file defines, or one two files define gives no file: guessing would
+// put one test's result on another's node.
+func caseFileResolver(g *mapx.Graph, cfg *config.Config, absRoot string) func(class, name string) string {
+	var def *regexp.Regexp
+	if cfg != nil {
+		if d := cfg.DialectFor().Definition; strings.TrimSpace(d) != "" {
+			def, _ = regexp.Compile(d)
+		}
+	}
+	testsByDir := map[string][]string{}
+	for _, n := range g.Nodes {
+		if n.Kind == mapx.KindTest {
+			dir := path.Dir(n.ID)
+			testsByDir[dir] = append(testsByDir[dir], n.ID)
+		}
+	}
+	definedIn := map[string]map[string][]string{} // folder → defined name → files
+	return func(class, name string) string {
+		if def == nil || class == "" || name == "" {
+			return ""
+		}
+		sep := "/"
+		if !strings.Contains(class, "/") {
+			sep = "."
+		}
+		segs := strings.Split(strings.Trim(class, sep), sep)
+		dir := ""
+		for i := range segs {
+			cand := path.Join(segs[i:]...)
+			if _, ok := testsByDir[cand]; ok {
+				dir = cand
+				break
+			}
+		}
+		// A package at the module's root names no folder below it (its class is the module
+		// path itself): the root's test files are the candidates, and the single-definer
+		// rule below still decides.
+		if _, ok := testsByDir["."]; dir == "" && ok {
+			dir = "."
+		}
+		if dir == "" {
+			return ""
+		}
+		names, ok := definedIn[dir]
+		if !ok {
+			names = map[string][]string{}
+			for _, id := range testsByDir[dir] {
+				b, err := os.ReadFile(filepath.Join(absRoot, filepath.FromSlash(id)))
+				if err != nil {
+					continue // @resilient: an unreadable test file defines nothing here; the map notices a missing file
+				}
+				owner := def.SubexpIndex("owner")
+				for _, m := range def.FindAllStringSubmatch(string(b), -1) {
+					for i, v := range m[1:] {
+						if v != "" && i+1 != owner {
+							names[v] = append(names[v], id)
+							break
+						}
+					}
+				}
+			}
+			definedIn[dir] = names
+		}
+		top, _, _ := strings.Cut(name, "/")
+		if files := names[top]; len(files) == 1 {
+			return files[0]
+		}
+		return ""
 	}
 }
 

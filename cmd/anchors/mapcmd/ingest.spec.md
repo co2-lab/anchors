@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NGSTI
-  updated_at: 2026-09-30
+  updated_at: 2026-10-02
   layer: comando
 -->
 # Ingest — binds the test and log signals the project produced to the nodes of the map
@@ -51,6 +51,7 @@ spec declares is reported, never bound to an invented owner.
 | `NGSTI-B16` | An ingestion that follows a run of `anchors test` or `anchors mutation` first takes the revs of the tree as it is now, so a proof of a spec edited after the last `map build` stays fresh once the map is rebuilt; a manual ingestion keeps the map's revs, since its report may be older than the tree. |
 | `NGSTI-B17` | An ingestion that follows a run first adds to the map the governed files it does not have yet — read alone, with their units —, so the proof of a spec created after the last `map build` reaches it. |
 | `NGSTI-B18` | A whole-run coverage report a declared test suite names in its `lcov:` marks as omitted every code file the suite covers and the report left out, and says how many; a partial run, or a report no suite declares, marks nothing. (`suiteOfLcov`) |
+| `NGSTI-B19` | A JUnit case with no `file` finds its test file from its class and name: the class names a test folder of the map by path suffix (segments split by `/`, or by `.` when it has none, dropped from the front until one exists; the root's folder when none does), and the case's file is the one test file there whose dialect `definition` defines the case's top-level test, the name before `/`; no folder, no file, or two files give the case no file. (`caseFileResolver`) |
 | `NGSTI-B15` | A report's signals are kept under its path relative to the root; a report outside the repository is kept under `external/` and its file name. (`SuiteKey`) |
 
 ## Domain

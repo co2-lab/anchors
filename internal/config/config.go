@@ -963,6 +963,18 @@ type Gate struct {
 	// read 94.87% with 65 of 78 mutants timed out, and 47.44% measured clean.
 	TimeoutCeiling float64 `yaml:"timeout_ceiling,omitempty"`
 
+	// MinCoverage — for `line-coverage`: the line coverage, in percent, a code file must
+	// reach. Zero means the default, DefaultMinCoverage. It was a constant, and a project
+	// whose bootstrap wiring cannot reach it had only `no_signal` to reach for — which says
+	// "nothing to measure", a false statement about a file that has lines (reported from
+	// baas-proxy).
+	MinCoverage float64 `yaml:"min_coverage,omitempty"`
+	// CoverageFloors — for `line-coverage`: a floor of its own for the files a glob
+	// matches, each with the reason (`why`). It is the honest exception: the file is still
+	// measured, against a floor the project wrote down and justified, where `no_signal`
+	// would stop measuring it. A floor with no reason is refused at load.
+	CoverageFloors map[string]CoverageFloor `yaml:"coverage_floors,omitempty"`
+
 	// NoSignal — the targets this gate has nothing to measure on, each with the reason: a
 	// glob of the target's path → why. A coverage or mutation report never lists a file
 	// with no statement to instrument (text constants, a data table, code compiled only
@@ -1107,6 +1119,51 @@ func (g Gate) ActionFor(level string) string {
 		return def
 	}
 	return v
+}
+
+// CoverageFloor is the line-coverage floor of the files a glob matches, and why it differs.
+type CoverageFloor struct {
+	Min float64 `yaml:"min"`
+	Why string  `yaml:"why"`
+}
+
+// DefaultMinCoverage is the line coverage a code file must reach when the gate declares
+// none: 70%.
+const DefaultMinCoverage = 70.0
+
+// CoverageFloorFor is the floor a target is held to: the first glob of `coverage_floors`
+// that matches it, in name order, with its reason; otherwise `min_coverage`, or the default.
+func (g Gate) CoverageFloorFor(target string) (min float64, glob, why string) {
+	globs := make([]string, 0, len(g.CoverageFloors))
+	for k := range g.CoverageFloors {
+		globs = append(globs, k)
+	}
+	sort.Strings(globs)
+	for _, k := range globs {
+		if ok, _ := doublestar.Match(k, target); ok {
+			return g.CoverageFloors[k].Min, k, g.CoverageFloors[k].Why
+		}
+	}
+	if g.MinCoverage > 0 {
+		return g.MinCoverage, "", ""
+	}
+	return DefaultMinCoverage, "", ""
+}
+
+// checkCoverageFloors refuses a floor out of 0–100 and one with no reason.
+func (g Gate) checkCoverageFloors() error {
+	if g.MinCoverage < 0 || g.MinCoverage > 100 {
+		return fmt.Errorf("%s", i18n.T("config.gate.coverage_out_of_range", g.Name, "min_coverage", g.MinCoverage))
+	}
+	for glob, f := range g.CoverageFloors {
+		if f.Min < 0 || f.Min > 100 {
+			return fmt.Errorf("%s", i18n.T("config.gate.coverage_out_of_range", g.Name, "coverage_floors."+glob, f.Min))
+		}
+		if strings.TrimSpace(f.Why) == "" {
+			return fmt.Errorf("%s", i18n.T("config.gate.coverage_floor_no_why", g.Name, glob))
+		}
+	}
+	return nil
 }
 
 // DefaultTimeoutCeiling is the share of timed-out mutants above which a mutation score is
@@ -1810,6 +1867,9 @@ func (c *Config) validarEnumsDeGate() error {
 			}
 		}
 		if err := g.checkSeverity(); err != nil {
+			return err
+		}
+		if err := g.checkCoverageFloors(); err != nil {
 			return err
 		}
 		for _, p := range g.SkipOn {

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: NGSTI
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @NGSTI
@@ -157,3 +157,10 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     Given a suite declaring its lcov report over the source files, and a file of types the report does not list
     When the report is ingested as a whole run, and again as a partial one in another project
     Then the whole run marks the file of types as omitted and says so, and the partial run marks nothing
+
+  @NGSTI-B19 @unit-level
+  Scenario: A JUnit case with no file finds its test by its class's folder and the one file defining its test
+    Given a Go project whose src/handlers holds probes_test.go defining TestReady and other_test.go defining TestOther
+    And a JUnit report with no file, its classes the import path of src/handlers, with TestReady, a subtest of it, TestNowhere, and TestReady of a missing package
+    When the report is ingested
+    Then one test file matched, probes_test.go has the two TestReady cases passed, and other_test.go got nothing

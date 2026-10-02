@@ -394,10 +394,11 @@ func TestDialectDefinitionByFamily(t *testing.T) {
 	t.Run("DLCTI-B17: The families say how code defines a name", func(t *testing.T) {})
 	names := func(family, code string) []string {
 		re := regexp.MustCompile((&Config{Dialect: &Dialect{Family: family}}).DialectFor().Definition)
+		owner := re.SubexpIndex("owner")
 		var out []string
 		for _, m := range re.FindAllStringSubmatch(code, -1) {
-			for _, g := range m[1:] {
-				if g != "" {
+			for i, g := range m[1:] {
+				if g != "" && i+1 != owner {
 					out = append(out, g)
 					break
 				}
@@ -416,6 +417,11 @@ func TestDialectDefinitionByFamily(t *testing.T) {
 		if got := names(c.family, c.code); !reflect.DeepEqual(got, c.want) {
 			t.Errorf("%s: want %v, got %v", c.family, c.want, got)
 		}
+	}
+	// A Go method names its receiver's type in the `owner` group.
+	goRe := regexp.MustCompile((&Config{Dialect: &Dialect{Family: "go"}}).DialectFor().Definition)
+	if m := goRe.FindStringSubmatch("func (f *fakePinger) Ping(ctx context.Context) error {"); m == nil || m[goRe.SubexpIndex("owner")] != "fakePinger" {
+		t.Errorf("the go definition should capture the receiver as owner, got %q", m)
 	}
 	own := (&Config{Dialect: &Dialect{Family: "go", Definition: `(?m)^proc (\w+)`}}).DialectFor()
 	if own.Definition != `(?m)^proc (\w+)` {

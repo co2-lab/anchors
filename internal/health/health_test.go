@@ -654,3 +654,28 @@ func TestNeedsCycleNamesOnlyTheCycleDeterministically(t *testing.T) {
 		}
 	})
 }
+
+func TestMissingSignals_ingestedButUnmatched(t *testing.T) {
+	t.Run("DCTRO-B26: An ingested report that reached no test is told apart from no report", func(t *testing.T) {})
+	prev := i18n.Current()
+	if err := i18n.Set("en"); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = i18n.Set(prev) })
+	tests := mapx.Node{ID: "a_test.go", Kind: mapx.KindTest}
+	spec := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec, Signal: &mapx.TestSignal{ProvenBySuite: map[string][]string{"junit.xml": {"A-B01"}}}}
+	detail := func(nodes ...mapx.Node) string {
+		for _, f := range checkMissingSignals(&mapx.Graph{Nodes: nodes}) {
+			if f.Subject == "execução (JUnit)" {
+				return f.Detail
+			}
+		}
+		return ""
+	}
+	if d := detail(tests, spec); !strings.Contains(d, "reached NONE") || !strings.Contains(d, "`file`") {
+		t.Errorf("an ingested report that reached no test should say so: %q", d)
+	}
+	if d := detail(tests, mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}); !strings.Contains(d, "anchors ingest --junit") {
+		t.Errorf("with no report ingested the warning asks to ingest: %q", d)
+	}
+}

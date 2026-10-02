@@ -541,3 +541,44 @@ func TestIngest_suiteCoverageMarksOmitted(t *testing.T) {
 		t.Errorf("a partial run marks nothing, got %+v", s)
 	}
 }
+
+// Go's JUnit reporters write the package import path as the class and no `file`: the case
+// reaches its test file by the class's folder and the one test file defining its top-level
+// test (reported from baas-proxy: "0 test file(s) matched" over a green suite).
+func TestIngest_junitWithNoFileFindsTheTestByClassAndName(t *testing.T) {
+	t.Run("NGSTI-B19: A JUnit case with no file finds its test by its class's folder and the one file defining its test", func(t *testing.T) {})
+	useEnglish(t)
+	root := t.TempDir()
+	for p, c := range map[string]string{
+		"anchors.yaml": "version: 6\ndialect:\n  family: go\nlayers:\n" +
+			"  spec: {pattern: \"src/**/*.spec.md\", kind: spec}\n" +
+			"  code: {pattern: \"src/**/*.go\", kind: code, exclude: [\"**/*_test.go\"]}\n" +
+			"  test: {pattern: \"src/**/*_test.go\", kind: test}\n" +
+			"derived:\n  anchor: code\n  files:\n    spec: [\"{{dir}}/{{name}}.spec.md\"]\n    test: [\"{{dir}}/{{name}}_test.go\"]\n",
+		"src/handlers/probes.spec.md": "<!-- @anchors\n  code: READY\n-->\n# Ready\n\nREADY-B01 — ready answers 200.\n",
+		"src/handlers/probes.go":      "package handlers\n\nfunc Ready() int { return 200 }\n",
+		"src/handlers/probes_test.go": "package handlers\n\nfunc TestReady(t *testing.T) {\n\tt.Run(\"READY-B01: ready answers 200\", func(t *testing.T) {})\n}\n",
+		"src/handlers/other_test.go":  "package handlers\n\nfunc TestOther(t *testing.T) {}\n",
+		"reports/junit.xml": `<?xml version="1.0"?>
+<testsuites><testsuite name="github.com/acme/app/src/handlers">
+  <testcase name="TestReady" classname="github.com/acme/app/src/handlers"/>
+  <testcase name="TestReady/READY-B01:_ready_answers_200" classname="github.com/acme/app/src/handlers"/>
+  <testcase name="TestNowhere" classname="github.com/acme/app/src/handlers"/>
+  <testcase name="TestReady" classname="github.com/acme/app/src/missing"/>
+</testsuite></testsuites>
+`,
+	} {
+		writeProjectFile(t, root, p, c)
+	}
+	runCmd(t, newMapCmd(), "build", "--root", root)
+	out := runCmd(t, newIngestCmd(), "--root", root, "--junit", filepath.Join(root, "reports/junit.xml"))
+	if !strings.Contains(out, "1 test file(s) matched") {
+		t.Errorf("the case should reach probes_test.go by its class and name:\n%s", out)
+	}
+	if s := node(t, root, "src/handlers/probes_test.go").Signal; s == nil || s.Passed != 2 {
+		t.Errorf("both TestReady cases of the handlers folder land on probes_test.go, got %+v", s)
+	}
+	if s := node(t, root, "src/handlers/other_test.go").Signal; s != nil && s.Passed+s.Failed > 0 {
+		t.Errorf("no case of TestOther ran, and a name no file defines lands nowhere: %+v", s)
+	}
+}
