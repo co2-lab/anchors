@@ -992,7 +992,7 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	// scenario nor a test outlives its state. An agent set up a project with screens and
 	// wrote no visual test, every gate green.
 	add("code", config.Gate{Name: "vr-states-covered", On: []string{"code"}, Tags: ui,
-		Measures: "every state the visual unit's spec registers has a visual-regression scenario in the feature"})
+		Measures: "every state the visual unit's spec registers has a visual-regression scenario in the feature, unless exempted with `@no-vr: <reason>`"})
 	add("code", config.Gate{Name: "vr-scenarios-tested", On: []string{"code"}, Tags: ui,
 		Measures: "every visual-regression scenario of the unit has a VR test and a baseline image"})
 	add("code", config.Gate{Name: "vr-scenarios-of-states", On: []string{"code"}, Tags: ui,

@@ -102,3 +102,9 @@ Feature: VRStatesCovered — each state of a visual unit tied to its visual regr
     Given a flow BUTTN-VR-S01.yaml the map lists and the disk does not have
     When vr-scenarios-tested confronts the unit's code
     Then the flow still counts as the VR test of S01
+
+  @VRSTC-B12 @unit-level
+  Scenario: A state with no visual value is exempted with @no-vr and a reason
+    Given a spec whose states table exempts S02 with "@no-vr: transient", and whose S03 heading carries "@no-vr" with no reason
+    When vr-states-covered and vr-scenarios-of-states confront the unit's code
+    Then S01 and S03 are asked for a scenario, S03 is named as an exemption with no reason, and a VR scenario of S02 fails

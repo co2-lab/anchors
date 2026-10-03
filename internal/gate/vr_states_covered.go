@@ -42,6 +42,8 @@ const baselineExts = "{png,jpg,jpeg,webp,gif,svg}"
 type vrUnit struct {
 	base, unit, code string
 	states           []string            // the states the spec registers: S01, S02…
+	exempt           map[string]bool     // the states the spec exempts with `@no-vr: <reason>`
+	unreasoned       []string            // the states marked `@no-vr` with no reason: still asked
 	scenarios        map[string]bool     // the states the feature's VR scenarios are of
 	stateless        []string            // VR scenarios of no state: the codes on their line
 	tests            map[string][]string // the states VR tests name → the tests
@@ -66,6 +68,7 @@ func readVRUnit(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (*v
 	u := &vrUnit{base: base, unit: path.Base(base), code: m[1], scenarios: map[string]bool{}, tests: map[string][]string{}}
 	letter := stateLetter(cfg)
 	u.states = specStates(string(spec), u.code, letter)
+	u.exempt, u.unreasoned = exemptStates(string(spec), u.code, letter)
 
 	stateRE := regexp.MustCompile(`\b` + regexp.QuoteMeta(u.code) + `-(?:VR-)?(` + regexp.QuoteMeta(letter) + `\d{2})\b`)
 	vrCodeRE := regexp.MustCompile(`@(` + regexp.QuoteMeta(u.code) + `-VR[\w-]*)`)
@@ -131,6 +134,12 @@ func hasTag(line, tag string) bool {
 }
 
 // checkVRStatesCovered: does every state of the spec have a VR scenario in the feature?
+//
+// EVERY state of a screen or a component is asked — only visual units are confronted at all
+// —, and the exception is written where the state is: `@no-vr: <reason>` on its heading or
+// its row, for a state with no visual value of its own (a transient loading, a state that
+// looks like another). An exemption with no reason does not exempt: it cannot be told from
+// a capture nobody wanted to make.
 func checkVRStatesCovered(_ string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	u, why, ok := readVRUnit(n, root, g, cfg)
 	if !ok {
@@ -141,14 +150,21 @@ func checkVRStatesCovered(_ string, n mapx.Node, root string, g *mapx.Graph, cfg
 	}
 	var missing []string
 	for _, s := range u.states {
-		if !u.scenarios[s] {
+		if !u.scenarios[s] && !u.exempt[s] {
 			missing = append(missing, u.code+"-"+s)
 		}
 	}
-	if len(missing) == 0 {
+	var gaps []string
+	if len(missing) > 0 {
+		gaps = append(gaps, i18n.T("gate.vr_states.no_scenario", len(missing), strings.Join(missing, ", "), visualRegimeTag(cfg)))
+	}
+	if len(u.unreasoned) > 0 {
+		gaps = append(gaps, i18n.T("gate.vr_states.no_reason", len(u.unreasoned), strings.Join(u.unreasoned, ", ")))
+	}
+	if len(gaps) == 0 {
 		return Pass, ""
 	}
-	return Fail, i18n.T("gate.vr_states.no_scenario", len(missing), strings.Join(missing, ", "), visualRegimeTag(cfg))
+	return Fail, strings.Join(gaps, "; ")
 }
 
 // checkVRScenariosTested: does every VR scenario have a VR test, and a baseline image?
@@ -195,15 +211,21 @@ func checkVRScenariosOfStates(_ string, n mapx.Node, root string, g *mapx.Graph,
 	for _, s := range u.states {
 		known[s] = true
 	}
-	var orphans []string
+	var orphans, exempted []string
 	for _, s := range sortedKeys(u.scenarios) {
-		if !known[s] {
+		switch {
+		case !known[s]:
 			orphans = append(orphans, u.code+"-"+s)
+		case u.exempt[s]:
+			exempted = append(exempted, u.code+"-"+s)
 		}
 	}
 	var gaps []string
 	if len(orphans) > 0 {
 		gaps = append(gaps, i18n.T("gate.vr_states.scenario_no_state", len(orphans), strings.Join(orphans, ", ")))
+	}
+	if len(exempted) > 0 {
+		gaps = append(gaps, i18n.T("gate.vr_states.scenario_exempt", len(exempted), strings.Join(exempted, ", ")))
 	}
 	if len(u.stateless) > 0 {
 		gaps = append(gaps, i18n.T("gate.vr_states.scenario_stateless", len(u.stateless), strings.Join(u.stateless, ", ")))
@@ -267,6 +289,34 @@ func specStates(content, code, letter string) []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// noVRRE is the exemption `@no-vr`, and the reason written after its colon.
+var noVRRE = regexp.MustCompile(`@no-vr\b(?::\s*([^|]*))?`)
+
+// exemptStates are the states whose declaration carries `@no-vr: <reason>` on the same line
+// — the state's heading or its row in the states table —, and the ones marked with no
+// reason, which stay asked.
+func exemptStates(content, code, letter string) (map[string]bool, []string) {
+	re := regexp.MustCompile(`\b` + regexp.QuoteMeta(code) + `-(` + regexp.QuoteMeta(letter) + `\d{2})\b`)
+	exempt := map[string]bool{}
+	var unreasoned []string
+	for _, line := range strings.Split(content, "\n") {
+		m := noVRRE.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		reasoned := strings.TrimSpace(strings.Trim(strings.TrimSpace(m[1]), "-—>")) != ""
+		for _, sm := range re.FindAllStringSubmatch(line, -1) {
+			if reasoned {
+				exempt[sm[1]] = true
+			} else {
+				unreasoned = append(unreasoned, code+"-"+sm[1])
+			}
+		}
+	}
+	sort.Strings(unreasoned)
+	return exempt, unreasoned
 }
 
 func isImage(id string) bool {

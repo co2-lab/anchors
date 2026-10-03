@@ -67,7 +67,8 @@ A spec is not all alike — it specializes according to what makes the unit vary
    is visible/hidden/disabled in it. In a VISUAL unit (a screen, a component), every state
    registered here is strongly recommended to be proven by VISUAL REGRESSION: a capture
    compared with a baseline image of that state — see ` + "`anchors guide test`" + `. It is what keeps
-   each state looking as the spec says; ` + "`vr-states-covered`" + ` asks it of every state.
+   each state looking as the spec says; ` + "`vr-states-covered`" + ` asks it of every state. A state with
+   no visual value of its own (a transient loading) carries ` + "`@no-vr: <reason>`" + ` on its line.
 5. State flow — the transitions between the states.
 6. Data contract — every dynamic datum displayed: origin, requiredness, format,
    default. Cautions that prevent real bugs: explicit TIMEZONE in dates; translated

@@ -591,7 +591,7 @@ func TestGuides_recommendVisualRegressionPerState(t *testing.T) {
 	t.Run("GVGDG-B19: The guides recommend visual regression for every state of a visual unit", func(t *testing.T) {})
 	test := guideOut(t, "test")
 	for _, want := range []string{"## Visual regression", "EVERY state", "{CODE}-VR-<state>", "VR TEST", "BASELINE IMAGE",
-		"vr-states-covered", "vr-scenarios-tested", "vr-scenarios-of-states", "vr-tests-of-scenarios"} {
+		"vr-states-covered", "vr-scenarios-tested", "vr-scenarios-of-states", "vr-tests-of-scenarios", "@no-vr: <reason>"} {
 		if !strings.Contains(test, want) {
 			t.Errorf("the test guide lacks %q", want)
 		}

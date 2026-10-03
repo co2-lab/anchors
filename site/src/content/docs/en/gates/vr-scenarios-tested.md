@@ -30,6 +30,11 @@ Four gates ask the four questions that tie a state to its capture, both ways:
 | `vr-scenarios-of-states` | Is every VR scenario of a state the spec registers? |
 | `vr-tests-of-scenarios` | Is every VR test of a VR scenario the feature declares? |
 
+Every state of a screen or a component is asked for a capture — only visual units are confronted at
+all. The exception is written where the state is: `@no-vr: <reason>` on its heading or its row, for a
+state with no visual value of its own, such as a transient loading or a state that looks like another.
+An exemption with no reason does not exempt.
+
 They run on a visual unit's main code file — the screen or the component, which is what a project tags
 as visual — and read the unit's spec, feature and tests from it (`Button.tsx` → `Button.spec.md`,
 `Button.feature`). A VR scenario is a scenario tagged with the project's visual regime and the code of

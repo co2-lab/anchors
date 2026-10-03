@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:19874d479482bc40 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:19c17de1491c7be1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -5543,6 +5543,8 @@ teste prova.
 - [A baseline that cannot be found counts as none](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-E03`
 
 - [A test that cannot be read is read by its path](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-E04`
+
+- [A state with no visual value is exempted with @no-vr and a reason](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B12`
 
 ## infra
 

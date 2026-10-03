@@ -77,7 +77,8 @@ VR scenario PER STATE its spec registers, tagged with the project's visual regim
 state's code (` + "`@{CODE}-S01`" + `, or ` + "`@{CODE}-VR-S01`" + `). It has no interaction steps: it says that
 the state is captured and compared with its baseline. It is not a unit test case: the proof
 is the capture (see ` + "`anchors guide test`" + `). Every VR scenario is of a state the spec
-registers — a state removed from the spec takes its scenario with it.
+registers — a state removed from the spec takes its scenario with it —, and none is of a
+state the spec exempts with ` + "`@no-vr`" + `.
 
 ## The unit with no interface (traceability, not BDD)
 

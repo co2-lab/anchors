@@ -23,6 +23,11 @@ Four gates ask the four questions that tie a state to its capture, both ways:
 | `vr-scenarios-of-states` | Is every VR scenario of a state the spec registers? |
 | `vr-tests-of-scenarios` | Is every VR test of a VR scenario the feature declares? |
 
+Every state of a screen or a component is asked for a capture — only visual units are confronted at
+all. The exception is written where the state is: `@no-vr: <reason>` on its heading or its row, for a
+state with no visual value of its own, such as a transient loading or a state that looks like another.
+An exemption with no reason does not exempt.
+
 They run on a visual unit's main code file — the screen or the component, which is what a project tags
 as visual — and read the unit's spec, feature and tests from it (`Button.tsx` → `Button.spec.md`,
 `Button.feature`). A VR scenario is a scenario tagged with the project's visual regime and the code of
@@ -44,16 +49,17 @@ its text. A baseline is `<Unit>.BUTTN-VR-S01[-variant].<ext>` beside the unit.
 | Effect | Description |
 | --- | --- |
 | `VRSTC-B01` | A node that is not code, a code file with no spec beside it (a part of the unit) and a spec with no code leave every gate without a verdict. |
-| `VRSTC-B02` | `vr-states-covered` fails naming each state of the spec with no VR scenario, and the regime tag to use; with no state it leaves without a verdict. |
+| `VRSTC-B02` | `vr-states-covered` fails naming each state of the spec with no VR scenario and no exemption, and the regime tag to use; with no state it leaves without a verdict. |
 | `VRSTC-B03` | `vr-scenarios-tested` fails naming each VR scenario that no VR test names; with no VR scenario it leaves without a verdict. |
 | `VRSTC-B04` | `vr-scenarios-tested` also fails naming each VR scenario with no image beside the unit, `<Unit>.{CODE}-VR-<state>` with an optional variant, as png, jpg, jpeg, webp, gif or svg, and the name to save it under. |
-| `VRSTC-B05` | `vr-scenarios-of-states` fails naming each VR scenario of a state the spec does not register. |
+| `VRSTC-B05` | `vr-scenarios-of-states` fails naming each VR scenario of a state the spec does not register, and each VR scenario of a state the spec exempts with `@no-vr`. |
 | `VRSTC-B06` | `vr-scenarios-of-states` fails naming each VR scenario that carries no state's code — a scenario capturing the whole unit at once. |
 | `VRSTC-B07` | `vr-tests-of-scenarios` fails naming each VR state a test names with no VR scenario in the feature, and the tests that name it; with no VR test it leaves without a verdict. |
 | `VRSTC-B08` | A VR scenario is a feature line carrying the visual-regime tag; its state is a `{CODE}-<state>` or `{CODE}-VR-<state>` code on that line. |
 | `VRSTC-B09` | A test is of the unit when its path names the unit's code, when it sits beside the unit under the unit's name, or when a folder of its path is named after the unit; an image is never a test. |
 | `VRSTC-B10` | The State letter is the one of the project's rule type whose term or a section starts with "state" or "estado"; without one, `S`. |
 | `VRSTC-B11` | `vr-baseline` accepts the same image formats for a VR scenario's baseline. |
+| `VRSTC-B12` | A state is exempted from visual regression by `@no-vr: <reason>` on a line that declares it — its heading or its row in a states table. An exemption with no reason does not exempt: the state is still asked, and the failure names it as an exemption with no reason. |
 
 ## Invariants
 

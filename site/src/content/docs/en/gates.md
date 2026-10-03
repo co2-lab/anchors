@@ -43,7 +43,7 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`testid-consistent`](/docs/gates/testid-consistent/) | `spec` | The spec's testID inventory, the IDs the code exposes, and the tests that query them agree |
 | [`testid-queried-exists`](/docs/gates/testid-queried-exists/) | `test` | Every handle an end-to-end flow queries is exposed somewhere in the code |
 | [`vr-baseline`](/docs/gates/vr-baseline/) | `feature` | Every visual-regression scenario has its baseline image |
-| [`vr-states-covered`](/docs/gates/vr-states-covered/) | `code` | Every state the visual unit's spec registers has a visual-regression scenario in the feature |
+| [`vr-states-covered`](/docs/gates/vr-states-covered/) | `code` | Every state the visual unit's spec registers has a visual-regression scenario in the feature, unless exempted with `@no-vr: <reason>` |
 | [`vr-scenarios-tested`](/docs/gates/vr-scenarios-tested/) | `code` | Every visual-regression scenario of the unit has a VR test and a baseline image |
 | [`vr-scenarios-of-states`](/docs/gates/vr-scenarios-of-states/) | `code` | Every visual-regression scenario of the unit is of a state its spec registers |
 | [`vr-tests-of-scenarios`](/docs/gates/vr-tests-of-scenarios/) | `code` | Every VR test of the unit is of a visual-regression scenario its feature declares |

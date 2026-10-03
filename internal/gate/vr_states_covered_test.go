@@ -206,3 +206,19 @@ func TestVRBaseline_otherImageFormats(t *testing.T) {
 		t.Fatalf("a jpg baseline counts: %v (%s)", v, msg)
 	}
 }
+
+func TestVR_aStateIsExemptedWithAReason(t *testing.T) {
+	t.Run("VRSTC-B12: A state with no visual value is exempted with @no-vr and a reason", func(t *testing.T) {})
+	spec := "<!-- @anchors\n  code: BUTTN\n-->\n# Button\n\n| State | Name | Note |\n| --- | --- | --- |\n" +
+		"| BUTTN-S01 | Enabled | |\n| BUTTN-S02 | Loading | @no-vr: transient, the spinner has its own capture |\n\n" +
+		"### BUTTN-S03: Pressed @no-vr\n"
+	root, g := vrFixture(t, map[string]string{"ui/Button.spec.md": spec, "ui/Button.feature": featureVRStates("S02")})
+	v, d := checkVRStatesCovered("", buttonCode, root, g, nil)
+	if v != Fail || !strings.Contains(d, "BUTTN-S01, BUTTN-S03") || !strings.Contains(d, "with no reason: BUTTN-S03") ||
+		strings.Contains(d, "BUTTN-S02") {
+		t.Errorf("S02 is exempt; S03's exemption has no reason, so it is still asked: %v %s", v, d)
+	}
+	if v, d := checkVRScenariosOfStates("", buttonCode, root, g, nil); v != Fail || !strings.Contains(d, "exempts with `@no-vr`: BUTTN-S02") {
+		t.Errorf("a VR scenario of an exempt state contradicts the spec: %v %s", v, d)
+	}
+}
