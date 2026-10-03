@@ -588,8 +588,9 @@ func TestEscalateCmd_upstreamReportsABugInAnchorsOncePerTitle(t *testing.T) {
 		t.Fatal(err)
 	}
 	up := onlyCall(t, calls, "issue create --repo co2-lab/anchors")
-	if !strings.Contains(up, "--title [bug] gate misreads a file") || !strings.Contains(up, "anchors ") {
-		t.Errorf("the report carries the bug's title and the release: %s", up)
+	if !strings.Contains(up, "--title [bug] gate misreads a file") || !strings.Contains(up, "### Version") ||
+		!strings.Contains(up, "### What happened") || !strings.Contains(up, "--label bug") {
+		t.Errorf("the report has the bug form's sections, the release and the bug label: %s", up)
 	}
 	if strings.Contains(up, "secret/plan.md") || strings.Contains(up, "44") {
 		t.Errorf("the report to a public repository carries nothing of the project: %s", up)

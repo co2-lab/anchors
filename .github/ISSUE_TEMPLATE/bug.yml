@@ -1,0 +1,48 @@
+name: Bug in Anchors
+description: An anchors command, a gate, the map, or a file Anchors seeds does the wrong thing.
+title: "[bug] "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repository is **public**. Describe the bug in Anchors' terms — the command, the gate, what it did and what it should do —
+        and reduce it to a minimal case. Never paste your project's code, names, paths or data.
+
+        Agents: `anchors escalate --bug --upstream "<reason>"` opens this same issue, with the release and platform filled in.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command or gate, and what it did. Paste the relevant output.
+      placeholder: "`anchors map build` wrote nothing, and `check` kept warning the map was written by an older release."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen
+      placeholder: "The map is restamped with the running release, and the warning clears."
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal case
+      description: The smallest anchors.yaml, files and commands that reproduce it — made up, not copied from your project.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: "`anchors --version`"
+      placeholder: "0.1.260"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [macOS, Linux, Windows]
+    validations:
+      required: true

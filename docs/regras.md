@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:504effa633be7603 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:5543c8b73960273c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -889,7 +889,7 @@ abra a página dela em `camadas/`.
 
 - [SCLTE-B17 — `--card` accepts the card as `44` or `#44`: the `#` is dropped before any use, so the label is `under-44` and the origin card touched is 44.](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
 
-- [SCLTE-B18 — With `--upstream`, a bug is also reported at `co2-lab/anchors`: an OPEN issue there with the same title receives a comment saying it was seen again, with the release and the platform, instead of a second issue; otherwise an issue is created with the bug's title and a body of the reason, the release and the platform. The project's bug card receives a comment with the address, and the output says "reported to Anchors" or "already reported to Anchors".](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
+- [SCLTE-B18 — With `--upstream`, a bug is also reported at `co2-lab/anchors`: an OPEN issue there with the same title receives a comment saying it was seen again, with the release and the platform, instead of a second issue; otherwise an issue is created with the bug's title, the `bug` label, and a body in the sections of the repository's bug form: what happened (the reason), the version and the platform. The project's bug card receives a comment with the address, and the output says "reported to Anchors" or "already reported to Anchors".](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
 
 - [SCLTE-B19 — In local mode, `--upstream` reports to Anchors alone — there is no project queue to open a card in — and the command succeeds.](layers/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must)
 

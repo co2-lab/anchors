@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://anchors.co2lab.io/docs/
+    about: How Anchors works — commands, gates, the anchors.yaml.

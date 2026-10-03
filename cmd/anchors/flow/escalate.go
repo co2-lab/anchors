@@ -637,9 +637,13 @@ func reportUpstream(motivo string) string {
 			}
 		}
 	}
-	corpo := motivo + "\n\n---\n" + seen + "\n\nReported by `anchors escalate --bug --upstream`.\n"
+	// The same sections as the repository's bug form, so a report from an agent reads like
+	// one from a person.
+	corpo := "### What happened\n\n" + motivo + "\n\n### Version\n\n" + common.Version +
+		"\n\n### Platform\n\n" + runtime.GOOS + "/" + runtime.GOARCH +
+		"\n\n---\nReported by `anchors escalate --bug --upstream`.\n"
 	out, err := exec.Command("gh", "issue", "create", "--repo", upstreamRepo,
-		"--title", titulo, "--body", corpo).CombinedOutput()
+		"--title", titulo, "--body", corpo, "--label", "bug").CombinedOutput()
 	if err != nil {
 		q := neturl.Values{"title": {titulo}, "body": {corpo}}
 		fmt.Printf("· warning: could not report to Anchors (%s) — open it by hand:\n  https://github.com/%s/issues/new?%s\n",

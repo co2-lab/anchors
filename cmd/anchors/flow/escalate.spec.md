@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCLTE
-  updated_at: 2026-10-02
+  updated_at: 2026-10-03
   layer: comando
 -->
 # Escalate — open the right card for a change the plan, the spec or the tool needs, and stop the work only when it must
@@ -84,7 +84,7 @@ day.
 
 | Effect | Description |
 | --- | --- |
-| `SCLTE-B18` | With `--upstream`, a bug is also reported at `co2-lab/anchors`: an OPEN issue there with the same title receives a comment saying it was seen again, with the release and the platform, instead of a second issue; otherwise an issue is created with the bug's title and a body of the reason, the release and the platform. The project's bug card receives a comment with the address, and the output says "reported to Anchors" or "already reported to Anchors". |
+| `SCLTE-B18` | With `--upstream`, a bug is also reported at `co2-lab/anchors`: an OPEN issue there with the same title receives a comment saying it was seen again, with the release and the platform, instead of a second issue; otherwise an issue is created with the bug's title, the `bug` label, and a body in the sections of the repository's bug form: what happened (the reason), the version and the platform. The project's bug card receives a comment with the address, and the output says "reported to Anchors" or "already reported to Anchors". |
 | `SCLTE-B19` | In local mode, `--upstream` reports to Anchors alone — there is no project queue to open a card in — and the command succeeds. |
 
 ## Invariants
