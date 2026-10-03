@@ -128,7 +128,9 @@ func writePage(path string, c *cobra.Command, f family, byName map[string]*cobra
 				body = body[:i] + body[j+len(endMarker):]
 			}
 		}
-		body = strings.TrimSpace(body)
+		// The separator before a person's text is the generator's too: left in, every run
+		// added another.
+		body = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(body), "---"))
 	}
 	front := fmt.Sprintf("---\ntitle: %q\ndescription: %q\n---\n\n", "anchors "+c.Name(), oneLine(c.Short))
 	out := front + block
