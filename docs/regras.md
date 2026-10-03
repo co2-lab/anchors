@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:f8647caef4f25a3a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:d0e8ed9c1c4dc9ab — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7447,6 +7447,8 @@ abra a página dela em `camadas/`.
 
 - [EVFRA-B08 — A node recorded in the closure that no longer exists in the graph is not a culprit.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
+- [EVFRA-B09 — A `captures` target — the unit a visual-regression test captures, and its images — enters the closure but the walk does not descend through it.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
+
 - [EVFRA-I01 — The closure never contains the test node itself.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-X01 — The closure only descends; the spec and feature above the test are never part of it.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
@@ -7724,6 +7726,20 @@ abra a página dela em `camadas/`.
 - [TSUNT-B04 — A `test` template that resolves to a glob matches every test file of the map it covers; a `code` template is read literally around its variables, so a directory named `[slug]` matches itself and glob characters match only themselves.](layers/mapa.md#tsunt--testedunits--which-code-a-test-tests-found-by-the-projects-own-derivation)
 
 - [TSUNT-B05 — Only test files the map has are answered; each test's units are listed once, in path order, and a project without a derivation answers nothing.](layers/mapa.md#tsunt--testedunits--which-code-a-test-tests-found-by-the-projects-own-derivation)
+
+## mapx
+
+### [VRCPT — Captures — a visual-regression test is tied to the unit it captures](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
+- [VRCPT-B01 — A test whose path or text names `{CODE}-VR` (with or without a state, `-S01`) gets a `captures` edge to the main code file of the unit that declares `{CODE}`, and one to each baseline image of that unit.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
+- [VRCPT-B02 — A test naming no VR code, an image, and a VR code no spec declares get no `captures` edge.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
+- [VRCPT-B03 — The evidence closure of a VR test holds the unit's code file and images, and does not descend past them: a component the screen depends on is not in it.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
+- [VRCPT-B04 — A visual-regression code is read whole with its state — `BUTTN-VR-S01` — by the scan and by the test-signal reader, as the gates read it.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
+- [VRCPT-I01 — A change to the captured unit's code file or to one of its images stales the capture's evidence; a change to a component it uses does not.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
 ## scan
 

@@ -66,6 +66,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 	g.Edges = append(g.Edges, governsEdges(files, cfg)...)
 	g.Edges = append(g.Edges, dependsOnEdges(files)...)
 	g.Edges = append(g.Edges, seedEdges(files)...)
+	g.Edges = append(g.Edges, captureEdges(files)...)
 
 	sortGraph(g)
 	return g

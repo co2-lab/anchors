@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:c8c7ee90bc48d571 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:19874d479482bc40 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -6762,6 +6762,8 @@ teste prova.
 
 - [The closure never climbs to the spec above the test](layers/mapa.md#evfra-x01--the-closure-never-climbs-to-the-spec-above-the-test) `EVFRA-X01`
 
+- [A capture's target enters the closure and is not descended](layers/mapa.md#evfra-b09--a-captures-target-enters-the-closure-and-is-not-descended) `EVFRA-B09`
+
 - [The written format and the oldest readable format are both accepted](layers/mapa.md#mpfrm-b01--the-written-format-and-the-oldest-readable-format-are-both-accepted) `MPFRM-B01`
 
 - [A map from a newer binary is refused with the upgrade message](layers/mapa.md#mpfrm-b02--a-map-from-a-newer-binary-is-refused-with-the-upgrade-message) `MPFRM-B02`
@@ -7007,6 +7009,18 @@ teste prova.
 - [A glob test template matches the tests it covers, a code template is read literally](layers/mapa.md#tsunt-b04--a-glob-test-template-matches-the-tests-it-covers-a-code-template-is-read-literally) `TSUNT-B04`
 
 - [Only the map's tests are answered, each unit once, in order](layers/mapa.md#tsunt-b05--only-the-maps-tests-are-answered-each-unit-once-in-order) `TSUNT-B05`
+
+## mapx
+
+- [A VR test captures its unit's code file and images](layers/mapx.md#vrcpt-b01--a-vr-test-captures-its-units-code-file-and-images) `VRCPT-B01`
+
+- [What captures nothing gets no edge](layers/mapx.md#vrcpt-b02--what-captures-nothing-gets-no-edge) `VRCPT-B02`
+
+- [The closure of a capture is one level](layers/mapx.md#vrcpt-b03--the-closure-of-a-capture-is-one-level) `VRCPT-B03`
+
+- [A VR code is read whole with its state](layers/mapx.md#vrcpt-b04--a-vr-code-is-read-whole-with-its-state) `VRCPT-B04`
+
+- [The screen's change stales its capture, a component's does not](layers/mapx.md#vrcpt-i01--the-screens-change-stales-its-capture-a-components-does-not) `VRCPT-I01`
 
 ## scan
 

@@ -122,6 +122,11 @@ the same change that alters the state on purpose, and review the image as you re
 an unreviewed baseline approves whatever it captured. Declare the baselines as a layer of
 the unit (proof, like a test) so a commit made only of them is governed.
 
+A capture's evidence goes stale when the unit's own file or one of its baselines changes —
+` + "`evidence-fresh`" + ` and ` + "`anchors stale`" + ` say so, and ` + "`anchors test`" + ` runs it again. One level only: a
+component the screen uses has its own capture, and its change stales that one, not the
+screen's.
+
 Four gates ask the four questions: ` + "`vr-states-covered`" + ` (every state has a VR scenario),
 ` + "`vr-scenarios-tested`" + ` (every VR scenario has a VR test and an image),
 ` + "`vr-scenarios-of-states`" + ` (every VR scenario is of a state) and ` + "`vr-tests-of-scenarios`" + `

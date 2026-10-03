@@ -95,7 +95,9 @@ func (g *Graph) EvidenceClosure(id string) map[string]string {
 			if r, ok := revs[filho]; ok {
 				out[filho] = r
 			}
-			if !noProp[filho] {
+			// A capture reaches the unit's own file and images, ONE level: a component the
+			// screen uses has its own capture, and its change stales that one, not this.
+			if !noProp[filho] && e.Type != EdgeCaptures {
 				fila = append(fila, filho)
 			}
 		}

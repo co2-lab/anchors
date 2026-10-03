@@ -101,6 +101,13 @@ const (
 	// regra pode depender de mais de um cenario (duas flags que se cruzam). Nenhum gate
 	// daqui cobra paridade de contagem.
 	EdgeGatedBy EdgeType = "gated-by"
+
+	// EdgeCaptures — a VISUAL-REGRESSION test captures a unit: its main code file and its
+	// baseline images. A capture flow reaches the screen through the running app, not an
+	// import, so without it the capture's evidence never went stale when the screen
+	// changed. The evidence closure takes its target and does NOT descend past it: a
+	// component a screen uses has its own capture (see captures.go).
+	EdgeCaptures EdgeType = "captures"
 )
 
 // SuiteCoverage is one suite's measurement of one file: which lines it instrumented,

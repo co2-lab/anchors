@@ -59,7 +59,7 @@ func mustCodeRE() *regexp.Regexp {
 }
 
 func codeCore() string {
-	return `\b[A-Z0-9]` + codeLenPattern + `-(?:[` + regexp.QuoteMeta(ruleLetters) + `]\d{2}(?:-[a-z][a-z0-9-]*)?|DS-[A-Za-z0-9-]+|VR)`
+	return `\b[A-Z0-9]` + codeLenPattern + `-(?:[` + regexp.QuoteMeta(ruleLetters) + `]\d{2}(?:-[a-z][a-z0-9-]*)?|DS-[A-Za-z0-9-]+|VR(?:-[` + regexp.QuoteMeta(ruleLetters) + `]\d{2})?)`
 }
 
 // mustScenarioRE is the scenario code WITH its variant suffix, when it carries one:

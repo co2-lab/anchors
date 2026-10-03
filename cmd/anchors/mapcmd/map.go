@@ -119,7 +119,7 @@ func printStats(s mapx.Stats) {
 		}
 	}
 	fmt.Println("\n" + strings.TrimLeft(i18n.T("map.edges_by_type"), " "))
-	for _, ty := range []mapx.EdgeType{mapx.EdgeGoverns, mapx.EdgeSpecifies, mapx.EdgeCoveredBy, mapx.EdgeTestedBy, mapx.EdgeReferences} {
+	for _, ty := range []mapx.EdgeType{mapx.EdgeGoverns, mapx.EdgeSpecifies, mapx.EdgeCoveredBy, mapx.EdgeTestedBy, mapx.EdgeReferences, mapx.EdgeCaptures} {
 		if n := s.EdgesByType[ty]; n > 0 {
 			fmt.Printf("   %-11s %d\n", ty, n)
 		}
@@ -270,7 +270,7 @@ func printEdgeSummary(g *mapx.Graph) {
 	// never showed up in the summary. The symptom misled — the `realizes` edges were
 	// built, the summary did not list them, and the first conclusion was that the build
 	// had not created them.
-	known := []mapx.EdgeType{mapx.EdgeGoverns, mapx.EdgeSpecifies, mapx.EdgeCoveredBy, mapx.EdgeTestedBy, mapx.EdgeReferences}
+	known := []mapx.EdgeType{mapx.EdgeGoverns, mapx.EdgeSpecifies, mapx.EdgeCoveredBy, mapx.EdgeTestedBy, mapx.EdgeReferences, mapx.EdgeCaptures}
 	seen := map[mapx.EdgeType]bool{}
 	for _, t := range known {
 		seen[t] = true

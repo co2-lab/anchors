@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EVFRA
-  updated_at: 2026-09-26
+  updated_at: 2026-10-03
   layer: mapa
 -->
 # EvidenceFreshness — a test's evidence expires when anything it exercises changes, not only its own file
@@ -48,6 +48,7 @@ turn a precision improvement into a flood of false expirations on the day it shi
 | `EVFRA-B06` | The closure of a test is every node reached by descending its outgoing edges transitively, each with its current revision. |
 | `EVFRA-B07` | A `@noPropagation` node enters the closure but the walk does not descend through it. |
 | `EVFRA-B08` | A node recorded in the closure that no longer exists in the graph is not a culprit. |
+| `EVFRA-B09` | A `captures` target — the unit a visual-regression test captures, and its images — enters the closure but the walk does not descend through it. |
 
 ## Invariants
 

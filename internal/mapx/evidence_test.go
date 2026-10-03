@@ -139,3 +139,14 @@ func TestEvidenceClosureNeverClimbs(t *testing.T) {
 		t.Errorf("the test is not part of its own closure, got %v", closure)
 	}
 }
+
+func TestEvidenceClosure_aCaptureTargetIsNotDescended(t *testing.T) {
+	t.Run("EVFRA-B09: A capture's target enters the closure and is not descended", func(t *testing.T) {})
+	closure := captureGraph().EvidenceClosure(".maestro/BUTTN-VR-S01.yaml")
+	if _, ok := closure["ui/Button.tsx"]; !ok {
+		t.Errorf("the captured screen enters the closure: %v", closure)
+	}
+	if _, ok := closure["ui/Icon.tsx"]; ok {
+		t.Errorf("the walk does not descend past a capture: %v", closure)
+	}
+}

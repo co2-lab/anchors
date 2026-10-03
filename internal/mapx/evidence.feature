@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: EVFRA
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @EVFRA
@@ -67,3 +67,10 @@ Feature: EvidenceFreshness — a test's evidence expires when anything it exerci
     Given a spec with an edge to the suite script
     When the closure of the suite script is computed
     Then the spec is not in it
+
+  @EVFRA-B09 @unit-level
+  Scenario: A capture's target enters the closure and is not descended
+    Given a VR flow that captures Button.tsx, which depends on Icon.tsx
+    When the flow's evidence closure is taken
+    Then Button.tsx is in it and Icon.tsx is not
+
