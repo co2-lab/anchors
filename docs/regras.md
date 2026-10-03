@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:c6ec2ca40b26cb6d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:0b4f5cc2f9451569 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2354,6 +2354,8 @@ abra a página dela em `camadas/`.
 - [CGPCH-B90 — After the table, the check says how many targets of its scope are to review (RVDUR-B01), as a line of its own that informs and never blocks, and says nothing when none is due.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B91 — A full sweep names, in one line, the catalog gates that cover the declared layers and are not declared, at most six by name, and points to the doctor; with none it says nothing.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
+- [CGPCH-B92 — A gate the project declares counts as declared in the catalog line and the governance tips even when this run leaves it out — `when: [manual]`, `skip_on`, another phase.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B08 — A gate that declares no perspective to skip runs both on the full sweep and on changed files.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 

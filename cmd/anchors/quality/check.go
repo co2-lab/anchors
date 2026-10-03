@@ -149,6 +149,12 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 					"waiver without a written justification is indistinguishable from someone dodging a "+
 					"gate that found a defect", strings.Join(erros, "\n  "))
 			}
+			// WHAT THE PROJECT DECLARES, kept apart from what this run measures. The catalog
+			// line and the governance tips ask "is this gate declared?", and a gate this run
+			// leaves out — `when: [manual]`, `skip_on`, another phase — is still declared:
+			// read from the filtered list, they named it as missing.
+			declared := *cfg
+			declared.Gates = append([]config.Gate(nil), cfg.Gates...)
 			cfg.Gates = filterGates(cfg.Gates, phase, category, skipSlow, perspective, dispensa)
 			if len(cfg.Gates) == 0 {
 				fmt.Println(i18n.T("check.no_gate_for_slice", phase, category))
@@ -339,7 +345,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// DICAS DE GOVERNANÇA (informativo, QUALITY §5.2).
 			// Apresenta oportunidades de evolução do projeto (gates canônicos ausentes ou
 			// configurações subótimas) sem quebrar commits ou inflar warnings.
-			if opps := health.QuickGovernanceHints(g, cfg); len(opps) > 0 && all {
+			if opps := health.QuickGovernanceHints(g, &declared); len(opps) > 0 && all {
 				fmt.Println()
 				for _, op := range opps {
 					fmt.Printf("ℹ %s (%s): %s\n", i18n.T("check.governance_tip"), op.Subject, op.Detail)
@@ -347,7 +353,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 				fmt.Printf("  %s\n", i18n.T("check.doctor_learn_more"))
 			}
 			if all {
-				printCatalogUndeclared(cfg)
+				printCatalogUndeclared(&declared)
 			}
 
 			if !profile.Passed {

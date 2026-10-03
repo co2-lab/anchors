@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CGPCH
-#   updated_at: 2026-10-02
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @CGPCH
@@ -621,3 +621,9 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     When the catalog line is printed
     Then it names both and points to the doctor
     And with every applicable gate declared it prints nothing
+
+  @CGPCH-B92 @unit-level
+  Scenario: A gate this run leaves out is still declared
+    Given a project whose features the catalog covers
+    When check --all runs with feature-test-match declared as manual-only, and again with it undeclared
+    Then the catalog line counts one gate fewer when it is declared

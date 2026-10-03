@@ -9,6 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -2800,5 +2802,29 @@ func TestPrintCatalogUndeclared(t *testing.T) {
 	none := &config.Config{Layers: map[string]config.Layer{"notes": {Kind: "note"}}}
 	if out := captureStdout(t, func() { printCatalogUndeclared(none) }); strings.TrimSpace(out) != "" {
 		t.Errorf("nothing missing prints nothing:\n%s", out)
+	}
+}
+
+func TestCatalogLine_aGateLeftOutOfTheRunIsStillDeclared(t *testing.T) {
+	t.Run("CGPCH-B92: A gate this run leaves out is still declared", func(t *testing.T) {})
+	const base = "version: 2\nlayers:\n  features:\n    kind: feature\n    pattern: \"*.feature\"\n"
+	files := map[string]string{"a.feature": "Feature: a\n"}
+	graph := func() *mapx.Graph { return &mapx.Graph{Nodes: []mapx.Node{{ID: "a.feature", Kind: mapx.KindFeature}}} }
+	count := func(yaml string) string {
+		dir := qProject(t, yaml, files, graph())
+		_, out := runCheckInChild(t, "--root", dir, "--all", "--no-record")
+		m := regexp.MustCompile(`(\d+) catalog gate\(s\) cover`).FindStringSubmatch(out)
+		if m == nil {
+			t.Fatalf("no catalog line:\n%s", out)
+		}
+		return m[1]
+	}
+	undeclared := count(base + "gates:\n  - name: non-empty\n    on: [feature]\n    check: non-empty\n")
+	manual := count(base + "gates:\n  - name: non-empty\n    on: [feature]\n    check: non-empty\n" +
+		"  - name: feature-test-match\n    on: [feature]\n    check: feature-test-match\n    when: [manual]\n")
+	u, _ := strconv.Atoi(undeclared)
+	m, _ := strconv.Atoi(manual)
+	if m != u-1 {
+		t.Errorf("declaring feature-test-match as manual-only must take it off the line: %d undeclared, %d with it declared", u, m)
 	}
 }
