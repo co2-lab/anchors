@@ -544,3 +544,14 @@ func TestContractStatusDeclared_Errors(t *testing.T) {
 		}
 	})
 }
+
+func TestContrato_theAPIResponsesSectionIsTheContract(t *testing.T) {
+	t.Run("CSDCN-B13: The API catalog's Responses section is the output contract", func(t *testing.T) {})
+	spec := "## Respostas de Erro\n| Regra | Quando | Status |\n| --- | --- | --- |\n| `X-E01` | falta | 999 |\n\n" +
+		"## Respostas\n| Status | Quando | Content type | Contrato |\n| --- | --- | --- | --- |\n| 201 | criado | application/json | `QRCDM` |\n"
+	codigo := "export const handler = async () => {\n  if (!x) return jsonResponse(404, {})\n  return jsonResponse(201, {})\n}"
+	v, msg := rodaContrato(t, spec, codigo)
+	if v != Fail || !strings.Contains(msg, "404") || strings.Contains(msg, "201") {
+		t.Fatalf("the Responses table is read, and 404 is accused alone: %v %s", v, msg)
+	}
+}

@@ -130,8 +130,9 @@ var specTemplate = template{
 			Purpose: "O limite da camada — o que é responsabilidade de outro. Vale sempre que a fronteira for confundível (ex.: regra pura que não busca dado).",
 			Body:    "## Restrições\n| Regra | Limite | Por quê |\n| --- | --- | --- |\n| `{id}-X01` | TODO | TODO |\n\n"},
 		{Key: "errors", Title: "Erros / Falhas", Default: false, Realizes: "E",
-			Purpose: "Como a unidade falha e quem sinaliza. Use quando houver entrada inválida, dependência externa ou estado impossível a tratar.",
-			Body:    "## Erros / Falhas\n| Regra | Condição | Falha |\n| --- | --- | --- |\n| `{id}-E01` | TODO | TODO |\n\n"},
+			Purpose:  "Como a unidade falha e quem sinaliza. Use quando houver entrada inválida, dependência externa ou estado impossível a tratar.",
+			Variants: []string{"error-responses"},
+			Body:     "## Erros / Falhas\n| Regra | Condição | Falha |\n| --- | --- | --- |\n| `{id}-E01` | TODO | TODO |\n\n"},
 		{Key: "constants", Title: "Constantes de negócio", Default: false,
 			Purpose: "Números/limites que são DECISÃO de negócio (teto de plano, janela de meses) — evita a constante virar mágica no código.",
 			Body:    "## Constantes de Negócio\n| Constante | Valor | Por quê |\n| --- | --- | --- |\n| TODO | TODO | TODO |\n\n"},
@@ -196,6 +197,36 @@ var specTemplate = template{
 		{Key: "auth", Title: "Auth/Acesso", Default: false, Realizes: "R",
 			Purpose: "Unidade cujo acesso depende de quem é o usuário (permissão, plano, dono do dado).",
 			Body:    "## Auth/Acesso\nTODO: quem pode; regra de acesso.\n\n"},
+		// ─── AS SEÇÕES DE API (HTTP) ──────────────────────────────────────────────────
+		//
+		// Espelham o que um OpenAPI descreve de uma operação — endpoint, parâmetros, corpo,
+		// respostas, segurança — mais o que ele não descreve e o cliente encontra:
+		// mensagens de erro e limites. São TABELAS para o `doct` gerar o OpenAPI delas, e
+		// o corpo e as respostas CITAM a spec do contrato (o modelo, no domínio) pelo
+		// código em vez de repetir campos: o contrato tem um lugar só.
+		{Key: "endpoint", Title: "Endpoint", Default: false,
+			Purpose: "Unidade de API: as operações que ela atende — método, caminho e um nome de operação estável. É o que situa a unidade na API e de onde o documento OpenAPI é gerado. Uma operação sendo aposentada é marcada como deprecated, não removida em silêncio.",
+			Body:    "## Endpoint\n| Método | Caminho | Operação | Deprecated |\n| --- | --- | --- | --- |\n| TODO: GET/POST/… | TODO: /v1/recurso/{id} | TODO: um nome estável, ex.: getRecurso | não |\n\n"},
+		{Key: "parameters", Title: "Parâmetros", Default: false,
+			Purpose: "Unidade de API: o que chega no caminho, na query, nos headers ou nos cookies — de onde vem cada um, se é obrigatório e o tipo. O corpo é `request-body`.",
+			Body:    "## Parâmetros\n| Nome | Em | Obrigatório | Tipo | Descrição |\n| --- | --- | --- | --- | --- |\n| TODO | TODO: path/query/header/cookie | sim | TODO: string (uuid) | TODO |\n\n"},
+		{Key: "request-body", Title: "Corpo da Requisição", Default: false,
+			Purpose: "Unidade de API que recebe um corpo: o content type e QUAL contrato ele é — a spec do modelo, citada pelo código, cuja `Domínio` declara os campos. A spec da API não repete os campos.",
+			Body:    "## Corpo da Requisição\n| Content type | Contrato | Obrigatório |\n| --- | --- | --- |\n| application/json | TODO: `CODE` da spec do contrato | sim |\n\n> O contrato é a spec do modelo da requisição, cuja `Domínio` lista os campos (com as colunas\n> `Tipo` e `Obrigatório`). Cite o código dela; não repita os campos aqui.\n\n"},
+		{Key: "responses", Title: "Respostas", Default: false,
+			Purpose: "Unidade de API: todo status que ela responde, quando, e QUAL contrato é o corpo — citado pelo código. Todo status que o código emite está aqui, e só eles (`contract-status-declared`). Uma resposta sem corpo diz `—` em Contrato.",
+			Feeds:   []string{"contract-status-declared"},
+			Body:    "## Respostas\n| Status | Quando | Content type | Contrato |\n| --- | --- | --- | --- |\n| TODO: 200 | TODO: o sucesso | application/json | TODO: `CODE` da spec do contrato |\n| TODO: 4xx | TODO: a requisição foi recusada | application/json | TODO: o contrato de erro |\n\n"},
+		{Key: "error-responses", Title: "Respostas de Erro", Default: false, Realizes: "E",
+			Purpose:  "Unidade de API: cada recusa com o status que ela responde, um código de erro estável que o cliente trata e a mensagem — catalogada uma vez, aqui. Prefira `errors` numa unidade que não é API.",
+			Variants: []string{"errors"},
+			Body:     "## Respostas de Erro\n| Regra | Quando | Status | Código de erro | Mensagem |\n| --- | --- | --- | --- | --- |\n| `{id}-E01` | TODO: a condição | TODO: 404 | TODO: UM_CODIGO_ESTAVEL | TODO: a mensagem que o cliente mostra |\n\n"},
+		{Key: "security", Title: "Segurança", Default: false,
+			Purpose: "Unidade de API: como quem chama se autentica — o esquema, por onde a credencial viaja e os escopos. A regra de negócio de quem pode (dono do dado, plano) fica em `auth`.",
+			Body:    "## Segurança\n| Esquema | Tipo | Onde | Escopos |\n| --- | --- | --- | --- |\n| TODO: um nome | TODO: apiKey / http bearer / oauth2 | TODO: header x-api-key | — |\n\n"},
+		{Key: "limits", Title: "Limites", Default: false,
+			Purpose: "Unidade de API: os limites que quem chama encontra — taxa, timeout, corpo máximo, chave de idempotência, tamanho de página. Cada um é uma decisão contra a qual o cliente programa; não escrito, é descoberto em produção.",
+			Body:    "## Limites\n| Limite | Valor | Por quê |\n| --- | --- | --- |\n| TODO: taxa / timeout / corpo máximo / idempotência | TODO | TODO |\n\n"},
 		// ─── AS SEÇÕES DE CRUZAMENTO DA UNIDADE DE INTERFACE ──────────────────────────
 		//
 		// As sete seções abaixo voltaram ao catálogo depois de terem sido cortadas na
@@ -571,6 +602,13 @@ var specPresets = map[string]presetDef{
 		//
 		// `callbacks` é o que substitui `navigation` aqui: componente não navega, emite.
 		Sections: []string{"title", "overview", "props", "variants", "states", "callbacks", "slots", "rules", "data-states", "presentation-validations", "messages", "components", "testids", "a11y", "rule-uses", "open"},
+	},
+	"api": {
+		Desc: "API HTTP — endpoint, parâmetros, contratos de requisição e resposta, erros, segurança e limites",
+		// O corpo e as respostas citam o CONTRATO pelo código (a spec do modelo, no
+		// domínio): a spec da API diz QUAL contrato, o contrato diz os campos. É daqui que
+		// o `doct` gera o OpenAPI do projeto.
+		Sections: []string{"title", "overview", "endpoint", "parameters", "request-body", "responses", "error-responses", "security", "limits", "rules", "auth", "rule-uses", "deps", "open"},
 	},
 	"handler": {
 		Desc:     "interface do backend (Lambda/rota) — request/response, auth e erro",

@@ -85,12 +85,24 @@ const GeneratedMarker = "<!-- anchors:generated from %s — DO NOT EDIT: run `an
 // template deixaria passar o caso comum, que e' a spec revisada.
 const GeneratedMarkerHashed = "<!-- anchors:generated from %s — inputs:%s — DO NOT EDIT: run `anchors docs build` -->"
 
-var markerRE = regexp.MustCompile(`^<!-- anchors:generated `)
+// A compiled YAML (the OpenAPI document) carries the marker as a `#` comment: an HTML
+// comment there is not YAML. Both forms are the marker.
+var markerRE = regexp.MustCompile(`^(?:<!--|#) anchors:generated `)
+
+// commentedMarker writes the marker in the comment form of the output: `#` for YAML,
+// `<!-- -->` for everything else.
+func commentedMarker(saida, marker string) string {
+	switch strings.ToLower(filepath.Ext(saida)) {
+	case ".yaml", ".yml":
+		return "# " + strings.TrimSuffix(strings.TrimPrefix(marker, "<!-- "), " -->")
+	}
+	return marker
+}
 
 // markerHashRE extrai a impressao digital de um marcador que a tenha. A ausencia nao e'
 // erro: paginas compiladas por uma versao anterior do Anchors nao a carregam, e para
 // elas o caminho continua sendo recompilar e comparar.
-var markerHashRE = regexp.MustCompile(`^<!-- anchors:generated from [^—]+— inputs:([0-9a-f]{16}) —`)
+var markerHashRE = regexp.MustCompile(`^(?:<!--|#) anchors:generated from [^—]+— inputs:([0-9a-f]{16}) —`)
 
 // HandwrittenMarker abre a página que NÃO é gerada — a doc de produto é o caso típico.
 //
@@ -284,6 +296,9 @@ func (c *Compiler) Funcs() template.FuncMap {
 		"orphanLayers":       c.fnOrphanLayers,
 		"layerFiles":         c.fnLayerFiles,
 		"mermaidID":          fnMermaidID,
+		// The project's OpenAPI, compiled from the specs of its API units:
+		// `{{ openapi "Title" "1.0.0" "https://api.example.com" }}` in `doct/openapi.yaml.tmpl`.
+		"openapi": c.fnOpenAPI,
 	}
 }
 
@@ -728,7 +743,7 @@ func (c *Compiler) compile(tmplPath, saida string) ([]byte, error) {
 		rel = tmplPath
 	}
 	rel = filepath.ToSlash(rel)
-	fmt.Fprintf(&buf, GeneratedMarkerHashed+"\n\n", rel, c.inputsHash(b))
+	fmt.Fprintf(&buf, commentedMarker(saida, GeneratedMarkerHashed)+"\n\n", rel, c.inputsHash(b))
 	if err := t.Execute(&buf, nil); err != nil {
 		return nil, fmt.Errorf("template %s: %w", tmplPath, err)
 	}

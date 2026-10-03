@@ -293,3 +293,22 @@ func TestScaffolds_speakTheProjectLanguage(t *testing.T) {
 		t.Error("a language with no table falls back to English")
 	}
 }
+
+func TestScaffold_aProjectWithAPIUnitsGetsTheOpenAPITemplate(t *testing.T) {
+	t.Run("DCSCD-B05: A project with API units gets the OpenAPI template", func(t *testing.T) {})
+	for spec, want := range map[string]bool{apiSpec: true, qrSpec: false} {
+		root, g := projetoDeTeste(t, map[string]string{"src/a.spec.md": spec})
+		c, err := New(root, g)
+		if err != nil {
+			t.Fatal(err)
+		}
+		written, _, err := c.InitScaffolds(false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := strings.Contains(strings.Join(written, ","), "openapi.yaml.tmpl")
+		if got != want {
+			t.Errorf("openapi.yaml.tmpl written = %v, want %v (%v)", got, want, written)
+		}
+	}
+}

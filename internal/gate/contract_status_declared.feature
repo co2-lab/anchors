@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CSDCN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @CSDCN
@@ -157,3 +157,10 @@ Feature: ContractStatusDeclared — the output contract lists the status codes t
     Given a project whose dialect http_status is a malformed regular expression
     When the gate confronts a spec with an output contract
     Then it returns Pending saying the pattern does not compile
+
+  @CSDCN-B13 @unit-level
+  Scenario: The API catalog's Responses section is the output contract
+    Given a spec whose "## Respostas" declares 201 and whose "## Respostas de Erro" comes first
+    When the handler emits 201 and 404
+    Then the gate reads the Responses table and accuses 404 alone
+

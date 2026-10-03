@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DCSCD
-#   updated_at: 2026-10-02
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @DCSCD
@@ -86,3 +86,10 @@ Feature: DocScaffolds — the starting templates `anchors docs init` proposes, o
     Then they are named architecture, behavior and rules; arquitetura, comportamento and regras; arquitectura, comportamiento and reglas
     And the architecture page opens with the language's heading, and the layer page lives in layers/, camadas/ or capas/ and asks for the language's overview title
     And no template keeps an unfilled text, and a language with no table gets English
+
+  @DCSCD-B05 @unit-level
+  Scenario: A project with API units gets the OpenAPI template
+    Given a project with a spec that has an Endpoint section, and one without
+    When the scaffolds are written
+    Then the first project gets openapi.yaml.tmpl and the second does not
+

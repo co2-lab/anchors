@@ -4,6 +4,7 @@
 package doct
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -497,6 +498,10 @@ func (c *Compiler) InitScaffolds(force bool) (escritos, pulados []string, err er
 	for _, l := range c.fnLayers() {
 		todos = append(todos, ScaffoldLayer(l, c.lang()))
 	}
+	// A project with API units gets its OpenAPI, compiled from them (see openapi.go).
+	if c.hasAPISpecs() {
+		todos = append(todos, ScaffoldOpenAPI(filepath.Base(c.Root)))
+	}
 	for _, s := range todos {
 		destino := filepath.Join(c.Root, Dir, s.Nome)
 		if _, e := os.Stat(destino); e == nil && !force {
@@ -513,4 +518,24 @@ func (c *Compiler) InitScaffolds(force bool) (escritos, pulados []string, err er
 		escritos = append(escritos, s.Nome)
 	}
 	return escritos, pulados, nil
+}
+
+// ScaffoldOpenAPI is the template of the project's OpenAPI document. The title, the version
+// and the servers are the team's to edit; the operations come from the specs.
+func ScaffoldOpenAPI(title string) Scaffold {
+	return Scaffold{
+		Nome:   "openapi.yaml.tmpl",
+		Corpo:  fmt.Sprintf("{{ openapi %q \"0.1.0\" }}\n", title),
+		Porque: "The API's contract, compiled from the specs that have an Endpoint section. Edit the title, the version and the servers (more arguments) here; the operations, their contracts and errors come from the specs.",
+	}
+}
+
+// hasAPISpecs says whether any spec the compiler loaded has an Endpoint section.
+func (c *Compiler) hasAPISpecs() bool {
+	for _, sp := range c.specs {
+		if len(sectionTable(sp, "Endpoint")) > 0 {
+			return true
+		}
+	}
+	return false
 }

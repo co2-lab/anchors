@@ -112,7 +112,7 @@ func TestSpecPresetsAreOrderedSectionSets(t *testing.T) {
 		names = append(names, n)
 	}
 	sort.Strings(names)
-	want := "backend-logic,component,handler,hook,mobile-logic,repository,schema,screen,service,store,validation"
+	want := "api,backend-logic,component,handler,hook,mobile-logic,repository,schema,screen,service,store,validation"
 	if got := strings.Join(names, ","); got != want {
 		t.Errorf("presets = %s, want %s", got, want)
 	}

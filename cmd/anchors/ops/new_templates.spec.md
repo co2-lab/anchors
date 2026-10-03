@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NWTMN
-  updated_at: 2026-09-28
+  updated_at: 2026-10-03
   layer: comando
 -->
 # NewTemplates — the catalog of artifact skeletons: which kinds exist, their headers, their sections and the presets that pick them
@@ -48,7 +48,7 @@ reading order.
 | `NWTMN-B06` | The test body is written in the idiom of each known family (a Python test function, a Go test function, a JUnit test, an xUnit fact, a Rust test, an RSpec block, a PHPUnit method, or a describe/it block), with no other language's syntax. |
 | `NWTMN-B07` | Every test body, of every family including an unknown one, carries the first scenario code of the unit. |
 | `NWTMN-B08` | For a family it does not know, the test body is an instruction to write a case with the scenario code in its name, not a guessed syntax. |
-| `NWTMN-B09` | The eleven spec presets (backend-logic, component, handler, hook, mobile-logic, repository, schema, screen, service, store, validation) are each an ordered set of catalog sections, opening with the title and closing with the open decisions. |
+| `NWTMN-B09` | The twelve spec presets (api, backend-logic, component, handler, hook, mobile-logic, repository, schema, screen, service, store, validation) are each an ordered set of catalog sections, opening with the title and closing with the open decisions. |
 | `NWTMN-B10` | Product doctrine has sections of its own, emits `-R` rules, and its header declares no layer. |
 | `NWTMN-B11` | The Python and Rust test functions are named by the snake_case of the unit name: each run of separators (`-`, space, `.`, `_`) becomes one `_`, an uppercase letter starts a new word only after a lowercase letter or a digit or when it opens a word after an acronym, and there is no leading or trailing `_` (`My-Name` → `my_name`, `HTTPServer` → `http_server`). |
 | `NWTMN-B12` | The spec catalog ties rules to what they use: `validations` realizes `V`, `presentation-validations` realizes `P`, and `rule-uses` realizes no letter; each emits a table whose first column is the rule's code and whose second is what it uses; `rule-uses` is in every preset, `validations` in the screen and validation presets, `presentation-validations` in the screen and component ones. |

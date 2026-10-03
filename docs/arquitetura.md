@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/arquitetura.md.tmpl — inputs:c7ab68880dd0a3e0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/arquitetura.md.tmpl — inputs:85948d0335085536 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Arquitetura
@@ -72,6 +72,7 @@ de nível 3 nenhum. Ou falta declará-las, ou elas não rodam em lugar nenhum:
 - `apoio`
 - `comando`
 - `config`
+- `doct`
 - `gate`
 - `infra`
 - `mapa`

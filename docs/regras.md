@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:61ef24c7280d2422 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:63af80f7678fccc0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -205,9 +205,9 @@ abra a página dela em `camadas/`.
 
 - [DCSCD-B03 — Init writes the three fixed templates plus one layer page for each layer that has specs, each one opening with a template comment carrying the sentence of what the page answers.](layers/apoio.md#dcscd--docscaffolds--the-starting-templates-anchors-docs-init-proposes-one-page-per-question-and-per-layer)
 
-- [DCSCD-B04 — An existing template is not rewritten unless forced; it is reported as skipped. Forced, it is rewritten.](layers/apoio.md#dcscd--docscaffolds--the-starting-templates-anchors-docs-init-proposes-one-page-per-question-and-per-layer)
+- [DCSCD-B05 — `ScaffoldOpenAPI`: When a spec has an `Endpoint` section, init also writes `openapi.yaml.tmpl`, compiling the project's OpenAPI under the project folder's name and version `0.1.0`, for the team to edit.](layers/apoio.md#dcscd--docscaffolds--the-starting-templates-anchors-docs-init-proposes-one-page-per-question-and-per-layer)
 
-- [DCSCD-B05 — On a small layer, the layer page carries each scenario's steps under a heading of its own, and the behaviour index links to that heading.](layers/apoio.md#dcscd--docscaffolds--the-starting-templates-anchors-docs-init-proposes-one-page-per-question-and-per-layer)
+- [DCSCD-B04 — An existing template is not rewritten unless forced; it is reported as skipped. Forced, it is rewritten.](layers/apoio.md#dcscd--docscaffolds--the-starting-templates-anchors-docs-init-proposes-one-page-per-question-and-per-layer)
 
 - [DCSCD-B06 — On a big layer, the layer page carries the layout's summary sentence and each unit's overview and rule list, without the scenarios' steps.](layers/apoio.md#dcscd--docscaffolds--the-starting-templates-anchors-docs-init-proposes-one-page-per-question-and-per-layer)
 
@@ -2219,7 +2219,7 @@ abra a página dela em `camadas/`.
 
 - [NWTMN-B08 — For a family it does not know, the test body is an instruction to write a case with the scenario code in its name, not a guessed syntax.](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them)
 
-- [NWTMN-B09 — The eleven spec presets (backend-logic, component, handler, hook, mobile-logic, repository, schema, screen, service, store, validation) are each an ordered set of catalog sections, opening with the title and closing with the open decisions.](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them)
+- [NWTMN-B09 — The twelve spec presets (api, backend-logic, component, handler, hook, mobile-logic, repository, schema, screen, service, store, validation) are each an ordered set of catalog sections, opening with the title and closing with the open decisions.](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them)
 
 - [NWTMN-B10 — Product doctrine has sections of its own, emits `-R` rules, and its header declares no layer.](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them)
 
@@ -3343,6 +3343,24 @@ abra a página dela em `camadas/`.
 
 - [GTVCG-X01 — The names are not cached: each question asks the registered source again.](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
+## doct
+
+### [OPNAP — OpenAPI — the project's API document, compiled from the specs of its API units](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
+- [OPNAP-B01 — Each Endpoint row of a spec is an operation under its path and method, with the operation name, the spec's title as summary and its overview as description, `deprecated` when the row says so, and the spec's parameters, body, responses (a range `4xx` as `4XX`), the error codes and messages of `Error Responses` under each one's status, its security schemes and its limits.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
+- [OPNAP-B02 — A contract cited by the body or a response is a shared schema named after the contract's spec file, built from its Domain — one property per input, the type from `Type`, the required ones from `Required`, what it accepts as the description —, whatever language the section and its columns are written in.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
+- [OPNAP-B03 — The document's keys come in OpenAPI's order and are indented by two spaces; a response with no contract has no content.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
+- [OPNAP-B04 — The compiled YAML opens with the generated marker as a `#` comment, and is valid YAML.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
+- [OPNAP-B05 — A compiled YAML is recognised as generated — overwritten, never skipped — and goes stale when a spec it reads changes.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
+- [OPNAP-E01 — A Contract cell cites no spec's code, or a code no spec of the project has.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
+- [OPNAP-E02 — An Endpoint row has no method or no path.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
 ## gate
 
 ### [BRCOV — BranchCoverage — the tests take the branches the code has](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has)
@@ -3492,6 +3510,8 @@ abra a página dela em `camadas/`.
 - [CSDCN-B10 — When the code carries a DYNAMIC status — a helper that takes the code by parameter — the gate stops asserting the phantom side, and keeps charging the literals it did find.](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
 
 - [CSDCN-B11 — Without a declared `http_status` in the dialect the verdict is Pending, and names the known families — the meter does not fake conformity nor guess the stack.](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
+
+- [CSDCN-B13 — The API catalog's `Responses` section (`Respostas`, `Respuestas`) is read as the output contract, by its whole title: `Error Responses` (`Respostas de Erro`) is another section.](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
 
 - [CSDCN-B12 — A project that explicitly waives the `http_status` field is skipped: the opt-out is declared, and it is honoured.](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
 

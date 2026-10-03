@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCSCD
-  updated_at: 2026-10-02
+  updated_at: 2026-10-03
   layer: apoio
 -->
 # DocScaffolds — the starting templates `anchors docs init` proposes, one page per question and per layer
@@ -31,6 +31,7 @@ comment saying what question the page answers, where whoever edits it will read 
 | `DCSCD-B01` | `Scaffolds`: There are three fixed page templates — architecture, behaviour and rules — each with a template name, a body and a sentence saying what the page answers. |
 | `DCSCD-B02` | `ScaffoldLayer`: A layer's page template is named after the layer inside the layer folder of the project's language (`LayerDir`, DCLND-B09). |
 | `DCSCD-B03` | Init writes the three fixed templates plus one layer page for each layer that has specs, each one opening with a template comment carrying the sentence of what the page answers. |
+| `DCSCD-B05` | `ScaffoldOpenAPI`: When a spec has an `Endpoint` section, init also writes `openapi.yaml.tmpl`, compiling the project's OpenAPI under the project folder's name and version `0.1.0`, for the team to edit. |
 | `DCSCD-B04` | An existing template is not rewritten unless forced; it is reported as skipped. Forced, it is rewritten. |
 | `DCSCD-B05` | On a small layer, the layer page carries each scenario's steps under a heading of its own, and the behaviour index links to that heading. |
 | `DCSCD-B06` | On a big layer, the layer page carries the layout's summary sentence and each unit's overview and rule list, without the scenarios' steps. |

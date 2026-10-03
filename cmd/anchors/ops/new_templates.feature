@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: NWTMN
-#   updated_at: 2026-09-28
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @NWTMN
@@ -62,7 +62,7 @@ Feature: NewTemplates — the catalog of artifact skeletons: which kinds exist, 
   Scenario: Each spec preset is an ordered set of catalog sections
     Given the spec presets
     When they are listed
-    Then they are the eleven named presets
+    Then they are the twelve named presets
     And each names only catalog sections, opens with title and closes with open
 
   @NWTMN-B10 @unit-level

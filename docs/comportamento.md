@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b65b96b24bc296ae — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:bc42abc5208c0641 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -205,6 +205,8 @@ teste prova.
 - [A templates folder that cannot be created stops init with the error](layers/apoio.md#dcscd--docscaffolds--the-starting-templates-anchors-docs-init-proposes-one-page-per-question-and-per-layer) `DCSCD-E01`
 
 - [The templates are named and written in the project's language](layers/apoio.md#dcscd--docscaffolds--the-starting-templates-anchors-docs-init-proposes-one-page-per-question-and-per-layer) `DCSCD-B09`
+
+- [A project with API units gets the OpenAPI template](layers/apoio.md#dcscd--docscaffolds--the-starting-templates-anchors-docs-init-proposes-one-page-per-question-and-per-layer) `DCSCD-B05`
 
 - [Scenarios and outlines open in any dialect, and an examples table does not](layers/apoio.md#gsrgh--gherkinscenarioreader--the-scenarios-of-a-units-feature-with-their-steps-for-the-documentation) `GSRGH-B01`
 
@@ -3034,6 +3036,22 @@ teste prova.
 
 - [The names are not cached: each question asks the registered source again](layers/config.md#gtvcg-x01--the-names-are-not-cached-each-question-asks-the-registered-source-again) `GTVCG-X01`
 
+## doct
+
+- [Each Endpoint row of a spec is an operation, with its parameters, body, responses, errors, security and limits](layers/doct.md#opnap-b01--each-endpoint-row-of-a-spec-is-an-operation-with-its-parameters-body-responses-errors-security-and-limits) `OPNAP-B01`
+
+- [A cited contract is a shared schema built from its Domain, in any language](layers/doct.md#opnap-b02--a-cited-contract-is-a-shared-schema-built-from-its-domain-in-any-language) `OPNAP-B02`
+
+- [The document is written in OpenAPI's order, two spaces deep](layers/doct.md#opnap-b03--the-document-is-written-in-openapis-order-two-spaces-deep) `OPNAP-B03`
+
+- [The compiled document carries the generated marker as a YAML comment and is valid YAML](layers/doct.md#opnap-b04--the-compiled-document-carries-the-generated-marker-as-a-yaml-comment-and-is-valid-yaml) `OPNAP-B04`
+
+- [A compiled YAML is recognised as generated and its freshness checked](layers/doct.md#opnap-b05--a-compiled-yaml-is-recognised-as-generated-and-its-freshness-checked) `OPNAP-B05`
+
+- [A contract cited and not found fails the build, naming it](layers/doct.md#opnap-e01--a-contract-cited-and-not-found-fails-the-build-naming-it) `OPNAP-E01`
+
+- [An Endpoint row with no path fails the build](layers/doct.md#opnap-e02--an-endpoint-row-with-no-path-fails-the-build) `OPNAP-E02`
+
 ## gate
 
 - [Below the floor fails naming the lines](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B01`
@@ -3191,6 +3209,8 @@ teste prova.
 - [Linked code gone from disk is pending, not a code without status](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E02`
 
 - [A dialect status pattern that does not compile is pending](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E03`
+
+- [The API catalog's Responses section is the output contract](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B13`
 
 - [Confronting an artifact that is not a spec skips](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B01`
 

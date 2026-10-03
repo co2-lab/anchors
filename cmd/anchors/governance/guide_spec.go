@@ -51,6 +51,15 @@ A spec is not all alike — it specializes according to what makes the unit vary
   data, emits events/callbacks. The spec focuses on the input contract, the variation
   matrix and the emitted events.
 (The names "screen"/"component" are the project's; the distinction is universal.)
+- An API unit (an HTTP operation) — varies by request. The spec says what an OpenAPI
+  says of the operation, and what it does not: ` + "`Endpoint`" + ` (method, path, a stable
+  operation name), ` + "`Parameters`" + `, ` + "`Request Body`" + ` and ` + "`Responses`" + `, ` + "`Error Responses`" + ` (each
+  refusal with its status, a stable error code and the message), ` + "`Security`" + ` and
+  ` + "`Limits`" + ` — ` + "`anchors new spec --preset api`" + `. The body and each response CITE their
+  contract by code: the contract is the model's spec, in the domain, whose ` + "`Domain`" + `
+  table lists the fields, with ` + "`Type`" + ` and ` + "`Required`" + ` columns. The API spec says WHICH
+  contract; the contract says the fields — one place each. The project's OpenAPI is
+  compiled from these specs by ` + "`anchors docs build`" + `.
 
 ## Sections (adopt the ones that apply to the unit)
 

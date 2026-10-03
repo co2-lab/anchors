@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CSDCN
-  updated_at: 2026-09-26
+  updated_at: 2026-10-03
   layer: gate
 -->
 # ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those
@@ -60,6 +60,7 @@ is nothing to confront.
 | `CSDCN-B09` | A status passed as a literal to a locally defined helper counts as emitted — `fail(400, …)` is a 400, wherever the envelope is built. |
 | `CSDCN-B10` | When the code carries a DYNAMIC status — a helper that takes the code by parameter — the gate stops asserting the phantom side, and keeps charging the literals it did find. |
 | `CSDCN-B11` | Without a declared `http_status` in the dialect the verdict is Pending, and names the known families — the meter does not fake conformity nor guess the stack. |
+| `CSDCN-B13` | The API catalog's `Responses` section (`Respostas`, `Respuestas`) is read as the output contract, by its whole title: `Error Responses` (`Respostas de Erro`) is another section. |
 | `CSDCN-B12` | A project that explicitly waives the `http_status` field is skipped: the opt-out is declared, and it is honoured. |
 
 ## Invariants

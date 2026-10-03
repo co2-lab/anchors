@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:f91645db7f61ea07 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:1f1851e8154aa609 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 77 unidades e 1300 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 77 unidades e 1301 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## BRCOV — BranchCoverage — the tests take the branches the code has
@@ -266,6 +266,8 @@ is nothing to confront.
 - **CSDCN-B10** — When the code carries a DYNAMIC status — a helper that takes the code by parameter — the gate stops asserting the phantom side, and keeps charging the literals it did find.
 
 - **CSDCN-B11** — Without a declared `http_status` in the dialect the verdict is Pending, and names the known families — the meter does not fake conformity nor guess the stack.
+
+- **CSDCN-B13** — The API catalog's `Responses` section (`Respostas`, `Respuestas`) is read as the output contract, by its whole title: `Error Responses` (`Respostas de Erro`) is another section.
 
 - **CSDCN-B12** — A project that explicitly waives the `http_status` field is skipped: the opt-out is declared, and it is honoured.
 

@@ -36,8 +36,10 @@ import (
 //
 // O gate NÃO exige as faixas genéricas (`5xx`) nem inventa semântica: só compara os
 // números concretos que aparecem na tabela com os que aparecem no código.
-// contractSectionRE isola a seção "Contrato de Saída" / "Output Contract" até o próximo cabeçalho `##`.
-var contractSectionRE = regexp.MustCompile(`(?si)##\s*(?:Contrato de Sa[íi]da|Output Contract)[^\n]*\n(.*?)(?:\n##|\z)`)
+// contractSectionRE isola a seção "Contrato de Saída" / "Output Contract" — ou a seção
+// `Responses` do catálogo de API, que a substitui — até o próximo cabeçalho `##`. A de
+// API casa só o título inteiro: "Respostas de Erro" é outra seção.
+var contractSectionRE = regexp.MustCompile(`(?si)##\s*(?:(?:Contrato de Sa[íi]da|Output Contract)[^\n]*|(?:Responses|Respostas|Respuestas)[ \t]*)\n(.*?)(?:\n##|\z)`)
 
 // statusNaTabelaRE casa o número de status numa linha de tabela: `| 200 | …`.
 // Aceita `4xx`/`5xx` na captura para poder IGNORÁ-los depois (são faixas, não
