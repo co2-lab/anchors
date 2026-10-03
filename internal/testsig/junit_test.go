@@ -232,3 +232,18 @@ func TestExecReport_variantsAreScenarios(t *testing.T) {
 		}
 	})
 }
+
+func TestPassedCodes_aGreenCaptureProvesTheState(t *testing.T) {
+	t.Run("JUIJN-B12: A green capture of a state proves the state", func(t *testing.T) {})
+	r := &ExecReport{Cases: []CaseResult{
+		{Name: "BUTTN-VR-S01 - Enabled"},
+		{Name: "BUTTN-VR-S02 - Disabled", Failed: true},
+	}}
+	passed, seen := r.PassedCodes(), r.SeenCodes()
+	if !passed["BUTTN-VR-S01"] || !passed["BUTTN-S01"] {
+		t.Errorf("the green capture proves its scenario and its state: %v", passed)
+	}
+	if passed["BUTTN-S02"] || !seen["BUTTN-S02"] {
+		t.Errorf("a red capture proves nothing and is still seen: passed %v seen %v", passed, seen)
+	}
+}

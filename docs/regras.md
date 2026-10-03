@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:8ff2837b8cbcb866 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:fb8feabb4698ab1c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7316,6 +7316,8 @@ abra a página dela em `camadas/`.
 - [JUIJN-B09 — A file that is not a JUnit report is read as a report with no cases: nothing is proven by it.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
 
 - [JUIJN-B10 — Each case carries its run time in seconds from its `time` attribute; a missing, malformed or negative time reads as 0.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
+
+- [JUIJN-B12 — A case naming a visual-regression code of a state — `BUTTN-VR-S01` — also proves (and is seen for) the state it captures, `BUTTN-S01`: a green capture shows the state under its condition, looking as the spec says.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
 
 - [JUIJN-B11 — The codes a report proves and sees carry the variant a case names (`CODE-B02#02`): a case of one variant never stands for its sibling. (`ScenarioCodesInCase`, `PassedCodes`, `SeenCodes`)](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
 

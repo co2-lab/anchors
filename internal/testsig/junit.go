@@ -144,6 +144,20 @@ func ScenarioCodesInCase(name string) []string {
 	return caseScenarioRE().FindAllString(name, -1)
 }
 
+// capturedStateRE is a visual-regression code that names the state it captures:
+// `BUTTN-VR-S01` captures `BUTTN-S01`.
+var capturedStateRE = regexp.MustCompile(`^([A-Z0-9]+)-VR-([A-Z]\d{2})$`)
+
+// withCapturedState is the code, and — for a visual-regression code of a state — the state
+// it captures. A green capture of a state proves the state: it shows it under its condition,
+// looking as the spec says.
+func withCapturedState(code string) []string {
+	if m := capturedStateRE.FindStringSubmatch(code); m != nil {
+		return []string{code, m[1] + "-" + m[2]}
+	}
+	return []string{code}
+}
+
 // CodesInCase devolve os códigos de cenário mencionados no nome de um caso.
 func CodesInCase(name string) []string {
 	return caseCodeRE().FindAllString(name, -1)
@@ -158,7 +172,9 @@ func (r *ExecReport) PassedCodes() map[string]bool {
 			continue
 		}
 		for _, code := range ScenarioCodesInCase(c.Name) {
-			out[strings.ToUpper(code)] = true
+			for _, k := range withCapturedState(strings.ToUpper(code)) {
+				out[k] = true
+			}
 		}
 	}
 	return out
@@ -171,7 +187,9 @@ func (r *ExecReport) SeenCodes() map[string]bool {
 	out := map[string]bool{}
 	for _, c := range r.Cases {
 		for _, code := range ScenarioCodesInCase(c.Name) {
-			out[strings.ToUpper(code)] = true
+			for _, k := range withCapturedState(strings.ToUpper(code)) {
+				out[k] = true
+			}
 		}
 	}
 	return out

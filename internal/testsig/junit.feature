@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: JUIJN
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @JUIJN
@@ -96,3 +96,10 @@ Feature: JUnitIngest — the run's outcome per test case, and the scenario codes
     Given a report where one variant passes and its sibling is skipped
     When the proven codes are read
     Then only the passing variant is proven, and neither the sibling nor the bare rule is
+
+  @JUIJN-B12 @unit-level
+  Scenario: A green capture of a state proves the state
+    Given a passed case "BUTTN-VR-S01 - Enabled" and a failed one "BUTTN-VR-S02 - Disabled"
+    When the passed and seen codes are read
+    Then BUTTN-VR-S01 and BUTTN-S01 are proven, BUTTN-S02 is seen and not proven
+

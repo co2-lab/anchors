@@ -1,6 +1,6 @@
 <!-- @anchors
   code: JUIJN
-  updated_at: 2026-09-30
+  updated_at: 2026-10-03
   layer: infra
 -->
 # JUnitIngest — the run's outcome per test case, and the scenario codes each case proves, read from a JUnit report
@@ -32,6 +32,7 @@ case's NAME by the rule code grammar, in the project's vocabulary.
 | `JUIJN-B08` | `CodesInCase`: Every code a case's name mentions is extracted, in the vocabulary the project declared. |
 | `JUIJN-B09` | A file that is not a JUnit report is read as a report with no cases: nothing is proven by it. |
 | `JUIJN-B10` | Each case carries its run time in seconds from its `time` attribute; a missing, malformed or negative time reads as 0. |
+| `JUIJN-B12` | A case naming a visual-regression code of a state — `BUTTN-VR-S01` — also proves (and is seen for) the state it captures, `BUTTN-S01`: a green capture shows the state under its condition, looking as the spec says. |
 | `JUIJN-B11` | The codes a report proves and sees carry the variant a case names (`CODE-B02#02`): a case of one variant never stands for its sibling. (`ScenarioCodesInCase`, `PassedCodes`, `SeenCodes`) |
 
 ## Domain
