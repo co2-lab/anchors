@@ -90,8 +90,8 @@ func TestParseMutationRefusesGarbage(t *testing.T) {
 	t.Run("MTINM-E02: A report that is not the canonical format is refused", func(t *testing.T) {
 		refused(t, "this is not json")
 	})
-	t.Run("MTINM-E03: A report without files is refused", func(t *testing.T) {
-		refused(t, `{"schemaVersion":"1.0"}`)
+	t.Run("MTINM-E03: A report with no file and no schema version is refused", func(t *testing.T) {
+		refused(t, `{"files":{}}`)
 	})
 }
 
@@ -337,4 +337,16 @@ func TestParseMutationThresholdsPathsAndMissing(t *testing.T) {
 			t.Errorf("want the not-exist error, got %v", err)
 		}
 	})
+}
+
+func TestParseMutation_aReportWithNoFileHadNothingToMutate(t *testing.T) {
+	t.Run("MTINM-B10: A report in the format with no file had nothing to mutate", func(t *testing.T) {})
+	p := filepath.Join(t.TempDir(), "mutation.json")
+	if err := os.WriteFile(p, []byte(`{"schemaVersion":"1.0","thresholds":{"high":80,"low":60},"files":{}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	rep, err := ParseMutation(p)
+	if err != nil || len(rep.Files) != 0 {
+		t.Fatalf("a run with nothing to mutate is an empty report, not an error: %v %v", rep, err)
+	}
 }

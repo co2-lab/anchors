@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:19c17de1491c7be1 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b65b96b24bc296ae — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1427,6 +1427,8 @@ teste prova.
 - [A suite's whole coverage run marks the files it left out](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B18`
 
 - [A JUnit case with no file finds its test by its class's folder and the one file defining its test](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B19`
+
+- [A targeted file that gave no mutant is measured with nothing to mutate](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B20`
 
 - [The legacy spelling of the waiver is a waiver all the way to the stamp](layers/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B01`
 
@@ -6658,9 +6660,11 @@ teste prova.
 
 - [A report that is not the canonical format is refused](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-E02`
 
-- [A report without files is refused](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-E03`
+- [A report with no file and no schema version is refused](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-E03`
 
 - [A missing report returns the read error](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-E04`
+
+- [A report in the format with no file had nothing to mutate](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-B10`
 
 - [The listed files are read into one result per file](layers/infra.md#gring--gremlinsingest--the-mutation-score-per-file-read-from-a-gremlins-report) `GRING-B01`
 

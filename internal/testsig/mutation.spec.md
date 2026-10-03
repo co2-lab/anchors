@@ -38,6 +38,7 @@ project to declare them twice.
 | `MTINM-B06` | A mutant that failed to compile or to run is not counted and does not enter the score. |
 | `MTINM-B07` | The score is killed over killed plus survived, times one hundred; a file where no mutant ran has no score (zero, not written to the map): nothing was measured. |
 | `MTINM-B08` | The low and high thresholds are read from the report when it carries them. |
+| `MTINM-B10` | A report in the format — it carries its schema version — with no file is a run that had nothing to mutate: it is read as a report of no file, not refused. |
 | `MTINM-B09` | A file's path is normalized: a leading `./` is dropped, and a path containing `/src/` is cut to start at `src/`. |
 
 ## Domain
@@ -65,7 +66,7 @@ project to declare them twice.
 | --- | --- | --- | --- |
 | `MTINM-E01` | The format name is not one the unit knows. | An error naming the accepted formats and where to declare them. | Otherwise the operator guesses the name. |
 | `MTINM-E02` | The report is not JSON of the canonical format. | An error naming the expected format. | Accepting it silently would record a phantom score. |
-| `MTINM-E03` | The report has no file. | An error pointing at the tool's output format. | An empty report is a tool emitting another format, not a project with nothing to mutate. |
+| `MTINM-E03` | The report has no file and no schema version. | An error pointing at the tool's output format. | Without the version it is a tool emitting another format; a report WITH it and no file is a run with nothing to mutate, read as an empty report (`MTINM-B10`). |
 | `MTINM-E04` | The report file cannot be read. | The read error is returned. | A missing report must not look like a clean run. |
 
 ## Dependencies

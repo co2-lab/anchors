@@ -585,3 +585,19 @@ func TestIngest_junitWithNoFileFindsTheTestByClassAndName(t *testing.T) {
 		t.Errorf("no case of TestOther ran, and a name no file defines lands nowhere: %+v", s)
 	}
 }
+
+func TestIngest_aTargetedFileWithNoMutantIsMeasured(t *testing.T) {
+	t.Run("NGSTI-B20: A targeted file that gave no mutant is measured with nothing to mutate", func(t *testing.T) {})
+	root := fixtureProject(t)
+	writeProjectFile(t, root, "reports/mutation.json", `{"schemaVersion":"1.0","thresholds":{"high":80,"low":60},"files":{}}`)
+	MutationTargets = []string{"src/login.ts"}
+	err := IngestArtifacts(root, "", "", "", filepath.Join(root, "reports/mutation.json"), "mutation", "", "", true)
+	MutationTargets = nil
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := node(t, root, "src/login.ts")
+	if n.Signal == nil || n.Signal.MutationAtRev != n.Rev || n.Signal.MutantsKilled+n.Signal.MutantsSurvived != 0 {
+		t.Errorf("the targeted file is measured at its revision with no mutant: %+v", n.Signal)
+	}
+}

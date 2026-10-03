@@ -145,7 +145,11 @@ func parseMTE(b []byte) (*MutationReport, error) {
 		return nil, fmt.Errorf("invalid mutation report (expected the "+
 			"Mutation Testing Elements format, schemaVersion 1.x): %w", err)
 	}
-	if len(raw.Files) == 0 {
+	// A report in the format, with no file, is a run that had NOTHING TO MUTATE — a file
+	// that is only `export const client = new Client({})`. It was an error, and the file
+	// stayed pending forever: the tool ran, said so, and the map never heard. Without even
+	// the schema version, it is no report of this format at all.
+	if len(raw.Files) == 0 && strings.TrimSpace(raw.SchemaVersion) == "" {
 		return nil, fmt.Errorf("mutation report with no files — check whether the " +
 			"tool emitted the standard JSON format (Mutation Testing Elements)")
 	}

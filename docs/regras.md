@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:8129303f6f3c63ba — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:61ef24c7280d2422 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1558,6 +1558,8 @@ abra a página dela em `camadas/`.
 - [NGSTI-B17 — An ingestion that follows a run first adds to the map the governed files it does not have yet — read alone, with their units —, so the proof of a spec created after the last `map build` reaches it.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B18 — A whole-run coverage report a declared test suite names in its `lcov:` marks as omitted every code file the suite covers and the report left out, and says how many; a partial run, or a report no suite declares, marks nothing. (`suiteOfLcov`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+
+- [NGSTI-B20 — A file a targeted mutation run handed to the tool (`MutationTargets`) that its report does not list is recorded as measured at its revision with no mutant, so `mutation-score` answers "nothing to mutate".](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B19 — A JUnit case with no `file` finds its test file from its class and name: the class names a test folder of the map by path suffix (segments split by `/`, or by `.` when it has none, dropped from the front until one exists; the root's folder when none does), and the case's file is the one test file there whose dialect `definition` defines the case's top-level test, the name before `/`; no folder, no file, or two files give the case no file. (`caseFileResolver`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
@@ -7331,6 +7333,8 @@ abra a página dela em `camadas/`.
 
 - [MTINM-B08 — The low and high thresholds are read from the report when it carries them.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
 
+- [MTINM-B10 — A report in the format — it carries its schema version — with no file is a run that had nothing to mutate: it is read as a report of no file, not refused.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
+
 - [MTINM-B09 — A file's path is normalized: a leading `./` is dropped, and a path containing `/src/` is cut to start at `src/`.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
 
 - [MTINM-I01 — A file where nothing ran is told apart from a proven one: it has no score, and its uncovered or ignored mutants stay counted.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
@@ -7341,7 +7345,7 @@ abra a página dela em `camadas/`.
 
 - [MTINM-E02 — The report is not JSON of the canonical format.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
 
-- [MTINM-E03 — The report has no file.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
+- [MTINM-E03 — The report has no file and no schema version.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
 
 - [MTINM-E04 — The report file cannot be read.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
 

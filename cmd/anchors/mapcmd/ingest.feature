@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: NGSTI
-#   updated_at: 2026-10-02
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @NGSTI
@@ -164,3 +164,10 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     And a JUnit report with no file, its classes the import path of src/handlers, with TestReady, a subtest of it, TestNowhere, and TestReady of a missing package
     When the report is ingested
     Then one test file matched, probes_test.go has the two TestReady cases passed, and other_test.go got nothing
+
+  @NGSTI-B20 @unit-level
+  Scenario: A targeted file that gave no mutant is measured with nothing to mutate
+    Given a targeted mutation run over src/login.ts whose report, in the format, lists no file
+    When the report is ingested
+    Then src/login.ts is measured at its revision with no mutant
+

@@ -87,8 +87,8 @@ Feature: MutationIngest — the mutation score per file, read from a Mutation Te
     Then each is refused with an error
 
   @MTINM-E03 @unit-level
-  Scenario: A report without files is refused
-    Given a JSON report with a schema version and no files
+  Scenario: A report with no file and no schema version is refused
+    Given a JSON report with no schema version and no files
     When the report is read
     Then it is refused with an error
 
@@ -97,3 +97,10 @@ Feature: MutationIngest — the mutation score per file, read from a Mutation Te
     Given a path where no report exists
     When the report is read
     Then the error says the file does not exist
+
+  @MTINM-B10 @unit-level
+  Scenario: A report in the format with no file had nothing to mutate
+    Given a report with schemaVersion 1.0 and no file
+    When the report is read
+    Then it is a report of no file, not an error
+

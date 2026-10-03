@@ -36,6 +36,13 @@ import (
 // que já não vale.
 var ViaAnchorsTest bool
 
+// MutationTargets are the files a targeted mutation run (`anchors mutation --changed`,
+// `--target`) handed to the tool. One the report does not list was measured and gave no
+// mutant: it is recorded so, and `mutation-score` answers "nothing to mutate" instead of
+// asking forever for a run that has already happened. Empty on a full run, where a file
+// the report omits may simply be out of the tool's reach.
+var MutationTargets []string
+
 func newIngestCmd() *cobra.Command {
 	var root, mapPath, junit, lcov, mutation, layer, scope, suite string
 	var partial bool
@@ -277,6 +284,22 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 					sobreviventes += fm.Survived
 				}
 				byFile = resolveByFile(g, mapx.KindCode, byFile, absRoot, mutation)
+				semMutante := 0
+				for _, t := range MutationTargets {
+					rel := filepath.ToSlash(t)
+					if r, err := filepath.Rel(absRoot, t); err == nil && filepath.IsAbs(t) {
+						rel = filepath.ToSlash(r)
+					}
+					if n := g.Node(rel); n != nil && n.Kind == mapx.KindCode {
+						if _, listed := byFile[rel]; !listed {
+							byFile[rel] = mapx.FileMutation{}
+							semMutante++
+						}
+					}
+				}
+				if semMutante > 0 {
+					fmt.Printf("mutation: %d targeted file(s) gave no mutant — measured, nothing to mutate\n", semMutante)
+				}
 				m := g.IngestMutationScoped(byFile, scope, now, rep.Low, rep.High)
 				fmt.Printf("mutation (%s): %d file(s) in the report, %d code node(s) matched, %d surviving mutant(s)\n",
 					mutationFormat, len(rep.Files), m, sobreviventes)

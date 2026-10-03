@@ -277,7 +277,18 @@ func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, a
 		// sobre a única que já se sabe ruim, e o vermelho pareceria ausência de medida.
 		//
 		// O relatório é a evidência do que aconteceu, não um prêmio por ter passado.
-		if err := ingestIfRecent(absRoot, junit, lcov, mutation, s, inicio, len(alvos) > 0); err != nil {
+		// The files a targeted mutation run handed to the tool: one its report omits gave no
+		// mutant (see mapcmd.MutationTargets).
+		mapcmd.MutationTargets = nil
+		if mutation != "" {
+			mapcmd.MutationTargets = mine
+			if target != "" {
+				mapcmd.MutationTargets = []string{target}
+			}
+		}
+		errIngest := ingestIfRecent(absRoot, junit, lcov, mutation, s, inicio, len(alvos) > 0)
+		mapcmd.MutationTargets = nil
+		if err := errIngest; err != nil {
 			return fmt.Errorf("layer %q: ingest report: %w", s.Layer, err)
 		}
 		if errRun != nil {
