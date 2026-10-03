@@ -47,6 +47,8 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | [`vr-scenarios-tested`](/pt/docs/gates/vr-scenarios-tested/) | `code` | Every visual-regression scenario of the unit has a VR test and a baseline image |
 | [`vr-scenarios-of-states`](/pt/docs/gates/vr-scenarios-of-states/) | `code` | Every visual-regression scenario of the unit is of a state its spec registers |
 | [`vr-tests-of-scenarios`](/pt/docs/gates/vr-tests-of-scenarios/) | `code` | Every VR test of the unit is of a visual-regression scenario its feature declares |
+| [`validation-transitions`](/pt/docs/gates/validation-transitions/) | `code` | Every validation of a visual unit is the trigger of a state transition, or says `@no-state: <reason>` |
+| [`error-message-declared`](/pt/docs/gates/error-message-declared/) | `code` | Every error of a visual unit names the message it shows, or says `@no-message: <reason>` |
 
 ## Doutrina e Feature Flags
 

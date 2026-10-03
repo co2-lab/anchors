@@ -73,7 +73,7 @@ exactly the tags it declares — a spelling the project did not declare makes th
 confronted by no gate.
 
 VISUAL REGRESSION is a level of its own. A visual unit (a screen, a component) declares ONE
-VR scenario PER STATE its spec registers, tagged with the project's visual regime and the
+VR scenario PER STATE its spec registers — and per message it catalogs, ` + "`@{CODE}-VR-M01`" + ` —, tagged with the project's visual regime and the
 state's code (` + "`@{CODE}-S01`" + `, or ` + "`@{CODE}-VR-S01`" + `). It has no interaction steps: it says that
 the state is captured and compared with its baseline. It is not a unit test case: the proof
 is the capture (see ` + "`anchors guide test`" + `). Every VR scenario is of a state the spec

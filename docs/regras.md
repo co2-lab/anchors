@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:003bc3217ec00154 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:c13c89a3824bb353 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1362,6 +1362,8 @@ abra a página dela em `camadas/`.
 - [GVGDG-B16 — The changelog guide says `anchors changelog` builds a technical changelog, not the product's, and recommends a product changelog an agent synthesizes from it: breaking changes, visible features and bugs fixed go in, fixes without `Bug:` stay out, and chores only when they matter to the product.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B17 — The spec guide asks for the spec in four passes — every section, with its questions (every input, every effect and its limit, every failure, every state shared with another unit); the variations of each rule; the generalization of cases into an invariant; a review that each rule states the intent and not the mechanism —, and says a defect is a rule not written, to be written with its invariant before the fix.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
+- [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B20 — The test guide strongly recommends a contract test for every API unit, validating the API against the OpenAPI compiled from the specs with the language's own tool, named by `{CODE}-CT`, loading the document instead of copying it, and asserting each error response's status, code and message.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -5755,6 +5757,20 @@ abra a página dela em `camadas/`.
 
 - [SFMSP-E02 — A feature the map links to the spec is no longer on disk.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 
+### [VTRST — StateTransitions — every change of a visual unit is proven through what the screen shows](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
+
+- [VTRST-B01 — A node that is not code, a code file with no spec beside it and a spec with no code leave both gates without a verdict.](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
+
+- [VTRST-B02 — `validation-transitions` fails naming each validation — of `Validations` and of `Presentation validations` — that no State Flow row names as its trigger; a spec with no validation leaves without a verdict.](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
+
+- [VTRST-B03 — A transition counts only when its From and To are states the spec registers; one from or to an unknown state is named with both ends.](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
+
+- [VTRST-B04 — A validation whose row says `@no-state: <reason>` is not asked; one that says `@no-state` with no reason is still asked, and named as an exemption with no reason.](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
+
+- [VTRST-B05 — `error-message-declared` fails naming each error that cites no message code of the unit, and each that cites codes the Messages section does not catalog; `@no-message: <reason>` on its row exempts it; a spec with no error leaves without a verdict.](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
+
+- [VTRST-E01 — The spec beside the code file cannot be read, or there is none.](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
+
 ### [THSAS — TestHasAssertion — every test asserts something in its body](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body)
 
 - [THSAS-B01 — A test whose body holds no assertion fails, each named by its line and title; a file whose tests all assert passes.](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body)
@@ -6142,6 +6158,10 @@ abra a página dela em `camadas/`.
 - [VRSTC-B10 — The State letter is the one of the project's rule type whose term or a section starts with "state" or "estado"; without one, `S`.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
 - [VRSTC-B11 — `vr-baseline` accepts the same image formats for a VR scenario's baseline.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
+
+- [VRSTC-B13 — Every message the spec catalogs (the codes of its User Messages section) is captured like a state: a VR scenario `{CODE}-VR-M01`, a VR test and a baseline image, `@no-vr: <reason>` on its row exempting it — an error shows on the screen as its message, the state is the same.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
+
+- [VRSTC-B14 — The states a spec registers are the codes in its States section — whose title may carry a note in parentheses — when it has one; a state code cited elsewhere registers nothing.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
 - [VRSTC-B12 — A state is exempted from visual regression by `@no-vr: <reason>` on a line that declares it — its heading or its row in a states table. An exemption with no reason does not exempt: the state is still asked, and the failure names it as an exemption with no reason.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 

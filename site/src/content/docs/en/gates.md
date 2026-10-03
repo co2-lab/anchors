@@ -47,6 +47,8 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`vr-scenarios-tested`](/docs/gates/vr-scenarios-tested/) | `code` | Every visual-regression scenario of the unit has a VR test and a baseline image |
 | [`vr-scenarios-of-states`](/docs/gates/vr-scenarios-of-states/) | `code` | Every visual-regression scenario of the unit is of a state its spec registers |
 | [`vr-tests-of-scenarios`](/docs/gates/vr-tests-of-scenarios/) | `code` | Every VR test of the unit is of a visual-regression scenario its feature declares |
+| [`validation-transitions`](/docs/gates/validation-transitions/) | `code` | Every validation of a visual unit is the trigger of a state transition, or says `@no-state: <reason>` |
+| [`error-message-declared`](/docs/gates/error-message-declared/) | `code` | Every error of a visual unit names the message it shows, or says `@no-message: <reason>` |
 
 ## Doctrine & Feature Flags
 

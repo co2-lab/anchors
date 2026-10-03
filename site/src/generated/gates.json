@@ -140,6 +140,14 @@
       {
         "label": "vr-tests-of-scenarios",
         "slug": "docs/gates/vr-tests-of-scenarios"
+      },
+      {
+        "label": "validation-transitions",
+        "slug": "docs/gates/validation-transitions"
+      },
+      {
+        "label": "error-message-declared",
+        "slug": "docs/gates/error-message-declared"
       }
     ]
   },

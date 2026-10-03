@@ -42,6 +42,8 @@ const baselineExts = "{png,jpg,jpeg,webp,gif,svg}"
 type vrUnit struct {
 	base, unit, code string
 	states           []string            // the states the spec registers: S01, S02…
+	messages         []string            // the messages the spec catalogs: M01, M02…
+	targets          []string            // what is captured: the states and the messages
 	exempt           map[string]bool     // the states the spec exempts with `@no-vr: <reason>`
 	unreasoned       []string            // the states marked `@no-vr` with no reason: still asked
 	scenarios        map[string]bool     // the states the feature's VR scenarios are of
@@ -67,10 +69,15 @@ func readVRUnit(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (*v
 	}
 	u := &vrUnit{base: base, unit: path.Base(base), code: m[1], scenarios: map[string]bool{}, tests: map[string][]string{}}
 	letter := stateLetter(cfg)
-	u.states = specStates(string(spec), u.code, letter)
-	u.exempt, u.unreasoned = exemptStates(string(spec), u.code, letter)
+	u.states = registeredStates(string(spec), u.code, letter)
+	// A MESSAGE is captured too: an error or a refusal shows on the screen as the message
+	// the spec catalogs, and the state is the same — what changes is the text.
+	u.messages = sectionCodes(string(spec), "section.title.messages", u.code)
+	u.targets = append(append([]string(nil), u.states...), u.messages...)
+	sort.Strings(u.targets)
+	u.exempt, u.unreasoned = exemptStates(string(spec), u.code, `[A-Z]`)
 
-	stateRE := regexp.MustCompile(`\b` + regexp.QuoteMeta(u.code) + `-(?:VR-)?(` + regexp.QuoteMeta(letter) + `\d{2})\b`)
+	stateRE := regexp.MustCompile(`\b` + regexp.QuoteMeta(u.code) + `-(?:VR-)?([A-Z]\d{2})\b`)
 	vrCodeRE := regexp.MustCompile(`@(` + regexp.QuoteMeta(u.code) + `-VR[\w-]*)`)
 	if feature, err := readFile(root, base+".feature"); err == nil {
 		tag := "@" + visualRegimeTag(cfg)
@@ -93,7 +100,7 @@ func readVRUnit(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (*v
 		}
 	}
 
-	refRE := regexp.MustCompile(`\b` + regexp.QuoteMeta(u.code) + `-VR-(` + regexp.QuoteMeta(letter) + `\d{2})\b`)
+	refRE := regexp.MustCompile(`\b` + regexp.QuoteMeta(u.code) + `-VR-([A-Z]\d{2})\b`)
 	if g != nil {
 		for _, t := range g.Nodes {
 			if t.Kind != mapx.KindTest || isImage(t.ID) || !testOfUnit(t.ID, u) {
@@ -145,11 +152,11 @@ func checkVRStatesCovered(_ string, n mapx.Node, root string, g *mapx.Graph, cfg
 	if !ok {
 		return Skip, why
 	}
-	if len(u.states) == 0 {
+	if len(u.targets) == 0 {
 		return Skip, i18n.T("gate.vr_states.skip_no_states")
 	}
 	var missing []string
-	for _, s := range u.states {
+	for _, s := range u.targets {
 		if !u.scenarios[s] && !u.exempt[s] {
 			missing = append(missing, u.code+"-"+s)
 		}
@@ -208,7 +215,7 @@ func checkVRScenariosOfStates(_ string, n mapx.Node, root string, g *mapx.Graph,
 		return Skip, i18n.T("gate.vr_states.skip_no_vr_scenarios")
 	}
 	known := map[string]bool{}
-	for _, s := range u.states {
+	for _, s := range u.targets {
 		known[s] = true
 	}
 	var orphans, exempted []string
@@ -276,6 +283,16 @@ func stateLetter(cfg *config.Config) string {
 	return "S"
 }
 
+// registeredStates are the states the spec REGISTERS: the codes in its States section when
+// it has one — a state code cited elsewhere (a transition to a state that does not exist)
+// registers nothing —, else every state code of the spec.
+func registeredStates(content, code, letter string) []string {
+	if text, ok := sectionText(content, "section.title.states"); ok {
+		return specStates(text, code, letter)
+	}
+	return specStates(content, code, letter)
+}
+
 // specStates are the state codes the spec registers — `S01`, `S02` — in order, once each.
 func specStates(content, code, letter string) []string {
 	re := regexp.MustCompile(`\b` + regexp.QuoteMeta(code) + `-(` + regexp.QuoteMeta(letter) + `\d{2})\b`)
@@ -297,8 +314,8 @@ var noVRRE = regexp.MustCompile(`@no-vr\b(?::\s*([^|]*))?`)
 // exemptStates are the states whose declaration carries `@no-vr: <reason>` on the same line
 // — the state's heading or its row in the states table —, and the ones marked with no
 // reason, which stay asked.
-func exemptStates(content, code, letter string) (map[string]bool, []string) {
-	re := regexp.MustCompile(`\b` + regexp.QuoteMeta(code) + `-(` + regexp.QuoteMeta(letter) + `\d{2})\b`)
+func exemptStates(content, code, letterClass string) (map[string]bool, []string) {
+	re := regexp.MustCompile(`\b` + regexp.QuoteMeta(code) + `-(` + letterClass + `\d{2})\b`)
 	exempt := map[string]bool{}
 	var unreasoned []string
 	for _, line := range strings.Split(content, "\n") {
@@ -317,6 +334,23 @@ func exemptStates(content, code, letter string) (map[string]bool, []string) {
 	}
 	sort.Strings(unreasoned)
 	return exempt, unreasoned
+}
+
+// sectionCodes are the codes of the unit — their suffix, `M01` — in the first column of the
+// table of the section the catalog key names, in any language.
+func sectionCodes(content, key, code string) []string {
+	re := regexp.MustCompile(`\b` + regexp.QuoteMeta(code) + `-([A-Z]\d{2})\b`)
+	seen := map[string]bool{}
+	var out []string
+	for _, r := range sectionRows(content, key) {
+		first, _ := col(r, ruleCols...)
+		if m := re.FindStringSubmatch(first); m != nil && !seen[m[1]] {
+			seen[m[1]] = true
+			out = append(out, m[1])
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 func isImage(id string) bool {

@@ -159,3 +159,8 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     When the test guide is printed
     Then it recommends a contract test named by {CODE}-CT that loads the OpenAPI document
 
+  @GVGDG-B21 @unit-level
+  Scenario: The guides tie validations to states and errors to messages
+    When the spec and test guides are printed
+    Then validations are triggers of State Flow transitions, errors cite their messages, and every message is captured
+

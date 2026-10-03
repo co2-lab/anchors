@@ -999,6 +999,12 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures: "every visual-regression scenario of the unit is of a state its spec registers"})
 	add("code", config.Gate{Name: "vr-tests-of-scenarios", On: []string{"code"}, Tags: ui,
 		Measures: "every VR test of the unit is of a visual-regression scenario its feature declares"})
+	// What changes a screen is proven through what it shows: a validation leads to a state,
+	// an error shows a message, and the capture of the state or the message proves them.
+	add("code", config.Gate{Name: "validation-transitions", On: []string{"code"}, Tags: ui,
+		Measures: "every validation of a visual unit is the trigger of a state transition, or says `@no-state: <reason>`"})
+	add("code", config.Gate{Name: "error-message-declared", On: []string{"code"}, Tags: ui,
+		Measures: "every error of a visual unit names the message it shows, or says `@no-message: <reason>`"})
 	// The proof that an API keeps the OpenAPI compiled from its specs: a contract test of
 	// the unit, named by `{CODE}-CT`, that loads the document. The tool is the project's.
 	add("code", config.Gate{Name: "contract-tested", On: []string{"code"}, Tags: []string{"interface"},

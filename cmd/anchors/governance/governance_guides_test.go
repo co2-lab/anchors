@@ -612,3 +612,16 @@ func TestTestGuide_recommendsContractTests(t *testing.T) {
 		}
 	}
 }
+
+func TestSpecGuide_validationsLeadToStatesAndErrorsShowMessages(t *testing.T) {
+	t.Run("GVGDG-B21: The spec guide ties validations to state transitions and errors to messages", func(t *testing.T) {})
+	spec := guideOut(t, "spec")
+	for _, want := range []string{"TRIGGER of a State Flow row", "@no-state: <reason>", "validation-transitions", "@no-message: <reason>", "error-message-declared"} {
+		if !strings.Contains(spec, want) {
+			t.Errorf("the spec guide lacks %q", want)
+		}
+	}
+	if !strings.Contains(guideOut(t, "test"), "EVERY message it catalogs") {
+		t.Error("the test guide does not ask a capture of every message")
+	}
+}

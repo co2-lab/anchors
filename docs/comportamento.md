@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:4f83f7836cb567c2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:26acd277932bc49b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1255,6 +1255,8 @@ teste prova.
 - [The guides recommend visual regression for every state of a visual unit](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B19`
 
 - [The test guide recommends a contract test against the compiled OpenAPI](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B20`
+
+- [The guides tie validations to states and errors to messages](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B21`
 
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
@@ -5230,6 +5232,18 @@ teste prova.
 
 - [Scenarios tagged with a suffix cover the requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B15`
 
+- [What has nothing to confront leaves both gates without a verdict](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B01`
+
+- [Every validation is the trigger of a transition](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B02`
+
+- [A transition from or to an unknown state does not count](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B03`
+
+- [A validation exempted with a reason is not asked](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B04`
+
+- [Every error names the message it shows](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B05`
+
+- [A code file with no spec beside it leaves without a verdict](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-E01`
+
 - [A test with no assertion fails, named by its line and title](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B01`
 
 - [The body is the block the test's line opens](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B02`
@@ -5599,6 +5613,10 @@ teste prova.
 - [A test that cannot be read is read by its path](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-E04`
 
 - [A state with no visual value is exempted with @no-vr and a reason](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B12`
+
+- [Every message is captured like a state](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B13`
+
+- [The states registered are those of the States section](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B14`
 
 ## infra
 

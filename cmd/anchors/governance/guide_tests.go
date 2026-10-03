@@ -101,7 +101,9 @@ later. (The project's golden rule holds: absence of proof is not proof of absenc
 ## Visual regression (screens and components)
 
 Every visual unit — a screen, a component — is strongly recommended to have a VISUAL
-REGRESSION test for EVERY state its spec registers. Which units are visual is the
+REGRESSION test for EVERY state its spec registers and EVERY message it catalogs — an error
+shows on the screen as its message, the state being the same; a validation leads to a
+state, and that state's capture proves it. Which units are visual is the
 anchors.yaml's to say: the code layers tagged ` + "`screen`" + ` or ` + "`component`" + `. A state with no visual
 value of its own — a transient loading, a state that looks like another — is exempted
 where it is declared, with the reason: ` + "`@no-vr: <reason>`" + ` on its heading or its row. An assertion proves what a state shows;

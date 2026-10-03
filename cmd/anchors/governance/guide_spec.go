@@ -78,6 +78,12 @@ A spec is not all alike — it specializes according to what makes the unit vary
    compared with a baseline image of that state — see ` + "`anchors guide test`" + `. It is what keeps
    each state looking as the spec says; ` + "`vr-states-covered`" + ` asks it of every state. A state with
    no visual value of its own (a transient loading) carries ` + "`@no-vr: <reason>`" + ` on its line.
+   In a visual unit, every VALIDATION (and presentation validation) changes the screen, so
+   it is the TRIGGER of a State Flow row — from the state it is checked in to the state it
+   leads to — and is proven by that state's capture; one that changes no state says
+   ` + "`@no-state: <reason>`" + ` (` + "`validation-transitions`" + `). Every ERROR shows on the screen as a
+   message: it cites the code of the User Message it shows, or says ` + "`@no-message: <reason>`" + `
+   (` + "`error-message-declared`" + `); the messages are captured like the states.
 5. State flow — the transitions between the states.
 6. Data contract — every dynamic datum displayed: origin, requiredness, format,
    default. Cautions that prevent real bugs: explicit TIMEZONE in dates; translated

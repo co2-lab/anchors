@@ -222,3 +222,19 @@ func TestVR_aStateIsExemptedWithAReason(t *testing.T) {
 		t.Errorf("a VR scenario of an exempt state contradicts the spec: %v %s", v, d)
 	}
 }
+
+func TestVR_messagesAndRegisteredStates(t *testing.T) {
+	t.Run("VRSTC-B13: Every message is captured like a state", func(t *testing.T) {})
+	t.Run("VRSTC-B14: The states registered are those of the States section", func(t *testing.T) {})
+	withMessage := specVR + "\n## User Messages\n| Rule | Condition | Message |\n| --- | --- | --- |\n| `BUTTN-M01` | refused | \"Try again\" |\n"
+	root, g := vrFixture(t, map[string]string{"ui/Button.spec.md": withMessage, "ui/Button.feature": featureVRStates("S01", "S02")})
+	if v, d := checkVRStatesCovered("", buttonCode, root, g, nil); v != Fail || !strings.Contains(d, "BUTTN-M01") || strings.Contains(d, "BUTTN-S0") {
+		t.Errorf("the message is asked for its capture: %v %s", v, d)
+	}
+	sectioned := "<!-- @anchors\n  code: BUTTN\n-->\n# Button\n\n## States (Estados da Tela)\n\n### BUTTN-S01: Enabled\n\n" +
+		"## State Flow\n\n| From | Trigger | To |\n| --- | --- | --- |\n| `BUTTN-S01` | click | `BUTTN-S09` |\n"
+	root, g = vrFixture(t, map[string]string{"ui/Button.spec.md": sectioned, "ui/Button.feature": featureVRStates("S01")})
+	if v, d := checkVRStatesCovered("", buttonCode, root, g, nil); v != Pass {
+		t.Errorf("S09 is cited, not registered: %v %s", v, d)
+	}
+}

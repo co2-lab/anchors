@@ -108,3 +108,16 @@ Feature: VRStatesCovered — each state of a visual unit tied to its visual regr
     Given a spec whose states table exempts S02 with "@no-vr: transient", and whose S03 heading carries "@no-vr" with no reason
     When vr-states-covered and vr-scenarios-of-states confront the unit's code
     Then S01 and S03 are asked for a scenario, S03 is named as an exemption with no reason, and a VR scenario of S02 fails
+
+  @VRSTC-B13 @unit-level
+  Scenario: Every message is captured like a state
+    Given a spec with states S01 and S02, a message M01, and VR scenarios of the two states
+    When vr-states-covered confronts the unit's code
+    Then it fails naming BUTTN-M01
+
+  @VRSTC-B14 @unit-level
+  Scenario: The states registered are those of the States section
+    Given a spec whose "## States (Estados da Tela)" lists S01, and whose State Flow cites S09
+    When vr-states-covered confronts the unit's code with a VR scenario of S01
+    Then it passes: S09 is no registered state
+

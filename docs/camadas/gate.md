@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:ed614e16f76ce586 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:e12b1019e62ee9f9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 79 unidades e 1316 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 80 unidades e 1324 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -3889,6 +3889,38 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 - **SFMSP-E02** — A feature the map links to the spec is no longer on disk.
 
 
+## VTRST — StateTransitions — every change of a visual unit is proven through what the screen shows
+
+A validation changes the screen: the form refuses, a field turns red, a button disables, the flow
+takes another path. Each of those is a state, and the states are already proven by their visual
+capture. So a validation does not need a capture of its own; it needs to say which state it leads to.
+An error, too, shows on the screen — as the message the spec catalogs; the state is the same, what
+changes is the text, and the messages are captured.
+
+Two gates tie each change of a visual unit to what the screen shows:
+
+| Gate | Question |
+| --- | --- |
+| `validation-transitions` | Is every validation the trigger of a State Flow transition, from the state it is checked in to the state it leads to — or does it say `@no-state: <reason>`? |
+| `error-message-declared` | Does every error name the message it shows — or say `@no-message: <reason>`? |
+
+They run, like the visual-regression gates, on a visual unit's main code file and read the spec beside
+it; sections and columns are read in any language of the catalog.
+
+
+- **VTRST-B01** — A node that is not code, a code file with no spec beside it and a spec with no code leave both gates without a verdict.
+
+- **VTRST-B02** — `validation-transitions` fails naming each validation — of `Validations` and of `Presentation validations` — that no State Flow row names as its trigger; a spec with no validation leaves without a verdict.
+
+- **VTRST-B03** — A transition counts only when its From and To are states the spec registers; one from or to an unknown state is named with both ends.
+
+- **VTRST-B04** — A validation whose row says `@no-state: <reason>` is not asked; one that says `@no-state` with no reason is still asked, and named as an exemption with no reason.
+
+- **VTRST-B05** — `error-message-declared` fails naming each error that cites no message code of the unit, and each that cites codes the Messages section does not catalog; `@no-message: <reason>` on its row exempts it; a spec with no error leaves without a verdict.
+
+- **VTRST-E01** — The spec beside the code file cannot be read, or there is none.
+
+
 ## THSAS — TestHasAssertion — every test asserts something in its body
 
 A test that asserts nothing passes whatever the code does. It carries the scenario's code, its
@@ -4513,6 +4545,10 @@ its text. A baseline is `<Unit>.BUTTN-VR-S01[-variant].<ext>` beside the unit.
 - **VRSTC-B10** — The State letter is the one of the project's rule type whose term or a section starts with "state" or "estado"; without one, `S`.
 
 - **VRSTC-B11** — `vr-baseline` accepts the same image formats for a VR scenario's baseline.
+
+- **VRSTC-B13** — Every message the spec catalogs (the codes of its User Messages section) is captured like a state: a VR scenario `{CODE}-VR-M01`, a VR test and a baseline image, `@no-vr: <reason>` on its row exempting it — an error shows on the screen as its message, the state is the same.
+
+- **VRSTC-B14** — The states a spec registers are the codes in its States section — whose title may carry a note in parentheses — when it has one; a state code cited elsewhere registers nothing.
 
 - **VRSTC-B12** — A state is exempted from visual regression by `@no-vr: <reason>` on a line that declares it — its heading or its row in a states table. An exemption with no reason does not exempt: the state is still asked, and the failure names it as an exemption with no reason.
 

@@ -56,16 +56,7 @@ func readAPIUnit(n mapx.Node, root string) (*apiUnit, string, bool) {
 // sectionRows reads the first table of the section the catalog key names, under its title
 // in any language, as rows keyed by the header's cells lower-cased.
 func sectionRows(content, key string) []map[string]string {
-	for _, title := range i18n.AllTranslations(key) {
-		re := regexp.MustCompile(`(?m)^##\s+` + regexp.QuoteMeta(title) + `[ \t]*$`)
-		loc := re.FindStringIndex(content)
-		if loc == nil {
-			continue
-		}
-		rest := content[loc[1]:]
-		if i := strings.Index(rest, "\n## "); i >= 0 {
-			rest = rest[:i]
-		}
+	if rest, ok := sectionText(content, key); ok {
 		var header []string
 		var rows []map[string]string
 		for _, line := range strings.Split(rest, "\n") {
@@ -97,6 +88,25 @@ func sectionRows(content, key string) []map[string]string {
 		return rows
 	}
 	return nil
+}
+
+// sectionText is the body of the section the catalog key names, under its title in any
+// language — the title alone, or followed by a note in parentheses (`## States (Estados da
+// Tela)`) — up to the next `##` section.
+func sectionText(content, key string) (string, bool) {
+	for _, title := range i18n.AllTranslations(key) {
+		re := regexp.MustCompile(`(?m)^##\s+` + regexp.QuoteMeta(title) + `[ \t]*(?:\([^)\n]*\))?[ \t]*$`)
+		loc := re.FindStringIndex(content)
+		if loc == nil {
+			continue
+		}
+		rest := content[loc[1]:]
+		if i := strings.Index(rest, "\n## "); i >= 0 {
+			rest = rest[:i]
+		}
+		return rest, true
+	}
+	return "", false
 }
 
 // col is a row's cell under the first of the header names that the row has.
