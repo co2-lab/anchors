@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:88faed59b693bba8 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:c5bbd072724b19a0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2306,6 +2306,8 @@ teste prova.
 
 - [A gate this run leaves out is still declared](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B92`
 
+- [The catalog line leaves out a gate that would only wait for its premise](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B93`
+
 - [The scenarios of one spec are listed as proven or not](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 
 - [A code another unit owns, cited in prose, is not a declared scenario](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B02`
@@ -2895,6 +2897,8 @@ teste prova.
 - [A gate's review asks its own question, else the gate's](layers/config.md#cnfgo-b59--a-gates-review-asks-its-own-question-else-the-gates) `CNFGO-B59`
 
 - [A gate relates to the declared layers, and the catalog names what is missing](layers/config.md#cnfgo-b60--a-gate-relates-to-the-declared-layers-and-the-catalog-names-what-is-missing) `CNFGO-B60`
+
+- [A gate's premises are missing or waived, and a waived one is never suggested](layers/config.md#cnfgo-b61--a-gates-premises-are-missing-or-waived-and-a-waived-one-is-never-suggested) `CNFGO-B61`
 
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 

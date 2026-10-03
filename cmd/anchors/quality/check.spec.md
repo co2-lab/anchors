@@ -70,6 +70,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-B89` | A check with no phase leaves out a gate declared for `manual` alone (CNFGO-B20): it runs, and a judgment gate queues its questions, only under `--phase manual`. |
 | `CGPCH-B90` | After the table, the check says how many targets of its scope are to review (RVDUR-B01), as a line of its own that informs and never blocks, and says nothing when none is due. |
 | `CGPCH-B91` | A full sweep names, in one line, the catalog gates that cover the declared layers and are not declared, at most six by name, and points to the doctor; with none it says nothing. |
+| `CGPCH-B93` | The catalog line leaves out a gate whose premise the project has not declared: declared, it would only wait. |
 | `CGPCH-B92` | A gate the project declares counts as declared in the catalog line and the governance tips even when this run leaves it out — `when: [manual]`, `skip_on`, another phase. |
 | `CGPCH-B08` | A gate that declares no perspective to skip runs both on the full sweep and on changed files. |
 | `CGPCH-B09` | A gate that declares it skips the change perspective is not charged on changed files and is charged on the full sweep. |

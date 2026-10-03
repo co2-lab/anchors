@@ -286,18 +286,7 @@ func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, 
 // `dialect.opt_out`. A judgment gate answered here queues no question — its question would
 // state a premise the project does not hold.
 func presupposedMissing(g config.Gate, cfg *config.Config) (Verdict, string, bool) {
-	var missing, waived []string
-	for _, p := range g.Presupposes {
-		if cfg.Declares(p) {
-			continue
-		}
-		field := p[strings.LastIndex(p, ".")+1:]
-		if cfg != nil && cfg.DialectFor().WaivedField(field) {
-			waived = append(waived, p)
-			continue
-		}
-		missing = append(missing, p)
-	}
+	missing, waived := cfg.Premises(g)
 	switch {
 	case len(missing) > 0:
 		return Pending, i18n.T("gate.presupposed_missing", strings.Join(missing, ", ")), true

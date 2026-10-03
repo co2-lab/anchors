@@ -627,3 +627,9 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a project whose features the catalog covers
     When check --all runs with feature-test-match declared as manual-only, and again with it undeclared
     Then the catalog line counts one gate fewer when it is declared
+
+  @CGPCH-B93 @unit-level
+  Scenario: The catalog line leaves out a gate that would only wait for its premise
+    Given a catalog gate presupposing derived.test_handle over a declared layer
+    When the catalog line is printed for a project that does not declare it
+    Then the gate is not named

@@ -390,8 +390,18 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 
 // printCatalogUndeclared says, in one line, which catalog gates cover the project's
 // declared layers without being declared — the doctor says what each measures.
+//
+// Only the gates that would MEASURE once declared: a gate whose premise is not declared
+// yet would only be pending, and a nudge to declare it reads as a gate missing from a
+// project it may not fit (testID gates suggested to a project with no UI). The doctor
+// lists those too, with the field each needs.
 func printCatalogUndeclared(cfg *config.Config) {
-	gs := cfg.ApplicableUndeclared()
+	var gs []config.Gate
+	for _, g := range cfg.ApplicableUndeclared() {
+		if missing, _ := cfg.Premises(g); len(missing) == 0 {
+			gs = append(gs, g)
+		}
+	}
 	if len(gs) == 0 {
 		return
 	}

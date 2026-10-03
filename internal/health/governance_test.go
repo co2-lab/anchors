@@ -209,3 +209,24 @@ func TestCheckGovernanceOpportunities_applicableCatalogGates(t *testing.T) {
 		t.Errorf("scenario-letter-declared's suggestion names rule_types: %+v", sld)
 	}
 }
+
+func TestQuickGovernanceHints_leavesAGateThatWouldOnlyWait(t *testing.T) {
+	t.Run("GVOPG-B07: The quick hints are the first two opportunities", func(t *testing.T) {})
+	prev := config.SetGateCatalog(func() []config.Gate {
+		return []config.Gate{{Name: "handle-gate", On: []string{"code"}, Presupposes: []string{"derived.test_handle"}, Measures: "x"}}
+	})
+	t.Cleanup(func() { config.SetGateCatalog(prev) })
+	blocking := true
+	cfg := &config.Config{Layers: map[string]config.Layer{"code": {Kind: "code"}}, Gates: []config.Gate{
+		{Name: "no-secret-leaked", Blocking: &blocking}, {Name: "dependency-vulnerable"}, {Name: "no-duplication"},
+	}}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.go", Kind: mapx.KindCode}}}
+	if !hasOpportunity(checkGovernanceOpportunities(g, cfg), "sugestao-gate", "handle-gate") {
+		t.Fatal("the doctor's list keeps the gate, with its premise")
+	}
+	for _, h := range QuickGovernanceHints(g, cfg) {
+		if h.Subject == "handle-gate" {
+			t.Errorf("the footer leaves out a gate that would only wait for its premise: %+v", h)
+		}
+	}
+}

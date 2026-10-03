@@ -1702,3 +1702,22 @@ func TestGateDescribe(t *testing.T) {
 		t.Errorf("a judgment gate describes by the first sentence of its question: %q", got)
 	}
 }
+
+func TestPremisesAndAWaivedPremise(t *testing.T) {
+	t.Run("CNFGO-B61: A gate's premises are missing or waived, and a waived one is never suggested", func(t *testing.T) {})
+	mock := Gate{Name: "mock-gate", On: []string{"test"}, Presupposes: []string{"derived.mock_detect"}}
+	handle := Gate{Name: "handle-gate", On: []string{"test"}, Presupposes: []string{"derived.test_handle"}}
+	prev := SetGateCatalog(func() []Gate { return []Gate{mock, handle} })
+	t.Cleanup(func() { SetGateCatalog(prev) })
+	cfg := &Config{Layers: map[string]Layer{"test": {Kind: "test"}}, Dialect: &Dialect{OptOut: []string{"mock_detect"}}}
+	if missing, waived := cfg.Premises(mock); len(missing) != 0 || len(waived) != 1 {
+		t.Errorf("mock_detect is waived: missing %v, waived %v", missing, waived)
+	}
+	if missing, waived := cfg.Premises(handle); len(missing) != 1 || len(waived) != 0 {
+		t.Errorf("test_handle is missing: missing %v, waived %v", missing, waived)
+	}
+	got := cfg.ApplicableUndeclared()
+	if len(got) != 1 || got[0].Name != "handle-gate" {
+		t.Errorf("a gate whose premise is waived is not suggested: %+v", got)
+	}
+}

@@ -130,8 +130,23 @@ func checkGovernanceOpportunities(g *mapx.Graph, cfg *config.Config) []Finding {
 
 // QuickGovernanceHints devolve uma lista condensada das oportunidades de governança mais
 // relevantes para exibição rápida e não obstrutiva (por exemplo, no rodapé do `check`).
+//
+// A catalog suggestion whose gate presupposes a field the project has not declared is left
+// to the doctor: in the footer it would nudge a gate that, declared, only waits.
 func QuickGovernanceHints(g *mapx.Graph, cfg *config.Config) []Finding {
-	findings := checkGovernanceOpportunities(g, cfg)
+	waits := map[string]bool{}
+	for _, gt := range cfg.ApplicableUndeclared() {
+		if missing, _ := cfg.Premises(gt); len(missing) > 0 {
+			waits[gt.Name] = true
+		}
+	}
+	var findings []Finding
+	for _, f := range checkGovernanceOpportunities(g, cfg) {
+		if f.Check == "sugestao-gate" && waits[f.Subject] {
+			continue
+		}
+		findings = append(findings, f)
+	}
 	if len(findings) > 2 {
 		return findings[:2]
 	}

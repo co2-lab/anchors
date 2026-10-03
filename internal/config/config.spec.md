@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNFGO
-  updated_at: 2026-10-02
+  updated_at: 2026-10-03
   layer: config
 -->
 # Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default
@@ -79,6 +79,7 @@ patterns a spec governs.
 | `CNFGO-B57` | A gate's `min_coverage` and each `coverage_floors` floor is a percentage from 0 to 100, and every floor carries a `why`; anything else is refused at load, naming the gate and the field. |
 | `CNFGO-B58` | `Declares` says whether the configuration holds a non-empty value at a dotted path of anchors.yaml (`derived.mock_detect`); a gate entry with no `presupposes` takes the canonical one, with the question it presupposes for. |
 | `CNFGO-B59` | A gate may declare `review:` apart from how it measures; its review question (`ReviewAsk`) is the review's own `ask`, else the gate's `ask`, else what it `measures`, and a gate with no `review:` has none; an entry with no `review:` takes the canonical one. What a gate measures, in a sentence (`Describe`), is its `measures`, or for a judgment gate the first sentence of its question. |
+| `CNFGO-B61` | `Premises` splits what a gate presupposes that the project does not declare into `missing` (a field to declare) and `waived` (a field the project's `dialect.opt_out` names); a catalog gate with a waived premise is never applicable undeclared. |
 | `CNFGO-B60` | A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 

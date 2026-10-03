@@ -2828,3 +2828,18 @@ func TestCatalogLine_aGateLeftOutOfTheRunIsStillDeclared(t *testing.T) {
 		t.Errorf("declaring feature-test-match as manual-only must take it off the line: %d undeclared, %d with it declared", u, m)
 	}
 }
+
+func TestPrintCatalogUndeclared_leavesAGateThatWouldOnlyWait(t *testing.T) {
+	t.Run("CGPCH-B93: The catalog line leaves out a gate that would only wait for its premise", func(t *testing.T) {})
+	englishOutput(t)
+	prev := config.SetGateCatalog(func() []config.Gate {
+		return []config.Gate{{Name: "feature-test-match", On: []string{"feature"}},
+			{Name: "testid-gate", On: []string{"feature"}, Presupposes: []string{"derived.test_handle"}}}
+	})
+	t.Cleanup(func() { config.SetGateCatalog(prev) })
+	cfg := &config.Config{Layers: map[string]config.Layer{"feature": {Kind: "feature"}}}
+	out := captureStdout(t, func() { printCatalogUndeclared(cfg) })
+	if !strings.Contains(out, "1 catalog gate(s)") || strings.Contains(out, "testid-gate") {
+		t.Errorf("only the gate that would measure is named:\n%s", out)
+	}
+}

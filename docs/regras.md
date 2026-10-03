@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:0b4f5cc2f9451569 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:2337639510ec2e36 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2355,6 +2355,8 @@ abra a página dela em `camadas/`.
 
 - [CGPCH-B91 — A full sweep names, in one line, the catalog gates that cover the declared layers and are not declared, at most six by name, and points to the doctor; with none it says nothing.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
+- [CGPCH-B93 — The catalog line leaves out a gate whose premise the project has not declared: declared, it would only wait.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
 - [CGPCH-B92 — A gate the project declares counts as declared in the catalog line and the governance tips even when this run leaves it out — `when: [manual]`, `skip_on`, another phase.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B08 — A gate that declares no perspective to skip runs both on the full sweep and on changed files.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
@@ -3090,6 +3092,8 @@ abra a página dela em `camadas/`.
 - [CNFGO-B58 — `Declares` says whether the configuration holds a non-empty value at a dotted path of anchors.yaml (`derived.mock_detect`); a gate entry with no `presupposes` takes the canonical one, with the question it presupposes for.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B59 — A gate may declare `review:` apart from how it measures; its review question (`ReviewAsk`) is the review's own `ask`, else the gate's `ask`, else what it `measures`, and a gate with no `review:` has none; an entry with no `review:` takes the canonical one. What a gate measures, in a sentence (`Describe`), is its `measures`, or for a judgment gate the first sentence of its question.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-B61 — `Premises` splits what a gate presupposes that the project does not declare into `missing` (a field to declare) and `waived` (a field the project's `dialect.opt_out` names); a catalog gate with a waived premise is never applicable undeclared.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -6321,7 +6325,7 @@ abra a página dela em `camadas/`.
 
 - [GVOPG-B06 — A nil map or a nil configuration gives no finding.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
-- [GVOPG-B07 — `QuickGovernanceHints`: The quick hints are the first two opportunities in order, or all of them when there are fewer.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
+- [GVOPG-B07 — `QuickGovernanceHints`: The quick hints are the first two opportunities in order, or all of them when there are fewer, leaving out a catalog suggestion whose gate presupposes a field the project has not declared — the doctor still lists it.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
 - [GVOPG-B08 — Every catalog gate that relates to a declared layer and that the project does not declare, beyond the ones above, is an informational `sugestao-gate` on it, saying what it measures, how to declare it, and the field it presupposes when it has one.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 

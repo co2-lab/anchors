@@ -1834,15 +1834,39 @@ func (c *Config) declaresGate(g Gate) bool {
 	return false
 }
 
+// Premises splits what a gate presupposes that the project does not declare: `missing`,
+// a field still to declare — the gate is pending and asks nothing —, and `waived`, a field
+// the project's `dialect.opt_out` says does not exist here — the gate does not apply.
+func (c *Config) Premises(g Gate) (missing, waived []string) {
+	for _, p := range g.Presupposes {
+		if c.Declares(p) {
+			continue
+		}
+		field := p[strings.LastIndex(p, ".")+1:]
+		if c != nil && c.DialectFor().WaivedField(field) {
+			waived = append(waived, p)
+			continue
+		}
+		missing = append(missing, p)
+	}
+	return missing, waived
+}
+
 // ApplicableUndeclared are the catalog gates that relate to the project's layers and that
 // the project does not declare, in catalog order. Each still says what it presupposes, so
 // whoever lists them can name the field a gate needs before it measures anything.
+//
+// A gate whose premise the project WAIVED (`dialect.opt_out`) is not one: the project said
+// that field does not exist here, and the gate would only skip.
 func (c *Config) ApplicableUndeclared() []Gate {
 	if c == nil || gateCatalog == nil {
 		return nil
 	}
 	var out []Gate
 	for _, g := range gateCatalog() {
+		if _, waived := c.Premises(g); len(waived) > 0 {
+			continue
+		}
 		if c.Relates(g) && !c.declaresGate(g) {
 			out = append(out, g)
 		}

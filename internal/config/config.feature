@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CNFGO
-#   updated_at: 2026-10-02
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @CNFGO
@@ -416,3 +416,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a project with a spec layer and a code layer tagged backend, declaring the gate a-spec-gate
     When the catalog holds a-spec-gate, b-code-gate, c-test-gate and d-screen-gate scoped by the screen tag
     Then b-code-gate relates and is undeclared, a-spec-gate relates and is declared, and c-test-gate and d-screen-gate do not relate
+
+  @CNFGO-B61 @unit-level
+  Scenario: A gate's premises are missing or waived, and a waived one is never suggested
+    Given a catalog gate presupposing derived.mock_detect and another presupposing derived.test_handle
+    When the project waives mock_detect in dialect.opt_out and declares neither
+    Then mock_detect is waived, test_handle is missing, and only the second gate is applicable undeclared
