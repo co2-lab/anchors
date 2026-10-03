@@ -27,6 +27,7 @@ Subcommands print the guides for the specific rulers:
   anchors guide work     how to work a card (the order, and a finding that is not its own)
   anchors guide review   how to review a PR (what is yours and what check already measured)
   anchors guide changelog  the technical changelog, and the product one an agent makes from it
+  anchors guide report-bug  when Anchors itself is wrong: how to tell, report it, and go on
 ```
 
 ## Uso
@@ -155,6 +156,16 @@ how to discover a project that does not yet exist (PROJECT.md + INSIGHTS.md).
 
 ```bash
 anchors guide project
+```
+
+### `anchors guide report-bug`
+
+when Anchors itself is wrong: how to tell, report it, and go on.
+
+#### Uso
+
+```bash
+anchors guide report-bug
 ```
 
 ### `anchors guide review`

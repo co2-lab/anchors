@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:77b3ad789e0a900c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:855ae45e06bd24a3 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -960,13 +960,35 @@ teste prova.
 
 - [A failed claim run is an error](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board) `WRQUW-E01`
 
-- [The root holds exactly the sixteen flow commands after registration](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each) `FLRGF-B01`
+- [The root holds exactly the seventeen flow commands after registration](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each) `FLRGF-B01`
 
 - [The watcher's controls live under watch](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each) `FLRGF-B02`
 
 - [No flow command is attached twice](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each) `FLRGF-I01`
 
 - [The progress command is not attached to the root](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each) `FLRGF-X01`
+
+- [The report has the bug form's sections](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project) `RPBUG-B01`
+
+- [An open issue with the same title is told it was seen again](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project) `RPBUG-B02`
+
+- [A new bug becomes an issue at co2-lab/anchors](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project) `RPBUG-B03`
+
+- [A dry run prints the issue and sends nothing](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project) `RPBUG-B04`
+
+- [The minimal case comes from a file or from standard input](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project) `RPBUG-B05`
+
+- [It works without an anchors.yaml](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project) `RPBUG-B06`
+
+- [An escalation whose reason names the project is not sent upstream](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project) `RPBUG-B07`
+
+- [A report that names the project is refused](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project) `RPBUG-X01`
+
+- [Without what should happen the report is refused](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project) `RPBUG-E01`
+
+- [A refused report leaves the link to file it](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project) `RPBUG-E02`
+
+- [An unreadable minimal case is refused](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project) `RPBUG-E03`
 
 - [The working tree is read from the root](layers/comando.md#tsstt--taskstatus--discover-what-the-machine-knows-about-the-task-at-hand-so-the-agents-report-does-not-have-to) `TSSTT-B01`
 
@@ -1225,6 +1247,8 @@ teste prova.
 - [The changelog guide tells the technical changelog from the product one](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B16`
 
 - [The spec guide asks for four passes and a review](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B17`
+
+- [The report-bug guide says how to tell, report and go on](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B18`
 
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 

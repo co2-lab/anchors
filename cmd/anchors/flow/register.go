@@ -14,6 +14,7 @@ func Register(root *cobra.Command) {
 	root.AddCommand(newDoneCmd())
 	root.AddCommand(newDropCmd())
 	root.AddCommand(newEscalateCmd())
+	root.AddCommand(newReportBugCmd())
 	root.AddCommand(newDecidedCmd())
 	root.AddCommand(newTaskStatusCmd())
 	root.AddCommand(newUnblockCmd())

@@ -119,12 +119,9 @@ choose, and the fix lives where you do not edit (` + "`.github/workflows/anchors
 
 **When the bug is in Anchors itself** — an ` + "`anchors`" + ` command, a gate, the map, a file Anchors
 seeds — and not in this project's configuration, add ` + "`--upstream`" + `: it is also reported at
-github.com/co2-lab/anchors, so the fix reaches every project that uses Anchors, and an open
-issue with the same title gets a "seen again" comment instead of a duplicate. Do it whenever
-you suspect Anchors: a report that turns out to be configuration is closed there with the
-answer, which helps the next project too. That repository is PUBLIC — write the reason in
-Anchors' terms (the command, the gate, what it did and what it should do, a minimal case),
-never this project's code, names or data.
+github.com/co2-lab/anchors, so the fix reaches every project that uses Anchors. Outside a
+card, ` + "`anchors report-bug`" + ` reports it alone. ` + "`anchors guide report-bug`" + ` says how to tell
+the two apart, and what to do while the fix does not come.
 
 ## When what you deliver fixes something
 

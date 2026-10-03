@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:5543c8b73960273c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:c6ec2ca40b26cb6d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1059,13 +1059,37 @@ abra a página dela em `camadas/`.
 
 ### [FLRGF — FlowRegister — attach the flow domain's commands to the root command, once each](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
 
-- [FLRGF-B01 — After registration the root holds exactly the sixteen flow commands: backfill-labels, decided, deliver, discard, done, drop, escalate, merge-progress, next, pr-body, queue, reclaim, task-status, unblock, watch and work.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
+- [FLRGF-B01 — After registration the root holds exactly the seventeen flow commands: backfill-labels, decided, deliver, discard, done, drop, escalate, merge-progress, next, pr-body, queue, reclaim, report-bug, task-status, unblock, watch and work.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
 
 - [FLRGF-B02 — The watcher's control commands (start, run, status, stop, pause, resume, logs) arrive under `watch`, not at the root.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
 
 - [FLRGF-I01 — Each flow command is attached to the root exactly once.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
 
 - [FLRGF-X01 — The progress command is not attached to the root.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
+
+### [RPBUG — ReportBug — report a bug in Anchors itself, where it is fixed for every project](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
+
+- [RPBUG-B01 — The title is `[bug] ` and the first line of what happened; the body has the sections `What happened`, `What should happen` (only when given), `Minimal case` (only when given, in a shell block), `Version` and `Platform`, and says it was reported by `anchors report-bug`.](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
+
+- [RPBUG-B02 — When an OPEN issue at co2-lab/anchors has the same title, ignoring case, it receives a comment saying it was seen again with the release and the platform, no issue is created, and the output says "already reported to Anchors" with its address.](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
+
+- [RPBUG-B03 — Otherwise an issue is created at co2-lab/anchors with the title, the body and the `bug` label, and the output says "reported to Anchors" with its address.](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
+
+- [RPBUG-B04 — `--dry-run` prints the title and the body and sends nothing.](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
+
+- [RPBUG-B05 — `--repro` puts the file's content, or standard input's with `-`, in the minimal case.](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
+
+- [RPBUG-B06 — It works in a directory with no `anchors.yaml`.](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
+
+- [RPBUG-B07 — `escalate --upstream` whose reason names the project does not report it: a warning names what was found and points to `anchors report-bug`.](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
+
+- [RPBUG-X01 — A report whose title or body carries the project's absolute path, the user's home folder, the project's `workflow.repo` or the repository of its `origin` remote (other than co2-lab/anchors) is refused, naming what was found, and nothing is sent.](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
+
+- [RPBUG-E01 — `--expected` is missing.](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
+
+- [RPBUG-E02 — The platform refuses to create the issue.](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
+
+- [RPBUG-E03 — The `--repro` file cannot be read.](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
 
 ### [TSSTT — TaskStatus — discover what the machine knows about the task at hand, so the agent's report does not have to](layers/comando.md#tsstt--taskstatus--discover-what-the-machine-knows-about-the-task-at-hand-so-the-agents-report-does-not-have-to)
 
@@ -1309,7 +1333,7 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-B01 — `anchors guide` with no subcommand prints the operating playbook.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
-- [GVGDG-B02 — `anchors guide` has exactly thirteen subcommands — code, feature, flag, flow, guide, header, plan, product, project, review, spec, test, work — each with a short description, each printing its own guide.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+- [GVGDG-B02 — `anchors guide` has exactly fifteen subcommands — changelog, code, feature, flag, flow, guide, header, plan, product, project, report-bug, review, spec, test, work — each with a short description, each printing its own guide.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B03 — `guide review` and `guide work` print their guide followed by the autonomy section of the root given by `--root`; a root that is not a project still prints, with the section for no role declared.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -1338,6 +1362,8 @@ abra a página dela em `camadas/`.
 - [GVGDG-B16 — The changelog guide says `anchors changelog` builds a technical changelog, not the product's, and recommends a product changelog an agent synthesizes from it: breaking changes, visible features and bugs fixed go in, fixes without `Bug:` stay out, and chores only when they matter to the product.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B17 — The spec guide asks for the spec in four passes — every section, with its questions (every input, every effect and its limit, every failure, every state shared with another unit); the variations of each rule; the generalization of cases into an invariant; a review that each rule states the intent and not the mechanism —, and says a defect is a rule not written, to be written with its invariant before the fix.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
+- [GVGDG-B18 — The report-bug guide tells a bug in Anchors from a problem of the project, asks for a made-up minimal case in Anchors' terms because the repository is public, a `--dry-run` before sending, and while the fix does not come: no hand edits to Anchors' files, a waiver that names the issue, and the user told. The playbook points to it and to `anchors report-bug`.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B15 — The work guide, in every mode, tells a fix from a bug — a bug is a defect that shipped —, asks for each fix as its own `fix` commit with a `Bug:` footer only on a bug, and for the failing test first; the code and review guides point to it.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 

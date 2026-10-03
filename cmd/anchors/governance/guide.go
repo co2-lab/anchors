@@ -227,6 +227,15 @@ workers in parallel — but there are two rules that avoid waste:
   spec, either the code is wrong (fix it) or the spec aged (update the spec, which
   may generate new work — report that).
 
+## When Anchors itself is wrong
+
+A command that crashes, a gate that contradicts its own documentation, a seeded file that
+is wrong: that is a bug in ANCHORS, not in the project. Report it where it is fixed for
+every project — ` + "`anchors report-bug \"<what happened>\" --expected \"<what should happen>\"`" + ` —,
+in Anchors' terms and with a made-up minimal case: the repository is public. Read
+` + "`anchors guide report-bug`" + ` for how to tell it from a problem of the project, and what to do
+while the fix does not come.
+
 ## Command reference
 
   anchors init                      configures the project (anchors.yaml) — once
@@ -253,6 +262,7 @@ workers in parallel — but there are two rules that avoid waste:
   anchors report all                generates every perspective + index in docs/anchors/
   anchors doctor                    ecosystem health (systemic loose ends)
   anchors guide                     this guide
+  anchors report-bug "<what>" --expected "<should>"   reports a bug in Anchors itself (public repository)
   anchors guide project             the ruler of the DISCOVER phase (new project → PROJECT.md)
   anchors guide plan                the ruler of the PLAN phase
 
@@ -289,7 +299,8 @@ Subcommands print the guides for the specific rulers:
   anchors guide header   the header block of every file (cross-cutting, mandatory)
   anchors guide work     how to work a card (the order, and a finding that is not its own)
   anchors guide review   how to review a PR (what is yours and what check already measured)
-  anchors guide changelog  the technical changelog, and the product one an agent makes from it`,
+  anchors guide changelog  the technical changelog, and the product one an agent makes from it
+  anchors guide report-bug  when Anchors itself is wrong: how to tell, report it, and go on`,
 		// sem subcomando → o playbook de operação
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Print(agentGuide)
@@ -318,6 +329,7 @@ Subcommands print the guides for the specific rulers:
 		newGuideSubCmd("guide", "how to write a guide (the ruler of a ruler)", guideGuide),
 		newGuideSubCmd("header", "the header block of every file (cross-cutting, mandatory)", headerGuide),
 		newGuideSubCmd("changelog", "the technical changelog, and the product one an agent makes from it", changelogGuide),
+		newGuideSubCmd("report-bug", "when Anchors itself is wrong: how to tell, report it, and go on", reportBugGuide),
 	)
 	return cmd
 }

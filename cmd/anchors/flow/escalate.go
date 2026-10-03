@@ -5,12 +5,10 @@ package flow
 
 import (
 	"fmt"
-	neturl "net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
@@ -157,7 +155,7 @@ card to change one word is bureaucracy.`,
 			// UPSTREAM WORKS IN EVERY MODE: a bug in Anchors is Anchors' whether or not the
 			// project keeps its queue on GitHub.
 			if upstream && !cfg.GitHubMode() {
-				reportUpstream(strings.Join(args, " "))
+				reportUpstream(strings.Join(args, " "), projectMarks(root, cfg))
 				return nil
 			}
 			if !cfg.GitHubMode() {
@@ -478,7 +476,7 @@ card to change one word is bureaucracy.`,
 				).Run()
 			}
 			if upstream {
-				if up := reportUpstream(motivo); up != "" {
+				if up := reportUpstream(motivo, projectMarks(root, cfg)); up != "" {
 					if n := numeroDaIssue(url); n != "" {
 						_ = exec.Command("gh", "issue", "comment", n,
 							"--repo", cfg.Workflow.Repo,
@@ -606,53 +604,6 @@ func bugBody(motivo, sobre, card string, bloqueante bool) string {
 		b.WriteString(fmt.Sprintf("\nFound during card #%s, which goes on.\n", card))
 	}
 	return b.String()
-}
-
-// upstreamRepo is where Anchors' own bugs are reported.
-const upstreamRepo = "co2-lab/anchors"
-
-// reportUpstream reports a bug in Anchors to Anchors, and returns the issue's address, or
-// empty when it could not.
-//
-// It looks for an OPEN issue with the same title first: the same defect met by several
-// projects is one issue with one comment per sighting — each saying the release and the
-// platform it was seen on —, not one issue per project.
-//
-// The report carries the reason, the release and the platform, and nothing of the project:
-// the repository is public. A refusal does not fail the command — the finding is already
-// recorded where it was found — and it prints the prefilled link a person can open.
-func reportUpstream(motivo string) string {
-	titulo := "[bug] " + firstLineOfReason(motivo)
-	seen := fmt.Sprintf("anchors %s · %s/%s", common.Version, runtime.GOOS, runtime.GOARCH)
-	if out, err := exec.Command("gh", "issue", "list", "--repo", upstreamRepo, "--state", "open",
-		"--search", firstLineOfReason(motivo)+" in:title", "--json", "url,title",
-		"--jq", `.[] | .title + "\t" + .url`).Output(); err == nil {
-		for _, l := range strings.Split(strings.TrimSpace(string(out)), "\n") {
-			t, u, ok := strings.Cut(l, "\t")
-			if ok && strings.EqualFold(strings.TrimSpace(t), titulo) {
-				_ = exec.Command("gh", "issue", "comment", u, "--repo", upstreamRepo,
-					"--body", "Seen again — "+seen+".").Run()
-				fmt.Printf("already reported to Anchors: %s (a comment says it was seen again)\n", u)
-				return u
-			}
-		}
-	}
-	// The same sections as the repository's bug form, so a report from an agent reads like
-	// one from a person.
-	corpo := "### What happened\n\n" + motivo + "\n\n### Version\n\n" + common.Version +
-		"\n\n### Platform\n\n" + runtime.GOOS + "/" + runtime.GOARCH +
-		"\n\n---\nReported by `anchors escalate --bug --upstream`.\n"
-	out, err := exec.Command("gh", "issue", "create", "--repo", upstreamRepo,
-		"--title", titulo, "--body", corpo, "--label", "bug").CombinedOutput()
-	if err != nil {
-		q := neturl.Values{"title": {titulo}, "body": {corpo}}
-		fmt.Printf("· warning: could not report to Anchors (%s) — open it by hand:\n  https://github.com/%s/issues/new?%s\n",
-			strings.TrimSpace(string(out)), upstreamRepo, q.Encode())
-		return ""
-	}
-	u := strings.TrimSpace(string(out))
-	fmt.Printf("reported to Anchors: %s\n", u)
-	return u
 }
 
 // numeroDaIssue tira o número da URL que o `gh issue create` imprime.

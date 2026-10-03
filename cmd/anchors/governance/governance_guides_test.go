@@ -30,20 +30,21 @@ import (
 
 // guideTitles is the set of guide subcommands and the first line each one prints.
 var guideTitles = map[string]string{
-	"code":      "# Code guide",
-	"feature":   "# Feature guide",
-	"flag":      "# Feature flag guide",
-	"flow":      "# Flow guide",
-	"guide":     "# Guide guide",
-	"header":    "# Header guide",
-	"changelog": "# Changelog guide",
-	"plan":      "# Plan guide",
-	"product":   "# Product doctrine guide",
-	"project":   "# Project guide",
-	"review":    "# Review guide",
-	"spec":      "# Spec guide",
-	"test":      "# Test guide",
-	"work":      "# Work guide",
+	"code":       "# Code guide",
+	"feature":    "# Feature guide",
+	"flag":       "# Feature flag guide",
+	"flow":       "# Flow guide",
+	"guide":      "# Guide guide",
+	"header":     "# Header guide",
+	"changelog":  "# Changelog guide",
+	"plan":       "# Plan guide",
+	"product":    "# Product doctrine guide",
+	"project":    "# Project guide",
+	"review":     "# Review guide",
+	"spec":       "# Spec guide",
+	"test":       "# Test guide",
+	"work":       "# Work guide",
+	"report-bug": "# Report-bug guide",
 }
 
 // captureOut collects what fn writes to os.Stdout: the guides print with fmt.Print.
@@ -568,5 +569,20 @@ func TestGuides_theSpecIsWrittenInFourPasses(t *testing.T) {
 	}
 	if strings.Index(g, "## Writing it") > strings.Index(g, "## Spec rules") {
 		t.Error("the passes come before the spec rules, right after the sections they walk")
+	}
+}
+
+func TestReportBugGuide_tellsReportsAndGoesOn(t *testing.T) {
+	t.Run("GVGDG-B18: The report-bug guide says how to tell, report and go on", func(t *testing.T) {})
+	for _, want := range []string{"Is it Anchors, or the project?", "MINIMAL CASE, made up", "PUBLIC",
+		"--dry-run", "While the fix does not come", "Do not edit Anchors' installed files", "[skip-<gate>@<CODE>: Anchors issue"} {
+		if !strings.Contains(guideOut(t, "report-bug"), want) {
+			t.Errorf("the report-bug guide lacks %q", want)
+		}
+	}
+	for _, want := range []string{"anchors report-bug", "anchors guide report-bug"} {
+		if !strings.Contains(guideOut(t), want) {
+			t.Errorf("the playbook does not point to %q", want)
+		}
 	}
 }

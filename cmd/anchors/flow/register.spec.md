@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLRGF
-  updated_at: 2026-09-26
+  updated_at: 2026-10-03
   layer: comando
 -->
 # FlowRegister — attach the flow domain's commands to the root command, once each
@@ -30,7 +30,7 @@ being attached to the root here.
 
 | Effect | Description |
 | --- | --- |
-| `FLRGF-B01` | After registration the root holds exactly the sixteen flow commands: backfill-labels, decided, deliver, discard, done, drop, escalate, merge-progress, next, pr-body, queue, reclaim, task-status, unblock, watch and work. |
+| `FLRGF-B01` | After registration the root holds exactly the seventeen flow commands: backfill-labels, decided, deliver, discard, done, drop, escalate, merge-progress, next, pr-body, queue, reclaim, report-bug, task-status, unblock, watch and work. |
 | `FLRGF-B02` | The watcher's control commands (start, run, status, stop, pause, resume, logs) arrive under `watch`, not at the root. |
 
 ## Invariants

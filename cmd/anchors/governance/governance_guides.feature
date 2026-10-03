@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GVGDG
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @GVGDG
@@ -23,7 +23,7 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
   Scenario: Each guide subcommand prints its own guide
     Given the governance commands registered on a root
     When each subcommand of anchors guide runs
-    Then the subcommands are exactly code, feature, flag, flow, guide, header, plan, product, project, review, spec, test and work, each with a short description
+    Then the subcommands are exactly changelog, code, feature, flag, flow, guide, header, plan, product, project, report-bug, review, spec, test and work, each with a short description
     And each prints a different text opening with its own title, such as "# Work guide" for work
 
   @GVGDG-B03 @unit-level
@@ -141,3 +141,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Given the spec guide
     When it is read
     Then it walks every section with its questions, derives the variations, generalizes into invariants, reviews intent against mechanism, and has a defect's rule written before its fix
+
+  @GVGDG-B18 @unit-level
+  Scenario: The report-bug guide says how to tell, report and go on
+    When `anchors guide report-bug` runs, and `anchors guide`
+    Then the guide tells Anchors' bugs from the project's, asks for a made-up minimal case and a dry run, and says what to do while the fix does not come
+    And the playbook points to the guide and to anchors report-bug

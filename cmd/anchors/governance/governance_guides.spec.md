@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GVGDG
-  updated_at: 2026-09-30
+  updated_at: 2026-10-03
   layer: comando
 -->
 # GovernanceGuides — the guides an agent reads to operate Anchors, and the contracts other code relies on
@@ -33,7 +33,7 @@ The review and work guides are also the two that tell an agent what to do with w
 | Effect | Description |
 | --- | --- |
 | `GVGDG-B01` | `anchors guide` with no subcommand prints the operating playbook. |
-| `GVGDG-B02` | `anchors guide` has exactly thirteen subcommands — code, feature, flag, flow, guide, header, plan, product, project, review, spec, test, work — each with a short description, each printing its own guide. |
+| `GVGDG-B02` | `anchors guide` has exactly fifteen subcommands — changelog, code, feature, flag, flow, guide, header, plan, product, project, report-bug, review, spec, test, work — each with a short description, each printing its own guide. |
 | `GVGDG-B03` | `guide review` and `guide work` print their guide followed by the autonomy section of the root given by `--root`; a root that is not a project still prints, with the section for no role declared. |
 | `GVGDG-B04` | Registering this package adds exactly `guide`, `audit`, `governs` and `compliance` to the root. |
 | `GVGDG-B05` | The review guide teaches that only the reviewer the claim assigned counts, only with a line posted after the assignment, that the last line wins, and that a line inside a code block is an example, not a verdict. |
@@ -48,6 +48,7 @@ The review and work guides are also the two that tell an agent what to do with w
 | `GVGDG-B14` | `anchors guide --help` lists every subcommand once, with what it teaches, and lists nothing that is not a subcommand. |
 | `GVGDG-B16` | The changelog guide says `anchors changelog` builds a technical changelog, not the product's, and recommends a product changelog an agent synthesizes from it: breaking changes, visible features and bugs fixed go in, fixes without `Bug:` stay out, and chores only when they matter to the product. |
 | `GVGDG-B17` | The spec guide asks for the spec in four passes — every section, with its questions (every input, every effect and its limit, every failure, every state shared with another unit); the variations of each rule; the generalization of cases into an invariant; a review that each rule states the intent and not the mechanism —, and says a defect is a rule not written, to be written with its invariant before the fix. |
+| `GVGDG-B18` | The report-bug guide tells a bug in Anchors from a problem of the project, asks for a made-up minimal case in Anchors' terms because the repository is public, a `--dry-run` before sending, and while the fix does not come: no hand edits to Anchors' files, a waiver that names the issue, and the user told. The playbook points to it and to `anchors report-bug`. |
 | `GVGDG-B15` | The work guide, in every mode, tells a fix from a bug — a bug is a defect that shipped —, asks for each fix as its own `fix` commit with a `Bug:` footer only on a bug, and for the failing test first; the code and review guides point to it. |
 
 ## Invariants

@@ -56,6 +56,7 @@ Comandos da mesma família — o que distingue cada um:
 | [`anchors discard`](/pt/docs/cli/commands/discard/) | Take off the board the card that no longer makes sense, without deleting it |
 | [`anchors unblock`](/pt/docs/cli/commands/unblock/) | Open the work card that unblocks a card stuck in `needs-user` |
 | [`anchors escalate`](/pt/docs/cli/commands/escalate/) | Open the issue for a change needed in the plan or the spec |
+| [`anchors report-bug`](/pt/docs/cli/commands/report-bug/) | Report a bug in Anchors itself at github.com/co2-lab/anchors |
 | **`anchors synthesize`** | Two PRs conflicting in CONTENT become a synthesis card |
 | [`anchors watch`](/pt/docs/cli/commands/watch/) | The background watcher: sees changes and QUEUES work |
 | [`anchors flow`](/pt/docs/cli/commands/flow/) | Operate the work flows (the puzzle of actions and results) |

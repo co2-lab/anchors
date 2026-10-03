@@ -158,6 +158,17 @@ também no modo local. Esse repositório é **público**: escreva o motivo nos t
 do Anchors — o comando, o gate, o que ele fez e o que deveria fazer, um caso
 mínimo —, nunca o código, os nomes ou os dados do projeto.
 
+Fora de um card — ou em qualquer projeto — reporte só ele:
+
+```sh
+anchors report-bug "<o que aconteceu>" --expected "<o que deveria acontecer>" --repro <caso> --dry-run
+```
+
+Ele escreve a issue nas seções do formulário de bug do repositório, com versão e
+plataforma preenchidas, e recusa um texto que cite o projeto. O
+`anchors guide report-bug` ensina o agente a distinguir um bug do Anchors de um
+problema do projeto, e o que fazer enquanto a correção não chega.
+
 ## 5. Abra o PR — sem inventar a sintaxe
 
 ```sh

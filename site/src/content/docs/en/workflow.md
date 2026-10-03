@@ -158,6 +158,17 @@ too. That repository is **public**: write the reason in Anchors' terms — the
 command, the gate, what it did and what it should do, a minimal case — never the
 project's code, names or data.
 
+Outside a card — or in any project — report it alone:
+
+```sh
+anchors report-bug "<what happened>" --expected "<what should happen>" --repro <case> --dry-run
+```
+
+It writes the issue in the sections of the repository's bug form, with the
+version and platform filled in, and refuses a text that names the project.
+`anchors guide report-bug` tells an agent how to tell an Anchors bug from a
+problem of the project, and what to do while the fix does not come.
+
 ## 5. Open the PR — without inventing the syntax
 
 ```sh
