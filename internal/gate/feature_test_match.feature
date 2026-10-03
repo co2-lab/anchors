@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: FTMFT
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @FTMFT
@@ -207,3 +207,10 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
     Given scenarios and tests titled with the scenario's title followed by detail, with a table-driven placeholder, and with the same words in another order
     When the gate confronts the feature
     Then the first two match, and the last one diverges
+
+  @FTMFT-B26 @unit-level
+  Scenario: A VR code carries its state, and each state's scenario is its own code
+    Given a feature with scenarios tagged @BUTTN-VR-S01 and @BUTTN-VR-S02
+    When its scenarios are read, and scenario-identity confronts it
+    Then the codes are BUTTN-VR-S01 and BUTTN-VR-S02, and scenario-identity passes
+

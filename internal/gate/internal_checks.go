@@ -721,7 +721,7 @@ var anyCodeRE = anyCodeREFor(config.DefaultRuleLetters)
 //
 // Measured in the reference app: 78 of the 124 "orphan" codes were this truncation.
 func anyCodeREFor(letters string) *regexp.Regexp {
-	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) + `]\d{2}|DS-[A-Za-z0-9-]+|VR)`)
+	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) + `]\d{2}|DS-[A-Za-z0-9-]+|VR(?:-[` + regexp.QuoteMeta(letters) + `]\d{2})?)`)
 }
 
 // SetRuleLetters reconfigura a gramática de código dos gates para o vocabulário do

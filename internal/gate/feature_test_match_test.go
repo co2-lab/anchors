@@ -786,3 +786,20 @@ func TestFeatureTestMatch_titleAndMore(t *testing.T) {
 		t.Error("an outline's parameter and a table placeholder are not words of either title")
 	}
 }
+
+func TestFeatureCodes_aVRCodeCarriesItsState(t *testing.T) {
+	t.Run("FTMFT-B26: A VR code carries its state, and each state's scenario is its own code", func(t *testing.T) {})
+	feature := "Feature: Button\n\n" +
+		"  @state @BUTTN-VR-S01 @vr-level\n  Scenario: The button in Enabled looks like its baseline\n    Given x\n\n" +
+		"  @state @BUTTN-VR-S02 @vr-level\n  Scenario: The button in Disabled looks like its baseline\n    Given x\n"
+	var codes []string
+	for _, s := range parseFeatureScenarios(feature) {
+		codes = append(codes, s.Codes...)
+	}
+	if strings.Join(codes, ",") != "BUTTN-VR-S01,BUTTN-VR-S02" {
+		t.Errorf("codes = %v", codes)
+	}
+	if v, d := checkScenarioIdentity(feature, mapx.Node{ID: "ui/Button.feature", Kind: mapx.KindFeature}, "", nil, nil); v == Fail {
+		t.Errorf("two states' VR scenarios are two codes: %v %s", v, d)
+	}
+}

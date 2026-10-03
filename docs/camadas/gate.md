@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:6e29ee2e6bee1a58 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:a9b6c8f297cc4f42 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 77 unidades e 1298 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 77 unidades e 1299 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## BRCOV — BranchCoverage — the tests take the branches the code has
@@ -1114,6 +1114,8 @@ in automated test suites.
 - **FTMFT-B23** — A scenario tag may carry a `#nn` suffix that gives each scenario of one rule its own identity: every code on the tag line keeps its suffix, and a code with no suffix is read as before.
 
 - **FTMFT-B24** — Every test that leads with a scenario's code is compared with the scenario, not only the first: another test whose title DIVERGES from it is named as a warning — it cites the code and talks about something else —, while a merely similar one is not, since several tests of a rule name its variations.
+
+- **FTMFT-B26** — A visual-regression code may carry the state it captures — `BUTTN-VR-S01` — and is read whole: two VR scenarios of different states are two codes, and `scenario-identity` does not take them for one.
 
 - **FTMFT-B25** — A test title matches its scenario when its words begin with the scenario title's words, in order — case and punctuation aside —, optionally followed by detail; the placeholders of a parameterised title — a table-driven test's `%s`, `%d`, `$name`, `${name}`, an outline's `<name>` — are words of neither title. The same words in another order, or fewer, still diverge. (`titleCovers`)
 

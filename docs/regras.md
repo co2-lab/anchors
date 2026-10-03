@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:56576091bae3d717 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:f8647caef4f25a3a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4036,6 +4036,8 @@ abra a página dela em `camadas/`.
 - [FTMFT-B23 — A scenario tag may carry a `#nn` suffix that gives each scenario of one rule its own identity: every code on the tag line keeps its suffix, and a code with no suffix is read as before.](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description)
 
 - [FTMFT-B24 — Every test that leads with a scenario's code is compared with the scenario, not only the first: another test whose title DIVERGES from it is named as a warning — it cites the code and talks about something else —, while a merely similar one is not, since several tests of a rule name its variations.](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description)
+
+- [FTMFT-B26 — A visual-regression code may carry the state it captures — `BUTTN-VR-S01` — and is read whole: two VR scenarios of different states are two codes, and `scenario-identity` does not take them for one.](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description)
 
 - [FTMFT-B25 — A test title matches its scenario when its words begin with the scenario title's words, in order — case and punctuation aside —, optionally followed by detail; the placeholders of a parameterised title — a table-driven test's `%s`, `%d`, `$name`, `${name}`, an outline's `<name>` — are words of neither title. The same words in another order, or fewer, still diverge. (`titleCovers`)](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description)
 

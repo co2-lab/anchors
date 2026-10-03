@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FTMFT
-  updated_at: 2026-10-01
+  updated_at: 2026-10-03
   layer: gate
 -->
 # FeatureTestMatch — scenarios in feature must be implemented in test by code and description
@@ -67,6 +67,7 @@ in automated test suites.
 | `FTMFT-B22` | A support file linked to a feature is not among the tests its scenarios are confronted with. |
 | `FTMFT-B23` | A scenario tag may carry a `#nn` suffix that gives each scenario of one rule its own identity: every code on the tag line keeps its suffix, and a code with no suffix is read as before. |
 | `FTMFT-B24` | Every test that leads with a scenario's code is compared with the scenario, not only the first: another test whose title DIVERGES from it is named as a warning — it cites the code and talks about something else —, while a merely similar one is not, since several tests of a rule name its variations. |
+| `FTMFT-B26` | A visual-regression code may carry the state it captures — `BUTTN-VR-S01` — and is read whole: two VR scenarios of different states are two codes, and `scenario-identity` does not take them for one. |
 | `FTMFT-B25` | A test title matches its scenario when its words begin with the scenario title's words, in order — case and punctuation aside —, optionally followed by detail; the placeholders of a parameterised title — a table-driven test's `%s`, `%d`, `$name`, `${name}`, an outline's `<name>` — are words of neither title. The same words in another order, or fewer, still diverge. (`titleCovers`) |
 
 ## Errors
