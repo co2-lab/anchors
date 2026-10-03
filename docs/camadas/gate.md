@@ -1,11 +1,44 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:59eaa723f114270f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:ed614e16f76ce586 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 78 unidades e 1309 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 79 unidades e 1316 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+
+
+## APISP — APISpec — the coherence of an API spec, and its error codes in the code
+
+An API spec ties three things the client relies on: which contract each body is, which status each
+refusal answers with, and which error code and message come with it. Three gates ask whether the spec
+holds them together, before anything is compiled or run:
+
+| Gate | Question |
+| --- | --- |
+| `api-contracts-resolve` | Is every contract the body and the responses cite a spec with a Domain, and does every response say its contract? |
+| `api-errors-declared` | Does every error response carry its error code and message, under a status the Responses declare? |
+| `error-codes-honored` | Is every error code the spec declares one the unit's code emits? |
+
+The OpenAPI build already fails on a contract that is no spec; asked here, per unit, the failure names
+the unit while it is being written, and the pre-commit stops the commit that broke it. They run on an
+API unit's main code file — the layers tagged `interface` — and read the spec beside it, when it has an
+`Endpoint` section; sections and their columns are read in any language of the catalog.
+
+
+- **APISP-B01** — A node that is not code and a code file whose spec is missing or has no `Endpoint` leave every gate without a verdict.
+
+- **APISP-B02** — `api-contracts-resolve` fails naming each body or response (by status) whose contract is empty or `TODO`, each cited code no spec of the map carries, and each contract whose spec has no Domain table; `—` is a response with no body.
+
+- **APISP-B03** — `api-errors-declared` fails naming each error response whose status the Responses do not declare — exactly, or by its range (`4xx`) —, and each one without an error code or a message; a spec with no error response leaves without a verdict.
+
+- **APISP-B04** — `error-codes-honored` fails naming each declared error code that appears in none of the unit's code — the main file and the files its spec specifies, comments removed —, and the files it read.
+
+- **APISP-B05** — Sections are found under their title in any language of the catalog, and their columns by their header in those languages.
+
+- **APISP-E01** — The spec beside the code file cannot be read, or there is none.
+
+- **APISP-E02** — A contract's spec or one of the unit's code files cannot be read.
 
 
 ## BRCOV — BranchCoverage — the tests take the branches the code has

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:fb8feabb4698ab1c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:003bc3217ec00154 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3364,6 +3364,22 @@ abra a página dela em `camadas/`.
 - [OPNAP-E02 — An Endpoint row has no method or no path.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
 
 ## gate
+
+### [APISP — APISpec — the coherence of an API spec, and its error codes in the code](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
+
+- [APISP-B01 — A node that is not code and a code file whose spec is missing or has no `Endpoint` leave every gate without a verdict.](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
+
+- [APISP-B02 — `api-contracts-resolve` fails naming each body or response (by status) whose contract is empty or `TODO`, each cited code no spec of the map carries, and each contract whose spec has no Domain table; `—` is a response with no body.](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
+
+- [APISP-B03 — `api-errors-declared` fails naming each error response whose status the Responses do not declare — exactly, or by its range (`4xx`) —, and each one without an error code or a message; a spec with no error response leaves without a verdict.](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
+
+- [APISP-B04 — `error-codes-honored` fails naming each declared error code that appears in none of the unit's code — the main file and the files its spec specifies, comments removed —, and the files it read.](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
+
+- [APISP-B05 — Sections are found under their title in any language of the catalog, and their columns by their header in those languages.](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
+
+- [APISP-E01 — The spec beside the code file cannot be read, or there is none.](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
+
+- [APISP-E02 — A contract's spec or one of the unit's code files cannot be read.](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
 
 ### [BRCOV — BranchCoverage — the tests take the branches the code has](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has)
 

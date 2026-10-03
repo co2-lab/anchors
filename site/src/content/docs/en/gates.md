@@ -161,6 +161,9 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`contract-impact`](/docs/gates/contract-impact/) | `spec` | A field changed since the last commit names the rules that use it, and their tests |
 | [`contract-status-declared`](/docs/gates/contract-status-declared/) | `spec` | The Output Contract statuses are the ones the handler returns — and only those |
 | [`contract-tested`](/docs/gates/contract-tested/) | `code` | Every API unit has a contract scenario and a contract test that validates it against the project's OpenAPI document |
+| [`api-contracts-resolve`](/docs/gates/api-contracts-resolve/) | `code` | Every contract an API unit's body and responses cite is a spec with a Domain, and no response leaves its contract unsaid |
+| [`api-errors-declared`](/docs/gates/api-errors-declared/) | `code` | Every error response of an API unit carries its error code and message, under a status its Responses declare |
+| [`error-codes-honored`](/docs/gates/error-codes-honored/) | `code` | Every error code an API unit's spec declares is one its code emits |
 | [`domain-declared`](/docs/gates/domain-declared/) | `spec` | The spec declares what it accepts and who guards the boundary |
 | [`count-honored`](/docs/gates/count-honored/) | `spec` | The number the spec asserts matches the code |
 | [`pagination-honored`](/docs/gates/pagination-honored/) | `code` | A function promising the whole set does not silently return the first page |

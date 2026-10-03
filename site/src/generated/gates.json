@@ -508,6 +508,18 @@
         "slug": "docs/gates/contract-tested"
       },
       {
+        "label": "api-contracts-resolve",
+        "slug": "docs/gates/api-contracts-resolve"
+      },
+      {
+        "label": "api-errors-declared",
+        "slug": "docs/gates/api-errors-declared"
+      },
+      {
+        "label": "error-codes-honored",
+        "slug": "docs/gates/error-codes-honored"
+      },
+      {
         "label": "domain-declared",
         "slug": "docs/gates/domain-declared"
       },

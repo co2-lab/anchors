@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:0d13e2fdc258991c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:4f83f7836cb567c2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3055,6 +3055,20 @@ teste prova.
 - [An Endpoint row with no path fails the build](layers/doct.md#opnap-e02--an-endpoint-row-with-no-path-fails-the-build) `OPNAP-E02`
 
 ## gate
+
+- [What is no API unit leaves every gate without a verdict](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B01`
+
+- [Every contract cited resolves to a spec with a Domain](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B02`
+
+- [Every error response is complete and under a declared status](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B03`
+
+- [Every declared error code is emitted by the unit's code](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B04`
+
+- [Sections and columns are read in any language](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B05`
+
+- [A code file with no spec beside it leaves without a verdict](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-E01`
+
+- [A code file the spec specifies that cannot be read emits nothing](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-E02`
 
 - [Below the floor fails naming the lines](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B01`
 

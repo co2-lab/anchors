@@ -1003,6 +1003,12 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	// the unit, named by `{CODE}-CT`, that loads the document. The tool is the project's.
 	add("code", config.Gate{Name: "contract-tested", On: []string{"code"}, Tags: []string{"interface"},
 		Measures: "every API unit has a contract scenario and a contract test that validates it against the project's OpenAPI document"})
+	add("code", config.Gate{Name: "api-contracts-resolve", On: []string{"code"}, Tags: []string{"interface"},
+		Measures: "every contract an API unit's body and responses cite is a spec with a Domain, and no response leaves its contract unsaid"})
+	add("code", config.Gate{Name: "api-errors-declared", On: []string{"code"}, Tags: []string{"interface"},
+		Measures: "every error response of an API unit carries its error code and message, under a status its Responses declare"})
+	add("code", config.Gate{Name: "error-codes-honored", On: []string{"code"}, Tags: []string{"interface"},
+		Measures: "every error code an API unit's spec declares is one its code emits"})
 	add("spec", config.Gate{Name: "placeholder-filled", On: []string{"spec", "feature"},
 		Measures: "no generator placeholder remains in a value position: header field, table cell, rule or title line"})
 	if chosen["code"] {
