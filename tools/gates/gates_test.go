@@ -103,3 +103,12 @@ func TestMutationReportsArePrefixedAndMerged(t *testing.T) {
 		t.Errorf("nothing to mutate lists no mutation: %v", m)
 	}
 }
+
+func TestReportFormat(t *testing.T) {
+	if code := reportFormat(""); code != 0 {
+		t.Errorf("nothing listed passes, got %d", code)
+	}
+	if code := reportFormat("internal/gate/a_test.go\n"); code != 1 {
+		t.Errorf("a file out of form fails, got %d", code)
+	}
+}

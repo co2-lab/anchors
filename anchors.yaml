@@ -807,6 +807,16 @@ gates:
     blocking: true
     measures: "o projeto compila"
 
+  # O CI confere o gofmt e o commit nao conferia: um teste editado depois do ultimo
+  # `gofmt` local entrou num commit, e so o passo de formatacao do CI acusou — depois do
+  # push, nas tres plataformas. Como gate, o pre-commit pega, onde o conserto e um comando.
+  - name: gofmt
+    on: [code, test]
+    run: "go run ./tools/gates format"
+    scope: project
+    blocking: true
+    measures: "todo arquivo Go esta na forma canonica do gofmt, como o CI exige"
+
   - name: vet
     on: [code]
     run: "go vet ./..."

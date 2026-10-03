@@ -34,6 +34,7 @@ var gates = map[string]func(args []string) int{
 	"sbom":      runSBOM,
 	"semgrep":   runSemgrep,
 	"language":  runLanguage,
+	"format":    runFormat,
 }
 
 func main() {
