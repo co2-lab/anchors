@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8a1617e5a6253ca6 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:91c6a27299abc162 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -6576,13 +6576,13 @@ teste prova.
 
 - [A mutant that failed to compile stays out of the count and the score](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-B06`
 
-- [A file where no mutant ran scores 100](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-B07`
+- [A file where no mutant ran has no score](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-B07`
 
 - [The thresholds are read from the report](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-B08`
 
 - [File paths are normalized to the map's form](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-B09`
 
-- [A 100 from ignored mutants keeps the ignored count](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-I01`
+- [A file where nothing ran has no score and keeps the ignored count](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-I01`
 
 - [Thresholds absent from the report stay zero](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-X01`
 

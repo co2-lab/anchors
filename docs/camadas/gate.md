@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:14083ad6e4d68324 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:1f941c77fcc9b83e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
@@ -1573,7 +1573,7 @@ looked at.
 
 - **INCHN-B22** — A spec whose layer dispenses `tested-by` is skipped by `scenario-coverage`, saying so, as `unit-complete` does; a layer without that opt-out is still charged.
 
-- **INCHN-B23** — `mutation-score` passes a file whose score reaches the acceptable threshold — the threshold itself included, and a run that ignored every mutant — and fails one below it, naming how many mutants survived and the threshold.
+- **INCHN-B23** — `mutation-score` passes a file whose score reaches the acceptable threshold — the threshold itself included — and fails one below it, naming how many mutants survived and the threshold. A file where no mutant ran does not apply: all ignored says so with the count, and none covered says the line coverage owns it.
 
 - **INCHN-B24** — With no mutation signal ingested, or with one measured at another revision of the file below the floor or under load, `mutation-score` is pending, saying what to ingest or that the signal is stale; a stale score that met the floor, measured without load, does not block — mutation is not remeasured on every change —, and says how to measure it again. The revision is the mutation's own.
 

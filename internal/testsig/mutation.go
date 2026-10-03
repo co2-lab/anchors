@@ -42,8 +42,9 @@ type FileMutation struct {
 	// mutantes que nem rodaram (erro de compilação/runtime), porque eles não dizem
 	// nada sobre a qualidade do teste.
 	//
-	// Quando NÃO HÁ denominador — todo mutante do arquivo foi ignorado, ou a ferramenta
-	// não gerou nenhum —, o score é 100: não sobra nada a provar ali. Ver `Ignored`.
+	// When there is NO denominator — every mutant was ignored, none was covered, or the
+	// tool generated none — there is no score: zero, which the map does not write. Nothing
+	// was measured, and a number there would say otherwise. See `Ignored`.
 	Score float64
 	// NoCoverage são os mutantes que NENHUM TESTE EXECUTOU. Ficam fora do score, e a
 	// razão é separação de responsabilidade: "existe teste que execute esta linha?" é a
@@ -194,16 +195,14 @@ func parseMTE(b []byte) (*MutationReport, error) {
 		if rodados > 0 {
 			fm.Score = float64(fm.Killed) / float64(rodados) * 100
 		} else {
-			// Nenhum mutante RODOU: todos foram ignorados, nenhum teste executou o
-			// arquivo, ou a ferramenta não gerou mutante nenhum (tabela, tipo, reexport).
-			// Nos três casos não há dívida DESTE gate — 0/0 vira 100, e não "sem sinal".
-			// Quando o motivo é ausência de teste, quem cobra é o gate de cobertura.
-			//
-			// Antes disso o arquivo ficava num limbo: o sinal era gravado vazio, e o gate,
-			// que testava `killed == 0 && survived == 0`, mandava "rode a ferramenta de
-			// mutação" para um arquivo em que ela já tinha rodado e ignorado tudo
-			// corretamente. O contador de `Ignored` é o que impede o 100 de mentir.
-			fm.Score = 100
+			// NO MUTANT RAN: all ignored, none covered, or none generated (a table, a
+			// type, a re-export). There is no score — 0/0 is not 100. A 100 here was a
+			// number with no measurement behind it, and the map recorded it as if the
+			// tests had proven the file (measured: 15 mutants, all ignored, written as
+			// `mutation_score: 100`). The counters say what happened, and the gate reads
+			// them: it answers "does not apply", and the coverage gate owns a file no test
+			// runs.
+			fm.Score = 0
 		}
 		rep.Files[normalizeMutationPath(path)] = fm
 	}

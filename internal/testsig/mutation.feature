@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MTINM
-#   updated_at: 2026-09-27
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @MTINM
@@ -45,10 +45,10 @@ Feature: MutationIngest — the mutation score per file, read from a Mutation Te
     Then it scores 75
 
   @MTINM-B07 @unit-level
-  Scenario: A file where no mutant ran scores 100
+  Scenario: A file where no mutant ran has no score
     Given a file whose three mutants no test covered
     When the report is read
-    Then it scores 100 with no survivor
+    Then it has no score and no survivor
 
   @MTINM-B08 @unit-level
   Scenario: The thresholds are read from the report
@@ -63,10 +63,10 @@ Feature: MutationIngest — the mutation score per file, read from a Mutation Te
     Then they are keyed "lib/a.ts" and "src/b.ts"
 
   @MTINM-I01 @unit-level
-  Scenario: A 100 from ignored mutants keeps the ignored count
+  Scenario: A file where nothing ran has no score and keeps the ignored count
     Given a file whose two mutants were both ignored
     When the report is read
-    Then it scores 100 with 2 ignored and nothing killed
+    Then it has no score, with 2 ignored and nothing killed
 
   @MTINM-X01 @unit-level
   Scenario: Thresholds absent from the report stay zero

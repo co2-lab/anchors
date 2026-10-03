@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:72af22e4892f4fc2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:504effa633be7603 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4289,7 +4289,7 @@ abra a página dela em `camadas/`.
 
 - [INCHN-B22 — A spec whose layer dispenses `tested-by` is skipped by `scenario-coverage`, saying so, as `unit-complete` does; a layer without that opt-out is still charged.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
-- [INCHN-B23 — `mutation-score` passes a file whose score reaches the acceptable threshold — the threshold itself included, and a run that ignored every mutant — and fails one below it, naming how many mutants survived and the threshold.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
+- [INCHN-B23 — `mutation-score` passes a file whose score reaches the acceptable threshold — the threshold itself included — and fails one below it, naming how many mutants survived and the threshold. A file where no mutant ran does not apply: all ignored says so with the count, and none covered says the line coverage owns it.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B24 — With no mutation signal ingested, or with one measured at another revision of the file below the floor or under load, `mutation-score` is pending, saying what to ingest or that the signal is stale; a stale score that met the floor, measured without load, does not block — mutation is not remeasured on every change —, and says how to measure it again. The revision is the mutation's own.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
@@ -7255,13 +7255,13 @@ abra a página dela em `camadas/`.
 
 - [MTINM-B06 — A mutant that failed to compile or to run is not counted and does not enter the score.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
 
-- [MTINM-B07 — The score is killed over killed plus survived, times one hundred; a file where no mutant ran scores 100.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
+- [MTINM-B07 — The score is killed over killed plus survived, times one hundred; a file where no mutant ran has no score (zero, not written to the map): nothing was measured.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
 
 - [MTINM-B08 — The low and high thresholds are read from the report when it carries them.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
 
 - [MTINM-B09 — A file's path is normalized: a leading `./` is dropped, and a path containing `/src/` is cut to start at `src/`.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
 
-- [MTINM-I01 — A file that scores 100 because nothing ran is told apart from a proven one: its uncovered or ignored mutants stay counted.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
+- [MTINM-I01 — A file where nothing ran is told apart from a proven one: it has no score, and its uncovered or ignored mutants stay counted.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
 
 - [MTINM-X01 — Thresholds absent from the report stay zero: the unit never invents a threshold.](layers/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report)
 

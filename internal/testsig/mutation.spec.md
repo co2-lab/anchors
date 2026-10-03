@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MTINM
-  updated_at: 2026-09-28
+  updated_at: 2026-10-03
   layer: infra
 -->
 # MutationIngest — the mutation score per file, read from a Mutation Testing Elements report
@@ -36,7 +36,7 @@ project to declare them twice.
 | `MTINM-B04` | A mutant no test covered is counted apart and does not enter the score, and its starting line is recorded. |
 | `MTINM-B05` | A mutant the tool ignored is counted apart and does not enter the score. |
 | `MTINM-B06` | A mutant that failed to compile or to run is not counted and does not enter the score. |
-| `MTINM-B07` | The score is killed over killed plus survived, times one hundred; a file where no mutant ran scores 100. |
+| `MTINM-B07` | The score is killed over killed plus survived, times one hundred; a file where no mutant ran has no score (zero, not written to the map): nothing was measured. |
 | `MTINM-B08` | The low and high thresholds are read from the report when it carries them. |
 | `MTINM-B09` | A file's path is normalized: a leading `./` is dropped, and a path containing `/src/` is cut to start at `src/`. |
 
@@ -51,7 +51,7 @@ project to declare them twice.
 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
-| `MTINM-I01` | A file that scores 100 because nothing ran is told apart from a proven one: its uncovered or ignored mutants stay counted. | reads a file whose mutants were all ignored and verifies it scores 100 with the ignored count kept |
+| `MTINM-I01` | A file where nothing ran is told apart from a proven one: it has no score, and its uncovered or ignored mutants stay counted. | reads a file whose mutants were all ignored and verifies it has no score, with the ignored count kept |
 
 ## Constraints
 

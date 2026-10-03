@@ -230,6 +230,8 @@
   "gate.coverage_dropped": "cobertura caiu %.0f%% → %.0f%% (%.0f pontos)",
   "gate.mutation.no_signal": "sem sinal de mutação ingerido — a cobertura de linha diz que a linha EXECUTOU, não que alguém verificou o resultado. Rode a ferramenta de mutação do seu stack (Stryker/PIT/Infection/mutmut) e `anchors ingest --mutation <relatório>`",
   "gate.mutation.nothing_to_mutate": "a ferramenta de mutação mediu este arquivo nesta revisão e não gerou mutante nenhum — não há o que mutar",
+  "gate.mutation.all_ignored": "os %d mutante(s) foram todos ignorados pela ferramenta de mutação (estáticos ou desabilitados) — nada foi medido, o gate não se aplica",
+  "gate.mutation.none_covered": "nenhum teste executa os %d mutante(s) deste arquivo — nada foi medido aqui; quem cobra é a cobertura de linha",
   "gate.mutation.stale": "sinal de mutação stale (o arquivo mudou desde a ingestão — reingira)",
   "gate.mutation.stale_above_floor": "sinal de mutação vencido, medido por último em %.0f%% (piso %.0f%%): não é remedido a cada mudança — `anchors mutation --include-passing` o mede de novo",
   "gate.mutation.isolated_failed": "score de mutação ISOLADO %.0f%% < %.0f%% — %s. %d mutante(s) sobrevivem ao teste da própria unidade; %s",

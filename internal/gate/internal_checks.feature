@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INCHN
-#   updated_at: 2026-10-02
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @INCHN
@@ -216,10 +216,11 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
 
   @INCHN-B23 @unit-level
   Scenario: Mutation score passes at the threshold and fails below it naming the survivors
-    Given fresh mutation signals scoring above the threshold, exactly at it, below it, and with every mutant ignored
+    Given fresh mutation signals scoring above the threshold, exactly at it, below it, with every mutant ignored, and with none covered
     When mutation-score confronts each
     Then the one below fails naming how many mutants survived and the threshold
-    And the others pass
+    And the ones at or above pass
+    And the all-ignored and the none-covered do not apply, each saying why
 
   @INCHN-B24 @unit-level
   Scenario: A missing or stale mutation signal is pending, unless it met the floor

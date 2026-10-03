@@ -120,15 +120,11 @@ const fixtureTudoIgnorado = `{
   }
 }`
 
-// A file with no SURVIVING mutant scores 100 — even when the reason is that none ran.
-// That is the number's definition: 100% means "nothing survived".
-//
-// Before this the score was absent and the file fell into limbo: the signal was recorded
-// empty and the gate asked to "run the mutation tool" for a file where it had already run
-// and correctly ignored everything — a request impossible to meet, since running again
-// gives the same result.
-func TestParseMutationAllIgnoredScoresHundred(t *testing.T) {
-	t.Run("MTINM-I01: A 100 from ignored mutants keeps the ignored count", func(t *testing.T) {})
+// A file where every mutant was ignored has NO score, and keeps the count. It scored 100,
+// and the map wrote `mutation_score: 100` for a file with nothing measured (measured: 15
+// mutants, all ignored). The counter, not a score, is what tells the gate the tool ran.
+func TestParseMutationAllIgnoredHasNoScore(t *testing.T) {
+	t.Run("MTINM-I01: A file where nothing ran has no score and keeps the ignored count", func(t *testing.T) {})
 	dir := t.TempDir()
 	p := filepath.Join(dir, "mutation.json")
 	if err := os.WriteFile(p, []byte(fixtureTudoIgnorado), 0o644); err != nil {
@@ -140,15 +136,14 @@ func TestParseMutationAllIgnoredScoresHundred(t *testing.T) {
 	}
 	fm := rep.Files["src/constants/categories.ts"]
 
-	if fm.Score != 100 {
-		t.Errorf("score = %.1f, want 100 (no mutant survived)", fm.Score)
+	if fm.Score != 0 {
+		t.Errorf("score = %.1f, want none (0) — nothing was measured", fm.Score)
 	}
 	if fm.Killed != 0 || fm.Survived != 0 {
 		t.Errorf("killed/survived = %d/%d, want 0/0 — ignored is neither killed nor alive",
 			fm.Killed, fm.Survived)
 	}
-	// The counter is what keeps the 100 from being ambiguous in a sorted list: without it,
-	// this file and one with every mutant KILLED would be indistinguishable.
+	// The counter is what says the tool ran here and found nothing to measure.
 	if fm.Ignored != 2 {
 		t.Errorf("ignored = %d, want 2", fm.Ignored)
 	}
@@ -185,7 +180,7 @@ func TestParseMutationIgnoredDoesNotInflateScore(t *testing.T) {
 }
 
 // A file NO test executes: every mutant is NoCoverage. The mutation gate does not own
-// that — the coverage gate charges "no test runs this line" —, so the score is 100 and the
+// that — the coverage gate charges "no test runs this line" —, so there is no score and the
 // number is recorded apart.
 //
 // MEASURED in the reference app on 08/25, and it is the common case, not the exception:
@@ -193,7 +188,7 @@ func TestParseMutationIgnoredDoesNotInflateScore(t *testing.T) {
 // is INTEGRATION, which the mutation config excludes on purpose (a test talking to a real
 // service cannot tell "I broke the rule" from "the network wobbled").
 func TestParseMutationUncoveredIsNotSurvivor(t *testing.T) {
-	t.Run("MTINM-B07: A file where no mutant ran scores 100", func(t *testing.T) {})
+	t.Run("MTINM-B07: A file where no mutant ran has no score", func(t *testing.T) {})
 	uncovered := `{"schemaVersion":"1.0","files":{"repo.ts":{"mutants":[
 	  {"id":"1","status":"NoCoverage","location":{"start":{"line":1,"column":1},"end":{"line":1,"column":2}}},
 	  {"id":"2","status":"NoCoverage","location":{"start":{"line":2,"column":1},"end":{"line":2,"column":2}}},
@@ -216,8 +211,8 @@ func TestParseMutationUncoveredIsNotSurvivor(t *testing.T) {
 	if fm.NoCoverage != 3 {
 		t.Errorf("noCoverage = %d, want 3", fm.NoCoverage)
 	}
-	if fm.Score != 100 {
-		t.Errorf("score = %.1f, want 100 — no mutant executed, nothing survived",
+	if fm.Score != 0 {
+		t.Errorf("score = %.1f, want none (0) — no mutant executed, nothing was measured",
 			fm.Score)
 	}
 }

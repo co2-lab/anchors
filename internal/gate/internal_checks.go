@@ -1082,9 +1082,9 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 		}
 		return Pending, i18n.T("gate.mutation.stale")
 	}
-	// Nenhum mutante EXECUTADO: o score é 100 por construção (ver ParseMutation) e não há
-	// veredito a dar. Passa em silêncio, e o silêncio é a decisão — os dois motivos
-	// possíveis pertencem a outros donos:
+	// NO MUTANT RAN: there is no score (see ParseMutation) and no verdict of this gate —
+	// it does not apply, as for a file listed with no mutant at all. It was Pass, over a
+	// score of 100 nobody measured. The two reasons belong to other owners:
 	//
 	//	tudo ignorado      → não há regra a provar (tabela, tipo, reexport)
 	//	tudo sem cobertura → não há TESTE que execute o arquivo, e quem cobra isso é o
@@ -1094,7 +1094,10 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 	// afogaria os zeros REAIS: 187 arquivos marcavam 0% quase todos por falta de teste, e
 	// no meio deles se perdiam os poucos em que o teste roda e não verifica nada.
 	if n.Signal.MutantsKilled == 0 && n.Signal.MutantsSurvived == 0 {
-		return Pass, ""
+		if n.Signal.MutantsNoCoverage > 0 {
+			return Skip, i18n.T("gate.mutation.none_covered", n.Signal.MutantsNoCoverage)
+		}
+		return Skip, i18n.T("gate.mutation.all_ignored", n.Signal.MutantsIgnored)
 	}
 	// A régua é do PROJETO e chega junto com a medida: `thresholds` é campo OBRIGATÓRIO
 	// do schema Mutation Testing Elements, com `low` e `high` obrigatórios dentro dele.

@@ -1150,11 +1150,13 @@ func TestMutationScore(t *testing.T) {
 		{"exact threshold → passes (the limit does not fail)",
 			&mapx.TestSignal{MutantsKilled: 7, MutantsSurvived: 3, MutationScore: 70}, Pass, ""},
 		// The tool RAN and ignored everything — a table of constants with `ignoreStatic`.
-		// Nothing survived, so it is 100 and the verdict is Pass. Before this the gate said
-		// "run the mutation tool" about a file it had already run on: a request running it
-		// again would not satisfy, and the kind of noise that teaches people to ignore the gate.
-		{"everything ignored → passes, without asking for a new run",
-			&mapx.TestSignal{MutantsIgnored: 12, MutationScore: 100}, Pass, ""},
+		// Nothing was measured: the gate does not apply, and does not ask for a new run
+		// either — running again gives the same result. It was Pass over a score of 100
+		// nobody measured.
+		{"everything ignored → does not apply, without asking for a new run",
+			&mapx.TestSignal{MutantsIgnored: 12}, Skip, "12"},
+		{"nothing covered → does not apply; the coverage gate owns it",
+			&mapx.TestSignal{MutantsNoCoverage: 7}, Skip, "7"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
