@@ -18,6 +18,8 @@ Organize the tests by cost and scope, from cheap to expensive:
 - INTEGRATION — one module with its edges (infrastructure) mocked; the domain runs
   for real.
 - END-TO-END — the real flow crossing the system boundaries.
+- VISUAL REGRESSION — for screens and components: each state captured and compared with
+  its baseline image (see below).
 Each feature scenario already arrived classified at its natural level — prove it there.
 
 ## The golden rules (what separates a real test from theatre)
@@ -95,6 +97,27 @@ Distinguish the suites that run without credentials from those that require an e
 claim "N/N green" without that caveat. "What could pass here passed" is an honest
 sentence; "all green" when half of it did not even run is a lie that costs dearly
 later. (The project's golden rule holds: absence of proof is not proof of absence.)
+
+## Visual regression (screens and components)
+
+Every visual unit — a screen, a component — is strongly recommended to have a VISUAL
+REGRESSION test for EVERY state its spec registers. An assertion proves what a state shows;
+only a capture proves what it LOOKS like, and a style change that breaks a state passes
+every assertion. The proof has three parts, all part of the unit:
+
+- the scenario ` + "`{CODE}-VR`" + ` in the unit's feature, tagged with the project's visual regime;
+- one BASELINE IMAGE per state, beside the unit: ` + "`<Unit>.{CODE}-VR-<state>.<ext>`" + ` — the state's
+  code (` + "`S01`" + `), an optional variant after it, in png, jpg, webp or svg;
+- the CAPTURE test that produces and compares them, named by ` + "`{CODE}-VR`" + `: a capture flow
+  whose file is named by the code, or a screenshot test beside the unit that names it. The
+  tool is the project's — a browser screenshot assertion, a device flow, a component
+  story runner; the naming is what lets the gates find it.
+
+Regenerate a state's baseline in the same change that alters the state on purpose, and
+review the image as you review code: an unreviewed baseline approves whatever it captured.
+Declare the baselines as a layer of the unit (proof, like a test) so a commit made only of
+them is governed. ` + "`vr-states-covered`" + ` asks every state for the three parts, and
+` + "`vr-baseline`" + ` asks every VR scenario for its images.
 
 ## Anti-patterns (refuse them)
 

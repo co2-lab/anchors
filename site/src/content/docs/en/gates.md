@@ -43,6 +43,7 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`testid-consistent`](/docs/gates/testid-consistent/) | `spec` | The spec's testID inventory, the IDs the code exposes, and the tests that query them agree |
 | [`testid-queried-exists`](/docs/gates/testid-queried-exists/) | `test` | Every handle an end-to-end flow queries is exposed somewhere in the code |
 | [`vr-baseline`](/docs/gates/vr-baseline/) | `feature` | Every visual-regression scenario has its baseline image |
+| [`vr-states-covered`](/docs/gates/vr-states-covered/) | `code` | Every state a visual unit's spec registers has a VR scenario, a baseline image and a capture test |
 
 ## Doctrine & Feature Flags
 

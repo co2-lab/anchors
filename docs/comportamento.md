@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:c5bbd072724b19a0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:83d4f25923748733 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1249,6 +1249,8 @@ teste prova.
 - [The spec guide asks for four passes and a review](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B17`
 
 - [The report-bug guide says how to tell, report and go on](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B18`
+
+- [The guides recommend visual regression for every state of a visual unit](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B19`
 
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
@@ -5507,6 +5509,30 @@ teste prova.
 - [Does not evaluate baseline staleness using disk modification timestamps](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-X01`
 
 - [Does not fail commits based on git commit dates of baseline images](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-X02`
+
+- [Specs that have nothing to cover leave without a verdict](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-B01`
+
+- [The unit's feature must declare the VR scenario](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-B02`
+
+- [Every state needs its baseline image, in any image format](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-B03`
+
+- [A capture test is a flow named by the VR code or a screenshot test beside the unit](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-B04`
+
+- [Scenario, images and capture pass](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-B05`
+
+- [The State letter comes from the project's rule types](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-B06`
+
+- [vr-baseline accepts other image formats](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-B07`
+
+- [One state's image never covers another](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-I01`
+
+- [A code file with no spec beside it leaves without a verdict](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-E01`
+
+- [A unit with no feature has no VR scenario](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-E02`
+
+- [A state whose image cannot be found counts as without one](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-E03`
+
+- [An unreadable test beside the unit is not the capture](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression) `VRSTC-E04`
 
 ## infra
 

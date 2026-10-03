@@ -124,6 +124,10 @@
       {
         "label": "vr-baseline",
         "slug": "docs/gates/vr-baseline"
+      },
+      {
+        "label": "vr-states-covered",
+        "slug": "docs/gates/vr-states-covered"
       }
     ]
   },

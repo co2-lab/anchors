@@ -54,7 +54,7 @@ func checkVRBaseline(content string, n mapx.Node, root string, g *mapx.Graph, cf
 		// A convenção do baseline é `<Unidade>.<CODEX-VR-variante>.png`, ao lado da
 		// unidade. O glob cobre a variante opcional: `TCDTX-VR` casa
 		// `TCDTX-VR-loaded.png` tanto quanto `TCDTX-VR.png`.
-		achou, _ := doublestar.Glob(os.DirFS(root), base+"."+c+"*.png")
+		achou, _ := doublestar.Glob(os.DirFS(root), base+"."+c+"*."+baselineExts)
 		if len(achou) == 0 {
 			semImagem = append(semImagem, c)
 		}

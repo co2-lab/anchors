@@ -72,6 +72,12 @@ The tag that names each level is the PROJECT's, declared in the map of regimes. 
 exactly the tags it declares — a spelling the project did not declare makes the scenario
 confronted by no gate.
 
+VISUAL REGRESSION is a level of its own. A visual unit (a screen, a component) whose spec
+registers states declares ONE scenario ` + "`{CODE}-VR`" + `, tagged with the project's visual regime,
+whose capture covers every state — it has no interaction steps: it says that each state is
+captured and compared with its baseline. It is not a unit test case: the proof is the
+capture (see ` + "`anchors guide test`" + `).
+
 ## The unit with no interface (traceability, not BDD)
 
 A backend rule, a gate, a repository, a pure function: the feature of a unit with no

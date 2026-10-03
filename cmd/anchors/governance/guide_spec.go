@@ -64,7 +64,10 @@ A spec is not all alike — it specializes according to what makes the unit vary
    confirm the spec passes; if it fails, the gate's message tells the expected format.
    Typing the rules helps coverage later.
 4. States — for units with state: each state, its entry condition, and what
-   is visible/hidden/disabled in it.
+   is visible/hidden/disabled in it. In a VISUAL unit (a screen, a component), every state
+   registered here is strongly recommended to be proven by VISUAL REGRESSION: a capture
+   compared with a baseline image of that state — see ` + "`anchors guide test`" + `. It is what keeps
+   each state looking as the spec says; ` + "`vr-states-covered`" + ` asks it of every state.
 5. State flow — the transitions between the states.
 6. Data contract — every dynamic datum displayed: origin, requiredness, format,
    default. Cautions that prevent real bugs: explicit TIMEZONE in dates; translated

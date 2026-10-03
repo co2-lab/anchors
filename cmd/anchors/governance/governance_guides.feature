@@ -147,3 +147,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     When `anchors guide report-bug` runs, and `anchors guide`
     Then the guide tells Anchors' bugs from the project's, asks for a made-up minimal case and a dry run, and says what to do while the fix does not come
     And the playbook points to the guide and to anchors report-bug
+
+  @GVGDG-B19 @unit-level
+  Scenario: The guides recommend visual regression for every state of a visual unit
+    When the test, spec and feature guides are printed
+    Then the test guide asks for the VR scenario, a baseline per state and a capture test
+    And the spec and feature guides point a visual unit's states to it

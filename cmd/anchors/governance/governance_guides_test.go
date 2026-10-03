@@ -586,3 +586,19 @@ func TestReportBugGuide_tellsReportsAndGoesOn(t *testing.T) {
 		}
 	}
 }
+
+func TestGuides_recommendVisualRegressionPerState(t *testing.T) {
+	t.Run("GVGDG-B19: The guides recommend visual regression for every state of a visual unit", func(t *testing.T) {})
+	test := guideOut(t, "test")
+	for _, want := range []string{"## Visual regression", "EVERY state", "{CODE}-VR-<state>", "CAPTURE test", "vr-states-covered"} {
+		if !strings.Contains(test, want) {
+			t.Errorf("the test guide lacks %q", want)
+		}
+	}
+	if !strings.Contains(guideOut(t, "spec"), "VISUAL REGRESSION") {
+		t.Error("the spec guide does not point a visual unit's states to visual regression")
+	}
+	if !strings.Contains(guideOut(t, "feature"), "{CODE}-VR") {
+		t.Error("the feature guide does not ask for the VR scenario")
+	}
+}
