@@ -267,7 +267,7 @@ func featCodeREFor(letters string) *regexp.Regexp {
 	// `VR` may carry the state it captures (`BUTTN-VR-S01`): one VR scenario per state is
 	// how the visual-regression gates read it, and cut at `-VR` every state's scenario was
 	// the same code — `scenario-identity` failed them as repeated.
-	return regexp.MustCompile(`@([A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) + `]\d{2}|DS-[A-Za-z0-9-]+|VR(?:-[` + regexp.QuoteMeta(letters) + `]\d{2})?))(#\d{2})?\b`)
+	return regexp.MustCompile(`@([A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) + `]\d{2}|DS-[A-Za-z0-9-]+|VR(?:-[` + regexp.QuoteMeta(letters) + `]\d{2})?|CT))(#\d{2})?\b`)
 }
 
 // rootCodeRE separa a raiz (`USBPX-B01`) do sufixo de cenário (`#02`). Os gates que

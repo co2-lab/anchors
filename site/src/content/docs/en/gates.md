@@ -160,6 +160,7 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`rule-uses-implemented`](/docs/gates/rule-uses-implemented/) | `spec` | The fields a rule says it uses appear in the code the spec governs |
 | [`contract-impact`](/docs/gates/contract-impact/) | `spec` | A field changed since the last commit names the rules that use it, and their tests |
 | [`contract-status-declared`](/docs/gates/contract-status-declared/) | `spec` | The Output Contract statuses are the ones the handler returns — and only those |
+| [`contract-tested`](/docs/gates/contract-tested/) | `code` | Every API unit has a contract scenario and a contract test that validates it against the project's OpenAPI document |
 | [`domain-declared`](/docs/gates/domain-declared/) | `spec` | The spec declares what it accepts and who guards the boundary |
 | [`count-honored`](/docs/gates/count-honored/) | `spec` | The number the spec asserts matches the code |
 | [`pagination-honored`](/docs/gates/pagination-honored/) | `code` | A function promising the whole set does not silently return the first page |

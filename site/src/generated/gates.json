@@ -504,6 +504,10 @@
         "slug": "docs/gates/contract-status-declared"
       },
       {
+        "label": "contract-tested",
+        "slug": "docs/gates/contract-tested"
+      },
+      {
         "label": "domain-declared",
         "slug": "docs/gates/domain-declared"
       },

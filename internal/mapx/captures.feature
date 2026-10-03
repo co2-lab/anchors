@@ -36,3 +36,10 @@ Feature: Captures — a visual-regression test is tied to the unit it captures
     Given a VR flow's evidence ingested over Button.tsx, which depends on Icon.tsx
     When Icon.tsx changes, and then Button.tsx changes
     Then the capture is fresh after the first change and stale after the second
+
+  @VRCPT-B05 @unit-level
+  Scenario: A contract test captures its API unit, its spec and the OpenAPI document
+    Given an API unit Generate with code GENAP, a contract test citing GENAP-CT and docs/openapi.yaml
+    When the map is built
+    Then the test has captures edges to generate.go, generate.spec.md and docs/openapi.yaml
+

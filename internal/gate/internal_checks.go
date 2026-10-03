@@ -101,6 +101,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"vr-scenarios-tested":      checkVRScenariosTested,
 	"vr-scenarios-of-states":   checkVRScenariosOfStates,
 	"vr-tests-of-scenarios":    checkVRTestsOfScenarios,
+	"contract-tested":          checkContractTested,
 	"test-level-codes":         checkTestLevelCodes,
 	"duplication":              checkDuplication,
 	"ref-resolves":             checkRefResolves,
@@ -721,7 +722,7 @@ var anyCodeRE = anyCodeREFor(config.DefaultRuleLetters)
 //
 // Measured in the reference app: 78 of the 124 "orphan" codes were this truncation.
 func anyCodeREFor(letters string) *regexp.Regexp {
-	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) + `]\d{2}|DS-[A-Za-z0-9-]+|VR(?:-[` + regexp.QuoteMeta(letters) + `]\d{2})?)`)
+	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) + `]\d{2}|DS-[A-Za-z0-9-]+|VR(?:-[` + regexp.QuoteMeta(letters) + `]\d{2})?|CT)`)
 }
 
 // SetRuleLetters reconfigura a gramática de código dos gates para o vocabulário do

@@ -98,3 +98,17 @@ func TestCapture_screenChangeStalesComponentChangeDoesNot(t *testing.T) {
 		t.Errorf("the screen's change stales its capture: %+v", ev)
 	}
 }
+
+func TestCaptureEdges_aContractTestCapturesItsAPI(t *testing.T) {
+	t.Run("VRCPT-B05: A contract test captures its API unit, its spec and the OpenAPI document", func(t *testing.T) {})
+	files := []scan.File{
+		{Path: "api/generate.spec.md", Kind: "spec", HeaderCode: "GENAP"},
+		{Path: "api/generate.go", Kind: "code"},
+		{Path: "docs/openapi.yaml", Kind: "doc"},
+		{Path: "api/generate_contract_test.go", Kind: "test", Codes: []string{"GENAP-CT"}},
+	}
+	got := strings.Join(capturesFrom(captureEdges(files), "api/generate_contract_test.go"), ",")
+	if got != "api/generate.go,api/generate.spec.md,docs/openapi.yaml" {
+		t.Errorf("a contract test captures %s", got)
+	}
+}

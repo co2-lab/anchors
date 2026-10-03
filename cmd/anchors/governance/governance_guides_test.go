@@ -603,3 +603,12 @@ func TestGuides_recommendVisualRegressionPerState(t *testing.T) {
 		t.Error("the feature guide does not ask for the VR scenario")
 	}
 }
+
+func TestTestGuide_recommendsContractTests(t *testing.T) {
+	t.Run("GVGDG-B20: The test guide recommends a contract test against the compiled OpenAPI for every API unit", func(t *testing.T) {})
+	for _, want := range []string{"## Contract tests (APIs)", "{CODE}-CT", "LOADS the OpenAPI", "contract-tested", "Schemathesis"} {
+		if !strings.Contains(guideOut(t, "test"), want) {
+			t.Errorf("the test guide lacks %q", want)
+		}
+	}
+}

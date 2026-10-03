@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:bc42abc5208c0641 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:46677d3443a3c42c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1253,6 +1253,8 @@ teste prova.
 - [The report-bug guide says how to tell, report and go on](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B18`
 
 - [The guides recommend visual regression for every state of a visual unit](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B19`
+
+- [The test guide recommends a contract test against the compiled OpenAPI](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B20`
 
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
@@ -3211,6 +3213,22 @@ teste prova.
 - [A dialect status pattern that does not compile is pending](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E03`
 
 - [The API catalog's Responses section is the output contract](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B13`
+
+- [What is no API unit leaves without a verdict](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B01`
+
+- [The feature must carry the contract scenario](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B02`
+
+- [A test of the unit must name the contract code](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B03`
+
+- [The contract test must load the OpenAPI document](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B04`
+
+- [The contract regime tag comes from the project](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B05`
+
+- [Scenario and a contract test that loads the document pass](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B06`
+
+- [A code file with no spec beside it leaves without a verdict](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-E01`
+
+- [A test that cannot be read is read by its path](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-E02`
 
 - [Confronting an artifact that is not a spec skips](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B01`
 
@@ -7047,6 +7065,8 @@ teste prova.
 - [A VR code is read whole with its state](layers/mapx.md#vrcpt-b04--a-vr-code-is-read-whole-with-its-state) `VRCPT-B04`
 
 - [The screen's change stales its capture, a component's does not](layers/mapx.md#vrcpt-i01--the-screens-change-stales-its-capture-a-components-does-not) `VRCPT-I01`
+
+- [A contract test captures its API unit, its spec and the OpenAPI document](layers/mapx.md#vrcpt-b05--a-contract-test-captures-its-api-unit-its-spec-and-the-openapi-document) `VRCPT-B05`
 
 ## scan
 

@@ -49,7 +49,7 @@ func scenarioCodeREFor(letters string) *regexp.Regexp {
 		letters = config.DefaultRuleLetters
 	}
 	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) +
-		`]\d{2}(?:-[a-z][a-z0-9-]*)?|DS-[A-Za-z0-9-]+|VR(?:-[` + regexp.QuoteMeta(letters) + `]\d{2})?)\b`)
+		`]\d{2}(?:-[a-z][a-z0-9-]*)?|DS-[A-Za-z0-9-]+|VR(?:-[` + regexp.QuoteMeta(letters) + `]\d{2})?|CT)\b`)
 }
 
 // SetRuleLetters reconfigura a gramática de código deste pacote para o vocabulário do

@@ -37,6 +37,7 @@ takes a `captures` target and does not descend past it.
 | `VRCPT-B01` | A test whose path or text names `{CODE}-VR` (with or without a state, `-S01`) gets a `captures` edge to the main code file of the unit that declares `{CODE}`, and one to each baseline image of that unit. |
 | `VRCPT-B02` | A test naming no VR code, an image, and a VR code no spec declares get no `captures` edge. |
 | `VRCPT-B03` | The evidence closure of a VR test holds the unit's code file and images, and does not descend past them: a component the screen depends on is not in it. |
+| `VRCPT-B05` | A contract test — its path or text names `{CODE}-CT` — gets a `captures` edge to the API unit's code file, to its spec (the OpenAPI is compiled from it) and to every OpenAPI document of the project (a file named `*openapi*.yaml`, `.yml` or `.json`), one level like a capture. |
 | `VRCPT-B04` | A visual-regression code is read whole with its state — `BUTTN-VR-S01` — by the scan and by the test-signal reader, as the gates read it. |
 
 ## Invariants

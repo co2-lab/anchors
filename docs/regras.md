@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:63af80f7678fccc0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:8ff2837b8cbcb866 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1362,6 +1362,8 @@ abra a página dela em `camadas/`.
 - [GVGDG-B16 — The changelog guide says `anchors changelog` builds a technical changelog, not the product's, and recommends a product changelog an agent synthesizes from it: breaking changes, visible features and bugs fixed go in, fixes without `Bug:` stay out, and chores only when they matter to the product.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B17 — The spec guide asks for the spec in four passes — every section, with its questions (every input, every effect and its limit, every failure, every state shared with another unit); the variations of each rule; the generalization of cases into an invariant; a review that each rule states the intent and not the mechanism —, and says a defect is a rule not written, to be written with its invariant before the fix.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
+- [GVGDG-B20 — The test guide strongly recommends a contract test for every API unit, validating the API against the OpenAPI compiled from the specs with the language's own tool, named by `{CODE}-CT`, loading the document instead of copying it, and asserting each error response's status, code and message.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B19 — The test guide strongly recommends a visual-regression test for every state a visual unit's spec registers, tied both ways — a VR scenario per state, a VR test naming `{CODE}-VR-<state>` and a baseline image per scenario, every scenario of a state and every test of a scenario, a state with no visual value exempted by `@no-vr: <reason>` on its line —, the spec guide points every state of a visual unit to it, and the feature guide asks for one VR scenario per state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -3532,6 +3534,24 @@ abra a página dela em `camadas/`.
 - [CSDCN-E02 — The map links the spec to code, but none of those files can be read (all gone from disk since the last build, or empty).](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
 
 - [CSDCN-E03 — The project's `dialect.http_status` does not compile as a regular expression.](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
+
+### [CTTST — ContractTested — an API unit is proven against the project's OpenAPI document](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document)
+
+- [CTTST-B01 — A node that is not code, a code file with no spec beside it, and a spec with no `Endpoint` section or no code leave without a verdict.](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document)
+
+- [CTTST-B02 — The feature must carry a scenario line with both `@{CODE}-CT` and the contract regime tag; otherwise the failure names both.](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document)
+
+- [CTTST-B03 — A test of the unit — its path names the unit's code, it sits beside the unit under its name, or a folder of its path is named after the unit — must name `{CODE}-CT`; otherwise the failure says no test names it.](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document)
+
+- [CTTST-B04 — A test naming `{CODE}-CT` must mention an OpenAPI document; otherwise the failure names the tests that do not load it.](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document)
+
+- [CTTST-B05 — The contract regime tag is the one `derived.regimes` maps to a regime naming a contract; without one, `contract-level`.](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document)
+
+- [CTTST-B06 — With the scenario and a contract test that loads the document, the gate passes.](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document)
+
+- [CTTST-E01 — The spec beside the code file cannot be read, or there is none.](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document)
+
+- [CTTST-E02 — The feature or a test file cannot be read.](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document)
 
 ### [CNHNC — CountHonored — a numerical assertion written in a spec must match reality in code](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code)
 
@@ -7762,6 +7782,8 @@ abra a página dela em `camadas/`.
 - [VRCPT-B02 — A test naming no VR code, an image, and a VR code no spec declares get no `captures` edge.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
 - [VRCPT-B03 — The evidence closure of a VR test holds the unit's code file and images, and does not descend past them: a component the screen depends on is not in it.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
+- [VRCPT-B05 — A contract test — its path or text names `{CODE}-CT` — gets a `captures` edge to the API unit's code file, to its spec (the OpenAPI is compiled from it) and to every OpenAPI document of the project (a file named `*openapi*.yaml`, `.yml` or `.json`), one level like a capture.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
 - [VRCPT-B04 — A visual-regression code is read whole with its state — `BUTTN-VR-S01` — by the scan and by the test-signal reader, as the gates read it.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 

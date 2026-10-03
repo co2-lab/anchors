@@ -999,6 +999,10 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures: "every visual-regression scenario of the unit is of a state its spec registers"})
 	add("code", config.Gate{Name: "vr-tests-of-scenarios", On: []string{"code"}, Tags: ui,
 		Measures: "every VR test of the unit is of a visual-regression scenario its feature declares"})
+	// The proof that an API keeps the OpenAPI compiled from its specs: a contract test of
+	// the unit, named by `{CODE}-CT`, that loads the document. The tool is the project's.
+	add("code", config.Gate{Name: "contract-tested", On: []string{"code"}, Tags: []string{"interface"},
+		Measures: "every API unit has a contract scenario and a contract test that validates it against the project's OpenAPI document"})
 	add("spec", config.Gate{Name: "placeholder-filled", On: []string{"spec", "feature"},
 		Measures: "no generator placeholder remains in a value position: header field, table cell, rule or title line"})
 	if chosen["code"] {

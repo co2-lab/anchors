@@ -25,8 +25,19 @@ import (
 // evidence closure does not descend past them. A component used by a screen has states and
 // a VR of its own; when it changes, its own capture goes stale, not every screen that uses
 // it.
+//
+// A CONTRACT test (`{CODE}-CT`) is tied the same way to what it validates: the API unit's
+// code, its spec — the OpenAPI is compiled from it — and the project's OpenAPI document when
+// the map knows it. A handler changed, or a contract regenerated, stales the contract test.
 func captureEdges(files []scan.File) []Edge {
-	vrRE := regexp.MustCompile(`\b([A-Z0-9]` + config.CodeLengthPattern() + `)-VR\b`)
+	vrRE := regexp.MustCompile(`\b([A-Z0-9]` + config.CodeLengthPattern() + `)-(VR|CT)\b`)
+	var openapiDocs []string
+	for _, f := range files {
+		if isOpenAPIPath(f.Path) {
+			openapiDocs = append(openapiDocs, f.Path)
+		}
+	}
+	sort.Strings(openapiDocs)
 	codeByStem := map[string]string{} // unit stem → main code file
 	for _, f := range files {
 		if f.Kind == string(KindCode) {
@@ -58,16 +69,18 @@ func captureEdges(files []scan.File) []Edge {
 		if f.Kind != string(KindTest) || isImagePath(f.Path) {
 			continue
 		}
-		codes := map[string]bool{}
+		codes := map[string]string{} // unit code → VR or CT
 		for _, m := range vrRE.FindAllStringSubmatch(f.Path, -1) {
-			codes[m[1]] = true
+			codes[m[1]] = m[2]
 		}
 		for _, c := range f.Codes {
-			if i := strings.Index(c, "-VR"); i > 0 {
-				codes[c[:i]] = true
+			for _, kind := range []string{"VR", "CT"} {
+				if i := strings.Index(c, "-"+kind); i > 0 && (len(c) == i+3 || c[i+3] == '-') {
+					codes[c[:i]] = kind
+				}
 			}
 		}
-		for _, code := range sortedSet(codes) {
+		for _, code := range sortedKeysOf(codes) {
 			stem, ok := stemByCode[code]
 			if !ok {
 				continue
@@ -75,6 +88,10 @@ func captureEdges(files []scan.File) []Edge {
 			var targets []string
 			if src, ok := codeByStem[stem]; ok {
 				targets = append(targets, src)
+			}
+			if codes[code] == "CT" {
+				targets = append(targets, stem+".spec.md")
+				targets = append(targets, openapiDocs...)
 			}
 			imgs := append([]string(nil), images[code]...)
 			sort.Strings(imgs)
@@ -97,7 +114,14 @@ func isImagePath(p string) bool {
 	return false
 }
 
-func sortedSet(m map[string]bool) []string {
+// isOpenAPIPath says whether a file is an OpenAPI document by its name: `openapi.yaml`,
+// `openapi.json`, `api.openapi.yml`.
+func isOpenAPIPath(p string) bool {
+	b := strings.ToLower(path.Base(p))
+	return strings.Contains(b, "openapi") && (strings.HasSuffix(b, ".yaml") || strings.HasSuffix(b, ".yml") || strings.HasSuffix(b, ".json"))
+}
+
+func sortedKeysOf(m map[string]string) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {
 		out = append(out, k)

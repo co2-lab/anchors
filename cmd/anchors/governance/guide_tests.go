@@ -135,6 +135,26 @@ Four gates ask the four questions: ` + "`vr-states-covered`" + ` (every state ha
 ` + "`vr-scenarios-of-states`" + ` (every VR scenario is of a state) and ` + "`vr-tests-of-scenarios`" + `
 (every VR test is of a scenario).
 
+## Contract tests (APIs)
+
+Every API unit is strongly recommended to have a CONTRACT TEST: one that runs requests
+against the API and validates each answer against the project's OpenAPI document — the
+one ` + "`anchors docs build`" + ` compiles from the specs, so the test proves the implementation keeps
+what the specs promise. Every language has the tool: Schemathesis or Dredd for any stack,
+kin-openapi in Go, jest-openapi or openapi-response-validator in JavaScript, openapi-core in
+Python, swagger-request-validator with RestAssured in Java. The tool is the project's.
+
+What makes it traceable, and what ` + "`contract-tested`" + ` asks of each API unit:
+
+- the scenario ` + "`{CODE}-CT`" + ` in the unit's feature, tagged with the project's contract regime;
+- a test of the unit that names ` + "`{CODE}-CT`" + ` (its case or its file) and LOADS the OpenAPI
+  document — a schema copied into the test is a second contract that drifts;
+- each refusal of ` + "`Error Responses`" + ` asserted with its status, its error code and its
+  message, which an OpenAPI validator does not check by itself.
+
+A contract test's evidence goes stale when the unit's code, its spec or the OpenAPI
+document changes — ` + "`evidence-fresh`" + ` says so, and ` + "`anchors test`" + ` runs it again.
+
 ## Anti-patterns (refuse them)
 
 - A mock that replicates the target's logic → you tested the mock, not the code.

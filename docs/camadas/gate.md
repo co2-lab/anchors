@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:1f1851e8154aa609 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:a48dec0fe31d8ecb — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 77 unidades e 1301 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 78 unidades e 1309 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## BRCOV — BranchCoverage — the tests take the branches the code has
@@ -288,6 +288,38 @@ is nothing to confront.
 - **CSDCN-E02** — The map links the spec to code, but none of those files can be read (all gone from disk since the last build, or empty).
 
 - **CSDCN-E03** — The project's `dialect.http_status` does not compile as a regular expression.
+
+
+## CTTST — ContractTested — an API unit is proven against the project's OpenAPI document
+
+The project's OpenAPI is compiled from the specs of its API units (`anchors docs build`), so it says
+what the API promises. A contract test is what says the implementation keeps it: each language has
+the tool that runs requests against an OpenAPI document and validates the answers — Schemathesis or
+Dredd for any stack, kin-openapi in Go, jest-openapi in JavaScript, openapi-core in Python,
+swagger-request-validator in Java. Anchors does not choose the tool; it asks for the three things that
+make the proof traceable: the contract scenario `{CODE}-CT` in the unit's feature, with the project's
+contract regime; a test of the unit that names `{CODE}-CT`; and that test loading the OpenAPI
+document, so it validates against the compiled contract and not against a copy written in the test.
+
+It runs on the API unit's main code file — the layers the project tags `interface` — and reads the
+spec beside it; a spec with no `Endpoint` section is no API unit.
+
+
+- **CTTST-B01** — A node that is not code, a code file with no spec beside it, and a spec with no `Endpoint` section or no code leave without a verdict.
+
+- **CTTST-B02** — The feature must carry a scenario line with both `@{CODE}-CT` and the contract regime tag; otherwise the failure names both.
+
+- **CTTST-B03** — A test of the unit — its path names the unit's code, it sits beside the unit under its name, or a folder of its path is named after the unit — must name `{CODE}-CT`; otherwise the failure says no test names it.
+
+- **CTTST-B04** — A test naming `{CODE}-CT` must mention an OpenAPI document; otherwise the failure names the tests that do not load it.
+
+- **CTTST-B05** — The contract regime tag is the one `derived.regimes` maps to a regime naming a contract; without one, `contract-level`.
+
+- **CTTST-B06** — With the scenario and a contract test that loads the document, the gate passes.
+
+- **CTTST-E01** — The spec beside the code file cannot be read, or there is none.
+
+- **CTTST-E02** — The feature or a test file cannot be read.
 
 
 ## CNHNC — CountHonored — a numerical assertion written in a spec must match reality in code

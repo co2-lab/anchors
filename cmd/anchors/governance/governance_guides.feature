@@ -153,3 +153,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     When the test, spec and feature guides are printed
     Then the test guide asks for the VR scenario, a baseline per state and a capture test
     And the spec and feature guides point a visual unit's states to it
+
+  @GVGDG-B20 @unit-level
+  Scenario: The test guide recommends a contract test against the compiled OpenAPI
+    When the test guide is printed
+    Then it recommends a contract test named by {CODE}-CT that loads the OpenAPI document
+
