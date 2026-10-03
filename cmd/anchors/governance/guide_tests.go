@@ -103,21 +103,29 @@ later. (The project's golden rule holds: absence of proof is not proof of absenc
 Every visual unit — a screen, a component — is strongly recommended to have a VISUAL
 REGRESSION test for EVERY state its spec registers. An assertion proves what a state shows;
 only a capture proves what it LOOKS like, and a style change that breaks a state passes
-every assertion. The proof has three parts, all part of the unit:
+every assertion. Each state is tied to its proof both ways, and all of it is part of the
+unit:
 
-- the scenario ` + "`{CODE}-VR`" + ` in the unit's feature, tagged with the project's visual regime;
-- one BASELINE IMAGE per state, beside the unit: ` + "`<Unit>.{CODE}-VR-<state>.<ext>`" + ` — the state's
-  code (` + "`S01`" + `), an optional variant after it, in png, jpg, webp or svg;
-- the CAPTURE test that produces and compares them, named by ` + "`{CODE}-VR`" + `: a capture flow
-  whose file is named by the code, or a screenshot test beside the unit that names it. The
-  tool is the project's — a browser screenshot assertion, a device flow, a component
-  story runner; the naming is what lets the gates find it.
+- the state has a VR scenario in the feature, tagged with the project's visual regime and
+  the state's code;
+- the VR scenario has a VR TEST — a capture flow or a screenshot test — that names
+  ` + "`{CODE}-VR-<state>`" + ` (` + "`BUTTN-VR-S01`" + `) in its file name or its text, and a BASELINE IMAGE
+  beside the unit: ` + "`<Unit>.{CODE}-VR-<state>.<ext>`" + `, an optional variant after the state, in
+  png, jpg, webp or svg;
+- the other way round, every VR scenario is of a state the spec registers, and every VR
+  test is of a VR scenario the feature declares — a capture that outlived its state is
+  removed with it.
 
-Regenerate a state's baseline in the same change that alters the state on purpose, and
-review the image as you review code: an unreviewed baseline approves whatever it captured.
-Declare the baselines as a layer of the unit (proof, like a test) so a commit made only of
-them is governed. ` + "`vr-states-covered`" + ` asks every state for the three parts, and
-` + "`vr-baseline`" + ` asks every VR scenario for its images.
+The tool is the project's — a browser screenshot assertion, a device flow, a component
+story runner; the naming is what lets the gates find it. Regenerate a state's baseline in
+the same change that alters the state on purpose, and review the image as you review code:
+an unreviewed baseline approves whatever it captured. Declare the baselines as a layer of
+the unit (proof, like a test) so a commit made only of them is governed.
+
+Four gates ask the four questions: ` + "`vr-states-covered`" + ` (every state has a VR scenario),
+` + "`vr-scenarios-tested`" + ` (every VR scenario has a VR test and an image),
+` + "`vr-scenarios-of-states`" + ` (every VR scenario is of a state) and ` + "`vr-tests-of-scenarios`" + `
+(every VR test is of a scenario).
 
 ## Anti-patterns (refuse them)
 

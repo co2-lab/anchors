@@ -25,16 +25,19 @@ const specVR = `<!-- @anchors
 ### BUTTN-S02: Disabled
 `
 
-const featureVR = `Feature: Button
+// featureVRStates is a feature with a VR scenario per given state, in the short form.
+func featureVRStates(states ...string) string {
+	var b strings.Builder
+	b.WriteString("Feature: Button\n\n  @BUTTN-B01 @unit-level\n  Scenario: Clicks\n    Given x\n")
+	for _, s := range states {
+		b.WriteString("\n  @BUTTN-" + s + " @vr-level\n  Scenario: " + s + " looks like its baseline\n    Given x\n")
+	}
+	return b.String()
+}
 
-  @BUTTN-VR @vr-level
-  Scenario: Each state of Button looks like its baseline
-    Given each state is captured
-`
-
-// vrUnit writes a Button unit under ui/ with the given files and returns the root and
-// the map, whose test nodes are the given test paths.
-func vrUnit(t *testing.T, files map[string]string, tests ...string) (string, *mapx.Graph) {
+// vrFixture writes a Button unit under ui/ with its spec and the given files, and returns
+// the root and the map, whose test nodes are the given paths.
+func vrFixture(t *testing.T, files map[string]string, tests ...string) (string, *mapx.Graph) {
 	t.Helper()
 	root := t.TempDir()
 	if _, ok := files["ui/Button.spec.md"]; !ok {
@@ -52,80 +55,139 @@ func vrUnit(t *testing.T, files map[string]string, tests ...string) (string, *ma
 	return root, g
 }
 
-func vrCheck(root string, g *mapx.Graph) (Verdict, string) {
-	return checkVRStatesCovered("", mapx.Node{ID: "ui/Button.tsx", Kind: mapx.KindCode}, root, g, nil)
+var buttonCode = mapx.Node{ID: "ui/Button.tsx", Kind: mapx.KindCode}
+
+var vrChecks = map[string]func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string){
+	"vr-states-covered": checkVRStatesCovered, "vr-scenarios-tested": checkVRScenariosTested,
+	"vr-scenarios-of-states": checkVRScenariosOfStates, "vr-tests-of-scenarios": checkVRTestsOfScenarios,
 }
 
-func TestVRStates_nothingToCover(t *testing.T) {
-	t.Run("VRSTC-B01: Specs that have nothing to cover leave without a verdict", func(t *testing.T) {})
-	root, _ := vrUnit(t, map[string]string{})
-	if v, _ := checkVRStatesCovered("", mapx.Node{ID: "ui/Button.spec.md", Kind: mapx.KindSpec}, root, nil, nil); v != Skip {
-		t.Errorf("a node that is not code: %v", v)
-	}
-	if v, _ := checkVRStatesCovered("", mapx.Node{ID: "ui/Button.styles.ts", Kind: mapx.KindCode}, root, nil, nil); v != Skip {
-		t.Errorf("a part of the unit, with no spec of its own: %v", v)
-	}
-	for name, spec := range map[string]string{"no code": "# Button\n### BUTTN-S01\n",
-		"no state": "<!-- @anchors\n  code: BUTTN\n-->\n# Button\n### BUTTN-B01\n"} {
-		root, _ := vrUnit(t, map[string]string{"ui/Button.spec.md": spec})
-		if v, _ := vrCheck(root, nil); v != Skip {
-			t.Errorf("a spec with %s: %v", name, v)
+func TestVR_nothingToConfront(t *testing.T) {
+	t.Run("VRSTC-B01: Nothing to confront leaves every gate without a verdict", func(t *testing.T) {})
+	t.Run("VRSTC-E01: A code file with no spec beside it leaves without a verdict", func(t *testing.T) {})
+	root, g := vrFixture(t, map[string]string{"ui/Other.spec.md": "# Other\n### BUTTN-S01\n"})
+	for name, check := range vrChecks {
+		if v, _ := check("", mapx.Node{ID: "ui/Button.spec.md", Kind: mapx.KindSpec}, root, g, nil); v != Skip {
+			t.Errorf("%s on a spec node: %v", name, v)
+		}
+		if v, d := check("", mapx.Node{ID: "ui/Button.styles.ts", Kind: mapx.KindCode}, root, g, nil); v != Skip || !strings.Contains(d, "spec") {
+			t.Errorf("%s on a part of the unit: %v %s", name, v, d)
+		}
+		if v, _ := check("", mapx.Node{ID: "ui/Other.tsx", Kind: mapx.KindCode}, root, g, nil); v != Skip {
+			t.Errorf("%s on a spec with no code: %v", name, v)
 		}
 	}
 }
 
-func TestVRStates_needsTheScenario(t *testing.T) {
-	t.Run("VRSTC-B02: The unit's feature must declare the VR scenario", func(t *testing.T) {})
-	root, g := vrUnit(t, map[string]string{"ui/Button.feature": "Feature: Button\n  @BUTTN-S01\n  Scenario: x\n",
-		"ui/Button.BUTTN-VR-S01.png": "x", "ui/Button.BUTTN-VR-S02.png": "x"}, "ui/BUTTN-VR.yaml")
-	v, d := vrCheck(root, g)
-	if v != Fail || !strings.Contains(d, "BUTTN-VR") || !strings.Contains(d, "@vr-level") {
-		t.Errorf("no VR scenario fails naming it and the tag: %v %s", v, d)
+func TestVR_everyStateHasAScenario(t *testing.T) {
+	t.Run("VRSTC-B02: Every state needs a VR scenario", func(t *testing.T) {})
+	t.Run("VRSTC-E02: A unit with no feature has no VR scenario", func(t *testing.T) {})
+	root, g := vrFixture(t, map[string]string{"ui/Button.feature": featureVRStates("S01")})
+	if v, d := checkVRStatesCovered("", buttonCode, root, g, nil); v != Fail || !strings.Contains(d, "BUTTN-S02") ||
+		strings.Contains(d, "BUTTN-S01") || !strings.Contains(d, "@vr-level") {
+		t.Errorf("S02 has no VR scenario: %v %s", v, d)
+	}
+	root, g = vrFixture(t, map[string]string{})
+	if v, d := checkVRStatesCovered("", buttonCode, root, g, nil); v != Fail || !strings.Contains(d, "BUTTN-S01, BUTTN-S02") {
+		t.Errorf("no feature, no VR scenario for any state: %v %s", v, d)
+	}
+	root, g = vrFixture(t, map[string]string{"ui/Button.spec.md": "<!-- @anchors\n  code: BUTTN\n-->\n### BUTTN-B01\n"})
+	if v, _ := checkVRStatesCovered("", buttonCode, root, g, nil); v != Skip {
+		t.Errorf("a spec with no state: %v", v)
 	}
 }
 
-func TestVRStates_everyStateNeedsItsImage(t *testing.T) {
-	t.Run("VRSTC-B03: Every state needs its baseline image, in any image format", func(t *testing.T) {})
-	t.Run("VRSTC-I01: One state's image never covers another", func(t *testing.T) {})
-	root, g := vrUnit(t, map[string]string{"ui/Button.feature": featureVR, "ui/Button.BUTTN-VR-S01.svg": "<svg/>"}, "ui/BUTTN-VR.yaml")
-	v, d := vrCheck(root, g)
-	if v != Fail || !strings.Contains(d, "BUTTN-S02") || strings.Contains(d, "BUTTN-S01") || !strings.Contains(d, "Button.BUTTN-VR-<state>.png") {
-		t.Errorf("S02 has no image and S01's does not cover it: %v %s", v, d)
+func TestVR_everyScenarioHasATestAndAnImage(t *testing.T) {
+	t.Run("VRSTC-B03: Every VR scenario needs a VR test", func(t *testing.T) {})
+	t.Run("VRSTC-B04: Every VR scenario needs its baseline image, in any image format", func(t *testing.T) {})
+	t.Run("VRSTC-E03: A baseline that cannot be found counts as none", func(t *testing.T) {})
+	root, g := vrFixture(t, map[string]string{"ui/Button.feature": featureVRStates("S01", "S02"),
+		"ui/Button.vr.test.ts": "toHaveScreenshot('BUTTN-VR-S01')", "ui/Button.BUTTN-VR-S01.svg": "<svg/>"}, "ui/Button.vr.test.ts")
+	v, d := checkVRScenariosTested("", buttonCode, root, g, nil)
+	if v != Fail || !strings.Contains(d, "no VR test: BUTTN-VR-S02") || !strings.Contains(d, "baseline image: BUTTN-VR-S02") ||
+		strings.Contains(d, "BUTTN-VR-S01") || !strings.Contains(d, "Button.BUTTN-VR-<state>.png") {
+		t.Errorf("S02 has no test and no image: %v %s", v, d)
+	}
+	root, g = vrFixture(t, map[string]string{"ui/Button.feature": featureVRStates("S01", "S02"),
+		"ui/Button.vr.test.ts": "BUTTN-VR-S01 BUTTN-VR-S02", "ui/Button.BUTTN-VR-S01.png": "x", "ui/Button.BUTTN-VR-S02-dark.webp": "x"}, "ui/Button.vr.test.ts")
+	if v, d := checkVRScenariosTested("", buttonCode, root, g, nil); v != Pass {
+		t.Errorf("every scenario tested and captured: %v %s", v, d)
+	}
+	root, g = vrFixture(t, map[string]string{"ui/Button.feature": featureVRStates()})
+	if v, _ := checkVRScenariosTested("", buttonCode, root, g, nil); v != Skip {
+		t.Errorf("no VR scenario: %v", v)
 	}
 }
 
-func TestVRStates_theCapture(t *testing.T) {
-	t.Run("VRSTC-B04: A capture test is a flow named by the VR code or a screenshot test beside the unit", func(t *testing.T) {})
-	images := map[string]string{"ui/Button.feature": featureVR, "ui/Button.BUTTN-VR-S01.png": "x", "ui/Button.BUTTN-VR-S02-dark.jpg": "x"}
-	root, g := vrUnit(t, images, "ui/Button.BUTTN-VR-S01.png")
-	if v, d := vrCheck(root, g); v != Fail || !strings.Contains(d, "no test captures `BUTTN-VR`") {
-		t.Errorf("an image is not the capture: %v %s", v, d)
+func TestVR_everyScenarioIsOfAState(t *testing.T) {
+	t.Run("VRSTC-B05: A VR scenario of a state the spec does not register", func(t *testing.T) {})
+	t.Run("VRSTC-B06: A VR scenario of no state", func(t *testing.T) {})
+	root, g := vrFixture(t, map[string]string{"ui/Button.feature": featureVRStates("S01", "S03") +
+		"\n  @BUTTN-VR @vr-level\n  Scenario: every state\n    Given x\n"})
+	v, d := checkVRScenariosOfStates("", buttonCode, root, g, nil)
+	if v != Fail || !strings.Contains(d, "BUTTN-S03") || !strings.Contains(d, "of no state: BUTTN-VR") || strings.Contains(d, "BUTTN-S01") {
+		t.Errorf("S03 is not a state, and BUTTN-VR is of none: %v %s", v, d)
 	}
-	root, g = vrUnit(t, images, ".maestro/ui/BUTTN-VR.yaml")
-	if v, d := vrCheck(root, g); v != Pass {
-		t.Errorf("a flow named by the VR code captures it: %v %s", v, d)
-	}
-	withShot := map[string]string{"ui/Button.vr.test.ts": "expect(page).toHaveScreenshot('BUTTN-VR-S01')"}
-	for k, v := range images {
-		withShot[k] = v
-	}
-	root, g = vrUnit(t, withShot, "ui/Button.vr.test.ts")
-	if v, d := vrCheck(root, g); v != Pass {
-		t.Errorf("a screenshot test beside the unit naming the VR captures it: %v %s", v, d)
+	root, g = vrFixture(t, map[string]string{"ui/Button.feature": featureVRStates("S01", "S02")})
+	if v, d := checkVRScenariosOfStates("", buttonCode, root, g, nil); v != Pass {
+		t.Errorf("every scenario of a state: %v %s", v, d)
 	}
 }
 
-func TestVRStates_coveredPasses(t *testing.T) {
-	t.Run("VRSTC-B05: Scenario, images and capture pass", func(t *testing.T) {})
-	root, g := vrUnit(t, map[string]string{"ui/Button.feature": featureVR, "ui/Button.BUTTN-VR-S01.png": "x",
-		"ui/Button.BUTTN-VR-S02.webp": "x"}, "ui/BUTTN-VR.yaml")
-	if v, d := vrCheck(root, g); v != Pass {
-		t.Errorf("all covered passes: %v %s", v, d)
+func TestVR_everyTestIsOfAScenario(t *testing.T) {
+	t.Run("VRSTC-B07: A VR test of a scenario the feature does not declare", func(t *testing.T) {})
+	root, g := vrFixture(t, map[string]string{"ui/Button.feature": featureVRStates("S01"),
+		"ui/Button.vr.test.ts": "BUTTN-VR-S01 BUTTN-VR-S03"}, "ui/Button.vr.test.ts")
+	if v, d := checkVRTestsOfScenarios("", buttonCode, root, g, nil); v != Fail || !strings.Contains(d, "BUTTN-VR-S03 (ui/Button.vr.test.ts)") ||
+		strings.Contains(d, "BUTTN-VR-S01") {
+		t.Errorf("S03's test has no scenario: %v %s", v, d)
+	}
+	root, g = vrFixture(t, map[string]string{"ui/Button.feature": featureVRStates("S01")})
+	if v, _ := checkVRTestsOfScenarios("", buttonCode, root, g, nil); v != Skip {
+		t.Errorf("no VR test: %v", v)
 	}
 }
 
-func TestVRStates_stateLetter(t *testing.T) {
-	t.Run("VRSTC-B06: The State letter comes from the project's rule types", func(t *testing.T) {})
+func TestVR_readingTheUnit(t *testing.T) {
+	t.Run("VRSTC-B08: A VR scenario carries the regime tag and the state's code, in either form", func(t *testing.T) {})
+	t.Run("VRSTC-B09: Which tests are of the unit", func(t *testing.T) {})
+	t.Run("VRSTC-E04: A test that cannot be read is read by its path", func(t *testing.T) {})
+	feature := "Feature: Button\n  @BUTTN-S01 @vr-level\n  Scenario: a\n  @BUTTN-VR-S02 @vr-level\n  Scenario: b\n  @BUTTN-S01 @unit-level\n  Scenario: c\n"
+	root, g := vrFixture(t, map[string]string{"ui/Button.feature": feature,
+		".maestro/screens/Button/capture.yaml": "takeScreenshot: BUTTN-VR-S01",
+		"ui/Button_vr_test.go":                 "// BUTTN-VR-S02",
+		"other/Other.test.ts":                  "BUTTN-VR-S01"},
+		".maestro/screens/Button/capture.yaml", "ui/Button_vr_test.go", "flows/BUTTN-VR-S02.yaml", "other/Other.test.ts", "ui/Button.BUTTN-VR-S01.png")
+	u, _, ok := readVRUnit(buttonCode, root, g, nil)
+	if !ok {
+		t.Fatal("the unit is read")
+	}
+	if len(u.scenarios) != 2 || !u.scenarios["S01"] || !u.scenarios["S02"] || len(u.stateless) != 0 {
+		t.Errorf("the VR scenarios are of S01 and S02: %v %v", u.scenarios, u.stateless)
+	}
+	if strings.Join(u.tests["S01"], ",") != ".maestro/screens/Button/capture.yaml" ||
+		strings.Join(u.tests["S02"], ",") != "ui/Button_vr_test.go,flows/BUTTN-VR-S02.yaml" {
+		t.Errorf("tests of the unit: %v", u.tests)
+	}
+}
+
+func TestVR_oneStateNeverAnswersForAnother(t *testing.T) {
+	t.Run("VRSTC-I01: One state never answers for another", func(t *testing.T) {})
+	root, g := vrFixture(t, map[string]string{"ui/Button.feature": featureVRStates("S01"),
+		"ui/Button.vr.test.ts": "BUTTN-VR-S01", "ui/Button.BUTTN-VR-S01.png": "x"}, "ui/Button.vr.test.ts")
+	for name, check := range vrChecks {
+		v, d := check("", buttonCode, root, g, nil)
+		if strings.Contains(d, "S01") {
+			t.Errorf("%s names S01, which is covered: %v %s", name, v, d)
+		}
+	}
+	if v, d := checkVRStatesCovered("", buttonCode, root, g, nil); v != Fail || !strings.Contains(d, "BUTTN-S02") {
+		t.Errorf("S02 is still uncovered: %v %s", v, d)
+	}
+}
+
+func TestVR_stateLetter(t *testing.T) {
+	t.Run("VRSTC-B10: The State letter comes from the project's rule types", func(t *testing.T) {})
 	if l := stateLetter(nil); l != "S" {
 		t.Errorf("default = %q", l)
 	}
@@ -136,7 +198,7 @@ func TestVRStates_stateLetter(t *testing.T) {
 }
 
 func TestVRBaseline_otherImageFormats(t *testing.T) {
-	t.Run("VRSTC-B07: vr-baseline accepts other image formats", func(t *testing.T) {})
+	t.Run("VRSTC-B11: vr-baseline accepts other image formats", func(t *testing.T) {})
 	root := t.TempDir()
 	must(t, os.MkdirAll(filepath.Join(root, "tela"), 0o755))
 	must(t, os.WriteFile(filepath.Join(root, "tela", "T.TCDTX-VR-loaded.jpg"), []byte("jpg"), 0o644))
@@ -144,19 +206,3 @@ func TestVRBaseline_otherImageFormats(t *testing.T) {
 		t.Fatalf("a jpg baseline counts: %v (%s)", v, msg)
 	}
 }
-
-func TestVRStates_failures(t *testing.T) {
-	t.Run("VRSTC-E01: A code file with no spec beside it leaves without a verdict", func(t *testing.T) {})
-	t.Run("VRSTC-E02: A unit with no feature has no VR scenario", func(t *testing.T) {})
-	t.Run("VRSTC-E03: A state whose image cannot be found counts as without one", func(t *testing.T) {})
-	t.Run("VRSTC-E04: An unreadable test beside the unit is not the capture", func(t *testing.T) {})
-	root, g := vrUnit(t, map[string]string{"ui/Button.BUTTN-VR-S01.png": "x"}, "ui/Button.vr.test.ts")
-	if v, d := checkVRStatesCovered("", mapx.Node{ID: "ui/Button.styles.ts", Kind: mapx.KindCode}, root, g, nil); v != Skip || !strings.Contains(d, "spec") {
-		t.Errorf("no spec beside it: %v %s", v, d)
-	}
-	v, d := vrCheck(root, g)
-	if v != Fail || !strings.Contains(d, "`BUTTN-VR`") || !strings.Contains(d, "BUTTN-S02") || !strings.Contains(d, "no test captures") {
-		t.Errorf("no feature, no S02 image and an unreadable test are each a gap: %v %s", v, d)
-	}
-}
-

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:b9a22461b46bea1d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:56576091bae3d717 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1363,7 +1363,7 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-B17 — The spec guide asks for the spec in four passes — every section, with its questions (every input, every effect and its limit, every failure, every state shared with another unit); the variations of each rule; the generalization of cases into an invariant; a review that each rule states the intent and not the mechanism —, and says a defect is a rule not written, to be written with its invariant before the fix.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
-- [GVGDG-B19 — The test guide strongly recommends a visual-regression test for every state a visual unit's spec registers — the `{CODE}-VR` scenario, a baseline image per state beside the unit, and a capture test named by the code —, the spec guide points every state of a visual unit to it, and the feature guide asks for the one `{CODE}-VR` scenario.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+- [GVGDG-B19 — The test guide strongly recommends a visual-regression test for every state a visual unit's spec registers, tied both ways — a VR scenario per state, a VR test naming `{CODE}-VR-<state>` and a baseline image per scenario, every scenario of a state and every test of a scenario —, the spec guide points every state of a visual unit to it, and the feature guide asks for one VR scenario per state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B18 — The report-bug guide tells a bug in Anchors from a problem of the project, asks for a made-up minimal case in Anchors' terms because the repository is public, a `--dry-run` before sending, and while the fix does not come: no hand edits to Anchors' files, a waiver that names the issue, and the user told. The playbook points to it and to `anchors report-bug`.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -6059,31 +6059,39 @@ abra a página dela em `camadas/`.
 
 - [VRBSV-X02 — Does not fail commits based on git commit dates of baseline images.](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images)
 
-### [VRSTC — VRStatesCovered — every state of a visual unit is proven by visual regression](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+### [VRSTC — VRStatesCovered — each state of a visual unit tied to its visual regression, both ways](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-B01 — A node that is not code, a code file with no spec beside it (a part of the unit), a spec with no code, and a spec that registers no state leave without a verdict.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-B01 — A node that is not code, a code file with no spec beside it (a part of the unit) and a spec with no code leave every gate without a verdict.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-B02 — The feature beside the spec must declare the scenario `{CODE}-VR` with the project's visual-regime tag; otherwise the failure names the code and the tag.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-B02 — `vr-states-covered` fails naming each state of the spec with no VR scenario, and the regime tag to use; with no state it leaves without a verdict.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-B03 — Every state needs an image beside the unit named `<Unit>.{CODE}-VR-<state>` with an optional variant, as png, jpg, jpeg, webp, gif or svg; the failure counts and names the states without one and the name to save them under.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-B03 — `vr-scenarios-tested` fails naming each VR scenario that no VR test names; with no VR scenario it leaves without a verdict.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-B04 — A test node captures the VR when its path names `{CODE}-VR`, or when it sits beside the unit (its name starts with the unit's) and its text names `{CODE}-VR`; an image is never the capture. Without one, the failure says no test captures it.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-B04 — `vr-scenarios-tested` also fails naming each VR scenario with no image beside the unit, `<Unit>.{CODE}-VR-<state>` with an optional variant, as png, jpg, jpeg, webp, gif or svg, and the name to save it under.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-B05 — With the scenario, every state's image and a capture, the gate passes; otherwise it fails with every gap at once.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-B05 — `vr-scenarios-of-states` fails naming each VR scenario of a state the spec does not register.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-B06 — The State letter is the one of the project's rule type whose term or a section starts with "state" or "estado"; without one, `S`.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-B06 — `vr-scenarios-of-states` fails naming each VR scenario that carries no state's code — a scenario capturing the whole unit at once.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-B07 — `vr-baseline` accepts the same image formats for a VR scenario's baseline.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-B07 — `vr-tests-of-scenarios` fails naming each VR state a test names with no VR scenario in the feature, and the tests that name it; with no VR test it leaves without a verdict.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-I01 — A state's image only counts for that state: `S01`'s image never covers `S02`.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-B08 — A VR scenario is a feature line carrying the visual-regime tag; its state is a `{CODE}-<state>` or `{CODE}-VR-<state>` code on that line.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-E01 — The spec beside the code file cannot be read, or there is none.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-B09 — A test is of the unit when its path names the unit's code, when it sits beside the unit under the unit's name, or when a folder of its path is named after the unit; an image is never a test.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-E02 — The unit's feature cannot be read, or there is none.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-B10 — The State letter is the one of the project's rule type whose term or a section starts with "state" or "estado"; without one, `S`.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-E03 — Looking for a state's image fails on the file system.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-B11 — `vr-baseline` accepts the same image formats for a VR scenario's baseline.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
-- [VRSTC-E04 — A test file beside the unit cannot be read.](camadas/gate.md#vrstc--vrstatescovered--every-state-of-a-visual-unit-is-proven-by-visual-regression)
+- [VRSTC-I01 — One state's scenario, test or image never answers for another state.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
+
+- [VRSTC-E01 — The spec beside the code file cannot be read, or there is none.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
+
+- [VRSTC-E02 — The unit's feature cannot be read, or there is none.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
+
+- [VRSTC-E03 — Looking for a baseline image fails on the file system.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
+
+- [VRSTC-E04 — A test of the unit cannot be read.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
 ## infra
 

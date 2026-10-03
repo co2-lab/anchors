@@ -43,7 +43,10 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | [`testid-consistent`](/pt/docs/gates/testid-consistent/) | `spec` | The spec's testID inventory, the IDs the code exposes, and the tests that query them agree |
 | [`testid-queried-exists`](/pt/docs/gates/testid-queried-exists/) | `test` | Every handle an end-to-end flow queries is exposed somewhere in the code |
 | [`vr-baseline`](/pt/docs/gates/vr-baseline/) | `feature` | Every visual-regression scenario has its baseline image |
-| [`vr-states-covered`](/pt/docs/gates/vr-states-covered/) | `code` | Every state a visual unit's spec registers has a VR scenario, a baseline image and a capture test |
+| [`vr-states-covered`](/pt/docs/gates/vr-states-covered/) | `code` | Every state the visual unit's spec registers has a visual-regression scenario in the feature |
+| [`vr-scenarios-tested`](/pt/docs/gates/vr-scenarios-tested/) | `code` | Every visual-regression scenario of the unit has a VR test and a baseline image |
+| [`vr-scenarios-of-states`](/pt/docs/gates/vr-scenarios-of-states/) | `code` | Every visual-regression scenario of the unit is of a state its spec registers |
+| [`vr-tests-of-scenarios`](/pt/docs/gates/vr-tests-of-scenarios/) | `code` | Every VR test of the unit is of a visual-regression scenario its feature declares |
 
 ## Doutrina e Feature Flags
 

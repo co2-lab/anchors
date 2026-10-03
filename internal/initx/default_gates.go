@@ -987,11 +987,18 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures:    "a scenario's nature tag agrees with the letter of its code"})
 	add("feature", config.Gate{Name: "vr-baseline", On: []string{"feature"}, Tags: ui,
 		Measures: "every visual-regression scenario has its baseline image"})
-	// The other half of visual regression: vr-baseline checks a VR scenario that exists
-	// has its image; nothing asked that a screen's states are captured at all. An agent
-	// set up a project with screens and wrote no visual test, every gate green.
+	// The four questions of visual regression, asked of a screen's or a component's code:
+	// each state has a VR scenario, each VR scenario a VR test and an image, and neither a
+	// scenario nor a test outlives its state. An agent set up a project with screens and
+	// wrote no visual test, every gate green.
 	add("code", config.Gate{Name: "vr-states-covered", On: []string{"code"}, Tags: ui,
-		Measures: "every state a visual unit's spec registers has a VR scenario, a baseline image and a capture test"})
+		Measures: "every state the visual unit's spec registers has a visual-regression scenario in the feature"})
+	add("code", config.Gate{Name: "vr-scenarios-tested", On: []string{"code"}, Tags: ui,
+		Measures: "every visual-regression scenario of the unit has a VR test and a baseline image"})
+	add("code", config.Gate{Name: "vr-scenarios-of-states", On: []string{"code"}, Tags: ui,
+		Measures: "every visual-regression scenario of the unit is of a state its spec registers"})
+	add("code", config.Gate{Name: "vr-tests-of-scenarios", On: []string{"code"}, Tags: ui,
+		Measures: "every VR test of the unit is of a visual-regression scenario its feature declares"})
 	add("spec", config.Gate{Name: "placeholder-filled", On: []string{"spec", "feature"},
 		Measures: "no generator placeholder remains in a value position: header field, table cell, rule or title line"})
 	if chosen["code"] {

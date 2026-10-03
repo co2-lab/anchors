@@ -128,6 +128,18 @@
       {
         "label": "vr-states-covered",
         "slug": "docs/gates/vr-states-covered"
+      },
+      {
+        "label": "vr-scenarios-tested",
+        "slug": "docs/gates/vr-scenarios-tested"
+      },
+      {
+        "label": "vr-scenarios-of-states",
+        "slug": "docs/gates/vr-scenarios-of-states"
+      },
+      {
+        "label": "vr-tests-of-scenarios",
+        "slug": "docs/gates/vr-tests-of-scenarios"
       }
     ]
   },

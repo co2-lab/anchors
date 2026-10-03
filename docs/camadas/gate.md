@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:a1510d372c03cbdd — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:6e29ee2e6bee1a58 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 77 unidades e 1294 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 77 unidades e 1298 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## BRCOV — BranchCoverage — the tests take the branches the code has
@@ -4395,51 +4395,60 @@ Verifies that visual regression scenarios declared in feature files have corresp
 - **VRBSV-X02** — Does not fail commits based on git commit dates of baseline images.
 
 
-## VRSTC — VRStatesCovered — every state of a visual unit is proven by visual regression
+## VRSTC — VRStatesCovered — each state of a visual unit tied to its visual regression, both ways
 
 A state is what a screen or a component looks like under a condition, and a visual capture is what
-keeps it looking so. `vr-baseline` asked, from the feature, whether a visual-regression scenario that
-exists has its baseline image. Nothing asked whether it exists: an agent setting up a project with
-screens wrote specs with states, features and unit tests, and no visual regression at all — every gate
-green, and no state of any screen protected against a visual change.
+keeps it looking so. An agent setting up a project with screens wrote specs with states, features and
+unit tests, and no visual regression at all — every gate green, and no state of any screen protected
+against a visual change. `vr-baseline` only asked a VR scenario that exists for its image.
 
-This gate confronts a visual unit with its proof. It runs on the unit's main code file — the screen or
-the component, which is what a project tags as visual — and reads the spec beside it
-(`Button.tsx` → `Button.spec.md`). For every state the spec registers (the codes of the State letter,
-`{CODE}-S01`, `{CODE}-S02`…) it asks for three things, all part of the unit:
-the visual-regression scenario `{CODE}-VR` in the unit's feature, tagged with the project's visual
-regime; a baseline image per state beside the unit, `<Unit>.{CODE}-VR-<state>.<ext>` in any common
-image format; and a test that captures them — a capture flow whose path names `{CODE}-VR`, or a
-screenshot test beside the unit whose text does.
+Four gates ask the four questions that tie a state to its capture, both ways:
 
-Which units are visual is the project's to say: the catalog scopes the gate to code layers tagged
-`screen` or `component`. A part of the unit (`Button.styles.ts`) has no spec of its own and is left
-alone, so each gap is reported once.
+| Gate | Question |
+| --- | --- |
+| `vr-states-covered` | Does every state of the spec have a VR scenario in the feature? |
+| `vr-scenarios-tested` | Does every VR scenario have a VR test, and a baseline image? |
+| `vr-scenarios-of-states` | Is every VR scenario of a state the spec registers? |
+| `vr-tests-of-scenarios` | Is every VR test of a VR scenario the feature declares? |
+
+They run on a visual unit's main code file — the screen or the component, which is what a project tags
+as visual — and read the unit's spec, feature and tests from it (`Button.tsx` → `Button.spec.md`,
+`Button.feature`). A VR scenario is a scenario tagged with the project's visual regime and the code of
+the state it captures (`@BUTTN-S01` or `@BUTTN-VR-S01`). A VR test names `BUTTN-VR-S01` in its path or
+its text. A baseline is `<Unit>.BUTTN-VR-S01[-variant].<ext>` beside the unit.
 
 
-- **VRSTC-B01** — A node that is not code, a code file with no spec beside it (a part of the unit), a spec with no code, and a spec that registers no state leave without a verdict.
+- **VRSTC-B01** — A node that is not code, a code file with no spec beside it (a part of the unit) and a spec with no code leave every gate without a verdict.
 
-- **VRSTC-B02** — The feature beside the spec must declare the scenario `{CODE}-VR` with the project's visual-regime tag; otherwise the failure names the code and the tag.
+- **VRSTC-B02** — `vr-states-covered` fails naming each state of the spec with no VR scenario, and the regime tag to use; with no state it leaves without a verdict.
 
-- **VRSTC-B03** — Every state needs an image beside the unit named `<Unit>.{CODE}-VR-<state>` with an optional variant, as png, jpg, jpeg, webp, gif or svg; the failure counts and names the states without one and the name to save them under.
+- **VRSTC-B03** — `vr-scenarios-tested` fails naming each VR scenario that no VR test names; with no VR scenario it leaves without a verdict.
 
-- **VRSTC-B04** — A test node captures the VR when its path names `{CODE}-VR`, or when it sits beside the unit (its name starts with the unit's) and its text names `{CODE}-VR`; an image is never the capture. Without one, the failure says no test captures it.
+- **VRSTC-B04** — `vr-scenarios-tested` also fails naming each VR scenario with no image beside the unit, `<Unit>.{CODE}-VR-<state>` with an optional variant, as png, jpg, jpeg, webp, gif or svg, and the name to save it under.
 
-- **VRSTC-B05** — With the scenario, every state's image and a capture, the gate passes; otherwise it fails with every gap at once.
+- **VRSTC-B05** — `vr-scenarios-of-states` fails naming each VR scenario of a state the spec does not register.
 
-- **VRSTC-B06** — The State letter is the one of the project's rule type whose term or a section starts with "state" or "estado"; without one, `S`.
+- **VRSTC-B06** — `vr-scenarios-of-states` fails naming each VR scenario that carries no state's code — a scenario capturing the whole unit at once.
 
-- **VRSTC-B07** — `vr-baseline` accepts the same image formats for a VR scenario's baseline.
+- **VRSTC-B07** — `vr-tests-of-scenarios` fails naming each VR state a test names with no VR scenario in the feature, and the tests that name it; with no VR test it leaves without a verdict.
 
-- **VRSTC-I01** — A state's image only counts for that state: `S01`'s image never covers `S02`.
+- **VRSTC-B08** — A VR scenario is a feature line carrying the visual-regime tag; its state is a `{CODE}-<state>` or `{CODE}-VR-<state>` code on that line.
+
+- **VRSTC-B09** — A test is of the unit when its path names the unit's code, when it sits beside the unit under the unit's name, or when a folder of its path is named after the unit; an image is never a test.
+
+- **VRSTC-B10** — The State letter is the one of the project's rule type whose term or a section starts with "state" or "estado"; without one, `S`.
+
+- **VRSTC-B11** — `vr-baseline` accepts the same image formats for a VR scenario's baseline.
+
+- **VRSTC-I01** — One state's scenario, test or image never answers for another state.
 
 - **VRSTC-E01** — The spec beside the code file cannot be read, or there is none.
 
 - **VRSTC-E02** — The unit's feature cannot be read, or there is none.
 
-- **VRSTC-E03** — Looking for a state's image fails on the file system.
+- **VRSTC-E03** — Looking for a baseline image fails on the file system.
 
-- **VRSTC-E04** — A test file beside the unit cannot be read.
+- **VRSTC-E04** — A test of the unit cannot be read.
 
 
 
