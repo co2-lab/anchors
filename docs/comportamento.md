@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:89e815e4d45077e7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:df5e4fd536ded524 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -6879,6 +6879,8 @@ teste prova.
 - [Signals are filled from another map at the same revision](layers/mapa.md#grblg-b23--signals-are-filled-from-another-map-at-the-same-revision) `GRBLG-B23`
 
 - [A file's own code is its file code, and a ref keeps its unit](layers/mapa.md#grblg-b24--a-files-own-code-is-its-file-code-and-a-ref-keeps-its-unit) `GRBLG-B24`
+
+- [A file with a code of its own and a ref links across directories through the unit it refs](layers/mapa.md#grblg-b25--a-file-with-a-code-of-its-own-and-a-ref-links-across-directories-through-the-unit-it-refs) `GRBLG-B25`
 
 - [A test that was never ingested has no verdict](layers/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 

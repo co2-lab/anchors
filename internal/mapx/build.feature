@@ -2,7 +2,7 @@
 # @anchors
 #   code: BLFTA
 #   ref: GRBLG
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-04
 #   layer: feature
 
 @GRBLG
@@ -177,3 +177,9 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     When the map is built
     Then the screen's unit is ARENA and its file code ARSCR, and the helper's unit and file code are TOKNS
 
+
+  @GRBLG-B25 @unit-level
+  Scenario: A file with a code of its own and a ref links across directories through the unit it refs
+    Given a feature and a test in different directories, each with a code of its own and ref LPSTI, the test also citing OTHER-B01, and OTHER's feature elsewhere
+    When the map is built
+    Then the feature of LPSTI is tested by the test, and OTHER's feature is not

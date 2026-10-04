@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:6e0599df51a12c6d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:357a2a7d3050a24a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7566,6 +7566,8 @@ abra a página dela em `camadas/`.
 - [GRBLG-B22 — A support file becomes a node marked as support, keeping its kind and its edges like any other node.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-B24 — A file's own header `code:` is its `file_code`. A file that also `ref:`s a unit is not that unit's owner: its unit code comes from the anchor beside it, as without a `code:`, and its identity is not declared; a file with a `code:` and no `ref:` — a spec, or a file with no unit around it — owns its unit, and both codes are the same.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
+
+- [GRBLG-B25 — Linking the incarnations of a scenario code across directories, a file's units are the ones it `ref:`s; only a file that refs none has its own `code:` as its unit — a test with a code of its own and `ref: X` is linked to X's feature by X's codes, and never by a code it only cites.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-B23 — Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 

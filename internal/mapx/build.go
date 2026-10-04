@@ -393,25 +393,37 @@ func scenarioEdges(files []scan.File, colo []Edge) []Edge {
 	//
 	// É a terceira porta do mesmo defeito que a v0.1.57 fechou nas outras duas (o dado de
 	// teste lido como declaração, e o derivado sem âncora).
-	codigoDe := func(f scan.File) string {
+	//
+	// The units of a file are the ones it `ref:`s; only a file that refs none has its own
+	// `code:` as its unit. Since format 7 every file carries a code of its own, and reading
+	// that one as the unit left a test in another directory unlinked from its feature: the
+	// test's `LPSTI-…` codes were no longer of its "unit" `ICTNF` (reported from jokenpo).
+	unidadesDe := func(f scan.File) map[string]bool {
+		if len(f.HeaderRefs) > 0 {
+			out := map[string]bool{}
+			for _, r := range f.HeaderRefs {
+				out[r] = true
+			}
+			return out
+		}
 		if f.HeaderCode != "" {
-			return f.HeaderCode
+			return map[string]bool{f.HeaderCode: true}
 		}
 		// Sem header, o primeiro código é a inferência que o `nodeCode` já usa.
 		if len(f.Codes) > 0 {
-			return RuleRoot(f.Codes[0])
+			return map[string]bool{RuleRoot(f.Codes[0]): true}
 		}
-		return ""
+		return nil
 	}
 
 	type ref struct{ path, kind string }
 	byCode := map[string][]ref{}
 	for _, f := range files {
-		dono := codigoDe(f)
+		donos := unidadesDe(f)
 		for _, c := range f.Codes {
 			// A citação de uma irmã não entra no índice: só o código cuja RAIZ é a
 			// identidade deste arquivo.
-			if dono == "" || RuleRoot(c) != dono {
+			if !donos[RuleRoot(c)] {
 				continue
 			}
 			byCode[c] = append(byCode[c], ref{f.Path, f.Kind})

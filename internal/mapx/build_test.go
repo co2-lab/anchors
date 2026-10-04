@@ -540,6 +540,22 @@ func TestBuild_scenarioEdgesCrossDirectoriesForOwnCodes(t *testing.T) {
 	}
 }
 
+func TestBuild_scenarioEdgesReadTheUnitFromTheRef(t *testing.T) {
+	t.Run("GRBLG-B25: A file with a code of its own and a ref links across directories through the unit it refs", func(t *testing.T) {})
+	files := []scan.File{
+		{Path: "lib/stack.feature", Kind: "feature", HeaderCode: "ICSFN", HeaderRefs: []string{"LPSTI"}, Codes: []string{"LPSTI-B01"}},
+		{Path: "test/stack.test.ts", Kind: "test", HeaderCode: "ICTNF", HeaderRefs: []string{"LPSTI"}, Codes: []string{"LPSTI-B01", "OTHER-B01"}},
+		{Path: "other/x.feature", Kind: "feature", HeaderCode: "OTHFT", HeaderRefs: []string{"OTHER"}, Codes: []string{"OTHER-B01"}},
+	}
+	g := Build(files, &config.Config{}, nil)
+	if !hasEdge(g, "lib/stack.feature", "test/stack.test.ts", EdgeTestedBy) {
+		t.Errorf("the feature and the test of LPSTI are linked across directories; got %+v", g.Edges)
+	}
+	if hasEdge(g, "other/x.feature", "test/stack.test.ts", EdgeTestedBy) {
+		t.Error("a code the test only cites does not link it to that unit's feature")
+	}
+}
+
 func TestBuild_governsByTag(t *testing.T) {
 	t.Run("GRBLG-B14: A guide governs the layers of its tag only, and never itself", func(t *testing.T) {})
 	g := Build(testFiles(), testCfg(), nil)
