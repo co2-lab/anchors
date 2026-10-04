@@ -625,3 +625,13 @@ func TestSpecGuide_validationsLeadToStatesAndErrorsShowMessages(t *testing.T) {
 		t.Error("the test guide does not ask a capture of every message")
 	}
 }
+
+func TestSpecGuide_environmentVariables(t *testing.T) {
+	t.Run("GVGDG-B22: The spec guide asks every unit that reads environment variables to declare them", func(t *testing.T) {})
+	spec := guideOut(t, "spec")
+	for _, want := range []string{"ENVIRONMENT VARIABLES", "Environment Variables", "env-declared", "deprecated"} {
+		if !strings.Contains(spec, want) {
+			t.Errorf("the spec guide lacks %q", want)
+		}
+	}
+}

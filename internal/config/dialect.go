@@ -80,6 +80,11 @@ type Dialect struct {
 	// gate para de afirmar que um status declarado é fantasma — os valores passados
 	// ao helper podem incluí-lo por um caminho que a leitura textual não alcança.
 	HTTPStatusDynamic string `yaml:"http_status_dynamic,omitempty"`
+	// EnvRead casa a LEITURA de uma variável de ambiente no código, capturando o nome
+	// (`os.Getenv("X")`, `process.env.X`, `System.getenv("X")`). O gate `env-declared` é
+	// agnóstico; este campo é o que o ensina a ler. Um projeto com leitor próprio
+	// (`config.get("X")`) declara o seu.
+	EnvRead string `yaml:"env_read,omitempty"`
 	// GherkinLanguage é o código de idioma do Gherkin (`en`, `pt`, `es`, `fr`…) — o que
 	// vai na linha `# language:` e decide as palavras-chave da feature. Default `en`, o
 	// idioma nativo do Gherkin: cravar um idioma específico obrigaria todo projeto a
@@ -264,6 +269,7 @@ var dialectFamilies = map[string]Dialect{
 	// C-like com `export`: TS, JS. Cobre `export async function`, `export const f = (…)`,
 	// e os métodos exportados por classe.
 	"ts": {
+		EnvRead:      "process\\.env\\.([A-Za-z_][A-Za-z0-9_]*)|process\\.env\\[\\s*['\"`]([A-Za-z_][A-Za-z0-9_]*)['\"`]\\s*\\]|import\\.meta\\.env\\.([A-Za-z_][A-Za-z0-9_]*)",
 		ExportedFunc: `(?m)^export\s+(?:async\s+)?function\s+(\w+)\s*\(|^export\s+const\s+(\w+)\s*=\s*(?:async\s+)?[\(<]`,
 		// `(?:[(,]|^)` ancora no abre-parêntese ou na vírgula — os parâmetros podem estar
 		// todos na MESMA linha (`(userId: string, limit: number)`), então ancorar só em
@@ -296,6 +302,7 @@ var dialectFamilies = map[string]Dialect{
 		Definition: `(?m)^\s*(?:export\s+(?:default\s+)?)?(?:async\s+)?(?:function\*?\s+(\w+)|class\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|\w+)\s*=>)`,
 	},
 	"go": {
+		EnvRead: "os\\.(?:Getenv|LookupEnv)\\(\\s*\"([A-Za-z_][A-Za-z0-9_]*)\"\\s*\\)",
 		// Em Go a exportação é a MAIÚSCULA inicial — não uma palavra-chave.
 		ExportedFunc: `(?m)^func\s+(?:\([^)]*\)\s+)?([A-Z]\w*)\s*\(`,
 		ParamName:    `(\w+)\s+\*?\w`,
@@ -340,6 +347,7 @@ var dialectFamilies = map[string]Dialect{
 		Definition: `(?m)^(?:func\s+\(\s*(?:\w+\s+)?\*?(?P<owner>\w+)(?:\[[^\]]*\])?\s*\)\s+(\w+)|func\s+(\w+)|type\s+(\w+))`,
 	},
 	"python": {
+		EnvRead: "os\\.(?:getenv|environ\\.get)\\(\\s*['\"]([A-Za-z_]\\w*)['\"]|os\\.environ\\[\\s*['\"]([A-Za-z_]\\w*)['\"]\\s*\\]",
 		// Sem palavra-chave de exportação: convenção é o underscore inicial marcar o
 		// privado, então "exportada" = def no nível do módulo sem `_`.
 		ExportedFunc: `(?m)^(?:async\s+)?def\s+([a-zA-Z]\w*)\s*\(`,
@@ -349,36 +357,42 @@ var dialectFamilies = map[string]Dialect{
 		Cursor:       `(?i)(next_token|continuation_token|next_cursor|next_page_token|offset)`,
 	},
 	"java": {
+		EnvRead:      "System\\.getenv\\(\\s*\"([A-Za-z_]\\w*)\"\\s*\\)",
 		ExportedFunc: `(?m)^\s*public\s+(?:static\s+)?(?:async\s+)?[\w<>\[\],\s]+\s+(\w+)\s*\(`,
 		ParamName:    `\w[\w<>\[\]]*\s+(\w+)\s*[,)]`,
 		Loop:         `\b(do|while|for)\b`,
 		Cursor:       `(?i)(nextToken|continuationToken|nextPageToken|pageable)`,
 	},
 	"rust": {
+		EnvRead:      "env::var(?:_os)?\\(\\s*\"([A-Za-z_]\\w*)\"\\s*\\)",
 		ExportedFunc: `(?m)^\s*pub\s+(?:async\s+)?fn\s+(\w+)\s*[\(<]`,
 		ParamName:    `(\w+)\s*:`,
 		Loop:         `\b(for|while|loop)\b`,
 		Cursor:       `(?i)(next_token|continuation_token|next_cursor|offset)`,
 	},
 	"ruby": {
+		EnvRead:      "ENV\\[\\s*['\"]([A-Za-z_]\\w*)['\"]\\s*\\]|ENV\\.fetch\\(\\s*['\"]([A-Za-z_]\\w*)['\"]",
 		ExportedFunc: `(?m)^\s*def\s+([a-z]\w*)`,
 		ParamName:    `(\w+)\s*[:,)]`,
 		Loop:         `\b(each|while|until|for|loop)\b`,
 		Cursor:       `(?i)(next_token|continuation_token|next_cursor|offset)`,
 	},
 	"php": {
+		EnvRead:      "getenv\\(\\s*['\"]([A-Za-z_]\\w*)['\"]\\s*\\)|\\$_ENV\\[\\s*['\"]([A-Za-z_]\\w*)['\"]\\s*\\]",
 		ExportedFunc: `(?m)^\s*(?:public\s+)?function\s+(\w+)\s*\(`,
 		ParamName:    `\$(\w+)`,
 		Loop:         `\b(do|while|for|foreach)\b`,
 		Cursor:       `(?i)(nextToken|continuationToken|nextCursor|offset)`,
 	},
 	"csharp": {
+		EnvRead:      "Environment\\.GetEnvironmentVariable\\(\\s*\"([A-Za-z_]\\w*)\"\\s*\\)",
 		ExportedFunc: `(?m)^\s*public\s+(?:static\s+)?(?:async\s+)?[\w<>\[\],\s]+\s+(\w+)\s*\(`,
 		ParamName:    `\w[\w<>\[\]]*\s+(\w+)\s*[,)]`,
 		Loop:         `\b(do|while|for|foreach)\b`,
 		Cursor:       `(?i)(nextToken|continuationToken|nextPageToken)`,
 	},
 	"kotlin": {
+		EnvRead:      "System\\.getenv\\(\\s*\"([A-Za-z_]\\w*)\"\\s*\\)",
 		ExportedFunc: `(?m)^\s*(?:public\s+)?(?:suspend\s+)?fun\s+(\w+)\s*[\(<]`,
 		ParamName:    `(\w+)\s*:`,
 		Loop:         `\b(do|while|for|forEach)\b`,
@@ -438,6 +452,9 @@ func (c *Config) DialectFor() Dialect {
 		}
 		if d.HTTPStatusDynamic == "" {
 			d.HTTPStatusDynamic = base.HTTPStatusDynamic
+		}
+		if d.EnvRead == "" {
+			d.EnvRead = base.EnvRead
 		}
 		if len(d.HandlePatterns) == 0 {
 			d.HandlePatterns = base.HandlePatterns
@@ -509,4 +526,23 @@ func (d Dialect) WaivedField(campoYAML string) bool {
 		}
 	}
 	return false
+}
+
+// EnvReadPattern is how this project's code reads an environment variable: its own
+// `env_read`, its family's, or — with no family declared — every family's together. The
+// idioms (`os.Getenv`, `process.env`, `System.getenv`) do not collide across languages, so
+// the union reads a project nobody configured without inventing reads.
+func (d Dialect) EnvReadPattern() string {
+	if d.EnvRead != "" {
+		return d.EnvRead
+	}
+	seen := map[string]bool{}
+	var parts []string
+	for _, k := range []string{"ts", "go", "python", "java", "rust", "ruby", "php", "csharp", "kotlin"} {
+		if p := dialectFamilies[k].EnvRead; p != "" && !seen[p] {
+			seen[p] = true
+			parts = append(parts, p)
+		}
+	}
+	return strings.Join(parts, "|")
 }

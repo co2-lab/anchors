@@ -299,6 +299,8 @@ func (c *Compiler) Funcs() template.FuncMap {
 		// The project's OpenAPI, compiled from the specs of its API units:
 		// `{{ openapi "Title" "1.0.0" "https://api.example.com" }}` in `doct/openapi.yaml.tmpl`.
 		"openapi": c.fnOpenAPI,
+		// The project's environment variables, from every spec's Environment Variables.
+		"envVars": c.fnEnvVars,
 	}
 }
 

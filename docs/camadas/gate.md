@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:e12b1019e62ee9f9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:8dd07792e3931bea — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 80 unidades e 1324 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 81 unidades e 1330 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -898,6 +898,33 @@ duplicated lines the project tolerates.
 - **DUPLC-B08** — The gate runs a pinned jscpd release, not whatever is newest: a release that cannot run where the project runs does not silently stop the measuring. (`jscpdPackage`, `duplicationCommand`)
 
 - **DUPLC-E01** — jscpd writes no report, or one that is not JSON
+
+
+## ENVDC — EnvDeclared — the environment variables a unit reads are the ones its spec declares
+
+An environment variable is a contract with whoever deploys. A variable the code reads and no spec names
+is found missing in production; a variable the spec names and the code no longer reads is configured
+forever for nothing. Like `contract-status-declared` with the status codes, this gate confronts both
+sides: the `Environment Variables` section of the spec against the reads in the code it specifies. A
+variable declared deprecated may stop being read — it is on its way out.
+
+The code is read with the dialect's `env_read`: the project's own pattern, its language family's
+(`os.Getenv`, `process.env`, `os.environ`, `System.getenv`, `ENV[...]`, `getenv`,
+`Environment.GetEnvironmentVariable`), or every family's together when the project declares none. A
+read by a computed name is out of reach of the text.
+
+
+- **ENVDC-B01** — A node that is not a spec, and a spec with no variable declared whose code reads none, leave without a verdict.
+
+- **ENVDC-B02** — Each variable the code reads and the spec does not declare is named.
+
+- **ENVDC-B03** — Each variable the spec declares and the code does not read is named — unless it is declared deprecated (`yes`, or `yes: use X`).
+
+- **ENVDC-B04** — A read inside a comment is no read.
+
+- **ENVDC-B05** — With no language family declared, the reads of every family are recognised.
+
+- **ENVDC-E01** — A specified code file cannot be read.
 
 
 ## EVFRV — EvidenceFresh — the score of this test holds against TODAY's code

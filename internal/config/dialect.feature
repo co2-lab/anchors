@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DLCTI
-#   updated_at: 2026-10-02
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @DLCTI
@@ -140,3 +140,10 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Then "if result.Error != nil {" and "return ErrWalletLinkNotFound" are handling
     And "return nil, result.Error" and "return nil, ErrWalletLinkNotFound" are recording
     And "return e.Error()" is not recording
+
+  @DLCTI-B20 @unit-level
+  Scenario: Each family reads environment variables its own way
+    Given the reads os.Getenv("A"), process.env.A, os.environ["A"], System.getenv("A"), env::var("A"), ENV["A"], getenv('A') and Environment.GetEnvironmentVariable("A")
+    When each family's pattern, and the pattern of a project with no family, reads them
+    Then each family reads its own, and the project with no family reads them all
+

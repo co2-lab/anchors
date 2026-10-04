@@ -301,13 +301,14 @@ func yes(raw string) bool {
 var columnAliases = map[string][]string{
 	"method": {"method", "metodo"}, "path": {"path", "caminho", "ruta"}, "operation": {"operation", "operacao", "operacion"},
 	"deprecated": {"deprecated"}, "name": {"name", "nome", "nombre"}, "in": {"in", "em", "en"},
-	"required": {"required", "obrigatorio", "obligatorio"}, "type": {"type", "tipo"},
+	"required": {"required", "obrigatorio", "obrigatoria", "obligatorio", "obligatoria"}, "type": {"type", "tipo"},
 	"description": {"description", "descricao", "descripcion"}, "content type": {"content type"},
 	"contract": {"contract", "contrato"}, "status": {"status"}, "when": {"when", "quando", "cuando"},
 	"rule": {"rule", "regra", "regla"}, "error code": {"error code", "codigo de erro", "codigo de error"},
 	"message": {"message", "mensagem", "mensaje"}, "scheme": {"scheme", "esquema"}, "where": {"where", "onde", "donde"},
 	"scopes": {"scopes", "escopos"}, "limit": {"limit", "limite"}, "value": {"value", "valor"},
 	"why": {"why", "por que", "por que?"}, "input": {"input", "entrada"}, "accepts": {"accepts", "aceita", "acepta"},
+	"variable": {"variable", "variavel"}, "default": {"default", "padrao", "predeterminado"}, "values": {"values", "valores"},
 }
 
 // sectionTable reads the first table of a section — found under its title in any

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:26acd277932bc49b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:fd05d42d4c171524 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1257,6 +1257,8 @@ teste prova.
 - [The test guide recommends a contract test against the compiled OpenAPI](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B20`
 
 - [The guides tie validations to states and errors to messages](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B21`
+
+- [The spec guide asks the environment variables to be declared](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B22`
 
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
@@ -2972,6 +2974,8 @@ teste prova.
 
 - [The Go family sees an error in a field and a sentinel error](layers/config.md#dlcti-b19--the-go-family-sees-an-error-in-a-field-and-a-sentinel-error) `DLCTI-B19`
 
+- [Each family reads environment variables its own way](layers/config.md#dlcti-b20--each-family-reads-environment-variables-its-own-way) `DLCTI-B20`
+
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
 - [A trigger naming a unit code charges that unit and not its neighbours in the same layer](layers/config.md#dcrqa-b02--a-trigger-naming-a-unit-code-charges-that-unit-and-not-its-neighbours-in-the-same-layer) `DCRQA-B02`
@@ -3041,6 +3045,14 @@ teste prova.
 - [The names are not cached: each question asks the registered source again](layers/config.md#gtvcg-x01--the-names-are-not-cached-each-question-asks-the-registered-source-again) `GTVCG-X01`
 
 ## doct
+
+- [Every declared variable is listed by name, in any language](layers/doct.md#dcenv-b01--every-declared-variable-is-listed-by-name-in-any-language) `DCENV-B01`
+
+- [A variable two units read is listed once, with both](layers/doct.md#dcenv-b02--a-variable-two-units-read-is-listed-once-with-both) `DCENV-B02`
+
+- [The environment page is seeded and compiled](layers/doct.md#dcenv-b03--the-environment-page-is-seeded-and-compiled) `DCENV-B03`
+
+- [A placeholder row is no variable](layers/doct.md#dcenv-e01--a-placeholder-row-is-no-variable) `DCENV-E01`
 
 - [Each Endpoint row of a spec is an operation, with its parameters, body, responses, errors, security and limits](layers/doct.md#opnap-b01--each-endpoint-row-of-a-spec-is-an-operation-with-its-parameters-body-responses-errors-security-and-limits) `OPNAP-B01`
 
@@ -3535,6 +3547,18 @@ teste prova.
 - [No report leaves the check Pending naming why](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-E01`
 
 - [The gate runs a pinned jscpd release](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B08`
+
+- [Nothing declared and nothing read leaves without a verdict](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B01`
+
+- [A variable read and not declared is named](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B02`
+
+- [A variable declared and not read is named, unless deprecated](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B03`
+
+- [A read in a comment is no read](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B04`
+
+- [Every family's reads are recognised when none is declared](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B05`
+
+- [A specified file that cannot be read reads nothing](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-E01`
 
 - [An artifact that is not a test leaves without a verdict](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B01`
 

@@ -1015,6 +1015,8 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures: "every error response of an API unit carries its error code and message, under a status its Responses declare"})
 	add("code", config.Gate{Name: "error-codes-honored", On: []string{"code"}, Tags: []string{"interface"},
 		Measures: "every error code an API unit's spec declares is one its code emits"})
+	add("spec", config.Gate{Name: "env-declared", On: []string{"spec"},
+		Measures: "the environment variables a unit's code reads are the ones its spec declares, and only those"})
 	add("spec", config.Gate{Name: "placeholder-filled", On: []string{"spec", "feature"},
 		Measures: "no generator placeholder remains in a value position: header field, table cell, rule or title line"})
 	if chosen["code"] {

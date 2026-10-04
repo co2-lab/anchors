@@ -454,3 +454,34 @@ func TestGherkinExamplesAlternatives(t *testing.T) {
 		t.Errorf("each keyword once, got %v", got)
 	}
 }
+
+func TestEnvReadPattern(t *testing.T) {
+	t.Run("DLCTI-B20: Each family reads environment variables its own way", func(t *testing.T) {})
+	reads := map[string]string{
+		"go": `os.Getenv("A")`, "ts": `process.env.A`, "python": `os.environ["A"]`, "java": `System.getenv("A")`,
+		"kotlin": `System.getenv("A")`, "rust": `env::var("A")`, "ruby": `ENV["A"]`, "php": `getenv('A')`,
+		"csharp": `Environment.GetEnvironmentVariable("A")`,
+	}
+	name := func(pat, text string) string {
+		m := regexp.MustCompile(pat).FindStringSubmatch(text)
+		for _, g := range m[1:] {
+			if g != "" {
+				return g
+			}
+		}
+		return ""
+	}
+	union := (Dialect{}).EnvReadPattern()
+	for fam, text := range reads {
+		pat := (&Config{Dialect: &Dialect{Family: fam}}).DialectFor().EnvReadPattern()
+		if got := name(pat, text); got != "A" {
+			t.Errorf("%s reads %q as %q", fam, text, got)
+		}
+		if got := name(union, text); got != "A" {
+			t.Errorf("with no family, %q is read as %q", text, got)
+		}
+	}
+	if p := (Dialect{EnvRead: `cfg\("(\w+)"\)`}).EnvReadPattern(); p != `cfg\("(\w+)"\)` {
+		t.Errorf("the project's own pattern wins: %s", p)
+	}
+}

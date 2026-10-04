@@ -197,6 +197,12 @@ var specTemplate = template{
 		{Key: "auth", Title: "Auth/Acesso", Default: false, Realizes: "R",
 			Purpose: "Unidade cujo acesso depende de quem é o usuário (permissão, plano, dono do dado).",
 			Body:    "## Auth/Acesso\nTODO: quem pode; regra de acesso.\n\n"},
+		// A configuração que a unidade lê do ambiente: o contrato com quem implanta, e a
+		// fonte da página de variáveis que o `doct` compila.
+		{Key: "environment", Title: "Variáveis de Ambiente", Default: false,
+			Purpose: "Unidade que lê variável de ambiente: cada uma com tipo, se é obrigatória, o default, os valores possíveis e se está deprecated — com o que usar no lugar. É o contrato com quem implanta, e o que a página de variáveis do projeto lista. Toda variável que o código lê está aqui, e só elas (`env-declared`).",
+			Feeds:   []string{"env-declared"},
+			Body:    "## Variáveis de Ambiente\n| Variável | Tipo | Obrigatória | Default | Valores | Deprecated | Descrição |\n| --- | --- | --- | --- | --- | --- | --- |\n| TODO: NOME_DA_VARIAVEL | TODO: string | sim | — | — | não | TODO: o que ela configura |\n\n"},
 		// ─── AS SEÇÕES DE API (HTTP) ──────────────────────────────────────────────────
 		//
 		// Espelham o que um OpenAPI descreve de uma operação — endpoint, parâmetros, corpo,
@@ -608,11 +614,11 @@ var specPresets = map[string]presetDef{
 		// O corpo e as respostas citam o CONTRATO pelo código (a spec do modelo, no
 		// domínio): a spec da API diz QUAL contrato, o contrato diz os campos. É daqui que
 		// o `doct` gera o OpenAPI do projeto.
-		Sections: []string{"title", "overview", "endpoint", "parameters", "request-body", "responses", "error-responses", "security", "limits", "rules", "auth", "rule-uses", "deps", "open"},
+		Sections: []string{"title", "overview", "endpoint", "parameters", "request-body", "responses", "error-responses", "security", "limits", "rules", "auth", "rule-uses", "environment", "deps", "open"},
 	},
 	"handler": {
 		Desc:     "interface do backend (Lambda/rota) — request/response, auth e erro",
-		Sections: []string{"title", "overview", "contract", "domain", "rules", "auth", "errors", "rule-uses", "deps", "open"},
+		Sections: []string{"title", "overview", "contract", "domain", "rules", "auth", "errors", "rule-uses", "environment", "deps", "open"},
 	},
 	"schema": {
 		Desc: "interface do DADO — modelos, índices e autorização (quem lê/escreve)",
@@ -648,7 +654,7 @@ var specPresets = map[string]presetDef{
 	},
 	"service": {
 		Desc:     "serviço — operação, dependência externa e como falha",
-		Sections: []string{"title", "overview", "contract", "domain", "rules", "errors", "constraints", "rule-uses", "deps", "open"},
+		Sections: []string{"title", "overview", "contract", "domain", "rules", "errors", "constraints", "rule-uses", "environment", "deps", "open"},
 	},
 	"repository": {
 		Desc:     "acesso a dado — operações e limites da camada",

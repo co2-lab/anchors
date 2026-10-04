@@ -60,6 +60,11 @@ A spec is not all alike — it specializes according to what makes the unit vary
   table lists the fields, with ` + "`Type`" + ` and ` + "`Required`" + ` columns. The API spec says WHICH
   contract; the contract says the fields — one place each. The project's OpenAPI is
   compiled from these specs by ` + "`anchors docs build`" + `.
+- Any unit that reads ENVIRONMENT VARIABLES declares them in ` + "`Environment Variables`" + `:
+  each with its type, whether it is required, its default, its possible values and
+  whether it is deprecated (` + "`yes: use NEW_NAME`" + `). It is the contract with whoever deploys:
+  ` + "`env-declared`" + ` confronts it with the code both ways — a variable read and not declared, or
+  declared and no longer read —, and the project's variables page is compiled from it.
 
 ## Sections (adopt the ones that apply to the unit)
 

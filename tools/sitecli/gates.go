@@ -42,7 +42,7 @@ var gateGroups = []gateGroup{
 	{"Planning & Progress", "Planejamento e Progresso", []string{"phase-exists", "phase-ordered", "parent-valid", "plan-seeds-valid", "plan-source-declared", "plan-revised", "plan-change-justified", "open-questions-resolved", "progress-honest", "revision-orphans"}},
 	{"Proof & Execution", "Prova e Execução", []string{"tests-green", "test-has-assertion", "test-exercises-unit", "test-ref-matches-unit", "evidence-fresh", "line-coverage", "branch-coverage", "coverage-delta", "mutation-score", "scenario-coverage", "single-test-per-unit", "test-level-codes", "test-traceable"}},
 	{"Security & Hygiene", "Segurança e Higiene", []string{"no-secret-leaked", "dependency-vulnerable", "sbom-generated", "license-compatible", "no-duplication", "spellcheck"}},
-	{"Rules Usage & Contracts", "Uso de Regras e Contratos", []string{"rule-uses-declared", "rule-uses-resolve", "rule-uses-implemented", "contract-impact", "contract-status-declared", "contract-tested", "api-contracts-resolve", "api-errors-declared", "error-codes-honored", "domain-declared", "count-honored", "pagination-honored", "route-declared", "route-exists", "dependency-honored", "trigger-declared", "value-anchored"}},
+	{"Rules Usage & Contracts", "Uso de Regras e Contratos", []string{"rule-uses-declared", "rule-uses-resolve", "rule-uses-implemented", "contract-impact", "contract-status-declared", "contract-tested", "api-contracts-resolve", "api-errors-declared", "error-codes-honored", "domain-declared", "count-honored", "pagination-honored", "route-declared", "route-exists", "dependency-honored", "trigger-declared", "value-anchored", "env-declared"}},
 	{"Other gates", "Outros gates", nil},
 }
 

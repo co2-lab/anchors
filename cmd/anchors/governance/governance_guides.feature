@@ -164,3 +164,8 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     When the spec and test guides are printed
     Then validations are triggers of State Flow transitions, errors cite their messages, and every message is captured
 
+  @GVGDG-B22 @unit-level
+  Scenario: The spec guide asks the environment variables to be declared
+    When the spec guide is printed
+    Then it asks every unit that reads environment variables to declare them, confronted by env-declared
+

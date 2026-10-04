@@ -174,5 +174,6 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`dependency-honored`](/docs/gates/dependency-honored/) | `spec` | The methods declared in the Dependencies Table are used in the code |
 | [`trigger-declared`](/docs/gates/trigger-declared/) | — |  |
 | [`value-anchored`](/docs/gates/value-anchored/) | `code` | Each declared value anchor matches the code below it, its spec rule's value, and every other declaration of the same key |
+| [`env-declared`](/docs/gates/env-declared/) | `spec` | The environment variables a unit's code reads are the ones its spec declares, and only those |
 
 <!-- gate-reference:end -->

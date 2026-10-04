@@ -502,6 +502,10 @@ func (c *Compiler) InitScaffolds(force bool) (escritos, pulados []string, err er
 	if c.hasAPISpecs() {
 		todos = append(todos, ScaffoldOpenAPI(filepath.Base(c.Root)))
 	}
+	// A project whose specs declare environment variables gets their page.
+	if c.hasEnvSpecs() {
+		todos = append(todos, ScaffoldEnvironment(c.lang()))
+	}
 	for _, s := range todos {
 		destino := filepath.Join(c.Root, Dir, s.Nome)
 		if _, e := os.Stat(destino); e == nil && !force {

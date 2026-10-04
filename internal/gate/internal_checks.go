@@ -107,6 +107,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"error-codes-honored":      checkErrorCodesHonored,
 	"validation-transitions":   checkValidationTransitions,
 	"error-message-declared":   checkErrorMessageDeclared,
+	"env-declared":             checkEnvDeclared,
 	"test-level-codes":         checkTestLevelCodes,
 	"duplication":              checkDuplication,
 	"ref-resolves":             checkRefResolves,

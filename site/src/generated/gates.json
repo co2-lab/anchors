@@ -558,6 +558,10 @@
       {
         "label": "value-anchored",
         "slug": "docs/gates/value-anchored"
+      },
+      {
+        "label": "env-declared",
+        "slug": "docs/gates/env-declared"
       }
     ]
   }

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:c13c89a3824bb353 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:437bd1cba85bde24 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1362,6 +1362,8 @@ abra a página dela em `camadas/`.
 - [GVGDG-B16 — The changelog guide says `anchors changelog` builds a technical changelog, not the product's, and recommends a product changelog an agent synthesizes from it: breaking changes, visible features and bugs fixed go in, fixes without `Bug:` stay out, and chores only when they matter to the product.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B17 — The spec guide asks for the spec in four passes — every section, with its questions (every input, every effect and its limit, every failure, every state shared with another unit); the variations of each rule; the generalization of cases into an invariant; a review that each rule states the intent and not the mechanism —, and says a defect is a rule not written, to be written with its invariant before the fix.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
+- [GVGDG-B22 — The spec guide asks every unit that reads environment variables to declare them — type, required, default, values, deprecated — as the contract `env-declared` confronts with the code and the variables page is compiled from.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -3241,6 +3243,8 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B13 — The Go family recognises both shapes of error handling: `if err != nil` and `if err := f(); err != nil`. The second is the commoner, and matching only the first left the handling of most Go code invisible to the failure gates.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
+- [DLCTI-B20 — Each language family declares how its code reads an environment variable (`env_read`), capturing the name; the project's own pattern wins, and with no family declared `EnvReadPattern` is every family's together.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B14 — The Go and TS families say how a test is written — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` — and a project that declares its own `tests` keeps it over the family's.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
@@ -3348,6 +3352,16 @@ abra a página dela em `camadas/`.
 - [GTVCG-X01 — The names are not cached: each question asks the registered source again.](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
 ## doct
+
+### [DCENV — Environment — the project's environment variables page, compiled from its specs](layers/doct.md#dcenv--environment--the-projects-environment-variables-page-compiled-from-its-specs)
+
+- [DCENV-B01 — `envVars` lists every variable the specs declare, read under the section's title and columns in any language of the catalog, ordered by name; a `TODO` placeholder is no variable.](layers/doct.md#dcenv--environment--the-projects-environment-variables-page-compiled-from-its-specs)
+
+- [DCENV-B02 — A variable declared by several specs is listed once, with every unit that declares it, and the first description given.](layers/doct.md#dcenv--environment--the-projects-environment-variables-page-compiled-from-its-specs)
+
+- [DCENV-B03 — `ScaffoldEnvironment`: The environment page template, in the project's language, renders one table row per variable with the units that read it; init writes it when a spec declares a variable.](layers/doct.md#dcenv--environment--the-projects-environment-variables-page-compiled-from-its-specs)
+
+- [DCENV-E01 — A row has no variable name, or carries the template's `TODO` placeholder.](layers/doct.md#dcenv--environment--the-projects-environment-variables-page-compiled-from-its-specs)
 
 ### [OPNAP — OpenAPI — the project's API document, compiled from the specs of its API units](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
 
@@ -3904,6 +3918,20 @@ abra a página dela em `camadas/`.
 - [DUPLC-B08 — The gate runs a pinned jscpd release, not whatever is newest: a release that cannot run where the project runs does not silently stop the measuring. (`jscpdPackage`, `duplicationCommand`)](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else)
 
 - [DUPLC-E01 — jscpd writes no report, or one that is not JSON](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else)
+
+### [ENVDC — EnvDeclared — the environment variables a unit reads are the ones its spec declares](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
+
+- [ENVDC-B01 — A node that is not a spec, and a spec with no variable declared whose code reads none, leave without a verdict.](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
+
+- [ENVDC-B02 — Each variable the code reads and the spec does not declare is named.](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
+
+- [ENVDC-B03 — Each variable the spec declares and the code does not read is named — unless it is declared deprecated (`yes`, or `yes: use X`).](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
+
+- [ENVDC-B04 — A read inside a comment is no read.](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
+
+- [ENVDC-B05 — With no language family declared, the reads of every family are recognised.](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
+
+- [ENVDC-E01 — A specified code file cannot be read.](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
 
 ### [EVFRV — EvidenceFresh — the score of this test holds against TODAY's code](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
 
