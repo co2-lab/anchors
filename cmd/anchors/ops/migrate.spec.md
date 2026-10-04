@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGCMM
-  updated_at: 2026-10-03
+  updated_at: 2026-10-04
   layer: comando
 -->
 # MigrateCommand — the command the format error promises, bringing the map and the config up to this binary's format
@@ -46,8 +46,10 @@ machine makes the next agent migrate again and produce the same diff.
 | `MGCMM-B08` | When the project crosses format 7, each four-character code a file owns is widened to five — the old code kept as the prefix — wherever it is written: the project's files, the names of the files that carry it (with or without a `recode:` block), the config and the map; the config's `code_lengths` becomes `[5]`. |
 | `MGCMM-B09` | When the project crosses format 7, every governed file that can carry a comment and has no `code:` gets one in its `@anchors` header, generated from its name and its type (layer or kind), unique in the project; the `ref:` it had stays. |
 | `MGCMM-B10` | When the project crosses format 7, each file the migration rewrote and the map had measured at the content it found has its measurements carried to its new revision. |
-| `MGCMM-B11` | When the project crosses format 7, each renamed code is appended, old → new under the date, to `anchors.renames.yaml` (`RenamesFile`). |
+| `MGCMM-B11` | When the project crosses format 7, each renamed code is appended, old → new under the date, to `anchors.renames.yaml` (`migra.RenamesFile`). |
 | `MGCMM-B12` | When the project crosses format 7, a file other than the spec that carries, as its own `code:`, the code its unit's spec owns has that line turned into `ref: <code>` with a code of its own above it. |
+| `MGCMM-B13` | When the project crosses format 7, each `@contract` stamp that matched its module before the migration and no longer does — a widened code inside the stamped snippet — is refreshed; a stamp already stale stays stale. |
+| `MGCMM-B14` | When the project crosses format 7, every file it rewrote has the `updated_at` of its header set to the day of the migration, before the measurements are carried — so no `anchors touch` after it changes the files again. |
 | `MGCMM-B06` | After a real migration the command tells the user to commit it. |
 
 ## Invariants

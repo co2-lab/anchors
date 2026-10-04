@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:e06f9a262fe6c751 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:3a15dfcd586c432d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 81 unidades e 1334 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 81 unidades e 1336 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1550,6 +1550,8 @@ a baseline is the physical proof of THIS specific unit, not a pointer to where i
 
 - **IDCND-B11** — A baseline of one of the unit's rules (`<Unit>.<CODE>-B04-VR-<variant>.png`) is read by its unit code, the part before the first hyphen: it passes when that is the spec's code and fails when it is another unit's.
 
+- **IDCND-B12** — A testID prefix that `anchors.renames.yaml` records as renamed to this unit's code, or to another unit's, is the same identity under its old name and passes — a testID is a contract with the E2E runner and its flows; a baseline passes under an old code only when it was renamed to this unit's.
+
 - **IDCND-I01** — Without a map graph the gate never approves. It returns Pending because concordance cannot be evaluated without the global code inventory.
 
 - **IDCND-I02** — Cross-unit reuse is allowed only for testIDs, never for visual regression baselines. The baseline must prove this specific unit.
@@ -1941,6 +1943,8 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 - **MCSTM-B18** — `RefreshStamps` (`anchors stamp --refresh <module>`) is how the author of a change updates the stamps: it lists every double stamped against the previous version — test, line, member, old and new hash, and how the stamped block changed from HEAD — and updates those hashes. The list is the work the change created: each double reproduced the old contract, and is adjusted in the same commit. A stamp whose anchor is gone is NOT refreshed, because only a person can say which new line the double now stands for.
 
 - **MCSTM-B19** — The modules a test file's stamps point at are listed each once, in the order they first appear; a file with no stamp lists none. (`StampedModules`)
+
+- **MCSTM-B20** — `StampsHolding` lists the stamps of a test that match their module today, keyed `<module>
 
 - **MCSTM-I01** — The gate RECOMPUTES the hash against the real module; it never validates the stamp's format alone. A stamp nobody confronts would certify itself, because whoever edits the test regenerates it to match their own mock.
 

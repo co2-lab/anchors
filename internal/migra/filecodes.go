@@ -5,7 +5,9 @@
 package migra
 
 import (
+	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -131,6 +133,62 @@ func AsRefWithOwnCode(content, unit, own string) string {
 	}
 	prefix := b[m[2]:m[3]]
 	nb := b[:m[0]] + prefix + "code: " + own + "\n" + prefix + "ref: " + unit + b[m[1]:]
+	at := strings.Index(content, b)
+	return content[:at] + nb + content[at+len(b):]
+}
+
+// RenamesFile is where the migration records each code it renamed: outside the repository —
+// the issues, the pull requests, the old commit messages — and in the contracts the project
+// keeps with tools that are not its own (a testID an E2E runner selects by), the old code
+// stays, and whoever meets it needs the way to the new one.
+const RenamesFile = "anchors.renames.yaml"
+
+var renameLineRE = regexp.MustCompile(`^\s+([A-Z0-9]+):\s*([A-Z0-9]+)\s*$`)
+
+// Renames reads the project's renamed codes, old → current: a code renamed twice resolves
+// to the last one. A missing or unreadable file is no rename.
+func Renames(root string) map[string]string {
+	b, err := os.ReadFile(filepath.Join(root, RenamesFile))
+	if err != nil {
+		return nil
+	}
+	next := map[string]string{}
+	for _, line := range strings.Split(strings.ReplaceAll(string(b), "\r\n", "\n"), "\n") {
+		if m := renameLineRE.FindStringSubmatch(line); m != nil {
+			next[m[1]] = m[2]
+		}
+	}
+	out := map[string]string{}
+	for old := range next {
+		cur, seen := old, map[string]bool{}
+		for {
+			n, ok := next[cur]
+			if !ok || seen[n] {
+				break
+			}
+			seen[cur] = true
+			cur = n
+		}
+		out[old] = cur
+	}
+	return out
+}
+
+var headerDateRE = regexp.MustCompile(`(updated_at:[ \t]*)\d{4}-\d{2}-\d{2}`)
+
+// WithHeaderDate is the content with the `updated_at` of its `@anchors` header set to the
+// day given — the date `anchors touch` writes on a file that changed —; a header without
+// one, or no header, is left as it was.
+func WithHeaderDate(content, day string) string {
+	block := scan.AnchorsHeader([]byte(content))
+	if block == nil {
+		return content
+	}
+	b := string(block)
+	nb := headerDateRE.ReplaceAllString(b, "${1}"+day)
+	if nb == b {
+		return content
+	}
 	at := strings.Index(content, b)
 	return content[:at] + nb + content[at+len(b):]
 }

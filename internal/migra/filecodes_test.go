@@ -5,6 +5,8 @@
 package migra
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -83,5 +85,33 @@ func TestAsRefWithOwnCode(t *testing.T) {
 	}
 	if got := AsRefWithOwnCode("package x\n", "LOGIN", "LGFTR"); got != "package x\n" {
 		t.Errorf("no header, nothing changes: %q", got)
+	}
+}
+
+func TestRenames(t *testing.T) {
+	t.Run("MGFCD-B07: The renamed codes are read old to current, a code renamed twice to the last one", func(t *testing.T) {})
+	root := t.TempDir()
+	if got := Renames(root); len(got) != 0 {
+		t.Errorf("no file, no rename: %v", got)
+	}
+	body := "# header\r\n2026-10-04:\r\n  ARNA: ARNAA\r\n  LOGI: LOGIN\r\n2026-11-01:\r\n  ARNAA: ARENA\r\n"
+	if err := os.WriteFile(filepath.Join(root, RenamesFile), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got := Renames(root)
+	if got["ARNA"] != "ARENA" || got["ARNAA"] != "ARENA" || got["LOGI"] != "LOGIN" || len(got) != 3 {
+		t.Errorf("got %v", got)
+	}
+}
+
+func TestWithHeaderDate(t *testing.T) {
+	t.Run("MGFCD-B08: The header's updated_at is set to the day given, and only in the header", func(t *testing.T) {})
+	in := "// @anchors\n//   code: ARSCR\n//   updated_at: 2026-09-01\n\n// updated_at: 2020-01-01 in the body\n"
+	want := "// @anchors\n//   code: ARSCR\n//   updated_at: 2026-10-04\n\n// updated_at: 2020-01-01 in the body\n"
+	if got := WithHeaderDate(in, "2026-10-04"); got != want {
+		t.Errorf("got %q", got)
+	}
+	if got := WithHeaderDate("// @anchors\n//   code: ARSCR\n", "2026-10-04"); got != "// @anchors\n//   code: ARSCR\n" {
+		t.Errorf("a header without the date is left as it was: %q", got)
 	}
 }

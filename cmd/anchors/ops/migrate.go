@@ -17,6 +17,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/flowx"
+	"github.com/co2-lab/anchors/internal/gate"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/migra"
 	"github.com/co2-lab/anchors/internal/recode"
@@ -271,11 +272,6 @@ func versionedFiles(absRoot string) ([]string, error) {
 	return files, err
 }
 
-// RenamesFile is where the migration records each code it renamed: outside the repository —
-// the issues, the pull requests, the old commit messages — the old code stays, and whoever
-// searches the history needs the way from it to the new one.
-const RenamesFile = "anchors.renames.yaml"
-
 // migrateToFileCodes brings a project to format 7: its four-character codes widened to five,
 // and a code of its own on every governed file that can carry one. What every file was
 // measured at is carried to its new revision, so the migration proves nothing new and loses
@@ -313,6 +309,17 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 	changed := false
 	touched := map[string]bool{}
 	renamedPath := map[string]string{}
+	// The `@contract` stamps that hold today: widening a code inside a stamped snippet
+	// changes its hash, and those stamps follow the rewrite — a stamp already stale stays so.
+	held := map[string]map[string]bool{}
+	for _, f := range before {
+		b, err := os.ReadFile(filepath.Join(absRoot, filepath.FromSlash(f.Path)))
+		if err == nil && strings.Contains(string(b), "@contract:") {
+			if h := gate.StampsHolding(absRoot, string(b)); len(h) > 0 {
+				held[f.Path] = h
+			}
+		}
+	}
 
 	// 1. The four-character codes, widened.
 	type pair struct{ old, new string }
@@ -466,8 +473,58 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 	if dryRun || !changed {
 		return changed, nil
 	}
+	after7 := func(p string) string {
+		if to, ok := renamedPath[p]; ok {
+			return to
+		}
+		return p
+	}
 
-	// 4. What each touched file was measured at goes with it to its new revision — when the
+	// 4. The stamps that held follow the codes widened inside their snippets.
+	refreshed := 0
+	for test, keys := range held {
+		moved := map[string]bool{}
+		for k := range keys {
+			i := strings.LastIndex(k, "|")
+			moved[after7(k[:i])+k[i:]] = true
+		}
+		abs := filepath.Join(absRoot, filepath.FromSlash(after7(test)))
+		b, err := os.ReadFile(abs)
+		if err != nil {
+			continue
+		}
+		out, n := gate.RefreshHeldStamps(absRoot, string(b), moved)
+		if n == 0 {
+			continue
+		}
+		if err := writeKeepingMode(abs, out); err != nil {
+			return true, err
+		}
+		refreshed += n
+		touched[test] = true
+	}
+	if refreshed > 0 {
+		fmt.Printf("✓ %d contract stamp(s) refreshed where a widened code changed the stamped snippet\n", refreshed)
+	}
+
+	// 5. Every file the migration rewrote carries today's date, as `anchors touch` would write
+	// it — so no touch after the migration changes the files again, past the measurements
+	// carried below.
+	today := time.Now().Format("2006-01-02")
+	for p := range touched {
+		abs := filepath.Join(absRoot, filepath.FromSlash(after7(p)))
+		b, err := os.ReadFile(abs)
+		if err != nil {
+			continue
+		}
+		if out := migra.WithHeaderDate(string(b), today); out != string(b) {
+			if err := writeKeepingMode(abs, out); err != nil {
+				return true, err
+			}
+		}
+	}
+
+	// 6. What each touched file was measured at goes with it to its new revision — when the
 	// map had it measured at the content the migration found.
 	g, err := mapx.Load(filepath.Join(absRoot, mapx.DefaultPath))
 	if err == nil {
@@ -504,7 +561,7 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 		}
 	}
 
-	// 5. The way from each old code to its new one.
+	// 7. The way from each old code to its new one.
 	if len(pairs) > 0 {
 		var b strings.Builder
 		b.WriteString("# Codes renamed by `anchors migrate` (format 7): old → new. Outside the repository —\n")
@@ -513,13 +570,22 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 		for _, p := range pairs {
 			fmt.Fprintf(&b, "  %s: %s\n", p.old, p.new)
 		}
-		prev, _ := os.ReadFile(filepath.Join(absRoot, RenamesFile))
-		if err := os.WriteFile(filepath.Join(absRoot, RenamesFile), append(prev, []byte(b.String())...), 0o644); err != nil {
+		prev, _ := os.ReadFile(filepath.Join(absRoot, migra.RenamesFile))
+		if err := os.WriteFile(filepath.Join(absRoot, migra.RenamesFile), append(prev, []byte(b.String())...), 0o644); err != nil {
 			return true, err
 		}
-		fmt.Printf("✓ %d code rename(s) recorded in %s\n", len(pairs), RenamesFile)
+		fmt.Printf("✓ %d code rename(s) recorded in %s\n", len(pairs), migra.RenamesFile)
 	}
 	return changed, nil
+}
+
+// writeKeepingMode writes a file's new content with the mode it had.
+func writeKeepingMode(p, content string) error {
+	info, err := os.Stat(p)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(p, []byte(content), info.Mode())
 }
 
 // rewriteText rewrites a file in place; a missing file is left alone.

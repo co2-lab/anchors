@@ -394,3 +394,47 @@ func StampSnippet(content, anchor string, count int) (string, bool) {
 	}
 	return strings.Join(linhas[idx:fim], "\n"), true
 }
+
+// StampsHolding are the `@contract` stamps of a test's content that match their module
+// today, keyed `<module>|<hash>`. Taken before a mechanical rewrite of the project (a
+// migration renaming codes inside the stamped snippets), it is what tells the stamps the
+// rewrite broke from the ones that were already stale.
+func StampsHolding(root, content string) map[string]bool {
+	out := map[string]bool{}
+	for _, c := range declaredStamps(content) {
+		if c.count <= 0 {
+			continue
+		}
+		if atual, err := recomputeStamp(root, c); err == nil && atual == c.hash {
+			out[filepath.ToSlash(c.file)+"|"+c.hash] = true
+		}
+	}
+	return out
+}
+
+// RefreshHeldStamps rewrites, in a test's content, the hash of each stamp whose
+// `<module>|<hash>` key is in `held` and that no longer matches its module: the stamps that
+// held before a mechanical rewrite follow it, and a stamp already stale stays stale. It
+// returns the content and how many stamps it refreshed.
+func RefreshHeldStamps(root, content string, held map[string]bool) (string, int) {
+	lines := strings.Split(content, "\n")
+	n := 0
+	for i, l := range lines {
+		m := stampRE.FindStringSubmatchIndex(l)
+		if m == nil {
+			continue
+		}
+		c := declaredStamp{file: l[m[2]:m[3]], anchor: l[m[4]:m[5]], hash: l[m[8]:m[9]]}
+		c.count, _ = strconv.Atoi(l[m[6]:m[7]])
+		if c.count <= 0 || !held[filepath.ToSlash(c.file)+"|"+c.hash] {
+			continue
+		}
+		atual, err := recomputeStamp(root, c)
+		if err != nil || atual == c.hash {
+			continue
+		}
+		lines[i] = l[:m[8]] + atual + l[m[9]:]
+		n++
+	}
+	return strings.Join(lines, "\n"), n
+}

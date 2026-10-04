@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:42463134be1a12aa — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:873a8aabea14d435 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2159,9 +2159,13 @@ abra a página dela em `camadas/`.
 
 - [MGCMM-B10 — When the project crosses format 7, each file the migration rewrote and the map had measured at the content it found has its measurements carried to its new revision.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
-- [MGCMM-B11 — When the project crosses format 7, each renamed code is appended, old → new under the date, to `anchors.renames.yaml` (`RenamesFile`).](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+- [MGCMM-B11 — When the project crosses format 7, each renamed code is appended, old → new under the date, to `anchors.renames.yaml` (`migra.RenamesFile`).](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-B12 — When the project crosses format 7, a file other than the spec that carries, as its own `code:`, the code its unit's spec owns has that line turned into `ref: <code>` with a code of its own above it.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
+- [MGCMM-B13 — When the project crosses format 7, each `@contract` stamp that matched its module before the migration and no longer does — a widened code inside the stamped snippet — is refreshed; a stamp already stale stays stale.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
+- [MGCMM-B14 — When the project crosses format 7, every file it rewrote has the `updated_at` of its header set to the day of the migration, before the measurements are carried — so no `anchors touch` after it changes the files again.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-B06 — After a real migration the command tells the user to commit it.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
@@ -4353,6 +4357,8 @@ abra a página dela em `camadas/`.
 
 - [IDCND-B11 — A baseline of one of the unit's rules (`<Unit>.<CODE>-B04-VR-<variant>.png`) is read by its unit code, the part before the first hyphen: it passes when that is the spec's code and fails when it is another unit's.](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline)
 
+- [IDCND-B12 — A testID prefix that `anchors.renames.yaml` records as renamed to this unit's code, or to another unit's, is the same identity under its old name and passes — a testID is a contract with the E2E runner and its flows; a baseline passes under an old code only when it was renamed to this unit's.](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline)
+
 - [IDCND-I01 — Without a map graph the gate never approves. It returns Pending because concordance cannot be evaluated without the global code inventory.](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline)
 
 - [IDCND-I02 — Cross-unit reuse is allowed only for testIDs, never for visual regression baselines. The baseline must prove this specific unit.](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline)
@@ -4608,6 +4614,8 @@ abra a página dela em `camadas/`.
 - [MCSTM-B18 — `RefreshStamps` (`anchors stamp --refresh <module>`) is how the author of a change updates the stamps: it lists every double stamped against the previous version — test, line, member, old and new hash, and how the stamped block changed from HEAD — and updates those hashes. The list is the work the change created: each double reproduced the old contract, and is adjusted in the same commit. A stamp whose anchor is gone is NOT refreshed, because only a person can say which new line the double now stands for.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
 - [MCSTM-B19 — The modules a test file's stamps point at are listed each once, in the order they first appear; a file with no stamp lists none. (`StampedModules`)](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
+
+- [MCSTM-B20 — `StampsHolding` lists the stamps of a test that match their module today, keyed `<module>](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
 - [MCSTM-I01 — The gate RECOMPUTES the hash against the real module; it never validates the stamp's format alone. A stamp nobody confronts would certify itself, because whoever edits the test regenerates it to match their own mock.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
@@ -7902,6 +7910,10 @@ abra a página dela em `camadas/`.
 - [MGFCD-B05 — `WithHeaderCode`: The `code:` line goes right below the `@anchors` opener of an existing header, in the file's comment syntax; a file with no header gets one at the top, after a shebang when there is one.](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
 
 - [MGFCD-B06 — `AsRefWithOwnCode`: A header whose `code:` is its unit's has that line turned into `code: <own>` followed by `ref: <unit>`, in the header's own syntax; a file with no header, or with no such line, is returned as it was.](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
+
+- [MGFCD-B07 — `Renames`: The codes recorded in `anchors.renames.yaml` (`RenamesFile`) are read old → current, a code renamed twice resolving to the last one; a missing file is no rename.](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
+
+- [MGFCD-B08 — `WithHeaderDate`: The `updated_at` of the `@anchors` header is set to the day given; one outside the header, or a header without it, is left as it was.](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
 
 ## scan
 

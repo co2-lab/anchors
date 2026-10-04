@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCSTM
-  updated_at: 2026-10-02
+  updated_at: 2026-10-04
   layer: gate
 -->
 # MockStamped — the double carries the mark of the snippet it replaces, and the gate RECOMPUTES it
@@ -67,6 +67,7 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-B17` | WHOEVER CHANGES A MODULE SEES THE DOUBLES IT BREAKS. `TestsStamping` resolves the tests whose stamps point at the module, so `check --changed <module>` brings them into the check and this gate runs on them, naming the module file of each stamp. Without it the drift surfaced to whoever next touched the test, far from the change. |
 | `MCSTM-B18` | `RefreshStamps` (`anchors stamp --refresh <module>`) is how the author of a change updates the stamps: it lists every double stamped against the previous version — test, line, member, old and new hash, and how the stamped block changed from HEAD — and updates those hashes. The list is the work the change created: each double reproduced the old contract, and is adjusted in the same commit. A stamp whose anchor is gone is NOT refreshed, because only a person can say which new line the double now stands for. |
 | `MCSTM-B19` | The modules a test file's stamps point at are listed each once, in the order they first appear; a file with no stamp lists none. (`StampedModules`) |
+| `MCSTM-B20` | `StampsHolding` lists the stamps of a test that match their module today, keyed `<module>|<hash>`; `RefreshHeldStamps` rewrites the hash of each stamp in that list that no longer matches — the ones a mechanical rewrite broke — and leaves a stamp already stale as it was. |
 
 ## Invariants
 

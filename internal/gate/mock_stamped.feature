@@ -2,7 +2,7 @@
 # @anchors
 #   code: MSFMC
 #   ref: MCSTM
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-04
 #   layer: feature
 
 @MCSTM
@@ -208,3 +208,9 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
     Given a test with three stamps against two modules, and a file with none
     When the stamped modules are listed
     Then the two modules come once each in order, and the other file lists none
+
+  @MCSTM-B20 @unit-level
+  Scenario: The stamps that held before a mechanical rewrite are refreshed after it, and a stamp already stale stays stale
+    Given a test with one stamp matching its module and one already stale
+    When the code inside the module and the stamp's anchor is widened, and the held stamps are refreshed
+    Then the stamp that held carries the new hash, and the stale one keeps its old hash

@@ -197,3 +197,25 @@ func TestIdentityConsistent_bracketDirectoryFindsBaselines(t *testing.T) {
 		t.Fatalf("the divergent baseline beside a [slug] spec must be found, got %v (%s)", v, msg)
 	}
 }
+
+// A code renamed (format 7 widened ARNA to ARNAA) is the same identity under its old name:
+// the testIDs the E2E flows select by keep it, and `anchors.renames.yaml` says whose it is.
+func TestIdentityConsistent_renamedCodeIsAnAlias(t *testing.T) {
+	t.Run("IDCND-B12: A testID prefix with a code the project renamed to this unit's, or to another unit's, passes", func(t *testing.T) {})
+	n, g, root := identidadeFixture(t, "ARNAA", `<View testID="arna-screen" /><View testID="home-card" /><View testID="bdge-x" />`, "HOMEH")
+	if err := os.WriteFile(filepath.Join(root, "anchors.renames.yaml"),
+		[]byte("# old → new\n2026-10-04:\n  ARNA: ARNAA\n  HOME: HOMEH\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	v, msg := checkIdentityConsistent("", n, root, g, &config.Config{})
+	if v != Fail || strings.Contains(msg, "ARNA ") || strings.Contains(msg, "HOME ") || !strings.Contains(msg, "BDGE") {
+		t.Errorf("the renamed codes pass and the orphan still fails: %v %s", v, msg)
+	}
+	n, g, root = identidadeFixture(t, "ARNAA", `<View testID="arna-screen" />`)
+	if err := os.WriteFile(filepath.Join(root, "anchors.renames.yaml"), []byte("2026-10-04:\n  ARNA: ARNAA\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if v, msg := checkIdentityConsistent("", n, root, g, &config.Config{}); v != Pass {
+		t.Errorf("the unit's own old code passes: %v %s", v, msg)
+	}
+}

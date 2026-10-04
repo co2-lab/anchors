@@ -2,7 +2,7 @@
 # @anchors
 #   code: MGFTM
 #   ref: MGCMM
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-04
 #   layer: feature
 
 @MGCMM
@@ -108,3 +108,15 @@ Feature: MigrateCommand — the command the format error promises, bringing the 
     Given a format 6 project with a governed file that cannot be written
     When migrate runs, then runs again after the file is made writable
     Then the first run fails with the write error, and the second gives the file its code
+
+  @MGCMM-B13 @unit-level
+  Scenario: Crossing format 7 refreshes the stamps a widened code broke
+    Given a format 6 project whose test stamps a module snippet citing the four-character code, and a stamp already stale
+    When migrate runs
+    Then the stamp that held carries the snippet's new hash, and the stale one stays stale
+
+  @MGCMM-B14 @unit-level
+  Scenario: Crossing format 7 dates every file it rewrote
+    Given a format 6 project whose files have an old updated_at
+    When migrate runs
+    Then every rewritten file's header carries the day of the migration, and the map is at their new revisions

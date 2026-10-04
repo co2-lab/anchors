@@ -5,15 +5,19 @@
 package ops
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/migra"
 	"github.com/co2-lab/anchors/internal/scan"
 )
 
@@ -182,8 +186,13 @@ func TestMigrateCrossingSevenGivesEveryFileACode(t *testing.T) {
 		"  feature:\n    pattern: \"src/*.feature\"\n    kind: feature\n"+
 		"derived:\n  anchor: logic\n  files:\n    spec: [\"{{dir}}/{{name}}.spec.md\"]\n")
 	writeFile(t, root, "src/Login.spec.md", "<!-- @anchors\n  code: LOGI\n-->\n# Login\n\n### LOGI-B01 — only anonymous\n")
-	writeFile(t, root, "src/Login.ts", "// @anchors\n//   ref: LOGI\n\nexport const login = 1\n")
-	writeFile(t, root, "src/Login.test.ts", "// @anchors\n//   ref: LOGI\n\ntest('LOGI-B01: only anonymous', () => {})\n")
+	t.Run("MGCMM-B13: Crossing format 7 refreshes the stamps a widened code broke", func(t *testing.T) {})
+	t.Run("MGCMM-B14: Crossing format 7 dates every file it rewrote", func(t *testing.T) {})
+	writeFile(t, root, "src/Login.ts", "// @anchors\n//   ref: LOGI\n//   updated_at: 2026-01-01\n\nexport const login = 1 // LOGI-B01\n")
+	writeFile(t, root, "src/Login.test.ts", "// @anchors\n//   ref: LOGI\n\n"+
+		"// @contract: src/Login.ts | export const login = 1 // LOGI-B01 | 1 | "+hash8("export const login = 1 // LOGI-B01")+"\n"+
+		"// @contract: src/Login.ts | export const login = 1 // LOGI-B01 | 1 | deadbeef\n"+
+		"test('LOGI-B01: only anonymous', () => {})\n")
 	writeFile(t, root, "baselines/LOGI-B01.txt", "a capture\n")
 	writeFile(t, root, "src/Login.feature", "# @anchors\n#   code: LOGI\n\nFeature: Login\n")
 	read := func(rel string) string { b, _ := os.ReadFile(filepath.Join(root, rel)); return string(b) }
@@ -236,8 +245,15 @@ func TestMigrateCrossingSevenGivesEveryFileACode(t *testing.T) {
 		!regexp.MustCompile(`#   code: [A-Z0-9]{5}\n`).MatchString(f) || strings.Contains(f, "code: "+newCode) {
 		t.Errorf("the feature that carried the spec's code refs it and gets its own:\n%s", f)
 	}
-	if !strings.Contains(read(RenamesFile), "LOGI: "+newCode) {
-		t.Errorf("the rename is recorded:\n%s", read(RenamesFile))
+	if tst := read("src/Login.test.ts"); !strings.Contains(tst, "| 1 | "+hash8("export const login = 1 // "+newCode+"-B01")+"\n") ||
+		!strings.Contains(tst, "| 1 | deadbeef") {
+		t.Errorf("the stamp that held follows the widened code, the stale one stays:\n%s", tst)
+	}
+	if !strings.Contains(read("src/Login.ts"), "updated_at: "+time.Now().Format("2006-01-02")) {
+		t.Errorf("a rewritten file carries the day of the migration:\n%s", read("src/Login.ts"))
+	}
+	if !strings.Contains(read(migra.RenamesFile), "LOGI: "+newCode) {
+		t.Errorf("the rename is recorded:\n%s", read(migra.RenamesFile))
 	}
 	g, err := mapx.Load(filepath.Join(root, mapx.DefaultPath))
 	if err != nil {
@@ -256,7 +272,7 @@ func TestMigrateCrossingSevenGivesEveryFileACode(t *testing.T) {
 	}
 
 	before := map[string]string{}
-	for _, rel := range []string{"src/Login.spec.md", "src/Login.ts", "src/Login.test.ts", "src/Login.feature", RenamesFile} {
+	for _, rel := range []string{"src/Login.spec.md", "src/Login.ts", "src/Login.test.ts", "src/Login.feature", migra.RenamesFile} {
 		before[rel] = read(rel)
 	}
 	if err, out = runCmd(t, newMigrateCmd(), "--root", root); err != nil {
@@ -299,4 +315,10 @@ func TestMigrateCrossingSevenFailsOnAFileItCannotWrite(t *testing.T) {
 	if b, _ := os.ReadFile(locked); !regexp.MustCompile(`//   code: [A-Z0-9]{5}\n`).Match(b) {
 		t.Errorf("the second run gives the file its code:\n%s", b)
 	}
+}
+
+// hash8 is a stamp's hash: the first eight hex digits of the snippet's SHA-256.
+func hash8(s string) string {
+	h := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(h[:])[:8]
 }

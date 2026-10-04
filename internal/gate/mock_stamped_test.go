@@ -620,3 +620,29 @@ func TestStampedModules(t *testing.T) {
 		t.Errorf("no stamp, no module, got %v", got)
 	}
 }
+
+func TestRefreshHeldStamps_onlyTheOnesThatHeld(t *testing.T) {
+	t.Run("MCSTM-B20: The stamps that held before a mechanical rewrite are refreshed after it, and a stamp already stale stays stale", func(t *testing.T) {})
+	root := t.TempDir()
+	mod := "export const a = 1 // LOGI-B01\nexport const b = 2\n"
+	if err := os.WriteFile(filepath.Join(root, "m.ts"), []byte(mod), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	good := snippetHash("export const a = 1 // LOGI-B01")
+	test := "// @contract: m.ts | export const a = 1 // LOGI-B01 | 1 | " + good + "\n" +
+		"// @contract: m.ts | export const b = 2 | 1 | deadbeef\n"
+	held := StampsHolding(root, test)
+	if !held["m.ts|"+good] || held["m.ts|deadbeef"] || len(held) != 1 {
+		t.Fatalf("only the stamp that matches holds: %v", held)
+	}
+	// the rewrite widens the code in the module and in the stamp's anchor line
+	if err := os.WriteFile(filepath.Join(root, "m.ts"), []byte(strings.ReplaceAll(mod, "LOGI-", "LOGIN-")), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	test = strings.ReplaceAll(test, "LOGI-", "LOGIN-")
+	out, n := RefreshHeldStamps(root, test, held)
+	want := snippetHash("export const a = 1 // LOGIN-B01")
+	if n != 1 || !strings.Contains(out, "| 1 | "+want+"\n") || !strings.Contains(out, "| 1 | deadbeef") {
+		t.Errorf("the held stamp follows, the stale one stays (%d):\n%s", n, out)
+	}
+}

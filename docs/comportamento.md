@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:808e0e9d6a680491 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d9b727c384b14b10 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1971,6 +1971,10 @@ teste prova.
 - [Crossing format 7 turns a file carrying its spec's code into a ref with a code of its own](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B12`
 
 - [Crossing format 7, a file that cannot be written fails the command, and a second run finishes it](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-E02`
+
+- [Crossing format 7 refreshes the stamps a widened code broke](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B13`
+
+- [Crossing format 7 dates every file it rewrote](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B14`
 
 - [An unknown kind is refused](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B01`
 
@@ -3960,6 +3964,8 @@ teste prova.
 
 - [A spec under a bracketed directory still has its baselines confronted](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-E02`
 
+- [A testID prefix with a code the project renamed to this unit's, or to another unit's, passes](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B12`
+
 - [A declared name routes to the function registered under it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B01`
 
 - [A name that does not resolve answers undetermined](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B02`
@@ -4205,6 +4211,8 @@ teste prova.
 - [A test missing from disk is left out of the doubles of a changed module](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-E02`
 
 - [The modules a test's stamps point at](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B19`
+
+- [The stamps that held before a mechanical rewrite are refreshed after it, and a stamp already stale stays stale](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B20`
 
 - [A double with no tie fails and the verdict names the loose module](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B01`
 
@@ -7171,6 +7179,10 @@ teste prova.
 - [The line goes below the header's opener, or in a new header](layers/migra.md#mgfcd-b05--the-line-goes-below-the-headers-opener-or-in-a-new-header) `MGFCD-B05`
 
 - [A header carrying its unit's code turns it into a ref beside a code of its own](layers/migra.md#mgfcd-b06--a-header-carrying-its-units-code-turns-it-into-a-ref-beside-a-code-of-its-own) `MGFCD-B06`
+
+- [The renamed codes are read old to current, a code renamed twice to the last one](layers/migra.md#mgfcd-b07--the-renamed-codes-are-read-old-to-current-a-code-renamed-twice-to-the-last-one) `MGFCD-B07`
+
+- [The header's updated_at is set to the day given, and only in the header](layers/migra.md#mgfcd-b08--the-headers-updated-at-is-set-to-the-day-given-and-only-in-the-header) `MGFCD-B08`
 
 ## scan
 

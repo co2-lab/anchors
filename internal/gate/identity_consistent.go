@@ -15,6 +15,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/migra"
 )
 
 // checkIdentityConsistent — o CÓDIGO da spec é a identidade da unidade. Este gate
@@ -60,6 +61,14 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 	}
 
 	conhecidos := mapCodes(g)
+	// A code the project renamed is still the same identity under its old name: a testID is
+	// a contract with the E2E runner and its flows, and renaming the code does not rename
+	// what they select by. The way from the old code to the new is `anchors.renames.yaml`.
+	renamed := migra.Renames(root)
+	isAlias := func(sigla string) bool {
+		cur, ok := renamed[strings.ToUpper(sigla)]
+		return ok && (strings.EqualFold(cur, code) || conhecidos[cur])
+	}
 	var orfas []string
 
 	// ── Superfície 1: o testID exposto pela unidade de código ────────────────
@@ -75,7 +84,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 			continue
 		}
 		for _, sigla := range testIDAcronyms(string(b)) {
-			if strings.EqualFold(sigla, code) || conhecidos[strings.ToUpper(sigla)] {
+			if strings.EqualFold(sigla, code) || conhecidos[strings.ToUpper(sigla)] || isAlias(sigla) {
 				continue
 			}
 			orfas = append(orfas,
@@ -94,7 +103,8 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 	// passed without looking (IDCND-E02).
 	pngs, _ := doublestar.Glob(os.DirFS(root), mapx.GlobEscape(base)+".*-VR*.png")
 	for _, p := range pngs {
-		if sigla := baselineAcronym(filepath.Base(p)); sigla != "" && !strings.EqualFold(sigla, code) {
+		if sigla := baselineAcronym(filepath.Base(p)); sigla != "" && !strings.EqualFold(sigla, code) &&
+			!strings.EqualFold(renamed[strings.ToUpper(sigla)], code) {
 			orfas = append(orfas, i18n.T("gate.identity_consistent.baseline_item", sigla, filepath.Base(p)))
 		}
 	}

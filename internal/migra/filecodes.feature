@@ -2,7 +2,7 @@
 # @anchors
 #   code: FLFTD
 #   ref: MGFCD
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-04
 #   layer: feature
 
 @MGFCD
@@ -43,3 +43,15 @@ Feature: FileCodes — every file a code of its own, of five characters
     Given a feature header and a Markdown header carrying the unit's code, and a file with no header
     When the code is turned into a ref with an own code
     Then each header has its own code followed by the unit's ref, and the file with no header is unchanged
+
+  @MGFCD-B07 @unit-level
+  Scenario: The renamed codes are read old to current, a code renamed twice to the last one
+    Given a project with no renames file, and then one recording ARNA → ARNAA, LOGI → LOGIN and later ARNAA → ARENA
+    When the renames are read
+    Then none come from the missing file, and ARNA and ARNAA both resolve to ARENA, LOGI to LOGIN
+
+  @MGFCD-B08 @unit-level
+  Scenario: The header's updated_at is set to the day given, and only in the header
+    Given a file whose header and body both write an updated_at, and a header without one
+    When the date is set
+    Then only the header's changes, and the header without one is left as it was

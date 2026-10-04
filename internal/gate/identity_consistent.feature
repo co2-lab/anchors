@@ -2,7 +2,7 @@
 # @anchors
 #   code: ICFDN
 #   ref: IDCND
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-04
 #   layer: feature
 
 @IDCND
@@ -122,3 +122,9 @@ Feature: IdentityConsistent — a unit's spec identity must match its exposed te
     Given a spec under app/[slug]/ with a baseline carrying another unit's acronym
     When the gate confronts the spec
     Then it returns Fail naming the baseline
+
+  @IDCND-B12 @unit-level
+  Scenario: A testID prefix with a code the project renamed to this unit's, or to another unit's, passes
+    Given a spec ARNAA whose code exposes arna-, home- and bdge- testIDs, and a renames file recording ARNA → ARNAA and HOME → HOMEH
+    When identity-consistent runs
+    Then arna and home pass as old names of known units, and bdge still fails as orphan

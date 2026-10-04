@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGFCD
-  updated_at: 2026-10-03
+  updated_at: 2026-10-04
   layer: migra
 -->
 # FileCodes — every file a code of its own, of five characters
@@ -35,7 +35,9 @@ becomes, what a file's code is generated from, which file can carry the line, an
 | `MGFCD-B04` | `CanCarryCode`: A file can carry the line when it is text and its extension has a comment syntax — a Gherkin `.feature` included, which comments with `#` —; a binary, a JSON or an unknown type cannot. |
 | `MGFCD-B05` | `WithHeaderCode`: The `code:` line goes right below the `@anchors` opener of an existing header, in the file's comment syntax; a file with no header gets one at the top, after a shebang when there is one. |
 | `MGFCD-B06` | `AsRefWithOwnCode`: A header whose `code:` is its unit's has that line turned into `code: <own>` followed by `ref: <unit>`, in the header's own syntax; a file with no header, or with no such line, is returned as it was. |
+| `MGFCD-B07` | `Renames`: The codes recorded in `anchors.renames.yaml` (`RenamesFile`) are read old → current, a code renamed twice resolving to the last one; a missing file is no rename. |
+| `MGFCD-B08` | `WithHeaderDate`: The `updated_at` of the `@anchors` header is set to the day given; one outside the header, or a header without it, is left as it was. |
 
 ## Errors
 
-none — every early return is normal flow: a file with no header, or a header with no such line, is returned as it was; nothing here reads the disk or can fail.
+none — every early return is normal flow: a file with no header, or a header with no such line, is returned as it was; a renames file that cannot be read is no rename (MGFCD-B07).
