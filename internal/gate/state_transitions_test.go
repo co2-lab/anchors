@@ -74,3 +74,17 @@ func TestErrorMessageDeclared(t *testing.T) {
 		t.Errorf("E03 shows nothing named, E02 a message that is none: %v %s", v, d)
 	}
 }
+
+func TestStateTransitions_nestedSections(t *testing.T) {
+	t.Run("VTRST-B06: Sections nested under another are found", func(t *testing.T) {})
+	spec := loginHead + "## Rules (Regras de Negócio)\n\n### Validações\n\n| Regra | Campo | Condição | Comportamento |\n| --- | --- | --- | --- |\n" +
+		"| `LOGIN-V01` | `email` | inválido | recusa |\n\n### Erros / Falhas\n\n| Regra | Condição | Falha |\n| --- | --- | --- |\n| `LOGIN-E01` | offline | \"Sem conexão\" |\n\n" +
+		"## Fluxo de Estados\n\n| De | Gatilho | Para |\n| --- | --- | --- |\n| `LOGIN-S02` | `LOGIN-V01` | `LOGIN-S03` |\n"
+	root := loginUnit(t, spec)
+	if v, d := checkValidationTransitions("", loginCode, root, nil, nil); v != Pass {
+		t.Errorf("the nested validation is read and linked: %v %s", v, d)
+	}
+	if v, d := checkErrorMessageDeclared("", loginCode, root, nil, nil); v != Fail || !strings.Contains(d, "LOGIN-E01") {
+		t.Errorf("the nested error is read: %v %s", v, d)
+	}
+}

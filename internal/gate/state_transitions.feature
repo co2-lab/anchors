@@ -42,3 +42,10 @@ Feature: StateTransitions — every change of a visual unit is proven through wh
     Given a code file with no spec beside it
     When both gates confront it
     Then each leaves without a verdict, saying so
+
+  @VTRST-B06 @unit-level
+  Scenario: Sections nested under another are found
+    Given a spec whose "### Validações" and "### Erros / Falhas" sit under "## Rules (Regras de Negócio)"
+    When both gates confront the unit's code
+    Then they read the validations and the errors
+

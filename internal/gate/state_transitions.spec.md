@@ -43,6 +43,7 @@ it; sections and columns are read in any language of the catalog.
 | `VTRST-B02` | `validation-transitions` fails naming each validation — of `Validations` and of `Presentation validations` — that no State Flow row names as its trigger; a spec with no validation leaves without a verdict. |
 | `VTRST-B03` | A transition counts only when its From and To are states the spec registers; one from or to an unknown state is named with both ends. |
 | `VTRST-B04` | A validation whose row says `@no-state: <reason>` is not asked; one that says `@no-state` with no reason is still asked, and named as an exemption with no reason. |
+| `VTRST-B06` | A section is found at any heading level — `### Validações` nested under `## Rules` — and ends at the next heading of its level or above. |
 | `VTRST-B05` | `error-message-declared` fails naming each error that cites no message code of the unit, and each that cites codes the Messages section does not catalog; `@no-message: <reason>` on its row exempts it; a spec with no error leaves without a verdict. |
 
 ## Errors

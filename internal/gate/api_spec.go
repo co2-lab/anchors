@@ -92,17 +92,22 @@ func sectionRows(content, key string) []map[string]string {
 
 // sectionText is the body of the section the catalog key names, under its title in any
 // language — the title alone, or followed by a note in parentheses (`## States (Estados da
-// Tela)`) — up to the next `##` section.
+// Tela)`) —, at any heading level, up to the next heading of the same level or above.
+//
+// Any level, because specs nest: `### Validações` under `## Rules`, as a project wrote them,
+// was a section the gates did not find, and each of its units left without a verdict.
 func sectionText(content, key string) (string, bool) {
 	for _, title := range i18n.AllTranslations(key) {
-		re := regexp.MustCompile(`(?m)^##\s+` + regexp.QuoteMeta(title) + `[ \t]*(?:\([^)\n]*\))?[ \t]*$`)
-		loc := re.FindStringIndex(content)
-		if loc == nil {
+		re := regexp.MustCompile(`(?m)^(#{2,6})\s+` + regexp.QuoteMeta(title) + `[ \t]*(?:\([^)\n]*\))?[ \t]*$`)
+		m := re.FindStringSubmatchIndex(content)
+		if m == nil {
 			continue
 		}
-		rest := content[loc[1]:]
-		if i := strings.Index(rest, "\n## "); i >= 0 {
-			rest = rest[:i]
+		level := m[3] - m[2]
+		rest := content[m[1]:]
+		end := regexp.MustCompile(`(?m)^#{2,` + fmt.Sprint(level) + `}\s`)
+		if loc := end.FindStringIndex(rest); loc != nil {
+			rest = rest[:loc[0]]
 		}
 		return rest, true
 	}

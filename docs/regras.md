@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:437bd1cba85bde24 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:36252c2cff56c195 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -5794,6 +5794,8 @@ abra a página dela em `camadas/`.
 - [VTRST-B03 — A transition counts only when its From and To are states the spec registers; one from or to an unknown state is named with both ends.](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
 
 - [VTRST-B04 — A validation whose row says `@no-state: <reason>` is not asked; one that says `@no-state` with no reason is still asked, and named as an exemption with no reason.](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
+
+- [VTRST-B06 — A section is found at any heading level — `### Validações` nested under `## Rules` — and ends at the next heading of its level or above.](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
 
 - [VTRST-B05 — `error-message-declared` fails naming each error that cites no message code of the unit, and each that cites codes the Messages section does not catalog; `@no-message: <reason>` on its row exempts it; a spec with no error leaves without a verdict.](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
 

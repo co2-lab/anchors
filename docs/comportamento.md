@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:fd05d42d4c171524 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:73e56e53296465f6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -5267,6 +5267,8 @@ teste prova.
 - [Every error names the message it shows](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B05`
 
 - [A code file with no spec beside it leaves without a verdict](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-E01`
+
+- [Sections nested under another are found](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B06`
 
 - [A test with no assertion fails, named by its line and title](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B01`
 
