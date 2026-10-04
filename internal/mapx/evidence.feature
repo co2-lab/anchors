@@ -74,3 +74,8 @@ Feature: EvidenceFreshness — a test's evidence expires when anything it exerci
     When the flow's evidence closure is taken
     Then Button.tsx is in it and Icon.tsx is not
 
+  @EVFRA-B10 @unit-level
+  Scenario: A component whose capture diverged stales the captures of who uses it
+    Given a screen capture ingested at 10:00, composing a component whose capture failed at 11:00
+    When the screen capture's freshness is asked
+    Then it is stale, naming the component; with the component's capture failing at 09:00, or passing, it is fresh

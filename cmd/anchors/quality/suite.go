@@ -8,10 +8,12 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/cmd/anchors/mapcmd"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
@@ -202,6 +204,21 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 					return selErr
 				}
 				alvos = impactFiles(nodes, cs.secao, absRoot)
+				// The captures a change reaches through what their unit depends on — a hook
+				// the screen reads — are not on the impact path, which follows the spec, not
+				// the code's dependencies: they join it here.
+				if cs.secao != "mutation" {
+					var rels []string
+					for _, c := range changed {
+						rels = append(rels, common.RelTo(absRoot, c))
+					}
+					for _, t := range g.CapturesReaching(rels) {
+						abs := filepath.ToSlash(filepath.Join(absRoot, filepath.FromSlash(t)))
+						if !slices.Contains(alvos, abs) {
+							alvos = append(alvos, abs)
+						}
+					}
+				}
 				if len(alvos) == 0 {
 					fmt.Printf("the impact path reaches no %s file — nothing to run.\n",
 						map[bool]string{true: "code", false: "code or test"}[cs.secao == "mutation"])

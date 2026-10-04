@@ -183,6 +183,7 @@ func RunFull(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Gr
 func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Waiver) []Result {
 	// A gramática do código de cenário segue o vocabulário do projeto (`rule_types`).
 	SetRuleLetters(cfg.RuleLetters())
+	SetProjectSectionTitles(cfg)
 	// índice kind por nó já vem em node.Kind
 	var results []Result
 	for _, g := range gates {

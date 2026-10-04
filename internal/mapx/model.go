@@ -108,6 +108,12 @@ const (
 	// changed. The evidence closure takes its target and does NOT descend past it: a
 	// component a screen uses has its own capture (see captures.go).
 	EdgeCaptures EdgeType = "captures"
+
+	// EdgeComposes — a spec's unit is made of another unit: the components a screen's
+	// Parts Used section names. It carries no change down — a component has its own
+	// capture —, and is what lets a component whose capture DIVERGED ask the captures of the
+	// units made of it again (see EvidenceStaleFor).
+	EdgeComposes EdgeType = "composes"
 )
 
 // SuiteCoverage is one suite's measurement of one file: which lines it instrumented,
@@ -145,6 +151,11 @@ type Node struct {
 	Rev       string `yaml:"rev"`                  // revisão do conteúdo (hash) — a "versão do arquivo"
 	UpdatedAt string `yaml:"updated_at,omitempty"` // carimbo de alteração (ISO8601)
 	Code      string `yaml:"code,omitempty"`       // código de cenário/identidade, se houver
+	// FileCode is the file's OWN code — its header's `code:` —, apart from Code, which is
+	// the code of the unit the file belongs to. A spec, or a file with no unit around it,
+	// owns its unit and both are the same; a file that `ref:`s a unit (its code, feature,
+	// test) has a code of its own, which names the file in the dependency chain.
+	FileCode string `yaml:"file_code,omitempty"`
 	// Layer é a camada que este arquivo casou na Estrutura (`layers:` do anchors.yaml).
 	//
 	// Existe porque a config resolve decisões POR CAMADA — `section_titles` é a primeira,

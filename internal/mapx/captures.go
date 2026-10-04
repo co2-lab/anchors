@@ -129,3 +129,37 @@ func sortedKeysOf(m map[string]string) []string {
 	sort.Strings(out)
 	return out
 }
+
+// composesEdges ties a spec to the code of each unit its Parts Used section names: the code
+// file whose name, without extension, is the name written (`BottomSheet` →
+// `…/BottomSheet.tsx`). A name no code file carries ties nothing; a name two carry, the first
+// by path.
+func composesEdges(files []scan.File) []Edge {
+	byName := map[string][]string{}
+	for _, f := range files {
+		if f.Kind == string(KindCode) {
+			stem := strings.TrimSuffix(path.Base(f.Path), path.Ext(f.Path))
+			byName[stem] = append(byName[stem], f.Path)
+		}
+	}
+	var edges []Edge
+	for _, f := range files {
+		if f.Kind != string(KindSpec) {
+			continue
+		}
+		seen := map[string]bool{}
+		for _, name := range f.Composes {
+			cands := byName[name]
+			if len(cands) == 0 {
+				continue
+			}
+			sort.Strings(cands)
+			if seen[cands[0]] {
+				continue
+			}
+			seen[cands[0]] = true
+			edges = append(edges, Edge{From: f.Path, To: cands[0], Type: EdgeComposes, Origin: OriginDeclared})
+		}
+	}
+	return edges
+}

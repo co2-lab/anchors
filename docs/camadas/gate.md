@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:fa3a373468f703c5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:381dee5c44bd9554 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 81 unidades e 1331 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 81 unidades e 1332 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -33,6 +33,8 @@ API unit's main code file — the layers tagged `interface` — and read the spe
 - **APISP-B03** — `api-errors-declared` fails naming each error response whose status the Responses do not declare — exactly, or by its range (`4xx`) —, and each one without an error code or a message; a spec with no error response leaves without a verdict.
 
 - **APISP-B04** — `error-codes-honored` fails naming each declared error code that appears in none of the unit's code — the main file and the files its spec specifies, comments removed —, and the files it read.
+
+- **APISP-B06** — `SetProjectSectionTitles`: The titles the project's `section_titles` give a catalog section — its own and each layer's — are found as that section too, besides the catalog's translations.
 
 - **APISP-B05** — Sections are found under their title in any language of the catalog, and their columns by their header in those languages.
 

@@ -43,3 +43,20 @@ Feature: Captures — a visual-regression test is tied to the unit it captures
     When the map is built
     Then the test has captures edges to generate.go, generate.spec.md and docs/openapi.yaml
 
+  @VRCPT-B06 @unit-level
+  Scenario: A capture's closure reaches the uncaptured dependencies, and stops at a captured one
+    Given a captured screen whose spec depends on a hook, the hook depending on a store, and the screen composing a captured component
+    When the screen capture's closure is taken
+    Then it holds the hook and the store, and not the component
+
+  @VRCPT-B07 @unit-level
+  Scenario: Parts Used names become composes edges
+    Given a spec composing BottomSheet and Missing, and a code file BottomSheet.tsx
+    When the map is built
+    Then the spec composes BottomSheet.tsx, and Missing ties nothing
+
+  @VRCPT-B08 @unit-level
+  Scenario: The captures a changed file reaches
+    Given the screen, hook and component above
+    When the captures reaching the hook, and then the component, are asked
+    Then the hook reaches the screen's capture, and the component only its own

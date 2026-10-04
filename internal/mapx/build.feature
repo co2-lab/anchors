@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GRBLG
-#   updated_at: 2026-10-01
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @GRBLG
@@ -169,3 +169,10 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Given a map with one node without signal, one with its own, and one at another revision, and a source map with signals for all three
     When the signals are filled from the source
     Then only the first gets the source's signal
+
+  @GRBLG-B24 @unit-level
+  Scenario: A file's own code is its file code, and a ref keeps its unit
+    Given a spec with code ARENA, its screen with "code: ARSCR" and "ref: ARENA", and a helper with "code: TOKNS" and no ref
+    When the map is built
+    Then the screen's unit is ARENA and its file code ARSCR, and the helper's unit and file code are TOKNS
+

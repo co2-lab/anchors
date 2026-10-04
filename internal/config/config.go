@@ -530,6 +530,32 @@ func (c *Config) SectionTitle(chave, padrao, camada string) string {
 	return padrao
 }
 
+// SectionTitlesFor are every title the project gives a catalog section key — its own and
+// each layer's `section_titles` —, for a reader that cannot know which layer a spec is in.
+func (c *Config) SectionTitlesFor(chave string) []string {
+	if c == nil {
+		return nil
+	}
+	seen := map[string]bool{}
+	var out []string
+	add := func(t string) {
+		if t = strings.TrimSpace(t); t != "" && !seen[t] {
+			seen[t] = true
+			out = append(out, t)
+		}
+	}
+	add(c.SectionTitles[chave])
+	names := make([]string, 0, len(c.Layers))
+	for n := range c.Layers {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	for _, n := range names {
+		add(c.Layers[n].SectionTitles[chave])
+	}
+	return out
+}
+
 // DefaultPlaceholderMarkers is the vocabulary of the `anchors new` templates: the only
 // word they leave where a value belongs.
 var DefaultPlaceholderMarkers = []string{"TODO"}

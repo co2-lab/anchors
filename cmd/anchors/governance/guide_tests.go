@@ -127,10 +127,16 @@ the same change that alters the state on purpose, and review the image as you re
 an unreviewed baseline approves whatever it captured. Declare the baselines as a layer of
 the unit (proof, like a test) so a commit made only of them is governed.
 
-A capture's evidence goes stale when the unit's own file or one of its baselines changes —
-` + "`evidence-fresh`" + ` and ` + "`anchors stale`" + ` say so, and ` + "`anchors test`" + ` runs it again. One level only: a
-component the screen uses has its own capture, and its change stales that one, not the
-screen's.
+A capture's evidence goes stale — ` + "`evidence-fresh`" + ` and ` + "`anchors stale`" + ` say so, and
+` + "`anchors test`" + ` runs it again — when:
+- the unit's own file or one of its baselines changes;
+- something the unit depends on that has NO capture of its own changes — a hook, a store,
+  a service, transitively, as the spec's Dependencies and the files' ` + "`dep:`" + ` declare them —,
+  because nothing smaller would catch it;
+- a component the unit's Parts Used names has a capture that DIVERGED (failed) after this
+  capture last ran: the component probably changed the screen's look too.
+A component's change by itself stales only the component's capture, not the screens that
+use it. ` + "`anchors test --changed`" + ` runs the captures the changed files reach this way.
 
 Four gates ask the four questions: ` + "`vr-states-covered`" + ` (every state has a VR scenario),
 ` + "`vr-scenarios-tested`" + ` (every VR scenario has a VR test and an image),

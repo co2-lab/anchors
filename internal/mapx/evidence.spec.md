@@ -48,6 +48,7 @@ turn a precision improvement into a flood of false expirations on the day it shi
 | `EVFRA-B06` | The closure of a test is every node reached by descending its outgoing edges transitively, each with its current revision. |
 | `EVFRA-B07` | A `@noPropagation` node enters the closure but the walk does not descend through it. |
 | `EVFRA-B08` | A node recorded in the closure that no longer exists in the graph is not a culprit. |
+| `EVFRA-B10` | A capture's evidence goes stale when a component its unit composes has a capture that FAILED — diverged beyond the tool's threshold — ingested after this capture last ran; the component is named as a culprit. A component that passed, or failed before, stales nothing. |
 | `EVFRA-B09` | A `captures` target — the unit a visual-regression test captures, and its images — enters the closure but the walk does not descend through it. |
 
 ## Invariants

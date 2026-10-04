@@ -3,7 +3,10 @@
 
 package mapx
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // evidenceGraph — a script composing a util, in the real shape: SS-03 → login.yaml.
 func evidenceGraph() *Graph {
@@ -148,5 +151,26 @@ func TestEvidenceClosure_aCaptureTargetIsNotDescended(t *testing.T) {
 	}
 	if _, ok := closure["ui/Icon.tsx"]; ok {
 		t.Errorf("the walk does not descend past a capture: %v", closure)
+	}
+}
+
+func TestEvidence_aDivergedComponentStalesWhoUsesIt(t *testing.T) {
+	t.Run("EVFRA-B10: A component whose capture diverged stales the captures of who uses it", func(t *testing.T) {})
+	for _, c := range []struct {
+		failed int
+		at     string
+		stale  bool
+	}{{1, "2026-10-03T11:00:00Z", true}, {1, "2026-10-03T09:00:00Z", false}, {0, "2026-10-03T11:00:00Z", false}} {
+		g := chainGraph()
+		screen, comp := g.node("flows/ARENA-VR-S01.yaml"), g.node("flows/SHEET-VR-S01.yaml")
+		screen.Signal = &TestSignal{AtRev: screen.Rev, IngestedAt: "2026-10-03T10:00:00Z", ClosureRev: g.EvidenceClosure(screen.ID)}
+		comp.Signal = &TestSignal{AtRev: comp.Rev, Failed: c.failed, IngestedAt: c.at}
+		ev := g.EvidenceStaleFor(screen.ID)
+		if (ev != nil) != c.stale {
+			t.Errorf("component failed=%d at %s: stale = %v, want %v", c.failed, c.at, ev != nil, c.stale)
+		}
+		if ev != nil && strings.Join(ev.Culprit, ",") != "ui/Sheet.tsx" {
+			t.Errorf("the culprit is the component: %v", ev.Culprit)
+		}
 	}
 }

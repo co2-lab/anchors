@@ -90,6 +90,9 @@ type File struct {
 	// de modelo que abre referenciando `DTAXX-B11` era registrada no mapa como dona de
 	// `DTAX`, e todo gate relacional passava a olhar a unidade errada.
 	HeaderCode string
+	// HeaderRefs are the units the file declares it realizes (`ref: X, Y`). A file with a
+	// `ref:` is not its unit's owner: its own `code:`, when it has one, names the FILE.
+	HeaderRefs []string
 	// HeaderLayer é a camada da UNIDADE, declarada no header (`layer: screen`).
 	//
 	// Distinta do `Layer`, que é a camada do ARQUIVO: uma spec casa `**/*.spec.md` e o
@@ -103,6 +106,10 @@ type File struct {
 	NoPropagation bool  // o texto contém a anotação @noPropagation
 	SharedCode    bool  // o texto contém @anchors-shared-code (opt-out de colisão)
 	Deps          []Dep // dependências de reúso declaradas (Tabela de Dependências, SPEC_TYPES §5)
+	// Composes are the units a spec's Parts Used section names — the components a screen is
+	// made of, by name (`BottomSheet`). The map ties the spec to each one's code, so a
+	// component whose capture diverged can ask the captures of who uses it again.
+	Composes []string
 	// Seeds: os caminhos de spec que um PLANO semeia. Extraídos aqui porque o scan já tem
 	// o conteúdo em mãos — o mapa não precisa reabrir o arquivo só para isso.
 	Seeds []string
@@ -257,6 +264,7 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 		Rev:           shortHash(content),
 		Codes:         extractCodes(content),
 		HeaderCode:    extractHeaderCode(string(content)),
+		HeaderRefs:    extractHeaderRefs(string(content)),
 		HeaderLayer:   extractHeaderLayer(string(content)),
 		Seeds:         extractSeeds(kind, string(content)),
 		Realizes:      extractRealizes(kind, string(content)),
@@ -269,6 +277,7 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 		NoPropagation: noPropRE.Match(content),
 		SharedCode:    sharedCodeRE.Match(content),
 		Deps:          depsFor(kind, content, root, rel),
+		Composes:      composesFor(kind, content, cfg),
 	}
 	// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
 	// project's vocabulary, not a claim on this project's units. Counting them would give
@@ -634,6 +643,54 @@ func escapeAll(xs []string) []string {
 	}
 	if len(out) == 0 {
 		out = append(out, `depend[e\x{00ea}]ncias?`)
+	}
+	return out
+}
+
+// partsHeadingRE is the heading of the Parts Used section, in any language of the catalog.
+var partsHeadingRE = regexp.MustCompile(`(?im)^#{1,6}\s+(?:` +
+	strings.Join(escapeAll(i18n.AllTranslations("section.title.components")), "|") + `)\b`)
+
+var backtickNameRE = regexp.MustCompile("`([A-Za-z_][A-Za-z0-9_.]*)`")
+
+// composesFor reads, from a spec, the names in the first column of its Parts Used table.
+func composesFor(kind string, content []byte, cfg *config.Config) []string {
+	if kind != "spec" {
+		return nil
+	}
+	s := string(content)
+	loc := partsHeadingRE.FindStringIndex(s)
+	if loc == nil {
+		// The project's own title for the section (`components: "Componentes Utilizados"`).
+		if own := cfg.SectionTitlesFor("components"); len(own) > 0 {
+			loc = regexp.MustCompile(`(?im)^#{1,6}\s+(?:` + strings.Join(escapeAll(own), "|") + `)\b`).FindStringIndex(s)
+		}
+	}
+	if loc == nil {
+		return nil
+	}
+	var out []string
+	inTable := false
+	for _, ln := range strings.Split(s[loc[1]:], "\n") {
+		t := strings.TrimSpace(ln)
+		if !strings.HasPrefix(t, "|") {
+			if inTable || strings.HasPrefix(t, "#") {
+				break
+			}
+			continue
+		}
+		if !inTable {
+			inTable = true // the header
+			continue
+		}
+		if isDividerRow(t) {
+			continue
+		}
+		if cells := splitRow(t); len(cells) > 0 {
+			if m := backtickNameRE.FindStringSubmatch(cells[0]); m != nil {
+				out = append(out, m[1])
+			}
+		}
 	}
 	return out
 }
@@ -1034,6 +1091,24 @@ func ShortHash(b []byte) string { return shortHash(b) }
 // default e a declaração do projeto não teria efeito.
 func headerCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
+}
+
+// headerRefRE is the header's `ref:` line: the units the file realizes.
+var headerRefRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `ref:\s*([A-Z0-9][A-Z0-9 ,]*)`)
+
+// extractHeaderRefs are the units the header's `ref:` names, in order.
+func extractHeaderRefs(content string) []string {
+	m := headerRefRE.FindStringSubmatch(string(AnchorsHeader([]byte(content))))
+	if m == nil {
+		return nil
+	}
+	var out []string
+	for _, r := range strings.Split(m[1], ",") {
+		if r = strings.TrimSpace(r); r != "" {
+			out = append(out, r)
+		}
+	}
+	return out
 }
 
 // extractHeaderCode devolve a identidade DECLARADA, ou vazio se o header não a declara.

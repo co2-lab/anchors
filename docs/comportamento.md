@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:73e56e53296465f6 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:69999ca6fa6fb650 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3083,6 +3083,8 @@ teste prova.
 - [A code file with no spec beside it leaves without a verdict](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-E01`
 
 - [A code file the spec specifies that cannot be read emits nothing](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-E02`
+
+- [A section renamed by the project is found](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B06`
 
 - [Below the floor fails naming the lines](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B01`
 
@@ -6846,6 +6848,8 @@ teste prova.
 
 - [Signals are filled from another map at the same revision](layers/mapa.md#grblg-b23--signals-are-filled-from-another-map-at-the-same-revision) `GRBLG-B23`
 
+- [A file's own code is its file code, and a ref keeps its unit](layers/mapa.md#grblg-b24--a-files-own-code-is-its-file-code-and-a-ref-keeps-its-unit) `GRBLG-B24`
+
 - [A test that was never ingested has no verdict](layers/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 
 - [The test's own change expires its evidence](layers/mapa.md#evfra-b02--the-tests-own-change-expires-its-evidence) `EVFRA-B02`
@@ -6867,6 +6871,8 @@ teste prova.
 - [The closure never climbs to the spec above the test](layers/mapa.md#evfra-x01--the-closure-never-climbs-to-the-spec-above-the-test) `EVFRA-X01`
 
 - [A capture's target enters the closure and is not descended](layers/mapa.md#evfra-b09--a-captures-target-enters-the-closure-and-is-not-descended) `EVFRA-B09`
+
+- [A component whose capture diverged stales the captures of who uses it](layers/mapa.md#evfra-b10--a-component-whose-capture-diverged-stales-the-captures-of-who-uses-it) `EVFRA-B10`
 
 - [The written format and the oldest readable format are both accepted](layers/mapa.md#mpfrm-b01--the-written-format-and-the-oldest-readable-format-are-both-accepted) `MPFRM-B01`
 
@@ -7128,6 +7134,12 @@ teste prova.
 
 - [A contract test captures its API unit, its spec and the OpenAPI document](layers/mapx.md#vrcpt-b05--a-contract-test-captures-its-api-unit-its-spec-and-the-openapi-document) `VRCPT-B05`
 
+- [A capture's closure reaches the uncaptured dependencies, and stops at a captured one](layers/mapx.md#vrcpt-b06--a-captures-closure-reaches-the-uncaptured-dependencies-and-stops-at-a-captured-one) `VRCPT-B06`
+
+- [Parts Used names become composes edges](layers/mapx.md#vrcpt-b07--parts-used-names-become-composes-edges) `VRCPT-B07`
+
+- [The captures a changed file reaches](layers/mapx.md#vrcpt-b08--the-captures-a-changed-file-reaches) `VRCPT-B08`
+
 ## scan
 
 - [The built-in directories are skipped when nothing is declared](layers/scan.md#scigs-b01--the-built-in-directories-are-skipped-when-nothing-is-declared) `SCIGS-B01`
@@ -7285,6 +7297,10 @@ teste prova.
 - [The index reader confronts the tree at each read](layers/scan.md#rpscr-b37--the-index-reader-confronts-the-tree-at-each-read) `RPSCR-B37`
 
 - [A rule is defined in any of the three forms](layers/scan.md#rpscr-b38--a-rule-is-defined-in-any-of-the-three-forms) `RPSCR-B38`
+
+- [A spec's Parts Used names its components](layers/scan.md#rpscr-b39--a-specs-parts-used-names-its-components) `RPSCR-B39`
+
+- [The header's ref names the units the file realizes](layers/scan.md#rpscr-b40--the-headers-ref-names-the-units-the-file-realizes) `RPSCR-B40`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

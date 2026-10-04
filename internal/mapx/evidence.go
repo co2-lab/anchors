@@ -55,6 +55,7 @@ func (g *Graph) EvidenceStaleFor(id string) *EvidenceStale {
 			out.Culprit = append(out.Culprit, alvo)
 		}
 	}
+	out.Culprit = append(out.Culprit, g.divergedParts(n)...)
 	sort.Strings(out.Culprit)
 	if !out.Own && len(out.Culprit) == 0 {
 		return nil
@@ -95,10 +96,107 @@ func (g *Graph) EvidenceClosure(id string) map[string]string {
 			if r, ok := revs[filho]; ok {
 				out[filho] = r
 			}
-			// A capture reaches the unit's own file and images, ONE level: a component the
-			// screen uses has its own capture, and its change stales that one, not this.
-			if !noProp[filho] && e.Type != EdgeCaptures {
+			// A capture reaches the unit's own file and images, and what the unit depends on
+			// that has no capture of its own — a hook, a store, a service, transitively — up
+			// to the next unit that is captured. A component the screen uses has its own
+			// capture, and its change stales that one, not this.
+			if e.Type == EdgeCaptures {
+				for d, r := range g.uncapturedDeps(filho, adj, revs) {
+					if !visto[d] && d != id {
+						visto[d] = true
+						out[d] = r
+					}
+				}
+				continue
+			}
+			if !noProp[filho] && e.Type != EdgeComposes {
 				fila = append(fila, filho)
+			}
+		}
+	}
+	return out
+}
+
+// divergedParts are the components of the unit a capture test captures whose own capture
+// FAILED — diverged from its baseline beyond the tool's threshold — after this test last
+// ran. A component's change stales only its own capture; a component whose capture
+// diverged probably changed the look of every unit made of it, and their captures are asked
+// again (`composes`, from the unit's Parts Used).
+func (g *Graph) divergedParts(n *Node) []string {
+	if n.Signal == nil {
+		return nil
+	}
+	adj := g.adjacency()
+	var out []string
+	for _, c := range adj.out[n.ID] {
+		if c.Type != EdgeCaptures {
+			continue
+		}
+		for _, sp := range adj.in[c.To] {
+			if sp.Type != EdgeSpecifies {
+				continue
+			}
+			for _, part := range adj.out[sp.From] {
+				if part.Type != EdgeComposes {
+					continue
+				}
+				for _, t := range adj.in[part.To] {
+					if t.Type != EdgeCaptures {
+						continue
+					}
+					if tn := g.node(t.From); tn != nil && tn.Signal != nil && tn.Signal.Failed > 0 &&
+						tn.Signal.IngestedAt > n.Signal.IngestedAt {
+						out = append(out, part.To)
+						break
+					}
+				}
+			}
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// uncapturedDeps are what a captured unit's code depends on that no test captures: the
+// declared dependencies of the spec that specifies it (`depends-on`), transitively through
+// the specs of those, stopping at any file a test captures — that one is proven by its own
+// capture.
+func (g *Graph) uncapturedDeps(code string, adj adjacency, revs map[string]string) map[string]string {
+	captured := func(id string) bool {
+		for _, e := range adj.in[id] {
+			if e.Type == EdgeCaptures {
+				return true
+			}
+		}
+		return false
+	}
+	out := map[string]string{}
+	seen := map[string]bool{code: true}
+	queue := []string{code}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		// What the file declares it depends on: its spec's Dependencies table, and its own
+		// header's `dep:` lines.
+		owners := []string{cur}
+		for _, sp := range adj.in[cur] {
+			if sp.Type == EdgeSpecifies {
+				owners = append(owners, sp.From)
+			}
+		}
+		for _, owner := range owners {
+			for _, d := range adj.out[owner] {
+				if d.Type != EdgeDependsOn || seen[d.To] {
+					continue
+				}
+				seen[d.To] = true
+				if captured(d.To) {
+					continue
+				}
+				if r, ok := revs[d.To]; ok {
+					out[d.To] = r
+				}
+				queue = append(queue, d.To)
 			}
 		}
 	}
@@ -116,3 +214,37 @@ func (g *Graph) node(id string) *Node {
 
 // Node is the map's node with this id, or nil.
 func (g *Graph) Node(id string) *Node { return g.node(id) }
+
+// CapturesReaching are the capture tests whose evidence closure holds one of the files: a
+// change to them is what those captures must be run again for — the unit's own file and
+// images, or a hook, a store, a service it depends on that no capture of its own proves.
+func (g *Graph) CapturesReaching(files []string) []string {
+	want := map[string]bool{}
+	for _, f := range files {
+		want[f] = true
+	}
+	var out []string
+	for _, n := range g.Nodes {
+		if n.Kind != KindTest {
+			continue
+		}
+		captures := false
+		for _, e := range g.Neighbors(n.ID).Out {
+			if e.Type == EdgeCaptures {
+				captures = true
+				break
+			}
+		}
+		if !captures {
+			continue
+		}
+		for f := range g.EvidenceClosure(n.ID) {
+			if want[f] {
+				out = append(out, n.ID)
+				break
+			}
+		}
+	}
+	sort.Strings(out)
+	return out
+}

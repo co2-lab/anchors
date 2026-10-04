@@ -117,3 +117,15 @@ func TestAPISpec_anyLanguage(t *testing.T) {
 		t.Errorf("a Portuguese spec is read: %v %s", v, d)
 	}
 }
+
+func TestAPISpec_projectSectionTitles(t *testing.T) {
+	t.Run("APISP-B06: A section renamed by the project is found", func(t *testing.T) {})
+	SetProjectSectionTitles(&config.Config{Layers: map[string]config.Layer{"api": {SectionTitles: config.SectionTitles{"error-responses": "Recusas da API"}}}})
+	t.Cleanup(func() { SetProjectSectionTitles(nil) })
+	spec := apiHead + "## Responses\n| Status | When | Content type | Contract |\n| --- | --- | --- | --- |\n| 4xx | refused | application/json | — |\n\n" +
+		"## Recusas da API\n| Rule | When | Status | Error code | Message |\n| --- | --- | --- | --- | --- |\n| `QRGEN-E01` | x | 503 | DOWN | \"Down\" |\n"
+	root, g := apiProject(t, map[string]string{"api/generate.spec.md": spec})
+	if v, d := checkAPIErrorsDeclared("", mapx.Node{ID: "api/generate.go", Kind: mapx.KindCode}, root, g, nil); v != Fail || !strings.Contains(d, "QRGEN-E01 (503)") {
+		t.Errorf("the renamed section is read: %v %s", v, d)
+	}
+}

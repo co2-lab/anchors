@@ -912,3 +912,24 @@ func TestFillSignals(t *testing.T) {
 	FillSignals(nil, src)
 	FillSignals(novo, nil)
 }
+
+func TestBuild_aFilesOwnCodeAndItsUnit(t *testing.T) {
+	t.Run("GRBLG-B24: A file's own code is its file code, and a ref keeps its unit", func(t *testing.T) {})
+	cfg := &config.Config{Derived: &config.Derived{Anchor: "spec"}}
+	files := []scan.File{
+		{Path: "ui/Arena.spec.md", Kind: "spec", HeaderCode: "ARENA"},
+		{Path: "ui/Arena.tsx", Kind: "code", HeaderCode: "ARSCR", HeaderRefs: []string{"ARENA"}},
+		{Path: "theme/tokens.ts", Kind: "code", HeaderCode: "TOKNS"},
+	}
+	g := Build(files, cfg, nil)
+	got := map[string]Node{}
+	for _, n := range g.Nodes {
+		got[n.ID] = n
+	}
+	if n := got["ui/Arena.tsx"]; n.Code != "ARENA" || n.FileCode != "ARSCR" || n.CodeDeclarado {
+		t.Errorf("the screen's unit is ARENA, its file code ARSCR: %+v", n)
+	}
+	if n := got["theme/tokens.ts"]; n.Code != "TOKNS" || n.FileCode != "TOKNS" || !n.CodeDeclarado {
+		t.Errorf("the helper owns its unit: %+v", n)
+	}
+}

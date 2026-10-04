@@ -51,6 +51,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			Support:       f.Support,
 			Revises:       f.Revises,
 			Code:          nodeCode(f, ancoraDeDerivado),
+			FileCode:      f.HeaderCode,
 			CodeDeclarado: declaredCode(f),
 			Tags:          tags,
 			Regime:        regime,
@@ -67,6 +68,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 	g.Edges = append(g.Edges, dependsOnEdges(files)...)
 	g.Edges = append(g.Edges, seedEdges(files)...)
 	g.Edges = append(g.Edges, captureEdges(files)...)
+	g.Edges = append(g.Edges, composesEdges(files)...)
 
 	sortGraph(g)
 	return g
@@ -556,7 +558,9 @@ func nodeCode(f scan.File, anchors map[string]string) string {
 	if f.Upstream {
 		return ""
 	}
-	if f.HeaderCode != "" {
+	// A file that `ref:`s a unit is not its owner: its own `code:` names the FILE, and the
+	// unit comes from the anchor beside it, as it always did.
+	if f.HeaderCode != "" && len(f.HeaderRefs) == 0 {
 		return f.HeaderCode
 	}
 	// A ÂNCORA IRMÃ vence a inferência pelo texto, para artefato derivado.
@@ -576,6 +580,10 @@ func nodeCode(f scan.File, anchors map[string]string) string {
 	// o defeito até alguém citar outra spec.
 	if c, ok := anchors[f.Path]; ok && c != "" {
 		return c
+	}
+	// A file that carries its own code and `ref:`s a unit names the unit itself.
+	if f.HeaderCode != "" && len(f.HeaderRefs) > 0 {
+		return f.HeaderRefs[0]
 	}
 	return primaryCode(f.Codes)
 }
@@ -616,7 +624,7 @@ func anchorCodeByDerived(files []scan.File, cfg *config.Config) map[string]strin
 
 // declaredCode diz se a identidade foi DECLARADA (header `code:`) ou apenas inferida do
 // texto. Ver Node.CodeDeclarado para o porquê da distinção.
-func declaredCode(f scan.File) bool { return f.HeaderCode != "" }
+func declaredCode(f scan.File) bool { return f.HeaderCode != "" && len(f.HeaderRefs) == 0 }
 
 func primaryCode(codes []string) string {
 	if len(codes) == 0 {

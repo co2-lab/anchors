@@ -41,6 +41,7 @@ API unit's main code file — the layers tagged `interface` — and read the spe
 | `APISP-B02` | `api-contracts-resolve` fails naming each body or response (by status) whose contract is empty or `TODO`, each cited code no spec of the map carries, and each contract whose spec has no Domain table; `—` is a response with no body. |
 | `APISP-B03` | `api-errors-declared` fails naming each error response whose status the Responses do not declare — exactly, or by its range (`4xx`) —, and each one without an error code or a message; a spec with no error response leaves without a verdict. |
 | `APISP-B04` | `error-codes-honored` fails naming each declared error code that appears in none of the unit's code — the main file and the files its spec specifies, comments removed —, and the files it read. |
+| `APISP-B06` | `SetProjectSectionTitles`: The titles the project's `section_titles` give a catalog section — its own and each layer's — are found as that section too, besides the catalog's translations. |
 | `APISP-B05` | Sections are found under their title in any language of the catalog, and their columns by their header in those languages. |
 
 ## Errors

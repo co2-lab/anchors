@@ -60,6 +60,9 @@ func captureGraph() *Graph {
 		g.Nodes = append(g.Nodes, Node{ID: f.Path, Kind: Kind(f.Kind), Rev: f.Rev})
 	}
 	g.Edges = append(captureEdges(captureFiles()), Edge{From: "ui/Button.tsx", To: "ui/Icon.tsx", Type: EdgeDependsOn})
+	// The component has a capture of its own: that is what keeps it out of the screen's.
+	g.Nodes = append(g.Nodes, Node{ID: ".maestro/ICONX-VR-S01.yaml", Kind: KindTest, Rev: "x1"})
+	g.Edges = append(g.Edges, Edge{From: ".maestro/ICONX-VR-S01.yaml", To: "ui/Icon.tsx", Type: EdgeCaptures})
 	return g
 }
 
@@ -110,5 +113,65 @@ func TestCaptureEdges_aContractTestCapturesItsAPI(t *testing.T) {
 	got := strings.Join(capturesFrom(captureEdges(files), "api/generate_contract_test.go"), ",")
 	if got != "api/generate.go,api/generate.spec.md,docs/openapi.yaml" {
 		t.Errorf("a contract test captures %s", got)
+	}
+}
+
+// chainGraph: a captured screen whose spec depends on a hook (which depends on a store) and
+// composes a captured component.
+func chainGraph() *Graph {
+	g := &Graph{}
+	for _, n := range []Node{
+		{ID: "ui/Arena.spec.md", Kind: KindSpec, Rev: "a"}, {ID: "ui/Arena.tsx", Kind: KindCode, Rev: "b"},
+		{ID: "hooks/useMatches.ts", Kind: KindCode, Rev: "c"}, {ID: "stores/league.ts", Kind: KindCode, Rev: "d"},
+		{ID: "ui/Sheet.tsx", Kind: KindCode, Rev: "e"},
+		{ID: "flows/ARENA-VR-S01.yaml", Kind: KindTest, Rev: "f"}, {ID: "flows/SHEET-VR-S01.yaml", Kind: KindTest, Rev: "g"},
+	} {
+		g.Nodes = append(g.Nodes, n)
+	}
+	g.Edges = []Edge{
+		{From: "ui/Arena.spec.md", To: "ui/Arena.tsx", Type: EdgeSpecifies},
+		{From: "ui/Arena.spec.md", To: "hooks/useMatches.ts", Type: EdgeDependsOn},
+		{From: "hooks/useMatches.ts", To: "stores/league.ts", Type: EdgeDependsOn},
+		{From: "ui/Arena.spec.md", To: "ui/Sheet.tsx", Type: EdgeComposes},
+		{From: "ui/Arena.spec.md", To: "ui/Sheet.tsx", Type: EdgeDependsOn},
+		{From: "flows/ARENA-VR-S01.yaml", To: "ui/Arena.tsx", Type: EdgeCaptures},
+		{From: "flows/SHEET-VR-S01.yaml", To: "ui/Sheet.tsx", Type: EdgeCaptures},
+	}
+	return g
+}
+
+func TestCaptureClosure_reachesUncapturedDependencies(t *testing.T) {
+	t.Run("VRCPT-B06: A capture's closure reaches the uncaptured dependencies, and stops at a captured one", func(t *testing.T) {})
+	c := chainGraph().EvidenceClosure("flows/ARENA-VR-S01.yaml")
+	for _, want := range []string{"ui/Arena.tsx", "hooks/useMatches.ts", "stores/league.ts"} {
+		if _, ok := c[want]; !ok {
+			t.Errorf("the closure lacks %s: %v", want, c)
+		}
+	}
+	if _, ok := c["ui/Sheet.tsx"]; ok {
+		t.Errorf("the component has its own capture, and is not in the screen's: %v", c)
+	}
+}
+
+func TestComposesEdges(t *testing.T) {
+	t.Run("VRCPT-B07: Parts Used names become composes edges", func(t *testing.T) {})
+	files := []scan.File{
+		{Path: "ui/Arena.spec.md", Kind: "spec", Composes: []string{"Sheet", "Missing"}},
+		{Path: "ui/Sheet.tsx", Kind: "code"},
+	}
+	edges := composesEdges(files)
+	if len(edges) != 1 || edges[0].To != "ui/Sheet.tsx" || edges[0].Type != EdgeComposes {
+		t.Errorf("edges = %+v", edges)
+	}
+}
+
+func TestCapturesReaching(t *testing.T) {
+	t.Run("VRCPT-B08: The captures a changed file reaches", func(t *testing.T) {})
+	g := chainGraph()
+	if got := strings.Join(g.CapturesReaching([]string{"stores/league.ts"}), ","); got != "flows/ARENA-VR-S01.yaml" {
+		t.Errorf("the store reaches the screen's capture: %s", got)
+	}
+	if got := strings.Join(g.CapturesReaching([]string{"ui/Sheet.tsx"}), ","); got != "flows/SHEET-VR-S01.yaml" {
+		t.Errorf("the component reaches only its own capture: %s", got)
 	}
 }

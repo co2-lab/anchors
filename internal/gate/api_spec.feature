@@ -48,3 +48,10 @@ Feature: APISpec — the coherence of an API spec, and its error codes in the co
     Given a spec that specifies a file the disk does not have
     When error-codes-honored confronts the unit's code
     Then the codes only that file would emit are named
+
+  @APISP-B06 @unit-level
+  Scenario: A section renamed by the project is found
+    Given a project whose screen layer calls the error responses "Recusas da API"
+    When api-errors-declared confronts a spec using that title
+    Then it reads the section
+

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:36252c2cff56c195 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:c4452afdc431e91e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3390,6 +3390,8 @@ abra a página dela em `camadas/`.
 - [APISP-B03 — `api-errors-declared` fails naming each error response whose status the Responses do not declare — exactly, or by its range (`4xx`) —, and each one without an error code or a message; a spec with no error response leaves without a verdict.](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
 
 - [APISP-B04 — `error-codes-honored` fails naming each declared error code that appears in none of the unit's code — the main file and the files its spec specifies, comments removed —, and the files it read.](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
+
+- [APISP-B06 — `SetProjectSectionTitles`: The titles the project's `section_titles` give a catalog section — its own and each layer's — are found as that section too, besides the catalog's translations.](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
 
 - [APISP-B05 — Sections are found under their title in any language of the catalog, and their columns by their header in those languages.](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code)
 
@@ -7533,6 +7535,8 @@ abra a página dela em `camadas/`.
 
 - [GRBLG-B22 — A support file becomes a node marked as support, keeping its kind and its edges like any other node.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
+- [GRBLG-B24 — A file's own header `code:` is its `file_code`. A file that also `ref:`s a unit is not that unit's owner: its unit code comes from the anchor beside it, as without a `code:`, and its identity is not declared; a file with a `code:` and no `ref:` — a spec, or a file with no unit around it — owns its unit, and both codes are the same.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
+
 - [GRBLG-B23 — Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-I01 — The same files and configuration always build the same graph, whatever order the files arrive in.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
@@ -7560,6 +7564,8 @@ abra a página dela em `camadas/`.
 - [EVFRA-B07 — A `@noPropagation` node enters the closure but the walk does not descend through it.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-B08 — A node recorded in the closure that no longer exists in the graph is not a culprit.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
+
+- [EVFRA-B10 — A capture's evidence goes stale when a component its unit composes has a capture that FAILED — diverged beyond the tool's threshold — ingested after this capture last ran; the component is named as a culprit. A component that passed, or failed before, stales nothing.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-B09 — A `captures` target — the unit a visual-regression test captures, and its images — enters the closure but the walk does not descend through it.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
@@ -7851,6 +7857,12 @@ abra a página dela em `camadas/`.
 
 - [VRCPT-B03 — The evidence closure of a VR test holds the unit's code file and images, and does not descend past them: a component the screen depends on is not in it.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
+- [VRCPT-B06 — A capture's closure also holds what its unit depends on that no test captures — the `depends-on` of the spec that specifies the unit's code and of the code file itself (its header's `dep:`), transitively through the files reached — and stops at any file a test captures: a hook or a store is in it, a component with its own capture is not.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
+- [VRCPT-B07 — A spec's Parts Used names become `composes` edges to the code file of that name (its file name without extension); a name no code file carries ties nothing. They carry no change down.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
+- [VRCPT-B08 — `CapturesReaching` are the capture tests whose closure holds one of the given files: a hook a captured screen depends on reaches the screen's captures; a component with its own capture reaches only its own.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
 - [VRCPT-B05 — A contract test — its path or text names `{CODE}-CT` — gets a `captures` edge to the API unit's code file, to its spec (the OpenAPI is compiled from it) and to every OpenAPI document of the project (a file named `*openapi*.yaml`, `.yml` or `.json`), one level like a capture.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
 - [VRCPT-B04 — A visual-regression code is read whole with its state — `BUTTN-VR-S01` — by the scan and by the test-signal reader, as the gates read it.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
@@ -8010,6 +8022,10 @@ abra a página dela em `camadas/`.
 - [RPSCR-B36 — The governed files where the tree and the index part are listed: tracked files with unstaged changes and untracked ones, of a governed layer and not ignored. (`GovernedTreeChanges`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B37 — The index reader confronts the tree with the index at each read: a file deleted or edited in the tree after the reader was made still reads as the index has it. (`IndexReader`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B39 — A spec's Parts Used section — under the catalog's title in any language, or the title the project's `section_titles` gives `components` — yields the names in backticks of its table's first column (`Composes`); a spec with no such section, and any file that is not a spec, yields none.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B40 — The header's `ref:` line yields the units it names, in order (`HeaderRefs`).](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

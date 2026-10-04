@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RPSCR
-#   updated_at: 2026-10-02
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @RPSCR
@@ -269,3 +269,15 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     When each is matched as a rule definition
     Then the first three define ABCDE-B01, ABCDE-B02 and ABCDE-B03
     And the prose line defines nothing
+
+  @RPSCR-B39 @unit-level
+  Scenario: A spec's Parts Used names its components
+    Given a spec whose "## Componentes Utilizados", the title the project declares, lists `BottomSheet` and `MoveIcon`
+    When it is scanned
+    Then its Composes are BottomSheet and MoveIcon, and a code file's are none
+
+  @RPSCR-B40 @unit-level
+  Scenario: The header's ref names the units the file realizes
+    Given a header with "ref: ARENA, WALLT"
+    When it is scanned
+    Then its HeaderRefs are ARENA and WALLT

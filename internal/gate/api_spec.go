@@ -97,7 +97,9 @@ func sectionRows(content, key string) []map[string]string {
 // Any level, because specs nest: `### Validações` under `## Rules`, as a project wrote them,
 // was a section the gates did not find, and each of its units left without a verdict.
 func sectionText(content, key string) (string, bool) {
-	for _, title := range i18n.AllTranslations(key) {
+	titles := i18n.AllTranslations(key)
+	titles = append(titles, projectSectionTitles[strings.ReplaceAll(strings.TrimPrefix(key, "section.title."), "_", "-")]...)
+	for _, title := range titles {
 		re := regexp.MustCompile(`(?m)^(#{2,6})\s+` + regexp.QuoteMeta(title) + `[ \t]*(?:\([^)\n]*\))?[ \t]*$`)
 		m := re.FindStringSubmatchIndex(content)
 		if m == nil {
@@ -112,6 +114,31 @@ func sectionText(content, key string) (string, bool) {
 		return rest, true
 	}
 	return "", false
+}
+
+// projectSectionTitles are the titles the project gives the catalog's sections, by key
+// (`components`, `data-contract`), set at the start of a run (SetProjectSectionTitles).
+var projectSectionTitles = map[string][]string{}
+
+// SetProjectSectionTitles reads the project's `section_titles` — its own and each layer's —
+// so the sections a gate looks for are found under the titles the project renamed them to.
+func SetProjectSectionTitles(cfg *config.Config) {
+	projectSectionTitles = map[string][]string{}
+	if cfg == nil {
+		return
+	}
+	keys := map[string]bool{}
+	for k := range cfg.SectionTitles {
+		keys[k] = true
+	}
+	for _, l := range cfg.Layers {
+		for k := range l.SectionTitles {
+			keys[k] = true
+		}
+	}
+	for k := range keys {
+		projectSectionTitles[k] = cfg.SectionTitlesFor(k)
+	}
 }
 
 // col is a row's cell under the first of the header names that the row has.

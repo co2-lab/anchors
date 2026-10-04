@@ -1072,3 +1072,19 @@ func TestRuleDefinitionRE_theThreeForms(t *testing.T) {
 		}
 	}
 }
+
+func TestScan_partsUsedAndRefs(t *testing.T) {
+	t.Run("RPSCR-B39: A spec's Parts Used names its components", func(t *testing.T) {})
+	t.Run("RPSCR-B40: The header's ref names the units the file realizes", func(t *testing.T) {})
+	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {SectionTitles: config.SectionTitles{"components": "Componentes Utilizados"}}}}
+	spec := []byte("# Arena\n\n## Componentes Utilizados\n\n| Componente | Tipo |\n| --- | --- |\n| `BottomSheet` | Organism |\n| `MoveIcon` | Atom |\n\n## Dependências\n")
+	if got := composesFor("spec", spec, cfg); strings.Join(got, ",") != "BottomSheet,MoveIcon" {
+		t.Errorf("composes = %v", got)
+	}
+	if got := composesFor("code", spec, cfg); got != nil {
+		t.Errorf("a code file composes nothing: %v", got)
+	}
+	if got := extractHeaderRefs("// @anchors\n//   ref: ARENA, WALLT\n"); strings.Join(got, ",") != "ARENA,WALLT" {
+		t.Errorf("refs = %v", got)
+	}
+}
