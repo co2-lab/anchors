@@ -1,4 +1,5 @@
 // @anchors
+//   code: RWINR
 //   ref: RCRWR
 
 // Package recode renomeia um CÓDIGO de identidade (ex.: TCDTX → TCTXX) e o propaga por

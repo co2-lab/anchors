@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/arquitetura.md.tmpl — inputs:0d0610a009ba39a1 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/arquitetura.md.tmpl — inputs:ae83278e37b66bb6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Arquitetura
@@ -77,6 +77,7 @@ de nível 3 nenhum. Ou falta declará-las, ou elas não rodam em lugar nenhum:
 - `infra`
 - `mapa`
 - `mapx`
+- `migra`
 - `scan`
 
 

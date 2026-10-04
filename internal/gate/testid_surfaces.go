@@ -1,4 +1,5 @@
 // @anchors
+//   code: TSGTS
 //   ref: TICTS
 
 // Superfícies CONSUMIDORAS do testID: onde procurar quem se apoia no handle — o teste

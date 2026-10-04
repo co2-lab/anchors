@@ -1,4 +1,5 @@
 // @anchors
+//   code: NWCMN
 //   ref: NWARN
 
 package ops
@@ -17,6 +18,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/migra"
 	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
 )
@@ -153,6 +155,11 @@ the identity by hand.`,
 			// `new` continua funcionando com os defaults — é comando de bootstrap.
 			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
 			content := renderArtifact(tpl, name, id, outPath, absRoot, sections, ordem, cfg)
+			// A file that refs its unit is born with a code of its own too: since format 7
+			// every governed file is addressable by one.
+			if tpl.idField == "ref" {
+				content = withOwnCode(content, absRoot, outPath, tpl.kind, cfg)
+			}
 			// A camada do ALVO decide se essa spec pode existir. Recusar aqui é o
 			// ponto mais barato: antes do arquivo nascer.
 			if cfg != nil {
@@ -755,4 +762,23 @@ func targetLayer(root, outPath string, cfg *config.Config) string {
 		return l
 	}
 	return ""
+}
+
+// withOwnCode writes, in a rendered header that only refs its unit, the file's own code —
+// generated from its name and its type, unique among the codes of the map.
+func withOwnCode(content, absRoot, outPath, kind string, cfg *config.Config) string {
+	taken, _, err := takenCodes(filepath.Join(absRoot, mapx.DefaultPath))
+	if err != nil {
+		taken = map[string]bool{}
+	}
+	rel, err := filepath.Rel(absRoot, outPath)
+	if err != nil {
+		rel = outPath
+	}
+	rel = filepath.ToSlash(rel)
+	f := scan.File{Path: rel, Kind: kind}
+	if cfg != nil {
+		f.Layer = targetLayer(absRoot, outPath, cfg)
+	}
+	return migra.WithHeaderCode(content, rel, code.GenerateUnique(migra.FileCodeName(f), taken))
 }

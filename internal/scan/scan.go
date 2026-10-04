@@ -1,4 +1,5 @@
 // @anchors
+//   code: SCSCS
 //   ref: RPSCR
 
 // Package scan percorre o repositório lendo TEXTO (nunca parseando código) e

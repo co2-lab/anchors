@@ -1,4 +1,5 @@
 // @anchors
+//   code: GRAPG
 //   ref: FLGRF
 
 // Package flagx reads the CONDITION of a feature-flag scenario.

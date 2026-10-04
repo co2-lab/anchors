@@ -1,4 +1,5 @@
 // @anchors
+//   code: SSWTS
 //   ref: WTCHA
 
 //go:build windows

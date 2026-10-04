@@ -1,6 +1,7 @@
 # @anchors
+#   code: DSFDC
 #   ref: DCSYN
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-03
 Feature: DocsSyncForCommit — the commit carries the pages its specs produce
 
   @DCSYN-B01 @unit-level

@@ -1,4 +1,5 @@
 // @anchors
+//   code: FTGTF
 //   ref: FTMFT
 
 package gate

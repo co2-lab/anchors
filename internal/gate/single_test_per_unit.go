@@ -1,4 +1,5 @@
 // @anchors
+//   code: SNGTS
 //   ref: SNGTU
 
 package gate

@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: QRFTQ
 #   ref: GRQRG
-#   updated_at: 2026-10-02
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @GRQRG

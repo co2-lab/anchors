@@ -31,8 +31,8 @@ An exemption with no reason does not exempt.
 They run on a visual unit's main code file — the screen or the component, which is what a project tags
 as visual — and read the unit's spec, feature and tests from it (`Button.tsx` → `Button.spec.md`,
 `Button.feature`). A VR scenario is a scenario tagged with the project's visual regime and the code of
-the state it captures (`@BUTTN-S01` or `@BUTTN-VR-S01`). A VR test names `BUTTN-VR-S01` in its path or
-its text. A baseline is `<Unit>.BUTTN-VR-S01[-variant].<ext>` beside the unit.
+the state it captures (`@{CODE}-S01` or `@{CODE}-VR-S01`). A VR test names `{CODE}-VR-S01` in its path or
+its text. A baseline is `<Unit>.{CODE}-VR-S01[-variant].<ext>` beside the unit.
 
 ## Domain
 

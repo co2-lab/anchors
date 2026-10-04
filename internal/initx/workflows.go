@@ -1,4 +1,5 @@
 // @anchors
+//   code: WRINW
 //   ref: FLWRF
 
 package initx

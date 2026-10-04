@@ -1,4 +1,5 @@
 // @anchors
+//   code: FXTSF
 //   layer: teste
 
 package mapcmd

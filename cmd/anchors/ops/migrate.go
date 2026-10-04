@@ -1,4 +1,5 @@
 // @anchors
+//   code: MGCMA
 //   ref: MGCMM
 
 package ops
@@ -9,13 +10,16 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/flowx"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/migra"
+	"github.com/co2-lab/anchors/internal/recode"
 	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
 )
@@ -57,9 +61,13 @@ running it again changes nothing.
 			// live in the project's own files, not in these two, and are rewritten once, when
 			// the project crosses the step that renamed them.
 			from := mapx.FormatoAtual
+			formatOf := map[string]int{}
 			for _, alvo := range alvos {
-				if f, err := migra.FormatOf(alvo); err == nil && f < from {
-					from = f
+				if f, err := migra.FormatOf(alvo); err == nil {
+					formatOf[alvo] = f
+					if f < from {
+						from = f
+					}
 				}
 			}
 
@@ -108,6 +116,24 @@ running it again changes nothing.
 				// pipeline — that is a copy of a template, not a project file.
 				fmt.Println("· pipelines: the installed ones read the old letters — `anchors doctor --fix` updates the")
 				fmt.Println("  ones nobody edited; a customized one needs its `-F[0-9]` patterns changed to `-W[0-9]` by hand")
+			}
+
+			// Format 7: every file a code of its own, of five characters.
+			if from < 7 && mapx.FormatoAtual >= 7 {
+				changed, err := migrateToFileCodes(absRoot, dryRun)
+				if err != nil {
+					// The files go back to the format they had, so the next run crosses the
+					// step again — and codes only what this one left.
+					for alvo, f := range formatOf {
+						if f < 7 {
+							_ = rewriteText(alvo, func(s string) string {
+								return regexp.MustCompile(`(?m)^version:\s*\d+\s*$`).ReplaceAllString(s, fmt.Sprintf("version: %d", f))
+							})
+						}
+					}
+					return err
+				}
+				mudou = mudou || changed
 			}
 
 			if !mudou {
@@ -243,4 +269,275 @@ func versionedFiles(absRoot string) ([]string, error) {
 		return nil
 	})
 	return files, err
+}
+
+// RenamesFile is where the migration records each code it renamed: outside the repository —
+// the issues, the pull requests, the old commit messages — the old code stays, and whoever
+// searches the history needs the way from it to the new one.
+const RenamesFile = "anchors.renames.yaml"
+
+// migrateToFileCodes brings a project to format 7: its four-character codes widened to five,
+// and a code of its own on every governed file that can carry one. What every file was
+// measured at is carried to its new revision, so the migration proves nothing new and loses
+// nothing proven.
+func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
+	// Without a configuration there is no governed file to give a code to; a configuration
+	// this binary cannot read is said, and the rest of the migration still goes on.
+	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil {
+		fmt.Printf("· file codes: %v\n", firstLine(err.Error()))
+		return false, nil
+	}
+	// Both lengths are read while the project crosses from one to the other.
+	prevLengths := config.CodeLengths
+	config.SetCodeLengths([]int{4, 5})
+	defer config.SetCodeLengths(prevLengths)
+
+	before, err := scan.Walk(absRoot, cfg)
+	if err != nil {
+		return false, err
+	}
+	oldRev := map[string]string{}
+	taken := map[string]bool{}
+	for _, f := range before {
+		oldRev[f.Path] = f.Rev
+		if f.HeaderCode != "" {
+			taken[f.HeaderCode] = true
+		}
+		for _, c := range f.Codes {
+			if i := strings.Index(c, "-"); i > 0 {
+				taken[c[:i]] = true
+			}
+		}
+	}
+	changed := false
+	touched := map[string]bool{}
+	renamedPath := map[string]string{}
+
+	// 1. The four-character codes, widened.
+	type pair struct{ old, new string }
+	var pairs []pair
+	seen := map[string]bool{}
+	for _, f := range before {
+		c := f.HeaderCode
+		if len(c) != 4 || len(f.HeaderRefs) > 0 || seen[c] {
+			continue
+		}
+		seen[c] = true
+		n := migra.WidenedCode(c, unitName(f.Path), taken)
+		taken[n] = true
+		pairs = append(pairs, pair{c, n})
+	}
+	sort.Slice(pairs, func(i, j int) bool { return pairs[i].old < pairs[j].old })
+	rcfg := *cfg
+	rc := config.Recode{}
+	if cfg.Recode != nil {
+		rc = *cfg.Recode
+	}
+	// Every file whose NAME carries the code is renamed with it — a baseline, a capture
+	// flow —, declared in `recode:` or not: left behind, it would no longer be found.
+	rc.FilePatterns = append(append([]string(nil), rc.FilePatterns...), "**/*{{code}}*")
+	rcfg.Recode = &rc
+	for _, p := range pairs {
+		plan, err := recode.BuildPlan(absRoot, &rcfg, p.old, p.new)
+		if err != nil {
+			fmt.Printf("· %s → %s: %v\n", p.old, p.new, err)
+			continue
+		}
+		changed = true
+		fmt.Printf("✓ code %s → %s: %d occurrence(s) in %d file(s), %d file(s) renamed\n",
+			p.old, p.new, plan.Total+plan.TestIDs, len(plan.Files), len(plan.Renames))
+		for _, fc := range plan.Files {
+			touched[fc.Path] = true
+		}
+		for _, r := range plan.Renames {
+			renamedPath[r.From] = r.To
+		}
+		if !dryRun {
+			if _, err := plan.Apply(absRoot); err != nil {
+				return changed, err
+			}
+		}
+	}
+
+	// 2. The configuration and the map speak the new codes, and the renamed paths.
+	if !dryRun {
+		if err := rewriteText(filepath.Join(absRoot, config.DefaultFile), func(s string) string {
+			for _, p := range pairs {
+				s, _ = recode.Rewrite(s, p.old, p.new)
+			}
+			return regexp.MustCompile(`(?m)^code_lengths:\s*\[[^\]]*\]`).ReplaceAllString(s, "code_lengths: [5]")
+		}); err != nil {
+			return changed, err
+		}
+		if err := rewriteText(filepath.Join(absRoot, mapx.DefaultPath), func(s string) string {
+			for from, to := range renamedPath {
+				s = strings.ReplaceAll(s, from, to)
+			}
+			for _, p := range pairs {
+				s, _ = recode.Rewrite(s, p.old, p.new)
+			}
+			return s
+		}); err != nil {
+			return changed, err
+		}
+	}
+	config.SetCodeLengths([]int{5})
+
+	// 3. A code of its own on every governed file that can carry one.
+	var after []scan.File
+	if dryRun {
+		after = before
+	} else if after, err = scan.Walk(absRoot, cfg); err != nil {
+		return changed, err
+	}
+	// A file that carried its spec's code — written before the code was the file's — keeps
+	// naming the unit by a `ref:`, and gets a code of its own like any other.
+	owners := map[string]int{}
+	specOwns := map[string]bool{}
+	for _, f := range after {
+		if f.HeaderCode != "" && len(f.HeaderRefs) == 0 {
+			owners[f.HeaderCode]++
+			if f.Kind == "spec" {
+				specOwns[f.HeaderCode] = true
+			}
+		}
+	}
+	given := 0
+	for _, f := range after {
+		if f.HeaderCode != "" && len(f.HeaderRefs) == 0 && f.Kind != "spec" &&
+			owners[f.HeaderCode] > 1 && specOwns[f.HeaderCode] && !f.Upstream {
+			abs := filepath.Join(absRoot, filepath.FromSlash(f.Path))
+			b, err := os.ReadFile(abs)
+			if err != nil {
+				continue
+			}
+			c := migra.FileCode(f, taken)
+			out := migra.AsRefWithOwnCode(string(b), f.HeaderCode, c)
+			if out == string(b) {
+				continue
+			}
+			taken[c] = true
+			given++
+			touched[f.Path] = true
+			if dryRun {
+				continue
+			}
+			info, err := os.Stat(abs)
+			if err != nil {
+				return true, err
+			}
+			if err := os.WriteFile(abs, []byte(out), info.Mode()); err != nil {
+				return true, err
+			}
+			continue
+		}
+		if f.HeaderCode != "" || f.Upstream {
+			continue
+		}
+		abs := filepath.Join(absRoot, filepath.FromSlash(f.Path))
+		b, err := os.ReadFile(abs)
+		if err != nil || !migra.CanCarryCode(f.Path, b) {
+			continue
+		}
+		c := migra.FileCode(f, taken)
+		taken[c] = true
+		given++
+		touched[f.Path] = true
+		if dryRun {
+			continue
+		}
+		info, err := os.Stat(abs)
+		if err != nil {
+			return true, err
+		}
+		if err := os.WriteFile(abs, []byte(migra.WithHeaderCode(string(b), f.Path, c)), info.Mode()); err != nil {
+			return true, err
+		}
+	}
+	if given > 0 {
+		changed = true
+		verb := "get"
+		if dryRun {
+			verb = "would get"
+		}
+		fmt.Printf("✓ %d file(s) %s a code of its own (`code:` in the header)\n", given, verb)
+	}
+	if dryRun || !changed {
+		return changed, nil
+	}
+
+	// 4. What each touched file was measured at goes with it to its new revision — when the
+	// map had it measured at the content the migration found.
+	g, err := mapx.Load(filepath.Join(absRoot, mapx.DefaultPath))
+	if err == nil {
+		var rels []string
+		for p := range touched {
+			if to, ok := renamedPath[p]; ok {
+				p = to
+			}
+			rels = append(rels, p)
+		}
+		sort.Strings(rels)
+		now, err := scan.ScanPaths(absRoot, cfg, rels)
+		if err == nil {
+			oldOf := map[string]string{}
+			for p, r := range oldRev {
+				if to, ok := renamedPath[p]; ok {
+					p = to
+				}
+				oldOf[p] = r
+			}
+			carried := 0
+			for _, f := range now {
+				n := g.Node(f.Path)
+				if n == nil || n.Rev != oldOf[f.Path] || n.Rev == f.Rev {
+					continue
+				}
+				g.RebaseRev(f.Path, n.Rev, f.Rev)
+				carried++
+			}
+			if err := mapx.Save(g, filepath.Join(absRoot, mapx.DefaultPath)); err != nil {
+				return true, err
+			}
+			fmt.Printf("✓ the measurements of %d file(s) carried to their new revision\n", carried)
+		}
+	}
+
+	// 5. The way from each old code to its new one.
+	if len(pairs) > 0 {
+		var b strings.Builder
+		b.WriteString("# Codes renamed by `anchors migrate` (format 7): old → new. Outside the repository —\n")
+		b.WriteString("# issues, pull requests, old commit messages — the old code stays; this is the way to the new.\n")
+		fmt.Fprintf(&b, "%s:\n", time.Now().Format("2006-01-02"))
+		for _, p := range pairs {
+			fmt.Fprintf(&b, "  %s: %s\n", p.old, p.new)
+		}
+		prev, _ := os.ReadFile(filepath.Join(absRoot, RenamesFile))
+		if err := os.WriteFile(filepath.Join(absRoot, RenamesFile), append(prev, []byte(b.String())...), 0o644); err != nil {
+			return true, err
+		}
+		fmt.Printf("✓ %d code rename(s) recorded in %s\n", len(pairs), RenamesFile)
+	}
+	return changed, nil
+}
+
+// rewriteText rewrites a file in place; a missing file is left alone.
+func rewriteText(p string, f func(string) string) error {
+	b, err := os.ReadFile(p)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+	out := f(string(b))
+	if out == string(b) {
+		return nil
+	}
+	info, err := os.Stat(p)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(p, []byte(out), info.Mode())
 }

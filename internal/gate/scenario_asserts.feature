@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: SAFSC
 #   ref: SCASS
-#   updated_at: 2026-09-19
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @SCASS

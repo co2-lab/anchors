@@ -1,4 +1,5 @@
 // @anchors
+//   code: FXGTF
 //   ref: FXIXX
 
 package gate
@@ -8,10 +9,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/code"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/migra"
 	"github.com/co2-lab/anchors/internal/scan"
 )
 
@@ -128,50 +131,75 @@ func fixMissingHeader(content string, n mapx.Node, _ string, g *mapx.Graph) (str
 	// stands lower: in a guide or a template that is an example inside a string or a code
 	// fence, and the top header makes it read as the text it is.
 	block := scan.AnchorsHeader([]byte(content))
+	var b string
 	if block != nil {
-		b := string(block)
-		if headerCodeRE().MatchString(b) || headerRefRE().MatchString(b) || headerLayerRE.MatchString(b) {
-			return content, false, ""
+		b = string(block)
+	}
+	var fields []string
+	// The file's OWN code, generated from its name and its type, unique in the map.
+	if !headerOwnCodeRE().MatchString(b) && g != nil {
+		taken := map[string]bool{}
+		for _, x := range g.Nodes {
+			for _, c := range []string{x.Code, x.FileCode} {
+				if c != "" {
+					taken[c] = true
+				}
+			}
+		}
+		f := scan.File{Path: n.ID, Layer: n.Layer, Kind: string(n.Kind)}
+		fields = append(fields, "code: "+code.GenerateUnique(migra.FileCodeName(f), taken))
+	}
+	if !headerCodeRE().MatchString(b) && !headerRefRE().MatchString(b) && !headerLayerRE.MatchString(b) {
+		var field string
+		if g != nil {
+			if codes := g.UnitCodesOf(n.ID); len(codes) > 0 {
+				field = "ref: " + strings.Join(codes, ", ")
+			}
+		}
+		if field == "" && n.Layer != "" && (n.Kind == mapx.KindGuide || n.Kind == mapx.KindDoc || n.Support) {
+			field = "layer: " + n.Layer
+		}
+		if field != "" {
+			fields = append(fields, field)
 		}
 	}
-	var field string
-	if g != nil {
-		if codes := g.UnitCodesOf(n.ID); len(codes) > 0 {
-			field = "ref: " + strings.Join(codes, ", ")
-		}
-	}
-	if field == "" && n.Layer != "" && (n.Kind == mapx.KindGuide || n.Kind == mapx.KindDoc || n.Support) {
-		field = "layer: " + n.Layer
-	}
-	if field == "" {
+	// A file whose identity cannot be told gets nothing: a code alone would read as a unit
+	// of its own.
+	hasIdentity := headerCodeRE().MatchString(b) || headerRefRE().MatchString(b) || headerLayerRE.MatchString(b)
+	if len(fields) == 0 || (!hasIdentity && len(fields) == 1 && strings.HasPrefix(fields[0], "code: ")) {
 		return content, false, ""
 	}
+	what := strings.Join(fields, ", ")
 	c := config.LineCommentFor(n.ID)
-	// A header at the top with no identity gets the missing line, right below `@anchors`:
-	// nothing someone wrote is changed, the identity is added.
+	indent := c + "   "
+	if c == "<!--" {
+		indent = "  "
+	}
+	var lines strings.Builder
+	for _, f := range fields {
+		lines.WriteString("\n" + indent + f)
+	}
+	// A header at the top gets the missing lines right below `@anchors`: nothing someone
+	// wrote is changed, the identity is added.
 	if block != nil {
-		at := strings.Index(content, string(block))
-		opener := at + strings.Index(string(block), "\n")
+		at := strings.Index(content, b)
+		opener := at + strings.Index(b, "\n")
 		if opener < at {
 			opener = at + len(block)
 		}
-		line := c + "   " + field
-		if c == "<!--" {
-			line = "  " + field
-		}
-		return content[:opener] + "\n" + line + content[opener:], true, i18n.T("gate.fix.header_written", field)
+		return content[:opener] + lines.String() + content[opener:], true, i18n.T("gate.fix.header_written", what)
 	}
 	var header string
 	if c == "<!--" {
-		header = "<!-- @anchors\n  " + field + "\n-->\n\n"
+		header = "<!-- @anchors" + lines.String() + "\n-->\n\n"
 	} else {
-		header = c + " @anchors\n" + c + "   " + field + "\n\n"
+		header = c + " @anchors" + lines.String() + "\n\n"
 	}
 	// A shebang stays the first line: the system reads it there.
 	if strings.HasPrefix(content, "#!") {
 		if i := strings.Index(content, "\n"); i >= 0 {
-			return content[:i+1] + header + content[i+1:], true, i18n.T("gate.fix.header_written", field)
+			return content[:i+1] + header + content[i+1:], true, i18n.T("gate.fix.header_written", what)
 		}
 	}
-	return header + content, true, i18n.T("gate.fix.header_written", field)
+	return header + content, true, i18n.T("gate.fix.header_written", what)
 }

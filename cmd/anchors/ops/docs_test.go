@@ -1,4 +1,5 @@
 // @anchors
+//   code: DCTSA
 //   ref: DCCMD
 
 package ops
@@ -100,7 +101,7 @@ O que a unidade faz.
 `)
 	// THE MAP ON DISK DOES NOT KNOW THE SPEC — exactly the state that produced the compiled
 	// output with 31 entries missing: a merge had lost the nodes, and nothing complained.
-	const emptyMap = "version: 6\nnodes: []\nedges: []\n"
+	const emptyMap = "version: 7\nnodes: []\nedges: []\n"
 	write("anchors.graph.yaml", emptyMap)
 	write(filepath.Join("doct", "camadas.md.tmpl"),
 		`{{range specs "layer=spec"}}## {{.Titulo}}
@@ -243,7 +244,7 @@ func TestDocsInitWritesTheSkeletonOnce(t *testing.T) {
 		!strings.Contains(err.Error(), "anchors map build") {
 		t.Errorf("init without a map must point at `map build`: %v", err)
 	}
-	writeFile(t, root, "anchors.graph.yaml", "version: 6\nnodes: []\nedges: []\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 7\nnodes: []\nedges: []\n")
 
 	err, out := runCmd(t, newDocsCmd(), "init", "--root", root)
 	if err != nil {

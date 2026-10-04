@@ -1,4 +1,5 @@
 // @anchors
+//   code: MVCMN
 //   ref: MNVRM
 
 package config

@@ -1,4 +1,5 @@
 // @anchors
+//   code: PCINA
 //   ref: OBPCB
 
 // Package pack carrega CONJUNTOS DE OBRIGAÇÕES distribuíveis — o mecanismo que torna a

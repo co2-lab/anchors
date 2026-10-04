@@ -1,4 +1,5 @@
 // @anchors
+//   code: CNGTC
 //   ref: CTTST
 
 package gate

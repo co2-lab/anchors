@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:c4452afdc431e91e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:42463134be1a12aa — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2153,6 +2153,16 @@ abra a página dela em `camadas/`.
 
 - [MGCMM-B07 — When the project crosses a step that renames code letters, the codes of its plans (files of a `kind: plan` layer), flows (`.flow.md`) and actions (`.action.md`), found by the code their header declares, are rewritten in every versioned text file, each file listed with its rewrites; with `--dry-run` they are listed and not written; codes of other units are not touched, and a second run rewrites nothing. The installed pipelines are not rewritten: the command points to `anchors doctor --fix`, which updates the ones nobody edited.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
+- [MGCMM-B08 — When the project crosses format 7, each four-character code a file owns is widened to five — the old code kept as the prefix — wherever it is written: the project's files, the names of the files that carry it (with or without a `recode:` block), the config and the map; the config's `code_lengths` becomes `[5]`.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
+- [MGCMM-B09 — When the project crosses format 7, every governed file that can carry a comment and has no `code:` gets one in its `@anchors` header, generated from its name and its type (layer or kind), unique in the project; the `ref:` it had stays.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
+- [MGCMM-B10 — When the project crosses format 7, each file the migration rewrote and the map had measured at the content it found has its measurements carried to its new revision.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
+- [MGCMM-B11 — When the project crosses format 7, each renamed code is appended, old → new under the date, to `anchors.renames.yaml` (`RenamesFile`).](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
+- [MGCMM-B12 — When the project crosses format 7, a file other than the spec that carries, as its own `code:`, the code its unit's spec owns has that line turned into `ref: <code>` with a code of its own above it.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
 - [MGCMM-B06 — After a real migration the command tells the user to commit it.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-I01 — The migration is idempotent: a second run reports the files as current, asks for no commit, and leaves them byte for byte as the first run wrote them.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
@@ -2162,6 +2172,8 @@ abra a página dela em `camadas/`.
 - [MGCMM-X02 — The command never commits: it only reminds.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-E01 — REF[MGCMM-B02]: a file that cannot be read is the failure this command handles, by reporting it and migrating the other file](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
+- [MGCMM-E02 — Crossing format 7, a project file, the config or the map cannot be written](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 ### [NWARN — NewArtifact — a new artifact is born beside its unit, with a resolved identity and the sections of the project's ruler](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
@@ -2198,6 +2210,8 @@ abra a página dela em `camadas/`.
 - [NWARN-B16 — The help and the unknown-kind refusal name every kind of the catalog (action, feature, flow, plan, product, spec, test), and the help of `--out` says it is mandatory, with no default.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-B17 — A new artifact enters the map at once, with its unit's links, when the project has a map and a configuration: read alone, not the tree; without a map, nothing is written to it.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
+
+- [NWARN-B18 — An artifact that refs its unit (a feature, a test) is born with a code of its own in its header, generated from its name and its type and unique among the map's codes, beside the `ref:`. (`withOwnCode`)](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-I01 — A refused `new` leaves nothing behind in the tree.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
@@ -4167,6 +4181,8 @@ abra a página dela em `camadas/`.
 
 - [FXIXX-B09 — `--fix` writes the header a governed file lacks, at its top after any shebang: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document or a test support file; to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`)](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
+- [FXIXX-B10 — `--fix` gives a file whose header has an identity (or gets one) and no `code:` of its own a code generated from its name and its type, unique among the codes in the map, written below `@anchors` beside the identity; a header with its own code is left as it is. (`fixMissingHeader`)](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
+
 - [FXIXX-I01 — A repair replaces only the date inside the field; every other byte of the file stays as it was.](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
 - [FXIXX-X01 — Does not create a missing `updated_at` field; it only corrects the value of one that exists.](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
@@ -4398,6 +4414,8 @@ abra a página dela em `camadas/`.
 - [INCHN-B39 — A header line is read in every comment dialect the map reads — `//`, `#`, `--`, `<!--` and a block comment's ` * ` (`config.HeaderLinePrefix`): a `-- ref: CODE` header has its identity.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B40 — `header-valid` reads the header as the map does — the `@anchors` block at the top (`scan.AnchorsHeader`) —, so an `@anchors` further down, in a string or an example, is neither the header nor its identity; and a guide, a document or a test support file, which belong to no unit, have their identity in `layer:` alone.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
+
+- [INCHN-B41 — `header-valid` requires, in a header that has its identity, the file's OWN `code:` — a `ref:` alone names the unit, not the file — and fails a code another node of the map carries as its own, naming that file. (`checkOwnCode`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B15 — An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
@@ -7385,7 +7403,7 @@ abra a página dela em `camadas/`.
 
 - [JUIJN-B10 — Each case carries its run time in seconds from its `time` attribute; a missing, malformed or negative time reads as 0.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
 
-- [JUIJN-B12 — A case naming a visual-regression code of a state — `BUTTN-VR-S01` — also proves (and is seen for) the state it captures, `BUTTN-S01`: a green capture shows the state under its condition, looking as the spec says.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
+- [JUIJN-B12 — A case naming a visual-regression code of a state — `{CODE}-VR-S01` — also proves (and is seen for) the state it captures, `{CODE}-S01`: a green capture shows the state under its condition, looking as the spec says.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
 
 - [JUIJN-B11 — The codes a report proves and sees carry the variant a case names (`CODE-B02#02`): a case of one variant never stands for its sibling. (`ScenarioCodesInCase`, `PassedCodes`, `SeenCodes`)](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
 
@@ -7585,7 +7603,7 @@ abra a página dela em `camadas/`.
 
 - [MPFRM-B05 — The two refusals do not mix: the refusal of a newer map never names the migration command.](layers/mapa.md#mpfrm--mapformat--the-maps-format-number-decides-whether-this-binary-may-read-it)
 
-- [MPFRM-I01 — The binary writes format 6 and reads only format 6 — format 6 renamed the gate `triad-complete` to `unit-complete`, and a project not migrated would declare a gate this binary does not know, its pieces charged by nothing; every other format is refused.](layers/mapa.md#mpfrm--mapformat--the-maps-format-number-decides-whether-this-binary-may-read-it)
+- [MPFRM-I01 — The binary writes format 7 and reads only format 7 — format 7 gave every governed file a code of its own and widened the four-character codes to five, and a map not migrated would name files by codes the project no longer has; every other format is refused.](layers/mapa.md#mpfrm--mapformat--the-maps-format-number-decides-whether-this-binary-may-read-it)
 
 - [MPFRM-X01 — Format 1 is not read, even though earlier binaries wrote it: it is migrated.](layers/mapa.md#mpfrm--mapformat--the-maps-format-number-decides-whether-this-binary-may-read-it)
 
@@ -7868,6 +7886,22 @@ abra a página dela em `camadas/`.
 - [VRCPT-B04 — A visual-regression code is read whole with its state — `BUTTN-VR-S01` — by the scan and by the test-signal reader, as the gates read it.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
 - [VRCPT-I01 — A change to the captured unit's code file or to one of its images stales the capture's evidence; a change to a component it uses does not.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
+## migra
+
+### [MGFCD — FileCodes — every file a code of its own, of five characters](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
+
+- [MGFCD-B01 — `WidenedCode`: A four-character code becomes a five-character one that keeps it as the prefix and adds a letter of the unit's name; a taken code is never returned.](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
+
+- [MGFCD-B02 — `FileCodeName`: A file's code is generated from its name without the artifact suffixes (`.spec.md`, `.feature`, `.test`, `_test`) and extension, and its layer — or its kind when it has no layer —, so the files of one unit differ.](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
+
+- [MGFCD-B03 — `FileCode`: The file's code has five characters and is not one of the taken codes.](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
+
+- [MGFCD-B04 — `CanCarryCode`: A file can carry the line when it is text and its extension has a comment syntax — a Gherkin `.feature` included, which comments with `#` —; a binary, a JSON or an unknown type cannot.](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
+
+- [MGFCD-B05 — `WithHeaderCode`: The `code:` line goes right below the `@anchors` opener of an existing header, in the file's comment syntax; a file with no header gets one at the top, after a shebang when there is one.](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
+
+- [MGFCD-B06 — `AsRefWithOwnCode`: A header whose `code:` is its unit's has that line turned into `code: <own>` followed by `ref: <unit>`, in the header's own syntax; a file with no header, or with no such line, is returned as it was.](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
 
 ## scan
 

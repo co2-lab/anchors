@@ -1,4 +1,5 @@
 // @anchors
+//   code: DCIND
 //   ref: INDCN
 
 package initx

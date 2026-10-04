@@ -1,4 +1,5 @@
 // @anchors
+//   code: FXTSA
 //   ref: FXIXX
 
 package gate
@@ -7,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -221,23 +223,36 @@ func TestFixMissingHeader_fromTheMap(t *testing.T) {
 		in     string
 		prefix string
 	}{
-		{mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode}, "package src\n", "// @anchors\n//   ref: PAYMT\n\npackage src\n"},
-		{mapx.Node{ID: "src/pay_test.go", Kind: mapx.KindTest}, "package src\n", "// @anchors\n//   ref: PAYMT\n\n"},
-		{mapx.Node{ID: "guides/A.md", Kind: mapx.KindGuide, Layer: "guide"}, "# A\n", "<!-- @anchors\n  layer: guide\n-->\n\n# A\n"},
-		{mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode}, "// @anchors\n//   updated_at: 2026-01-01\npackage src\n", "// @anchors\n//   ref: PAYMT\n//   updated_at: 2026-01-01\n"},
+		{mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode}, "package src\n", "// @anchors\n//   code: CODE\n//   ref: PAYMT\n\npackage src\n"},
+		{mapx.Node{ID: "src/pay_test.go", Kind: mapx.KindTest}, "package src\n", "// @anchors\n//   code: CODE\n//   ref: PAYMT\n\n"},
+		{mapx.Node{ID: "guides/A.md", Kind: mapx.KindGuide, Layer: "guide"}, "# A\n", "<!-- @anchors\n  code: CODE\n  layer: guide\n-->\n\n# A\n"},
+		{mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode}, "// @anchors\n//   updated_at: 2026-01-01\npackage src\n", "// @anchors\n//   code: CODE\n//   ref: PAYMT\n//   updated_at: 2026-01-01\n"},
 	}
 	for _, c := range cases {
 		out, changed, _ := fixMissingHeader(c.in, c.n, "", g)
+		out = generatedCodeRE.ReplaceAllString(out, "code: CODE")
 		if !changed || !strings.HasPrefix(out, c.prefix) {
 			t.Errorf("%s: got %q, want it to start with %q", c.n.ID, out, c.prefix)
 		}
 	}
 	sh := mapx.Node{ID: "src/run.sh", Kind: mapx.KindCode}
 	gs := &mapx.Graph{Nodes: []mapx.Node{{ID: "s.spec.md", Kind: mapx.KindSpec, Code: "RUNXX"}, sh}, Edges: []mapx.Edge{{From: "s.spec.md", To: "src/run.sh", Type: mapx.EdgeSpecifies}}}
-	if out, _, _ := fixMissingHeader("#!/bin/sh\necho hi\n", sh, "", gs); !strings.HasPrefix(out, "#!/bin/sh\n# @anchors\n#   ref: RUNXX\n") {
+	if out, _, _ := fixMissingHeader("#!/bin/sh\necho hi\n", sh, "", gs); !strings.HasPrefix(generatedCodeRE.ReplaceAllString(out, "code: CODE"), "#!/bin/sh\n# @anchors\n#   code: CODE\n#   ref: RUNXX\n") {
 		t.Errorf("the shebang stays first: %q", out)
 	}
 	if _, changed, _ := fixMissingHeader("package x\n", mapx.Node{ID: "x/orphan.go", Kind: mapx.KindCode}, "", g); changed {
 		t.Error("a file of no unit is left as it is")
 	}
+	t.Run("FXIXX-B10: The fix gives a file with an identity and no code of its own a code unique in the map", func(t *testing.T) {})
+	in := "// @anchors\n//   ref: PAYMT\n\npackage src\n"
+	out, changed, _ := fixMissingHeader(in, mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode, Layer: "logic"}, "", g)
+	m := regexp.MustCompile(`code: ([A-Z0-9]{5})\n`).FindStringSubmatch(out)
+	if !changed || m == nil || m[1] == "PAYMT" || !strings.Contains(out, "ref: PAYMT") {
+		t.Errorf("a code of its own, beside the ref: %q", out)
+	}
+	if again, changed, _ := fixMissingHeader(out, mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode}, "", g); changed || again != out {
+		t.Errorf("a header with its own code is left as it is: %q", again)
+	}
 }
+
+var generatedCodeRE = regexp.MustCompile(`code: [A-Z0-9]{5}`)

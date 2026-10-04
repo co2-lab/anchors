@@ -1,4 +1,5 @@
 // @anchors
+//   code: GTTSC
 //   ref: GHIGT
 
 package issue

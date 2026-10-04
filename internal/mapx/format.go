@@ -1,4 +1,5 @@
 // @anchors
+//   code: FRMPF
 //   ref: MPFRM
 
 package mapx
@@ -29,7 +30,7 @@ import "fmt"
 // Subir por isso tornaria toda adição uma barreira, e o número perderia o significado.
 const (
 	// FormatoAtual é o que este binário ESCREVE.
-	FormatoAtual = 6
+	FormatoAtual = 7
 
 	// FormatoMinimoLegivel é o mais antigo que ele lê sem migrar.
 	//
@@ -42,7 +43,7 @@ const (
 	// renomeou o gate `unit-complete` para `unit-complete`: um projeto não migrado
 	// declararia um gate que o binário não conhece, e as peças da unidade deixariam de ser
 	// cobradas em silêncio.
-	FormatoMinimoLegivel = 6
+	FormatoMinimoLegivel = 7
 )
 
 // ErroDeFormato distingue "não sei ler isto" de "o arquivo está corrompido".

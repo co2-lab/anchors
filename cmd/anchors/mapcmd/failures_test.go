@@ -1,4 +1,5 @@
 // @anchors
+//   code: FLTSF
 //   ref: FLRSA
 
 package mapcmd

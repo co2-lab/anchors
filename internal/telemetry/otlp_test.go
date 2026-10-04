@@ -1,4 +1,5 @@
 // @anchors
+//   code: OTTST
 //   ref: TLEMT
 
 package telemetry

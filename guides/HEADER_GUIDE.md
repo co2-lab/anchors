@@ -1,4 +1,5 @@
 <!-- @anchors
+  code: HGGDH
   layer: guide-distribuido
 -->
 

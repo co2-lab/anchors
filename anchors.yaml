@@ -12,7 +12,7 @@ lang: en
 # interativo, ou inferir do escaneamento que ele mesmo acabou de fazer (ele JÁ detectou
 # "código em: [cli/internal cli/cmd]" — e não usou; os caminhos daquele dia tinham o
 # prefixo `cli/`, que saiu quando o `go.mod` foi para a raiz).
-version: 6
+version: 7
 # The version floor: `mode: manual` (below) exists from 0.1.190 on. An older binary would
 # refuse to load this file; with the floor it asks to be updated instead.
 min_version: 0.1.190

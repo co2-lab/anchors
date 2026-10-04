@@ -1,4 +1,5 @@
 // @anchors
+//   code: QSINQ
 //   ref: INQSN
 
 package initx

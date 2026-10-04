@@ -1,4 +1,5 @@
 // @anchors
+//   code: STMPA
 //   ref: GRPRG
 
 package mapx

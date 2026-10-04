@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: OBFTB
 #   ref: BLGTN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @BLGTN

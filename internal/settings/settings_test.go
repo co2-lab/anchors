@@ -1,4 +1,5 @@
 // @anchors
+//   code: STTSH
 //   ref: USSTS
 
 package settings

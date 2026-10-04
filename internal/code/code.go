@@ -1,4 +1,5 @@
 // @anchors
+//   code: CDINC
 //   ref: CDGNC
 
 // Package code gera e valida o código de identidade de uma unidade (TRACEABILITY

@@ -1,4 +1,5 @@
 // @anchors
+//   code: STTSG
 //   ref: MSCMG
 
 package migra

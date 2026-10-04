@@ -1,4 +1,5 @@
 // @anchors
+//   code: GTGTG
 //   ref: GTENG
 
 // Package gate executa os gates de qualidade sobre um conjunto de nós — o pipeline

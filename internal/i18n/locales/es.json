@@ -262,6 +262,8 @@
   "gate.env_declared.skip_none": "la spec no declara variables de entorno y su código no lee ninguna",
   "gate.env_declared.undeclared": "%d variable(s) de entorno que el código lee y la spec no declara: %s — agréguelas en la sección Variables de Entorno",
   "gate.env_declared.unread": "%d variable(s) de entorno que la spec declara y el código no lee: %s — elimínelas, o márquelas deprecated mientras salen",
+  "gate.header.no_own_code": "la cabecera `@anchors` no tiene `code:` propio — desde el formato 7 todo archivo regido lleva su propio código (junto al `ref:` de su unidad, cuando la tiene), para que la cadena de dependencias pueda nombrarlo. `anchors check --fix` genera uno a partir del nombre y del tipo del archivo; `anchors code generate <nombre>` da uno a mano.",
+  "gate.header.code_taken": "el código `%s` también es el código propio de %s — un código es la dirección de UN archivo. Dale otro a este archivo (`anchors code generate <nombre>`), o quita la línea `code:` y deja que `anchors check --fix` genere uno.",
   "gate.vr_states.skip_no_code": "la spec no tiene código de identidad",
   "gate.vr_states.skip_no_spec": "ninguna spec junto al archivo principal de la unidad",
   "gate.mutation.nothing_to_mutate": "la herramienta de mutación midió este archivo en esta revisión y no generó ningún mutante — no hay qué mutar",

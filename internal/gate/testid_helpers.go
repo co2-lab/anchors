@@ -1,4 +1,5 @@
 // @anchors
+//   code: THGTS
 //   ref: TICTS
 
 // Helpers de testID: reconhecer o handle nas duas pontas que o ESCREVEM — o código

@@ -1,4 +1,5 @@
 // @anchors
+//   code: CHTSD
 //   ref: CHNGL
 
 package changelog

@@ -1,4 +1,5 @@
 // @anchors
+//   code: DLTSD
 //   ref: DLVRE
 
 package flow
@@ -19,7 +20,7 @@ const deliverLocalYAML = "version: 1\n" +
 	"    run: \"echo 'the loop drops the last page. Details follow here'; exit 1\"\n"
 
 // deliverMap is a map where src/pricing.ts is the unit PRICX, with no mutation signal.
-const deliverMap = "version: 6\nnodes:\n" +
+const deliverMap = "version: 7\nnodes:\n" +
 	"  - id: src/pricing.ts\n    kind: code\n    rev: a\n    code: PRICX\n    layer: logic\n" +
 	"  - id: src/pricing.spec.md\n    kind: spec\n    rev: b\n    code: PRICX\n    layer: spec\n" +
 	"edges: []\n"

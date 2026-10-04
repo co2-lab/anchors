@@ -1,4 +1,5 @@
 // @anchors
+//   code: CNTSD
 //   ref: CNGDC
 
 package initx

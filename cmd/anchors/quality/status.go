@@ -1,4 +1,5 @@
 // @anchors
+//   code: STCMD
 //   ref: PRSTP
 
 package quality

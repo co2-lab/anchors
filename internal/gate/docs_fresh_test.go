@@ -1,4 +1,5 @@
 // @anchors
+//   code: DFTDC
 //   ref: DCFRD
 
 package gate

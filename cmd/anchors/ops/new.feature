@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: NWFTN
 #   ref: NWARN
-#   updated_at: 2026-09-28
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @NWARN
@@ -135,3 +136,9 @@ Feature: NewArtifact — a new artifact is born beside its unit, with a resolved
     Given a project with a configuration and a map
     When a spec is created with anchors new
     Then the map has its node, and the output says it was added
+
+  @NWARN-B18 @unit-level
+  Scenario: A new artifact that refs its unit is born with a code of its own
+    Given a project whose map has the spec of the unit Pay
+    When a feature is created for Pay
+    Then the feature refs PAYMT and carries a five-character code of its own

@@ -1,4 +1,5 @@
 // @anchors
+//   code: CVTSC
 //   ref: CVCMC
 
 package quality

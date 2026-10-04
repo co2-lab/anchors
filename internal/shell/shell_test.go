@@ -1,4 +1,5 @@
 // @anchors
+//   code: SHTSS
 //   ref: PSXSH
 
 package shell

@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: MGFTM
 #   ref: MGCMM
-#   updated_at: 2026-09-28
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @MGCMM
@@ -71,3 +72,39 @@ Feature: MigrateCommand — the command the format error promises, bringing the 
     Given a format 4 project with a plan, a flow, an action, and a spec citing a phase beside a permission and a revision of its own
     When migrate runs with --dry-run, then for real, then again
     Then the dry run lists the rewrites and writes nothing, the real run rewrites the phase, step and result codes wherever cited and leaves the spec's own codes, and the second run rewrites nothing
+
+  @MGCMM-B08 @unit-level
+  Scenario: Crossing format 7 widens the four-character codes and renames the files named by them
+    Given a format 6 project whose spec owns a four-character code cited by its test and naming a baseline file
+    When migrate runs
+    Then the code becomes five characters with the old one as prefix in every file, the baseline file is renamed, and the config reads code_lengths [5]
+
+  @MGCMM-B09 @unit-level
+  Scenario: Crossing format 7 gives every governed file a code of its own
+    Given a format 6 project whose code and test files only ref their unit
+    When migrate runs
+    Then each of them gets a code of its own in its header and keeps its ref
+
+  @MGCMM-B10 @unit-level
+  Scenario: Crossing format 7 carries what each file was measured at to its new revision
+    Given a format 6 map with every file measured at its current content
+    When migrate runs
+    Then the map has each rewritten file at its new revision
+
+  @MGCMM-B11 @unit-level
+  Scenario: Crossing format 7 records each renamed code in anchors.renames.yaml
+    Given a format 6 project with a four-character code
+    When migrate runs, then again
+    Then anchors.renames.yaml records the old code and the new one, and the second run changes nothing
+
+  @MGCMM-B12 @unit-level
+  Scenario: Crossing format 7 turns a file carrying its spec's code into a ref with a code of its own
+    Given a format 6 project whose feature carries its spec's code as its own
+    When migrate runs
+    Then the feature refs the unit's widened code and gets a code of its own
+
+  @MGCMM-E02 @unit-level
+  Scenario: Crossing format 7, a file that cannot be written fails the command, and a second run finishes it
+    Given a format 6 project with a governed file that cannot be written
+    When migrate runs, then runs again after the file is made writable
+    Then the first run fails with the write error, and the second gives the file its code

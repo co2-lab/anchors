@@ -1,4 +1,5 @@
 // @anchors
+//   code: GRTSG
 //   ref: FLGRF
 
 package flagx

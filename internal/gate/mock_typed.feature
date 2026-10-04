@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: MTFMC
 #   ref: MCTYM
-#   updated_at: 2026-10-02
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @MCTYM

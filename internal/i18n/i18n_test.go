@@ -1,4 +1,5 @@
 // @anchors
+//   code: INTSA
 //   ref: INCTA
 
 package i18n

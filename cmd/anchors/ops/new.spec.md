@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NWARN
-  updated_at: 2026-09-28
+  updated_at: 2026-10-03
   layer: comando
 -->
 # NewArtifact — a new artifact is born beside its unit, with a resolved identity and the sections of the project's ruler
@@ -60,6 +60,7 @@ progress companion.
 | `NWARN-B15` | The target layer of a spec or feature is the layer of the unit it describes: an existing code file wins, otherwise the most specific extension that a layer claims. |
 | `NWARN-B16` | The help and the unknown-kind refusal name every kind of the catalog (action, feature, flow, plan, product, spec, test), and the help of `--out` says it is mandatory, with no default. |
 | `NWARN-B17` | A new artifact enters the map at once, with its unit's links, when the project has a map and a configuration: read alone, not the tree; without a map, nothing is written to it. |
+| `NWARN-B18` | An artifact that refs its unit (a feature, a test) is born with a code of its own in its header, generated from its name and its type and unique among the map's codes, beside the `ref:`. (`withOwnCode`) |
 
 ## Invariants
 

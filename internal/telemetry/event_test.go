@@ -1,4 +1,5 @@
 // @anchors
+//   code: EVTSA
 //   ref: TLEVT
 
 package telemetry

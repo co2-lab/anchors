@@ -1,4 +1,5 @@
 // @anchors
+//   code: MNCMM
 //   ref: CLMNC
 
 // Command anchors é o CLI único do framework Anchors.

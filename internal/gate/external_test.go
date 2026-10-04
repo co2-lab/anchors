@@ -1,4 +1,5 @@
 // @anchors
+//   code: EXTSX
 //   ref: EXCMX
 
 package gate

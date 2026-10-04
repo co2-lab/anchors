@@ -1,4 +1,5 @@
 // @anchors
+//   code: DDGDM
 //   ref: DMDCD
 
 package gate

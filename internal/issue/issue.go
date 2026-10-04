@@ -1,4 +1,5 @@
 // @anchors
+//   code: ISINS
 //   ref: ISLFS
 
 // Package issue materializa as issues do Anchors (CONCEPT §5): o registro de uma

@@ -1,4 +1,5 @@
 // @anchors
+//   code: QUINQ
 //   ref: TSQUT
 
 // Package queue é a fila de tarefas do Anchors: o mecanismo que desacopla "algo

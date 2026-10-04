@@ -1,4 +1,5 @@
 // @anchors
+//   code: RGCMB
 //   ref: MPRGM
 
 package mapcmd

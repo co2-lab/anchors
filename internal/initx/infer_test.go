@@ -1,4 +1,5 @@
 // @anchors
+//   code: INTSB
 //   ref: INPRN
 
 package initx

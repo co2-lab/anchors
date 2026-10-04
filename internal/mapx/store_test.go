@@ -1,4 +1,5 @@
 // @anchors
+//   code: STTSF
 //   ref: GRPRG
 
 package mapx
@@ -94,7 +95,7 @@ func TestSaveStampsTheCurrentFormatAndTheHeader(t *testing.T) {
 	if !strings.HasPrefix(text, "# anchors.graph.yaml — ") || !strings.Contains(strings.SplitN(text, "\n", 2)[0], "anchors map build") {
 		t.Errorf("the file must open with the fixed comment header; got:\n%s", text)
 	}
-	if !strings.Contains(text, "\nversion: 6\n") || !strings.Contains(text, "\ngenerated_by: 0.1.10\n") {
+	if !strings.Contains(text, "\nversion: 7\n") || !strings.Contains(text, "\ngenerated_by: 0.1.10\n") {
 		t.Errorf("the save must stamp the current format and the running release; got:\n%s", text)
 	}
 	if _, err := Load(p); err != nil {

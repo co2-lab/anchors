@@ -1,4 +1,5 @@
 // @anchors
+//   code: JNINJ
 //   ref: JUIJN
 
 // Package testsig ingere SINAIS de qualidade de teste que o projeto já gera — o

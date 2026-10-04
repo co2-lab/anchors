@@ -1,4 +1,5 @@
 // @anchors
+//   code: CHINB
 //   ref: CHLGC
 
 // Package checklog espelha a saída do `anchors check` num arquivo, para que ela

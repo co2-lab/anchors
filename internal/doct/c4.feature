@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: C4FTC
 #   ref: C4CNC
-#   updated_at: 2026-09-27
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @C4CNC

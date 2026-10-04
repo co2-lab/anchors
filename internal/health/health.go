@@ -1,4 +1,5 @@
 // @anchors
+//   code: HLINH
 //   ref: DCTRO
 
 // Package health é o validador de saúde do ecossistema (QUALITY §5.2) — a visão

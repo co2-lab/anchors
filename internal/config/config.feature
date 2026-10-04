@@ -1,5 +1,6 @@
 # language: en
 # @anchors
+#   code: CNFTC
 #   ref: CNFGO
 #   updated_at: 2026-10-03
 #   layer: feature

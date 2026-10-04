@@ -1,4 +1,5 @@
 // @anchors
+//   code: STCMC
 //   ref: CNSTC
 
 package quality

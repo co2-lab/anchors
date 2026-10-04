@@ -1,4 +1,5 @@
 // @anchors
+//   code: GTTSA
 //   ref: GTMTG
 
 package gitmeta

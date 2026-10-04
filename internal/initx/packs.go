@@ -1,4 +1,5 @@
 // @anchors
+//   code: PCINP
 //   ref: PCSDP
 
 package initx

@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: IWFNT
 #   ref: INWZN
-#   updated_at: 2026-10-02
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @INWZN

@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: DMFTD
 #   ref: DMSTD
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @DMSTD

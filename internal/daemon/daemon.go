@@ -1,4 +1,5 @@
 // @anchors
+//   code: DMIND
 //   ref: DMSTD
 
 // Package daemon gerencia o watcher em background: daemonização (re-exec

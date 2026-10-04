@@ -1,4 +1,5 @@
 // @anchors
+//   code: NTTSA
 //   ref: TLNTT
 
 package telemetry

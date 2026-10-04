@@ -1,4 +1,5 @@
 // @anchors
+//   code: CHTSE
 //   ref: CHLGC
 
 package checklog

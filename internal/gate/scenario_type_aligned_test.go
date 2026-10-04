@@ -1,4 +1,5 @@
 // @anchors
+//   code: STATS
 //   ref: STASC
 
 package gate

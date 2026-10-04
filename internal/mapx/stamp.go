@@ -1,4 +1,5 @@
 // @anchors
+//   code: STMPS
 //   ref: EDSTD
 
 package mapx

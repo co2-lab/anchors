@@ -1,4 +1,5 @@
 // @anchors
+//   code: STTSD
 //   ref: STPRS
 
 package quality

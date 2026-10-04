@@ -1,4 +1,5 @@
 // @anchors
+//   code: SHINS
 //   ref: PSXSH
 
 // Package shell finds the POSIX shell that runs the commands a project declares — a gate's

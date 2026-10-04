@@ -1,4 +1,5 @@
 // @anchors
+//   code: SGINB
 //   ref: SGSTS
 
 // Package suggestion materializa uma CORREÇÃO PROPOSTA que ainda não foi aplicada.

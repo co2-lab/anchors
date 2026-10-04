@@ -1,4 +1,5 @@
 // @anchors
+//   code: ININN
 //   ref: INPRN
 
 // Package initx infere uma proposta de Estrutura (config.Config) escaneando o

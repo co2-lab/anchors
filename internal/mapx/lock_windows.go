@@ -1,4 +1,5 @@
 // @anchors
+//   code: LWMLC
 //   ref: MPLCK
 
 //go:build windows

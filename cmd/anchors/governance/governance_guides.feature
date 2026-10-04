@@ -1,5 +1,6 @@
 # language: en
 # @anchors
+#   code: GGFGV
 #   ref: GVGDG
 #   updated_at: 2026-10-03
 #   layer: feature

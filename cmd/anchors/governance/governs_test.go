@@ -1,4 +1,5 @@
 // @anchors
+//   code: GVTSG
 //   ref: GVRNS
 
 package governance

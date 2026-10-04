@@ -1,4 +1,5 @@
 // @anchors
+//   code: CHINA
 //   ref: CHNGL
 
 // Package changelog builds a project's changelog from its commits.

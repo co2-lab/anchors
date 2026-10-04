@@ -1,4 +1,5 @@
 // @anchors
+//   code: DCGTD
 //   ref: DCTRN
 
 package gate

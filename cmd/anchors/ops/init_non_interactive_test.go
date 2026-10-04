@@ -1,4 +1,5 @@
 // @anchors
+//   code: INITN
 //   ref: ININT
 
 package ops

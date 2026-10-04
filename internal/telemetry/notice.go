@@ -1,4 +1,5 @@
 // @anchors
+//   code: NTAPN
 //   ref: TLNTT
 
 package telemetry

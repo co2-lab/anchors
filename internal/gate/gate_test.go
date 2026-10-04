@@ -1,4 +1,5 @@
 // @anchors
+//   code: GTTSG
 //   ref: GTENG
 
 package gate
@@ -156,11 +157,12 @@ func TestInternalCheckers(t *testing.T) {
 		{"spec-sections", "### LOGIX-S01\nUma regra escrita de verdade.", Pass}, // placeholder
 		{"has-code", "it('LOGIX-A01: ...')", Pass},
 		{"has-code", "sem identidade nenhuma", Fail},
-		{"header-valid", "// @anchors\n//   code: LGNNX\nconst x = 1", Pass}, // dono (code)
-		{"header-valid", "// @anchors\n//   ref: LGNNX\nconst x = 1", Pass},  // referência (ref) também conta
-		{"header-valid", "<!-- @anchors\n  code: SPCRX\n-->\n# spec", Pass},  // dialeto markdown
-		{"header-valid", "const x = 1 // nada aqui", Fail},                   // sem bloco
-		{"header-valid", "// @anchors\n//   layer: screen\nconst x=1", Fail}, // bloco sem code NEM ref
+		{"header-valid", "// @anchors\n//   code: LGNNX\nconst x = 1", Pass},                  // dono (code)
+		{"header-valid", "// @anchors\n//   code: LGNCD\n//   ref: LGNNX\nconst x = 1", Pass}, // o código do arquivo e a referência à unidade
+		{"header-valid", "// @anchors\n//   ref: LGNNX\nconst x = 1", Fail},                   // a referência sozinha não nomeia o arquivo
+		{"header-valid", "<!-- @anchors\n  code: SPCRX\n-->\n# spec", Pass},                   // dialeto markdown
+		{"header-valid", "const x = 1 // nada aqui", Fail},                                    // sem bloco
+		{"header-valid", "// @anchors\n//   layer: screen\nconst x=1", Fail},                  // bloco sem code NEM ref
 	}
 	for _, c := range cases {
 		// O checker pode estar em qualquer um dos dois registros: os puros de conteúdo e

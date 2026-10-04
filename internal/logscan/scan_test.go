@@ -1,4 +1,5 @@
 // @anchors
+//   code: SCTSB
 //   ref: LGSCL
 
 package logscan

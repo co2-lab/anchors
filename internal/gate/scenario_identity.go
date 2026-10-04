@@ -1,4 +1,5 @@
 // @anchors
+//   code: SIGSC
 //   ref: SCIDS
 
 package gate

@@ -1,4 +1,5 @@
 // @anchors
+//   code: MPTSM
 //   ref: MPCMM
 
 package mapcmd

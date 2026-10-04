@@ -1,4 +1,5 @@
 // @anchors
+//   code: MMCMP
 //   ref: MPMRM
 
 package mapcmd

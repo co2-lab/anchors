@@ -1,4 +1,5 @@
 <!-- @anchors
+  code: GEGGD
   layer: guide-distribuido
 -->
 

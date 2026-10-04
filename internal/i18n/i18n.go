@@ -1,4 +1,5 @@
 // @anchors
+//   code: INAPN
 //   ref: INCTA
 
 // Package i18n é o catálogo de mensagens do Anchors.

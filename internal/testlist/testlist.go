@@ -1,4 +1,5 @@
 // @anchors
+//   code: TSINT
 //   ref: TSTLS
 
 // Package testlist reads the project's tests: which tests exist, in which file, on which

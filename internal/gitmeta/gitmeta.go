@@ -1,4 +1,5 @@
 // @anchors
+//   code: GTING
 //   ref: GTMTG
 
 // Package gitmeta lê metadados do git de um arquivo — hoje, a data do último commit

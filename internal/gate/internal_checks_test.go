@@ -1,4 +1,5 @@
 // @anchors
+//   code: ICTNT
 //   ref: INCHN
 
 package gate
@@ -1813,12 +1814,35 @@ func TestHeaderValid_readsADoubleDashHeader(t *testing.T) {
 	t.Run("INCHN-B39: A header in a double-dash comment has its identity", func(t *testing.T) {})
 	n := mapx.Node{ID: "migrations/001.sql", Kind: mapx.KindCode}
 	for _, header := range []string{
-		"-- @anchors\n--   ref: MGRTN\n--   layer: migration\nCREATE TABLE x();\n",
-		"// @anchors\n//   ref: MGRTN\n//   layer: migration\n",
+		"-- @anchors\n--   code: MGRTS\n--   ref: MGRTN\n--   layer: migration\nCREATE TABLE x();\n",
+		"// @anchors\n//   code: MGRTS\n//   ref: MGRTN\n//   layer: migration\n",
 	} {
 		if v, msg := checkersWithGraph["header-valid"](header, n, "", nil, nil); v == Fail {
 			t.Errorf("a valid header fails: %s\n%s", msg, header)
 		}
+	}
+}
+
+// Since format 7 every governed file carries a code of its own, and no two files carry
+// the same one.
+func TestHeaderValid_asksForTheFilesOwnCodeAndOnlyOnce(t *testing.T) {
+	t.Run("INCHN-B41: A header without a code of its own fails, and a code another file owns fails naming it", func(t *testing.T) {})
+	hv := checkersWithGraph["header-valid"]
+	n := mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode}
+	if v, msg := hv("// @anchors\n//   ref: PAYMT\n\npackage src\n", n, "", nil, nil); v != Fail || !strings.Contains(msg, "code:") {
+		t.Errorf("a ref alone names the unit, not the file: %v (%s)", v, msg)
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "src/pay.spec.md", Kind: mapx.KindSpec, Code: "PAYMT", FileCode: "PAYMT"},
+		{ID: "src/other.go", Kind: mapx.KindCode, FileCode: "PAYCD"},
+	}}
+	own := "// @anchors\n//   code: PAYCD\n//   ref: PAYMT\n\npackage src\n"
+	if v, msg := hv(own, n, "", g, nil); v != Fail || !strings.Contains(msg, "src/other.go") {
+		t.Errorf("a code another file owns fails naming it: %v (%s)", v, msg)
+	}
+	g.Nodes[1].FileCode = "OTHRC"
+	if v, msg := hv(own, n, "", g, nil); v != Pass {
+		t.Errorf("a code of its own, carried by no other file, passes: %v (%s)", v, msg)
 	}
 }
 
@@ -1830,14 +1854,14 @@ func TestHeaderValid_readsTheTopBlockAndLayerForNoUnit(t *testing.T) {
 	if v, _ := hv(inString, code, "", nil, nil); v != Fail {
 		t.Errorf("a header in a string is no header: %v", v)
 	}
-	layerOnly := "<!-- @anchors\n  layer: guide\n-->\n\n# Guide\n"
+	layerOnly := "<!-- @anchors\n  code: GUIDA\n  layer: guide\n-->\n\n# Guide\n"
 	for _, n := range []mapx.Node{{ID: "g/A.md", Kind: mapx.KindGuide}, {ID: "D.md", Kind: mapx.KindDoc}} {
 		if v, msg := hv(layerOnly, n, "", nil, nil); v != Pass {
 			t.Errorf("%s with layer only: %v (%s)", n.Kind, v, msg)
 		}
 	}
 	support := mapx.Node{ID: "pkg/helpers_test.go", Kind: mapx.KindTest, Support: true}
-	if v, msg := hv("// @anchors\n//   layer: test\n\npackage pkg\n", support, "", nil, nil); v != Pass {
+	if v, msg := hv("// @anchors\n//   code: HLPRT\n//   layer: test\n\npackage pkg\n", support, "", nil, nil); v != Pass {
 		t.Errorf("a support file with layer only: %v (%s)", v, msg)
 	}
 }

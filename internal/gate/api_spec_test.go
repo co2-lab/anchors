@@ -1,4 +1,5 @@
 // @anchors
+//   code: ASTPS
 //   ref: APISP
 
 package gate

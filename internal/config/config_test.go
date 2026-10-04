@@ -1,4 +1,5 @@
 // @anchors
+//   code: CNTSC
 //   ref: CNFGO
 
 package config

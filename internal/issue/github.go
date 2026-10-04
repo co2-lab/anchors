@@ -1,4 +1,5 @@
 // @anchors
+//   code: GTINB
 //   ref: GHIGT
 
 package issue

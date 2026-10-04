@@ -1,4 +1,5 @@
 // @anchors
+//   code: STAPA
 //   ref: USSTS
 
 // Package settings guarda a configuração LOCAL do agente — o que é dele e não do projeto.

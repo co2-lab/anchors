@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: FXFTF
 #   ref: FXIXX
-#   updated_at: 2026-10-02
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @FXIXX
@@ -85,3 +86,9 @@ Feature: Fix — the self-healer that applies the mechanical, safe repairs of `c
     When the header fix runs
     Then the code and the test get the ref of their unit, the guide its layer, the script's header goes below the shebang, the identity-less header gets its line
     And the code file of no unit is left as it is
+
+  @FXIXX-B10 @unit-level
+  Scenario: The fix gives a file with an identity and no code of its own a code unique in the map
+    Given a code file whose header refs its unit and has no code of its own
+    When the header fix runs, then again
+    Then the header gets a five-character code that is not the unit's, beside the ref, and the second run changes nothing

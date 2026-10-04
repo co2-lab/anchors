@@ -1,4 +1,5 @@
 // @anchors
+//   code: CNTSE
 //   ref: TLCNT
 
 package telemetry

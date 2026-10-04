@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: THAFT
 #   ref: THSAS
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @THSAS

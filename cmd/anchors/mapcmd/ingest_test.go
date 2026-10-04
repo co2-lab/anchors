@@ -1,4 +1,5 @@
 // @anchors
+//   code: INTSN
 //   ref: NGSTI
 
 package mapcmd

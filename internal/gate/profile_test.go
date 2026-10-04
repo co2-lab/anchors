@@ -1,4 +1,5 @@
 // @anchors
+//   code: PRTSC
 //   ref: PRFLO
 
 package gate

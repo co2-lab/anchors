@@ -1,4 +1,5 @@
 // @anchors
+//   code: HGTHD
 //   ref: HDGDH
 
 package initx

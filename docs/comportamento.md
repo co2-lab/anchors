@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:69999ca6fa6fb650 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:808e0e9d6a680491 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1960,6 +1960,18 @@ teste prova.
 
 - [Crossing format 5 rewrites the letters of plans, flows and actions](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B07`
 
+- [Crossing format 7 widens the four-character codes and renames the files named by them](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B08`
+
+- [Crossing format 7 gives every governed file a code of its own](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B09`
+
+- [Crossing format 7 carries what each file was measured at to its new revision](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B10`
+
+- [Crossing format 7 records each renamed code in anchors.renames.yaml](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B11`
+
+- [Crossing format 7 turns a file carrying its spec's code into a ref with a code of its own](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B12`
+
+- [Crossing format 7, a file that cannot be written fails the command, and a second run finishes it](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-E02`
+
 - [An unknown kind is refused](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B01`
 
 - [The name and the output path are required](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B02`
@@ -1997,6 +2009,8 @@ teste prova.
 - [The help and the unknown-kind refusal name every kind, and --out is mandatory](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B16`
 
 - [The new artifact enters the map at once](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B17`
+
+- [A new artifact that refs its unit is born with a code of its own](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B18`
 
 - [The catalog holds seven kinds and each is born by new](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B01`
 
@@ -3780,6 +3794,8 @@ teste prova.
 
 - [The fix writes the missing header from the map](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B09`
 
+- [The fix gives a file with an identity and no code of its own a code unique in the map](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B10`
+
 - [The flag gates skip what is not a flag, and a flag with no scenario](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B01`
 
 - [A flag whose every condition is in the grammar passes](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B02`
@@ -4037,6 +4053,8 @@ teste prova.
 - [Line coverage is held to the gate's floor, or a glob's floor with its reason](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B38`
 
 - [A header in a double-dash comment has its identity](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B39`
+
+- [A header without a code of its own fails, and a code another file owns fails naming it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B41`
 
 - [The header is the block at the top, and a file of no unit is identified by its layer](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B40`
 
@@ -6884,7 +6902,7 @@ teste prova.
 
 - [The newer-map refusal never names the migration command](layers/mapa.md#mpfrm-b05--the-newer-map-refusal-never-names-the-migration-command) `MPFRM-B05`
 
-- [Exactly format 6 is readable](layers/mapa.md#mpfrm-i01--exactly-format-6-is-readable) `MPFRM-I01`
+- [Exactly format 7 is readable](layers/mapa.md#mpfrm-i01--exactly-format-7-is-readable) `MPFRM-I01`
 
 - [Format 1 is migrated, not read](layers/mapa.md#mpfrm-x01--format-1-is-migrated-not-read) `MPFRM-X01`
 
@@ -7139,6 +7157,20 @@ teste prova.
 - [Parts Used names become composes edges](layers/mapx.md#vrcpt-b07--parts-used-names-become-composes-edges) `VRCPT-B07`
 
 - [The captures a changed file reaches](layers/mapx.md#vrcpt-b08--the-captures-a-changed-file-reaches) `VRCPT-B08`
+
+## migra
+
+- [A four-character code is widened, keeping it as the prefix](layers/migra.md#mgfcd-b01--a-four-character-code-is-widened-keeping-it-as-the-prefix) `MGFCD-B01`
+
+- [The files of one unit get different code names](layers/migra.md#mgfcd-b02--the-files-of-one-unit-get-different-code-names) `MGFCD-B02`
+
+- [A file's code is new and of five characters](layers/migra.md#mgfcd-b03--a-files-code-is-new-and-of-five-characters) `MGFCD-B03`
+
+- [Only a text file with a comment syntax carries the line](layers/migra.md#mgfcd-b04--only-a-text-file-with-a-comment-syntax-carries-the-line) `MGFCD-B04`
+
+- [The line goes below the header's opener, or in a new header](layers/migra.md#mgfcd-b05--the-line-goes-below-the-headers-opener-or-in-a-new-header) `MGFCD-B05`
+
+- [A header carrying its unit's code turns it into a ref beside a code of its own](layers/migra.md#mgfcd-b06--a-header-carrying-its-units-code-turns-it-into-a-ref-beside-a-code-of-its-own) `MGFCD-B06`
 
 ## scan
 

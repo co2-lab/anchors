@@ -1,4 +1,5 @@
 // @anchors
+//   code: MNTSM
 //   ref: CLMNC
 
 package main
@@ -76,7 +77,7 @@ func TestMainExitsThreeForANotGovernedFile(t *testing.T) {
 	dir := t.TempDir()
 	writeTo(t, dir, "anchors.yaml", "version: 1\nlayers:\n  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n"+
 		"gates:\n  - name: spec-has-code\n    id: spec-has-code\n    \"on\": [spec]\n    check: has-code\n    blocking: true\n")
-	writeTo(t, dir, "anchors.graph.yaml", "version: 6\nnodes: []\nedges: []\n")
+	writeTo(t, dir, "anchors.graph.yaml", "version: 7\nnodes: []\nedges: []\n")
 	writeTo(t, dir, "package.json", "{}\n")
 	_, stderr, code := runMain(t, dir, "check", "--changed", "package.json", "--no-record")
 	if code != 3 {

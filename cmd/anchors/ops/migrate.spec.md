@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGCMM
-  updated_at: 2026-09-28
+  updated_at: 2026-10-03
   layer: comando
 -->
 # MigrateCommand — the command the format error promises, bringing the map and the config up to this binary's format
@@ -31,6 +31,7 @@ machine makes the next agent migrate again and produce the same diff.
 | --- | --- | --- | --- |
 | the project root | a directory; either file may be missing | — | this unit: a missing file is reported and skipped |
 | each file's format | a format at or below the binary's | a file whose format cannot be determined | the migration package reports it; this unit prints it and moves on |
+| the project's config, crossing format 7 | an `anchors.yaml` this binary reads | a missing or unreadable config | this unit: no file is given a code, the reason is printed on a `·` line, and the rest of the migration goes on |
 
 ## Effects
 
@@ -42,6 +43,11 @@ machine makes the next agent migrate again and produce the same diff.
 | `MGCMM-B04` | For each migrated file, the renamed keys are listed in alphabetical order, each with its number of occurrences. |
 | `MGCMM-B05` | With `--dry-run` the command reports what would be migrated, writes nothing, and says that nothing was written. |
 | `MGCMM-B07` | When the project crosses a step that renames code letters, the codes of its plans (files of a `kind: plan` layer), flows (`.flow.md`) and actions (`.action.md`), found by the code their header declares, are rewritten in every versioned text file, each file listed with its rewrites; with `--dry-run` they are listed and not written; codes of other units are not touched, and a second run rewrites nothing. The installed pipelines are not rewritten: the command points to `anchors doctor --fix`, which updates the ones nobody edited. |
+| `MGCMM-B08` | When the project crosses format 7, each four-character code a file owns is widened to five — the old code kept as the prefix — wherever it is written: the project's files, the names of the files that carry it (with or without a `recode:` block), the config and the map; the config's `code_lengths` becomes `[5]`. |
+| `MGCMM-B09` | When the project crosses format 7, every governed file that can carry a comment and has no `code:` gets one in its `@anchors` header, generated from its name and its type (layer or kind), unique in the project; the `ref:` it had stays. |
+| `MGCMM-B10` | When the project crosses format 7, each file the migration rewrote and the map had measured at the content it found has its measurements carried to its new revision. |
+| `MGCMM-B11` | When the project crosses format 7, each renamed code is appended, old → new under the date, to `anchors.renames.yaml` (`RenamesFile`). |
+| `MGCMM-B12` | When the project crosses format 7, a file other than the spec that carries, as its own `code:`, the code its unit's spec owns has that line turned into `ref: <code>` with a code of its own above it. |
 | `MGCMM-B06` | After a real migration the command tells the user to commit it. |
 
 ## Invariants
@@ -62,6 +68,7 @@ machine makes the next agent migrate again and produce the same diff.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `MGCMM-E01` | REF[MGCMM-B02]: a file that cannot be read is the failure this command handles, by reporting it and migrating the other file | — | — |
+| `MGCMM-E02` | Crossing format 7, a project file, the config or the map cannot be written | the command fails with the write error; the map and the config go back to the format they had, and what was already written stays | run again after fixing the cause, it crosses the step again and codes only what is left |
 
 ## Dependencies
 
@@ -70,6 +77,10 @@ machine makes the next agent migrate again and produce the same diff.
 | DEP1 | `internal/migra/migrate.go` | `MigrateFile` | apoio — the migration steps |
 | DEP2 | `internal/mapx/model.go` | `DefaultPath`, `FormatoAtual` | mapa — the map's path and the current format |
 | DEP3 | `internal/config/config.go` | `AbsRoot`, `DefaultFile` | config — the config's path |
+| DEP4 | `internal/recode/plan.go` | `BuildPlan` | apoio — widening a code wherever it is written, file names included |
+| DEP7 | `internal/recode/rewrite.go` | `Rewrite` | apoio — the code rewritten in the config and the map |
+| DEP5 | `internal/migra/filecodes.go` | `WidenedCode`, `FileCode`, `CanCarryCode`, `WithHeaderCode` | apoio — what a code becomes and where the header line goes |
+| DEP6 | `internal/scan/scan.go` | `Walk`, `ScanPaths` | scan — the governed files and their revisions |
 
 ## Open Decisions
 

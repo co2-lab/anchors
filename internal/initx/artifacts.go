@@ -1,4 +1,5 @@
 // @anchors
+//   code: ARINR
 //   ref: ARCHR
 
 package initx

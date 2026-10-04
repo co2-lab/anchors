@@ -1,4 +1,5 @@
 // @anchors
+//   code: SCAPB
 //   ref: LGSCL
 
 // Package logscan scans the project's logs and identifies OCCURRENCES of declared failure.

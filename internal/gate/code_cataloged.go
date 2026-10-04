@@ -1,4 +1,5 @@
 // @anchors
+//   code: CCGCD
 //   ref: CDCTC
 
 package gate

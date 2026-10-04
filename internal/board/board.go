@@ -1,4 +1,5 @@
 // @anchors
+//   code: BRAPB
 //   ref: BRCRB
 
 // Package board reivindica trabalho no BOARD do repositório — as issues, no `mode: github`.

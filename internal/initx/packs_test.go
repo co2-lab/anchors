@@ -1,4 +1,5 @@
 // @anchors
+//   code: PCTSP
 //   ref: PCSDP
 
 package initx

@@ -1,4 +1,5 @@
 // @anchors
+//   code: GHCGD
 //   ref: GVGDG
 
 package governance
@@ -30,7 +31,8 @@ Python/shell, '<!-- -->' in markdown). Inside it:
 Example (TS/Go) — a screen:
 
   // @anchors
-  //   ref: LGNN            (the SCREEN realizes the LGNN spec — it references, it does not own)
+  //   code: LGNSC          (the file's OWN code — its address)
+  //   ref: LGNNA           (the SCREEN realizes the LGNNA spec — the unit it belongs to)
   //   updated_at: 2026-08-08
   //   layer: screen
   //   @feature: auth
@@ -39,39 +41,38 @@ Example (TS/Go) — a screen:
 Example (markdown, in the owning SPEC) — the spec OWNS the code:
 
   <!-- @anchors
-    code: LGNN            (the spec IS the owner of the identity)
+    code: LGNNA           (the spec's own code IS the unit's code)
     updated_at: 2026-08-08
     layer: screen
     @feature: auth
   -->
 
 The block opens with '@anchors' and the following lines are the markers. What does not
-apply, omit — but every file in the graph needs IDENTITY: 'code:' if it is the owner
-(the spec), 'ref:' if it references (the rest of the unit), OR 'layer:' if it belongs to a
-RECOGNIZED layer with no spec (infra/dao/presentation/domain vocabulary — see below).
+apply, omit — but every file in the graph needs a CODE OF ITS OWN ('code:'), and the
+identity of where it belongs: the spec's own code is its unit's; the rest of the unit adds
+'ref:' to it; a file of a RECOGNIZED layer with no spec (infra/dao/presentation/domain
+vocabulary — see below) adds 'layer:'.
 
 ## The markers
 
-### Identity: 'code:' (ownership) vs 'ref:' (reference)
+### Identity: 'code:' (the file's own) and 'ref:' (its unit)
 
-This is the distinction that avoids the most common confusion. A scenario code belongs to
-ONE unit; the files that revolve around it either OWN it or REFERENCE it:
-
-- 'code: <CODE>' — OWNERSHIP. The file IS the canonical owner of the identity. Only ONE value.
-  Who the owner is: the SPEC (the source of truth, SPEC.md). The spec DEFINES the requirement and
-  its scenarios; it owns the code. Generate it with 'anchors code <name>' (uniqueness).
-- 'ref: <CODE> [, <CODE>...]' — REFERENCE. The file is NOT the owner; it realizes,
-  covers or proves the owning unit(s). It can be MULTIPLE. Thus:
-    - the CODE (Divider.tsx) that realizes the spec  → 'ref: DIVI'
-    - the FEATURE that covers the spec's scenarios   → 'ref: DIVI'
-    - the TEST that proves the scenarios             → 'ref: DIVI'
+- 'code: <CODE>' — the FILE'S OWN code, one value, unique in the project: the address by
+  which anything else names this file (the dependency chain does). Every file has one. The
+  SPEC's own code is also its UNIT's code: the rules and scenarios are numbered from it
+  (DIVID-B01). 'anchors check --fix' generates a missing one from the file's name and type;
+  'anchors code <name>' gives one by hand.
+- 'ref: <CODE> [, <CODE>...]' — the UNIT(S) the file realizes, covers or proves. It can be
+  MULTIPLE. Thus, beside its own code:
+    - the CODE (Divider.tsx) that realizes the spec  → 'ref: DIVID'
+    - the FEATURE that covers the spec's scenarios   → 'ref: DIVID'
+    - the TEST that proves the scenarios             → 'ref: DIVID'
   And a file may reference SEVERAL units: a util tested by scenarios of two
-  screens → 'ref: TXDT, MNDT'; a screen that composes components → 'ref' with their codes.
+  screens → 'ref: TXDTS, MNDTS'; a screen that composes components → 'ref' with their codes.
 
-Why it matters: putting 'code:' in a test would say the test OWNS the code — but it only
-references it (it proves the spec's unit). Swapping ownership for reference crosses the
-traceability and produces a false identity collision. When in doubt: the spec has 'code:'; the
-rest of the unit has 'ref:'.
+Why it matters: a test whose 'code:' were the spec's would be a second file at the spec's
+address — gate 'header-valid' fails a code two files carry. The unit is said by 'ref:'; the
+file is named by its own 'code:'.
 
 ### RECOGNIZED layers: identity by 'layer:' (and 'dep:' for dependencies)
 
@@ -81,9 +82,9 @@ vocabulary (enums/catalogs). They exist to LEAVE THE SCRUTINY of a spec (there i
 of their own to document), but they still need IDENTITY. Since they have no owning spec nor
 a sibling to reference, their minimal honest identity is the layer itself:
 
-- 'layer: <layer>' — for a file of a recognized layer, 'layer:' IS the identity
-  (it satisfies the gate). Do not invent a 'code:' (it owns no spec) nor a forced 'ref:'
-  (it realizes no spec). It honestly declares "I belong to this layer".
+- 'layer: <layer>' — for a file of a recognized layer, 'layer:' is where it belongs,
+  beside its own 'code:'. Do not force a 'ref:' (it realizes no spec). It honestly declares
+  "I belong to this layer".
 - 'dep: <file> [, <file>...]' — since they have no spec, they have no Dependency
   Table (SPEC_TYPES §5). So they declare in their OWN header the FILES they
   depend on (the file path, not a code — the target may be another recognized layer with no
@@ -92,8 +93,8 @@ a sibling to reference, their minimal honest identity is the layer itself:
   'theme/tokens.ts' → 'dep: theme/tokens.ts'.
 
 GOVERNED layers (business-logic, validation, hook, store, repository, service, and the spec)
-still require 'code:'/'ref:' — they have a rule to document, so they have a spec and a
-code identity. 'layer:' alone is NOT enough for a governed one.
+still require 'ref:' to their unit (the spec, its own 'code:') — they have a rule to
+document, so they have a spec. 'layer:' alone is NOT enough for a governed one.
 
 ### Other data (key: value)
 

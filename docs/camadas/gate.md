@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:381dee5c44bd9554 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:e06f9a262fe6c751 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 81 unidades e 1332 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 81 unidades e 1334 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1267,6 +1267,8 @@ reported. Each repair written, or attempted and failed, is returned for the call
 
 - **FXIXX-B09** — `--fix` writes the header a governed file lacks, at its top after any shebang: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document or a test support file; to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`)
 
+- **FXIXX-B10** — `--fix` gives a file whose header has an identity (or gets one) and no `code:` of its own a code generated from its name and its type, unique among the codes in the map, written below `@anchors` beside the identity; a header with its own code is left as it is. (`fixMissingHeader`)
+
 - **FXIXX-I01** — A repair replaces only the date inside the field; every other byte of the file stays as it was.
 
 - **FXIXX-X01** — Does not create a missing `updated_at` field; it only corrects the value of one that exists.
@@ -1654,6 +1656,8 @@ looked at.
 - **INCHN-B39** — A header line is read in every comment dialect the map reads — `//`, `#`, `--`, `<!--` and a block comment's ` * ` (`config.HeaderLinePrefix`): a `-- ref: CODE` header has its identity.
 
 - **INCHN-B40** — `header-valid` reads the header as the map does — the `@anchors` block at the top (`scan.AnchorsHeader`) —, so an `@anchors` further down, in a string or an example, is neither the header nor its identity; and a guide, a document or a test support file, which belong to no unit, have their identity in `layer:` alone.
+
+- **INCHN-B41** — `header-valid` requires, in a header that has its identity, the file's OWN `code:` — a `ref:` alone names the unit, not the file — and fails a code another node of the map carries as its own, naming that file. (`checkOwnCode`)
 
 - **INCHN-B15** — An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name.
 
@@ -2266,8 +2270,8 @@ Measured in the very first real-world usage: an automated agent was assigned the
 there was nowhere to configure tooling. The assignment only avoided becoming lost work because a human intervened to
 read the narrative plan; an agent trusting the task card would have attempted execution and failed.
 
-Phases are therefore promoted to catalogued items with identity codes derived from the plan (such as `FNDTN-W01`).
-A seeded specification declares `needs: FNDTN-W01` in its header, adopting the exact ordering keyword at phase scope.
+Phases are therefore promoted to catalogued items with identity codes derived from the plan (such as `<PLAN>-W01`).
+A seeded specification declares `needs: <PLAN>-W01` in its header, adopting the exact ordering keyword at phase scope.
 Identity codes remain immutable even when authors revise descriptive phase titles, transforming "can this specification
 be worked on now?" into an objective mechanical query.
 
@@ -4551,8 +4555,8 @@ An exemption with no reason does not exempt.
 They run on a visual unit's main code file — the screen or the component, which is what a project tags
 as visual — and read the unit's spec, feature and tests from it (`Button.tsx` → `Button.spec.md`,
 `Button.feature`). A VR scenario is a scenario tagged with the project's visual regime and the code of
-the state it captures (`@BUTTN-S01` or `@BUTTN-VR-S01`). A VR test names `BUTTN-VR-S01` in its path or
-its text. A baseline is `<Unit>.BUTTN-VR-S01[-variant].<ext>` beside the unit.
+the state it captures (`@{CODE}-S01` or `@{CODE}-VR-S01`). A VR test names `{CODE}-VR-S01` in its path or
+its text. A baseline is `<Unit>.{CODE}-VR-S01[-variant].<ext>` beside the unit.
 
 
 - **VRSTC-B01** — A node that is not code, a code file with no spec beside it (a part of the unit) and a spec with no code leave every gate without a verdict.

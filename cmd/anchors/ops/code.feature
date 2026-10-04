@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: CDFTC
 #   ref: CDCMC
-#   updated_at: 2026-10-01
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @CDCMC

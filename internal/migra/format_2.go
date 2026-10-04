@@ -1,4 +1,5 @@
 // @anchors
+//   code: F2AFR
 //   ref: MGSTM
 
 package migra

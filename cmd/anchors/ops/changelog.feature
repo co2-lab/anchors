@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: CHFTC
 #   ref: CLGCM
-#   updated_at: 2026-09-27
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @CLGCM

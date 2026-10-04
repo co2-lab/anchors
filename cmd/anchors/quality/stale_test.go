@@ -1,4 +1,5 @@
 // @anchors
+//   code: STTSA
 //   ref: STEDS
 
 package quality

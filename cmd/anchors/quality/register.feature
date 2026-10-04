@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: RGFTC
 #   ref: QLCMQ
-#   updated_at: 2026-09-29
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @QLCMQ

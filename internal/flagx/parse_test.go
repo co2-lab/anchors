@@ -1,4 +1,5 @@
 // @anchors
+//   code: PRTSA
 //   ref: FLPRF
 
 package flagx

@@ -1,4 +1,5 @@
 // @anchors
+//   code: INTSD
 //   ref: SGINA
 
 package mapx

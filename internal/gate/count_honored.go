@@ -1,4 +1,5 @@
 // @anchors
+//   code: CHGCN
 //   ref: CNHNC
 
 package gate

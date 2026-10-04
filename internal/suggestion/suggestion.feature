@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: SGFTA
 #   ref: SGSTS
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @SGSTS

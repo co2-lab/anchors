@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: LTFTL
 #   ref: MGLTR
-#   updated_at: 2026-09-28
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @MGLTR

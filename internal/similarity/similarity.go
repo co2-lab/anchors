@@ -1,4 +1,5 @@
 // @anchors
+//   code: SMINS
 //   ref: TXSMT
 
 // Package similarity mede o quanto dois textos falam da MESMA coisa, ponderando

@@ -1,4 +1,5 @@
 // @anchors
+//   code: CDCMA
 //   ref: CDCMC
 
 package ops
@@ -525,6 +526,10 @@ func readCodes(mapPath string) (*codeIndex, error) {
 	codeDecl := map[string]bool{}
 	seen := map[string]bool{}
 	for _, n := range g.Nodes {
+		// A file's own code is taken as much as a unit's: it is the file's address.
+		if n.FileCode != "" {
+			taken[n.FileCode] = true
+		}
 		if n.Code == "" {
 			continue
 		}

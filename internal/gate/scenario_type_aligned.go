@@ -1,4 +1,5 @@
 // @anchors
+//   code: STAGS
 //   ref: STASC
 
 package gate

@@ -1,5 +1,6 @@
 # language: en
 # @anchors
+#   code: ICFNT
 #   ref: INCHN
 #   updated_at: 2026-10-03
 #   layer: feature
@@ -325,6 +326,12 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given an SQL migration whose header is written with "--" comments, carrying ref and layer
     When header-valid confronts it
     Then it passes, as the same header written with "//" does
+
+  @INCHN-B41 @unit-level
+  Scenario: A header without a code of its own fails, and a code another file owns fails naming it
+    Given a code file whose header only refs its unit, and one whose code another file of the map carries
+    When header-valid runs
+    Then the first fails asking for its own code, the second fails naming the other file, and a code no other file carries passes
 
   @INCHN-B40 @unit-level
   Scenario: The header is the block at the top, and a file of no unit is identified by its layer

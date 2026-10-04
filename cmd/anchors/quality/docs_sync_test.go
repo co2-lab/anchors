@@ -1,4 +1,5 @@
 // @anchors
+//   code: DSTDC
 //   ref: DCSYN
 
 package quality

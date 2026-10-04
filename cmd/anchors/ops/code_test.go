@@ -1,4 +1,5 @@
 // @anchors
+//   code: CDTSC
 //   ref: CDCMC
 
 package ops
@@ -23,7 +24,7 @@ func codeProject(t *testing.T, cfg, nodes string) string {
 	t.Helper()
 	root := t.TempDir()
 	writeFile(t, root, config.DefaultFile, cfg)
-	writeFile(t, root, mapx.DefaultPath, "version: 6\nnodes:\n"+nodes+"edges: []\n")
+	writeFile(t, root, mapx.DefaultPath, "version: 7\nnodes:\n"+nodes+"edges: []\n")
 	return root
 }
 
@@ -264,7 +265,7 @@ func mapWithCodes(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
 	p := filepath.Join(dir, "anchors.graph.yaml")
-	const y = `version: 6
+	const y = `version: 7
 nodes:
     - id: apps/mobile/src/features/auth/LoginScreen.spec.md
       kind: spec

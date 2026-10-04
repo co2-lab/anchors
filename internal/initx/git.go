@@ -1,4 +1,5 @@
 // @anchors
+//   code: GTINA
 //   ref: GTSTG
 
 package initx

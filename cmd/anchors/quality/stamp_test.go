@@ -1,4 +1,5 @@
 // @anchors
+//   code: STTSB
 //   ref: CNSTC
 
 package quality

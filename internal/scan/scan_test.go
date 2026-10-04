@@ -1,4 +1,5 @@
 // @anchors
+//   code: SCTSC
 //   ref: RPSCR
 
 package scan

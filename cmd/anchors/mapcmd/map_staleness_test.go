@@ -1,4 +1,5 @@
 // @anchors
+//   code: MSTMP
 //   ref: MPSTM
 
 package mapcmd

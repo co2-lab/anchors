@@ -1,4 +1,5 @@
 // @anchors
+//   code: GTTSB
 //   ref: GTSTG
 
 package initx

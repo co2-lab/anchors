@@ -1,4 +1,5 @@
 // @anchors
+//   code: INTSC
 //   ref: GRINC
 
 package mapx

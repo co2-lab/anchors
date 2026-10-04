@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: STFTD
 #   ref: STPRS
-#   updated_at: 2026-09-27
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @STPRS

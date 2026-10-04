@@ -1,4 +1,5 @@
 // @anchors
+//   code: HLDGH
 //   ref: HDLYD
 
 package gate

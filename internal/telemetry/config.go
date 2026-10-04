@@ -1,4 +1,5 @@
 // @anchors
+//   code: CNAPC
 //   ref: TLCNT
 
 package telemetry

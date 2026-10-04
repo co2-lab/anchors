@@ -1,4 +1,5 @@
 // @anchors
+//   code: FLTSA
 //   ref: FLWOX
 
 package mapcmd

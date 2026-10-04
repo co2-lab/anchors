@@ -1,4 +1,5 @@
 // @anchors
+//   code: JDCMJ
 //   ref: JDGUE
 
 package mapcmd

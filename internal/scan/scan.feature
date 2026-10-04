@@ -1,5 +1,6 @@
 # language: en
 # @anchors
+#   code: SCFTC
 #   ref: RPSCR
 #   updated_at: 2026-10-03
 #   layer: feature

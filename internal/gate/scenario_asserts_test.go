@@ -1,4 +1,5 @@
 // @anchors
+//   code: SATSC
 //   ref: SCASS
 
 package gate

@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: WRFTW
 #   ref: WRPRW
-#   updated_at: 2026-10-01
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @WRPRW

@@ -1,4 +1,5 @@
 // @anchors
+//   code: STTSE
 //   ref: EDSTD
 
 package mapx

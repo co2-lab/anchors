@@ -1,7 +1,8 @@
 # language: en
 # @anchors
+#   code: STFTE
 #   ref: EDSTD
-#   updated_at: 2026-09-29
+#   updated_at: 2026-10-03
 #   layer: feature
 
 @EDSTD

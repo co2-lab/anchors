@@ -1,4 +1,5 @@
 // @anchors
+//   code: ICGNT
 //   ref: INCHN
 
 package gate
@@ -6,6 +7,7 @@ package gate
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -88,8 +90,11 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"presentation-observable":         checkPresentationObservable,
 	// Precisa de `cfg` para ler a própria opção `enforce_section_language` — ver checkSpecSections.
 	"spec-sections": checkSpecSections,
-	"header-valid": func(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
-		return checkHeaderConforms(content, n, cfg)
+	"header-valid": func(content string, n mapx.Node, _ string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+		if v, msg := checkHeaderConforms(content, n, cfg); v != Pass {
+			return v, msg
+		}
+		return checkOwnCode(content, n, g)
 	},
 	"count-honored":            checkCountHonored,
 	"trigger-declared":         checkTriggerDeclared,
@@ -468,6 +473,40 @@ func checkHeaderConforms(content string, n mapx.Node, cfg *config.Config) (Verdi
 		return Fail, i18n.T("gate.header.governed_missing_id")
 	}
 	return Pass, ""
+}
+
+// checkOwnCode: does the header carry the file's OWN code, and is no other file in the map
+// carrying the same one? Since format 7 every governed file is addressable by a code of its
+// own — the dependency chain (`dep:` on the importer, `@used-by` on what it exports) names
+// files by it —, and a `ref:` alone names the unit, not the file. Two files with one code
+// are one address for two places: whoever follows it lands on either.
+func checkOwnCode(content string, n mapx.Node, g *mapx.Graph) (Verdict, string) {
+	block := scan.AnchorsHeader([]byte(content))
+	if block == nil {
+		return Pass, ""
+	}
+	m := headerOwnCodeRE().FindStringSubmatch(string(block))
+	if m == nil {
+		return Fail, i18n.T("gate.header.no_own_code")
+	}
+	if g != nil {
+		var others []string
+		for _, x := range g.Nodes {
+			if x.ID != n.ID && x.FileCode == m[1] {
+				others = append(others, x.ID)
+			}
+		}
+		if len(others) > 0 {
+			sort.Strings(others)
+			return Fail, i18n.T("gate.header.code_taken", m[1], strings.Join(others, ", "))
+		}
+	}
+	return Pass, ""
+}
+
+// headerOwnCodeRE captures the code of the header's `code:` line.
+func headerOwnCodeRE() *regexp.Regexp {
+	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
 }
 
 func checkSpecSections(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {

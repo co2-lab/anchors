@@ -1,4 +1,5 @@
 // @anchors
+//   code: SMTSS
 //   ref: TXSMT
 
 package similarity

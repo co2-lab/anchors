@@ -30,8 +30,8 @@ Measured in the very first real-world usage: an automated agent was assigned the
 there was nowhere to configure tooling. The assignment only avoided becoming lost work because a human intervened to
 read the narrative plan; an agent trusting the task card would have attempted execution and failed.
 
-Phases are therefore promoted to catalogued items with identity codes derived from the plan (such as `FNDTN-W01`).
-A seeded specification declares `needs: FNDTN-W01` in its header, adopting the exact ordering keyword at phase scope.
+Phases are therefore promoted to catalogued items with identity codes derived from the plan (such as `<PLAN>-W01`).
+A seeded specification declares `needs: <PLAN>-W01` in its header, adopting the exact ordering keyword at phase scope.
 Identity codes remain immutable even when authors revise descriptive phase titles, transforming "can this specification
 be worked on now?" into an objective mechanical query.
 

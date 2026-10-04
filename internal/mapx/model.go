@@ -1,4 +1,5 @@
 // @anchors
+//   code: MDMPM
 //   ref: GRMDG
 
 // Package mapx modela e persiste o mapa de dependências — o anchors.graph.yaml.
