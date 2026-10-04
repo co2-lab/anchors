@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:df5e4fd536ded524 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:04f6003f826d5169 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1977,6 +1977,8 @@ teste prova.
 - [Crossing format 7 dates every file it rewrote](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B14`
 
 - [Crossing format 7 rewrites the rule codes cited in files the project does not govern](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B15`
+
+- [Crossing format 7 rewrites a code only where it is cited as one, and lists the bare words it left](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B16`
 
 - [An unknown kind is refused](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B01`
 
@@ -6552,6 +6554,8 @@ teste prova.
 
 - [A file that cannot be written stops the apply, naming it](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project) `RCPLR-E05`
 
+- [A batch plans many codes in one pass, cited only, renames the files their names carry, and lists the bare words](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project) `RCPLR-B13`
+
 - [A code is well formed only in the project's lengths and alphabet](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-B01`
 
 - [The header code is replaced in every header style](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-B02`
@@ -6571,6 +6575,10 @@ teste prova.
 - [Longer codes and neighbours are never touched](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-X01`
 
 - [Outside the governed files only the rule and scenario codes are rewritten](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-B08`
+
+- [A code is rewritten only where it is cited as a code, and the bare words left are listed](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-B09`
+
+- [A code inside an identifier with an underscore is not a mention](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-B10`
 
 - [The sh on PATH is the shell](layers/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands) `PSXSH-B01`
 

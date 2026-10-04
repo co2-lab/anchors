@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -276,4 +277,99 @@ func gitMoves(root, from, to string) error {
 		"   (there is a repository here, so the file was NOT moved behind its back — moving without "+
 		"git would leave the index diverging from disk, and that is what makes undoing hard)",
 		from, to, strings.TrimSpace(string(out)))
+}
+
+// Batch is the cited-only rename of many codes at once, as a migration makes it: one walk
+// of the project, each file read and rewritten once for every code, and the files whose
+// names carry a code renamed with it. Planning each code on its own read the whole project
+// once per code — hours for a project with hundreds.
+type Batch struct {
+	Files   []FileChange
+	Renames []FileRename
+	// Per old code: the cited occurrences rewritten, the files they were in, and the files
+	// renamed.
+	Count, InFiles, Renamed map[string]int
+	// Bare are the bare mentions left alone, per old code and file, for a person to judge.
+	Bare map[string]map[string][]BareMention
+}
+
+// BuildBatchCited plans the cited-only rename of each old → new pair (RewriteCited), over
+// the project's governed files and the files whose names carry a code (`patterns`, as
+// `recode.file_patterns`).
+func BuildBatchCited(root string, cfg *config.Config, pairs [][2]string, patterns []string) (*Batch, error) {
+	files, err := scan.Walk(root, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("scanning the project: %w", err)
+	}
+	to := map[string]string{}
+	for _, p := range pairs {
+		to[p[0]] = p[1]
+	}
+	set := NewCitedSet(to)
+	b := &Batch{Count: map[string]int{}, InFiles: map[string]int{}, Renamed: map[string]int{},
+		Bare: map[string]map[string][]BareMention{}}
+	for _, f := range files {
+		raw, rerr := os.ReadFile(filepath.Join(root, f.Path))
+		if rerr != nil {
+			continue
+		}
+		content, counts, bare := set.Rewrite(string(raw))
+		total := 0
+		for old, n := range counts {
+			b.Count[old] += n
+			b.InFiles[old]++
+			total += n
+		}
+		for old, ms := range bare {
+			if b.Bare[old] == nil {
+				b.Bare[old] = map[string][]BareMention{}
+			}
+			b.Bare[old][f.Path] = ms
+		}
+		if total > 0 {
+			b.Files = append(b.Files, FileChange{Path: f.Path, NewContent: content, count: total})
+		}
+	}
+	if len(patterns) > 0 {
+		err := filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
+			if err != nil || d.IsDir() {
+				if d != nil && d.IsDir() && skipDir(d.Name()) {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			rel, rerr := filepath.Rel(root, p)
+			if rerr != nil {
+				return nil
+			}
+			rel = filepath.ToSlash(rel)
+			to := rel
+			for _, pr := range pairs {
+				if strings.Contains(path.Base(to), pr[0]) && FileMatchesCode(to, pr[0], patterns) {
+					if n := RenameFilePath(to, pr[0], pr[1]); n != to {
+						to = n
+						b.Renamed[pr[0]]++
+					}
+				}
+			}
+			if to != rel {
+				b.Renames = append(b.Renames, FileRename{From: rel, To: to})
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	sort.Slice(b.Files, func(i, j int) bool { return b.Files[i].Path < b.Files[j].Path })
+	sort.Slice(b.Renames, func(i, j int) bool { return b.Renames[i].From < b.Renames[j].From })
+	return b, nil
+}
+
+// Apply writes the batch: the rewritten files first, then the renames (`git mv` in a
+// repository, as Plan.Apply).
+func (b *Batch) Apply(root string) error {
+	p := &Plan{Files: b.Files, Renames: b.Renames}
+	_, err := p.Apply(root)
+	return err
 }

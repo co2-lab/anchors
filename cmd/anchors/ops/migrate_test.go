@@ -188,7 +188,8 @@ func TestMigrateCrossingSevenGivesEveryFileACode(t *testing.T) {
 	writeFile(t, root, "src/Login.spec.md", "<!-- @anchors\n  code: LOGI\n-->\n# Login\n\n### LOGI-B01 — only anonymous\n")
 	t.Run("MGCMM-B13: Crossing format 7 refreshes the stamps a widened code broke", func(t *testing.T) {})
 	t.Run("MGCMM-B14: Crossing format 7 dates every file it rewrote", func(t *testing.T) {})
-	writeFile(t, root, "src/Login.ts", "// @anchors\n//   ref: LOGI\n//   updated_at: 2026-01-01\n\nexport const login = 1 // LOGI-B01\n")
+	writeFile(t, root, "src/Login.ts", "// @anchors\n//   ref: LOGI\n//   updated_at: 2026-01-01\n\nexport const login = 1 // LOGI-B01\n"+
+		"export const LOGI_URL = process.env.LOGI_URL\nexport const label = 'LOGI'\n")
 	writeFile(t, root, "src/Login.test.ts", "// @anchors\n//   ref: LOGI\n\n"+
 		"// @contract: src/Login.ts | export const login = 1 // LOGI-B01 | 1 | "+hash8("export const login = 1 // LOGI-B01")+"\n"+
 		"// @contract: src/Login.ts | export const login = 1 // LOGI-B01 | 1 | deadbeef\n"+
@@ -235,6 +236,13 @@ func TestMigrateCrossingSevenGivesEveryFileACode(t *testing.T) {
 	t.Run("MGCMM-B15: Crossing format 7 rewrites the rule codes cited in files the project does not govern", func(t *testing.T) {})
 	if got, want := read("scripts/run.sh"), "# runs "+newCode+"-B01 and "+newCode+"-VR-S01; LOGI alone and LOGI_URL stay\n"; got != want {
 		t.Errorf("an ungoverned file has its rule codes rewritten and nothing else:\n%s", got)
+	}
+	t.Run("MGCMM-B16: Crossing format 7 rewrites a code only where it is cited as one, and lists the bare words it left", func(t *testing.T) {})
+	if l := read("src/Login.ts"); !strings.Contains(l, "export const LOGI_URL = process.env.LOGI_URL\nexport const label = 'LOGI'\n") {
+		t.Errorf("an identifier and a bare word keep the old letters:\n%s", l)
+	}
+	if !strings.Contains(out, "bare mention(s) of an old code") || !strings.Contains(out, "src/Login.ts:7  LOGI") {
+		t.Errorf("the bare word left is listed for review:\n%s", out)
 	}
 	if !strings.Contains(read(config.DefaultFile), "code_lengths: [5]") {
 		t.Errorf("the config reads five-character codes only:\n%s", read(config.DefaultFile))

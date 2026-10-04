@@ -323,6 +323,7 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 
 	// 1. The four-character codes, widened.
 	type pair struct{ old, new string }
+	var bare []string // bare mentions of an old code left alone, for review
 	var pairs []pair
 	seen := map[string]bool{}
 	for _, f := range before {
@@ -336,36 +337,71 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 		pairs = append(pairs, pair{c, n})
 	}
 	sort.Slice(pairs, func(i, j int) bool { return pairs[i].old < pairs[j].old })
-	rcfg := *cfg
 	rc := config.Recode{}
 	if cfg.Recode != nil {
 		rc = *cfg.Recode
 	}
 	// Every file whose NAME carries the code is renamed with it — a baseline, a capture
 	// flow —, declared in `recode:` or not: left behind, it would no longer be found.
-	rc.FilePatterns = append(append([]string(nil), rc.FilePatterns...), "**/*{{code}}*")
-	rcfg.Recode = &rc
-	for _, p := range pairs {
-		plan, err := recode.BuildPlan(absRoot, &rcfg, p.old, p.new)
+	patterns := append(append([]string(nil), rc.FilePatterns...), "**/*{{code}}*")
+	if len(pairs) > 0 {
+		var pp [][2]string
+		for _, p := range pairs {
+			pp = append(pp, [2]string{p.old, p.new})
+		}
+		batch, err := recode.BuildBatchCited(absRoot, cfg, pp, patterns)
 		if err != nil {
-			fmt.Printf("· %s → %s: %v\n", p.old, p.new, err)
-			continue
+			return changed, err
 		}
 		changed = true
-		fmt.Printf("✓ code %s → %s: %d occurrence(s) in %d file(s), %d file(s) renamed\n",
-			p.old, p.new, plan.Total+plan.TestIDs, len(plan.Files), len(plan.Renames))
-		for _, fc := range plan.Files {
+		for _, p := range pairs {
+			fmt.Printf("✓ code %s → %s: %d occurrence(s) in %d file(s), %d file(s) renamed\n",
+				p.old, p.new, batch.Count[p.old], batch.InFiles[p.old], batch.Renamed[p.old])
+			for path, ms := range batch.Bare[p.old] {
+				for _, m := range ms {
+					bare = append(bare, fmt.Sprintf("%s:%d  %s  — %s", path, m.Line, p.old, m.Text))
+				}
+			}
+		}
+		for _, fc := range batch.Files {
 			touched[fc.Path] = true
 		}
-		for _, r := range plan.Renames {
+		for _, r := range batch.Renames {
 			renamedPath[r.From] = r.To
 		}
 		if !dryRun {
-			if _, err := plan.Apply(absRoot); err != nil {
+			if err := batch.Apply(absRoot); err != nil {
 				return changed, err
 			}
 		}
 	}
+
+	if len(bare) > 0 {
+		sort.Strings(bare)
+		fmt.Printf("· %d bare mention(s) of an old code left as they were — a word or a name with the same\n", len(bare))
+		fmt.Println("  letters is not a code; rewrite by hand the ones that cite the unit:")
+		for i, b := range bare {
+			if i == 40 {
+				fmt.Printf("    … and %d more\n", len(bare)-40)
+				break
+			}
+			fmt.Println("    " + b)
+		}
+		if !dryRun {
+			list := filepath.Join(absRoot, ".anchors", "migrate-bare-mentions.txt")
+			if err := os.MkdirAll(filepath.Dir(list), 0o755); err == nil &&
+				os.WriteFile(list, []byte(strings.Join(bare, "\n")+"\n"), 0o644) == nil {
+				fmt.Printf("  the full list: %s\n", filepath.ToSlash(filepath.Join(".anchors", "migrate-bare-mentions.txt")))
+			}
+		}
+	}
+
+	citedTo := map[string]string{}
+	for _, p := range pairs {
+		citedTo[p.old] = p.new
+	}
+	cited := recode.NewCitedSet(citedTo)
+	ruleOnly := cited
 
 	// The other versioned text files — a runner script, a lint config, an env example —
 	// cite the codes too, in comments: their rule and scenario codes follow, never a bare
@@ -389,10 +425,9 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 			if err != nil || bytes.IndexByte(b, 0) >= 0 {
 				continue
 			}
-			out, n := string(b), 0
-			for _, p := range pairs {
-				var k int
-				out, k = recode.RewriteRuleCodes(out, p.old, p.new)
+			out, counts := ruleOnly.RewriteRuleCodes(string(b))
+			n := 0
+			for _, k := range counts {
 				n += k
 			}
 			if n == 0 {
@@ -415,20 +450,18 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 	// 2. The configuration and the map speak the new codes, and the renamed paths.
 	if !dryRun {
 		if err := rewriteText(filepath.Join(absRoot, config.DefaultFile), func(s string) string {
-			for _, p := range pairs {
-				s, _ = recode.Rewrite(s, p.old, p.new)
-			}
+			s, _, _ = cited.Rewrite(s)
 			return regexp.MustCompile(`(?m)^code_lengths:\s*\[[^\]]*\]`).ReplaceAllString(s, "code_lengths: [5]")
 		}); err != nil {
 			return changed, err
 		}
 		if err := rewriteText(filepath.Join(absRoot, mapx.DefaultPath), func(s string) string {
+			var moves []string
 			for from, to := range renamedPath {
-				s = strings.ReplaceAll(s, from, to)
+				moves = append(moves, from, to)
 			}
-			for _, p := range pairs {
-				s, _ = recode.Rewrite(s, p.old, p.new)
-			}
+			s = strings.NewReplacer(moves...).Replace(s)
+			s, _, _ = cited.Rewrite(s)
 			return s
 		}); err != nil {
 			return changed, err

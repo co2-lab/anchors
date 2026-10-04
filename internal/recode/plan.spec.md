@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RCPLR
-  updated_at: 2026-09-26
+  updated_at: 2026-10-04
   layer: infra
 -->
 # RecodePlan — planning and applying the rename of a code across the whole project
@@ -51,6 +51,7 @@ the disk in silence.
 | `RCPLR-B10` | Inside a repository a file git does not track is moved by a plain rename, and a reported success means the file really moved. |
 | `RCPLR-B11` | A target code another unit already owns — declared in its header, or the prefix of one of its scenario codes — is refused naming that file; a code that merely contains the target is not a collision. |
 | `RCPLR-B12` | The refusal of a malformed code names the lengths the project declares in `code_lengths`, the same ones the validation applies. |
+| `RCPLR-B13` | `BuildBatchCited` plans the rename of many codes at once, as a migration makes it: one walk of the governed files, each rewritten once for every code where it is cited as a code (`NewCitedSet`), the files whose names carry a code renamed with it (the given name patterns), the counts per code, and the bare mentions left, per code and file; `Batch.Apply` writes the files and makes the renames as `Plan.Apply` does. |
 
 ## Constraints
 

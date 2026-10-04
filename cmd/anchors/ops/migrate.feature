@@ -126,3 +126,9 @@ Feature: MigrateCommand — the command the format error promises, bringing the 
     Given a format 6 project with a script outside every layer citing LOGI-B01, LOGI-VR-S01, a bare LOGI and LOGI_URL
     When migrate runs
     Then the two rule codes carry the widened code, and the bare code and the identifier are left alone
+
+  @MGCMM-B16 @unit-level
+  Scenario: Crossing format 7 rewrites a code only where it is cited as one, and lists the bare words it left
+    Given a format 6 project whose code file holds LOGI_URL from the environment and the string 'LOGI' beside its rule code
+    When migrate runs
+    Then the rule code is widened, the identifier and the string keep LOGI, and the string's line is listed for review

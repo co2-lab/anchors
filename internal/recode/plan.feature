@@ -2,7 +2,7 @@
 # @anchors
 #   code: PLFTP
 #   ref: RCPLR
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-04
 #   layer: feature
 
 @RCPLR
@@ -98,3 +98,9 @@ Feature: RecodePlan — planning and applying the rename of a code across the wh
     Given a plan whose only file is the path of a folder
     When it is applied
     Then applying stops with an error naming the folder and 0 files written
+
+  @RCPLR-B13 @unit-level
+  Scenario: A batch plans many codes in one pass, cited only, renames the files their names carry, and lists the bare words
+    Given a spec of GOAL with a rule titled with the word, a code file refing GOAL and SEAT with an env var GOAL_TABLE, and an e2e flow named by each code
+    When the batch for GOAL → GOALG and SEAT → SEATO is planned and applied
+    Then the citations carry the new codes, GOAL_TABLE is untouched, both flows are renamed, and the rule title's line is listed as bare

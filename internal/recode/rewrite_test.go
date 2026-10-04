@@ -182,3 +182,34 @@ func TestRewriteRuleCodes(t *testing.T) {
 		t.Errorf("a bare code is left alone: %q", got)
 	}
 }
+
+func TestRewriteCited(t *testing.T) {
+	t.Run("RCRWR-B09: A code is rewritten only where it is cited as a code, and the bare words left are listed", func(t *testing.T) {})
+	in := "<!-- @anchors\n  code: GOAL\n-->\n" +
+		"# Goal — `GOAL`\n\n### GOAL-B01 — a rule\n\n@GOAL @GOAL-B01\n" +
+		"ref: CNPJ, GOAL\n    file_code: GOAL\n" +
+		"const GOAL_TABLE = process.env.GOAL_CONTRIBUTIONS_TABLE_NAME\n" +
+		"label=\"GOAL\" and the GOAL of the user; MY_GOAL\n"
+	got, n := RewriteCited(in, "GOAL", "GOALG")
+	want := "<!-- @anchors\n  code: GOALG\n-->\n" +
+		"# Goal — `GOALG`\n\n### GOALG-B01 — a rule\n\n@GOALG @GOALG-B01\n" +
+		"ref: CNPJ, GOALG\n    file_code: GOALG\n" +
+		"const GOAL_TABLE = process.env.GOAL_CONTRIBUTIONS_TABLE_NAME\n" +
+		"label=\"GOAL\" and the GOAL of the user; MY_GOAL\n"
+	if got != want || n != 7 {
+		t.Errorf("got %d:\n%s", n, got)
+	}
+	_, _, left := NewCitedSet(map[string]string{"GOAL": "GOALG"}).Rewrite(in)
+	bare := left["GOAL"]
+	if len(bare) != 1 || bare[0].Line != 12 {
+		t.Errorf("only the line with the bare word is listed, not the identifiers: %+v", bare)
+	}
+}
+
+func TestRewrite_underscoreIsNoBoundary(t *testing.T) {
+	t.Run("RCRWR-B10: A code inside an identifier with an underscore is not a mention", func(t *testing.T) {})
+	got, _ := Rewrite("GOAL_TABLE and X_GOAL and GOAL.", "GOAL", "GOALG")
+	if got != "GOAL_TABLE and X_GOAL and GOALG." {
+		t.Errorf("got %q", got)
+	}
+}

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:357a2a7d3050a24a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:9843eccb8a436ea4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2153,7 +2153,7 @@ abra a página dela em `camadas/`.
 
 - [MGCMM-B07 — When the project crosses a step that renames code letters, the codes of its plans (files of a `kind: plan` layer), flows (`.flow.md`) and actions (`.action.md`), found by the code their header declares, are rewritten in every versioned text file, each file listed with its rewrites; with `--dry-run` they are listed and not written; codes of other units are not touched, and a second run rewrites nothing. The installed pipelines are not rewritten: the command points to `anchors doctor --fix`, which updates the ones nobody edited.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
-- [MGCMM-B08 — When the project crosses format 7, each four-character code a file owns is widened to five — the old code kept as the prefix — wherever it is written: the project's files, the names of the files that carry it (with or without a `recode:` block), the config and the map; the config's `code_lengths` becomes `[5]`.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+- [MGCMM-B08 — When the project crosses format 7, each four-character code a file owns is widened to five — the old code kept as the prefix — wherever it is cited as a code (MGCMM-B16): the project's files, the names of the files that carry it (with or without a `recode:` block), the config and the map; the config's `code_lengths` becomes `[5]`.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-B09 — When the project crosses format 7, every governed file that can carry a comment and has no `code:` gets one in its `@anchors` header, generated from its name and its type (layer or kind), unique in the project; the `ref:` it had stays.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
@@ -2168,6 +2168,8 @@ abra a página dela em `camadas/`.
 - [MGCMM-B14 — When the project crosses format 7, every file it rewrote has the `updated_at` of its header set to the day of the migration, before the measurements are carried — so no `anchors touch` after it changes the files again.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-B15 — When the project crosses format 7, every other versioned text file — one the project does not govern, outside the map, the config and `anchors.renames.yaml` — has the rule and scenario codes of each widened code rewritten (`RewriteRuleCodes`); a bare code there is left alone.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
+- [MGCMM-B16 — Crossing format 7, a code is rewritten only where it is cited as a code (`RewriteCited`: its rule codes, the header fields, backticks, a Gherkin tag) — in the project's files, the config and the map —; a bare word with its letters, and an identifier that holds them (`CODE_URL`), are left as they were, and each bare mention is listed with its file and line for a person to judge.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-B06 — After a real migration the command tells the user to commit it.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
@@ -7207,6 +7209,8 @@ abra a página dela em `camadas/`.
 
 - [RCPLR-B12 — The refusal of a malformed code names the lengths the project declares in `code_lengths`, the same ones the validation applies.](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project)
 
+- [RCPLR-B13 — `BuildBatchCited` plans the rename of many codes at once, as a migration makes it: one walk of the governed files, each rewritten once for every code where it is cited as a code (`NewCitedSet`), the files whose names carry a code renamed with it (the given name patterns), the counts per code, and the bare mentions left, per code and file; `Batch.Apply` writes the files and makes the renames as `Plan.Apply` does.](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project)
+
 - [RCPLR-X01 — A refusal from git is returned as an error naming the move, and the file is not moved by other means.](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project)
 
 - [RCPLR-X02 — Planning writes nothing to the project.](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project)
@@ -7240,6 +7244,10 @@ abra a página dela em `camadas/`.
 - [RCRWR-B07 — Each occurrence in the dry-run listing carries the text it matched and the line it starts on, counted from one, also for headers and mentions that come after scenario codes. (`Find`)](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
 
 - [RCRWR-B08 — `RewriteRuleCodes` rewrites only the rule and scenario codes of OLD — `OLD-B08`, `OLD-S06#02`, `OLD-VR-S01`, `OLD-CT` — and never the bare code, which outside the governed files is as likely an ordinary word or part of an identifier (`DATA_URL`).](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
+
+- [RCRWR-B09 — `RewriteCited` rewrites a code only where it is cited as one — its rule and scenario codes, the header fields that hold codes (`code:`, `file_code:`, `ref:`/`refs:`, `dep:`, `needs:`), the code in backticks and a Gherkin tag `@CODE` — and leaves the bare word; `CitedSet` (`NewCitedSet`) does it for many codes in one pass over the text (`Rewrite`, and `RewriteRuleCodes` for the rule codes alone) and lists the lines where each still stands bare, an identifier (`CODE_X`, `X_CODE`) not counted.](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
+
+- [RCRWR-B10 — An underscore is no boundary for a bare mention: `CODE_TABLE` and `X_CODE` are identifiers, not mentions of the code, and `Rewrite` leaves them.](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
 
 - [RCRWR-I01 — A text without the old code comes back unchanged with zero replacements, so rewriting a second time after a rewrite changes nothing.](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
 

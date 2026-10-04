@@ -52,7 +52,11 @@ func buildPatterns(old string) (headerRE, scenarioRE, bareRE *regexp.Regexp) {
 	// Go (RE2) não tem lookahead, então casamos OLD + o caractere-limite seguinte
 	// (não-alfanumérico e não '-'), num grupo, para recolocá-lo. `(?:$)` cobre o fim.
 	// Os scenario-codes (OLD-…) já foram trocados antes, então um OLD-… não sobra aqui.
-	bareRE = regexp.MustCompile(`\b` + o + `([^A-Za-z0-9-]|$)`)
+	//
+	// `_` is no boundary: `GOAL_TABLE_NAME` is an identifier that holds the word, not a
+	// citation of the code `GOAL` — rewritten, it broke an env var its consumers still read
+	// by the old name (reported from MIF).
+	bareRE = regexp.MustCompile(`\b` + o + `([^A-Za-z0-9_-]|$)`)
 	return
 }
 
@@ -157,11 +161,121 @@ func (o Occurrence) String() string {
 // example): there a bare `DATA` is as likely an ordinary word or `DATA_URL` as a code,
 // and only the code's rule shape says for certain that it is one.
 func RewriteRuleCodes(content, old, new string) (string, int) {
-	re := regexp.MustCompile(`\b` + regexp.QuoteMeta(old) + `(-(?:VR(?:-[A-Z]{1,2}\d{2})?|CT|[A-Z]{1,2}\d{2,})(?:#\d+)?)\b`)
 	n := 0
-	out := re.ReplaceAllStringFunc(content, func(m string) string {
+	out := ruleCodeRE(old).ReplaceAllStringFunc(content, func(m string) string {
 		n++
 		return new + m[len(old):]
 	})
 	return out, n
+}
+
+// ruleCodeRE matches the rule and scenario codes of OLD, with their suffix.
+func ruleCodeRE(old string) *regexp.Regexp {
+	return regexp.MustCompile(`\b` + regexp.QuoteMeta(old) + `(-(?:VR(?:-[A-Z]{1,2}\d{2})?|CT|[A-Z]{1,2}\d{2,}[a-z]?)(?:#\d+)?)\b`)
+}
+
+// RewriteCited rewrites OLD only where the text cites it AS A CODE: the rule and scenario
+// codes (`OLD-B08`, `OLD-VR-S01`, `OLD-CT`), the header fields that hold codes (`code:`,
+// `ref:`/`refs:`, `dep:`, `needs:`), the code in backticks (“ `OLD` “) and a Gherkin tag
+// (`@OLD`). A bare word is left alone: a code is short and upper-case, and the same letters
+// are a word of the language ("CNPJ inválido", "na HOME") or part of an identifier
+// (`SEAT_PRICE`) — rewriting those broke user-facing text and an env var the code reads by
+// name (reported from MIF). What is left is listed by CitedSet.Rewrite, for a person to judge.
+func RewriteCited(content, old, new string) (string, int) {
+	out, counts, _ := NewCitedSet(map[string]string{old: new}).Rewrite(content)
+	return out, counts[old]
+}
+
+// CitedSet rewrites many codes at once where each is cited as a code (see RewriteCited),
+// in one pass over the text: a migration renaming hundreds of codes reads every file —
+// and the map, the largest — once, not once per code.
+type CitedSet struct {
+	to map[string]string
+}
+
+// NewCitedSet is the rewrite of each old code to its new one.
+func NewCitedSet(to map[string]string) *CitedSet { return &CitedSet{to: to} }
+
+var (
+	citedWordRE   = regexp.MustCompile(`[A-Za-z0-9_]+`)
+	citedSuffixRE = regexp.MustCompile(`^-(?:VR(?:-[A-Z]{1,2}\d{2})?|CT|[A-Z]{1,2}\d{2,}[a-z]?)(?:#\d+)?\b`)
+	citedFieldRE  = regexp.MustCompile(`(?:code|refs?|dep|needs)\s*:`)
+)
+
+// RewriteRuleCodes rewrites only the rule and scenario codes of the set's codes (see
+// RewriteRuleCodes), in one pass, and says how many of each.
+func (c *CitedSet) RewriteRuleCodes(content string) (string, map[string]int) {
+	counts := map[string]int{}
+	var b strings.Builder
+	last := 0
+	for _, loc := range citedWordRE.FindAllStringIndex(content, -1) {
+		s, e := loc[0], loc[1]
+		nw, ok := c.to[content[s:e]]
+		if !ok || !citedSuffixRE.MatchString(content[e:]) {
+			continue
+		}
+		b.WriteString(content[last:s])
+		b.WriteString(nw)
+		last = e
+		counts[content[s:e]]++
+	}
+	b.WriteString(content[last:])
+	return b.String(), counts
+}
+
+// Rewrite returns the text with every cited old code rewritten, how many of each it
+// rewrote, and the bare mentions of each it left — a whole word with the code's letters,
+// not followed by a hyphen, outside the cited forms.
+func (c *CitedSet) Rewrite(content string) (string, map[string]int, map[string][]BareMention) {
+	counts := map[string]int{}
+	var bare map[string][]BareMention
+	var b strings.Builder
+	last, line, lineAt := 0, 1, 0
+	for _, loc := range citedWordRE.FindAllStringIndex(content, -1) {
+		s, e := loc[0], loc[1]
+		w := content[s:e]
+		nw, ok := c.to[w]
+		if !ok {
+			continue
+		}
+		cited := citedSuffixRE.MatchString(content[e:]) ||
+			(s > 0 && e < len(content) && content[s-1] == '`' && content[e] == '`') ||
+			(s > 0 && content[s-1] == '@' && (s == 1 || strings.ContainsRune(" \t\n([,", rune(content[s-2]))) &&
+				(e == len(content) || content[e] != '-'))
+		if !cited {
+			ls := strings.LastIndexByte(content[:s], '\n') + 1
+			cited = citedFieldRE.MatchString(content[ls:s])
+		}
+		if cited {
+			b.WriteString(content[last:s])
+			b.WriteString(nw)
+			last = e
+			counts[w]++
+			continue
+		}
+		if e < len(content) && content[e] == '-' {
+			continue // a testID or a word joined by a hyphen, not a mention
+		}
+		line += strings.Count(content[lineAt:s], "\n")
+		lineAt = s
+		ls := strings.LastIndexByte(content[:s], '\n') + 1
+		le := strings.IndexByte(content[s:], '\n')
+		if le < 0 {
+			le = len(content) - s
+		}
+		if bare == nil {
+			bare = map[string][]BareMention{}
+		}
+		if ms := bare[w]; len(ms) == 0 || ms[len(ms)-1].Line != line {
+			bare[w] = append(ms, BareMention{Line: line, Text: strings.TrimSpace(content[ls : s+le])})
+		}
+	}
+	b.WriteString(content[last:])
+	return b.String(), counts, bare
+}
+
+// BareMention is an occurrence of a code that a cited rewrite leaves alone, for review.
+type BareMention struct {
+	Line int
+	Text string // the line, trimmed
 }

@@ -416,3 +416,36 @@ func TestBuildPlan_malformedCodeNamesTheDeclaredLengths(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildBatchCited(t *testing.T) {
+	t.Run("RCPLR-B13: A batch plans many codes in one pass, cited only, renames the files their names carry, and lists the bare words", func(t *testing.T) {})
+	root := writeProject(t, map[string]string{
+		"src/Goal.spec.md":  "<!-- @anchors\n  code: GOAL\n-->\n# Goal\n\n### GOAL-B01 — the GOAL of a user\n",
+		"src/Goal.tsx":      "// @anchors\n//   ref: GOAL, SEAT\n\nconst t = process.env.GOAL_TABLE // GOAL-B01, SEAT-B02\n",
+		"e2e/GOAL-B01.yaml": "# GOAL-B01\n",
+		"e2e/SEAT-B02.yaml": "# SEAT-B02\n",
+	})
+	b, err := BuildBatchCited(root, plainCfg(), [][2]string{{"GOAL", "GOALG"}, {"SEAT", "SEATO"}}, []string{"**/{{code}}-*.yaml"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b.Count["GOAL"] != 5 || b.Count["SEAT"] != 3 || b.InFiles["GOAL"] != 3 {
+		t.Errorf("counts: %v in files %v", b.Count, b.InFiles)
+	}
+	if len(b.Renames) != 2 || b.Renames[0].To != "e2e/GOALG-B01.yaml" || b.Renames[1].To != "e2e/SEATO-B02.yaml" {
+		t.Errorf("renames: %+v", b.Renames)
+	}
+	if ms := b.Bare["GOAL"]["src/Goal.spec.md"]; len(ms) != 1 || ms[0].Line != 6 {
+		t.Errorf("the bare word in the rule's title is listed: %+v", b.Bare)
+	}
+	if err := b.Apply(root); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := os.ReadFile(filepath.Join(root, "src/Goal.tsx"))
+	if string(got) != "// @anchors\n//   ref: GOALG, SEATO\n\nconst t = process.env.GOAL_TABLE // GOALG-B01, SEATO-B02\n" {
+		t.Errorf("the code file:\n%s", got)
+	}
+	if _, err := os.Stat(filepath.Join(root, "e2e/GOALG-B01.yaml")); err != nil {
+		t.Error(err)
+	}
+}
