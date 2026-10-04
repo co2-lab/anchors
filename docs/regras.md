@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:b0eaaf2b70a5872b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:b9f88d5de7c7f0f4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4918,6 +4918,8 @@ abra a página dela em `camadas/`.
 - [PCJPL-B14 — The exported function `RevisionsOf` extracts all declared revisions in order with code, number, and explanation.](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed)
 
 - [PCJPL-B15 — A revision recorded as a section TITLE (`### CODE-R0001 — what changed`) is a revision too, and it is read together with the revisions of the other formats in the same file.](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed)
+
+- [PCJPL-B16 — A changed file that differs from its committed version only in its `@anchors` header and in codes `anchors.renames.yaml` records as renamed — both versions read without the header and with each renamed code as its current one are the same text — is a mechanical change and skips; any other change still asks for its revision.](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed)
 
 - [PCJPL-I01 — Only files genuinely modified are charged. A file present in the impact radius but not in the changed list is never accused.](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed)
 

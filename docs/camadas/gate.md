@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:2154acd29bb4a73c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:d9d2de54431af01c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 81 unidades e 1336 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 81 unidades e 1337 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2435,6 +2435,8 @@ the document itself instead of letting drift happen by omission.
 - **PCJPL-B14** — The exported function `RevisionsOf` extracts all declared revisions in order with code, number, and explanation.
 
 - **PCJPL-B15** — A revision recorded as a section TITLE (`### CODE-R0001 — what changed`) is a revision too, and it is read together with the revisions of the other formats in the same file.
+
+- **PCJPL-B16** — A changed file that differs from its committed version only in its `@anchors` header and in codes `anchors.renames.yaml` records as renamed — both versions read without the header and with each renamed code as its current one are the same text — is a mechanical change and skips; any other change still asks for its revision.
 
 - **PCJPL-I01** — Only files genuinely modified are charged. A file present in the impact radius but not in the changed list is never accused.
 

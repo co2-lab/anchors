@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:5fb1e08c2b243ad4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:29c9205e029323aa — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -4483,6 +4483,8 @@ teste prova.
 - [The gate does not enforce identity code presence](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-X02`
 
 - [Without a changed files list the gate skips confrontation](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-X03`
+
+- [A change only in the header and in renamed codes is mechanical and skips](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B16`
 
 - [Non-plan artifacts skip confrontation](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B01`
 

@@ -6,6 +6,7 @@ package gate
 
 import (
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -13,6 +14,8 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/migra"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // --- o plano ALTERADO diz por que mudou ---
@@ -120,6 +123,14 @@ func checkPlanChangeJustified(content string, n mapx.Node, root string, g *mapx.
 	codigo := n.Code
 	if codigo == "" {
 		return Skip, i18n.T("gate.plan_change_justified.skip_no_code")
+	}
+
+	// A MECHANICAL change has no direction to justify: the `@anchors` header and the codes a
+	// migration or a recode renamed (`anchors.renames.yaml`). Demanding a revision of each
+	// file `anchors migrate` touched asked a project for 114 revision lines that said only
+	// "migration" — the noise that buries the real ones (reported from MIF).
+	if onlyMechanical(root, n.ID, content) {
+		return Skip, i18n.T("gate.plan_change_justified.skip_mechanical")
 	}
 
 	// Só contam as revisões DESTE documento. Um plano pode citar a revisão de outro ao
@@ -255,4 +266,35 @@ func inRepository(root string) bool {
 	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
 	cmd.Dir = root
 	return cmd.Run() == nil
+}
+
+var mechanicalWordRE = regexp.MustCompile(`[A-Za-z0-9_]+`)
+
+// onlyMechanical says whether the file differs from its committed version only in its
+// `@anchors` header and in codes the project renamed: both versions, without the header and
+// with every renamed code read as its current one, are the same text.
+func onlyMechanical(root, path, content string) bool {
+	cmd := exec.Command("git", "show", "HEAD:"+filepath.ToSlash(path))
+	cmd.Dir = root
+	before, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+	renamed := migra.Renames(root)
+	norm := func(s string) string {
+		if block := scan.AnchorsHeader([]byte(s)); block != nil {
+			s = strings.Replace(s, string(block), "", 1)
+		}
+		s = strings.ReplaceAll(s, "\r\n", "\n")
+		if len(renamed) == 0 {
+			return strings.TrimSpace(s)
+		}
+		return strings.TrimSpace(mechanicalWordRE.ReplaceAllStringFunc(s, func(w string) string {
+			if to, ok := renamed[w]; ok {
+				return to
+			}
+			return w
+		}))
+	}
+	return norm(string(before)) == norm(content)
 }

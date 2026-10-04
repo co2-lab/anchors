@@ -368,3 +368,31 @@ func TestRevisionsOf_bothFormatsLiveTogether(t *testing.T) {
 		t.Errorf("expected 2 revisions, got %d — the numbering would look non-sequential", len(revs))
 	}
 }
+
+// A migration or a recode changes a plan only mechanically — the `@anchors` header, and the
+// codes renamed in anchors.renames.yaml —, and that asks for no revision; any other change
+// does.
+func TestAlterado_mudancaMecanicaPula(t *testing.T) {
+	t.Run("PCJPL-B16: A change only in the header and in renamed codes is mechanical and skips", func(t *testing.T) {})
+	seed := "<!-- @anchors\n  code: FNDT\n-->\n# Plan FNDT\n\n### FNDT-W01 — set up ARNA, the CNPJ screen\n"
+	dir := fixRepo(t, "plan.md", seed)
+	if err := os.WriteFile(filepath.Join(dir, "anchors.renames.yaml"), []byte("2026-10-04:\n  FNDT: FNDTN\n  ARNA: ARNAA\n  CNPJ: CNPJC\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// header gains a code line, the codes are widened; the bare CNPJ is left as it was
+	migrated := "<!-- @anchors\n  code: FNDTN\n  updated_at: 2026-10-04\n-->\n# Plan FNDTN\n\n### FNDTN-W01 — set up ARNAA, the CNPJ screen\n"
+	if err := os.WriteFile(filepath.Join(dir, "plan.md"), []byte(migrated), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n := mapx.Node{ID: "plan.md", Code: "FNDTN"}
+	if v, d := checkPlanChangeJustified(migrated, n, dir, nil, cfgAlterado("plan.md")); v != Skip {
+		t.Errorf("a mechanical change asks for no revision: %v %s", v, d)
+	}
+	edited := migrated + "\nA new sentence that changes the plan.\n"
+	if err := os.WriteFile(filepath.Join(dir, "plan.md"), []byte(edited), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if v, d := checkPlanChangeJustified(edited, n, dir, nil, cfgAlterado("plan.md")); v != Fail {
+		t.Errorf("a change beyond the mechanical one still asks for its revision: %v %s", v, d)
+	}
+}

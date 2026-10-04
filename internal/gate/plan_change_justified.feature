@@ -2,7 +2,7 @@
 # @anchors
 #   code: PCJFP
 #   ref: PCJPL
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-04
 #   layer: feature
 
 @PCJPL
@@ -137,3 +137,9 @@ Feature: PlanChangeJustified — a modified plan or spec must declare why it cha
     Given a configuration without a list of changed files
     When the gate confronts the artifact
     Then it returns Skip, avoiding unjustified accusations during full runs
+
+  @PCJPL-B16 @unit-level
+  Scenario: A change only in the header and in renamed codes is mechanical and skips
+    Given a committed plan, and the migration that gave its header a code and widened its codes as anchors.renames.yaml records
+    When plan-change-justified confronts it, and again after a sentence is added
+    Then the mechanical change skips, and the one with the new sentence fails asking for its revision

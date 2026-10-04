@@ -264,6 +264,7 @@
   "gate.env_declared.unread": "%d environment variable(s) the spec declares and the code does not read: %s — remove them, or mark them deprecated while they go",
   "gate.header.no_own_code": "the `@anchors` header has no `code:` of its own — since format 7 every governed file carries its own code (beside the `ref:` of its unit, when it has one), so the dependency chain can name it. `anchors check --fix` generates one from the file's name and type; `anchors code generate <name>` gives one by hand.",
   "gate.header.code_taken": "the code `%s` is also the own code of %s — a code is the address of ONE file. Give this file another (`anchors code generate <name>`), or remove the `code:` line and let `anchors check --fix` generate one.",
+  "gate.plan_change_justified.skip_mechanical": "only the `@anchors` header and codes renamed in anchors.renames.yaml changed — a mechanical change, nothing to justify",
   "gate.vr_states.skip_no_code": "the spec carries no identity code",
   "gate.vr_states.skip_no_spec": "no spec beside the unit's main file",
   "gate.mutation.nothing_to_mutate": "the mutation tool measured this file at its revision and generated no mutant — there is nothing to mutate",
