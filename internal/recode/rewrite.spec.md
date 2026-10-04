@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RCRWR
-  updated_at: 2026-09-27
+  updated_at: 2026-10-04
   layer: infra
 -->
 # RecodeRewrite — renaming an identity code inside a text, on every surface where it appears
@@ -38,6 +38,7 @@ with it, is never touched.
 | `RCRWR-B05` | A bare mention of the old code is replaced, the character right after it is kept, and each mention counts as one replacement. |
 | `RCRWR-B06` | The dry-run listing classifies each occurrence as a scenario code, a header or a bare reference, counting each occurrence once. (`Find`) |
 | `RCRWR-B07` | Each occurrence in the dry-run listing carries the text it matched and the line it starts on, counted from one, also for headers and mentions that come after scenario codes. (`Find`) |
+| `RCRWR-B08` | `RewriteRuleCodes` rewrites only the rule and scenario codes of OLD — `OLD-B08`, `OLD-S06#02`, `OLD-VR-S01`, `OLD-CT` — and never the bare code, which outside the governed files is as likely an ordinary word or part of an identifier (`DATA_URL`). |
 
 ## Invariants
 

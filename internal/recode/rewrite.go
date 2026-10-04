@@ -150,3 +150,18 @@ func lineOf(s string, byteIdx int) int {
 func (o Occurrence) String() string {
 	return fmt.Sprintf("L%d %s: %s", o.Line, o.Kind, o.Match)
 }
+
+// RewriteRuleCodes rewrites only the rule and scenario codes of OLD — `OLD-B08`,
+// `OLD-S06#02`, `OLD-VR-S01`, `OLD-CT` — leaving the bare code alone. It is the rewrite
+// for a file the project does not govern (a runner script, a lint config, an env
+// example): there a bare `DATA` is as likely an ordinary word or `DATA_URL` as a code,
+// and only the code's rule shape says for certain that it is one.
+func RewriteRuleCodes(content, old, new string) (string, int) {
+	re := regexp.MustCompile(`\b` + regexp.QuoteMeta(old) + `(-(?:VR(?:-[A-Z]{1,2}\d{2})?|CT|[A-Z]{1,2}\d{2,})(?:#\d+)?)\b`)
+	n := 0
+	out := re.ReplaceAllStringFunc(content, func(m string) string {
+		n++
+		return new + m[len(old):]
+	})
+	return out, n
+}

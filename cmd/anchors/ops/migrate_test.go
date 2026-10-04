@@ -194,6 +194,7 @@ func TestMigrateCrossingSevenGivesEveryFileACode(t *testing.T) {
 		"// @contract: src/Login.ts | export const login = 1 // LOGI-B01 | 1 | deadbeef\n"+
 		"test('LOGI-B01: only anonymous', () => {})\n")
 	writeFile(t, root, "baselines/LOGI-B01.txt", "a capture\n")
+	writeFile(t, root, "scripts/run.sh", "# runs LOGI-B01 and LOGI-VR-S01; LOGI alone and LOGI_URL stay\n")
 	writeFile(t, root, "src/Login.feature", "# @anchors\n#   code: LOGI\n\nFeature: Login\n")
 	read := func(rel string) string { b, _ := os.ReadFile(filepath.Join(root, rel)); return string(b) }
 
@@ -230,6 +231,10 @@ func TestMigrateCrossingSevenGivesEveryFileACode(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(root, "baselines", newCode+"-B01.txt")); err != nil {
 		t.Errorf("the file named by the code is renamed with it: %v", err)
+	}
+	t.Run("MGCMM-B15: Crossing format 7 rewrites the rule codes cited in files the project does not govern", func(t *testing.T) {})
+	if got, want := read("scripts/run.sh"), "# runs "+newCode+"-B01 and "+newCode+"-VR-S01; LOGI alone and LOGI_URL stay\n"; got != want {
+		t.Errorf("an ungoverned file has its rule codes rewritten and nothing else:\n%s", got)
 	}
 	if !strings.Contains(read(config.DefaultFile), "code_lengths: [5]") {
 		t.Errorf("the config reads five-character codes only:\n%s", read(config.DefaultFile))

@@ -2,7 +2,7 @@
 # @anchors
 #   code: RWFTR
 #   ref: RCRWR
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-04
 #   layer: feature
 
 @RCRWR
@@ -64,3 +64,9 @@ Feature: RecodeRewrite — renaming an identity code inside a text, on every sur
     Given the text "TCDTXX-B01 e XTCDTX e TCDTXABCD"
     When "TCDTX" is rewritten to "TCTXX"
     Then the text is unchanged and zero replacements are counted
+
+  @RCRWR-B08 @unit-level
+  Scenario: Outside the governed files only the rule and scenario codes are rewritten
+    Given a text citing ARNA-S06, ARNA-VR-S01, ARNA-CT and ARNA-B03#02, a bare ARNA, ARNA-screen, and DATA_URL
+    When the rule codes of ARNA are rewritten to ARNAA
+    Then the four rule codes are rewritten, and the bare code, the testID-like word and the identifier are left alone

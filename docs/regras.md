@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:873a8aabea14d435 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:6e0599df51a12c6d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2166,6 +2166,8 @@ abra a página dela em `camadas/`.
 - [MGCMM-B13 — When the project crosses format 7, each `@contract` stamp that matched its module before the migration and no longer does — a widened code inside the stamped snippet — is refreshed; a stamp already stale stays stale.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-B14 — When the project crosses format 7, every file it rewrote has the `updated_at` of its header set to the day of the migration, before the measurements are carried — so no `anchors touch` after it changes the files again.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
+- [MGCMM-B15 — When the project crosses format 7, every other versioned text file — one the project does not govern, outside the map, the config and `anchors.renames.yaml` — has the rule and scenario codes of each widened code rewritten (`RewriteRuleCodes`); a bare code there is left alone.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-B06 — After a real migration the command tells the user to commit it.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
@@ -7236,6 +7238,8 @@ abra a página dela em `camadas/`.
 - [RCRWR-B06 — The dry-run listing classifies each occurrence as a scenario code, a header or a bare reference, counting each occurrence once. (`Find`)](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
 
 - [RCRWR-B07 — Each occurrence in the dry-run listing carries the text it matched and the line it starts on, counted from one, also for headers and mentions that come after scenario codes. (`Find`)](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
+
+- [RCRWR-B08 — `RewriteRuleCodes` rewrites only the rule and scenario codes of OLD — `OLD-B08`, `OLD-S06#02`, `OLD-VR-S01`, `OLD-CT` — and never the bare code, which outside the governed files is as likely an ordinary word or part of an identifier (`DATA_URL`).](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
 
 - [RCRWR-I01 — A text without the old code comes back unchanged with zero replacements, so rewriting a second time after a rewrite changes nothing.](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
 

@@ -367,6 +367,51 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 		}
 	}
 
+	// The other versioned text files — a runner script, a lint config, an env example —
+	// cite the codes too, in comments: their rule and scenario codes follow, never a bare
+	// code, which there is as likely a word.
+	if len(pairs) > 0 {
+		governed := map[string]bool{config.DefaultFile: true, mapx.DefaultPath: true, migra.RenamesFile: true}
+		for _, f := range before {
+			governed[f.Path] = true
+			if to, ok := renamedPath[f.Path]; ok {
+				governed[to] = true
+			}
+		}
+		others, _ := versionedFiles(absRoot)
+		swept, files := 0, 0
+		for _, rel := range others {
+			if governed[rel] {
+				continue
+			}
+			abs := filepath.Join(absRoot, filepath.FromSlash(rel))
+			b, err := os.ReadFile(abs)
+			if err != nil || bytes.IndexByte(b, 0) >= 0 {
+				continue
+			}
+			out, n := string(b), 0
+			for _, p := range pairs {
+				var k int
+				out, k = recode.RewriteRuleCodes(out, p.old, p.new)
+				n += k
+			}
+			if n == 0 {
+				continue
+			}
+			swept += n
+			files++
+			if !dryRun {
+				if err := writeKeepingMode(abs, out); err != nil {
+					return true, err
+				}
+			}
+		}
+		if swept > 0 {
+			changed = true
+			fmt.Printf("✓ %d rule code(s) rewritten in %d file(s) the project does not govern\n", swept, files)
+		}
+	}
+
 	// 2. The configuration and the map speak the new codes, and the renamed paths.
 	if !dryRun {
 		if err := rewriteText(filepath.Join(absRoot, config.DefaultFile), func(s string) string {

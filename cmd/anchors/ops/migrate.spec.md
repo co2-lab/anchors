@@ -50,6 +50,7 @@ machine makes the next agent migrate again and produce the same diff.
 | `MGCMM-B12` | When the project crosses format 7, a file other than the spec that carries, as its own `code:`, the code its unit's spec owns has that line turned into `ref: <code>` with a code of its own above it. |
 | `MGCMM-B13` | When the project crosses format 7, each `@contract` stamp that matched its module before the migration and no longer does — a widened code inside the stamped snippet — is refreshed; a stamp already stale stays stale. |
 | `MGCMM-B14` | When the project crosses format 7, every file it rewrote has the `updated_at` of its header set to the day of the migration, before the measurements are carried — so no `anchors touch` after it changes the files again. |
+| `MGCMM-B15` | When the project crosses format 7, every other versioned text file — one the project does not govern, outside the map, the config and `anchors.renames.yaml` — has the rule and scenario codes of each widened code rewritten (`RewriteRuleCodes`); a bare code there is left alone. |
 | `MGCMM-B06` | After a real migration the command tells the user to commit it. |
 
 ## Invariants

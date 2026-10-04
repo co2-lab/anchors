@@ -169,3 +169,16 @@ func TestValidCode(t *testing.T) {
 		}
 	}
 }
+
+func TestRewriteRuleCodes(t *testing.T) {
+	t.Run("RCRWR-B08: Outside the governed files only the rule and scenario codes are rewritten", func(t *testing.T) {})
+	in := "// ARNA-S06 and USWL-B08 and ARNA-VR-S01, ARNA-CT, ARNA-B03#02\nDATA_URL=x ARNA alone ARNAX-B01 ARNA-screen\n"
+	got, n := RewriteRuleCodes(in, "ARNA", "ARNAA")
+	want := "// ARNAA-S06 and USWL-B08 and ARNAA-VR-S01, ARNAA-CT, ARNAA-B03#02\nDATA_URL=x ARNA alone ARNAX-B01 ARNA-screen\n"
+	if got != want || n != 4 {
+		t.Errorf("got %d %q", n, got)
+	}
+	if got, n := RewriteRuleCodes("DATA_URL=x DATA", "DATA", "DATAR"); n != 0 || got != "DATA_URL=x DATA" {
+		t.Errorf("a bare code is left alone: %q", got)
+	}
+}

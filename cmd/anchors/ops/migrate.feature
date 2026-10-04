@@ -120,3 +120,9 @@ Feature: MigrateCommand — the command the format error promises, bringing the 
     Given a format 6 project whose files have an old updated_at
     When migrate runs
     Then every rewritten file's header carries the day of the migration, and the map is at their new revisions
+
+  @MGCMM-B15 @unit-level
+  Scenario: Crossing format 7 rewrites the rule codes cited in files the project does not govern
+    Given a format 6 project with a script outside every layer citing LOGI-B01, LOGI-VR-S01, a bare LOGI and LOGI_URL
+    When migrate runs
+    Then the two rule codes carry the widened code, and the bare code and the identifier are left alone

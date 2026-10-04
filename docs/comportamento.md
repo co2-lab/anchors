@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d9b727c384b14b10 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:89e815e4d45077e7 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1975,6 +1975,8 @@ teste prova.
 - [Crossing format 7 refreshes the stamps a widened code broke](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B13`
 
 - [Crossing format 7 dates every file it rewrote](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B14`
+
+- [Crossing format 7 rewrites the rule codes cited in files the project does not govern](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B15`
 
 - [An unknown kind is refused](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B01`
 
@@ -6567,6 +6569,8 @@ teste prova.
 - [A text without the old code is left unchanged](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-I01`
 
 - [Longer codes and neighbours are never touched](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-X01`
+
+- [Outside the governed files only the rule and scenario codes are rewritten](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-B08`
 
 - [The sh on PATH is the shell](layers/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands) `PSXSH-B01`
 
