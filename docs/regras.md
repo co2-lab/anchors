@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:b9f88d5de7c7f0f4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:65c27b84498b3dd4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -6226,6 +6226,8 @@ abra a página dela em `camadas/`.
 - [VRSTC-B13 — Every message the spec catalogs (the codes of its User Messages section) is captured like a state: a VR scenario `{CODE}-VR-M01`, a VR test and a baseline image, `@no-vr: <reason>` on its row exempting it — an error shows on the screen as its message, the state is the same.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
 - [VRSTC-B14 — The states a spec registers are the codes in its States section — whose title may carry a note in parentheses — when it has one; a state code cited elsewhere registers nothing.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
+
+- [VRSTC-B15 — A `@no-vr` exempts the code its line declares — the first cell of a table row, or the code before the marker — and never a code its reason mentions: "same frame as M03" exempts the row's own state, not M03.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 
 - [VRSTC-B12 — A state is exempted from visual regression by `@no-vr: <reason>` on a line that declares it — its heading or its row in a states table. An exemption with no reason does not exempt: the state is still asked, and the failure names it as an exemption with no reason.](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways)
 

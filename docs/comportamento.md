@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:29c9205e029323aa — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:7820791a31845dcf — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -5677,6 +5677,8 @@ teste prova.
 - [Every message is captured like a state](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B13`
 
 - [The states registered are those of the States section](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B14`
+
+- [A @no-vr exempts the code of its own row, never a code its reason mentions](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B15`
 
 ## infra
 

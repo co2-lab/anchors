@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:d9d2de54431af01c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:692935f80286a463 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 81 unidades e 1337 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 81 unidades e 1338 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -4590,6 +4590,8 @@ its text. A baseline is `<Unit>.{CODE}-VR-S01[-variant].<ext>` beside the unit.
 - **VRSTC-B13** — Every message the spec catalogs (the codes of its User Messages section) is captured like a state: a VR scenario `{CODE}-VR-M01`, a VR test and a baseline image, `@no-vr: <reason>` on its row exempting it — an error shows on the screen as its message, the state is the same.
 
 - **VRSTC-B14** — The states a spec registers are the codes in its States section — whose title may carry a note in parentheses — when it has one; a state code cited elsewhere registers nothing.
+
+- **VRSTC-B15** — A `@no-vr` exempts the code its line declares — the first cell of a table row, or the code before the marker — and never a code its reason mentions: "same frame as M03" exempts the row's own state, not M03.
 
 - **VRSTC-B12** — A state is exempted from visual regression by `@no-vr: <reason>` on a line that declares it — its heading or its row in a states table. An exemption with no reason does not exempt: the state is still asked, and the failure names it as an exemption with no reason.
 

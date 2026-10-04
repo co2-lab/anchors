@@ -320,12 +320,23 @@ func exemptStates(content, code, letterClass string) (map[string]bool, []string)
 	exempt := map[string]bool{}
 	var unreasoned []string
 	for _, line := range strings.Split(content, "\n") {
-		m := noVRRE.FindStringSubmatch(line)
-		if m == nil {
+		loc := noVRRE.FindStringSubmatchIndex(line)
+		if loc == nil {
 			continue
 		}
+		m := noVRRE.FindStringSubmatch(line)
 		reasoned := strings.TrimSpace(strings.Trim(strings.TrimSpace(m[1]), "-—>")) != ""
-		for _, sm := range re.FindAllStringSubmatch(line, -1) {
+		// The exemption is of the code the line declares — the first cell of a table row,
+		// or what stands before the marker —, never of a code its REASON mentions: "same
+		// frame as the M03 notice" exempted M03 and failed M03's real capture (reported
+		// from MIF).
+		owner := line[:loc[0]]
+		if t := strings.TrimSpace(line); strings.HasPrefix(t, "|") {
+			if cells := cellsOf(t); len(cells) > 0 {
+				owner = cells[0]
+			}
+		}
+		for _, sm := range re.FindAllStringSubmatch(owner, -1) {
 			if reasoned {
 				exempt[sm[1]] = true
 			} else {

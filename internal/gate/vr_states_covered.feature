@@ -2,7 +2,7 @@
 # @anchors
 #   code: VSCFV
 #   ref: VRSTC
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-04
 #   layer: feature
 
 @VRSTC
@@ -122,3 +122,9 @@ Feature: VRStatesCovered — each state of a visual unit tied to its visual regr
     When vr-states-covered confronts the unit's code with a VR scenario of S01
     Then it passes: S09 is no registered state
 
+
+  @VRSTC-B15 @unit-level
+  Scenario: A @no-vr exempts the code of its own row, never a code its reason mentions
+    Given a spec whose S02 row and S03 heading are exempt with reasons that mention S01, and a VR scenario of S01
+    When vr-scenarios-of-states and vr-states-covered run
+    Then S01's capture is no contradiction, and S02 and S03 are the exempt ones

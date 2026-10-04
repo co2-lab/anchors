@@ -224,6 +224,20 @@ func TestVR_aStateIsExemptedWithAReason(t *testing.T) {
 	}
 }
 
+func TestVR_aReasonCitingAnotherStateExemptsOnlyItsOwn(t *testing.T) {
+	t.Run("VRSTC-B15: A @no-vr exempts the code of its own row, never a code its reason mentions", func(t *testing.T) {})
+	spec := "<!-- @anchors\n  code: BUTTN\n-->\n# Button\n\n| State | Name | Note |\n| --- | --- | --- |\n" +
+		"| BUTTN-S01 | Enabled | |\n| BUTTN-S02 | Loading | @no-vr: same frame as BUTTN-S01; only the text changes |\n\n" +
+		"### BUTTN-S03: Pressed @no-vr: looks like BUTTN-S01\n"
+	root, g := vrFixture(t, map[string]string{"ui/Button.spec.md": spec, "ui/Button.feature": featureVRStates("S01")})
+	if v, d := checkVRScenariosOfStates("", buttonCode, root, g, nil); v == Fail {
+		t.Errorf("S01's capture is no contradiction: only S02 and S03 are exempt: %v %s", v, d)
+	}
+	if v, d := checkVRStatesCovered("", buttonCode, root, g, nil); v != Pass {
+		t.Errorf("S01 captured, S02 and S03 exempt: %v %s", v, d)
+	}
+}
+
 func TestVR_messagesAndRegisteredStates(t *testing.T) {
 	t.Run("VRSTC-B13: Every message is captured like a state", func(t *testing.T) {})
 	t.Run("VRSTC-B14: The states registered are those of the States section", func(t *testing.T) {})

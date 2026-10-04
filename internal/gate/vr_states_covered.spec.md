@@ -1,6 +1,6 @@
 <!-- @anchors
   code: VRSTC
-  updated_at: 2026-10-03
+  updated_at: 2026-10-04
   layer: gate
 -->
 # VRStatesCovered — each state of a visual unit tied to its visual regression, both ways
@@ -61,6 +61,7 @@ its text. A baseline is `<Unit>.{CODE}-VR-S01[-variant].<ext>` beside the unit.
 | `VRSTC-B11` | `vr-baseline` accepts the same image formats for a VR scenario's baseline. |
 | `VRSTC-B13` | Every message the spec catalogs (the codes of its User Messages section) is captured like a state: a VR scenario `{CODE}-VR-M01`, a VR test and a baseline image, `@no-vr: <reason>` on its row exempting it — an error shows on the screen as its message, the state is the same. |
 | `VRSTC-B14` | The states a spec registers are the codes in its States section — whose title may carry a note in parentheses — when it has one; a state code cited elsewhere registers nothing. |
+| `VRSTC-B15` | A `@no-vr` exempts the code its line declares — the first cell of a table row, or the code before the marker — and never a code its reason mentions: "same frame as M03" exempts the row's own state, not M03. |
 | `VRSTC-B12` | A state is exempted from visual regression by `@no-vr: <reason>` on a line that declares it — its heading or its row in a states table. An exemption with no reason does not exempt: the state is still asked, and the failure names it as an exemption with no reason. |
 
 ## Invariants
