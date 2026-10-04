@@ -104,3 +104,9 @@ Feature: RecodePlan — planning and applying the rename of a code across the wh
     Given a spec of GOAL with a rule titled with the word, a code file refing GOAL and SEAT with an env var GOAL_TABLE, and an e2e flow named by each code
     When the batch for GOAL → GOALG and SEAT → SEATO is planned and applied
     Then the citations carry the new codes, GOAL_TABLE is untouched, both flows are renamed, and the rule title's line is listed as bare
+
+  @RCPLR-B14 @unit-level
+  Scenario: A binary file is renamed with its code and its bytes are never rewritten
+    Given a VR baseline named by GOAL whose compressed bytes hold the letters GOAL-B01 and GOAL
+    When the batch for GOAL → GOALG is applied
+    Then the baseline is renamed to carry GOALG and its bytes are the same

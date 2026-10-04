@@ -200,6 +200,7 @@ var (
 	citedWordRE   = regexp.MustCompile(`[A-Za-z0-9_]+`)
 	citedSuffixRE = regexp.MustCompile(`^-(?:VR(?:-[A-Z]{1,2}\d{2})?|CT|[A-Z]{1,2}\d{2,}[a-z]?)(?:#\d+)?\b`)
 	citedFieldRE  = regexp.MustCompile(`(?:code|refs?|dep|needs)\s*:`)
+	citedJoinedRE = regexp.MustCompile(`^-[A-Za-z0-9]`)
 )
 
 // RewriteRuleCodes rewrites only the rule and scenario codes of the set's codes (see
@@ -238,7 +239,11 @@ func (c *CitedSet) Rewrite(content string) (string, map[string]int, map[string][
 		if !ok {
 			continue
 		}
-		cited := citedSuffixRE.MatchString(content[e:]) ||
+		// A code joined by a hyphen to what follows — a rule code, `CODE-DS-method-email`,
+		// `CODE-perm-suite`, the stem of a flow named by the code — is a citation: the
+		// upper-case code is the head of a name. Only a bare word, or one inside an
+		// identifier, is not (reported from MIF: renamed flows lost their own `name:`).
+		cited := citedJoinedRE.MatchString(content[e:]) ||
 			(s > 0 && e < len(content) && content[s-1] == '`' && content[e] == '`') ||
 			(s > 0 && content[s-1] == '@' && (s == 1 || strings.ContainsRune(" \t\n([,", rune(content[s-2]))) &&
 				(e == len(content) || content[e] != '-'))
@@ -252,9 +257,6 @@ func (c *CitedSet) Rewrite(content string) (string, map[string]int, map[string][
 			last = e
 			counts[w]++
 			continue
-		}
-		if e < len(content) && content[e] == '-' {
-			continue // a testID or a word joined by a hyphen, not a mention
 		}
 		line += strings.Count(content[lineAt:s], "\n")
 		lineAt = s

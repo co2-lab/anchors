@@ -189,14 +189,16 @@ func TestRewriteCited(t *testing.T) {
 		"# Goal — `GOAL`\n\n### GOAL-B01 — a rule\n\n@GOAL @GOAL-B01\n" +
 		"ref: CNPJ, GOAL\n    file_code: GOAL\n" +
 		"const GOAL_TABLE = process.env.GOAL_CONTRIBUTIONS_TABLE_NAME\n" +
-		"label=\"GOAL\" and the GOAL of the user; MY_GOAL\n"
+		"label=\"GOAL\" and the GOAL of the user; MY_GOAL\n" +
+		"name: GOAL-DS-method-email and GOAL-perm-suite\n"
 	got, n := RewriteCited(in, "GOAL", "GOALG")
 	want := "<!-- @anchors\n  code: GOALG\n-->\n" +
 		"# Goal — `GOALG`\n\n### GOALG-B01 — a rule\n\n@GOALG @GOALG-B01\n" +
 		"ref: CNPJ, GOALG\n    file_code: GOALG\n" +
 		"const GOAL_TABLE = process.env.GOAL_CONTRIBUTIONS_TABLE_NAME\n" +
-		"label=\"GOAL\" and the GOAL of the user; MY_GOAL\n"
-	if got != want || n != 7 {
+		"label=\"GOAL\" and the GOAL of the user; MY_GOAL\n" +
+		"name: GOALG-DS-method-email and GOALG-perm-suite\n"
+	if got != want || n != 9 {
 		t.Errorf("got %d:\n%s", n, got)
 	}
 	_, _, left := NewCitedSet(map[string]string{"GOAL": "GOALG"}).Rewrite(in)

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:04f6003f826d5169 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:5fb1e08c2b243ad4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -6555,6 +6555,8 @@ teste prova.
 - [A file that cannot be written stops the apply, naming it](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project) `RCPLR-E05`
 
 - [A batch plans many codes in one pass, cited only, renames the files their names carry, and lists the bare words](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project) `RCPLR-B13`
+
+- [A binary file is renamed with its code and its bytes are never rewritten](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project) `RCPLR-B14`
 
 - [A code is well formed only in the project's lengths and alphabet](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-B01`
 

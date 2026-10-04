@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:9843eccb8a436ea4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:b0eaaf2b70a5872b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7211,6 +7211,8 @@ abra a página dela em `camadas/`.
 
 - [RCPLR-B13 — `BuildBatchCited` plans the rename of many codes at once, as a migration makes it: one walk of the governed files, each rewritten once for every code where it is cited as a code (`NewCitedSet`), the files whose names carry a code renamed with it (the given name patterns), the counts per code, and the bare mentions left, per code and file; `Batch.Apply` writes the files and makes the renames as `Plan.Apply` does.](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project)
 
+- [RCPLR-B14 — A batch never rewrites a binary as text — a file that is not valid UTF-8 or holds a NUL byte, such as a VR baseline —: it is renamed with its code when its name carries one, byte for byte.](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project)
+
 - [RCPLR-X01 — A refusal from git is returned as an error naming the move, and the file is not moved by other means.](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project)
 
 - [RCPLR-X02 — Planning writes nothing to the project.](layers/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project)
@@ -7245,7 +7247,7 @@ abra a página dela em `camadas/`.
 
 - [RCRWR-B08 — `RewriteRuleCodes` rewrites only the rule and scenario codes of OLD — `OLD-B08`, `OLD-S06#02`, `OLD-VR-S01`, `OLD-CT` — and never the bare code, which outside the governed files is as likely an ordinary word or part of an identifier (`DATA_URL`).](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
 
-- [RCRWR-B09 — `RewriteCited` rewrites a code only where it is cited as one — its rule and scenario codes, the header fields that hold codes (`code:`, `file_code:`, `ref:`/`refs:`, `dep:`, `needs:`), the code in backticks and a Gherkin tag `@CODE` — and leaves the bare word; `CitedSet` (`NewCitedSet`) does it for many codes in one pass over the text (`Rewrite`, and `RewriteRuleCodes` for the rule codes alone) and lists the lines where each still stands bare, an identifier (`CODE_X`, `X_CODE`) not counted.](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
+- [RCRWR-B09 — `RewriteCited` rewrites a code only where it is cited as one — its rule and scenario codes and any name it heads joined by a hyphen (`CODE-DS-method-email`, `CODE-perm-suite`, the stem of a file named by it), the header fields that hold codes (`code:`, `file_code:`, `ref:`/`refs:`, `dep:`, `needs:`), the code in backticks and a Gherkin tag `@CODE` — and leaves the bare word; `CitedSet` (`NewCitedSet`) does it for many codes in one pass over the text (`Rewrite`, and `RewriteRuleCodes` for the rule codes alone) and lists the lines where each still stands bare, an identifier (`CODE_X`, `X_CODE`) not counted.](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
 
 - [RCRWR-B10 — An underscore is no boundary for a bare mention: `CODE_TABLE` and `X_CODE` are identifiers, not mentions of the code, and `Rewrite` leaves them.](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
 

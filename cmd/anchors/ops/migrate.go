@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/flowx"
@@ -401,7 +402,6 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 		citedTo[p.old] = p.new
 	}
 	cited := recode.NewCitedSet(citedTo)
-	ruleOnly := cited
 
 	// The other versioned text files — a runner script, a lint config, an env example —
 	// cite the codes too, in comments: their rule and scenario codes follow, never a bare
@@ -422,10 +422,10 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 			}
 			abs := filepath.Join(absRoot, filepath.FromSlash(rel))
 			b, err := os.ReadFile(abs)
-			if err != nil || bytes.IndexByte(b, 0) >= 0 {
-				continue
+			if err != nil || bytes.IndexByte(b, 0) >= 0 || !utf8.Valid(b) {
+				continue // a binary is never rewritten as text
 			}
-			out, counts := ruleOnly.RewriteRuleCodes(string(b))
+			out, counts := cited.RewriteRuleCodes(string(b))
 			n := 0
 			for _, k := range counts {
 				n += k

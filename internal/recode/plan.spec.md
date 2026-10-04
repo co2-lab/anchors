@@ -52,6 +52,7 @@ the disk in silence.
 | `RCPLR-B11` | A target code another unit already owns — declared in its header, or the prefix of one of its scenario codes — is refused naming that file; a code that merely contains the target is not a collision. |
 | `RCPLR-B12` | The refusal of a malformed code names the lengths the project declares in `code_lengths`, the same ones the validation applies. |
 | `RCPLR-B13` | `BuildBatchCited` plans the rename of many codes at once, as a migration makes it: one walk of the governed files, each rewritten once for every code where it is cited as a code (`NewCitedSet`), the files whose names carry a code renamed with it (the given name patterns), the counts per code, and the bare mentions left, per code and file; `Batch.Apply` writes the files and makes the renames as `Plan.Apply` does. |
+| `RCPLR-B14` | A batch never rewrites a binary as text — a file that is not valid UTF-8 or holds a NUL byte, such as a VR baseline —: it is renamed with its code when its name carries one, byte for byte. |
 
 ## Constraints
 

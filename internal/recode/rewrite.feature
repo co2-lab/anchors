@@ -73,9 +73,9 @@ Feature: RecodeRewrite — renaming an identity code inside a text, on every sur
 
   @RCRWR-B09 @unit-level
   Scenario: A code is rewritten only where it is cited as a code, and the bare words left are listed
-    Given a spec of GOAL citing it in its header, backticks, a rule, a Gherkin tag, a ref list and a map field, beside an env var, an identifier and a sentence with the word
+    Given a spec of GOAL citing it in its header, backticks, a rule, a Gherkin tag, a ref list, a map field and two names it heads with a hyphen, beside an env var, an identifier and a sentence with the word
     When GOAL is rewritten to GOALG where cited
-    Then the seven citations carry GOALG, the identifiers and the sentence keep GOAL, and only the sentence's line is listed as bare
+    Then the nine citations carry GOALG, the identifiers and the sentence keep GOAL, and only the sentence's line is listed as bare
 
   @RCRWR-B10 @unit-level
   Scenario: A code inside an identifier with an underscore is not a mention

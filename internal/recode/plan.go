@@ -5,6 +5,7 @@
 package recode
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
@@ -311,6 +313,11 @@ func BuildBatchCited(root string, cfg *config.Config, pairs [][2]string, pattern
 	for _, f := range files {
 		raw, rerr := os.ReadFile(filepath.Join(root, f.Path))
 		if rerr != nil {
+			continue
+		}
+		// A binary — a VR baseline, an image — is never rewritten as text: a code's letters
+		// inside compressed bytes are no citation, and rewriting them corrupts the file.
+		if !utf8.Valid(raw) || bytes.IndexByte(raw, 0) >= 0 {
 			continue
 		}
 		content, counts, bare := set.Rewrite(string(raw))
