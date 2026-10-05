@@ -834,3 +834,22 @@ func TestIngestCoverage_aSuiteThatRanNothingLeavesTheUnion(t *testing.T) {
 		t.Errorf("with no suite having run it, the coverage is none of its lines, got %d/%d", s.CoveredLines, s.TotalLines)
 	}
 }
+
+func TestAdoptMissingSuites(t *testing.T) {
+	t.Run("SGINA-B24: The suites another measurement holds and this signal does not are adopted, and the ones it has stay", func(t *testing.T) {})
+	s := &TestSignal{ProvenBySuite: map[string][]string{"unit.xml": {"X-B01"}}, ProvenRevBySuite: map[string]string{"unit.xml": "new"}, AtRev: "new"}
+	head := &TestSignal{
+		ProvenBySuite:    map[string][]string{"unit.xml": {"X-B01", "X-B02"}, "e2e.xml": {"X-A01"}},
+		ProvenRevBySuite: map[string]string{"unit.xml": "old", "e2e.xml": "old"},
+	}
+	if !s.AdoptMissingSuites(head, "new") {
+		t.Fatal("the e2e suite is adopted")
+	}
+	if len(s.ProvenBySuite["unit.xml"]) != 1 || s.ProvenRevBySuite["unit.xml"] != "new" || s.ProvenRevBySuite["e2e.xml"] != "old" ||
+		strings.Join(s.ProvenCodes, ",") != "X-A01,X-B01" || s.AtRev != "old" {
+		t.Errorf("the unit run stays, the e2e proof joins at its own rev, and the union is as old as it: %+v", s)
+	}
+	if s.AdoptMissingSuites(head, "new") {
+		t.Error("a second adoption has nothing to add")
+	}
+}

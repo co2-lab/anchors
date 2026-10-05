@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTD
 #   ref: SGINA
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-05
 #   layer: feature
 
 @SGINA
@@ -199,3 +199,9 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a file whose unit suite covered all its lines and whose integration suite instrumented other lines and ran none
     When both are ingested
     Then the file's coverage is the unit suite's, and with neither having run it the coverage is none
+
+  @SGINA-B24 @unit-level
+  Scenario: The suites another measurement holds and this signal does not are adopted, and the ones it has stay
+    Given a signal with the unit suite at the new revision, and HEAD's with the unit and e2e suites at the old one
+    When the missing suites are adopted from HEAD's
+    Then the e2e suite joins at its own revision, the unit run stays, and a second adoption adds nothing

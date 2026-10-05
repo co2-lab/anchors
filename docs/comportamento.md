@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:7820791a31845dcf — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:0f2cec4d28f4645e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2453,6 +2453,8 @@ teste prova.
 - [The contract stamps are refreshed under the same declaration](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B04`
 
 - [A missing reason, file or map fails](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-E01`
+
+- [The suites a later run did not replace come back from HEAD and are carried with the rest](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B05`
 
 - [The issues in todo and doing are counted, with the user-owned ones apart](layers/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines) `LCBCL-B01`
 
@@ -7029,6 +7031,8 @@ teste prova.
 - [A file the coverage report lists, or leaves out, says so](layers/mapa.md#sgina-b29--a-file-the-coverage-report-lists-or-leaves-out-says-so) `SGINA-B29`
 
 - [A suite that ran none of a file's lines leaves its coverage](layers/mapa.md#sgina-b30--a-suite-that-ran-none-of-a-files-lines-leaves-its-coverage) `SGINA-B30`
+
+- [The suites another measurement holds and this signal does not are adopted, and the ones it has stay](layers/mapa.md#sgina-b24--the-suites-another-measurement-holds-and-this-signal-does-not-are-adopted-and-the-ones-it-has-stay) `SGINA-B24`
 
 - [The lock is a file beside the map with its owner](layers/mapa.md#mplck-b01--the-lock-is-a-file-beside-the-map-with-its-owner) `MPLCK-B01`
 

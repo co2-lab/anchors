@@ -2,7 +2,7 @@
 # @anchors
 #   code: KEFKP
 #   ref: KPEVD
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-05
 #   layer: feature
 
 @KPEVD
@@ -37,3 +37,9 @@ Feature: KeepEvidence — a change that proves nothing new keeps the files' evid
     Given no reason, a file outside the map, and a project with no map
     When the command runs with each
     Then it fails saying which
+
+  @KPEVD-B05 @unit-level
+  Scenario: The suites a later run did not replace come back from HEAD and are carried with the rest
+    Given a spec proven at HEAD by a unit suite and an e2e suite, changed, the map rebuilt and only the unit suite run again
+    When keep-evidence runs on the spec
+    Then the e2e proof comes back from HEAD, and both suites are at the new content

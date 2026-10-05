@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:65c27b84498b3dd4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:f3333c16f7884ff0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2688,6 +2688,8 @@ abra a página dela em `camadas/`.
 - [KPEVD-B03 — A file whose evidence is already at its content, or that has none, is said to have nothing to keep, and is left as it was.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
 
 - [KPEVD-B04 — The `@contract` stamps of the doubles pointing at the files kept are refreshed and listed, under the same declaration.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
+
+- [KPEVD-B05 — When the file's signal lacks suites the map at HEAD holds for it — the rebuild dropped the signal and only some suites ran again at the new content —, those suites come back from HEAD and are carried with the rest; a suite run again keeps its new measurement. A suite that ran again and proved nothing here also comes back: the command is the author's declaration that the change proves nothing new.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
 
 - [KPEVD-E01 — The reason is missing or blank, a file is not in the map or cannot be read, or there is no map](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
 

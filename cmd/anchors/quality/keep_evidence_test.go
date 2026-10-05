@@ -124,3 +124,50 @@ func TestKeepEvidence_refusals(t *testing.T) {
 		t.Errorf("no map points at the map build, got %v", err)
 	}
 }
+
+func TestKeepEvidence_suitesNotRunAgainComeFromHead(t *testing.T) {
+	t.Run("KPEVD-B05: The suites a later run did not replace come back from HEAD and are carried with the rest", func(t *testing.T) {})
+	r, mapPath := keepRepo(t, false)
+	// HEAD's map: the spec proven by the unit suite and by an e2e suite, at the old content.
+	g, err := mapx.Load(mapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := g.Node("src/pay.spec.md")
+	old := n.Rev
+	n.Signal = &mapx.TestSignal{
+		ProvenCodes:      []string{"PAYMX-B01"},
+		ProvenBySuite:    map[string][]string{"unit.xml": {"PAYMX-B01"}, "e2e/flow.xml": {"PAYMX-B01"}},
+		ProvenRevBySuite: map[string]string{"unit.xml": old, "e2e/flow.xml": old},
+		AtRev:            old,
+	}
+	if err := mapx.Save(g, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	r.git("add", mapx.DefaultPath)
+	r.git("commit", "-qm", "proven", "--", mapx.DefaultPath)
+	// The map is rebuilt at the new content, and only the unit suite runs again.
+	_, newRev := keptSignal(t, mapPath)
+	g, _ = mapx.Load(mapPath)
+	n = g.Node("src/pay.spec.md")
+	n.Rev = newRev
+	n.Signal = &mapx.TestSignal{
+		ProvenCodes:      []string{"PAYMX-B01"},
+		ProvenBySuite:    map[string][]string{"unit.xml": {"PAYMX-B01"}},
+		ProvenRevBySuite: map[string]string{"unit.xml": newRev},
+		AtRev:            newRev,
+	}
+	if err := mapx.Save(g, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runQ(t, newKeepEvidenceCmd(), "--root", r.root, "src/pay.spec.md", "--reason", "only VR metadata")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _ := keptSignal(t, mapPath)
+	s := got.Signal
+	if s == nil || len(s.ProvenBySuite) != 2 || s.ProvenRevBySuite["e2e/flow.xml"] != newRev || s.ProvenRevBySuite["unit.xml"] != newRev ||
+		s.AtRev != newRev || !strings.Contains(out, "evidence kept:") {
+		t.Errorf("the e2e proof comes back from HEAD and is at the new content beside the unit run: %+v\n%s", s, out)
+	}
+}

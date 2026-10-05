@@ -544,6 +544,43 @@ func unionRev(sig *TestSignal, current string) string {
 	return current
 }
 
+// AdoptMissingSuites gives the signal the proofs of each suite `from` holds and it does not:
+// the suites of another measurement of the same file — the map at HEAD — that no run since
+// has replaced. A suite this signal already has was measured again, and stays as it is. It
+// says whether a suite was adopted.
+//
+// The map rebuild drops a changed file's whole signal, and a later run of ONE suite — the
+// unit tests, at the new content — starts a new signal with that suite alone: the e2e
+// proofs, still at the previous revision, were gone, and `keep-evidence` found nothing to
+// carry (reported from MIF: 60 Maestro scenarios asked to run again for a VR-only edit).
+func (s *TestSignal) AdoptMissingSuites(from *TestSignal, current string) bool {
+	if s == nil || from == nil {
+		return false
+	}
+	adopted := false
+	for suite, codes := range from.ProvenBySuite {
+		if _, ok := s.ProvenBySuite[suite]; ok {
+			continue
+		}
+		if s.ProvenBySuite == nil {
+			s.ProvenBySuite = map[string][]string{}
+		}
+		if s.ProvenRevBySuite == nil {
+			s.ProvenRevBySuite = map[string]string{}
+		}
+		s.ProvenBySuite[suite] = append([]string(nil), codes...)
+		if rev, ok := from.ProvenRevBySuite[suite]; ok {
+			s.ProvenRevBySuite[suite] = rev
+		}
+		adopted = true
+	}
+	if adopted {
+		s.ProvenCodes = unionProven(s.ProvenBySuite)
+		s.AtRev = unionRev(s, current)
+	}
+	return adopted
+}
+
 // IngestCoverage grava a cobertura de linha nos nós de CÓDIGO, casando por caminho.
 func (g *Graph) IngestCoverage(byFile map[string]FileCov, now string) (matched int) {
 	return g.IngestCoverageSuite(byFile, "", now)

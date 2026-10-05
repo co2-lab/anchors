@@ -84,9 +84,15 @@ unproven.`,
 					if n == nil {
 						return fmt.Errorf("%s is not in the map: run `anchors map build` first", rel)
 					}
-					if n.Signal == nil && head != nil {
+					if head != nil {
 						if h := head.Node(rel); h != nil && h.Signal != nil {
-							n.Signal = h.Signal
+							if n.Signal == nil {
+								n.Signal = h.Signal
+							} else {
+								// A suite run since at the new content stays; the ones it did
+								// not replace come back from HEAD, to be carried with the rest.
+								n.Signal.AdoptMissingSuites(h.Signal, n.Rev)
+							}
 						}
 					}
 					carried := g.KeepEvidence(rel, scan.ShortHash(b), reason, today, lines)

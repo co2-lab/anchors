@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SGINA
-  updated_at: 2026-10-01
+  updated_at: 2026-10-05
   layer: mapa
 -->
 # SignalIngestion — hanging the runner's results on the map's nodes: executions, proven rules, coverage and mutation
@@ -102,6 +102,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B30` | A suite that ran none of a file's lines at the current revision leaves the file's line and branch coverage when another suite ran it: its instrumented lines and branches say nothing about which run; with no suite having run the file, the coverage is none of its lines. (`unionCoverage`, `unionBranches`) |
 | `SGINA-B24` | The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. (`RefreshRevs`) |
 | `SGINA-B23` | A run time Anchors measured itself is recorded on the node under the suite; a node the map does not have is ignored. (`RecordRunSeconds`) |
+| `SGINA-B24` | `AdoptMissingSuites` gives a signal the proofs of each suite another measurement holds and it does not, at that suite's own revision, and recomputes the union and its revision; a suite the signal already has stays as it is. |
 
 ## Invariants
 
