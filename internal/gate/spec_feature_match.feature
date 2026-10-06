@@ -2,7 +2,7 @@
 # @anchors
 #   code: SFMFS
 #   ref: SFMSP
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-06
 #   layer: feature
 
 @SFMSP
@@ -165,3 +165,9 @@ Feature: SpecFeatureMatch — every requirement the spec defines has at least on
     And a feature whose two scenarios tag that requirement with the suffixes 01 and 02
     When the gate confronts the spec
     Then it does not fail, because the suffix identifies each case, not a new requirement
+
+  @SFMSP-B16 @unit-level
+  Scenario: A code in the open-decisions section is no requirement
+    Given a spec with the rule GOALG-B01 and the open decision GOALG-Q01, and a feature with the scenario of GOALG-B01
+    When spec-feature-match runs
+    Then it passes, and the spec's requirements are GOALG-B01 alone

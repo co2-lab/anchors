@@ -501,3 +501,18 @@ Funcionalidade: Dedup
 		t.Errorf("a scenario suffix should not fail the root requirement: %s", detail)
 	}
 }
+
+// An open decision has a code — open-questions-resolved asks for it — and is no
+// requirement: it gets its scenario when it becomes a rule.
+func TestSpecFeatureMatchOpenDecisionIsNoRequirement(t *testing.T) {
+	t.Run("SFMSP-B16: A code in the open-decisions section is no requirement", func(t *testing.T) {})
+	spec := "# Spec\n\n## Rules\n### GOALG-B01 — lists the goals\n\n## Decisões em aberto\n\n" +
+		"| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n| `GOALG-Q01` | archive or delete? | product | rule |\n"
+	feature := "@GOALG\nFeature: goals\n\n  @GOALG-B01 @nivel-unit\n  Scenario: lists\n"
+	if v, d := rodaSpecFeature(t, spec, feature); v != Pass {
+		t.Errorf("the open question asks for no scenario: %v %s", v, d)
+	}
+	if got := definedRequirements(spec); len(got) != 1 || got[0] != "GOALG-B01" {
+		t.Errorf("the requirements are the rules alone, for every gate that reads them: %v", got)
+	}
+}

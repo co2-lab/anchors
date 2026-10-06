@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:2bd044f0241a7c7a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:26a3e6992104d3c9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 81 unidades e 1338 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 81 unidades e 1339 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -3912,6 +3912,8 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 - **SFMSP-B14** — An alias that stands for no rule FAILS, naming it: a target this spec does not define, a target that is itself an alias, or no reason after the colon. It is checked before the feature is looked for, because a dangling alias would drop the rule from every scenario check unseen.
 
 - **SFMSP-B15** — A requirement is covered by scenarios whose tag carries it with a `#nn` suffix: the suffix identifies each case of the requirement, not a new requirement.
+
+- **SFMSP-B16** — A code defined in the open-decisions section (`## Open Decisions`, `## Decisões em Aberto`…) is no requirement — for this gate and for every one that reads the spec's requirements (`scenario-coverage`, `reverse-match`, `rule-uses`): an open question gets its scenario once it becomes a rule.
 
 - **SFMSP-I01** — Every waiver requires a written REASON — both the per-requirement marker and the whole-spec one. A bare marker is a switch with no accounting, and silence without a why is what the gate exists to end.
 

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:f3333c16f7884ff0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:22c5e5534c38ac9b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -5806,6 +5806,8 @@ abra a página dela em `camadas/`.
 - [SFMSP-B14 — An alias that stands for no rule FAILS, naming it: a target this spec does not define, a target that is itself an alias, or no reason after the colon. It is checked before the feature is looked for, because a dangling alias would drop the rule from every scenario check unseen.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 
 - [SFMSP-B15 — A requirement is covered by scenarios whose tag carries it with a `#nn` suffix: the suffix identifies each case of the requirement, not a new requirement.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
+
+- [SFMSP-B16 — A code defined in the open-decisions section (`## Open Decisions`, `## Decisões em Aberto`…) is no requirement — for this gate and for every one that reads the spec's requirements (`scenario-coverage`, `reverse-match`, `rule-uses`): an open question gets its scenario once it becomes a rule.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 
 - [SFMSP-I01 — Every waiver requires a written REASON — both the per-requirement marker and the whole-spec one. A bare marker is a switch with no accounting, and silence without a why is what the gate exists to end.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:0f2cec4d28f4645e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:70a2f1cb03dd7b46 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -5291,6 +5291,8 @@ teste prova.
 - [A feature missing from disk does not hide the scenarios of the other features](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-E02`
 
 - [Scenarios tagged with a suffix cover the requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B15`
+
+- [A code in the open-decisions section is no requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B16`
 
 - [What has nothing to confront leaves both gates without a verdict](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B01`
 

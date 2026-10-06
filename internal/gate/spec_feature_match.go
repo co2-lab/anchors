@@ -137,6 +137,15 @@ func definedRequirements(content string) []string {
 	vistos := map[string]bool{}
 	var out []string
 	re := defineRuleCaptureRE()
+	// An OPEN DECISION is not a requirement: it is a question the spec has not answered,
+	// and it becomes a rule — with its scenario and its test — only once answered. Its code
+	// is what `open-questions-resolved` asks for, and charging it a scenario here made the
+	// spec with an honest open question fail twice (reported from MIF).
+	if body, ok := openDecisionsSection(content); ok {
+		for _, m := range re.FindAllStringSubmatch(body, -1) {
+			vistos[m[1]] = true
+		}
+	}
 	for _, linha := range strings.Split(content, "\n") {
 		if waivedByNoScenario(linha) {
 			continue

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SFMSP
-  updated_at: 2026-10-01
+  updated_at: 2026-10-06
   layer: gate
 -->
 # SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario
@@ -62,6 +62,7 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 | `SFMSP-B13` | A rule written as an ALIAS of another rule of the same spec — `REF[CODE-B05]: <reason>` on its line — needs no scenario of its own: the target's scenario is the proof. It is how a rule is catalogued under one letter (a failure, `-E`) while its behaviour is already stated under another, without writing the decision twice. |
 | `SFMSP-B14` | An alias that stands for no rule FAILS, naming it: a target this spec does not define, a target that is itself an alias, or no reason after the colon. It is checked before the feature is looked for, because a dangling alias would drop the rule from every scenario check unseen. |
 | `SFMSP-B15` | A requirement is covered by scenarios whose tag carries it with a `#nn` suffix: the suffix identifies each case of the requirement, not a new requirement. |
+| `SFMSP-B16` | A code defined in the open-decisions section (`## Open Decisions`, `## Decisões em Aberto`…) is no requirement — for this gate and for every one that reads the spec's requirements (`scenario-coverage`, `reverse-match`, `rule-uses`): an open question gets its scenario once it becomes a rule. |
 
 ## Invariants
 
