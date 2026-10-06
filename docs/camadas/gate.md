@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:26a3e6992104d3c9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:e43258c559b2ea4e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 81 unidades e 1339 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 81 unidades e 1340 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2195,6 +2195,8 @@ a code, and the item leaves the section.
 - **OPQSP-B06** — Every question needs a CODE. Without identity it does not become a traceable item nor survive a rewrite of the spec.
 
 - **OPQSP-B07** — `OpenDecisions` COUNTS a spec's pending decisions, for whoever needs the number instead of the verdict — it is what allows reporting the pendency as a systemic lead, in the same standing as an absent signal. The count reads the project's lexicon by the same route as the confrontation: counting zero in a spec whose section is called something else would assert "there is no pending decision" about a spec full of them, which is the silence this unit exists to eliminate.
+
+- **OPQSP-B08** — An item is a question already turned into a rule only when the rule code stands where the answer is written — on a table row, in a cell after the question's text; on a list item, after an arrow or a word of resolution (`→`, `virou`, `became`, `resolved`…); a code the question cites as context (a state, another rule) leaves it open.
 
 - **OPQSP-I01** — Prose is not an item. Explanatory text inside the section does not count as a question — otherwise the author would learn to explain nothing.
 

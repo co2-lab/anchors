@@ -2,7 +2,7 @@
 # @anchors
 #   code: OQFPN
 #   ref: OPQSP
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-06
 #   layer: feature
 
 @OPQSP
@@ -89,3 +89,9 @@ Feature: OpenQuestions — a spec with an open question is not ready to implemen
       apart from "the section was deleted"
     And the verdict says how to close it: declare that there is no question, or write
       what is not yet decided
+
+  @OPQSP-B08 @unit-level
+  Scenario: A code the question cites as context does not close it
+    Given a table question citing a state in its text and a list question citing a rule as context, and the same two with the answer written after them
+    When the open items are read
+    Then the first two are open, and the two with the answer written are closed

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:70a2f1cb03dd7b46 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:4d2db17a6030104a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -4351,6 +4351,8 @@ teste prova.
 - [The gate does not judge whether the question is good](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-X01`
 
 - [A spec with no section is a divergence item, and the verdict teaches the way out](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-X02`
+
+- [A code the question cites as context does not close it](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B08`
 
 - [A limit received from the caller passes](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B01`
 

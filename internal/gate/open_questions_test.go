@@ -402,3 +402,25 @@ func TestOpenQuestions_ausenciaDaSecaoEhPendenciaQueEnsinaASaida(t *testing.T) {
 		t.Errorf("o veredito não ensina como fechar a seção: %s", d)
 	}
 }
+
+// A code the QUESTION cites as context is no answer: only a rule code where the answer is
+// written — a cell after the question, or after an arrow or a word of resolution — closes it.
+func TestOpenItems_codigoCitadoNaPerguntaNaoAFecha(t *testing.T) {
+	t.Run("OPQSP-B08: A code the question cites as context does not close it", func(t *testing.T) {})
+	for _, open := range []string{
+		"| `BGETB-Q01` | Is the Loading (`BGETB-S01`) only a spinner? | product | a rule B… |",
+		"- `BGETB-Q02` does `BGETB-B03` apply to archived goals?",
+	} {
+		if got := openItems(open + "\n"); len(got) != 1 {
+			t.Errorf("openItems(%q) = %d item(s), want 1: the question is still open", open, len(got))
+		}
+	}
+	for _, closed := range []string{
+		"| `BGETB-Q01` | Is the Loading (`BGETB-S01`) only a spinner? | product | `BGETB-B05` |",
+		"- `BGETB-Q02` does it apply to archived goals? → `BGETB-B07`",
+	} {
+		if got := openItems(closed + "\n"); len(got) != 0 {
+			t.Errorf("openItems(%q) = %d item(s), want 0: the answer is written", closed, len(got))
+		}
+	}
+}

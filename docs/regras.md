@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:22c5e5534c38ac9b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:845767726139a65b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4774,6 +4774,8 @@ abra a página dela em `camadas/`.
 - [OPQSP-B06 — Every question needs a CODE. Without identity it does not become a traceable item nor survive a rewrite of the spec.](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement)
 
 - [OPQSP-B07 — `OpenDecisions` COUNTS a spec's pending decisions, for whoever needs the number instead of the verdict — it is what allows reporting the pendency as a systemic lead, in the same standing as an absent signal. The count reads the project's lexicon by the same route as the confrontation: counting zero in a spec whose section is called something else would assert "there is no pending decision" about a spec full of them, which is the silence this unit exists to eliminate.](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement)
+
+- [OPQSP-B08 — An item is a question already turned into a rule only when the rule code stands where the answer is written — on a table row, in a cell after the question's text; on a list item, after an arrow or a word of resolution (`→`, `virou`, `became`, `resolved`…); a code the question cites as context (a state, another rule) leaves it open.](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement)
 
 - [OPQSP-I01 — Prose is not an item. Explanatory text inside the section does not count as a question — otherwise the author would learn to explain nothing.](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement)
 

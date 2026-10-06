@@ -1,6 +1,6 @@
 <!-- @anchors
   code: OPQSP
-  updated_at: 2026-09-30
+  updated_at: 2026-10-06
   layer: gate
 -->
 # OpenQuestions — a spec with an open question is not ready to implement
@@ -48,6 +48,7 @@ a code, and the item leaves the section.
 | `OPQSP-B05` | An item marked as RESOLVED does not block: the question stays in the trace, and what closed it is the rule that was born from it. |
 | `OPQSP-B06` | Every question needs a CODE. Without identity it does not become a traceable item nor survive a rewrite of the spec. |
 | `OPQSP-B07` | `OpenDecisions` COUNTS a spec's pending decisions, for whoever needs the number instead of the verdict — it is what allows reporting the pendency as a systemic lead, in the same standing as an absent signal. The count reads the project's lexicon by the same route as the confrontation: counting zero in a spec whose section is called something else would assert "there is no pending decision" about a spec full of them, which is the silence this unit exists to eliminate. |
+| `OPQSP-B08` | An item is a question already turned into a rule only when the rule code stands where the answer is written — on a table row, in a cell after the question's text; on a list item, after an arrow or a word of resolution (`→`, `virou`, `became`, `resolved`…); a code the question cites as context (a state, another rule) leaves it open. |
 
 ## Invariants
 

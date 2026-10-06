@@ -368,9 +368,71 @@ func questionToRuleRE() *regexp.Regexp {
 }
 
 // isQuestionAlreadyRule diz se a linha registra uma pergunta que JÁ virou regra.
+//
+// The rule code must stand where an ANSWER is written, not anywhere on the line: on a table
+// row, in a cell after the question's own text (the "Vira"/"Virou" side); on a list item,
+// after an arrow or a word of resolution. A code the QUESTION cites as context — "is the
+// Loading state (`BGETB-S01`) only a spinner?" — read as the answer, and the open question
+// left the report in silence (reported from MIF: 6 of 10 specs).
 func isQuestionAlreadyRule(linha string) bool {
-	return questionToRuleRE().MatchString(linha)
+	re := questionToRuleRE()
+	if !re.MatchString(linha) {
+		return false
+	}
+	rule := ruleOfQuestionRE()
+	if regexp.MustCompile(`(?i)(?:→|->|=>|\bvirou\b|\bbecame\b|\bresolv\w*|\brespondid\w*|\banswered\b)[^|\n]*?` + rule.String()).MatchString(linha) {
+		return true
+	}
+	if t := strings.TrimSpace(linha); strings.HasPrefix(t, "|") {
+		cells := cellsOf(t)
+		qi := -1
+		for i, c := range cells {
+			if questionCodeRE().MatchString(c) {
+				qi = i
+				break
+			}
+		}
+		if qi < 0 {
+			return false
+		}
+		// the question's text: its code's own cell when it holds more than the code, or the
+		// first cell after it that does
+		ask := -1
+		for i := qi; i < len(cells); i++ {
+			if c := strings.TrimSpace(cells[i]); c != "" && !onlyCodesRE.MatchString(c) {
+				ask = i
+				break
+			}
+		}
+		if ask < 0 {
+			return false
+		}
+		for _, c := range cells[ask+1:] {
+			if rule.MatchString(c) {
+				return true
+			}
+		}
+		return false
+	}
+	return false
 }
+
+// ruleOfQuestionRE is a rule code of the letters a question can become (see
+// questionToRuleRE).
+func ruleOfQuestionRE() *regexp.Regexp {
+	letras := strings.NewReplacer("Q", "", "R", "", config.PhaseLetter, "").Replace(config.DefaultRuleLetters)
+	if letras == "" {
+		letras = "BIE"
+	}
+	return regexp.MustCompile(`[A-Z0-9]` + config.CodeLengthPattern() + `-[` + letras + `]\d+\b`)
+}
+
+// questionCodeRE is a question code (`CODE-Q01`).
+func questionCodeRE() *regexp.Regexp {
+	return regexp.MustCompile(`[A-Z0-9]` + config.CodeLengthPattern() + `-Q\d+\b`)
+}
+
+var onlyCodesRE = regexp.MustCompile("^[`*\\s]*[A-Z0-9]+-[A-Z]+\\d+[`*\\s]*$")
 
 // isTableHeader diz se a linha é o cabeçalho de uma tabela markdown.
 //
