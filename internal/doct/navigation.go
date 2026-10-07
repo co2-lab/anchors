@@ -67,8 +67,17 @@ func (c *Compiler) fnNavigation() NavMap {
 		if e.Type != mapx.EdgeNavigatesTo {
 			continue
 		}
-		from, ok1 := screenOf[e.From]
-		to, ok2 := screenOf[e.To]
+		// A flag names the screen by its code — its spec's —, so an end is the spec itself,
+		// or a file the spec specifies.
+		end := func(id string) (int, bool) {
+			if i, ok := bySpec[id]; ok {
+				return i, true
+			}
+			i, ok := screenOf[id]
+			return i, ok
+		}
+		from, ok1 := end(e.From)
+		to, ok2 := end(e.To)
 		if !ok1 || !ok2 || from == to {
 			continue
 		}

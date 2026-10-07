@@ -36,8 +36,9 @@ func navApp(t *testing.T) *Compiler {
 		g.Edges = append(g.Edges, mapx.Edge{From: "s/" + s + "Screen.spec.md", To: code, Type: mapx.EdgeSpecifies})
 	}
 	g.Edges = append(g.Edges,
-		mapx.Edge{From: "s/HomeScreen.tsx", To: "s/GoalDetailScreen.tsx", Type: mapx.EdgeNavigatesTo, Method: "HOMEH-A01"},
-		mapx.Edge{From: "s/GoalDetailScreen.tsx", To: "s/GoalEditScreen.tsx", Type: mapx.EdgeNavigatesTo, Method: "GLDTG-A01"},
+		// The flag names the screen's code, its spec's: the edge lands on the spec.
+		mapx.Edge{From: "s/HomeScreen.tsx", To: "s/GoalDetailScreen.spec.md", Type: mapx.EdgeNavigatesTo, Method: "HOMEH-A01"},
+		mapx.Edge{From: "s/GoalDetailScreen.tsx", To: "s/GoalEditScreen.spec.md", Type: mapx.EdgeNavigatesTo, Method: "GLDTG-A01"},
 		mapx.Edge{From: "s/GoalEditScreen.tsx", To: "s/GoalDetailScreen.tsx", Type: mapx.EdgeNavigatesTo})
 	c, err := New(root, g)
 	if err != nil {
