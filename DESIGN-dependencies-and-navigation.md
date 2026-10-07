@@ -5,7 +5,7 @@
 
 # Dependencies and navigation — a map of what each file uses, and where each screen leads
 
-> IN PROGRESS — W01 (v0.1.290) and W02 delivered; approved on 2026-10-07 with the decisions below. Two chains, one mechanism: **the agent marks in the code, with
+> IN PROGRESS — W01 (v0.1.290), W02 (v0.1.291) and W03 delivered; approved on 2026-10-07 with the decisions below. Two chains, one mechanism: **the agent marks in the code, with
 > comment flags, what the file uses and where the screen navigates; Anchors confronts the
 > marks with the real code and with the spec, and builds the map.**
 
@@ -168,5 +168,17 @@ none — the three questions were decided on 2026-10-07 (above).
   one. A Go repository's chain is therefore not closed by `--fix` alone; flagging package
   imports by their main file is a follow-up.
 - **Measured.** On a jokenpo clone: `dep-declared` 101 → 0 and `used-by-declared` 125 → 0
-  after `--fix`, with `evidence-fresh` and `tests-pass` unchanged.
+  after `--fix`, with `evidence-fresh` and `tests-pass` unchanged. On a MIF clone: `dep-declared`
+  649 → 0 and `used-by-declared` 817 → 27, 953 files keeping their evidence.
+- **A statement opens above only when a list of names does.** The reader first climbed from any
+  line with a path to the import above it, and a `require(…)` or an `export … from` borrowed
+  the names and the flag of the import before it (MIF: phantom symbols `case:`, `member:`, and
+  flags read on the wrong import). Only a line that closes a list (`} from '…'`) opens above.
+- **Navigation, measured.** On a jokenpo clone (21 screens), `--fix` flagged every call whose
+  route names one screen (`nav-annotated` 19 → 11); what remains is the back and reset
+  navigations the author names by hand. `nav-matches-spec` and `nav-symmetric` named real
+  divergences: an Out table that leads to Login while the code goes to Register; an Out row
+  that says "previous screen" instead of naming it; a code navigation to a profile the Out
+  table does not declare. Reachability waits on the reset navigations being flagged — the
+  entry screen navigates only by `reset`.
 

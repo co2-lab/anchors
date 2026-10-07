@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:45174474f701b905 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:75413bdc9704adbe — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1708,6 +1708,14 @@ abra a página dela em `camadas/`.
 - [MPMRM-E01 — Our side or the other side cannot be read or parsed as a map.](layers/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text)
 
 - [MPMRM-E02 — The driver receives other than three paths.](layers/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text)
+
+### [MNCMP — MapNav — the app's navigation, screen by screen](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen)
+
+- [MNCMP-B01 — With no screen named, each screen that leads somewhere is printed as `A → B, C`, the screens and their destinations sorted. (`NavLines`)](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen)
+
+- [MNCMP-B02 — With a screen named, its origins (`←`) and its destinations (`→`) are printed; a name that is no screen of the navigation is refused.](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen)
+
+- [MNCMP-E01 — REF[MNCMP-B02]: a name that is no screen is refused, naming it](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen)
 
 ### [MPSTM — MapStaleness — names the files of the map whose content changed after the map was built](layers/comando.md#mpstm--mapstaleness--names-the-files-of-the-map-whose-content-changed-after-the-map-was-built)
 
@@ -4746,6 +4754,18 @@ abra a página dela em `camadas/`.
 - [MCTYM-E01 — REF[MCTYM-B05]: with no configuration or no tie shape declared, B05 answers Pending naming what to declare](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
 - [MCTYM-E02 — No map has been built and the test mocks modules.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
+
+### [NCGNV — NavigationChain — every navigation flagged with the screen it leads to, and the screens' tables confronted with it](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
+
+- [NCGNV-B01 — `nav-annotated` fails naming each navigation call with no flag on its line or alone on the line above, by line and destination, and each flag whose screens do not include the one its route leads to; a waived call, a back navigation and a route no screen declares are not charged for the screen. (`checkNavAnnotated`, `NavCall`, `navCallsOf`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
+
+- [NCGNV-B02 — `nav-matches-spec` fails naming each Out row no flag of the screen's code answers, each Out row that names no screen of the app, and each flag the Out table does not declare; a spec that is no screen is skipped. (`checkNavMatchesSpec`, `Screen`, `NavRow`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
+
+- [NCGNV-B03 — `nav-symmetric` fails naming each Out whose destination's In does not come from the screen, and each In whose origin's Out does not lead to it. (`checkNavSymmetric`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
+
+- [NCGNV-B04 — `nav-reachable` fails a screen no path reaches from the entry routes — through the Out tables and the code's navigation flags (`NavEdges`) —, and is pending with no entry declared. (`checkNavReachable`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
+
+- [NCGNV-B05 — The fixer writes the navigation flag of each unflagged call whose route names one screen of the app, and leaves a back navigation and a dynamic route to the author. (`fixNavFlags`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
 
 ### [OBHNB — ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit)
 

@@ -21,6 +21,8 @@ const chainScreen = `import {
 import useToast from '@/hooks/useToast' // @dep: WRONG
 import React from 'react'
 import type { Goal } from './types' // @no-dep: types only
+const legacy = { case: 1, member: 2 }
+export { withAlpha } from '../theme/tokens'
 
 export function Arena() {}
 `
@@ -78,8 +80,11 @@ func TestDepChain_importsAreReadAndResolved(t *testing.T) {
 	t.Run("DCGDP-B01: The imports are read by the dialect's pattern and resolved to files of the map", func(t *testing.T) {})
 	root, g, cfg := chainProject(t)
 	imps := ImportsOf(read(t, root, "src/ui/Arena.tsx"), "src/ui/Arena.tsx", cfg.DialectFor(), g)
-	if len(imps) != 4 {
-		t.Fatalf("four import statements: %+v", imps)
+	if len(imps) != 5 {
+		t.Fatalf("five import statements: %+v", imps)
+	}
+	if re := imps[4]; re.First != re.Line || strings.Join(re.Symbols, ",") != "withAlpha" {
+		t.Errorf("an export-from on its own line is its own statement, with its own names only: %+v", re)
 	}
 	tok := imps[0]
 	if tok.First != 1 || tok.Line != 4 || tok.Target != "src/theme/tokens.ts" || strings.Join(tok.Symbols, ",") != "PALETTE,withAlpha" {

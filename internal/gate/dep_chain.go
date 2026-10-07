@@ -77,6 +77,9 @@ func importPathRE(d config.Dialect) *regexp.Regexp {
 var (
 	importKeywordRE   = regexp.MustCompile(`^\s*import\b`)
 	importBlockOpenRE = regexp.MustCompile(`^\s*import\s*\(\s*$`)
+	// listOpenRE opens a list of names that spans lines: `import {`, `import type {`,
+	// `import X, {`, `export {`.
+	listOpenRE = regexp.MustCompile(`^(?:import|export)\b[^'"]*\{[^}]*$`)
 )
 
 // ImportsOf are the import statements of a file's content, resolved against the map's files.
@@ -114,12 +117,19 @@ func ImportsOf(content, rel string, d config.Dialect, g *mapx.Graph) []RealImpor
 			continue
 		}
 		imp := RealImport{First: i + 1, Line: i + 1, Path: m[group]}
-		// The statement's first line: an import whose names span lines opens above.
-		if !goBlocks && !importKeywordRE.MatchString(ln) {
-			for j := i - 1; j >= 0 && i-j <= 40; j-- {
-				if importKeywordRE.MatchString(lines[j]) {
+		// The statement's first line: only a line that CLOSES a list of names (`} from '…'`)
+		// opens above, at the `import {` or `export {` that opened the list. A `require(…)`
+		// or an `export … from` on its own line is a statement of its own — climbing from
+		// them took the names and the flag of the import above.
+		if !goBlocks && strings.HasPrefix(strings.TrimSpace(code), "}") {
+			for j := i - 1; j >= 0 && i-j <= 60; j-- {
+				t := strings.TrimSpace(cutInlineComment(lines[j]))
+				if listOpenRE.MatchString(t) {
 					imp.First = j + 1
 					break
+				}
+				if strings.Contains(t, " from ") || strings.HasSuffix(t, ";") || t == "" {
+					break // another statement: this one opens no list above
 				}
 			}
 		}

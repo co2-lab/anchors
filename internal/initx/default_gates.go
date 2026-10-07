@@ -1024,6 +1024,16 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures: "every `@dep:` flag names the code of the file its import resolves to"})
 	add("code", config.Gate{Name: "used-by-declared", On: []string{"code"},
 		Measures: "every symbol another file imports carries `@used-by:` with exactly the codes of who imports it"})
+	// The navigation chain: every navigation call flagged with the screen it leads to, and
+	// the screens' In and Out tables confronted with the flags and with one another.
+	add("code", config.Gate{Name: "nav-annotated", On: []string{"code"},
+		Measures: "every navigation call — back and reset included — carries `@navigates:` naming the screen it leads to, or `@no-nav: <reason>`"})
+	add("spec", config.Gate{Name: "nav-matches-spec", On: []string{"spec"},
+		Measures: "a screen's Out table and its code's `@navigates:` flags name the same screens"})
+	add("spec", config.Gate{Name: "nav-symmetric", On: []string{"spec"},
+		Measures: "a screen's Out leads to another exactly when that one's In comes from it"})
+	add("spec", config.Gate{Name: "nav-reachable", On: []string{"spec"},
+		Measures: "every screen is reachable from the app's entry routes (`navigation.entry`)"})
 	add("spec", config.Gate{Name: "env-declared", On: []string{"spec"},
 		Measures: "the environment variables a unit's code reads are the ones its spec declares, and only those"})
 	add("spec", config.Gate{Name: "placeholder-filled", On: []string{"spec", "feature"},

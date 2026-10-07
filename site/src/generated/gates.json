@@ -582,6 +582,22 @@
         "slug": "docs/gates/dep-honored"
       },
       {
+        "label": "nav-annotated",
+        "slug": "docs/gates/nav-annotated"
+      },
+      {
+        "label": "nav-matches-spec",
+        "slug": "docs/gates/nav-matches-spec"
+      },
+      {
+        "label": "nav-reachable",
+        "slug": "docs/gates/nav-reachable"
+      },
+      {
+        "label": "nav-symmetric",
+        "slug": "docs/gates/nav-symmetric"
+      },
+      {
         "label": "used-by-declared",
         "slug": "docs/gates/used-by-declared"
       }

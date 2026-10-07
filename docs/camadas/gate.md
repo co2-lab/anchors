@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:bdb83fddfd0d646f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:5fc85a8eee06e1b9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 82 unidades e 1356 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 83 unidades e 1361 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2087,6 +2087,35 @@ there is no structural type to lean on.
 - **MCTYM-E01** — REF[MCTYM-B05]: with no configuration or no tie shape declared, B05 answers Pending naming what to declare
 
 - **MCTYM-E02** — No map has been built and the test mocks modules.
+
+
+## NCGNV — NavigationChain — every navigation flagged with the screen it leads to, and the screens' tables confronted with it
+
+A screen spec declares its route and its navigation tables, and nothing tied its Out table
+to the navigation calls of its code, nor one screen's Out to the other's In: a screen could
+lead where its spec did not say, with every gate green, and the app had no navigation map.
+This unit confronts the navigation flags the agent writes beside each call with the code and
+with the specs (DESIGN-dependencies-and-navigation.md):
+
+- `nav-annotated` — every navigation call, back and reset included, carries the navigation
+  flag naming the screen it leads to, or a waiver with its reason;
+- `nav-matches-spec` — a screen's Out table and its code's flags name the same screens;
+- `nav-symmetric` — a screen's Out leads to another exactly when that one's In comes from it;
+- `nav-reachable` — every screen is reachable from the app's entry routes.
+
+A call is read by a pattern — the dialect's `navigation_call`, its destination in the group
+`route`, or the family's —, a screen by its spec's stem and its declared route.
+
+
+- **NCGNV-B01** — `nav-annotated` fails naming each navigation call with no flag on its line or alone on the line above, by line and destination, and each flag whose screens do not include the one its route leads to; a waived call, a back navigation and a route no screen declares are not charged for the screen. (`checkNavAnnotated`, `NavCall`, `navCallsOf`)
+
+- **NCGNV-B02** — `nav-matches-spec` fails naming each Out row no flag of the screen's code answers, each Out row that names no screen of the app, and each flag the Out table does not declare; a spec that is no screen is skipped. (`checkNavMatchesSpec`, `Screen`, `NavRow`)
+
+- **NCGNV-B03** — `nav-symmetric` fails naming each Out whose destination's In does not come from the screen, and each In whose origin's Out does not lead to it. (`checkNavSymmetric`)
+
+- **NCGNV-B04** — `nav-reachable` fails a screen no path reaches from the entry routes — through the Out tables and the code's navigation flags (`NavEdges`) —, and is pending with no entry declared. (`checkNavReachable`)
+
+- **NCGNV-B05** — The fixer writes the navigation flag of each unflagged call whose route names one screen of the app, and leaves a back navigation and a dynamic route to the author. (`fixNavFlags`)
 
 
 ## OBHNB — ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit

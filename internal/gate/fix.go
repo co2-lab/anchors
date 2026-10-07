@@ -46,6 +46,7 @@ var fixers = map[string]func(content string, n mapx.Node, root string, g *mapx.G
 	"dep-declared":     fixDepFlags,
 	"dep-honored":      fixDepFlags,
 	"used-by-declared": fixUsedBy,
+	"nav-annotated":    fixNavFlags,
 }
 
 // fixConfig is the project's config for the fixers that need its dialect (the dependency

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b1f9a7803bd685d4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9995a2eda7327af1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1549,6 +1549,10 @@ teste prova.
 - [An unreadable side fails the merge naming the side](layers/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-E01`
 
 - [A call with two paths is refused](layers/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-E02`
+
+- [The navigation is printed screen by screen, each with where it leads, sorted](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen) `MNCMP-B01`
+
+- [One screen shows where it comes from and where it leads; a name that is no screen is refused](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen) `MNCMP-B02`
 
 - [A spec edited after the map build is named as stale](layers/comando.md#mpstm--mapstaleness--names-the-files-of-the-map-whose-content-changed-after-the-map-was-built) `MPSTM-B01`
 
@@ -4315,6 +4319,16 @@ teste prova.
 - [With no map the verdict is pending, not an external-only skip](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-E02`
 
 - [A factory on the next line is still read, tie and all](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B13`
+
+- [nav-annotated names each navigation call with no flag, and each flag naming another screen than its route](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B01`
+
+- [nav-matches-spec names each Out row no flag answers, and each flag the Out table does not declare](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B02`
+
+- [nav-symmetric names each Out with no matching In, and each In with no matching Out](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B03`
+
+- [nav-reachable fails a screen no entry route reaches, and is pending with no entry declared](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B04`
+
+- [The fixer flags a navigation call whose route names one screen, and leaves a back navigation to the author](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B05`
 
 - [A node that carries the trigger and is absent from the demanded file fails](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B01`
 

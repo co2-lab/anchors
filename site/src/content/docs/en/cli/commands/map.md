@@ -95,6 +95,30 @@ The result is written to <ours>, which is what git expects.
 anchors map merge <base> <ours> <theirs>
 ```
 
+### `anchors map nav`
+
+The app's navigation: which screen leads to which.
+
+```text
+Prints the navigation between the app's screens — the screens' Out tables and the
+code's `@navigates:` flags:
+
+  anchors map nav              — every screen and where it leads
+  anchors map nav GoalEdit     — one screen: where it comes from and where it leads
+```
+
+#### Usage
+
+```bash
+anchors map nav [screen] [flags]
+```
+
+#### Flags
+
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--root` | `.` | project root |
+
 ### `anchors map show`
 
 Query the map: a node's neighbourhood, orphans, statistics.
