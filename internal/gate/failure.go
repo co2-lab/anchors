@@ -141,6 +141,9 @@ func declaredFailures(content string) (all, resilient []string) {
 	seen := map[string]bool{}
 	ruleRE := failureRuleRE()
 	for _, line := range strings.Split(content, "\n") {
+		if retiredLine(line) {
+			continue // a retired failure is neither handled nor logged any more
+		}
 		for _, m := range ruleRE.FindAllStringSubmatch(line, -1) {
 			if seen[m[1]] {
 				continue

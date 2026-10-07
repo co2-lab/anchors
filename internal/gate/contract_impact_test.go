@@ -117,3 +117,30 @@ func TestContractImpact_impactedTests(t *testing.T) {
 		t.Errorf("the test of the affected rule is listed, got %v", got)
 	}
 }
+
+func TestContractImpact_answeredByTheChangesRevision(t *testing.T) {
+	t.Run("CTRIM-B05: The rules the change's own revision revises or checks answer the impact", func(t *testing.T) {})
+	root, g, cfg := impactRepo(t)
+	s := edited(root, t)
+	all := ContractImpacts(root, "src/pay.spec.md", s, g, cfg)
+	if len(all) == 0 {
+		t.Fatal("the edit has impacts to answer")
+	}
+	var rules []string
+	for _, imp := range all {
+		for _, r := range imp.Rules {
+			rules = append(rules, "`"+r+"`")
+		}
+	}
+	answered := s + "\n### PAYMT-R0001 — the amount moved to decimal\n\n**Revises:** " + rules[0] + ".\n**Checked:** " + strings.Join(rules, ", ") + ".\n"
+	writeFile(t, root, "src/pay.spec.md", answered)
+	if got := ContractImpacts(root, "src/pay.spec.md", answered, g, cfg); len(got) != 0 {
+		t.Errorf("every rule the change's revision names is answered: %+v", got)
+	}
+	partly := s + "\n### PAYMT-R0001 — only one\n\n**Revises:** " + rules[0] + ".\n"
+	if len(rules) > 1 {
+		if got := ContractImpacts(root, "src/pay.spec.md", partly, g, cfg); len(got) == 0 {
+			t.Error("an impact with a rule nobody answered stays")
+		}
+	}
+}

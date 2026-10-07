@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:5c50f234e6618fab — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:b8c4e48a9a940099 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3557,6 +3557,8 @@ abra a página dela em `camadas/`.
 
 - [CTRIM-B04 — The test files every impacted rule reaches, across the specs with uncommitted changes, are listed for the test selection, which adds those its suite runs. (`ImpactedTests`)](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests)
 
+- [CTRIM-B05 — The rules a revision added since HEAD names in `Revises:` or `Checked:` are answered: an impact whose rules are all answered is not reported, and one with a rule nobody answered still is. The impact lives only while the change is uncommitted, and the change's own revision is where whoever changed the field says they looked. (`acknowledgedRules`)](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests)
+
 ### [CSDCN — ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
 
 - [CSDCN-B01 — A status EMITTED by the code and absent from the table fails, and the verdict names it — the client programmed from the table does not handle the refusal.](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
@@ -5828,6 +5830,8 @@ abra a página dela em `camadas/`.
 - [SFMSP-B16 — A code defined in the open-decisions section (`## Open Decisions`, `## Decisões em Aberto`…) is no requirement — for this gate and for every one that reads the spec's requirements (`scenario-coverage`, `reverse-match`, `rule-uses`): an open question gets its scenario once it becomes a rule.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 
 - [SFMSP-B17 — With `data_states.required`, a data state the spec defines — `DS-<field>-<variant>`, bare or with the unit's code, opening a table row, a list item or a heading — is a requirement of the unit, for every gate that reads the spec's requirements (`spec-feature-match`, `scenario-coverage`), with the same no-scenario waiver as a rule; another unit's data state is a citation. Off, the data-state tables only document.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
+
+- [SFMSP-B18 — A rule whose line carries the retired marker (`@retired` with a colon, the revision and the reason) is a tombstone: it stays defined, so the old revisions that name it still resolve, and no gate asks anything of it — it is no requirement (`spec-feature-match`, `scenario-coverage`), no rule of the code (`rule-implemented`), uses nothing (`rule-uses-*`) and is no failure to handle. A rule's code is read whole: `CODE-R0001`, a revision, is not the rule `CODE-R00`. (`retiredLine`)](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 
 - [SFMSP-I01 — Every waiver requires a written REASON — both the per-requirement marker and the whole-spec one. A bare marker is a switch with no accounting, and silence without a why is what the gate exists to end.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 

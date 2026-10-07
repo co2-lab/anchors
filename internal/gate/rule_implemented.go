@@ -214,11 +214,15 @@ func specCode(content string) string {
 // lista ou título. Uma citação no meio de um parágrafo é referência, não declaração, e
 // contá-la faria o gate cobrar do código regras que pertencem a outra unidade.
 func declaredRules(content, unidade string) []string {
-	re := regexp.MustCompile(`(?m)^\s*(?:\|\s*|-\s*|#{2,4}\s+)` + "`?" + `(` + unidade + `-[A-Z]\d{2})` + "`?")
+	re := regexp.MustCompile(`(?m)^\s*(?:\|\s*|-\s*|#{2,4}\s+)` + "`?" + `(` + unidade + `-[A-Z]\d{2})\b` + "`?")
 	visto := map[string]bool{}
 	var out []string
-	for _, m := range re.FindAllStringSubmatch(content, -1) {
-		if !visto[m[1]] {
+	for _, linha := range strings.Split(content, "\n") {
+		if retiredLine(linha) {
+			continue
+		}
+		m := re.FindStringSubmatch(linha)
+		if m != nil && !visto[m[1]] {
 			visto[m[1]] = true
 			out = append(out, m[1])
 		}

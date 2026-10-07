@@ -177,3 +177,9 @@ Feature: SpecFeatureMatch — every requirement the spec defines has at least on
     Given a spec with a rule, two data states of its own (bare and prefixed), one waived with @no-scenario and one of another unit, and a feature covering the rule and one data state
     When the requirements are read off and then on, and spec-feature-match runs
     Then off only the rule is a requirement; on the two own data states join it, and the one with no scenario is named
+
+  @SFMSP-B18 @unit-level
+  Scenario: A rule marked @retired is no requirement, no rule of the code, and uses nothing
+    Given a spec whose revision names a rule now retired with a tombstone line, beside a live rule
+    When its requirements, its rules for the code, its rule uses and its revisions are read
+    Then only the live rule is a requirement and a rule of the code, the retired one uses nothing, and the revision still resolves

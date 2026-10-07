@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2bd29baa8a2db67c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f75cb5e729707596 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3234,6 +3234,8 @@ teste prova.
 
 - [The impacted tests are listed for the selection](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B04`
 
+- [The rules the change's own revision revises or checks answer the impact](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B05`
+
 - [A status emitted and not declared is accused by number](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B01`
 
 - [A status declared and emitted by no path is accused as a phantom](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B02`
@@ -5313,6 +5315,8 @@ teste prova.
 - [A code in the open-decisions section is no requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B16`
 
 - [With data_states.required, a data state the spec defines is a requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B17`
+
+- [A rule marked @retired is no requirement, no rule of the code, and uses nothing](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B18`
 
 - [What has nothing to confront leaves both gates without a verdict](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B01`
 

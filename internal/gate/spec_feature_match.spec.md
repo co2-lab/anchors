@@ -64,6 +64,7 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 | `SFMSP-B15` | A requirement is covered by scenarios whose tag carries it with a `#nn` suffix: the suffix identifies each case of the requirement, not a new requirement. |
 | `SFMSP-B16` | A code defined in the open-decisions section (`## Open Decisions`, `## Decisões em Aberto`…) is no requirement — for this gate and for every one that reads the spec's requirements (`scenario-coverage`, `reverse-match`, `rule-uses`): an open question gets its scenario once it becomes a rule. |
 | `SFMSP-B17` | With `data_states.required`, a data state the spec defines — `DS-<field>-<variant>`, bare or with the unit's code, opening a table row, a list item or a heading — is a requirement of the unit, for every gate that reads the spec's requirements (`spec-feature-match`, `scenario-coverage`), with the same no-scenario waiver as a rule; another unit's data state is a citation. Off, the data-state tables only document. |
+| `SFMSP-B18` | A rule whose line carries the retired marker (`@retired` with a colon, the revision and the reason) is a tombstone: it stays defined, so the old revisions that name it still resolve, and no gate asks anything of it — it is no requirement (`spec-feature-match`, `scenario-coverage`), no rule of the code (`rule-implemented`), uses nothing (`rule-uses-*`) and is no failure to handle. A rule's code is read whole: `CODE-R0001`, a revision, is not the rule `CODE-R00`. (`retiredLine`) |
 
 ## Invariants
 

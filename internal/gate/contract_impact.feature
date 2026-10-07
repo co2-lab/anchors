@@ -2,7 +2,7 @@
 # @anchors
 #   code: CIFCN
 #   ref: CTRIM
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @CTRIM
@@ -31,3 +31,9 @@ Feature: ContractImpact — a changed field names the rules that use it, and the
     Given the spec with uncommitted changes to amount
     When the impacted tests are asked for
     Then the test file of the affected rule is listed
+
+  @CTRIM-B05 @unit-level
+  Scenario: The rules the change's own revision revises or checks answer the impact
+    Given a field changed that several rules use, and a new revision naming all of them, then one naming only one
+    When the impacts are computed
+    Then the first leaves no impact, and the second keeps the impact of the rules nobody answered

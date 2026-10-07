@@ -190,7 +190,7 @@ func definedRequirements(content string) []string {
 // on all 691 specs, blocking and blind.
 func defineRuleCaptureRE() *regexp.Regexp {
 	return regexp.MustCompile(
-		"(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2})")
+		"(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2})\\b")
 }
 
 // ruleAliasRE is a rule declared as an ALIAS of another rule of the same spec:
@@ -276,8 +276,18 @@ var noScenarioRE = regexp.MustCompile(`@no-scenario[^\S\n]*:[^\S\n]*\S+`)
 // não quebra de linha, senão a razão seria "achada" na linha seguinte e um marcador nu
 // passaria — que é justamente o que a dispensa não pode permitir.
 func waivedByNoScenario(linha string) bool {
-	return noScenarioRE.MatchString(linha)
+	return noScenarioRE.MatchString(linha) || retiredLine(linha)
 }
+
+// retiredRE marks a RETIRED rule: its line stays in the spec as a tombstone —
+// `| CODE-V01 | @retired: CODE-R0004 — the game changed |` —, so the old revisions that
+// name it still resolve, and every gate that asks something of a rule (its scenario, its
+// test, its code, what it uses) leaves it. Deleting the line broke the history; keeping it
+// alive asked a removed rule to be implemented (reported from jokenpo).
+var retiredRE = regexp.MustCompile(`@retired:\s*\S`)
+
+// retiredLine says whether a line is a retired rule's tombstone.
+func retiredLine(line string) bool { return retiredRE.MatchString(line) }
 
 // dataStatesRequired is the project's `data_states.required`, set at the start of a run.
 var dataStatesRequired bool

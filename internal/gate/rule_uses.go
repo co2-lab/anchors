@@ -110,6 +110,9 @@ func ruleUsesOf(content string, cfg *config.Config, layer string) []ruleUse {
 		if !strings.HasPrefix(t, "|") || tableDividerR.MatchString(t) {
 			continue
 		}
+		if retiredLine(t) {
+			continue // a retired rule uses nothing
+		}
 		cells := cellsOf(t)
 		if len(cells) < 2 {
 			continue

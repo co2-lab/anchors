@@ -540,3 +540,25 @@ func TestSpecFeatureMatchDataStatesAreRequirementsWhenRequired(t *testing.T) {
 		t.Errorf("the data state with no scenario is named: %v %s", v, d)
 	}
 }
+
+// A retired rule stays as a tombstone so old revisions resolve, and no gate asks anything of it.
+func TestRetiredRuleIsATombstone(t *testing.T) {
+	t.Run("SFMSP-B18: A rule marked @retired is no requirement, no rule of the code, and uses nothing", func(t *testing.T) {})
+	spec := "<!-- @anchors\n  code: CRCHH\n-->\n# Create\n\n### CRCHH-R0001 — first\n\n**Revises:** `CRCHH-V01`.\n\n" +
+		"## Validations\n\n| Rule | Field | Condition | Behavior |\n| --- | --- | --- | --- |\n" +
+		"| `CRCHH-V01` | @retired: CRCHH-R0004 — the game changed | — | — |\n| `CRCHH-V02` | `move` | missing | refuses |\n"
+	if got := strings.Join(definedRequirements(spec), ","); got != "CRCHH-V02" {
+		t.Errorf("only the live rule is a requirement: %s", got)
+	}
+	if got := strings.Join(declaredRules(spec, "CRCHH"), ","); got != "CRCHH-V02" {
+		t.Errorf("only the live rule is asked of the code: %s", got)
+	}
+	for _, u := range ruleUsesOf(spec, nil, "") {
+		if u.Rule == "CRCHH-V01" {
+			t.Errorf("a retired rule uses nothing: %+v", u)
+		}
+	}
+	if v, msg := checkRevisionOrphans(spec, mapx.Node{ID: "h.spec.md", Kind: mapx.KindSpec, Code: "CRCHH"}, "", nil, nil); v == Fail && strings.Contains(msg, "V01") {
+		t.Errorf("an old revision naming the retired rule still resolves: %v %s", v, msg)
+	}
+}

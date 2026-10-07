@@ -93,6 +93,11 @@ func ContractImpacts(root, specID, content string, g *mapx.Graph, cfg *config.Co
 	if len(changed) == 0 {
 		return nil
 	}
+	// What this change's own revision says it revised or checked is answered: the rules a
+	// revision added since HEAD names in `Revises:` or `Checked:`. The impact exists only
+	// while the change is uncommitted, so with no way to answer it a project whose
+	// divergence blocks could never commit a field change (reported from jokenpo).
+	acked := acknowledgedRules(content, head)
 	readers := []specText{{specID, content, layer}}
 	readers = append(readers, dependents(root, specID, g)...)
 	var out []Impact
@@ -108,6 +113,16 @@ func ContractImpacts(root, specID, content string, g *mapx.Graph, cfg *config.Co
 			}
 		}
 		if len(imp.Rules) == 0 {
+			continue
+		}
+		open := false
+		for _, r := range imp.Rules {
+			if !acked[shortRule(r)] {
+				open = true
+				break
+			}
+		}
+		if !open {
 			continue
 		}
 		sort.Strings(imp.Rules)
@@ -219,4 +234,36 @@ func checkContractImpact(content string, n mapx.Node, root string, g *mapx.Graph
 		items = append(items, fmt.Sprintf(i18n.T("gate.contract_impact.item"), imp.Field, strings.Join(imp.Rules, ", "), tests))
 	}
 	return Diverge, i18n.T("gate.contract_impact.pending", strings.Join(items, "; "))
+}
+
+// acknowledgedRules are the rules — by their short code, `R03` — that the revision lines
+// added since HEAD name in `Revises:` or `Checked:`.
+func acknowledgedRules(content, head string) map[string]bool {
+	before := map[string]int{}
+	for _, l := range strings.Split(head, "\n") {
+		before[l]++
+	}
+	var added strings.Builder
+	for _, l := range strings.Split(content, "\n") {
+		if before[l] > 0 {
+			before[l]--
+			continue
+		}
+		added.WriteString(l)
+		added.WriteString("\n")
+	}
+	text := added.String()
+	out, _ := revisedCodes(text)
+	for c := range codesIn(checkedRE(), text) {
+		out[c] = true
+	}
+	return out
+}
+
+// shortRule is a rule's code without its unit: `DATAR-R03` → `R03`.
+func shortRule(code string) string {
+	if i := strings.LastIndex(code, "-"); i >= 0 {
+		return code[i+1:]
+	}
+	return code
 }
