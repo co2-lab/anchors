@@ -206,7 +206,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// --fix: aplica os reparos automáticos (self-healer) ANTES de confrontar,
 			// para que o check seguinte já reflita o conserto.
 			if fix {
-				fixes := gate.Fix(cfg.Gates, nodes, absRoot, g)
+				fixes := gate.FixWithConfig(cfg.Gates, nodes, absRoot, g, cfg)
 				n := 0
 				for _, fr := range fixes {
 					if fr.Fixed {
@@ -215,6 +215,14 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 					}
 				}
 				fmt.Println(i18n.T("check.fixes_count", n))
+				// The repairs write comments — a header line, a date, a dependency or used-by
+				// flag —, and prove nothing new: each fixed file's evidence goes with it to its
+				// new content, as `keep-evidence` would carry it. Without this, the next map
+				// build dropped the proof of every file the chain's fixer flagged (measured on
+				// a peer: 141 files, the whole suite to run again for comments).
+				if kept := keepFixedEvidence(absRoot, mapPath, fixes); kept > 0 {
+					fmt.Println(i18n.T("check.fix_evidence_kept", kept))
+				}
 				fmt.Println()
 			}
 
@@ -2077,4 +2085,39 @@ func dropAbsentFromIndex(absRoot string, g *mapx.Graph) error {
 	}
 	g.Edges = edges
 	return nil
+}
+
+// keepFixedEvidence carries, in the map, the evidence of each file the repairs changed to
+// its new content; the line-level signals only when no line moved. It returns how many
+// files kept their evidence.
+func keepFixedEvidence(absRoot, mapPath string, fixes []gate.FixResult) int {
+	moved := map[string]bool{}
+	var files []string
+	for _, f := range fixes {
+		if !f.Fixed {
+			continue
+		}
+		if _, seen := moved[f.Target]; !seen {
+			files = append(files, f.Target)
+		}
+		moved[f.Target] = moved[f.Target] || f.LinesMoved
+	}
+	if len(files) == 0 {
+		return 0
+	}
+	kept := 0
+	today := gitmeta.Today()
+	_ = mapx.Update(mapPath, func(g *mapx.Graph) error {
+		for _, rel := range files {
+			b, err := os.ReadFile(filepath.Join(absRoot, filepath.FromSlash(rel)))
+			if err != nil || g.Node(rel) == nil {
+				continue
+			}
+			if len(g.KeepEvidence(rel, scan.ShortHash(b), i18n.T("check.fix_evidence_reason"), today, !moved[rel])) > 0 {
+				kept++
+			}
+		}
+		return nil
+	})
+	return kept
 }

@@ -2,7 +2,7 @@
 # @anchors
 #   code: CHFTA
 #   ref: CGPCH
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @CGPCH
@@ -634,3 +634,9 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a catalog gate presupposing derived.test_handle over a declared layer
     When the catalog line is printed for a project that does not declare it
     Then the gate is not named
+
+  @CGPCH-B94 @unit-level
+  Scenario: The files check --fix repaired keep their evidence, the line-level signals only when no line moved
+    Given a map with two proven files, one repaired on its own line, one with a line inserted
+    When the repaired files' evidence is kept
+    Then both proofs are at the new content with the declaration, and only the first carries its line-level signals

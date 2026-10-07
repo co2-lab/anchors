@@ -1099,17 +1099,18 @@ func TestCodeFlags_depUsedByNavigates(t *testing.T) {
 	got := extractCodeDeps([]byte(src))
 	want := []CodeDep{
 		{Code: "TOKNS", Symbols: []string{"PALETTE", "withAlpha"}, Line: 1},
-		{Code: "USTST", Symbols: []string{"useToast"}, Line: 2},
+		{Code: "USTST", Symbols: []string{"default"}, Line: 2},
 		{Symbols: []string{"Goal"}, Line: 3, Waiver: "types only, erased at compile time"},
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %+v\nwant %+v", got, want)
 	}
 	t.Run("RPSCR-B42: Each @used-by flag is read with the symbol declared below it", func(t *testing.T) {})
-	exp := "// @used-by: ARNAA, WLLTW\nexport const PALETTE = {}\n\n// @used-by: ARNAA\nexport function withAlpha(c: string) {}\n"
+	exp := "// @used-by: ARNAA, WLLTW\nexport const PALETTE = {}\n\n// @used-by: ARNAA\nexport function withAlpha(c: string) {}\n\n// @used-by: WLLTW\nexport default {}\n"
 	if got := extractUsedBy([]byte(exp)); !reflect.DeepEqual(got, []UsedBy{
 		{Symbol: "PALETTE", Codes: []string{"ARNAA", "WLLTW"}, Line: 1},
 		{Symbol: "withAlpha", Codes: []string{"ARNAA"}, Line: 4},
+		{Symbol: "default", Codes: []string{"WLLTW"}, Line: 7},
 	}) {
 		t.Errorf("got %+v", got)
 	}

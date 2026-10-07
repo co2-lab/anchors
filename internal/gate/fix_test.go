@@ -256,3 +256,28 @@ func TestFixMissingHeader_fromTheMap(t *testing.T) {
 }
 
 var generatedCodeRE = regexp.MustCompile(`code: [A-Z0-9]{5}`)
+
+func TestFixWithConfig_theDialectAndTheMovedLines(t *testing.T) {
+	t.Run("FXIXX-B11: FixWithConfig gives the fixers the project's config for that run", func(t *testing.T) {})
+	t.Run("FXIXX-B12: Each repair says whether it moved lines", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	gates := []config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code"}}, {Name: "used-by-declared", Check: "used-by-declared", On: []string{"code"}}}
+	moved := map[string]bool{}
+	fixed := map[string]bool{}
+	for _, r := range FixWithConfig(gates, g.Nodes, root, g, cfg) {
+		fixed[r.Target] = fixed[r.Target] || r.Fixed
+		moved[r.Target] = moved[r.Target] || r.LinesMoved
+	}
+	if !fixed["src/ui/Arena.tsx"] {
+		t.Error("with the project's dialect, the fixer reads the screen's imports and flags them")
+	}
+	if fixConfig != nil {
+		t.Error("the config is the fixers' only for that run")
+	}
+	if moved["src/ui/Arena.tsx"] || !moved["src/theme/tokens.ts"] {
+		t.Errorf("a flag on the import's line moves no line, a used-by line inserted does: %+v", moved)
+	}
+	if !linesMoved("a\nb\nc", "x\na\nc") || linesMoved("a // @dep: X\nb", "a // @dep: Y\nb") {
+		t.Error("an insertion with a removal moves lines; a flag rewritten in place does not")
+	}
+}

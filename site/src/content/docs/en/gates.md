@@ -176,4 +176,12 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`value-anchored`](/docs/gates/value-anchored/) | `code` | Each declared value anchor matches the code below it, its spec rule's value, and every other declaration of the same key |
 | [`env-declared`](/docs/gates/env-declared/) | `spec` | The environment variables a unit's code reads are the ones its spec declares, and only those |
 
+## Other gates
+
+| Gate | Confronts | What it measures |
+| --- | --- | --- |
+| [`dep-declared`](/docs/gates/dep-declared/) | `code` | Every import of a governed file carries `@dep:` with the code of the file it uses, or `@no-dep: <reason>` |
+| [`dep-honored`](/docs/gates/dep-honored/) | `code` | Every `@dep:` flag names the code of the file its import resolves to |
+| [`used-by-declared`](/docs/gates/used-by-declared/) | `code` | Every symbol another file imports carries `@used-by:` with exactly the codes of who imports it |
+
 <!-- gate-reference:end -->

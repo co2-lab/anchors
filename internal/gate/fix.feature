@@ -2,7 +2,7 @@
 # @anchors
 #   code: FXFTF
 #   ref: FXIXX
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @FXIXX
@@ -92,3 +92,15 @@ Feature: Fix — the self-healer that applies the mechanical, safe repairs of `c
     Given a code file whose header refs its unit and has no code of its own
     When the header fix runs, then again
     Then the header gets a five-character code that is not the unit's, beside the ref, and the second run changes nothing
+
+  @FXIXX-B11 @unit-level
+  Scenario: FixWithConfig gives the fixers the project's config for that run
+    Given a project whose dialect resolves its imports
+    When FixWithConfig runs the dependency chain's fixers
+    Then the fixers read the imports by the project's dialect
+
+  @FXIXX-B12 @unit-level
+  Scenario: Each repair says whether it moved lines
+    Given a repair that appends to a line and one that inserts a line
+    When the fixers run
+    Then the first moved no line and the second did

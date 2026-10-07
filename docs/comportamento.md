@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:6997c3e2b64bf527 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:6e6861068328cb59 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1522,6 +1522,10 @@ teste prova.
 
 - [The pending worklist with no configuration is refused](layers/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-E05`
 
+- [The tree goes down what a file uses, and up who uses it, a cycle marked once](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file) `MDCMP-B01`
+
+- [A file is named by its own code, its unit's code or its path](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file) `MDCMP-B02`
+
 - [The merged map is written onto our side's file](layers/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-B01`
 
 - [A node created only on the other branch reaches the merged map](layers/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-B02`
@@ -2349,6 +2353,8 @@ teste prova.
 - [A gate this run leaves out is still declared](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B92`
 
 - [The catalog line leaves out a gate that would only wait for its premise](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B93`
+
+- [The files check --fix repaired keep their evidence, the line-level signals only when no line moved](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B94`
 
 - [The scenarios of one spec are listed as proven or not](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 
@@ -3348,6 +3354,16 @@ teste prova.
 
 - [An unreadable file fails the pattern count naming it](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-E03`
 
+- [The imports are read by the dialect's pattern and resolved to files of the map](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B01`
+
+- [dep-declared names each import of a governed file with no flag, and the code it would carry](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B02`
+
+- [dep-honored names each flag whose code is not the one its import resolves to](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B03`
+
+- [used-by-declared names each imported symbol whose flag is missing or wrong, and each flag nobody imports](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B04`
+
+- [The fixers write the dependency and used-by flags, correct a wrong code, and remove a stale flag](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B05`
+
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B01`
 
 - [Without a relational map the verdict is undetermined](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B02`
@@ -3835,6 +3851,10 @@ teste prova.
 - [The fix writes the missing header from the map](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B09`
 
 - [The fix gives a file with an identity and no code of its own a code unique in the map](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B10`
+
+- [FixWithConfig gives the fixers the project's config for that run](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B11`
+
+- [Each repair says whether it moved lines](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B12`
 
 - [The flag gates skip what is not a flag, and a flag with no scenario](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B01`
 

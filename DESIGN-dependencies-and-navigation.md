@@ -5,7 +5,7 @@
 
 # Dependencies and navigation — a map of what each file uses, and where each screen leads
 
-> PLAN, approved on 2026-10-07 with the decisions below. Two chains, one mechanism: **the agent marks in the code, with
+> IN PROGRESS — W01 (v0.1.290) and W02 delivered; approved on 2026-10-07 with the decisions below. Two chains, one mechanism: **the agent marks in the code, with
 > comment flags, what the file uses and where the screen navigates; Anchors confronts the
 > marks with the real code and with the spec, and builds the map.**
 
@@ -151,3 +151,22 @@ version.
 ## Open Decisions
 
 none — the three questions were decided on 2026-10-07 (above).
+
+## What the implementation taught
+
+- **A default import is the module's default.** `import palette from './palette'` binds a
+  local name the importer chose; the symbol it uses is `default`, declared by `export default`
+  or `module.exports =`, and that is where its `@used-by:` stands.
+- **`--fix` carries the evidence.** The chain's fixer flagged 147 files of a peer; a map rebuild
+  would have dropped the proof of every one, for comments. `check --fix` now carries each
+  repaired file's evidence to its new content, the line-level signals only when no line moved
+  (a flag appended to an import line moves none; an inserted `@used-by:` line does).
+- **Aliases by longest prefix.** A monorepo maps `@/` to one workspace and `@/backend/` to
+  another; one alias map serves both, the longest matching prefix winning.
+- **A package of several files is the author's.** An import that resolves to a directory — a
+  Go package — may be flagged with the code of any of its files, and the fixer does not choose
+  one. A Go repository's chain is therefore not closed by `--fix` alone; flagging package
+  imports by their main file is a follow-up.
+- **Measured.** On a jokenpo clone: `dep-declared` 101 → 0 and `used-by-declared` 125 → 0
+  after `--fix`, with `evidence-fresh` and `tests-pass` unchanged.
+

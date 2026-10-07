@@ -1016,6 +1016,14 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures: "every error response of an API unit carries its error code and message, under a status its Responses declare"})
 	add("code", config.Gate{Name: "error-codes-honored", On: []string{"code"}, Tags: []string{"interface"},
 		Measures: "every error code an API unit's spec declares is one its code emits"})
+	// The dependency chain (DESIGN-dependencies-and-navigation.md): every import of a
+	// governed file flagged with the code it uses, and every imported symbol with who uses it.
+	add("code", config.Gate{Name: "dep-declared", On: []string{"code"},
+		Measures: "every import of a governed file carries `@dep:` with the code of the file it uses, or `@no-dep: <reason>`"})
+	add("code", config.Gate{Name: "dep-honored", On: []string{"code"},
+		Measures: "every `@dep:` flag names the code of the file its import resolves to"})
+	add("code", config.Gate{Name: "used-by-declared", On: []string{"code"},
+		Measures: "every symbol another file imports carries `@used-by:` with exactly the codes of who imports it"})
 	add("spec", config.Gate{Name: "env-declared", On: []string{"spec"},
 		Measures: "the environment variables a unit's code reads are the ones its spec declares, and only those"})
 	add("spec", config.Gate{Name: "placeholder-filled", On: []string{"spec", "feature"},

@@ -564,5 +564,27 @@
         "slug": "docs/gates/env-declared"
       }
     ]
+  },
+  {
+    "label": "Other gates",
+    "translations": {
+      "pt": "Outros gates",
+      "pt-BR": "Outros gates"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "dep-declared",
+        "slug": "docs/gates/dep-declared"
+      },
+      {
+        "label": "dep-honored",
+        "slug": "docs/gates/dep-honored"
+      },
+      {
+        "label": "used-by-declared",
+        "slug": "docs/gates/used-by-declared"
+      }
+    ]
   }
 ]

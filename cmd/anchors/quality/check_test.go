@@ -2844,3 +2844,43 @@ func TestPrintCatalogUndeclared_leavesAGateThatWouldOnlyWait(t *testing.T) {
 		t.Errorf("only the gate that would measure is named:\n%s", out)
 	}
 }
+
+func TestKeepFixedEvidence(t *testing.T) {
+	t.Run("CGPCH-B94: The files check --fix repaired keep their evidence, the line-level signals only when no line moved", func(t *testing.T) {})
+	dir := t.TempDir()
+	write := func(rel, body string) {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(dir, rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("a.ts", "import x from './b' // @dep: BBBBB\n")
+	write("b.ts", "// @used-by: AAAAA\nexport default 1\n")
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "a.ts", Kind: mapx.KindCode, Rev: "olda", Signal: &mapx.TestSignal{ProvenCodes: []string{"X-B01"}, AtRev: "olda"}},
+		{ID: "b.ts", Kind: mapx.KindCode, Rev: "oldb", Signal: &mapx.TestSignal{ProvenCodes: []string{"X-B02"}, AtRev: "oldb"}},
+	}}
+	mapPath := filepath.Join(dir, mapx.DefaultPath)
+	if err := mapx.Save(g, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	fixes := []gate.FixResult{{Gate: "dep-declared", Target: "a.ts", Fixed: true}, {Gate: "used-by-declared", Target: "b.ts", Fixed: true, LinesMoved: true}, {Gate: "x", Target: "c.ts"}}
+	if n := keepFixedEvidence(dir, mapPath, fixes); n != 2 {
+		t.Fatalf("both repaired files keep their evidence, got %d", n)
+	}
+	got, err := mapx.Load(mapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{"a.ts", "b.ts"} {
+		n := got.Node(id)
+		if n.SignalStale() || len(n.EvidenceKept) != 1 {
+			t.Errorf("%s: the proof is at the repaired content, with the declaration: %+v", id, n)
+		}
+	}
+	if !got.Node("b.ts").EvidenceKept[0].Lines == false || got.Node("a.ts").EvidenceKept[0].Lines != true {
+		t.Errorf("line-level signals go only where no line moved: a=%v b=%v", got.Node("a.ts").EvidenceKept[0].Lines, got.Node("b.ts").EvidenceKept[0].Lines)
+	}
+}

@@ -1498,23 +1498,26 @@ func splitCodes(s string) []string {
 }
 
 // importSymbols are the names an import line brings: those inside its braces (an alias
-// `A as B` brings A), or its default name.
+// `A as B` brings A), and `default` for its default import — the local name a default
+// import binds is the importer's choice, and the symbol it uses is the module's default.
 func importSymbols(line string) []string {
+	var out []string
+	if m := importDefaultRE.FindStringSubmatch(line); m != nil && m[1] != "type" && m[1] != "from" {
+		out = append(out, "default")
+	}
 	if m := importBracesRE.FindStringSubmatch(line); m != nil {
-		var out []string
 		for _, part := range strings.Split(m[1], ",") {
 			name := strings.Fields(strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(part), "type ")))
 			if len(name) > 0 {
 				out = append(out, name[0])
 			}
 		}
-		return out
 	}
-	if m := importDefaultRE.FindStringSubmatch(line); m != nil && m[1] != "type" {
-		return []string{m[1]}
-	}
-	return nil
+	return out
 }
+
+// defaultExportRE is the line that declares a module's default export.
+var defaultExportRE = regexp.MustCompile(`^\s*export\s+default\b|^\s*module\.exports\s*=`)
 
 // extractCodeDeps reads the `@dep:` and `@no-dep:` flags, one per import line. The flags
 // are comment text, read in any dialect: a line that carries one is the import it flags.
@@ -1550,6 +1553,10 @@ func extractUsedBy(content []byte) []UsedBy {
 		}
 		u := UsedBy{Codes: splitCodes(m[1]), Line: i + 1}
 		for j := i + 1; j < len(lines) && j <= i+5; j++ {
+			if defaultExportRE.MatchString(lines[j]) {
+				u.Symbol = "default"
+				break
+			}
 			if d := declaredNameRE.FindStringSubmatch(lines[j]); d != nil {
 				u.Symbol = d[1]
 				break
@@ -1588,3 +1595,15 @@ func extractNavigates(content []byte) []Navigation {
 	}
 	return out
 }
+
+// CodeDepsIn are the dependency flags of a file's content (see File.CodeDeps).
+func CodeDepsIn(content []byte) []CodeDep { return extractCodeDeps(content) }
+
+// UsedByIn are the used-by flags of a file's content (see File.UsedBy).
+func UsedByIn(content []byte) []UsedBy { return extractUsedBy(content) }
+
+// NavigatesIn are the navigation flags of a file's content (see File.Navigates).
+func NavigatesIn(content []byte) []Navigation { return extractNavigates(content) }
+
+// ImportSymbols are the names an import statement brings (see importSymbols).
+func ImportSymbols(statement string) []string { return importSymbols(statement) }

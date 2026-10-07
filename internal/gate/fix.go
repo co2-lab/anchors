@@ -28,6 +28,10 @@ type FixResult struct {
 	Target string
 	Fixed  bool
 	Detail string
+	// LinesMoved says whether the repair added or removed lines — the line-level signals
+	// (coverage, mutation) name lines by number, and only a repair that moved none keeps
+	// them. Every repair is a comment's, so the evidence of what was proven still holds.
+	LinesMoved bool
 }
 
 // fixers: check → função que repara o arquivo. Recebe o conteúdo e o contexto (o mapa,
@@ -38,7 +42,22 @@ var fixers = map[string]func(content string, n mapx.Node, root string, g *mapx.G
 		out, changed := fixUpdatedAt(content, n, root)
 		return out, changed, i18n.T("gate.fix.updated_at_fixed")
 	},
-	"header-valid": fixMissingHeader,
+	"header-valid":     fixMissingHeader,
+	"dep-declared":     fixDepFlags,
+	"dep-honored":      fixDepFlags,
+	"used-by-declared": fixUsedBy,
+}
+
+// fixConfig is the project's config for the fixers that need its dialect (the dependency
+// chain); set by FixWithConfig.
+var fixConfig *config.Config
+
+// FixWithConfig is Fix with the project's config: the fixers that read the code by the
+// dialect — the dependency chain's — have it.
+func FixWithConfig(gates []config.Gate, nodes []mapx.Node, root string, g *mapx.Graph, cfg *config.Config) []FixResult {
+	fixConfig = cfg
+	defer func() { fixConfig = nil }()
+	return Fix(gates, nodes, root, g)
 }
 
 // Fixable diz se um check tem reparo automático.
@@ -74,10 +93,11 @@ func Fix(gates []config.Gate, nodes []mapx.Node, root string, g *mapx.Graph) []F
 			if err := os.WriteFile(path, []byte(newContent), 0o644); err != nil {
 				// Os detalhes passam por i18n: eram literais em português, impressos
 				// assim em projeto de qualquer `lang:`.
-				out = append(out, FixResult{gt.Name, n.ID, false, i18n.T("gate.fix.write_failed", err)})
+				out = append(out, FixResult{Gate: gt.Name, Target: n.ID, Detail: i18n.T("gate.fix.write_failed", err)})
 				continue
 			}
-			out = append(out, FixResult{gt.Name, n.ID, true, detail})
+			moved := linesMoved(string(content), newContent)
+			out = append(out, FixResult{Gate: gt.Name, Target: n.ID, Fixed: true, Detail: detail, LinesMoved: moved})
 		}
 	}
 	return out
@@ -202,4 +222,31 @@ func fixMissingHeader(content string, n mapx.Node, _ string, g *mapx.Graph) (str
 		}
 	}
 	return header + content, true, i18n.T("gate.fix.header_written", what)
+}
+
+// linesMoved says whether a repair shifted any line: the line counts differ, or a line at
+// the same position is neither the old one extended (a flag appended to it), nor a comment
+// that replaced a comment, nor the same code with another trailing comment (a flag rewritten). An insertion and a removal elsewhere keep the
+// count and still move every line between them.
+func linesMoved(before, after string) bool {
+	a, b := strings.Split(before, "\n"), strings.Split(after, "\n")
+	if len(a) != len(b) {
+		return true
+	}
+	for i := range a {
+		if a[i] == b[i] {
+			continue
+		}
+		if strings.HasPrefix(b[i], strings.TrimRight(a[i], " \t")) {
+			continue
+		}
+		if commentLine(a[i]) && commentLine(b[i]) {
+			continue
+		}
+		if strings.TrimRight(cutInlineComment(a[i]), " \t") == strings.TrimRight(cutInlineComment(b[i]), " \t") {
+			continue // only the trailing comment changed: a flag rewritten in place
+		}
+		return true
+	}
+	return false
 }

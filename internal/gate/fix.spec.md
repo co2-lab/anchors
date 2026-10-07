@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FXIXX
-  updated_at: 2026-10-03
+  updated_at: 2026-10-07
   layer: gate
 -->
 # Fix — the self-healer that applies the mechanical, safe repairs of `check --fix`
@@ -45,6 +45,8 @@ reported. Each repair written, or attempted and failed, is returned for the call
 | `FXIXX-B08` | The detail of each repair (fixed, or a write that failed) is written in the project's language, through i18n. |
 | `FXIXX-B09` | `--fix` writes the header a governed file lacks, at its top after any shebang: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document or a test support file; to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`) |
 | `FXIXX-B10` | `--fix` gives a file whose header has an identity (or gets one) and no `code:` of its own a code generated from its name and its type, unique among the codes in the map, written below `@anchors` beside the identity; a header with its own code is left as it is. (`fixMissingHeader`) |
+| `FXIXX-B11` | `FixWithConfig` runs the fixers with the project's config, so the ones that read the code by the dialect — the dependency chain's — have it; the config is theirs only for that run. |
+| `FXIXX-B12` | Each repair says whether it added or removed lines (`LinesMoved`), so whoever carries the file's evidence knows whether the line-level signals still name the right lines. |
 
 ## Invariants
 

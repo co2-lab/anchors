@@ -26,6 +26,7 @@ func newMapCmd() *cobra.Command {
 	}
 	cmd.AddCommand(newMapBuildCmd())
 	cmd.AddCommand(newMapShowCmd())
+	cmd.AddCommand(newMapDepsCmd())
 	// O merge driver: o git chama isto em vez de mesclar o mapa como texto (#12).
 	cmd.AddCommand(newMapMergeCmd())
 	return cmd

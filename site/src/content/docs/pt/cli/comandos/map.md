@@ -38,6 +38,33 @@ anchors map build [flags]
 | `--out` |  | output path (default: <root>/anchors.graph.yaml) |
 | `--root` | `.` | project root to scan |
 
+### `anchors map deps`
+
+The dependency tree of a file: what it uses, or who uses it (--up).
+
+```text
+Prints the dependency tree of a file, by the depends-on edges of the map — the ones the
+code's `@dep:` flags declare and the ones the specs' Dependencies tables declare:
+
+  anchors map deps TOKNS              — what the file of code TOKNS uses, down the tree
+  anchors map deps src/theme/tokens.ts --up   — who uses it, up the tree
+  anchors map deps ARSCR --depth 2    — two levels
+```
+
+#### Uso
+
+```bash
+anchors map deps <CODE|file> [flags]
+```
+
+#### Flags
+
+| Flag | Padrão | O que faz |
+| --- | --- | --- |
+| `--depth` | `0` | levels to print (0 = all) |
+| `--root` | `.` | project root |
+| `--up` |  | who uses the file, instead of what it uses |
+
 ### `anchors map merge`
 
 Map merge driver: unites the stamps from both sides (git merge=anchors-map).

@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:35ab1da4988c86c9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:ce569713d6757d85 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 81 unidades e 1348 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 82 unidades e 1355 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -434,6 +434,38 @@ to any human reader opening the document.
 - **CNHNC-E02** — REF[CNHNC-B09]: a count pattern that does not compile is the configuration failure B09 answers: the gate fails carrying the regex error
 
 - **CNHNC-E03** — A file the glob matches cannot be read while occurrences of a pattern are counted.
+
+
+## DCGDP — DependencyChain — every import flagged with the code it uses, and every symbol with who uses it
+
+Every import is a dependency, and the map knew only the ones somebody wrote in a spec's
+Dependencies table: a project imported its tokens, a toast hook and its components without
+declaring them, and every gate stayed green. This unit closes the chain in both directions,
+with flags the agent writes beside the code and Anchors confronts with the code
+(DESIGN-dependencies-and-navigation.md):
+
+- `dep-declared` — every import of a governed file carries the dependency flag naming the
+  code of the file it uses, or a waiver with its reason;
+- `dep-honored` — every dependency flag names the code of the file its import resolves to;
+- `used-by-declared` — every symbol another file imports carries the used-by flag with exactly
+  the codes of who imports it.
+
+Anchors does not parse the language: it reads the import's path with a pattern — the
+dialect's `import_pattern` with the path in the group `path`, or the family's (`ts`, `go`) —
+and resolves it with `import_resolve` (relative paths, the project's aliases, the extensions).
+An import that resolves to no file of the map — a package of the ecosystem — is no link of
+the chain. A test takes no part: it is tied to its unit by its `ref:`.
+
+
+- **DCGDP-B01** — The import statements of a file are read by the dialect's pattern — a statement whose names span lines is one, its path on its last line, an alias read as the name it aliases — and each path resolved to a file of the map: relative to the importer or through an alias, as written or with each extension; a path naming a directory of code files is a package; anything else is outside the project. With no pattern for the dialect, nothing is read. (`ImportsOf`, `RealImport`)
+
+- **DCGDP-B02** — `dep-declared` fails naming each import of a governed file with no dependency flag on its statement, by line, path and the code it would carry; an import outside the project, or one with a waiver, is not charged, and a test is skipped. (`checkDepDeclared`)
+
+- **DCGDP-B03** — `dep-honored` fails naming each dependency flag whose code is not the code of the file its import resolves to — with the right one —, and each flag on a line with no import. (`checkDepHonored`)
+
+- **DCGDP-B04** — `used-by-declared` fails naming each symbol another code file imports whose used-by flag is missing or names other codes, and each used-by flag on a symbol nobody imports. (`checkUsedByDeclared`, `UsedByOf`)
+
+- **DCGDP-B05** — The fixers write the dependency flag on each unflagged import of a single governed file, correct a flag naming another code, write above each imported symbol the used-by flag with exactly who imports it, and remove a used-by flag nobody answers; an import of a package of several files is left for the author. (`fixDepFlags`, `fixUsedBy`)
 
 
 ## DEPHN — DependencyHonored — methods promised in the dependency table are consumed in code
@@ -1278,6 +1310,10 @@ reported. Each repair written, or attempted and failed, is returned for the call
 - **FXIXX-B09** — `--fix` writes the header a governed file lacks, at its top after any shebang: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document or a test support file; to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`)
 
 - **FXIXX-B10** — `--fix` gives a file whose header has an identity (or gets one) and no `code:` of its own a code generated from its name and its type, unique among the codes in the map, written below `@anchors` beside the identity; a header with its own code is left as it is. (`fixMissingHeader`)
+
+- **FXIXX-B11** — `FixWithConfig` runs the fixers with the project's config, so the ones that read the code by the dialect — the dependency chain's — have it; the config is theirs only for that run.
+
+- **FXIXX-B12** — Each repair says whether it added or removed lines (`LinesMoved`), so whoever carries the file's evidence knows whether the line-level signals still name the right lines.
 
 - **FXIXX-I01** — A repair replaces only the date inside the field; every other byte of the file stays as it was.
 
