@@ -5,10 +5,12 @@
 package mapx
 
 import (
+	"slices"
 	"sort"
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/scan"
 )
 
@@ -174,5 +176,40 @@ func TestCapturesReaching(t *testing.T) {
 	}
 	if got := strings.Join(g.CapturesReaching([]string{"ui/Sheet.tsx"}), ","); got != "flows/SHEET-VR-S01.yaml" {
 		t.Errorf("the component reaches only its own capture: %s", got)
+	}
+}
+
+// flaggedApp is a captured screen whose code imports a hook, which imports a store, each
+// import carrying its `@dep:` flag — no spec declares the hook or the store.
+func flaggedApp() *Graph {
+	return Build([]scan.File{
+		{Path: "ui/Arena.spec.md", Kind: "spec", HeaderCode: "ARENA", Rev: "a"},
+		{Path: "ui/Arena.tsx", Kind: "code", HeaderCode: "ARNAA", Rev: "b", CodeDeps: []scan.CodeDep{{Code: "USMTC", Line: 1}}},
+		{Path: "hooks/useMatches.ts", Kind: "code", HeaderCode: "USMTC", Rev: "c", CodeDeps: []scan.CodeDep{{Code: "LEAGS", Line: 1}}},
+		{Path: "stores/league.ts", Kind: "code", HeaderCode: "LEAGS", Rev: "d"},
+		{Path: "flows/ARENA-VR-S01.yaml", Kind: "test", Rev: "f"},
+	}, &config.Config{}, nil)
+}
+
+func TestFlaggedChain_feedsTheCaptureAndTheImpact(t *testing.T) {
+	t.Run("VRCPT-B09: A dependency the code's flags declare reaches the capture's closure and the impact of a change, transitively", func(t *testing.T) {})
+	g := flaggedApp()
+	c := g.EvidenceClosure("flows/ARENA-VR-S01.yaml")
+	for _, want := range []string{"ui/Arena.tsx", "hooks/useMatches.ts", "stores/league.ts"} {
+		if _, ok := c[want]; !ok {
+			t.Errorf("the capture's closure lacks %s, flagged in the chain: %v", want, c)
+		}
+	}
+	flow := g.node("flows/ARENA-VR-S01.yaml")
+	flow.Signal = &TestSignal{AtRev: flow.Rev, ClosureRev: c}
+	g.node("stores/league.ts").Rev = "d2"
+	if ev := g.EvidenceStaleFor(flow.ID); ev == nil || !slices.Contains(ev.Culprit, "stores/league.ts") {
+		t.Errorf("a change to the store stales the screen's capture: %+v", ev)
+	}
+	up := g.AnalyzeImpact("stores/league.ts").Validate
+	for _, want := range []string{"hooks/useMatches.ts", "ui/Arena.tsx"} {
+		if !slices.Contains(up, want) {
+			t.Errorf("a change to the store reaches %s, who imports it through the chain: %v", want, up)
+		}
 	}
 }

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9ecb46d0b99fcbf7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:6d2056ea1d932de6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -7285,6 +7285,8 @@ teste prova.
 - [Parts Used names become composes edges](layers/mapx.md#vrcpt-b07--parts-used-names-become-composes-edges) `VRCPT-B07`
 
 - [The captures a changed file reaches](layers/mapx.md#vrcpt-b08--the-captures-a-changed-file-reaches) `VRCPT-B08`
+
+- [A dependency the code's flags declare reaches the capture's closure and the impact of a change, transitively](layers/mapx.md#vrcpt-b09--a-dependency-the-codes-flags-declare-reaches-the-captures-closure-and-the-impact-of-a-change-transitively) `VRCPT-B09`
 
 ## migra
 

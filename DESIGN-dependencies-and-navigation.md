@@ -197,4 +197,10 @@ none — the three questions were decided on 2026-10-07 (above).
   dependency flag. The guides splice the at sign into their examples.
 - **The header `dep:` stays.** `--fix` writes the flag on each import line; it does not
   remove a header `dep:`, which still declares a dependency no import line carries.
+- **Two of W05's consumers came with W01.** Every `@dep:` flag is a declared `depends-on` edge,
+  and the capture's closure and the impact of `--changed` already walk `depends-on`, in both
+  directions, transitively. A map built from flagged imports alone — no spec declaring the
+  hook or the store — stales the screen's capture when the store changes, and the change's
+  impact climbs to the hook and the screen (`VRCPT-B09`). What W05 still lacks is the third:
+  which e2e flows pass through a screen.
 

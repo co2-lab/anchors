@@ -2,7 +2,7 @@
 # @anchors
 #   code: CPFTC
 #   ref: VRCPT
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @VRCPT
@@ -61,3 +61,9 @@ Feature: Captures — a visual-regression test is tied to the unit it captures
     Given the screen, hook and component above
     When the captures reaching the hook, and then the component, are asked
     Then the hook reaches the screen's capture, and the component only its own
+
+  @VRCPT-B09 @unit-level
+  Scenario: A dependency the code's flags declare reaches the capture's closure and the impact of a change, transitively
+    Given a captured screen whose code imports a hook, which imports a store, each import flagged with the code it uses
+    When the map is built and the store changes
+    Then the screen's capture is stale, naming the store, and the change's impact climbs to the hook and the screen

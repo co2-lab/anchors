@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:a18d510018370d06 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:70a8551c5c7dc515 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -8020,6 +8020,8 @@ abra a página dela em `camadas/`.
 - [VRCPT-B07 — A spec's Parts Used names become `composes` edges to the code file of that name (its file name without extension); a name no code file carries ties nothing. They carry no change down.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
 - [VRCPT-B08 — `CapturesReaching` are the capture tests whose closure holds one of the given files: a hook a captured screen depends on reaches the screen's captures; a component with its own capture reaches only its own.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
+- [VRCPT-B09 — A dependency the code's flags declare — the dependency flag on each import line, one file to the next — reaches a capture's closure and the impact of a change like one a spec declares, transitively: a change to a store a hook imports stales the capture of the screen that imports the hook, and the impact of that change climbs to the hook and the screen. (`EvidenceStaleFor`, `AnalyzeImpact`)](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
 - [VRCPT-B05 — A contract test — its path or text names `{CODE}-CT` — gets a `captures` edge to the API unit's code file, to its spec (the OpenAPI is compiled from it) and to every OpenAPI document of the project (a file named `*openapi*.yaml`, `.yml` or `.json`), one level like a capture.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
