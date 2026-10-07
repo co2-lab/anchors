@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:5fc85a8eee06e1b9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:989241d02d40ae77 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 83 unidades e 1361 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 83 unidades e 1362 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -466,6 +466,8 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 - **DCGDP-B04** — `used-by-declared` fails naming each symbol another code file imports whose used-by flag is missing or names other codes, and each used-by flag on a symbol nobody imports. (`checkUsedByDeclared`, `UsedByOf`)
 
 - **DCGDP-B05** — The fixers write the dependency flag on each unflagged import of a single governed file, correct a flag naming another code, write above each imported symbol the used-by flag with exactly who imports it, and remove a used-by flag nobody answers; an import of a package of several files is left for the author. (`fixDepFlags`, `fixUsedBy`)
+
+- **DCGDP-B06** — A re-export declares the names it lists — `export { X } from`, `export type { A, B }`, or a list spanning lines —, and the fixer writes each name's used-by flag above the list, naming its symbol in parentheses; an inline import (`import('…').Name`) brings the member it reads and carries its dependency flag on its line. (`declarationLine`)
 
 
 ## DEPHN — DependencyHonored — methods promised in the dependency table are consumed in code

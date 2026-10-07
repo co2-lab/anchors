@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:75413bdc9704adbe — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:14036a2534efbde8 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3710,6 +3710,8 @@ abra a página dela em `camadas/`.
 - [DCGDP-B04 — `used-by-declared` fails naming each symbol another code file imports whose used-by flag is missing or names other codes, and each used-by flag on a symbol nobody imports. (`checkUsedByDeclared`, `UsedByOf`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B05 — The fixers write the dependency flag on each unflagged import of a single governed file, correct a flag naming another code, write above each imported symbol the used-by flag with exactly who imports it, and remove a used-by flag nobody answers; an import of a package of several files is left for the author. (`fixDepFlags`, `fixUsedBy`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+
+- [DCGDP-B06 — A re-export declares the names it lists — `export { X } from`, `export type { A, B }`, or a list spanning lines —, and the fixer writes each name's used-by flag above the list, naming its symbol in parentheses; an inline import (`import('…').Name`) brings the member it reads and carries its dependency flag on its line. (`declarationLine`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 ### [DEPHN — DependencyHonored — methods promised in the dependency table are consumed in code](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
 
@@ -8193,9 +8195,9 @@ abra a página dela em `camadas/`.
 
 - [RPSCR-B40 — The header's `ref:` line yields the units it names, in order (`HeaderRefs`).](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B41 — The dependency flag on an import line (`@dep` with a colon and the used file's own code) is read with the symbols the import brings — the names in its braces, an alias reading as the name it aliases, and `default` for a default import, whose local name is the importer's choice —; the waiver (`@no-dep` with a colon and its reason) is read with its reason. (`CodeDep`, `CodeDeps`, `CodeDepsIn`, `ImportSymbols`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B41 — The dependency flag on an import line (`@dep` with a colon and the used file's own code) is read with the symbols the import brings — the names in its braces, an alias reading as the name it aliases, `default` for a default import, whose local name is the importer's choice, and the member an inline import reads (`import('…').Name`) —; the waiver (`@no-dep` with a colon and its reason) is read with its reason. (`CodeDep`, `CodeDeps`, `CodeDepsIn`, `ImportSymbols`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B42 — Each used-by flag (`@used-by` with a colon and the codes that use it) is read with the symbol declared on the next lines — `default` above the module's default export (`export default`, `module.exports =`). (`UsedBy`, `UsedByIn`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B42 — Each used-by flag (`@used-by` with a colon and the codes that use it) is read with the symbol declared on the next lines — `default` above the module's default export (`export default`, `module.exports =`), the one name of an export list that lists one —, or the symbol it names in parentheses after its codes, which a flag above an export list of several names must do. (`UsedBy`, `UsedByIn`, `ExportListNames`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B43 — Each navigation flag (`@navigates` with a colon, the screens' codes and, in brackets, the rule that triggers it) is read with its call's line — its own, or the next one when the flag stands alone on its line —, and each navigation waiver (`@no-nav` with a colon) with its reason. (`Navigation`, `Navigates`, `NavigatesIn`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

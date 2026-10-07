@@ -154,3 +154,43 @@ func TestDepChain_usedByAndTheFixers(t *testing.T) {
 		}
 	}
 }
+
+func TestDepChain_reExportsAndInlineImports(t *testing.T) {
+	t.Run("DCGDP-B06: A re-export declares the names it lists, and an inline import brings the member it reads", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	for rel, body := range map[string]string{
+		"src/theme/barrel.ts": "export { PALETTE } from './tokens' // @dep: TOKNS\nexport type { Goal, Mode } from '../ui/types' // @dep: TYPSU\nexport {\n  alpha,\n  beta as gamma,\n} from './more'\n",
+		"src/ui/Shop.tsx":     "import { PALETTE, Mode, gamma } from '../theme/barrel'\n",
+		"src/ui/Cart.tsx":     "type R = { item: import('../theme/barrel').Goal }\n",
+	} {
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g.Nodes = append(g.Nodes,
+		mapx.Node{ID: "src/theme/barrel.ts", Kind: mapx.KindCode, FileCode: "BARRL"},
+		mapx.Node{ID: "src/ui/Shop.tsx", Kind: mapx.KindCode, FileCode: "SHOPU"},
+		mapx.Node{ID: "src/ui/Cart.tsx", Kind: mapx.KindCode, FileCode: "CARTU"})
+	if imps := ImportsOf(read(t, root, "src/ui/Cart.tsx"), "src/ui/Cart.tsx", cfg.DialectFor(), g); len(imps) != 1 || strings.Join(imps[0].Symbols, ",") != "Goal" {
+		t.Errorf("the inline import brings the member it reads: %+v", imps)
+	}
+	gates := []config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code"}}, {Name: "used-by-declared", Check: "used-by-declared", On: []string{"code"}}}
+	FixWithConfig(gates, g.Nodes, root, g, cfg)
+	barrel := read(t, root, "src/theme/barrel.ts")
+	for _, want := range []string{
+		"// @used-by: SHOPU (PALETTE)\nexport { PALETTE }",
+		"// @used-by: CARTU (Goal)\n// @used-by: SHOPU (Mode)\nexport type { Goal, Mode }",
+		"// @used-by: SHOPU (gamma)\nexport {\n  alpha,",
+	} {
+		if !strings.Contains(barrel, want) {
+			t.Errorf("the flag stands above the list and names its symbol — want %q in:\n%s", want, barrel)
+		}
+	}
+	if cart := read(t, root, "src/ui/Cart.tsx"); !strings.Contains(cart, ".Goal } // @dep: BARRL") {
+		t.Errorf("the inline import carries its flag:\n%s", cart)
+	}
+	n := g.Nodes[len(g.Nodes)-3]
+	if v, msg := checkUsedByDeclared(barrel, n, root, g, cfg); v == Fail {
+		t.Errorf("after the fix the re-exports answer their importers: %s", msg)
+	}
+}

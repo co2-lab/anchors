@@ -174,6 +174,13 @@ none — the three questions were decided on 2026-10-07 (above).
   line with a path to the import above it, and a `require(…)` or an `export … from` borrowed
   the names and the flag of the import before it (MIF: phantom symbols `case:`, `member:`, and
   flags read on the wrong import). Only a line that closes a list (`} from '…'`) opens above.
+- **A re-export declares what it lists.** MIF's last 23 `used-by-declared` failures were
+  names a barrel re-exports (`export { GROUPS } from './CategoryPickerContent'`,
+  `export type { DeletionScope, DeletionStatus }`) — the fixer found no declaration to flag —
+  and an inline type import (`import('…').AuditItem`) read as the phantom symbol `audit:`. A
+  list now declares its names; above a list, the flag names its symbol in parentheses
+  (`// @used-by: DRSSD (DeletionStatus)`), since one line declares several; and an inline
+  import brings the member it reads.
 - **Navigation, measured.** On a jokenpo clone (21 screens), `--fix` flagged every call whose
   route names one screen (`nav-annotated` 19 → 11); what remains is the back and reset
   navigations the author names by hand. `nav-matches-spec` and `nav-symmetric` named real

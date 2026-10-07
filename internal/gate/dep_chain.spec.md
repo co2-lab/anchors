@@ -44,6 +44,7 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 | `DCGDP-B03` | `dep-honored` fails naming each dependency flag whose code is not the code of the file its import resolves to — with the right one —, and each flag on a line with no import. (`checkDepHonored`) |
 | `DCGDP-B04` | `used-by-declared` fails naming each symbol another code file imports whose used-by flag is missing or names other codes, and each used-by flag on a symbol nobody imports. (`checkUsedByDeclared`, `UsedByOf`) |
 | `DCGDP-B05` | The fixers write the dependency flag on each unflagged import of a single governed file, correct a flag naming another code, write above each imported symbol the used-by flag with exactly who imports it, and remove a used-by flag nobody answers; an import of a package of several files is left for the author. (`fixDepFlags`, `fixUsedBy`) |
+| `DCGDP-B06` | A re-export declares the names it lists — `export { X } from`, `export type { A, B }`, or a list spanning lines —, and the fixer writes each name's used-by flag above the list, naming its symbol in parentheses; an inline import (`import('…').Name`) brings the member it reads and carries its dependency flag on its line. (`declarationLine`) |
 
 ## Errors
 

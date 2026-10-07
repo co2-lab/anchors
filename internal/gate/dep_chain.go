@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"path"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -476,8 +477,18 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 	}
 	var edits []edit
 	var done []string
-	for sym, codes := range want {
+	syms := make([]string, 0, len(want))
+	for sym := range want {
+		syms = append(syms, sym)
+	}
+	sort.Strings(syms)
+	for _, sym := range syms {
+		codes := want[sym]
+		at, listed := declarationLine(lines, sym)
 		text := marker + " @used-by: " + strings.Join(codes, ", ")
+		if listed {
+			text += " (" + sym + ")"
+		}
 		if at, ok := flagLine[sym]; ok {
 			indent := lines[at][:len(lines[at])-len(strings.TrimLeft(lines[at], " \t"))]
 			if strings.TrimSpace(lines[at]) != text {
@@ -486,7 +497,6 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 			}
 			continue
 		}
-		at := declarationLine(lines, sym)
 		if at < 0 {
 			continue
 		}
@@ -503,7 +513,13 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 	if len(edits) == 0 {
 		return content, false, ""
 	}
-	sort.Slice(edits, func(i, j int) bool { return edits[i].at > edits[j].at })
+	// From the bottom up; flags inserted above the same line land in the order of their text.
+	sort.SliceStable(edits, func(i, j int) bool {
+		if edits[i].at != edits[j].at {
+			return edits[i].at > edits[j].at
+		}
+		return edits[i].text > edits[j].text
+	})
 	for _, e := range edits {
 		switch {
 		case e.remove:
@@ -519,24 +535,46 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 }
 
 // declarationLine is the 0-based line that declares a symbol at the top level of the file,
-// or -1.
-func declarationLine(lines []string, sym string) int {
+// or -1; listed when that line opens an export list, where a flag must name its symbol.
+func declarationLine(lines []string, sym string) (int, bool) {
 	if sym == "default" {
 		for i, l := range lines {
 			if defaultDeclRE.MatchString(l) {
-				return i
+				return i, false
 			}
 		}
-		return -1
+		return -1, false
 	}
 	re := regexp.MustCompile(`^(?:export\s+)?(?:default\s+)?(?:async\s+)?(?:function\*?|const|let|var|class|interface|type|enum|func|def)\s+(?:\([^)]*\)\s*)?` + regexp.QuoteMeta(sym) + `\b`)
+	// A re-export declares the name too: `export { X } from '…'`, `export type { A, X }`,
+	// or the name on a line of an export list that spans lines.
+	openList := -1
 	for i, l := range lines {
 		if re.MatchString(l) {
-			return i
+			return i, false
+		}
+		t := strings.TrimSpace(cutInlineComment(l))
+		if m := exportListLineRE.FindStringSubmatch(t); m != nil {
+			if slices.Contains(scan.ExportListNames(m[1]), sym) {
+				return i, true
+			}
+			continue
+		}
+		switch {
+		case strings.HasPrefix(t, "export") && listOpenRE.MatchString(t):
+			openList = i
+		case openList >= 0 && strings.HasPrefix(t, "}"):
+			if slices.Contains(scan.ExportListNames(strings.Join(lines[openList+1:i], " ")), sym) {
+				return openList, true
+			}
+			openList = -1
 		}
 	}
-	return -1
+	return -1, false
 }
+
+// exportListLineRE is an export list on one line.
+var exportListLineRE = regexp.MustCompile(`^export\s+(?:type\s+)?\{([^}]*)\}`)
 
 // defaultDeclRE is the line that declares a module's default export.
 var defaultDeclRE = regexp.MustCompile(`^\s*export\s+default\b|^\s*module\.exports\s*=`)

@@ -1114,6 +1114,16 @@ func TestCodeFlags_depUsedByNavigates(t *testing.T) {
 	}) {
 		t.Errorf("got %+v", got)
 	}
+	reexp := "// @used-by: ARNAA\nexport { PALETTE } from './tokens'\n// @used-by: WLLTW (Mode)\nexport type { Goal, Mode }\n"
+	if got := extractUsedBy([]byte(reexp)); !reflect.DeepEqual(got, []UsedBy{
+		{Symbol: "PALETTE", Codes: []string{"ARNAA"}, Line: 1},
+		{Symbol: "Mode", Codes: []string{"WLLTW"}, Line: 3},
+	}) {
+		t.Errorf("a list of one name declares it; above a list of several, the flag names its symbol: %+v", got)
+	}
+	if got := ImportSymbols("type R = { item: import('@/hooks/useFeed').AuditItem }"); !reflect.DeepEqual(got, []string{"AuditItem"}) {
+		t.Errorf("an inline import brings the member it reads: %v", got)
+	}
 	t.Run("RPSCR-B43: Each @navigates and @no-nav flag is read with its screens, its rule and its call's line", func(t *testing.T) {})
 	nav := "onPress={() => navigation.navigate('GoalDetail')} // @navigates: GLDTG [GLETG-A02]\n" +
 		"// @navigates: HOMEH, GOALG\nnavigation.goBack()\n" +

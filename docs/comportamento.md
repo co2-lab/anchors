@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9995a2eda7327af1 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:61de2cc3387d26bd — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3367,6 +3367,8 @@ teste prova.
 - [used-by-declared names each imported symbol whose flag is missing or wrong, and each flag nobody imports](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B04`
 
 - [The fixers write the dependency and used-by flags, correct a wrong code, and remove a stale flag](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B05`
+
+- [A re-export declares the names it lists, and an inline import brings the member it reads](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B06`
 
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B01`
 

@@ -36,3 +36,9 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     Given the screen and the tokens file as above
     When check --fix runs the chain's fixers
     Then the flags are written and corrected, the stale one removed, and the three gates pass
+
+  @DCGDP-B06 @unit-level
+  Scenario: A re-export declares the names it lists, and an inline import brings the member it reads
+    Given a barrel re-exporting one name, a type list of two and a list spanning lines, and a file reading a type through an inline import
+    When check --fix runs the chain's fixers
+    Then each re-exported name gets its flag above its list, naming its symbol, the inline import carries its flag, and used-by-declared passes

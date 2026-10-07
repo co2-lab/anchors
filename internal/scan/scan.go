@@ -1473,15 +1473,22 @@ type Navigation struct {
 }
 
 var (
-	codeDepRE   = regexp.MustCompile(`@dep:\s*([A-Z0-9]+)\b`)
-	noDepRE     = regexp.MustCompile(`@no-dep:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
-	usedByRE    = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*)`)
-	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-[A-Z]\d{2})\s*\])?\s*(?:\*/|-->)?\s*$`)
-	noNavRE     = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
+	codeDepRE = regexp.MustCompile(`@dep:\s*([A-Z0-9]+)\b`)
+	noDepRE   = regexp.MustCompile(`@no-dep:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
+	// usedByRE: the codes, and the symbol in parentheses when the flag stands above an
+	// export list — `// @used-by: ARNAA (Budget)` — where the next line names several.
+	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([A-Za-z_$][\w$]*)\s*\))?\s*(?:\*/|-->)?\s*$`)
+	// exportListRE is an export list on one line: `export { X } from '…'`, `export type { A, B }`.
+	exportListRE = regexp.MustCompile(`^\s*export\s+(?:type\s+)?\{([^}]*)\}`)
+	navigatesRE  = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-[A-Z]\d{2})\s*\])?\s*(?:\*/|-->)?\s*$`)
+	noNavRE      = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
 	// importSymbolsRE reads what an import line brings: the names inside braces, or the
 	// default name right after the keyword.
 	importBracesRE  = regexp.MustCompile(`\{([^}]*)\}`)
 	importDefaultRE = regexp.MustCompile(`^\s*import\s+(?:type\s+)?([A-Za-z_$][\w$]*)\b`)
+	// importInlineRE is an import inside an expression or a type — `import('./x').Name`:
+	// it brings the member it reads, or the module's default.
+	importInlineRE = regexp.MustCompile(`\bimport\(\s*['"][^'"]+['"]\s*\)(?:\.([A-Za-z_$][\w$]*))?`)
 	// declaredNameRE is the name a declaration line declares, in the common shapes.
 	declaredNameRE = regexp.MustCompile(`\b(?:function\*?|const|let|var|class|interface|type|enum|func|def)\s+(?:\([^)]*\)\s*)?([A-Za-z_$][\w$]*)`)
 )
@@ -1502,6 +1509,14 @@ func splitCodes(s string) []string {
 // import binds is the importer's choice, and the symbol it uses is the module's default.
 func importSymbols(line string) []string {
 	var out []string
+	if !strings.Contains(line, " from ") && !strings.HasPrefix(strings.TrimSpace(line), "import ") {
+		if m := importInlineRE.FindStringSubmatch(line); m != nil {
+			if m[1] != "" {
+				return []string{m[1]}
+			}
+			return []string{"default"}
+		}
+	}
 	if m := importDefaultRE.FindStringSubmatch(line); m != nil && m[1] != "type" && m[1] != "from" {
 		out = append(out, "default")
 	}
@@ -1551,8 +1566,15 @@ func extractUsedBy(content []byte) []UsedBy {
 		if m == nil {
 			continue
 		}
-		u := UsedBy{Codes: splitCodes(m[1]), Line: i + 1}
-		for j := i + 1; j < len(lines) && j <= i+5; j++ {
+		u := UsedBy{Codes: splitCodes(m[1]), Line: i + 1, Symbol: m[2]}
+		for j := i + 1; u.Symbol == "" && j < len(lines) && j <= i+5; j++ {
+			if l := exportListRE.FindStringSubmatch(lines[j]); l != nil {
+				// A list of one name declares it; a list of several needs the name on the flag.
+				if names := ExportListNames(l[1]); len(names) == 1 {
+					u.Symbol = names[0]
+				}
+				break
+			}
 			if defaultExportRE.MatchString(lines[j]) {
 				u.Symbol = "default"
 				break
@@ -1604,6 +1626,19 @@ func UsedByIn(content []byte) []UsedBy { return extractUsedBy(content) }
 
 // NavigatesIn are the navigation flags of a file's content (see File.Navigates).
 func NavigatesIn(content []byte) []Navigation { return extractNavigates(content) }
+
+// ExportListNames are the names an export list exports — the alias when it renames:
+// `A, type B, C as D` exports A, B and D.
+func ExportListNames(list string) []string {
+	var out []string
+	for _, part := range strings.Split(list, ",") {
+		f := strings.Fields(strings.TrimPrefix(strings.TrimSpace(part), "type "))
+		if len(f) > 0 {
+			out = append(out, f[len(f)-1])
+		}
+	}
+	return out
+}
 
 // ImportSymbols are the names an import statement brings (see importSymbols).
 func ImportSymbols(statement string) []string { return importSymbols(statement) }
