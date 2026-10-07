@@ -104,3 +104,9 @@ Feature: Fix — the self-healer that applies the mechanical, safe repairs of `c
     Given a repair that appends to a line and one that inserts a line
     When the fixers run
     Then the first moved no line and the second did
+
+  @FXIXX-B13 @unit-level
+  Scenario: The date repair answers each file from one snapshot of the repository
+    Given a repository with committed and edited files carrying stale dates
+    When the fixers run with the date repair
+    Then each date is the one the per-file rule gives, from a single read of the repository

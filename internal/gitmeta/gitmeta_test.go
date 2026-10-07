@@ -278,3 +278,24 @@ func TestStagedChanges(t *testing.T) {
 		t.Error("outside a repository it cannot be told")
 	}
 }
+
+func TestDirtyFiles(t *testing.T) {
+	t.Run("GTMTG-B10: The files with uncommitted changes are read in one status, relative to the root", func(t *testing.T) {})
+	d := gitRepo(t)
+	os.MkdirAll(filepath.Join(d, "app", "src"), 0o755)
+	for _, f := range []string{"app/src/clean.ts", "app/src/edited.ts", "top.txt"} {
+		os.WriteFile(filepath.Join(d, f), []byte("1"), 0o644)
+	}
+	exec.Command("git", "-C", d, "add", "-A").Run()
+	exec.Command("git", "-C", d, "commit", "-q", "-m", "c").Run()
+	os.WriteFile(filepath.Join(d, "app/src/edited.ts"), []byte("2"), 0o644)
+	os.WriteFile(filepath.Join(d, "app/src/new.ts"), []byte("3"), 0o644)
+	os.WriteFile(filepath.Join(d, "top.txt"), []byte("2"), 0o644)
+	dirty, known := DirtyFiles(filepath.Join(d, "app"))
+	if !known || !dirty["src/edited.ts"] || !dirty["src/new.ts"] || dirty["src/clean.ts"] || len(dirty) != 2 {
+		t.Errorf("the edited and the new file, relative to the root, nothing outside it: %v %v", dirty, known)
+	}
+	if _, known := DirtyFiles(t.TempDir()); known {
+		t.Error("outside git the answer is not known")
+	}
+}

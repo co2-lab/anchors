@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTMTG
-  updated_at: 2026-09-29
+  updated_at: 2026-10-07
   layer: infra
 -->
 # GitMeta — what git knows about the files: last commit dates, pending changes, HEAD, dirty count
@@ -44,6 +44,7 @@ snapshot that never existed.
 | `GTMTG-B07` | The dirty count is the number of files with uncommitted changes in the whole tree: 0 in a clean repository, 1 after one new file. (`DirtyCount`) |
 | `GTMTG-B08` | A file's content at the last commit is returned as HEAD has it; a file HEAD does not have, or a directory that is not a repository, has none. (`AtHead`) |
 | `GTMTG-B09` | Whether the commit being made changes a file is read from the index: a staged edit or an added file does, an unstaged edit does not; outside a repository it cannot be told. (`StagedChanges`) |
+| `GTMTG-B10` | The files with uncommitted changes — modified, staged, added, untracked — are read in a single `git status`, by their path relative to the root, files outside the root left out; outside git the answer is not known. (`DirtyFiles`) |
 
 ## Constraints
 

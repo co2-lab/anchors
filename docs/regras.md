@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:261ca32523eea3b5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:45174474f701b905 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4249,6 +4249,8 @@ abra a página dela em `camadas/`.
 
 - [FXIXX-B12 — Each repair says whether it added or removed lines (`LinesMoved`), so whoever carries the file's evidence knows whether the line-level signals still name the right lines.](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
+- [FXIXX-B13 — A run of the fixers that includes the date repair reads the repository's state once — the files with uncommitted changes and each file's last commit date —, and the date repair answers each file from it, with the same rule as one git question per file.](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
+
 - [FXIXX-I01 — A repair replaces only the date inside the field; every other byte of the file stays as it was.](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
 - [FXIXX-X01 — Does not create a missing `updated_at` field; it only corrects the value of one that exists.](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
@@ -6506,6 +6508,8 @@ abra a página dela em `camadas/`.
 - [GTMTG-B08 — A file's content at the last commit is returned as HEAD has it; a file HEAD does not have, or a directory that is not a repository, has none. (`AtHead`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-B09 — Whether the commit being made changes a file is read from the index: a staged edit or an added file does, an unstaged edit does not; outside a repository it cannot be told. (`StagedChanges`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+
+- [GTMTG-B10 — The files with uncommitted changes — modified, staged, added, untracked — are read in a single `git status`, by their path relative to the root, files outside the root left out; outside git the answer is not known. (`DirtyFiles`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-X01 — The dirty count never answers 0 when it could not count: outside a repository or without git it answers a negative number.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 

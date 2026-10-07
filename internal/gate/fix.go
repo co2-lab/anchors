@@ -71,6 +71,14 @@ func Fixable(check string) bool {
 // veredito do gate: é o fixer quem decide se há o que corrigir, e um nó já correto
 // não muda e não entra no resultado.
 func Fix(gates []config.Gate, nodes []mapx.Node, root string, g *mapx.Graph) []FixResult {
+	for _, gt := range gates {
+		if gt.Check == "updated-at-atual" {
+			dirty, known := gitmeta.DirtyFiles(root)
+			fixGit = &gitSnapshot{root: root, dirty: dirty, known: known, dates: gitmeta.AllCommitDates(root)}
+			defer func() { fixGit = nil }()
+			break
+		}
+	}
 	var out []FixResult
 	for _, gt := range gates {
 		fix, ok := fixers[gt.Check]
@@ -115,14 +123,25 @@ func fixUpdatedAt(content string, n mapx.Node, root string) (string, bool) {
 	// a data CORRETA: hoje se há edição não-commitada (alteração em curso), senão a
 	// data do último commit. Espelha a regra do checkUpdatedAt.
 	var correct string
-	mudou, sabido := gitmeta.UncommittedChanges(root, n.ID)
+	var mudou, sabido bool
+	var lastDate string
+	var hasDate bool
+	if snap := fixGit; snap != nil && snap.root == root {
+		// One snapshot for the whole run: a git process per file was thousands of them in
+		// a large repository, and `check --fix` took an hour.
+		mudou, sabido = snap.dirty[n.ID], snap.known
+		lastDate, hasDate = snap.dates[n.ID]
+	} else {
+		mudou, sabido = gitmeta.UncommittedChanges(root, n.ID)
+		lastDate, hasDate = gitmeta.LastCommitDate(root, n.ID)
+	}
 	if !sabido {
 		return content, false // sem git: não há data correta a apurar, e chutar seria pior
 	}
 	if mudou {
 		correct = gitmeta.Today()
-	} else if d, ok := gitmeta.LastCommitDate(root, n.ID); ok {
-		correct = d
+	} else if hasDate {
+		correct = lastDate
 	} else {
 		return content, false // sem commit e sem edição — nada a comparar
 	}
@@ -250,3 +269,15 @@ func linesMoved(before, after string) bool {
 	}
 	return false
 }
+
+// gitSnapshot is the repository's state read once for a run of the fixers: the files with
+// uncommitted changes and each file's last commit date.
+type gitSnapshot struct {
+	root  string
+	dirty map[string]bool
+	known bool
+	dates map[string]string
+}
+
+// fixGit is the snapshot of the run in progress; nil outside Fix.
+var fixGit *gitSnapshot

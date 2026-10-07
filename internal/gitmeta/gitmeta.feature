@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTA
 #   ref: GTMTG
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @GTMTG
@@ -73,3 +73,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a committed file edited and not staged, one staged, and a new one added
     When each is asked whether the commit changes it
     Then the unstaged one does not, the other two do, and outside a repository it cannot be told
+
+  @GTMTG-B10 @unit-level
+  Scenario: The files with uncommitted changes are read in one status, relative to the root
+    Given a repository whose project root is a subdirectory, with a clean file, an edited one, a new one, and an edit outside the root
+    When the dirty files of the root are read
+    Then the edited and the new file are listed by their path from the root, and nothing else; outside git the answer is unknown

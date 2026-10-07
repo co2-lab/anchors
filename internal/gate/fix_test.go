@@ -60,6 +60,7 @@ func TestFixable(t *testing.T) {
 }
 
 func TestFix_rewritesAStaleDateToTheCommitDate(t *testing.T) {
+	t.Run("FXIXX-B13: The date repair answers each file from one snapshot of the repository", func(t *testing.T) {})
 	t.Run("FXIXX-B02: A stale date on a committed file is rewritten to its last commit date", func(t *testing.T) {})
 	t.Run("FXIXX-I01: Only the date changes, the rest of the file is kept byte for byte", func(t *testing.T) {})
 	const rel = "a.spec.md"

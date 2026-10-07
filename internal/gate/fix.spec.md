@@ -47,6 +47,7 @@ reported. Each repair written, or attempted and failed, is returned for the call
 | `FXIXX-B10` | `--fix` gives a file whose header has an identity (or gets one) and no `code:` of its own a code generated from its name and its type, unique among the codes in the map, written below `@anchors` beside the identity; a header with its own code is left as it is. (`fixMissingHeader`) |
 | `FXIXX-B11` | `FixWithConfig` runs the fixers with the project's config, so the ones that read the code by the dialect — the dependency chain's — have it; the config is theirs only for that run. |
 | `FXIXX-B12` | Each repair says whether it added or removed lines (`LinesMoved`), so whoever carries the file's evidence knows whether the line-level signals still name the right lines. |
+| `FXIXX-B13` | A run of the fixers that includes the date repair reads the repository's state once — the files with uncommitted changes and each file's last commit date —, and the date repair answers each file from it, with the same rule as one git question per file. |
 
 ## Invariants
 

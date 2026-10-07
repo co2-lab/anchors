@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:ce569713d6757d85 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:bdb83fddfd0d646f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 82 unidades e 1355 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 82 unidades e 1356 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1314,6 +1314,8 @@ reported. Each repair written, or attempted and failed, is returned for the call
 - **FXIXX-B11** — `FixWithConfig` runs the fixers with the project's config, so the ones that read the code by the dialect — the dependency chain's — have it; the config is theirs only for that run.
 
 - **FXIXX-B12** — Each repair says whether it added or removed lines (`LinesMoved`), so whoever carries the file's evidence knows whether the line-level signals still name the right lines.
+
+- **FXIXX-B13** — A run of the fixers that includes the date repair reads the repository's state once — the files with uncommitted changes and each file's last commit date —, and the date repair answers each file from it, with the same rule as one git question per file.
 
 - **FXIXX-I01** — A repair replaces only the date inside the field; every other byte of the file stays as it was.
 

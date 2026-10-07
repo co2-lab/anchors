@@ -149,3 +149,38 @@ func AtHead(root, rel string) (content string, ok bool) {
 	}
 	return string(out), true
 }
+
+// DirtyFiles are, in one `git status`, the files with uncommitted changes — modified,
+// staged, added or untracked —, by their path relative to the root; known=false outside
+// git. It answers for a whole run what UncommittedChanges answers for one file, without a
+// git process per file (thousands in a large repository).
+func DirtyFiles(root string) (dirty map[string]bool, known bool) {
+	out, err := exec.Command("git", "-C", root, "status", "--porcelain", "-z", "--untracked-files=all").Output()
+	if err != nil {
+		return nil, false
+	}
+	prefix := ""
+	if p, err := exec.Command("git", "-C", root, "rev-parse", "--show-prefix").Output(); err == nil {
+		prefix = strings.TrimSpace(string(p))
+	}
+	dirty = map[string]bool{}
+	entries := strings.Split(string(out), "\x00")
+	for i := 0; i < len(entries); i++ {
+		e := entries[i]
+		if len(e) < 4 {
+			continue
+		}
+		status, path := e[:2], e[3:]
+		if status[0] == 'R' || status[0] == 'C' {
+			i++ // a rename or a copy carries its origin in the next entry
+		}
+		if prefix != "" {
+			if !strings.HasPrefix(path, prefix) {
+				continue
+			}
+			path = strings.TrimPrefix(path, prefix)
+		}
+		dirty[path] = true
+	}
+	return dirty, true
+}
