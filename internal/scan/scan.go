@@ -1488,7 +1488,8 @@ var (
 	importDefaultRE = regexp.MustCompile(`^\s*import\s+(?:type\s+)?([A-Za-z_$][\w$]*)\b`)
 	// importInlineRE is an import inside an expression or a type — `import('./x').Name`:
 	// it brings the member it reads, or the module's default.
-	importInlineRE = regexp.MustCompile(`\bimport\(\s*['"][^'"]+['"]\s*\)(?:\.([A-Za-z_$][\w$]*))?`)
+	importDestructRE = regexp.MustCompile(`\{([^}]*)\}\s*=\s*(?:await\s+)?import\(`)
+	importInlineRE   = regexp.MustCompile(`\bimport\(\s*['"][^'"]+['"]\s*\)(?:\.([A-Za-z_$][\w$]*))?`)
 	// declaredNameRE is the name a declaration line declares, in the common shapes.
 	declaredNameRE = regexp.MustCompile(`\b(?:function\*?|const|let|var|class|interface|type|enum|func|def)\s+(?:\([^)]*\)\s*)?([A-Za-z_$][\w$]*)`)
 )
@@ -1511,6 +1512,16 @@ func importSymbols(line string) []string {
 	var out []string
 	if !strings.Contains(line, " from ") && !strings.HasPrefix(strings.TrimSpace(line), "import ") {
 		if m := importInlineRE.FindStringSubmatch(line); m != nil {
+			// `const { a, b: c } = await import('./x')` brings a and b; `import('./x').Name`,
+			// Name; otherwise the module's default.
+			if d := importDestructRE.FindStringSubmatch(line); d != nil {
+				for _, part := range strings.Split(d[1], ",") {
+					if name := strings.TrimSpace(strings.SplitN(part, ":", 2)[0]); name != "" {
+						out = append(out, name)
+					}
+				}
+				return out
+			}
 			if m[1] != "" {
 				return []string{m[1]}
 			}

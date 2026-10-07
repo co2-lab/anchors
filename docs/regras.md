@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:8a7b03c1accc975c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:a18d510018370d06 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -8205,7 +8205,7 @@ abra a página dela em `camadas/`.
 
 - [RPSCR-B40 — The header's `ref:` line yields the units it names, in order (`HeaderRefs`).](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B41 — The dependency flag on an import line (`@dep` with a colon and the used file's own code) is read with the symbols the import brings — the names in its braces, an alias reading as the name it aliases, `default` for a default import, whose local name is the importer's choice, and the member an inline import reads (`import('…').Name`) —; the waiver (`@no-dep` with a colon and its reason) is read with its reason. (`CodeDep`, `CodeDeps`, `CodeDepsIn`, `ImportSymbols`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B41 — The dependency flag on an import line (`@dep` with a colon and the used file's own code) is read with the symbols the import brings — the names in its braces, an alias reading as the name it aliases, `default` for a default import, whose local name is the importer's choice, the member an inline import reads (`import('…').Name`), and the names a dynamic import destructures (`const { a } = await import('…')`) —; the waiver (`@no-dep` with a colon and its reason) is read with its reason. (`CodeDep`, `CodeDeps`, `CodeDepsIn`, `ImportSymbols`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B42 — Each used-by flag (`@used-by` with a colon and the codes that use it) is read with the symbol declared on the next lines — `default` above the module's default export (`export default`, `module.exports =`), the one name of an export list that lists one —, or the symbol it names in parentheses after its codes, which a flag above an export list of several names must do. (`UsedBy`, `UsedByIn`, `ExportListNames`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

@@ -1124,6 +1124,12 @@ func TestCodeFlags_depUsedByNavigates(t *testing.T) {
 	if got := ImportSymbols("type R = { item: import('@/hooks/useFeed').AuditItem }"); !reflect.DeepEqual(got, []string{"AuditItem"}) {
 		t.Errorf("an inline import brings the member it reads: %v", got)
 	}
+	if got := ImportSymbols("const { resolve, open: openFile } = await import('@/utils/files') // @dep: FILES"); !reflect.DeepEqual(got, []string{"resolve", "open"}) {
+		t.Errorf("a destructured dynamic import brings the names it destructures: %v", got)
+	}
+	if got := ImportSymbols("const mod = await import('./x')"); !reflect.DeepEqual(got, []string{"default"}) {
+		t.Errorf("a dynamic import bound whole is the module's default: %v", got)
+	}
 	t.Run("RPSCR-B43: Each @navigates and @no-nav flag is read with its screens, its rule and its call's line", func(t *testing.T) {})
 	nav := "onPress={() => navigation.navigate('GoalDetail')} // @navigates: GLDTG [GLETG-A02]\n" +
 		"// @navigates: HOMEH, GOALG\nnavigation.goBack()\n" +
