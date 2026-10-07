@@ -97,17 +97,36 @@ func ContractImpacts(root, specID, content string, g *mapx.Graph, cfg *config.Co
 	// revision added since HEAD names in `Revises:` or `Checked:`. The impact exists only
 	// while the change is uncommitted, so with no way to answer it a project whose
 	// divergence blocks could never commit a field change (reported from jokenpo).
-	acked := acknowledgedRules(content, head)
+	//
+	// A rule is answered where it lives: by a revision added to its own spec — the changed
+	// one or a spec that reads its data —, short code or full; or by one added to the changed
+	// spec naming it by its full code. A short code answers only its own spec's rule: `B12`
+	// in this spec's revision said nothing of another unit's `B12`. A spec not yet in git
+	// has every revision added (reported from jokenpo).
 	readers := []specText{{specID, content, layer}}
 	readers = append(readers, dependents(root, specID, g)...)
+	ownAcked := map[string]map[string]bool{specID: acknowledgedRules(content, head)}
+	fullAcked := acknowledgedFullCodes(content, head)
+	ackedIn := func(r specText) map[string]bool {
+		if a, ok := ownAcked[r.id]; ok {
+			return a
+		}
+		h, _ := gitmeta.AtHead(root, r.id)
+		ownAcked[r.id] = acknowledgedRules(r.content, h)
+		return ownAcked[r.id]
+	}
 	var out []Impact
 	for _, f := range changed {
 		imp := Impact{Spec: specID, Field: f}
+		answered := map[string]bool{}
 		for _, r := range readers {
 			for _, u := range ruleUsesOf(r.content, cfg, r.layer) {
 				for _, it := range u.Uses {
 					if strings.EqualFold(it, f) || strings.EqualFold(rootName(it), f) {
 						imp.Rules = appendOnce(imp.Rules, u.Rule)
+						if ackedIn(r)[shortRule(u.Rule)] || fullAcked[u.Rule] {
+							answered[u.Rule] = true
+						}
 					}
 				}
 			}
@@ -117,7 +136,7 @@ func ContractImpacts(root, specID, content string, g *mapx.Graph, cfg *config.Co
 		}
 		open := false
 		for _, r := range imp.Rules {
-			if !acked[shortRule(r)] {
+			if !answered[r] {
 				open = true
 				break
 			}
@@ -239,6 +258,16 @@ func checkContractImpact(content string, n mapx.Node, root string, g *mapx.Graph
 // acknowledgedRules are the rules — by their short code, `R03` — that the revision lines
 // added since HEAD name in `Revises:` or `Checked:`.
 func acknowledgedRules(content, head string) map[string]bool {
+	text := addedLines(content, head)
+	out, _ := revisedCodes(text)
+	for c := range codesIn(checkedRE(), text) {
+		out[c] = true
+	}
+	return out
+}
+
+// addedLines are the lines of content that head does not have, as text.
+func addedLines(content, head string) string {
 	before := map[string]int{}
 	for _, l := range strings.Split(head, "\n") {
 		before[l]++
@@ -252,13 +281,26 @@ func acknowledgedRules(content, head string) map[string]bool {
 		added.WriteString(l)
 		added.WriteString("\n")
 	}
-	text := added.String()
-	out, _ := revisedCodes(text)
-	for c := range codesIn(checkedRE(), text) {
-		out[c] = true
+	return added.String()
+}
+
+// acknowledgedFullCodes are the full rule codes (`ARNAA-A04`) the revisions added since HEAD
+// name in `Revises:` or `Checked:` — how the changed spec answers another spec's rule.
+func acknowledgedFullCodes(content, head string) map[string]bool {
+	text := addedLines(content, head)
+	out := map[string]bool{}
+	for _, re := range []*regexp.Regexp{revisesRE(), checkedRE()} {
+		for _, m := range re.FindAllStringSubmatch(text, -1) {
+			for _, c := range fullRuleRefRE.FindAllString(m[1], -1) {
+				out[c] = true
+			}
+		}
 	}
 	return out
 }
+
+// fullRuleRefRE is a rule code with its unit.
+var fullRuleRefRE = regexp.MustCompile(`\b[A-Z0-9]{3,6}-[A-Z]\d{2}\b`)
 
 // shortRule is a rule's code without its unit: `DATAR-R03` → `R03`.
 func shortRule(code string) string {

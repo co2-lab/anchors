@@ -37,3 +37,10 @@ Feature: ContractImpact — a changed field names the rules that use it, and the
     Given a field changed that several rules use, and a new revision naming all of them, then one naming only one
     When the impacts are computed
     Then the first leaves no impact, and the second keeps the impact of the rules nobody answered
+
+  @CTRIM-B06 @unit-level
+  Scenario: A rule is answered by a revision added to its own spec, even one not yet in git, or by the changed spec's naming its full code; a short code answers only its own spec's rule
+    Given the amount changed, read by rules of the pay spec, the checkout spec and a cart spec not yet in git
+    When the pay spec's revision names B01 and V01, then each dependent answers its own rule, then the pay spec names CHKOT-B01
+    Then the short codes leave the other specs' rules open, each spec's own revision answers its rule, and the full code answers the checkout's
+

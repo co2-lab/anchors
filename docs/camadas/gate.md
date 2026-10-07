@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:afb3012582731176 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:c2f0e127edc1eca9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 83 unidades e 1362 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 83 unidades e 1363 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -252,6 +252,8 @@ when its own file did not move.
 - **CTRIM-B04** — The test files every impacted rule reaches, across the specs with uncommitted changes, are listed for the test selection, which adds those its suite runs. (`ImpactedTests`)
 
 - **CTRIM-B05** — The rules a revision added since HEAD names in `Revises:` or `Checked:` are answered: an impact whose rules are all answered is not reported, and one with a rule nobody answered still is. The impact lives only while the change is uncommitted, and the change's own revision is where whoever changed the field says they looked. (`acknowledgedRules`)
+
+- **CTRIM-B06** — A rule is answered where it lives: by a revision added since the last commit to its own spec — the changed one or a spec that reads its data, every revision of a spec not yet in git counting as added —, naming it by its short or full code; or by one added to the changed spec naming it by its full code. A short code answers only its own spec's rule, never another unit's rule of the same letter and number. (`acknowledgedFullCodes`)
 
 
 ## CSDCN — ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those

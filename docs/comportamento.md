@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9b1306f84ab0428f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1419a2fdc12d5de9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3265,6 +3265,8 @@ teste prova.
 - [The impacted tests are listed for the selection](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B04`
 
 - [The rules the change's own revision revises or checks answer the impact](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B05`
+
+- [A rule is answered by a revision added to its own spec, even one not yet in git, or by the changed spec's naming its full code; a short code answers only its own spec's rule](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B06`
 
 - [A status emitted and not declared is accused by number](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B01`
 

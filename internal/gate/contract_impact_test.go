@@ -144,3 +144,46 @@ func TestContractImpact_answeredByTheChangesRevision(t *testing.T) {
 		}
 	}
 }
+
+func TestContractImpact_answeredWhereTheRuleLives(t *testing.T) {
+	t.Run("CTRIM-B06: A rule is answered by a revision added to its own spec — even one not yet in git —, or by the changed spec's naming its full code; a short code answers only its own spec's rule", func(t *testing.T) {})
+	root, g, cfg := impactRepo(t)
+	s := edited(root, t)
+	// A third spec reads the amount too, and is new: not yet in git.
+	cart := "# Cart\n\n## Rule uses\n\n| Rule | Uses |\n| --- | --- |\n| `CARTX-B01` | `amount` |\n"
+	writeFile(t, root, "src/cart.spec.md", cart)
+	g.Nodes = append(g.Nodes, mapx.Node{ID: "src/cart.spec.md", Kind: mapx.KindSpec})
+	g.Edges = append(g.Edges, mapx.Edge{From: "src/cart.spec.md", To: "src/pay.go", Type: mapx.EdgeDependsOn})
+	openOn := func(spec string) []string {
+		for _, imp := range ContractImpacts(root, "src/pay.spec.md", spec, g, cfg) {
+			if imp.Field == "amount" {
+				return imp.Rules
+			}
+		}
+		return nil
+	}
+	if got := openOn(s); strings.Join(got, ",") != "CARTX-B01,CHKOT-B01,PAYMT-B01,PAYMT-V01" {
+		t.Fatalf("the amount is read by rules in three specs: %v", got)
+	}
+	// The changed spec answers its own B01 by the short code: that says nothing of the
+	// checkout's B01 nor the cart's.
+	own := s + "\n### PAYMT-R0001 — decimal\n\n**Revises:** `B01`, `V01`.\n"
+	writeFile(t, root, "src/pay.spec.md", own)
+	if got := openOn(own); got == nil {
+		t.Error("a short code answers only its own spec's rule: the checkout's and the cart's stay open")
+	}
+	// Each dependent answers its rule in its own revision; the cart is not in git, so all of
+	// its revisions are new.
+	writeFile(t, root, "src/checkout.spec.md", checkoutSpec+"\n### CHKOT-R0001 — reads the decimal\n\n**Checked:** `B01`.\n")
+	writeFile(t, root, "src/cart.spec.md", cart+"\n### CARTX-R0001 — reads the decimal\n\n**Revises:** `CARTX-B01`.\n")
+	if got := openOn(own); got != nil {
+		t.Errorf("each rule answered where it lives: %v", got)
+	}
+	// Or the changed spec names the other spec's rule by its full code.
+	writeFile(t, root, "src/checkout.spec.md", checkoutSpec)
+	full := own + "**Checked:** `CHKOT-B01`.\n"
+	writeFile(t, root, "src/pay.spec.md", full)
+	if got := openOn(full); got != nil {
+		t.Errorf("a full code in the changed spec's revision answers another spec's rule: %v", got)
+	}
+}

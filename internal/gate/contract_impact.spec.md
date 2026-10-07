@@ -33,6 +33,7 @@ when its own file did not move.
 | `CTRIM-B03` | `contract-impact` is a divergence with each changed field, its rules and its tests; with no impact it passes, and a node that is not a spec is skipped. |
 | `CTRIM-B04` | The test files every impacted rule reaches, across the specs with uncommitted changes, are listed for the test selection, which adds those its suite runs. (`ImpactedTests`) |
 | `CTRIM-B05` | The rules a revision added since HEAD names in `Revises:` or `Checked:` are answered: an impact whose rules are all answered is not reported, and one with a rule nobody answered still is. The impact lives only while the change is uncommitted, and the change's own revision is where whoever changed the field says they looked. (`acknowledgedRules`) |
+| `CTRIM-B06` | A rule is answered where it lives: by a revision added since the last commit to its own spec — the changed one or a spec that reads its data, every revision of a spec not yet in git counting as added —, naming it by its short or full code; or by one added to the changed spec naming it by its full code. A short code answers only its own spec's rule, never another unit's rule of the same letter and number. (`acknowledgedFullCodes`) |
 
 ## Errors
 
