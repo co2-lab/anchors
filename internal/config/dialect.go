@@ -276,6 +276,16 @@ var dialectFamilies = map[string]Dialect{
 	// C-like com `export`: TS, JS. Cobre `export async function`, `export const f = (…)`,
 	// e os métodos exportados por classe.
 	"ts": {
+		// What can fail in a TS app and what handles it: React Query (the hooks and the
+		// mutation), SWR, fetch and axios. A project with its own data hooks adds them, or
+		// declares `fallible_patterns: []` to turn these off.
+		FalliblePatterns: []FalliblePattern{
+			{Call: `\buse(?:Query|SuspenseQuery|InfiniteQuery|SuspenseInfiniteQuery|Queries|Mutation)\(`,
+				Handled: `\bisError\b|\berror\b|\bonError\b|\bthrowOnError\b|\bstatus\b|\bcatch\b`},
+			{Call: `\buseSWR(?:Infinite|Immutable|Mutation)?\(`, Handled: `\berror\b|\bonError\b`},
+			{Call: `\bfetch\(`, Handled: `\.catch\(|\bcatch\b|\.ok\b|\bthrow\b`},
+			{Call: `\baxios(?:\.\w+)?\(`, Handled: `\.catch\(|\bcatch\b`},
+		},
 		EnvRead:      "process\\.env\\.([A-Za-z_][A-Za-z0-9_]*)|process\\.env\\[\\s*['\"`]([A-Za-z_][A-Za-z0-9_]*)['\"`]\\s*\\]|import\\.meta\\.env\\.([A-Za-z_][A-Za-z0-9_]*)",
 		ExportedFunc: `(?m)^export\s+(?:async\s+)?function\s+(\w+)\s*\(|^export\s+const\s+(\w+)\s*=\s*(?:async\s+)?[\(<]`,
 		// `(?:[(,]|^)` ancora no abre-parêntese ou na vírgula — os parâmetros podem estar
@@ -309,6 +319,12 @@ var dialectFamilies = map[string]Dialect{
 		Definition: `(?m)^\s*(?:export\s+(?:default\s+)?)?(?:async\s+)?(?:function\*?\s+(\w+)|class\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|\w+)\s*=>)`,
 	},
 	"go": {
+		// What can fail in Go and what handles it: an HTTP request and a database call, both
+		// answered by reading their error.
+		FalliblePatterns: []FalliblePattern{
+			{Call: `\bhttp\.(?:Get|Post|Head|PostForm)\(|\.Do\(`, Handled: `\berr\s*!=\s*nil|\berrors\.`},
+			{Call: `\.(?:Query|QueryRow|Exec)(?:Context)?\(`, Handled: `\berr\s*!=\s*nil|\.Err\(\)|\berrors\.`},
+		},
 		EnvRead: "os\\.(?:Getenv|LookupEnv)\\(\\s*\"([A-Za-z_][A-Za-z0-9_]*)\"\\s*\\)",
 		// Em Go a exportação é a MAIÚSCULA inicial — não uma palavra-chave.
 		ExportedFunc: `(?m)^func\s+(?:\([^)]*\)\s+)?([A-Z]\w*)\s*\(`,
@@ -354,6 +370,10 @@ var dialectFamilies = map[string]Dialect{
 		Definition: `(?m)^(?:func\s+\(\s*(?:\w+\s+)?\*?(?P<owner>\w+)(?:\[[^\]]*\])?\s*\)\s+(\w+)|func\s+(\w+)|type\s+(\w+))`,
 	},
 	"python": {
+		// What can fail in Python and what handles it: an HTTP request through `requests`.
+		FalliblePatterns: []FalliblePattern{
+			{Call: `\brequests\.(?:get|post|put|patch|delete|head|request)\(`, Handled: `\bexcept\b|raise_for_status|status_code`},
+		},
 		EnvRead: "os\\.(?:getenv|environ\\.get)\\(\\s*['\"]([A-Za-z_]\\w*)['\"]|os\\.environ\\[\\s*['\"]([A-Za-z_]\\w*)['\"]\\s*\\]",
 		// Sem palavra-chave de exportação: convenção é o underscore inicial marcar o
 		// privado, então "exportada" = def no nível do módulo sem `_`.
@@ -469,9 +489,10 @@ func (c *Config) DialectFor() Dialect {
 		if len(d.LogPatterns) == 0 {
 			d.LogPatterns = base.LogPatterns
 		}
-		if len(d.FalliblePatterns) == 0 {
-			d.FalliblePatterns = base.FalliblePatterns
-		}
+		// The family's fallible patterns are NOT taken here. A project whose failure gates
+		// already block would wake up to every fetch charged the day it updates (reported
+		// from MIF: 65 screens, blocking). They are seeded by `anchors init` and suggested
+		// by the governance tips (FamilyFalliblePatterns): measured before they bar.
 		switch {
 		case d.Tests == nil:
 			d.Tests = base.Tests
@@ -557,7 +578,9 @@ func (d Dialect) EnvReadPattern() string {
 	return strings.Join(parts, "|")
 }
 
-// FalliblePattern is a call that can fail, and what handles it (see FalliblePatterns).
+// FalliblePattern is a call that can fail, and what handles it (see FalliblePatterns). The
+// families know their own (React Query, SWR, fetch and axios for `ts`; HTTP and SQL for
+// `go`; `requests` for `python`) — see FamilyFalliblePatterns.
 type FalliblePattern struct {
 	// Call recognises the call that can fail (a regular expression).
 	Call string `yaml:"call"`
@@ -570,3 +593,15 @@ type FalliblePattern struct {
 // DefaultFallibleWindow is the window when a pattern declares none: a destructuring and
 // the early returns of a component fit in it, the next component does not.
 const DefaultFallibleWindow = 25
+
+// FamilyFalliblePatterns are what the family knows can fail, and what handles it. They are
+// not applied by themselves: `anchors init` writes them into a new project's dialect, and
+// the governance tips suggest them to a project that declared none — a project's failure
+// gates are measured with them before they bar with them.
+func FamilyFalliblePatterns(family string) []FalliblePattern {
+	base, ok := dialectFamilies[strings.ToLower(family)]
+	if !ok {
+		return nil
+	}
+	return append([]FalliblePattern(nil), base.FalliblePatterns...)
+}

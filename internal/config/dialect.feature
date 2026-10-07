@@ -154,3 +154,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given a project declaring its own fallible pattern, and a project declaring none with no family
     When the dialect is resolved
     Then the first keeps its pattern and window, and the second has none
+
+  @DLCTI-B22 @unit-level
+  Scenario: A family knows its fallible patterns and does not impose them on a project that declared none
+    Given the ts, go and python families, an unknown family, and a ts project that declared no fallible patterns
+    When the family's patterns and the project's dialect are read
+    Then each known family has its patterns, the unknown has none, and the project is measured with none

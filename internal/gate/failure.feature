@@ -168,3 +168,9 @@ Feature: Failure — the failure a spec declares must be handled, recorded, and 
     Given a unit with four fallible calls — one handled in the destructuring above it, one handled below, one read with `?? []` and nothing else, one waived on the line above
     When failure-handled runs
     Then it fails naming only the call read with `?? []`
+
+  @FLRAI-B23 @unit-level
+  Scenario: A fallible call whose result is returned hands its failure to the caller
+    Given a unit returning a query, an arrow whose body is a query, a function returning an awaited fetch, and a query kept in a variable with no handling
+    When failure-handled runs
+    Then only the query kept in the variable is charged

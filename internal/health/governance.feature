@@ -2,7 +2,7 @@
 # @anchors
 #   code: GVFTA
 #   ref: GVOPG
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @GVOPG
@@ -68,3 +68,9 @@ Feature: GovernanceOpportunities — the doctor suggests the canonical gates and
     When the governance opportunities are read
     Then both are suggested as informational, with what they measure and how to declare them
     And scenario-letter-declared's suggestion names rule_types
+
+  @GVOPG-B09 @unit-level
+  Scenario: A family's fallible patterns are suggested to a project that declared none, and declining silences it
+    Given a ts project with code that declared no fallible patterns, one that declined with an empty list, and one with its own
+    When the governance opportunities are read
+    Then only the first is offered the family's patterns, with the block to copy

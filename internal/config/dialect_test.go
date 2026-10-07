@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strings"
 	"testing"
 )
 
@@ -499,5 +500,29 @@ func TestFalliblePatterns_familyFillsWhatTheProjectDidNotDeclare(t *testing.T) {
 	}
 	if DefaultFallibleWindow <= 0 {
 		t.Error("the default window is a positive number of lines")
+	}
+}
+
+func TestFalliblePatterns_familyKnowsThemAndDoesNotImposeThem(t *testing.T) {
+	t.Run("DLCTI-B22: A family knows its fallible patterns and does not impose them on a project that declared none", func(t *testing.T) {})
+	found := false
+	for _, p := range FamilyFalliblePatterns("TS") {
+		if strings.Contains(p.Call, "Query") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("the ts family knows React Query: %+v", FamilyFalliblePatterns("ts"))
+	}
+	for _, fam := range []string{"go", "python"} {
+		if len(FamilyFalliblePatterns(fam)) == 0 {
+			t.Errorf("%s knows its fallible patterns", fam)
+		}
+	}
+	if FamilyFalliblePatterns("cobol") != nil {
+		t.Error("an unknown family knows none")
+	}
+	if got := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor().FalliblePatterns; len(got) != 0 {
+		t.Errorf("a project that declared none is measured with none until it adopts them: %+v", got)
 	}
 }

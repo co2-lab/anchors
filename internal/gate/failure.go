@@ -580,6 +580,9 @@ func unhandledCalls(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) [
 		if noHandleRE.MatchString(lines[i]) || (i > 0 && noHandleRE.MatchString(lines[i-1])) {
 			continue
 		}
+		if propagated(d, c) {
+			continue // the result is returned: whoever calls this unit handles the failure
+		}
 		var handled []*regexp.Regexp
 		if c.Pattern.Handled != "" {
 			if re := d.Compile(c.Pattern.Handled); re != nil {
@@ -621,4 +624,23 @@ func unhandledCalls(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) [
 		}
 	}
 	return out
+}
+
+// propagatedRE is a call whose result is the unit's own result: `return useQuery(…)`,
+// `=> useQuery(…)`, with or without `await`.
+var propagatedRE = regexp.MustCompile(`(?:\breturn|=>)\s*(?:await\s+)?$`)
+
+// propagated says whether a fallible call hands its failure to the unit's caller — a hook
+// that returns the query, a function that returns the fetch's promise. The handling is the
+// caller's; the unit's spec still names the failure (failure-declared).
+func propagated(d config.Dialect, c FallibleCall) bool {
+	re := d.Compile(c.Pattern.Call)
+	if re == nil {
+		return false
+	}
+	loc := re.FindStringIndex(c.Text)
+	if loc == nil {
+		return false
+	}
+	return propagatedRE.MatchString(c.Text[:loc[0]])
 }

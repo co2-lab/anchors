@@ -393,3 +393,19 @@ func TestFailureHandled_eachFallibleCallHasItsHandling(t *testing.T) {
 		}
 	}
 }
+
+func TestFailureHandled_propagatedCallIsTheCallers(t *testing.T) {
+	t.Run("FLRAI-B23: A fallible call whose result is returned hands its failure to the caller", func(t *testing.T) {})
+	code := "package x\n\nfunc a() {\n\treturn useQuery(\"a\")\n}\n\nconst b = () => useQuery(\"b\")\n\nasync function c() {\n\treturn await fetch(\"c\")\n}\n\nfunc d() {\n\tv := useQuery(\"d\")\n\t_ = v\n}\n"
+	root, n, g, cfg := failureProject(t, specWithFailure, code)
+	cfg.Dialect.FalliblePatterns = []config.FalliblePattern{{Call: `\buseQuery\(|\bfetch\(`, Handled: `\bisError\b`, Window: 2}}
+	v, msg := checkFailureHandled(specWithFailure, n, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "x.go:14") {
+		t.Fatalf("the call kept in the unit is charged: %v %s", v, msg)
+	}
+	for _, line := range []string{"x.go:4", "x.go:7", "x.go:10"} {
+		if strings.Contains(msg, line) {
+			t.Errorf("%s returns its result and is the caller's: %s", line, msg)
+		}
+	}
+}

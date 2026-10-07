@@ -192,3 +192,14 @@ func TestBuildConfigColocationNeverDerivesTheSpec(t *testing.T) {
 		t.Errorf("feature and test are the derivatives, got %v", c.Derived.Files)
 	}
 }
+
+func TestBuildConfigSeedsTheFamilysFalliblePatterns(t *testing.T) {
+	t.Run("BLCNB-B09: A new project's dialect carries what its family knows can fail", func(t *testing.T) {})
+	c := (&Proposal{Family: "ts"}).buildConfig()
+	if c.Dialect == nil || len(c.Dialect.FalliblePatterns) == 0 || !reflect.DeepEqual(c.Dialect.FalliblePatterns, config.FamilyFalliblePatterns("ts")) {
+		t.Errorf("the ts project starts with the family's fallible patterns: %+v", c.Dialect)
+	}
+	if c := (&Proposal{}).buildConfig(); c.Dialect != nil {
+		t.Errorf("no family, no dialect: %+v", c.Dialect)
+	}
+}

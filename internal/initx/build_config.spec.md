@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BLCNB
-  updated_at: 2026-10-01
+  updated_at: 2026-10-07
   layer: infra
 -->
 # BuildConfig — builds the configuration that inference proposes as the default for the init questions
@@ -50,6 +50,7 @@ breaking a convention the project never promised.
 | `BLCNB-B06` | The colocated test template is where the project's most followed test convention puts a unit's test beside its code (`{{dir}}/{{name}}_test.go`, `{{dir}}/test_{{name}}.py`); with no convention known it is `{{dir}}/{{name}}.test.{{ext}}`. |
 | `BLCNB-B07` | The proposal's dialect is the language family inference found (INPRN-B11); with no family, no dialect is written. |
 | `BLCNB-B08` | The test layer's pattern (`TestPattern`) is the project's test convention, several written as a set, its family's default with no test yet, and `**/*.test.*` when neither is known. |
+| `BLCNB-B09` | A new project whose family is detected starts with the family's fallible patterns in its dialect (`config.FamilyFalliblePatterns`): the failure gates ask each fetch for its failure and handling from the first day, on a project that has nothing to unlearn. |
 
 ## Invariants
 

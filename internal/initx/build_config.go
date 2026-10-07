@@ -74,6 +74,10 @@ func (p *Proposal) buildConfig() *config.Config {
 	// language's tests, exports and comments from the first check.
 	if p.Family != "" {
 		c.Dialect = &config.Dialect{Family: p.Family}
+		// What can fail in this stack, written down from the first day: the failure gates
+		// ask each fetch for its failure and its handling, on a project that has nothing
+		// to unlearn. An existing project is offered them by the governance tips instead.
+		c.Dialect.FalliblePatterns = config.FamilyFalliblePatterns(p.Family)
 	}
 
 	// governs fica VAZIO — é a parte semântica, preenchida na P&R (guide↔tag).

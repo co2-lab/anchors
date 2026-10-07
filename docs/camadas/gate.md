@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:eec4a64acfe012b4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:c0fed56158b641f8 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 81 unidades e 1347 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 81 unidades e 1348 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1140,6 +1140,8 @@ not match) closes its failure section with `none — <why>`, and that satisfies 
 - **FLRAI-B21** — A dependency the spec declares on a file of a layer the project marks `fallible: true` is a fallible source too, named by its `DEPn` and path, and answered by a failure citing its `DEPn` or the file's stem (`useBudget`); a dependency on any other layer is not a source.
 
 - **FLRAI-B22** — `failure-handled`: each fallible call of the unit's code has its handling in its window — the call's statement from its first line (a destructuring above it that reads the error; the climb stops at a blank line or at one ending a statement, `;`, `}` or `)`), and the pattern's `window` after it (`DefaultFallibleWindow` when it declares none) —, matched by the pattern's `handled` or, when it declares none, the project's `handle_patterns`; a call with none fails, named by file, line and text, unless its line or the line above waives it with `@no-handle: <reason>`. (`unhandledCalls`)
+
+- **FLRAI-B23** — A fallible call whose result is the unit's own — `return`ed, or the body of an arrow (`=>`), with or without `await` — hands its failure to the caller: `failure-handled` does not charge it, and `failure-declared` still asks the unit's spec to name it. (`propagated`)
 
 - **FLRAI-I01** — `failure-handled` and `failure-logged` never both fail the same spec: with no handling the first charges and the second steps aside, and with handling that records nothing it is the other way round.
 

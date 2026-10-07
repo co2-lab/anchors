@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GVOPG
-  updated_at: 2026-10-03
+  updated_at: 2026-10-07
   layer: infra
 -->
 # GovernanceOpportunities — the doctor suggests the canonical gates and settings a project has not adopted yet
@@ -41,6 +41,7 @@ items, is the short hint other commands can show without getting in the way.
 | `GVOPG-B06` | A nil map or a nil configuration gives no finding. |
 | `GVOPG-B07` | `QuickGovernanceHints`: The quick hints are the first two opportunities in order, or all of them when there are fewer, leaving out a catalog suggestion whose gate presupposes a field the project has not declared — the doctor still lists it. |
 | `GVOPG-B08` | Every catalog gate that relates to a declared layer and that the project does not declare, beyond the ones above, is an informational `sugestao-gate` on it, saying what it measures, how to declare it, and the field it presupposes when it has one. |
+| `GVOPG-B09` | A project with code, a family that knows fallible patterns and no `dialect.fallible_patterns` declared is offered them, as the block to copy under `dialect:`; one that declined (`fallible_patterns: []`) or declared its own is not. (`fallibleYAML`) |
 
 ## Invariants
 

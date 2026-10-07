@@ -2,7 +2,7 @@
 # @anchors
 #   code: BCFBL
 #   ref: BLCNB
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @BLCNB
@@ -78,3 +78,9 @@ Feature: BuildConfig — builds the configuration that inference proposes as the
     Then it is {**/*.spec.ts,**/*.test.ts}
     And a Go project with no test yet gets **/*_test.go
     And with no convention and no family it is **/*.test.*
+
+  @BLCNB-B09 @unit-level
+  Scenario: A new project's dialect carries what its family knows can fail
+    Given a proposal for a ts project and one with no family
+    When the config is built
+    Then the ts project's dialect has the family's fallible patterns, and the other has no dialect

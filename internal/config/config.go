@@ -2661,7 +2661,7 @@ func versionHint(err error, data []byte) string {
 	}
 
 	return fmt.Sprintf("\n  Two possible causes, and the second is not your mistake:\n"+
-		"    • the key `%s` is misspelled (check it against `anchors init --print`)\n"+
+		"    • the key `%s` is misspelled (check it against the anchors.yaml reference — the `anchors-yaml` page of the Anchors docs)\n"+
 		"    • the key is NEW and this binary is OLD — the `anchors.yaml` was written by\n"+
 		"      a version that knows it. Update: `go install github.com/co2-lab/anchors/cmd/anchors@latest`",
 		chave)

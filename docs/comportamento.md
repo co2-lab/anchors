@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d5f149ddc6497ea1 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:865c46646bfd3063 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3010,6 +3010,8 @@ teste prova.
 
 - [The fallible patterns are the project's, and the family's only when the project declares none](layers/config.md#dlcti-b21--the-fallible-patterns-are-the-projects-and-the-familys-only-when-the-project-declares-none) `DLCTI-B21`
 
+- [A family knows its fallible patterns and does not impose them on a project that declared none](layers/config.md#dlcti-b22--a-family-knows-its-fallible-patterns-and-does-not-impose-them-on-a-project-that-declared-none) `DLCTI-B22`
+
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
 - [A trigger naming a unit code charges that unit and not its neighbours in the same layer](layers/config.md#dcrqa-b02--a-trigger-naming-a-unit-code-charges-that-unit-and-not-its-neighbours-in-the-same-layer) `DCRQA-B02`
@@ -3729,6 +3731,8 @@ teste prova.
 - [A dependency on a file of a fallible layer is a fallible source](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B21`
 
 - [A fallible call with no handling in its window fails, named by its line](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B22`
+
+- [A fallible call whose result is returned hands its failure to the caller](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B23`
 
 - [Non-feature artifacts skip confrontation](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B01`
 
@@ -5946,6 +5950,8 @@ teste prova.
 
 - [Every applicable undeclared catalog gate is suggested](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B08`
 
+- [A family's fallible patterns are suggested to a project that declared none, and declining silences it](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B09`
+
 - [The report is sorted by check then subject, and counts the map](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B01`
 
 - [Warnings keeps only the warnings](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B02`
@@ -6083,6 +6089,8 @@ teste prova.
 - [The proposal's dialect is the family inference found](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B07`
 
 - [The test layer's pattern is the project's test convention](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B08`
+
+- [A new project's dialect carries what its family knows can fail](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B09`
 
 - [The whole guide is a title, a seeding note and the section](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B01`
 

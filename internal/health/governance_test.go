@@ -231,3 +231,25 @@ func TestQuickGovernanceHints_leavesAGateThatWouldOnlyWait(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckGovernanceOpportunities_FalliblePatternsOfTheFamily(t *testing.T) {
+	t.Run("GVOPG-B09: A family's fallible patterns are suggested to a project that declared none, and declining silences it", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "Screen.tsx", Kind: mapx.KindCode}}}
+	has := func(cfg *config.Config) (bool, string) {
+		for _, f := range checkGovernanceOpportunities(g, cfg) {
+			if f.Check == "sugestao-fallible" {
+				return true, f.Detail
+			}
+		}
+		return false, ""
+	}
+	if ok, detail := has(&config.Config{Dialect: &config.Dialect{Family: "ts"}}); !ok || !strings.Contains(detail, "fallible_patterns:") || !strings.Contains(detail, "Query|") {
+		t.Errorf("the ts project that declared none is offered the family's patterns, to copy: %v %s", ok, detail)
+	}
+	if ok, _ := has(&config.Config{Dialect: &config.Dialect{Family: "ts", FalliblePatterns: []config.FalliblePattern{}}}); ok {
+		t.Error("`fallible_patterns: []` declines, and the tip goes quiet")
+	}
+	if ok, _ := has(&config.Config{Dialect: &config.Dialect{Family: "ts", FalliblePatterns: []config.FalliblePattern{{Call: `x\(`}}}}); ok {
+		t.Error("a project with its own patterns is not offered the family's")
+	}
+}

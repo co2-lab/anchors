@@ -69,14 +69,22 @@ handling over the whole file: one `catch` anywhere satisfies a unit with five fe
 
 All of it stays **informative** by default, as the family is today.
 
-### Defaults per family
+### Defaults per family — known, offered, never imposed
 
-A project declaring `dialect.family` gets `fallible_patterns` for its stack without writing
-them: React Query (`useQuery` and siblings), SWR (`useSWR`), `fetch`, axios, and Go (a call
-whose error result is discarded). A project with its own data hooks adds them — or marks the
-hooks' layer `fallible: true`, which covers every screen that depends on them through the
-table. `anchors doctor` says when a family is declared and its fallible defaults are in use,
-so a new project gets the warning without knowing the check exists.
+Each family knows what can fail in its stack and what handles it: React Query (`useQuery`
+and siblings, `useMutation`), SWR, `fetch` and axios for `ts`; an HTTP request and a database
+call for `go`; `requests` for `python`. They are **not applied by themselves**: a project whose
+failure gates already block would wake up, the day it updates, with every fetch charged —
+measured on MIF, 65 screens, blocking. Instead:
+
+- `anchors init` writes them into a new project's `dialect:` — a project with nothing to
+  unlearn starts measured;
+- the governance tips (`check --all`, `anchors doctor`) offer them to a project that declared
+  none, as the block to copy; the project adopts them, measures with the gates informative,
+  then lets them bar — or declines with `fallible_patterns: []`, which silences the tip.
+
+A call whose result is returned (`return useQuery(…)`, `=> useQuery(…)`) hands its failure to
+the caller: the handling is the caller's, and the unit's spec still names the failure.
 
 ### The spec and the guide
 
@@ -92,7 +100,7 @@ so a new project gets the warning without knowing the check exists.
 | --- | --- | --- |
 | `DFLSR-W01` | **Sources.** `fallible: true` on layers; `dialect.fallible_patterns` with `call`, `handled` and `window`; `failure-declared` charges each fallible source no failure names, waived by `@no-failure:`. | Spec, feature and test; on a MIF clone with its data hooks declared, the screens of the incident are named, and a sample of the rest checked by hand. |
 | `DFLSR-W02` | **Per-call handling.** `failure-handled` checks each fallible call's window; `@no-handle:` waives a call. Depends on `DFLSR-W01`. | On a MIF clone, the screens that read `data` without the error are named, with the call's line; the ones that handle it pass. |
-| `DFLSR-W03` | **Family defaults and doctor.** The patterns per `family:`; `anchors doctor` says what is in use. Depends on `DFLSR-W01`. | A project declaring the React Query family is warned with nothing else written. |
+| `DFLSR-W03` | **Family defaults, offered.** The patterns per `family:`, seeded by `anchors init` and offered by the governance tips; a returned call is the caller's. Depends on `DFLSR-W01`. | A new ts project starts with them; an existing one is offered them, and nothing changes until it adopts them. |
 | `DFLSR-W04` | **Preset and guide.** The screen preset's four states and the load-error failure; the guide's rule. Can run alongside the others. | `anchors new spec --preset screen` writes the four states; the guide is cited by the verdicts. |
 
 Each phase: full triad, `check --all` green, CI green on the three systems, tag, measured on
@@ -116,6 +124,9 @@ none — the approach was approved on 2026-10-07; the details above are the plan
 - **Per source, not per unit.** W01 first asked for "at least one failure", and a MIF clone
   answered: the screen of the incident declared one — "not found" — and passed. A failure
   answers a source only when it names it.
+- **Offered, not imposed.** W03 first applied the family's patterns by themselves; MIF, whose
+  failure gates already blocked, would have had 65 screens barred the day it updated. A new
+  project gets them from `init`; an existing one adopts them.
 - **Hook names, not file names.** A project declaring its data hooks lists the names called
   (`useGoal`), which are not always the file's (`useGoals.ts`); the fallible layer and the
   dependency table cover the files.

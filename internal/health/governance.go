@@ -5,6 +5,7 @@
 package health
 
 import (
+	"fmt"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
@@ -30,6 +31,20 @@ func checkGovernanceOpportunities(g *mapx.Graph, cfg *config.Config) []Finding {
 	gateMap := map[string]config.Gate{}
 	for _, gt := range cfg.Gates {
 		gateMap[gt.Name] = gt
+	}
+
+	// 0. fallible patterns: the family knows what can fail here, and the project declared
+	// nothing — the failure gates do not see a fetch that nobody handles. Declining is
+	// writing `fallible_patterns: []`, which silences this tip.
+	if hasKind[mapx.KindCode] && cfg.Dialect != nil && cfg.Dialect.FalliblePatterns == nil {
+		if fam := config.FamilyFalliblePatterns(cfg.Dialect.Family); len(fam) > 0 {
+			out = append(out, Finding{
+				Check:    "sugestao-fallible",
+				Severity: Info,
+				Subject:  "fallible_patterns",
+				Detail:   i18n.T("health.opportunity.fallible_patterns", cfg.Dialect.Family, len(fam), fallibleYAML(fam)),
+			})
+		}
 	}
 
 	// 1. evidence-fresh: projeto tem testes e código, mas não monitora frescor (teste stale)
@@ -152,4 +167,17 @@ func QuickGovernanceHints(g *mapx.Graph, cfg *config.Config) []Finding {
 		return findings[:2]
 	}
 	return findings
+}
+
+// fallibleYAML is the family's fallible patterns as the `dialect:` block to copy.
+func fallibleYAML(ps []config.FalliblePattern) string {
+	var b strings.Builder
+	b.WriteString("\n    fallible_patterns:")
+	for _, p := range ps {
+		fmt.Fprintf(&b, "\n      - call: '%s'", p.Call)
+		if p.Handled != "" {
+			fmt.Fprintf(&b, "\n        handled: '%s'", p.Handled)
+		}
+	}
+	return b.String()
 }

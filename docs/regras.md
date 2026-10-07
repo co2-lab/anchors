@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:72920a42c788778e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:cd08f2867560ba43 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3279,6 +3279,8 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B21 — `fallible_patterns` (`FalliblePatterns`, each a `FalliblePattern` with `call`, `handled` and `window` — `DefaultFallibleWindow` lines when it declares none) are the project's; the family's fill them only when the project declares none.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
+- [DLCTI-B22 — A family knows what can fail in its stack and what handles it (`FamilyFalliblePatterns`: React Query, SWR, fetch and axios for `ts`; HTTP and SQL for `go`; `requests` for `python`), and does not impose them: a project that declared no `fallible_patterns` is measured with none until it adopts them.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B14 — The Go and TS families say how a test is written — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` — and a project that declares its own `tests` keeps it over the family's.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
@@ -4112,6 +4114,8 @@ abra a página dela em `camadas/`.
 - [FLRAI-B21 — A dependency the spec declares on a file of a layer the project marks `fallible: true` is a fallible source too, named by its `DEPn` and path, and answered by a failure citing its `DEPn` or the file's stem (`useBudget`); a dependency on any other layer is not a source.](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
 - [FLRAI-B22 — `failure-handled`: each fallible call of the unit's code has its handling in its window — the call's statement from its first line (a destructuring above it that reads the error; the climb stops at a blank line or at one ending a statement, `;`, `}` or `)`), and the pattern's `window` after it (`DefaultFallibleWindow` when it declares none) —, matched by the pattern's `handled` or, when it declares none, the project's `handle_patterns`; a call with none fails, named by file, line and text, unless its line or the line above waives it with `@no-handle: <reason>`. (`unhandledCalls`)](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
+
+- [FLRAI-B23 — A fallible call whose result is the unit's own — `return`ed, or the body of an arrow (`=>`), with or without `await` — hands its failure to the caller: `failure-handled` does not charge it, and `failure-declared` still asks the unit's spec to name it. (`propagated`)](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
 - [FLRAI-I01 — `failure-handled` and `failure-logged` never both fail the same spec: with no handling the first charges and the second steps aside, and with handling that records nothing it is the other way round.](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
@@ -6543,6 +6547,8 @@ abra a página dela em `camadas/`.
 
 - [GVOPG-B08 — Every catalog gate that relates to a declared layer and that the project does not declare, beyond the ones above, is an informational `sugestao-gate` on it, saying what it measures, how to declare it, and the field it presupposes when it has one.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
+- [GVOPG-B09 — A project with code, a family that knows fallible patterns and no `dialect.fallible_patterns` declared is offered them, as the block to copy under `dialect:`; one that declined (`fallible_patterns: []`) or declared its own is not. (`fallibleYAML`)](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
+
 - [GVOPG-I01 — Every opportunity is informational: this unit never raises a warning.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
 - [GVOPG-X01 — A gate the project already declares (blocking, for the secret gate) is never suggested again, and a project with JUnit output is not told to add it.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
@@ -6696,6 +6702,8 @@ abra a página dela em `camadas/`.
 - [BLCNB-B07 — The proposal's dialect is the language family inference found (INPRN-B11); with no family, no dialect is written.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
 - [BLCNB-B08 — The test layer's pattern (`TestPattern`) is the project's test convention, several written as a set, its family's default with no test yet, and `**/*.test.*` when neither is known.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
+
+- [BLCNB-B09 — A new project whose family is detected starts with the family's fallible patterns in its dialect (`config.FamilyFalliblePatterns`): the failure gates ask each fetch for its failure and handling from the first day, on a project that has nothing to unlearn.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
 - [BLCNB-I01 — REF[BLCNB-B05]: a proposal never carries a test handle the project does not use](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
