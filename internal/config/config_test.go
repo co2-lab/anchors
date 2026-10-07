@@ -1722,3 +1722,19 @@ func TestPremisesAndAWaivedPremise(t *testing.T) {
 		t.Errorf("a gate whose premise is waived is not suggested: %+v", got)
 	}
 }
+
+func TestDataStatesRequired(t *testing.T) {
+	t.Run("CNFGO-B62: data_states.required makes the data states requirements, and is off by default", func(t *testing.T) {})
+	on, err := load(t, "version: 7\nlayers: {}\ndata_states:\n  required: true\n")
+	if err != nil || !on.DataStatesRequired() {
+		t.Errorf("declared: %v %v", on.DataStatesRequired(), err)
+	}
+	off, err := load(t, "version: 7\nlayers: {}\n")
+	if err != nil || off.DataStatesRequired() {
+		t.Errorf("not declared is off: %v %v", off.DataStatesRequired(), err)
+	}
+	var none *Config
+	if none.DataStatesRequired() {
+		t.Error("no config is off")
+	}
+}

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:78718d263bb972fd — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:e9306a0a42fa9fe3 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -676,6 +676,8 @@ abra a página dela em `camadas/`.
 - [UNCDN-B05 — With no map, the unit has no code.](layers/comando.md#uncdn--unitcodes--the-identity-code-of-a-unit-read-from-a-header-from-the-map-or-from-the-codes-a-file-names)
 
 - [UNCDN-B06 — `CodesInFileOfUnit`: the codes of a file are the rule codes it names that carry the unit's prefix, each once, in the order they first appear; with no unit every rule code counts.](layers/comando.md#uncdn--unitcodes--the-identity-code-of-a-unit-read-from-a-header-from-the-map-or-from-the-codes-a-file-names)
+
+- [UNCDN-B07 — A data state the file writes bare (`DS-seen-no`, as a data-state table names it) is listed as the unit's own code (`ARSCA-DS-seen-no`), after the prefixed codes; a data state prefixed with another unit's code is not the unit's.](layers/comando.md#uncdn--unitcodes--the-identity-code-of-a-unit-read-from-a-header-from-the-map-or-from-the-codes-a-file-names)
 
 - [UNCDN-I01 — No code listed for a unit belongs to another unit, and none is listed twice.](layers/comando.md#uncdn--unitcodes--the-identity-code-of-a-unit-read-from-a-header-from-the-map-or-from-the-codes-a-file-names)
 
@@ -3131,6 +3133,8 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B61 — `Premises` splits what a gate presupposes that the project does not declare into `missing` (a field to declare) and `waived` (a field the project's `dialect.opt_out` names); a catalog gate with a waived premise is never applicable undeclared.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
+- [CNFGO-B62 — `data_states.required` (`DataStates`) makes the data states a spec defines requirements of its unit; undeclared, or with no config, it is off (`DataStatesRequired`).](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
@@ -5539,6 +5543,8 @@ abra a página dela em `camadas/`.
 
 - [RLIMR-B06 — The waiver may name the rule it covers, or count for all of them when it names none.](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
 
+- [RLIMR-B07 — With `data_states.required`, the code of the unit cites each data state its spec defines, as it cites a rule; off, the data states are not asked of the code.](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
+
 - [RLIMR-I01 — Requiring the marking never punishes whoever already marks. Whoever did the work before the requirement cannot fail for having done it.](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
 
 - [RLIMR-I02 — Identity survives the rename: code marked with the previous name keeps counting. Losing the mark in a rename would turn identity stability into new debt.](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
@@ -5812,6 +5818,8 @@ abra a página dela em `camadas/`.
 - [SFMSP-B15 — A requirement is covered by scenarios whose tag carries it with a `#nn` suffix: the suffix identifies each case of the requirement, not a new requirement.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 
 - [SFMSP-B16 — A code defined in the open-decisions section (`## Open Decisions`, `## Decisões em Aberto`…) is no requirement — for this gate and for every one that reads the spec's requirements (`scenario-coverage`, `reverse-match`, `rule-uses`): an open question gets its scenario once it becomes a rule.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
+
+- [SFMSP-B17 — With `data_states.required`, a data state the spec defines — `DS-<field>-<variant>`, bare or with the unit's code, opening a table row, a list item or a heading — is a requirement of the unit, for every gate that reads the spec's requirements (`spec-feature-match`, `scenario-coverage`), with the same no-scenario waiver as a rule; another unit's data state is a citation. Off, the data-state tables only document.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 
 - [SFMSP-I01 — Every waiver requires a written REASON — both the per-requirement marker and the whole-spec one. A bare marker is a switch with no accounting, and silence without a why is what the gate exists to end.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 

@@ -2,7 +2,7 @@
 # @anchors
 #   code: SPFTS
 #   ref: UNCDN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @UNCDN
@@ -55,3 +55,9 @@ Feature: UnitCodes — the identity code of a unit, read from a header, from the
     Given a path to a file that does not exist
     When its codes are asked for the unit "ALPHA"
     Then an error is returned
+
+  @UNCDN-B07 @unit-level
+  Scenario: A data state written bare is the unit's own code
+    Given a spec with a rule, a bare data state, a prefixed data state of its own and one of another unit
+    When the unit's codes are listed
+    Then the rule, the prefixed data state and the bare one as the unit's code are listed, and the other unit's is not

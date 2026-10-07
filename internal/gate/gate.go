@@ -185,6 +185,7 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 	// A gramática do código de cenário segue o vocabulário do projeto (`rule_types`).
 	SetRuleLetters(cfg.RuleLetters())
 	SetProjectSectionTitles(cfg)
+	dataStatesRequired = cfg.DataStatesRequired()
 	// índice kind por nó já vem em node.Kind
 	var results []Result
 	for _, g := range gates {

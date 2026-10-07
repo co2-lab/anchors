@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:380312052bb90b00 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:1f5bd661324037be — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 81 unidades e 1340 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 81 unidades e 1342 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -3451,6 +3451,8 @@ DECLARES, rule by rule, whether it has code.
 
 - **RLIMR-B06** — The waiver may name the rule it covers, or count for all of them when it names none.
 
+- **RLIMR-B07** — With `data_states.required`, the code of the unit cites each data state its spec defines, as it cites a rule; off, the data states are not asked of the code.
+
 - **RLIMR-I01** — Requiring the marking never punishes whoever already marks. Whoever did the work before the requirement cannot fail for having done it.
 
 - **RLIMR-I02** — Identity survives the rename: code marked with the previous name keeps counting. Losing the mark in a rename would turn identity stability into new debt.
@@ -3916,6 +3918,8 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 - **SFMSP-B15** — A requirement is covered by scenarios whose tag carries it with a `#nn` suffix: the suffix identifies each case of the requirement, not a new requirement.
 
 - **SFMSP-B16** — A code defined in the open-decisions section (`## Open Decisions`, `## Decisões em Aberto`…) is no requirement — for this gate and for every one that reads the spec's requirements (`scenario-coverage`, `reverse-match`, `rule-uses`): an open question gets its scenario once it becomes a rule.
+
+- **SFMSP-B17** — With `data_states.required`, a data state the spec defines — `DS-<field>-<variant>`, bare or with the unit's code, opening a table row, a list item or a heading — is a requirement of the unit, for every gate that reads the spec's requirements (`spec-feature-match`, `scenario-coverage`), with the same no-scenario waiver as a rule; another unit's data state is a citation. Off, the data-state tables only document.
 
 - **SFMSP-I01** — Every waiver requires a written REASON — both the per-requirement marker and the whole-spec one. A bare marker is a switch with no accounting, and silence without a why is what the gate exists to end.
 

@@ -516,3 +516,27 @@ func TestSpecFeatureMatchOpenDecisionIsNoRequirement(t *testing.T) {
 		t.Errorf("the requirements are the rules alone, for every gate that reads them: %v", got)
 	}
 }
+
+// With `data_states.required`, a data state the spec defines is a requirement of its unit;
+// without it, the table only documents.
+func TestSpecFeatureMatchDataStatesAreRequirementsWhenRequired(t *testing.T) {
+	t.Run("SFMSP-B17: With data_states.required, a data state the spec defines is a requirement", func(t *testing.T) {})
+	spec := "<!-- @anchors\n  code: HOMEH\n-->\n# Home\n\n## Rules\n### HOMEH-B01 — shows the summary\n\n## Data States\n\n" +
+		"| State | When | Shows |\n| --- | --- | --- |\n| `DS-hero-income` | income > 0 | the income |\n" +
+		"| `HOMEH-DS-hero-empty` | income = 0 | the empty hero |\n| `DS-hero-hidden` @no-scenario: never reached in the app | — | — |\n" +
+		"| `GOALG-DS-progress` | cited | from the goals unit |\n"
+	defer func() { dataStatesRequired = false }()
+	dataStatesRequired = false
+	if got := definedRequirements(spec); len(got) != 1 {
+		t.Errorf("off: the data states only document: %v", got)
+	}
+	dataStatesRequired = true
+	got := strings.Join(definedRequirements(spec), ",")
+	if got != "HOMEH-B01,HOMEH-DS-hero-income,HOMEH-DS-hero-empty" {
+		t.Errorf("on: the unit's data states, bare or prefixed, are requirements; a waived one and another unit's are not: %s", got)
+	}
+	feature := "@HOMEH\nFeature: home\n\n  @HOMEH-B01 @HOMEH-DS-hero-income @nivel-unit\n  Scenario: summary\n"
+	if v, d := rodaSpecFeature(t, spec, feature); v != Fail || !strings.Contains(d, "HOMEH-DS-hero-empty") || strings.Contains(d, "hero-income") {
+		t.Errorf("the data state with no scenario is named: %v %s", v, d)
+	}
+}

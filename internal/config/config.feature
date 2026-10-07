@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTC
 #   ref: CNFGO
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @CNFGO
@@ -423,3 +423,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a catalog gate presupposing derived.mock_detect and another presupposing derived.test_handle
     When the project waives mock_detect in dialect.opt_out and declares neither
     Then mock_detect is waived, test_handle is missing, and only the second gate is applicable undeclared
+
+  @CNFGO-B62 @unit-level
+  Scenario: data_states.required makes the data states requirements, and is off by default
+    Given a config declaring data_states.required, one without it, and no config
+    When the project's choice is read
+    Then only the first makes the data states requirements

@@ -146,8 +146,19 @@ func definedRequirements(content string) []string {
 			vistos[m[1]] = true
 		}
 	}
+	unit := ""
+	if dataStatesRequired {
+		unit = specCode(content)
+	}
 	for _, linha := range strings.Split(content, "\n") {
 		if waivedByNoScenario(linha) {
+			continue
+		}
+		if ds := definedDataState(linha, unit); ds != "" {
+			if !vistos[ds] {
+				vistos[ds] = true
+				out = append(out, ds)
+			}
 			continue
 		}
 		// An ALIAS (`REF[CODE-B05]: reason`) has no scenario of its own: the rule it
@@ -266,4 +277,27 @@ var noScenarioRE = regexp.MustCompile(`@no-scenario[^\S\n]*:[^\S\n]*\S+`)
 // passaria — que é justamente o que a dispensa não pode permitir.
 func waivedByNoScenario(linha string) bool {
 	return noScenarioRE.MatchString(linha)
+}
+
+// dataStatesRequired is the project's `data_states.required`, set at the start of a run.
+var dataStatesRequired bool
+
+// definedDataState is the data state a line DEFINES — `DS-<field>-<variant>` opening a table
+// row, a list item or a heading, bare or with the unit's code —, as the unit's code
+// (`HOMEH-DS-hero-income`), when the project made data states requirements and the line
+// defines one of THIS unit; empty otherwise. A data state of another unit is a citation.
+func definedDataState(line, unit string) string {
+	if unit == "" {
+		return ""
+	}
+	m := dataStateDefineRE().FindStringSubmatch(line)
+	if m == nil || (m[1] != "" && m[1] != unit) {
+		return ""
+	}
+	return unit + "-DS-" + m[2]
+}
+
+func dataStateDefineRE() *regexp.Regexp {
+	return regexp.MustCompile("^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}(?:([A-Z0-9]" +
+		config.CodeLengthPattern() + ")-)?DS-([A-Za-z0-9][A-Za-z0-9-]*)")
 }

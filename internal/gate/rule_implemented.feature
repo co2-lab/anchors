@@ -2,7 +2,7 @@
 # @anchors
 #   code: RIFRL
 #   ref: RLIMR
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @RLIMR
@@ -89,3 +89,9 @@ Feature: RuleImplemented — the spec catalogues rules, and the code shows it re
     Given a spec whose code file is on disk without read permission
     When the gate confronts it
     Then it returns Pending naming the file that could not be read
+
+  @RLIMR-B07 @unit-level
+  Scenario: With data_states.required, the code cites each data state the spec defines
+    Given a spec with a rule and two data states, and code citing the rule and one data state
+    When rule-implemented runs off and then on
+    Then off it does not ask for the data states, and on it names the one the code does not cite

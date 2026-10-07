@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RLIMR
-  updated_at: 2026-09-30
+  updated_at: 2026-10-07
   layer: gate
 -->
 # RuleImplemented — a spec catalogues rules, and the code shows it realized them
@@ -51,6 +51,7 @@ DECLARES, rule by rule, whether it has code.
 | `RLIMR-B04` | Once the requirement is declared in the Structure, the divergence becomes a failure: it is the act of saying "the migration ended here". |
 | `RLIMR-B05` | A spec with no linked code is not this gate's subject: without the piece on the other side there is no confrontation to make. |
 | `RLIMR-B06` | The waiver may name the rule it covers, or count for all of them when it names none. |
+| `RLIMR-B07` | With `data_states.required`, the code of the unit cites each data state its spec defines, as it cites a rule; off, the data states are not asked of the code. |
 
 ## Invariants
 

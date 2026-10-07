@@ -84,3 +84,16 @@ func TestCodesInFileOfUnit_keepsOnlyTheUnitsCodes(t *testing.T) {
 		t.Error("a missing file must be an error")
 	}
 }
+
+func TestCodesInFileOfUnit_bareDataStatesAreTheUnits(t *testing.T) {
+	t.Run("UNCDN-B07: A data state written bare is the unit's own code", func(t *testing.T) {})
+	p := filepath.Join(t.TempDir(), "alerts.spec.md")
+	writeFile(t, p, "# Alerts\n\n| `ARSCA-B01` | lists |\n\n| State | When |\n| --- | --- |\n| `DS-seen-no` | unseen |\n| `ARSCA-DS-seen-yes` | seen |\n| `GOALG-DS-progress` | cited |\n")
+	got, err := CodesInFileOfUnit(p, "ARSCA")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"ARSCA-B01", "ARSCA-DS-seen-yes", "ARSCA-DS-seen-no"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}

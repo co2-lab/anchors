@@ -322,3 +322,21 @@ func TestRuleImplemented_Errors(t *testing.T) {
 		}
 	})
 }
+
+func TestRuleImplemented_dataStatesWhenRequired(t *testing.T) {
+	t.Run("RLIMR-B07: With data_states.required, the code cites each data state the spec defines", func(t *testing.T) {})
+	root := t.TempDir()
+	must(t, os.WriteFile(filepath.Join(root, "h.ts"), []byte(
+		"// @anchors\n//   ref: HOMEH\n// HOMEH-B01: shows the summary\n// HOMEH-DS-hero-income: the income hero\nexport function hero() { return 1 }\n"), 0o644))
+	spec := "<!-- @anchors\n  code: HOMEH\n-->\n## Rules\n| Rule | Effect |\n| --- | --- |\n| `HOMEH-B01` | shows the summary |\n\n" +
+		"## Data States\n| State | When |\n| --- | --- |\n| `DS-hero-income` | income > 0 |\n| `DS-hero-empty` | income = 0 |\n"
+	defer func() { dataStatesRequired = false }()
+	n := mapx.Node{Kind: mapx.KindSpec, ID: "h.spec.md"}
+	if v, msg := checkRuleImplemented(spec, n, root, nil, nil); v == Fail {
+		t.Errorf("off: the data states are not asked of the code: %v %s", v, msg)
+	}
+	dataStatesRequired = true
+	if v, msg := checkRuleImplemented(spec, n, root, nil, nil); v != Fail || !strings.Contains(msg, "HOMEH-DS-hero-empty") || strings.Contains(msg, "hero-income") {
+		t.Errorf("on: the data state the code does not cite is named: %v %s", v, msg)
+	}
+}

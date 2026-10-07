@@ -2,7 +2,7 @@
 # @anchors
 #   code: SFMFS
 #   ref: SFMSP
-#   updated_at: 2026-10-06
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @SFMSP
@@ -171,3 +171,9 @@ Feature: SpecFeatureMatch — every requirement the spec defines has at least on
     Given a spec with the rule GOALG-B01 and the open decision GOALG-Q01, and a feature with the scenario of GOALG-B01
     When spec-feature-match runs
     Then it passes, and the spec's requirements are GOALG-B01 alone
+
+  @SFMSP-B17 @unit-level
+  Scenario: With data_states.required, a data state the spec defines is a requirement
+    Given a spec with a rule, two data states of its own (bare and prefixed), one waived with @no-scenario and one of another unit, and a feature covering the rule and one data state
+    When the requirements are read off and then on, and spec-feature-match runs
+    Then off only the rule is a requirement; on the two own data states join it, and the one with no scenario is named

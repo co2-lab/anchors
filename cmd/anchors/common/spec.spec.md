@@ -1,6 +1,6 @@
 <!-- @anchors
   code: UNCDN
-  updated_at: 2026-09-26
+  updated_at: 2026-10-07
   layer: comando
 -->
 # UnitCodes — the identity code of a unit, read from a header, from the map, or from the codes a file names
@@ -44,6 +44,7 @@ they first appear. A code of another unit that the file merely mentions is left 
 | `UNCDN-B04` | When the exact node carries no code, or there is no exact node, the code of a node of the same unit stem answers; with neither, the answer is empty. |
 | `UNCDN-B05` | With no map, the unit has no code. |
 | `UNCDN-B06` | `CodesInFileOfUnit`: the codes of a file are the rule codes it names that carry the unit's prefix, each once, in the order they first appear; with no unit every rule code counts. |
+| `UNCDN-B07` | A data state the file writes bare (`DS-seen-no`, as a data-state table names it) is listed as the unit's own code (`ARSCA-DS-seen-no`), after the prefixed codes; a data state prefixed with another unit's code is not the unit's. |
 
 ## Invariants
 

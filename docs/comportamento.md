@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:944fbd6e9de4be28 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:016965d1be8b1bf7 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -615,6 +615,8 @@ teste prova.
 - [No listed code belongs to another unit or repeats](layers/comando.md#uncdn--unitcodes--the-identity-code-of-a-unit-read-from-a-header-from-the-map-or-from-the-codes-a-file-names) `UNCDN-I01`
 
 - [A file that cannot be read is an error](layers/comando.md#uncdn--unitcodes--the-identity-code-of-a-unit-read-from-a-header-from-the-map-or-from-the-codes-a-file-names) `UNCDN-E01`
+
+- [A data state written bare is the unit's own code](layers/comando.md#uncdn--unitcodes--the-identity-code-of-a-unit-read-from-a-header-from-the-map-or-from-the-codes-a-file-names) `UNCDN-B07`
 
 - [The project opt-out is read from the project root](layers/comando.md#tlstt--telemetrysetup--every-command-starts-telemetry-the-same-way-the-opt-outs-first-then-the-notice-then-the-emitter) `TLSTT-B01`
 
@@ -2938,6 +2940,8 @@ teste prova.
 
 - [A gate's premises are missing or waived, and a waived one is never suggested](layers/config.md#cnfgo-b61--a-gates-premises-are-missing-or-waived-and-a-waived-one-is-never-suggested) `CNFGO-B61`
 
+- [data_states.required makes the data states requirements, and is off by default](layers/config.md#cnfgo-b62--data-statesrequired-makes-the-data-states-requirements-and-is-off-by-default) `CNFGO-B62`
+
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](layers/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -5040,6 +5044,8 @@ teste prova.
 
 - [A code file that cannot be read is pending, naming the file](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-E01`
 
+- [With data_states.required, the code cites each data state the spec defines](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B07`
+
 - [A letter that is not declared in the vocabulary fails](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B01`
 
 - [A declared letter under a claimed section passes](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B02`
@@ -5297,6 +5303,8 @@ teste prova.
 - [Scenarios tagged with a suffix cover the requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B15`
 
 - [A code in the open-decisions section is no requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B16`
+
+- [With data_states.required, a data state the spec defines is a requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B17`
 
 - [What has nothing to confront leaves both gates without a verdict](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B01`
 

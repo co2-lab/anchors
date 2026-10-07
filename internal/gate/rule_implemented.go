@@ -223,6 +223,19 @@ func declaredRules(content, unidade string) []string {
 			out = append(out, m[1])
 		}
 	}
+	// The data states, when the project made them requirements: the code that handles a
+	// variant cites it, as it cites a rule.
+	if dataStatesRequired {
+		for _, linha := range strings.Split(content, "\n") {
+			if waivedByNoScenario(linha) {
+				continue
+			}
+			if ds := definedDataState(linha, unidade); ds != "" && !visto[ds] {
+				visto[ds] = true
+				out = append(out, ds)
+			}
+		}
+	}
 	return out
 }
 

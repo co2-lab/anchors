@@ -66,5 +66,20 @@ func CodesInFileOfUnit(path, unit string) ([]string, error) {
 			out = append(out, c)
 		}
 	}
+	// A data state written bare — `DS-seen-no`, as a spec's data-state table names it — is
+	// the unit's own: the test names it with the prefix (`ARSCA-DS-seen-no: …`), and without
+	// it here the passing test was dropped at ingestion, and the data state never proven
+	// (reported from MIF: 129 data states, every one with a passing test).
+	if unit != "" {
+		for _, m := range bareDataStateRE.FindAllStringSubmatch(data, -1) {
+			if c := unit + "-DS-" + m[1]; !seen[c] {
+				seen[c] = true
+				out = append(out, c)
+			}
+		}
+	}
 	return out, nil
 }
+
+// bareDataStateRE is a data state with no unit prefix: `DS-` not glued to a code before it.
+var bareDataStateRE = regexp.MustCompile(`(?:^|[^A-Za-z0-9_-])DS-([A-Za-z0-9][A-Za-z0-9-]*)`)

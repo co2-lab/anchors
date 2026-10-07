@@ -163,6 +163,12 @@ type Config struct {
 	// não pode adivinhar — cada stack tem o seu lugar e a sua sintaxe. Sem isto, o gate
 	// `route-exists` fica Pendente em vez de afirmar que uma rota existe sem ter olhado.
 	RouteRegistryGlobs []string `yaml:"route_registry,omitempty"`
+	// DataStates: whether the data states a spec defines (`DS-<field>-<variant>` in the
+	// first cell of a table row) are requirements of their unit like its rules — each
+	// asking for its scenario, its passing test and its citation in the code. Off by
+	// default: a project whose data-state tables only document turns it on when it means
+	// them as requirements.
+	DataStates *DataStates `yaml:"data_states,omitempty"`
 	// Obligations são as OBRIGAÇÕES TRANSVERSAIS do projeto: "todo nó que carrega o
 	// atributo P deve aparecer em Q". Ver Obligation.
 	Obligations []Obligation `yaml:"obligations,omitempty"`
@@ -2771,4 +2777,15 @@ func (c *Changelog) PathOrDefault() string {
 		return "changelog"
 	}
 	return "CHANGELOG.md"
+}
+
+// DataStates is the project's choice about its data states (see Config.DataStates).
+type DataStates struct {
+	// Required makes every data state the spec defines a requirement of its unit.
+	Required bool `yaml:"required"`
+}
+
+// DataStatesRequired says whether the project made its data states requirements.
+func (c *Config) DataStatesRequired() bool {
+	return c != nil && c.DataStates != nil && c.DataStates.Required
 }
