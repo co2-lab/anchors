@@ -1738,3 +1738,11 @@ func TestDataStatesRequired(t *testing.T) {
 		t.Error("no config is off")
 	}
 }
+
+func TestLayerFallible(t *testing.T) {
+	t.Run("CNFGO-B63: A layer may be marked fallible", func(t *testing.T) {})
+	c, err := load(t, "version: 7\nlayers:\n  hook:\n    pattern: \"hooks/*.ts\"\n    kind: code\n    fallible: true\n  util:\n    pattern: \"utils/*.ts\"\n    kind: code\n")
+	if err != nil || !c.Layers["hook"].Fallible || c.Layers["util"].Fallible {
+		t.Errorf("hook fallible, util not: %+v %v", c.Layers, err)
+	}
+}

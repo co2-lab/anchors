@@ -2,7 +2,7 @@
 # @anchors
 #   code: FLFTB
 #   ref: FLRAI
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @FLRAI
@@ -150,3 +150,15 @@ Feature: Failure — the failure a spec declares must be handled, recorded, and 
     Given a project that declares code length 7
     When a spec with the table row "CREDITS-E01" marked resilient and the bullet "CREDITS-E02" is read
     Then both are declared failures, "CREDITS-E01" is resilient, and its resilient reason is read
+
+  @FLRAI-B20 @unit-level
+  Scenario: A unit with a fallible source and no declared failure fails, naming the source
+    Given a unit whose code calls a fallible query on line 5, and mentions it in a comment on line 3
+    When failure-declared runs on its spec with no failure, with a failure that does not name the query, with one that names it, with a waiver, and with a section closed as none
+    Then the first two fail naming line 5 and not line 3, and the other three pass
+
+  @FLRAI-B21 @unit-level
+  Scenario: A dependency on a file of a fallible layer is a fallible source
+    Given a spec depending on a hook of a layer marked fallible and on a utility of another layer
+    When failure-declared runs on the spec with no failure, then with a failure whose uses name the DEP
+    Then the first fails naming the hook's dependency and not the utility's, and the second passes

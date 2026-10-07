@@ -1467,11 +1467,15 @@ func (g Gate) IsExternal() bool { return g.Run != "" }
 // Layer — uma camada declarada: como reconhecer seus arquivos, o kind do nó, e as
 // tags (rótulos de agrupamento transversais) pelas quais um guide pode regê-la.
 type Layer struct {
-	Pattern string   `yaml:"pattern"`           // glob que reconhece arquivos da camada
-	Kind    string   `yaml:"kind"`              // spec|feature|test|code|doc|guide|plan
-	Tags    []string `yaml:"tags,omitempty"`    // rótulos p/ governs (ex.: frontend, mobile)
-	Regime  string   `yaml:"regime,omitempty"`  // comportamental|declarativo|misto
-	Exclude []string `yaml:"exclude,omitempty"` // globs a excluir (derivados que casam o glob amplo)
+	Pattern string `yaml:"pattern"` // glob que reconhece arquivos da camada
+	// Fallible: the layer reaches what can fail — a network, a database, a device: the
+	// hooks that read, the repositories, the services. A unit whose spec depends on a file
+	// of such a layer consumes a fallible source, and its spec declares how it fails.
+	Fallible bool     `yaml:"fallible,omitempty"`
+	Kind     string   `yaml:"kind"`              // spec|feature|test|code|doc|guide|plan
+	Tags     []string `yaml:"tags,omitempty"`    // rótulos p/ governs (ex.: frontend, mobile)
+	Regime   string   `yaml:"regime,omitempty"`  // comportamental|declarativo|misto
+	Exclude  []string `yaml:"exclude,omitempty"` // globs a excluir (derivados que casam o glob amplo)
 	// Support: globs, among the files of this layer, of files that SUPPORT the tests
 	// without being tests — sub-flows other flows call, suite aggregators, helper files.
 	// They stay in the map (a change to a helper still reaches every test that uses it),

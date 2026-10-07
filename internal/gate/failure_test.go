@@ -332,3 +332,43 @@ func TestFailure_readsEveryDeclaredCodeLength(t *testing.T) {
 		t.Errorf("FailureConclusions lost the resilient reason of CREDITS-E01: %+v", c)
 	}
 }
+
+// A unit that consumes a fallible source declares how it fails — the source is in its code,
+// or in a dependency on a layer the project marks fallible.
+func TestFailureDeclared_fallibleSourceAsksForTheFailure(t *testing.T) {
+	t.Run("FLRAI-B20: A unit with a fallible source and no declared failure fails, naming the source", func(t *testing.T) {})
+	code := "package x\n\n// useQuery in a comment is no call\nfunc load() {\n\tdata := useQuery(\"budget\") // the fetch\n\t_ = data\n}\n"
+	root, n, g, cfg := failureProject(t, "# X\n\n| `CREDT-B01` | shows the budget |\n", code)
+	cfg.Dialect.FalliblePatterns = []config.FalliblePattern{{Call: `\buseQuery\(`, Handled: `isError`}}
+	v, msg := checkFailureDeclared("# X\n\n| `CREDT-B01` | shows the budget |\n", n, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "x.go:5") || strings.Contains(msg, "x.go:3") {
+		t.Errorf("the call names its line, and a comment is no call: %v %s", v, msg)
+	}
+	if v, msg := checkFailureDeclared("# X\n\n"+specWithFailure, n, root, g, cfg); v != Fail || !strings.Contains(msg, "x.go:5") {
+		t.Errorf("a failure that does not name the source does not answer it — \"not found\" is no load failure: %v %s", v, msg)
+	}
+	for _, spec := range []string{
+		"# X\n\n| `CREDT-E02` | `useQuery` fails (no network) | shows the load error and a retry |\n",
+		"# X\n\n| `CREDT-B01` | shows the budget |\n\n@no-failure: the value comes from a constant\n",
+		"# X\n\n## Errors\n\nnone — the source is a local constant\n",
+	} {
+		if v, msg := checkFailureDeclared(spec, n, root, g, cfg); v == Fail {
+			t.Errorf("a declared failure, a waiver or a closed section answers the source: %v %s\n%s", v, msg, spec)
+		}
+	}
+	t.Run("FLRAI-B21: A dependency on a file of a fallible layer is a fallible source", func(t *testing.T) {})
+	cfg.Dialect.FalliblePatterns = nil
+	cfg.Layers = map[string]config.Layer{"hook": {Pattern: "hooks/*.ts", Kind: "code", Fallible: true}, "util": {Pattern: "utils/*.ts", Kind: "code"}}
+	g.Nodes = []mapx.Node{{ID: "hooks/useBudget.ts", Kind: mapx.KindCode, Layer: "hook"}, {ID: "utils/fmt.ts", Kind: mapx.KindCode, Layer: "util"}}
+	g.Edges = append(g.Edges,
+		mapx.Edge{From: "x.spec.md", To: "hooks/useBudget.ts", Type: mapx.EdgeDependsOn, Dep: "DEP1"},
+		mapx.Edge{From: "x.spec.md", To: "utils/fmt.ts", Type: mapx.EdgeDependsOn, Dep: "DEP2"})
+	v, msg = checkFailureDeclared("# X\n\n| `CREDT-B01` | shows the budget |\n", n, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "DEP1 hooks/useBudget.ts") || strings.Contains(msg, "fmt.ts") {
+		t.Errorf("the fallible layer's dependency is the source, the other is not: %v %s", v, msg)
+	}
+	uses := "# X\n\n| `CREDT-E01` | the budget does not load | shows the load error |\n\n## Rule uses\n\n| Rule | Uses |\n| --- | --- |\n| `CREDT-E01` | `DEP1` |\n"
+	if v, msg := checkFailureDeclared(uses, n, root, g, cfg); v == Fail {
+		t.Errorf("a failure whose uses name the DEPn answers it: %v %s", v, msg)
+	}
+}

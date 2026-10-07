@@ -2,7 +2,7 @@
 # @anchors
 #   code: DLFTA
 #   ref: DLCTI
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @DLCTI
@@ -148,3 +148,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     When each family's pattern, and the pattern of a project with no family, reads them
     Then each family reads its own, and the project with no family reads them all
 
+
+  @DLCTI-B21 @unit-level
+  Scenario: The fallible patterns are the project's, and the family's only when the project declares none
+    Given a project declaring its own fallible pattern, and a project declaring none with no family
+    When the dialect is resolved
+    Then the first keeps its pattern and window, and the second has none

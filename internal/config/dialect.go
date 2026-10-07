@@ -117,6 +117,12 @@ type Dialect struct {
 	// path that swallows the failure without recording anything is the perfect silence —
 	// the failure happens, nothing knows, and no tool downstream has anything to read.
 	LogPatterns []string `yaml:"log_patterns,omitempty"`
+	// FalliblePatterns are the calls that CAN FAIL — a query, a fetch, a read from a
+	// device —, each with what counts as handling it and how many lines after the call
+	// the handling may stand. A unit whose code makes one is a unit that can fail, whether
+	// or not anybody wrote it down: the failure gates ask its spec for the failure, and
+	// each call for its handling.
+	FalliblePatterns []FalliblePattern `yaml:"fallible_patterns,omitempty"`
 	// Tests says how the project's tests are written, so the gates that read a test's
 	// title (feature-test-match, test-traceable, scenario-coverage) can find it. It is the
 	// project's knowledge, not the engine's: the test library decides how a test opens.
@@ -463,6 +469,9 @@ func (c *Config) DialectFor() Dialect {
 		if len(d.LogPatterns) == 0 {
 			d.LogPatterns = base.LogPatterns
 		}
+		if len(d.FalliblePatterns) == 0 {
+			d.FalliblePatterns = base.FalliblePatterns
+		}
 		switch {
 		case d.Tests == nil:
 			d.Tests = base.Tests
@@ -547,3 +556,17 @@ func (d Dialect) EnvReadPattern() string {
 	}
 	return strings.Join(parts, "|")
 }
+
+// FalliblePattern is a call that can fail, and what handles it (see FalliblePatterns).
+type FalliblePattern struct {
+	// Call recognises the call that can fail (a regular expression).
+	Call string `yaml:"call"`
+	// Handled recognises its handling — the error read, a catch, an error callback.
+	Handled string `yaml:"handled,omitempty"`
+	// Window is how many lines after the call the handling may stand; 0 is the default.
+	Window int `yaml:"window,omitempty"`
+}
+
+// DefaultFallibleWindow is the window when a pattern declares none: a destructuring and
+// the early returns of a component fit in it, the next component does not.
+const DefaultFallibleWindow = 25

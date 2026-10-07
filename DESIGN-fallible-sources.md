@@ -52,9 +52,13 @@ handling over the whole file: one `catch` anywhere satisfies a unit with five fe
 
 ### What each gate asks — the same family, one question more each
 
-- `failure-declared`: **a unit with a fallible source declares how it fails** — at least one
-  `-E` rule —, or waives it with `@no-failure: <reason>` in the spec. The verdict names the
-  source: the dependency (`DEP2 useBudget`) or the call and its line.
+- `failure-declared`: **each fallible source of a unit is named by a declared failure** — an
+  `-E` rule whose row, or whose row of the rules' uses, cites the source: the name called
+  (`useBudget`), or the dependency's `DEPn` or file stem. "At least one failure" is not enough,
+  and measuring proved it: the screen that showed "Budget not found" declared exactly that
+  failure, and the load that failed was no failure of its. Unanswered sources fail, named by
+  file and line or by `DEPn`, unless the spec waives with `@no-failure: <reason>` or closes its
+  Errors section with `none — <reason>`.
 - `failure-handled`: besides the set-level check it does today, **each fallible call in the
   code has its handling within its window**. "Reads `data` from `useQuery` and never looks at
   `isError`" is exactly this, and so is `?? []` over query data with nothing beside it. A call
@@ -86,7 +90,7 @@ so a new project gets the warning without knowing the check exists.
 
 | Phase | Delivers | Done when |
 | --- | --- | --- |
-| `DFLSR-W01` | **Sources.** `fallible: true` on layers; `dialect.fallible_patterns` with `call`, `handled` and `window`; `failure-declared` charges a unit with a fallible source and no `-E`, naming the source, waived by `@no-failure:`. | Spec, feature and test; on clones of MIF and jokenpo, the six known screens are named, and a sample of the rest checked by hand. |
+| `DFLSR-W01` | **Sources.** `fallible: true` on layers; `dialect.fallible_patterns` with `call`, `handled` and `window`; `failure-declared` charges each fallible source no failure names, waived by `@no-failure:`. | Spec, feature and test; on a MIF clone with its data hooks declared, the screens of the incident are named, and a sample of the rest checked by hand. |
 | `DFLSR-W02` | **Per-call handling.** `failure-handled` checks each fallible call's window; `@no-handle:` waives a call. Depends on `DFLSR-W01`. | On a MIF clone, the screens that read `data` without the error are named, with the call's line; the ones that handle it pass. |
 | `DFLSR-W03` | **Family defaults and doctor.** The patterns per `family:`; `anchors doctor` says what is in use. Depends on `DFLSR-W01`. | A project declaring the React Query family is warned with nothing else written. |
 | `DFLSR-W04` | **Preset and guide.** The screen preset's four states and the load-error failure; the guide's rule. Can run alongside the others. | `anchors new spec --preset screen` writes the four states; the guide is cited by the verdicts. |
@@ -106,3 +110,12 @@ peer clones before release, and the peers told at every version.
 ## Open Decisions
 
 none — the approach was approved on 2026-10-07; the details above are the plan's.
+
+## What the implementation taught
+
+- **Per source, not per unit.** W01 first asked for "at least one failure", and a MIF clone
+  answered: the screen of the incident declared one — "not found" — and passed. A failure
+  answers a source only when it names it.
+- **Hook names, not file names.** A project declaring its data hooks lists the names called
+  (`useGoal`), which are not always the file's (`useGoals.ts`); the fallible layer and the
+  dependency table cover the files.

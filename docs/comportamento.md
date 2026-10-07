@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:016965d1be8b1bf7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2bd29baa8a2db67c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2942,6 +2942,8 @@ teste prova.
 
 - [data_states.required makes the data states requirements, and is off by default](layers/config.md#cnfgo-b62--data-statesrequired-makes-the-data-states-requirements-and-is-off-by-default) `CNFGO-B62`
 
+- [A layer may be marked fallible](layers/config.md#cnfgo-b63--a-layer-may-be-marked-fallible) `CNFGO-B63`
+
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](layers/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -3005,6 +3007,8 @@ teste prova.
 - [The Go family sees an error in a field and a sentinel error](layers/config.md#dlcti-b19--the-go-family-sees-an-error-in-a-field-and-a-sentinel-error) `DLCTI-B19`
 
 - [Each family reads environment variables its own way](layers/config.md#dlcti-b20--each-family-reads-environment-variables-its-own-way) `DLCTI-B20`
+
+- [The fallible patterns are the project's, and the family's only when the project declares none](layers/config.md#dlcti-b21--the-fallible-patterns-are-the-projects-and-the-familys-only-when-the-project-declares-none) `DLCTI-B21`
 
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
@@ -3717,6 +3721,10 @@ teste prova.
 - [One handling path answers for every declared failure](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-X01`
 
 - [A failure rule is read at the code length the project declares](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B19`
+
+- [A unit with a fallible source and no declared failure fails, naming the source](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B20`
+
+- [A dependency on a file of a fallible layer is a fallible source](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B21`
 
 - [Non-feature artifacts skip confrontation](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B01`
 

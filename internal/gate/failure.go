@@ -6,6 +6,7 @@ package gate
 
 import (
 	"fmt"
+	"path"
 	"regexp"
 	"sort"
 	"strings"
@@ -286,6 +287,25 @@ func checkFailureDeclared(content string, n mapx.Node, root string, g *mapx.Grap
 		return Skip, i18n.T("gate.failure_handled.skip_not_spec")
 	}
 	d := cfg.DialectFor()
+	// A unit that CAN fail declares how. The other questions start from what somebody
+	// wrote — a failure declared, a handling coded —, and a unit that consumes a fallible
+	// source and wrote neither passed all of them in silence (reported from MIF: six detail
+	// screens showed "not found", an endless spinner, an empty list, or a form of defaults
+	// that erased the data on save, when the fetch failed).
+	//
+	// Each source is answered by a failure that NAMES it — its `DEPn` or its name, in the
+	// failure's row or in its row of the rules' uses. "At least one failure" was not enough:
+	// the screens that showed "not found" declared exactly that failure, and the load that
+	// failed was no failure of theirs.
+	if srcs := uncoveredSources(content, fallibleSources(n, root, g, cfg, d)); len(srcs) > 0 {
+		if errorsClosedAsNone(content) == "" && !noFailureRE.MatchString(content) {
+			shown := srcs
+			if len(shown) > 5 {
+				shown = append(append([]string(nil), shown[:5]...), fmt.Sprintf("… +%d", len(srcs)-5))
+			}
+			return Fail, i18n.T("gate.failure_declared.fallible_undeclared", strings.Join(shown, "; "))
+		}
+	}
 	if len(d.HandlePatterns) == 0 {
 		return Pending, i18n.T("gate.failure_handled.skip_no_dialect")
 	}
@@ -342,4 +362,158 @@ func errorsClosedAsNone(content string) string {
 		return ""
 	}
 	return ""
+}
+
+// noFailureRE is the spec's waiver of the fallible-source question, with its reason.
+var noFailureRE = regexp.MustCompile(`@no-failure:\s*\S`)
+
+// FallibleCall is a call that can fail, in a file of the unit (see FalliblePatterns).
+type FallibleCall struct {
+	File    string
+	Line    int
+	Text    string
+	Pattern config.FalliblePattern
+}
+
+// fallibleCalls are the calls of the unit's code (the files its spec `specifies`) that a
+// declared pattern recognises as fallible. Comment lines do not count, and a trailing
+// comment is cut before matching; the line is the file's own.
+func fallibleCalls(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) []FallibleCall {
+	if g == nil || len(d.FalliblePatterns) == 0 {
+		return nil
+	}
+	type compiled struct {
+		p  config.FalliblePattern
+		re *regexp.Regexp
+	}
+	var pats []compiled
+	for _, p := range d.FalliblePatterns {
+		if re := d.Compile(p.Call); re != nil {
+			pats = append(pats, compiled{p, re})
+		}
+	}
+	var out []FallibleCall
+	for _, e := range g.Neighbors(n.ID).Out {
+		if e.Type != mapx.EdgeSpecifies {
+			continue
+		}
+		b, err := readFile(root, e.To)
+		if err != nil {
+			continue
+		}
+		for i, ln := range strings.Split(string(b), "\n") {
+			if commentLine(ln) {
+				continue
+			}
+			code := cutInlineComment(ln)
+			for _, c := range pats {
+				if c.re.MatchString(code) {
+					out = append(out, FallibleCall{File: e.To, Line: i + 1, Text: strings.TrimSpace(code), Pattern: c.p})
+					break
+				}
+			}
+		}
+	}
+	return out
+}
+
+// commentLine says whether a line is only a comment, by the same reading stripLineComments
+// makes.
+func commentLine(ln string) bool {
+	return strings.TrimSpace(stripLineComments(ln)) == "" && strings.TrimSpace(ln) != ""
+}
+
+// FallibleSource is what makes a unit able to fail, and the names a failure cites it by.
+type FallibleSource struct {
+	Label string   // how the verdict names it: `file:line` or `DEP2 path`
+	Names []string // what a failure cites to answer it: the call's name, the DEPn, the file's stem
+}
+
+// fallibleSources names what makes the unit able to fail: each fallible call of its code
+// (`file:line`, cited by the name called), and each dependency its spec declares on a file
+// of a layer the project marks `fallible: true` (`DEP2 path`, cited by `DEP2` or the
+// file's stem).
+func fallibleSources(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config, d config.Dialect) []FallibleSource {
+	var out []FallibleSource
+	for _, c := range fallibleCalls(n, root, g, d) {
+		src := FallibleSource{Label: fmt.Sprintf("%s:%d", c.File, c.Line)}
+		if re := d.Compile(c.Pattern.Call); re != nil {
+			if m := calledNameRE.FindStringSubmatch(re.FindString(c.Text)); m != nil {
+				src.Names = append(src.Names, m[1])
+			}
+		}
+		out = append(out, src)
+	}
+	if g != nil && cfg != nil {
+		seen := map[string]bool{}
+		for _, e := range g.Neighbors(n.ID).Out {
+			if e.Type != mapx.EdgeDependsOn || seen[e.To] {
+				continue
+			}
+			t := g.Node(e.To)
+			if t == nil {
+				continue
+			}
+			if l, ok := cfg.Layers[t.Layer]; ok && l.Fallible {
+				seen[e.To] = true
+				src := FallibleSource{Label: e.To}
+				if e.Dep != "" {
+					src.Label = e.Dep + " " + e.To
+					src.Names = append(src.Names, e.Dep)
+				}
+				base := path.Base(e.To)
+				if i := strings.Index(base, "."); i > 0 {
+					base = base[:i]
+				}
+				src.Names = append(src.Names, base)
+				out = append(out, src)
+			}
+		}
+	}
+	return out
+}
+
+// calledNameRE is the name a matched call calls: the identifier right before its parenthesis.
+var calledNameRE = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9_]*)\s*\(`)
+
+// uncoveredSources are the sources no declared failure names: a source is answered when a
+// line that carries a failure code of the spec — its row, or its row of the rules' uses —
+// cites one of the source's names as a whole word.
+func uncoveredSources(content string, srcs []FallibleSource) []string {
+	if len(srcs) == 0 {
+		return nil
+	}
+	all, _ := declaredFailures(content)
+	var failureLines strings.Builder
+	if len(all) > 0 {
+		codes := map[string]bool{}
+		for _, c := range all {
+			codes[c] = true
+		}
+		codeRE := regexp.MustCompile(`[A-Z0-9]` + config.CodeLengthPattern() + `-E[0-9]{2}`)
+		for _, ln := range strings.Split(content, "\n") {
+			for _, c := range codeRE.FindAllString(ln, -1) {
+				if codes[c] {
+					failureLines.WriteString(ln)
+					failureLines.WriteString("\n")
+					break
+				}
+			}
+		}
+	}
+	text := failureLines.String()
+	var out []string
+	for _, src := range srcs {
+		named := false
+		for _, name := range src.Names {
+			if name != "" && regexp.MustCompile(`\b`+regexp.QuoteMeta(name)+`\b`).MatchString(text) {
+				named = true
+				break
+			}
+		}
+		if !named {
+			out = append(out, src.Label)
+		}
+	}
+	return out
 }

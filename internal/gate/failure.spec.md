@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLRAI
-  updated_at: 2026-09-26
+  updated_at: 2026-10-07
   layer: gate
 -->
 # Failure — the failure a spec declares must be handled, recorded, and every handling declared
@@ -91,6 +91,8 @@ not match) closes its failure section with `none — <why>`, and that satisfies 
 | `FLRAI-B17` | For each declared failure (`FailureConclusions`), the reasons of `@resilient` and `@observing` are read whole; a failure with neither carries no conclusion. |
 | `FLRAI-B18` | A conclusion's reason ends at its table cell: the next column is never read into it. |
 | `FLRAI-B19` | A failure rule and its conclusion are read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a 7-character `-E` rule is a declared failure. |
+| `FLRAI-B20` | `failure-declared`: each fallible source of a unit — a call of its code that a `dialect.fallible_patterns` entry recognises (comment lines and trailing comments do not count) — is named by a declared failure (`-E`): its row, or its row of the rules' uses, cites the name called as a whole word; a failure that does not name it ("not found") does not answer it. Unanswered, the gate fails naming each source by file and line, unless the Errors section is closed with `none — <reason>` or the spec waives with `@no-failure: <reason>`. (`fallibleSources`, `fallibleCalls`, `FallibleCall`, `FallibleSource`, `uncoveredSources`) |
+| `FLRAI-B21` | A dependency the spec declares on a file of a layer the project marks `fallible: true` is a fallible source too, named by its `DEPn` and path, and answered by a failure citing its `DEPn` or the file's stem (`useBudget`); a dependency on any other layer is not a source. |
 
 ## Invariants
 

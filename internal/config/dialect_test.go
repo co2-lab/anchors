@@ -486,3 +486,18 @@ func TestEnvReadPattern(t *testing.T) {
 		t.Errorf("the project's own pattern wins: %s", p)
 	}
 }
+
+func TestFalliblePatterns_familyFillsWhatTheProjectDidNotDeclare(t *testing.T) {
+	t.Run("DLCTI-B21: The fallible patterns are the project's, and the family's only when the project declares none", func(t *testing.T) {})
+	own := []FalliblePattern{{Call: `\bload\(`, Handled: `err`, Window: 5}}
+	c := &Config{Dialect: &Dialect{FalliblePatterns: own}}
+	if got := c.DialectFor().FalliblePatterns; len(got) != 1 || got[0].Call != `\bload\(` || got[0].Window != 5 {
+		t.Errorf("the project's patterns stay: %+v", got)
+	}
+	if got := (&Config{}).DialectFor().FalliblePatterns; len(got) != 0 {
+		t.Errorf("no family, no project patterns, nothing: %+v", got)
+	}
+	if DefaultFallibleWindow <= 0 {
+		t.Error("the default window is a positive number of lines")
+	}
+}

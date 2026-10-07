@@ -429,3 +429,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a config declaring data_states.required, one without it, and no config
     When the project's choice is read
     Then only the first makes the data states requirements
+
+  @CNFGO-B63 @unit-level
+  Scenario: A layer may be marked fallible
+    Given a config with a hook layer marked fallible and a utility layer not marked
+    When it is loaded
+    Then only the hook layer is fallible
