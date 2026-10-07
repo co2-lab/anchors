@@ -7,6 +7,9 @@ package mapx
 import (
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // evidenceGraph — a script composing a util, in the real shape: SS-03 → login.yaml.
@@ -173,5 +176,55 @@ func TestEvidence_aDivergedComponentStalesWhoUsesIt(t *testing.T) {
 		if ev != nil && strings.Join(ev.Culprit, ",") != "ui/Sheet.tsx" {
 			t.Errorf("the culprit is the component: %v", ev.Culprit)
 		}
+	}
+}
+
+// navFlows: the Arena's Out table has two rows; one flow asserts A03, another only passes
+// through the Arena on its way to the wallet, citing a rule of the wallet.
+func navFlows(rows map[string]string) *Graph {
+	return Build([]scan.File{
+		{Path: "ui/Arena.spec.md", Kind: "spec", HeaderCode: "ARNAA", Rev: "s1", OutRows: rows},
+		{Path: "ui/Wallet.spec.md", Kind: "spec", HeaderCode: "WLLTW", Rev: "w1"},
+		{Path: "flows/ARNAA-A03.yaml", Kind: "test", Rev: "f1", Codes: []string{"ARNAA-A03"}},
+		{Path: "flows/WLLTW-B01.yaml", Kind: "test", Rev: "f2", Codes: []string{"WLLTW-B01"}},
+	}, &config.Config{}, nil)
+}
+
+func TestEvidence_aNavigationRowStalesTheFlowThatAssertsIt(t *testing.T) {
+	t.Run("EVFRA-B11: A flow that asserts a navigation goes stale when its Out row changes or goes, and a flow that passes through does not", func(t *testing.T) {})
+	before := map[string]string{"ARNAA-A03": "r3", "ARNAA-A04": "r4"}
+	g := navFlows(before)
+	if a := g.node("flows/ARNAA-A03.yaml").Asserts; strings.Join(a, ",") != "ui/Arena.spec.md#out:ARNAA-A03" {
+		t.Fatalf("the flow asserts the row of the rule it cites: %v", a)
+	}
+	if a := g.node("flows/WLLTW-B01.yaml").Asserts; len(a) != 0 {
+		t.Fatalf("a flow citing no Out rule asserts no row: %v", a)
+	}
+	stamp := func(g *Graph) {
+		for _, id := range []string{"flows/ARNAA-A03.yaml", "flows/WLLTW-B01.yaml"} {
+			n := g.node(id)
+			n.Signal = &TestSignal{AtRev: n.Rev, ClosureRev: g.EvidenceClosure(id)}
+		}
+	}
+	stamp(g)
+	reread := func(rows map[string]string) *Graph {
+		next := navFlows(rows)
+		for _, id := range []string{"flows/ARNAA-A03.yaml", "flows/WLLTW-B01.yaml"} {
+			next.node(id).Signal = g.node(id).Signal
+		}
+		return next
+	}
+	if ev := reread(map[string]string{"ARNAA-A03": "r3", "ARNAA-A04": "r4b"}).EvidenceStaleFor("flows/ARNAA-A03.yaml"); ev != nil {
+		t.Errorf("another row's change leaves the flow fresh: %+v", ev)
+	}
+	changed := reread(map[string]string{"ARNAA-A03": "r3b", "ARNAA-A04": "r4"})
+	if ev := changed.EvidenceStaleFor("flows/ARNAA-A03.yaml"); ev == nil || strings.Join(ev.Culprit, ",") != "ui/Arena.spec.md#out:ARNAA-A03" {
+		t.Errorf("its row's change stales the flow, naming the row: %+v", ev)
+	}
+	if ev := changed.EvidenceStaleFor("flows/WLLTW-B01.yaml"); ev != nil {
+		t.Errorf("a flow that asserts no row of the Arena stays fresh: %+v", ev)
+	}
+	if ev := reread(map[string]string{"ARNAA-A04": "r4"}).EvidenceStaleFor("flows/ARNAA-A03.yaml"); ev == nil {
+		t.Error("its row's removal stales the flow")
 	}
 }

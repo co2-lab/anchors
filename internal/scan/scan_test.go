@@ -1142,3 +1142,21 @@ func TestCodeFlags_depUsedByNavigates(t *testing.T) {
 		t.Errorf("got %+v", got)
 	}
 }
+
+func TestOutRows_eachNavigationRowWithItsOwnRevision(t *testing.T) {
+	t.Run("RPSCR-B44: A spec's Out rows are read by rule, each with a revision of the row alone", func(t *testing.T) {})
+	spec := func(dest string) []byte {
+		return []byte("# Arena\n\n## Navegação\n\n### Saída\n\n| Regra | Destino | Ação |\n| --- | --- | --- |\n" +
+			"| `ARNAA-A03` | " + dest + " | lançar |\n| `ARNAA-A04` | Wallet | ver saldo |\n| — | Help | sem regra |\n\n## Regras\n\n| `ARNAA-B01` | x |\n")
+	}
+	a, b := extractOutRows(spec("HomeScreen")), extractOutRows(spec("WalletScreen"))
+	if len(a) != 2 || a["ARNAA-A03"] == "" || a["ARNAA-A04"] == "" {
+		t.Fatalf("two rows with a rule, none after the table's section: %v", a)
+	}
+	if a["ARNAA-A03"] == b["ARNAA-A03"] || a["ARNAA-A04"] != b["ARNAA-A04"] {
+		t.Errorf("a row's change changes its revision alone: %v %v", a, b)
+	}
+	if got := extractOutRows([]byte("# X\n\n| `ARNAA-A03` | Home |\n")); got != nil {
+		t.Errorf("no Out heading, no rows: %v", got)
+	}
+}

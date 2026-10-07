@@ -174,7 +174,7 @@ func (g *Graph) standIns(read []scan.File) []scan.File {
 			continue
 		}
 		f := scan.File{Path: n.ID, Kind: string(n.Kind), Layer: n.Layer, Rev: n.Rev,
-			Support: n.Support, Upstream: n.Upstream, Parent: n.Parent, Needs: n.Needs, Revises: n.Revises}
+			Support: n.Support, Upstream: n.Upstream, Parent: n.Parent, Needs: n.Needs, Revises: n.Revises, OutRows: n.OutRows}
 		if n.CodeDeclarado {
 			f.HeaderCode = n.Code
 		}

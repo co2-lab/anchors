@@ -241,6 +241,13 @@ type Node struct {
 	// On the node, not in the signal: a signal means something was measured, and a file
 	// with nothing measured must not look measured because someone kept its stamps.
 	EvidenceKept []EvidenceKeep `yaml:"evidence_kept,omitempty"`
+	// OutRows: a screen spec's navigation rows, by rule, each with a revision of the row
+	// alone (scan.File.OutRows).
+	OutRows map[string]string `yaml:"out_rows,omitempty"`
+	// Asserts: the navigation rows a test asserts — the Out rows of the rules it cites, as
+	// OutRowKey. Its evidence is stamped with each row's revision and goes stale when that
+	// row changes; a test that only passes through the screen cites no row of it.
+	Asserts []string `yaml:"asserts,omitempty"`
 }
 
 // FailureSignal é a ocorrência observada de UMA falha declarada.

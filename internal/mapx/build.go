@@ -59,8 +59,10 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			NoPropagation: f.NoPropagation,
 			SharedCode:    f.SharedCode,
 			Needs:         f.Needs,
+			OutRows:       f.OutRows,
 		})
 	}
+	assertedRows(g, files)
 
 	colo := colocationEdges(files, cfg)
 	g.Edges = append(g.Edges, colo...)
@@ -74,6 +76,33 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 
 	sortGraph(g)
 	return g
+}
+
+// assertedRows ties each test to the navigation rows it asserts: the Out rows of the rules
+// it cites. A rule names its row in one spec; a code no Out table holds asserts nothing.
+func assertedRows(g *Graph, files []scan.File) {
+	rowSpec := map[string]string{}
+	for _, f := range files {
+		for rule := range f.OutRows {
+			rowSpec[rule] = f.Path
+		}
+	}
+	if len(rowSpec) == 0 {
+		return
+	}
+	for i, f := range files {
+		if f.Kind != string(KindTest) {
+			continue
+		}
+		seen := map[string]bool{}
+		for _, c := range f.Codes {
+			if spec, ok := rowSpec[c]; ok && !seen[c] {
+				seen[c] = true
+				g.Nodes[i].Asserts = append(g.Nodes[i].Asserts, OutRowKey(spec, c))
+			}
+		}
+		sort.Strings(g.Nodes[i].Asserts)
+	}
 }
 
 // dependsOnEdges constrói as arestas de REÚSO entre camadas (SPEC_TYPES §5): de cada

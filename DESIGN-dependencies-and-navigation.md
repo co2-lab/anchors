@@ -5,7 +5,7 @@
 
 # Dependencies and navigation — a map of what each file uses, and where each screen leads
 
-> IN PROGRESS — W01 (v0.1.290), W02 (v0.1.291), W03 (v0.1.293) and W04 delivered; approved on 2026-10-07 with the decisions below. Two chains, one mechanism: **the agent marks in the code, with
+> IMPLEMENTED — W01 (v0.1.290), W02 (v0.1.291), W03 (v0.1.293), W04 (v0.1.294–295) and W05 delivered; approved on 2026-10-07 with the decisions below. Two chains, one mechanism: **the agent marks in the code, with
 > comment flags, what the file uses and where the screen navigates; Anchors confronts the
 > marks with the real code and with the spec, and builds the map.**
 
@@ -147,6 +147,7 @@ version.
 | `DNDDP-D01` | Where does a dependency flag live? | On each `import` line (`// @dep: TOKNS`): the relation is explicit where the tie is made, and removing or changing the import shows which flag goes with it. |
 | `DNDDP-D02` | Does `@used-by:` list test files? | No: a test is tied by its `ref:`. |
 | `DNDDP-D03` | Do back and reset navigations count? | Yes, every navigation counts — `goBack`, `reset`, `popToTop` and the rest; a back navigation names the screens it returns to. |
+| `DNDDP-D04` | Which e2e flows does a change to a screen's Out table stale? | Only the flows that ASSERT the navigation that changed — those citing the rule of the changed row —, not the ones that pass through the screen, and never the screen's own evidence. Each Out row has a revision of its own: changing another row, or the rest of the spec, stales nothing. |
 
 ## Open Decisions
 
@@ -203,4 +204,9 @@ none — the three questions were decided on 2026-10-07 (above).
   hook or the store — stales the screen's capture when the store changes, and the change's
   impact climbs to the hook and the screen (`VRCPT-B09`). What W05 still lacks is the third:
   which e2e flows pass through a screen.
+- **A flow asserts; it does not pass through.** The third consumer was first drawn as "the
+  flows that pass through a screen", which would stale a flow for every Out row of every
+  screen on its way. Decided instead (`DNDDP-D04`): a flow is tied to a navigation only when it
+  asserts it — it cites the rule of the row —, and each row carries a revision of its own
+  (`EVFRA-B11`). No new flag: the rule code a flow already cites is the declaration.
 

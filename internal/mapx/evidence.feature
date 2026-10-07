@@ -2,7 +2,7 @@
 # @anchors
 #   code: EVFTV
 #   ref: EVFRA
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @EVFRA
@@ -80,3 +80,9 @@ Feature: EvidenceFreshness — a test's evidence expires when anything it exerci
     Given a screen capture ingested at 10:00, composing a component whose capture failed at 11:00
     When the screen capture's freshness is asked
     Then it is stale, naming the component; with the component's capture failing at 09:00, or passing, it is fresh
+
+  @EVFRA-B11 @unit-level
+  Scenario: A flow that asserts a navigation goes stale when its Out row changes or goes, and a flow that passes through does not
+    Given the Arena's Out table with rows A03 and A04, a flow asserting A03, and a flow that only passes through the Arena
+    When row A04 changes, then row A03 changes, then row A03 is removed
+    Then the A03 flow stays fresh, then goes stale naming its row, then goes stale again; the other flow stays fresh

@@ -118,6 +118,10 @@ type File struct {
 	// the screen each call leads to, and the rule that triggers it — and the `@no-nav:`
 	// waivers.
 	Navigates []Navigation
+	// OutRows are a screen spec's navigation rows — its Out table —, each by the rule that
+	// triggers it, with a revision of the row alone: a flow that asserts a navigation is
+	// stale when its row changes, and not when the rest of the spec does.
+	OutRows map[string]string
 	// Composes are the units a spec's Parts Used section names — the components a screen is
 	// made of, by name (`BottomSheet`). The map ties the spec to each one's code, so a
 	// component whose capture diverged can ask the captures of who uses it again.
@@ -293,6 +297,9 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 		CodeDeps:      extractCodeDeps(content),
 		UsedBy:        extractUsedBy(content),
 		Navigates:     extractNavigates(content),
+	}
+	if kind == "spec" {
+		f.OutRows = extractOutRows(content)
 	}
 	// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
 	// project's vocabulary, not a claim on this project's units. Counting them would give
@@ -1637,6 +1644,48 @@ func UsedByIn(content []byte) []UsedBy { return extractUsedBy(content) }
 
 // NavigatesIn are the navigation flags of a file's content (see File.Navigates).
 func NavigatesIn(content []byte) []Navigation { return extractNavigates(content) }
+
+var (
+	// outHeadingRE opens a spec's Out table, in the languages of the catalog.
+	outHeadingRE = regexp.MustCompile(`(?i)^#{2,4}\s+(?:Sa[íi]da|Exit|Out|Outgoing|Destino|Destination)\b`)
+	// outRuleRE is the rule a row cites: the first scenario code in it.
+	outRuleRE = regexp.MustCompile("`?([A-Z0-9]{3,}-[A-Z][0-9]{2})`?")
+)
+
+// extractOutRows reads the rows under a spec's Out heading: each row's rule, with the
+// short hash of the row's cells, spaces normalized. A row citing no rule is no navigation
+// a flow can assert.
+func extractOutRows(content []byte) map[string]string {
+	var out map[string]string
+	in, header := false, false
+	for _, line := range strings.Split(string(content), "\n") {
+		t := strings.TrimSpace(line)
+		switch {
+		case outHeadingRE.MatchString(t):
+			in, header = true, false
+			continue
+		case strings.HasPrefix(t, "#"):
+			in = false
+			continue
+		}
+		if !in || !strings.HasPrefix(t, "|") {
+			continue
+		}
+		if !header {
+			header = true // the column names
+			continue
+		}
+		m := outRuleRE.FindStringSubmatch(t)
+		if m == nil {
+			continue // the separator, or a row with no rule
+		}
+		if out == nil {
+			out = map[string]string{}
+		}
+		out[m[1]] = shortHash([]byte(strings.Join(strings.Fields(t), " ")))
+	}
+	return out
+}
 
 // ExportListNames are the names an export list exports — the alias when it renames:
 // `A, type B, C as D` exports A, B and D.

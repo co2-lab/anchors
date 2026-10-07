@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:2d249df17cb07964 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:1799506ebe6e807d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7725,6 +7725,8 @@ abra a página dela em `camadas/`.
 
 - [EVFRA-B09 — A `captures` target — the unit a visual-regression test captures, and its images — enters the closure but the walk does not descend through it.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
+- [EVFRA-B11 — A test that cites the rule of a row of a screen's Out table asserts that navigation: its evidence is stamped with the revision of that row alone, and goes stale when the row changes or is removed — naming the row —, not when another row or the rest of the spec changes. A test that cites no Out rule of a screen, passing through it on its way, is not tied to its navigation. (`OutRowKey`, `EvidenceClosure`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
+
 - [EVFRA-I01 — The closure never contains the test node itself.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-X01 — The closure only descends; the spec and feature above the test are never part of it.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
@@ -8212,6 +8214,8 @@ abra a página dela em `camadas/`.
 - [RPSCR-B42 — Each used-by flag (`@used-by` with a colon and the codes that use it) is read with the symbol declared on the next lines — `default` above the module's default export (`export default`, `module.exports =`), the one name of an export list that lists one —, or the symbol it names in parentheses after its codes, which a flag above an export list of several names must do. (`UsedBy`, `UsedByIn`, `ExportListNames`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B43 — Each navigation flag (`@navigates` with a colon, the screens' codes and, in brackets, the rule that triggers it) is read with its call's line — its own, or the next one when the flag stands alone on its line —, and each navigation waiver (`@no-nav` with a colon) with its reason. (`Navigation`, `Navigates`, `NavigatesIn`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B44 — A spec's Out rows — the table under its Out heading, in any language of the catalog — are read by the rule each cites, with a revision of the row alone, its spacing normalized; a row citing no rule, and a table under any other heading, are not read. (`OutRows`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

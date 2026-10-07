@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e9670c4a482f219d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e8cd22a905b85ae6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -7016,6 +7016,8 @@ teste prova.
 
 - [A component whose capture diverged stales the captures of who uses it](layers/mapa.md#evfra-b10--a-component-whose-capture-diverged-stales-the-captures-of-who-uses-it) `EVFRA-B10`
 
+- [A flow that asserts a navigation goes stale when its Out row changes or goes, and a flow that passes through does not](layers/mapa.md#evfra-b11--a-flow-that-asserts-a-navigation-goes-stale-when-its-out-row-changes-or-goes-and-a-flow-that-passes-through-does-not) `EVFRA-B11`
+
 - [The written format and the oldest readable format are both accepted](layers/mapa.md#mpfrm-b01--the-written-format-and-the-oldest-readable-format-are-both-accepted) `MPFRM-B01`
 
 - [A map from a newer binary is refused with the upgrade message](layers/mapa.md#mpfrm-b02--a-map-from-a-newer-binary-is-refused-with-the-upgrade-message) `MPFRM-B02`
@@ -7473,6 +7475,8 @@ teste prova.
 - [Each @used-by flag is read with the symbol declared below it](layers/scan.md#rpscr-b42--each-used-by-flag-is-read-with-the-symbol-declared-below-it) `RPSCR-B42`
 
 - [Each @navigates and @no-nav flag is read with its screens, its rule and its call's line](layers/scan.md#rpscr-b43--each-navigates-and-no-nav-flag-is-read-with-its-screens-its-rule-and-its-calls-line) `RPSCR-B43`
+
+- [A spec's Out rows are read by rule, each with a revision of the row alone](layers/scan.md#rpscr-b44--a-specs-out-rows-are-read-by-rule-each-with-a-revision-of-the-row-alone) `RPSCR-B44`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

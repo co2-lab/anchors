@@ -300,3 +300,9 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a navigation call flagged on its own line with a rule, a back navigation flagged on the line above with two screens, and a call waived
     When its flags are read
     Then each has its screens, its rule and its call's line, and the waiver its reason
+
+  @RPSCR-B44 @unit-level
+  Scenario: A spec's Out rows are read by rule, each with a revision of the row alone
+    Given a Portuguese Out table with rows ARNAA-A03 and ARNAA-A04, a row with no rule, and a rule table after it
+    When its Out rows are read, and then with A03's destination changed
+    Then two rows are read, and only A03's revision changes

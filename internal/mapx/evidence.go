@@ -4,7 +4,10 @@
 
 package mapx
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 // Frescor de EVIDÊNCIA — distinto do frescor de CONFRONTO.
 //
@@ -50,9 +53,18 @@ func (g *Graph) EvidenceStaleFor(id string) *EvidenceStale {
 	revAtual := map[string]string{}
 	for _, x := range g.Nodes {
 		revAtual[x.ID] = x.Rev
+		for rule, r := range x.OutRows {
+			revAtual[OutRowKey(x.ID, rule)] = r
+		}
 	}
 	for alvo, revNaIngestao := range n.Signal.ClosureRev {
-		if atual, ok := revAtual[alvo]; ok && atual != revNaIngestao {
+		atual, ok := revAtual[alvo]
+		if ok && atual != revNaIngestao {
+			out.Culprit = append(out.Culprit, alvo)
+		}
+		// A navigation row the test asserted that its spec no longer has: the navigation
+		// is gone, and the assertion with it.
+		if spec, _, isRow := strings.Cut(alvo, "#out:"); isRow && !ok && g.node(spec) != nil {
 			out.Culprit = append(out.Culprit, alvo)
 		}
 	}
@@ -112,6 +124,17 @@ func (g *Graph) EvidenceClosure(id string) map[string]string {
 			}
 			if !noProp[filho] && e.Type != EdgeComposes {
 				fila = append(fila, filho)
+			}
+		}
+	}
+	// The navigation rows the test asserts, each with the revision of the row alone.
+	if t := g.node(id); t != nil {
+		for _, key := range t.Asserts {
+			spec, rule, _ := strings.Cut(key, "#out:")
+			if sp := g.node(spec); sp != nil {
+				if r, ok := sp.OutRows[rule]; ok {
+					out[key] = r
+				}
 			}
 		}
 	}
@@ -249,3 +272,6 @@ func (g *Graph) CapturesReaching(files []string) []string {
 	sort.Strings(out)
 	return out
 }
+
+// OutRowKey names one navigation row of a spec in an evidence closure.
+func OutRowKey(spec, rule string) string { return spec + "#out:" + rule }
