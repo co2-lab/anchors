@@ -688,12 +688,7 @@ func translateTitle(kind, body string, s section, cfg *config.Config, camada str
 	// 2) `rule_types.sections` continua valendo para as seções de regra — é onde o
 	// projeto já declarava o nome da seção junto com a letra que ela cataloga.
 	if local == "" && s.Realizes != "" {
-		for _, rt := range cfg.RuleTypes {
-			if strings.EqualFold(rt.Letter, s.Realizes) && len(rt.Sections) > 0 {
-				local = rt.Sections[0]
-				break
-			}
-		}
+		local = ownSectionTitle(cfg.RuleTypes, s.Realizes)
 	}
 	// 3) o IDIOMA do projeto (`lang:`). Último na precedência de propósito: o léxico
 	// próprio do projeto vence a tradução do framework — quem declarou "Modelo de Dado"
@@ -781,4 +776,36 @@ func withOwnCode(content, absRoot, outPath, kind string, cfg *config.Config) str
 		f.Layer = targetLayer(absRoot, outPath, cfg)
 	}
 	return migra.WithHeaderCode(content, rel, code.GenerateUnique(migra.FileCodeName(f), taken))
+}
+
+// ownSectionTitle is the section title the project lists for a rule letter that is the
+// letter's OWN: the first of its titles no other letter lists too. A section every letter
+// lists — "Uso das regras", where rules of all letters say what they use — is no letter's
+// title, and taking it as the first made the scaffold write three sections under that one
+// name, for the effects, the constraints and the uses (reported from jokenpo). With no
+// title of its own, the first is kept.
+func ownSectionTitle(types []config.RuleType, letter string) string {
+	shared := map[string]int{}
+	for _, rt := range types {
+		seen := map[string]bool{}
+		for _, t := range rt.Sections {
+			k := strings.ToLower(strings.TrimSpace(t))
+			if !seen[k] {
+				seen[k] = true
+				shared[k]++
+			}
+		}
+	}
+	for _, rt := range types {
+		if !strings.EqualFold(rt.Letter, letter) || len(rt.Sections) == 0 {
+			continue
+		}
+		for _, t := range rt.Sections {
+			if shared[strings.ToLower(strings.TrimSpace(t))] == 1 {
+				return t
+			}
+		}
+		return rt.Sections[0]
+	}
+	return ""
 }

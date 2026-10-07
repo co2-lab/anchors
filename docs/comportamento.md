@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:4d2db17a6030104a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:944fbd6e9de4be28 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2019,6 +2019,8 @@ teste prova.
 - [The new artifact enters the map at once](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B17`
 
 - [A new artifact that refs its unit is born with a code of its own](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B18`
+
+- [A rule section takes the title its letter lists alone, not one every letter shares](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B19`
 
 - [The catalog holds seven kinds and each is born by new](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B01`
 

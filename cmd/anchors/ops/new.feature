@@ -2,7 +2,7 @@
 # @anchors
 #   code: NWFTN
 #   ref: NWARN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @NWARN
@@ -142,3 +142,9 @@ Feature: NewArtifact — a new artifact is born beside its unit, with a resolved
     Given a project whose map has the spec of the unit Pay
     When a feature is created for Pay
     Then the feature refs PAYMT and carries a five-character code of its own
+
+  @NWARN-B19 @unit-level
+  Scenario: A rule section takes the title its letter lists alone, not one every letter shares
+    Given rule types where every letter lists "Uso das regras", some first, beside a title of their own
+    When the title of each letter's section is chosen
+    Then each letter takes its own title, a letter with only the shared one takes it, and an unknown letter takes none

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:845767726139a65b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:78718d263bb972fd — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2220,6 +2220,8 @@ abra a página dela em `camadas/`.
 - [NWARN-B17 — A new artifact enters the map at once, with its unit's links, when the project has a map and a configuration: read alone, not the tree; without a map, nothing is written to it.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-B18 — An artifact that refs its unit (a feature, a test) is born with a code of its own in its header, generated from its name and its type and unique among the map's codes, beside the `ref:`. (`withOwnCode`)](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
+
+- [NWARN-B19 — A rule section of the scaffold takes, from the project's `rule_types`, the first title its letter lists that no other letter lists too; a title every letter shares (the rule-uses section) is no letter's own, and is taken only when the letter has no other. (`ownSectionTitle`)](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-I01 — A refused `new` leaves nothing behind in the tree.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 

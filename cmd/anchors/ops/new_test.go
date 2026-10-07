@@ -565,3 +565,18 @@ func TestNewRefArtifactIsBornWithItsOwnCode(t *testing.T) {
 		t.Errorf("the feature refs its unit and carries a code of its own:\n%s", b)
 	}
 }
+
+func TestOwnSectionTitleSkipsASectionEveryLetterLists(t *testing.T) {
+	t.Run("NWARN-B19: A rule section takes the title its letter lists alone, not one every letter shares", func(t *testing.T) {})
+	types := []config.RuleType{
+		{Letter: "E", Sections: []string{"Uso das regras", "Efeitos"}},
+		{Letter: "X", Sections: []string{"Uso das regras", "Restrições"}},
+		{Letter: "B", Sections: []string{"Comportamentos", "Uso das regras"}},
+		{Letter: "U", Sections: []string{"Uso das regras"}},
+	}
+	for letter, want := range map[string]string{"E": "Efeitos", "X": "Restrições", "B": "Comportamentos", "U": "Uso das regras", "Z": ""} {
+		if got := ownSectionTitle(types, letter); got != want {
+			t.Errorf("letter %s: got %q, want %q", letter, got, want)
+		}
+	}
+}
