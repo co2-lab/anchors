@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:865c46646bfd3063 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:c4b06977e6acf247 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1262,6 +1262,8 @@ teste prova.
 
 - [The spec guide asks the environment variables to be declared](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B22`
 
+- [The spec guide asks a unit that loads data for its four states and the failure of its load](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B23`
+
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
 - [A map without governance has an empty board](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B02`
@@ -2023,6 +2025,8 @@ teste prova.
 - [A new artifact that refs its unit is born with a code of its own](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B18`
 
 - [A rule section takes the title its letter lists alone, not one every letter shares](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B19`
+
+- [The screen preset writes the four states of a unit that loads data and the failure of its load, under the titles of States and Errors](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B20`
 
 - [The catalog holds seven kinds and each is born by new](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B01`
 

@@ -2,7 +2,7 @@
 # @anchors
 #   code: GGFGV
 #   ref: GVGDG
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @GVGDG
@@ -170,3 +170,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     When the spec guide is printed
     Then it asks every unit that reads environment variables to declare them, confronted by env-declared
 
+
+  @GVGDG-B23 @unit-level
+  Scenario: The spec guide asks a unit that loads data for its four states and the failure of its load
+    Given the spec guide
+    When it is read
+    Then it names the load error as its own state, the failure naming its source, the per-call handling, and the screen preset

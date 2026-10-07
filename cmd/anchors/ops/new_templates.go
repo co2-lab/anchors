@@ -134,6 +134,22 @@ var specTemplate = template{
 			Purpose:  "Como a unidade falha e quem sinaliza. Use quando houver entrada inválida, dependência externa ou estado impossível a tratar.",
 			Variants: []string{"error-responses"},
 			Body:     "## Erros / Falhas\n| Regra | Condição | Falha |\n| --- | --- | --- |\n| `{id}-E01` | TODO | TODO |\n\n"},
+		// The STATES of a unit that loads data, and the failure of its load. A screen that
+		// fetches has at least four states, and the one that goes missing is the load error:
+		// written as "not found", an empty list or a form of defaults, the failure of the
+		// fetch passes for an answer (MIF: six detail screens; DESIGN-fallible-sources.md).
+		{Key: "load-states", As: "states", Title: "Estados de quem carrega dados", Default: false, Realizes: "S",
+			Purpose:  "Unidade que CARREGA dados (tela de lista ou de detalhe): os quatro estados — carregando, vazio, erro de carregamento, carregado. O erro é distinto do vazio e do não-encontrado.",
+			Variants: []string{"states"},
+			Body: "## Estados\n\n### {id}-S01 — Carregando\n\n**Quando**: a busca ainda não respondeu.\n\n" +
+				"### {id}-S02 — Vazio\n\n**Quando**: a busca respondeu, e não há dado.\n\n" +
+				"### {id}-S03 — Erro de carregamento\n\n**Quando**: a busca FALHOU (`{id}-E01`) — distinto do vazio e do não-encontrado.\n\n" +
+				"### {id}-S04 — Carregado\n\n**Quando**: a busca respondeu com dado.\n\n"},
+		{Key: "load-failure", As: "errors", Title: "Falha do carregamento", Default: false, Realizes: "E",
+			Purpose:  "Unidade que carrega dados: a falha da busca, nomeando a fonte (o hook ou a consulta), e o que o usuário vê.",
+			Variants: []string{"errors"},
+			Body: "## Erros / Falhas\n| Regra | Condição | Falha |\n| --- | --- | --- |\n" +
+				"| `{id}-E01` | TODO: `useX` (a busca) falha — sem rede, erro do servidor | mostra `{id}-S03` e tentar de novo; não o vazio, nem \"não encontrado\" |\n\n"},
 		{Key: "constants", Title: "Constantes de negócio", Default: false,
 			Purpose: "Números/limites que são DECISÃO de negócio (teto de plano, janela de meses) — evita a constante virar mágica no código.",
 			Body:    "## Constantes de Negócio\n| Constante | Valor | Por quê |\n| --- | --- | --- |\n| TODO | TODO | TODO |\n\n"},
@@ -595,7 +611,7 @@ var specPresets = map[string]presetDef{
 		// ninguém emite é a seção que ninguém escreve. A prova: num projeto nascido com o
 		// preset SEM elas, 25 specs `layer: screen` foram escritas e 24 ficaram sem rota.
 		// Quem não precisar de uma delas tira com `--without`; o caro é o contrário.
-		Sections: []string{"title", "route", "overview", "states", "state-flow", "loading", "rules", "data-contract", "data-states", "validations", "presentation-validations", "messages", "navigation", "auth", "components", "rule-uses", "deps", "testids", "a11y", "notes", "open"},
+		Sections: []string{"title", "route", "overview", "load-states", "state-flow", "load-failure", "loading", "rules", "data-contract", "data-states", "validations", "presentation-validations", "messages", "navigation", "auth", "components", "rule-uses", "deps", "testids", "a11y", "notes", "open"},
 	},
 	"component": {
 		Desc: "componente de UI — props e estados visuais, sem rota",

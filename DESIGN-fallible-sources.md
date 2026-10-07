@@ -5,7 +5,7 @@
 
 # Fallible sources — the failure nobody declared
 
-> PLAN, approved on 2026-10-07. It extends the failure family (`failure-declared`,
+> IMPLEMENTED (W01–W04, v0.1.285–v0.1.289). It extends the failure family (`failure-declared`,
 > `failure-handled`, `failure-logged`) with what it lacked: a source that says a unit CAN
 > fail, independent of anyone having written it down.
 

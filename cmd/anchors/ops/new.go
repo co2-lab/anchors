@@ -228,7 +228,11 @@ the identity by hand.`,
 // section é um bloco nomeado do artefato. Default entra sempre (salvo --without);
 // !Default entra só com --with. body pode conter os placeholders {name} e {id}.
 type section struct {
-	Key     string
+	Key string
+	// As is the catalog section whose TITLE this one takes — a variant body of the same
+	// section (`load-states` is a States section): the gates find it by that title, and a
+	// project that renamed the section renames this one too.
+	As      string
 	Title   string
 	Default bool
 	Body    string
@@ -684,7 +688,11 @@ func translateTitle(kind, body string, s section, cfg *config.Config, camada str
 	// "Modelo de Dado/Comportamentos/Notas de Implementação", e NENHUMA das três
 	// coincidia. Dois agentes escreveram em dialetos opostos, cada um obedecendo a uma
 	// fonte da régua, os dois verdes nos gates.
-	local := cfg.SectionTitle(s.Key, "", camada)
+	titleOf := s.Key
+	if s.As != "" {
+		titleOf = s.As
+	}
+	local := cfg.SectionTitle(titleOf, "", camada)
 	// 2) `rule_types.sections` continua valendo para as seções de regra — é onde o
 	// projeto já declarava o nome da seção junto com a letra que ela cataloga.
 	if local == "" && s.Realizes != "" {
@@ -699,7 +707,7 @@ func translateTitle(kind, body string, s section, cfg *config.Config, camada str
 	// (i18n.Default = "en"). Ninguém tropeçou porque os dois projetos que existiam eram
 	// pt-BR: o defeito era invisível para seus únicos usuários.
 	if local == "" {
-		local = i18n.TIn(langOf(cfg), "section.title."+titleKey(kind, s.Key))
+		local = i18n.TIn(langOf(cfg), "section.title."+titleKey(kind, titleOf))
 	}
 	if local == "" {
 		return body

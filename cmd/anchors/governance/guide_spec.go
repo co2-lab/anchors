@@ -90,6 +90,12 @@ A spec is not all alike — it specializes according to what makes the unit vary
    ` + "`@no-state: <reason>`" + ` (` + "`validation-transitions`" + `). Every ERROR shows on the screen as a
    message: it cites the code of the User Message it shows, or says ` + "`@no-message: <reason>`" + `
    (` + "`error-message-declared`" + `); the messages are captured like the states.
+   A unit that LOADS data has four states at least — loading, empty, LOAD ERROR and loaded —
+   and the load error is its own: "no data" never stands for "the load failed", nor does
+   "not found". Its failure is a rule (` + "`-E`" + `) that names the source it answers — the hook or
+   the query —, which is what ` + "`failure-declared`" + ` asks of each fallible source, and each
+   fallible call reads its error beside it (` + "`failure-handled`" + `). The screen preset of
+   ` + "`anchors new`" + ` writes the four states and the load failure.
 5. State flow — the transitions between the states.
 6. Data contract — every dynamic datum displayed: origin, requiredness, format,
    default. Cautions that prevent real bugs: explicit TIMEZONE in dates; translated

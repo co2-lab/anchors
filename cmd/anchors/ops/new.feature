@@ -148,3 +148,9 @@ Feature: NewArtifact — a new artifact is born beside its unit, with a resolved
     Given rule types where every letter lists "Uso das regras", some first, beside a title of their own
     When the title of each letter's section is chosen
     Then each letter takes its own title, a letter with only the shared one takes it, and an unknown letter takes none
+
+  @NWARN-B20 @unit-level
+  Scenario: The screen preset writes the four states of a unit that loads data and the failure of its load, under the titles of States and Errors
+    Given the screen preset, and a project that renamed its States section
+    When a screen spec is rendered for each
+    Then it has the four load states and the load failure under States and Errors, and under the project's own title for States

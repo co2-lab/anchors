@@ -580,3 +580,22 @@ func TestOwnSectionTitleSkipsASectionEveryLetterLists(t *testing.T) {
 		}
 	}
 }
+
+func TestScreenPresetWritesTheLoadStatesAndTheirFailure(t *testing.T) {
+	t.Run("NWARN-B20: The screen preset writes the four states of a unit that loads data and the failure of its load, under the titles of States and Errors", func(t *testing.T) {})
+	chosen, order, err := resolveSectionsWithPreset(specTemplate, "screen", nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := renderArtifact(specTemplate, "Probe", "PRBOE", "Probe.spec.md", t.TempDir(), chosen, order, &config.Config{Lang: "en"})
+	for _, want := range []string{"## States", "PRBOE-S01 — Loading", "PRBOE-S02 — Empty", "PRBOE-S03 — Load error", "PRBOE-S04 — Loaded", "## Errors / Failures", "`PRBOE-E01`"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the screen spec lacks %q", want)
+		}
+	}
+	renamed := renderArtifact(specTemplate, "Probe", "PRBOE", "Probe.spec.md", t.TempDir(), chosen, order,
+		&config.Config{Lang: "en", SectionTitles: config.SectionTitles{"states": "Screen States"}})
+	if !strings.Contains(renamed, "## Screen States") {
+		t.Error("the load states take the title the project gave its States section")
+	}
+}

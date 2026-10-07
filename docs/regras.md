@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:cd08f2867560ba43 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:44a9a979c8109038 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1367,6 +1367,8 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-B22 — The spec guide asks every unit that reads environment variables to declare them — type, required, default, values, deprecated — as the contract `env-declared` confronts with the code and the variables page is compiled from.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
+- [GVGDG-B23 — The spec guide asks a unit that loads data for four states at least — loading, empty, load error and loaded —, the load error its own and never written as "no data" or "not found", its failure a rule naming the source it answers (`failure-declared`), each fallible call reading its error beside it (`failure-handled`), and points at the screen preset that writes them.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B20 — The test guide strongly recommends a contract test for every API unit, validating the API against the OpenAPI compiled from the specs with the language's own tool, named by `{CODE}-CT`, loading the document instead of copying it, and asserting each error response's status, code and message.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
@@ -2224,6 +2226,8 @@ abra a página dela em `camadas/`.
 - [NWARN-B18 — An artifact that refs its unit (a feature, a test) is born with a code of its own in its header, generated from its name and its type and unique among the map's codes, beside the `ref:`. (`withOwnCode`)](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-B19 — A rule section of the scaffold takes, from the project's `rule_types`, the first title its letter lists that no other letter lists too; a title every letter shares (the rule-uses section) is no letter's own, and is taken only when the letter has no other. (`ownSectionTitle`)](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
+
+- [NWARN-B20 — The screen preset writes the four states of a unit that loads data — loading, empty, load error, loaded — and the failure of its load naming the source, under the titles of the States and Errors sections: a section declared `As` another takes that section's title, the project's own when it renamed it.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-I01 — A refused `new` leaves nothing behind in the tree.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 

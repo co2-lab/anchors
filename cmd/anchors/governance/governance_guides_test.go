@@ -636,3 +636,13 @@ func TestSpecGuide_environmentVariables(t *testing.T) {
 		}
 	}
 }
+
+func TestSpecGuide_loadingUnitsHaveALoadError(t *testing.T) {
+	t.Run("GVGDG-B23: The spec guide asks a unit that loads data for its four states and the failure of its load", func(t *testing.T) {})
+	spec := guideOut(t, "spec")
+	for _, want := range []string{"LOAD ERROR", "not found", "failure-declared", "failure-handled", "screen preset"} {
+		if !strings.Contains(spec, want) {
+			t.Errorf("the spec guide lacks %q", want)
+		}
+	}
+}
