@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:1799506ebe6e807d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:2742a877dfe9aad6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2246,6 +2246,8 @@ abra a página dela em `camadas/`.
 - [NWARN-B19 — A rule section of the scaffold takes, from the project's `rule_types`, the first title its letter lists that no other letter lists too; a title every letter shares (the rule-uses section) is no letter's own, and is taken only when the letter has no other. (`ownSectionTitle`)](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-B20 — The screen preset writes the four states of a unit that loads data — loading, empty, load error, loaded — and the failure of its load naming the source, under the titles of the States and Errors sections: a section declared `As` another takes that section's title, the project's own when it renamed it.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
+
+- [NWARN-B21 — Two sections of one rule letter never define the same code: the rules section keeps its codes, and another section of the letter takes the next free number for each code it would repeat — a section that only cites codes is left as it is. When the layer names its rules section and gives a section of the rules' letter no title of its own, that section goes inside the rules section as a subsection under its catalog title, instead of opening a second section under the letter's first title.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-I01 — A refused `new` leaves nothing behind in the tree.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 

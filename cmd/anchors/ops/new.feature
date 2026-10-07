@@ -154,3 +154,9 @@ Feature: NewArtifact — a new artifact is born beside its unit, with a resolved
     Given the screen preset, and a project that renamed its States section
     When a screen spec is rendered for each
     Then it has the four load states and the load failure under States and Errors, and under the project's own title for States
+
+  @NWARN-B21 @unit-level
+  Scenario: Two sections of one letter never define the same code, and a section of the rules' letter with no title of its own goes inside the rules section the layer names
+    Given the screen preset, a project whose letter B lists "Efeitos" first, and a layer naming its rules section "Rules (Regras de Negócio)"
+    When a screen spec is rendered, and then for a project that names neither
+    Then the loading table sits inside the rules section as a subsection with PRBOE-B02, PRBOE-B01 is defined once, and without the names the sections stay apart with distinct codes

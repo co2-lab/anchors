@@ -599,3 +599,32 @@ func TestScreenPresetWritesTheLoadStatesAndTheirFailure(t *testing.T) {
 		t.Error("the load states take the title the project gave its States section")
 	}
 }
+
+func TestScreenPresetKeepsTheLetterInOneHome(t *testing.T) {
+	t.Run("NWARN-B21: Two sections of one letter never define the same code, and a section of the rules' letter with no title of its own goes inside the rules section the layer names", func(t *testing.T) {})
+	chosen, order, err := resolveSectionsWithPreset(specTemplate, "screen", nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// jokenpo's shape: the letter B's first own title is "Efeitos", and the screen layer
+	// names its rules section "Rules (Regras de Negócio)".
+	cfg := &config.Config{Lang: "pt-BR",
+		RuleTypes:     []config.RuleType{{Letter: "B", Sections: []string{"Uso das regras", "Efeitos", "Comportamentos"}}, {Letter: "U", Sections: []string{"Uso das regras"}}},
+		SectionTitles: config.SectionTitles{"rules": "Rules (Regras de Negócio)"}}
+	out := renderArtifact(specTemplate, "Probe", "PRBOE", "Probe.spec.md", t.TempDir(), chosen, order, cfg)
+	if strings.Contains(out, "## Efeitos") || strings.Count(out, "## Rules (Regras de Negócio)") != 1 {
+		t.Errorf("one home for the letter's rules, not a second section:\n%s", out)
+	}
+	rules := out[strings.Index(out, "## Rules (Regras de Negócio)"):]
+	rules = rules[:strings.Index(rules[3:], "\n## ")+3]
+	if !strings.Contains(rules, "### PRBOE-B01") || !strings.Contains(rules, "### Carregamento") || !strings.Contains(rules, "`PRBOE-B02`") {
+		t.Errorf("the loading table goes inside the rules section with the next code:\n%s", rules)
+	}
+	if n := strings.Count(out, "### PRBOE-B01") + strings.Count(out, "| `PRBOE-B01` | TODO: tudo"); n != 1 {
+		t.Errorf("PRBOE-B01 is defined once, got %d:\n%s", n, out)
+	}
+	plain := renderArtifact(specTemplate, "Probe", "PRBOE", "Probe.spec.md", t.TempDir(), chosen, order, &config.Config{Lang: "en"})
+	if !strings.Contains(plain, "`PRBOE-B02` | TODO") || strings.Count(plain, "PRBOE-B01 —") != 1 {
+		t.Errorf("with no title declared the sections stay apart, their codes still distinct:\n%s", plain)
+	}
+}

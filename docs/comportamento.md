@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e8cd22a905b85ae6 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9b1306f84ab0428f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2037,6 +2037,8 @@ teste prova.
 - [A rule section takes the title its letter lists alone, not one every letter shares](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B19`
 
 - [The screen preset writes the four states of a unit that loads data and the failure of its load, under the titles of States and Errors](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B20`
+
+- [Two sections of one letter never define the same code, and a section of the rules' letter with no title of its own goes inside the rules section the layer names](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B21`
 
 - [The catalog holds seven kinds and each is born by new](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B01`
 

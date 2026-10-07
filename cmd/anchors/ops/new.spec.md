@@ -63,6 +63,7 @@ progress companion.
 | `NWARN-B18` | An artifact that refs its unit (a feature, a test) is born with a code of its own in its header, generated from its name and its type and unique among the map's codes, beside the `ref:`. (`withOwnCode`) |
 | `NWARN-B19` | A rule section of the scaffold takes, from the project's `rule_types`, the first title its letter lists that no other letter lists too; a title every letter shares (the rule-uses section) is no letter's own, and is taken only when the letter has no other. (`ownSectionTitle`) |
 | `NWARN-B20` | The screen preset writes the four states of a unit that loads data — loading, empty, load error, loaded — and the failure of its load naming the source, under the titles of the States and Errors sections: a section declared `As` another takes that section's title, the project's own when it renamed it. |
+| `NWARN-B21` | Two sections of one rule letter never define the same code: the rules section keeps its codes, and another section of the letter takes the next free number for each code it would repeat — a section that only cites codes is left as it is. When the layer names its rules section and gives a section of the rules' letter no title of its own, that section goes inside the rules section as a subsection under its catalog title, instead of opening a second section under the letter's first title. |
 
 ## Invariants
 

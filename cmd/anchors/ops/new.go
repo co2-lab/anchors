@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
@@ -301,6 +302,7 @@ func renderArtifact(t template, name, id, outPath, root string, chosen map[strin
 	// O léxico de seções é da CAMADA do alvo (ver `section_titles`): resolver uma vez,
 	// fora do loop.
 	camadaDoArtefato := targetLayer(root, outPath, cfg)
+	var parts []renderedSection
 	for _, s := range sortSections(t, chosen, ordem) {
 		body := strings.NewReplacer("{name}", name, "{id}", id).Replace(sectionBody(t.kind, s, cfg))
 		// Traduz o título GENÉRICO para o nome que ESTE projeto usa, quando `rule_types`
@@ -324,9 +326,119 @@ func renderArtifact(t template, name, id, outPath, root string, chosen map[strin
 			"{FEATURE}", kw.Feature, "{SCENARIO}", kw.Scenario, "{OUTLINE}", kw.Outline,
 			"{GIVEN}", kw.Given, "{WHEN}", kw.When, "{THEN}", kw.Then, "{EXAMPLES}", kw.Examples,
 		).Replace(body)
-		b.WriteString(body)
+		parts = append(parts, renderedSection{s: s, body: body})
+	}
+	if t.kind == "spec" {
+		parts = numberRuleCodes(parts, id)
+		parts = nestInRulesHome(parts, cfg, camadaDoArtefato)
+	}
+	for _, p := range parts {
+		b.WriteString(p.body)
 	}
 	return b.String()
+}
+
+// renderedSection is a section of the artifact with its body resolved.
+type renderedSection struct {
+	s    section
+	body string
+}
+
+// numberRuleCodes keeps two sections of the same letter from defining the same code: each
+// template starts its letter at 01, and a spec with the rules and the loading sections was
+// born with `-B01` twice. The rules section keeps its codes; another section of the letter
+// takes the next free number for each code it would repeat. A section citing a code
+// (`Rule uses`) realizes no letter and is left as it is: it cites the rules section's.
+func numberRuleCodes(parts []renderedSection, id string) []renderedSection {
+	codeRE := regexp.MustCompile(regexp.QuoteMeta(id) + `-([A-Z])(\d{2})\b`)
+	used := map[string]bool{}
+	next := map[string]int{}
+	claim := func(i int) {
+		for _, m := range codeRE.FindAllStringSubmatch(parts[i].body, -1) {
+			if m[1] == parts[i].s.Realizes {
+				used[m[0]] = true
+				if n, _ := strconv.Atoi(m[2]); n >= next[m[1]] {
+					next[m[1]] = n + 1
+				}
+			}
+		}
+	}
+	order := []int{}
+	for i, p := range parts {
+		if p.s.Key == "rules" {
+			order = append([]int{i}, order...)
+		} else if p.s.Realizes != "" {
+			order = append(order, i)
+		}
+	}
+	for k, i := range order {
+		if k == 0 {
+			claim(i)
+			continue
+		}
+		renamed := map[string]string{}
+		parts[i].body = codeRE.ReplaceAllStringFunc(parts[i].body, func(code string) string {
+			m := codeRE.FindStringSubmatch(code)
+			if m[1] != parts[i].s.Realizes || !used[code] {
+				return code
+			}
+			if r, ok := renamed[code]; ok {
+				return r
+			}
+			r := fmt.Sprintf("%s-%s%02d", id, m[1], next[m[1]])
+			next[m[1]]++
+			renamed[code] = r
+			return r
+		})
+		claim(i)
+	}
+	return parts
+}
+
+// nestInRulesHome puts a section of the rules' letter inside the rules section when the
+// layer names the rules section and gives that section no title of its own: there the
+// letter's first title in `rule_types` would open a second section for the same rules
+// beside the one the layer declares (jokenpo: "Efeitos" beside "Rules (Regras de
+// Negócio)"). It goes in as a subsection under its catalog title, in the project's
+// language.
+func nestInRulesHome(parts []renderedSection, cfg *config.Config, camada string) []renderedSection {
+	home := -1
+	for i, p := range parts {
+		if p.s.Key == "rules" {
+			home = i
+		}
+	}
+	if home < 0 || cfg == nil || cfg.SectionTitle("rules", "", camada) == "" {
+		return parts
+	}
+	letter := parts[home].s.Realizes
+	var out []renderedSection
+	var nested []string
+	for i, p := range parts {
+		key := p.s.Key
+		if p.s.As != "" {
+			key = p.s.As
+		}
+		if i == home || p.s.Realizes != letter || cfg.SectionTitle(key, "", camada) != "" {
+			out = append(out, p)
+			continue
+		}
+		title := i18n.TIn(langOf(cfg), "section.title."+titleKey("spec", key))
+		if title == "" {
+			title = p.s.Title
+		}
+		body := p.body
+		if m := sectionTitleRE.FindStringIndex(body); m != nil {
+			body = body[:m[0]] + "### " + title + "\n" + body[m[1]:]
+		}
+		nested = append(nested, body)
+	}
+	for i := range out {
+		if out[i].s.Key == "rules" {
+			out[i].body = strings.TrimRight(out[i].body, "\n") + "\n\n" + strings.Join(nested, "")
+		}
+	}
+	return out
 }
 
 // resolveSections aplica with/without ao default do template, validando os nomes.
