@@ -36,7 +36,7 @@ A call is read by a pattern — the dialect's `navigation_call`, its destination
 
 | Effect | Description |
 | --- | --- |
-| `NCGNV-B01` | `nav-annotated` fails naming each navigation call with no flag on its line or alone on the line above, by line and destination, and each flag whose screens do not include the one its route leads to; a waived call, a back navigation and a route no screen declares are not charged for the screen. (`checkNavAnnotated`, `NavCall`, `navCallsOf`) |
+| `NCGNV-B01` | `nav-annotated` fails naming each navigation call with no flag on its line or alone on the line above, by line and destination, and each flag whose screens do not include the one its route leads to; a waived call, a back navigation and a route no screen declares are not charged for the screen. Each failure of the chain points at `anchors guide navigation`. (`checkNavAnnotated`, `NavCall`, `navCallsOf`) |
 | `NCGNV-B02` | `nav-matches-spec` fails naming each Out row no flag of the screen's code answers, each Out row that names no screen of the app, and each flag the Out table does not declare; a spec that is no screen is skipped. (`checkNavMatchesSpec`, `Screen`, `NavRow`) |
 | `NCGNV-B03` | `nav-symmetric` fails naming each Out whose destination's In does not come from the screen, and each In whose origin's Out does not lead to it. (`checkNavSymmetric`) |
 | `NCGNV-B04` | `nav-reachable` fails a screen no path reaches from the entry routes — through the Out tables and the code's navigation flags (`NavEdges`) —, and is pending with no entry declared. (`checkNavReachable`) |

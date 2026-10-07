@@ -37,6 +37,7 @@ var guideTitles = map[string]string{
 	"flow":       "# Flow guide",
 	"guide":      "# Guide guide",
 	"header":     "# Header guide",
+	"navigation": "# Navigation guide",
 	"changelog":  "# Changelog guide",
 	"plan":       "# Plan guide",
 	"product":    "# Product doctrine guide",
@@ -643,6 +644,22 @@ func TestSpecGuide_loadingUnitsHaveALoadError(t *testing.T) {
 	for _, want := range []string{"LOAD ERROR", "not found", "failure-declared", "failure-handled", "screen preset"} {
 		if !strings.Contains(spec, want) {
 			t.Errorf("the spec guide lacks %q", want)
+		}
+	}
+}
+
+func TestGuides_theFlagsBesideTheCode(t *testing.T) {
+	t.Run("GVGDG-B24: The header guide names the flags beside the code, and the navigation guide shows the screen's In and Out and the flag on every call", func(t *testing.T) {})
+	header := guideOut(t, "header")
+	for _, want := range []string{"@dep: TOKNS", "@no-dep: <reason>", "@used-by: DRSSD (DeletionStatus)", "@navigates: GLDTG [HOMEH-A01]", "@no-nav: <reason>", "dep-declared", "used-by-declared", "anchors guide navigation"} {
+		if !strings.Contains(header, want) {
+			t.Errorf("the header guide lacks %q", want)
+		}
+	}
+	nav := guideOut(t, "navigation")
+	for _, want := range []string{"### In", "### Out", "| Rule | Destination | Action |", "navigation.goBack()", "@navigates: HOMEH, GOALG", "nav-annotated", "nav-matches-spec", "nav-symmetric", "nav-reachable", "entry: [Home]", "{{ with navigation }}", "anchors map nav"} {
+		if !strings.Contains(nav, want) {
+			t.Errorf("the navigation guide lacks %q", want)
 		}
 	}
 }

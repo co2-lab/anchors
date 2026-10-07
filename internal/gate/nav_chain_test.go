@@ -63,7 +63,7 @@ func TestNavChain_annotated(t *testing.T) {
 	t.Run("NCGNV-B01: nav-annotated names each navigation call with no flag, and each flag naming another screen than its route", func(t *testing.T) {})
 	root, g, cfg := navProject(t)
 	v, msg := checkNavAnnotated(read(t, root, "s/HomeScreen.tsx"), navNode(g, "s/HomeScreen.tsx"), root, g, cfg)
-	if v != Fail || !strings.Contains(msg, "line 1") || !strings.Contains(msg, "GoalDetail") {
+	if v != Fail || !strings.Contains(msg, "line 1") || !strings.Contains(msg, "GoalDetail") || !strings.Contains(msg, "anchors guide navigation") {
 		t.Errorf("the unflagged call is named: %v %s", v, msg)
 	}
 	if v, msg := checkNavAnnotated(read(t, root, "s/GoalDetailScreen.tsx"), navNode(g, "s/GoalDetailScreen.tsx"), root, g, cfg); v != Pass {

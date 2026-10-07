@@ -507,6 +507,13 @@ func (c *Compiler) InitScaffolds(force bool) (escritos, pulados []string, err er
 	if c.hasEnvSpecs() {
 		todos = append(todos, ScaffoldEnvironment(c.lang()))
 	}
+	// An app with screens gets its navigation map; a code base with dependency flags, its chain.
+	if c.hasScreens() {
+		todos = append(todos, ScaffoldNavigation(c.lang()))
+	}
+	if c.hasDependencyFlags() {
+		todos = append(todos, ScaffoldDependencies(c.lang()))
+	}
 	for _, s := range todos {
 		destino := filepath.Join(c.Root, Dir, s.Nome)
 		if _, e := os.Stat(destino); e == nil && !force {

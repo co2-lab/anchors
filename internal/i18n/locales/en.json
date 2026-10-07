@@ -297,6 +297,8 @@
   "gate.nav_chain.in_without_out": "the In table comes from %s, and its Out table does not lead to %s",
   "gate.nav_chain.unreachable": "%s is reachable from no entry route (%s) — through the Out tables and the code's navigation, no path arrives",
   "gate.fix.nav_written": "@navigates flags written (line code): %s",
+  "gate.dep_chain.guide": " — the flags and their form: `anchors guide header`",
+  "gate.nav_chain.guide": " — the screens' In and Out and the flag on each call: `anchors guide navigation`",
   "gate.vr_states.skip_no_code": "the spec carries no identity code",
   "gate.vr_states.skip_no_spec": "no spec beside the unit's main file",
   "gate.mutation.nothing_to_mutate": "the mutation tool measured this file at its revision and generated no mutant — there is nothing to mutate",

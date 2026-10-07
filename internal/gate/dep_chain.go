@@ -259,7 +259,7 @@ func checkDepDeclared(content string, n mapx.Node, root string, g *mapx.Graph, c
 	if len(missing) == 0 {
 		return Pass, ""
 	}
-	return Fail, i18n.T("gate.dep_chain.undeclared", len(missing), strings.Join(missing, "; "))
+	return Fail, i18n.T("gate.dep_chain.undeclared", len(missing), strings.Join(missing, "; ")) + i18n.T("gate.dep_chain.guide")
 }
 
 // checkDepHonored: does every `@dep:` name the code of the file its import resolves to?
@@ -301,7 +301,7 @@ func checkDepHonored(content string, n mapx.Node, root string, g *mapx.Graph, cf
 	if len(wrong) == 0 {
 		return Pass, ""
 	}
-	return Fail, strings.Join(wrong, "; ")
+	return Fail, strings.Join(wrong, "; ") + i18n.T("gate.dep_chain.guide")
 }
 
 // importerIndex is, per file, who imports which of its symbols — read once per run.
@@ -406,7 +406,7 @@ func checkUsedByDeclared(content string, n mapx.Node, root string, g *mapx.Graph
 		return Pass, ""
 	}
 	sort.Strings(gaps)
-	return Fail, strings.Join(gaps, "; ")
+	return Fail, strings.Join(gaps, "; ") + i18n.T("gate.dep_chain.guide")
 }
 
 // fixDepFlags writes the `@dep:` of each import of a governed file that has none, and

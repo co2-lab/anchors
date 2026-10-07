@@ -176,3 +176,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Given the spec guide
     When it is read
     Then it names the load error as its own state, the failure naming its source, the per-call handling, and the screen preset
+
+  @GVGDG-B24 @unit-level
+  Scenario: The header guide names the flags beside the code, and the navigation guide shows the screen's In and Out and the flag on every call
+    Given the header and navigation guides
+    When they are printed
+    Then the header guide names the dependency, used-by and navigation flags with their gates, and the navigation guide the tables, the flag on every call, the four gates and the entry routes

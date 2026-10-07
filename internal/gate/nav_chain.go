@@ -279,7 +279,7 @@ func checkNavAnnotated(content string, n mapx.Node, root string, g *mapx.Graph, 
 	if len(gaps) == 0 {
 		return Pass, ""
 	}
-	return Fail, strings.Join(gaps, "; ")
+	return Fail, strings.Join(gaps, "; ") + i18n.T("gate.nav_chain.guide")
 }
 
 func nonEmpty(s string) string {
@@ -362,7 +362,7 @@ func checkNavMatchesSpec(content string, n mapx.Node, root string, g *mapx.Graph
 		return Pass, ""
 	}
 	sort.Strings(gaps)
-	return Fail, strings.Join(gaps, "; ")
+	return Fail, strings.Join(gaps, "; ") + i18n.T("gate.nav_chain.guide")
 }
 
 // checkNavSymmetric: does every Out of the screen meet an In of its destination, and every
@@ -398,7 +398,7 @@ func checkNavSymmetric(content string, n mapx.Node, root string, g *mapx.Graph, 
 		return Pass, ""
 	}
 	sort.Strings(gaps)
-	return Fail, strings.Join(gaps, "; ")
+	return Fail, strings.Join(gaps, "; ") + i18n.T("gate.nav_chain.guide")
 }
 
 // NavEdges are the app's navigation, screen to screen: the Out tables and the code's flags.
@@ -455,7 +455,7 @@ func checkNavReachable(content string, n mapx.Node, root string, g *mapx.Graph, 
 	if seen[s.Spec] {
 		return Pass, ""
 	}
-	return Fail, i18n.T("gate.nav_chain.unreachable", s.Name, strings.Join(cfg.Navigation.Entry, ", "))
+	return Fail, i18n.T("gate.nav_chain.unreachable", s.Name, strings.Join(cfg.Navigation.Entry, ", ")) + i18n.T("gate.nav_chain.guide")
 }
 
 // fixNavFlags writes the `@navigates:` of each unflagged navigation call whose route

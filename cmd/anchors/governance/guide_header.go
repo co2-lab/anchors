@@ -9,6 +9,10 @@ package governance
 // que o Anchors lê: identidade, carimbo de alteração, tags de agrupamento e opt-outs.
 // É o guide transversal: rege TODOS os arquivos, não um tipo. O `anchors init` semeia
 // um HEADER_GUIDE.md concreto no projeto a partir desta régua.
+// flagAt is the flags' at sign, spliced into the guide's examples: written whole in this
+// source, each example would be read as a real flag of this file.
+const flagAt = "@"
+
 const headerGuide = `# Header guide (the block of markers at the top of each file)
 
 Every file that takes part in the graph carries, at the top, a standardized HEADER
@@ -156,6 +160,42 @@ fit a readable comment):
 
 An opt-out WAIVES the rule, never the record — it is the legitimate door, the opposite of the
 silent coverage hole.
+
+## Flags beside the code: the dependency and navigation chain
+
+Outside the header, on the line they speak of, five flags tie files to files by their own
+'code:' — never by path, so a rename breaks nothing. Each is a comment in the file's dialect;
+'anchors check --fix' writes the ones the code proves, and the gates of the chain confront
+them with the code (they are named in each line below).
+
+- '@dep: <CODE>' — at the end of each import line of a governed file: this import ties this
+  file to that one; the symbols are the import's own. 'dep-declared' asks one on every
+  import that resolves to a file of the project; 'dep-honored' asks it to name the code of
+  that file. A package of the ecosystem takes none.
+    import { PALETTE } from './tokens' // ` + flagAt + `dep: TOKNS
+- '` + flagAt + `no-dep: <reason>' — on the import line instead: this import stays out of the chain
+  (types only, a test double…).
+- '@used-by: <CODE>[, <CODE>...]' — in the comment right above each symbol another file
+  imports: exactly who imports it ('used-by-declared'). A default import is the module's
+  'default', flagged above 'export default' or 'module.exports ='. Above an export list,
+  which declares several names on one line, the flag names its symbol after the codes:
+    // ` + flagAt + `used-by: ARNAA, WLLTW
+    export const PALETTE = {}
+    // ` + flagAt + `used-by: DRSSD (DeletionStatus)
+    export type { DeletionScope, DeletionStatus }
+- '@navigates: <CODE>[, <CODE>...] [<RULE>]' — on a navigation call's line, or the line
+  before: this call leads to that screen (several, for a back navigation that returns to
+  more than one), through that rule of the screen's Out table. Every call counts — navigate,
+  push, replace, goBack, reset ('nav-annotated', 'nav-matches-spec', 'nav-symmetric',
+  'nav-reachable'; 'anchors guide navigation' has the whole of it).
+    navigation.navigate('GoalDetail') // ` + flagAt + `navigates: GLDTG [HOMEH-A01]
+- '` + flagAt + `no-nav: <reason>' — on the call's line: this call is no screen edge (it closes a modal of
+  the same screen).
+
+The header 'dep:' above remains for a dependency no import line carries; where one does, the
+flag on the import line is the declaration — removing or changing the import shows at once
+which flag goes with it. 'anchors map deps <CODE>' walks the chain as a tree; 'anchors map
+nav' prints the screens' edges.
 
 ## Header rules
 

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:14036a2534efbde8 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:8a7b03c1accc975c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1368,6 +1368,8 @@ abra a página dela em `camadas/`.
 - [GVGDG-B22 — The spec guide asks every unit that reads environment variables to declare them — type, required, default, values, deprecated — as the contract `env-declared` confronts with the code and the variables page is compiled from.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B23 — The spec guide asks a unit that loads data for four states at least — loading, empty, load error and loaded —, the load error its own and never written as "no data" or "not found", its failure a rule naming the source it answers (`failure-declared`), each fallible call reading its error beside it (`failure-handled`), and points at the screen preset that writes them.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
+- [GVGDG-B24 — The header guide names the flags beside the code — the dependency flag on each import line and its waiver, the used-by flag above each imported symbol (naming its symbol above an export list), the navigation flag on each call and its waiver —, the gates that confront each, and that the fixer writes what the code proves; the navigation guide, a subcommand of its own, shows a screen spec's In and Out tables, the flag on every navigation call, a back navigation included, the four navigation gates, the entry routes, and the page and command that show the map. Their examples are written so this repository does not read them as its own flags.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -3425,6 +3427,14 @@ abra a página dela em `camadas/`.
 
 - [DCENV-E01 — A row has no variable name, or carries the template's `TODO` placeholder.](layers/doct.md#dcenv--environment--the-projects-environment-variables-page-compiled-from-its-specs)
 
+### [DCNAV — Navigation — the app's navigation map and the code's dependency chain, compiled into pages](layers/doct.md#dcnav--navigation--the-apps-navigation-map-and-the-codes-dependency-chain-compiled-into-pages)
+
+- [DCNAV-B01 — `navigation` lists the screen specs by name and every edge the code's navigation flags declare, each end taken to the screen whose spec specifies its file, with the rule that triggers it; a screen leading to itself is no edge. (`NavMap`, `NavScreen`, `NavEdge`, `fnNavigation`)](layers/doct.md#dcnav--navigation--the-apps-navigation-map-and-the-codes-dependency-chain-compiled-into-pages)
+
+- [DCNAV-B02 — A screen an entry names is marked as an entry, and a screen no entry reaches along the edges is marked unreached; with no entry declared, none is. The flowchart draws an entry as a stadium, an unreached screen dashed, each edge labelled with its rule. (`Mermaid`)](layers/doct.md#dcnav--navigation--the-apps-navigation-map-and-the-codes-dependency-chain-compiled-into-pages)
+
+- [DCNAV-B03 — `ScaffoldNavigation` and `ScaffoldDependencies`: the pages' templates, in the project's language, are seeded when a spec is a screen and when a code file declares a dependency, and compile into one row per screen with where it leads, and one row per file of the chain with what it uses and who uses it. (`DepFile`, `DepLink`, `fnDependencies`)](layers/doct.md#dcnav--navigation--the-apps-navigation-map-and-the-codes-dependency-chain-compiled-into-pages)
+
 ### [OPNAP — OpenAPI — the project's API document, compiled from the specs of its API units](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
 
 - [OPNAP-B01 — Each Endpoint row of a spec is an operation under its path and method, with the operation name, the spec's title as summary and its overview as description, `deprecated` when the row says so, and the spec's parameters, body, responses (a range `4xx` as `4XX`), the error codes and messages of `Error Responses` under each one's status, its security schemes and its limits.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
@@ -3703,7 +3713,7 @@ abra a página dela em `camadas/`.
 
 - [DCGDP-B01 — The import statements of a file are read by the dialect's pattern — a statement whose names span lines is one, its path on its last line, an alias read as the name it aliases — and each path resolved to a file of the map: relative to the importer or through an alias, as written or with each extension; a path naming a directory of code files is a package; anything else is outside the project. With no pattern for the dialect, nothing is read. (`ImportsOf`, `RealImport`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
-- [DCGDP-B02 — `dep-declared` fails naming each import of a governed file with no dependency flag on its statement, by line, path and the code it would carry; an import outside the project, or one with a waiver, is not charged, and a test is skipped. (`checkDepDeclared`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+- [DCGDP-B02 — `dep-declared` fails naming each import of a governed file with no dependency flag on its statement, by line, path and the code it would carry; an import outside the project, or one with a waiver, is not charged, and a test is skipped. Each failure of the chain points at `anchors guide header`, where the flags are. (`checkDepDeclared`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B03 — `dep-honored` fails naming each dependency flag whose code is not the code of the file its import resolves to — with the right one —, and each flag on a line with no import. (`checkDepHonored`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
@@ -4759,7 +4769,7 @@ abra a página dela em `camadas/`.
 
 ### [NCGNV — NavigationChain — every navigation flagged with the screen it leads to, and the screens' tables confronted with it](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
 
-- [NCGNV-B01 — `nav-annotated` fails naming each navigation call with no flag on its line or alone on the line above, by line and destination, and each flag whose screens do not include the one its route leads to; a waived call, a back navigation and a route no screen declares are not charged for the screen. (`checkNavAnnotated`, `NavCall`, `navCallsOf`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
+- [NCGNV-B01 — `nav-annotated` fails naming each navigation call with no flag on its line or alone on the line above, by line and destination, and each flag whose screens do not include the one its route leads to; a waived call, a back navigation and a route no screen declares are not charged for the screen. Each failure of the chain points at `anchors guide navigation`. (`checkNavAnnotated`, `NavCall`, `navCallsOf`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
 
 - [NCGNV-B02 — `nav-matches-spec` fails naming each Out row no flag of the screen's code answers, each Out row that names no screen of the app, and each flag the Out table does not declare; a spec that is no screen is skipped. (`checkNavMatchesSpec`, `Screen`, `NavRow`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
 

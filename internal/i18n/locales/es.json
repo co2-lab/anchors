@@ -297,6 +297,8 @@
   "gate.nav_chain.in_without_out": "la Entrada viene de %s, y su Salida no lleva a %s",
   "gate.nav_chain.unreachable": "%s no es alcanzable desde ninguna ruta de entrada (%s) — por las tablas de Salida y la navegación del código, ningún camino llega",
   "gate.fix.nav_written": "marcas @navigates escritas (línea código): %s",
+  "gate.dep_chain.guide": " — las flags y su forma: `anchors guide header`",
+  "gate.nav_chain.guide": " — el In y el Out de las pantallas y la flag en cada llamada: `anchors guide navigation`",
   "gate.vr_states.skip_no_code": "la spec no tiene código de identidad",
   "gate.vr_states.skip_no_spec": "ninguna spec junto al archivo principal de la unidad",
   "gate.mutation.nothing_to_mutate": "la herramienta de mutación midió este archivo en esta revisión y no generó ningún mutante — no hay qué mutar",

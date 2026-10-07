@@ -5,7 +5,7 @@
 
 # Dependencies and navigation — a map of what each file uses, and where each screen leads
 
-> IN PROGRESS — W01 (v0.1.290), W02 (v0.1.291) and W03 delivered; approved on 2026-10-07 with the decisions below. Two chains, one mechanism: **the agent marks in the code, with
+> IN PROGRESS — W01 (v0.1.290), W02 (v0.1.291), W03 (v0.1.293) and W04 delivered; approved on 2026-10-07 with the decisions below. Two chains, one mechanism: **the agent marks in the code, with
 > comment flags, what the file uses and where the screen navigates; Anchors confronts the
 > marks with the real code and with the spec, and builds the map.**
 
@@ -188,4 +188,13 @@ none — the three questions were decided on 2026-10-07 (above).
   that says "previous screen" instead of naming it; a code navigation to a profile the Out
   table does not declare. Reachability waits on the reset navigations being flagged — the
   entry screen navigates only by `reset`.
+- **The pages read the map, not the gate.** The navigation and dependency pages are drawn from
+  the map's `navigates-to` and `depends-on` edges, each end taken to its screen by the
+  `specifies` edge. The doc compiler sits below the gates (they import it), and the flags are
+  already what the gates keep equal to the Out tables: the page needs nothing more.
+- **A guide's example is a flag.** The scan reads flags as text, in any file: the header
+  guide's `@dep:` example, written whole in its Go source, was read as this repository's own
+  dependency flag. The guides splice the at sign into their examples.
+- **The header `dep:` stays.** `--fix` writes the flag on each import line; it does not
+  remove a header `dep:`, which still declares a dependency no import line carries.
 

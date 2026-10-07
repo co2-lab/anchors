@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:61de2cc3387d26bd — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1f870512253114be — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1263,6 +1263,8 @@ teste prova.
 - [The spec guide asks the environment variables to be declared](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B22`
 
 - [The spec guide asks a unit that loads data for its four states and the failure of its load](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B23`
+
+- [The header guide names the flags beside the code, and the navigation guide shows the screen's In and Out and the flag on every call](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B24`
 
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
@@ -3107,6 +3109,12 @@ teste prova.
 - [The environment page is seeded and compiled](layers/doct.md#dcenv-b03--the-environment-page-is-seeded-and-compiled) `DCENV-B03`
 
 - [A placeholder row is no variable](layers/doct.md#dcenv-e01--a-placeholder-row-is-no-variable) `DCENV-E01`
+
+- [navigation lists the screen specs and the edges the code's flags declare, each end taken to its screen](layers/doct.md#dcnav-b01--navigation-lists-the-screen-specs-and-the-edges-the-codes-flags-declare-each-end-taken-to-its-screen) `DCNAV-B01`
+
+- [An entry is marked, and a screen no entry reaches is marked unreached; with no entry, none is](layers/doct.md#dcnav-b02--an-entry-is-marked-and-a-screen-no-entry-reaches-is-marked-unreached-with-no-entry-none-is) `DCNAV-B02`
+
+- [ScaffoldNavigation and ScaffoldDependencies are seeded when the app has screens and dependency flags, and compile into the pages](layers/doct.md#dcnav-b03--scaffoldnavigation-and-scaffolddependencies-are-seeded-when-the-app-has-screens-and-dependency-flags-and-compile-into-the-pages) `DCNAV-B03`
 
 - [Each Endpoint row of a spec is an operation, with its parameters, body, responses, errors, security and limits](layers/doct.md#opnap-b01--each-endpoint-row-of-a-spec-is-an-operation-with-its-parameters-body-responses-errors-security-and-limits) `OPNAP-B01`
 

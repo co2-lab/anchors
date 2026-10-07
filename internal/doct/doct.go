@@ -302,6 +302,10 @@ func (c *Compiler) Funcs() template.FuncMap {
 		"openapi": c.fnOpenAPI,
 		// The project's environment variables, from every spec's Environment Variables.
 		"envVars": c.fnEnvVars,
+		// `{{ with navigation }}` — the app's screens and where each leads (navigation.go).
+		"navigation": c.fnNavigation,
+		// `{{ range dependencies }}` — the code files' dependency chain (dependencies.go).
+		"dependencies": c.fnDependencies,
 	}
 }
 

@@ -123,7 +123,7 @@ func TestDepChain_usedByAndTheFixers(t *testing.T) {
 	root, g, cfg := chainProject(t)
 	tokens := g.Nodes[1]
 	v, msg := checkUsedByDeclared(read(t, root, tokens.ID), tokens, root, g, cfg)
-	if v != Fail || !strings.Contains(msg, "`PALETTE` says `@used-by: OLDXX`") || !strings.Contains(msg, "`withAlpha` is imported by ARSCR") || !strings.Contains(msg, "`unused`") {
+	if v != Fail || !strings.Contains(msg, "`PALETTE` says `@used-by: OLDXX`") || !strings.Contains(msg, "`withAlpha` is imported by ARSCR") || !strings.Contains(msg, "`unused`") || !strings.Contains(msg, "anchors guide header") {
 		t.Errorf("wrong, missing and stale flags are named: %v %s", v, msg)
 	}
 	gates := []config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code"}}, {Name: "used-by-declared", Check: "used-by-declared", On: []string{"code"}}}

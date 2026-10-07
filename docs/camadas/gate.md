@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:989241d02d40ae77 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:eba415c1e02a8fca — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
@@ -459,7 +459,7 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 
 - **DCGDP-B01** — The import statements of a file are read by the dialect's pattern — a statement whose names span lines is one, its path on its last line, an alias read as the name it aliases — and each path resolved to a file of the map: relative to the importer or through an alias, as written or with each extension; a path naming a directory of code files is a package; anything else is outside the project. With no pattern for the dialect, nothing is read. (`ImportsOf`, `RealImport`)
 
-- **DCGDP-B02** — `dep-declared` fails naming each import of a governed file with no dependency flag on its statement, by line, path and the code it would carry; an import outside the project, or one with a waiver, is not charged, and a test is skipped. (`checkDepDeclared`)
+- **DCGDP-B02** — `dep-declared` fails naming each import of a governed file with no dependency flag on its statement, by line, path and the code it would carry; an import outside the project, or one with a waiver, is not charged, and a test is skipped. Each failure of the chain points at `anchors guide header`, where the flags are. (`checkDepDeclared`)
 
 - **DCGDP-B03** — `dep-honored` fails naming each dependency flag whose code is not the code of the file its import resolves to — with the right one —, and each flag on a line with no import. (`checkDepHonored`)
 
@@ -2109,7 +2109,7 @@ A call is read by a pattern — the dialect's `navigation_call`, its destination
 `route`, or the family's —, a screen by its spec's stem and its declared route.
 
 
-- **NCGNV-B01** — `nav-annotated` fails naming each navigation call with no flag on its line or alone on the line above, by line and destination, and each flag whose screens do not include the one its route leads to; a waived call, a back navigation and a route no screen declares are not charged for the screen. (`checkNavAnnotated`, `NavCall`, `navCallsOf`)
+- **NCGNV-B01** — `nav-annotated` fails naming each navigation call with no flag on its line or alone on the line above, by line and destination, and each flag whose screens do not include the one its route leads to; a waived call, a back navigation and a route no screen declares are not charged for the screen. Each failure of the chain points at `anchors guide navigation`. (`checkNavAnnotated`, `NavCall`, `navCallsOf`)
 
 - **NCGNV-B02** — `nav-matches-spec` fails naming each Out row no flag of the screen's code answers, each Out row that names no screen of the app, and each flag the Out table does not declare; a spec that is no screen is skipped. (`checkNavMatchesSpec`, `Screen`, `NavRow`)
 
