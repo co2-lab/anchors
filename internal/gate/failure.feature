@@ -162,3 +162,9 @@ Feature: Failure — the failure a spec declares must be handled, recorded, and 
     Given a spec depending on a hook of a layer marked fallible and on a utility of another layer
     When failure-declared runs on the spec with no failure, then with a failure whose uses name the DEP
     Then the first fails naming the hook's dependency and not the utility's, and the second passes
+
+  @FLRAI-B22 @unit-level
+  Scenario: A fallible call with no handling in its window fails, named by its line
+    Given a unit with four fallible calls — one handled in the destructuring above it, one handled below, one read with `?? []` and nothing else, one waived on the line above
+    When failure-handled runs
+    Then it fails naming only the call read with `?? []`

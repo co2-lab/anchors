@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f75cb5e729707596 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d5f149ddc6497ea1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3727,6 +3727,8 @@ teste prova.
 - [A unit with a fallible source and no declared failure fails, naming the source](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B20`
 
 - [A dependency on a file of a fallible layer is a fallible source](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B21`
+
+- [A fallible call with no handling in its window fails, named by its line](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B22`
 
 - [Non-feature artifacts skip confrontation](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B01`
 

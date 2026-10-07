@@ -372,3 +372,24 @@ func TestFailureDeclared_fallibleSourceAsksForTheFailure(t *testing.T) {
 		t.Errorf("a failure whose uses name the DEPn answers it: %v %s", v, msg)
 	}
 }
+
+// Each fallible call has its handling beside it — above, in the destructuring that receives
+// it, or below, within its window —, or is waived on its line.
+func TestFailureHandled_eachFallibleCallHasItsHandling(t *testing.T) {
+	t.Run("FLRAI-B22: A fallible call with no handling in its window fails, named by its line", func(t *testing.T) {})
+	code := "package x\n\nfunc a() {\n\tconst {\n\t\tdata,\n\t\tisError,\n\t} = useQuery(\"a\")\n}\n\n" + // line 7: handled above
+		"func b() {\n\tr := useQuery(\"b\")\n\tif r.isError { return }\n}\n\n" + // line 11: handled below
+		"func c() {\n\titems := useQuery(\"c\").data ?? []\n\t_ = items\n}\n\n" + // line 16: not handled
+		"func d() {\n\t// @no-handle: the cache answers offline\n\tv := useQuery(\"d\")\n\t_ = v\n}\n" // line 22: waived
+	root, n, g, cfg := failureProject(t, specWithFailure, code)
+	cfg.Dialect.FalliblePatterns = []config.FalliblePattern{{Call: `\buseQuery\(`, Handled: `\bisError\b`, Window: 3}}
+	v, msg := checkFailureHandled(specWithFailure, n, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "x.go:16") {
+		t.Fatalf("the unhandled call is named: %v %s", v, msg)
+	}
+	for _, line := range []string{"x.go:7", "x.go:11", "x.go:22"} {
+		if strings.Contains(msg, line) {
+			t.Errorf("%s is handled or waived, and is not named: %s", line, msg)
+		}
+	}
+}

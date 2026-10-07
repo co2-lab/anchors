@@ -195,6 +195,17 @@ func checkFailureHandled(content string, n mapx.Node, root string, g *mapx.Graph
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.failure_handled.skip_not_spec")
 	}
+	// EACH FALLIBLE CALL has its handling beside it. Read over the whole file, one `catch`
+	// anywhere answered a unit with five fetches, and the screen that reads `data` from a
+	// query and never looks at its error passed (reported from MIF: an endless spinner, an
+	// empty list, a form of defaults that erased the data on save).
+	if open := unhandledCalls(n, root, g, cfg.DialectFor()); len(open) > 0 {
+		shown := open
+		if len(shown) > 5 {
+			shown = append(append([]string(nil), shown[:5]...), fmt.Sprintf("… +%d", len(open)-5))
+		}
+		return Fail, i18n.T("gate.failure_handled.call_unhandled", strings.Join(shown, "; "))
+	}
 	all, resilient := declaredFailures(content)
 	if len(all) == 0 {
 		return Skip, i18n.T("gate.failure_handled.skip_none")
@@ -516,6 +527,97 @@ func uncoveredSources(content string, srcs []FallibleSource) []string {
 		}
 		if !named {
 			out = append(out, src.Label)
+		}
+	}
+	return out
+}
+
+// noHandleRE waives one fallible call, with its reason, on its line or the line above.
+var noHandleRE = regexp.MustCompile(`@no-handle:\s*\S`)
+
+// handleBefore is the most lines above a fallible call its handling may stand: a
+// destructuring that reads the error spans the lines before the call it receives.
+const handleBefore = 10
+
+// statementStart is the first line of the statement that ends at line i: it climbs while
+// the line above continues it, and stops at a blank line or one that ends a statement
+// (`;`, `}`, `)`) — the previous statement's handling is not this call's.
+func statementStart(lines []string, i int) int {
+	j := i
+	for j > 0 && i-j < handleBefore {
+		t := strings.TrimSpace(cutInlineComment(lines[j-1]))
+		if t == "" || strings.HasSuffix(t, ";") || strings.HasSuffix(t, "}") || strings.HasSuffix(t, ")") {
+			break
+		}
+		j--
+	}
+	return j
+}
+
+// unhandledCalls are the fallible calls of the unit with no handling in their window — the
+// call's statement from its first line (a destructuring above it), and the pattern's window
+// after it
+// —, named `file:line \`call\“. The handling is the pattern's own `handled`, or the
+// project's `handle_patterns` when the pattern declares none.
+func unhandledCalls(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) []string {
+	calls := fallibleCalls(n, root, g, d)
+	if len(calls) == 0 {
+		return nil
+	}
+	files := map[string][]string{}
+	var out []string
+	for _, c := range calls {
+		lines, ok := files[c.File]
+		if !ok {
+			b, err := readFile(root, c.File)
+			if err != nil {
+				continue
+			}
+			lines = strings.Split(string(b), "\n")
+			files[c.File] = lines
+		}
+		i := c.Line - 1
+		if noHandleRE.MatchString(lines[i]) || (i > 0 && noHandleRE.MatchString(lines[i-1])) {
+			continue
+		}
+		var handled []*regexp.Regexp
+		if c.Pattern.Handled != "" {
+			if re := d.Compile(c.Pattern.Handled); re != nil {
+				handled = append(handled, re)
+			}
+		} else {
+			for _, p := range d.HandlePatterns {
+				if re := d.Compile(p); re != nil {
+					handled = append(handled, re)
+				}
+			}
+		}
+		if len(handled) == 0 {
+			continue // nothing says what handling looks like: nothing to confront
+		}
+		window := c.Pattern.Window
+		if window <= 0 {
+			window = config.DefaultFallibleWindow
+		}
+		from, to := statementStart(lines, i), i+window
+		if to >= len(lines) {
+			to = len(lines) - 1
+		}
+		found := false
+		for j := from; j <= to && !found; j++ {
+			if commentLine(lines[j]) {
+				continue
+			}
+			code := cutInlineComment(lines[j])
+			for _, re := range handled {
+				if re.MatchString(code) {
+					found = true
+					break
+				}
+			}
+		}
+		if !found {
+			out = append(out, fmt.Sprintf("%s:%d `%s`", c.File, c.Line, c.Text))
 		}
 	}
 	return out
