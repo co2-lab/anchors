@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:c4b06977e6acf247 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:6997c3e2b64bf527 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2948,6 +2948,8 @@ teste prova.
 
 - [A layer may be marked fallible](layers/config.md#cnfgo-b63--a-layer-may-be-marked-fallible) `CNFGO-B63`
 
+- [navigation.entry declares the routes the app opens on](layers/config.md#cnfgo-b64--navigationentry-declares-the-routes-the-app-opens-on) `CNFGO-B64`
+
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](layers/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -3015,6 +3017,8 @@ teste prova.
 - [The fallible patterns are the project's, and the family's only when the project declares none](layers/config.md#dlcti-b21--the-fallible-patterns-are-the-projects-and-the-familys-only-when-the-project-declares-none) `DLCTI-B21`
 
 - [A family knows its fallible patterns and does not impose them on a project that declared none](layers/config.md#dlcti-b22--a-family-knows-its-fallible-patterns-and-does-not-impose-them-on-a-project-that-declared-none) `DLCTI-B22`
+
+- [import_resolve and navigation_call are read from the dialect](layers/config.md#dlcti-b23--import-resolve-and-navigation-call-are-read-from-the-dialect) `DLCTI-B23`
 
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
@@ -6938,6 +6942,8 @@ teste prova.
 
 - [A file with a code of its own and a ref links across directories through the unit it refs](layers/mapa.md#grblg-b25--a-file-with-a-code-of-its-own-and-a-ref-links-across-directories-through-the-unit-it-refs) `GRBLG-B25`
 
+- [The @dep and @navigates flags become edges to the file whose own code they name](layers/mapa.md#grblg-b26--the-dep-and-navigates-flags-become-edges-to-the-file-whose-own-code-they-name) `GRBLG-B26`
+
 - [A test that was never ingested has no verdict](layers/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 
 - [The test's own change expires its evidence](layers/mapa.md#evfra-b02--the-tests-own-change-expires-its-evidence) `EVFRA-B02`
@@ -7103,6 +7109,8 @@ teste prova.
 - [The node kinds and relation types are the fixed vocabulary](layers/mapa.md#grmdg-i03--the-node-kinds-and-relation-types-are-the-fixed-vocabulary) `GRMDG-I03`
 
 - [The stamp's date and verdict play no part in staleness](layers/mapa.md#grmdg-x01--the-stamps-date-and-verdict-play-no-part-in-staleness) `GRMDG-X01`
+
+- [The navigation between screens is an edge type of its own](layers/mapa.md#grmdg-b04--the-navigation-between-screens-is-an-edge-type-of-its-own) `GRMDG-B04`
 
 - [A guide governs only the targets of its governs edges, sorted](layers/mapa.md#grqrg-b01--a-guide-governs-only-the-targets-of-its-governs-edges-sorted) `GRQRG-B01`
 
@@ -7409,6 +7417,12 @@ teste prova.
 - [A spec's Parts Used names its components](layers/scan.md#rpscr-b39--a-specs-parts-used-names-its-components) `RPSCR-B39`
 
 - [The header's ref names the units the file realizes](layers/scan.md#rpscr-b40--the-headers-ref-names-the-units-the-file-realizes) `RPSCR-B40`
+
+- [The @dep and @no-dep flags of import lines are read, with the symbols each import brings](layers/scan.md#rpscr-b41--the-dep-and-no-dep-flags-of-import-lines-are-read-with-the-symbols-each-import-brings) `RPSCR-B41`
+
+- [Each @used-by flag is read with the symbol declared below it](layers/scan.md#rpscr-b42--each-used-by-flag-is-read-with-the-symbol-declared-below-it) `RPSCR-B42`
+
+- [Each @navigates and @no-nav flag is read with its screens, its rule and its call's line](layers/scan.md#rpscr-b43--each-navigates-and-no-nav-flag-is-read-with-its-screens-its-rule-and-its-calls-line) `RPSCR-B43`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

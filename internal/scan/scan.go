@@ -107,6 +107,17 @@ type File struct {
 	NoPropagation bool  // o texto contém a anotação @noPropagation
 	SharedCode    bool  // o texto contém @anchors-shared-code (opt-out de colisão)
 	Deps          []Dep // dependências de reúso declaradas (Tabela de Dependências, SPEC_TYPES §5)
+	// CodeDeps are the `@dep: CODE` flags on the file's import lines — what the file uses,
+	// addressed by the used file's own code, with the symbols the import brings — and the
+	// `@no-dep: <reason>` waivers. See DESIGN-dependencies-and-navigation.md.
+	CodeDeps []CodeDep
+	// UsedBy are the `@used-by: CODE, CODE` flags above the file's exported symbols — the
+	// way back of `@dep:`: who uses each symbol.
+	UsedBy []UsedBy
+	// Navigates are the `@navigates: CODE [CODE-X01]` flags on the file's navigation calls —
+	// the screen each call leads to, and the rule that triggers it — and the `@no-nav:`
+	// waivers.
+	Navigates []Navigation
 	// Composes are the units a spec's Parts Used section names — the components a screen is
 	// made of, by name (`BottomSheet`). The map ties the spec to each one's code, so a
 	// component whose capture diverged can ask the captures of who uses it again.
@@ -279,6 +290,9 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 		SharedCode:    sharedCodeRE.Match(content),
 		Deps:          depsFor(kind, content, root, rel),
 		Composes:      composesFor(kind, content, cfg),
+		CodeDeps:      extractCodeDeps(content),
+		UsedBy:        extractUsedBy(content),
+		Navigates:     extractNavigates(content),
 	}
 	// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
 	// project's vocabulary, not a claim on this project's units. Counting them would give
@@ -1433,4 +1447,144 @@ func GovernedTreeChanges(root string, cfg *config.Config) ([]string, error) {
 		}
 	}
 	return out, nil
+}
+
+// CodeDep is a `@dep:` flag on an import line (see File.CodeDeps).
+type CodeDep struct {
+	Code    string   // the used file's own code; empty for a waiver
+	Symbols []string // what the import line brings, by name
+	Line    int      // 1-based
+	Waiver  string   // the reason of `@no-dep:`, for a waived import
+}
+
+// UsedBy is a `@used-by:` flag above an exported symbol (see File.UsedBy).
+type UsedBy struct {
+	Symbol string   // the symbol declared on the next code line
+	Codes  []string // the codes of the files that use it
+	Line   int      // 1-based, the flag's
+}
+
+// Navigation is a `@navigates:` flag on a navigation call (see File.Navigates).
+type Navigation struct {
+	Codes  []string // the screens the call leads to (a back navigation may return to several)
+	Rule   string   // the rule that triggers it, when the flag names one
+	Line   int      // 1-based, the call's
+	Waiver string   // the reason of `@no-nav:`, for a waived call
+}
+
+var (
+	codeDepRE   = regexp.MustCompile(`@dep:\s*([A-Z0-9]+)\b`)
+	noDepRE     = regexp.MustCompile(`@no-dep:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
+	usedByRE    = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*)`)
+	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-[A-Z]\d{2})\s*\])?\s*(?:\*/|-->)?\s*$`)
+	noNavRE     = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
+	// importSymbolsRE reads what an import line brings: the names inside braces, or the
+	// default name right after the keyword.
+	importBracesRE  = regexp.MustCompile(`\{([^}]*)\}`)
+	importDefaultRE = regexp.MustCompile(`^\s*import\s+(?:type\s+)?([A-Za-z_$][\w$]*)\b`)
+	// declaredNameRE is the name a declaration line declares, in the common shapes.
+	declaredNameRE = regexp.MustCompile(`\b(?:function\*?|const|let|var|class|interface|type|enum|func|def)\s+(?:\([^)]*\)\s*)?([A-Za-z_$][\w$]*)`)
+)
+
+// splitCodes splits a list of codes written with commas or spaces.
+func splitCodes(s string) []string {
+	var out []string
+	for _, f := range strings.FieldsFunc(s, func(r rune) bool { return r == ',' || r == ' ' }) {
+		if f != "" {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+// importSymbols are the names an import line brings: those inside its braces (an alias
+// `A as B` brings A), or its default name.
+func importSymbols(line string) []string {
+	if m := importBracesRE.FindStringSubmatch(line); m != nil {
+		var out []string
+		for _, part := range strings.Split(m[1], ",") {
+			name := strings.Fields(strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(part), "type ")))
+			if len(name) > 0 {
+				out = append(out, name[0])
+			}
+		}
+		return out
+	}
+	if m := importDefaultRE.FindStringSubmatch(line); m != nil && m[1] != "type" {
+		return []string{m[1]}
+	}
+	return nil
+}
+
+// extractCodeDeps reads the `@dep:` and `@no-dep:` flags, one per import line. The flags
+// are comment text, read in any dialect: a line that carries one is the import it flags.
+func extractCodeDeps(content []byte) []CodeDep {
+	if !strings.Contains(string(content), "@dep:") && !strings.Contains(string(content), "@no-dep:") {
+		return nil
+	}
+	var out []CodeDep
+	for i, line := range strings.Split(string(content), "\n") {
+		if m := codeDepRE.FindStringSubmatch(line); m != nil {
+			out = append(out, CodeDep{Code: m[1], Symbols: importSymbols(line), Line: i + 1})
+			continue
+		}
+		if m := noDepRE.FindStringSubmatch(line); m != nil {
+			out = append(out, CodeDep{Symbols: importSymbols(line), Line: i + 1, Waiver: m[1]})
+		}
+	}
+	return out
+}
+
+// extractUsedBy reads each `@used-by:` flag and the symbol declared on the next line that
+// declares one.
+func extractUsedBy(content []byte) []UsedBy {
+	if !strings.Contains(string(content), "@used-by:") {
+		return nil
+	}
+	lines := strings.Split(string(content), "\n")
+	var out []UsedBy
+	for i, line := range lines {
+		m := usedByRE.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		u := UsedBy{Codes: splitCodes(m[1]), Line: i + 1}
+		for j := i + 1; j < len(lines) && j <= i+5; j++ {
+			if d := declaredNameRE.FindStringSubmatch(lines[j]); d != nil {
+				u.Symbol = d[1]
+				break
+			}
+		}
+		out = append(out, u)
+	}
+	return out
+}
+
+// extractNavigates reads each `@navigates:` and `@no-nav:` flag. A flag on a line of its
+// own speaks of the call on the next line; one beside a call, of that call.
+func extractNavigates(content []byte) []Navigation {
+	if !strings.Contains(string(content), "@navigates:") && !strings.Contains(string(content), "@no-nav:") {
+		return nil
+	}
+	lines := strings.Split(string(content), "\n")
+	callLine := func(i int) int {
+		t := strings.TrimSpace(lines[i])
+		for _, mk := range []string{"//", "#", "--", "/*", "*", "<!--"} {
+			if strings.HasPrefix(t, mk) && i+1 < len(lines) {
+				return i + 2 // the flag stands alone: the call is the next line
+			}
+		}
+		return i + 1
+	}
+	var out []Navigation
+	for i, line := range lines {
+		if m := navigatesRE.FindStringSubmatch(line); m != nil {
+			out = append(out, Navigation{Codes: splitCodes(m[1]), Rule: m[2], Line: callLine(i)})
+			continue
+		}
+		if m := noNavRE.FindStringSubmatch(line); m != nil {
+			out = append(out, Navigation{Line: callLine(i), Waiver: m[1]})
+		}
+	}
+	return out
 }

@@ -115,6 +115,11 @@ const (
 	// capture —, and is what lets a component whose capture DIVERGED ask the captures of the
 	// units made of it again (see EvidenceStaleFor).
 	EdgeComposes EdgeType = "composes"
+
+	// EdgeNavigatesTo — a screen leads to another: the `@navigates:` flag on a navigation
+	// call names the screen, and the edge carries the rule that triggers it (`Method`). The
+	// map of the app's navigation is these edges (DESIGN-dependencies-and-navigation.md).
+	EdgeNavigatesTo EdgeType = "navigates-to"
 )
 
 // SuiteCoverage is one suite's measurement of one file: which lines it instrumented,

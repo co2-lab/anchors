@@ -160,3 +160,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given the ts, go and python families, an unknown family, and a ts project that declared no fallible patterns
     When the family's patterns and the project's dialect are read
     Then each known family has its patterns, the unknown has none, and the project is measured with none
+
+  @DLCTI-B23 @unit-level
+  Scenario: import_resolve and navigation_call are read from the dialect
+    Given a dialect declaring import extensions, an alias, and a navigation call with its route group
+    When the config is loaded
+    Then the dialect has the extensions, the alias and the navigation pattern

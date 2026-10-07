@@ -1746,3 +1746,11 @@ func TestLayerFallible(t *testing.T) {
 		t.Errorf("hook fallible, util not: %+v %v", c.Layers, err)
 	}
 }
+
+func TestNavigationEntry(t *testing.T) {
+	t.Run("CNFGO-B64: navigation.entry declares the routes the app opens on", func(t *testing.T) {})
+	c, err := load(t, "version: 7\nlayers: {}\nnavigation:\n  entry: [Splash, Login]\n")
+	if err != nil || c.Navigation == nil || len(c.Navigation.Entry) != 2 || c.Navigation.Entry[0] != "Splash" {
+		t.Errorf("got %+v %v", c.Navigation, err)
+	}
+}

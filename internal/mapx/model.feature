@@ -2,7 +2,7 @@
 # @anchors
 #   code: MDFTA
 #   ref: GRMDG
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @GRMDG
@@ -49,3 +49,9 @@ Feature: GraphModel — the shape of the map file, and when a validated relation
     Given a relation stamped with both current revisions, verdict issue and an old date
     When its staleness is asked
     Then it is fresh
+
+  @GRMDG-B04 @unit-level
+  Scenario: The navigation between screens is an edge type of its own
+    Given the map's edge types
+    When the navigation edge is read
+    Then it is navigates-to, apart from depends-on

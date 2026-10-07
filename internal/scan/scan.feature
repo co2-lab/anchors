@@ -2,7 +2,7 @@
 # @anchors
 #   code: SCFTC
 #   ref: RPSCR
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @RPSCR
@@ -282,3 +282,21 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a header with "ref: ARENA, WALLT"
     When it is scanned
     Then its HeaderRefs are ARENA and WALLT
+
+  @RPSCR-B41 @unit-level
+  Scenario: The @dep and @no-dep flags of import lines are read, with the symbols each import brings
+    Given a file whose imports carry dependency flags — one with named and aliased symbols, one default — and one a waiver
+    When its flags are read
+    Then each flag has its code, its symbols and its line, and the waiver its reason
+
+  @RPSCR-B42 @unit-level
+  Scenario: Each @used-by flag is read with the symbol declared below it
+    Given a file with two exported symbols, each under a used-by flag
+    When its flags are read
+    Then each flag has the codes that use it and the symbol below it
+
+  @RPSCR-B43 @unit-level
+  Scenario: Each @navigates and @no-nav flag is read with its screens, its rule and its call's line
+    Given a navigation call flagged on its own line with a rule, a back navigation flagged on the line above with two screens, and a call waived
+    When its flags are read
+    Then each has its screens, its rule and its call's line, and the waiver its reason

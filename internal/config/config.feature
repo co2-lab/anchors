@@ -435,3 +435,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a config with a hook layer marked fallible and a utility layer not marked
     When it is loaded
     Then only the hook layer is fallible
+
+  @CNFGO-B64 @unit-level
+  Scenario: navigation.entry declares the routes the app opens on
+    Given a config declaring two entry routes
+    When it is loaded
+    Then its navigation has both, in order

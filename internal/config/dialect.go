@@ -123,6 +123,14 @@ type Dialect struct {
 	// or not anybody wrote it down: the failure gates ask its spec for the failure, and
 	// each call for its handling.
 	FalliblePatterns []FalliblePattern `yaml:"fallible_patterns,omitempty"`
+	// ImportResolve says how an import's path becomes a file of the project: the
+	// extensions and index files tried, and the aliases the project's build maps. The
+	// dependency gates resolve each real import with it, to confront it with its `@dep:`.
+	ImportResolve *ImportResolve `yaml:"import_resolve,omitempty"`
+	// NavigationCall recognises a navigation call and captures its destination — the route
+	// name — in the group `route`. The navigation gates confront each call with its
+	// `@navigates:` flag.
+	NavigationCall string `yaml:"navigation_call,omitempty"`
 	// Tests says how the project's tests are written, so the gates that read a test's
 	// title (feature-test-match, test-traceable, scenario-coverage) can find it. It is the
 	// project's knowledge, not the engine's: the test library decides how a test opens.
@@ -604,4 +612,12 @@ func FamilyFalliblePatterns(family string) []FalliblePattern {
 		return nil
 	}
 	return append([]FalliblePattern(nil), base.FalliblePatterns...)
+}
+
+// ImportResolve is how an import's path becomes a file (see Dialect.ImportResolve).
+type ImportResolve struct {
+	// Extensions are tried in order after the path: `.ts`, `.tsx`, `/index.ts`.
+	Extensions []string `yaml:"extensions,omitempty"`
+	// Aliases map a path prefix to a directory of the project: `"@/": "apps/mobile/src/"`.
+	Aliases map[string]string `yaml:"aliases,omitempty"`
 }

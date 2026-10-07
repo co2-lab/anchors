@@ -1089,3 +1089,39 @@ func TestScan_partsUsedAndRefs(t *testing.T) {
 		t.Errorf("refs = %v", got)
 	}
 }
+
+func TestCodeFlags_depUsedByNavigates(t *testing.T) {
+	t.Run("RPSCR-B41: The @dep and @no-dep flags of import lines are read, with the symbols each import brings", func(t *testing.T) {})
+	src := "import { PALETTE, withAlpha as alpha } from './tokens' // @dep: TOKNS\n" +
+		"import useToast from '../hooks/useToast' // @dep: USTST\n" +
+		"import type { Goal } from './types' // @no-dep: types only, erased at compile time\n" +
+		"import React from 'react'\n"
+	got := extractCodeDeps([]byte(src))
+	want := []CodeDep{
+		{Code: "TOKNS", Symbols: []string{"PALETTE", "withAlpha"}, Line: 1},
+		{Code: "USTST", Symbols: []string{"useToast"}, Line: 2},
+		{Symbols: []string{"Goal"}, Line: 3, Waiver: "types only, erased at compile time"},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %+v\nwant %+v", got, want)
+	}
+	t.Run("RPSCR-B42: Each @used-by flag is read with the symbol declared below it", func(t *testing.T) {})
+	exp := "// @used-by: ARNAA, WLLTW\nexport const PALETTE = {}\n\n// @used-by: ARNAA\nexport function withAlpha(c: string) {}\n"
+	if got := extractUsedBy([]byte(exp)); !reflect.DeepEqual(got, []UsedBy{
+		{Symbol: "PALETTE", Codes: []string{"ARNAA", "WLLTW"}, Line: 1},
+		{Symbol: "withAlpha", Codes: []string{"ARNAA"}, Line: 4},
+	}) {
+		t.Errorf("got %+v", got)
+	}
+	t.Run("RPSCR-B43: Each @navigates and @no-nav flag is read with its screens, its rule and its call's line", func(t *testing.T) {})
+	nav := "onPress={() => navigation.navigate('GoalDetail')} // @navigates: GLDTG [GLETG-A02]\n" +
+		"// @navigates: HOMEH, GOALG\nnavigation.goBack()\n" +
+		"close() // @no-nav: closes a modal of this same screen\n"
+	if got := extractNavigates([]byte(nav)); !reflect.DeepEqual(got, []Navigation{
+		{Codes: []string{"GLDTG"}, Rule: "GLETG-A02", Line: 1},
+		{Codes: []string{"HOMEH", "GOALG"}, Line: 3},
+		{Line: 4, Waiver: "closes a modal of this same screen"},
+	}) {
+		t.Errorf("got %+v", got)
+	}
+}

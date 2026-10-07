@@ -141,3 +141,10 @@ func TestModelVocabulary(t *testing.T) {
 		t.Errorf("edge types = %v, want %v", types, wantTypes)
 	}
 }
+
+func TestEdgeNavigatesTo(t *testing.T) {
+	t.Run("GRMDG-B04: The navigation between screens is an edge type of its own", func(t *testing.T) {})
+	if EdgeNavigatesTo != "navigates-to" || EdgeNavigatesTo == EdgeDependsOn {
+		t.Errorf("the navigation edge is its own type: %q", EdgeNavigatesTo)
+	}
+}

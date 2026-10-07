@@ -169,6 +169,9 @@ type Config struct {
 	// default: a project whose data-state tables only document turns it on when it means
 	// them as requirements.
 	DataStates *DataStates `yaml:"data_states,omitempty"`
+	// Navigation is the app's navigation as the project declares it: the initial routes,
+	// from which every screen is reachable (DESIGN-dependencies-and-navigation.md).
+	Navigation *Navigation `yaml:"navigation,omitempty"`
 	// Obligations são as OBRIGAÇÕES TRANSVERSAIS do projeto: "todo nó que carrega o
 	// atributo P deve aparecer em Q". Ver Obligation.
 	Obligations []Obligation `yaml:"obligations,omitempty"`
@@ -2792,4 +2795,10 @@ type DataStates struct {
 // DataStatesRequired says whether the project made its data states requirements.
 func (c *Config) DataStatesRequired() bool {
 	return c != nil && c.DataStates != nil && c.DataStates.Required
+}
+
+// Navigation is the project's navigation (see Config.Navigation).
+type Navigation struct {
+	// Entry are the routes the app opens on — the roots of reachability.
+	Entry []string `yaml:"entry,omitempty"`
 }

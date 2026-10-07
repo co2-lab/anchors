@@ -526,3 +526,15 @@ func TestFalliblePatterns_familyKnowsThemAndDoesNotImposeThem(t *testing.T) {
 		t.Errorf("a project that declared none is measured with none until it adopts them: %+v", got)
 	}
 }
+
+func TestDialect_importResolveAndNavigationCall(t *testing.T) {
+	t.Run("DLCTI-B23: import_resolve and navigation_call are read from the dialect", func(t *testing.T) {})
+	c, err := load(t, "version: 7\nlayers: {}\ndialect:\n  import_resolve:\n    extensions: [.ts, /index.ts]\n    aliases:\n      \"@/\": \"src/\"\n  navigation_call: 'navigate\\(''(?P<route>\\w+)'''\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := c.DialectFor()
+	if d.ImportResolve == nil || len(d.ImportResolve.Extensions) != 2 || d.ImportResolve.Aliases["@/"] != "src/" || !strings.Contains(d.NavigationCall, "route") {
+		t.Errorf("got %+v %q", d.ImportResolve, d.NavigationCall)
+	}
+}

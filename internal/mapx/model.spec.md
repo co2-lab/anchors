@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRMDG
-  updated_at: 2026-09-26
+  updated_at: 2026-10-07
   layer: mapa
 -->
 # GraphModel — the shape of the map file, and when a validated relation goes stale
@@ -42,6 +42,7 @@ re-measurement of what may be correct.
 | `GRMDG-B01` | A relation that was never stamped is stale. |
 | `GRMDG-B02` | A stamped relation is fresh while both ends keep the revisions recorded in the stamp, and stale as soon as either end moves. |
 | `GRMDG-B03` | A mutation measurement of one scope is stale only when it recorded a revision and that revision differs from the file's current one. |
+| `GRMDG-B04` | The navigation between screens is an edge type of its own, `navigates-to` (`EdgeNavigatesTo`), apart from the dependency between files: a screen that leads to another does not use it. |
 
 ## Invariants
 

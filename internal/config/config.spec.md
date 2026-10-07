@@ -82,6 +82,7 @@ patterns a spec governs.
 | `CNFGO-B61` | `Premises` splits what a gate presupposes that the project does not declare into `missing` (a field to declare) and `waived` (a field the project's `dialect.opt_out` names); a catalog gate with a waived premise is never applicable undeclared. |
 | `CNFGO-B62` | `data_states.required` (`DataStates`) makes the data states a spec defines requirements of its unit; undeclared, or with no config, it is off (`DataStatesRequired`). |
 | `CNFGO-B63` | A layer may be marked `fallible: true` (`Fallible`): its files reach what can fail, and a unit depending on one consumes a fallible source. |
+| `CNFGO-B64` | `navigation.entry` (`Navigation`) declares the routes the app opens on — the roots from which every screen is reachable. |
 | `CNFGO-B60` | A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 

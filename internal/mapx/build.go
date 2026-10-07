@@ -67,6 +67,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 	g.Edges = append(g.Edges, scenarioEdges(files, colo)...)
 	g.Edges = append(g.Edges, governsEdges(files, cfg)...)
 	g.Edges = append(g.Edges, dependsOnEdges(files)...)
+	g.Edges = append(g.Edges, flagEdges(files)...)
 	g.Edges = append(g.Edges, seedEdges(files)...)
 	g.Edges = append(g.Edges, captureEdges(files)...)
 	g.Edges = append(g.Edges, composesEdges(files)...)
@@ -880,4 +881,45 @@ func layerOfUnit(f scan.File) string {
 		return f.HeaderLayer
 	}
 	return f.Layer
+}
+
+// flagEdges are the edges the code's own flags declare, addressed by code: `@dep: CODE` on an
+// import line is a `depends-on` to the file whose own code it is, carrying the symbols the
+// import brings; `@navigates: CODE` on a navigation call is a `navigates-to` to that file,
+// carrying the rule that triggers it. A code no file owns makes no edge — the gates name
+// the dangling flag.
+func flagEdges(files []scan.File) []Edge {
+	byCode := map[string]string{}
+	for _, f := range files {
+		if f.HeaderCode != "" {
+			if _, taken := byCode[f.HeaderCode]; !taken {
+				byCode[f.HeaderCode] = f.Path
+			}
+		}
+	}
+	seen := map[string]bool{}
+	var edges []Edge
+	add := func(e Edge) {
+		k := e.From + "\x00" + e.To + "\x00" + string(e.Type)
+		if seen[k] || e.From == e.To {
+			return
+		}
+		seen[k] = true
+		edges = append(edges, e)
+	}
+	for _, f := range files {
+		for _, d := range f.CodeDeps {
+			if to, ok := byCode[d.Code]; ok && d.Code != "" {
+				add(Edge{From: f.Path, To: to, Type: EdgeDependsOn, Origin: OriginDeclared, Method: strings.Join(d.Symbols, ", ")})
+			}
+		}
+		for _, nv := range f.Navigates {
+			for _, c := range nv.Codes {
+				if to, ok := byCode[c]; ok {
+					add(Edge{From: f.Path, To: to, Type: EdgeNavigatesTo, Origin: OriginDeclared, Method: nv.Rule})
+				}
+			}
+		}
+	}
+	return edges
 }

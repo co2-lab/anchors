@@ -950,3 +950,35 @@ func TestBuild_aFilesOwnCodeAndItsUnit(t *testing.T) {
 		t.Errorf("the helper owns its unit: %+v", n)
 	}
 }
+
+func TestBuild_flagEdgesByCode(t *testing.T) {
+	t.Run("GRBLG-B26: The @dep and @navigates flags become edges to the file whose own code they name", func(t *testing.T) {})
+	files := []scan.File{
+		{Path: "ui/Arena.tsx", Kind: "code", HeaderCode: "ARNSC",
+			CodeDeps:  []scan.CodeDep{{Code: "TOKNS", Symbols: []string{"PALETTE", "withAlpha"}}, {Code: "GHOST"}, {Waiver: "types"}},
+			Navigates: []scan.Navigation{{Codes: []string{"WLLTW"}, Rule: "ARNAA-A02"}, {Codes: []string{"NOWHR"}}}},
+		{Path: "theme/tokens.ts", Kind: "code", HeaderCode: "TOKNS"},
+		{Path: "ui/Wallet.spec.md", Kind: "spec", HeaderCode: "WLLTW"},
+	}
+	g := Build(files, &config.Config{}, nil)
+	var dep, nav *Edge
+	for i, e := range g.Edges {
+		if e.From == "ui/Arena.tsx" && e.To == "theme/tokens.ts" && e.Type == EdgeDependsOn {
+			dep = &g.Edges[i]
+		}
+		if e.From == "ui/Arena.tsx" && e.To == "ui/Wallet.spec.md" && e.Type == EdgeNavigatesTo {
+			nav = &g.Edges[i]
+		}
+	}
+	if dep == nil || dep.Method != "PALETTE, withAlpha" || dep.Origin != OriginDeclared {
+		t.Errorf("the @dep is a declared depends-on carrying the symbols: %+v", dep)
+	}
+	if nav == nil || nav.Method != "ARNAA-A02" {
+		t.Errorf("the @navigates is a navigates-to carrying the rule: %+v", nav)
+	}
+	for _, e := range g.Edges {
+		if e.From == "ui/Arena.tsx" && (e.Type == EdgeDependsOn || e.Type == EdgeNavigatesTo) && e.To != "theme/tokens.ts" && e.To != "ui/Wallet.spec.md" {
+			t.Errorf("a code no file owns makes no edge: %+v", e)
+		}
+	}
+}

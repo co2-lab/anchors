@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:44a9a979c8109038 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:f4bd130fcb3eb4d6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3141,6 +3141,8 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B63 — A layer may be marked `fallible: true` (`Fallible`): its files reach what can fail, and a unit depending on one consumes a fallible source.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
+- [CNFGO-B64 — `navigation.entry` (`Navigation`) declares the routes the app opens on — the roots from which every screen is reachable.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
@@ -3284,6 +3286,8 @@ abra a página dela em `camadas/`.
 - [DLCTI-B21 — `fallible_patterns` (`FalliblePatterns`, each a `FalliblePattern` with `call`, `handled` and `window` — `DefaultFallibleWindow` lines when it declares none) are the project's; the family's fill them only when the project declares none.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B22 — A family knows what can fail in its stack and what handles it (`FamilyFalliblePatterns`: React Query, SWR, fetch and axios for `ts`; HTTP and SQL for `go`; `requests` for `python`), and does not impose them: a project that declared no `fallible_patterns` is measured with none until it adopts them.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
+- [DLCTI-B23 — The dialect declares how an import's path becomes a file (`import_resolve`: `extensions` tried in order and `aliases` of path prefixes — `ImportResolve`) and what a navigation call looks like (`navigation_call`, its destination in the group `route` — `NavigationCall`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -7625,6 +7629,8 @@ abra a página dela em `camadas/`.
 
 - [GRBLG-B25 — Linking the incarnations of a scenario code across directories, a file's units are the ones it `ref:`s; only a file that refs none has its own `code:` as its unit — a test with a code of its own and `ref: X` is linked to X's feature by X's codes, and never by a code it only cites.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
+- [GRBLG-B26 — The code's flags become edges to the file whose own code they name: a dependency flag is a declared `depends-on` carrying the import's symbols, a navigation flag a `navigates-to` carrying the rule that triggers it; a code no file owns makes no edge, and a waiver makes none. (`flagEdges`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
+
 - [GRBLG-B23 — Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-I01 — The same files and configuration always build the same graph, whatever order the files arrive in.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
@@ -7808,6 +7814,8 @@ abra a página dela em `camadas/`.
 - [GRMDG-B02 — A stamped relation is fresh while both ends keep the revisions recorded in the stamp, and stale as soon as either end moves.](layers/mapa.md#grmdg--graphmodel--the-shape-of-the-map-file-and-when-a-validated-relation-goes-stale)
 
 - [GRMDG-B03 — A mutation measurement of one scope is stale only when it recorded a revision and that revision differs from the file's current one.](layers/mapa.md#grmdg--graphmodel--the-shape-of-the-map-file-and-when-a-validated-relation-goes-stale)
+
+- [GRMDG-B04 — The navigation between screens is an edge type of its own, `navigates-to` (`EdgeNavigatesTo`), apart from the dependency between files: a screen that leads to another does not use it.](layers/mapa.md#grmdg--graphmodel--the-shape-of-the-map-file-and-when-a-validated-relation-goes-stale)
 
 - [GRMDG-I01 — The map file's keys are fixed and English: the graph writes version, generated_by, nodes, edges and flow; a relation writes from, to, judgments, type, origin, method, dep and stamp; a stamp writes validated_from_rev, validated_to_rev, changed_at, verdict and gate; a judgment writes gate, verdict, validated_from_rev, validated_to_rev and changed_at; a node writes id, kind, rev, updated_at, code, layer, code_declared, tags, regime, no_propagation, shared_code, needs, parent, upstream, revises, signal and failures.](layers/mapa.md#grmdg--graphmodel--the-shape-of-the-map-file-and-when-a-validated-relation-goes-stale)
 
@@ -8134,6 +8142,12 @@ abra a página dela em `camadas/`.
 - [RPSCR-B39 — A spec's Parts Used section — under the catalog's title in any language, or the title the project's `section_titles` gives `components` — yields the names in backticks of its table's first column (`Composes`); a spec with no such section, and any file that is not a spec, yields none.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B40 — The header's `ref:` line yields the units it names, in order (`HeaderRefs`).](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B41 — The dependency flag on an import line (`@dep` with a colon and the used file's own code) is read with the symbols the import brings — the names in its braces, an alias reading as the name it aliases, or its default name —; the waiver (`@no-dep` with a colon and its reason) is read with its reason. (`CodeDep`, `CodeDeps`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B42 — Each used-by flag (`@used-by` with a colon and the codes that use it) is read with the symbol declared on the next lines. (`UsedBy`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B43 — Each navigation flag (`@navigates` with a colon, the screens' codes and, in brackets, the rule that triggers it) is read with its call's line — its own, or the next one when the flag stands alone on its line —, and each navigation waiver (`@no-nav` with a colon) with its reason. (`Navigation`, `Navigates`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
