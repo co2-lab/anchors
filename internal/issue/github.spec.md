@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GHIGT
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: infra
 -->
 # GitHubIssues — the issue lifecycle on the repository's cards, when the project works on GitHub
@@ -52,13 +52,6 @@ whole command over a missing label, so a divergent label does not degrade, it er
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `GHIGT-E01` | A `gh` call fails (search, create, reopen, comment or close), or the search answer is not readable. | The error is returned carrying `gh`'s output, and nothing is reported created or closed. | A finding reported as recorded that never reached the board is the silent loss this backend exists to end. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/initx/workflows.go` | `LabelToDo`, `LabelNeedsUser` | infra — the labels `anchors init` creates |
-| DEP2 | `internal/issue/issue.go` | `Issue` | infra — the lifecycle this backend serves (`ISLFS`) |
 
 ## Open Decisions
 

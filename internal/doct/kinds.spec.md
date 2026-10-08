@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCKND
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # DocKinds — what each kind of project documentation must answer, told to the agent that writes it
@@ -55,12 +55,6 @@ what was already foreseen.
 ## Errors
 
 none — an unknown or empty kind is normal flow answered by `DCKND-B03`, and the unit reads nothing that can fail.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/docs.go` | `DocArtifact`, `KindOpenAPI`, `KindC4`, `KindSchema`, `KindComponent`, `KindADR`, `KindRunbook` | config — the declared documentation and its kind names |
 
 ## Open Decisions
 

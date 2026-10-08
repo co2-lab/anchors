@@ -171,7 +171,7 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`pagination-honored`](/docs/gates/pagination-honored/) | `code` | A function promising the whole set does not silently return the first page |
 | [`route-declared`](/docs/gates/route-declared/) | `spec` | A screen spec declares its route and names its neighbour screens |
 | [`route-exists`](/docs/gates/route-exists/) | `spec` | The route the spec declares is registered where the app registers its routes |
-| [`dependency-honored`](/docs/gates/dependency-honored/) | `spec` | The methods declared in the Dependencies Table are used in the code |
+| [`dependency-honored`](/docs/gates/dependency-honored/) | `spec` | The spec declares no dependency table — the code declares its dependencies by `@dep:` |
 | [`trigger-declared`](/docs/gates/trigger-declared/) | — |  |
 | [`value-anchored`](/docs/gates/value-anchored/) | `code` | Each declared value anchor matches the code below it, its spec rule's value, and every other declaration of the same key |
 | [`env-declared`](/docs/gates/env-declared/) | `spec` | The environment variables a unit's code reads are the ones its spec declares, and only those |

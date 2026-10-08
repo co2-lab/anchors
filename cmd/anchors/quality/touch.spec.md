@@ -76,13 +76,6 @@ would bump. The installed pre-commit runs this bump by default; the project can 
 | `HDTHD-E01` | Outside a git repository touch fails. | Error naming the git command that could not list the changes. | "Changed" is measured against the last commit; without one there is no change to date. |
 | `HDTHD-E02` | A changed file cannot be read. | It is skipped and named as unreadable, and the other files are dated. | One unreadable file must not stop the dates of the rest. |
 
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Load` | config — the exclusion globs and the pre-commit switch |
-| DEP2 | `internal/gitmeta/gitmeta.go` | `Today` | infra — the day of the run |
-
 ## Open Decisions
 
 | Code | Question | Who decides | Becomes |

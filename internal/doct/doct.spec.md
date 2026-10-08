@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DTCDC
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # DocTemplateCompiler — compiles documentation pages from templates that reference the specs' content
@@ -107,17 +107,6 @@ reaches at all.
 | `DTCDC-E04` | `New`: A spec the map lists is not on disk. | Creating the compiler fails, telling to rebuild the map. | The spec would leave the documentation without a word while the build stayed green. |
 | `DTCDC-E05` | The project has no `doct/` folder. | The build fails telling to create the templates first; the staleness and coverage questions answer with nothing. | Without templates there is nothing to compile, and nothing compiled to be stale or to cover. |
 | `DTCDC-E06` | A template asks for one spec by a code no spec has. | An error naming the code. | Returning nothing would render a hole exactly where someone wanted to highlight a unit. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Load`, `Config`, `DefaultFile` | config — the project structure, for the containers |
-| DEP2 | `internal/mapx/model.go` | `Graph`, `Nodes`, `KindSpec` | mapa — which specs exist and their identity |
-| DEP3 | `internal/doct/layout.go` | `DefaultLayout`, `Layout` | apoio — the one format decision given to templates |
-| DEP4 | `internal/doct/anchor.go` | `Size`, `fnLayerDeps` | apoio — links, sizes and layer arrows for templates |
-| DEP5 | `internal/doct/scenarios.go` | `fnScenarios` | apoio — the scenarios offered to templates |
-| DEP6 | `internal/doct/c4.go` | `fnContainers` | apoio — the containers offered to templates |
 
 ## Open Decisions
 

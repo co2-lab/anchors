@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GSRGH
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # GherkinScenarioReader — the scenarios of a unit's feature, with their steps, for the documentation
@@ -58,14 +58,6 @@ convention, which would break in the first project that organised its files diff
 | --- | --- | --- | --- |
 | `GSRGH-E01` | A feature the map links to the spec cannot be read from disk. | That feature contributes no scenario; the other features of the spec are still read, and no error is raised. | A missing feature file is the map's staleness, charged by the map's own gates; failing the whole documentation build here would block every page over one file. |
 | `GSRGH-E02` | REF[GSRGH-B06]: a malformed or empty selection filter is refused with the spec selection's error, which fails the template that asked | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/dialect.go` | `GherkinScenarioAlternatives` | config — every scenario keyword of every dialect |
-| DEP2 | `internal/doct/doct.go` | `Compiler`, `Spec` | apoio — the loaded specs and the selection filter |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `KindFeature`, `KindSpec` | mapa — the edges that link a spec to its features |
 
 ## Open Decisions
 

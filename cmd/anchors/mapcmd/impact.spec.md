@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPCTI
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Impact — what a change to one file reaches, in both directions of the map
@@ -57,14 +57,6 @@ The command is a query: it opens no issue and changes nothing.
 | --- | --- | --- | --- |
 | `MPCTI-E01` | The resolved file is not a node of the map. | The command fails saying the file is not in the map. | There is no edge to follow from a file the map does not know. |
 | `MPCTI-E02` | The map cannot be loaded. | The command fails with the load error and a hint to build the map. | Impact is a query over the map, and the fix is to build it. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/impact.go` | `AnalyzeImpact` | mapa — computes the two directions over the graph |
-| DEP2 | `internal/mapx/store.go` | `Load` | mapa — loads the map |
-| DEP3 | `internal/config/root.go` | `AbsRoot` | config — the project root |
 
 ## Open Decisions
 

@@ -50,10 +50,3 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 ## Errors
 
 none — an unreadable file is skipped by the readers it belongs to, and a pattern that does not compile reads no import; neither is a failure of this unit.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/scan/scan.go` | `CodeDepsIn`, `UsedByIn`, `ImportSymbols` | scan — the flags and an import's symbols |
-| DEP2 | `internal/config/dialect.go` | `DialectFor` | config — the dialect's patterns and resolution |

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NGSTI
-  updated_at: 2026-10-03
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Ingest — binds the test and log signals the project produced to the nodes of the map
@@ -86,18 +86,6 @@ spec declares is reported, never bound to an invented owner.
 | `NGSTI-E03` | Log ingestion in a project that declares no log paths. | The command refuses, naming the declaration to add. | There is no log to scan. |
 | `NGSTI-E04` | A report that is missing or cannot be parsed. | The command fails naming which report format could not be read. | A signal read from a broken report would be invented. |
 | `NGSTI-E05` | The map cannot be loaded while ingesting reports. | The command fails with a hint to build the map. | The signals are written onto the map's nodes. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/testsig/junit.go` | `ParseJUnit` | infra — reads the execution report |
-| DEP2 | `internal/testsig/lcov.go` | `ParseLCOV` | infra — reads the line coverage report |
-| DEP3 | `internal/testsig/mutation.go` | `ParseMutationFormat` | infra — reads the mutation report in the declared format |
-| DEP4 | `internal/mapx/ingest.go` | `IngestExecutionSuite`, `IngestCoverageSuite`, `IngestMutationScoped`, `ResolveReportPaths`, `DropExternalSuites` | mapa — writes the signals onto the nodes |
-| DEP5 | `internal/logscan/scan.go` | `Scan`, `SpecFailureCodes` | apoio — finds the failure codes in the logs and in the specs |
-| DEP6 | `cmd/anchors/common/spec.go` | `CodesInFileOfUnit` | comando — the scenario codes a spec declares |
-| DEP7 | `internal/config/config.go` | `Load` | config — the project's letters, code length, suites and log paths |
 
 ## Open Decisions
 

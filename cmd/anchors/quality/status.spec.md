@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRSTP
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # ProjectStatus — where the project stands in the cycle, and the one next step
@@ -70,16 +70,6 @@ It is read by a person and by an agent alike, and it changes nothing.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `PRSTP-E01` | The configuration file exists and does not load. | Error naming the configuration file. | A broken configuration is not a phase of the cycle; reporting a next step on top of it would send the reader past the real problem. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gitmeta/availability.go` | `Check` | infra — whether git is there |
-| DEP2 | `internal/initx/workflows.go` | `MissingWorkflow` | infra — the github pipelines |
-| DEP3 | `internal/gate/promotable.go` | `PromotableGates` | gate — informative gates that could block |
-| DEP4 | `internal/config/config.go` | `Load` | config — the mode, the repository and the branches |
-| DEP5 | `internal/mapx/store.go` | `Load` | mapa — the map and its nodes |
 
 ## Open Decisions
 

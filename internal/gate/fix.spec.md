@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FXIXX
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: gate
 -->
 # Fix — the self-healer that applies the mechanical, safe repairs of `check --fix`
@@ -67,15 +67,6 @@ reported. Each repair written, or attempted and failed, is returned for the call
 | --- | --- | --- | --- |
 | `FXIXX-E01` | Writing the repaired file fails. | The file is reported as not fixed, with the cause in the detail. | A repair that silently did not happen would let the caller claim the finding was fixed. <!-- @resilient: the write failure is not hidden: it becomes the file's result, not fixed and with the cause, which the caller prints; the other files are still repaired --> |
 | `FXIXX-E02` | REF[FXIXX-B05]: a node whose file cannot be read is one of the files B05 leaves out, and nothing is reported for it | — | — <!-- @resilient: an unreadable file has no content to repair, and a node missing from disk is already reported by the map's own checks --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Gate` | core — the configured gates and their checks |
-| DEP2 | `internal/gitmeta/gitmeta.go` | `UncommittedChanges`, `LastCommitDate`, `Today` | infra — the dates git knows |
-| DEP3 | `internal/mapx/model.go` | `Node` | core — the nodes the gates apply to |
-| DEP4 | `internal/i18n/i18n.go` | `T` | core — the localized detail of each repair |
 
 ## Open Decisions
 

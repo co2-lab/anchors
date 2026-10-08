@@ -188,3 +188,25 @@ func TestContractImpact_answeredWhereTheRuleLives(t *testing.T) {
 		t.Errorf("a full code in the changed spec's revision answers another spec's rule: %v", got)
 	}
 }
+
+func TestContractImpact_dependentsThroughTheCode(t *testing.T) {
+	t.Run("CTRIM-B07: The dependent units are found through the code: a file another spec specifies importing a file this spec governs", func(t *testing.T) {})
+	root, g, cfg := impactRepo(t)
+	// No table: the checkout's code imports the pay code, by its @dep flag.
+	g.Nodes = append(g.Nodes, mapx.Node{ID: "src/checkout.go", Kind: mapx.KindCode})
+	g.Edges = []mapx.Edge{
+		{From: "src/pay.spec.md", To: "src/pay.go", Type: mapx.EdgeSpecifies},
+		{From: "src/checkout.spec.md", To: "src/checkout.go", Type: mapx.EdgeSpecifies},
+		{From: "src/checkout.go", To: "src/pay.go", Type: mapx.EdgeDependsOn, Origin: mapx.OriginDeclared},
+	}
+	s := edited(root, t)
+	var rules []string
+	for _, imp := range ContractImpacts(root, "src/pay.spec.md", s, g, cfg) {
+		if imp.Field == "amount" {
+			rules = imp.Rules
+		}
+	}
+	if !reflect.DeepEqual(rules, []string{"CHKOT-B01", "PAYMT-B01", "PAYMT-V01"}) {
+		t.Errorf("the checkout's rule reading the amount is reached through its code: %v", rules)
+	}
+}

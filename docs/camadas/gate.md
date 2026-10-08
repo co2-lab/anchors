@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:0469f31baae7cf88 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:e482f25a069ff9a7 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 84 unidades e 1371 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 84 unidades e 1373 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -255,6 +255,8 @@ when its own file did not move.
 
 - **CTRIM-B06** — A rule is answered where it lives: by a revision added since the last commit to its own spec — the changed one or a spec that reads its data, every revision of a spec not yet in git counting as added —, naming it by its short or full code; or by one added to the changed spec naming it by its full code. A short code answers only its own spec's rule, never another unit's rule of the same letter and number. (`acknowledgedFullCodes`)
 
+- **CTRIM-B07** — The units that read this spec's data are found through the code: a file another spec specifies that imports — by its `@dep:` flag — a file this spec governs makes that spec a dependent; a spec still declaring the dependency in a table is one too, until it migrates. (`dependents`)
+
 
 ## CSDCN — ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those
 
@@ -474,63 +476,43 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 - **DCGDP-B07** — Every artifact that imports takes part in the chain — code, tests, test support, flows —: a test's imports carry the dependency flag like the code's, a flow composing another (`runFlow:`, inline or by `file:`, relative to the flow) imports it, the fixer writes the flag in each artifact's own comment, and — when the used-by gate confronts tests (`on:` holds `test`) — a symbol a test imports lists the test in its used-by flag; with the gate on code alone, the used-by flags list the code that imports the symbol, as before. (`chainUnit`)
 
 
-## DEPHN — DependencyHonored — methods promised in the dependency table are consumed in code
+## DEPHN — DependencyHonored — a spec declares no dependency: the code does
 
-Confronts a spec's **Dependency Table** against actual use in the unit's code: **every method
-symbol a spec promises to consume must genuinely appear in the non-comment content of the code
-it governs.**
-
-This is the **relational gate of the spec→code edge**. It catches the divergence that sibling gates
-(such as `feature-test-match`) cannot see: a spec declares `DEP2 → metadataVersioning · resolveVersion, applyEdit`,
-but the unit's code calls only `resolveVersion` — the promised `applyEdit` is never invoked.
-That exact divergence was the bug that slipped past 65 green tests in the originating project's
-end-to-end suite.
-
-The ruler is **static, without execution**:
-- **Only symbols are confronted**: identifiers enclosed in `backticks` in the Method field. A prose
-  description (such as `"CRUD + queries"` or `"requests"`) is not confrontable and is deliberately ignored;
-  prose explains the relationship rather than establishing a verifiable contractual promise.
-- Each declared symbol must appear as a token within the non-comment content of the code the spec
-  `specifies`. Line comments are stripped before checking so that comments cannot mask unused dependencies.
-  A declared symbol absent from code fails.
-- When a promised symbol is missing from code, the gate checks for a near rename (e.g. `ping` → `pingHeartbeat`
-  or `computeSeatsAmount` → `computeSeatsAmountCents`). If an identifier in code extends the symbol as a prefix
-  or suffix and the symbol has at least four characters, the verdict actively suggests the rename instead
-  of merely reporting an error.
-- Undetermined and unapplicable states are explicit:
-  - An artifact that is not a spec skips with reason (`not a spec — only spec has Dependency Table`).
-  - When no relational graph is loaded, the verdict is undetermined (`Pending`).
-  - When the Dependency Table contains no confrontable symbols, the check skips (`Dependency Table promises no confrontable SYMBOL`).
-  - When the spec governs no code (`specifies` edge absent), the verdict is undetermined (`Pending`).
+A spec that still carries a Dependencies table — rows opening with a `DEPn` — declares, in the
+artifact that comes first, what only the code can know. The gate names it as a divergence to
+migrate: `anchors migrate` removes the table and rewrites the `DEPn` a rule cites. A spec with
+no table passes.
 
 
-- **DEPHN-B01** — An artifact that is not a spec leaves without a verdict: only specs have a Dependency Table.
+- **DEPHN-B01** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-B02** — Without a relational map the verdict is UNDETERMINED (Pending), because dependency and specification edges cannot be traversed.
+- **DEPHN-B02** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-B03** — A spec declaring no confrontable symbols in its Dependency Table leaves without a verdict (Skip): prose descriptions and empty tables promise no verifiable identifiers.
+- **DEPHN-B03** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-B04** — A spec that specifies no code files leaves the verdict UNDETERMINED (Pending): there is no governed code to confront yet.
+- **DEPHN-B04** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-B05** — When every promised symbol appears in the non-comment content of the governed code, the gate passes.
+- **DEPHN-B05** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-B06** — When a promised symbol is absent from the governed code, the gate fails and names the unused symbol and dependency target file.
+- **DEPHN-B06** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-B07** — When an absent symbol resembles an identifier in code (sharing a prefix or suffix extension), the failure verdict suggests the candidate rename.
+- **DEPHN-B07** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-B08** — Line comments in governed code are stripped before confrontation, so symbols appearing exclusively within comments do not fulfill the promise.
+- **DEPHN-B08** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-I01** — Prose descriptions in dependency methods are never treated as contracts; only backticked identifiers constitute promises to verify.
+- **DEPHN-B09** — A spec whose text still has rows opening with a `DEPn` — a Dependencies table — diverges, naming how many rows and pointing at `anchors migrate`; a spec with none passes, and an artifact that is not a spec leaves without a verdict. (`checkDependencyHonored`)
 
-- **DEPHN-I02** — Symbol presence in code is matched strictly on token word boundaries, never as a substring of a larger identifier name.
+- **DEPHN-I01** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-I03** — Near-symbol rename suggestions are strictly conservative, requiring prefix or suffix containment and a minimum symbol length of four characters.
+- **DEPHN-I02** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-X01** — Static textual confrontation without runtime execution.
+- **DEPHN-I03** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-X02** — Does not interpret dependency semantics, parameter signatures, or method types.
+- **DEPHN-X01** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
-- **DEPHN-E01** — A code file the map says the spec specifies is no longer on disk.
+- **DEPHN-X02** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
+
+- **DEPHN-E01** — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`
 
 
 ## DCRQD — DocRequired — the aggregated document the unit must feed
@@ -921,7 +903,7 @@ The first reader is `rule-types`'s: a rule code defined twice in one file; then 
 
 - **GTDPG-B02** — `rule-types` counts each rule code a file defines — a heading, the first cell of a table row, a bold or bare bullet —, where it is defined; not inside a section whose rows cite codes (what a rule uses, the open decisions, the navigation, the state flow, the events a unit emits, a change history, what a plan revises) nor its subsections — known by the catalog's titles and by the titles the project declares for them in any layer; not on an alias or a retired line, nor a list item opening with the code in backticks; and a heading with the rows under it that open with its own code once. (`definedRuleOccurrences`)
 
-- **GTDPG-B03** — The spec catalogue's gates count their own declarations, each by the row that declares it: `env-declared` a variable of the environment table, `dependency-honored` a `DEPn` opening a row, `domain-declared` a Domain entry (case and backticks aside), `open-questions-resolved` an open question's code, answered rows included, `revision-orphans` a revision code opening a line, and `spec-sections` a catalog section — by its catalog title in any language or the title the project gave it — under the same parent heading. (`envOccurrences`, `depOccurrences`, `domainOccurrences`, `openQuestionOccurrences`, `revisionOccurrences`, `sectionOccurrences`)
+- **GTDPG-B03** — The spec catalogue's gates count their own declarations, each by the row that declares it: `env-declared` a variable of the environment table, `domain-declared` a Domain entry (case and backticks aside), `open-questions-resolved` an open question's code, answered rows included, `revision-orphans` a revision code opening a line, and `spec-sections` a catalog section — by its catalog title in any language or the title the project gave it — under the same parent heading. (`envOccurrences`, `domainOccurrences`, `openQuestionOccurrences`, `revisionOccurrences`, `sectionOccurrences`)
 
 
 ## DUPLC — Duplication — no code file holds a block copied from somewhere else
@@ -1194,7 +1176,7 @@ not match) closes its failure section with `none — <why>`, and that satisfies 
 
 - **FLRAI-B20** — `failure-declared`: each fallible source of a unit — a call of its code that a `dialect.fallible_patterns` entry recognises (comment lines and trailing comments do not count) — is named by a declared failure (`-E`): its row, or its row of the rules' uses, cites the name called as a whole word; a failure that does not name it ("not found") does not answer it. Unanswered, the gate fails naming each source by file and line, unless the Errors section is closed with `none — <reason>` or the spec waives with `@no-failure: <reason>`. (`fallibleSources`, `fallibleCalls`, `FallibleCall`, `FallibleSource`, `uncoveredSources`)
 
-- **FLRAI-B21** — A dependency the spec declares on a file of a layer the project marks `fallible: true` is a fallible source too, named by its `DEPn` and path, and answered by a failure citing its `DEPn` or the file's stem (`useBudget`); a dependency on any other layer is not a source.
+- **FLRAI-B21** — A file of a layer the project marks `fallible: true` that the unit's code imports — by its `@dep:` flag — is a fallible source too, named by its path and answered by a failure citing the file's stem (`useBudget`) or a name the code imports from it; while a spec still declares the dependency in a table, its `DEPn` names it as well. A dependency on any other layer is not a source. (`FallibleSource`)
 
 - **FLRAI-B22** — `failure-handled`: each fallible call of the unit's code has its handling in its window — the call's statement from its first line (a destructuring above it that reads the error; the climb stops at a blank line or at one ending a statement, `;`, `}` or `)`), and the pattern's `window` after it (`DefaultFallibleWindow` when it declares none) —, matched by the pattern's `handled` or, when it declares none, the project's `handle_patterns`; a call with none fails, named by file, line and text, unless its line or the line above waives it with `@no-handle: <reason>`. (`unhandledCalls`)
 

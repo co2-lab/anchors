@@ -1,6 +1,6 @@
 <!-- @anchors
   code: VLANV
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ValueAnchored — a replicated key is declared where it is used, and every copy carries the same value
@@ -87,14 +87,6 @@ copies are the truth.
 | `VLANV-E01` | A spec the map lists is no longer on disk when the project index is built. | That spec is left out of the index: its rules declare no value, and the declarations pointing at them are not charged against the spec. The rules of every other spec are still confronted (`VLANV-B05`). | The map can be older than the tree (a spec deleted since the last build): a missing spec declares nothing, and one stale node must not drop the source of every other rule. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
 | `VLANV-E02` | A code file the map lists is no longer on disk when the project index is built. | That file contributes no copy of any key; the copies in every other file are still confronted (`VLANV-B04`). | A file that is gone carries no copy that could disagree, and one stale node must not hide the divergence between the files that are there. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
 | `VLANV-E03` | `derived.value_anchor` is declared with fewer than two capture groups. | `Skip` (the pattern counts as not declared, `VLANV-I01`), naming the declared pattern and the missing group. | The skip is decided; only the cause was wrong — "not declared" about a declared pattern. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `ValueAnchor` | core — the declaration shape is declared by the project |
-| DEP2 | `internal/mapx/model.go` | `KindCode` | core — the kind routes the jurisdiction |
-| DEP3 | `internal/gate/spec_feature_match.go` | `defineRuleCaptureRE` | gate — the same reading of "the line that defines a rule" |
 
 ## Open Decisions
 

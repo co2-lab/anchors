@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DSCRD
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Discard — take off the board a card that no longer makes sense, without deleting it
@@ -62,13 +62,6 @@ fails is named in the error while the others are still discarded.
 | --- | --- | --- | --- |
 | `DSCRD-E01` | The discard label cannot be applied to a card. | That card is neither commented nor closed, the other cards are still discarded, and the command fails naming the card and the platform's answer. | A reason recorded on a card that stays on the board would say two contrary things at once. |
 | `DSCRD-E02` | The reason comment cannot be recorded on a card. | That card is not closed, and the failure is reported as "record the reason" with the platform's answer. | A closed card with no reason is indistinguishable from a lost one. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Load`, `AbsRoot`, `GitHubMode` | config — project configuration and workflow mode |
-| DEP2 | `internal/initx/workflows.go` | `LabelDiscarded` | the name of the discard label |
 
 ## Open Decisions
 

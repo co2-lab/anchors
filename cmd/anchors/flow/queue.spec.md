@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WRQUW
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: comando
 -->
 # WorkQueue — list, pull, close and discard the work, from the local queue or from the board
@@ -102,16 +102,6 @@ decide the product is told to escalate instead of asking whoever runs it.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `WRQUW-E01` | The claim run ends in failure without a card. | `next` fails naming the run, its conclusion and how to see its log. | A failed claim is a broken pipeline, unlike a claim that found no free card. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/queue` | `List`, `Claim`, `Enqueue`, `MarkDone`, `Drop`, `Reclaim`, `ReclaimForce`, `RecentlyHeld`, `SuggestNext` | the local queue |
-| DEP2 | `internal/board` | `Client.Mine`, `AskAndWait`, `ClaimOutcome` | the board and the claim pipeline |
-| DEP3 | `internal/settings` | `Load`, `Save`, `HandlesUserIssues` | the agent's declared role |
-| DEP4 | `internal/scan` | `Walk`, `LayerOfUnit` | scan — the plans' seeds and the unit's layer |
-| DEP5 | `cmd/anchors/flow/notifications.go` | `printNotifications` | comando — the message on top of `next` |
 
 ## Open Decisions
 

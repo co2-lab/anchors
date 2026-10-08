@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLWRF
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: infra
 -->
 # FlowWorkflows — declare the pipelines of the work flow, find what is missing or broken, and seed them without taking over what the team owns
@@ -95,13 +95,6 @@ card back to its author, and at the merge says on the card when the work landed 
 | `FLWRF-E01` | The pipelines folder cannot be created. | The seeding returns an error naming the folder and writes nothing. | Reporting success with no pipeline on disk would leave the flow silently off. |
 | `FLWRF-E02` | A pipeline cannot be written. | The seeding stops with an error naming the file and returns what it wrote before. | The caller must know which pipelines exist and which do not. |
 | `FLWRF-E03` | The binary does not carry a listed template. | The seeding stops with an error naming the template. | A doctor that demands a pipeline Anchors cannot create would loop forever. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Workflow.IntegrationBranchOrDefault` | config — the project's integration branch |
-| DEP2 | `internal/scan/upstream.go` | `UpstreamDir`, `UpstreamMarker` | scan — where the pipelines live and the ownership marker |
 
 ## Open Decisions
 

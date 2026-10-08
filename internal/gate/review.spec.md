@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RVDUR
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ReviewsDue — the targets of a reviewed gate that no review covers at their current revision
@@ -41,13 +41,6 @@ A gate that declares `review:` marks its targets to review, apart from how it me
 ## Errors
 
 none — the unit only reads the configuration and the map it is given; nothing it does can fail.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/review.go` | `ReviewOf` | mapa — the reviews recorded (MPRVM) |
-| DEP2 | `internal/config/config.go` | `Gate.Review`, `ReviewAsk` | config — which gates are reviewed |
 
 ## Open Decisions
 

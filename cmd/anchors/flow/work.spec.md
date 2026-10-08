@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WRPRW
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: comando
 -->
 # WorkPrompt — compose the work prompt of one stage over one target, from what the project declares
@@ -88,17 +88,6 @@ STOP: a production script under a heading that forbids the piece made workers cr
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `WRPRW-E01` | REF[WRPRW-B01]: an unknown artifact, a missing target or an unloadable configuration, which B01 refuses before composing anything | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Layer`, `Derived`, `Gate` | config — the declared structure |
-| DEP2 | `internal/queue` | `ValidWorkArtifact`, `ArtefatosDeTrabalho` | the stages that are composed |
-| DEP3 | `internal/change` | `Pending` | the pending delivery records |
-| DEP4 | `internal/issue` | `List` | the recorded findings |
-| DEP5 | `internal/mapx` | `Load`, `StemOfAnchor` | mapa — the specifies edges and the unit's stem |
-| DEP6 | `internal/i18n` | `TIn` | the open-decisions section's title and "none" value |
 
 ## Open Decisions
 

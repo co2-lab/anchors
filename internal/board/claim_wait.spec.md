@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CLWTC
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # ClaimWait — asking the claim pipeline for a card and waiting, bounded, for the answer
@@ -49,12 +49,6 @@ bounded number of times.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `CLWTC-E01` | The run list is not the expected JSON. | The wait fails with the error before dispatching anything. | Without the run list the agent cannot know whether a claim of its own is pending, and dispatching blind is what duplicated claims. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/board/board.go` | `Ask`, `Mine` | apoio — the dispatch and the look at the board (`BRCRB`) |
 
 ## Open Decisions
 

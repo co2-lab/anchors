@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLALF
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # FlagAliases — a renamed command flag keeps answering to its old name
@@ -49,12 +49,6 @@ current flag cannot hold is reported under the name the person actually typed.
 | --- | --- | --- | --- |
 | `FLALF-E01` | The value typed under the old name cannot be held by the current flag. | An error that names the OLD flag. | The person typed the old name; an error about a flag they never typed would send them looking in the wrong place. |
 | `FLALF-E02` | An alias is declared for a current flag the command does not have. | The program stops at start with a message naming the missing flag and the command. | It is a programming error in the command's wiring, and it must surface the first time the command is built, not when a user passes the flag. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | — | the command-line flag library | external — command and flag parsing |
 
 ## Open Decisions
 

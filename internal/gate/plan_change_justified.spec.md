@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PCJPL
-  updated_at: 2026-10-04
+  updated_at: 2026-10-08
   layer: gate
 -->
 # PlanChangeJustified — a modified plan or spec must declare why it changed
@@ -82,14 +82,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `PCJPL-E01` | REF[PCJPL-B13]: a git that cannot report the changed files is the outside-a-repository case B13 answers: the caller's list is trusted | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `CodeLengthPattern`, `Config` | core — code length patterns and configuration for changed files |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized verdict and diagnostic messages |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `Node` | core — graph structure and artifact node representations |
 
 ## Open Decisions
 

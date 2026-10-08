@@ -2,7 +2,7 @@
 # @anchors
 #   code: NWFTN
 #   ref: NWARN
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @NWARN
@@ -160,3 +160,10 @@ Feature: NewArtifact — a new artifact is born beside its unit, with a resolved
     Given the screen preset, a project whose letter B lists "Efeitos" first, and a layer naming its rules section "Rules (Regras de Negócio)"
     When a screen spec is rendered, and then for a project that names neither
     Then the loading table sits inside the rules section as a subsection with PRBOE-B02, PRBOE-B01 is defined once, and without the names the sections stay apart with distinct codes
+
+  @NWARN-B22 @unit-level
+  Scenario: No spec template writes a Dependencies section
+    Given every spec section of the catalog and every spec preset
+    When each is rendered
+    Then none writes a Dependencies section nor cites a DEPn
+

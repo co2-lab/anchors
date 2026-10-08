@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CHNGL
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: infra
 -->
 # Changelog — the releases of a project, read from its commits
@@ -66,12 +66,6 @@ that keeps what it already holds.
 | --- | --- | --- | --- |
 | `CHNGL-E01` | The template does not parse, or fails while rendering. | `Render` returns the error, prefixed with `changelog template`. | A changelog written from half a template would look complete. |
 | `CHNGL-E02` | A git command fails (not a repository, an unknown ref). | The error names the command and carries git's own message. | The history is the source; without it there is nothing honest to write. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `git` | `tag`, `log` | external — the history |
 
 ## Open Decisions
 

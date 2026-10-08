@@ -1,6 +1,6 @@
 <!-- @anchors
   code: LYBNL
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: gate
 -->
 # LayerBoundary — a layer does not reach what is not its own
@@ -79,14 +79,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `LYBNL-E01` | REF[LYBNL-B10]: a forbid pattern that does not compile is answered by B10: it fails visibly | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Boundary` | core — the rules, their scope, reason and severity are declared in the Structure |
-| DEP2 | `internal/scan/scan.go` | `Classify` | core — the layer of the node comes from the same classification the scan uses |
-| DEP3 | `internal/mapx/model.go` | `KindCode` | core — the gate needs the node's KIND to know whether it has jurisdiction |
 
 ## Open Decisions
 

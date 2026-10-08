@@ -1,6 +1,6 @@
 <!-- @anchors
   code: THSAS
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: gate
 -->
 # TestHasAssertion — every test asserts something in its body
@@ -46,13 +46,6 @@ otherwise the body is read by its layout, which every language keeps whatever it
 | Error | When | What the user sees |
 | --- | --- | --- |
 | `THSAS-E01` | The tests cannot be listed (a script that fails, output outside the contract), or the assertion does not compile | the gate fails with the reason, instead of answering as if there were no test |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/project_tests.go` | `projectTests` | gate — the project's tests, read once per scan |
-| DEP2 | `internal/gate/rule_uses.go` | `gateEntry` | gate — the gate's own settings |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCLTR
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ScenarioLetterDeclared — the letter of a scenario code exists in the vocabulary
@@ -73,13 +73,6 @@ work for whoever knows the domain.
 | --- | --- | --- |
 | `SCLTR-X01` | Does not decide whether the invented letter should be declared or remapped. | Both repairs are legitimate and the choice depends on whether the nature is genuinely missing from the project — domain knowledge the gate does not have. Choosing for the author would impose one of two valid answers. |
 | `SCLTR-X02` | Does not judge the TAGS accompanying the code, only the letter of the code itself. | The measured pattern shows invented letters travel with tags equally outside the vocabulary, but a tag is free vocabulary by design. Charging it here would turn a precise instrument into a style opinion. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `CodeLengthPattern` | core — the code shape is declared by the project |
-| DEP2 | `internal/mapx/model.go` | `KindFeature` | core — the kind is what routes the jurisdiction |
 
 ## Open Decisions
 

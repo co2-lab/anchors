@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MTINM
-  updated_at: 2026-10-03
+  updated_at: 2026-10-08
   layer: infra
 -->
 # MutationIngest — the mutation score per file, read from a Mutation Testing Elements report
@@ -68,12 +68,6 @@ project to declare them twice.
 | `MTINM-E02` | The report is not JSON of the canonical format. | An error naming the expected format. | Accepting it silently would record a phantom score. |
 | `MTINM-E03` | The report has no file and no schema version. | An error pointing at the tool's output format. | Without the version it is a tool emitting another format; a report WITH it and no file is a run with nothing to mutate, read as an empty report (`MTINM-B10`). |
 | `MTINM-E04` | The report file cannot be read. | The read error is returned. | A missing report must not look like a clean run. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/testsig/mutation_gremlins.go` | `parseGremlins` | infra — the reading of the gremlins format, chosen by name |
 
 ## Open Decisions
 

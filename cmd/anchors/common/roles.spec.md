@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ARCGN
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: comando
 -->
 # AgentRoleCLI — who this agent is, and the role it declared, as the commands show and ask it
@@ -54,14 +54,6 @@ back and asked again, never guessed.
 | --- | --- | --- | --- |
 | `ARCGN-E01` | The input closes before any answer while the role is being asked. | An error saying the response could not be read; no role is assumed. | Assuming a role would grant or deny capabilities nobody chose. |
 | `ARCGN-E02` | The settings file exists but cannot be read. | The agent does not decide the product. | The capability is closed by default: a broken file must never unlock it. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/settings/roles.go` | `KnownRoles`, `ParseRole`, `Role` | apoio — the role catalogue |
-| DEP2 | `internal/settings/settings.go` | `Load` | apoio — the agent's declared settings |
-| DEP3 | `internal/i18n/i18n.go` | `T` | apoio — the text shown to the agent |
 
 ## Open Decisions
 

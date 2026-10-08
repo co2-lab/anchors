@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRHNP
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ProgressHonest — the progress file tells the truth about the disk
@@ -88,14 +88,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `PRHNP-E01` | REF[PRHNP-B02]: a companion progress file that cannot be read is answered as the missing one of B02: skipped, not failed | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/scan/progress.go` | `ProgressPathFor` | core — the companion's suffix has one definition, and it belongs to the scanner |
-| DEP3 | `internal/mapx/model.go` | `KindPlan` | core — the gate is anchored on the plan, and the kind is what routes the jurisdiction |
-| DEP4 | `internal/config/config.go` | `Config` | core — the plan layer and its conventions are declared in the Structure |
 
 ## Open Decisions
 

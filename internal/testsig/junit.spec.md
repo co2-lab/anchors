@@ -1,6 +1,6 @@
 <!-- @anchors
   code: JUIJN
-  updated_at: 2026-10-03
+  updated_at: 2026-10-08
   layer: infra
 -->
 # JUnitIngest — the run's outcome per test case, and the scenario codes each case proves, read from a JUnit report
@@ -60,12 +60,6 @@ case's NAME by the rule code grammar, in the project's vocabulary.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `JUIJN-E01` | The report file cannot be read. | The read error is returned and no report is produced. | A missing report must not look like a run with no cases. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/testsig/code.go` | `mustCodeRE` | infra — the scenario code grammar, in the project's vocabulary |
 
 ## Open Decisions
 

@@ -21,7 +21,7 @@ Feature: Duplicates — each gate confronts the repeats of what it declares
 
   @GTDPG-B03 @unit-level
   Scenario: The spec catalogue's gates count their declarations
-    Given a spec repeating an environment variable, a DEPn, a Domain entry in another case, an open question code after it was answered, a revision code, and a section under the same parent
+    Given a spec repeating an environment variable, a Domain entry in another case, an open question code after it was answered, a revision code, and a section under the same parent
     When each gate's occurrences are read
-    Then each names its repeated key, a DEPn cited in a rule's uses is not counted, and each line is the row's
+    Then each names its repeated key, and each line is the row's
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PLCFL
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # PlaceholderFilled — the skeleton the generator emits must be FILLED IN
@@ -63,12 +63,6 @@ writes, fills in, and that the gate charges only what was left behind.
 | --- | --- | --- |
 | `PLCFL-X01` | Does not judge whether what replaced the marker is GOOD. | The ruler is deterministic: the marker is there, or it is not. Whether the sentence that replaced it says something worth saying is judgment, and judgment belongs to another class of gate. |
 | `PLCFL-X02` | Charges only the marker in a VALUE POSITION — header field, table cell, rule title — and never a marker in running prose. | This is the whole distinction that keeps the gate honest. A deliberate pending-work section, a sentence naming what is left to do, a comment carrying a marker: all are the author writing, and the gate that accused them would punish the honesty the framework asks for everywhere else. The position is the evidence, not the word. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindSpec` | core — the kind is what routes the jurisdiction |
 
 ## Open Decisions
 

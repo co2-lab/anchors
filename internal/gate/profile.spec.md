@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRFLO
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # Profile — the verdicts of a run, gathered per gate and per node
@@ -62,12 +62,6 @@ actually confronted, and which of them failed a blocking gate.
 ## Errors
 
 none — the profile is a pure aggregation over results already produced: it reads no file and calls nothing that can fail.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/gate.go` | `Result`, `Verdict` | gate — the raw verdict of one confrontation |
 
 ## Open Decisions
 

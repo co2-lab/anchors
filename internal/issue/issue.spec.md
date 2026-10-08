@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ISLFS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: infra
 -->
 # IssueLifecycle — a divergence recorded so it survives the session, with its state as a folder
@@ -73,12 +73,6 @@ lingering. When the project works on GitHub, the same lifecycle is routed to car
 | --- | --- | --- | --- |
 | `ISLFS-E01` | The state folder cannot be created when an issue is opened. | Opening returns the error and reports nothing created. | A gate that accuses and does not record would say "recorded" about a finding nobody will find tomorrow. |
 | `ISLFS-E02` | The issue to reassign does not exist in the given state. | Reassigning returns the error. | Handing over an issue that is not there would tell the user they have work they do not. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/issue/github.go` | `GitHub` | infra — the card backend of the same lifecycle (`GHIGT`) |
 
 ## Open Decisions
 

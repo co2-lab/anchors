@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BLGTN
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # Obligations — the duties in force, resolved from packs and config, and their status across the project
@@ -80,15 +80,6 @@ trust without checking.
 | --- | --- | --- | --- |
 | `BLGTN-E01` | REF[BLGTN-B05]: a pack that fails to load is the configuration failure B05 reports on the error output while keeping the inline duties | — | — <!-- @resilient: the pack failure is printed on the error output, and the inline duties still apply, so the check goes on with what it can trust --> |
 | `BLGTN-E02` | A node of the map whose file cannot be read. | It is not counted as a subject of any duty. | A node that cannot be read cannot be shown to carry the trigger; counting it as missing would accuse a file that is not there. <!-- @resilient: a node that cannot be read cannot be shown to carry the trigger, and counting it would accuse a file that is not there --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/obligation_honored.go` | `checkObligationHonored`, `headerHasAttr`, `waiverFor` | gate — the judgement of one node against one duty |
-| DEP2 | `internal/pack/pack.go` | `LoadAll` | infra — the packs adopted by the project |
-| DEP3 | `internal/config/config.go` | `Config`, `Obligation` | config — the inline duties and the adopted packs |
-| DEP4 | `internal/mapx/model.go` | `Graph` | mapa — the nodes the report walks |
 
 ## Open Decisions
 

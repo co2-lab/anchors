@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNHNC
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # CountHonored — a numerical assertion written in a spec must match reality in code
@@ -90,14 +90,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | `CNHNC-E01` | REF[CNHNC-B08]: a declared glob that does not parse is the configuration failure B08 answers: the gate fails carrying the glob error | — | — |
 | `CNHNC-E02` | REF[CNHNC-B09]: a count pattern that does not compile is the configuration failure B09 answers: the gate fails carrying the regex error | — | — |
 | `CNHNC-E03` | A file the glob matches cannot be read while occurrences of a pattern are counted. | `Fail` naming the file. | An unread file would undercount, and the gate would accuse the declared number of a divergence it never measured. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | core — project configuration |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized error and skip messages |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `KindSpec`, `Node` | core — graph model and spec node representation |
 
 ## Open Decisions
 

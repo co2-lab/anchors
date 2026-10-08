@@ -1,6 +1,6 @@
 <!-- @anchors
   code: OPRGP
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: comando
 -->
 # OpsRegister — the operation commands reach the CLI through one registration point
@@ -46,12 +46,6 @@ is an `unknown command` for whoever follows the instruction.
 ## Errors
 
 none — registration only attaches commands built by their own units; it has no input to reject and no failure path.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/root.go` | the root assembly that calls this registration | comando — CLRTC |
 
 ## Open Decisions
 

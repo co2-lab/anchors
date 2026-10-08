@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DTAUI
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Audit — the dossier of everything pending on one file, for fixing it in one pass
@@ -50,15 +50,6 @@ The dossier separates what is actionable from what is only shown. A failing gate
 | `DTAUI-E01` | The root has no loadable configuration. | The command fails with "load config: …". | Without the configuration there are no gates to run; an empty dossier would read as a clean file. |
 | `DTAUI-E02` | The root has no loadable map. | The command fails with "load map: … (run `anchors map build`)". | The scope and the doctor both read the map; the message names the command that creates it. |
 | `DTAUI-E03` | REF[DTAUI-B01]: a target outside the map is the failure B01 answers: the command refuses it by name | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/gate.go` | `RunWithConfig` | gate — the gates over the scope |
-| DEP2 | `internal/health/health.go` | `Diagnose` | the doctor's systemic findings |
-| DEP3 | `internal/mapx/impact.go` | `AnalyzeImpact` | the impact path for `--impact` |
-| DEP4 | `cmd/anchors/common/path.go` | `RelTo`, `NodeExists` | the target resolved against the root and the map |
 
 ## Open Decisions
 

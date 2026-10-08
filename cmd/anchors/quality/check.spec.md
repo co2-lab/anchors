@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CGPCH
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: comando
 -->
 # CheckGatePipeline — confronts the map's nodes against the declared gates, records the verdicts and reports the profile
@@ -208,21 +208,6 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-E05` | Neither changed files nor the full sweep is asked for. | Error asking for one of the two. | There is no default scope: guessing one would confront either too little or everything. |
 | `CGPCH-E06` | A changed file is governed by a layer but is not in the map. | Error saying the file is GOVERNED and to run the map build first. | Outside the map no gate confronts it: a new governed file would pass with no spec, feature or test. |
 | `CGPCH-E07` | A changed path exists neither on disk nor in the map. | Error asking to check the path. | A typo must not become "not governed" and let the hook continue in silence. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/gate.go` | `RunWithWaiver` | gate — running the gates under the waivers |
-| DEP9 | `internal/gate/profile.go` | `Aggregate` | gate — the verdict profile |
-| DEP2 | `internal/gate/rule.go` | `ParseWaiver`, `WaiverFromMessage` | gate — the waivers and their reasons |
-| DEP3 | `internal/mapx/stamp.go` | `StampEdges` | mapa — stamping the confronted edges |
-| DEP4 | `internal/issue/issue.go` | `Open`, `OpenAt`, `Resolve`, `ReconcileViolations` | infra — the issue folders |
-| DEP5 | `internal/queue/queue.go` | `Enqueue`, `List`, `Drop` | infra — the judgment queue |
-| DEP6 | `internal/scan/scan.go` | `Classify`, `Walk` | scan — what the project governs |
-| DEP10 | `internal/scan/progress.go` | `IsProgressFile` | scan — the plan's progress companion |
-| DEP7 | `cmd/anchors/mapcmd/map_staleness.go` | `StaleMapNodes` | comando — the nodes edited after the map build |
-| DEP8 | `internal/config/config.go` | `Load` | config — gates, layers and workflow mode |
 
 ## Open Decisions
 

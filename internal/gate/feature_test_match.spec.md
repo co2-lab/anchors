@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FTMFT
-  updated_at: 2026-10-03
+  updated_at: 2026-10-08
   layer: gate
 -->
 # FeatureTestMatch — scenarios in feature must be implemented in test by code and description
@@ -92,16 +92,6 @@ in automated test suites.
 | `FTMFT-X01` | Does not execute test suites or inspect test execution results. | This gate performs static structural and textual analysis; test execution signals are handled by test runners and ingested via `anchors ingest`. |
 | `FTMFT-X02` | Does not confront E2E or visual regression scenarios. | Non-unit testing surfaces inhabit different directories and runners, governed by dedicated surfaces. |
 | `FTMFT-X03` | Does not fail tests for minor natural language variations in test titles. | Human scenario language and implementation code descriptions naturally vary; classifying drift as a divergence — whose state the gate's `severity` decides — prevents disruption while preserving traceability. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `CodeLengthPattern`, `Config`, `DefaultRuleLetters` | core — configuration models and vocabulary patterns |
-| DEP2 | `internal/config/dialect.go` | `GherkinScenarioAlternatives` | core — multilingual Gherkin scenario keywords |
-| DEP3 | `internal/i18n/i18n.go` | `T` | core — localized messages for failures and warnings |
-| DEP4 | `internal/mapx/model.go` | `EdgeTestedBy`, `Graph`, `KindFeature`, `Node` | core — graph model and test relationship edges |
-| DEP5 | `internal/similarity/similarity.go` | `Classify`, `Identico`, `Limitrofe`, `Similar`, `Verdict`, `Weights` | core — weighted term similarity analysis for title matching |
 
 ## Open Decisions
 

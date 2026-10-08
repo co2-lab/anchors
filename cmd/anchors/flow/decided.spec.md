@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCDDE
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Decided — release the card an escalation stopped for a person, once the decision became a rule
@@ -67,14 +67,6 @@ what blocked the card, and closes the open decision issues born under it.
 | `DCDDE-E02` | The release edit fails. | The command fails with "release card #n" and the platform's answer, announces no release, and neither comments nor closes. | A decision closed on a card still stopped is the inconsistency this command exists to undo. |
 | `DCDDE-E03` | The list of decisions under the card cannot be read. | Nothing is closed, and the count is zero. | Closing without a list that was actually read could close the wrong issues. |
 | `DCDDE-E04` | The card's labels cannot be read. | No blocker is reported, and the release still removes the needs-user label. | The blockers are the trace, not the release; failing to read them must not keep the card stopped. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Load`, `AbsRoot`, `GitHubMode` | config — project configuration and workflow mode |
-| DEP2 | `internal/initx/workflows.go` | `LabelNeedsUser`, `LabelDesbloqueia`, `PrefixoLabelBlockedBy`, `LabelSob`, `LabelManual` | the workflow labels |
-| DEP3 | `internal/i18n/i18n.go` | `T` | the refusal when the unblock lookup fails |
 
 ## Open Decisions
 

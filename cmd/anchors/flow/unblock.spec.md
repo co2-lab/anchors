@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NBLCK
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Unblock — open the work card a decision demanded, linked to the card stuck waiting for a person
@@ -65,14 +65,6 @@ agent takes it early.
 | --- | --- | --- | --- |
 | `NBLCK-E01` | The platform refuses to create the new card. | The command fails with "create the card" and the platform's answer, and the blocked card is not commented. | A comment pointing at a card that does not exist would send the reader nowhere. |
 | `NBLCK-E02` | The comment on the blocked card fails after the new card was created. | A warning names the blocked card, and the command still succeeds. | The card exists; failing would hide what was created and what was not. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Load`, `AbsRoot`, `GitHubMode` | config — project configuration and workflow mode |
-| DEP2 | `internal/initx/workflows.go` | `LabelDesbloqueia` | the link label of a blocked card |
-| DEP3 | `cmd/anchors/common` | `FirstLineOfReason` | comando — the title line of a reason |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGLTR
-  updated_at: 2026-09-28
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # CodeLetters — rewriting the letter of the codes of one kind of unit
@@ -41,12 +41,6 @@ permission and stays, and a plan's revision block `-R0001` has four digits and i
 
 none — the rewrite reads only the text it is given; a code it does not recognize is a code it
 leaves alone, not a failure
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/migra/step.go` | `LetterRename` | infra — the steps that declare the renames |
 
 ## Open Decisions
 

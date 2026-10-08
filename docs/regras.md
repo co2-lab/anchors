@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:88e1a139b177d7b8 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:e7ea2228189cad88 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1375,6 +1375,8 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-B24 — The header guide names the flags beside the code — the dependency flag on each import line and its waiver, the used-by flag above each imported symbol (naming its symbol above an export list), the navigation flag on each call and its waiver —, the gates that confront each, and that the fixer writes what the code proves; the navigation guide, a subcommand of its own, shows a screen spec's In and Out tables, the flag on every navigation call, a back navigation included, the four navigation gates, the entry routes, and the page and command that show the map. Their examples are written so this repository does not read them as its own flags.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
+- [GVGDG-B25 — The spec guide says a spec names no file, method or file code — the files a unit imports are declared where the import is, in the code and the tests —, that a rule another unit shares lives in the product doctrine and is realized, not cited, and that the rule uses cite fields and the spec's own codes.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B20 — The test guide strongly recommends a contract test for every API unit, validating the API against the OpenAPI compiled from the specs with the language's own tool, named by `{CODE}-CT`, loading the document instead of copying it, and asserting each error response's status, code and message.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
@@ -2197,6 +2199,10 @@ abra a página dela em `camadas/`.
 
 - [MGCMM-B16 — Crossing format 7, a code is rewritten only where it is cited as a code (`RewriteCited`: its rule codes, the header fields, backticks, a Gherkin tag) — in the project's files, the config and the map —; a bare word with its letters, and an identifier that holds them (`CODE_URL`), are left as they were, and each bare mention is listed with its file and line for a person to judge.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
+- [MGCMM-B17 — The migration takes the dependencies out of the specs, whatever the format: it removes every section whose table rows open with a `DEPn`, under any title, and the `DEPn` from what each rule uses (Rule uses, Validations, Presentation validations); it names, per spec, the rows that named no file of the project — to flag in the code with a kind —, the rules whose uses held nothing else, and the lines that still cite a `DEPn`. A second run changes nothing. (`SpecDepsReport`)](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
+- [MGCMM-B18 — Taking a spec's Dependencies table out proves nothing new: what held at the spec's revision before — its scenarios' proofs, its stamps — moves, in the map, to the content without the table.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
 - [MGCMM-B06 — After a real migration the command tells the user to commit it.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-I01 — The migration is idempotent: a second run reports the files as current, asks for no commit, and leaves them byte for byte as the first run wrote them.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
@@ -2252,6 +2258,8 @@ abra a página dela em `camadas/`.
 - [NWARN-B20 — The screen preset writes the four states of a unit that loads data — loading, empty, load error, loaded — and the failure of its load naming the source, under the titles of the States and Errors sections: a section declared `As` another takes that section's title, the project's own when it renamed it.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-B21 — Two sections of one rule letter never define the same code: the rules section keeps its codes, and another section of the letter takes the next free number for each code it would repeat — a section that only cites codes is left as it is. When the layer names its rules section and gives a section of the rules' letter no title of its own, that section goes inside the rules section as a subsection under its catalog title, instead of opening a second section under the letter's first title.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
+
+- [NWARN-B22 — No spec template or preset writes a Dependencies section, and the rule uses' example cites no `DEPn`: a spec precedes the code, and the files a unit imports are declared where the import is.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-I01 — A refused `new` leaves nothing behind in the tree.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
@@ -3417,7 +3425,7 @@ abra a página dela em `camadas/`.
 
 - [GTVCG-B01 — With no source registered, the default gate names are absent, and asking is not a failure (`DefaultGateNamesForTest`).](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
-- [GTVCG-B02 — With a source registered, the default gate names are the ones it gives.](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
+- [GTVCG-B02 — With a source registered, the default gate names are the ones it gives (`RegisterGateNames`).](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
 - [GTVCG-B03 — The letters of the artifacts that are not specs are fixed and English: a plan's phase is `W`, a flow's step `T`, an action's result `O`, and none is a canonical spec letter with another meaning; the phase letter is among the canonical rule letters, since specs cite phases in `needs:` (`PhaseLetter`, `StepLetter`, `OutcomeLetter`).](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
@@ -3611,6 +3619,8 @@ abra a página dela em `camadas/`.
 
 - [CTRIM-B06 — A rule is answered where it lives: by a revision added since the last commit to its own spec — the changed one or a spec that reads its data, every revision of a spec not yet in git counting as added —, naming it by its short or full code; or by one added to the changed spec naming it by its full code. A short code answers only its own spec's rule, never another unit's rule of the same letter and number. (`acknowledgedFullCodes`)](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests)
 
+- [CTRIM-B07 — The units that read this spec's data are found through the code: a file another spec specifies that imports — by its `@dep:` flag — a file this spec governs makes that spec a dependent; a spec still declaring the dependency in a table is one too, until it migrates. (`dependents`)](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests)
+
 ### [CSDCN — ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
 
 - [CSDCN-B01 — A status EMITTED by the code and absent from the table fails, and the verdict names it — the client programmed from the table does not handle the refusal.](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
@@ -3739,35 +3749,37 @@ abra a página dela em `camadas/`.
 
 - [DCGDP-B07 — Every artifact that imports takes part in the chain — code, tests, test support, flows —: a test's imports carry the dependency flag like the code's, a flow composing another (`runFlow:`, inline or by `file:`, relative to the flow) imports it, the fixer writes the flag in each artifact's own comment, and — when the used-by gate confronts tests (`on:` holds `test`) — a symbol a test imports lists the test in its used-by flag; with the gate on code alone, the used-by flags list the code that imports the symbol, as before. (`chainUnit`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
-### [DEPHN — DependencyHonored — methods promised in the dependency table are consumed in code](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+### [DEPHN — DependencyHonored — a spec declares no dependency: the code does](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-B01 — An artifact that is not a spec leaves without a verdict: only specs have a Dependency Table.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-B01 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-B02 — Without a relational map the verdict is UNDETERMINED (Pending), because dependency and specification edges cannot be traversed.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-B02 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-B03 — A spec declaring no confrontable symbols in its Dependency Table leaves without a verdict (Skip): prose descriptions and empty tables promise no verifiable identifiers.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-B03 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-B04 — A spec that specifies no code files leaves the verdict UNDETERMINED (Pending): there is no governed code to confront yet.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-B04 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-B05 — When every promised symbol appears in the non-comment content of the governed code, the gate passes.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-B05 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-B06 — When a promised symbol is absent from the governed code, the gate fails and names the unused symbol and dependency target file.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-B06 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-B07 — When an absent symbol resembles an identifier in code (sharing a prefix or suffix extension), the failure verdict suggests the candidate rename.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-B07 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-B08 — Line comments in governed code are stripped before confrontation, so symbols appearing exclusively within comments do not fulfill the promise.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-B08 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-I01 — Prose descriptions in dependency methods are never treated as contracts; only backticked identifiers constitute promises to verify.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-B09 — A spec whose text still has rows opening with a `DEPn` — a Dependencies table — diverges, naming how many rows and pointing at `anchors migrate`; a spec with none passes, and an artifact that is not a spec leaves without a verdict. (`checkDependencyHonored`)](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-I02 — Symbol presence in code is matched strictly on token word boundaries, never as a substring of a larger identifier name.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-I01 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-I03 — Near-symbol rename suggestions are strictly conservative, requiring prefix or suffix containment and a minimum symbol length of four characters.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-I02 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-X01 — Static textual confrontation without runtime execution.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-I03 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-X02 — Does not interpret dependency semantics, parameter signatures, or method types.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-X01 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
-- [DEPHN-E01 — A code file the map says the spec specifies is no longer on disk.](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+- [DEPHN-X02 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
+
+- [DEPHN-E01 — @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:`](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
 ### [DCRQD — DocRequired — the aggregated document the unit must feed](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed)
 
@@ -4011,7 +4023,7 @@ abra a página dela em `camadas/`.
 
 - [GTDPG-B02 — `rule-types` counts each rule code a file defines — a heading, the first cell of a table row, a bold or bare bullet —, where it is defined; not inside a section whose rows cite codes (what a rule uses, the open decisions, the navigation, the state flow, the events a unit emits, a change history, what a plan revises) nor its subsections — known by the catalog's titles and by the titles the project declares for them in any layer; not on an alias or a retired line, nor a list item opening with the code in backticks; and a heading with the rows under it that open with its own code once. (`definedRuleOccurrences`)](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares)
 
-- [GTDPG-B03 — The spec catalogue's gates count their own declarations, each by the row that declares it: `env-declared` a variable of the environment table, `dependency-honored` a `DEPn` opening a row, `domain-declared` a Domain entry (case and backticks aside), `open-questions-resolved` an open question's code, answered rows included, `revision-orphans` a revision code opening a line, and `spec-sections` a catalog section — by its catalog title in any language or the title the project gave it — under the same parent heading. (`envOccurrences`, `depOccurrences`, `domainOccurrences`, `openQuestionOccurrences`, `revisionOccurrences`, `sectionOccurrences`)](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares)
+- [GTDPG-B03 — The spec catalogue's gates count their own declarations, each by the row that declares it: `env-declared` a variable of the environment table, `domain-declared` a Domain entry (case and backticks aside), `open-questions-resolved` an open question's code, answered rows included, `revision-orphans` a revision code opening a line, and `spec-sections` a catalog section — by its catalog title in any language or the title the project gave it — under the same parent heading. (`envOccurrences`, `domainOccurrences`, `openQuestionOccurrences`, `revisionOccurrences`, `sectionOccurrences`)](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares)
 
 ### [DUPLC — Duplication — no code file holds a block copied from somewhere else](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else)
 
@@ -4185,7 +4197,7 @@ abra a página dela em `camadas/`.
 
 - [FLRAI-B20 — `failure-declared`: each fallible source of a unit — a call of its code that a `dialect.fallible_patterns` entry recognises (comment lines and trailing comments do not count) — is named by a declared failure (`-E`): its row, or its row of the rules' uses, cites the name called as a whole word; a failure that does not name it ("not found") does not answer it. Unanswered, the gate fails naming each source by file and line, unless the Errors section is closed with `none — <reason>` or the spec waives with `@no-failure: <reason>`. (`fallibleSources`, `fallibleCalls`, `FallibleCall`, `FallibleSource`, `uncoveredSources`)](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
-- [FLRAI-B21 — A dependency the spec declares on a file of a layer the project marks `fallible: true` is a fallible source too, named by its `DEPn` and path, and answered by a failure citing its `DEPn` or the file's stem (`useBudget`); a dependency on any other layer is not a source.](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
+- [FLRAI-B21 — A file of a layer the project marks `fallible: true` that the unit's code imports — by its `@dep:` flag — is a fallible source too, named by its path and answered by a failure citing the file's stem (`useBudget`) or a name the code imports from it; while a spec still declares the dependency in a table, its `DEPn` names it as well. A dependency on any other layer is not a source. (`FallibleSource`)](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
 - [FLRAI-B22 — `failure-handled`: each fallible call of the unit's code has its handling in its window — the call's statement from its first line (a destructuring above it that reads the error; the climb stops at a blank line or at one ending a statement, `;`, `}` or `)`), and the pattern's `window` after it (`DefaultFallibleWindow` when it declares none) —, matched by the pattern's `handled` or, when it declares none, the project's `handle_patterns`; a call with none fails, named by file, line and text, unless its line or the line above waives it with `@no-handle: <reason>`. (`unhandledCalls`)](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
@@ -6483,7 +6495,7 @@ abra a página dela em `camadas/`.
 
 - [CDGNC-B09 — The module prefix of a module name is its initial and its first consonant, padded with X to two characters. (`ModulePrefix`)](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name)
 
-- [CDGNC-B10 — The generated length is the smallest declared code length of at least 2; loading the project's configuration applies it, and an empty list leaves the length unchanged.](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name)
+- [CDGNC-B10 — The generated length is the smallest declared code length of at least 2; loading the project's configuration applies it, and an empty list leaves the length unchanged. (`SetSlots`)](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name)
 
 - [CDGNC-I01 — The same name and the same taken codes always give the same code, and a resolved collision is never a taken code.](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name)
 
@@ -6867,7 +6879,7 @@ abra a página dela em `camadas/`.
 
 - [DFGTD-B09 — Every judgment gate that asks about the code or a test carries the @TBD instruction; the one that asks about the proof of a permanent test waiver does not.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
-- [DFGTD-B10 — The canonical declaration of a gate is found by name in the catalog of every artifact, including gates seeded only for guides or plans; an unknown name is not found.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
+- [DFGTD-B10 — The canonical declaration of a gate is found by name in the catalog of every artifact, including gates seeded only for guides or plans; an unknown name is not found. (`CanonicalGate`)](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-B11 — Loading a configuration completes a canonical gate declared by name alone with the catalog's declaration.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
@@ -8252,6 +8264,8 @@ abra a página dela em `camadas/`.
 - [RPSCR-B43 — Each navigation flag (`@navigates` with a colon, the screens' codes and, in brackets, the rule that triggers it) is read with its call's line — its own, or the next one when the flag stands alone on its line —, and each navigation waiver (`@no-nav` with a colon) with its reason. (`Navigation`, `Navigates`, `NavigatesIn`) The rule may be a data state (`CODE-DS-<name>`), which an Out row can be triggered by.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B44 — A spec's Out rows — the table under its Out heading, in any language of the catalog — are read by the rule each cites, with a revision of the row alone, its spacing normalized; a row citing no rule, and a table under any other heading, are not read. (`OutRows`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B45 — A spec's Dependencies table is no dependency of the map — a spec precedes the code, and the files a unit imports are declared where the import is —; the table is still read for the migration that removes it.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

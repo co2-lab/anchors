@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BDGRN
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: comando
 -->
 # BudgetRun — run a suite's files fastest first until a time budget is spent
@@ -46,15 +46,6 @@ their run is what times them.
 | --- | --- | --- | --- |
 | `BDGRN-E01` | REF[BDGRN-B07]: a suite the budget cannot run in batches | — | — |
 | `BDGRN-E02` | The map cannot be loaded | an error saying to build it | Without the recorded times there is no order to follow |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Suite` | core — the suite's commands and reports |
-| DEP2 | `internal/mapx/model.go` | `Graph`, `KindTest`, `KindCode` | core — the files and their recorded times |
-| DEP3 | `internal/mapx/ingest.go` | `RecordRunSeconds` | core — keeping a time Anchors measured |
-| DEP4 | `cmd/anchors/mapcmd/ingest.go` | `SuiteKey` | comando — the key a suite's times are kept under |
 
 ## Open Decisions
 

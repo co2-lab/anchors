@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RCPLR
-  updated_at: 2026-10-04
+  updated_at: 2026-10-08
   layer: infra
 -->
 # RecodePlan — planning and applying the rename of a code across the whole project
@@ -71,15 +71,6 @@ the disk in silence.
 | `RCPLR-E04` | REF[RCPLR-X01]: git refusing a move is surfaced by X01 | — | — |
 | `RCPLR-E05` | A planned file cannot be written while applying. | Applying stops with an error naming the file, and answers how many files were written before it. | The caller must know the rename is partial, and where it stopped. |
 | `RCPLR-E06` | REF[RCPLR-B11]: a target code owned by another unit is refused by B11 | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/recode/rewrite.go` | `Rewrite`, `Find`, `ValidCode` | infra — the text rewrite (`RCRWR`) |
-| DEP2 | `internal/recode/dialect.go` | `RewriteTestIDs`, `FileMatchesCode`, `RenameFilePath` | infra — the project's dialect (`RCDLR`) |
-| DEP3 | `internal/scan/scan.go` | `Walk` | scan — the project's files |
-| DEP4 | `internal/gitmeta/availability.go` | `Check` | infra — whether a move goes through git (`GTAVG`) |
 
 ## Open Decisions
 

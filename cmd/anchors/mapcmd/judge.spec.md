@@ -1,6 +1,6 @@
 <!-- @anchors
   code: JDGUE
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Judge — records an AI's verdict on a judgment gate with the same bookkeeping as a deterministic gate
@@ -84,16 +84,6 @@ applicable suggestion, and recording a verdict closes the judge task the queue h
 | `JDGUE-E07` | The target is not in the map and no piece of its unit is. | Refused, naming the target. | A stamp on nothing would be lost at once. |
 | `JDGUE-E08` | There is a map but no configuration. | Refused: the configuration could not be loaded. | The gate cannot be validated without its declaration. |
 | `JDGUE-E09` | The patch file cannot be read. | Refused before any issue or suggestion is written; the verdict was already stamped on the map. | A suggestion without its diff is not applicable. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/stamp.go` | `StampEdgeByGate`, `StampNodeByGate` | mapa — stamping the verdict |
-| DEP2 | `internal/issue/issue.go` | `Open`, `Reopen`, `Resolve` | infra — the issue of the finding |
-| DEP3 | `internal/suggestion/suggestion.go` | `Open` | infra — the fix suggestion |
-| DEP4 | `internal/queue/queue.go` | `List`, `MarkDone` | infra — the judge tasks |
-| DEP5 | `internal/config/config.go` | `Load` | config — the judgment gates and the workflow mode |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSRTS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # TaskStatusReport — the format of the round's report: where the task is, the verdict, what is missing, and what comes next
@@ -68,12 +68,6 @@ problem, not what went right.
 ## Errors
 
 none — the renderer receives a state and formats it; an absent part of the state is itself a line of the report (no card, no pull request), not a failure.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/flow/task_status.go` | `taskState` | comando — the state it formats |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SGINA
-  updated_at: 2026-10-05
+  updated_at: 2026-10-08
   layer: mapa
 -->
 # SignalIngestion — hanging the runner's results on the map's nodes: executions, proven rules, coverage and mutation
@@ -119,13 +119,6 @@ instead — an under-estimate, never a double count.
 ## Errors
 
 none — a report path that matches no node, a node that declares nothing and a suite that proves nothing are normal input answered by B03–B05 and B18; ingestion works on the graph in memory and cannot fail.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Graph`, `TestSignal`, `SuiteCoverage`, `MutationScope` | mapa — the signals recorded on nodes |
-| DEP2 | `internal/mapx/evidence.go` | `EvidenceClosure` | mapa — the closure revisions recorded with an execution |
 
 ## Open Decisions
 

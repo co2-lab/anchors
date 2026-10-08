@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNSTC
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: comando
 -->
 # StampCommand — writes the missing contract stamps on test doubles, and refreshes them after a change
@@ -66,17 +66,6 @@ adjusted in the same commit. A stamp whose member is gone is reported and left a
 | `CNSTC-E02` | The map does not exist or cannot be read. | Error pointing at `anchors map build`. | The map says which files are tests and which modules they double. |
 | `CNSTC-E03` | During a refresh, the member a stamp names no longer exists in the changed file. | The stamp is listed as NOT refreshed with the instruction to adjust the double, delete the stamp and stamp again; it is left unchanged. | A renamed or removed member cannot be re-hashed: guessing the new member would certify a double against code it does not copy. |
 | `CNSTC-E04` | A test to stamp cannot be read. | It is reported as not readable and the run goes on with the other tests. | One missing file in the map must not stop the stamps of every other test. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/mock_stamp_gen.go` | `GenerateStamps` | gate — computing the stamps a double lacks |
-| DEP2 | `internal/gate/mock_stamped.go` | `RefreshStamps`, `StampSnippet` | gate — finding and updating the stamps of a changed file |
-| DEP3 | `internal/mapx/store.go` | `Load` | mapa — the tests of the map |
-| DEP4 | `internal/config/config.go` | `Load` | config — the project configuration |
-| DEP6 | `internal/config/root.go` | `AbsRoot` | config — the project root |
-| DEP5 | `cmd/anchors/common/path.go` | `RelTo` | comando — paths relative to the root |
 
 ## Open Decisions
 

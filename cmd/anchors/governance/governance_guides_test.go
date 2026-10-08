@@ -663,3 +663,16 @@ func TestGuides_theFlagsBesideTheCode(t *testing.T) {
 		}
 	}
 }
+
+func TestSpecGuide_declaresNoDependency(t *testing.T) {
+	t.Run("GVGDG-B25: The spec guide says a spec declares no dependency", func(t *testing.T) {})
+	spec := guideOut(t, "spec")
+	for _, want := range []string{"No dependency", "@dep:", "in the code and in the tests", "product doctrine", "@realizes"} {
+		if !strings.Contains(spec, want) {
+			t.Errorf("the spec guide lacks %q", want)
+		}
+	}
+	if strings.Contains(spec, "`DEPn` rows") {
+		t.Error("the rule uses no longer cite DEPn rows")
+	}
+}

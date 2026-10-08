@@ -371,6 +371,20 @@ func TestFailureDeclared_fallibleSourceAsksForTheFailure(t *testing.T) {
 	if v, msg := checkFailureDeclared(uses, n, root, g, cfg); v == Fail {
 		t.Errorf("a failure whose uses name the DEPn answers it: %v %s", v, msg)
 	}
+	// With no table: the code the spec specifies imports the hook, by its @dep flag.
+	g.Nodes = append(g.Nodes, mapx.Node{ID: "x.tsx", Kind: mapx.KindCode, Layer: "screen"})
+	g.Edges = []mapx.Edge{
+		{From: "x.spec.md", To: "x.tsx", Type: mapx.EdgeSpecifies},
+		{From: "x.tsx", To: "hooks/useBudget.ts", Type: mapx.EdgeDependsOn, Method: "useBudget, default"},
+		{From: "x.tsx", To: "utils/fmt.ts", Type: mapx.EdgeDependsOn, Method: "fmt"}}
+	v, msg = checkFailureDeclared("# X\n\n| `CREDT-B01` | shows the budget |\n", n, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "hooks/useBudget.ts") || strings.Contains(msg, "DEP1") || strings.Contains(msg, "fmt.ts") {
+		t.Errorf("the hook the code imports is the source: %v %s", v, msg)
+	}
+	named := "# X\n\n| `CREDT-E01` | `useBudget` does not load | shows the load error |\n"
+	if v, msg := checkFailureDeclared(named, n, root, g, cfg); v == Fail {
+		t.Errorf("a failure naming the hook the code imports answers it: %v %s", v, msg)
+	}
 }
 
 // Each fallible call has its handling beside it — above, in the destructuring that receives

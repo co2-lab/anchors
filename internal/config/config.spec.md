@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNFGO
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: config
 -->
 # Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default
@@ -181,14 +181,6 @@ Most failures of the load are the refusals stated as behaviours; the rows below 
 | `CNFGO-E08` | REF[CNFGO-B11]: a pattern that does not compile is the refusal B11 states | — | — |
 | `CNFGO-E09` | REF[CNFGO-B12]: an unsupported language is the refusal B12 states | — | — |
 | `CNFGO-E10` | REF[CNFGO-B13]: a code length out of range is the refusal B13 states | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/i18n/i18n.go` | `T`, `Set` | core — the language of every message, set at load |
-| DEP2 | `internal/config/min_version.go` | `validarMinVersion` | config — the minimum version check the load runs |
-| DEP3 | `internal/config/patterns.go` | `Padroes` | config — a pattern declared as one string or a list |
 
 ## Open Decisions
 

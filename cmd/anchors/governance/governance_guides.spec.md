@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GVGDG
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: comando
 -->
 # GovernanceGuides — the guides an agent reads to operate Anchors, and the contracts other code relies on
@@ -51,6 +51,7 @@ The review and work guides are also the two that tell an agent what to do with w
 | `GVGDG-B22` | The spec guide asks every unit that reads environment variables to declare them — type, required, default, values, deprecated — as the contract `env-declared` confronts with the code and the variables page is compiled from. |
 | `GVGDG-B23` | The spec guide asks a unit that loads data for four states at least — loading, empty, load error and loaded —, the load error its own and never written as "no data" or "not found", its failure a rule naming the source it answers (`failure-declared`), each fallible call reading its error beside it (`failure-handled`), and points at the screen preset that writes them. |
 | `GVGDG-B24` | The header guide names the flags beside the code — the dependency flag on each import line and its waiver, the used-by flag above each imported symbol (naming its symbol above an export list), the navigation flag on each call and its waiver —, the gates that confront each, and that the fixer writes what the code proves; the navigation guide, a subcommand of its own, shows a screen spec's In and Out tables, the flag on every navigation call, a back navigation included, the four navigation gates, the entry routes, and the page and command that show the map. Their examples are written so this repository does not read them as its own flags. |
+| `GVGDG-B25` | The spec guide says a spec names no file, method or file code — the files a unit imports are declared where the import is, in the code and the tests —, that a rule another unit shares lives in the product doctrine and is realized, not cited, and that the rule uses cite fields and the spec's own codes. |
 | `GVGDG-B21` | The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state. |
 | `GVGDG-B20` | The test guide strongly recommends a contract test for every API unit, validating the API against the OpenAPI compiled from the specs with the language's own tool, named by `{CODE}-CT`, loading the document instead of copying it, and asserting each error response's status, code and message. |
 | `GVGDG-B19` | The test guide strongly recommends a visual-regression test for every state a visual unit's spec registers, tied both ways — a VR scenario per state, a VR test naming `{CODE}-VR-<state>` and a baseline image per scenario, every scenario of a state and every test of a scenario, a state with no visual value exempted by `@no-vr: <reason>` on its line —, the spec guide points every state of a visual unit to it, and the feature guide asks for one VR scenario per state. |
@@ -74,15 +75,6 @@ The review and work guides are also the two that tell an agent what to do with w
 ## Errors
 
 none — every guide prints an embedded text and has no failure to handle; a `--root` that is not a project is not a failure either, and `GVGDG-B03` states what it prints.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/governance/guide_autonomy.go` | `printAutonomy` | the section appended to the review and work guides |
-| DEP2 | `internal/config/root.go` | `AbsRoot` | the root of the review and work guides |
-
-The label names and the verdict line are not called by this code: they are facts the texts must match. Their sources — the label constants of `internal/initx/workflows.go` and the verdict expression of the seeded `anchors-pr-checks.yml` — are confronted by the proofs of `GVGDG-I02` and `GVGDG-I03`.
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CLMNC
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # CliMain — the entry point that stamps the build identity, prints a failure once and turns it into the exit code the hooks read
@@ -55,15 +55,6 @@ files through, while any other failure exits 1.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `CLMNC-E01` | REF[CLMNC-B01]: any command failure is handled here by printing it once and exiting non-zero | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/root.go` | `newRootCmd` | comando — CLRTC |
-| DEP2 | `cmd/anchors/common` | `Version`, `ErrNotGoverned`, `ExitNotGoverned`, `FlushTelemetry` | comando — the shared identity and exit codes |
-| DEP3 | `internal/mapx/model.go` | `GeneratedBy` | mapa — the generator the map records |
-| DEP4 | `internal/migra` | `RenamedKey` | apoio — the renamed keys |
 
 ## Open Decisions
 

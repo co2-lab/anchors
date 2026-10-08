@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CRVCD
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: gate
 -->
 # CodeReferenceValid — cross-referenced requirement codes must resolve to existing units
@@ -66,14 +66,6 @@ This gate operates in distinct territory from neighbouring gates:
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `CRVCD-E01` | A spec the map carries without its code is no longer on disk, so its header cannot be read when the declared codes are collected. | That spec contributes no code; the codes of the other specs are still collected, so a citation of theirs resolves and passes, and a citation of the missing spec's code is charged as unresolved (`CRVCD-B05`). | The map can be older than the tree (a spec deleted since the last build). A deleted spec declares no unit any more, so citing it really is a dangling reference, and one stale node must not empty the universe every other citation resolves against. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `CodeLengthPattern`, `Config` | core — identity code length regex pattern and project configuration |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized gate verdict and defect messages |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `KindSpec`, `Node` | core — map graph structure, spec kind definition, and node representations |
 
 ## Open Decisions
 

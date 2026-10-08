@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DMSTD
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: infra
 -->
 # DaemonState — the background watcher's state files: PID, pause flag, log and meta
@@ -52,12 +52,6 @@ to do it. How a process is probed and terminated is platform-specific and belong
 | --- | --- | --- | --- |
 | `DMSTD-E01` | REF[DMSTD-B04]: stopping with no watcher is the failure B04 answers with "watcher is not running" | — | — |
 | `DMSTD-E02` | The state folder cannot be created when the PID is written. | The error is returned and no PID file exists. | A watcher whose PID was not recorded is invisible to `stop` and `status`; the starter must know. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/daemon/daemon_unix.go` | `alive`, `terminate` | infra — the platform probe and termination (`DMRND`) |
 
 ## Open Decisions
 

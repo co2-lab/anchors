@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PGNHN
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # PaginationHonored — what promises a SET does not return the first page in silence
@@ -70,13 +70,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `PGNHN-E01` | REF[PGNHN-B07]: an undeclared dialect is answered by B07: indeterminate, and it says so | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/dialect.go` | `DialectFor` | core — recognizing function, loop and cursor belongs to the project's dialect |
-| DEP2 | `internal/mapx/model.go` | `KindCode` | core — the gate only has jurisdiction over code |
 
 ## Open Decisions
 

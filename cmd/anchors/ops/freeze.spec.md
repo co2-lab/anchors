@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FRZEX
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Freeze — the project is stopped in three layers with a written reason, and thawed by undoing exactly those layers
@@ -73,13 +73,6 @@ holds, never a failure that loses the local brake.
 | --- | --- | --- | --- |
 | `FRZEX-E01` | `anchors.yaml` is missing or does not load, for freeze or thaw. | The command fails with "load anchors.yaml". | There is no project to freeze, and writing a new file would invent one. |
 | `FRZEX-E02` | REF[FRZEX-B08]: a failing remote layer is the failure this command handles, by warning and keeping the local brake | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Load`, `Frozen`, `FreezeReasonText`, `GitHubMode` | config — the freeze state and the workflow mode |
-| DEP2 | `cmd/anchors/common` | `AliasDeFlag`, `ResolveAliases`, `FirstLineOfReason` | comando — the deprecated flag names and the commit subject |
 
 ## Open Decisions
 

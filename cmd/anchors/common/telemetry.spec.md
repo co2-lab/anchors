@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TLSTT
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # TelemetrySetup — every command starts telemetry the same way: the opt-outs first, then the notice, then the emitter
@@ -62,16 +62,6 @@ At exit, the command waits for the events still in flight, and does nothing when
 ## Errors
 
 none — a project configuration that does not load is not an error here: its `telemetry:` line is read as text (see TLSTT-B07), and the command itself reports the configuration error when it loads it.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/root.go` | `AbsRoot` | config — the project root |
-| DEP2 | `internal/config/config.go` | `Load` | config — the project's declared opt-out |
-| DEP3 | `internal/telemetry/config.go` | `Disabled` | apoio — which values turn telemetry off |
-| DEP4 | `internal/telemetry/notice.go` | `Notice` | apoio — the once-per-project notice |
-| DEP5 | `internal/telemetry/otlp.go` | `NewEmitter`, `Flush` | apoio — the event emitter |
 
 ## Open Decisions
 

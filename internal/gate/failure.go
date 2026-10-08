@@ -444,9 +444,9 @@ type FallibleSource struct {
 }
 
 // fallibleSources names what makes the unit able to fail: each fallible call of its code
-// (`file:line`, cited by the name called), and each dependency its spec declares on a file
-// of a layer the project marks `fallible: true` (`DEP2 path`, cited by `DEP2` or the
-// file's stem).
+// (`file:line`, cited by the name called), and each file of a layer the project marks
+// `fallible: true` its code imports (cited by the file's stem or a name it imports; by its
+// `DEPn` too while a spec still declares it in a table).
 func fallibleSources(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config, d config.Dialect) []FallibleSource {
 	var out []FallibleSource
 	for _, c := range fallibleCalls(n, root, g, d) {
@@ -459,16 +459,28 @@ func fallibleSources(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config
 		out = append(out, src)
 	}
 	if g != nil && cfg != nil {
-		seen := map[string]bool{}
+		// What the unit imports, from its code's `@dep:` flags (and a spec's table not yet
+		// migrated): each file of a fallible layer is a source.
+		from := []string{n.ID}
 		for _, e := range g.Neighbors(n.ID).Out {
-			if e.Type != mapx.EdgeDependsOn || seen[e.To] {
-				continue
+			if e.Type == mapx.EdgeSpecifies {
+				from = append(from, e.To)
 			}
-			t := g.Node(e.To)
-			if t == nil {
-				continue
-			}
-			if l, ok := cfg.Layers[t.Layer]; ok && l.Fallible {
+		}
+		seen := map[string]bool{}
+		for _, id := range from {
+			for _, e := range g.Neighbors(id).Out {
+				if e.Type != mapx.EdgeDependsOn || seen[e.To] {
+					continue
+				}
+				t := g.Node(e.To)
+				if t == nil {
+					continue
+				}
+				l, ok := cfg.Layers[t.Layer]
+				if !ok || !l.Fallible {
+					continue
+				}
 				seen[e.To] = true
 				src := FallibleSource{Label: e.To}
 				if e.Dep != "" {
@@ -480,6 +492,12 @@ func fallibleSources(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config
 					base = base[:i]
 				}
 				src.Names = append(src.Names, base)
+				// The names the code imports from it — `useBudgets` — name it too.
+				for _, sym := range strings.Split(e.Method, ",") {
+					if sym = strings.TrimSpace(sym); sym != "" && sym != "default" && identRE.MatchString(sym) {
+						src.Names = append(src.Names, sym)
+					}
+				}
 				out = append(out, src)
 			}
 		}
@@ -489,6 +507,9 @@ func fallibleSources(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config
 
 // calledNameRE is the name a matched call calls: the identifier right before its parenthesis.
 var calledNameRE = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9_]*)\s*\(`)
+
+// identRE is a name the code can import.
+var identRE = regexp.MustCompile(`^[A-Za-z_$][\w$]*$`)
 
 // uncoveredSources are the sources no declared failure names: a source is answered when a
 // line that carries a failure code of the spec — its row, or its row of the rules' uses —

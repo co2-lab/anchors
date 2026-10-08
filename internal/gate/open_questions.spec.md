@@ -1,6 +1,6 @@
 <!-- @anchors
   code: OPQSP
-  updated_at: 2026-10-06
+  updated_at: 2026-10-08
   layer: gate
 -->
 # OpenQuestions — a spec with an open question is not ready to implement
@@ -72,12 +72,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `OPQSP-E01` | REF[OPQSP-X02]: the one handled path is the absent section, which X02 answers: recorded as a divergence, never failed | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | core — the section's title may come from the project's lexicon, and the gate reads the Structure to find out |
 
 ## Open Decisions
 

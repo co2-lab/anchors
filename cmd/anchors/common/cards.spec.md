@@ -1,6 +1,6 @@
 <!-- @anchors
   code: AGCRG
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # AgentCards — the cards this agent owns, and the card a pull request declares, read from the tracker
@@ -67,12 +67,6 @@ installed, not authenticated or offline: every missing ingredient answers "nothi
 | --- | --- | --- | --- |
 | `AGCRG-E01` | The tracker client exits with an error while listing the agent's cards. | No cards, no error. | The list is a hint for the next step; an offline or unauthenticated client must not stop the command that asked. <!-- @resilient: the card list is only a hint for the next step, and an offline or unauthenticated tracker is an ordinary state of a workstation, not a defect to report --> |
 | `AGCRG-E02` | The tracker client exits with an error while reading a pull request body. | No card (empty answer). | Same reason: the caller treats "no card" as "no link declared" and moves on. <!-- @resilient: a PR body that cannot be read is read as no card linked, which is the answer the caller already handles; the tracker being unreachable is not this lookup's to report --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Workflow` | config — the workflow repository and labels |
 
 ## Open Decisions
 

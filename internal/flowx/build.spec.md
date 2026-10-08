@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLBLF
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # FlowBuild — assembling the work-flow graph from the project's flow and action files
@@ -54,13 +54,6 @@ simply not declared any, and files are read in a stable order.
 | `FLBLF-E01` | `flows/` or `flows/actions/` exists but cannot be read as a folder, or a flow or action file in them cannot be read. | The build returns the read error and no graph. Only a folder that does not exist is read as "no flows" (B01). | Skipping it would drop its states from the graph in silence, and the flows routed to them would look dangling. |
 
 A flow's findings (unreachable, unhandled, dangling) are answered by `FLMDF`, not failures of the build.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/i18n/i18n.go` | `AllTranslations` | apoio — the flow keywords in every language (`INCTA`) |
-| DEP2 | `internal/mapx/model.go` | `FlowGraph` | mapa — the graph the flows are written into |
 
 ## Open Decisions
 

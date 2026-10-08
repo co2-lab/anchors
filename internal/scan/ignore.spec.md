@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCIGS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: scan
 -->
 # ScanIgnore — what the scan never sees: the built-in list, the project's `.gitignore`, and editor noise
@@ -64,12 +64,6 @@ output and would feed the work queue with its own reports.
 ## Errors
 
 none — an absent or unreadable `.gitignore` is the normal case of a project that declared nothing, and the built-in list still applies; a pattern that does not parse as a glob matches nothing, as a line git itself would not match.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | config — the declared layers whose patterns re-enable built-in directories |
 
 ## Open Decisions
 

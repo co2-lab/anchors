@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPCMM
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: comando
 -->
 # MapCommand — builds the dependency map from the project and answers questions about it
@@ -79,17 +79,6 @@ grouped, because it is where the decision is made. Both warnings inform and neve
 | `MPCMM-E03` | `show` is given a file that is not a node of the map. | It fails naming the file. | An empty neighbourhood would read as an isolated file, which is a different fact. |
 | `MPCMM-E04` | `show` is given no file and no switch. | It fails naming the accepted selectors. | There is no default question to answer. |
 | `MPCMM-E05` | The worklist is asked for pending nodes with no configuration file. | It fails naming the configuration. | Pending means a failing gate, and the gates live in the configuration. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/scan/scan.go` | `Walk`, `Ambiguities` | scan — the files and the layers decided by length |
-| DEP2 | `internal/mapx/build.go` | `Build`, `PreserveStamps` | mapa — the graph and what a rebuild carries over |
-| DEP3 | `internal/mapx/store.go` | `Load`, `Save` | mapa — the map file |
-| DEP4 | `internal/gate/gate.go` | `RunWithConfig` | gate — the failing gates of the pending worklist |
-| DEP5 | `internal/config/config.go` | `Load` | config — the layers and the gates |
-| DEP6 | `internal/mapx/query.go` | `Neighbors`, `Orphans`, `Statistics`, `TopoOrder` | mapa — the questions `show` answers |
 
 ## Open Decisions
 

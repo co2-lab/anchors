@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PLPRP
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # PlanProgress — create a plan's progress file, the state that lives beside the decision and outside the map
@@ -63,13 +63,6 @@ comes from the plan's own header, so the pair stays locatable by code.
 | --- | --- | --- | --- |
 | `PLPRP-E01` | The plan declares no `code:` in its header. | The command fails naming the plan, and no progress file is created. | A progress without identity cannot be paired with its plan. |
 | `PLPRP-E02` | The plan cannot be read. | The command fails with "read the plan". | There is nothing to derive the phases and the code from. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `CodeLengthPattern`, `AbsRoot` | config — the project's code lengths |
-| DEP2 | `cmd/anchors/common` | `CodeDoHeaderSpec`, `RelTo` | comando — the header's code and the printed path |
 
 ## Open Decisions
 

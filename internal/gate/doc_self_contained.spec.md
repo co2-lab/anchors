@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DSCDC
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # DocSelfContained — the spec has to stand on its own
@@ -82,13 +82,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `DSCDC-E01` | REF[DSCDC-B09]: with no map the list of references cannot be known, and B09 answers that the confrontation is skipped | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindSpec`, `KindCode` | core — the kind gives jurisdiction, and the code nodes are left out of what counts as a reference |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — the findings are written in the reader's language, since the gate itself matches no vocabulary |
 
 ## Open Decisions
 

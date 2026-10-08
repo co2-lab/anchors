@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPMRM
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: comando
 -->
 # MapMerge — the git merge driver that unites two versions of the map instead of merging text
@@ -67,13 +67,6 @@ keeps and how many came from the other side.
 | --- | --- | --- | --- |
 | `MPMRM-E01` | Our side or the other side cannot be read or parsed as a map. | The merge fails naming which side it could not read, and our side's file is left as it was. | A merge written from half the information would silently drop the other half, which is the loss the driver exists to prevent. |
 | `MPMRM-E02` | The driver receives other than three paths. | The command is refused before reading anything. | Git always passes three; any other call is a misconfiguration, not a merge. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/store.go` | `Load`, `Save` | mapa — reading and writing the map files |
-| DEP2 | `internal/mapx/model.go` | `Graph`, `Edge`, `Node`, `FlowGraph` | mapa — the judgments, failures and flow the driver joins |
 
 ## Open Decisions
 

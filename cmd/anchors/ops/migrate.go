@@ -138,6 +138,15 @@ running it again changes nothing.
 				mudou = mudou || changed
 			}
 
+			// The specs' Dependencies tables: no format step — they run while one is left.
+			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			reports, err := migrateSpecDependencies(absRoot, cfg, dryRun)
+			if err != nil {
+				return err
+			}
+			printSpecDepsReport(reports, dryRun)
+			mudou = mudou || len(reports) > 0
+
 			if !mudou {
 				return nil
 			}

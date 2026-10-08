@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RCRWR
-  updated_at: 2026-10-04
+  updated_at: 2026-10-08
   layer: infra
 -->
 # RecodeRewrite — renaming an identity code inside a text, on every surface where it appears
@@ -57,12 +57,6 @@ with it, is never touched.
 ## Errors
 
 none — the unit is pure text rewriting; a text without the code is the invariant I01, not a failure.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `CodeLengthPattern` | config — the lengths a code may have come from the project |
 
 ## Open Decisions
 

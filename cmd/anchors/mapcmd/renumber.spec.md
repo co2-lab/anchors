@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RNMBR
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Renumber — moves the revisions a branch added when the base already took their number
@@ -68,14 +68,6 @@ and the one at the base — hands them to the planner, and applies what it answe
 | `RNMBR-E01` | The project has no configuration file. | The command fails naming the configuration file. | The default base comes from the configured integration branch. |
 | `RNMBR-E02` | The base has no merge base with the current branch. | The command fails naming the base, before reading any file. | Without the fork point the command cannot tell what the branch added. |
 | `RNMBR-E03` | A spec file given on the command line cannot be read. | The command fails naming the file, and nothing is written. | A renumber that skipped the file asked for would report success on work it did not do. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/revision_renumber.go` | `PlanRenumber`, `RewriteRevisionCitations` | gate — which revisions collide, and where their citations are |
-| DEP2 | `internal/config/config.go` | `Load` | config — the integration branch |
-| DEP3 | `cmd/anchors/common/path.go` | `RelTo` | comando — the project-relative form of a path given by hand |
 
 ## Open Decisions
 

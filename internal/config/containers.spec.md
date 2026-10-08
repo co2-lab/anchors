@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNTNR
-  updated_at: 2026-09-28
+  updated_at: 2026-10-08
   layer: config
 -->
 # Containers — what runs separately, and which layers run inside each
@@ -61,12 +61,6 @@ declared, and still claimed by it.
 ## Errors
 
 none — an undeclared layer or a missing block is information the unit returns, not a failure it handles.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | config — holds the declared containers |
 
 ## Open Decisions
 

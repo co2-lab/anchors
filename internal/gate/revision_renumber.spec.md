@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RVRNR
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # RevisionRenumber — the revisions a branch added move to a free number when the base took theirs
@@ -61,12 +61,6 @@ reasoning decides which citations move: only those on a line the branch added.
 ## Errors
 
 none — the nil checks create each code's set of numbers on first use, and the number conversion cannot fail — the revision pattern captures four digits only.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/plan_change_justified.go` | `revisionRE` | gate — a revision is recognised exactly as the gate that counts them recognises it |
 
 ## Open Decisions
 

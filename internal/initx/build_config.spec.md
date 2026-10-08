@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BLCNB
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: infra
 -->
 # BuildConfig — builds the configuration that inference proposes as the default for the init questions
@@ -67,13 +67,6 @@ breaking a convention the project never promised.
 ## Errors
 
 none — the proposal is assembled in memory from the inference result; nothing is read, and no input is rejected.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Layer`, `Derived` | core — project configuration |
-| DEP2 | `internal/initx/infer.go` | `Proposal` | infra — what inference found (INPRN) |
 
 ## Open Decisions
 

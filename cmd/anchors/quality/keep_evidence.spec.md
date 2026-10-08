@@ -1,6 +1,6 @@
 <!-- @anchors
   code: KPEVD
-  updated_at: 2026-10-05
+  updated_at: 2026-10-08
   layer: comando
 -->
 # KeepEvidence — a change that proves nothing new keeps the files' evidence
@@ -39,14 +39,6 @@ they say it, with the reason recorded.
 | Error | When | What the user sees |
 | --- | --- | --- |
 | `KPEVD-E01` | The reason is missing or blank, a file is not in the map or cannot be read, or there is no map | the command fails saying which, and the map is not written |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/stamp.go` | `KeepEvidence` | mapx — the evidence moved, the declaration recorded |
-| DEP2 | `cmd/anchors/quality/stamp.go` | `refreshStamps` | comando — the `@contract` stamps refreshed and listed |
-| DEP3 | `internal/mapx/store.go` | `LoadBytes` | mapx — the map at HEAD |
 
 ## Open Decisions
 

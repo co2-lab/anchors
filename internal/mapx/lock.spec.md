@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPLCK
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: mapa
 -->
 # MapLock — the map changed by one writer at a time, each applying only what it changes
@@ -46,12 +46,6 @@ holding its owner's pid and host. A lock left by a process that died holding it 
 | `MPLCK-E01` | Another writer holds the lock past the timeout. | Taking the lock fails saying another process is writing the map, naming the holder and the lock file; the holder's lock is left as it is. | Waiting forever would hang a hook; taking a live lock would bring the race back. |
 | `MPLCK-E02` | The map cannot be read under the lock, or the change refuses. | `Update` returns the error, writes nothing, and releases the lock. | A change applied to no map, or a half-applied one, is not a map. |
 | `MPLCK-E03` | The lock file cannot be created for a reason other than existing (the directory cannot be written). | The error names the lock file. | Retrying until the timeout would hide the real cause for two minutes. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/store.go` | `Load`, `Save` | mapa — the map file |
 
 ## Open Decisions
 

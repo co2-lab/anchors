@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PHORP
-  updated_at: 2026-10-03
+  updated_at: 2026-10-08
   layer: gate
 -->
 # PhaseOrdered — plan phases and phase dependencies must be ordered and consistent
@@ -88,14 +88,6 @@ This gate confronts three complementary structural ordering contracts:
 | --- | --- | --- | --- |
 | `PHORP-E01` | No map has been built when a spec's `needs:` or an artifact's `parent:` is confronted. | Pending ("without map cannot find plans" / "without map cannot find parent"): no reference is judged. | The phases live in the plans and the parents in other artifacts, and only the map lists them: approving would assert a reference nobody resolved, and failing would accuse it of pointing at nothing when nothing was looked at. |
 | `PHORP-E02` | A plan the map lists is no longer on disk when the phases it catalogues are collected. | That plan is passed over and the phases of every other plan still resolve `needs:` and `parent:`; a reference only the missing plan catalogued fails as unknown (`PHORP-B11`, `PHORP-B13`). | The map can be older than the tree (a plan deleted since the last build): a plan that is gone catalogues nothing, and one stale node must not unresolve the phases of the plans that are there. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `CodeLengthPattern`, `Config` | core — code length pattern validation and project configuration |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized verdict and defect messages |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `KindPlan`, `KindSpec`, `Node` | core — graph model and artifact representations |
 
 ## Open Decisions
 

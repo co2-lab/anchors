@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TICTS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # TestIDContract — a test handle is one contract with four ends: the code exposes it, the spec declares it, a consumer queries it
@@ -105,14 +105,6 @@ belongs to a project-scope gate.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `TICTS-E01` | A linked code file cannot be read. | It is not an end of the contract; when no linked code can be read, the gate skips as a spec without linked code. | Reading nothing and then charging every declared handle as "not exposed" would accuse the spec of a divergence the gate never measured. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Derived` | config — the handle attribute and the e2e surface |
-| DEP2 | `internal/mapx/model.go` | `Graph`, `EdgeSpecifies`, `EdgeCoveredBy`, `EdgeTestedBy` | mapa — the spec's code, feature and test |
-| DEP3 | `internal/i18n/i18n.go` | `T` | apoio — the localized report |
 
 ## Open Decisions
 

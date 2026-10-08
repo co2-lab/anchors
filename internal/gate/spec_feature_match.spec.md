@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SFMSP
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: gate
 -->
 # SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario
@@ -87,13 +87,6 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 | --- | --- | --- | --- |
 | `SFMSP-E01` | No map has been built, so the gate receives no graph. | `Pending` with the no-map message. | The features that cover a spec are found through the map's `covered-by` edges: without them there is nothing to confront, and `Pending` says "not measured" where `Pass` or `Fail` would claim a coverage nobody checked. |
 | `SFMSP-E02` | A feature the map links to the spec is no longer on disk. | That feature covers nothing; the other linked features are still read, and a requirement one of them tags is covered. | The map can be older than the tree (a feature deleted or renamed since the last build): a missing file has no scenario, and one stale edge must not make the requirements the other features tag look uncovered. <!-- @resilient: a stale map edge is expected between builds, and the next map build removes it --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindSpec` | core — jurisdiction comes from the node's KIND, and the feature is reached by the `covered-by` edge |
-| DEP2 | `internal/config/config.go` | `CodeLengthPattern` | core — the identity code's shape is the project's, and the "defines" grammar is built on it |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NTFCT
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Notifications — a message to every agent, read from one file and printed on top of `next`
@@ -59,12 +59,6 @@ agent its work.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `NTFCT-E01` | The platform read fails for any reason other than a missing file. | The failure is returned with the platform's answer, and printed as one line saying the file could not be read, with no message block. | A broken read must not look like "no message", and it must not cost the agent its work either. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/flow/queue.go` | the next command | comando — the only caller, which picks the source by mode |
 
 ## Open Decisions
 

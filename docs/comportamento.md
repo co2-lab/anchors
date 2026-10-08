@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1850779d4285ed2f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:3a2efb3d0e0820d5 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1266,6 +1266,8 @@ teste prova.
 
 - [The header guide names the flags beside the code, and the navigation guide shows the screen's In and Out and the flag on every call](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B24`
 
+- [The spec guide says a spec declares no dependency](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B25`
+
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
 - [A map without governance has an empty board](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B02`
@@ -1994,6 +1996,10 @@ teste prova.
 
 - [Crossing format 7 rewrites a code only where it is cited as one, and lists the bare words it left](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B16`
 
+- [The migration takes the dependencies out of the specs](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B17`
+
+- [Taking the table out keeps what each spec proved](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B18`
+
 - [An unknown kind is refused](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B01`
 
 - [The name and the output path are required](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B02`
@@ -2039,6 +2045,8 @@ teste prova.
 - [The screen preset writes the four states of a unit that loads data and the failure of its load, under the titles of States and Errors](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B20`
 
 - [Two sections of one letter never define the same code, and a section of the rules' letter with no title of its own goes inside the rules section the layer names](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B21`
+
+- [No spec template writes a Dependencies section](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B22`
 
 - [The catalog holds seven kinds and each is born by new](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B01`
 
@@ -3274,6 +3282,8 @@ teste prova.
 
 - [A rule is answered by a revision added to its own spec, even one not yet in git, or by the changed spec's naming its full code; a short code answers only its own spec's rule](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B06`
 
+- [The dependent units are found through the code](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B07`
+
 - [A status emitted and not declared is accused by number](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B01`
 
 - [A status declared and emitted by no path is accused as a phantom](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B02`
@@ -3390,33 +3400,7 @@ teste prova.
 
 - [Tests, test support and flows take part in the chain](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B07`
 
-- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B01`
-
-- [Without a relational map the verdict is undetermined](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B02`
-
-- [A spec declaring no confrontable symbols leaves without a verdict](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B03`
-
-- [A spec governing no code leaves the verdict undetermined](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B04`
-
-- [When every promised symbol appears in governed code, the gate passes](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B05`
-
-- [When a promised symbol is absent from governed code, the gate fails](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B06`
-
-- [When an absent symbol resembles an identifier in code, the verdict suggests the rename](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B07`
-
-- [Symbols appearing only in comments do not fulfill the promise](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B08`
-
-- [Prose descriptions in dependency methods are never treated as contracts](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-I01`
-
-- [Symbol presence is matched strictly on token word boundaries](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-I02`
-
-- [Near-symbol rename suggestions are strictly conservative](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-I03`
-
-- [The gate performs static textual confrontation without runtime execution](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-X01`
-
-- [The gate does not interpret dependency semantics or parameter signatures](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-X02`
-
-- [A specified code file missing from disk is left out of the confrontation](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-E01`
+- [A spec still carrying a Dependencies table diverges, pointing at the migration](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 
 - [A mandatory document that does not exist fails](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B01`
 
@@ -7507,6 +7491,8 @@ teste prova.
 - [Each @navigates and @no-nav flag is read with its screens, its rule and its call's line](layers/scan.md#rpscr-b43--each-navigates-and-no-nav-flag-is-read-with-its-screens-its-rule-and-its-calls-line) `RPSCR-B43`
 
 - [A spec's Out rows are read by rule, each with a revision of the row alone](layers/scan.md#rpscr-b44--a-specs-out-rows-are-read-by-rule-each-with-a-revision-of-the-row-alone) `RPSCR-B44`
+
+- [A spec's Dependencies table is no dependency of the map](layers/scan.md#rpscr-b45--a-specs-dependencies-table-is-no-dependency-of-the-map) `RPSCR-B45`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

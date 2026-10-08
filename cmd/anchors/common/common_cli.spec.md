@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CMCLC
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: comando
 -->
 # CommonCLI — the contract every command shares: how a path becomes a node, how "not governed" is signalled, what the binary says it is
@@ -59,13 +59,6 @@ says so plainly (`dev`, `none`, `unknown`) instead of pretending to be a release
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `CMCLC-E01` | The path cannot be expressed relative to the root (the root is relative and the path absolute). | The path is returned as given, with forward slashes. | A path the caller can still show is better than an empty one that would match nothing and hide the cause. <!-- @resilient: the path as given is still a correct name for the file, and the caller that fails to find it as a node reports that with the path in hand --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/i18n/i18n.go` | `T` | apoio — the "not governed" message |
-| DEP2 | `internal/mapx/model.go` | `Graph` | mapa — the nodes of the project map |
 
 ## Open Decisions
 

@@ -755,6 +755,7 @@ func TestSeedIgnoresNameWithoutDirectory(t *testing.T) {
 
 func TestExtractDepsIgnoresDocumentalTable(t *testing.T) {
 	t.Run("RPSCR-X01: A guide's dependencies table is not a dependency", func(t *testing.T) {})
+	t.Run("RPSCR-B45: A spec's Dependencies table is no dependency of the map: a spec precedes the code", func(t *testing.T) {})
 	// a documental "Dependencies" table (File|Description, WITHOUT a code column) — like a
 	// guide's. It is not a reuse dependency table and must not yield deps.
 	root := t.TempDir()
@@ -773,8 +774,11 @@ func TestDepsForOnlySpec(t *testing.T) {
 	if d := depsFor("guide", []byte(tbl), root, "guides/G.md"); d != nil {
 		t.Errorf("kind guide should not extract deps: %+v", d)
 	}
-	if d := depsFor("spec", []byte(tbl), root, "a/src/s.spec.md"); len(d) != 1 {
-		t.Errorf("kind spec should extract 1 dep, got %+v", d)
+	if d := depsFor("spec", []byte(tbl), root, "a/src/s.spec.md"); d != nil {
+		t.Errorf("a spec declares no dependency of the map, got %+v", d)
+	}
+	if d := extractDeps([]byte(tbl), root, "a/src/s.spec.md"); len(d) != 1 {
+		t.Errorf("the table is still read, for the migration: %+v", d)
 	}
 }
 

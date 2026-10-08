@@ -1,6 +1,6 @@
 <!-- @anchors
   code: UNCDN
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: comando
 -->
 # UnitCodes — the identity code of a unit, read from a header, from the map, or from the codes a file names
@@ -58,14 +58,6 @@ they first appear. A code of another unit that the file merely mentions is left 
 | --- | --- | --- | --- |
 | `UNCDN-E01` | The file whose codes are asked for cannot be read. | The read error is returned, with no codes. | An empty list would say "this file names no rule", which is a different fact from "the file was never read". |
 | `UNCDN-E02` | REF[UNCDN-B05]: a missing or unreadable map is the failure B05 answers with no code | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `CodeLengthPattern` | config — the configured code length |
-| DEP2 | `internal/mapx/store.go`, `internal/mapx/build.go` | `Load`, `StemOfAnchor` | mapa — the project map and the unit stem |
-| DEP3 | `internal/testsig/junit.go` | `CodesInCase` | apoio — the rule-code pattern |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRPRG
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: mapa
 -->
 # GraphPersistence — saving and loading the map file without churn and without partial reads
@@ -64,13 +64,6 @@ understood.
 | `GRPRG-E02` | The file's text is not the map's structure. | The parse error is returned, with no graph. | A half-parsed map would be the partial read the unit exists to prevent. |
 | `GRPRG-E03` | REF[GRPRG-B05]: a format outside the readable range is the failure B05 answers with the format refusal | — | — |
 | `GRPRG-E04` | The file cannot be written (its directory does not exist). | The write error is returned. | Swallowing it would let the caller believe the map was saved. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/format.go` | `ConfereFormato` | mapa — the readable-format check run on load |
-| DEP2 | `internal/mapx/model.go` | `Graph` | mapa — the structure written and read |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRBDP
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # PRBody — write the lines that link a pull request to its cards, in the platform's syntax
@@ -65,14 +65,6 @@ which already read the root cards from the body and checks the findings are ther
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `PRBDP-E01` | The lookup of the findings under a root fails or returns unreadable output. | That root contributes no finding, and the root itself is still linked. | A partial body still links the work that was done; refusing would leave the pull request with no link at all. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Load`, `AbsRoot`, `GitHubMode` | config — project configuration and workflow mode |
-| DEP2 | `cmd/anchors/common/cards.go` | `AgentCards` | comando — the running agent's cards |
-| DEP3 | `internal/initx/workflows.go` | `LabelSob` | initx — the label of a card born under another |
 
 ## Open Decisions
 

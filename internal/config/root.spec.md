@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRRPR
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: config
 -->
 # ProjectRootResolution — the project root a command works on
@@ -54,12 +54,6 @@ instruction.
 ## Errors
 
 none — not finding a project is answered with the starting directory, and the failure to load its configuration belongs to the caller.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `DefaultFile` | config — the name of the configuration file looked for |
 
 ## Open Decisions
 

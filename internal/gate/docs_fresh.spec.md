@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCFRD
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # DocsFresh — the compiled document has to reflect the spec
@@ -80,13 +80,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | `DCFRD-E01` | REF[DCFRD-B05]: a missing template directory is the project that never opted in, answered by B05 | — | — |
 | `DCFRD-E02` | REF[DCFRD-B08]: a template that fails to compile is answered by B08: it fails with the compiler error | — | — |
 | `DCFRD-E03` | REF[DCFRD-B09]: specs that cannot be read are answered by B09: no verdict, with the reason | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/doct/doct.go` | `Stale` | core — the comparison between disk and what the templates produce now belongs to the compiler, not to the gate |
-| DEP2 | `internal/mapx/model.go` | `KindSpec` | core — the charge starts from the spec, which is the source that changes |
 
 ## Open Decisions
 

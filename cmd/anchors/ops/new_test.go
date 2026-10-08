@@ -628,3 +628,22 @@ func TestScreenPresetKeepsTheLetterInOneHome(t *testing.T) {
 		t.Errorf("with no title declared the sections stay apart, their codes still distinct:\n%s", plain)
 	}
 }
+
+func TestSpecTemplate_declaresNoDependency(t *testing.T) {
+	t.Run("NWARN-B22: No spec template writes a Dependencies section, and the rule uses cite no DEPn: a spec precedes the code", func(t *testing.T) {})
+	for _, s := range specTemplate.sections {
+		if s.Key == "deps" || strings.Contains(s.Body, "DEP1") {
+			t.Errorf("section %q writes a dependency: %q", s.Key, s.Body)
+		}
+	}
+	for name := range specPresets {
+		chosen, order, err := resolveSectionsWithPreset(specTemplate, name, nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		out := renderArtifact(specTemplate, "Probe", "PRBOE", "Probe.spec.md", t.TempDir(), chosen, order, &config.Config{Lang: "pt-BR"})
+		if strings.Contains(out, "## Dependências") || strings.Contains(out, "DEP1") {
+			t.Errorf("preset %s writes a dependency:\n%s", name, out)
+		}
+	}
+}

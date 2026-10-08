@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CTRIM
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ContractImpact — a changed field names the rules that use it, and their tests
@@ -34,18 +34,11 @@ when its own file did not move.
 | `CTRIM-B04` | The test files every impacted rule reaches, across the specs with uncommitted changes, are listed for the test selection, which adds those its suite runs. (`ImpactedTests`) |
 | `CTRIM-B05` | The rules a revision added since HEAD names in `Revises:` or `Checked:` are answered: an impact whose rules are all answered is not reported, and one with a rule nobody answered still is. The impact lives only while the change is uncommitted, and the change's own revision is where whoever changed the field says they looked. (`acknowledgedRules`) |
 | `CTRIM-B06` | A rule is answered where it lives: by a revision added since the last commit to its own spec — the changed one or a spec that reads its data, every revision of a spec not yet in git counting as added —, naming it by its short or full code; or by one added to the changed spec naming it by its full code. A short code answers only its own spec's rule, never another unit's rule of the same letter and number. (`acknowledgedFullCodes`) |
+| `CTRIM-B07` | The units that read this spec's data are found through the code: a file another spec specifies that imports — by its `@dep:` flag — a file this spec governs makes that spec a dependent; a spec still declaring the dependency in a table is one too, until it migrates. (`dependents`) |
 
 ## Errors
 
 none — no repository, no committed version, or no change is no impact, not a failure
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gitmeta/gitmeta.go` | `AtHead`, `HasUncommittedChanges` | infra — the spec at the last commit |
-| DEP2 | `internal/gate/rule_uses.go` | `ruleUsesOf`, `cellsOf` | gate — what each rule reads |
-| DEP3 | `internal/gate/project_tests.go` | `projectTests` | gate — the tests and their titles |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GNPTG
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # GeneratedPaths — the product names the files it derives, so a conflict in them is rebuilt, not merged
@@ -58,15 +58,6 @@ governed project.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `GNPTG-E01` | The root has no `anchors.yaml`, or it does not load. | The command fails with the load error and prints no pattern. | "What is generated?" only has an answer in a governed project; a guessed list in a foreign tree would mislead the resolver. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `AbsRoot`, `Load`, `DefaultFile` | config — the project must be governed |
-| DEP2 | `internal/mapx/model.go` | `DefaultPath` | mapa — the map's path |
-| DEP3 | `internal/doct` | `OutDir` | the compiled documentation directory |
-| DEP4 | `internal/scan` | `SufixoProgresso` | scan — the plan progress suffix |
 
 ## Open Decisions
 

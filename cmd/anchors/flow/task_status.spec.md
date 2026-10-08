@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSSTT
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # TaskStatus — discover what the machine knows about the task at hand, so the agent's report does not have to
@@ -64,16 +64,6 @@ It also records, as telemetry, the state the turn ended in — only numbers and 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `TSSTT-E01` | A lookup fails or answers with something unreadable. | That part of the state is absent (no card, no pull request, no waiting list, no undone move), and the report is still printed. | A partial report beats none; nothing is invented to fill the gap. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/board` | `Client.Mine`, `Card` | the agent's card on the board |
-| DEP2 | `internal/initx/workflows.go` | `MarcadorDeReversao` | the state lock's marker |
-| DEP3 | `internal/telemetry` | `TurnEnded` | the turn-ended event |
-| DEP4 | `cmd/anchors/flow/task_status_render.go` | `renderTaskStatus` | comando — the report's format |
-| DEP5 | `cmd/anchors/flow/queue.go` | `agentID` | comando — this agent's identity |
 
 ## Open Decisions
 

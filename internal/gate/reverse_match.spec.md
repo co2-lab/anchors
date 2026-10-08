@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RVMTR
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ReverseMatch — every scenario still has its rule, and every proven code still has its scenario
@@ -84,16 +84,6 @@ the visual baseline, revision codes, and other units' codes cited to build fixtu
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `RVMTR-E01` | A linked spec or feature cannot be read. | It contributes no rule and no scenario; when none can be read, the gate is Pending. | An unread origin would otherwise make every code look orphaned, accusing what was never measured. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/spec_feature_match.go` | `definedRequirements` | gate — the rules a spec defines |
-| DEP2 | `internal/gate/feature_test_match.go` | `parseFeatureScenarios`, `stripLineComments` | gate — the scenarios a feature declares, and a body with its comments out |
-| DEP3 | `internal/gate/internal_checks.go` | `anyCodeRE` | gate — the codes a test body names |
-| DEP4 | `internal/mapx/model.go` | `Graph`, `EdgeCoveredBy`, `EdgeTestedBy` | mapa — which specs cover a feature and which features a test exercises |
-| DEP5 | `internal/i18n/i18n.go` | `T` | apoio — the localized messages |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CFPCD
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: infra
 -->
 # CodeFromPath — the most meaningful unique code for a unit, given its file path
@@ -46,12 +46,6 @@ first.
 ## Errors
 
 none — every path yields a code; collisions are resolved by the generator (`CDGNC-B08`), not failed.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/code/code.go` | `GenerateUnique` | infra — the compression and the collision resolution (`CDGNC`) |
 
 ## Open Decisions
 

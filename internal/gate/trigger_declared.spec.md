@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TRDCT
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # TriggerDeclared — cited compliance triggers and obligations must exist in the declared vocabulary
@@ -96,15 +96,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | --- | --- | --- | --- |
 | `TRDCT-E01` | REF[TRDCT-B03]: with no vocabulary declared in the configuration or the packs, B03 answers Pending | — | — |
 | `TRDCT-E02` | A pack the project declares cannot be loaded. | `Pending` carrying the load error; no trigger is judged. | Part of the vocabulary is missing: judging against the rest would charge a correct trigger as unknown, or read "no vocabulary" where the project declared one. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | core — project configuration and obligation definitions |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized verdict and defect messages |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `KindSpec`, `Node` | core — graph model and artifact representations |
-| DEP4 | `internal/pack/pack.go` | `LoadAll` | core — loads adopted compliance packs and their obligation triggers |
 
 ## Open Decisions
 

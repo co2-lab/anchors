@@ -1,6 +1,6 @@
 <!-- @anchors
   code: HDGDH
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: infra
 -->
 # HeaderGuide — render the project's header guide in the language's comment dialect, passing the gate that init itself declares
@@ -56,12 +56,6 @@ what makes the guide confrontable rather than merely read.
 ## Errors
 
 none — rendering only concatenates text from its inputs and the translation catalog; there is nothing that can fail.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/i18n/i18n.go` | `TIn`, `Current` | core — the compliance-section title in the project's language |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BREXB
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: infra
 -->
 # BoardExposure — hand the local board the same page and the same collect contract the pipeline publishes
@@ -83,12 +83,6 @@ board was taken, or from now on a live board, and a released card has no agent.
 | --- | --- | --- | --- |
 | `BREXB-E01` | The binary does not carry the board page or the board pipeline. | An empty result and an error saying which one is not carried. | Serving an empty board would look like a board with no cards. |
 | `BREXB-E02` | The carried pipeline has no collect expression of the expected shape. | An empty result and an error saying the pipeline changed shape. | The local board would otherwise read a contract different from the one that is published. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/initx/workflows.go` | `workflowsFS`, `boardFS` | infra — the pipeline and the board page carried in the binary |
 
 ## Open Decisions
 

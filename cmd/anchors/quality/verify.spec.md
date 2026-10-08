@@ -1,6 +1,6 @@
 <!-- @anchors
   code: VPFVR
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: comando
 -->
 # VerifyPhaseFacade — one invocation per phase, delegated to the check pipeline
@@ -74,16 +74,6 @@ stays a failure.
 | `VPFVR-E03` | Neither the staged scope, nor a file, nor the full sweep is given. | Error asking for one of the three. | A verify with no scope would pass having confronted nothing. |
 | `VPFVR-E04` | The staged scope is asked for outside a git repository. | Error explaining which of git or the repository is missing. | There is no index to list, and the raw git error does not say why. |
 | `VPFVR-E05` | Dating the staged files fails. | A warning is printed and the verify goes on. | The updated-at gate still checks the dates; a failed convenience must not block the commit. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/quality/check.go` | `errNotGoverned` | comando — the check the facade delegates to |
-| DEP5 | `cmd/anchors/common/errors.go` | `ExitNotGoverned` | comando — the one not-governed exit code |
-| DEP2 | `cmd/anchors/quality/touch.go` | `touchRun`, `touchOnPreCommit` | comando — dating the staged files |
-| DEP3 | `internal/gitmeta/availability.go` | `Check`, `Explain` | infra — why the index cannot be read |
-| DEP4 | `internal/config/config.go` | `Load` | config — the touch setting |
 
 ## Open Decisions
 

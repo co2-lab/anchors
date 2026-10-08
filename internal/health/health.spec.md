@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCTRO
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: infra
 -->
 # Doctor — the global health check that hunts the systemic loose ends of a project
@@ -121,18 +121,6 @@ same diagnosis and sorted into the same report.
 ## Errors
 
 none — every missing file, tool, repository or plan the doctor meets is itself a finding it presents; the diagnosis has no failure of its own to report.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Graph`, `Nodes`, `Edges` | mapa — the map being diagnosed |
-| DEP2 | `internal/config/config.go` | `Config`, `Gates`, `Layers` | config — layers, gates and workflow |
-| DEP3 | `internal/i18n/i18n.go` | `T` | apoio — localized finding texts |
-| DEP4 | `internal/health/github_environment.go` | `checkGitHubEnv` | infra — the GitHub environment checks |
-| DEP5 | `internal/health/pending_decision.go` | `checkPendingDecisions` | infra — the open decisions |
-| DEP6 | `internal/health/governance.go` | `checkGovernanceOpportunities` | infra — the governance suggestions |
-| DEP7 | `internal/health/spec_sections.go` | `checkSpecSections` | infra — the recommended spec sections |
 
 ## Open Decisions
 

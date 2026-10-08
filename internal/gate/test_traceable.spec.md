@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSTRT
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: gate
 -->
 # TestTraceable — a test linked to a feature must declare what scenario it proves
@@ -99,15 +99,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | `TSTRT-E01` | REF[TSTRT-B02]: with no map the link to the feature cannot be followed, and B02 answers Pending | — | — |
 | `TSTRT-E02` | REF[TSTRT-B04]: a linked feature that cannot be read is answered by B04: the confrontation is skipped | — | — |
 | `TSTRT-E03` | The project's tests source fails, or answers outside its contract | Fail, naming the source's error | The titles could not be read; answering as if the test cited nothing, or approving it, would both be about tests nobody read |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | core — project configuration |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized verdict and defect messages |
-| DEP3 | `internal/mapx/model.go` | `EdgeTestedBy`, `Graph`, `KindTest`, `Node` | core — graph structure, test nodes, and tested-by edges |
-| DEP4 | `internal/scan/scan.go` | `ScenarioCodeRE` | core — scenario code regular expression grammar |
 
 ## Open Decisions
 

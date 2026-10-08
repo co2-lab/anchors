@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCLND
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # DocLinks — the anchors, links, sizes and layer arrows the documentation templates are given
@@ -64,15 +64,6 @@ diagram nodes identifiers the diagram language can parse.
 ## Errors
 
 none — a selection that matches nothing is answered as an empty size (`DCLND-B05`), and an edge to a node that is not a spec is filtered out (`DCLND-B06`); the unit reads nothing that can fail.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/doct/layout.go` | `Layout`, `Big` | apoio — the one big-or-small decision |
-| DEP2 | `internal/doct/doct.go` | `Compiler`, `Spec`, `Rule` | apoio — the loaded specs and the spec selection |
-| DEP3 | `internal/doct/scenarios.go` | `Scenario` | apoio — the scenarios counted and linked |
-| DEP4 | `internal/mapx/model.go` | `Edges` | mapa — the dependency edges between units |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCSCD
-  updated_at: 2026-10-03
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # DocScaffolds — the starting templates `anchors docs init` proposes, one page per question and per layer
@@ -64,14 +64,6 @@ comment saying what question the page answers, where whoever edits it will read 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `DCSCD-E01` | The templates folder cannot be created or a template cannot be written. | Init stops and returns the error, with the templates written so far. | A partial skeleton reported as complete would leave the team building from pages that are not there. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/doct/doct.go` | `Compiler`, `Dir`, `SufixoTemplate` | apoio — the templates folder and the layers with specs |
-| DEP2 | `internal/doct/layout.go` | `Describe` | apoio — the summary decision the layer page asks |
-| DEP3 | `internal/doct/c4.go` | `containers` | apoio — the containers the architecture page draws |
 
 ## Open Decisions
 

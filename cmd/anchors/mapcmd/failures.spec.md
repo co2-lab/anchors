@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLRSA
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Failures — the observed failures that the spec has not explained yet
@@ -63,15 +63,6 @@ about what was not observed.
 | --- | --- | --- | --- |
 | `FLRSA-E01` | The map cannot be loaded. | The command fails with the load error. | Without the map there are no ingested occurrences to review. |
 | `FLRSA-E02` | A spec that carries failures can no longer be read. | That spec is skipped; the review answers for the others. | Its conclusions cannot be read, and one missing file must not hide every other open failure. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/store.go` | `Load` | mapa — the map and its ingested failure occurrences |
-| DEP2 | `internal/gate/failure.go` | `FailureConclusions` | gate — reads the resilient and under-observation conclusions |
-| DEP3 | `internal/i18n/i18n.go` | `T` | apoio — the review's messages |
-| DEP4 | `internal/config/root.go` | `AbsRoot` | config — the project root |
 
 ## Open Decisions
 

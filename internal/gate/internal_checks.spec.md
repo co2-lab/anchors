@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INCHN
-  updated_at: 2026-10-03
+  updated_at: 2026-10-08
   layer: gate
 -->
 # InternalChecks — the registry that routes a declared check name to a function
@@ -131,14 +131,6 @@ looked at.
 | --- | --- | --- | --- |
 | `INCHN-E01` | A test the map lists is no longer on disk when `scenario-coverage` looks for the tests that name each scenario code. | That test names nothing; the tests still on disk are read, so a code one of them names is still counted as written. | The map can be older than the tree (a test deleted since the last build): a missing file names no code, and one stale node must not make the codes the other tests name look untested. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
 | `INCHN-E02` | The project's tests source fails, or answers outside its contract, when `scenario-coverage` looks for the tests that name each code | Fail, naming the source's error | Which scenarios have a test cannot be told; calling them untested would send the reader to write tests that may exist |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `CodeLengthPattern` | core — the shape of an identity code is declared by the project, not frozen by the engine |
-| DEP2 | `internal/mapx/model.go` | `Node` | core — the target the checker confronts, and its kind |
-| DEP3 | `internal/i18n/i18n.go` | `AllTranslations` | core — the compliance ruler is recognised in every language of the catalogue |
 
 ## Open Decisions
 

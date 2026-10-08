@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLRAI
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: gate
 -->
 # Failure — the failure a spec declares must be handled, recorded, and every handling declared
@@ -92,7 +92,7 @@ not match) closes its failure section with `none — <why>`, and that satisfies 
 | `FLRAI-B18` | A conclusion's reason ends at its table cell: the next column is never read into it. |
 | `FLRAI-B19` | A failure rule and its conclusion are read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a 7-character `-E` rule is a declared failure. |
 | `FLRAI-B20` | `failure-declared`: each fallible source of a unit — a call of its code that a `dialect.fallible_patterns` entry recognises (comment lines and trailing comments do not count) — is named by a declared failure (`-E`): its row, or its row of the rules' uses, cites the name called as a whole word; a failure that does not name it ("not found") does not answer it. Unanswered, the gate fails naming each source by file and line, unless the Errors section is closed with `none — <reason>` or the spec waives with `@no-failure: <reason>`. (`fallibleSources`, `fallibleCalls`, `FallibleCall`, `FallibleSource`, `uncoveredSources`) |
-| `FLRAI-B21` | A dependency the spec declares on a file of a layer the project marks `fallible: true` is a fallible source too, named by its `DEPn` and path, and answered by a failure citing its `DEPn` or the file's stem (`useBudget`); a dependency on any other layer is not a source. |
+| `FLRAI-B21` | A file of a layer the project marks `fallible: true` that the unit's code imports — by its `@dep:` flag — is a fallible source too, named by its path and answered by a failure citing the file's stem (`useBudget`) or a name the code imports from it; while a spec still declares the dependency in a table, its `DEPn` names it as well. A dependency on any other layer is not a source. (`FallibleSource`) |
 | `FLRAI-B22` | `failure-handled`: each fallible call of the unit's code has its handling in its window — the call's statement from its first line (a destructuring above it that reads the error; the climb stops at a blank line or at one ending a statement, `;`, `}` or `)`), and the pattern's `window` after it (`DefaultFallibleWindow` when it declares none) —, matched by the pattern's `handled` or, when it declares none, the project's `handle_patterns`; a call with none fails, named by file, line and text, unless its line or the line above waives it with `@no-handle: <reason>`. (`unhandledCalls`) |
 | `FLRAI-B23` | A fallible call whose result is the unit's own — `return`ed, or the body of an arrow (`=>`), with or without `await` — hands its failure to the caller: `failure-handled` does not charge it, and `failure-declared` still asks the unit's spec to name it. (`propagated`) |
 
@@ -113,14 +113,6 @@ not match) closes its failure section with `none — <why>`, and that satisfies 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `FLRAI-E01` | REF[FLRAI-B05]: a specified file that cannot be read is left out of the governed code, and when none can be read B05 answers with Pending | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/dialect.go` | `DialectFor`, `Compile`, `HandlePatterns`, `LogPatterns` | core — the project's handling and recording patterns |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized verdict messages |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `Node`, `EdgeSpecifies` | core — the specified code of a spec |
 
 ## Open Decisions
 

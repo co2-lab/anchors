@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCIDS
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ScenarioIdentity — two scenarios of the same feature cannot share one code
@@ -71,13 +71,6 @@ sees what is left.
 | `SCIDS-X02` | Does not look across features. | A code repeated in two different features is a different defect with a different owner; the relational gates that hold the map are the ones that can see it. Charging it here would need a graph this gate does not take. |
 | `SCIDS-X03` | Does not charge the ABSENCE of a code on a scenario. | An uncoded scenario is invisible to the parser and to every relational gate. Charging it is the ruler of the gate that pairs scenarios to tests, and two gates on one defect become noise. |
 | `SCIDS-X04` | Does not renumber the scenarios, even knowing the fix. | The suffix carries meaning — which case is the first, which is the alternative — and picking it is the author's call. A gate that rewrote the feature would also invalidate every test already bound to the old code. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindFeature` | core — the kind decides whether the artifact carries scenarios at all |
-| DEP2 | `internal/config/config.go` | `Config` | core — the project's Structure travels with the confrontation |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PLRVP
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: gate
 -->
 # PlanRevised — mutual revision visibility between superseded and revising plans
@@ -71,14 +71,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | --- | --- | --- | --- |
 | `PLRVP-E01` | REF[PLRVP-B02]: with no map the revision links cannot be resolved, and B02 answers Pending | — | — |
 | `PLRVP-E02` | REF[PLRVP-B05]: a revised plan whose file cannot be read carries no notice, which B05 answers with the divergence reminder | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `CodeLengthPattern`, `Config` | core — identity code length pattern and configuration model |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized messages for gate verdicts |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `KindPlan`, `Node` | core — graph structure, plan kind definition, and node representations |
 
 ## Open Decisions
 

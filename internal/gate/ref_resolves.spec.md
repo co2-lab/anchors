@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RFRSR
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: gate
 -->
 # RefResolves — the reference points at the spec that REALLY describes the unit
@@ -93,13 +93,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `RFRSR-E01` | REF[RFRSR-B06]: a sibling spec that cannot be read is answered as the missing sibling of B06: the gate goes quiet | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindCode` | core — the kind decides whether the artifact references or owns |
-| DEP2 | `internal/config/config.go` | `Config` | core — the project's Structure travels with the confrontation, and the accepted identity length is read from it per call |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RLIMR
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: gate
 -->
 # RuleImplemented — a spec catalogues rules, and the code shows it realized them
@@ -72,13 +72,6 @@ DECLARES, rule by rule, whether it has code.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `RLIMR-E01` | The code file the spec describes is on disk but cannot be read (no read permission). | `Pending` naming the file that could not be read. | The file exists, so `RLIMR-B05` does not apply; but unread code carries no mark to find, and failing would accuse the rules of being unrealized in code nobody looked at. `Pending` names the file so the reader can fix the access. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Graph` | core — the linked code is reached by the edge, not by name convention |
-| DEP2 | `internal/config/config.go` | `Config` | core — the marking requirement is declared in the Structure |
 
 ## Open Decisions
 

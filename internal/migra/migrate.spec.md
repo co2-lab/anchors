@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGFLM
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # MigrateFile — takes one project file from its declared format to the current one, renaming only what is a key
@@ -77,12 +77,6 @@ doctor warn without touching the repository of someone who did not ask.
 | `MGFLM-E01` | The file cannot be read. | The read error is returned and nothing is written. | There is no format to read, and nothing to migrate. |
 | `MGFLM-E02` | The top-level `version:` line holds something that is not a number (text such as `abc`, or a number too large to represent). | An error naming the file and saying the version is not a number; nothing is written. | Guessing a format would apply the wrong steps, and reading it as format 1 inserted a second `version:` line. |
 | `MGFLM-E03` | A step between the file's format and the target is missing. | The chain's error is returned and the file is left untouched. | Writing the new number with part of the conversion missing would make the file lie about its own format. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/migra/step.go` | `StepsFrom` | apoio — the ordered steps between two formats |
 
 ## Open Decisions
 

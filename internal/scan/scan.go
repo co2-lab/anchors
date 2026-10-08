@@ -879,8 +879,11 @@ func extractNeeds(content []byte, root, rel string) []string {
 // Um guide/doc pode ter uma seção "Dependências" documental (tabela Arquivo|Descrição)
 // que NÃO é dep de reúso; por isso a tabela é lida só p/ spec (o header `dep:` não colide).
 func depsFor(kind string, content []byte, root, rel string) []Dep {
+	// A spec declares no dependency: it precedes the code, and the files a unit imports are
+	// born with it — declared where the import is, by `@dep:` (DOOSD). A Dependencies table
+	// not yet migrated is read by `anchors migrate`, never into the map.
 	if kind == "spec" {
-		return extractDeps(content, root, rel)
+		return nil
 	}
 	// Roteiro de teste (.yaml): a dependência é a COMPOSIÇÃO — o `runFlow:` que ele
 	// executa. Um roteiro não tem header `@anchors` com linha `dep:`, então sem este

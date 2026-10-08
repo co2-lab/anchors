@@ -2,7 +2,7 @@
 # @anchors
 #   code: CIFCN
 #   ref: CTRIM
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @CTRIM
@@ -43,4 +43,10 @@ Feature: ContractImpact — a changed field names the rules that use it, and the
     Given the amount changed, read by rules of the pay spec, the checkout spec and a cart spec not yet in git
     When the pay spec's revision names B01 and V01, then each dependent answers its own rule, then the pay spec names CHKOT-B01
     Then the short codes leave the other specs' rules open, each spec's own revision answers its rule, and the full code answers the checkout's
+
+  @CTRIM-B07 @unit-level
+  Scenario: The dependent units are found through the code
+    Given the checkout's code importing the pay code by its flag, and no Dependencies table
+    When the amount changes in the pay spec
+    Then the checkout's rule that reads the amount is among its impact
 

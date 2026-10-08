@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRQRG
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: mapa
 -->
 # GraphQueries — read-only questions over the loaded map: who governs what, neighbours, orphans, counts and a parents-first order
@@ -59,12 +59,6 @@ Every answer here is computed from the graph in memory. Nothing is written and n
 ## Errors
 
 none — every query is a walk over an in-memory graph; an unknown id and a cycle are normal input answered by an empty list and by B08.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Graph`, `Edge`, `Node`, `Kind`, `EdgeType` | mapa — the graph queried |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRING
-  updated_at: 2026-09-28
+  updated_at: 2026-10-08
   layer: infra
 -->
 # GremlinsIngest — the mutation score per file, read from a gremlins report
@@ -58,12 +58,6 @@ not in the report.
 | --- | --- | --- | --- |
 | `GRING-E01` | The report is not a gremlins report — a canonical-format report under `format: gremlins`, or no JSON. | An error that names the expected shape and the `format:` declaration. | A wrong `format:` is the likely mistake, and silence would read as a project with no file. |
 | `GRING-E02` | The report has no file. | An error pointing at the gremlins run. | An empty report is a run that produced no mutant, not a proven project. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/testsig/mutation.go` | `MutationReport`, `FileMutation`, `normalizeMutationPath` | infra — the shared mutation result and path normalization |
 
 ## Open Decisions
 

@@ -116,6 +116,7 @@ heuristic decided.
 | `RPSCR-B42` | Each used-by flag (`@used-by` with a colon and the codes that use it) is read with the symbol declared on the next lines — `default` above the module's default export (`export default`, `module.exports =`), the one name of an export list that lists one —, or the symbol it names in parentheses after its codes, which a flag above an export list of several names must do. (`UsedBy`, `UsedByIn`, `ExportListNames`) |
 | `RPSCR-B43` | Each navigation flag (`@navigates` with a colon, the screens' codes and, in brackets, the rule that triggers it) is read with its call's line — its own, or the next one when the flag stands alone on its line —, and each navigation waiver (`@no-nav` with a colon) with its reason. (`Navigation`, `Navigates`, `NavigatesIn`) The rule may be a data state (`CODE-DS-<name>`), which an Out row can be triggered by. |
 | `RPSCR-B44` | A spec's Out rows — the table under its Out heading, in any language of the catalog — are read by the rule each cites, with a revision of the row alone, its spacing normalized; a row citing no rule, and a table under any other heading, are not read. (`OutRows`) |
+| `RPSCR-B45` | A spec's Dependencies table is no dependency of the map — a spec precedes the code, and the files a unit imports are declared where the import is —; the table is still read for the migration that removes it. |
 | `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants
@@ -137,17 +138,6 @@ heuristic decided.
 | --- | --- | --- | --- |
 | `RPSCR-E01` | The root cannot be walked (it does not exist or cannot be read). | The walk error is returned to the caller. | A map built from an unreadable root would be empty without saying so. |
 | `RPSCR-E02` | A file that matches a layer cannot be read (other than having vanished since the listing). | The walk fails with an error naming the file. | Dropping it would shrink the map without a line of error; a file that vanished has nothing to map and is skipped. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | config — declared layers, rule letters and code length |
-| DEP2 | `internal/i18n/i18n.go` | `AllTranslations` | apoio — the dependencies heading in every catalogue language |
-| DEP3 | `internal/scan/ignore.go` | `LoadIgnoreFor` | scan — what the walk never sees |
-| DEP4 | `internal/scan/progress.go` | `IsProgressFile` | scan — the progress companion kept out of the map |
-| DEP5 | `internal/scan/upstream.go` | `IsUpstreamOwned`, `AnchorsHeader` | scan — upstream ownership and the header block |
-| DEP6 | `internal/scan/region.go` | `ComposeRefs` | scan — the composition of test scripts |
 
 ## Open Decisions
 

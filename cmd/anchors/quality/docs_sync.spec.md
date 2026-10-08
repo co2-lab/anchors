@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCSYN
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: comando
 -->
 # DocsSyncForCommit — the commit carries the pages its specs produce
@@ -49,13 +49,6 @@ it does the map.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `DCSYN-E01` | The index cannot be read, a template does not compile, or a page cannot be written or staged. | The error comes back; the hook warns and does not block. | `docs-fresh` still holds the commit to its pages; a sync that failed must not be what blocks it. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/doct/doct.go` | `NewWith`, `Compiled` | doct — the pages the templates produce |
-| DEP2 | `internal/scan/scan.go` | `IndexReader`, `GovernedTreeChanges` | scan — the files as the index has them |
 
 ## Open Decisions
 

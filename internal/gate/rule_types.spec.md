@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RLTYR
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: gate
 -->
 # RuleTypes — the rule VOCABULARY is extensible, but it must be DECLARED
@@ -73,14 +73,6 @@ exist.
 | `RLTYR-X02` | Without a declared vocabulary it charges only the letter, not sections or terms. | Sections and terms only exist once the project declares the vocabulary. Charging them against an implicit vocabulary would invent a rule nobody wrote. |
 | `RLTYR-X03` | Does not judge whether the letter is the RIGHT one for that rule. | Whether a behaviour was catalogued as `-B` or as `-S` is editorial judgement. The ruler here is that the letter be recognisable by the traceability, which is deterministic. |
 | `RLTYR-X04` | Does not charge format — only traceability. | A section with no code, or one that only cites other people's codes, is ignored. What the gate defends is that a code the tooling cannot see does not exist. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `RuleType` | core — the vocabulary, its sections and `sections_require_code` are declared in the Structure |
-| DEP2 | `internal/config/config.go` | `DefaultRuleLetters` | core — the canonical letters, the ruler used when the project declares no vocabulary |
-| DEP3 | `internal/config/config.go` | `CodeLengthPattern` | core — the accepted code length comes from the project and is read PER CALL, never frozen |
 
 ## Open Decisions
 

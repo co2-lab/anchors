@@ -1,6 +1,6 @@
 <!-- @anchors
   code: IMANM
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: mapa
 -->
 # ImpactAnalysis — what changing one file propagates to, and what it must be confronted against
@@ -56,12 +56,6 @@ gate, and executing the wave belongs to `propagate`.
 ## Errors
 
 none — the analysis walks an in-memory graph; an unknown or isolated starting node is normal input that reaches nothing (B05), not a failure.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Graph`, `Edge` | mapa — the graph walked, and the `@noPropagation` mark on its nodes |
 
 ## Open Decisions
 

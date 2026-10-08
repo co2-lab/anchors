@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRINC
-  updated_at: 2026-09-28
+  updated_at: 2026-10-08
   layer: mapa
 -->
 # IncrementalMap — new files enter the map without the tree being read
@@ -52,14 +52,6 @@ the ingestion that follows a run.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `GRINC-E01` | The reader fails. | The error comes back and the map is not changed. | A half-read unit merged would be a map the full build contradicts. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/build.go` | `Build` | mapa — the same construction as the full build |
-| DEP2 | `internal/scan/scan.go` | `ScanPaths`, `GovernedPaths` | scan — reading only some files |
-| DEP3 | `internal/mapx/lock.go` | `Update` | mapa — the map's lock |
 
 ## Open Decisions
 

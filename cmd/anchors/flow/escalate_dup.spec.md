@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ESDPS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # EscalateDuplicate — find the open cards that already deal with the target of an escalation
@@ -57,12 +57,6 @@ in one spec), and a lookup that fails yields nothing instead of stopping the esc
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `ESDPS-E01` | The board lookup fails, or answers with something that is not a list of cards. | Nothing is reported, and no error reaches the escalation. | The check is auxiliary; stopping the escalation for it would be worse than the duplicate it prevents. <!-- @resilient: the duplicate lookup is auxiliary, and a board that cannot be read must not stop the escalation it only advises --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/flow/escalate.go` | the escalate command | comando — the only caller, which prints the warning |
 
 ## Open Decisions
 

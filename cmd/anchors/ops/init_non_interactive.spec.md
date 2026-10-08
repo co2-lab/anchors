@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ININT
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: comando
 -->
 # InitNonInteractive — the init that an agent answers with flags: it asks in JSON, and writes only a complete, valid set of answers
@@ -71,13 +71,6 @@ the map.
 | --- | --- | --- | --- |
 | `ININT-E01` | A `--governs` rule has no `=`. | The command fails naming the expected `GUIDE=tag1,tag2` form. | A rule without its tags cannot be read either way, and guessing would govern the wrong guide. |
 | `ININT-E02` | REF[ININT-B05]: a refused answer is the failure this mode handles, by refusing the set and writing nothing | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/initx` | `Infer`, `Questions`, `ValidateAnswers`, `TudoAceito`, `PrecisaDescobrir`, `ApplyArtifactChoice`, `ApplyColocation`, `PruneCodeLayers`, `DefaultGates`, `RenderHeaderGuide`, `RenderContributing`, `ContributingSection` | apoio — the init questions and how each answer shapes the config |
-| DEP2 | `internal/config/config.go` | `Save`, the workflow modes | config — the written file |
 
 ## Open Decisions
 

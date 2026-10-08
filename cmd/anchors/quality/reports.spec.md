@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPRTS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Reports — markdown perspectives on what Anchors already measures, written into docs
@@ -72,17 +72,6 @@ the helpers they share.
 | --- | --- | --- | --- |
 | `RPRTS-E01` | The map does not exist or cannot be read, for a single perspective or for all. | Error naming the map load and pointing at `anchors map build`. | Every perspective is a cut of the map; without it there is nothing to report. |
 | `RPRTS-E02` | The destination cannot be created or written. | The report fails with the write error. | A report that says "generated" and wrote nothing would pass for an up-to-date document. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/store.go` | `Load` | mapa — the map and the ingested signals |
-| DEP2 | `internal/gate/profile.go` | `Aggregate` | gate — the quality verdict |
-| DEP3 | `internal/health/health.go` | `Diagnose` | infra — the structural findings |
-| DEP4 | `internal/issue/issue.go` | `List`, `FileOwner` | infra — the issues by state and owner |
-| DEP5 | `internal/queue/queue.go` | `List` | infra — the task queue |
-| DEP6 | `internal/config/config.go` | `Load` | config — the declared layers, governance and gates |
 
 ## Open Decisions
 

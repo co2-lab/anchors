@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNGDC
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: infra
 -->
 # ContributingGuide — render the project's CONTRIBUTING.md from the configuration init writes
@@ -54,12 +54,6 @@ init never touches it: the section this unit renders is what init shows for the 
 ## Errors
 
 none — rendering only concatenates text from the configuration; there is nothing that can fail.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Gate.ActionFor` | core — the configuration read aloud |
 
 ## Open Decisions
 

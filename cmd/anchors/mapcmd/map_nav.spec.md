@@ -31,9 +31,3 @@ with where it leads, or one screen with where it comes from and where it leads.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `MNCMP-E01` | REF[MNCMP-B02]: a name that is no screen is refused, naming it | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/nav_chain.go` | `NavEdges` | gate — the navigation between screens |

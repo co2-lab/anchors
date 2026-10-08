@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLRGF
-  updated_at: 2026-10-03
+  updated_at: 2026-10-08
   layer: comando
 -->
 # FlowRegister — attach the flow domain's commands to the root command, once each
@@ -48,12 +48,6 @@ being attached to the root here.
 ## Errors
 
 none — registration only attaches commands; it reads no input and handles no failure.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/root.go` | the root command | comando — calls this registration once |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GHEGT
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: infra
 -->
 # GitHubEnvironment — the doctor warns, before the work starts, about the pieces the GitHub flow silently needs
@@ -63,15 +63,6 @@ optional mirror.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `GHEGT-E01` | REF[GHEGT-B05]: a failed read of the branch protection is the answer for an unprotected branch, so it becomes the finding, not an error | — | — <!-- @resilient: the failed read becomes the unprotected-branch warning the doctor prints, so it is reported as a finding and not lost --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `GitHubMode` | config — the mode and the repository |
-| DEP2 | `internal/initx/workflows.go` | `MissingWorkflow`, `OutdatedWorkflows`, `SemConcurrency` | the flow's pipeline catalogue and its comparisons |
-| DEP3 | `internal/i18n/i18n.go` | `T` | apoio — localized finding texts |
-| DEP4 | `internal/health/approval.go` | `checkApprovalReachable` | infra — the approval reachability joins the GitHub checks |
 
 ## Open Decisions
 

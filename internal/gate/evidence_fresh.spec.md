@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EVFRV
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # EvidenceFresh — the score of this test holds against TODAY's code
@@ -80,14 +80,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `EVFRV-E01` | REF[EVFRV-B02]: with no map there is no closure to walk, and B02 answers that the gate stays quiet | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Graph` | core — the closure walk and the culprit list belong to the map, which is what holds the revisions |
-| DEP2 | `internal/config/config.go` | `Config` | core — the freshness window and the declared surfaces come from the Structure |
-| DEP3 | `internal/mapx/model.go` | `KindTest` | core — only a test carries an execution score, and the kind is what routes the jurisdiction |
 
 ## Open Decisions
 

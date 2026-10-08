@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPSYN
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: comando
 -->
 # MapSyncForCommit — the commit carries the map a build of the commit makes
@@ -40,14 +40,6 @@ stages it.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `MPSYN-E01` | The index cannot be read or the map cannot be written or staged. | The error comes back; the hook warns and does not block. | The map-freshness checks still hold the commit to the map; a sync that failed must not be what blocks it. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/scan/scan.go` | `WalkStaged`, `ShortHash` | scan — the files as the index has them |
-| DEP2 | `internal/mapx/stamp.go` | `RebaseRev` | mapa — a date is not a new revision to measure |
-| DEP3 | `internal/mapx/lock.go` | `WithLock` | mapa — the map's lock |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGSTM
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # MigrationSteps — the registered steps, one per format, take any project from format 1 to the current format
@@ -72,12 +72,6 @@ The steps, and why each exists:
 none — the format files only declare data registered at load time; a hole in the chain or a file
 that cannot be migrated is refused by the step chain and the file migrator, which own those
 failures.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/migra/step.go` | `Register`, `Step` | apoio — the registry each format file adds its step to |
 
 ## Open Decisions
 

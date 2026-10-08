@@ -95,14 +95,6 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-E01` | A stamp declares a line count that is not a positive number (`0`, `-3`, `x`). | The comment is not read as a stamp, so the double it sits on is charged as UNSTAMPED (`MCSTM-B11`). | A window of zero lines covers nothing: accepting it would certify a double against an empty snippet, which never diverges. Reading it as absent sends the author to write a real one. |
 | `MCSTM-E02` | A test the map still lists is no longer on disk when `TestsStamping` looks for the doubles of a changed module. | That test is left out of the list; the others are still returned. | The map can be older than the tree (a test deleted since the last build): a missing file carries no stamp, and one stale node must not hide the doubles that are there. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
 
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindTest` | core — jurisdiction starts from the node's kind, and the `Graph` says which modules the project governs |
-| DEP2 | `internal/config/config.go` | `Config` | core — the double dialect is declared by the project, never assumed by the gate |
-| DEP3 | `internal/i18n/i18n.go` | `T` | core — the findings name the drift in the reader's language |
-
 ## Open Decisions
 
 | Code | Question | Who decides | Becomes |

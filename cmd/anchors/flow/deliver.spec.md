@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DLVRE
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Deliver — record what a stage delivered, where the reviewer reads it, and send the author to the review
@@ -73,16 +73,6 @@ confronts the declaration against the disk (see the delivery confrontation).
 | `DLVRE-E01` | In github mode without `--card`, the map gives the unit no code. | The command fails saying the code was not found, to run `anchors map build`, or to name the card with `--card <n>`. | The code is what identifies the card; guessing would record on the wrong one. |
 | `DLVRE-E02` | In github mode, no open card carries the unit's code. | The command fails naming the code, and says to reopen the card or to name another with `--card <n>`. | The record must land on an open card the reviewer reads. |
 | `DLVRE-E03` | In github mode, the card given with `--card` is closed. | The command fails saying the card is closed. | A comment on a closed card reaches no reviewer. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/change/change.go` | `Change`, `Save`, `Render` | the record and its file |
-| DEP2 | `internal/board` | `Client.FindOpenByNumber`, `FindByCode`, `Comment` | the card that receives the record |
-| DEP3 | `internal/mapx` | `Load`, `StemOfAnchor` | mapa — the unit's code |
-| DEP4 | `internal/scan` | `IsUpstreamOwned` | scan — a vendored pipeline |
-| DEP5 | `cmd/anchors/flow/deliver_confront.go` | `confrontDelivery` | comando — the confrontation after the record |
 
 ## Open Decisions
 

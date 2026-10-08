@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRJTS
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ProjectTests — the gates read the project's tests through the source the project declares
@@ -39,14 +39,6 @@ syntax themselves, and a project on any other library had no title read at all.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `PRJTS-E01` | REF[PRJTS-B05]: the source fails or answers outside its contract | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `DialectFor` | core — the project's dialect and its `tests` source |
-| DEP2 | `internal/mapx/model.go` | `Graph`, `KindTest` | core — the map's test files |
-| DEP3 | `internal/testlist/testlist.go` | `ListFrom`, `Source`, `Test` | infra — reading the tests through a pattern or a script |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLGRF
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # FlagGrammar — the fixed grammar of a feature-flag scenario's condition
@@ -52,12 +52,6 @@ deliberately not accepted: a scenario that depends on one is written as the valu
 | `FLGRF-E01` | The condition is empty or blank. | Refused: a scenario states when it applies. | An empty condition applies to nothing and would hide a missing statement. |
 | `FLGRF-E02` | An operator has nothing to compare against. | Refused, naming the operator. | A half-written comparison would be read as some other statement. |
 | `FLGRF-E03` | The condition is not a known comparison nor an absent/present word. | Refused, quoting the condition and showing the forms that are accepted. | A grammar that refuses without saying what it wanted moves the guessing to whoever writes the scenario. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/i18n/i18n.go` | `AllTranslations` | apoio — the absent/present words in every language (`INCTA`) |
 
 ## Open Decisions
 

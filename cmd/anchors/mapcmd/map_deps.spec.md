@@ -33,9 +33,3 @@ question the dependency chain exists to answer (DESIGN-dependencies-and-navigati
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `MDCMP-E01` | REF[MDCMP-B02]: a name that is no code nor file of the map is refused, naming it | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/store.go` | `Load` | mapa — the map |

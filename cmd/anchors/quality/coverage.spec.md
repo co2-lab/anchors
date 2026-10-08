@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CVCMC
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: comando
 -->
 # CoverageCommand — answers the confidence questions from the ingested signals: by scenario, by line, of the diff and the delta
@@ -80,16 +80,6 @@ Against the previous ingestion: did any file lose line coverage? A drop fails th
 | `CVCMC-E04` | The coverage report cannot be read. | Error naming the report parse. | An unread report would pass every changed line as not instrumented. |
 | `CVCMC-E05` | The diff is asked against a git reference and the project is not under git. | Error explaining why the diff could not be taken and pointing at the diff file alternative. | Without history there is nothing to compare against; the diff file serves any other source. |
 | `CVCMC-E06` | The diff file cannot be read. | The diff coverage fails. | An empty diff would pass as "nothing to cover". |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/testsig/lcov.go` | `ParseLCOV` | infra — reading the coverage report |
-| DEP2 | `internal/testsig/diff.go` | `GitDiff`, `ParseDiffFile` | infra — the changed lines |
-| DEP3 | `internal/testsig/junit.go` | `CodesInCase` | infra — the scenario codes a text carries |
-| DEP4 | `internal/gitmeta/availability.go` | `Check`, `Explain` | infra — why git could not answer |
-| DEP5 | `internal/mapx/store.go` | `Load` | mapa — the ingested signals |
 
 ## Open Decisions
 

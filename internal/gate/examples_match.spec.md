@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EXMCH
-  updated_at: 2026-09-28
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ExamplesMatch — every Examples row is a case its tests run
@@ -44,14 +44,6 @@ header carries `(label)`, in any supported language, is display text and is not 
 | Error | When | What the user sees |
 | --- | --- | --- |
 | `EXMCH-E01` | The tests cannot be listed (a script that fails, output outside the contract) | the gate fails with the reason |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/project_tests.go` | `projectTests` | gate — the project's tests, read once per scan |
-| DEP2 | `internal/gate/test_has_assertion.go` | `testBody` | gate — a test's body by the layout or the script's end |
-| DEP3 | `internal/config/dialect.go` | `GherkinExamplesAlternatives` | config — the examples keyword in every language |
 
 ## Open Decisions
 

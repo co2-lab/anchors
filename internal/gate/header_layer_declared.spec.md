@@ -1,6 +1,6 @@
 <!-- @anchors
   code: HDLYD
-  updated_at: 2026-09-28
+  updated_at: 2026-10-08
   layer: gate
 -->
 # HeaderLayerDeclared — the layer a header declares is one the Estrutura has
@@ -34,12 +34,6 @@ surfaced by chance.
 ## Errors
 
 none — the gate reads the file's header and the configuration
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/scan/scan.go` | `HeaderLayerOf` | scan — the layer the header declares |
 
 ## Open Decisions
 

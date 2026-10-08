@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSUNT
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: mapa
 -->
 # TestedUnits — which code a test tests, found by the project's own derivation
@@ -41,12 +41,6 @@ is matched against the `code` templates first, to recover the variables.
 
 none — the lookup reads only the map and the configuration it is given; a template that does not
 match is a file it does not describe, not a failure
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Padroes`, `PadroesDe` | core — the project's derivation |
 
 ## Open Decisions
 

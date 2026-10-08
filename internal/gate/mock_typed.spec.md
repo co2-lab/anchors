@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCTYM
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: gate
 -->
 # MockTyped — every test double must DERIVE from the module it replaces
@@ -90,14 +90,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | --- | --- | --- | --- |
 | `MCTYM-E01` | REF[MCTYM-B05]: with no configuration or no tie shape declared, B05 answers Pending naming what to declare | — | — |
 | `MCTYM-E02` | No map has been built and the test mocks modules. | `Pending` with the no-map message. | Which doubles are the project's is decided by the map (`MCTYM-I01`): without it, "only mocks modules outside the project" would be a cause nobody measured. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindTest` | core — jurisdiction starts from the node's kind, and the `Graph` is what decides which modules the project governs |
-| DEP2 | `internal/config/config.go` | `Config` | core — the tie shape and the double dialect are declared by the project, never assumed by the gate |
-| DEP3 | `internal/i18n/i18n.go` | `T` | core — the verdict names the loose modules in the reader's language |
 
 ## Open Decisions
 

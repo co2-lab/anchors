@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BCLBB
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # BackfillLabels — write into open cards the blocking and provenance links the board already implies
@@ -71,14 +71,6 @@ dry run shows what would be written without touching anything.
 | `BCLBB-E02` | The listing answers with something that is not a list of cards. | The command fails with "read the list". | An unread list cannot be taken for an empty board. |
 | `BCLBB-E03` | The edit that writes a label fails. | The card and the platform's answer are reported on standard error, and the link counts as skipped, not written. | One refused card must not stop the others, and the count must not claim a write that did not happen. |
 | `BCLBB-E04` | The state of an origin card cannot be read. | The origin card receives nothing and counts as skipped. | Writing a block on a card whose state is unknown could label a closed card. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Load`, `AbsRoot`, `GitHubMode` | config — project configuration and workflow mode |
-| DEP2 | `internal/initx/workflows.go` | `LabelNeedsUser`, `LabelSob`, `LabelBlockedBy`, `LabelDePR` | the workflow labels |
-| DEP3 | `cmd/anchors/flow/escalate.go` | `cardDoPR` | comando — the card a pull request declares |
 
 ## Open Decisions
 

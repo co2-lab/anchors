@@ -5,7 +5,7 @@
 
 # Duplicate declarations — each gate confronts the repeats of what it controls
 
-> APPROVED on 2026-10-07 (on by default). One mechanism in the engine; each gate that controls a kind of
+> IN PROGRESS — W01 (v0.1.299) and W02 (v0.1.300) delivered; approved on 2026-10-07 (on by default). One mechanism in the engine; each gate that controls a kind of
 > declaration says what its occurrences are; a key declared twice in the same file is a
 > finding of that gate. On by default, switched off per gate in `anchors.yaml`.
 
@@ -60,7 +60,6 @@ declaration is counted by one gate, so a repeat is reported once.
 | `flag-scenario-grammar` | a flag scenario code twice in a flag file | `CODE-Gnn` | `flagx.ParseContent` (has lines) |
 | `open-questions-resolved` | an open question code twice, resolved rows included | `Qnn` | `openItems` |
 | `env-declared` | an environment variable in two rows | variable name | `sectionRows` of Environment Variables |
-| `dependency-honored` | the same `DEPn` in two rows of the Dependencies table | `DEPn` | the spec's Dependencies table |
 | `domain-declared` | the same entry in two rows of the Domain | entry name | `domainLines` |
 | `used-by-declared` | two `@used-by:` flags on one symbol | symbol | `scan.UsedByIn` (has lines) |
 | `testid-consistent` | a testID in two rows of the spec's inventory (exposing one id in two render branches of the code is not counted) | testID | `declaredTestIDs` |
@@ -76,7 +75,7 @@ this one's).
 | Phase | What | Proof |
 | --- | --- | --- |
 | `DPDCD-W01` | **The mechanism.** `Occurrence`, the reader registry, the engine's count after a gate runs, `duplicates:` on the gate, the message, the site pages. One reader to prove it: `rule-types`, rule codes defined twice. | The screen spec born with `-B01` twice (the bug of v0.1.297) fails `rule-types` naming both lines; `duplicates: false` silences it. Measured on clones of jokenpo and MIF: how many specs already have a repeat, read one by one. |
-| `DPDCD-W02` | **The spec catalogue.** `spec-sections`, `revision-orphans`, `open-questions-resolved`, `domain-declared`, `dependency-honored`, `env-declared`. | Each with its test; measured on the clones. |
+| `DPDCD-W02` | **The spec catalogue.** `spec-sections`, `revision-orphans`, `open-questions-resolved`, `domain-declared`, `env-declared` (`dependency-honored`'s `DEPn` too, until DOOSD retired the table). | Each with its test; measured on the clones. |
 | `DPDCD-W03` | **Features, plans, flags, code.** `scenario-identity` and `phase-ordered` moved onto the mechanism; `flag-scenario-grammar`, `used-by-declared`, `testid-consistent`, `examples-match`. | Each with its test; measured on the clones; the peers told what each repeat found. |
 
 ## What NOT to do

@@ -335,3 +335,72 @@ func hash8(s string) string {
 	h := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(h[:])[:8]
 }
+
+func TestMigrateTakesTheDependenciesOutOfTheSpecs(t *testing.T) {
+	t.Run("MGCMM-B17: The migration removes every section whose rows open with a DEPn, and the DEPn from what the rules use, naming what it leaves to the author", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src/models"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "src/models/profile.ts"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	spec := "# Pay\n\n## Data Contract\n\n| Field | Origin |\n| --- | --- |\n| `amount` | DEP1 |\n\n" +
+		"## Dependências\n\n| Cód | Arquivo | Método |\n| --- | --- | --- |\n| DEP1 | `src/models/profile.ts` | `getProfile` |\n| DEP2 | Stripe API | charges |\n\n" +
+		"## Rule uses\n\n| Rule | Uses |\n| --- | --- |\n| `PAYMT-B01` | `amount`, DEP1 |\n| `PAYMT-B02` | `DEP2` |\n| `PAYMT-B03` | `amount` |\n\n" +
+		"## Open Decisions\n\nnone\n"
+	got, r := withoutSpecDependencies(spec, root, "src", nil)
+	if strings.Contains(got, "## Dependências") || strings.Contains(got, "getProfile") || strings.Contains(got, "\n\n\n") {
+		t.Errorf("the table's section is gone, with no blank run left:\n%s", got)
+	}
+	for _, want := range []string{"| `PAYMT-B01` | `amount` |", "| `PAYMT-B03` | `amount` |", "## Open Decisions"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("want %q in:\n%s", want, got)
+		}
+	}
+	if r.Dropped != 2 || strings.Join(r.Emptied, ",") != "PAYMT-B02" || len(r.Sections) != 1 {
+		t.Errorf("two DEPn left the uses, B02 now says nothing, one table removed: %+v", r)
+	}
+	if len(r.External) != 1 || !strings.Contains(r.External[0], "Stripe") {
+		t.Errorf("the row naming no file of the project is named for the author: %+v", r.External)
+	}
+	if len(r.Mentions) != 1 || !strings.Contains(strings.Split(got, "\n")[r.Mentions[0]-1], "`amount` | DEP1") {
+		t.Errorf("the data origin still citing DEP1 is named by its line: %+v", r.Mentions)
+	}
+	if again, r2 := withoutSpecDependencies(got, root, "src", nil); again != got || r2.Dropped != 0 || len(r2.Sections) != 0 {
+		t.Errorf("a second run changes nothing: %+v", r2)
+	}
+	spaced := "# Other\n\n\n\n## Rules\n\n| `OTHRS-B01` | x |\n"
+	if same, _ := withoutSpecDependencies(spaced, root, "src", nil); same != spaced {
+		t.Errorf("a spec with no table is left exactly as it was, its own spacing included:\n%q", same)
+	}
+}
+
+func TestMigrateKeepsTheSpecsEvidence(t *testing.T) {
+	t.Run("MGCMM-B18: Taking the table out keeps what each spec proved: its evidence moves, in the map, to the content without the table", func(t *testing.T) {})
+	root := t.TempDir()
+	spec := "# Pay\n\n## Dependencies\n\n| Code | File |\n| --- | --- |\n| DEP1 | `x.ts` |\n\n## Rules\n\n| `PAYMT-B01` | charges |\n"
+	if err := os.WriteFile(filepath.Join(root, "pay.spec.md"), []byte(spec), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	old := scan.ShortHash([]byte(spec))
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "pay.spec.md", Kind: mapx.KindSpec, Rev: old,
+		Signal: &mapx.TestSignal{AtRev: old, ProvenRevBySuite: map[string]string{"unit": old}}}}}
+	if err := mapx.Save(g, filepath.Join(root, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	reports, err := migrateSpecDependencies(root, nil, false)
+	if err != nil || len(reports) != 1 {
+		t.Fatalf("one spec migrated: %v %+v", err, reports)
+	}
+	b, _ := os.ReadFile(filepath.Join(root, "pay.spec.md"))
+	now := scan.ShortHash(b)
+	got, err := mapx.Load(filepath.Join(root, mapx.DefaultPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := got.Node("pay.spec.md")
+	if n == nil || n.Rev != now || n.Signal.ProvenRevBySuite["unit"] != now {
+		t.Errorf("the spec's proofs follow its new content: %+v", n)
+	}
+}

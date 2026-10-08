@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CLGCM
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: comando
 -->
 # anchors changelog — the technical changelog, printed or written
@@ -47,14 +47,6 @@ project's `lang`, and `changelog.template` replaces the built-in template.
 | `CLGCM-E01` | `--from` names no tag reachable from `--to`. | The command fails naming the tag. | An unknown start would silently print nothing, or everything. |
 | `CLGCM-E02` | `changelog.template` names a file that cannot be read. | The command fails naming `changelog.template`. | Falling back to the built-in template would write a changelog the project did not ask for. |
 | `CLGCM-E03` | `anchors.yaml` exists and does not load. | The command fails naming the file. | A broken configuration must not be read as the defaults. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/changelog/changelog.go` | `Git`, `Render`, `Prepend` | infra — the history and the file |
-| DEP2 | `internal/config/config.go` | `Load`, `Changelog` | core — the `changelog:` block |
-| DEP3 | `internal/i18n/i18n.go` | `T` | infra — the headings' language |
 
 ## Open Decisions
 

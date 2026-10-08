@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DLCTI
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: config
 -->
 # Dialect — the lexicon of the project's language, between an agnostic gate and concrete code
@@ -91,12 +91,6 @@ written in the configuration file).
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `DLCTI-E01` | REF[DLCTI-B09]: a pattern that does not compile is the failure B09 absorbs: it compiles to nothing, and the gate answers as for an undeclared pattern | — | — <!-- @resilient: loading the configuration already refuses a pattern that does not compile and names it, so the nil here only reaches a hand-built dialect --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | config — holds the declared dialect block |
 
 ## Open Decisions
 

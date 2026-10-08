@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCCVD
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: gate
 -->
 # DocsCovered — every spec must reach some page of the compiled documentation
@@ -63,14 +63,6 @@ only.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `DCCVD-E01` | REF[DCCVD-B05]: the templates failing to compile is the one failure the gate handles, and B05 states its answer: skip, and leave the report to the sibling gate | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/doct/doct.go` | `New`, `Uncovered`, `Dir` | the documentation compiler that knows what each template selects |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized verdict messages |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `Node`, `KindSpec` | core — the map the templates select from |
 
 ## Open Decisions
 

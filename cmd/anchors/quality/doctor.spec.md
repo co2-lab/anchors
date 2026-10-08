@@ -1,6 +1,6 @@
 <!-- @anchors
   code: HLDCH
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # DoctorCommand — the global health x-ray, and the repair of the github-mode environment
@@ -74,16 +74,6 @@ the rest of the doctor, it answers about the project the root flag names.
 | `HLDCH-E02` | The map does not exist or cannot be read. | Error naming the map load and pointing at `anchors map build`. | The diagnosis is a sweep over the map. |
 | `HLDCH-E03` | The fix runs in github mode and `gh` is not installed. | Refuses naming the tool, before seeding or changing anything. | Every repair goes through `gh`; one refusal naming the cause beats five failures naming symptoms. |
 | `HLDCH-E04` | The fix runs in github mode and `gh` is installed but not authenticated. | Refuses with the instruction to log in, before seeding or changing anything. | Logging in is interactive and an agent cannot complete it; telling the person is the only honest way out. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/health/health.go` | `Diagnose` | infra — the systemic findings |
-| DEP2 | `internal/initx/workflows.go` | `MissingWorkflow`, `OutdatedWorkflows`, `SemeiaWorkflows` | infra — the workflow pipelines |
-| DEP3 | `internal/config/config.go` | `Load` | config — the mode, the repository and the protected branches |
-| DEP4 | `internal/mapx/store.go` | `Load` | mapa — the map the diagnosis sweeps |
-| DEP5 | `internal/change/change.go` | `Pending` | infra — the delivery records |
 
 ## Open Decisions
 

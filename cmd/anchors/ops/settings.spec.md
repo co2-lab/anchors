@@ -1,6 +1,6 @@
 <!-- @anchors
   code: STCMS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # SettingsCommand — one agent's local decisions, declared with a date and kept out of the project's configuration
@@ -64,14 +64,6 @@ none is.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `STCMS-E01` | The terminal input closes before an answer is read. | The command fails with the read error, not a silent "no". | A closed input is not an answer; recording "no" would make the agent decide on its own. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/settings` | `Load`, `Save`, `Path`, `ParseRole`, `ParseAnswer`, `Role.Caps` | apoio — the local settings file and its vocabulary |
-| DEP2 | `cmd/anchors/common` | `AskRole`, `AgentID`, `PrintRole`, `RoleList` | comando — the shared role prompt and agent identity |
-| DEP3 | `internal/i18n` | `T` | apoio — the messages |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SPGDS
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: comando
 -->
 # SpecGuide — the project's own spec guide, instantiated with its dialect and a complete example
@@ -43,13 +43,6 @@ The central difference from the built-in guide is a COMPLETE EXAMPLE, because no
 ## Errors
 
 none — the unit renders text from a configuration already loaded and has no failure to handle: an empty example code is normal flow answered by `SPGDS-B01`.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/i18n/i18n.go` | `T`, `TIn` | the section titles and labels of the current language |
-| DEP2 | `internal/config/config.go` | `Config` | the project's `rule_types` and `code_lengths` |
 
 ## Open Decisions
 

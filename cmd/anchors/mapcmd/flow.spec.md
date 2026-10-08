@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLWOX
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Flow — build, draw and navigate the work flows kept in the map
@@ -70,15 +70,6 @@ as a mermaid diagram. It is never stored, so it cannot age against the flow it d
 | `FLWOX-E02` | Navigating a step that is not in the flow graph. | The command fails naming the step. | There is no exit to answer for a step the graph does not have. |
 | `FLWOX-E03` | Showing a flow when no flow name contains the given text. | The command fails listing the available flows. | The reader needs the names to ask again. |
 | `FLWOX-E04` | Showing or navigating when the map holds no flow. | The command fails asking for the flow build. | The flow is read from the map, and nothing was built into it yet. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/flowx/build.go` | `Build` | apoio — reads the declared flows and actions into a graph |
-| DEP2 | `internal/flowx/model.go` | `Next`, `StatesOf`, `Unhandled`, `StateByCode`, `Entry` | apoio — the queries over the flow graph |
-| DEP3 | `internal/mapx/lock.go` | `Update` | mapa — the map that stores the flow graph, changed under its lock |
-| DEP4 | `internal/config/root.go` | `AbsRoot` | config — the project root |
 
 ## Open Decisions
 

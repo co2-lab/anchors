@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CLRTC
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: comando
 -->
 # CliRoot — every command passes through one root that speaks the project's language and honours the freeze
@@ -67,15 +67,6 @@ leaves printing to the entry point, which prints the error once and decides the 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `CLRTC-E01` | REF[CLRTC-B01]: a command run in a frozen project is the failure the root raises | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `AbsRoot`, `Load`, `Frozen`, `FreezeReasonText` | config — the freeze state |
-| DEP2 | `internal/i18n` | `Set`, `T` | apoio — the language |
-| DEP3 | `cmd/anchors/common` | `NoticeTelemetry` | comando — the telemetry notice every command passes through |
-| DEP4 | `cmd/anchors/ops/register.go` | `Register` | comando — OPRGP, and the other domains' registrations |
 
 ## Open Decisions
 

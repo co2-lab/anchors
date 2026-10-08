@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCLTE
-  updated_at: 2026-10-03
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Escalate — open the right card for a change the plan, the spec or the tool needs, and stop the work only when it must
@@ -107,16 +107,6 @@ day.
 | `SCLTE-E01` | The platform refuses to create the new card. | The command fails with "open the issue" and the platform's answer. | Nothing was recorded; saying it worked would lose the finding. |
 | `SCLTE-E03` | The platform refuses the report to Anchors. | A warning says it could not, and prints the prefilled new-issue link; the command succeeds. | The finding is already recorded in the project; failing would hide that, and the link lets a person file it. |
 | `SCLTE-E02` | The origin card cannot be labelled as stopped. | A warning says to label it by hand; the command succeeds and does not announce the card as stopped. | The new card exists; failing would hide it, and staying silent would let another agent take the card and redo the path. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Load`, `AbsRoot`, `GitHubMode` | config — project configuration and workflow mode |
-| DEP2 | `internal/initx/workflows.go` | `LabelNeedsUser`, `LabelNeedsFraming`, `LabelBug`, `LabelSob`, `LabelDePR`, `LabelBlockedBy` | the workflow labels |
-| DEP3 | `cmd/anchors/flow/escalate_dup.go` | `openCardsAbout` | comando — the open cards about the target |
-| DEP4 | `cmd/anchors/flow/pr_body.go` | `requestedCards` | comando — the agent's cards |
-| DEP5 | `cmd/anchors/common` | `FirstLineOfReason`, `AliasDeFlag`, `ResolveAliases` | comando — the title line and the deprecated flag names |
 
 ## Open Decisions
 

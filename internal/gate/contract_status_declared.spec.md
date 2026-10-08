@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CSDCN
-  updated_at: 2026-10-03
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those
@@ -86,13 +86,6 @@ is nothing to confront.
 | `CSDCN-E01` | No map has been built, so the gate receives no graph. | `Pending` with the no-map message. | The code a spec specifies is found through the map's `specifies` edges: without them there is nothing to confront, and `Pending` says "not measured" where `Pass` would claim a contract was checked. |
 | `CSDCN-E02` | The map links the spec to code, but none of those files can be read (all gone from disk since the last build, or empty). | `Pending` saying the linked code could not be read. | No code read is no status measured. Letting it fall through to `CSDCN-B08` would answer "the code returns no status", a claim about code the gate never saw. |
 | `CSDCN-E03` | The project's `dialect.http_status` does not compile as a regular expression. | `Pending` saying the pattern does not compile. | Without a lexicon there is no way to read the code's statuses; `Pending` sends the reader to fix the configuration instead of reporting a divergence nobody measured. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindSpec`, `EdgeSpecifies` | core — the kind gives jurisdiction, and the edge says which code realises the contract |
-| DEP2 | `internal/config/config.go` | `KnownDialectFamilies` | core — the lexicon that reads the status comes from the Structure, and the Pending verdict names the families |
 
 ## Open Decisions
 

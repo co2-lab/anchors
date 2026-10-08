@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INWZN
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: comando
 -->
 # InitWizard — the interactive init walks a person from an unconfigured directory to a reviewed anchors.yaml, and writes nothing on answers nobody gave
@@ -97,15 +97,6 @@ the file, which is a successful no.
 | `INWZN-E01` | A prompt cannot run because there is no terminal. | The error keeps the caller's context and shows both calls of the non-interactive mode, the one that asks and the one that answers with an example. | An agent or a pipe needs the way out, not only the diagnosis. |
 | `INWZN-E02` | The input ends while the prompts run in line mode. | The end of input counts as a failed prompt, and the init refuses to write. | A line-mode prompt returns its default at end of input with no error, which once wrote a configuration with no artifact and no gate under a success message. |
 | `INWZN-E03` | REF[INWZN-I01]: every prompt failure ends in the same refusal to write | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/initx` | `Infer`, `DetectGit`, `AvisoGit`, `OfferAction`, `PrecisaDescobrir`, `DetectOperator`, `AgentName`, `CommandToOpenAI`, `PromptDescobrir`, `CoverageHint`, `RenderContributing`, `ContributingSection` | apoio — the inference, the git states, the operator, the dialect and the contributing guide |
-| DEP2 | `cmd/anchors/ops/init_non_interactive.go` | `runInitNonInteractive` | comando — ININT |
-| DEP3 | `internal/config/config.go` | `Save`, `DefaultFile` | config — the written file |
-| DEP4 | `cmd/anchors/governance` | `RenderSpecGuide` | comando — the seeded spec guide |
 
 ## Open Decisions
 

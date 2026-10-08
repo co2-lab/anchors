@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BRCRB
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # BoardCards — reading the repository's board, where the work queue lives in github mode
@@ -60,12 +60,6 @@ commenting, so a unit's card is found by the code in its title only, and an ambi
 | `BRCRB-E05` | Two or more open cards have the code in their title. | Refused, listing every card and asking for `--card <n>`. | Picking the first recorded a delivery on the wrong card; the choice goes back to whoever knows it. |
 | `BRCRB-E06` | The card named by number is closed, or lacks a configured label. | Refused, saying which. | A delivery there would go to a card nobody reads, or onto someone else's issue. |
 | `BRCRB-E07` | The comment body is empty or blank. | Refused before calling `gh`. | A blank comment records nothing and looks like a delivery. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/board/gh.go` | `runGH` | apoio — every call to `gh` (`GHRNG`) |
 
 ## Open Decisions
 

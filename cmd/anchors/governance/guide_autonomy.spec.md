@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ATGDT
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # AutonomyGuide — what an agent does with what it does not know, by the role declared locally
@@ -52,13 +52,6 @@ So whoever does not decide the product reads a different instruction, in the pla
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `ATGDT-E01` | REF[ATGDT-B08]: a settings file that cannot be read is the one failure the unit handles, and B08 states how: named, on the closed side <!-- @resilient: the cause is written into the guide the agent reads --> | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/settings/settings.go` | `Load`, `HandlesUserIssues`, `Decided` | the local declaration and whether it decides the product |
-| DEP2 | `internal/settings/roles.go` | `Title`, `Lens` | the role's name and review lens |
 
 ## Open Decisions
 

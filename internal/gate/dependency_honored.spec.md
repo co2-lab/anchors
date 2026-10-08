@@ -1,95 +1,68 @@
 <!-- @anchors
   code: DEPHN
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
-# DependencyHonored — methods promised in the dependency table are consumed in code
+# DependencyHonored — a spec declares no dependency: the code does
 
 > **Code**: `DEPHN`
 
+> **DEPHN-R0001:** the gate stopped confronting a spec's Dependencies table with the code.
+> A spec precedes the code, and the files a unit imports and the methods it calls are born
+> with it: they are declared where the import is, by the `@dep:` flag, and confronted by
+> `dep-declared` and `dep-honored` (DESIGN-dependencies-out-of-the-spec.md). What this gate
+> asks now is that the table is gone.
+> **Revises:** `DEPHN-B01`, `DEPHN-B02`, `DEPHN-B03`, `DEPHN-B04`, `DEPHN-B05`, `DEPHN-B06`, `DEPHN-B07`, `DEPHN-B08`, `DEPHN-I01`, `DEPHN-I02`, `DEPHN-I03`, `DEPHN-X01`, `DEPHN-X02`, `DEPHN-E01`.
+
 ## Overview
 
-Confronts a spec's **Dependency Table** against actual use in the unit's code: **every method
-symbol a spec promises to consume must genuinely appear in the non-comment content of the code
-it governs.**
-
-This is the **relational gate of the spec→code edge**. It catches the divergence that sibling gates
-(such as `feature-test-match`) cannot see: a spec declares `DEP2 → metadataVersioning · resolveVersion, applyEdit`,
-but the unit's code calls only `resolveVersion` — the promised `applyEdit` is never invoked.
-That exact divergence was the bug that slipped past 65 green tests in the originating project's
-end-to-end suite.
-
-The ruler is **static, without execution**:
-- **Only symbols are confronted**: identifiers enclosed in `backticks` in the Method field. A prose
-  description (such as `"CRUD + queries"` or `"requests"`) is not confrontable and is deliberately ignored;
-  prose explains the relationship rather than establishing a verifiable contractual promise.
-- Each declared symbol must appear as a token within the non-comment content of the code the spec
-  `specifies`. Line comments are stripped before checking so that comments cannot mask unused dependencies.
-  A declared symbol absent from code fails.
-- When a promised symbol is missing from code, the gate checks for a near rename (e.g. `ping` → `pingHeartbeat`
-  or `computeSeatsAmount` → `computeSeatsAmountCents`). If an identifier in code extends the symbol as a prefix
-  or suffix and the symbol has at least four characters, the verdict actively suggests the rename instead
-  of merely reporting an error.
-- Undetermined and unapplicable states are explicit:
-  - An artifact that is not a spec skips with reason (`not a spec — only spec has Dependency Table`).
-  - When no relational graph is loaded, the verdict is undetermined (`Pending`).
-  - When the Dependency Table contains no confrontable symbols, the check skips (`Dependency Table promises no confrontable SYMBOL`).
-  - When the spec governs no code (`specifies` edge absent), the verdict is undetermined (`Pending`).
+A spec that still carries a Dependencies table — rows opening with a `DEPn` — declares, in the
+artifact that comes first, what only the code can know. The gate names it as a divergence to
+migrate: `anchors migrate` removes the table and rewrites the `DEPn` a rule cites. A spec with
+no table passes.
 
 ## Domain
 
 | Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
-| the confronted artifact | any node in the map graph | — (the gate does not select the target) | the gate engine, routing by declared `on: [spec]` |
-| the relational graph | a populated map graph with spec edges | `nil` graph (verdict is undetermined as Pending) | the caller / map loader |
-| the dependency promises | backticked identifier symbols in `depends-on` edges | prose descriptions without backticks (ignored without confrontation) | this unit, extracting symbols via `backtickedSymbols` |
-| the governed code | non-comment content of code files linked via `specifies` edges | specs with no `specifies` edge (returns Pending) | this unit, stripping comments and checking word-boundary tokens |
+| the confronted artifact | any node of the map | — | the gate engine, routing by `on: [spec]` |
+| the spec's text | rows opening with a `DEPn` | a `DEPn` cited in another column (a rule's uses) | this unit, reading only the rows that open with it |
 
 ## Effects
 
 | Effect | Description |
 | --- | --- |
-| `DEPHN-B01` | An artifact that is not a spec leaves without a verdict: only specs have a Dependency Table. |
-| `DEPHN-B02` | Without a relational map the verdict is UNDETERMINED (Pending), because dependency and specification edges cannot be traversed. |
-| `DEPHN-B03` | A spec declaring no confrontable symbols in its Dependency Table leaves without a verdict (Skip): prose descriptions and empty tables promise no verifiable identifiers. |
-| `DEPHN-B04` | A spec that specifies no code files leaves the verdict UNDETERMINED (Pending): there is no governed code to confront yet. |
-| `DEPHN-B05` | When every promised symbol appears in the non-comment content of the governed code, the gate passes. |
-| `DEPHN-B06` | When a promised symbol is absent from the governed code, the gate fails and names the unused symbol and dependency target file. |
-| `DEPHN-B07` | When an absent symbol resembles an identifier in code (sharing a prefix or suffix extension), the failure verdict suggests the candidate rename. |
-| `DEPHN-B08` | Line comments in governed code are stripped before confrontation, so symbols appearing exclusively within comments do not fulfill the promise. |
+| `DEPHN-B01` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` |
+| `DEPHN-B02` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` |
+| `DEPHN-B03` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` |
+| `DEPHN-B04` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` |
+| `DEPHN-B05` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` |
+| `DEPHN-B06` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` |
+| `DEPHN-B07` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` |
+| `DEPHN-B08` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` |
+| `DEPHN-B09` | A spec whose text still has rows opening with a `DEPn` — a Dependencies table — diverges, naming how many rows and pointing at `anchors migrate`; a spec with none passes, and an artifact that is not a spec leaves without a verdict. (`checkDependencyHonored`) |
 
 ## Invariants
 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
-| `DEPHN-I01` | Prose descriptions in dependency methods are never treated as contracts; only backticked identifiers constitute promises to verify. | confronts dependency methods with and without backticks and verifies prose is ignored |
-| `DEPHN-I02` | Symbol presence in code is matched strictly on token word boundaries, never as a substring of a larger identifier name. | confronts a code file containing a longer identifier containing the symbol as a substring and verifies failure |
-| `DEPHN-I03` | Near-symbol rename suggestions are strictly conservative, requiring prefix or suffix containment and a minimum symbol length of four characters. | evaluates candidate identifiers of various lengths and forms, verifying only valid extensions trigger suggestions |
+| `DEPHN-I01` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` | — |
+| `DEPHN-I02` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` | — |
+| `DEPHN-I03` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` | — |
 
 ## Constraints
 
 | Rule | Boundary | Why |
 | --- | --- | --- |
-| `DEPHN-X01` | Static textual confrontation without runtime execution. | The gate inspects non-comment source tokens rather than executing target code or inspecting call graphs; dynamic verification belongs to test suites. |
-| `DEPHN-X02` | Does not interpret dependency semantics, parameter signatures, or method types. | The gate enforces relational honesty between declared symbols and source references; semantic and type checking belongs to language compilers. |
+| `DEPHN-X01` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` | — |
+| `DEPHN-X02` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` | — |
 
 ## Errors
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `DEPHN-E01` | A code file the map says the spec specifies is no longer on disk. | That file contributes no code; the files still on disk are confronted as usual, so the gate passes when they use every promised symbol, and a symbol used only by the missing file is charged as unused (`DEPHN-B06`). | The map can be older than the tree (a file deleted since the last build). A deleted file uses nothing, so what only it used is really no longer used, and one stale edge must not stop the confrontation of the code that is there. <!-- @resilient: a stale map edge is expected between builds, and the next map build removes it --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/query.go` | `Neighbors` | core — querying outgoing edges from the spec node |
-| DEP2 | `internal/mapx/model.go` | `KindSpec`, `EdgeDependsOn`, `EdgeSpecifies` | core — identifying spec nodes and dependency/governance edge types |
-| DEP3 | `internal/i18n/i18n.go` | `T` | core — localized messages for gate verdicts |
+| `DEPHN-E01` | @retired: DEPHN-R0001 — the spec declares no dependency any more; the code does, by `@dep:` | — | — |
 
 ## Open Decisions
-
-| Code | Question | Who decides | Becomes |
-| --- | --- | --- | --- |
 
 none

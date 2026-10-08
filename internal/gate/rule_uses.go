@@ -26,7 +26,7 @@ import (
 //
 //	Validations               `| V01 | field | condition | behaviour |`
 //	Presentation validations  `| P01 | prop/state | condition | appearance |`
-//	Rule uses                 `| B01 | field, CODE-S01, DEP1 |`
+//	Rule uses                 `| B01 | field, CODE-S01 |`
 //
 // Each row starts with the rule's code and goes on with what it uses, in that order. The
 // row is read by POSITION, not by the columns' names: those follow the project's language

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PSDPL
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # PlanSourceDeclared — a plan that NAMES a source has to declare who builds it
@@ -82,13 +82,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `PSDPL-E01` | REF[PSDPL-I01]: with no map nothing was measured, and I01 answers Pending, never approval | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindPlan`, `EdgeSeeds` | core — jurisdiction comes from the node's KIND, and the adapter's owner from the seeding EDGE |
-| DEP2 | `internal/config/config.go` | `Config` | core — the gate receives the project's Structure with the confronted node |
 
 ## Open Decisions
 

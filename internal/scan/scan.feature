@@ -2,7 +2,7 @@
 # @anchors
 #   code: SCFTC
 #   ref: RPSCR
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @RPSCR
@@ -306,3 +306,9 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a Portuguese Out table with rows ARNAA-A03 and ARNAA-A04, a row with no rule, and a rule table after it
     When its Out rows are read, and then with A03's destination changed
     Then two rows are read, and only A03's revision changes
+
+  @RPSCR-B45 @unit-level
+  Scenario: A spec's Dependencies table is no dependency of the map
+    Given a spec with a Dependencies table naming a file
+    When its dependencies are read for the map, and then for the migration
+    Then the map gets none, and the migration reads the row

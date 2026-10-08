@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPHRG
-  updated_at: 2026-09-19
+  updated_at: 2026-10-08
   layer: gate
 -->
 # RegionPairHonored — every opened source region must close with its own identity code
@@ -76,15 +76,6 @@ when a file does not define regions, the whole file revision applies cleanly.
 | `RPHRG-X01` | Does not mandate region markers in code or test files. | Region markers provide fine-grained interval traceability, but requiring them everywhere would penalize small single-purpose files. |
 | `RPHRG-X02` | Does not inspect region markers inside specs or markdown files. | Specifications and guides frequently contain documentation examples showing region syntax; parsing them would trigger false alarms. |
 | `RPHRG-X03` | Does not enforce semantic validity of the code enclosed within a region. | This gate validates the integrity of the interval boundary markers; code logic and semantics belong to compiler, linters, and unit tests. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | core — project configuration |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized verdict and defect messages |
-| DEP3 | `internal/mapx/model.go` | `KindCode`, `KindTest`, `Node` | core — node representations and artifact kinds |
-| DEP4 | `internal/scan/region.go` | `Regioes` | core — extracts region intervals and detects pairing errors |
 
 ## Open Decisions
 

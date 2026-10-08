@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRBLG
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: mapa
 -->
 # GraphBuild — projecting the declared structure onto the scanned files: one node per file, and the relations between them
@@ -116,14 +116,6 @@ of the nodes whose content did not change.
 ## Errors
 
 none — every branch that skips a relation is normal flow (a target that does not exist, a tag no layer carries, an ambiguous name), stated as behaviours B13–B18 and X02; assembling the graph in memory cannot fail.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/scan/scan.go` | `File` | scan — the scanned files, their headers, codes and declarations |
-| DEP2 | `internal/config/config.go` | `Config` | config — layers, derived templates and governing rules |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `Node`, `Edge` | mapa — the graph assembled |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PNDCP
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: infra
 -->
 # PendingDecisions — the doctor lists the specs that still hold open decisions, the heaviest first
@@ -53,15 +53,6 @@ exists to be TAKEN to whoever decides, and that person needs to know where to st
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `PNDCP-E01` | A spec node's file cannot be read. | The spec is skipped silently, and the other specs are still reported. | The map knowing a file the disk lost is already the doctor's `no-fantasma` finding; repeating it here would report one problem twice. <!-- @resilient: the lost file is the doctor's no-fantasma finding already, and repeating it here would report one problem twice --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/open_questions.go` | `OpenDecisions` | gate — the rule that counts open decisions |
-| DEP2 | `internal/mapx/model.go` | `Graph`, `KindSpec` | mapa — the specs of the project |
-| DEP3 | `internal/config/config.go` | `Config` | config — section titles and rule letters for the count |
-| DEP4 | `internal/i18n/i18n.go` | `T` | apoio — the localized finding text |
 
 ## Open Decisions
 

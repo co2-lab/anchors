@@ -1,6 +1,6 @@
 <!-- @anchors
   code: USSTS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # UserSettings — the agent's local settings: the declared role, kept out of git
@@ -52,12 +52,6 @@ conversation.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `USSTS-E01` | The settings file exists but is not valid YAML. | Loading fails with an error naming the file. | Reading it as empty would silently drop a decision someone took, and the agent would ask again or act without its role. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/settings/roles.go` | `Role`, `Capability` | apoio — the roles and their capabilities (`AGRLG`) |
 
 ## Open Decisions
 

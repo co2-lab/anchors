@@ -106,7 +106,7 @@ A spec is not all alike — it specializes according to what makes the unit vary
 9. Presentation validations (` + "`P`" + `) — a rule that changes what the unit SHOWS from a prop or a
    state: ` + "`| Rule | Prop/State | Condition | Appearance |`" + `. Apart from 8, since both live in one screen.
 10. Rule uses — ties every other rule (behaviours, states, errors, actions) to what it uses:
-   ` + "`| Rule | Uses |`" + `, with fields by name, the spec's own codes and ` + "`DEPn`" + ` rows. Sections 8–10
+   ` + "`| Rule | Uses |`" + `, with fields by name and the spec's own codes. Sections 8–10
    are what say which rules a changed field reaches: the rule's code first, what it uses second.
    ` + "`rule-uses-declared`" + ` asks every rule to say what it uses; a rule that uses nothing carries
    ` + "`@no-uses: <why>`" + ` on the rule's OWN row, where the rule is declared — not in the Rule uses
@@ -186,6 +186,11 @@ leaves its siblings to arrive one by one.
   in another section — reference the code.
 - Ambiguity becomes a TODO, never a guess (inherited from the plan).
 - Co-location. The spec lives beside the artifact it describes.
+- No dependency. A spec comes before the code, so it names no file, no method and no code of a
+  file: those are born with the implementation. The files a unit imports are declared where
+  the import is — ` + "`@dep:`" + ` on the import line, in the code and in the tests (` + "`anchors guide header`" + `).
+  A rule another unit shares is not cited from here either: it lives in the product doctrine,
+  which comes first, and each spec realizes it with ` + "`@realizes`" + ` — no spec watches another.
 - A rule that holds for OTHER units is not this spec's: it is product doctrine. Reference
   it with ` + "`@realizes`" + ` instead of writing it again here.
 - A rule this spec already states under ANOTHER letter is aliased, not rewritten. The

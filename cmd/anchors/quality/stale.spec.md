@@ -1,6 +1,6 @@
 <!-- @anchors
   code: STEDS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # StaleEdges — lists the confrontation debt: expired test evidence and stale edges
@@ -55,16 +55,6 @@ It only reads. Reconciling the debt is the check's job, and the command says so 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `STEDS-E01` | The map does not exist or cannot be read. | Error pointing at `anchors map build`. | Without a map there are no edges and no stamps; an empty listing would pass for a clean project. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/store.go` | `Load` | mapa — reading the map |
-| DEP5 | `internal/mapx/stamp.go` | `StaleEdges` | mapa — the edges whose stamp is missing or behind |
-| DEP2 | `internal/mapx/evidence.go` | `EvidenceStaleFor` | mapa — the test evidence against its closure |
-| DEP3 | `internal/config/config.go` | `AbsRoot` | config — the project root |
-| DEP4 | `internal/i18n/i18n.go` | `T` | apoio — the localized lines |
 
 ## Open Decisions
 

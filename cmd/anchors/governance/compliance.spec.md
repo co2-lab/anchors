@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CMPLN
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Compliance — the state of each regulatory duty, grouped by the norm that imposes it
@@ -48,14 +48,6 @@ A duty with subjects and nobody complying is rarely total violation; it is usual
 | `CMPLN-E01` | An adopted pack is missing a value it requires. | The command fails with the pack loader's error, naming the missing value. | A duty whose target is a placeholder would be evaluated against no file and read as total violation. |
 | `CMPLN-E02` | The root has no loadable configuration. | The command fails with "load config: …". | Without the configuration there are no packs or obligations; "No duty declared" would be a false answer. |
 | `CMPLN-E03` | The root has no loadable map. | The command fails with "load map: … (run `anchors map build`)". | The subjects are the map's nodes; the message names the command that creates it. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/pack/pack.go` | `LoadAll` | the adopted packs, with their values resolved |
-| DEP2 | `internal/gate/obligations_report.go` | `ObligationsInForce`, `EvaluateObligations` | gate — the duties in force and their status per node |
-| DEP3 | `internal/initx/packs.go` | `AvailablePacks` | the embedded packs, to list the ones not adopted |
 
 ## Open Decisions
 

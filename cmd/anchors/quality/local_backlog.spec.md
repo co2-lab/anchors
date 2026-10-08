@@ -1,6 +1,6 @@
 <!-- @anchors
   code: LCBCL
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # LocalBacklog — what is still open locally after a full check, said in two lines
@@ -57,14 +57,6 @@ never on an incremental check) belongs to the check command that calls it.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `LCBCL-E01` | An issue state folder (or the queue) exists but cannot be listed. | That part counts as zero and the check goes on. | The backlog is informative and never blocks: a check that failed because its closing summary could not read a folder would hide the verdict it already reached. <!-- @resilient: the backlog is an informative summary after the verdict, and an unlistable folder can only lower a count, never change what the check decided --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/issue/issue.go` | `List`, `ListByOwner` | infra — the issue folders by state and owner |
-| DEP2 | `internal/queue/queue.go` | `List`, `ClaimIsOld` | infra — the task queue and the work window |
-| DEP3 | `internal/i18n/i18n.go` | `T` | apoio — the localized backlog lines |
 
 ## Open Decisions
 

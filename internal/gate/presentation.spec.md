@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRSNT
-  updated_at: 2026-09-28
+  updated_at: 2026-10-08
   layer: gate
 -->
 # PresentationGates — the presentation validations, confronted
@@ -36,12 +36,6 @@ changes. All four are informational by default.
 ## Errors
 
 none — the gates read only the spec's text
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/rule_uses.go` | `splitSections`, `declaredNames`, `usedItems` | gate — the sections and cells of the spec |
 
 ## Open Decisions
 

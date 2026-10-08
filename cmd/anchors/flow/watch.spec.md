@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WTCHA
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Watch — the background watcher that turns "a file changed" into "there is work in the queue"
@@ -86,15 +86,6 @@ unless the unit's layer waives the test.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `WTCHA-E01` | REF[WTCHA-B06]: the configuration or the map cannot be loaded, and B06 fails `run` naming which | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/daemon` | `PathsFor`, `Running`, `Pause`, `Resume`, `Stop`, `Cleanup` | infra — the daemon's state files |
-| DEP2 | `internal/queue` | `Enqueue`, `SuggestNext`, `PendingCount` | the task queue and the chain of steps |
-| DEP3 | `internal/scan` | `Classify`, `LoadIgnoreFor`, `ShortHash` | scan — the structure and the ignore list |
-| DEP4 | `cmd/anchors/flow/watch_unix.go`, `watch_windows.go` | `detach` | comando — how `start` detaches the child (WatchDaemon) |
 
 ## Open Decisions
 

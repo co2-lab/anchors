@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SNGTU
-  updated_at: 2026-09-28
+  updated_at: 2026-10-08
   layer: gate
 -->
 # SingleTestPerUnit — a unit has one test file per test layer
@@ -36,12 +36,6 @@ assumes a language or a layout. A split the project means is declared in one of 
 ## Errors
 
 none — the gate reads the map and the test files it names; a file it cannot read declares no split
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/reverse_match.go` | `testedUnits` | gate — the derivation read backwards, cached per map |
 
 ## Open Decisions
 

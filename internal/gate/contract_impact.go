@@ -153,7 +153,9 @@ func ContractImpacts(root, specID, content string, g *mapx.Graph, cfg *config.Co
 
 type specText struct{ id, content, layer string }
 
-// dependents are the specs that depend on the code this spec governs: they read its data.
+// dependents are the specs whose units depend on the code this spec governs: they read its
+// data. The relation is the code's — a file the spec specifies imported, with its `@dep:` flag,
+// by a file another spec specifies (DOOSD): no spec names another unit's file.
 func dependents(root, specID string, g *mapx.Graph) []specText {
 	if g == nil {
 		return nil
@@ -168,15 +170,33 @@ func dependents(root, specID string, g *mapx.Graph) []specText {
 	for _, n := range g.Nodes {
 		kindOf[n.ID] = n
 	}
+	specOf := map[string][]string{} // a file → the specs that specify it
+	for _, e := range g.Edges {
+		if e.Type == mapx.EdgeSpecifies {
+			specOf[e.To] = append(specOf[e.To], e.From)
+		}
+	}
 	var out []specText
 	seen := map[string]bool{specID: true}
+	add := func(spec string) {
+		if seen[spec] || kindOf[spec].Kind != mapx.KindSpec {
+			return
+		}
+		seen[spec] = true
+		if b, err := readFile(root, spec); err == nil {
+			out = append(out, specText{spec, string(b), kindOf[spec].Layer})
+		}
+	}
 	for _, e := range g.Edges {
-		if e.Type != mapx.EdgeDependsOn || !governed[e.To] || seen[e.From] || kindOf[e.From].Kind != mapx.KindSpec {
+		if e.Type != mapx.EdgeDependsOn || !governed[e.To] {
 			continue
 		}
-		seen[e.From] = true
-		if b, err := readFile(root, e.From); err == nil {
-			out = append(out, specText{e.From, string(b), kindOf[e.From].Layer})
+		if kindOf[e.From].Kind == mapx.KindSpec {
+			add(e.From) // a spec that still declares the dependency in a table, before migrating
+			continue
+		}
+		for _, spec := range specOf[e.From] {
+			add(spec)
 		}
 	}
 	return out

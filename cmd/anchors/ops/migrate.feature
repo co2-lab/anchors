@@ -2,7 +2,7 @@
 # @anchors
 #   code: MGFTM
 #   ref: MGCMM
-#   updated_at: 2026-10-04
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @MGCMM
@@ -132,3 +132,16 @@ Feature: MigrateCommand — the command the format error promises, bringing the 
     Given a format 6 project whose code file holds LOGI_URL from the environment and the string 'LOGI' beside its rule code
     When migrate runs
     Then the rule code is widened, the identifier and the string keep LOGI, and the string's line is listed for review
+
+  @MGCMM-B17 @unit-level
+  Scenario: The migration takes the dependencies out of the specs
+    Given a spec with a Dependencies table naming a project file and an external API, rules using DEP1 and DEP2, and a data origin citing DEP1
+    When the migration runs, and then again
+    Then the table is gone, the DEPn left the uses, the rule left with nothing, the external row and the data origin are named, and the second run changes nothing
+
+  @MGCMM-B18 @unit-level
+  Scenario: Taking the table out keeps what each spec proved
+    Given a spec with a Dependencies table whose scenarios are proven at its revision in the map
+    When the migration takes the table out
+    Then the spec's revision and its proofs in the map follow the new content
+

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCRQA
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: config
 -->
 # DocsRequired — which aggregate documentation a change of a unit obliges to touch
@@ -62,12 +62,6 @@ when a unit does) is never owed by a unit change.
 ## Errors
 
 none — an undeclared block, a document without triggers and a change that triggers nothing are answers, not failures.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | config — holds the declared docs block |
 
 ## Open Decisions
 

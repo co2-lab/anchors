@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DMDCD
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # DomainDeclared — the spec declares what the unit ACCEPTS, and who blocks the invalid
@@ -67,13 +67,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `DMDCD-E01` | REF[DMDCD-B02]: the one handled path is the absent domain section, and B02 answers it: the spec fails | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindSpec` | core — the gate needs the node's KIND to know whether it has jurisdiction |
-| DEP2 | `internal/config/config.go` | `Config` | core — the lexicon of accepted titles comes from the project's Structure |
 
 ## Open Decisions
 

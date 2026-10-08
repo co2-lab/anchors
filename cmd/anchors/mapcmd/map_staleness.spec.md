@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPSTM
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # MapStaleness — names the files of the map whose content changed after the map was built
@@ -59,14 +59,6 @@ taking down the report the user came for.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `MPSTM-E01` | The project root cannot be walked. | Nothing is named and no error is raised. | The check is auxiliary: failing here would take down the `check` report that prints it. <!-- @resilient: the staleness notice is a warning beside the check, never its verdict; a root that cannot be walked only loses the warning --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/scan/scan.go` | `Walk` | scan — the current content revision of each file |
-| DEP2 | `internal/mapx/model.go` | `Graph` | mapa — the revision the map recorded |
-| DEP3 | `internal/config/config.go` | `Config` | config — the layers that decide what is walked |
 
 ## Open Decisions
 

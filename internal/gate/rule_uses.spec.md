@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RLUSG
-  updated_at: 2026-09-28
+  updated_at: 2026-10-08
   layer: gate
 -->
 # RuleUses — each rule says what it uses, and what it uses exists
@@ -43,14 +43,6 @@ it uses exists in the spec.
 ## Errors
 
 none — both gates read only the spec's text; what they cannot find is a verdict, not a failure
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/i18n/i18n.go` | `AllTranslations` | infra — the sections' titles in every language |
-| DEP2 | `internal/config/config.go` | `SectionTitle`, `Gate` | core — the project's titles and the gate's `letters` |
-| DEP3 | `internal/gate/failure.go` | `governedCode` | gate — the code the spec governs |
 
 ## Open Decisions
 

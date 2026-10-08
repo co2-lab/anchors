@@ -1,6 +1,6 @@
 <!-- @anchors
   code: STPRS
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: comando
 -->
 # SuiteProxy — runs the test and mutation suites the project declared, and binds their reports to the map
@@ -83,15 +83,6 @@ coverage, or the check over the run's own scope: the same changed files, or the 
 | `STPRS-E07` | The command line is longer than the platform's ceiling (overridable by an environment variable). | Error before running, with the ceiling and the ways out. | Past the ceiling the command fails without writing anything, and that failure looks like a red test. |
 | `STPRS-E08` | The chain names a command other than check or coverage. | Error naming what is accepted. | The chain is not a disguised shell runner. |
 | `STPRS-E09` | The incremental mode without a map points at the map build. | Error pointing at `anchors map build`. | The impact path is read from the map. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `SelecionaSuites`, `DeclaredLayers` | config — the declared suites and their filters |
-| DEP2 | `cmd/anchors/mapcmd/ingest.go` | `IngestArtifacts` | comando — binding the reports to the map |
-| DEP3 | `cmd/anchors/quality/check.go` | `selectNodes` | comando — the impact path the check uses |
-| DEP4 | `internal/mapx/store.go` | `Load` | mapa — the map of the impact path |
 
 ## Open Decisions
 

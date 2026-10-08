@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INPRN
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: infra
 -->
 # InferProposal — walks the project and proposes its structure deterministically, for init to confirm
@@ -82,13 +82,6 @@ The proposal carries the configuration built from it (BLCNB).
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `INPRN-E01` | The project root cannot be walked (it does not exist or cannot be read). | The inference fails with the walk error and no proposal. | A proposal built from a partial or missing walk would present an empty project as the truth and seed a configuration from nothing. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | core — the proposed configuration |
-| DEP2 | `internal/initx/build_config.go` | `buildConfig` | infra — the proposal's configuration (BLCNB) |
 
 ## Open Decisions
 

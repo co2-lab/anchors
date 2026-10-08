@@ -140,7 +140,7 @@ func keysOf(occ []Occurrence) []string {
 }
 
 func TestDuplicates_theSpecCatalogue(t *testing.T) {
-	t.Run("GTDPG-B03: The spec catalogue's gates count their declarations: an environment variable, a DEPn, a Domain entry, an open question, a revision, a section under one parent", func(t *testing.T) {})
+	t.Run("GTDPG-B03: The spec catalogue's gates count their declarations: an environment variable, a Domain entry, an open question, a revision, a section under one parent", func(t *testing.T) {})
 	n := mapx.Node{ID: "pay.spec.md", Kind: mapx.KindSpec}
 	check := func(name string, occ []Occurrence, want string) {
 		t.Helper()
@@ -149,7 +149,6 @@ func TestDuplicates_theSpecCatalogue(t *testing.T) {
 		}
 	}
 	check("env", envOccurrences(catalogueSpec, n, "", nil, nil), "PAY_URL")
-	check("deps", depOccurrences(catalogueSpec, n, "", nil, nil), "DEP1")
 	check("domain", domainOccurrences(catalogueSpec, n, "", nil, nil), "amount")
 	check("open", openQuestionOccurrences(catalogueSpec, n, "", nil, nil), "PAYMT-Q02")
 	check("revisions", revisionOccurrences(catalogueSpec, n, "", nil, nil), "PAYMT-R0001")

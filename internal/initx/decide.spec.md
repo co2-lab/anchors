@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INDCN
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: infra
 -->
 # InitDecisions — the pure decisions of init over the proposed configuration: code layers, tags and governs rules
@@ -52,12 +52,6 @@ ordered by guide, so the written configuration does not depend on the order the 
 ## Errors
 
 none — every function works on values in memory and returns a value; an unknown kept name or an unanswered guide is a normal input that is skipped, not a failure.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `GovernRule` | core — project configuration |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DFGTD
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: infra
 -->
 # DefaultGates — the gates a project is born with, by artifact and by project age, and the canonical gate catalog
@@ -62,7 +62,7 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 | `DFGTD-B07` | In a new project every gate is born blocking, except the gates that read an ingested report. |
 | `DFGTD-B08` | A gate that reads an ingested report (tests, coverage, mutation, scenario coverage, and the external-tool checks) stays informative even in a new project. |
 | `DFGTD-B09` | Every judgment gate that asks about the code or a test carries the @TBD instruction; the one that asks about the proof of a permanent test waiver does not. |
-| `DFGTD-B10` | The canonical declaration of a gate is found by name in the catalog of every artifact, including gates seeded only for guides or plans; an unknown name is not found. |
+| `DFGTD-B10` | The canonical declaration of a gate is found by name in the catalog of every artifact, including gates seeded only for guides or plans; an unknown name is not found. (`CanonicalGate`) |
 | `DFGTD-B11` | Loading a configuration completes a canonical gate declared by name alone with the catalog's declaration. |
 | `DFGTD-B12` | The gate is of the BLOCKING class: a new project is born with it blocking, and an existing one takes it through the same maturation as every structural gate — informative until the project promotes it. It never depends on an ingested signal, so it can block from day one. |
 | `DFGTD-B13` | Choosing every artifact `anchors init` offers (ARCHR-B01) seeds every gate of the catalog, the code gates included. |
@@ -94,14 +94,6 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 ## Errors
 
 none — seeding builds a list in memory from the answers it receives, and resolving a name that is not in the catalog is the normal "not found" answer (DFGTD-B10), not a failure.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Gate`, `Bool`, `SetCanonicalGateResolver` | core — gate declarations and the canonical merge |
-| DEP2 | `internal/config/vocabulary.go` | `RegisterGateNames` | core — the default gate names for the vocabulary check |
-| DEP3 | `internal/initx/tbd_instruction.go` | `tbdInstruction` | infra — the @TBD instruction (INCTN) |
 
 ## Open Decisions
 

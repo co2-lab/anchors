@@ -303,10 +303,10 @@ var specTemplate = template{
 			Body: "## Validações de apresentação\n\n| Regra | Prop/Estado | Condição | Aparência |\n| --- | --- | --- | --- |\n" +
 				"| `{id}-P01` | `TODO: prop ou estado` | TODO: a condição | TODO: o que muda na tela |\n\n"},
 		{Key: "rule-uses", Title: "Uso das regras (o que cada regra lê)", Default: false,
-			Purpose: "Liga as regras que não são validação — comportamentos, estados, erros, ações — ao que elas usam: campos pelo nome, códigos da própria spec (um estado, uma mensagem) e linhas da tabela de dependências (`DEP1`). É o que diz quais regras um campo alterado atinge.",
+			Purpose: "Liga as regras que não são validação — comportamentos, estados, erros, ações — ao que elas usam: campos pelo nome e códigos da própria spec (um estado, uma mensagem). É o que diz quais regras um campo alterado atinge. Um arquivo ou método do código não entra aqui: a spec vem antes do código, e a dependência é declarada onde o import acontece (`@dep:`).",
 			Feeds:   []string{"rule-uses-declared", "rule-uses-resolve"},
 			Body: "## Uso das regras\n\n| Regra | Usa |\n| --- | --- |\n" +
-				"| `{id}-B01` | TODO: `campo`, `{id}-S01`, `DEP1` |\n\n"},
+				"| `{id}-B01` | TODO: `campo`, `{id}-S01` |\n\n"},
 		// A seção que o `route-declared` cobra. A doutrina do gate é explícita: com termos
 		// genéricos ("Próxima tela", "Menu principal") a aresta de navegação não aponta para
 		// lugar nenhum, e o grafo fica com nós soltos. Por isso o corpo insiste em NOME
@@ -388,10 +388,6 @@ var specTemplate = template{
 		{Key: "history", Title: "Histórico de alterações", Default: false,
 			Purpose: "O rastro de quem mudou a spec e por quê. Vale onde a spec é contrato entre times e a mudança precisa ser atribuível.",
 			Body:    "## Histórico de Alterações\n\n| Data | Autor | Alteração |\n| --- | --- | --- |\n| TODO | TODO | criação |\n\n"},
-		{Key: "deps", Title: "Tabela de dependências", Default: false,
-			Purpose: "O que a unidade consome. Símbolos entre `crases` viram CONTRATO verificável (gate dependency-honored); descrição em prosa não é cobrada.",
-			Feeds:   []string{"dependency-honored"},
-			Body:    "## Dependências\n| Cód | Arquivo | Método | Camada |\n| --- | --- | --- | --- |\n| DEP1 | TODO | `TODO` | TODO |\n\n"},
 		// A seção da AMBIGUIDADE. Default: true — é a única seção cuja ausência esconde
 		// justamente o que ela existe para revelar. Quem não tem dúvida gasta uma palavra
 		// ("nenhuma"); quem tem, ganha um lugar declarado para ela em vez de um comentário
@@ -586,11 +582,11 @@ var specPresets = map[string]presetDef{
 		Desc: "função PURA de backend — a assinatura é o contrato",
 		// `constants` já existia no catálogo e NENHUM preset a emitia — seção que ninguém
 		// emite é seção que ninguém escreve, e o limite de negócio vira número mágico.
-		Sections: []string{"title", "overview", "signature", "domain", "effects", "invariants", "constants", "constraints", "rule-uses", "deps", "open"},
+		Sections: []string{"title", "overview", "signature", "domain", "effects", "invariants", "constants", "constraints", "rule-uses", "open"},
 	},
 	"mobile-logic": {
 		Desc:     "regra de negócio do app — entrada/saída + regras catalogadas",
-		Sections: []string{"title", "overview", "contract", "domain", "rules", "invariants", "constraints", "rule-uses", "deps", "open"},
+		Sections: []string{"title", "overview", "contract", "domain", "rules", "invariants", "constraints", "rule-uses", "open"},
 	},
 	"screen": {
 		Desc: "tela navegável — rota, estados observáveis, dados e acesso",
@@ -611,7 +607,7 @@ var specPresets = map[string]presetDef{
 		// ninguém emite é a seção que ninguém escreve. A prova: num projeto nascido com o
 		// preset SEM elas, 25 specs `layer: screen` foram escritas e 24 ficaram sem rota.
 		// Quem não precisar de uma delas tira com `--without`; o caro é o contrário.
-		Sections: []string{"title", "route", "overview", "load-states", "state-flow", "load-failure", "loading", "rules", "data-contract", "data-states", "validations", "presentation-validations", "messages", "navigation", "auth", "components", "rule-uses", "deps", "testids", "a11y", "notes", "open"},
+		Sections: []string{"title", "route", "overview", "load-states", "state-flow", "load-failure", "loading", "rules", "data-contract", "data-states", "validations", "presentation-validations", "messages", "navigation", "auth", "components", "rule-uses", "testids", "a11y", "notes", "open"},
 	},
 	"component": {
 		Desc: "componente de UI — props e estados visuais, sem rota",
@@ -631,11 +627,11 @@ var specPresets = map[string]presetDef{
 		// O corpo e as respostas citam o CONTRATO pelo código (a spec do modelo, no
 		// domínio): a spec da API diz QUAL contrato, o contrato diz os campos. É daqui que
 		// o `doct` gera o OpenAPI do projeto.
-		Sections: []string{"title", "overview", "endpoint", "parameters", "request-body", "responses", "error-responses", "security", "limits", "rules", "auth", "rule-uses", "environment", "deps", "open"},
+		Sections: []string{"title", "overview", "endpoint", "parameters", "request-body", "responses", "error-responses", "security", "limits", "rules", "auth", "rule-uses", "environment", "open"},
 	},
 	"handler": {
 		Desc:     "interface do backend (Lambda/rota) — request/response, auth e erro",
-		Sections: []string{"title", "overview", "contract", "domain", "rules", "auth", "errors", "rule-uses", "environment", "deps", "open"},
+		Sections: []string{"title", "overview", "contract", "domain", "rules", "auth", "errors", "rule-uses", "environment", "open"},
 	},
 	"schema": {
 		Desc: "interface do DADO — modelos, índices e autorização (quem lê/escreve)",
@@ -645,7 +641,7 @@ var specPresets = map[string]presetDef{
 		//
 		// Medido contra 50 specs de modelo de um projeto real: com este preset, 8 de 8
 		// seções coincidem; com o anterior, 5 de 8 — e as 3 divergentes eram as centrais.
-		Sections: []string{"title", "overview", "domain", "rules", "auth", "constraints", "rule-uses", "deps", "notes", "open"},
+		Sections: []string{"title", "overview", "domain", "rules", "auth", "constraints", "rule-uses", "notes", "open"},
 	},
 	"hook": {
 		Desc: "hook/composable — o que ele faz acontecer e o limite da camada",
@@ -657,25 +653,25 @@ var specPresets = map[string]presetDef{
 		// `signature` fica (13 de 37 a usam), mas depois de `effects`: o que os 37 têm em
 		// comum é dizer O QUE PROVOCAM; a assinatura é detalhe de quem tem contrato
 		// complexo. A ordem das seções é o fio de leitura.
-		Sections: []string{"title", "overview", "effects", "signature", "constraints", "rule-uses", "deps", "open"},
+		Sections: []string{"title", "overview", "effects", "signature", "constraints", "rule-uses", "open"},
 	},
 	"store": {
 		Desc: "estado global (Redux/Zustand/Pinia/MobX) — shape, actions e hidratação",
 		// `selectors` entre `actions` e `hydration`: escreve, lê, persiste — a ordem em que
 		// se pensa um estado global.
-		Sections: []string{"title", "overview", "state-shape", "actions", "selectors", "hydration", "invariants", "constraints", "rule-uses", "deps", "open"},
+		Sections: []string{"title", "overview", "state-shape", "actions", "selectors", "hydration", "invariants", "constraints", "rule-uses", "open"},
 	},
 	"validation": {
 		Desc:     "regra de validação — critérios e a mensagem que o usuário lê",
-		Sections: []string{"title", "overview", "contract", "domain", "rules", "validations", "constants", "messages", "rule-uses", "deps", "open"},
+		Sections: []string{"title", "overview", "contract", "domain", "rules", "validations", "constants", "messages", "rule-uses", "open"},
 	},
 	"service": {
 		Desc:     "serviço — operação, dependência externa e como falha",
-		Sections: []string{"title", "overview", "contract", "domain", "rules", "errors", "constraints", "rule-uses", "environment", "deps", "open"},
+		Sections: []string{"title", "overview", "contract", "domain", "rules", "errors", "constraints", "rule-uses", "environment", "open"},
 	},
 	"repository": {
 		Desc:     "acesso a dado — operações e limites da camada",
-		Sections: []string{"title", "overview", "domain", "effects", "constraints", "errors", "rule-uses", "deps", "open"},
+		Sections: []string{"title", "overview", "domain", "effects", "constraints", "errors", "rule-uses", "open"},
 	},
 }
 

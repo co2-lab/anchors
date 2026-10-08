@@ -1,6 +1,6 @@
 <!-- @anchors
   code: QLCMQ
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: comando
 -->
 # QualityCommands — the quality domain puts its twelve commands under the root command
@@ -48,14 +48,6 @@ would make one of the two unreachable.
 ## Errors
 
 none — registration attaches commands to the root and handles no failure: there is no input to reject and nothing that can be missing at that point.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/quality/check.go` | `newCheckCmd` | comando — the check command |
-| DEP2 | `cmd/anchors/quality/suite.go` | `newTestCmd`, `newMutationCmd` | comando — the suite commands |
-| DEP3 | `cmd/anchors/quality/report.go` | `newReportCmd` | comando — the report command |
 
 ## Open Decisions
 

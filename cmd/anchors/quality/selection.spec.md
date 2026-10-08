@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SLCTN
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: comando
 -->
 # RunSelection — a run takes only what is stale and below the minimum, unless told otherwise
@@ -57,15 +57,6 @@ whole, saying so.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `SLCTN-E01` | The map cannot be loaded for a selective run | an error saying to build it, or to run with `--all` | Without the recorded results there is no state to select by |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Suite`, `Gate`, `DefaultTimeoutCeiling`, `TimeoutCeilingOrDefault`, `NoSignalFor` | core — the suites and the gates' ceiling and `no_signal` |
-| DEP2 | `internal/mapx/model.go` | `Graph`, `Node`, `SignalStale`, `KindTest`, `KindCode` | core — the files and their last results |
-| DEP3 | `internal/mapx/evidence.go` | `EvidenceStaleFor` | core — a test stale through what it exercises |
-| DEP4 | `cmd/anchors/mapcmd/ingest.go` | `SuiteKey` | comando — the key a suite's times are kept under |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTENG
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: gate
 -->
 # GateEngine — which gates reach which node, and what the run concludes
@@ -135,14 +135,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | --- | --- | --- | --- |
 | `GTENG-E01` | REF[GTENG-B06]: a target that cannot be read is answered by B06: the gate does not apply to it | — | — |
 | `GTENG-E02` | REF[GTENG-B08]: a required binary missing from the PATH is answered by B08: the gate steps aside | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Gate` | core — what a gate declares is where routing reads its filters and its scope |
-| DEP2 | `internal/mapx/model.go` | `Node` | core — the kind, the labels and the identity that routing matches against |
-| DEP3 | `internal/i18n/i18n.go` | `T` | core — every verdict the engine writes itself is a translated message, never a fixed phrase |
 
 ## Open Decisions
 

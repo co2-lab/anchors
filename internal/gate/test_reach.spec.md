@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSRCH
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: gate
 -->
 # TestReach — a test reaches the unit it says it tests
@@ -50,15 +50,6 @@ a definition looks like), or — for the `ref:` — when a call the project decl
 ## Errors
 
 none — an unreadable unit defines nothing, and the gates read what the map and the files say
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/reverse_match.go` | `testedUnits` | gate — the derivation read backwards, cached per map |
-| DEP2 | `internal/gate/proof_crosses_boundary.go` | `importLines` | gate — the lines that import something |
-| DEP3 | `internal/gate/proof_crosses_boundary.go` | `unitFiles` | gate — a code's spec to the code files it governs |
-| DEP4 | `internal/gate/ref_resolves.go` | `refHeaderRE` | gate — the `ref:` header |
 
 ## Open Decisions
 

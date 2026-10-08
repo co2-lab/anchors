@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SGCMS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # SuggestCommand — the proposed fixes are listed, shown, applied or rejected, and every decision keeps its record
@@ -59,13 +59,6 @@ so the same proposal does not come back as news in the next sweep.
 | --- | --- | --- | --- |
 | `SGCMS-E01` | The patch no longer applies because the file changed since the proposal. | `apply` fails saying the patch no longer matches and asking for a new check; nothing is touched. | Applying half a patch, or approving one that did not apply, would leave the record lying about the tree. |
 | `SGCMS-E02` | The project is not a git repository. | The failure names the missing repository and the suggestion patch it was trying to apply, not git's raw error. | A suggestion IS a patch; git's own message about a missing repository mentions neither. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/suggestion` | `List`, `PatchOf`, `Decide`, `Dir`, the states | apoio — the suggestion records and their states |
-| DEP2 | `internal/gitmeta` | `Check`, `Explain` | apoio — explains a tree that is not a repository |
 
 ## Open Decisions
 

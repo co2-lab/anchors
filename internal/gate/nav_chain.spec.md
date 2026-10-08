@@ -47,10 +47,3 @@ A call is read by a pattern — the dialect's `navigation_call`, its destination
 ## Errors
 
 none — an unreadable spec or file is skipped by the index it belongs to, and a pattern that does not compile reads no call; neither is a failure of this unit.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/scan/scan.go` | `NavigatesIn` | scan — the navigation flags |
-| DEP2 | `internal/config/dialect.go` | `DialectFor` | config — the navigation pattern |

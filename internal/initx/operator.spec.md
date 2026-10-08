@@ -1,6 +1,6 @@
 <!-- @anchors
   code: OPDTP
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: infra
 -->
 # OperatorDetection — tell whether a person or an AI is running `init`, and whether the discovery phase is still to be done
@@ -64,12 +64,6 @@ from (no code, spec, feature or test) and no project description written yet.
 ## Errors
 
 none — a missing description file is the "not written yet" answer and a missing environment lookup falls back to the process environment; nothing the unit reads can fail in a way it has to report.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/initx/infer.go` | `Proposal` | infra — what the disk inference found |
 
 ## Open Decisions
 

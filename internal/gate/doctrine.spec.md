@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCTRN
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: gate
 -->
 # Doctrine — the vertical axis: product doctrine exists, is realized, and is never copied
@@ -129,16 +129,6 @@ rule to realize.
 | `DCTRN-E01` | A doctrine that a realizes edge of the spec reaches cannot be read. | The rule the edge names still resolves; any other rule the spec declares for that doctrine fails as unresolved. | The edge proves only that the file was found when the map was built; without reading it, no other rule can be confirmed, and assuming it would certify a renamed rule. |
 | `DCTRN-E02` | REF[DCTRN-B19]: a realized doctrine that cannot be read contributes no text, and B19 answers the spec left with none | — | — |
 | `DCTRN-E03` | REF[DCTRN-B05]: a cited doctrine whose file cannot be found is the missing doctrine B05 charges | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Layers` | core — the layers that require doctrine |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized verdict messages |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `Node`, `EdgeRealizes`, `EdgeSpecifies` | core — the realizes edges of the axis |
-| DEP4 | `internal/scan/scan.go` | `Classify` | scan — the layer a target path would have |
-| DEP5 | `internal/similarity/similarity.go` | `Weights`, `Classify` | apoio — the similarity ruler |
 
 ## Open Decisions
 

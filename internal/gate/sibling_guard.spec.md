@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SBGRD
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: gate
 -->
 # SiblingGuard — sibling functions treat the same parameter consistently
@@ -72,13 +72,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `SBGRD-E01` | REF[SBGRD-B02]: an undeclared exported-function pattern is answered by B02: undetermined, and it says so | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/dialect.go` | `KnownDialectFamilies` | core — recognising an exported function and a guard belongs to the project's dialect |
-| DEP2 | `internal/mapx/model.go` | `KindCode` | core — the gate only has jurisdiction over code |
 
 ## Open Decisions
 

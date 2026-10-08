@@ -1,6 +1,6 @@
 <!-- @anchors
   code: STASC
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ScenarioTypeAligned — scenario classification tags must match the code nature letter
@@ -85,14 +85,6 @@ here respects projects that did not request this check.
 | `STASC-X02` | Does not decide whether the tag or the code is the erroneous party when disagreement occurs. | Distinguishing whether a tag was misapplied or a code was borrowed requires reading scenario steps and understanding domain context. |
 | `STASC-X03` | Does not validate or alter specifications or test code files. | Specification section validation belongs to `rule-types` and scenario-to-test code validation belongs to `feature-test-match`. |
 | `STASC-X04` | Does not restrict tags from being mapped to more than one rule type letter. | Overlapping tags legitimately apply across multiple rule categories, such as state-data applying to both state and validation. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `TagLetters` | core — configuration schema and tag-to-letter mappings |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized verdict and defect messages |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `KindFeature`, `Node` | core — graph model and artifact representations |
 
 ## Open Decisions
 

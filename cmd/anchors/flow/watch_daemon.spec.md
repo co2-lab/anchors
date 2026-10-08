@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WTDMW
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: comando
 -->
 # WatchDaemon — the watcher started in the background survives the terminal that started it
@@ -52,12 +52,6 @@ metadata belong to the watch command.
 ## Errors
 
 none — detaching only sets the attributes the child will be started with; it cannot fail, and the failure to start is the caller's.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/flow/watch.go` | `watch start` | comando — the only caller |
 
 ## Open Decisions
 

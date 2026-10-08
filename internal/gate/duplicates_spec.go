@@ -87,21 +87,6 @@ func envOccurrences(content string, _ mapx.Node, _ string, _ *mapx.Graph, _ *con
 	return out
 }
 
-// depRowLineRE is a row of the Dependencies table: it opens with its `DEPn`.
-var depRowLineRE = regexp.MustCompile(`^\s*\|\s*` + "`?" + `(DEP\d+)` + "`?" + `\s*\|`)
-
-// depOccurrences: each `DEPn` a spec's Dependencies table declares. Only a row opening with
-// it declares it; a rule's uses cite it in another column.
-func depOccurrences(content string, _ mapx.Node, _ string, _ *mapx.Graph, _ *config.Config) []Occurrence {
-	var out []Occurrence
-	for i, l := range strings.Split(content, "\n") {
-		if m := depRowLineRE.FindStringSubmatch(l); m != nil {
-			out = append(out, Occurrence{Key: m[1], Line: i + 1})
-		}
-	}
-	return out
-}
-
 // domainOccurrences: each entry the Domain declares, by its row — the first cell, its case
 // and backticks aside.
 func domainOccurrences(content string, _ mapx.Node, _ string, _ *mapx.Graph, _ *config.Config) []Occurrence {
@@ -217,7 +202,6 @@ func sectionOccurrences(content string, _ mapx.Node, _ string, _ *mapx.Graph, _ 
 
 func init() {
 	occurrenceReaders["env-declared"] = occurrenceReader{read: envOccurrences, verdict: Fail}
-	occurrenceReaders["dependency-honored"] = occurrenceReader{read: depOccurrences, verdict: Fail}
 	occurrenceReaders["domain-declared"] = occurrenceReader{read: domainOccurrences, verdict: Fail}
 	occurrenceReaders["open-questions-resolved"] = occurrenceReader{read: openQuestionOccurrences, verdict: Fail}
 	occurrenceReaders["revision-orphans"] = occurrenceReader{read: revisionOccurrences, verdict: Fail}

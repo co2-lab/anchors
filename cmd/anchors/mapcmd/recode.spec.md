@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RCDEO
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Recode — renames an identity code and carries the change to every textual surface of the project
@@ -68,15 +68,6 @@ engine; this unit is the command that shows it, applies it and puts the map back
 | `RCDEO-E02` | The old code appears in no file of the project. | The command fails and nothing is written. | There is nothing to rename, and a silent success would hide a typo. |
 | `RCDEO-E03` | A file cannot be written during the apply, after other files were already rewritten. | The command fails and first reports how many files had already changed, saying the project is half converted and the map still describes the old form. | The disk is left in an intermediate state, and running again without knowing it would work over a mixed project. |
 | `RCDEO-E04` | The command receives other than two codes. | It is refused before reading anything. | A rename needs exactly a source and a target. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/recode/plan.go` | `BuildPlan`, `Apply` | infra — finding, classifying and rewriting the occurrences |
-| DEP2 | `internal/scan/scan.go` | `Walk` | scan — the files the rebuilt map is made of |
-| DEP3 | `internal/mapx/build.go` | `Build`, `PreserveStamps` | mapa — rebuilding the map from the headers, keeping the previous stamps and judgments |
-| DEP4 | `internal/config/config.go` | `Load` | config — the project's layers |
 
 ## Open Decisions
 

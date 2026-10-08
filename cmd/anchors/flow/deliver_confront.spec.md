@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DLCND
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # DeliveryConfront — confront what a delivery declares against the disk, at the moment it is declared
@@ -64,15 +64,6 @@ and the record's value is in declaring more.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `DLCND-E01` | REF[DLCND-B02]: git cannot be read, and B02 says the confrontation did not happen instead of accusing or clearing any file | — | — <!-- @resilient: without git the delivery goes on by design, and the output already says the confrontation did not happen, so the failure is visible where the person reads --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate` | `RunWithConfig` | gate — the project's gates |
-| DEP2 | `internal/mapx` | `Load` | mapa — the delivered nodes and the mutation signal |
-| DEP3 | `internal/gitmeta` | `Check`, `Explain` | why git could not be read |
-| DEP4 | `cmd/anchors/flow/deliver.go` | the deliver command | comando — the only caller |
 
 ## Open Decisions
 

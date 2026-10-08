@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NWTMN
-  updated_at: 2026-10-03
+  updated_at: 2026-10-08
   layer: comando
 -->
 # NewTemplates — the catalog of artifact skeletons: which kinds exist, their headers, their sections and the presets that pick them
@@ -68,13 +68,6 @@ reading order.
 ## Errors
 
 none — the catalog is data and pure renderers; an unknown kind is refused by the new command, and an unknown family is a documented instruction (`NWTMN-B08`), not a failure.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `LineCommentFor` | config — the comment dialect of the output file |
-| DEP2 | `cmd/anchors/ops/new.go` | the new command that renders these templates | comando — NWARN |
 
 ## Open Decisions
 

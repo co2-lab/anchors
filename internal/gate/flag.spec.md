@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLSCF
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: gate
 -->
 # FlagScenarios — the scenarios a feature flag declares are written, complete, cited and tested
@@ -104,15 +104,6 @@ must not have, and the value changes per user and per minute. The gates confront
 | `FLSCF-E01` | REF[FLSCF-B03]: a condition the parser refuses is the failure the grammar gate reports, naming the scenario and the parse error | — | — |
 | `FLSCF-E02` | The `flags/` folder, or a flag file in it, cannot be read when a spec cites a flag scenario. | Pending, naming the read error and the `flags/` folder — not the "no map" message. | Without the flags the gate cannot say which scenarios exist: Pass would approve a citation never checked, Fail would accuse one that may exist, and blaming the map would send the reader to build a map this gate never reads. |
 | `FLSCF-E03` | The project's tests source fails, or answers outside its contract | Fail, naming the source's error | Which flag scenarios have a test cannot be told, and the gate says why instead of answering about tests nobody read |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/flagx/parse.go` | `ParseContent`, `Load`, `ByCode` | scan — the flag file's scenarios |
-| DEP2 | `internal/mapx/model.go` | `Graph`, `Node`, `EdgeGatedBy` | mapa — the citation edges and the ingested signal |
-| DEP3 | `internal/gate/internal_checks.go` | `codesNamedByTests` | gate — which scenario codes a test body names |
-| DEP4 | `internal/i18n/i18n.go` | `T` | apoio — the localized messages |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCCMD
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # DocsCommand — the documentation is compiled from the specs through templates, against a map rebuilt from the tree
@@ -69,15 +69,6 @@ known kinds when the project declares none.
 | `DCCMD-E01` | `docs build` runs where `anchors.yaml` cannot be loaded. | It fails with the load error, pointing at `anchors init`. | There is no tree definition to rebuild the map from. |
 | `DCCMD-E02` | `docs duties` runs where `anchors.yaml` cannot be loaded. | It fails with the load error. | The duties are declared in the config; answering "none" would lie. |
 | `DCCMD-E03` | `docs build --no-map-rebuild` or `docs init` runs with no map on disk. | It fails pointing at `anchors map build`. | Both were asked to use the map on disk, and there is none. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/doct` | `New`, `Build`, `InitScaffolds`, `Duty`, `KnownKinds`, `Dir`, `OutDir` | apoio — the documentation compiler |
-| DEP2 | `internal/mapx/model.go` | `Load`, `Build`, `PreserveStamps` | mapa — the map rebuilt in memory |
-| DEP3 | `internal/scan` | `Walk`, `LayerOfUnit` | scan — the tree and a unit's layer |
-| DEP4 | `internal/config/config.go` | `Load`, `AllRequiredDocs`, `RequiredFor` | config — the declared duties |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INHKN
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: comando
 -->
 # InstallHooks — the git hooks that confront every commit and push with the gates and the freeze, installed without taking a hook the user wrote
@@ -74,14 +74,6 @@ theirs and is not replaced without `--force`.
 | `INHKN-E01` | The root has no `anchors.yaml`. | The install fails pointing at `anchors init`, and no hook is written. | A hook in an ungoverned project would run gates over nothing and train people to skip it. |
 | `INHKN-E02` | The root is not inside a git repository. | The install fails explaining that installing the pre-commit needs git. | Git's raw error about a missing repository names neither the hook nor the fix. |
 | `INHKN-E03` | REF[INHKN-B03]: a pre-commit the user wrote is the failure this command handles, by refusing and pointing at `--force` | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gitmeta` | `Check`, `Explain` | apoio — explains a directory outside git |
-| DEP2 | `internal/mapx/model.go` | `DefaultPath` | mapa — the map's attribute line |
-| DEP3 | `cmd/anchors/ops/commit_msg.go` | the message check the commit-msg hook runs | comando — CMMSC |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGCMM
-  updated_at: 2026-10-04
+  updated_at: 2026-10-08
   layer: comando
 -->
 # MigrateCommand — the command the format error promises, bringing the map and the config up to this binary's format
@@ -52,6 +52,8 @@ machine makes the next agent migrate again and produce the same diff.
 | `MGCMM-B14` | When the project crosses format 7, every file it rewrote has the `updated_at` of its header set to the day of the migration, before the measurements are carried — so no `anchors touch` after it changes the files again. |
 | `MGCMM-B15` | When the project crosses format 7, every other versioned text file — one the project does not govern, outside the map, the config and `anchors.renames.yaml` — has the rule and scenario codes of each widened code rewritten (`RewriteRuleCodes`); a bare code there is left alone. |
 | `MGCMM-B16` | Crossing format 7, a code is rewritten only where it is cited as a code (`RewriteCited`: its rule codes, the header fields, backticks, a Gherkin tag) — in the project's files, the config and the map —; a bare word with its letters, and an identifier that holds them (`CODE_URL`), are left as they were, and each bare mention is listed with its file and line for a person to judge. |
+| `MGCMM-B17` | The migration takes the dependencies out of the specs, whatever the format: it removes every section whose table rows open with a `DEPn`, under any title, and the `DEPn` from what each rule uses (Rule uses, Validations, Presentation validations); it names, per spec, the rows that named no file of the project — to flag in the code with a kind —, the rules whose uses held nothing else, and the lines that still cite a `DEPn`. A second run changes nothing. (`SpecDepsReport`) |
+| `MGCMM-B18` | Taking a spec's Dependencies table out proves nothing new: what held at the spec's revision before — its scenarios' proofs, its stamps — moves, in the map, to the content without the table. |
 | `MGCMM-B06` | After a real migration the command tells the user to commit it. |
 
 ## Invariants
@@ -73,18 +75,6 @@ machine makes the next agent migrate again and produce the same diff.
 | --- | --- | --- | --- |
 | `MGCMM-E01` | REF[MGCMM-B02]: a file that cannot be read is the failure this command handles, by reporting it and migrating the other file | — | — |
 | `MGCMM-E02` | Crossing format 7, a project file, the config or the map cannot be written | the command fails with the write error; the map and the config go back to the format they had, and what was already written stays | run again after fixing the cause, it crosses the step again and codes only what is left |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/migra/migrate.go` | `MigrateFile` | apoio — the migration steps |
-| DEP2 | `internal/mapx/model.go` | `DefaultPath`, `FormatoAtual` | mapa — the map's path and the current format |
-| DEP3 | `internal/config/config.go` | `AbsRoot`, `DefaultFile` | config — the config's path |
-| DEP4 | `internal/recode/plan.go` | `BuildBatchCited` | apoio — widening every code where it is cited, file names included, in one pass |
-| DEP7 | `internal/recode/rewrite.go` | `NewCitedSet` | apoio — the codes rewritten where cited in the config, the map and the files outside governance |
-| DEP5 | `internal/migra/filecodes.go` | `WidenedCode`, `FileCode`, `CanCarryCode`, `WithHeaderCode` | apoio — what a code becomes and where the header line goes |
-| DEP6 | `internal/scan/scan.go` | `Walk`, `ScanPaths` | scan — the governed files and their revisions |
 
 ## Open Decisions
 

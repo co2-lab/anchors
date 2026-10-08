@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCRQD
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: gate
 -->
 # DocRequired — the aggregated document the unit must feed
@@ -76,13 +76,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | `DCRQD-E01` | REF[DCRQD-I03]: with no map built the aggregate cannot look, and I03 answers it: skipped, never approved | — | — |
 | `DCRQD-E02` | REF[DCRQD-B01]: a mandatory document that cannot be read is answered as the missing one of B01 — either way the reader is sent to that file | — | — |
 | `DCRQD-E03` | REF[DCRQD-B06]: with no configuration there is no declared duty, and B06 answers that nothing is charged | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `RequiredFor` | core — the duties and their triggers are declared in the Structure |
-| DEP2 | `internal/mapx/model.go` | `KindSpec` | core — the duty starts from the spec, and the layer comes from the unit |
 
 ## Open Decisions
 

@@ -5,7 +5,7 @@
 
 # Dependencies out of the spec — declared where the import is, in every artifact that imports
 
-> IN PROGRESS — W01 delivered; approved on 2026-10-08. The spec comes before the code, so it cannot hold what the code
+> IN PROGRESS — W01 (v0.1.303), W02 and W03 delivered; approved on 2026-10-08. The spec comes before the code, so it cannot hold what the code
 > produces: the files a unit imports and the methods it calls are born with the implementation.
 > They are declared where the import happens — in the code, in the tests, in any artifact that
 > imports —, by the `@dep:` flag on the import line, and the spec's Dependencies table goes.
@@ -100,4 +100,14 @@ none
   with it, and reading it as the default asked a `@used-by:` of an `export default` that does
   not exist — 303 symbols no fixer could flag. An import bound whole names no symbol, like
   `import * as`.
+- **A migration that rewrites a spec must carry its evidence.** Taking the table out changed
+  80 specs of jokenpo, and with them the revision their scenarios were proven at: 73 failed
+  `scenario-coverage` until the migration carried what held at each spec's revision, as
+  `check --fix` does. Taking a table out proves nothing new.
+- **What the migration leaves is the author's, and it says so.** On jokenpo: 80 tables and
+  480 `DEPn` out of the rules' uses; 34 specs left with rules whose only use was a `DEPn` — every
+  one named by the migration, and no other new failure. The rows that named no file (Cognito,
+  a push service) and the data origins citing a `DEPn` are named too: what a datum comes from,
+  and an external dependency, are the author's to say (W04 gives the latter a kind).
+- **This repository** carried 221 tables; two rows named no file of it (the flag library, git).
 

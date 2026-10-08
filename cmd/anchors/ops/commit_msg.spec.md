@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CMMSC
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: comando
 -->
 # CommitMsg — the commit subject is confronted with the format the changelog will read, before the commit exists
@@ -74,12 +74,6 @@ does a message with no subject, which git refuses on its own with a better messa
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `CMMSC-E01` | The message file cannot be read. | The command fails with "read the message" and the cause. | A hook that silently passed an unread message would let any subject through. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/ops/install_hooks.go` | the commit-msg hook | comando — the caller that runs this command on every commit |
 
 ## Open Decisions
 

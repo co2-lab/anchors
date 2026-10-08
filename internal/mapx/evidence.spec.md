@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EVFRA
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: mapa
 -->
 # EvidenceFreshness — a test's evidence expires when anything it exercises changes, not only its own file
@@ -67,13 +67,6 @@ turn a precision improvement into a flood of false expirations on the day it shi
 ## Errors
 
 none — a node with no signal is normal input answered by B01 (no verdict), and the closure walks an in-memory graph that cannot fail.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Graph`, `Node` | mapa — the graph walked and the node whose signal's recorded closure is compared |
-| DEP2 | `internal/mapx/impact.go` | `adjacency`, `noPropSet` | mapa — the shared edge index and the `@noPropagation` set |
 
 ## Open Decisions
 

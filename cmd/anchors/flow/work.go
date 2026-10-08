@@ -783,14 +783,14 @@ func procedureFor(artifact string, cfg *config.Config) []string {
 			"Read 2–3 NEIGHBORING specs of the same layer: they show the real dialect of the project (which may diverge from the template).",
 			"Generate the frame with `anchors new spec <Name> --preset <preset> --out <path>` (see the presets in `anchors new spec --list-sections`).",
 			"Fill the sections cataloguing each rule with its code (`{CODE}-<letter><NN>`); the valid letters are in `rule_types` in anchors.yaml.",
-			"In the Dependency Table, use `backticks` only on symbols the code WILL use — that becomes a verifiable contract. Free description stays in prose.",
+			"Name no file, method or code of a file: a spec precedes the code. The code declares what it imports, by `@dep:` on each import line.",
 		}
 	case "code":
 		return []string{
 			"Read the whole spec before writing the first line; it is the ruler.",
 			"Read 1–2 neighboring files of the same layer to follow the local pattern (imports, error, style).",
 			ruleMarking(cfg),
-			"If the spec promises a symbol in the Dependency Table, USE that symbol — the gate `dependency-honored` confronts it.",
+			"Flag each import of a project file with `@dep: <its code>` on the import line — `anchors check --fix` writes the ones the import proves.",
 		}
 	case "feature":
 		return []string{
@@ -956,7 +956,7 @@ func gateRequirements(artifact string, cfg *config.Config) []string {
 		"rule-types": "Each **code letter** (the `B` of `-B01`) must be declared in the " +
 			"project `rule_types` vocabulary — and the section that defines it, too.",
 		"route-declared":     "A SCREEN spec declares the **route** in the header.",
-		"dependency-honored": "Every symbol promised in the **Dependency Table** (in backticks) is used in the code.",
+		"dependency-honored": "The spec declares **no Dependencies table**: the code declares what it imports, by `@dep:` (`anchors migrate` removes an old table).",
 		"spec-feature-match": "Every declared requirement has a **scenario in the feature** (or `@no-scenario: <reason>`).",
 		"rule-implemented":   "Every catalogued rule appears **in the code** (the excerpt that realizes it carries its code in a comment) — or is waived on its line with `@no-code: <reason>`, for what is satisfied by the ABSENCE of code. Declare rule by rule: it is what trades guessing for confrontation.",
 		// The title and the "none" value come from the same catalogue as the procedure's

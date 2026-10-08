@@ -2,7 +2,7 @@
 # @anchors
 #   code: GGFGV
 #   ref: GVGDG
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @GVGDG
@@ -182,3 +182,10 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Given the header and navigation guides
     When they are printed
     Then the header guide names the dependency, used-by and navigation flags with their gates, and the navigation guide the tables, the flag on every call, the four gates and the entry routes
+
+  @GVGDG-B25 @unit-level
+  Scenario: The spec guide says a spec declares no dependency
+    Given the spec guide
+    When it is printed
+    Then it says the spec names no file of the code, the imports are flagged in the code and the tests, a shared rule lives in the product, and the rule uses cite no DEPn
+

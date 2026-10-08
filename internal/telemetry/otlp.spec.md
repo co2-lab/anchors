@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TLEMT
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # TelemetryEmitter — decision events leave as OTLP logs, never block the work, and never carry who uses the product
@@ -65,13 +65,6 @@ a no-op, so callers need no guard around each call.
 | --- | --- | --- | --- |
 | `TLEMT-E01` | REF[TLEMT-B04]: an unreachable collector is the failure B04 answers: the send fails in the background and the caller is never told | — | — <!-- @resilient: telemetry must never become a problem for whoever is working, and a collector that is down is an expected state --> |
 | `TLEMT-E02` | The collector answers with an error status. | The answer is discarded; nothing is retried and nothing fails. | Telemetry that fails cannot become a problem for whoever is working; the event is lost in silence. <!-- @resilient: telemetry must never become a problem for whoever is working, and a rejected event is lost by design, not retried --> |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/telemetry/config.go` | `Config` | apoio — whether to emit, where, and with which headers |
-| DEP2 | `internal/telemetry/event.go` | `Event` | apoio — the decision event being sent |
 
 ## Open Decisions
 

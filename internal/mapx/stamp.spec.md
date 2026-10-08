@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EDSTD
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: mapa
 -->
 # EdgeStamping — recording on each relation that it was confronted, with what result, and since when
@@ -82,12 +82,6 @@ an unrelated gate erase a person's decision, which is what the check already ref
 ## Errors
 
 none — a relation or node that does not exist is normal input answered by B07 (false) and B09 (zero stamped); stamping works on the graph in memory and cannot fail.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Graph`, `Stamp`, `Judgment`, `Stale` | mapa — the relations stamped and the staleness rule the stamp feeds |
 
 ## Open Decisions
 

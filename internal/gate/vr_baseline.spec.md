@@ -1,6 +1,6 @@
 <!-- @anchors
   code: VRBSV
-  updated_at: 2026-09-19
+  updated_at: 2026-10-08
   layer: gate
 -->
 # VRBaseline — ensures visual regression scenarios have captured reference baseline images
@@ -60,14 +60,6 @@ Verifies that visual regression scenarios declared in feature files have corresp
 | --- | --- | --- |
 | `VRBSV-X01` | Does not evaluate baseline staleness using disk modification timestamps. | Disk mtime changes on repository cloning, which accused 105 of 105 baselines in audit without providing true staleness signal. |
 | `VRBSV-X02` | Does not fail commits based on git commit dates of baseline images. | Accusing 103 of 105 baselines (98% of the repository) would cause the gate to be disabled immediately, neutralizing functioning protections. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | core — project configuration containing derived visual regime mappings |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized messages for skips and failure verdicts |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `KindFeature`, `Node` | core — graph model and feature node representations |
 
 ## Open Decisions
 

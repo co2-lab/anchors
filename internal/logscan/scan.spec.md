@@ -1,6 +1,6 @@
 <!-- @anchors
   code: LGSCL
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # LogScan — finding the occurrences of declared failures in the project's logs
@@ -53,13 +53,6 @@ the logs are: with no declared path it reads nothing, since a log usually carrie
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `LGSCL-E01` | A declared alias or timestamp is not a valid pattern. | The scan fails with the pattern's error and gives no result. | A partial scan would report fewer occurrences than happened, and the confrontation would clear failures that were never looked for. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `LogsConfig` | config — the declared logs |
-| DEP2 | `internal/mapx/model.go` | `Graph`, `FailureSignal` | mapa — the specs to read and the occurrences to record |
 
 ## Open Decisions
 

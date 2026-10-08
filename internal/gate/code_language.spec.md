@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CDLNG
-  updated_at: 2026-09-27
+  updated_at: 2026-10-08
   layer: gate
 -->
 # CodeLanguage — the code does not go back to mixing languages
@@ -62,12 +62,6 @@ turned off on the first day.
 | `CDLNG-X01` | Does not read a COMMENT. | The comment carries the measurement and the why, in the language of whoever decided. Translating it would lose what it exists to record, and the ruler is about what the contributor needs to READ in order to work. |
 | `CDLNG-X02` | Does not read USER-FACING TEXT. | A message to the user goes through the translation catalogue, which already resolves it by the project's language. Charging it here would duplicate the ruler in two places that would diverge. |
 | `CDLNG-X03` | Does not use a dictionary to decide the language. | Measured: the system dictionary accuses a compound identifier in English, and produced 90% false positive. A gate that is wrong nine times out of ten is turned off, and then it defends nothing. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/gate/code_language.go` | `PortugueseIdentifiers` | gate — the confrontation is self-contained: the unit reads text and owns its own vocabulary, with no core symbol to borrow |
 
 ## Open Decisions
 

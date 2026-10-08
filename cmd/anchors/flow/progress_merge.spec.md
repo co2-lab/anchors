@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRMRP
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # ProgressMerge — the git merge driver of a plan's progress file: unite both sides, done beats pending
@@ -58,12 +58,6 @@ edits the file, and that edit arrives as one side.
 | `PRMRP-E01` | Our side cannot be read. | The driver fails with "read our side" and the path. | Git needs to know which side broke to fall back to a manual merge. |
 | `PRMRP-E02` | Their side cannot be read. | The driver fails with "read the other side" and the path, and our side is left untouched. | A half-merged file written on a failed read would lose our side. |
 | `PRMRP-E03` | The result cannot be written into our side. | The driver fails with "write the result". | Git must not take an unwritten merge for a resolved one. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/scan/progress.go` | `MergeProgress`, `ProgressDone` | scan — the union rule and the count of done items |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GVOPG
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: infra
 -->
 # GovernanceOpportunities — the doctor suggests the canonical gates and settings a project has not adopted yet
@@ -58,14 +58,6 @@ items, is the short hint other commands can show without getting in the way.
 ## Errors
 
 none — the unit only reads a graph and a configuration already in memory; nil inputs are the empty case of `GVOPG-B06`, not a failure.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Gate`, `IsBlocking` | config — the declared gates and test suites |
-| DEP2 | `internal/mapx/model.go` | `Graph`, `Kind` | mapa — the kinds present in the project |
-| DEP3 | `internal/i18n/i18n.go` | `T` | apoio — localized suggestion texts |
 
 ## Open Decisions
 

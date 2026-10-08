@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MNVRM
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: config
 -->
 # MinVersion — whether the running binary meets the minimum version the project declares
@@ -66,12 +66,6 @@ least dev" decides nothing.
 | --- | --- | --- | --- |
 | `MNVRM-E01` | REF[MNVRM-B05]: a malformed declared minimum is the load failure B05 answers: the configuration does not load | — | — |
 | `MNVRM-E02` | REF[MNVRM-B04]: a running version that cannot be ordered is the comparison failure B04 answers: it does not meet the minimum, with the reason | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | config — the check is a method of the loaded configuration, called by the load |
 
 ## Open Decisions
 

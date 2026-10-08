@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPRGM
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: comando
 -->
 # MapRegister — hangs the map domain's commands on the root command
@@ -39,20 +39,6 @@ commands is reachable by its name from the root, and that the map domain adds no
 ## Errors
 
 none — registration adds commands to the root and handles no failure; a command's own failures are its spec's
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/mapcmd/map.go` | `newMapCmd` | comando — the map command |
-| DEP2 | `cmd/anchors/mapcmd/impact.go` | `newImpactCmd` | comando — the impact command |
-| DEP3 | `cmd/anchors/mapcmd/ingest.go` | `newIngestCmd` | comando — the ingest command |
-| DEP4 | `cmd/anchors/mapcmd/judge.go` | `newJudgeCmd` | comando — the judge command |
-| DEP5 | `cmd/anchors/mapcmd/recode.go` | `newRecodeCmd` | comando — the recode command |
-| DEP6 | `cmd/anchors/mapcmd/renumber.go` | `newRenumberCmd` | comando — the renumber command |
-| DEP7 | `cmd/anchors/mapcmd/flow.go` | `newFlowCmd` | comando — the flow command |
-| DEP8 | `cmd/anchors/mapcmd/failures.go` | `newFailuresCmd` | comando — the failures command |
-| DEP9 | `cmd/anchors/mapcmd/review.go` | `newReviewCmd` | comando — the review command |
 
 ## Open Decisions
 

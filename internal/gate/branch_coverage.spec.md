@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BRCOV
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: gate
 -->
 # BranchCoverage — the tests take the branches the code has
@@ -41,13 +41,6 @@ nothing the tests do reaches it.
 ## Errors
 
 none — the gate reads the signal the ingestion wrote and the file's text
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/ingest.go` | `NoCoverageLines` | mapx — the lines of the mutants no test ran |
-| DEP2 | `internal/gate/rule_uses.go` | `gateEntry` | gate — the gate's own settings |
 
 ## Open Decisions
 

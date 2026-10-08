@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ARCHR
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: infra
 -->
 # ArtifactChoice — turns the artifacts the user chose at init into artifact layers and colocation
@@ -68,13 +68,6 @@ the colocation declaration is removed.
 ## Errors
 
 none — applying a choice rewrites a configuration held in memory from values it receives; an unknown artifact name is simply not offered, and nothing is read or written outside the configuration.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Layer`, `Derived` | core — project configuration |
-| DEP2 | `internal/initx/infer.go` | `Proposal` | infra — what inference found (INPRN) |
 
 ## Open Decisions
 

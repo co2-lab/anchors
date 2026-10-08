@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PSVPL
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: gate
 -->
 # PlanSeedsValid — specifications seeded in a plan must target valid governed layers
@@ -92,15 +92,6 @@ Each failure the code handles is already stated as a rule of another letter; the
 | --- | --- | --- | --- |
 | `PSVPL-E01` | REF[PSVPL-B02]: with no configuration there is nothing to confront, and B02 answers Pending | — | — |
 | `PSVPL-E02` | REF[PSVPL-B06]: a path whose top directory is not on disk is answered by B06: read as prose, not charged | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | core — project layer definitions and layer regimes |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — localized verdict and defect messages |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `KindPlan`, `Node` | core — graph model and artifact representations |
-| DEP4 | `internal/scan/scan.go` | `Classify` | core — classifies file paths into declared project layers |
 
 ## Open Decisions
 

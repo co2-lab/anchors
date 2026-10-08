@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GVRNS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # Governs — who each guide governs, and how many, read from the map
@@ -41,13 +41,6 @@
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `GVRNS-E01` | The map cannot be loaded. | The command fails with "load map: … (run `anchors map build`)". | Governance exists only in the map; the message names the command that builds it. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/query.go` | `Governs`, `GovernanceSummary` | the governs edges of one guide, and the count per guide |
-| DEP2 | `cmd/anchors/common/path.go` | `RelTo` | the argument resolved against the root |
 
 ## Open Decisions
 

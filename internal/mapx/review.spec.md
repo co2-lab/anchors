@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPRVM
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: mapa
 -->
 # MapReview — the reviews recorded on a node, and which of them still holds
@@ -41,12 +41,6 @@ A review is a second look at what an agent decided, recorded on the node it look
 ## Errors
 
 none — the unit reads and writes the map in memory; a node not in the map is answered by MPRVM-B02, not as a failure.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Graph`, `Review` | mapa — the map |
 
 ## Open Decisions
 

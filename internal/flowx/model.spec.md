@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLMDF
-  updated_at: 2026-09-28
+  updated_at: 2026-10-08
   layer: apoio
 -->
 # FlowModel — the questions a work-flow graph answers: what comes next, and what is broken
@@ -52,12 +52,6 @@ result is never asked "who reaches you?".
 ## Errors
 
 none — every question over a missing graph or an unknown code answers "nothing" (X01), and the broken flows are findings the unit returns, not failures it handles.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `FlowGraph`, `FlowState`, `FlowTransition` | mapa — the flow graph's shape |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SYCMS
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: comando
 -->
 # SynthesizeCommand — two pull requests in content conflict become one card that asks for the best of each, and every end points at it
@@ -68,15 +68,6 @@ written in the project's language. A dry run shows the card and touches nothing.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `SYCMS-E01` | The card cannot be opened on the host. | The command fails carrying the host's message, and no pull request is commented or closed. | Closing the pull requests without the card would lose both works with no owner. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Load`, `GitHubMode`, the workflow repository and labels | config — the mode and the board |
-| DEP2 | `cmd/anchors/common` | `CardDoPR`, `NumeroDaIssue` | comando — the origin card of a pull request and the new card's number |
-| DEP3 | `internal/initx` | `LabelSob` | apoio — the label under an origin card |
-| DEP4 | `internal/i18n` | `T` | apoio — the card in the project's language |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DUPLC
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: gate
 -->
 # Duplication — no code file holds a block copied from somewhere else
@@ -63,14 +63,6 @@ duplicated lines the project tolerates.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `DUPLC-E01` | jscpd writes no report, or one that is not JSON | Pending, naming the last line jscpd printed or the parse error | The duplication was not measured; approving would say it was, failing would blame the code for the tool |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | core — the gate's configuration, passed and not read |
-| DEP2 | `internal/i18n/i18n.go` | `T` | core — the verdict messages |
-| DEP3 | `internal/mapx/model.go` | `Graph`, `Node` | core — the file being judged and the scan's map |
 
 ## Open Decisions
 

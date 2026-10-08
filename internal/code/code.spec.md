@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CDGNC
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: infra
 -->
 # CodeGenerator — the short, stable identity code suggested for a unit's name
@@ -46,7 +46,7 @@ it instead of generating a different code.
 | `CDGNC-B07` | With a module prefix, the code starts with the prefix in upper case (cut to the code length) and the rest comes from the name's initial and consonants. (`GenerateWithPrefix`) |
 | `CDGNC-B08` | A code not taken is returned as generated; a taken one is varied deterministically, trying every other letter in the last position, then in the one before, never changing the positions of the module prefix. (`GenerateUnique`, `GenerateUniqueWithPrefix`) |
 | `CDGNC-B09` | The module prefix of a module name is its initial and its first consonant, padded with X to two characters. (`ModulePrefix`) |
-| `CDGNC-B10` | The generated length is the smallest declared code length of at least 2; loading the project's configuration applies it, and an empty list leaves the length unchanged. |
+| `CDGNC-B10` | The generated length is the smallest declared code length of at least 2; loading the project's configuration applies it, and an empty list leaves the length unchanged. (`SetSlots`) |
 
 ## Invariants
 
@@ -63,12 +63,6 @@ it instead of generating a different code.
 ## Errors
 
 none — every name yields a code (an empty name yields only padding), and a saturated namespace is the boundary X01, not a failure.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `SetSlotsHook` | config — the project's declared code lengths reach the generator when the configuration loads |
 
 ## Open Decisions
 

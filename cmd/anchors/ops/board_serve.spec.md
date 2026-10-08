@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BRSRB
-  updated_at: 2026-09-29
+  updated_at: 2026-10-08
   layer: comando
 -->
 # BoardServe — the board page served locally with live state, read from the host only when something changed
@@ -69,12 +69,6 @@ data route answers with the error.
 | `BRSRB-E01` | The host refuses the full sweep. | The collection fails with "collect from GitHub" and the host's own message. | A refusal without the host's reason (a rate limit, a permission) leaves nothing to act on. |
 | `BRSRB-E02` | The sweep fails and there is no previous read. | The data route answers 502 with the error as a JSON `error` field. | There is nothing true to serve, and an empty board would read as "no cards". |
 | `BRSRB-E03` | No `--repo` is given and the repository cannot be discovered from the clone. | The command fails saying to declare `--repo <owner/name>`. | Guessing a repository would serve another project's board. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/initx` | `BoardHTML`, `BoardCollectJQ` | apoio — the published board page and its data contract |
 
 ## Open Decisions
 

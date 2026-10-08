@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CDCMC
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: comando
 -->
 # CodeCommand — a new unit gets an identity code that no other unit in the map already owns, and the codes in use are listed from the map
@@ -79,15 +79,6 @@ rename rewrites the whole project and deserves its own dry-run.
 | --- | --- | --- | --- |
 | `CDCMC-E01` | `code` runs with no name and no `--check`, or the map cannot be read. | It fails asking for the unit name, or asking to run `anchors map build`. | A code suggested without the map could collide with any unit. |
 | `CDCMC-E02` | `code list` runs where `anchors.yaml` or the map cannot be loaded. | It fails naming which one. | The length check and the listing need both; an empty answer would read as "no code in use". |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/code` | `Generate`, `GenerateUnique`, `GenerateWithPrefix`, `GenerateUniqueWithPrefix`, `GenerateFromPath`, `Slots` | apoio — the code algorithm |
-| DEP2 | `internal/mapx/model.go` | `Load`, `DefaultPath` | mapa — the codes in use |
-| DEP3 | `internal/config/config.go` | `Load`, `CodeLengths` | config — the layers' prefixes and the accepted lengths |
-| DEP4 | `internal/scan` | `Classify` | scan — the layer of a path |
 
 ## Open Decisions
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCASS
-  updated_at: 2026-10-01
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ScenarioAsserts — scenario outcome steps must assert concrete verifiable outcomes
@@ -64,15 +64,6 @@ This gate operates in distinct territory from neighbouring gates:
 ## Errors
 
 none — the one nil check is a step that cites no rule code, which is not a tautology (B02, B09) — normal flow, not a defence.
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `CodeLengthPattern`, `Config` | core — identity code length pattern and dialect configuration |
-| DEP2 | `internal/config/dialect.go` | `GherkinThenAlternatives` | core — set of supported outcome keywords across languages |
-| DEP3 | `internal/i18n/i18n.go` | `T` | core — localized defect messages |
-| DEP4 | `internal/mapx/model.go` | `Graph`, `KindFeature`, `Node` | core — graph model and node kind representations |
 
 ## Open Decisions
 

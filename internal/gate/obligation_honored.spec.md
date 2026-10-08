@@ -1,6 +1,6 @@
 <!-- @anchors
   code: OBHNB
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: gate
 -->
 # ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit
@@ -79,13 +79,6 @@ points at, triggered by an attribute the node itself declares.
 | --- | --- | --- | --- |
 | `OBHNB-E01` | A file matched by a `must_appear_in` glob cannot be read (permissions). | It counts as not carrying the token and the search goes on through the other matched files: the duty passes if a readable one carries the token, and fails naming the glob (`OBHNB-B01`) if none does. | An unreadable file is not evidence that the duty is fulfilled, so it can never approve it; and one locked file must not hide the readable one where the token really is. |
 | `OBHNB-E02` | A `must_appear_in` glob of a triggered obligation does not parse (`purge[.ts`). | `Fail` naming the obligation and the glob. | A glob that cannot be read is a configuration defect. Read as "matched no file" (`OBHNB-I02`), it dropped the duty and the node passed with nothing checked. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Node` | core — the node's identity is what the token is derived from |
-| DEP2 | `internal/config/config.go` | `Config` | core — the obligations, their triggers and their destinations are declared in the Structure |
 
 ## Open Decisions
 

@@ -152,11 +152,12 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 				Name: "rule-types", ID: "rule-types", On: []string{"spec"}, Check: "rule-types",
 				Blocking: config.Bool(false), Measures: "every code letter is declared in the vocabulary, with no conflict",
 			},
-			// A Tabela de Dependências promete símbolos; o código precisa usá-los.
-			// Pega a divergência que o feature-test-match não vê (a aresta spec→código).
+			// A spec declares no dependency: it precedes the code, and the files a unit imports
+			// are declared where the import is (`@dep:`, DOOSD). The gate names a table left to
+			// migrate.
 			config.Gate{
 				Name: "dependency-honored", ID: "dependency-honored", On: []string{"spec"}, Check: "dependency-honored",
-				Blocking: config.Bool(false), Measures: "the methods declared in the Dependencies Table are used in the code",
+				Blocking: config.Bool(false), Measures: "the spec declares no dependency table — the code declares its dependencies by `@dep:`",
 			},
 			// O padrão mais repetido de uma auditoria de 51 divergências spec×código
 			// (app de referência, 2026-08): oito handlers declaravam um Contrato de Saída que o

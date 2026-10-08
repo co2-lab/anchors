@@ -1,6 +1,6 @@
 <!-- @anchors
   code: APRCP
-  updated_at: 2026-09-26
+  updated_at: 2026-10-08
   layer: infra
 -->
 # ApprovalReachable — the doctor says when the required approval can never be given, and how to get out
@@ -63,13 +63,6 @@ project's configuration remains the source of truth.
 | --- | --- | --- | --- |
 | `APRCP-E01` | The platform refuses the protection update. | An error naming the branch and carrying the platform's own output. | The fix must say which branch failed and why, or the operator retries blind. |
 | `APRCP-E02` | REF[APRCP-B02]: an unreadable answer of the platform while deciding the bypass is a refusal with its reason, not an error | — | — |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config`, `Workflow` | config — the workflow's repository, branch and required approvals |
-| DEP2 | `internal/i18n/i18n.go` | `T` | apoio — localized refusal reasons and the warning text |
 
 ## Open Decisions
 

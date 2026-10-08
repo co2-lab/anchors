@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RVCMR
-  updated_at: 2026-10-02
+  updated_at: 2026-10-08
   layer: comando
 -->
 # ReviewCommand — record a review with who looked and what they found, or list what is to review
@@ -45,14 +45,6 @@
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `RVCMR-E01` | The target is not in the map, the gate declares no `review:`, or no reviewer is given. | The record is refused saying what to write, and nothing is written. | A review recorded on a wrong target, gate or nobody would answer for a look that did not happen there. |
-
-## Dependencies
-
-| Code | File | Method | Layer |
-| --- | --- | --- | --- |
-| DEP1 | `internal/mapx/review.go` | `RecordReview` | mapa — the record (MPRVM) |
-| DEP2 | `internal/gate/review.go` | `ReviewsDue` | gate — what is to review (RVDUR) |
-| DEP3 | `internal/issue/issue.go` | `Open`, `Reopen` | infra — the findings' issue |
 
 ## Open Decisions
 
