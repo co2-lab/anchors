@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a467c2e3d296830a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9ce67bf70732a73b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -4299,6 +4299,8 @@ teste prova.
 - [The stamps that held before a mechanical rewrite are refreshed after it, and a stamp already stale stays stale](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B20`
 
 - [The chain's flags change no contract](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B21`
+
+- [A flag in a block comment inside a line changes no contract](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B22`
 
 - [A double with no tie fails and the verdict names the loose module](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B01`
 

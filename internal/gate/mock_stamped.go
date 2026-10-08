@@ -259,12 +259,18 @@ func snippetOf(linhas []string, anchor string, count int) (string, error) {
 // is such a comment at the end of a line of code.
 var (
 	chainFlagOnlyRE = regexp.MustCompile(`^\s*(?://|#|--|/\*|<!--)\s*@(?:dep|no-dep|used-by|navigates|no-nav):.*$`)
-	chainFlagRE     = regexp.MustCompile(`\s*(?://|#|--|/\*|<!--)\s*@(?:dep|no-dep|used-by|navigates|no-nav):.*$`)
+	chainFlagRE     = regexp.MustCompile(`\s*(?://|#|--|<!--)\s*@(?:dep|no-dep|used-by|navigates|no-nav):.*$`)
+	// chainBlockFlagRE is a flag in a block comment, wherever it sits in the line: the
+	// navigation fixer writes one right after a call on a JSX line (`/* @navigates: X */}>`),
+	// and only the comment goes — what follows it is code.
+	chainBlockFlagRE = regexp.MustCompile(`\s*/\*\s*@(?:dep|no-dep|used-by|navigates|no-nav):[^*]*\*/`)
 )
 
-// stripChainFlag is a line without the chain's flag at its end.
+// stripChainFlag is a line without the chain's flags: a block comment carrying one, and a
+// line comment carrying one at its end.
 func stripChainFlag(l string) string {
-	return chainFlagRE.ReplaceAllString(strings.TrimRight(l, "\r"), "")
+	l = chainBlockFlagRE.ReplaceAllString(strings.TrimRight(l, "\r"), "")
+	return chainFlagRE.ReplaceAllString(l, "")
 }
 
 // stampLines are a module's lines as a stamp reads them: without the lines that only carry a

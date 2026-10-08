@@ -2,7 +2,7 @@
 # @anchors
 #   code: MSFMC
 #   ref: MCSTM
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @MCSTM
@@ -221,3 +221,8 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
     When the stamps are confronted, and then one taken over the flag, and then the function's parameter changes
     Then the stamps hold, the one taken over the flag holds too, and the real change fails
 
+  @MCSTM-B22 @unit-level
+  Scenario: A flag in a block comment inside a line changes no contract
+    Given a stamped component whose JSX line gained a navigation flag in a block comment after the call
+    When the stamp is confronted, and then the code after the comment changes
+    Then the stamp holds, and the change after the comment fails

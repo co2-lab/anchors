@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCSTM
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: gate
 -->
 # MockStamped — the double carries the mark of the snippet it replaces, and the gate RECOMPUTES it
@@ -69,6 +69,7 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-B19` | The modules a test file's stamps point at are listed each once, in the order they first appear; a file with no stamp lists none. (`StampedModules`) |
 | `MCSTM-B20` | `StampsHolding` lists the stamps of a test that match their module today, keyed `<module>|<hash>`; `RefreshHeldStamps` rewrites the hash of each stamp in that list that no longer matches — the ones a mechanical rewrite broke — and leaves a stamp already stale as it was. |
 | `MCSTM-B21` | A stamp reads its module without the chain's flags — a dependency, used-by or navigation flag (or its waiver) at the end of a line, and a line that only carries one —: a flag `check --fix` writes changes no contract, and the stamp's anchor and snippet hold through it. A stamp taken while the flags were in the module, as written, holds too; a change to the stamped code itself still fails, and a refresh writes the hash read without the flags. (`StampSnippet`) |
+| `MCSTM-B22` | A chain flag in a block comment inside a line — the form the navigation fixer writes after a call on a JSX line — is read out of the stamped snippet too, and only the comment: the code after it stays, so a change there still fails. |
 
 ## Invariants
 

@@ -676,3 +676,20 @@ func TestMockCarimbado_chainFlagsChangeNoContract(t *testing.T) {
 		t.Errorf("a real change still fails: %v", v)
 	}
 }
+
+func TestMockCarimbado_inlineBlockFlagChangesNoContract(t *testing.T) {
+	t.Run("MCSTM-B22: A flag in a block comment inside a line — the navigation fixer's form on a JSX line — changes no contract, and the code after it stays in the snippet", func(t *testing.T) {})
+	jsx := "export function Card({ onOpen }) {\n  return <Pressable onPress={() => nav.navigate('Detail')}>\n}\n"
+	h := carimboDe(t, jsx, "export function Card({ onOpen }) {", 3)
+	flagged := strings.Replace(jsx, "nav.navigate('Detail')}>", "nav.navigate('Detail') /* @navigates: DETLS */}>", 1)
+	root := escreveModulo(t, flagged)
+	teste := "// @contract: src/mod.ts | export function Card({ onOpen }) { | 3 | " + h + "\njest.mock('src/mod')"
+	if v, msg := rodaCarimbo(t, root, teste); v != Pass {
+		t.Errorf("the inline flag changes no contract: %v (%s)", v, msg)
+	}
+	// What follows the comment is code: changing it still fails.
+	changed := strings.Replace(flagged, "*/}>", "*/} disabled>", 1)
+	if v, _ := rodaCarimbo(t, escreveModulo(t, changed), teste); v != Fail {
+		t.Errorf("a change after the comment is a change: %v", v)
+	}
+}
