@@ -475,7 +475,7 @@ func staleProject(t *testing.T) (*Compiler, string, string) {
 }
 
 func TestStale(t *testing.T) {
-	t.Run("DTCDC-B11: A missing page or a page with a different stamp is stale", func(t *testing.T) {
+	t.Run("DTCDC-B22: A missing page or a page with a different stamp is stale", func(t *testing.T) {
 		c, root, page := staleProject(t)
 		if s, _ := c.Stale(); len(s) != 0 {
 			t.Fatalf("a matching stamp is fresh, got %v", s)
@@ -490,7 +490,7 @@ func TestStale(t *testing.T) {
 			t.Errorf("a missing page: stale = %v, want [x.md]", s)
 		}
 	})
-	t.Run("DTCDC-B12: Editing the template makes its page stale", func(t *testing.T) {
+	t.Run("DTCDC-B23: Editing the template makes its page stale", func(t *testing.T) {
 		c, root, _ := staleProject(t)
 		escreveTemplate(t, root, "x.md.tmpl", `{{range specs}}{{.Titulo}}{{end}}`)
 		if s, _ := c.Stale(); strings.Join(s, ",") != "x.md" {

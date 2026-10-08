@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:6386b52c8e2ed2c4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:19c59460ebddd9c2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -134,6 +134,10 @@ abra a página dela em `camadas/`.
 - [DTCDC-B12 — A spec's rules are read in the three catalogued forms — heading, table row, bold bullet — with the map's rule definition; only the spec's own codes, each at its first definition, so a Rule uses row does not repeat a rule; a table row's title is the cell after the code and its body the cells after that, and only a heading rule is marked as having a heading of its own.](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content)
 
 - [DTCDC-B10 — A rule's title carries no HTML comment, even one written on the heading line, while the title's words stay.](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content)
+
+- [DTCDC-B22 — A compiled page is stale when it is missing, or when its stamp differs from the stamp of today's template and specs; a page whose stamp matches is fresh without being recompiled.](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content)
+
+- [DTCDC-B23 — The stamp covers the template and every loaded spec, so editing either makes the page stale.](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content)
 
 - [DTCDC-B13 — A spec header's `updated_at:` line, within the first ten lines, is not part of the stamp; the same line further down is content and is.](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content)
 
@@ -3165,6 +3169,8 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B64 — `navigation.entry` (`Navigation`) declares the routes the app opens on — the roots from which every screen is reachable.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
+- [CNFGO-B65 — A gate confronts the repeats of what it declares unless the project wrote `duplicates: false` on it (`DuplicatesOn`).](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
@@ -3992,6 +3998,12 @@ abra a página dela em `camadas/`.
 - [DMDCD-X02 — Does not confront the code to check whether the validation in fact exists.](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid)
 
 - [DMDCD-E01 — REF[DMDCD-B02]: the one handled path is the absent domain section, and B02 answers it: the spec fails](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid)
+
+### [GTDPG — Duplicates — each gate confronts the repeats of what it declares](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares)
+
+- [GTDPG-B01 — A key the gate's reader finds more than once in a node turns the verdict into the reader's — a failure, unless the gate measures repeats as a divergence of its own, and never softer than a failure the gate already gave —, naming each repeated key, how many times and the lines, beside the gate's own finding. A node the gate skipped, a gate with no reader, and a gate with `duplicates: false` are left as they were. (`Occurrence`, `HasDuplicateReader`, `confrontDuplicates`)](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares)
+
+- [GTDPG-B02 — `rule-types` counts each rule code a file defines — a heading, the first cell of a table row, a bold or bare bullet —, where it is defined; not inside a section whose rows cite codes (what a rule uses, the open decisions, the navigation, the state flow, the events a unit emits, a change history, what a plan revises) nor its subsections — known by the catalog's titles and by the titles the project declares for them in any layer; not on an alias or a retired line, nor a list item opening with the code in backticks; and a heading with the rows under it that open with its own code once. (`definedRuleOccurrences`)](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares)
 
 ### [DUPLC — Duplication — no code file holds a block copied from somewhere else](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else)
 

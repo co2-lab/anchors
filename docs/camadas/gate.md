@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:c2f0e127edc1eca9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:fffc58dad824f1af — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 83 unidades e 1363 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 84 unidades e 1365 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -901,6 +901,23 @@ someone on the other side.
 - **DMDCD-X02** — Does not confront the code to check whether the validation in fact exists.
 
 - **DMDCD-E01** — REF[DMDCD-B02]: the one handled path is the absent domain section, and B02 answers it: the spec fails
+
+
+## GTDPG — Duplicates — each gate confronts the repeats of what it declares
+
+A gate that controls a kind of declaration registers an occurrence reader: the key of each
+declaration it controls, with its line. After the gate measures a node, the engine counts the
+keys, and a key declared more than once is a finding of that gate, naming the key and every
+line (DESIGN-duplicate-declarations.md). Only declarations count — a citation repeats by
+nature —, and each kind of declaration has one owner, so a repeat is reported once. On by
+default; `duplicates: false` on the gate switches it off.
+
+The first reader is `rule-types`'s: a rule code defined twice in one file.
+
+
+- **GTDPG-B01** — A key the gate's reader finds more than once in a node turns the verdict into the reader's — a failure, unless the gate measures repeats as a divergence of its own, and never softer than a failure the gate already gave —, naming each repeated key, how many times and the lines, beside the gate's own finding. A node the gate skipped, a gate with no reader, and a gate with `duplicates: false` are left as they were. (`Occurrence`, `HasDuplicateReader`, `confrontDuplicates`)
+
+- **GTDPG-B02** — `rule-types` counts each rule code a file defines — a heading, the first cell of a table row, a bold or bare bullet —, where it is defined; not inside a section whose rows cite codes (what a rule uses, the open decisions, the navigation, the state flow, the events a unit emits, a change history, what a plan revises) nor its subsections — known by the catalog's titles and by the titles the project declares for them in any layer; not on an alias or a retired line, nor a list item opening with the code in backticks; and a heading with the rows under it that open with its own code once. (`definedRuleOccurrences`)
 
 
 ## DUPLC — Duplication — no code file holds a block copied from somewhere else

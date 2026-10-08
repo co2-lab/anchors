@@ -791,6 +791,19 @@ func TestGate_withoutBlockingIsInformative(t *testing.T) {
 	}
 }
 
+func TestGate_duplicatesOnByDefault(t *testing.T) {
+	t.Run("CNFGO-B65: A gate confronts the repeats of what it declares unless switched off", func(t *testing.T) {})
+	if !(Gate{Name: "g"}).DuplicatesOn() {
+		t.Error("with no key, the gate confronts repeats")
+	}
+	if (Gate{Name: "g", Duplicates: Bool(false)}).DuplicatesOn() {
+		t.Error("duplicates: false switches it off")
+	}
+	if !(Gate{Name: "g", Duplicates: Bool(true)}).DuplicatesOn() {
+		t.Error("duplicates: true keeps it on")
+	}
+}
+
 func TestGate_scopeForScan(t *testing.T) {
 	t.Run("CNFGO-B19: The scope defaults to one run per target, and the full scan uses scope_full only when it is batch or project", func(t *testing.T) {})
 	cases := []struct {

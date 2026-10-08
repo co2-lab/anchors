@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1419a2fdc12d5de9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:cdc1d09542de7542 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -156,9 +156,9 @@ teste prova.
 
 - [The pages out of date, compiled without writing](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B21`
 
-- [A section asked by its title in one language is found under another](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B11`
+- [A section asked by its title in one language is found under another](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B22`
 
-- [The rules are read in the three catalogued forms, the spec's own codes at their first definition](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B12`
+- [The rules are read in the three catalogued forms, the spec's own codes at their first definition](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B23`
 
 - [Every known kind has a title, items to cover and a trap](layers/apoio.md#dcknd--dockinds--what-each-kind-of-project-documentation-must-answer-told-to-the-agent-that-writes-it) `DCKND-B01`
 
@@ -2964,6 +2964,8 @@ teste prova.
 
 - [navigation.entry declares the routes the app opens on](layers/config.md#cnfgo-b64--navigationentry-declares-the-routes-the-app-opens-on) `CNFGO-B64`
 
+- [A gate confronts the repeats of what it declares unless switched off](layers/config.md#cnfgo-b65--a-gate-confronts-the-repeats-of-what-it-declares-unless-switched-off) `CNFGO-B65`
+
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](layers/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -3611,6 +3613,10 @@ teste prova.
 - [The gate does not judge whether the declared domain is correct](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-X01`
 
 - [The gate does not read the code to check the validation exists](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-X02`
+
+- [A key declared twice turns the gate's verdict into a failure naming the lines, unless switched off or skipped](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B01`
+
+- [rule-types counts the rule codes a file defines, not those it cites](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B02`
 
 - [A file in no clone passes](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B01`
 

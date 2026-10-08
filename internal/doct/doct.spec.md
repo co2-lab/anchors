@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DTCDC
-  updated_at: 2026-10-02
+  updated_at: 2026-10-07
   layer: apoio
 -->
 # DocTemplateCompiler — compiles documentation pages from templates that reference the specs' content
@@ -58,8 +58,8 @@ reaches at all.
 
 | Effect | Description |
 | --- | --- |
-| `DTCDC-B11` | A compiled page is stale when it is missing, or when its stamp differs from the stamp of today's template and specs; a page whose stamp matches is fresh without being recompiled. |
-| `DTCDC-B12` | The stamp covers the template and every loaded spec, so editing either makes the page stale. |
+| `DTCDC-B22` | A compiled page is stale when it is missing, or when its stamp differs from the stamp of today's template and specs; a page whose stamp matches is fresh without being recompiled. |
+| `DTCDC-B23` | The stamp covers the template and every loaded spec, so editing either makes the page stale. |
 | `DTCDC-B13` | A spec header's `updated_at:` line, within the first ten lines, is not part of the stamp; the same line further down is content and is. |
 | `DTCDC-B14` | A page without the generated marker is never reported stale. |
 | `DTCDC-B17` | A page whose generated marker carries no stamp (compiled by an earlier version) is compared by its body below the marker line: stale when the body differs from today's compilation, fresh when it is the same. |

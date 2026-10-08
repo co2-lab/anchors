@@ -359,6 +359,7 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 		}
 	case g.Check != "":
 		r.Verdict, r.Detail = runInternal(g.Check, n, root, graph, cfg)
+		r.Verdict, r.Detail = confrontDuplicates(g, n, root, graph, cfg, r.Verdict, r.Detail)
 		// DÍVIDA ASSUMIDA é o Pending que tem dono e vencimento — e o único que vira
 		// trabalho registrado (issue em `future/`). Só o gate de obrigações a produz; os
 		// demais Pending são "não tive o que confrontar", que não é dívida de ninguém.

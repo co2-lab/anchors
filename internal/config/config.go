@@ -853,6 +853,10 @@ type Gate struct {
 	// Com `*bool`, `nil` é exatamente "a chave não veio no yaml" e o merge funciona
 	// como para todos os outros campos. Leia sempre por `IsBlocking()`.
 	Blocking *bool `yaml:"blocking,omitempty"`
+	// Duplicates: whether the gate also confronts the repeats of what it declares — a key
+	// its occurrence reader finds twice in one file (DESIGN-duplicate-declarations.md).
+	// On unless `false`; a gate with no reader has nothing to count. Read by DuplicatesOn().
+	Duplicates *bool `yaml:"duplicates,omitempty"`
 	// Measures declara o TIPO de medidor (QUALITY §5.2). Vazio/qualquer descrição =
 	// determinístico (usa run/check). O valor especial "judgment" marca o GATE DE
 	// JULGAMENTO POR IA: o CLI não computa — enfileira o alvo para uma IA confrontar
@@ -1331,6 +1335,10 @@ func (g Gate) IsJudgment() bool { return g.Measures == MeasuresJudgment }
 // severidade ninguém declarou não pode barrar commit — a maturação (QUALITY §7) é
 // escolha explícita do projeto, não algo que o silêncio decide.
 func (g Gate) IsBlocking() bool { return g.Blocking != nil && *g.Blocking }
+
+// DuplicatesOn says whether the gate confronts the repeats of what it declares: on unless
+// the project wrote `duplicates: false`.
+func (g Gate) DuplicatesOn() bool { return g.Duplicates == nil || *g.Duplicates }
 
 // Bool devolve um ponteiro para o literal — açúcar para declarar gates.
 // @no-rule: syntax sugar that takes the address of a literal
@@ -2349,6 +2357,9 @@ func mergeCanonical(g Gate) Gate {
 	}
 	if g.Blocking == nil {
 		g.Blocking = base.Blocking
+	}
+	if g.Duplicates == nil {
+		g.Duplicates = base.Duplicates
 	}
 	return g
 }

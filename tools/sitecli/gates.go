@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gate"
 	"github.com/co2-lab/anchors/internal/initx"
 )
 
@@ -47,8 +48,8 @@ var gateGroups = []gateGroup{
 }
 
 var gateTexts = map[string]map[string]string{
-	"en": {"dir": "en/gates", "prefix": "/docs/gates/", "check": "Checker", "run": "Command", "judgment": "Judgment", "judgmentV": "an AI or a person answers the question below, through `anchors judge`", "on": "Confronts", "blockNew": "Blocking by default — new project", "blockOld": "Blocking by default — existing project", "yes": "yes", "no": "no — informs", "presupposes": "Presupposes", "presupposesV": "until these are declared in `anchors.yaml`, the gate is pending and asks nothing", "review": "Review", "reviewV": "its targets are marked to review (`anchors review`)", "ask": "The question", "how": "How it measures", "declare": "Declaring it", "source": "Source", "checker": "checker", "spec": "its spec", "notSeeded": "Not in the default catalog: `init` does not seed it; a project declares it with `check:`.", "property": "Property", "value": "Value", "gate": "Gate", "measures": "What it measures"},
-	"pt": {"dir": "pt/gates", "prefix": "/pt/docs/gates/", "check": "Verificação", "run": "Comando", "judgment": "Julgamento", "judgmentV": "uma IA ou uma pessoa responde a pergunta abaixo, via `anchors judge`", "on": "Confronta", "blockNew": "Bloqueante por padrão — projeto novo", "blockOld": "Bloqueante por padrão — projeto existente", "yes": "sim", "no": "não — informa", "presupposes": "Pressupõe", "presupposesV": "enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada", "review": "Review", "reviewV": "seus alvos ficam marcados para revisar (`anchors review`)", "ask": "A pergunta", "how": "Como mede", "declare": "Como declarar", "source": "Fonte", "checker": "verificação", "spec": "sua spec (em inglês)", "notSeeded": "Fora do catálogo padrão: o `init` não o semeia; um projeto o declara com `check:`.", "property": "Propriedade", "value": "Valor", "gate": "Gate", "measures": "O que mede"},
+	"en": {"dir": "en/gates", "prefix": "/docs/gates/", "check": "Checker", "run": "Command", "judgment": "Judgment", "judgmentV": "an AI or a person answers the question below, through `anchors judge`", "on": "Confronts", "blockNew": "Blocking by default — new project", "blockOld": "Blocking by default — existing project", "yes": "yes", "no": "no — informs", "presupposes": "Presupposes", "presupposesV": "until these are declared in `anchors.yaml`, the gate is pending and asks nothing", "review": "Review", "reviewV": "its targets are marked to review (`anchors review`)", "dups": "Duplicates", "dupsV": "a declaration it controls repeated in one file fails it; `duplicates: false` switches this off", "ask": "The question", "how": "How it measures", "declare": "Declaring it", "source": "Source", "checker": "checker", "spec": "its spec", "notSeeded": "Not in the default catalog: `init` does not seed it; a project declares it with `check:`.", "property": "Property", "value": "Value", "gate": "Gate", "measures": "What it measures"},
+	"pt": {"dir": "pt/gates", "prefix": "/pt/docs/gates/", "check": "Verificação", "run": "Comando", "judgment": "Julgamento", "judgmentV": "uma IA ou uma pessoa responde a pergunta abaixo, via `anchors judge`", "on": "Confronta", "blockNew": "Bloqueante por padrão — projeto novo", "blockOld": "Bloqueante por padrão — projeto existente", "yes": "sim", "no": "não — informa", "presupposes": "Pressupõe", "presupposesV": "enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada", "review": "Review", "reviewV": "seus alvos ficam marcados para revisar (`anchors review`)", "dups": "Duplicidade", "dupsV": "uma declaração que ele controla repetida no mesmo arquivo o reprova; `duplicates: false` desliga", "ask": "A pergunta", "how": "Como mede", "declare": "Como declarar", "source": "Fonte", "checker": "verificação", "spec": "sua spec (em inglês)", "notSeeded": "Fora do catálogo padrão: o `init` não o semeia; um projeto o declara com `check:`.", "property": "Propriedade", "value": "Valor", "gate": "Gate", "measures": "O que mede"},
 }
 
 // gatePage is one gate as the site shows it.
@@ -163,6 +164,9 @@ func writeGatePage(path string, p gatePage, lang string) error {
 	}
 	if g.Review != nil {
 		b.WriteString("| " + t["review"] + " | " + t["reviewV"] + " |\n")
+	}
+	if g.Check != "" && gate.HasDuplicateReader(g.Check) {
+		b.WriteString("| " + t["dups"] + " | " + t["dupsV"] + " |\n")
 	}
 	b.WriteString("\n")
 	if g.Ask != "" {

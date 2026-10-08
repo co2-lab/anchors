@@ -299,6 +299,8 @@
   "gate.fix.nav_written": "@navigates flags written (line code): %s",
   "gate.dep_chain.guide": " — the flags and their form: `anchors guide header`",
   "gate.nav_chain.guide": " — the screens' In and Out and the flag on each call: `anchors guide navigation`",
+  "gate.duplicates.key": "`%s` declared %d times — lines %s",
+  "gate.duplicates.found": "declared more than once: %s. Each declaration needs its own key: renumber or merge the repeat (`duplicates: false` on the gate switches this off)",
   "gate.vr_states.skip_no_code": "the spec carries no identity code",
   "gate.vr_states.skip_no_spec": "no spec beside the unit's main file",
   "gate.mutation.nothing_to_mutate": "the mutation tool measured this file at its revision and generated no mutant — there is nothing to mutate",

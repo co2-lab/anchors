@@ -441,3 +441,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a config declaring two entry routes
     When it is loaded
     Then its navigation has both, in order
+
+  @CNFGO-B65 @unit-level
+  Scenario: A gate confronts the repeats of what it declares unless switched off
+    Given a gate with no duplicates key, one with duplicates false, and one with duplicates true
+    When each is asked whether it confronts repeats
+    Then the first and the third do, the second does not
