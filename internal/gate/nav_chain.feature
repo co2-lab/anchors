@@ -48,3 +48,9 @@ Feature: NavigationChain — every navigation flagged with the screen it leads t
     Given Home rendering a section that renders a card navigating to Lonely, and GoalDetail's code importing Home's file
     When nav-reachable and nav-matches-spec run
     Then Lonely is reached through Home, Home's Out table is asked for it, and GoalDetail is not charged with Home's flags
+
+  @NCGNV-B08 @unit-level
+  Scenario: A dormant navigation is no edge
+    Given a card Home renders, whose navigation to Lonely is marked dormant with a reason
+    When nav-matches-spec and nav-annotated run
+    Then Home's Out table is not asked for Lonely, and the call counts as annotated

@@ -311,6 +311,9 @@ func flaggedTargets(s *Screen, root string, idx *screenIndex) map[string]bool {
 			continue
 		}
 		for _, fl := range scan.NavigatesIn(b) {
+			if fl.Dormant != "" {
+				continue // a call kept for a feature not turned on: no edge yet
+			}
 			for _, c := range fl.Codes {
 				if t := idx.byCode[c]; t != nil {
 					out[t.Spec] = true

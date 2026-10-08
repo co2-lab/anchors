@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9218f51428fd6385 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b26738b273510230 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -4360,6 +4360,8 @@ teste prova.
 
 - [A component's navigation counts for every screen that renders it](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B07`
 
+- [A dormant navigation is no edge](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B08`
+
 - [A node that carries the trigger and is absent from the demanded file fails](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B01`
 
 - [A node that carries the trigger and does appear passes](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B02`
@@ -7507,6 +7509,8 @@ teste prova.
 - [A spec's Dependencies table is no dependency of the map](layers/scan.md#rpscr-b45--a-specs-dependencies-table-is-no-dependency-of-the-map) `RPSCR-B45`
 
 - [A kinded dependency is read with its kind and name](layers/scan.md#rpscr-b46--a-kinded-dependency-is-read-with-its-kind-and-name) `RPSCR-B46`
+
+- [A dormant navigation flag is read with its reason](layers/scan.md#rpscr-b47--a-dormant-navigation-flag-is-read-with-its-reason) `RPSCR-B47`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

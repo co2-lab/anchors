@@ -56,6 +56,10 @@ replace, goBack, reset, popToTop: a back navigation is a navigation too.
   that returns to more than one) this call leads to, by its code, and the Out rule it
   answers.
 - '` + flagAt + `no-nav: <reason>' — this call is no screen edge.
+- '@dormant: <reason>' after a flag — a call the code keeps for a feature not turned on yet.
+  It annotates the call and is no edge: no screen that renders the component inherits it,
+  until the marker goes with the feature.
+    navigation.navigate('Paywall') // ` + flagAt + `navigates: PAWAP [AGOCC-B03] ` + flagAt + `dormant: plan mode is off
 - 'anchors check --fix' writes the flag on every call whose route names one screen; a back
   navigation, whose target the code does not say, is the author's to write.
 

@@ -962,6 +962,9 @@ func flagEdges(files []scan.File) []Edge {
 			}
 		}
 		for _, nv := range f.Navigates {
+			if nv.Dormant != "" {
+				continue // a dormant navigation is no edge of the map
+			}
 			for _, c := range nv.Codes {
 				if to, ok := byCode[c]; ok {
 					add(Edge{From: f.Path, To: to, Type: EdgeNavigatesTo, Origin: OriginDeclared, Method: nv.Rule})

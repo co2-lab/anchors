@@ -1186,3 +1186,11 @@ func TestKindedDep_readWithItsKindAndName(t *testing.T) {
 		t.Errorf("got %+v", got)
 	}
 }
+
+func TestNavigates_dormant(t *testing.T) {
+	t.Run("RPSCR-B47: A dormant navigation flag is read with its reason", func(t *testing.T) {})
+	got := extractNavigates([]byte("nav.navigate('Paywall') // @navigates: PAWAP [AGOCC-B03] @dormant: the plan mode is not on yet\n"))
+	if len(got) != 1 || got[0].Codes[0] != "PAWAP" || got[0].Rule != "AGOCC-B03" || got[0].Dormant != "the plan mode is not on yet" {
+		t.Errorf("got %+v", got)
+	}
+}

@@ -1483,6 +1483,9 @@ type Navigation struct {
 	Rule   string   // the rule that triggers it, when the flag names one
 	Line   int      // 1-based, the call's
 	Waiver string   // the reason of `@no-nav:`, for a waived call
+	// Dormant is the reason of `@dormant:` after the flag: a call the code keeps for a feature
+	// not turned on yet. It annotates the call and is no edge: no screen leads anywhere by it.
+	Dormant string
 }
 
 var (
@@ -1497,7 +1500,7 @@ var (
 	exportListRE = regexp.MustCompile(`^\s*export\s+(?:type\s+)?\{([^}]*)\}`)
 	// navigatesRE: the flag at the end of the line, or a block comment inside it — after the
 	// call on a JSX line, where text after the tag would render (`/* @navigates: X */}>`).
-	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-(?:[A-Z]\d{2}|DS-[A-Za-z0-9_-]+))\s*\])?\s*(?:\*/.*|-->.*)?$`)
+	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-(?:[A-Z]\d{2}|DS-[A-Za-z0-9_-]+))\s*\])?\s*(?:@dormant:\s*(\S.*?))?\s*(?:\*/.*|-->.*)?$`)
 	noNavRE     = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
 	// importSymbolsRE reads what an import line brings: the names inside braces, or the
 	// default name right after the keyword.
@@ -1643,7 +1646,7 @@ func extractNavigates(content []byte) []Navigation {
 	var out []Navigation
 	for i, line := range lines {
 		if m := navigatesRE.FindStringSubmatch(line); m != nil {
-			out = append(out, Navigation{Codes: splitCodes(m[1]), Rule: m[2], Line: callLine(i)})
+			out = append(out, Navigation{Codes: splitCodes(m[1]), Rule: m[2], Line: callLine(i), Dormant: m[3]})
 			continue
 		}
 		if m := noNavRE.FindStringSubmatch(line); m != nil {

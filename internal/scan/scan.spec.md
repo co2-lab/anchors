@@ -118,6 +118,7 @@ heuristic decided.
 | `RPSCR-B44` | A spec's Out rows — the table under its Out heading, in any language of the catalog — are read by the rule each cites, with a revision of the row alone, its spacing normalized; a row citing no rule, and a table under any other heading, are not read. (`OutRows`) |
 | `RPSCR-B45` | A spec's Dependencies table is no dependency of the map — a spec precedes the code, and the files a unit imports are declared where the import is —; the table is still read for the migration that removes it. |
 | `RPSCR-B46` | A dependency that is no import — `@dep[<kind>]: <name>` on the line that calls it — is read with its kind and name, apart from the import flags. (`CodeDep`) |
+| `RPSCR-B47` | A navigation flag may carry `@dormant` with a colon and its reason after it: the call is kept for a feature not turned on, and the flag is read with that reason. (`Navigation`) |
 | `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants

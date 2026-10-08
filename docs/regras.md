@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:a716cccc392294b9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:b64aee3c5e916008 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4835,6 +4835,8 @@ abra a página dela em `camadas/`.
 
 - [NCGNV-B07 — A screen navigates from its own files and from every file they reach along the dependency chain — the components it renders, transitively —, stopping at a file another screen specifies: a navigation call flagged in a component counts for each screen that renders it, in `nav-matches-spec`, `nav-reachable` and the navigation edges. (`screenFiles`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
 
+- [NCGNV-B08 — A dormant navigation — its flag carrying `@dormant` and a reason — annotates its call and is no edge: no screen that renders the component leads anywhere by it, in `nav-matches-spec`, `nav-reachable` and the map, until the marker is removed.](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
+
 ### [OBHNB — ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit)
 
 - [OBHNB-B01 — A node that carries the trigger and does not appear in the demanded file fails, and the verdict carries the declared REASON for the duty.](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit)
@@ -8282,6 +8284,8 @@ abra a página dela em `camadas/`.
 - [RPSCR-B45 — A spec's Dependencies table is no dependency of the map — a spec precedes the code, and the files a unit imports are declared where the import is —; the table is still read for the migration that removes it.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B46 — A dependency that is no import — `@dep[<kind>]: <name>` on the line that calls it — is read with its kind and name, apart from the import flags. (`CodeDep`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B47 — A navigation flag may carry `@dormant` with a colon and its reason after it: the call is kept for a feature not turned on, and the flag is read with that reason. (`Navigation`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

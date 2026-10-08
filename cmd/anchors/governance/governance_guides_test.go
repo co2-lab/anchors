@@ -658,7 +658,7 @@ func TestGuides_theFlagsBesideTheCode(t *testing.T) {
 		}
 	}
 	nav := guideOut(t, "navigation")
-	for _, want := range []string{"### In", "### Out", "| Rule | Destination | Action |", "navigation.goBack()", "@navigates: HOMEH, GOALG", "nav-annotated", "nav-matches-spec", "nav-symmetric", "nav-reachable", "entry: [Home]", "{{ with navigation }}", "anchors map nav"} {
+	for _, want := range []string{"### In", "### Out", "| Rule | Destination | Action |", "navigation.goBack()", "@navigates: HOMEH, GOALG", "nav-annotated", "nav-matches-spec", "nav-symmetric", "nav-reachable", "entry: [Home]", "{{ with navigation }}", "anchors map nav", "@dormant: plan mode is off"} {
 		if !strings.Contains(nav, want) {
 			t.Errorf("the navigation guide lacks %q", want)
 		}

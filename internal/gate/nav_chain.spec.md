@@ -43,6 +43,7 @@ A call is read by a pattern — the dialect's `navigation_call`, its destination
 | `NCGNV-B05` | The fixer writes the navigation flag of each unflagged call whose route names one screen of the app, and leaves a back navigation and a dynamic route to the author. (`fixNavFlags`) |
 | `NCGNV-B06` | On a line ending in a JSX tag — where text after `>` is rendered — the fixer writes the flag as a block comment right after the navigation call's closing parenthesis, inside its expression, and the flag is read there; a call whose end it cannot find is left to the author. Elsewhere the flag is appended to the line. (`navCallEnd`) |
 | `NCGNV-B07` | A screen navigates from its own files and from every file they reach along the dependency chain — the components it renders, transitively —, stopping at a file another screen specifies: a navigation call flagged in a component counts for each screen that renders it, in `nav-matches-spec`, `nav-reachable` and the navigation edges. (`screenFiles`) |
+| `NCGNV-B08` | A dormant navigation — its flag carrying `@dormant` and a reason — annotates its call and is no edge: no screen that renders the component leads anywhere by it, in `nav-matches-spec`, `nav-reachable` and the map, until the marker is removed. |
 
 ## Errors
 

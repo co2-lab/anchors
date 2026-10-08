@@ -186,3 +186,29 @@ func TestNavChain_aComponentNavigatesForItsScreens(t *testing.T) {
 		t.Errorf("Home's flags do not cross into GoalDetail through Home's file: %v %s", v, msg)
 	}
 }
+
+func TestNavChain_aDormantNavigationIsNoEdge(t *testing.T) {
+	t.Run("NCGNV-B08: A dormant navigation is no edge", func(t *testing.T) {})
+	root, g, cfg := navProject(t)
+	card := "navigation.navigate('Lonely') // @navigates: LNLYS @dormant: the plan mode is not on yet\n"
+	if err := os.MkdirAll(filepath.Join(root, "s/components"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "s/components/Card.tsx"), []byte(card), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "s/HomeScreen.tsx"), []byte("navigation.navigate('GoalDetail') // @navigates: GLDTG\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g.Nodes = append(g.Nodes, mapx.Node{ID: "s/components/Card.tsx", Kind: mapx.KindCode, FileCode: "CARDC"})
+	g.Edges = append(g.Edges, mapx.Edge{From: "s/HomeScreen.tsx", To: "s/components/Card.tsx", Type: mapx.EdgeDependsOn})
+	screensMu.Lock()
+	delete(screensCache, root)
+	screensMu.Unlock()
+	if v, msg := checkNavMatchesSpec("", navNode(g, "s/HomeScreen.spec.md"), root, g, cfg); v != Pass {
+		t.Errorf("Home inherits no dormant edge: %v %s", v, msg)
+	}
+	if v, msg := checkNavAnnotated(card, mapx.Node{ID: "s/components/Card.tsx", Kind: mapx.KindCode}, root, g, cfg); v == Fail {
+		t.Errorf("the dormant call is annotated: %s", msg)
+	}
+}
