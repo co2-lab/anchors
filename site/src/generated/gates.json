@@ -574,6 +574,10 @@
     "collapsed": true,
     "items": [
       {
+        "label": "cross-unit-citation",
+        "slug": "docs/gates/cross-unit-citation"
+      },
+      {
         "label": "dep-declared",
         "slug": "docs/gates/dep-declared"
       },

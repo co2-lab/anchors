@@ -361,13 +361,13 @@ func TestReviewGuideCarriesAnchoredConformancePoints(t *testing.T) {
 	if !slices.Contains(i18n.AllTranslations("section.title.compliance_points"), strings.TrimPrefix(heading, "## ")) {
 		t.Errorf("%q is not a heading the guide-checklist gate recognises", heading)
 	}
-	for i := 1; i <= 18; i++ {
+	for i := 1; i <= 19; i++ {
 		if code := "REV-CK" + itoa(i) + ":"; !strings.Contains(review, code) {
 			t.Errorf("point %s is missing — the numbering has a gap", code)
 		}
 	}
-	if strings.Contains(review, "REV-CK19:") {
-		t.Error("a 19th point appeared: extend this test and its anchors together")
+	if strings.Contains(review, "REV-CK20:") {
+		t.Error("a 20th point appeared: extend this test and its anchors together")
 	}
 	body := review[:at]
 	anchors := map[string]string{
@@ -386,6 +386,7 @@ func TestReviewGuideCarriesAnchoredConformancePoints(t *testing.T) {
 		"REV-CK16": "walk its variations, or stop at the first draft?",
 		"REV-CK17": "state the INTENT, or the mechanism?",
 		"REV-CK18": "FIX carries its rule",
+		"REV-CK19": "name another unit by its code?",
 	}
 	for ck, anchor := range anchors {
 		if !strings.Contains(body, anchor) {

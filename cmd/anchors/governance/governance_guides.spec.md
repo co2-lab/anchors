@@ -38,7 +38,7 @@ The review and work guides are also the two that tell an agent what to do with w
 | `GVGDG-B04` | Registering this package adds exactly `guide`, `audit`, `governs` and `compliance` to the root. |
 | `GVGDG-B05` | The review guide teaches that only the reviewer the claim assigned counts, only with a line posted after the assignment, that the last line wins, and that a line inside a code block is an example, not a verdict. |
 | `GVGDG-B06` | The review guide says the reviewer does not move the card: the checks move it to `ready-to-review` and the merge to `ready-to-test`, and a wrong state costs more than a late one. |
-| `GVGDG-B07` | The review guide carries a conformance points section, under a heading the `guide-checklist` gate recognises, with points `REV-CK1` to `REV-CK18` and no gap, each anchored in the prose above the list, and says the list is not a substitute for the checks. |
+| `GVGDG-B07` | The review guide carries a conformance points section, under a heading the `guide-checklist` gate recognises, with points `REV-CK1` to `REV-CK19` and no gap, each anchored in the prose above the list, and says the list is not a substitute for the checks. |
 | `GVGDG-B08` | The work guide teaches the claim (`anchors next`, with `ANCHORS_SESSION` declared) before the board order, and why: a card that never enters the review column leaves the next agent finding it empty. |
 | `GVGDG-B09` | The work guide says pushing is not a stopping point: the agent waits for the CI with `--watch`, and the only exits are green or an escalation. |
 | `GVGDG-B10` | The work guide says the agent does not close the card — the merge does — and what closing early breaks. |

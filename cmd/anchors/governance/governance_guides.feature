@@ -59,7 +59,7 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Given the review guide as anchors guide review prints it
     When its conformance points are read
     Then the heading "## Pontos de conformidade" is one the guide-checklist gate recognises
-    And the points run from REV-CK1 to REV-CK18 with no gap, each with its anchor in the prose above the list
+    And the points run from REV-CK1 to REV-CK19 with no gap, each with its anchor in the prose above the list
 
   @GVGDG-B08 @unit-level
   Scenario: The work guide teaches the claim as the first step

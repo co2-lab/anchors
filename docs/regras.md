@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:19cc07ba7ff729da — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:84df074653538e83 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1349,7 +1349,7 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-B06 — The review guide says the reviewer does not move the card: the checks move it to `ready-to-review` and the merge to `ready-to-test`, and a wrong state costs more than a late one.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
-- [GVGDG-B07 — The review guide carries a conformance points section, under a heading the `guide-checklist` gate recognises, with points `REV-CK1` to `REV-CK18` and no gap, each anchored in the prose above the list, and says the list is not a substitute for the checks.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+- [GVGDG-B07 — The review guide carries a conformance points section, under a heading the `guide-checklist` gate recognises, with points `REV-CK1` to `REV-CK19` and no gap, each anchored in the prose above the list, and says the list is not a substitute for the checks.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B08 — The work guide teaches the claim (`anchors next`, with `ANCHORS_SESSION` declared) before the board order, and why: a card that never enters the review column leaves the next agent finding it empty.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -3736,6 +3736,10 @@ abra a página dela em `camadas/`.
 - [CNHNC-E02 — REF[CNHNC-B09]: a count pattern that does not compile is the configuration failure B09 answers: the gate fails carrying the regex error](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code)
 
 - [CNHNC-E03 — A file the glob matches cannot be read while occurrences of a pattern are counted.](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code)
+
+### [CRUCT — CrossUnitCitation — a rule of another unit a spec cites lives in the product](camadas/gate.md#cruct--crossunitcitation--a-rule-of-another-unit-a-spec-cites-lives-in-the-product)
+
+- [CRUCT-B01 — A spec citing a rule of another unit's spec that realizes no product rule — no `@realizes` on the rule's line — fails, naming each code and the lines it is cited on; a cited rule that realizes the product passes; the navigation sections and their subsections — a reference —, a line realizing the product, an alias, a revision and a retired rule are no citation, and a spec citing none passes. (`checkCrossUnitCitation`)](camadas/gate.md#cruct--crossunitcitation--a-rule-of-another-unit-a-spec-cites-lives-in-the-product)
 
 ### [DCGDP — DependencyChain — every import flagged with the code it uses, and every symbol with who uses it](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 

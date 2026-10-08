@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:91af546090a099c8 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:afc90336e1560685 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 84 unidades e 1374 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 85 unidades e 1375 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -438,6 +438,21 @@ to any human reader opening the document.
 - **CNHNC-E02** — REF[CNHNC-B09]: a count pattern that does not compile is the configuration failure B09 answers: the gate fails carrying the regex error
 
 - **CNHNC-E03** — A file the glob matches cannot be read while occurrences of a pattern are counted.
+
+
+## CRUCT — CrossUnitCitation — a rule of another unit a spec cites lives in the product
+
+A spec may **reference** another unit — point at its identity, as a screen's Navigation names
+the screen it leads to — and may **cite** another unit's rule by its code. What it cites is
+content two units share, though, and a shared rule lives in the product doctrine, which comes
+first: the cited rule realizes a doctrine rule, so neither spec watches the other — both
+follow the product above them (DESIGN-dependencies-out-of-the-spec.md, DOOSD-D02, D04, D05).
+The gate names each cited rule of another unit that realizes no product rule; informative by
+default. A prose naming another screen without its code is a judgment, asked in the review
+guide.
+
+
+- **CRUCT-B01** — A spec citing a rule of another unit's spec that realizes no product rule — no `@realizes` on the rule's line — fails, naming each code and the lines it is cited on; a cited rule that realizes the product passes; the navigation sections and their subsections — a reference —, a line realizing the product, an alias, a revision and a retired rule are no citation, and a spec citing none passes. (`checkCrossUnitCitation`)
 
 
 ## DCGDP — DependencyChain — every import flagged with the code it uses, and every symbol with who uses it

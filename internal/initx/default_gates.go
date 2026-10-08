@@ -749,6 +749,12 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Name: "code-reference-valid", ID: "code-reference-valid", On: []string{"spec"}, Check: "code-reference-valid",
 			Blocking: config.Bool(false), Measures: "every code the spec cites exists in the project",
 		})
+		// A spec uses no other unit's content: what two units share lives in the product,
+		// which each realizes. A navigation names a screen — a reference, not a citation.
+		gates = append(gates, config.Gate{
+			Name: "cross-unit-citation", ID: "cross-unit-citation", On: []string{"spec"}, Check: "cross-unit-citation",
+			Blocking: config.Bool(false), Measures: "the spec cites no rule of another unit — a shared rule lives in the product",
+		})
 	}
 
 	if chosen["spec"] && chosen["feature"] {

@@ -304,6 +304,8 @@
   "gate.dependency_honored.skip_not_spec": "not a spec — only a spec could carry a Dependencies table",
   "gate.dependency_honored.table": "the spec still declares %d dependency row(s) in a table. A spec precedes the code: the files a unit imports are declared where the import is, by `@dep:` in the code and the tests. Run `anchors migrate` to remove the table and rewrite the `DEPn` a rule cites",
   "gate.dep_chain.kind_undeclared": "line %d flags `@dep[%s]: %s`, a kind the project does not declare — add it to `dependency_kinds:` in anchors.yaml, or use a declared one",
+  "gate.cross_unit.skip_not_spec": "not a spec — only a spec cites a unit",
+  "gate.cross_unit.cites": "the spec cites %d rule(s) of other units that live in no product doctrine: %s. Citing another unit's rule by its code is right; what two units share lives in the product, which comes first: realize a doctrine rule on the cited rule's line (`@realizes`), so neither spec watches the other",
   "gate.vr_states.skip_no_code": "the spec carries no identity code",
   "gate.vr_states.skip_no_spec": "no spec beside the unit's main file",
   "gate.mutation.nothing_to_mutate": "the mutation tool measured this file at its revision and generated no mutant — there is nothing to mutate",

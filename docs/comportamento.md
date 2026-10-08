@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:34de9cbd80ca567c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:73c92f6b8e608c7a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3389,6 +3389,8 @@ teste prova.
 - [Only files are counted, never directories](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B14`
 
 - [An unreadable file fails the pattern count naming it](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-E03`
+
+- [A cited rule of another unit must realize the product; references are no citation](camadas/gate.md#cruct--crossunitcitation--a-rule-of-another-unit-a-spec-cites-lives-in-the-product) `CRUCT-B01`
 
 - [The imports are read by the dialect's pattern and resolved to files of the map](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B01`
 

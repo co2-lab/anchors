@@ -5,7 +5,7 @@
 
 # Dependencies out of the spec — declared where the import is, in every artifact that imports
 
-> IN PROGRESS — W01 (v0.1.303), W02 and W03 (v0.1.305) and W04's kinds delivered; the spec-to-spec finding waits on DOOSD-Q03; approved on 2026-10-08. The spec comes before the code, so it cannot hold what the code
+> IN PROGRESS — W01 (v0.1.303), W02 and W03 (v0.1.305) and W04 delivered; approved on 2026-10-08. The spec comes before the code, so it cannot hold what the code
 > produces: the files a unit imports and the methods it calls are born with the implementation.
 > They are declared where the import happens — in the code, in the tests, in any artifact that
 > imports —, by the `@dep:` flag on the import line, and the spec's Dependencies table goes.
@@ -80,41 +80,10 @@ and that relation is declared nowhere (DNDDP-D02 left the tests out).
 | --- | --- | --- |
 | `DOOSD-D01` | Where is a dependency declared? | Where the import is, in every artifact that imports — code, tests, support, flows —; never in the spec, which precedes the code (the user, 2026-10-08). |
 | `DOOSD-D02` | May a spec rely on another unit? | Only through the product: the shared rule lives in the product doctrine, which comes first, and each spec realizes it; specs never cite each other, so none has to watch the other to stay valid (the user, 2026-10-08). |
+| `DOOSD-D04` | Is a screen's Navigation In/Out a spec depending on other specs? | No: it is a **reference** — it points at another screen's identity and uses nothing of its content — and a reference is allowed. What goes through the product is a **citation**: a spec using another unit's content, a rule or a field of it (the user, 2026-10-08). |
+| `DOOSD-D05` | Which citations does a gate charge? | A spec may cite another unit's rule by its code (`WLLTW-B03`), and the cited rule must realize a rule of the product doctrine — `cross-unit-citation` checks it. A prose naming another screen without its code is a judgment, asked in the review guide (`REV-CK19`) (the user, 2026-10-08). |
 | `DOOSD-D03` | What the code reaches that is no import — a table, an external API, a queue? | A `@dep` too, with a kind the project declares, flagged where it is called: the map gains the kind and later uses without a second mechanism (the user, 2026-10-08). |
 
 ## Open Decisions
 
-| Code | Question | Proposed |
-| --- | --- | --- |
-| `DOOSD-Q03` | A screen's spec names the screens it leads to and comes from (Navigation In/Out, DNDDP) — a spec citing other specs, which `nav-symmetric` keeps consistent across them. Is that the reference D02 allows only through the product, or a reference of another nature? | Another nature: a navigation names a screen's identity, not its rules, and a screen keeps its meaning whatever the other screen's rules say. The spec-to-spec finding of W04 leaves the navigation tables out, and charges only a rule or a field of another unit cited in a spec. |
-
-## What the implementation taught
-
-- **W01, measured.** On a jokenpo clone, `--fix` flagged every import of the tests:
-  `dep-declared` 88 → 0, `used-by-declared` 45 → 0; on a MIF clone 1746 → 0 and 773 → 0, once
-  the forms tests import with were read: an inline import bound whole, a `require(…)`'s member
-  and a destructuring's `A: B`. `evidence-fresh`,
-  `mock-stamped` and `tests-pass` unchanged on both.
-- **A symbol only a test imported gains its first `@used-by:` line**, which moves the lines of
-  the file: its line coverage waits for the next run (11 files on jokenpo, 83 on MIF). One
-  run per project, the day it adopts the chain on its tests.
-- **`typeof import('./x')` brings the module, not its default.** MIF's tests type their mocks
-  with it, and reading it as the default asked a `@used-by:` of an `export default` that does
-  not exist — 303 symbols no fixer could flag. An import bound whole names no symbol, like
-  `import * as`.
-- **A migration that rewrites a spec must carry its evidence.** Taking the table out changed
-  80 specs of jokenpo, and with them the revision their scenarios were proven at: 73 failed
-  `scenario-coverage` until the migration carried what held at each spec's revision, as
-  `check --fix` does. Taking a table out proves nothing new.
-- **What the migration leaves is the author's, and it says so.** On jokenpo: 80 tables and
-  480 `DEPn` out of the rules' uses; 34 specs left with rules whose only use was a `DEPn` — every
-  one named by the migration, and no other new failure. The rows that named no file (Cognito,
-  a push service) and the data origins citing a `DEPn` are named too: what a datum comes from,
-  and an external dependency, are the author's to say (W04 gives the latter a kind).
-- **This repository** carried 221 tables; two rows named no file of it (the flag library, git).
-- **Kinds, W04.** `@dep[<kind>]: <name>` on a call that is no import; the kinds the project
-  declares in `dependency_kinds:`; the file's resources in the map (`db:transactions`) — on the
-  node, since a resource is no file of the map; `anchors map deps --kind db` lists who reaches
-  each. `dep-honored` charges only an undeclared kind: which calls reach a resource is the
-  author's to flag, as no pattern of a language can tell.
-
+none

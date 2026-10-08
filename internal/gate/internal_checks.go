@@ -71,6 +71,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"scenario-letter-declared":        checkScenarioLetterDeclared,
 	"spec-feature-match":              checkSpecFeatureMatch,
 	"code-reference-valid":            checkCodeReferenceValid,
+	"cross-unit-citation":             checkCrossUnitCitation,
 	"scenario-asserts":                checkScenarioAsserts,
 	"domain-declared":                 checkDomainDeclared,
 	"rule-uses-declared":              checkRuleUsesDeclared,

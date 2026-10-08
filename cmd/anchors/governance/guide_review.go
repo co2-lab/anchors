@@ -91,6 +91,15 @@ together. The rule states what must hold ("the body is everything the test runs"
 FIX carries its rule: the defect is a rule that was not written, so the PR that fixes it
 adds the rule — and the invariant it is one case of — with its scenario and its test.
 
+### Does the spec name another unit by its code?
+
+A spec may point at another unit — a screen it leads to, a unit whose rule it follows. When
+it does so in PROSE ("as the wallet screen computes it"), the reference is a guess the map
+cannot follow: name the unit by its code (` + "`WLLTW`" + `, ` + "`WLLTW-B03`" + `). And a rule of
+another unit a spec cites is content both share: it lives in the product doctrine, realized
+by each (` + "`cross-unit-citation`" + ` checks the cited rule; whether a sentence leans on another
+unit without saying so is yours to see).
+
 ### Does the code realize the rule, or only cite it?
 
 The ` + "`regra-cumprida`" + ` gate already asks that of an AI, and its verdict is in the
@@ -278,6 +287,8 @@ These are the ones no script reaches.
   is proven by any test of that code, right or wrong
 - REV-CK18: a fix carries its rule — the PR that fixes a defect adds the rule it broke, and
   the invariant it is one case of, with scenario and test, not the code change alone
+- REV-CK19: a spec names another unit by its code, never only in prose — and what it takes
+  from another unit's rule is a rule of the product doctrine both realize
 
 ### The revision (tag: spec, plan)
 

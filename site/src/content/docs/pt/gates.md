@@ -180,6 +180,7 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 
 | Gate | Confronta | O que mede |
 | --- | --- | --- |
+| [`cross-unit-citation`](/pt/docs/gates/cross-unit-citation/) | `spec` | The spec cites no rule of another unit — a shared rule lives in the product |
 | [`dep-declared`](/pt/docs/gates/dep-declared/) | `code` `test` | Every import of a governed file carries `@dep:` with the code of the file it uses, or `@no-dep: <reason>` |
 | [`dep-honored`](/pt/docs/gates/dep-honored/) | `code` `test` | Every `@dep:` flag names the code of the file its import resolves to |
 | [`nav-annotated`](/pt/docs/gates/nav-annotated/) | `code` | Every navigation call — back and reset included — carries `@navigates:` naming the screen it leads to, or `@no-nav: <reason>` |
