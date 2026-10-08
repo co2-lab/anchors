@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:e482f25a069ff9a7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:91af546090a099c8 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 84 unidades e 1373 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 84 unidades e 1374 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -474,6 +474,8 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 - **DCGDP-B06** — A re-export declares the names it lists — `export { X } from`, `export type { A, B }`, or a list spanning lines —, and the fixer writes each name's used-by flag above the list, naming its symbol in parentheses; an inline import (`import('…').Name`) brings the member it reads and carries its dependency flag on its line. (`declarationLine`)
 
 - **DCGDP-B07** — Every artifact that imports takes part in the chain — code, tests, test support, flows —: a test's imports carry the dependency flag like the code's, a flow composing another (`runFlow:`, inline or by `file:`, relative to the flow) imports it, the fixer writes the flag in each artifact's own comment, and — when the used-by gate confronts tests (`on:` holds `test`) — a symbol a test imports lists the test in its used-by flag; with the gate on code alone, the used-by flags list the code that imports the symbol, as before. (`chainUnit`)
+
+- **DCGDP-B08** — A kinded dependency flag (`@dep[<kind>]: <name>`) is no import: `dep-honored` asks only that its kind is one the project declares in `dependency_kinds:`, naming the line, the kind and the name when it is not.
 
 
 ## DEPHN — DependencyHonored — a spec declares no dependency: the code does

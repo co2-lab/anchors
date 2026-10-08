@@ -1178,3 +1178,11 @@ func TestOutRows_eachNavigationRowWithItsOwnRevision(t *testing.T) {
 		t.Errorf("no Out heading, no rows: %v", got)
 	}
 }
+
+func TestKindedDep_readWithItsKindAndName(t *testing.T) {
+	t.Run("RPSCR-B46: A kinded dependency is read with its kind and name", func(t *testing.T) {})
+	got := extractCodeDeps([]byte("await db.query(sql) // @dep[db]: transactions\nimport { a } from './a' // @dep: AAAAA\n"))
+	if len(got) != 2 || got[0].Kind != "db" || got[0].Name != "transactions" || got[0].Code != "" || got[1].Code != "AAAAA" || got[1].Kind != "" {
+		t.Errorf("got %+v", got)
+	}
+}

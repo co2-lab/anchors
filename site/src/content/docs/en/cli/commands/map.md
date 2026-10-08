@@ -44,17 +44,19 @@ The dependency tree of a file: what it uses, or who uses it (--up).
 
 ```text
 Prints the dependency tree of a file, by the depends-on edges of the map — the ones the
-code's `@dep:` flags declare and the ones the specs' Dependencies tables declare:
+code's `@dep:` flags declare:
 
   anchors map deps TOKNS              — what the file of code TOKNS uses, down the tree
   anchors map deps src/theme/tokens.ts --up   — who uses it, up the tree
   anchors map deps ARSCR --depth 2    — two levels
+  anchors map deps --kind db          — each database resource the code reaches, and the files
+                                        that reach it (`@dep[db]: <name>`)
 ```
 
 #### Usage
 
 ```bash
-anchors map deps <CODE|file> [flags]
+anchors map deps <CODE|file> | --kind <kind> [flags]
 ```
 
 #### Flags
@@ -62,6 +64,7 @@ anchors map deps <CODE|file> [flags]
 | Flag | Default | What it does |
 | --- | --- | --- |
 | `--depth` | `0` | levels to print (0 = all) |
+| `--kind` |  | list the resources of a kind (`db`, `api`…) and the files that reach each |
 | `--root` | `.` | project root |
 | `--up` |  | who uses the file, instead of what it uses |
 

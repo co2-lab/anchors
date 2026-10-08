@@ -2,7 +2,7 @@
 # @anchors
 #   code: BLFTA
 #   ref: GRBLG
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @GRBLG
@@ -189,3 +189,9 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Given a screen flagging a dependency on the tokens file, one on a code nobody owns, a waiver, a navigation to a spec's code with its rule, and one to a code nobody owns
     When the map is built
     Then there is a declared depends-on to the tokens file with its symbols and a navigates-to to the spec with its rule, and no other edge from those flags
+
+  @GRBLG-B27 @unit-level
+  Scenario: A file's kinded dependencies are its resources in the map
+    Given a file flagging the transactions table twice and the Stripe API
+    When the map is built
+    Then its node carries api:stripe and db:transactions, once each

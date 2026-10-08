@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTC
 #   ref: CNFGO
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @CNFGO
@@ -447,3 +447,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a gate with no duplicates key, one with duplicates false, and one with duplicates true
     When each is asked whether it confronts repeats
     Then the first and the third do, the second does not
+
+  @CNFGO-B66 @unit-level
+  Scenario: dependency_kinds declares the kinds of the dependencies that are no import
+    Given a config declaring the kinds db and api
+    When it is loaded
+    Then its dependency kinds are db and api, in order

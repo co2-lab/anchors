@@ -1461,10 +1461,13 @@ func GovernedTreeChanges(root string, cfg *config.Config) ([]string, error) {
 
 // CodeDep is a `@dep:` flag on an import line (see File.CodeDeps).
 type CodeDep struct {
-	Code    string   // the used file's own code; empty for a waiver
-	Symbols []string // what the import line brings, by name
-	Line    int      // 1-based
-	Waiver  string   // the reason of `@no-dep:`, for a waived import
+	Code string // the used file's own code; empty for a waiver
+	// Kind and Name: what the code reaches that is no import — `@dep[db]: transactions` on
+	// the line that calls it. The kinds are the project's (`dependency_kinds:`).
+	Kind, Name string
+	Symbols    []string // what the import line brings, by name
+	Line       int      // 1-based
+	Waiver     string   // the reason of `@no-dep:`, for a waived import
 }
 
 // UsedBy is a `@used-by:` flag above an exported symbol (see File.UsedBy).
@@ -1484,7 +1487,9 @@ type Navigation struct {
 
 var (
 	codeDepRE = regexp.MustCompile(`@dep:\s*([A-Z0-9]+)\b`)
-	noDepRE   = regexp.MustCompile(`@no-dep:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
+	// kindedDepRE is a dependency that is no import: `@dep[<kind>]: <name>`.
+	kindedDepRE = regexp.MustCompile(`@dep\[([a-z][a-z0-9-]*)\]:\s*([^\s*]+)`)
+	noDepRE     = regexp.MustCompile(`@no-dep:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
 	// usedByRE: the codes, and the symbol in parentheses when the flag stands above an
 	// export list — `// @used-by: ARNAA (Budget)` — where the next line names several.
 	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([A-Za-z_$][\w$]*)\s*\))?\s*(?:\*/|-->)?\s*$`)
@@ -1563,11 +1568,15 @@ var defaultExportRE = regexp.MustCompile(`^\s*export\s+default\b|^\s*module\.exp
 // extractCodeDeps reads the `@dep:` and `@no-dep:` flags, one per import line. The flags
 // are comment text, read in any dialect: a line that carries one is the import it flags.
 func extractCodeDeps(content []byte) []CodeDep {
-	if !strings.Contains(string(content), "@dep:") && !strings.Contains(string(content), "@no-dep:") {
+	if !strings.Contains(string(content), "@dep:") && !strings.Contains(string(content), "@no-dep:") && !strings.Contains(string(content), "@dep[") {
 		return nil
 	}
 	var out []CodeDep
 	for i, line := range strings.Split(string(content), "\n") {
+		if m := kindedDepRE.FindStringSubmatch(line); m != nil {
+			out = append(out, CodeDep{Kind: m[1], Name: strings.TrimRight(m[2], ",;"), Line: i + 1})
+			continue
+		}
 		if m := codeDepRE.FindStringSubmatch(line); m != nil {
 			out = append(out, CodeDep{Code: m[1], Symbols: importSymbols(line), Line: i + 1})
 			continue

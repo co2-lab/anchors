@@ -19,16 +19,19 @@ func newMapDepsCmd() *cobra.Command {
 	var root string
 	var up bool
 	var depth int
+	var kind string
 	cmd := &cobra.Command{
-		Use:   "deps <CODE|file>",
+		Use:   "deps <CODE|file> | --kind <kind>",
 		Short: "The dependency tree of a file: what it uses, or who uses it (--up)",
 		Long: `Prints the dependency tree of a file, by the depends-on edges of the map — the ones the
-code's ` + "`@dep:`" + ` flags declare and the ones the specs' Dependencies tables declare:
+code's ` + "`@dep:`" + ` flags declare:
 
   anchors map deps TOKNS              — what the file of code TOKNS uses, down the tree
   anchors map deps src/theme/tokens.ts --up   — who uses it, up the tree
-  anchors map deps ARSCR --depth 2    — two levels`,
-		Args: cobra.ExactArgs(1),
+  anchors map deps ARSCR --depth 2    — two levels
+  anchors map deps --kind db          — each database resource the code reaches, and the files
+                                        that reach it (` + "`@dep[db]: <name>`" + `)`,
+		Args: cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
@@ -37,6 +40,15 @@ code's ` + "`@dep:`" + ` flags declare and the ones the specs' Dependencies tabl
 			g, err := mapx.Load(filepath.Join(absRoot, mapx.DefaultPath))
 			if err != nil {
 				return fmt.Errorf("load map: %w (run `anchors map build`)", err)
+			}
+			if kind != "" {
+				for _, l := range ResourceUsers(g, kind) {
+					fmt.Fprintln(cmd.OutOrStdout(), l)
+				}
+				return nil
+			}
+			if len(args) == 0 {
+				return fmt.Errorf("name a code or a file, or a kind with --kind")
 			}
 			start := resolveDepsStart(g, args[0])
 			if start == "" {
@@ -51,7 +63,39 @@ code's ` + "`@dep:`" + ` flags declare and the ones the specs' Dependencies tabl
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().BoolVar(&up, "up", false, "who uses the file, instead of what it uses")
 	cmd.Flags().IntVar(&depth, "depth", 0, "levels to print (0 = all)")
+	cmd.Flags().StringVar(&kind, "kind", "", "list the resources of a kind (`db`, `api`…) and the files that reach each")
 	return cmd
+}
+
+// ResourceUsers are, for a kind, each resource of it the code reaches and the files that
+// reach it — `name` then `  CODE path` lines —, by name.
+func ResourceUsers(g *mapx.Graph, kind string) []string {
+	users := map[string][]string{}
+	for _, n := range g.Nodes {
+		for _, r := range n.Resources {
+			k, name, ok := strings.Cut(r, ":")
+			if !ok || k != kind {
+				continue
+			}
+			code := n.FileCode
+			if code == "" {
+				code = "-"
+			}
+			users[name] = append(users[name], "  "+code+" "+n.ID)
+		}
+	}
+	names := make([]string, 0, len(users))
+	for name := range users {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	var out []string
+	for _, name := range names {
+		sort.Strings(users[name])
+		out = append(out, kind+":"+name)
+		out = append(out, users[name]...)
+	}
+	return out
 }
 
 // resolveDepsStart is the file a code or a path names: a file's own code first, then a

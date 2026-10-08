@@ -60,6 +60,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			SharedCode:    f.SharedCode,
 			Needs:         f.Needs,
 			OutRows:       f.OutRows,
+			Resources:     resourcesOf(f),
 		})
 	}
 	assertedRows(g, files)
@@ -76,6 +77,24 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 
 	sortGraph(g)
 	return g
+}
+
+// resourcesOf are the resources a file's kinded dependency flags name, `kind:name`, sorted.
+func resourcesOf(f scan.File) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, d := range f.CodeDeps {
+		if d.Kind == "" || d.Name == "" {
+			continue
+		}
+		k := d.Kind + ":" + d.Name
+		if !seen[k] {
+			seen[k] = true
+			out = append(out, k)
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 // assertedRows ties each test to the navigation rows it asserts: the Out rows of the rules

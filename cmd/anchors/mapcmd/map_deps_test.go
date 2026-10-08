@@ -43,3 +43,14 @@ func TestDepsTree(t *testing.T) {
 		}
 	}
 }
+
+func TestResourceUsers(t *testing.T) {
+	t.Run("MDCMP-B03: The resources of a kind and the files that reach them", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "a.ts", FileCode: "AAAAA", Resources: []string{"db:transactions"}},
+		{ID: "b.ts", FileCode: "BBBBB", Resources: []string{"api:stripe", "db:transactions"}},
+	}}
+	if got := strings.Join(ResourceUsers(g, "db"), "\n"); got != "db:transactions\n  AAAAA a.ts\n  BBBBB b.ts" {
+		t.Errorf("got:\n%s", got)
+	}
+}

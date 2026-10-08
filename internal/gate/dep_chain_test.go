@@ -245,3 +245,14 @@ func TestDepChain_everyImporter(t *testing.T) {
 		t.Errorf("a fixture's symbol lists the test that imports it:\n%s", got)
 	}
 }
+
+func TestDepChain_kindedDependencies(t *testing.T) {
+	t.Run("DCGDP-B08: A kinded dependency needs a declared kind, and no import", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	cfg.DependencyKinds = []string{"db"}
+	content := "await db.query(sql) // @dep[db]: transactions\nqueue.push(job) // @dep[queue]: jobs\n"
+	v, msg := checkDepHonored(content, mapx.Node{ID: "src/ui/Arena.tsx", Kind: mapx.KindCode, FileCode: "ARSCR"}, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "queue") || strings.Contains(msg, "transactions") || strings.Contains(msg, "imports nothing") {
+		t.Errorf("only the undeclared kind is named, and no kinded flag is taken for an import: %v %s", v, msg)
+	}
+}

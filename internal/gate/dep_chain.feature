@@ -49,3 +49,8 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     When dep-declared runs on the test, the flow's imports are read, and check --fix runs the chain's fixers
     Then the test's imports are charged and flagged, the flow's compositions are flagged with its own comment, and the fixture's symbol lists the test
 
+  @DCGDP-B08 @unit-level
+  Scenario: A kinded dependency needs a declared kind, and no import
+    Given a file flagging `@dep[db]: transactions` and `@dep[queue]: jobs` on its calls, in a project declaring the kind db
+    When dep-honored runs
+    Then only the queue flag is named, for its undeclared kind

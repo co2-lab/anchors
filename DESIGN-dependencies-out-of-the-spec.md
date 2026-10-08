@@ -5,7 +5,7 @@
 
 # Dependencies out of the spec — declared where the import is, in every artifact that imports
 
-> IN PROGRESS — W01 (v0.1.303), W02 and W03 delivered; approved on 2026-10-08. The spec comes before the code, so it cannot hold what the code
+> IN PROGRESS — W01 (v0.1.303), W02 and W03 (v0.1.305) and W04's kinds delivered; the spec-to-spec finding waits on DOOSD-Q03; approved on 2026-10-08. The spec comes before the code, so it cannot hold what the code
 > produces: the files a unit imports and the methods it calls are born with the implementation.
 > They are declared where the import happens — in the code, in the tests, in any artifact that
 > imports —, by the `@dep:` flag on the import line, and the spec's Dependencies table goes.
@@ -84,7 +84,9 @@ and that relation is declared nowhere (DNDDP-D02 left the tests out).
 
 ## Open Decisions
 
-none
+| Code | Question | Proposed |
+| --- | --- | --- |
+| `DOOSD-Q03` | A screen's spec names the screens it leads to and comes from (Navigation In/Out, DNDDP) — a spec citing other specs, which `nav-symmetric` keeps consistent across them. Is that the reference D02 allows only through the product, or a reference of another nature? | Another nature: a navigation names a screen's identity, not its rules, and a screen keeps its meaning whatever the other screen's rules say. The spec-to-spec finding of W04 leaves the navigation tables out, and charges only a rule or a field of another unit cited in a spec. |
 
 ## What the implementation taught
 
@@ -110,4 +112,9 @@ none
   a push service) and the data origins citing a `DEPn` are named too: what a datum comes from,
   and an external dependency, are the author's to say (W04 gives the latter a kind).
 - **This repository** carried 221 tables; two rows named no file of it (the flag library, git).
+- **Kinds, W04.** `@dep[<kind>]: <name>` on a call that is no import; the kinds the project
+  declares in `dependency_kinds:`; the file's resources in the map (`db:transactions`) — on the
+  node, since a resource is no file of the map; `anchors map deps --kind db` lists who reaches
+  each. `dep-honored` charges only an undeclared kind: which calls reach a resource is the
+  author's to flag, as no pattern of a language can tell.
 

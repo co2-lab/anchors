@@ -303,6 +303,7 @@
   "gate.duplicates.found": "declared more than once: %s. Each declaration needs its own key: renumber or merge the repeat (`duplicates: false` on the gate switches this off)",
   "gate.dependency_honored.skip_not_spec": "not a spec — only a spec could carry a Dependencies table",
   "gate.dependency_honored.table": "the spec still declares %d dependency row(s) in a table. A spec precedes the code: the files a unit imports are declared where the import is, by `@dep:` in the code and the tests. Run `anchors migrate` to remove the table and rewrite the `DEPn` a rule cites",
+  "gate.dep_chain.kind_undeclared": "line %d flags `@dep[%s]: %s`, a kind the project does not declare — add it to `dependency_kinds:` in anchors.yaml, or use a declared one",
   "gate.vr_states.skip_no_code": "the spec carries no identity code",
   "gate.vr_states.skip_no_spec": "no spec beside the unit's main file",
   "gate.mutation.nothing_to_mutate": "the mutation tool measured this file at its revision and generated no mutant — there is nothing to mutate",

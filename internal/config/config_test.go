@@ -1767,3 +1767,11 @@ func TestNavigationEntry(t *testing.T) {
 		t.Errorf("got %+v %v", c.Navigation, err)
 	}
 }
+
+func TestDependencyKinds(t *testing.T) {
+	t.Run("CNFGO-B66: dependency_kinds declares the kinds of the dependencies that are no import", func(t *testing.T) {})
+	c, err := load(t, "version: 7\nlayers: {}\ndependency_kinds: [db, api]\n")
+	if err != nil || strings.Join(c.DependencyKinds, ",") != "db,api" {
+		t.Errorf("got %+v %v", c.DependencyKinds, err)
+	}
+}

@@ -18,3 +18,9 @@ Feature: MapDeps — the dependency tree of a file
     Given the same map
     When a file is named by its code, its unit's code, its path, and a name nobody owns
     Then each resolves to its file, and the last to none
+
+  @MDCMP-B03 @unit-level
+  Scenario: The resources of a kind and the files that reach them
+    Given two files reaching the transactions table and one reaching the Stripe API
+    When the db resources are listed
+    Then transactions is listed with both files, and Stripe is not

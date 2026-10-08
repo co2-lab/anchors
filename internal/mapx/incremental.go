@@ -178,6 +178,11 @@ func (g *Graph) standIns(read []scan.File) []scan.File {
 		if n.CodeDeclarado {
 			f.HeaderCode = n.Code
 		}
+		for _, r := range n.Resources {
+			if kind, name, ok := strings.Cut(r, ":"); ok {
+				f.CodeDeps = append(f.CodeDeps, scan.CodeDep{Kind: kind, Name: name})
+			}
+		}
 		out = append(out, f)
 	}
 	return out

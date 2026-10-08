@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:3a2efb3d0e0820d5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:34de9cbd80ca567c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1530,6 +1530,8 @@ teste prova.
 
 - [A file is named by its own code, its unit's code or its path](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file) `MDCMP-B02`
 
+- [The resources of a kind and the files that reach them](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file) `MDCMP-B03`
+
 - [The merged map is written onto our side's file](layers/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-B01`
 
 - [A node created only on the other branch reaches the merged map](layers/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-B02`
@@ -2976,6 +2978,8 @@ teste prova.
 
 - [A gate confronts the repeats of what it declares unless switched off](layers/config.md#cnfgo-b65--a-gate-confronts-the-repeats-of-what-it-declares-unless-switched-off) `CNFGO-B65`
 
+- [dependency_kinds declares the kinds of the dependencies that are no import](layers/config.md#cnfgo-b66--dependency-kinds-declares-the-kinds-of-the-dependencies-that-are-no-import) `CNFGO-B66`
+
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](layers/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -3399,6 +3403,8 @@ teste prova.
 - [A re-export declares the names it lists, and an inline import brings the member it reads](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B06`
 
 - [Tests, test support and flows take part in the chain](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B07`
+
+- [A kinded dependency needs a declared kind, and no import](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B08`
 
 - [A spec still carrying a Dependencies table diverges, pointing at the migration](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 
@@ -7004,6 +7010,8 @@ teste prova.
 
 - [The @dep and @navigates flags become edges to the file whose own code they name](layers/mapa.md#grblg-b26--the-dep-and-navigates-flags-become-edges-to-the-file-whose-own-code-they-name) `GRBLG-B26`
 
+- [A file's kinded dependencies are its resources in the map](layers/mapa.md#grblg-b27--a-files-kinded-dependencies-are-its-resources-in-the-map) `GRBLG-B27`
+
 - [A test that was never ingested has no verdict](layers/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 
 - [The test's own change expires its evidence](layers/mapa.md#evfra-b02--the-tests-own-change-expires-its-evidence) `EVFRA-B02`
@@ -7493,6 +7501,8 @@ teste prova.
 - [A spec's Out rows are read by rule, each with a revision of the row alone](layers/scan.md#rpscr-b44--a-specs-out-rows-are-read-by-rule-each-with-a-revision-of-the-row-alone) `RPSCR-B44`
 
 - [A spec's Dependencies table is no dependency of the map](layers/scan.md#rpscr-b45--a-specs-dependencies-table-is-no-dependency-of-the-map) `RPSCR-B45`
+
+- [A kinded dependency is read with its kind and name](layers/scan.md#rpscr-b46--a-kinded-dependency-is-read-with-its-kind-and-name) `RPSCR-B46`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

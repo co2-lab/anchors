@@ -248,6 +248,9 @@ type Node struct {
 	// OutRowKey. Its evidence is stamped with each row's revision and goes stale when that
 	// row changes; a test that only passes through the screen cites no row of it.
 	Asserts []string `yaml:"asserts,omitempty"`
+	// Resources: what the file reaches that is no file of the project — `db:transactions`,
+	// `api:stripe.charges` —, from its `@dep[<kind>]:` flags.
+	Resources []string `yaml:"resources,omitempty"`
 }
 
 // FailureSignal é a ocorrência observada de UMA falha declarada.

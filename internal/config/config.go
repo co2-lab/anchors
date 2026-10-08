@@ -172,6 +172,10 @@ type Config struct {
 	// Navigation is the app's navigation as the project declares it: the initial routes,
 	// from which every screen is reachable (DESIGN-dependencies-and-navigation.md).
 	Navigation *Navigation `yaml:"navigation,omitempty"`
+	// DependencyKinds are the kinds of what the code reaches that is no import — `db`, `api`,
+	// `queue` —, flagged where it is called (`@dep[db]: transactions`). A kind not declared here
+	// is a finding of dep-honored.
+	DependencyKinds []string `yaml:"dependency_kinds,omitempty"`
 	// Obligations são as OBRIGAÇÕES TRANSVERSAIS do projeto: "todo nó que carrega o
 	// atributo P deve aparecer em Q". Ver Obligation.
 	Obligations []Obligation `yaml:"obligations,omitempty"`

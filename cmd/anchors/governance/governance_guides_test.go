@@ -651,7 +651,7 @@ func TestSpecGuide_loadingUnitsHaveALoadError(t *testing.T) {
 func TestGuides_theFlagsBesideTheCode(t *testing.T) {
 	t.Run("GVGDG-B24: The header guide names the flags beside the code, and the navigation guide shows the screen's In and Out and the flag on every call", func(t *testing.T) {})
 	header := guideOut(t, "header")
-	for _, want := range []string{"@dep: TOKNS", "@no-dep: <reason>", "@used-by: DRSSD (DeletionStatus)", "@navigates: GLDTG [HOMEH-A01]", "@no-nav: <reason>", "dep-declared", "used-by-declared", "anchors guide navigation"} {
+	for _, want := range []string{"@dep: TOKNS", "@dep[db]: transactions", "dependency_kinds", "@no-dep: <reason>", "@used-by: DRSSD (DeletionStatus)", "@navigates: GLDTG [HOMEH-A01]", "@no-nav: <reason>", "dep-declared", "used-by-declared", "anchors guide navigation"} {
 		if !strings.Contains(header, want) {
 			t.Errorf("the header guide lacks %q", want)
 		}

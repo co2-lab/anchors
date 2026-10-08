@@ -7,6 +7,7 @@ package mapx
 import (
 	"reflect"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -980,5 +981,18 @@ func TestBuild_flagEdgesByCode(t *testing.T) {
 		if e.From == "ui/Arena.tsx" && (e.Type == EdgeDependsOn || e.Type == EdgeNavigatesTo) && e.To != "theme/tokens.ts" && e.To != "ui/Wallet.spec.md" {
 			t.Errorf("a code no file owns makes no edge: %+v", e)
 		}
+	}
+}
+
+func TestBuild_resourcesOfAFile(t *testing.T) {
+	t.Run("GRBLG-B27: A file's kinded dependencies are its resources in the map", func(t *testing.T) {})
+	g := Build([]scan.File{{Path: "pay.ts", Kind: "code", CodeDeps: []scan.CodeDep{
+		{Kind: "db", Name: "transactions"}, {Kind: "api", Name: "stripe"}, {Kind: "db", Name: "transactions"}, {Code: "XXXXX"}}}}, &config.Config{}, nil)
+	if r := g.Node("pay.ts").Resources; strings.Join(r, ",") != "api:stripe,db:transactions" {
+		t.Errorf("resources = %v", r)
+	}
+	again := g.standIns(nil)
+	if len(again) != 1 || len(again[0].CodeDeps) != 2 {
+		t.Errorf("a stand-in keeps the file's resources: %+v", again)
 	}
 }

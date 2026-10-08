@@ -163,7 +163,7 @@ silent coverage hole.
 
 ## Flags beside the code: the dependency and navigation chain
 
-Outside the header, on the line they speak of, five flags tie files to files by their own
+Outside the header, on the line they speak of, six flags tie files to files by their own
 'code:' — never by path, so a rename breaks nothing. Each is a comment in the file's dialect;
 'anchors check --fix' writes the ones the code proves, and the gates of the chain confront
 them with the code (they are named in each line below).
@@ -173,6 +173,10 @@ them with the code (they are named in each line below).
   import that resolves to a file of the project; 'dep-honored' asks it to name the code of
   that file. A package of the ecosystem takes none.
     import { PALETTE } from './tokens' // ` + flagAt + `dep: TOKNS
+- '@dep[<kind>]: <name>' — what the code reaches that is no import (a table of the database,
+  an external API, a queue), on the line that calls it. The kinds are the project's
+  ('dependency_kinds:' in anchors.yaml); 'anchors map deps --kind <kind>' lists who reaches each.
+    await db.query(sql) // ` + flagAt + `dep[db]: transactions
 - '` + flagAt + `no-dep: <reason>' — on the import line instead: this import stays out of the chain
   (types only, a test double…).
 - '@used-by: <CODE>[, <CODE>...]' — in the comment right above each symbol another file

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:e7ea2228189cad88 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:19cc07ba7ff729da — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1373,7 +1373,7 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-B23 — The spec guide asks a unit that loads data for four states at least — loading, empty, load error and loaded —, the load error its own and never written as "no data" or "not found", its failure a rule naming the source it answers (`failure-declared`), each fallible call reading its error beside it (`failure-handled`), and points at the screen preset that writes them.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
-- [GVGDG-B24 — The header guide names the flags beside the code — the dependency flag on each import line and its waiver, the used-by flag above each imported symbol (naming its symbol above an export list), the navigation flag on each call and its waiver —, the gates that confront each, and that the fixer writes what the code proves; the navigation guide, a subcommand of its own, shows a screen spec's In and Out tables, the flag on every navigation call, a back navigation included, the four navigation gates, the entry routes, and the page and command that show the map. Their examples are written so this repository does not read them as its own flags.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+- [GVGDG-B24 — The header guide names the flags beside the code — the dependency flag on each import line and its waiver, the kinded dependency on a call that is no import (`@dep` with a kind the project declares), the used-by flag above each imported symbol (naming its symbol above an export list), the navigation flag on each call and its waiver —, the gates that confront each, and that the fixer writes what the code proves; the navigation guide, a subcommand of its own, shows a screen spec's In and Out tables, the flag on every navigation call, a back navigation included, the four navigation gates, the entry routes, and the page and command that show the map. Their examples are written so this repository does not read them as its own flags.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B25 — The spec guide says a spec names no file, method or file code — the files a unit imports are declared where the import is, in the code and the tests —, that a rule another unit shares lives in the product doctrine and is realized, not cited, and that the rule uses cite fields and the spec's own codes.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -1688,6 +1688,8 @@ abra a página dela em `camadas/`.
 - [MDCMP-B01 — The tree is printed one file per line, `CODE path`, indented by level: down the files it uses, or with `--up` the files that use it, each level sorted, `--depth` limiting the levels; a file already on the branch is marked `↺` and not walked again, so a cycle ends. (`DepsTree`)](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file)
 
 - [MDCMP-B02 — The file is named by its own code first, then by its unit's code (its code file), then by its path; a name that is none of them is refused. (`resolveDepsStart`)](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file)
+
+- [MDCMP-B03 — `--kind <kind>` lists each resource of that kind the code reaches, by name, and under each the files that reach it, by their codes. (`ResourceUsers`)](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file)
 
 - [MDCMP-E01 — REF[MDCMP-B02]: a name that is no code nor file of the map is refused, naming it](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file)
 
@@ -3181,6 +3183,8 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B65 — A gate confronts the repeats of what it declares unless the project wrote `duplicates: false` on it (`DuplicatesOn`).](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
+- [CNFGO-B66 — `dependency_kinds:` declares the kinds of what the code reaches that is no import — `db`, `api`, `queue` —, read as a list. (`DependencyKinds`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
@@ -3748,6 +3752,8 @@ abra a página dela em `camadas/`.
 - [DCGDP-B06 — A re-export declares the names it lists — `export { X } from`, `export type { A, B }`, or a list spanning lines —, and the fixer writes each name's used-by flag above the list, naming its symbol in parentheses; an inline import (`import('…').Name`) brings the member it reads and carries its dependency flag on its line. (`declarationLine`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B07 — Every artifact that imports takes part in the chain — code, tests, test support, flows —: a test's imports carry the dependency flag like the code's, a flow composing another (`runFlow:`, inline or by `file:`, relative to the flow) imports it, the fixer writes the flag in each artifact's own comment, and — when the used-by gate confronts tests (`on:` holds `test`) — a symbol a test imports lists the test in its used-by flag; with the gate on code alone, the used-by flags list the code that imports the symbol, as before. (`chainUnit`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+
+- [DCGDP-B08 — A kinded dependency flag (`@dep[<kind>]: <name>`) is no import: `dep-honored` asks only that its kind is one the project declares in `dependency_kinds:`, naming the line, the kind and the name when it is not.](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 ### [DEPHN — DependencyHonored — a spec declares no dependency: the code does](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
@@ -7739,6 +7745,8 @@ abra a página dela em `camadas/`.
 
 - [GRBLG-B26 — The code's flags become edges to the file whose own code they name: a dependency flag is a declared `depends-on` carrying the import's symbols, a navigation flag a `navigates-to` carrying the rule that triggers it; a code no file owns makes no edge, and a waiver makes none. (`flagEdges`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
+- [GRBLG-B27 — A file's kinded dependency flags become its resources in the map — `kind:name`, once each, sorted —, and an incremental rebuild keeps those of the files it does not read again. (`Resources`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
+
 - [GRBLG-B23 — Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-I01 — The same files and configuration always build the same graph, whatever order the files arrive in.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
@@ -8266,6 +8274,8 @@ abra a página dela em `camadas/`.
 - [RPSCR-B44 — A spec's Out rows — the table under its Out heading, in any language of the catalog — are read by the rule each cites, with a revision of the row alone, its spacing normalized; a row citing no rule, and a table under any other heading, are not read. (`OutRows`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B45 — A spec's Dependencies table is no dependency of the map — a spec precedes the code, and the files a unit imports are declared where the import is —; the table is still read for the migration that removes it.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B46 — A dependency that is no import — `@dep[<kind>]: <name>` on the line that calls it — is read with its kind and name, apart from the import flags. (`CodeDep`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

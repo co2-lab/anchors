@@ -312,3 +312,9 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a spec with a Dependencies table naming a file
     When its dependencies are read for the map, and then for the migration
     Then the map gets none, and the migration reads the row
+
+  @RPSCR-B46 @unit-level
+  Scenario: A kinded dependency is read with its kind and name
+    Given a line flagged `@dep[db]: transactions` and an import flagged with a code
+    When the dependency flags are read
+    Then the first has kind db and name transactions, and the second its code

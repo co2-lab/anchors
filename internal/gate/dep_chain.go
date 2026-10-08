@@ -291,6 +291,14 @@ func checkDepHonored(content string, n mapx.Node, root string, g *mapx.Graph, cf
 	imps := ImportsOf(content, n.ID, d, g)
 	var wrong []string
 	for _, f := range all {
+		if f.Kind != "" {
+			// What the code reaches that is no import: the kind must be one the project
+			// declares; the call is the author's to name.
+			if !contains(cfg.DependencyKinds, f.Kind) {
+				wrong = append(wrong, i18n.T("gate.dep_chain.kind_undeclared", f.Line, f.Kind, f.Name))
+			}
+			continue
+		}
 		if f.Code == "" {
 			continue // a waiver names no code
 		}
