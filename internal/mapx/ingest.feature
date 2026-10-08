@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTD
 #   ref: SGINA
-#   updated_at: 2026-10-05
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @SGINA
@@ -163,6 +163,7 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a map with a spec, a code file and a test file
     When the revs of the spec and the code are refreshed, one of them unchanged, with a path the map does not have
     Then only the changed one is counted, both carry the tree's rev, and the test keeps its own
+    And a code file whose used-by line only lost a code keeps the test reaching it fresh
 
   @SGINA-B23 @unit-level
   Scenario: A run time Anchors measured is recorded on the node

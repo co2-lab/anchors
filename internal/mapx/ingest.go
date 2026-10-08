@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // A ingestão de sinais de teste no grafo (o Anchors consome o artefato do runner e o
@@ -922,15 +924,33 @@ func (g *Graph) RecordRunSeconds(id, key string, seconds float64) {
 // just ended ran against the tree as it is, not against the map's photo of it: a spec
 // edited after the last `map build` still carries its old rev here, and a proof stamped
 // with it reads as stale once the map is rebuilt — the run proved the new text, and the
-// map said nobody had. A node the tree no longer has keeps its rev. (`RefreshRevs`)
-func (g *Graph) RefreshRevs(revs map[string]string) (changed int) {
+// map said nobody had. A node the tree no longer has keeps its rev. A node whose evidence
+// revisions held carries its evidence, as a rebuild does (CarryUnchangedEvidence): moved
+// here, the next build saw no revision change and carried nothing (reported from MIF: 113
+// tests stale after a `@used-by` line lost a code). (`RefreshRevs`)
+func (g *Graph) RefreshRevs(files []scan.File) (changed int) {
+	at := make(map[string]int, len(g.Nodes))
 	for i := range g.Nodes {
-		if r, ok := revs[g.Nodes[i].ID]; ok && r != "" && r != g.Nodes[i].Rev {
-			g.Nodes[i].Rev = r
-			changed++
-		}
+		at[g.Nodes[i].ID] = i
 	}
-	return changed
+	moved := &Graph{}
+	var idx []int
+	var evs []scan.File
+	for _, f := range files {
+		i, ok := at[f.Path]
+		if !ok || f.Rev == "" || f.Rev == g.Nodes[i].Rev {
+			continue
+		}
+		n := g.Nodes[i]
+		n.setEvidence(f.Rev, f.Evidence)
+		moved.Nodes = append(moved.Nodes, n)
+		idx, evs = append(idx, i), append(evs, f)
+	}
+	CarryUnchangedEvidence(moved, g)
+	for k, i := range idx {
+		g.Nodes[i].setEvidence(evs[k].Rev, evs[k].Evidence)
+	}
+	return len(idx)
 }
 
 // NoCoverageLines are the lines of the mutants no test ran, as the signal keeps them.

@@ -9,6 +9,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 func ingestGraph() *Graph {
@@ -686,7 +688,7 @@ func TestRecordRunSeconds(t *testing.T) {
 func TestRefreshRevs(t *testing.T) {
 	t.Run("SGINA-B24: The tree's revs replace the map's", func(t *testing.T) {})
 	g := &Graph{Nodes: []Node{{ID: "a.spec.md", Rev: "old"}, {ID: "a.go", Rev: "same"}, {ID: "a_test.go", Rev: "t1"}}}
-	if n := g.RefreshRevs(map[string]string{"a.spec.md": "new", "a.go": "same", "gone.go": "x"}); n != 1 {
+	if n := g.RefreshRevs([]scan.File{{Path: "a.spec.md", Rev: "new"}, {Path: "a.go", Rev: "same"}, {Path: "gone.go", Rev: "x"}}); n != 1 {
 		t.Errorf("only the changed node is counted, got %d", n)
 	}
 	want := []string{"new", "same", "t1"}
@@ -697,6 +699,18 @@ func TestRefreshRevs(t *testing.T) {
 	}
 	if len(g.Nodes) != 3 {
 		t.Errorf("a path the map does not have adds no node, got %d nodes", len(g.Nodes))
+	}
+
+	// A used-by line that lost a code: the evidence held, and the test reaching the file
+	// stays fresh.
+	before := []byte("// @used-by: AAAAA, BBBBB\nexport const a = 1\n")
+	after := []byte("// @used-by: AAAAA\nexport const a = 1\n")
+	h := &Graph{Nodes: []Node{{ID: "a.ts", Kind: KindCode}, {ID: "a_test.ts", Kind: KindTest, Rev: "t1"}}}
+	h.Nodes[0].setEvidence(scan.ShortHash(before), scan.EvidenceOf("code", before, nil))
+	h.Nodes[1].Signal = &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.ts": scan.ShortHash(before)}}
+	h.RefreshRevs([]scan.File{{Path: "a.ts", Rev: scan.ShortHash(after), Evidence: scan.EvidenceOf("code", after, nil)}})
+	if h.Nodes[0].Rev != scan.ShortHash(after) || h.EvidenceStaleFor("a_test.ts") != nil {
+		t.Errorf("a flag-only edit refreshed before the build keeps the closure, got %+v", h.Nodes)
 	}
 }
 

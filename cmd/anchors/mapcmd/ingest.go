@@ -160,11 +160,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 						}
 					}
 					if files, werr := scan.Walk(absRoot, cfg); werr == nil {
-						revs := make(map[string]string, len(files))
-						for _, f := range files {
-							revs[f.Path] = f.Rev
-						}
-						g.RefreshRevs(revs)
+						g.RefreshRevs(files)
 					}
 				}
 			}

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:2420bf4c2c492b2f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:66da9907f10baf84 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7917,7 +7917,7 @@ abra a página dela em `camadas/`.
 
 - [SGINA-B30 — A suite that ran none of a file's lines at the current revision leaves the file's line and branch coverage when another suite ran it: its instrumented lines and branches say nothing about which run; with no suite having run the file, the coverage is none of its lines. (`unionCoverage`, `unionBranches`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
-- [SGINA-B24 — The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. (`RefreshRevs`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
+- [SGINA-B24 — The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. A node whose evidence revisions held carries its evidence, as a rebuild does — the tests reaching it stay fresh. (`RefreshRevs`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B23 — A run time Anchors measured itself is recorded on the node under the suite; a node the map does not have is ignored. (`RecordRunSeconds`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
