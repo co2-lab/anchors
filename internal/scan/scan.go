@@ -1489,7 +1489,7 @@ var (
 	exportListRE = regexp.MustCompile(`^\s*export\s+(?:type\s+)?\{([^}]*)\}`)
 	// navigatesRE: the flag at the end of the line, or a block comment inside it — after the
 	// call on a JSX line, where text after the tag would render (`/* @navigates: X */}>`).
-	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-[A-Z]\d{2})\s*\])?\s*(?:\*/.*|-->.*)?$`)
+	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-(?:[A-Z]\d{2}|DS-[A-Za-z0-9_-]+))\s*\])?\s*(?:\*/.*|-->.*)?$`)
 	noNavRE     = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
 	// importSymbolsRE reads what an import line brings: the names inside braces, or the
 	// default name right after the keyword.

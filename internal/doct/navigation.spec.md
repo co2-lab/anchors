@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCNAV
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: doct
 -->
 # Navigation — the app's navigation map and the code's dependency chain, compiled into pages
@@ -38,6 +38,7 @@ compiles those edges into two pages a reader opens instead of the map:
 | `DCNAV-B01` | `navigation` lists the screen specs by name and every edge the code's navigation flags declare, each end taken to its screen — the spec itself, which a flag names by its code, or the spec that specifies the file —, with the rule that triggers it; a screen leading to itself is no edge. (`NavMap`, `NavScreen`, `NavEdge`, `fnNavigation`) |
 | `DCNAV-B02` | A screen an entry names is marked as an entry, and a screen no entry reaches along the edges is marked unreached; with no entry declared, none is. The flowchart draws an entry as a stadium, an unreached screen dashed, each edge labelled with its rule. (`Mermaid`) |
 | `DCNAV-B03` | `ScaffoldNavigation` and `ScaffoldDependencies`: the pages' templates, in the project's language, are seeded when a spec is a screen and when a code file declares a dependency, and compile into one row per screen with where it leads, and one row per file of the chain with what it uses and who uses it. (`DepFile`, `DepLink`, `fnDependencies`) |
+| `DCNAV-B04` | A navigation flagged in a component is drawn from every screen that renders it along the dependency chain, transitively and not past another screen's file, and counts for what the entries reach. |
 
 ## Errors
 

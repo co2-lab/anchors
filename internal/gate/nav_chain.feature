@@ -42,3 +42,9 @@ Feature: NavigationChain — every navigation flagged with the screen it leads t
     Given two JSX lines whose onPress navigates, one with nested parentheses in its arguments
     When check --fix runs the navigation fixer
     Then each flag is a block comment right after its call, nothing follows the tags, and nav-annotated reads them
+
+  @NCGNV-B07 @unit-level
+  Scenario: A component's navigation counts for every screen that renders it
+    Given Home rendering a section that renders a card navigating to Lonely, and GoalDetail's code importing Home's file
+    When nav-reachable and nav-matches-spec run
+    Then Lonely is reached through Home, Home's Out table is asked for it, and GoalDetail is not charged with Home's flags

@@ -147,3 +147,42 @@ func TestNavChain_theFixerNeverWritesIntoJSXText(t *testing.T) {
 		t.Errorf("the block flags are read: %v %s", v, msg)
 	}
 }
+
+func TestNavChain_aComponentNavigatesForItsScreens(t *testing.T) {
+	t.Run("NCGNV-B07: A component's navigation counts for every screen that reaches it along the dependency chain, transitively, and not past another screen's file", func(t *testing.T) {})
+	root, g, cfg := navProject(t)
+	// Lonely is reached only through a card Home renders, inside a section it renders too.
+	files := map[string]string{
+		"s/HomeScreen.tsx":         "navigation.navigate('GoalDetail') // @navigates: GLDTG\n",
+		"s/components/Section.tsx": "export const Section = 1\n",
+		"s/components/Card.tsx":    "navigation.navigate('Lonely') // @navigates: LNLYS\n",
+	}
+	for rel, body := range files {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g.Nodes = append(g.Nodes, mapx.Node{ID: "s/components/Section.tsx", Kind: mapx.KindCode, FileCode: "SECTC"},
+		mapx.Node{ID: "s/components/Card.tsx", Kind: mapx.KindCode, FileCode: "CARDC"})
+	g.Edges = append(g.Edges,
+		mapx.Edge{From: "s/HomeScreen.tsx", To: "s/components/Section.tsx", Type: mapx.EdgeDependsOn},
+		mapx.Edge{From: "s/components/Section.tsx", To: "s/components/Card.tsx", Type: mapx.EdgeDependsOn},
+		// GoalDetail's code imports Home's file: Home's flags are Home's, not GoalDetail's.
+		mapx.Edge{From: "s/GoalDetailScreen.tsx", To: "s/HomeScreen.tsx", Type: mapx.EdgeDependsOn})
+	screensMu.Lock()
+	delete(screensCache, root)
+	screensMu.Unlock()
+	if v, msg := checkNavReachable("", navNode(g, "s/LonelyScreen.spec.md"), root, g, cfg); v != Pass {
+		t.Errorf("Lonely is reached through the card Home renders: %v %s", v, msg)
+	}
+	v, msg := checkNavMatchesSpec("", navNode(g, "s/HomeScreen.spec.md"), root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "LonelyScreen") {
+		t.Errorf("the card's navigation is Home's, and Home's Out table does not say it: %v %s", v, msg)
+	}
+	if v, msg := checkNavMatchesSpec("", navNode(g, "s/GoalDetailScreen.spec.md"), root, g, cfg); v != Pass {
+		t.Errorf("Home's flags do not cross into GoalDetail through Home's file: %v %s", v, msg)
+	}
+}

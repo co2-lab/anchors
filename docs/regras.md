@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:47a7348ebe0da3bc — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:b5731df2ee72d048 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3445,6 +3445,8 @@ abra a página dela em `camadas/`.
 
 - [DCNAV-B03 — `ScaffoldNavigation` and `ScaffoldDependencies`: the pages' templates, in the project's language, are seeded when a spec is a screen and when a code file declares a dependency, and compile into one row per screen with where it leads, and one row per file of the chain with what it uses and who uses it. (`DepFile`, `DepLink`, `fnDependencies`)](layers/doct.md#dcnav--navigation--the-apps-navigation-map-and-the-codes-dependency-chain-compiled-into-pages)
 
+- [DCNAV-B04 — A navigation flagged in a component is drawn from every screen that renders it along the dependency chain, transitively and not past another screen's file, and counts for what the entries reach.](layers/doct.md#dcnav--navigation--the-apps-navigation-map-and-the-codes-dependency-chain-compiled-into-pages)
+
 ### [OPNAP — OpenAPI — the project's API document, compiled from the specs of its API units](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
 
 - [OPNAP-B01 — Each Endpoint row of a spec is an operation under its path and method, with the operation name, the spec's title as summary and its overview as description, `deprecated` when the row says so, and the spec's parameters, body, responses (a range `4xx` as `4XX`), the error codes and messages of `Error Responses` under each one's status, its security schemes and its limits.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
@@ -4806,6 +4808,8 @@ abra a página dela em `camadas/`.
 - [NCGNV-B05 — The fixer writes the navigation flag of each unflagged call whose route names one screen of the app, and leaves a back navigation and a dynamic route to the author. (`fixNavFlags`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
 
 - [NCGNV-B06 — On a line ending in a JSX tag — where text after `>` is rendered — the fixer writes the flag as a block comment right after the navigation call's closing parenthesis, inside its expression, and the flag is read there; a call whose end it cannot find is left to the author. Elsewhere the flag is appended to the line. (`navCallEnd`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
+
+- [NCGNV-B07 — A screen navigates from its own files and from every file they reach along the dependency chain — the components it renders, transitively —, stopping at a file another screen specifies: a navigation call flagged in a component counts for each screen that renders it, in `nav-matches-spec`, `nav-reachable` and the navigation edges. (`screenFiles`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
 
 ### [OBHNB — ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit)
 
@@ -8245,7 +8249,7 @@ abra a página dela em `camadas/`.
 
 - [RPSCR-B42 — Each used-by flag (`@used-by` with a colon and the codes that use it) is read with the symbol declared on the next lines — `default` above the module's default export (`export default`, `module.exports =`), the one name of an export list that lists one —, or the symbol it names in parentheses after its codes, which a flag above an export list of several names must do. (`UsedBy`, `UsedByIn`, `ExportListNames`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B43 — Each navigation flag (`@navigates` with a colon, the screens' codes and, in brackets, the rule that triggers it) is read with its call's line — its own, or the next one when the flag stands alone on its line —, and each navigation waiver (`@no-nav` with a colon) with its reason. (`Navigation`, `Navigates`, `NavigatesIn`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B43 — Each navigation flag (`@navigates` with a colon, the screens' codes and, in brackets, the rule that triggers it) is read with its call's line — its own, or the next one when the flag stands alone on its line —, and each navigation waiver (`@no-nav` with a colon) with its reason. (`Navigation`, `Navigates`, `NavigatesIn`) The rule may be a data state (`CODE-DS-<name>`), which an Out row can be triggered by.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B44 — A spec's Out rows — the table under its Out heading, in any language of the catalog — are read by the rule each cites, with a revision of the row alone, its spacing normalized; a row citing no rule, and a table under any other heading, are not read. (`OutRows`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

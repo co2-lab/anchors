@@ -298,26 +298,62 @@ func anyIn(xs, ys []string) bool {
 	return false
 }
 
-// flaggedTargets are the screens the `@navigates:` flags of a screen's code name.
+// flaggedTargets are the screens the `@navigates:` flags of a screen's code name — its own
+// files and the components they render (screenFiles).
 func flaggedTargets(s *Screen, root string, idx *screenIndex) map[string]bool {
 	out := map[string]bool{}
 	if idx.g == nil {
 		return out
 	}
-	for _, e := range idx.g.Neighbors(s.Spec).Out {
-		if e.Type != mapx.EdgeSpecifies {
-			continue
-		}
-		b, err := readFile(root, e.To)
+	for _, f := range screenFiles(s, idx) {
+		b, err := readFile(root, f)
 		if err != nil {
 			continue
 		}
-		for _, f := range scan.NavigatesIn(b) {
-			for _, c := range f.Codes {
+		for _, fl := range scan.NavigatesIn(b) {
+			for _, c := range fl.Codes {
 				if t := idx.byCode[c]; t != nil {
 					out[t.Spec] = true
 				}
 			}
+		}
+	}
+	return out
+}
+
+// screenFiles are the code files a screen navigates from: the files its spec specifies, and
+// every file they reach along the `@dep:` chain — a card, a header, a gate overlay, and the
+// components those render —, stopping at a file another screen specifies: a navigation call
+// in a component counts for every screen that renders it (reported from MIF: a card's flags
+// were nobody's, and the screen it alone led to was unreachable).
+func screenFiles(s *Screen, idx *screenIndex) []string {
+	var out []string
+	seen := map[string]bool{}
+	var queue []string
+	for _, e := range idx.g.Neighbors(s.Spec).Out {
+		if e.Type == mapx.EdgeSpecifies && !seen[e.To] {
+			seen[e.To] = true
+			out = append(out, e.To)
+			queue = append(queue, e.To)
+		}
+	}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		for _, e := range idx.g.Neighbors(cur).Out {
+			if e.Type != mapx.EdgeDependsOn || seen[e.To] {
+				continue
+			}
+			seen[e.To] = true
+			n := idx.g.Node(e.To)
+			if n == nil || n.Kind != mapx.KindCode {
+				continue
+			}
+			if other := idx.screenOfNode(e.To); other != nil && other != s {
+				continue
+			}
+			out = append(out, e.To)
+			queue = append(queue, e.To)
 		}
 	}
 	return out

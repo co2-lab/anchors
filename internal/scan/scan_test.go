@@ -1152,6 +1152,9 @@ func TestCodeFlags_depUsedByNavigates(t *testing.T) {
 	}) {
 		t.Errorf("got %+v", got)
 	}
+	if got := extractNavigates([]byte("go() // @navigates: BUGEB [ADDTA-DS-action-metadata]\n")); len(got) != 1 || got[0].Rule != "ADDTA-DS-action-metadata" {
+		t.Errorf("a data state triggers a navigation too: %+v", got)
+	}
 }
 
 func TestOutRows_eachNavigationRowWithItsOwnRevision(t *testing.T) {

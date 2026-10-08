@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:ac53ecb20a998c38 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:89ccf81775e27696 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3122,6 +3122,8 @@ teste prova.
 
 - [ScaffoldNavigation and ScaffoldDependencies are seeded when the app has screens and dependency flags, and compile into the pages](layers/doct.md#dcnav-b03--scaffoldnavigation-and-scaffolddependencies-are-seeded-when-the-app-has-screens-and-dependency-flags-and-compile-into-the-pages) `DCNAV-B03`
 
+- [A component's navigation is drawn from the screens that render it](layers/doct.md#dcnav-b04--a-components-navigation-is-drawn-from-the-screens-that-render-it) `DCNAV-B04`
+
 - [Each Endpoint row of a spec is an operation, with its parameters, body, responses, errors, security and limits](layers/doct.md#opnap-b01--each-endpoint-row-of-a-spec-is-an-operation-with-its-parameters-body-responses-errors-security-and-limits) `OPNAP-B01`
 
 - [A cited contract is a shared schema built from its Domain, in any language](layers/doct.md#opnap-b02--a-cited-contract-is-a-shared-schema-built-from-its-domain-in-any-language) `OPNAP-B02`
@@ -4361,6 +4363,8 @@ teste prova.
 - [The fixer flags a navigation call whose route names one screen, and leaves a back navigation to the author](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B05`
 
 - [On a line ending in a JSX tag the fixer writes the flag where it renders nothing](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B06`
+
+- [A component's navigation counts for every screen that renders it](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B07`
 
 - [A node that carries the trigger and is absent from the demanded file fails](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B01`
 

@@ -114,3 +114,25 @@ func TestNavigation_thePagesAreSeededAndCompiled(t *testing.T) {
 		}
 	}
 }
+
+func TestNavigation_aComponentNavigatesForItsScreens(t *testing.T) {
+	t.Run("DCNAV-B04: A navigation flagged in a component is drawn from every screen that renders it along the dependency chain", func(t *testing.T) {})
+	c := navApp(t)
+	c.Graph.Nodes = append(c.Graph.Nodes, mapx.Node{ID: "s/Card.tsx", Kind: mapx.KindCode, FileCode: "CARDC"})
+	c.Graph.Edges = append(c.Graph.Edges,
+		mapx.Edge{From: "s/HomeScreen.tsx", To: "s/Card.tsx", Type: mapx.EdgeDependsOn},
+		mapx.Edge{From: "s/Card.tsx", To: "s/LonelyScreen.spec.md", Type: mapx.EdgeNavigatesTo, Method: "HOMEH-A02"})
+	m := c.fnNavigation()
+	var edges []string
+	for _, e := range m.Edges {
+		edges = append(edges, e.From.Code+">"+e.To.Code+":"+e.Rule)
+	}
+	if !strings.Contains(strings.Join(edges, " "), "HOMEH>LNLYS:HOMEH-A02") {
+		t.Errorf("the card's navigation is drawn from Home: %v", edges)
+	}
+	for _, s := range m.Screens {
+		if s.Code == "LNLYS" && !s.Reached {
+			t.Error("Lonely is reached through the card")
+		}
+	}
+}

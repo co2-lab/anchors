@@ -24,3 +24,9 @@ Feature: Navigation — the app's navigation map and the code's dependency chain
     Given the app, and Home importing GoalDetail with a dependency flag
     When docs init and docs build run
     Then the navigation page draws the flowchart and the table, and the dependencies page lists who uses whom
+
+  @DCNAV-B04 @unit-level
+  Scenario: A component's navigation is drawn from the screens that render it
+    Given Home rendering a card that navigates to Lonely
+    When navigation is read
+    Then the edge runs from Home to Lonely with its rule, and Lonely is reached

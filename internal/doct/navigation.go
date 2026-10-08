@@ -5,6 +5,7 @@
 package doct
 
 import (
+	"fmt"
 	"path"
 	"sort"
 	"strings"
@@ -59,6 +60,38 @@ func (c *Compiler) fnNavigation() NavMap {
 			}
 		}
 	}
+	// A component's navigation is its screens': every screen whose code reaches the component
+	// along the `@dep:` chain, stopping at another screen's file (as the navigation gates read it).
+	rendered := map[string][]int{} // a code file → the screens that render it
+	deps := map[string][]string{}
+	for _, e := range c.Graph.Edges {
+		if e.Type == mapx.EdgeDependsOn {
+			deps[e.From] = append(deps[e.From], e.To)
+		}
+	}
+	for file, i := range screenOf {
+		rendered[file] = append(rendered[file], i)
+		seen := map[string]bool{file: true}
+		queue := []string{file}
+		for len(queue) > 0 {
+			cur := queue[0]
+			queue = queue[1:]
+			for _, to := range deps[cur] {
+				if seen[to] {
+					continue
+				}
+				seen[to] = true
+				if n := c.Graph.Node(to); n == nil || n.Kind != mapx.KindCode {
+					continue
+				}
+				if j, ok := screenOf[to]; ok && j != i {
+					continue
+				}
+				rendered[to] = append(rendered[to], i)
+				queue = append(queue, to)
+			}
+		}
+	}
 	seen := map[string]bool{}
 	type pair struct{ from, to int }
 	var pairs []pair
@@ -67,27 +100,27 @@ func (c *Compiler) fnNavigation() NavMap {
 		if e.Type != mapx.EdgeNavigatesTo {
 			continue
 		}
-		// A flag names the screen by its code — its spec's —, so an end is the spec itself,
-		// or a file the spec specifies.
-		end := func(id string) (int, bool) {
-			if i, ok := bySpec[id]; ok {
-				return i, true
+		// A flag names the screen by its code — its spec's —, so the destination is the spec
+		// itself, or a file the spec specifies; the origin, each screen that renders the file.
+		to, ok := bySpec[e.To]
+		if !ok {
+			if to, ok = screenOf[e.To]; !ok {
+				continue
 			}
-			i, ok := screenOf[id]
-			return i, ok
 		}
-		from, ok1 := end(e.From)
-		to, ok2 := end(e.To)
-		if !ok1 || !ok2 || from == to {
-			continue
+		froms := rendered[e.From]
+		if i, ok := bySpec[e.From]; ok {
+			froms = append(froms, i)
 		}
-		k := e.From + "\x00" + e.To + "\x00" + e.Method
-		if seen[k] {
-			continue
+		for _, from := range froms {
+			k := fmt.Sprint(from) + "\x00" + fmt.Sprint(to) + "\x00" + e.Method
+			if from == to || seen[k] {
+				continue
+			}
+			seen[k] = true
+			pairs = append(pairs, pair{from, to})
+			rules = append(rules, e.Method)
 		}
-		seen[k] = true
-		pairs = append(pairs, pair{from, to})
-		rules = append(rules, e.Method)
 	}
 	var entries []string
 	if c.Config != nil && c.Config.Navigation != nil {
