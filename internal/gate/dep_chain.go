@@ -332,15 +332,16 @@ var (
 )
 
 // importersOf is the index of the imports of the project's code, built once per map.
-func importersOf(root string, g *mapx.Graph, d config.Dialect) *importerIndex {
+func importersOf(root string, g *mapx.Graph, d config.Dialect, withTests bool) *importerIndex {
 	importersMu.Lock()
 	defer importersMu.Unlock()
-	if idx, ok := importersCache[root]; ok && idx.g == g {
+	key := fmt.Sprint(root, "\x00", withTests)
+	if idx, ok := importersCache[key]; ok && idx.g == g {
 		return idx
 	}
 	idx := &importerIndex{g: g, usage: map[string]map[string]map[string]bool{}}
 	for _, n := range g.Nodes {
-		if !chainUnit(n) || n.FileCode == "" {
+		if !chainUnit(n) || n.FileCode == "" || n.Kind == mapx.KindTest && !withTests {
 			continue
 		}
 		b, err := readFile(root, n.ID)
@@ -362,15 +363,36 @@ func importersOf(root string, g *mapx.Graph, d config.Dialect) *importerIndex {
 			}
 		}
 	}
-	importersCache[root] = idx
+	importersCache[key] = idx
 	return idx
+}
+
+// testsInChain says whether the project put its tests in the chain: the used-by gate
+// confronts tests (`on:` holds `test`). Then a symbol a test imports lists the test; with the
+// gate on code alone, @used-by lists the code that imports it, as before the tests could take
+// part — adopting the chain on the tests is the project's decision, not a version's (reported
+// from MIF: 768 symbols asked for their tests after an upgrade).
+func testsInChain(cfg *config.Config) bool {
+	if cfg == nil {
+		return false
+	}
+	for _, g := range cfg.Gates {
+		if g.Check == "used-by-declared" || g.Name == "used-by-declared" {
+			for _, k := range g.On {
+				if k == "test" {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // UsedByOf is, for a file, who imports each of its symbols — by the importers' codes,
 // sorted.
-func UsedByOf(root, id string, g *mapx.Graph, d config.Dialect) map[string][]string {
+func UsedByOf(root, id string, g *mapx.Graph, d config.Dialect, withTests bool) map[string][]string {
 	out := map[string][]string{}
-	for sym, codes := range importersOf(root, g, d).usage[id] {
+	for sym, codes := range importersOf(root, g, d, withTests).usage[id] {
 		for c := range codes {
 			out[sym] = append(out[sym], c)
 		}
@@ -389,7 +411,7 @@ func checkUsedByDeclared(content string, n mapx.Node, root string, g *mapx.Graph
 	if importPathRE(d) == nil || g == nil {
 		return Pending, i18n.T("gate.dep_chain.pending_no_pattern")
 	}
-	want := UsedByOf(root, n.ID, g, d)
+	want := UsedByOf(root, n.ID, g, d, testsInChain(cfg))
 	have := map[string][]string{}
 	for _, u := range scan.UsedByIn([]byte(content)) {
 		if u.Symbol != "" {
@@ -476,7 +498,7 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 	if importPathRE(d) == nil {
 		return content, false, ""
 	}
-	want := UsedByOf(root, n.ID, g, d)
+	want := UsedByOf(root, n.ID, g, d, testsInChain(fixConfig))
 	lines := strings.Split(content, "\n")
 	flagLine := map[string]int{} // symbol → 0-based line of its flag
 	for _, u := range scan.UsedByIn([]byte(content)) {

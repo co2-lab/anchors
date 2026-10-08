@@ -225,7 +225,15 @@ func TestDepChain_everyImporter(t *testing.T) {
 	if imps := ImportsOf(read(t, root, flow.ID), flow.ID, cfg.DialectFor(), g); len(imps) != 2 || imps[0].Target != "flows/utils/login.yaml" || imps[1].Target != "flows/utils/login.yaml" {
 		t.Errorf("a flow composing another imports it, inline or by file: %+v", imps)
 	}
+	// With the used-by gate on code alone, a test is no importer: adopting the chain on the
+	// tests is the project's decision.
+	codeOnly := *cfg
+	codeOnly.Gates = []config.Gate{{Name: "used-by-declared", Check: "used-by-declared", On: []string{"code"}}}
+	if v, msg := checkUsedByDeclared(read(t, root, "src/test/fixtures.ts"), mapx.Node{ID: "src/test/fixtures.ts", Kind: mapx.KindTest, Support: true, FileCode: "FXTRS"}, root, g, &codeOnly); v == Fail {
+		t.Errorf("with the gate on code alone, the test importing the fixture is not asked for: %s", msg)
+	}
 	gates := []config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code", "test"}}, {Name: "used-by-declared", Check: "used-by-declared", On: []string{"code", "test"}}}
+	cfg.Gates = gates
 	FixWithConfig(gates, g.Nodes, root, g, cfg)
 	if got := read(t, root, test.ID); !strings.Contains(got, "from './Arena' // @dep: ARSCR") || !strings.Contains(got, "fixtures' // @dep: FXTRS") {
 		t.Errorf("the fixer flags a test's imports:\n%s", got)
