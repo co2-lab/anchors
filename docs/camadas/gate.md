@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:d37ae5cb20191c05 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:e40fe052a36f0e10 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 84 unidades e 1367 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 84 unidades e 1368 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2141,6 +2141,8 @@ A call is read by a pattern — the dialect's `navigation_call`, its destination
 - **NCGNV-B04** — `nav-reachable` fails a screen no path reaches from the entry routes — through the Out tables and the code's navigation flags (`NavEdges`) —, and is pending with no entry declared. (`checkNavReachable`)
 
 - **NCGNV-B05** — The fixer writes the navigation flag of each unflagged call whose route names one screen of the app, and leaves a back navigation and a dynamic route to the author. (`fixNavFlags`)
+
+- **NCGNV-B06** — On a line ending in a JSX tag — where text after `>` is rendered — the fixer writes the flag as a block comment right after the navigation call's closing parenthesis, inside its expression, and the flag is read there; a call whose end it cannot find is left to the author. Elsewhere the flag is appended to the line. (`navCallEnd`)
 
 
 ## OBHNB — ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:0f49fde40532e7a3 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a467c2e3d296830a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -4354,6 +4354,8 @@ teste prova.
 
 - [The fixer flags a navigation call whose route names one screen, and leaves a back navigation to the author](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B05`
 
+- [On a line ending in a JSX tag the fixer writes the flag where it renders nothing](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B06`
+
 - [A node that carries the trigger and is absent from the demanded file fails](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B01`
 
 - [A node that carries the trigger and does appear passes](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B02`
@@ -6701,6 +6703,8 @@ teste prova.
 - [A command is sh -c with its arguments](layers/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands) `PSXSH-B03`
 
 - [No shell is an environment error](layers/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands) `PSXSH-E01`
+
+- [A command does not carry the hook's repository](layers/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands) `PSXSH-B04`
 
 - [Words are upper-cased, and one-character and digit-only words are dropped](layers/infra.md#txsmt--textsimilarity--how-close-two-texts-that-should-be-equal-are-weighted-by-what-each-word-discriminates) `TXSMT-B01`
 

@@ -69,5 +69,32 @@ func Command(script string, args ...string) (*exec.Cmd, error) {
 	if err != nil {
 		return nil, err
 	}
-	return exec.Command(sh, append([]string{"-c", script}, args...)...), nil //nolint:gosec // the command is declared by the project
+	c := exec.Command(sh, append([]string{"-c", script}, args...)...) //nolint:gosec // the command is declared by the project
+	c.Env = WithoutRepoEnv(os.Environ())
+	return c, nil
+}
+
+// repoEnv are the variables git exports to a hook that tie it to THIS repository: a command
+// the hook runs — a test suite — that runs git in a directory of its own would otherwise act
+// on the repository being committed. A test's `git commit` in a temporary directory,
+// inheriting `GIT_DIR` from a hook run in a linked worktree, committed to the real repository.
+var repoEnv = []string{"GIT_DIR=", "GIT_WORK_TREE=", "GIT_INDEX_FILE=", "GIT_COMMON_DIR=",
+	"GIT_OBJECT_DIRECTORY=", "GIT_ALTERNATE_OBJECT_DIRECTORIES=", "GIT_PREFIX="}
+
+// WithoutRepoEnv is env without the variables that tie git to the repository a hook runs in.
+func WithoutRepoEnv(env []string) []string {
+	out := make([]string, 0, len(env))
+	for _, kv := range env {
+		keep := true
+		for _, p := range repoEnv {
+			if strings.HasPrefix(kv, p) {
+				keep = false
+				break
+			}
+		}
+		if keep {
+			out = append(out, kv)
+		}
+	}
+	return out
 }

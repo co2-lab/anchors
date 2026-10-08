@@ -16,6 +16,7 @@ import (
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 // fixRepo creates a real temporary git repository holding `rel` with `content`,
@@ -33,7 +34,7 @@ func fixRepo(t *testing.T, rel, content string) string {
 		t.Helper()
 		cmd := exec.Command("git", append([]string{"-C", dir, "-c", "user.name=t", "-c", "user.email=t@t",
 			"-c", "commit.gpgsign=false"}, args...)...)
-		cmd.Env = append(os.Environ(), "GIT_CONFIG_GLOBAL=/dev/null",
+		cmd.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_CONFIG_GLOBAL=/dev/null",
 			"GIT_AUTHOR_DATE=2024-03-05T12:00:00", "GIT_COMMITTER_DATE=2024-03-05T12:00:00")
 		if out, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("git %v: %s", args, out)

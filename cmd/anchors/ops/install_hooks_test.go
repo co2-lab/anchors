@@ -16,6 +16,7 @@ import (
 	"github.com/co2-lab/anchors/internal/testkit"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 // O HOOK PRECISA FUNCIONAR EM WORKTREE, e `$ROOT/.git` não serve.
@@ -456,7 +457,7 @@ func TestHooksRunOnARealCommit(t *testing.T) {
 	run := func(name string, args ...string) (string, error) {
 		c := exec.Command(name, args...)
 		c.Dir = root
-		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
 		out, err := c.CombinedOutput()
 		return string(out), err
 	}

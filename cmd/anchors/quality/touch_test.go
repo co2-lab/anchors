@@ -15,6 +15,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 const touchHeader = "// @anchors\n//   code: CODEX\n//   updated_at: 2026-09-01\n"
@@ -175,7 +176,7 @@ func TestTouch_stagedInAPartialCommit(t *testing.T) {
 			t.Fatal(err)
 		}
 		c := exec.Command("git", "-C", root, "add", "a.ts")
-		c.Env = append(os.Environ(), "GIT_INDEX_FILE="+idx)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_INDEX_FILE="+idx)
 		if out, err := c.CombinedOutput(); err != nil {
 			t.Fatalf("stage in %s: %v %s", idx, err, out)
 		}
@@ -187,7 +188,7 @@ func TestTouch_stagedInAPartialCommit(t *testing.T) {
 	}
 	for _, idx := range []string{temp, real} {
 		c := exec.Command("git", "-C", root, "show", ":a.ts")
-		c.Env = append(os.Environ(), "GIT_INDEX_FILE="+idx)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_INDEX_FILE="+idx)
 		out, _ := c.Output()
 		if !strings.Contains(string(out), "updated_at: 2026-09-25") {
 			t.Errorf("%s must hold the dated a.ts:\n%s", filepath.Base(idx), out)

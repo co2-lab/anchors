@@ -120,3 +120,30 @@ func TestNavChain_reachableAndTheFix(t *testing.T) {
 		t.Errorf("the waived back navigation is left as it is:\n%s", detail)
 	}
 }
+
+func TestNavChain_theFixerNeverWritesIntoJSXText(t *testing.T) {
+	t.Run("NCGNV-B06: On a line ending in a JSX tag the fixer writes the flag as a block comment right after the call, where it renders nothing, and the flag is read there", func(t *testing.T) {})
+	root, g, cfg := navProject(t)
+	jsx := "<Text style={link} onPress={() => navigation.navigate('GoalDetail')}>\n" +
+		"<Pressable onPress={() => go(navigation.navigate('GoalDetail', { id: f(x) }))}>\n"
+	if err := os.WriteFile(filepath.Join(root, "s/HomeScreen.tsx"), []byte(jsx), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	gates := []config.Gate{{Name: "nav-annotated", Check: "nav-annotated", On: []string{"code"}}}
+	FixWithConfig(gates, g.Nodes, root, g, cfg)
+	home := read(t, root, "s/HomeScreen.tsx")
+	for _, want := range []string{
+		"navigation.navigate('GoalDetail') /* @navigates: GLDTG */}>",
+		"navigation.navigate('GoalDetail', { id: f(x) }) /* @navigates: GLDTG */)}>",
+	} {
+		if !strings.Contains(home, want) {
+			t.Errorf("the flag sits after the call, inside the expression — want %q in:\n%s", want, home)
+		}
+	}
+	if strings.Contains(home, "> //") {
+		t.Errorf("nothing is written after the tag:\n%s", home)
+	}
+	if v, msg := checkNavAnnotated(home, navNode(g, "s/HomeScreen.tsx"), root, g, cfg); v != Pass {
+		t.Errorf("the block flags are read: %v %s", v, msg)
+	}
+}

@@ -2,7 +2,7 @@
 # @anchors
 #   code: SHFTS
 #   ref: PSXSH
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @PSXSH
@@ -31,3 +31,9 @@ Feature: Shell — the POSIX shell that runs a project's commands
     Given no sh on PATH, and on Windows no shell beside git
     When the shell is looked up
     Then the error says no POSIX shell was found and how to get one
+
+  @PSXSH-B04 @unit-level
+  Scenario: A command does not carry the hook's repository
+    Given an environment with GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE set, and other variables
+    When a command is made
+    Then the three are gone and the others remain

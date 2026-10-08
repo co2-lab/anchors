@@ -477,11 +477,65 @@ func fixNavFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 		if t == nil || t.Code == "" {
 			continue
 		}
-		lines[c.Line-1] = strings.TrimRight(lines[c.Line-1], " \t") + " " + marker + " @navigates: " + t.Code
+		l := lines[c.Line-1]
+		if code := strings.TrimSpace(cutInlineComment(l)); strings.HasSuffix(code, ">") {
+			// A line ending in a JSX tag: what follows `>` is text the app renders, and a
+			// `// @navigates:` there shows on screen (reported from MIF). The flag goes as a
+			// block comment right after the call, inside its expression; a call whose end is
+			// not found is left to the author.
+			at := navCallEnd(l, navigationCallRE(d))
+			if at < 0 {
+				continue
+			}
+			lines[c.Line-1] = l[:at] + " /* @navigates: " + t.Code + " */" + l[at:]
+		} else {
+			lines[c.Line-1] = strings.TrimRight(l, " \t") + " " + marker + " @navigates: " + t.Code
+		}
 		done = append(done, fmt.Sprintf("%d %s", c.Line, t.Code))
 	}
 	if len(done) == 0 {
 		return content, false, ""
 	}
 	return strings.Join(lines, "\n"), true, i18n.T("gate.fix.nav_written", strings.Join(done, ", "))
+}
+
+// navCallEnd is the index right after the closing parenthesis of the navigation call on a
+// line, or -1: from the call's match, the parentheses are counted outside the strings.
+func navCallEnd(line string, re *regexp.Regexp) int {
+	if re == nil {
+		return -1
+	}
+	m := re.FindStringIndex(line)
+	if m == nil {
+		return -1
+	}
+	open := strings.IndexByte(line[m[0]:], '(')
+	if open < 0 {
+		return -1
+	}
+	depth := 0
+	var quote byte
+	for i := m[0] + open; i < len(line); i++ {
+		c := line[i]
+		if quote != 0 {
+			if c == '\\' {
+				i++
+			} else if c == quote {
+				quote = 0
+			}
+			continue
+		}
+		switch c {
+		case '\'', '"', '`':
+			quote = c
+		case '(':
+			depth++
+		case ')':
+			depth--
+			if depth == 0 {
+				return i + 1
+			}
+		}
+	}
+	return -1
 }

@@ -1487,8 +1487,10 @@ var (
 	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([A-Za-z_$][\w$]*)\s*\))?\s*(?:\*/|-->)?\s*$`)
 	// exportListRE is an export list on one line: `export { X } from '…'`, `export type { A, B }`.
 	exportListRE = regexp.MustCompile(`^\s*export\s+(?:type\s+)?\{([^}]*)\}`)
-	navigatesRE  = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-[A-Z]\d{2})\s*\])?\s*(?:\*/|-->)?\s*$`)
-	noNavRE      = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
+	// navigatesRE: the flag at the end of the line, or a block comment inside it — after the
+	// call on a JSX line, where text after the tag would render (`/* @navigates: X */}>`).
+	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-[A-Z]\d{2})\s*\])?\s*(?:\*/.*|-->.*)?$`)
+	noNavRE     = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
 	// importSymbolsRE reads what an import line brings: the names inside braces, or the
 	// default name right after the keyword.
 	importBracesRE  = regexp.MustCompile(`\{([^}]*)\}`)

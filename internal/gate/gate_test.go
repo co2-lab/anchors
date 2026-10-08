@@ -16,6 +16,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 func TestApplies(t *testing.T) {
@@ -1208,7 +1209,7 @@ func TestChangedSource_updatedAt(t *testing.T) {
 	run := func(args ...string) {
 		t.Helper()
 		c := exec.Command("git", append([]string{"-C", root}, args...)...)
-		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t",
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t",
 			"GIT_CONFIG_GLOBAL=/dev/null", "GIT_AUTHOR_DATE=2026-01-02T12:00:00", "GIT_COMMITTER_DATE=2026-01-02T12:00:00")
 		if out, err := c.CombinedOutput(); err != nil {
 			t.Skipf("git: %v %s", err, out)

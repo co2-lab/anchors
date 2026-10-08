@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:4e72aad12f39a1dc — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:cc40526cf7158a9c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4799,6 +4799,8 @@ abra a página dela em `camadas/`.
 
 - [NCGNV-B05 — The fixer writes the navigation flag of each unflagged call whose route names one screen of the app, and leaves a back navigation and a dynamic route to the author. (`fixNavFlags`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
 
+- [NCGNV-B06 — On a line ending in a JSX tag — where text after `>` is rendered — the fixer writes the flag as a block comment right after the navigation call's closing parenthesis, inside its expression, and the flag is read there; a call whose end it cannot find is left to the author. Elsewhere the flag is appended to the line. (`navCallEnd`)](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
+
 ### [OBHNB — ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit)
 
 - [OBHNB-B01 — A node that carries the trigger and does not appear in the demanded file fails, and the verdict carries the declared REASON for the duty.](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit)
@@ -7394,6 +7396,8 @@ abra a página dela em `camadas/`.
 - [PSXSH-B02 — On Windows with no `sh` on PATH, the shell is the one beside the installed git: `bin\sh.exe` or `usr\bin\sh.exe` under the root three levels above `git --exec-path`.](layers/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands)
 
 - [PSXSH-B03 — A command is `sh -c <script>` with the arguments after it as `$0 $1…`. (`Command`)](layers/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands)
+
+- [PSXSH-B04 — A command runs without the variables git exports to a hook that tie it to the repository being committed (`GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` and their kin): a test suite the hook runs that uses git in a directory of its own acts on that directory, never on the repository; every other variable passes. (`WithoutRepoEnv`)](layers/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands)
 
 - [PSXSH-E01 — No shell on PATH, and on Windows none beside git either](layers/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands)
 

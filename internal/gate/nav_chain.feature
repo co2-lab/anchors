@@ -36,3 +36,9 @@ Feature: NavigationChain — every navigation flagged with the screen it leads t
     Given the same app
     When check --fix runs the navigation fixer
     Then the home's call is flagged with the detail's code, and the detail's waived back navigation stays as it is
+
+  @NCGNV-B06 @unit-level
+  Scenario: On a line ending in a JSX tag the fixer writes the flag where it renders nothing
+    Given two JSX lines whose onPress navigates, one with nested parentheses in its arguments
+    When check --fix runs the navigation fixer
+    Then each flag is a block comment right after its call, nothing follows the tags, and nav-annotated reads them

@@ -16,6 +16,7 @@ import (
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 type syncRepo struct {
@@ -32,7 +33,7 @@ func newSyncRepo(t *testing.T, trackMap bool) syncRepo {
 		t.Helper()
 		c := exec.Command("git", append([]string{"-C", root, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)...)
 		if past {
-			c.Env = append(os.Environ(), "GIT_AUTHOR_DATE=2026-09-01T12:00:00", "GIT_COMMITTER_DATE=2026-09-01T12:00:00")
+			c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_DATE=2026-09-01T12:00:00", "GIT_COMMITTER_DATE=2026-09-01T12:00:00")
 		}
 		out, err := c.CombinedOutput()
 		if err != nil {

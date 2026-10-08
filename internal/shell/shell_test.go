@@ -141,3 +141,23 @@ func TestPath_realEmptyPath(t *testing.T) {
 		t.Errorf("an empty PATH has no shell, got %v", err)
 	}
 }
+
+func TestCommand_doesNotCarryTheHooksRepository(t *testing.T) {
+	t.Run("PSXSH-B04: A command runs without the variables that tie git to the repository a hook runs in; the rest of the environment passes", func(t *testing.T) {})
+	env := []string{"PATH=/bin", "GIT_DIR=/repo/.git", "GIT_INDEX_FILE=/repo/.git/index", "GIT_WORK_TREE=/repo",
+		"GIT_AUTHOR_NAME=t", "GIT_CONFIG_GLOBAL=/dev/null", "HOME=/home/x"}
+	got := strings.Join(WithoutRepoEnv(env), " ")
+	if got != "PATH=/bin GIT_AUTHOR_NAME=t GIT_CONFIG_GLOBAL=/dev/null HOME=/home/x" {
+		t.Errorf("the repository's variables leave, the rest stays: %s", got)
+	}
+	t.Setenv("GIT_DIR", "/somewhere/.git")
+	c, err := Command("true")
+	if err != nil {
+		t.Skip(err)
+	}
+	for _, kv := range c.Env {
+		if strings.HasPrefix(kv, "GIT_DIR=") {
+			t.Errorf("the command carries %s", kv)
+		}
+	}
+}
