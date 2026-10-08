@@ -18,3 +18,10 @@ Feature: Duplicates — each gate confronts the repeats of what it declares
     Given a spec defining B01 in two sections, and citing it in what rules use, an Out table, the state flow, an events table under the title the project declares, an open decision, an alias, a retired line and a prose bullet, with a heading followed by its own row
     When its occurrences are read
     Then B01 is counted at its two definitions only, and the heading with its own row once
+
+  @GTDPG-B03 @unit-level
+  Scenario: The spec catalogue's gates count their declarations
+    Given a spec repeating an environment variable, a DEPn, a Domain entry in another case, an open question code after it was answered, a revision code, and a section under the same parent
+    When each gate's occurrences are read
+    Then each names its repeated key, a DEPn cited in a rule's uses is not counted, and each line is the row's
+

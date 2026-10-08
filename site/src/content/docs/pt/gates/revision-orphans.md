@@ -13,6 +13,7 @@ The revision names the sibling rules that speak of the same subject.
 | Confronta | `spec` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Duplicidade | uma declaração que ele controla repetida no mesmo arquivo o reprova; `duplicates: false` desliga |
 
 ## Como declarar
 

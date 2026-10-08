@@ -60,14 +60,13 @@ declaration is counted by one gate, so a repeat is reported once.
 | `flag-scenario-grammar` | a flag scenario code twice in a flag file | `CODE-Gnn` | `flagx.ParseContent` (has lines) |
 | `open-questions-resolved` | an open question code twice, resolved rows included | `Qnn` | `openItems` |
 | `env-declared` | an environment variable in two rows | variable name | `sectionRows` of Environment Variables |
-| `contract-status-declared` | the same HTTP status in two rows of the output contract (concrete statuses only) | status | the section's status rows |
 | `dependency-honored` | the same `DEPn` in two rows of the Dependencies table | `DEPn` | the spec's Dependencies table |
 | `domain-declared` | the same entry in two rows of the Domain | entry name | `domainLines` |
 | `used-by-declared` | two `@used-by:` flags on one symbol | symbol | `scan.UsedByIn` (has lines) |
 | `testid-consistent` | a testID in two rows of the spec's inventory (exposing one id in two render branches of the code is not counted) | testID | `declaredTestIDs` |
 | `examples-match` | an identical row in one outline's Examples | scenario + row values | `exampleTables` (has lines) |
 
-Left out on purpose: citations of any kind; the code's own repeats (an import twice, a
+Left out on purpose: an HTTP status in two rows of the output contract — one row per reason is a way of writing it (measured on MIF: `403` for a missing permission and again for another user's record) —; citations of any kind; the code's own repeats (an import twice, a
 handle in two branches, overloads); measured data (coverage, mutation, test runs); and
 duplicates across files (the same code owned by two specs is `identity`'s question, not
 this one's).
@@ -77,7 +76,7 @@ this one's).
 | Phase | What | Proof |
 | --- | --- | --- |
 | `DPDCD-W01` | **The mechanism.** `Occurrence`, the reader registry, the engine's count after a gate runs, `duplicates:` on the gate, the message, the site pages. One reader to prove it: `rule-types`, rule codes defined twice. | The screen spec born with `-B01` twice (the bug of v0.1.297) fails `rule-types` naming both lines; `duplicates: false` silences it. Measured on clones of jokenpo and MIF: how many specs already have a repeat, read one by one. |
-| `DPDCD-W02` | **The spec catalogue.** `spec-sections`, `revision-orphans`, `open-questions-resolved`, `domain-declared`, `dependency-honored`, `env-declared`, `contract-status-declared`. | Each with its test; measured on the clones. |
+| `DPDCD-W02` | **The spec catalogue.** `spec-sections`, `revision-orphans`, `open-questions-resolved`, `domain-declared`, `dependency-honored`, `env-declared`. | Each with its test; measured on the clones. |
 | `DPDCD-W03` | **Features, plans, flags, code.** `scenario-identity` and `phase-ordered` moved onto the mechanism; `flag-scenario-grammar`, `used-by-declared`, `testid-consistent`, `examples-match`. | Each with its test; measured on the clones; the peers told what each repeat found. |
 
 ## What NOT to do
@@ -99,3 +98,16 @@ this one's).
 ## Open Decisions
 
 none
+
+## What the implementation taught
+
+- **The events a unit emits cite their rule.** Both peers' "Eventos / Callbacks" table opens each
+  row with the B rule the callback realizes; counted as a definition, it failed 47 specs of MIF
+  for no error. The section is a citing one, known by the catalog's title or the one the project
+  declares (W01, v0.1.299).
+- **A status may take one row per reason.** The output contract's statuses were dropped from W02:
+  MIF writes `403` once per reason it is returned.
+- **It found real repeats.** This repository's doct spec reused `DTCDC-B11` and `B12` for two
+  other rules; MIF has a spec with two Dependencies tables numbering `DEP1` for different files,
+  and three screens with two "Histórico de Alterações" sections.
+

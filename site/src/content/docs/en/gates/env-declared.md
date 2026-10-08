@@ -13,6 +13,7 @@ The environment variables a unit's code reads are the ones its spec declares, an
 | Confronts | `spec` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Duplicates | a declaration it controls repeated in one file fails it; `duplicates: false` switches this off |
 
 ## How it measures
 

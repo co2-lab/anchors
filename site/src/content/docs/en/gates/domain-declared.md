@@ -13,6 +13,7 @@ The spec declares what it accepts and who guards the boundary.
 | Confronts | `spec` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Duplicates | a declaration it controls repeated in one file fails it; `duplicates: false` switches this off |
 
 ## How it measures
 

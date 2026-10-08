@@ -58,7 +58,7 @@ nodes:
         - desenho
     - id: DESIGN-duplicate-declarations.md
       kind: doc
-      rev: b084f2002e90
+      rev: 725bbd18f3d1
       updated_at: "2026-10-07"
       code: DPDCD
       file_code: DPDCD
@@ -13376,7 +13376,7 @@ nodes:
         ingested_at: "2026-10-07T23:47:21-03:00"
     - id: internal/gate/duplicates.feature
       kind: feature
-      rev: 7133732f5b78
+      rev: 869999d9fbdb
       updated_at: "2026-10-07"
       code: GTDPG
       file_code: DPFTA
@@ -13410,7 +13410,7 @@ nodes:
         ingested_at: "2026-10-07T23:47:21-03:00"
     - id: internal/gate/duplicates.spec.md
       kind: spec
-      rev: 20bc5014c2c9
+      rev: a29fcb7e62aa
       updated_at: "2026-10-07"
       code: GTDPG
       file_code: GTDPG
@@ -13422,17 +13422,43 @@ nodes:
         proven_codes:
             - GTDPG-B01
             - GTDPG-B02
+            - GTDPG-B03
         proven_by_suite:
             .anchors/junit.xml:
                 - GTDPG-B01
                 - GTDPG-B02
+                - GTDPG-B03
         proven_rev_by_suite:
-            .anchors/junit.xml: 20bc5014c2c9
-        at_rev: 20bc5014c2c9
-        ingested_at: "2026-10-07T23:02:49-03:00"
+            .anchors/junit.xml: a29fcb7e62aa
+        at_rev: a29fcb7e62aa
+        ingested_at: "2026-10-07T23:47:21-03:00"
+    - id: internal/gate/duplicates_spec.go
+      kind: code
+      rev: 0a3de02fb2a2
+      updated_at: "2026-10-07"
+      code: GTDPG
+      file_code: DSGDP
+      layer: gate
+      tags:
+        - regra
+        - gate
+      signal:
+        covered_lines: 133
+        total_lines: 145
+        line_coverage: 91.72413793103448
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 20-25,33-44,46,48-53,55-56,58-62,64-67,69,73-83,85,87,95-100,102,107-117,119-121,123-125,127,129,135-144,146-148,150,155-161,163,173-178,180-192,194-207,209-213,215,218-225
+                covered: 20-22,25,33-44,46,48-53,55-56,58-62,64-67,69,73-75,78-82,85,87,95-100,102,107-109,112-117,119-120,123-124,127,129,135-144,146-148,150,155-161,163,173-175,180-192,194-207,209-213,215,218-225
+                covered_lines: 133
+                total_lines: 145
+                at_rev: 0a3de02fb2a2
+        coverage_rev: 0a3de02fb2a2
+        at_rev: 0a3de02fb2a2
+        ingested_at: "2026-10-07T23:47:21-03:00"
     - id: internal/gate/duplicates_test.go
       kind: test
-      rev: 0ba358bdc731
+      rev: 3173cefc83cd
       updated_at: "2026-10-07"
       code: GTDPG
       file_code: DPTSA
@@ -13440,14 +13466,12 @@ nodes:
       tags:
         - test
       signal:
-        passed: 4
+        passed: 6
         by_layer:
             unit:
-                passed: 4
-        seconds_by_suite:
-            .anchors/junit.xml: 0.01
-        at_rev: 0ba358bdc731
-        ingested_at: "2026-10-07T23:02:49-03:00"
+                passed: 6
+        at_rev: 3173cefc83cd
+        ingested_at: "2026-10-07T23:47:21-03:00"
     - id: internal/gate/duplication.feature
       kind: feature
       rev: 669b630ade03
@@ -27790,6 +27814,15 @@ edges:
       stamp:
         validated_from_rev: de4d4d30dd56
         validated_to_rev: e6b9d2f2dee4
+        changed_at: "2026-10-07"
+        verdict: ok
+    - from: QUALITY.md
+      to: internal/gate/duplicates_spec.go
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: de4d4d30dd56
+        validated_to_rev: 1d875dcf0483
         changed_at: "2026-10-07"
         verdict: ok
     - from: QUALITY.md
