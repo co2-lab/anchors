@@ -306,6 +306,8 @@
   "gate.dep_chain.kind_undeclared": "la línea %d marca `@dep[%s]: %s`, un tipo que el proyecto no declara — agréguelo en `dependency_kinds:` del anchors.yaml, o use uno declarado",
   "gate.cross_unit.skip_not_spec": "no es spec — solo una spec cita una unidad",
   "gate.cross_unit.cites": "la spec cita %d regla(s) de otras unidades que no viven en una doctrina del producto: %s. Citar la regla de otra unidad por su código está bien; lo que dos unidades comparten vive en el producto, que viene antes: realice una regla de la doctrina en la línea de la regla citada (`@realizes`), para que ninguna spec vigile a la otra",
+  "gate.duplicates.hint.scenario": "Una regla puede tener varios escenarios, cada uno con su propia identidad: numérelos con el sufijo `#NN` (`@CODE-B01#01`, `@CODE-B01#02`).",
+  "gate.duplicates.hint.phase": "El código de una fase es su identidad: dos fases con el mismo código hacen imposible saber de cuál depende una spec.",
   "gate.vr_states.skip_no_code": "la spec no tiene código de identidad",
   "gate.vr_states.skip_no_spec": "ninguna spec junto al archivo principal de la unidad",
   "gate.mutation.nothing_to_mutate": "la herramienta de mutación midió este archivo en esta revisión y no generó ningún mutante — no hay qué mutar",

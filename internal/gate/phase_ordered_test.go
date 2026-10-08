@@ -76,12 +76,17 @@ func TestPhaseOrdered_B06_CodigoDuplicadoFalha(t *testing.T) {
 	t.Run("PHORP-B06: Plans with duplicate phase codes fail", func(t *testing.T) {})
 	plano := mapx.Node{Kind: mapx.KindPlan, Code: "FNDTN"}
 	repetida := "### FNDTN-W01 — a árvore\n\n### FNDTN-W01 — outra fase\n"
-	v, msg := checkPhaseOrdered(repetida, plano, "", nil, nil)
+	// The repeat is the duplicates mechanism's, as the engine runs it after the gate.
+	root := t.TempDir()
+	writeFile(t, root, "plan.md", repetida)
+	plano.ID = "plan.md"
+	v, msg := checkPhaseOrdered(repetida, plano, root, nil, nil)
+	v, msg = confrontDuplicates(config.Gate{Name: "phase-ordered", Check: "phase-ordered"}, plano, root, nil, nil, v, msg)
 	if v != Fail {
 		t.Fatalf("código repetido deve falhar; veio %v", v)
 	}
-	if !strings.Contains(msg, "FNDTN-W01") {
-		t.Errorf("mensagem deve conter o código duplicado; veio %s", msg)
+	if !strings.Contains(msg, "FNDTN-W01") || !strings.Contains(msg, "1, 3") || !strings.Contains(msg, "identity") && !strings.Contains(msg, "identidade") {
+		t.Errorf("mensagem deve conter o código duplicado, as linhas e a dica; veio %s", msg)
 	}
 }
 

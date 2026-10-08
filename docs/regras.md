@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:84df074653538e83 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:a716cccc392294b9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4035,6 +4035,8 @@ abra a página dela em `camadas/`.
 
 - [GTDPG-B03 — The spec catalogue's gates count their own declarations, each by the row that declares it: `env-declared` a variable of the environment table, `domain-declared` a Domain entry (case and backticks aside), `open-questions-resolved` an open question's code, answered rows included, `revision-orphans` a revision code opening a line, and `spec-sections` a catalog section — by its catalog title in any language or the title the project gave it — under the same parent heading. (`envOccurrences`, `domainOccurrences`, `openQuestionOccurrences`, `revisionOccurrences`, `sectionOccurrences`)](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares)
 
+- [GTDPG-B04 — The gates of flags, code and features count their own declarations: `flag-scenario-grammar` a flag scenario's code, `used-by-declared` a symbol under two used-by flags, `testid-consistent` a testID in two rows of the spec's inventory (its first cell — a testID cited in another cell, or exposed in two render branches of the code, is no repeat), and `examples-match` an identical row within one Examples table (two outlines sharing a value, each in its own table, are no repeat); `phase-ordered` counts a phase cataloged twice, with a hint of what a phase's code is. A reader may carry a hint, said beside the finding. (`flagScenarioOccurrences`, `usedByOccurrences`, `testIDOccurrences`, `exampleRowOccurrences`, `phaseOccurrences`)](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares)
+
 ### [DUPLC — Duplication — no code file holds a block copied from somewhere else](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else)
 
 - [DUPLC-B01 — A file that takes part in no clone passes.](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else)
@@ -4975,7 +4977,7 @@ abra a página dela em `camadas/`.
 
 - [PHORP-B05 — When plan phases declare valid backward dependencies on preceding phases, phase ordering passes.](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent)
 
-- [PHORP-B06 — When a plan defines duplicate phase codes, phase ordering fails.](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent)
+- [PHORP-B06 — When a plan defines duplicate phase codes, phase ordering fails through the duplicates mechanism, naming the code and the lines of its headings, with what a phase's code is (`phaseOccurrences`); the rest of the ordering is confronted on the first of them.](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent)
 
 - [PHORP-B07 — When a phase declares a dependency on a phase code not catalogued in the plan, phase ordering fails.](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent)
 
@@ -5785,7 +5787,7 @@ abra a página dela em `camadas/`.
 
 - [SCIDS-B01 — Two scenarios sharing one code are reported: nothing links one of them to one test, and the relational gates compare N titles against a single test.](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code)
 
-- [SCIDS-B02 — The report NAMES the repeated code, so the reader does not have to scan the feature to find it.](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code)
+- [SCIDS-B02 — The report NAMES the repeated code and the lines of its scenarios, so the reader does not have to scan the feature to find them.](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code)
 
 - [SCIDS-B03 — The report says HOW MANY scenarios share the code, which separates an accidental duplicate from a code borrowed across a whole rule.](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code)
 

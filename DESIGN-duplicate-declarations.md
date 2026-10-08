@@ -5,7 +5,7 @@
 
 # Duplicate declarations — each gate confronts the repeats of what it controls
 
-> IN PROGRESS — W01 (v0.1.299) and W02 (v0.1.300) delivered; approved on 2026-10-07 (on by default). One mechanism in the engine; each gate that controls a kind of
+> IMPLEMENTED — W01 (v0.1.299), W02 (v0.1.300) and W03 delivered; approved on 2026-10-07 (on by default). One mechanism in the engine; each gate that controls a kind of
 > declaration says what its occurrences are; a key declared twice in the same file is a
 > finding of that gate. On by default, switched off per gate in `anchors.yaml`.
 
@@ -109,4 +109,9 @@ none
 - **It found real repeats.** This repository's doct spec reused `DTCDC-B11` and `B12` for two
   other rules; MIF has a spec with two Dependencies tables numbering `DEP1` for different files,
   and three screens with two "Histórico de Alterações" sections.
+- **`scenario-identity` keeps its own count.** Its finding names the repeated scenarios by
+  their titles and teaches the `#NN` suffix with the project's own code — what the author needs
+  to tell which is which —, which the generic finding cannot. It names the lines now, and stays
+  outside the mechanism: `duplicates: false` does not silence it. `phase-ordered` moved onto it,
+  with a hint of what a phase's code is.
 

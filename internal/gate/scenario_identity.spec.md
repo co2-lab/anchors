@@ -44,7 +44,7 @@ sees what is left.
 | Effect | Description |
 | --- | --- |
 | `SCIDS-B01` | Two scenarios sharing one code are reported: nothing links one of them to one test, and the relational gates compare N titles against a single test. |
-| `SCIDS-B02` | The report NAMES the repeated code, so the reader does not have to scan the feature to find it. |
+| `SCIDS-B02` | The report NAMES the repeated code and the lines of its scenarios, so the reader does not have to scan the feature to find them. |
 | `SCIDS-B03` | The report says HOW MANY scenarios share the code, which separates an accidental duplicate from a code borrowed across a whole rule. |
 | `SCIDS-B04` | The report teaches the way out with the project's OWN repeated code as the example, not a generic one. |
 | `SCIDS-B05` | The SUFFIX gives each scenario its own identity: numbered, two scenarios of one rule pass. |

@@ -34,6 +34,9 @@ type occurrenceReader struct {
 	// verdict is what a repeat makes the gate say: Fail, unless the gate measures repeats
 	// as a divergence of its own.
 	verdict Verdict
+	// hint is the i18n key of what the gate tells about fixing a repeat of its kind — the
+	// `#NN` suffix of a scenario —, beside the generic finding; empty for none.
+	hint string
 }
 
 // occurrenceReaders are the gates with a reader, by check.
@@ -95,6 +98,9 @@ func confrontDuplicates(g config.Gate, n mapx.Node, root string, graph *mapx.Gra
 		parts = append(parts, i18n.T("gate.duplicates.key", k, len(dups[k]), strings.Join(at, ", ")))
 	}
 	msg := i18n.T("gate.duplicates.found", strings.Join(parts, "; "))
+	if rd.hint != "" {
+		msg += " " + i18n.T(rd.hint)
+	}
 	if detail != "" && v != Pass {
 		msg = detail + "; " + msg
 	}

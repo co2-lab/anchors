@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:73c92f6b8e608c7a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9218f51428fd6385 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3617,6 +3617,8 @@ teste prova.
 - [rule-types counts the rule codes a file defines, not those it cites](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B02`
 
 - [The spec catalogue's gates count their declarations](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B03`
+
+- [The gates of flags, code and features count their declarations](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B04`
 
 - [A file in no clone passes](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B01`
 

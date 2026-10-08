@@ -13,6 +13,7 @@ Every row of an outline's Examples is run by a test citing the scenario.
 | Confronts | `feature` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Duplicates | a declaration it controls repeated in one file fails it; `duplicates: false` switches this off |
 
 ## How it measures
 

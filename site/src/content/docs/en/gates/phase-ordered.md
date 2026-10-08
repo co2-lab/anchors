@@ -13,6 +13,7 @@ The plan's phases do not depend on what comes after them.
 | Confronts | `plan` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Duplicates | a declaration it controls repeated in one file fails it; `duplicates: false` switches this off |
 
 ## How it measures
 

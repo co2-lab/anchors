@@ -13,6 +13,7 @@ Each scenario's condition is written in the grammar.
 | Confronta | `flag` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Duplicidade | uma declaração que ele controla repetida no mesmo arquivo o reprova; `duplicates: false` desliga |
 
 ## Como declarar
 

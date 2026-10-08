@@ -13,6 +13,7 @@ Every row of an outline's Examples is run by a test citing the scenario.
 | Confronta | `feature` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Duplicidade | uma declaração que ele controla repetida no mesmo arquivo o reprova; `duplicates: false` desliga |
 
 ## Como declarar
 

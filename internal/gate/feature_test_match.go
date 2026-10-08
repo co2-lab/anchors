@@ -220,6 +220,7 @@ func titleWords(s string) []string {
 }
 
 type featureScenario struct {
+	Line  int // 1-based, of its tag line
 	Code  string
 	Title string
 	Tags  []string // as tags de regime do projeto na tag-line (sem @), ex.: ["nivel-unit","smoke"]
@@ -298,15 +299,17 @@ func parseFeatureScenarios(content string) []featureScenario {
 	var pendingCode string
 	var pendingCodes []string
 	var pendingTags []string
+	pendingLine := 0
 	flush := func(title string) {
 		if pendingCode == "" {
 			return
 		}
-		out = append(out, featureScenario{Code: pendingCode, Title: title, Tags: pendingTags, Codes: pendingCodes})
+		out = append(out, featureScenario{Line: pendingLine, Code: pendingCode, Title: title, Tags: pendingTags, Codes: pendingCodes})
 		pendingCode, pendingTags, pendingCodes = "", nil, nil
 	}
-	for _, ln := range lines {
+	for i, ln := range lines {
 		if ms := featScenarioCodeRE.FindAllStringSubmatch(ln, -1); ms != nil {
+			pendingLine = i + 1
 			// O PRIMEIRO código é a identidade do cenário (o que o mapa e os demais gates
 			// usam); os seguintes são requisitos que o mesmo cenário também prova.
 			// O código do cenário inclui o sufixo `#NN` quando presente: é ele que

@@ -14,6 +14,7 @@ The spec's testID inventory, the IDs the code exposes, and the tests that query 
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
 | Presupposes | `derived.test_handle` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
+| Duplicates | a declaration it controls repeated in one file fails it; `duplicates: false` switches this off |
 
 ## Declaring it
 

@@ -55,6 +55,9 @@ func TestCenarioIdentidadeNomeiaOCodigoRepetido(t *testing.T) {
 	if strings.Contains(msg, "SAUTX-B01") {
 		t.Errorf("mensagem acusa um código que aparece uma vez só: %s", msg)
 	}
+	if !strings.Contains(msg, "5, 8") {
+		t.Errorf("mensagem sem as linhas dos cenários repetidos: %s", msg)
+	}
 }
 
 // QUANTOS cenários dividem o código separa a duplicata acidental do código emprestado

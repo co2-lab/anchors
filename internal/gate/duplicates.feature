@@ -25,3 +25,9 @@ Feature: Duplicates — each gate confronts the repeats of what it declares
     When each gate's occurrences are read
     Then each names its repeated key, and each line is the row's
 
+  @GTDPG-B04 @unit-level
+  Scenario: The gates of flags, code and features count their declarations
+    Given a flag file declaring a scenario twice, a symbol under two used-by flags, a test ID in two inventory rows and cited in a third, and an outline repeating an Examples row
+    When each gate's occurrences are read
+    Then each names its repeated key, and the cited test ID and a used-by on another symbol are not counted
+

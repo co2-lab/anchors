@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:afc90336e1560685 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:5dfddfa832f625ac — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 85 unidades e 1375 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 85 unidades e 1376 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -921,6 +921,8 @@ The first reader is `rule-types`'s: a rule code defined twice in one file; then 
 - **GTDPG-B02** — `rule-types` counts each rule code a file defines — a heading, the first cell of a table row, a bold or bare bullet —, where it is defined; not inside a section whose rows cite codes (what a rule uses, the open decisions, the navigation, the state flow, the events a unit emits, a change history, what a plan revises) nor its subsections — known by the catalog's titles and by the titles the project declares for them in any layer; not on an alias or a retired line, nor a list item opening with the code in backticks; and a heading with the rows under it that open with its own code once. (`definedRuleOccurrences`)
 
 - **GTDPG-B03** — The spec catalogue's gates count their own declarations, each by the row that declares it: `env-declared` a variable of the environment table, `domain-declared` a Domain entry (case and backticks aside), `open-questions-resolved` an open question's code, answered rows included, `revision-orphans` a revision code opening a line, and `spec-sections` a catalog section — by its catalog title in any language or the title the project gave it — under the same parent heading. (`envOccurrences`, `domainOccurrences`, `openQuestionOccurrences`, `revisionOccurrences`, `sectionOccurrences`)
+
+- **GTDPG-B04** — The gates of flags, code and features count their own declarations: `flag-scenario-grammar` a flag scenario's code, `used-by-declared` a symbol under two used-by flags, `testid-consistent` a testID in two rows of the spec's inventory (its first cell — a testID cited in another cell, or exposed in two render branches of the code, is no repeat), and `examples-match` an identical row within one Examples table (two outlines sharing a value, each in its own table, are no repeat); `phase-ordered` counts a phase cataloged twice, with a hint of what a phase's code is. A reader may carry a hint, said beside the finding. (`flagScenarioOccurrences`, `usedByOccurrences`, `testIDOccurrences`, `exampleRowOccurrences`, `phaseOccurrences`)
 
 
 ## DUPLC — Duplication — no code file holds a block copied from somewhere else
@@ -2409,7 +2411,7 @@ This gate confronts three complementary structural ordering contracts:
 
 - **PHORP-B05** — When plan phases declare valid backward dependencies on preceding phases, phase ordering passes.
 
-- **PHORP-B06** — When a plan defines duplicate phase codes, phase ordering fails.
+- **PHORP-B06** — When a plan defines duplicate phase codes, phase ordering fails through the duplicates mechanism, naming the code and the lines of its headings, with what a phase's code is (`phaseOccurrences`); the rest of the ordering is confronted on the first of them.
 
 - **PHORP-B07** — When a phase declares a dependency on a phase code not catalogued in the plan, phase ordering fails.
 
@@ -3740,7 +3742,7 @@ sees what is left.
 
 - **SCIDS-B01** — Two scenarios sharing one code are reported: nothing links one of them to one test, and the relational gates compare N titles against a single test.
 
-- **SCIDS-B02** — The report NAMES the repeated code, so the reader does not have to scan the feature to find it.
+- **SCIDS-B02** — The report NAMES the repeated code and the lines of its scenarios, so the reader does not have to scan the feature to find them.
 
 - **SCIDS-B03** — The report says HOW MANY scenarios share the code, which separates an accidental duplicate from a code borrowed across a whole rule.
 

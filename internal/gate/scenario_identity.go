@@ -43,17 +43,22 @@ func checkScenarioIdentity(content string, n mapx.Node, _ string, _ *mapx.Graph,
 	// Agrupa por código COMPLETO (com sufixo, se houver): é ele que identifica o
 	// cenário. Dois cenários com `#01` e `#02` são distintos; dois sem sufixo, não.
 	porCodigo := map[string][]string{}
+	linhas := map[string][]int{}
 	for _, c := range cenarios {
 		porCodigo[c.Code] = append(porCodigo[c.Code], c.Title)
+		linhas[c.Code] = append(linhas[c.Code], c.Line)
 	}
 
+	// The repeats are this gate's own, and not the duplicates mechanism's: its message names
+	// the scenarios by their titles and teaches the suffix with the project's code — what the
+	// author needs to tell which is which. It names the lines too.
 	var repetidos []string
 	for cod, titulos := range porCodigo {
 		if len(titulos) < 2 {
 			continue
 		}
 		repetidos = append(repetidos, i18n.T("gate.scenario_identity.repeated_item",
-			cod, len(titulos), strings.Join(summarizeTitles(titulos), " / ")))
+			cod, len(titulos), strings.Join(summarizeTitles(titulos), " / ")+" — "+joinInts(linhas[cod])))
 	}
 	if len(repetidos) > 0 {
 		sort.Strings(repetidos)

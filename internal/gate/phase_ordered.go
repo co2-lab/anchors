@@ -78,10 +78,11 @@ func checkPhaseOrdered(content string, n mapx.Node, root string, g *mapx.Graph, 
 	// A posição de cada fase, para saber o que vem antes.
 	pos := map[string]int{}
 	for i, f := range fases {
-		if _, repetida := pos[f]; repetida {
-			return Fail, i18n.T("gate.phase_ordered.fail_duplicate_phase", f)
+		// A phase cataloged twice is counted by the duplicates mechanism, with its lines
+		// (phaseOccurrences); here the first one is the phase.
+		if _, repetida := pos[f]; !repetida {
+			pos[f] = i
 		}
-		pos[f] = i
 	}
 
 	// The dependency in the phase's own section: `### FNDTN-W02 — … (depends on FNDTN-W01)`.
@@ -258,4 +259,17 @@ func dependsOnRE() *regexp.Regexp {
 	}
 	return regexp.MustCompile(`(?i)(?:` + strings.Join(alts, "|") + `)\s+` + "`?" + `([A-Z0-9]` +
 		config.CodeLengthPattern() + `-` + config.PhaseLetter + `\d{2})`)
+}
+
+// phaseOccurrences: each phase a plan catalogs, at its heading.
+func phaseOccurrences(content string, _ mapx.Node, _ string, _ *mapx.Graph, _ *config.Config) []Occurrence {
+	var out []Occurrence
+	for _, m := range phaseRE().FindAllStringSubmatchIndex(content, -1) {
+		out = append(out, Occurrence{Key: content[m[2]:m[3]], Line: strings.Count(content[:m[0]], "\n") + 1})
+	}
+	return out
+}
+
+func init() {
+	occurrenceReaders["phase-ordered"] = occurrenceReader{read: phaseOccurrences, verdict: Fail, hint: "gate.duplicates.hint.phase"}
 }

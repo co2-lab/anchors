@@ -160,3 +160,32 @@ func TestDuplicates_theSpecCatalogue(t *testing.T) {
 		}
 	}
 }
+
+func TestDuplicates_flagsCodeAndFeatures(t *testing.T) {
+	t.Run("GTDPG-B04: A flag scenario code, a symbol under two used-by flags, a testID in two rows of the inventory and an identical Examples row are counted; a testID in prose and a used-by on two symbols are not", func(t *testing.T) {})
+	n := mapx.Node{ID: "x"}
+	keys := func(occ []Occurrence) string { return strings.Join(keysOf(occ), ",") }
+	usedBy := "// @used-by: AAAAA\n// @used-by: BBBBB\nexport const PALETTE = {}\n\n// @used-by: AAAAA\nexport const OTHER = 1\n"
+	if got := keys(usedByOccurrences(usedBy, n, "", nil, nil)); got != "PALETTE" {
+		t.Errorf("two used-by flags on one symbol: %q", got)
+	}
+	cfg := &config.Config{Derived: &config.Derived{TestHandle: "testID"}}
+	ids := "# S\n\n## Test IDs\n\n| testID | Element |\n| --- | --- |\n| `pay-button` | the button |\n| `pay-total` | `pay-button` shown above |\n| `pay-button` | again |\n"
+	if got := keys(testIDOccurrences(ids, n, "", nil, cfg)); got != "pay-button" {
+		t.Errorf("a testID in two rows, not one cited in another cell: %q", got)
+	}
+	flag := "| `CHKUT-G01` | `= \"off\"` | old |\n| `CHKUT-G02` | `= \"on\"` | new |\n| `CHKUT-G01` | absent | old |\n"
+	if got := keys(flagScenarioOccurrences(flag, mapx.Node{ID: "checkout.flag.md"}, "", nil, nil)); got != "CHKUT-G01" {
+		t.Errorf("a flag scenario code twice: %q", got)
+	}
+	feature := "Feature: x\n\n  @PAYMT-B01\n  Scenario Outline: pays\n    Examples:\n      | amount | result |\n      | 10 | ok |\n      | 20 | ok |\n      | 10 | ok |\n"
+	if got := keys(exampleRowOccurrences(feature, n, "", nil, nil)); !strings.HasPrefix(got, "PAYMT-B01 (Examples at line 6) | 10") || strings.Contains(got, "20") {
+		t.Errorf("an identical Examples row: %q", got)
+	}
+	// Two outlines of one rule, each with its own table and columns, share a value: no repeat.
+	two := "Feature: x\n\n  @PAYMT-S02#03\n  Scenario Outline: small\n    Examples:\n      | small |\n      | true |\n\n" +
+		"  @PAYMT-S02#04\n  Scenario Outline: inverted\n    Examples:\n      | on |\n      | true |\n"
+	if got := keys(exampleRowOccurrences(two, n, "", nil, nil)); got != "" {
+		t.Errorf("rows of two tables are no repeat: %q", got)
+	}
+}

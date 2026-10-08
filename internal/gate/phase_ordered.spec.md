@@ -55,7 +55,7 @@ This gate confronts three complementary structural ordering contracts:
 | `PHORP-B03` | When a plan contains no phase headings, phase ordering skips confrontation. |
 | `PHORP-B04` | When a plan contains phase-like sections without catalogued phase codes, phase ordering returns a divergence. |
 | `PHORP-B05` | When plan phases declare valid backward dependencies on preceding phases, phase ordering passes. |
-| `PHORP-B06` | When a plan defines duplicate phase codes, phase ordering fails. |
+| `PHORP-B06` | When a plan defines duplicate phase codes, phase ordering fails through the duplicates mechanism, naming the code and the lines of its headings, with what a phase's code is (`phaseOccurrences`); the rest of the ordering is confronted on the first of them. |
 | `PHORP-B07` | When a phase declares a dependency on a phase code not catalogued in the plan, phase ordering fails. |
 | `PHORP-B08` | When a phase declares a dependency on itself, phase ordering fails. |
 | `PHORP-B09` | When a phase declares a dependency on a future phase defined later in the plan, phase ordering fails. |
