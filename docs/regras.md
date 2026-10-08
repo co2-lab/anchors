@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:66da9907f10baf84 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:2633d3385d58ab90 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2896,6 +2896,8 @@ abra a página dela em `camadas/`.
 - [CNSTC-B08 — The block diff lists the lines of the old block missing from the new one, marked as left, then the lines of the new block missing from the old one, marked as came, counting repeated lines.](layers/comando.md#cnstc--stampcommand--writes-the-missing-contract-stamps-on-test-doubles-and-refreshes-them-after-a-change)
 
 - [CNSTC-B09 — Handed a test file that holds stamps instead of a module, the refresh names the modules its stamps point at and the command to refresh them, and changes nothing.](layers/comando.md#cnstc--stampcommand--writes-the-missing-contract-stamps-on-test-doubles-and-refreshes-them-after-a-change)
+
+- [CNSTC-B10 — The refresh takes every file given after it — `--refresh a b c` refreshes the three —, not only the first.](layers/comando.md#cnstc--stampcommand--writes-the-missing-contract-stamps-on-test-doubles-and-refreshes-them-after-a-change)
 
 - [CNSTC-I01 — Stamping is idempotent: a second run over the same tests writes nothing.](layers/comando.md#cnstc--stampcommand--writes-the-missing-contract-stamps-on-test-doubles-and-refreshes-them-after-a-change)
 

@@ -45,6 +45,7 @@ adjusted in the same commit. A stamp whose member is gone is reported and left a
 | `CNSTC-B07` | The refresh in dry run lists the doubles and says nothing was written, leaving the stamps as they were. |
 | `CNSTC-B08` | The block diff lists the lines of the old block missing from the new one, marked as left, then the lines of the new block missing from the old one, marked as came, counting repeated lines. |
 | `CNSTC-B09` | Handed a test file that holds stamps instead of a module, the refresh names the modules its stamps point at and the command to refresh them, and changes nothing. |
+| `CNSTC-B10` | The refresh takes every file given after it — `--refresh a b c` refreshes the three —, not only the first. |
 
 ## Invariants
 

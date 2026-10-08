@@ -303,3 +303,20 @@ func TestStampRefreshHandedATest(t *testing.T) {
 		t.Error("handed the test, the refresh changes nothing")
 	}
 }
+
+func TestStampRefreshTakesEveryFileGiven(t *testing.T) {
+	t.Run("CNSTC-B10: The refresh takes every file given after it, not only the first", func(t *testing.T) {})
+	dir, _ := stampFixture(t)
+	if err := os.WriteFile(filepath.Join(dir, "src", "other.ts"), []byte("export const other = 1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runQ(t, newStampCmd(), "--root", dir, "--refresh", "src/hooks/balance.ts", "src/other.ts")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range []string{"src/hooks/balance.ts", "src/other.ts"} {
+		if !strings.Contains(out, f+" — no double is stamped against a previous version of it.") {
+			t.Errorf("%s is refreshed too:\n%s", f, out)
+		}
+	}
+}

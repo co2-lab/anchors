@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:76986c9e71837827 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:78933a01e712867c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2645,6 +2645,8 @@ teste prova.
 - [A test of the map that cannot be read is reported and skipped](layers/comando.md#cnstc--stampcommand--writes-the-missing-contract-stamps-on-test-doubles-and-refreshes-them-after-a-change) `CNSTC-E04`
 
 - [The refresh handed a test names the modules to refresh](layers/comando.md#cnstc--stampcommand--writes-the-missing-contract-stamps-on-test-doubles-and-refreshes-them-after-a-change) `CNSTC-B09`
+
+- [The refresh takes every file given after it, not only the first](layers/comando.md#cnstc--stampcommand--writes-the-missing-contract-stamps-on-test-doubles-and-refreshes-them-after-a-change) `CNSTC-B10`
 
 - [A directory with no git repository stops at git init](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step) `PRSTP-B01`
 

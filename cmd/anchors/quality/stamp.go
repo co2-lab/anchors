@@ -75,7 +75,10 @@ hand. With --dry-run it only lists.`,
 				return fmt.Errorf("load map: %w (run `anchors map build`)", err)
 			}
 			if len(refresh) > 0 {
-				return refreshStamps(absRoot, g, refresh, dryRun)
+				// `--refresh a b c` gives the flag `a` and leaves `b c` as arguments: they are
+				// files to refresh too, as the user meant (reported from MIF: only the first
+				// module was refreshed).
+				return refreshStamps(absRoot, g, append(refresh, args...), dryRun)
 			}
 
 			var tests []string

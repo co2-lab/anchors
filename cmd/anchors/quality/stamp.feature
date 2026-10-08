@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTB
 #   ref: CNSTC
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @CNSTC
@@ -109,3 +109,9 @@ Feature: StampCommand — writes the missing contract stamps on test doubles, an
     Given a test whose double is stamped against a module that changed
     When the refresh is handed the test instead of the module
     Then it names the module and the command, and the stamp is left as it was
+
+  @CNSTC-B10 @unit-level
+  Scenario: The refresh takes every file given after it, not only the first
+    Given two modules no double is stamped against
+    When the refresh is given both after the flag
+    Then each one is answered
