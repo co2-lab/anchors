@@ -2,7 +2,7 @@
 # @anchors
 #   code: TCFTT
 #   ref: HDTHD
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @HDTHD
@@ -124,3 +124,9 @@ Feature: HeaderDateTouch — bumps the header date of the files that changed, an
     Given a changed file, a file with no change from HEAD, a changed file with no header, and a path that does not exist
     When the touch names all four
     Then the changed one is dated, the unchanged one is reported with no change from HEAD, the one with no header as such, and the missing one as unreadable
+
+  @HDTHD-B16 @unit-level
+  Scenario: A touch run on its own carries the evidence in the map
+    Given a changed file whose test's closure holds the file's current revision in the map
+    When anchors touch dates it
+    Then the file's revision and the test's closure in the map follow the new content

@@ -15,6 +15,8 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/co2-lab/anchors/internal/shell"
 )
 
@@ -426,5 +428,34 @@ func TestTouch_everyNamedFileGetsAVerdict(t *testing.T) {
 				t.Errorf("an unchanged folder brings nothing, got %s", f)
 			}
 		}
+	}
+}
+
+func TestTouch_carriesTheEvidenceInTheMap(t *testing.T) {
+	t.Run("HDTHD-B16: A touch run on its own carries, in the map, each bumped file's evidence to the content with the new date", func(t *testing.T) {})
+	root := touchRepo(t)
+	changed := touchHeader + "export const x = 2\n"
+	touchWrite(t, root, "a.ts", changed)
+	before := scan.ShortHash([]byte(changed))
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "a.ts", Kind: mapx.KindCode, Rev: before},
+		{ID: "a.test.ts", Kind: mapx.KindTest, Rev: "t1", Signal: &mapx.TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.ts": before}}},
+	}}
+	if err := mapx.Save(g, filepath.Join(root, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(root)
+	runTouch(t, "a.ts", "--date", "2026-09-25")
+	b, _ := os.ReadFile(filepath.Join(root, "a.ts"))
+	after := scan.ShortHash(b)
+	got, err := mapx.Load(filepath.Join(root, mapx.DefaultPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := got.Node("a.ts"); n == nil || n.Rev != after {
+		t.Errorf("the file's revision follows the date: %+v", n)
+	}
+	if c := got.Node("a.test.ts").Signal.ClosureRev["a.ts"]; c != after {
+		t.Errorf("the test's closure follows the date, so its evidence stays fresh: %s, want %s", c, after)
 	}
 }

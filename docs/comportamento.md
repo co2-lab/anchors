@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:87028205e920a1b0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:ac53ecb20a998c38 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2745,6 +2745,8 @@ teste prova.
 - [Named files narrow the touch to them](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B14`
 
 - [Every named file gets a verdict](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B15`
+
+- [A touch run on its own carries the evidence in the map](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B16`
 
 - [The staged scope is the added, copied, modified and renamed files of the index](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B01`
 

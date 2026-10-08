@@ -19,6 +19,8 @@ import (
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // --- anchors touch: bump `updated_at` on the files that changed ---
@@ -151,6 +153,9 @@ After a ` + "`stamp --refresh`" + `, order does not matter: a ` + "`@contract`" 
 			if err != nil {
 				return err
 			}
+			if !dryRun {
+				rebaseTouched(absRoot, bumped)
+			}
 			verb := "bumped"
 			if dryRun {
 				verb = "would bump"
@@ -174,6 +179,27 @@ After a ` + "`stamp --refresh`" + `, order does not matter: a ` + "`@contract`" 
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "say what would be bumped, without writing")
 	cmd.Flags().Bool("changed", true, "the files changed in the worktree vs HEAD (the default)")
 	return common.TakesFiles(cmd)
+}
+
+// rebaseTouched carries, in the map, each bumped file's evidence from the content it had to
+// the content with the new date: a date proves nothing new nor undoes anything proven. The
+// commit hook's map sync does the same for what it bumps; a touch run on its own did not,
+// and the next check found the closure of every test reaching the file advanced — 50 VR
+// flows stale over a date crossing midnight (reported from jokenpo). No map, nothing to carry.
+func rebaseTouched(absRoot string, bumped []touchDecision) {
+	if len(bumped) == 0 {
+		return
+	}
+	mapPath := filepath.Join(absRoot, mapx.DefaultPath)
+	if _, err := os.Stat(mapPath); err != nil {
+		return
+	}
+	_ = mapx.Update(mapPath, func(g *mapx.Graph) error {
+		for _, d := range bumped {
+			g.RebaseRev(d.File, scan.ShortHash([]byte(d.Old)), scan.ShortHash([]byte(d.Content)))
+		}
+		return nil
+	})
 }
 
 // touchCandidates lists the files to consider: changed vs HEAD in the worktree (plus the

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: HDTHD
-  updated_at: 2026-09-30
+  updated_at: 2026-10-08
   layer: comando
 -->
 # HeaderDateTouch — bumps the header date of the files that changed, and only of those
@@ -55,6 +55,7 @@ would bump. The installed pre-commit runs this bump by default; the project can 
 | `HDTHD-B13` | A project root below the repository's top considers only its own files, named from the project root, in both the worktree and the staged modes. |
 | `HDTHD-B14` | Files or folders named on the command line narrow the touch to the changed files among them — a path relative to where the command runs, or absolute; one outside the project is an error. With none named, every changed file is a candidate. (`touchPaths`, `within`) |
 | `HDTHD-B15` | Every file named on the command line gets a verdict: one with no change from HEAD is reported as skipped for it, one that does not exist as unreadable, one with no `@anchors` header as such — a named file never leaves the list silently. A named folder brings only its changed files. (`named`) |
+| `HDTHD-B16` | A touch run on its own carries, in the map, each bumped file's evidence — its signals and the closures of the tests that reach it — from the content it had to the content with the new date, as the commit hook's map sync does: a date proves nothing new. With no map there is nothing to carry. (`rebaseTouched`) |
 
 ## Invariants
 
