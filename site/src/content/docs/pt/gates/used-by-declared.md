@@ -10,7 +10,7 @@ Every symbol another file imports carries `@used-by:` with exactly the codes of 
 | Propriedade | Valor |
 | --- | --- |
 | Verificação | `used-by-declared` |
-| Confronta | `code` |
+| Confronta | `code` `test` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
 
@@ -19,7 +19,7 @@ Every symbol another file imports carries `@used-by:` with exactly the codes of 
 ```yaml
 gates:
   - name: used-by-declared
-    on: [code]
+    on: [code, test]
     check: used-by-declared
 ```
 

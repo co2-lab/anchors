@@ -10,7 +10,7 @@ Every import of a governed file carries `@dep:` with the code of the file it use
 | Propriedade | Valor |
 | --- | --- |
 | Verificação | `dep-declared` |
-| Confronta | `code` |
+| Confronta | `code` `test` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
 
@@ -19,7 +19,7 @@ Every import of a governed file carries `@dep:` with the code of the file it use
 ```yaml
 gates:
   - name: dep-declared
-    on: [code]
+    on: [code, test]
     check: dep-declared
 ```
 

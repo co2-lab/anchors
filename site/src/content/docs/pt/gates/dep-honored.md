@@ -10,7 +10,7 @@ Every `@dep:` flag names the code of the file its import resolves to.
 | Propriedade | Valor |
 | --- | --- |
 | Verificação | `dep-honored` |
-| Confronta | `code` |
+| Confronta | `code` `test` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
 
@@ -19,7 +19,7 @@ Every `@dep:` flag names the code of the file its import resolves to.
 ```yaml
 gates:
   - name: dep-honored
-    on: [code]
+    on: [code, test]
     check: dep-honored
 ```
 

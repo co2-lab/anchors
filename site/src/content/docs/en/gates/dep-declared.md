@@ -10,7 +10,7 @@ Every import of a governed file carries `@dep:` with the code of the file it use
 | Property | Value |
 | --- | --- |
 | Checker | `dep-declared` |
-| Confronts | `code` |
+| Confronts | `code` `test` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
 
@@ -39,7 +39,7 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 ```yaml
 gates:
   - name: dep-declared
-    on: [code]
+    on: [code, test]
     check: dep-declared
 ```
 

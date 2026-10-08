@@ -112,8 +112,8 @@ func TestDepChain_declaredAndHonored(t *testing.T) {
 	if v != Fail || !strings.Contains(msg, "WRONG") || !strings.Contains(msg, "USTST") {
 		t.Errorf("the wrong code is named with the right one: %v %s", v, msg)
 	}
-	if v, _ := checkDepDeclared("", mapx.Node{ID: "x_test.ts", Kind: mapx.KindTest}, root, g, cfg); v != Skip {
-		t.Error("a test is tied by its ref, not by the chain")
+	if v, _ := checkDepDeclared("", mapx.Node{ID: "vendor/x.ts", Kind: mapx.KindCode, Upstream: true}, root, g, cfg); v != Skip {
+		t.Error("a vendored file takes no part in the chain")
 	}
 }
 
@@ -192,5 +192,48 @@ func TestDepChain_reExportsAndInlineImports(t *testing.T) {
 	n := g.Nodes[len(g.Nodes)-3]
 	if v, msg := checkUsedByDeclared(barrel, n, root, g, cfg); v == Fail {
 		t.Errorf("after the fix the re-exports answer their importers: %s", msg)
+	}
+}
+
+func TestDepChain_everyImporter(t *testing.T) {
+	t.Run("DCGDP-B07: Tests, test support and flows take part in the chain: their imports carry the dependency flag, the fixer writes it, and a symbol a test imports lists the test in its used-by flag", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	for rel, body := range map[string]string{
+		"src/ui/Arena.test.tsx":  "import { Arena } from './Arena'\nimport { tokensFixture } from '../test/fixtures'\n",
+		"src/test/fixtures.ts":   "export const tokensFixture = {}\n",
+		"flows/arena.yaml":       "appId: x\n---\n- runFlow: utils/login.yaml\n- runFlow:\n    file: utils/login.yaml\n",
+		"flows/utils/login.yaml": "appId: x\n---\n- tapOn: login\n",
+	} {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g.Nodes = append(g.Nodes,
+		mapx.Node{ID: "src/ui/Arena.test.tsx", Kind: mapx.KindTest, FileCode: "ARTST"},
+		mapx.Node{ID: "src/test/fixtures.ts", Kind: mapx.KindTest, Support: true, FileCode: "FXTRS"},
+		mapx.Node{ID: "flows/arena.yaml", Kind: mapx.KindTest, FileCode: "ARFLW"},
+		mapx.Node{ID: "flows/utils/login.yaml", Kind: mapx.KindTest, Support: true, FileCode: "LGFLW"})
+	test := g.Nodes[len(g.Nodes)-4]
+	v, msg := checkDepDeclared(read(t, root, test.ID), test, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "ARSCR") || !strings.Contains(msg, "FXTRS") {
+		t.Errorf("a test's imports are charged: %v %s", v, msg)
+	}
+	flow := g.Nodes[len(g.Nodes)-2]
+	if imps := ImportsOf(read(t, root, flow.ID), flow.ID, cfg.DialectFor(), g); len(imps) != 2 || imps[0].Target != "flows/utils/login.yaml" || imps[1].Target != "flows/utils/login.yaml" {
+		t.Errorf("a flow composing another imports it, inline or by file: %+v", imps)
+	}
+	gates := []config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code", "test"}}, {Name: "used-by-declared", Check: "used-by-declared", On: []string{"code", "test"}}}
+	FixWithConfig(gates, g.Nodes, root, g, cfg)
+	if got := read(t, root, test.ID); !strings.Contains(got, "from './Arena' // @dep: ARSCR") || !strings.Contains(got, "fixtures' // @dep: FXTRS") {
+		t.Errorf("the fixer flags a test's imports:\n%s", got)
+	}
+	if got := read(t, root, flow.ID); !strings.Contains(got, "runFlow: utils/login.yaml # @dep: LGFLW") {
+		t.Errorf("the fixer flags a flow's composition with the flow's comment:\n%s", got)
+	}
+	if got := read(t, root, "src/test/fixtures.ts"); !strings.Contains(got, "// @used-by: ARTST\nexport const tokensFixture") {
+		t.Errorf("a fixture's symbol lists the test that imports it:\n%s", got)
 	}
 }

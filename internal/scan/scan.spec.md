@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPSCR
-  updated_at: 2026-10-07
+  updated_at: 2026-10-08
   layer: scan
 -->
 # RepoScan — the repository read as text: which files exist, of which layer, and what each declares
@@ -112,7 +112,7 @@ heuristic decided.
 | `RPSCR-B37` | The index reader confronts the tree with the index at each read: a file deleted or edited in the tree after the reader was made still reads as the index has it. (`IndexReader`) |
 | `RPSCR-B39` | A spec's Parts Used section — under the catalog's title in any language, or the title the project's `section_titles` gives `components` — yields the names in backticks of its table's first column (`Composes`); a spec with no such section, and any file that is not a spec, yields none. |
 | `RPSCR-B40` | The header's `ref:` line yields the units it names, in order (`HeaderRefs`). |
-| `RPSCR-B41` | The dependency flag on an import line (`@dep` with a colon and the used file's own code) is read with the symbols the import brings — the names in its braces, an alias reading as the name it aliases, `default` for a default import, whose local name is the importer's choice, the member an inline import reads (`import('…').Name`), and the names a dynamic import destructures (`const { a } = await import('…')`) —; the waiver (`@no-dep` with a colon and its reason) is read with its reason. (`CodeDep`, `CodeDeps`, `CodeDepsIn`, `ImportSymbols`) |
+| `RPSCR-B41` | The dependency flag on an import line (`@dep` with a colon and the used file's own code) is read with the symbols the import brings — the names in its braces, an alias reading as the name it aliases, `default` for a default import, whose local name is the importer's choice, the member an inline import reads (`import('…').Name`), and the names a dynamic import destructures (`const { a } = await import('…')`); an inline import bound whole (`typeof import('…')`) brings the namespace and no symbol; a `require(…)` reads the same way, and a destructuring's `A: B` brings A —; the waiver (`@no-dep` with a colon and its reason) is read with its reason. (`CodeDep`, `CodeDeps`, `CodeDepsIn`, `ImportSymbols`) |
 | `RPSCR-B42` | Each used-by flag (`@used-by` with a colon and the codes that use it) is read with the symbol declared on the next lines — `default` above the module's default export (`export default`, `module.exports =`), the one name of an export list that lists one —, or the symbol it names in parentheses after its codes, which a flag above an export list of several names must do. (`UsedBy`, `UsedByIn`, `ExportListNames`) |
 | `RPSCR-B43` | Each navigation flag (`@navigates` with a colon, the screens' codes and, in brackets, the rule that triggers it) is read with its call's line — its own, or the next one when the flag stands alone on its line —, and each navigation waiver (`@no-nav` with a colon) with its reason. (`Navigation`, `Navigates`, `NavigatesIn`) |
 | `RPSCR-B44` | A spec's Out rows — the table under its Out heading, in any language of the catalog — are read by the rule each cites, with a revision of the row alone, its spacing normalized; a row citing no rule, and a table under any other heading, are not read. (`OutRows`) |

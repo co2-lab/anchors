@@ -180,12 +180,12 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 
 | Gate | Confronts | What it measures |
 | --- | --- | --- |
-| [`dep-declared`](/docs/gates/dep-declared/) | `code` | Every import of a governed file carries `@dep:` with the code of the file it uses, or `@no-dep: <reason>` |
-| [`dep-honored`](/docs/gates/dep-honored/) | `code` | Every `@dep:` flag names the code of the file its import resolves to |
+| [`dep-declared`](/docs/gates/dep-declared/) | `code` `test` | Every import of a governed file carries `@dep:` with the code of the file it uses, or `@no-dep: <reason>` |
+| [`dep-honored`](/docs/gates/dep-honored/) | `code` `test` | Every `@dep:` flag names the code of the file its import resolves to |
 | [`nav-annotated`](/docs/gates/nav-annotated/) | `code` | Every navigation call — back and reset included — carries `@navigates:` naming the screen it leads to, or `@no-nav: <reason>` |
 | [`nav-matches-spec`](/docs/gates/nav-matches-spec/) | `spec` | A screen's Out table and its code's `@navigates:` flags name the same screens |
 | [`nav-reachable`](/docs/gates/nav-reachable/) | `spec` | Every screen is reachable from the app's entry routes (`navigation.entry`) |
 | [`nav-symmetric`](/docs/gates/nav-symmetric/) | `spec` | A screen's Out leads to another exactly when that one's In comes from it |
-| [`used-by-declared`](/docs/gates/used-by-declared/) | `code` | Every symbol another file imports carries `@used-by:` with exactly the codes of who imports it |
+| [`used-by-declared`](/docs/gates/used-by-declared/) | `code` `test` | Every symbol another file imports carries `@used-by:` with exactly the codes of who imports it |
 
 <!-- gate-reference:end -->

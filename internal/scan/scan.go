@@ -1497,8 +1497,8 @@ var (
 	importDefaultRE = regexp.MustCompile(`^\s*import\s+(?:type\s+)?([A-Za-z_$][\w$]*)\b`)
 	// importInlineRE is an import inside an expression or a type — `import('./x').Name`:
 	// it brings the member it reads, or the module's default.
-	importDestructRE = regexp.MustCompile(`\{([^}]*)\}\s*=\s*(?:await\s+)?import\(`)
-	importInlineRE   = regexp.MustCompile(`\bimport\(\s*['"][^'"]+['"]\s*\)(?:\.([A-Za-z_$][\w$]*))?`)
+	importDestructRE = regexp.MustCompile(`\{([^}]*)\}\s*=\s*(?:await\s+)?(?:import|require)\(`)
+	importInlineRE   = regexp.MustCompile(`\b(?:import|require)\(\s*['"][^'"]+['"]\s*\)(?:\.([A-Za-z_$][\w$]*))?`)
 	// declaredNameRE is the name a declaration line declares, in the common shapes.
 	declaredNameRE = regexp.MustCompile(`\b(?:function\*?|const|let|var|class|interface|type|enum|func|def)\s+(?:\([^)]*\)\s*)?([A-Za-z_$][\w$]*)`)
 )
@@ -1522,7 +1522,8 @@ func importSymbols(line string) []string {
 	if !strings.Contains(line, " from ") && !strings.HasPrefix(strings.TrimSpace(line), "import ") {
 		if m := importInlineRE.FindStringSubmatch(line); m != nil {
 			// `const { a, b: c } = await import('./x')` brings a and b; `import('./x').Name`,
-			// Name; otherwise the module's default.
+			// Name; bound whole (`typeof import('./x')`, `const mod = await import('./x')`) it
+			// brings the module's namespace — no symbol of it in particular, as `import * as`.
 			if d := importDestructRE.FindStringSubmatch(line); d != nil {
 				for _, part := range strings.Split(d[1], ",") {
 					if name := strings.TrimSpace(strings.SplitN(part, ":", 2)[0]); name != "" {
@@ -1534,7 +1535,7 @@ func importSymbols(line string) []string {
 			if m[1] != "" {
 				return []string{m[1]}
 			}
-			return []string{"default"}
+			return nil
 		}
 	}
 	if m := importDefaultRE.FindStringSubmatch(line); m != nil && m[1] != "type" && m[1] != "from" {
@@ -1542,7 +1543,9 @@ func importSymbols(line string) []string {
 	}
 	if m := importBracesRE.FindStringSubmatch(line); m != nil {
 		for _, part := range strings.Split(m[1], ",") {
-			name := strings.Fields(strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(part), "type ")))
+			// `A as B` and a destructuring's `A: B` both bring A.
+			part = strings.SplitN(strings.TrimPrefix(strings.TrimSpace(part), "type "), ":", 2)[0]
+			name := strings.Fields(strings.TrimSpace(part))
 			if len(name) > 0 {
 				out = append(out, name[0])
 			}

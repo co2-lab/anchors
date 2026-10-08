@@ -145,7 +145,7 @@ version.
 | Code | Question | Decided |
 | --- | --- | --- |
 | `DNDDP-D01` | Where does a dependency flag live? | On each `import` line (`// @dep: TOKNS`): the relation is explicit where the tie is made, and removing or changing the import shows which flag goes with it. |
-| `DNDDP-D02` | Does `@used-by:` list test files? | No: a test is tied by its `ref:`. |
+| `DNDDP-D02` | Does `@used-by:` list test files? | No: a test is tied by its `ref:`. — Revised by `DOOSD-D01` (2026-10-08): every artifact that imports takes part in the chain, tests included. |
 | `DNDDP-D03` | Do back and reset navigations count? | Yes, every navigation counts — `goBack`, `reset`, `popToTop` and the rest; a back navigation names the screens it returns to. |
 | `DNDDP-D04` | Which e2e flows does a change to a screen's Out table stale? | Only the flows that ASSERT the navigation that changed — those citing the rule of the changed row —, not the ones that pass through the screen, and never the screen's own evidence. Each Out row has a revision of its own: changing another row, or the rest of the spec, stales nothing. |
 

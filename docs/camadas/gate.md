@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:bd0bb13cc0c82859 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:71126041ac72a372 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 84 unidades e 1369 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 84 unidades e 1370 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -461,7 +461,7 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 
 - **DCGDP-B01** — The import statements of a file are read by the dialect's pattern — a statement whose names span lines is one, its path on its last line, an alias read as the name it aliases — and each path resolved to a file of the map: relative to the importer or through an alias, as written or with each extension; a path naming a directory of code files is a package; anything else is outside the project. With no pattern for the dialect, nothing is read. (`ImportsOf`, `RealImport`)
 
-- **DCGDP-B02** — `dep-declared` fails naming each import of a governed file with no dependency flag on its statement, by line, path and the code it would carry; an import outside the project, or one with a waiver, is not charged, and a test is skipped. Each failure of the chain points at `anchors guide header`, where the flags are. (`checkDepDeclared`)
+- **DCGDP-B02** — `dep-declared` fails naming each import of a governed file with no dependency flag on its statement, by line, path and the code it would carry; an import outside the project, or one with a waiver, is not charged, and a vendored file is skipped. Each failure of the chain points at `anchors guide header`, where the flags are. (`checkDepDeclared`)
 
 - **DCGDP-B03** — `dep-honored` fails naming each dependency flag whose code is not the code of the file its import resolves to — with the right one —, and each flag on a line with no import. (`checkDepHonored`)
 
@@ -470,6 +470,8 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 - **DCGDP-B05** — The fixers write the dependency flag on each unflagged import of a single governed file, correct a flag naming another code, write above each imported symbol the used-by flag with exactly who imports it, and remove a used-by flag nobody answers; an import of a package of several files is left for the author. (`fixDepFlags`, `fixUsedBy`)
 
 - **DCGDP-B06** — A re-export declares the names it lists — `export { X } from`, `export type { A, B }`, or a list spanning lines —, and the fixer writes each name's used-by flag above the list, naming its symbol in parentheses; an inline import (`import('…').Name`) brings the member it reads and carries its dependency flag on its line. (`declarationLine`)
+
+- **DCGDP-B07** — Every artifact that imports takes part in the chain — code, tests, test support, flows —: a test's imports carry the dependency flag like the code's, a flow composing another (`runFlow:`, inline or by `file:`, relative to the flow) imports it, the fixer writes the flag in each artifact's own comment, and a symbol a test imports lists the test in its used-by flag. (`chainUnit`)
 
 
 ## DEPHN — DependencyHonored — methods promised in the dependency table are consumed in code

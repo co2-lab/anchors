@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:e5d6b6e68b610b4f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:1460607056522f8e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3723,7 +3723,7 @@ abra a página dela em `camadas/`.
 
 - [DCGDP-B01 — The import statements of a file are read by the dialect's pattern — a statement whose names span lines is one, its path on its last line, an alias read as the name it aliases — and each path resolved to a file of the map: relative to the importer or through an alias, as written or with each extension; a path naming a directory of code files is a package; anything else is outside the project. With no pattern for the dialect, nothing is read. (`ImportsOf`, `RealImport`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
-- [DCGDP-B02 — `dep-declared` fails naming each import of a governed file with no dependency flag on its statement, by line, path and the code it would carry; an import outside the project, or one with a waiver, is not charged, and a test is skipped. Each failure of the chain points at `anchors guide header`, where the flags are. (`checkDepDeclared`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+- [DCGDP-B02 — `dep-declared` fails naming each import of a governed file with no dependency flag on its statement, by line, path and the code it would carry; an import outside the project, or one with a waiver, is not charged, and a vendored file is skipped. Each failure of the chain points at `anchors guide header`, where the flags are. (`checkDepDeclared`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B03 — `dep-honored` fails naming each dependency flag whose code is not the code of the file its import resolves to — with the right one —, and each flag on a line with no import. (`checkDepHonored`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
@@ -3732,6 +3732,8 @@ abra a página dela em `camadas/`.
 - [DCGDP-B05 — The fixers write the dependency flag on each unflagged import of a single governed file, correct a flag naming another code, write above each imported symbol the used-by flag with exactly who imports it, and remove a used-by flag nobody answers; an import of a package of several files is left for the author. (`fixDepFlags`, `fixUsedBy`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B06 — A re-export declares the names it lists — `export { X } from`, `export type { A, B }`, or a list spanning lines —, and the fixer writes each name's used-by flag above the list, naming its symbol in parentheses; an inline import (`import('…').Name`) brings the member it reads and carries its dependency flag on its line. (`declarationLine`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+
+- [DCGDP-B07 — Every artifact that imports takes part in the chain — code, tests, test support, flows —: a test's imports carry the dependency flag like the code's, a flow composing another (`runFlow:`, inline or by `file:`, relative to the flow) imports it, the fixer writes the flag in each artifact's own comment, and a symbol a test imports lists the test in its used-by flag. (`chainUnit`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 ### [DEPHN — DependencyHonored — methods promised in the dependency table are consumed in code](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
 
@@ -8237,7 +8239,7 @@ abra a página dela em `camadas/`.
 
 - [RPSCR-B40 — The header's `ref:` line yields the units it names, in order (`HeaderRefs`).](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B41 — The dependency flag on an import line (`@dep` with a colon and the used file's own code) is read with the symbols the import brings — the names in its braces, an alias reading as the name it aliases, `default` for a default import, whose local name is the importer's choice, the member an inline import reads (`import('…').Name`), and the names a dynamic import destructures (`const { a } = await import('…')`) —; the waiver (`@no-dep` with a colon and its reason) is read with its reason. (`CodeDep`, `CodeDeps`, `CodeDepsIn`, `ImportSymbols`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B41 — The dependency flag on an import line (`@dep` with a colon and the used file's own code) is read with the symbols the import brings — the names in its braces, an alias reading as the name it aliases, `default` for a default import, whose local name is the importer's choice, the member an inline import reads (`import('…').Name`), and the names a dynamic import destructures (`const { a } = await import('…')`); an inline import bound whole (`typeof import('…')`) brings the namespace and no symbol; a `require(…)` reads the same way, and a destructuring's `A: B` brings A —; the waiver (`@no-dep` with a colon and its reason) is read with its reason. (`CodeDep`, `CodeDeps`, `CodeDepsIn`, `ImportSymbols`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B42 — Each used-by flag (`@used-by` with a colon and the codes that use it) is read with the symbol declared on the next lines — `default` above the module's default export (`export default`, `module.exports =`), the one name of an export list that lists one —, or the symbol it names in parentheses after its codes, which a flag above an export list of several names must do. (`UsedBy`, `UsedByIn`, `ExportListNames`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

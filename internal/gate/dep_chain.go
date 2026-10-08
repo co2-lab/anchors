@@ -87,12 +87,15 @@ var (
 // Without a pattern for the dialect, there is nothing to read.
 func ImportsOf(content, rel string, d config.Dialect, g *mapx.Graph) []RealImport {
 	re := importPathRE(d)
+	if isFlowFile(rel) {
+		re = flowImportRE
+	}
 	if re == nil {
 		return nil
 	}
 	group := re.SubexpIndex("path")
 	lines := strings.Split(content, "\n")
-	goBlocks := strings.EqualFold(d.Family, "go")
+	goBlocks := strings.EqualFold(d.Family, "go") && !isFlowFile(rel)
 	inBlock := false
 	var out []RealImport
 	for i, ln := range lines {
@@ -151,7 +154,8 @@ func resolveImport(rel, p string, d config.Dialect, g *mapx.Graph) (string, bool
 	}
 	var base string
 	switch {
-	case strings.HasPrefix(p, "./") || strings.HasPrefix(p, "../") || p == "." || p == "..":
+	// A flow names the flow it composes relative to itself, with or without `./`.
+	case strings.HasPrefix(p, "./") || strings.HasPrefix(p, "../") || p == "." || p == ".." || isFlowFile(rel):
 		base = path.Clean(path.Join(path.Dir(rel), p))
 	default:
 		var aliases map[string]string
@@ -230,10 +234,22 @@ func flagsByStatement(content string, imps []RealImport) map[int]*scan.CodeDep {
 	return out
 }
 
-// chainUnit says whether a node takes part in the chain: code of the project, never a test
-// (a test is tied by its `ref:`), a support file nor a vendored one.
+// chainUnit says whether a node takes part in the chain: every artifact of the project that
+// imports — code, tests, test support, flows —, never a vendored one. A test imports what it
+// tests, its fixtures and its helpers, and a moved fixture breaks it as a moved hook breaks a
+// screen (DESIGN-dependencies-out-of-the-spec.md, DOOSD-D01).
 func chainUnit(n mapx.Node) bool {
-	return n.Kind == mapx.KindCode && !n.Support && !n.Upstream
+	return (n.Kind == mapx.KindCode || n.Kind == mapx.KindTest) && !n.Upstream
+}
+
+// flowImportRE is a flow composing another — Maestro's `runFlow:`, inline or with `file:` on
+// its own line —: the import of an e2e flow, whatever the code's family.
+var flowImportRE = regexp.MustCompile(`^\s*(?:-\s*)?(?:runFlow:|file:)\s*['"]?(?P<path>[^'"\s#{}]+\.ya?ml)\b`)
+
+// isFlowFile says whether a file is a flow, read by flowImportRE.
+func isFlowFile(rel string) bool {
+	l := strings.ToLower(rel)
+	return strings.HasSuffix(l, ".yaml") || strings.HasSuffix(l, ".yml")
 }
 
 // checkDepDeclared: does every import of a governed file carry `@dep:` with a code, or a

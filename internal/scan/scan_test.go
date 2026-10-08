@@ -1127,8 +1127,19 @@ func TestCodeFlags_depUsedByNavigates(t *testing.T) {
 	if got := ImportSymbols("const { resolve, open: openFile } = await import('@/utils/files') // @dep: FILES"); !reflect.DeepEqual(got, []string{"resolve", "open"}) {
 		t.Errorf("a destructured dynamic import brings the names it destructures: %v", got)
 	}
-	if got := ImportSymbols("const mod = await import('./x')"); !reflect.DeepEqual(got, []string{"default"}) {
-		t.Errorf("a dynamic import bound whole is the module's default: %v", got)
+	for line, want := range map[string]string{
+		"const { CATEGORY_COLOR_PALETTE: PALETA, STATIC } = require('@/theme/tokens') // @dep: TKINT": "CATEGORY_COLOR_PALETTE,STATIC",
+		"  require('@/test/vr/gorhom').gorhomVr({ nasceAberto: false }), // @dep: GRVRG":              "gorhomVr",
+		"import { handler, audit as a } from './handler'":                                             "handler,audit",
+	} {
+		if got := strings.Join(ImportSymbols(line), ","); got != want {
+			t.Errorf("%q brings %q, want %q", line, got, want)
+		}
+	}
+	for _, whole := range []string{"const mod = await import('./x')", "jest.mock('./x', (): Partial<typeof import('./x')> => ({}))"} {
+		if got := ImportSymbols(whole); got != nil {
+			t.Errorf("an import bound whole brings the namespace, no symbol in particular: %q → %v", whole, got)
+		}
 	}
 	t.Run("RPSCR-B43: Each @navigates and @no-nav flag is read with its screens, its rule and its call's line", func(t *testing.T) {})
 	nav := "onPress={() => navigation.navigate('GoalDetail')} // @navigates: GLDTG [GLETG-A02]\n" +

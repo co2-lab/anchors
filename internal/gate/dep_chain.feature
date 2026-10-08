@@ -42,3 +42,10 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     Given a barrel re-exporting one name, a type list of two and a list spanning lines, and a file reading a type through an inline import
     When check --fix runs the chain's fixers
     Then each re-exported name gets its flag above its list, naming its symbol, the inline import carries its flag, and used-by-declared passes
+
+  @DCGDP-B07 @unit-level
+  Scenario: Tests, test support and flows take part in the chain
+    Given a test importing the screen and a fixture, and a flow composing a login flow inline and by file
+    When dep-declared runs on the test, the flow's imports are read, and check --fix runs the chain's fixers
+    Then the test's imports are charged and flagged, the flow's compositions are flagged with its own comment, and the fixture's symbol lists the test
+

@@ -10,7 +10,7 @@ Every symbol another file imports carries `@used-by:` with exactly the codes of 
 | Property | Value |
 | --- | --- |
 | Checker | `used-by-declared` |
-| Confronts | `code` |
+| Confronts | `code` `test` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
 
@@ -39,7 +39,7 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 ```yaml
 gates:
   - name: used-by-declared
-    on: [code]
+    on: [code, test]
     check: used-by-declared
 ```
 

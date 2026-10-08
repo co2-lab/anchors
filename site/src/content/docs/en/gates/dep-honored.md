@@ -10,7 +10,7 @@ Every `@dep:` flag names the code of the file its import resolves to.
 | Property | Value |
 | --- | --- |
 | Checker | `dep-honored` |
-| Confronts | `code` |
+| Confronts | `code` `test` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
 
@@ -39,7 +39,7 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 ```yaml
 gates:
   - name: dep-honored
-    on: [code]
+    on: [code, test]
     check: dep-honored
 ```
 
