@@ -1193,4 +1193,8 @@ func TestNavigates_dormant(t *testing.T) {
 	if len(got) != 1 || got[0].Codes[0] != "PAWAP" || got[0].Rule != "AGOCC-B03" || got[0].Dormant != "the plan mode is not on yet" {
 		t.Errorf("got %+v", got)
 	}
+	// With no reason there is no dormancy: the flag stays, as a plain edge.
+	if bare := extractNavigates([]byte("go() // @navigates: PAWAP @dormant:\n")); len(bare) != 1 || bare[0].Dormant != "" || bare[0].Codes[0] != "PAWAP" {
+		t.Errorf("a bare marker keeps the flag, as an edge: %+v", bare)
+	}
 }

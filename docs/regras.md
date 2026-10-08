@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:b64aee3c5e916008 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:8654297264ea833c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -8285,7 +8285,7 @@ abra a página dela em `camadas/`.
 
 - [RPSCR-B46 — A dependency that is no import — `@dep[<kind>]: <name>` on the line that calls it — is read with its kind and name, apart from the import flags. (`CodeDep`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B47 — A navigation flag may carry `@dormant` with a colon and its reason after it: the call is kept for a feature not turned on, and the flag is read with that reason. (`Navigation`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B47 — A navigation flag may carry `@dormant` with a colon and its reason after it: the call is kept for a feature not turned on, and the flag is read with that reason; a marker with no reason is no dormancy, and the flag stays a plain one. (`Navigation`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
