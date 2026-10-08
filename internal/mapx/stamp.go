@@ -414,15 +414,29 @@ const maxEvidenceKeeps = 5
 // added or removed lines moved them, and only the author knows. The node's revision becomes
 // `to`. It returns the revisions carried, and records the declaration on the node.
 func (g *Graph) KeepEvidence(id, to, reason, at string, lines bool) []string {
+	return g.keepEvidence(id, to, reason, at, lines, false)
+}
+
+// KeepFixedEvidence carries a file's evidence across a mechanical repair, as KeepEvidence
+// does, but only what held at the file's revision before it: a signal already stale then —
+// a mutation run on an older content — stays stale. Carrying every revision it found made a
+// stale mutation fresh again, and the dead-branch heuristic read it as today's (reported
+// from MIF: six handlers failing branch-coverage after the dependency flags were appended).
+func (g *Graph) KeepFixedEvidence(id, to, reason, at string, lines bool) []string {
+	return g.keepEvidence(id, to, reason, at, lines, true)
+}
+
+func (g *Graph) keepEvidence(id, to, reason, at string, lines, onlyHeld bool) []string {
 	i := g.nodeIndex(id)
 	if i < 0 {
 		return nil
 	}
 	n := &g.Nodes[i]
+	prev := n.Rev
 	n.Rev = to
 	olds := map[string]bool{}
 	add := func(r string) {
-		if r != "" && r != to && r != "unknown" {
+		if r != "" && r != to && r != "unknown" && (!onlyHeld || r == prev) {
 			olds[r] = true
 		}
 	}

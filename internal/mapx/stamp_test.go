@@ -555,3 +555,26 @@ func TestKeepEvidence(t *testing.T) {
 		t.Errorf("the latest five declarations are kept, got %+v", k)
 	}
 }
+
+func TestKeepFixedEvidence_onlyWhatHeld(t *testing.T) {
+	t.Run("EDSTD-B18: A repair carries only the evidence that held at the file's revision before it; what was already stale stays stale", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{
+		// Coverage and the unit's proof at the current content c5; the mutation ran at c1.
+		{ID: "h.ts", Rev: "c5", Signal: &TestSignal{AtRev: "c5", MutationAtRev: "c1", TotalLines: 9,
+			ProvenRevBySuite: map[string]string{"u": "c5"},
+			CoverageBySuite:  map[string]SuiteCoverage{"u": {AtRev: "c5"}}}},
+		{ID: "h_test.go", Rev: "t1", Signal: &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"h.ts": "c5"}}},
+	}}
+	if !g.Nodes[0].MutationStale() {
+		t.Fatal("the mutation is stale before the repair")
+	}
+	got := g.KeepFixedEvidence("h.ts", "c6", "the chain's flags", "d", true)
+	s := g.Nodes[0].Signal
+	if strings.Join(got, ",") != "c5" || s.AtRev != "c6" || s.ProvenRevBySuite["u"] != "c6" || s.CoverageBySuite["u"].AtRev != "c6" ||
+		g.Nodes[1].Signal.ClosureRev["h.ts"] != "c6" {
+		t.Errorf("what held at c5 moves to c6: %v %+v", got, s)
+	}
+	if s.MutationAtRev != "c1" || !g.Nodes[0].MutationStale() {
+		t.Errorf("the mutation stale before the repair stays stale: %+v", s)
+	}
+}

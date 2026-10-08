@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9e12d191b1a6b65c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:3e98fb482bc2f2b9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -7243,6 +7243,8 @@ teste prova.
 - [A new revision that proves nothing new keeps what was measured](layers/mapa.md#edstd-b16--a-new-revision-that-proves-nothing-new-keeps-what-was-measured) `EDSTD-B16`
 
 - [A declared change keeps what was proven, and the lines only when asked](layers/mapa.md#edstd-b17--a-declared-change-keeps-what-was-proven-and-the-lines-only-when-asked) `EDSTD-B17`
+
+- [A repair carries only the evidence that held at the file's revision before it](layers/mapa.md#edstd-b18--a-repair-carries-only-the-evidence-that-held-at-the-files-revision-before-it) `EDSTD-B18`
 
 - [Saving stamps the current format and the running binary's release](layers/mapa.md#grprg-b01--saving-stamps-the-current-format-and-the-running-binarys-release) `GRPRG-B01`
 

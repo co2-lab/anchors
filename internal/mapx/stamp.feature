@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTE
 #   ref: EDSTD
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @EDSTD
@@ -122,3 +122,10 @@ Feature: EdgeStamping — recording on each relation that it was confronted, wit
     Given a spec proven at two earlier revisions, a code file with coverage and mutation, and a test whose closure holds the spec
     When their evidence is kept, with and without lines
     Then the proofs, closures and stamps move to the current revision, the coverage moves only with lines, and each declaration is recorded
+
+  @EDSTD-B18 @unit-level
+  Scenario: A repair carries only the evidence that held at the file's revision before it
+    Given a file whose coverage and proof are at its content and whose mutation ran on an older one
+    When check --fix repairs it with no line moved
+    Then the coverage, the proof and the closures move to the new content, and the mutation stays stale
+

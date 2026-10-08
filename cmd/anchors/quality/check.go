@@ -2113,7 +2113,7 @@ func keepFixedEvidence(absRoot, mapPath string, fixes []gate.FixResult) int {
 			if err != nil || g.Node(rel) == nil {
 				continue
 			}
-			if len(g.KeepEvidence(rel, scan.ShortHash(b), i18n.T("check.fix_evidence_reason"), today, !moved[rel])) > 0 {
+			if len(g.KeepFixedEvidence(rel, scan.ShortHash(b), i18n.T("check.fix_evidence_reason"), today, !moved[rel])) > 0 {
 				kept++
 			}
 		}

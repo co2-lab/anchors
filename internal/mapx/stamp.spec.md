@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EDSTD
-  updated_at: 2026-09-29
+  updated_at: 2026-10-07
   layer: mapa
 -->
 # EdgeStamping — recording on each relation that it was confronted, with what result, and since when
@@ -64,6 +64,7 @@ an unrelated gate erase a person's decision, which is what the check already ref
 | `EDSTD-B15` | A snapshot of the stamps, taken before a round stamps its copy of the map, lets the round carry to the map as it is on disk only the stamps it changed; a stamp another process changed since the snapshot is kept as theirs and counted, and an edge the map on disk does not have is left out (`EdgeStamps`, `ApplyStampChanges`). |
 | `EDSTD-B16` | Moving a file from one revision to another carries along everything measured at the first — its signal, proofs, coverage and mutation, the closures of the tests that reach it, and its edges' stamps and judgments —, and leaves what was measured at any other revision, and every other file, as they were. (`RebaseRev`) |
 | `EDSTD-B17` | Keeping a file's evidence moves, from every earlier revision it holds to the current one, the scenario proofs and execution, the closures other tests recorded, and its edges' stamps and judgments; the node's revision becomes the current one. Coverage and mutation, which name lines, move only when lines are kept, and the node's shared revision stays while it stamps them. The declaration — the revisions carried, the current one, the reason, the day, and whether lines went along — is recorded on the node itself — never as a signal, which would say something was measured —, the latest five kept; a file with nothing at an earlier revision carries nothing and records nothing; an unknown file is left alone. (`KeepEvidence`) |
+| `EDSTD-B18` | A mechanical repair (`check --fix`) carries only the evidence that held at the file's revision before it: a signal already stale then — a mutation run on an older content — stays stale, where a declared change carries every earlier revision. (`KeepFixedEvidence`) |
 | `EDSTD-B14` | Judging a node or a single relation keeps a waived stamp recorded by another gate, or when no gate is named, and still records the judging gate's judgment; the gate that recorded the waiver replaces it, and a new waiver always replaces the stamp. |
 
 ## Invariants
