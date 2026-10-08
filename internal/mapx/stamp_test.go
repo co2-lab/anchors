@@ -6,8 +6,11 @@ package mapx
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // graph: spec(rev a) ──specifies──▶ code(rev b), and code ──tested-by──▶ test(rev c)
@@ -577,4 +580,163 @@ func TestKeepFixedEvidence_onlyWhatHeld(t *testing.T) {
 	if s.MutationAtRev != "c1" || !g.Nodes[0].MutationStale() {
 		t.Errorf("the mutation stale before the repair stays stale: %+v", s)
 	}
+}
+
+// carryGraphs are a map before an edit and the build after it: a spec proven by two suites, a
+// code file with coverage, a test whose closure reaches the code, and an edge stamped on both.
+func carryGraphs(spec, code Node) (novo, old *Graph) {
+	old = &Graph{
+		Nodes: []Node{
+			{ID: "a.spec.md", Kind: KindSpec, Rev: "s1", EvidenceRev: "e1", RestRev: "rest", RuleRevs: map[string]string{"A-B01": "x", "A-B02": "y"},
+				Signal: &TestSignal{AtRev: "s1", ProvenCodes: []string{"A-B01", "A-B02#01", "A-B02#02"},
+					ProvenBySuite:    map[string][]string{"unit": {"A-B01", "A-B02#01"}, "e2e": {"A-B02#02"}},
+					ProvenRevBySuite: map[string]string{"unit": "s1", "e2e": "s1"}}},
+			{ID: "a.ts", Kind: KindCode, Rev: "c1", EvidenceRev: "ce", LineRev: "cl",
+				Signal: &TestSignal{AtRev: "c1", TotalLines: 9, CoverageBySuite: map[string]SuiteCoverage{"unit": {AtRev: "c1"}}}},
+			{ID: "a_test.ts", Kind: KindTest, Rev: "t1", Signal: &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.ts": "c1"}}},
+		},
+		Edges: []Edge{{From: "a.spec.md", To: "a.ts", Stamp: &Stamp{ValidatedFromRev: "s1", ValidatedToRev: "c1"}}},
+	}
+	novo = &Graph{Nodes: []Node{spec, code, {ID: "a_test.ts", Kind: KindTest, Rev: "t1"}},
+		Edges: []Edge{{From: "a.spec.md", To: "a.ts"}}}
+	return novo, old
+}
+
+func TestCarryUnchangedEvidence_whatProvesNothingKeepsTheProofs(t *testing.T) {
+	t.Run("EDSTD-B19: A rebuild carries the evidence of a file whose evidence revision held", func(t *testing.T) {})
+	spec := Node{ID: "a.spec.md", Kind: KindSpec, Rev: "s2", EvidenceRev: "e1", RestRev: "rest", RuleRevs: map[string]string{"A-B01": "x", "A-B02": "y"}}
+	// A flag line inserted: the evidence held, the lines did not.
+	code := Node{ID: "a.ts", Kind: KindCode, Rev: "c2", EvidenceRev: "ce", LineRev: "cl2"}
+	novo, old := carryGraphs(spec, code)
+	if got := CarryUnchangedEvidence(novo, old); !reflect.DeepEqual(got, []string{"a.spec.md", "a.ts"}) {
+		t.Fatalf("the spec and the code carried, got %v", got)
+	}
+	PreserveStamps(novo, old)
+	s, c, tst := novo.Nodes[0].Signal, novo.Nodes[1].Signal, novo.Nodes[2].Signal
+	if s == nil || novo.Nodes[0].SignalStale() || len(s.ProvenCodes) != 3 || len(s.StaleCodes) != 0 {
+		t.Errorf("the spec's proofs stand, got %+v", s)
+	}
+	if c == nil || c.CoverageBySuite["unit"].AtRev != "c1" || !novo.Nodes[1].SignalStale() {
+		t.Errorf("coverage names lines, and a line inserted leaves it stale, got %+v", c)
+	}
+	if tst.ClosureRev["a.ts"] != "c2" || novo.EvidenceStaleFor("a_test.ts") != nil {
+		t.Errorf("the test reaching the code stays fresh, got %+v", tst)
+	}
+	if st := novo.Edges[0].Stamp; st == nil || st.ValidatedFromRev != "s2" || st.ValidatedToRev != "c2" {
+		t.Errorf("the edge's stamp follows both ends, got %+v", st)
+	}
+	if len(novo.Nodes[0].EvidenceKept) != 0 {
+		t.Error("nothing is recorded: nobody declared anything")
+	}
+
+	// A flag at a line's end: the lines held, and coverage goes along.
+	novo, old = carryGraphs(spec, Node{ID: "a.ts", Kind: KindCode, Rev: "c2", EvidenceRev: "ce", LineRev: "cl"})
+	PreserveStamps(novo, old)
+	if c := novo.Nodes[1].Signal; c.CoverageBySuite["unit"].AtRev != "c2" || novo.Nodes[1].SignalStale() {
+		t.Errorf("with the lines held, coverage is carried, got %+v", c)
+	}
+
+	// The code changed: nothing of it is carried.
+	novo, old = carryGraphs(spec, Node{ID: "a.ts", Kind: KindCode, Rev: "c2", EvidenceRev: "ce2"})
+	PreserveStamps(novo, old)
+	if novo.Nodes[1].Signal != nil || novo.EvidenceStaleFor("a_test.ts") == nil {
+		t.Error("a change to the code drops its signal and stales the test reaching it")
+	}
+
+	// A map written before the evidence revisions: the old revision is the evidence, and an
+	// edit that only added what proves nothing still carries.
+	novo, old = carryGraphs(spec, Node{ID: "a.ts", Kind: KindCode, Rev: "c2", EvidenceRev: "c1"})
+	old.Nodes[1].EvidenceRev, old.Nodes[1].LineRev = "", ""
+	if got := CarryUnchangedEvidence(novo, old); len(got) != 2 {
+		t.Errorf("the old content was its own evidence, got %v", got)
+	}
+}
+
+func TestCarryUnchangedEvidence_aRuleThatChangedStalesItsScenarios(t *testing.T) {
+	t.Run("EDSTD-B20: A spec whose rules alone changed carries its evidence with those rules' scenarios stale", func(t *testing.T) {})
+	code := Node{ID: "a.ts", Kind: KindCode, Rev: "c1", EvidenceRev: "ce", LineRev: "cl"}
+	spec := Node{ID: "a.spec.md", Kind: KindSpec, Rev: "s2", EvidenceRev: "e2", RestRev: "rest", RuleRevs: map[string]string{"A-B01": "x", "A-B02": "y2"}}
+	novo, old := carryGraphs(spec, code)
+	PreserveStamps(novo, old)
+	s := novo.Nodes[0].Signal
+	if s == nil || novo.Nodes[0].SignalStale() || !reflect.DeepEqual(s.StaleCodes, []string{"A-B02#01", "A-B02#02"}) {
+		t.Fatalf("B02's scenarios, each variant, are stale and the signal is current, got %+v", s)
+	}
+	if !reflect.DeepEqual(s.FreshProven(), []string{"A-B01"}) || len(s.ProvenCodes) != 3 {
+		t.Errorf("B01's proof stands and B02's stays recorded, got %+v", s)
+	}
+
+	// Something outside the rules changed: nothing is carried.
+	spec.RestRev = "rest2"
+	novo, old = carryGraphs(spec, code)
+	PreserveStamps(novo, old)
+	if novo.Nodes[0].Signal != nil {
+		t.Error("a change outside the rules drops the spec's proofs")
+	}
+}
+
+func TestStaleCodes_freshAgainByARunOrTheAuthor(t *testing.T) {
+	t.Run("EDSTD-B21: A stale scenario is fresh again when a run proves it, or the author keeps the evidence", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec, Rev: "s2", Signal: &TestSignal{AtRev: "s2",
+		ProvenCodes:      []string{"A-B01", "A-B02#01", "A-B02#02"},
+		ProvenBySuite:    map[string][]string{"unit": {"A-B01", "A-B02#01"}, "e2e": {"A-B02#02"}},
+		ProvenRevBySuite: map[string]string{"unit": "s2", "e2e": "s2"},
+		StaleCodes:       []string{"A-B02#01", "A-B02#02"}}}}}
+	declared := map[string][]string{"a.spec.md": {"A-B01", "A-B02#01", "A-B02#02"}}
+	g.IngestExecutionSuite(nil, map[string]bool{"A-B02#02": true}, nil, declared, "e2e", "e2e", "now")
+	s := g.Nodes[0].Signal
+	if !reflect.DeepEqual(s.StaleCodes, []string{"A-B02#01"}) {
+		t.Errorf("the run that proved #02 again freshens it alone, got %v", s.StaleCodes)
+	}
+	g.IngestExecutionSuite(nil, map[string]bool{"A-B01": true}, nil, declared, "unit", "unit", "now")
+	if len(s.StaleCodes) != 0 {
+		t.Errorf("a scenario no longer proven is no longer stale either, got %v", s.StaleCodes)
+	}
+	s.StaleCodes = []string{"A-B01"}
+	if got := s.ClearStale(); !reflect.DeepEqual(got, []string{"A-B01"}) || len(s.StaleCodes) != 0 {
+		t.Errorf("the author's declaration clears what was stale, got %v", got)
+	}
+}
+
+func TestAdvanceTo(t *testing.T) {
+	t.Run("EDSTD-B22: Advancing a node to its content carries the evidence its revisions show unchanged", func(t *testing.T) {})
+	before := []byte("export const a = 1\n")
+	ev := scan.EvidenceOf("code", before, nil)
+	g := &Graph{Nodes: []Node{{ID: "a.ts", Kind: KindCode}, {ID: "a_test.ts", Kind: KindTest, Rev: "t1"}}}
+	g.Nodes[0].setEvidence(scan.ShortHash(before), ev)
+	g.Nodes[1].Signal = &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.ts": scan.ShortHash(before)}}
+	if moved, carried := g.AdvanceTo("a.ts", []byte("export const a = 1 // @used-by: BBBBB\n"), nil); !moved || !carried {
+		t.Errorf("a flag moves the revision and carries the evidence, got %v %v", moved, carried)
+	}
+	if g.EvidenceStaleFor("a_test.ts") != nil {
+		t.Error("the test reaching it stays fresh")
+	}
+	if moved, carried := g.AdvanceTo("a.ts", []byte("export const a = 2\n"), nil); !moved || carried || g.EvidenceStaleFor("a_test.ts") == nil {
+		t.Errorf("a change to the code carries nothing, got %v %v", moved, carried)
+	}
+	if moved, _ := g.AdvanceTo("gone.ts", before, nil); moved {
+		t.Error("an unknown file is left alone")
+	}
+}
+
+func TestFillOldEvidence(t *testing.T) {
+	t.Run("EDSTD-B23: A map written before evidence revisions gets them from the content at its revision", func(t *testing.T) {})
+	before := []byte("<!-- @anchors\n  code: A\n  updated_at: 2026-10-01\n-->\n# A\n\n### A-B01 — joins\n")
+	after := []byte("<!-- @anchors\n  code: A\n  updated_at: 2026-10-08\n-->\n# A\n\n### A-B01 — joins\n\n## Change History\n\n- navigation\n")
+	old := &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec, Rev: scan.ShortHash(before),
+		Signal: &TestSignal{AtRev: scan.ShortHash(before), ProvenCodes: []string{"A-B01"}}}}}
+	novo := &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec}}}
+	novo.Nodes[0].setEvidence(scan.ShortHash(after), scan.EvidenceOf("spec", after, nil))
+	stale := func(string) ([]byte, bool) { return []byte("another content"), true }
+	FillOldEvidence(novo, old, stale, nil)
+	if old.Nodes[0].EvidenceRev != "" {
+		t.Fatal("a content that is not the node's revision is not taken")
+	}
+	FillOldEvidence(novo, old, func(string) ([]byte, bool) { return before, true }, nil)
+	PreserveStamps(novo, old)
+	if s := novo.Nodes[0].Signal; s == nil || novo.Nodes[0].SignalStale() {
+		t.Errorf("the upgrade carries the spec across a date and a history line, got %+v", s)
+	}
+	written := &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec, Rev: "r0", EvidenceRev: "e0"}}}
+	FillOldEvidence(novo, written, func(string) ([]byte, bool) { t.Error("a map with evidence revisions is not read"); return nil, false }, nil)
 }

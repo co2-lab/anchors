@@ -2,7 +2,7 @@
 # @anchors
 #   code: MSFMA
 #   ref: MPSYN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @MPSYN
@@ -55,3 +55,9 @@ Feature: MapSyncForCommit — the commit carries the map a build of the commit m
     Given a map on disk with coverage measured after HEAD for an unchanged file and for a new file, and the new file staged
     When the pre-commit syncs the map
     Then both keep what was measured, in the committed map and in the map on disk
+
+  @MPSYN-B08 @unit-level
+  Scenario: A file the commit leaves as HEAD has it takes HEAD's measurement over one carried from the tree's edit
+    Given a proven spec whose rule another session edited without staging, and a rebuild that marked its scenario stale
+    When a commit carries only another file
+    Then the committed map has HEAD's proof of the spec, with nothing stale

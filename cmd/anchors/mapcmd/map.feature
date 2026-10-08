@@ -2,7 +2,7 @@
 # @anchors
 #   code: MPFTM
 #   ref: MPCMM
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @MPCMM
@@ -123,3 +123,9 @@ Feature: MapCommand — builds the dependency map from the project and answers q
     Given a map file with no anchors.yaml beside it
     When the map shows the worklist of pending nodes
     Then it fails with "load config"
+
+  @MPCMM-B12 @unit-level
+  Scenario: The map's old contents are read as the commit has them, and else as the index does
+    Given a committed file edited in the tree, a staged file edited after staging, and an untracked file
+    When each is read for the map's old content
+    Then the first is the commit's copy, the second the index's, and the third is not read

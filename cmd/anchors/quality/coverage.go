@@ -481,7 +481,7 @@ func codesInFileOfUnit(path, unit string) ([]string, error) {
 func provenRules(g *mapx.Graph, root string, n mapx.Node) map[string]bool {
 	var proven []string
 	if n.Signal != nil {
-		proven = n.Signal.ProvenCodes
+		proven = n.Signal.FreshProven()
 	}
 	var scenarios []string
 	for _, e := range g.Edges {

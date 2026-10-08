@@ -544,3 +544,28 @@ func TestHandleChange_aNewFileEntersTheMap(t *testing.T) {
 		t.Fatalf("the spec enters the map on disk and in the watcher's copy, got disk %+v copy %+v\n%s", disk.Nodes, g.Nodes, out)
 	}
 }
+
+func TestUpdateNodeRev_carriesWhatProvesNothing(t *testing.T) {
+	t.Run("WTCHA-B17: A changed file moves to its revision in the watcher's copy, with its evidence when nothing it proves changed", func(t *testing.T) {})
+	root := t.TempDir()
+	before := []byte("export const a = 1\n")
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "a.ts", Kind: mapx.KindCode, Rev: scan.ShortHash(before)},
+		{ID: "a_test.ts", Kind: mapx.KindTest, Rev: "t1", Signal: &mapx.TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.ts": scan.ShortHash(before)}}},
+	}}
+	write := func(body string) {
+		if err := os.WriteFile(filepath.Join(root, "a.ts"), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("// @used-by: BBBBB (a)\nexport const a = 1\n")
+	updateNodeRev(g, root, "a.ts", nil)
+	if g.Node("a.ts").Rev == scan.ShortHash(before) || g.EvidenceStaleFor("a_test.ts") != nil {
+		t.Errorf("a flag moves the revision and keeps the test reaching it fresh, got %+v", g.Nodes)
+	}
+	write("export const a = 2\n")
+	updateNodeRev(g, root, "a.ts", nil)
+	if g.EvidenceStaleFor("a_test.ts") == nil {
+		t.Error("a change to the code stales the test reaching it")
+	}
+}

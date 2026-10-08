@@ -17,6 +17,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // mock-carimbado: o dublê carrega a marca do trecho que ele substitui, e o gate
@@ -255,30 +256,16 @@ func snippetOf(linhas []string, anchor string, count int) (string, error) {
 	return snippetHash(strings.Join(linhas[idx:fim], "\n")), nil
 }
 
-// chainFlagOnlyRE is a line that is only a comment carrying a flag of the chains; chainFlagRE
-// is such a comment at the end of a line of code.
-var (
-	chainFlagOnlyRE = regexp.MustCompile(`^\s*(?://|#|--|/\*|<!--)\s*@(?:dep|no-dep|used-by|navigates|no-nav):.*$`)
-	chainFlagRE     = regexp.MustCompile(`\s*(?://|#|--|<!--)\s*@(?:dep|no-dep|used-by|navigates|no-nav):.*$`)
-	// chainBlockFlagRE is a flag in a block comment, wherever it sits in the line: the
-	// navigation fixer writes one right after a call on a JSX line (`/* @navigates: X */}>`),
-	// and only the comment goes — what follows it is code.
-	chainBlockFlagRE = regexp.MustCompile(`\s*/\*\s*@(?:dep|no-dep|used-by|navigates|no-nav):[^*]*\*/`)
-)
-
-// stripChainFlag is a line without the chain's flags: a block comment carrying one, and a
-// line comment carrying one at its end.
-func stripChainFlag(l string) string {
-	l = chainBlockFlagRE.ReplaceAllString(strings.TrimRight(l, "\r"), "")
-	return chainFlagRE.ReplaceAllString(l, "")
-}
+// stripChainFlag is a line without the chain's flags (scan.StripChainFlag) — the reading the
+// map's evidence revisions share, kinded dependencies (`@dep[db]:`) included.
+func stripChainFlag(l string) string { return scan.StripChainFlag(l) }
 
 // stampLines are a module's lines as a stamp reads them: without the lines that only carry a
 // flag of the chains, and without the flag at the end of a line.
 func stampLines(lines []string) []string {
 	out := make([]string, 0, len(lines))
 	for _, l := range lines {
-		if chainFlagOnlyRE.MatchString(l) {
+		if scan.ChainFlagOnlyRE.MatchString(l) {
 			continue
 		}
 		out = append(out, stripChainFlag(l))

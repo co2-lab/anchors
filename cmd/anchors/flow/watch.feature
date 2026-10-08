@@ -2,7 +2,7 @@
 # @anchors
 #   code: WTFTW
 #   ref: WTCHA
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @WTCHA
@@ -129,3 +129,9 @@ Feature: Watch — the background watcher that turns "a file changed" into "ther
     Given a project with a map, and a spec created while the watcher runs
     When the watcher handles the change
     Then the map on disk and the watcher's copy have the spec
+
+  @WTCHA-B17 @unit-level
+  Scenario: A changed file moves to its revision with its evidence when nothing it proves changed
+    Given a code file in the map and a test whose closure reaches it
+    When the file gains a flag of the chains, and then its code changes
+    Then the test stays fresh after the flag, and goes stale after the change

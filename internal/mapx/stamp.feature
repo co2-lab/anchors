@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTE
 #   ref: EDSTD
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @EDSTD
@@ -129,3 +129,32 @@ Feature: EdgeStamping — recording on each relation that it was confronted, wit
     When check --fix repairs it with no line moved
     Then the coverage, the proof and the closures move to the new content, and the mutation stays stale
 
+  @EDSTD-B19 @unit-level
+  Scenario: A rebuild carries the evidence of a file whose evidence revision held
+    Given a proven spec, a covered code file, a test whose closure reaches it and an edge stamped on both
+    When the spec's revision moves with its evidence held, and the code gains a flag line, a flag at a line's end, or a change
+    Then the spec's proofs stand, the test stays fresh and the stamp follows, coverage goes along only when the lines held, and a change carries nothing
+
+  @EDSTD-B20 @unit-level
+  Scenario: A spec whose rules alone changed carries its evidence with those rules' scenarios stale
+    Given a spec proven for two rules, the second with two variants
+    When the second rule's definition changes, and then something outside the rules
+    Then the second rule's variants are stale and the first's proof stands, and the change outside drops the proofs
+
+  @EDSTD-B21 @unit-level
+  Scenario: A stale scenario is fresh again when a run proves it, or the author keeps the evidence
+    Given a spec whose two variants of a rule are stale
+    When a suite proves one again, another stops proving the other, and the author keeps the evidence
+    Then the first is fresh, the second leaves the stale ones, and the author's declaration clears what was left
+
+  @EDSTD-B22 @unit-level
+  Scenario: Advancing a node to its content carries the evidence its revisions show unchanged
+    Given a code file and a test whose closure reaches it
+    When the file is advanced to its content with a flag, then with a change, then an unknown file
+    Then the flag carries the evidence, the change does not, and the unknown file is left alone
+
+  @EDSTD-B23 @unit-level
+  Scenario: A map written before evidence revisions gets them from the content at its revision
+    Given a proven spec in a map with no evidence revisions, edited since in its date and history alone
+    When the build reads a content that is not the node's revision, then the one that is
+    Then the first is not taken, the second carries the proof, and a map with evidence revisions is not read

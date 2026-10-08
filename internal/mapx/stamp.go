@@ -414,7 +414,7 @@ const maxEvidenceKeeps = 5
 // added or removed lines moved them, and only the author knows. The node's revision becomes
 // `to`. It returns the revisions carried, and records the declaration on the node.
 func (g *Graph) KeepEvidence(id, to, reason, at string, lines bool) []string {
-	return g.keepEvidence(id, to, reason, at, lines, false)
+	return g.keepEvidence(id, to, reason, at, lines, false, true)
 }
 
 // KeepFixedEvidence carries a file's evidence across a mechanical repair, as KeepEvidence
@@ -423,10 +423,10 @@ func (g *Graph) KeepEvidence(id, to, reason, at string, lines bool) []string {
 // stale mutation fresh again, and the dead-branch heuristic read it as today's (reported
 // from MIF: six handlers failing branch-coverage after the dependency flags were appended).
 func (g *Graph) KeepFixedEvidence(id, to, reason, at string, lines bool) []string {
-	return g.keepEvidence(id, to, reason, at, lines, true)
+	return g.keepEvidence(id, to, reason, at, lines, true, true)
 }
 
-func (g *Graph) keepEvidence(id, to, reason, at string, lines, onlyHeld bool) []string {
+func (g *Graph) keepEvidence(id, to, reason, at string, lines, onlyHeld, record bool) []string {
 	i := g.nodeIndex(id)
 	if i < 0 {
 		return nil
@@ -516,6 +516,9 @@ func (g *Graph) keepEvidence(id, to, reason, at string, lines, onlyHeld bool) []
 				s.AtRev = keepAt
 			}
 		}
+	}
+	if !record {
+		return carried
 	}
 	n.EvidenceKept = append(n.EvidenceKept, EvidenceKeep{
 		From: strings.Join(carried, " "), To: to, Reason: reason, At: at, Lines: lines,

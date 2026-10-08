@@ -244,6 +244,15 @@ type Node struct {
 	// OutRows: a screen spec's navigation rows, by rule, each with a revision of the row
 	// alone (scan.File.OutRows).
 	OutRows map[string]string `yaml:"out_rows,omitempty"`
+	// EvidenceRev, LineRev, RuleRevs and RestRev are the revisions the file's proofs are
+	// measured against (scan.Evidence): its content without what proves nothing. A rebuild
+	// carries a file's evidence across an edit that left them as they were
+	// (DESIGN-evidence-by-what-it-proves.md). EvidenceRev is empty when it equals Rev, and
+	// LineRev when it equals Rev too — the file has nothing to leave out.
+	EvidenceRev string            `yaml:"evidence_rev,omitempty"`
+	LineRev     string            `yaml:"line_rev,omitempty"`
+	RuleRevs    map[string]string `yaml:"rule_revs,omitempty,flow"`
+	RestRev     string            `yaml:"rest_rev,omitempty"`
 	// Asserts: the navigation rows a test asserts — the Out rows of the rules it cites, as
 	// OutRowKey. Its evidence is stamped with each row's revision and goes stale when that
 	// row changes; a test that only passes through the screen cites no row of it.
@@ -402,7 +411,12 @@ type TestSignal struct {
 	// `utils/login.yaml` é composto por 290 roteiros; ao tocá-lo, a evidência dos 290 devia
 	// vencer, e nenhum sinal deles muda — o teste não mudou, mudou o que ele executa.
 	ClosureRev map[string]string `yaml:"closure_rev,omitempty"`
-	IngestedAt string            `yaml:"ingested_at,omitempty"`
+	// StaleCodes are the proven scenarios whose rule changed since they were proven, when
+	// nothing else of the spec did (DESIGN-evidence-by-what-it-proves.md, W03): the rest of
+	// the spec's proofs still stand, and these read as stale until a run proves them again or
+	// the author keeps the evidence.
+	StaleCodes []string `yaml:"stale_codes,omitempty"`
+	IngestedAt string   `yaml:"ingested_at,omitempty"`
 }
 
 // LayerExec é o resultado de execução de UMA camada de teste sobre um nó.

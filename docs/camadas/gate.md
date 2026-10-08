@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:128b76a6a1141fab — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:1b15e73f824fd773 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 85 unidades e 1377 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 85 unidades e 1378 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1735,6 +1735,8 @@ looked at.
 
 - **INCHN-B41** — `header-valid` requires, in a header that has its identity, the file's OWN `code:` — a `ref:` alone names the unit, not the file — and fails a code another node of the map carries as its own, naming that file. (`checkOwnCode`)
 
+- **INCHN-B42** — `scenario-coverage` reads the rules whose scenarios are stale — their rule changed since they were proven, and nothing else of the spec did — as stale, apart from the rest: Pending naming them when every other rule is proven, and named beside the failing ones otherwise. (`checkScenarioCoverage`)
+
 - **INCHN-B15** — An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name.
 
 - **INCHN-B16** — A guide with no compliance-points section, or with the section and no item in it, fails — the AI judgment gate would otherwise fall back on vague heuristics.
@@ -2020,7 +2022,7 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 
 - **MCSTM-B20** — `StampsHolding` lists the stamps of a test that match their module today, keyed `<module>
 
-- **MCSTM-B21** — A stamp reads its module without the chain's flags — a dependency, used-by or navigation flag (or its waiver) at the end of a line, and a line that only carries one —: a flag `check --fix` writes changes no contract, and the stamp's anchor and snippet hold through it. A stamp taken while the flags were in the module, as written, holds too; a change to the stamped code itself still fails, and a refresh writes the hash read without the flags. (`StampSnippet`)
+- **MCSTM-B21** — A stamp reads its module without the chain's flags — a dependency (kinded or not), used-by or navigation flag (or its waiver) at the end of a line, and a line that only carries one —, the reading the map's evidence revisions share: a flag `check --fix` writes changes no contract, and the stamp's anchor and snippet hold through it. A stamp taken while the flags were in the module, as written, holds too; a change to the stamped code itself still fails, and a refresh writes the hash read without the flags. (`StampSnippet`)
 
 - **MCSTM-B22** — A chain flag in a block comment inside a line — the form the navigation fixer writes after a call on a JSX line — is read out of the stamped snippet too, and only the comment: the code after it stays, so a change there still fails.
 

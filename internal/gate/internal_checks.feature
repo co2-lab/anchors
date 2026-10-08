@@ -2,7 +2,7 @@
 # @anchors
 #   code: ICFNT
 #   ref: INCHN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @INCHN
@@ -339,3 +339,9 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     When header-valid confronts it
     Then it fails as having no header
     And a guide, a document and a test support file with only `layer:` in their header pass
+
+  @INCHN-B42 @unit-level
+  Scenario: Scenario coverage reads the scenarios of a changed rule as stale, and the rest as proven
+    Given a spec with two rules, both proven, the second's scenario stale
+    When scenario coverage confronts it, and then with the first unproven
+    Then it is pending naming the second alone, and then fails naming both

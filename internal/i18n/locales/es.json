@@ -985,6 +985,7 @@
   "gate.flag_covered.written_not_ingested": "%d escenario(s) con prueba ESCRITA y ninguna ejecucion ingerida: %s.\nLa prueba nombra el codigo y nadie sabe si pasa — escrita no es verde. Ejecute la suite e ingiera el reporte (`anchors ingest --junit`).",
   "gate.flag_covered.written_not_green": "%d escenario(s) con prueba escrita que NO paso: %s.\nHubo ejecucion ingerida y estos codigos no estan entre los probados: la prueba existe y no prueba el escenario.",
   "gate.scenario_written_not_ingested": "%d escenario(s) con prueba ESCRITA y ninguna ejecucion ingerida: %s.\nLa prueba nombra el codigo y nadie sabe si pasa — escrita no es verde. Ejecute la suite e ingiera el reporte (`anchors ingest --junit`).",
+  "gate.scenario_rule_changed": "%d regla(s) cambiaron desde que sus escenarios fueron probados, y nada más de la spec cambió: %s.\nLas demás pruebas de la spec siguen valiendo; vuelva a correr esos escenarios, o mantenga la evidencia (`anchors keep-evidence`) si el cambio no prueba nada nuevo.",
   "gate.scenario_written_not_green": "%d escenario(s) con prueba escrita que NO paso: %s.\nHubo ejecucion ingerida y estos codigos no estan entre los probados.",
   "gate.revision_orphans.skip_not_spec": "no es una spec — la revision se exige al documento que la lleva",
   "gate.revision_orphans.no_revision": "la spec no declara revision — nada que confrontar",

@@ -324,3 +324,15 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a navigation call flagged with its screen, its rule and a dormant reason
     When the navigation flags are read
     Then the flag has its screen, its rule and the reason
+
+  @RPSCR-B48 @unit-level
+  Scenario: A spec's evidence leaves out its header, navigation, history and spacing
+    Given a spec with a header date, rules in rows and under a heading, an Out table and a change history
+    When its evidence is read, and then with another date, Out row, history line, spacing, rule, and title
+    Then the date, the Out row, the history and the spacing move nothing, the rule moves its own revision alone, and the title moves the rest
+
+  @RPSCR-B49 @unit-level
+  Scenario: A file's evidence leaves out its header and the chain's flags, and its line revision keeps the lines
+    Given a module, the same with flags at the end of its lines, the same with a flag line of its own, and the same under headers of two dates
+    When their evidence is read, and then with a change to the code
+    Then they have one evidence, the line-end flags and the header's date keep the lines and the flag line moves them, and the code's change moves the evidence

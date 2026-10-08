@@ -396,3 +396,26 @@ func capturaStdout(t *testing.T, f func()) string {
 	t.Helper()
 	return testkit.CaptureStdout(t, f)
 }
+
+func TestAtHeadReader(t *testing.T) {
+	t.Run("MPCMM-B12: The map's old contents are read as the commit has them, and else as the index does", func(t *testing.T) {})
+	r := newRepo(t)
+	r.write("a.spec.md", "committed\n")
+	r.git("add", "a.spec.md")
+	r.git("commit", "-m", "a")
+	r.write("a.spec.md", "edited in the tree\n")
+	r.write("b.spec.md", "staged\n")
+	r.git("add", "b.spec.md")
+	r.write("b.spec.md", "edited after staging\n")
+	r.write("c.spec.md", "untracked\n")
+	read := AtHeadReader(r.dir)
+	if b, ok := read("a.spec.md"); !ok || string(b) != "committed\n" {
+		t.Errorf("the commit's copy, got %q %v", b, ok)
+	}
+	if b, ok := read("b.spec.md"); !ok || string(b) != "staged\n" {
+		t.Errorf("a file the commit lacks is read from the index, got %q %v", b, ok)
+	}
+	if _, ok := read("c.spec.md"); ok {
+		t.Error("a file in neither is not read")
+	}
+}

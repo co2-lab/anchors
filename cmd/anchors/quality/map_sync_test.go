@@ -206,8 +206,9 @@ func TestSyncMap_untouchedFilesKeepHeadsProofs(t *testing.T) {
 	t.Run("MPSYN-B05: A file the commit does not change keeps the proofs HEAD had", func(t *testing.T) {})
 	r := newSyncRepo(t, true)
 	mapPath := filepath.Join(r.root, mapx.DefaultPath)
-	// another session edits the proven spec and does not stage it; a map build drops its proof
-	touchWrite(t, r.root, "src/pay.spec.md", "<!-- @anchors\n  code: PAYMX\n  updated_at: 2026-09-01\n-->\n# Pay\n\n### PAYMX-B01 — charges, edited elsewhere\n")
+	// another session edits the proven spec outside its rules and does not stage it; a map
+	// build drops its proof
+	touchWrite(t, r.root, "src/pay.spec.md", "<!-- @anchors\n  code: PAYMX\n  updated_at: 2026-09-01\n-->\n# Pay, edited elsewhere\n\n### PAYMX-B01 — charges\n")
 	old, _ := mapx.Load(mapPath)
 	files, _ := scan.Walk(r.root, r.cfg)
 	g := mapx.Build(files, r.cfg, gitmeta.AllCommitDates(r.root))
@@ -324,4 +325,31 @@ func loadedMap(t *testing.T, path string) *mapx.Graph {
 		t.Fatal(err)
 	}
 	return g
+}
+
+func TestSyncMap_aFileAsHeadHasItTakesHeadsMeasurement(t *testing.T) {
+	t.Run("MPSYN-B08: A file the commit leaves as HEAD has it takes HEAD's measurement over one carried from the tree's edit", func(t *testing.T) {})
+	r := newSyncRepo(t, true)
+	mapPath := filepath.Join(r.root, mapx.DefaultPath)
+	// another session edits the proven rule and does not stage it; a map build carries the
+	// spec's evidence with the rule's scenarios stale
+	touchWrite(t, r.root, "src/pay.spec.md", "<!-- @anchors\n  code: PAYMX\n  updated_at: 2026-09-01\n-->\n# Pay\n\n### PAYMX-B01 — charges, edited elsewhere\n")
+	old, _ := mapx.Load(mapPath)
+	files, _ := scan.Walk(r.root, r.cfg)
+	g := mapx.Build(files, r.cfg, gitmeta.AllCommitDates(r.root))
+	mapx.PreserveStamps(g, old)
+	if n := nodeOf(g, "src/pay.spec.md"); n.Signal == nil || len(n.Signal.StaleCodes) != 1 {
+		t.Fatalf("the rebuild carries the spec with its rule stale, got %+v", n.Signal)
+	}
+	if err := mapx.Save(g, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	touchWrite(t, r.root, "src/other.ts", "export const other = 3\n")
+	r.git("add", "src/other.ts")
+	if _, err := syncMapForCommit(r.root, r.cfg, nil); err != nil {
+		t.Fatal(err)
+	}
+	if n := nodeOf(r.stagedMap(t), "src/pay.spec.md"); n == nil || n.Signal == nil || len(n.Signal.StaleCodes) != 0 || n.Signal.ProvenCodes[0] != "PAYMX-B01" {
+		t.Errorf("the committed map has HEAD's proof of HEAD's content, got %+v", n)
+	}
 }

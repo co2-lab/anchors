@@ -47,6 +47,7 @@ grouped, because it is where the decision is made. Both warnings inform and neve
 | `MPCMM-B04` | The edge summary lists the unit's edge types first, in a fixed order, then every other type alphabetically, so no type is hidden; with no edges there is no summary. |
 | `MPCMM-B05` | When the layer of a file was decided by pattern length, the build warns once per pair of winning and losing layers, with the number of files and one example, and says what the wrong choice costs; with no such file it says nothing. |
 | `MPCMM-B11` | A file whose layer is decided by a declared priority is not reported as a guess: once one of the matching layers declares a priority, the build no longer warns about that file. |
+| `MPCMM-B12` | Before the rebuild carries what the edits since the last map left proven, a map written before evidence revisions has each moved file's old content read as the commit has it, and else as the index does; a file in neither is not read. (`AtHeadReader`) |
 
 ### Show
 

@@ -140,6 +140,7 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 				if len(pc) > 0 || (n.Signal != nil && len(n.Signal.ProvenCodes) > 0) {
 					ensureSignal(n)
 					n.Signal.ProvenCodes = pc
+					n.Signal.refreshStale(pc)
 					n.Signal.AtRev = n.Rev
 					n.Signal.IngestedAt = now
 					matchedCodes += len(pc)
@@ -168,6 +169,7 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 					delete(n.Signal.ProvenRevBySuite, suite)
 				}
 				n.Signal.ProvenCodes = unionProven(n.Signal.ProvenBySuite)
+				n.Signal.refreshStale(pc)
 				n.Signal.AtRev = unionRev(n.Signal, n.Rev)
 				n.Signal.IngestedAt = now
 				matchedCodes += len(pc)
@@ -215,6 +217,7 @@ func (g *Graph) DropExternalSuites() (dropped []string) {
 		}
 		if execChanged {
 			sig.ProvenCodes = unionProven(sig.ProvenBySuite)
+			sig.refreshStale(nil)
 			sig.AtRev = unionRev(sig, g.Nodes[i].Rev)
 			if len(sig.ProvenBySuite) == 0 {
 				sig.ProvenBySuite, sig.ProvenRevBySuite = nil, nil

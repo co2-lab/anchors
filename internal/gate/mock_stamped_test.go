@@ -648,7 +648,7 @@ func TestRefreshHeldStamps_onlyTheOnesThatHeld(t *testing.T) {
 }
 
 func TestMockCarimbado_chainFlagsChangeNoContract(t *testing.T) {
-	t.Run("MCSTM-B21: The chain's flags change no contract: a stamp holds when a dependency flag joins its anchor line or a used-by line joins its block, a stamp taken over the flags holds too, and a real change still fails", func(t *testing.T) {})
+	t.Run("MCSTM-B21: The chain's flags change no contract: a stamp holds when a dependency flag joins its anchor line or a used-by or kinded dependency line joins its block, a stamp taken over the flags holds too, and a real change still fails", func(t *testing.T) {})
 	imp := "import React, { useEffect } from 'react'"
 	before := imp + "\n\n" + moduloBase
 	hImport := carimboDe(t, before, imp, 1)
@@ -656,7 +656,7 @@ func TestMockCarimbado_chainFlagsChangeNoContract(t *testing.T) {
 	// The chain's --fix: a flag at the end of the import, a used-by line above the symbol,
 	// inside the stamped block of the import's neighbour.
 	after := strings.Replace(before, imp, imp+" // @dep: REACT", 1)
-	after = strings.Replace(after, ancora, "// @used-by: ARNAA, WLLTW\n"+ancora, 1)
+	after = strings.Replace(after, ancora, "// @used-by: ARNAA, WLLTW\n// @dep[api]: profile.get\n"+ancora, 1)
 	root := escreveModulo(t, after)
 	teste := "// @contract: src/mod.ts | " + imp + " | 1 | " + hImport + "\n" +
 		"// @contract: src/mod.ts | " + ancora + " | 5 | " + hFunc + "\njest.mock('src/mod')"

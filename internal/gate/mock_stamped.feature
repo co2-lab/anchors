@@ -217,7 +217,7 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
 
   @MCSTM-B21 @unit-level
   Scenario: The chain's flags change no contract
-    Given a module whose import line gained a dependency flag and whose stamped function gained a used-by line above it, and stamps taken before
+    Given a module whose import line gained a dependency flag and whose stamped function gained a used-by and a kinded dependency line above it, and stamps taken before
     When the stamps are confronted, and then one taken over the flag, and then the function's parameter changes
     Then the stamps hold, the one taken over the flag holds too, and the real change fails
 

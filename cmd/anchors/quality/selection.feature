@@ -2,7 +2,7 @@
 # @anchors
 #   code: SLFTS
 #   ref: SLCTN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @SLCTN
@@ -100,6 +100,6 @@ Feature: RunSelection — a run takes only what is stale and below the minimum, 
 
   @SLCTN-B15 @unit-level
   Scenario: A file edited since the map was built is read as it is now
-    Given two passing tests measured at their revisions in the map, one of them edited on disk after the map was built
+    Given two passing tests measured at their revisions in the map, one edited on disk after the map was built and the other given only a dependency flag
     When the default run selects
-    Then the edited one runs as never measured, and the other is left out as fresh and passing
+    Then the edited one runs as never measured, and the flagged one is left out as fresh and passing

@@ -15,9 +15,10 @@ import (
 	"github.com/co2-lab/anchors/internal/scan"
 )
 
-const keptSpec = "<!-- @anchors\n  code: PAYMX\n  updated_at: 2026-09-01\n-->\n# Pay\n\n### PAYMX-B01 — charges @realizes GSSL-R01\n"
+const keptSpec = "<!-- @anchors\n  code: PAYMX\n  updated_at: 2026-09-01\n-->\n# Pay\n\nRealizes the payments doctrine.\n\n### PAYMX-B01 — charges @realizes GSSL-R01\n"
 
-// keepRepo is a repository whose spec was proven, then gained a `@realizes`.
+// keepRepo is a repository whose spec was proven, then gained a `@realizes` and a sentence
+// saying so — outside its rules, so the rebuild drops the proof.
 func keepRepo(t *testing.T, rebuild bool) (syncRepo, string) {
 	t.Helper()
 	r := newSyncRepo(t, true)
@@ -169,5 +170,28 @@ func TestKeepEvidence_suitesNotRunAgainComeFromHead(t *testing.T) {
 	if s == nil || len(s.ProvenBySuite) != 2 || s.ProvenRevBySuite["e2e/flow.xml"] != newRev || s.ProvenRevBySuite["unit.xml"] != newRev ||
 		s.AtRev != newRev || !strings.Contains(out, "evidence kept:") {
 		t.Errorf("the e2e proof comes back from HEAD and is at the new content beside the unit run: %+v\n%s", s, out)
+	}
+}
+
+func TestKeepEvidence_clearsTheScenariosOfAChangedRule(t *testing.T) {
+	t.Run("KPEVD-B06: The scenarios of a changed rule, marked stale by the rebuild, are kept too", func(t *testing.T) {})
+	r, mapPath := keepRepo(t, false)
+	g, err := mapx.Load(mapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := g.Node("src/pay.spec.md")
+	rev := scan.ShortHash([]byte(keptSpec))
+	n.Rev = rev
+	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"PAYMX-B01"}, AtRev: rev, StaleCodes: []string{"PAYMX-B01"}}
+	if err := mapx.Save(g, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runQ(t, newKeepEvidenceCmd(), "--root", r.root, "src/pay.spec.md", "--reason", "the rule's wording only")
+	if err != nil || !strings.Contains(out, "src/pay.spec.md — scenarios of a changed rule kept: PAYMX-B01") || !strings.Contains(out, "1 file(s) kept") {
+		t.Fatalf("the command says what it kept, got %v:\n%s", err, out)
+	}
+	if n, _ := keptSignal(t, mapPath); len(n.Signal.StaleCodes) != 0 {
+		t.Errorf("nothing is stale any more, got %+v", n.Signal)
 	}
 }

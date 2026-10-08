@@ -1865,3 +1865,20 @@ func TestHeaderValid_readsTheTopBlockAndLayerForNoUnit(t *testing.T) {
 		t.Errorf("a support file with layer only: %v (%s)", v, msg)
 	}
 }
+
+// A RULE THAT CHANGED since its scenarios were proven, with nothing else of the spec: its
+// proofs are stale and the others stand (DESIGN-evidence-by-what-it-proves.md, W03).
+func TestScenarioCoverage_aChangedRuleIsStaleAlone(t *testing.T) {
+	t.Run("INCHN-B42: Scenario coverage reads the scenarios of a changed rule as stale, and the rest as proven", func(t *testing.T) {})
+	root, g := rootWithTest(t, "const c = \"CREDX-B01 CREDX-B02\"\nfunc TestX(t *testing.T) {}\n")
+	n := specNodeCoverage()
+	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CREDX-B01", "CREDX-B02"}, StaleCodes: []string{"CREDX-B02"}}
+	v, msg := checkScenarioCoverage(specWithTwoRequirements, n, root, g, nil)
+	if v != Pending || !strings.Contains(msg, "CREDX-B02") || strings.Contains(msg, "CREDX-B01") {
+		t.Errorf("only B02 is stale, and stale is pending: %v %q", v, msg)
+	}
+	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CREDX-B02"}, StaleCodes: []string{"CREDX-B02"}}
+	if v, msg := checkScenarioCoverage(specWithTwoRequirements, n, root, g, nil); v != Fail || !strings.Contains(msg, "CREDX-B02") || !strings.Contains(msg, "CREDX-B01") {
+		t.Errorf("a rule not proven still fails, with the stale one named beside it: %v %q", v, msg)
+	}
+}

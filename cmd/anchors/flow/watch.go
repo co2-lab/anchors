@@ -465,7 +465,7 @@ func handleChange(root string, cfg *config.Config, g *mapx.Graph, rel string) {
 		return
 	}
 	addIfNew(g, root, filepath.ToSlash(rel), cfg)
-	updateNodeRev(g, root, rel)
+	updateNodeRev(g, root, rel, cfg)
 
 	next, reason := queue.SuggestNext(kind)
 	// A camada pode DISPENSAR a peça que a fila sugere (`optional_unit_edges`). Enfileirá-la
@@ -551,18 +551,12 @@ func taskID(rel, next string) string {
 // permitido aqui — só o carimbo de criação, informativo.
 func nowStamp() string { return time.Now().Format(time.RFC3339) }
 
-func updateNodeRev(g *mapx.Graph, root, rel string) {
+func updateNodeRev(g *mapx.Graph, root, rel string, cfg *config.Config) {
 	content, err := os.ReadFile(filepath.Join(root, rel))
 	if err != nil {
 		return
 	}
-	rev := scan.ShortHash(content)
-	for i := range g.Nodes {
-		if g.Nodes[i].ID == rel {
-			g.Nodes[i].Rev = rev
-			return
-		}
-	}
+	g.AdvanceTo(filepath.ToSlash(rel), content, cfg)
 }
 
 // changeDelivered diz se o arquivo é um REGISTRO DE ENTREGA pendente de review, e devolve

@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/co2-lab/anchors/cmd/anchors/mapcmd"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/mapx"
@@ -67,16 +68,35 @@ func syncMapForCommit(absRoot string, cfg *config.Config, bumped []touchDecision
 		if err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("read the map: %w", err)
 		}
+		// A file the commit leaves as HEAD has it, and the tree has edited since, takes HEAD's
+		// measurement of that content: carried back from the edit, its proofs could have lost
+		// the scenarios of a rule the edit changed.
+		asHead := map[string]*mapx.Node{}
+		if err == nil && head != nil {
+			for _, n := range fresh.Nodes {
+				h, b := head.Node(n.ID), before.Node(n.ID)
+				if h != nil && h.Rev == n.Rev && h.Signal != nil && b != nil && b.Rev != n.Rev {
+					asHead[n.ID] = h
+				}
+			}
+		}
 		if err == nil {
 			for _, d := range bumped {
 				before.RebaseRev(d.File, scan.ShortHash([]byte(d.Old)), scan.ShortHash([]byte(d.Content)))
 			}
+			mapx.FillOldEvidence(fresh, before, mapcmd.AtHeadReader(absRoot), cfg)
 			mapx.PreserveStamps(fresh, before)
 			fresh.Flow = before.Flow
+		}
+		for i := range fresh.Nodes {
+			if h, ok := asHead[fresh.Nodes[i].ID]; ok {
+				fresh.Nodes[i].Signal, fresh.Nodes[i].EvidenceKept = h.Signal, h.EvidenceKept
+			}
 		}
 		// A file the commit leaves as HEAD has it keeps what was measured of that content:
 		// the map on disk may hold another revision of it — an unstaged edit, measured or
 		// not —, and the committed map must not lose the proofs HEAD already had.
+		mapx.CarryUnchangedEvidence(fresh, head)
 		mapx.FillSignals(fresh, head)
 		if !apart {
 			return mapx.Save(fresh, mapPath)

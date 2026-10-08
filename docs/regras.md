@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:8654297264ea833c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:2420bf4c2c492b2f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1215,6 +1215,8 @@ abra a página dela em `camadas/`.
 
 - [WTCHA-B16 — A governed file the map does not have enters it the moment the watcher sees it — read alone, with its unit —, and the watcher's copy of the map is reloaded; without a map on disk, nothing is written.](layers/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue)
 
+- [WTCHA-B17 — A governed file the watcher sees changed moves to its new revision in the watcher's copy of the map, carrying its evidence when what its proofs read did not change — a flag of the chains, a spec's navigation or date —; a change to what they read leaves them stale. (`updateNodeRev`)](layers/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue)
+
 - [WTCHA-I01 — A task still in the queue is never queued twice: the same change again is reported as already in the queue.](layers/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue)
 
 - [WTCHA-I02 — Every change is handled by the loop itself, one at a time — the debounce timer only hands the path back to it. A change still inside its debounce window when the loop ends is handled before the loop returns, and nothing is handled after it.](layers/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue)
@@ -1658,6 +1660,8 @@ abra a página dela em `camadas/`.
 - [MPCMM-B05 — When the layer of a file was decided by pattern length, the build warns once per pair of winning and losing layers, with the number of files and one example, and says what the wrong choice costs; with no such file it says nothing.](layers/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it)
 
 - [MPCMM-B11 — A file whose layer is decided by a declared priority is not reported as a guess: once one of the matching layers declares a priority, the build no longer warns about that file.](layers/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it)
+
+- [MPCMM-B12 — Before the rebuild carries what the edits since the last map left proven, a map written before evidence revisions has each moved file's old content read as the commit has it, and else as the index does; a file in neither is not read. (`AtHeadReader`)](layers/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it)
 
 - [MPCMM-B06 — Showing a file lists the edges that reach it and the edges that leave it, marking a file with nothing above it as a top and one with nothing below as a leaf.](layers/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it)
 
@@ -2735,6 +2739,8 @@ abra a página dela em `camadas/`.
 
 - [KPEVD-B05 — When the file's signal lacks suites the map at HEAD holds for it — the rebuild dropped the signal and only some suites ran again at the new content —, those suites come back from HEAD and are carried with the rest; a suite run again keeps its new measurement. A suite that ran again and proved nothing here also comes back: the command is the author's declaration that the change proves nothing new.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
 
+- [KPEVD-B06 — The scenarios a rebuild marked stale because their rule changed are kept too, and said, even when the evidence itself is already at the current content.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
+
 - [KPEVD-E01 — The reason is missing or blank, a file is not in the map or cannot be read, or there is no map](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
 
 ### [LCBCL — LocalBacklog — what is still open locally after a full check, said in two lines](layers/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines)
@@ -2766,6 +2772,8 @@ abra a página dela em `camadas/`.
 - [MPSYN-B06 — When governed files of the tree differ from the index — unstaged edits, untracked files —, the commit's map goes straight into the index and the map on disk stays the tree's, with what was measured of those edits; with a tree that matches the index, the map on disk is the one staged.](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
 
 - [MPSYN-B07 — What the map on disk measured of a file after the last commit — an ingestion since HEAD, or a new file measured before it was staged — survives the commit, in the committed map and in the map on disk, at the file's revision. (`PreserveStamps`)](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
+
+- [MPSYN-B08 — A file the commit leaves as HEAD has it, and the tree edited since, takes HEAD's measurement of that content in the committed map — not one carried back from the tree's edit, which may have marked a changed rule's scenarios stale.](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
 
 - [MPSYN-B04 — A map git does not track, or no map, is left alone and nothing is staged.](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
 
@@ -2849,7 +2857,7 @@ abra a página dela em `camadas/`.
 
 - [SLCTN-B14 — A test run also takes the test files of the rules a contract field changed since the last commit reaches, when the suite runs them — saying which were added and why —, whatever state their own file is in.](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
-- [SLCTN-B15 — The map is read as a build would leave it now: a file edited since the last build has no result — the build drops the result of another version — and is selected as never measured; an unchanged file keeps its result. (`currentRevs`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
+- [SLCTN-B15 — The map is read as a build would leave it now: a file edited since the last build has no result — the build drops the result of another version — and is selected as never measured; an unchanged file keeps its result, and so does a file whose edit changed nothing its result proved — a flag of the chains —, as the build carries it. (`currentRevs`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
 - [SLCTN-E01 — The map cannot be loaded for a selective run](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
@@ -4555,6 +4563,8 @@ abra a página dela em `camadas/`.
 
 - [INCHN-B41 — `header-valid` requires, in a header that has its identity, the file's OWN `code:` — a `ref:` alone names the unit, not the file — and fails a code another node of the map carries as its own, naming that file. (`checkOwnCode`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
+- [INCHN-B42 — `scenario-coverage` reads the rules whose scenarios are stale — their rule changed since they were proven, and nothing else of the spec did — as stale, apart from the rest: Pending naming them when every other rule is proven, and named beside the failing ones otherwise. (`checkScenarioCoverage`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
+
 - [INCHN-B15 — An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B16 — A guide with no compliance-points section, or with the section and no item in it, fails — the AI judgment gate would otherwise fall back on vague heuristics.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
@@ -4749,7 +4759,7 @@ abra a página dela em `camadas/`.
 
 - [MCSTM-B20 — `StampsHolding` lists the stamps of a test that match their module today, keyed `<module>](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
-- [MCSTM-B21 — A stamp reads its module without the chain's flags — a dependency, used-by or navigation flag (or its waiver) at the end of a line, and a line that only carries one —: a flag `check --fix` writes changes no contract, and the stamp's anchor and snippet hold through it. A stamp taken while the flags were in the module, as written, holds too; a change to the stamped code itself still fails, and a refresh writes the hash read without the flags. (`StampSnippet`)](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
+- [MCSTM-B21 — A stamp reads its module without the chain's flags — a dependency (kinded or not), used-by or navigation flag (or its waiver) at the end of a line, and a line that only carries one —, the reading the map's evidence revisions share: a flag `check --fix` writes changes no contract, and the stamp's anchor and snippet hold through it. A stamp taken while the flags were in the module, as written, holds too; a change to the stamped code itself still fails, and a refresh writes the hash read without the flags. (`StampSnippet`)](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
 - [MCSTM-B22 — A chain flag in a block comment inside a line — the form the navigation fixer writes after a call on a JSX line — is read out of the stamped snippet too, and only the comment: the code after it stays, so a change there still fails.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
@@ -8023,6 +8033,16 @@ abra a página dela em `camadas/`.
 
 - [EDSTD-B18 — A mechanical repair (`check --fix`) carries only the evidence that held at the file's revision before it: a signal already stale then — a mutation run on an older content — stays stale, where a declared change carries every earlier revision. (`KeepFixedEvidence`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 
+- [EDSTD-B19 — A rebuild carries the evidence of a file whose revision moved and whose evidence revision held — what held at its previous revision, as a repair does: its proofs, the closures of the tests that reach it, its edges' stamps —; coverage and mutation go along only when its line revision held too, and nothing is recorded on the node, for nobody declared anything. A file whose evidence changed is carried nothing; a map written before evidence revisions reads a file's old revision as its evidence. (`CarryUnchangedEvidence`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
+
+- [EDSTD-B20 — A spec whose rule definitions alone changed — its rest held — is carried too, with the proven scenarios of the rules that changed, each variant `#NN`, marked stale; their proof stays recorded, and the others stand. A spec whose rest changed is carried nothing. (`CarryUnchangedEvidence`, `StaleCodes`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
+
+- [EDSTD-B21 — A stale scenario is fresh again when a run proves it, and leaves the stale ones when no suite proves it any more; the author keeping the evidence clears them all. The fresh proofs are the proven ones without the stale. (`FreshProven`, `ClearStale`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
+
+- [EDSTD-B22 — Advancing a node to its file's content moves its revisions and carries the evidence they show unchanged, saying whether the revision moved and whether the evidence went along; an unknown file is left alone. (`AdvanceTo`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
+
+- [EDSTD-B23 — A map written before evidence revisions gets, for each file the new build moved, the evidence of its content at the map's revision — read from the commit's copy, or the index's —, taken only when its hash is that revision; a map that has evidence revisions is not read. The first build after the upgrade then carries what the edits since left proven. (`FillOldEvidence`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
+
 - [EDSTD-B14 — Judging a node or a single relation keeps a waived stamp recorded by another gate, or when no gate is named, and still records the judging gate's judgment; the gate that recorded the waiver replaces it, and a new waiver always replaces the stamp.](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 
 - [EDSTD-I01 — Two rounds over the same graph, with the same verdicts on the same date, produce the same stamps.](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
@@ -8286,6 +8306,10 @@ abra a página dela em `camadas/`.
 - [RPSCR-B46 — A dependency that is no import — `@dep[<kind>]: <name>` on the line that calls it — is read with its kind and name, apart from the import flags. (`CodeDep`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B47 — A navigation flag may carry `@dormant` with a colon and its reason after it: the call is kept for a feature not turned on, and the flag is read with that reason; a marker with no reason is no dormancy, and the flag stays a plain one. (`Navigation`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B48 — A spec's evidence revision is its content without its `@anchors` header, its navigation and change-history sections — in any language of the catalog, or as the project names them — and an Out table under any title, with its blank lines and trailing spaces normalized; each rule it defines has a revision of its definition — its heading and what is under it, its table rows, its bold bullet —, and the rest of what it reads has one of its own. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B49 — Any other file's evidence revision is its content without its `@anchors` header and the chain's flags — dependency (kinded or not), used-by and navigation flags and their waivers, at a line's end or on lines of their own —; its line revision keeps every line in place, the header and the flag-only lines blank, so a flag at a line's end keeps it and a flag line moves it. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

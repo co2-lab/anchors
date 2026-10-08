@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e9f77b4cfec1b2ed — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f5e08eeb4f333f86 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1110,6 +1110,8 @@ teste prova.
 
 - [A file the watcher sees for the first time enters the map](layers/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue) `WTCHA-B16`
 
+- [A changed file moves to its revision with its evidence when nothing it proves changed](layers/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue) `WTCHA-B17`
+
 - [On unix a detached child leads its own process group](layers/comando.md#wtdmw--watchdaemon--the-watcher-started-in-the-background-survives-the-terminal-that-started-it) `WTDMW-B01`
 
 - [On Windows a detached child is created in a new process group](layers/comando.md#wtdmw--watchdaemon--the-watcher-started-in-the-background-survives-the-terminal-that-started-it) `WTDMW-B02`
@@ -1525,6 +1527,8 @@ teste prova.
 - [Showing with no selector is refused](layers/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-E04`
 
 - [The pending worklist with no configuration is refused](layers/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-E05`
+
+- [The map's old contents are read as the commit has them, and else as the index does](layers/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-B12`
 
 - [The tree goes down what a file uses, and up who uses it, a cycle marked once](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file) `MDCMP-B01`
 
@@ -2488,6 +2492,8 @@ teste prova.
 
 - [The suites a later run did not replace come back from HEAD and are carried with the rest](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B05`
 
+- [The scenarios of a changed rule, marked stale by the rebuild, are kept too](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B06`
+
 - [The issues in todo and doing are counted, with the user-owned ones apart](layers/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines) `LCBCL-B01`
 
 - [The pending and claimed tasks are counted](layers/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines) `LCBCL-B02`
@@ -2517,6 +2523,8 @@ teste prova.
 - [With the tree ahead of the commit, the map on disk stays the tree's](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B06`
 
 - [What was measured after the last commit survives the next one](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B07`
+
+- [A file the commit leaves as HEAD has it takes HEAD's measurement over one carried from the tree's edit](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B08`
 
 - [The quality domain registers exactly its twelve commands](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command) `QLCMQ-B01`
 
@@ -4147,6 +4155,8 @@ teste prova.
 - [A header without a code of its own fails, and a code another file owns fails naming it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B41`
 
 - [The header is the block at the top, and a file of no unit is identified by its layer](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B40`
+
+- [Scenario coverage reads the scenarios of a changed rule as stale, and the rest as proven](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B42`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -7260,6 +7270,16 @@ teste prova.
 
 - [A repair carries only the evidence that held at the file's revision before it](layers/mapa.md#edstd-b18--a-repair-carries-only-the-evidence-that-held-at-the-files-revision-before-it) `EDSTD-B18`
 
+- [A rebuild carries the evidence of a file whose evidence revision held](layers/mapa.md#edstd-b19--a-rebuild-carries-the-evidence-of-a-file-whose-evidence-revision-held) `EDSTD-B19`
+
+- [A spec whose rules alone changed carries its evidence with those rules' scenarios stale](layers/mapa.md#edstd-b20--a-spec-whose-rules-alone-changed-carries-its-evidence-with-those-rules-scenarios-stale) `EDSTD-B20`
+
+- [A stale scenario is fresh again when a run proves it, or the author keeps the evidence](layers/mapa.md#edstd-b21--a-stale-scenario-is-fresh-again-when-a-run-proves-it-or-the-author-keeps-the-evidence) `EDSTD-B21`
+
+- [Advancing a node to its content carries the evidence its revisions show unchanged](layers/mapa.md#edstd-b22--advancing-a-node-to-its-content-carries-the-evidence-its-revisions-show-unchanged) `EDSTD-B22`
+
+- [A map written before evidence revisions gets them from the content at its revision](layers/mapa.md#edstd-b23--a-map-written-before-evidence-revisions-gets-them-from-the-content-at-its-revision) `EDSTD-B23`
+
 - [Saving stamps the current format and the running binary's release](layers/mapa.md#grprg-b01--saving-stamps-the-current-format-and-the-running-binarys-release) `GRPRG-B01`
 
 - [The saved file starts with the fixed comment header](layers/mapa.md#grprg-b02--the-saved-file-starts-with-the-fixed-comment-header) `GRPRG-B02`
@@ -7511,6 +7531,10 @@ teste prova.
 - [A kinded dependency is read with its kind and name](layers/scan.md#rpscr-b46--a-kinded-dependency-is-read-with-its-kind-and-name) `RPSCR-B46`
 
 - [A dormant navigation flag is read with its reason](layers/scan.md#rpscr-b47--a-dormant-navigation-flag-is-read-with-its-reason) `RPSCR-B47`
+
+- [A spec's evidence leaves out its header, navigation, history and spacing](layers/scan.md#rpscr-b48--a-specs-evidence-leaves-out-its-header-navigation-history-and-spacing) `RPSCR-B48`
+
+- [A file's evidence leaves out its header and the chain's flags, and its line revision keeps the lines](layers/scan.md#rpscr-b49--a-files-evidence-leaves-out-its-header-and-the-chains-flags-and-its-line-revision-keeps-the-lines) `RPSCR-B49`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

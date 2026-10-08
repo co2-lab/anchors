@@ -122,6 +122,9 @@ type File struct {
 	// triggers it, with a revision of the row alone: a flow that asserts a navigation is
 	// stale when its row changes, and not when the rest of the spec does.
 	OutRows map[string]string
+	// Evidence are the revisions the file's proofs are measured against: its content without
+	// what proves nothing (see EvidenceOf).
+	Evidence Evidence
 	// Composes are the units a spec's Parts Used section names — the components a screen is
 	// made of, by name (`BottomSheet`). The map ties the spec to each one's code, so a
 	// component whose capture diverged can ask the captures of who uses it again.
@@ -301,6 +304,7 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 	if kind == "spec" {
 		f.OutRows = extractOutRows(content)
 	}
+	f.Evidence = EvidenceOf(kind, content, cfg)
 	// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
 	// project's vocabulary, not a claim on this project's units. Counting them would give
 	// the file an inferred identity it does not own.

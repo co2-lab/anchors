@@ -368,11 +368,15 @@ func TestSelection_readsTheFileAsItIsNow(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "a_test.go"), []byte("package a // edited\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	// b only gains a flag of the chains: nothing its result proved changed.
+	if err := os.WriteFile(filepath.Join(dir, "b_test.go"), []byte("// @dep: AAAAA\npackage a\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	out, err := runQ(t, newTestCmd(), "--root", dir)
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
 	}
 	if got := readLog(t, dir); !reflect.DeepEqual(got, []string{"a_test.go"}) || !strings.Contains(out, "1 fresh and passing") {
-		t.Errorf("the edited test runs as never measured and the other is left out, got %v\n%s", got, out)
+		t.Errorf("the edited test runs as never measured and the flagged one is left out with its result, got %v\n%s", got, out)
 	}
 }

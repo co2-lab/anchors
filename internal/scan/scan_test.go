@@ -1198,3 +1198,62 @@ func TestNavigates_dormant(t *testing.T) {
 		t.Errorf("a bare marker keeps the flag, as an edge: %+v", bare)
 	}
 }
+
+func TestEvidenceOf_specLeavesOutWhatProvesNothing(t *testing.T) {
+	t.Run("RPSCR-B48: A spec's evidence leaves out its header, navigation, history and spacing", func(t *testing.T) {})
+	spec := func(date, out, history, b02 string) []byte {
+		return []byte("<!-- @anchors\n  code: ARNAA\n  updated_at: " + date + "\n-->\n# Arena\n\n## Rules\n\n" +
+			"| `ARNAA-B01` | joins a match |\n| `ARNAA-B02` | " + b02 + " |\n\n### ARNAA-S01 — waiting\n\nThe lobby shows the players.\n\n" +
+			"## Navegação\n\n### Saída\n\n| Destino | Regra |\n| --- | --- |\n| " + out + " | `ARNAA-B01` |\n\n" +
+			"## Change History\n\n- " + history + "\n")
+	}
+	base := EvidenceOf("spec", spec("2026-10-01", "Home", "created", "leaves"), nil)
+	quiet := EvidenceOf("spec", spec("2026-10-08", "Wallet", "Out row changed", "leaves"), nil)
+	if base.Rev == "" || base.Rev != quiet.Rev || base.Rest != quiet.Rest {
+		t.Errorf("a date, an Out row and a history line prove nothing: %+v %+v", base, quiet)
+	}
+	if len(base.Rules) != 3 || base.Rules["ARNAA-S01"] == "" {
+		t.Errorf("each rule — row or heading with what is under it — has its revision: %v", base.Rules)
+	}
+	rule := EvidenceOf("spec", spec("2026-10-01", "Home", "created", "leaves the match"), nil)
+	if rule.Rev == base.Rev || rule.Rest != base.Rest || rule.Rules["ARNAA-B02"] == base.Rules["ARNAA-B02"] ||
+		rule.Rules["ARNAA-B01"] != base.Rules["ARNAA-B01"] || rule.Rules["ARNAA-S01"] != base.Rules["ARNAA-S01"] {
+		t.Errorf("a rule's change moves its own revision and the evidence, not the rest: %+v %+v", base, rule)
+	}
+	spaced := replaceOnce(spec("2026-10-01", "Home", "created", "leaves"), []byte("## Rules\n"), []byte("## Rules  \n\n\n"))
+	if EvidenceOf("spec", spaced, nil).Rev != base.Rev {
+		t.Error("blank lines and trailing spaces prove nothing")
+	}
+	prose := replaceOnce(spec("2026-10-01", "Home", "created", "leaves"), []byte("# Arena\n"), []byte("# Arena, the match room\n"))
+	if e := EvidenceOf("spec", prose, nil); e.Rest == base.Rest {
+		t.Error("what is outside the rules is the rest, and moves it")
+	}
+}
+
+func TestEvidenceOf_codeLeavesOutTheChainsFlags(t *testing.T) {
+	t.Run("RPSCR-B49: A file's evidence leaves out its header and the chain's flags, and its line revision keeps the lines", func(t *testing.T) {})
+	plain := "import { a } from './a'\nexport function f() {\n  return db.query(a)\n}\n"
+	ended := "import { a } from './a' // @dep: AAAAA\nexport function f() {\n  return db.query(a) // @dep[db]: transactions\n}\n"
+	above := "import { a } from './a'\n// @used-by: BBBBB (f)\nexport function f() {\n  return db.query(a)\n}\n"
+	p, e, ab := EvidenceOf("code", []byte(plain), nil), EvidenceOf("code", []byte(ended), nil), EvidenceOf("code", []byte(above), nil)
+	if p.Rev != e.Rev || p.Rev != ab.Rev {
+		t.Errorf("flags at a line's end and on lines of their own prove nothing: %+v %+v %+v", p, e, ab)
+	}
+	if p.LineRev != e.LineRev || p.LineRev == ab.LineRev {
+		t.Errorf("a flag at a line's end keeps the lines; a flag line moves them: %+v %+v %+v", p, e, ab)
+	}
+	if EvidenceOf("code", []byte(strings.Replace(plain, "query", "exec", 1)), nil).Rev == p.Rev {
+		t.Error("a change to the code moves the evidence")
+	}
+	// The header's date is the hook's, and its lines stay in place.
+	dated := func(day string) Evidence {
+		return EvidenceOf("code", []byte("// @anchors\n//   code: AAAAA\n//   updated_at: 2026-10-0"+day+"\n"+plain), nil)
+	}
+	if d1, d2 := dated("1"), dated("8"); d1.Rev != d2.Rev || d1.LineRev != d2.LineRev || d1.Rev != p.Rev || d1.LineRev == p.LineRev {
+		t.Errorf("the header proves nothing and keeps its lines: %+v %+v", d1, d2)
+	}
+}
+
+func replaceOnce(b []byte, old, new []byte) []byte {
+	return []byte(strings.Replace(string(b), string(old), string(new), 1))
+}

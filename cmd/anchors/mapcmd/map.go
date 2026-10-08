@@ -169,6 +169,7 @@ map's edges by co-location (file names) and by scenario code
 			var perdidos string
 			if err := mapx.WithLock(outPath, func() error {
 				if anterior, err := mapx.Load(outPath); err == nil {
+					mapx.FillOldEvidence(g, anterior, AtHeadReader(absRoot), cfg)
 					mapx.PreserveStamps(g, anterior)
 					// O FLUXO sobrevive ao rebuild do mapa, pela mesma razão dos carimbos e
 					// com um risco maior: quem o preenche é o `flow build`, que lê
@@ -390,4 +391,25 @@ func stampLossWarning(antigo, novo *mapx.Graph) string {
 	b.WriteString("  The report lives in `anchors judge`'s `--reason`, not in the file: if the stamp\n")
 	b.WriteString("  is gone, the judgment goes back to the queue and the evidence has to be redone.\n")
 	return b.String()
+}
+
+// AtHeadReader reads a file as the commit has it, and else as the index does: the copies a
+// map on disk was most likely built from (mapx.FillOldEvidence checks the revision).
+func AtHeadReader(absRoot string) func(id string) ([]byte, bool) {
+	var index func(string) ([]byte, error)
+	tried := false
+	return func(id string) ([]byte, bool) {
+		if c, ok := gitmeta.AtHead(absRoot, id); ok {
+			return []byte(c), true
+		}
+		if !tried {
+			tried = true
+			index, _ = scan.IndexReader(absRoot)
+		}
+		if index == nil {
+			return nil, false
+		}
+		b, err := index(id)
+		return b, err == nil
+	}
 }

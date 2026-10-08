@@ -985,6 +985,7 @@
   "gate.flag_covered.written_not_ingested": "%d scenario(s) with a test WRITTEN but no execution ingested: %s.\nThe test names the code and nobody knows whether it passes — written is not green. Run the suite and ingest the report (`anchors ingest --junit`).",
   "gate.flag_covered.written_not_green": "%d scenario(s) with a test written that did NOT pass: %s.\nExecution was ingested and these codes are not among the proven ones: the test exists and does not prove the scenario.",
   "gate.scenario_written_not_ingested": "%d scenario(s) with a test WRITTEN but no execution ingested: %s.\nThe test names the code and nobody knows whether it passes — written is not green. Run the suite and ingest the report (`anchors ingest --junit`).",
+  "gate.scenario_rule_changed": "%d rule(s) changed since their scenarios were proven, and nothing else of the spec did: %s.\nThe rest of the spec's proofs stand; run these scenarios again, or keep the evidence (`anchors keep-evidence`) if the change proves nothing new.",
   "gate.scenario_written_not_green": "%d scenario(s) with a test written that did NOT pass: %s.\nExecution was ingested and these codes are not among the proven ones.",
   "gate.revision_orphans.skip_not_spec": "not a spec — revisions are charged of the document that carries them",
   "gate.revision_orphans.no_revision": "the spec declares no revision — nothing to confront",

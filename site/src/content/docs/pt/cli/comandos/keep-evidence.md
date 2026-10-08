@@ -24,6 +24,11 @@ the change and no longer holds the evidence, it is taken from the map at HEAD.
 
 The `@contract` stamps of the doubles pointing at the file are refreshed too, and listed.
 
+What proves nothing by itself needs no declaration: the map carries the evidence across a
+header's date, a spec's navigation or change history, and the chain's flags (`@dep`,
+`@used-by`, `@navigates`). A spec whose rule changed and nothing else keeps its other
+proofs, with that rule's scenarios stale; this command keeps those too.
+
 Do not use it for a change in behaviour: the evidence is what stops that change from passing
 unproven.
 ```

@@ -44,7 +44,6 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 		g.Nodes = append(g.Nodes, Node{
 			ID:            f.Path,
 			Kind:          Kind(f.Kind),
-			Rev:           f.Rev,
 			UpdatedAt:     updatedAt[f.Path],
 			Layer:         f.Layer,
 			Parent:        f.Parent,
@@ -62,6 +61,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			OutRows:       f.OutRows,
 			Resources:     resourcesOf(f),
 		})
+		g.Nodes[len(g.Nodes)-1].setEvidence(f.Rev, f.Evidence)
 	}
 	assertedRows(g, files)
 
@@ -735,6 +735,7 @@ func sortGraph(g *Graph) {
 // qualquer ponta mudou de rev, o `StaleEdges` continua acusando: preservar o carimbo não
 // é fingir que o confronto é atual, é lembrar QUANDO ele aconteceu.
 func PreserveStamps(novo, antigo *Graph) {
+	CarryUnchangedEvidence(novo, antigo)
 	preservarSinais(novo, antigo)
 	if novo == nil || antigo == nil {
 		return

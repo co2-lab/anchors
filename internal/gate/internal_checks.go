@@ -880,10 +880,17 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 	// A rule is proven when EVERY scenario its features declare is — each variant `#NN` a
 	// scenario of its own. Read by the rule alone, a skipped `#02` was "proven" by the green
 	// `#01` beside it, and a suite that never ran passed as run.
+	// A rule changed since its scenarios were proven, and nothing else of the spec did: its
+	// proofs are stale, and the others stand (DESIGN-evidence-by-what-it-proves.md, W03).
 	ingested := n.Signal != nil
 	var provenCodes []string
+	staleRule := map[string]bool{}
 	if ingested {
-		provenCodes = n.Signal.ProvenCodes
+		provenCodes = n.Signal.FreshProven()
+		for _, c := range n.Signal.StaleCodes {
+			base, _, _ := strings.Cut(c, "#")
+			staleRule[base] = true
+		}
 	}
 	scenarios := specScenarios(root, g, n.ID)
 	proven := testsig.RulesProven(provenCodes, scenarios)
@@ -892,7 +899,7 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 		return Fail, i18n.T("gate.tests_source.failed", err)
 	}
 
-	var noTest, notGreen []string
+	var noTest, notGreen, changed []string
 	seen := map[string]bool{}
 	for _, code := range declared {
 		if seen[code] {
@@ -902,6 +909,8 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 		switch {
 		case proven[code]:
 			// proven: nothing to charge
+		case staleRule[code]:
+			changed = append(changed, code)
 		case written[code]:
 			if missing := testsig.UnprovenScenarios(code, provenCodes, scenarios); len(missing) > 0 {
 				notGreen = append(notGreen, missing...)
@@ -913,10 +922,16 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 		}
 	}
 	if len(noTest) == 0 && len(notGreen) == 0 {
+		if len(changed) > 0 {
+			return Pending, i18n.T("gate.scenario_rule_changed", len(changed), strings.Join(changed, ", "))
+		}
 		return Pass, ""
 	}
 
 	var b strings.Builder
+	if len(changed) > 0 {
+		b.WriteString(i18n.T("gate.scenario_rule_changed", len(changed), strings.Join(changed, ", ")) + "\n")
+	}
 	if len(noTest) > 0 {
 		b.WriteString(i18n.T("gate.scenario_missing_test", len(noTest), strings.Join(noTest, ", ")))
 	}

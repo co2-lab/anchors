@@ -272,7 +272,7 @@ func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, c
 	ingested := n.Signal != nil
 	var provenCodes []string
 	if ingested {
-		provenCodes = n.Signal.ProvenCodes
+		provenCodes = n.Signal.FreshProven()
 	}
 	green := testsig.RulesProven(provenCodes, scenarioCodes(f))
 	for _, c := range provenCodes {

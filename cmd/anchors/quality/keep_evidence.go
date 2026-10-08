@@ -54,6 +54,11 @@ the change and no longer holds the evidence, it is taken from the map at HEAD.
 
 The ` + "`@contract`" + ` stamps of the doubles pointing at the file are refreshed too, and listed.
 
+What proves nothing by itself needs no declaration: the map carries the evidence across a
+header's date, a spec's navigation or change history, and the chain's flags (` + "`@dep`" + `,
+` + "`@used-by`" + `, ` + "`@navigates`" + `). A spec whose rule changed and nothing else keeps its other
+proofs, with that rule's scenarios stale; this command keeps those too.
+
 Do not use it for a change in behaviour: the evidence is what stops that change from passing
 unproven.`,
 		Args: cobra.MinimumNArgs(1),
@@ -95,12 +100,20 @@ unproven.`,
 							}
 						}
 					}
+					// The scenarios of a rule that changed, marked stale by the rebuild, are what
+					// the author vouches for too.
+					cleared := n.Signal.ClearStale()
 					carried := g.KeepEvidence(rel, scan.ShortHash(b), reason, today, lines)
-					if len(carried) == 0 {
+					if len(carried) == 0 && len(cleared) == 0 {
 						fmt.Printf("  %s — nothing to keep: its evidence is already at this content, or it has none\n", rel)
 						continue
 					}
-					fmt.Printf("  %s — evidence kept: %s → %s\n", rel, strings.Join(carried, ", "), scan.ShortHash(b))
+					if len(carried) > 0 {
+						fmt.Printf("  %s — evidence kept: %s → %s\n", rel, strings.Join(carried, ", "), scan.ShortHash(b))
+					}
+					if len(cleared) > 0 {
+						fmt.Printf("  %s — scenarios of a changed rule kept: %s\n", rel, strings.Join(cleared, ", "))
+					}
 					files = append(files, rel)
 				}
 				return nil

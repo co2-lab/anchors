@@ -2,7 +2,7 @@
 # @anchors
 #   code: KEFKP
 #   ref: KPEVD
-#   updated_at: 2026-10-05
+#   updated_at: 2026-10-08
 #   layer: feature
 
 @KPEVD
@@ -43,3 +43,9 @@ Feature: KeepEvidence — a change that proves nothing new keeps the files' evid
     Given a spec proven at HEAD by a unit suite and an e2e suite, changed, the map rebuilt and only the unit suite run again
     When keep-evidence runs on the spec
     Then the e2e proof comes back from HEAD, and both suites are at the new content
+
+  @KPEVD-B06 @unit-level
+  Scenario: The scenarios of a changed rule, marked stale by the rebuild, are kept too
+    Given a spec at its current content whose rule's scenario is stale
+    When the evidence is kept with a reason
+    Then the command says the scenario was kept and nothing is stale any more

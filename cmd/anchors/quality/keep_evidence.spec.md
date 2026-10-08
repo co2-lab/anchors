@@ -33,6 +33,7 @@ they say it, with the reason recorded.
 | `KPEVD-B03` | A file whose evidence is already at its content, or that has none, is said to have nothing to keep, and is left as it was. |
 | `KPEVD-B04` | The `@contract` stamps of the doubles pointing at the files kept are refreshed and listed, under the same declaration. |
 | `KPEVD-B05` | When the file's signal lacks suites the map at HEAD holds for it — the rebuild dropped the signal and only some suites ran again at the new content —, those suites come back from HEAD and are carried with the rest; a suite run again keeps its new measurement. A suite that ran again and proved nothing here also comes back: the command is the author's declaration that the change proves nothing new. |
+| `KPEVD-B06` | The scenarios a rebuild marked stale because their rule changed are kept too, and said, even when the evidence itself is already at the current content. |
 
 ## Errors
 
