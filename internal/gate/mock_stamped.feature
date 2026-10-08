@@ -2,7 +2,7 @@
 # @anchors
 #   code: MSFMC
 #   ref: MCSTM
-#   updated_at: 2026-10-04
+#   updated_at: 2026-10-07
 #   layer: feature
 
 @MCSTM
@@ -214,3 +214,10 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
     Given a test with one stamp matching its module and one already stale
     When the code inside the module and the stamp's anchor is widened, and the held stamps are refreshed
     Then the stamp that held carries the new hash, and the stale one keeps its old hash
+
+  @MCSTM-B21 @unit-level
+  Scenario: The chain's flags change no contract
+    Given a module whose import line gained a dependency flag and whose stamped function gained a used-by line above it, and stamps taken before
+    When the stamps are confronted, and then one taken over the flag, and then the function's parameter changes
+    Then the stamps hold, the one taken over the flag holds too, and the real change fails
+

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:19c59460ebddd9c2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:24354c9a7b288fe4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4716,6 +4716,8 @@ abra a página dela em `camadas/`.
 - [MCSTM-B19 — The modules a test file's stamps point at are listed each once, in the order they first appear; a file with no stamp lists none. (`StampedModules`)](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
 - [MCSTM-B20 — `StampsHolding` lists the stamps of a test that match their module today, keyed `<module>](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
+
+- [MCSTM-B21 — A stamp reads its module without the chain's flags — a dependency, used-by or navigation flag (or its waiver) at the end of a line, and a line that only carries one —: a flag `check --fix` writes changes no contract, and the stamp's anchor and snippet hold through it. A stamp taken while the flags were in the module, as written, holds too; a change to the stamped code itself still fails, and a refresh writes the hash read without the flags. (`StampSnippet`)](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
 - [MCSTM-I01 — The gate RECOMPUTES the hash against the real module; it never validates the stamp's format alone. A stamp nobody confronts would certify itself, because whoever edits the test regenerates it to match their own mock.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 

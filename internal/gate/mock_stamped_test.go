@@ -646,3 +646,33 @@ func TestRefreshHeldStamps_onlyTheOnesThatHeld(t *testing.T) {
 		t.Errorf("the held stamp follows, the stale one stays (%d):\n%s", n, out)
 	}
 }
+
+func TestMockCarimbado_chainFlagsChangeNoContract(t *testing.T) {
+	t.Run("MCSTM-B21: The chain's flags change no contract: a stamp holds when a dependency flag joins its anchor line or a used-by line joins its block, a stamp taken over the flags holds too, and a real change still fails", func(t *testing.T) {})
+	imp := "import React, { useEffect } from 'react'"
+	before := imp + "\n\n" + moduloBase
+	hImport := carimboDe(t, before, imp, 1)
+	hFunc := carimboDe(t, before, ancora, 5)
+	// The chain's --fix: a flag at the end of the import, a used-by line above the symbol,
+	// inside the stamped block of the import's neighbour.
+	after := strings.Replace(before, imp, imp+" // @dep: REACT", 1)
+	after = strings.Replace(after, ancora, "// @used-by: ARNAA, WLLTW\n"+ancora, 1)
+	root := escreveModulo(t, after)
+	teste := "// @contract: src/mod.ts | " + imp + " | 1 | " + hImport + "\n" +
+		"// @contract: src/mod.ts | " + ancora + " | 5 | " + hFunc + "\njest.mock('src/mod')"
+	if v, msg := rodaCarimbo(t, root, teste); v != Pass {
+		t.Errorf("the flags change no contract: %v (%s)", v, msg)
+	}
+	// A stamp taken while the flag was already on the line, as written, holds too.
+	withFlag := imp + " // @dep: REACT"
+	hWritten := carimboDe(t, after, withFlag, 1)
+	if v, msg := rodaCarimbo(t, root, "// @contract: src/mod.ts | "+withFlag+" | 1 | "+hWritten+"\njest.mock('src/mod')"); v != Pass {
+		t.Errorf("a stamp taken over the flags holds: %v (%s)", v, msg)
+	}
+	// A real change to the stamped block still fails.
+	changed := strings.Replace(after, "  userId?: string,\n", "  userId: string,\n", 1)
+	root2 := escreveModulo(t, changed)
+	if v, _ := rodaCarimbo(t, root2, teste); v != Fail {
+		t.Errorf("a real change still fails: %v", v)
+	}
+}

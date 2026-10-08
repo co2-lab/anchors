@@ -101,7 +101,8 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 			skipped = append(skipped, StampSkipped{module, "the module could not be read: " + file})
 			continue
 		}
-		modLines := strings.Split(string(body), "\n")
+		// The module as the stamp reads it: without the chain's flags (see stampLines).
+		modLines := stampLines(strings.Split(string(body), "\n"))
 
 		var stamps []StampWritten
 		if exportRE != nil {

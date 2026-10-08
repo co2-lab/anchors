@@ -95,12 +95,12 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 
 	var divergentes []string
 	for _, c := range carimbos {
-		atual, err := recomputeStamp(root, c)
+		atual, holds, err := stampHolds(root, c)
 		if err != nil {
 			divergentes = append(divergentes, fmt.Sprintf("%s (%v)", c.anchor, err))
 			continue
 		}
-		if atual != c.hash {
+		if !holds {
 			divergentes = append(divergentes, fmt.Sprintf(i18n.T("gate.mock_stamped.stamp_diff_line"),
 				c.file, c.anchor, c.hash, atual))
 		}
@@ -193,22 +193,46 @@ func declaredStamps(content string) []declaredStamp {
 	return out
 }
 
-// recomputeStamp lê o módulo real e devolve o hash do trecho HOJE.
+// stampHolds says whether a stamp matches its module today: by the snippet read without the
+// chain's flags, or — for a stamp taken while the flags were already in the module — by the
+// snippet as written.
+func stampHolds(root string, c declaredStamp) (current string, holds bool, err error) {
+	h, raw, err := recomputeStampBoth(root, c)
+	if err != nil {
+		return "", false, err
+	}
+	return h, h == c.hash || (raw != "" && raw == c.hash), nil
+}
+
+// recomputeStampBoth reads the module and returns the hash of the stamped snippet today, read
+// without the chain's flags — a dependency flag appended to an import line, a used-by line
+// inserted above a symbol change no contract (reported from MIF: 270 stamps broken by the
+// chain's `--fix`) —, and the hash of the snippet as written, when its anchor is still found
+// as written.
+func recomputeStampBoth(root string, c declaredStamp) (string, string, error) {
+	b, err := readFile(root, c.file)
+	if err != nil {
+		return "", "", fmt.Errorf(i18n.T("gate.mock_stamped.err_module_not_found"), c.file)
+	}
+	written := strings.Split(string(b), "\n")
+	h, err := snippetOf(stampLines(written), stripChainFlag(c.anchor), c.count)
+	if err != nil {
+		return "", "", err
+	}
+	raw, _ := snippetOf(written, c.anchor, c.count)
+	return h, raw, nil
+}
+
+// snippetOf is the hash of the `count` lines from the unique line equal to `anchor`.
 //
 // A âncora é procurada por CONTEÚDO — é o que torna o carimbo imune a deslocamento.
 // Duas ocorrências da mesma linha tornam o alvo ambíguo, e o gate prefere acusar a
 // escolher uma: um carimbo que aponta para "alguma das duas" não prova nada.
-func recomputeStamp(root string, c declaredStamp) (string, error) {
-	b, err := readFile(root, c.file)
-	if err != nil {
-		return "", fmt.Errorf(i18n.T("gate.mock_stamped.err_module_not_found"), c.file)
-	}
-	linhas := strings.Split(string(b), "\n")
-
+func snippetOf(linhas []string, anchor string, count int) (string, error) {
 	idx := -1
 	ocorrencias := 0
 	for i, l := range linhas {
-		if strings.TrimRight(l, "\r") == c.anchor {
+		if strings.TrimRight(l, "\r") == anchor {
 			ocorrencias++
 			if idx < 0 {
 				idx = i
@@ -224,12 +248,36 @@ func recomputeStamp(root string, c declaredStamp) (string, error) {
 	case ocorrencias > 1:
 		return "", fmt.Errorf(i18n.T("gate.mock_stamped.err_anchor_ambiguous"), ocorrencias)
 	}
-
-	fim := idx + c.count
+	fim := idx + count
 	if fim > len(linhas) {
 		fim = len(linhas)
 	}
 	return snippetHash(strings.Join(linhas[idx:fim], "\n")), nil
+}
+
+// chainFlagOnlyRE is a line that is only a comment carrying a flag of the chains; chainFlagRE
+// is such a comment at the end of a line of code.
+var (
+	chainFlagOnlyRE = regexp.MustCompile(`^\s*(?://|#|--|/\*|<!--)\s*@(?:dep|no-dep|used-by|navigates|no-nav):.*$`)
+	chainFlagRE     = regexp.MustCompile(`\s*(?://|#|--|/\*|<!--)\s*@(?:dep|no-dep|used-by|navigates|no-nav):.*$`)
+)
+
+// stripChainFlag is a line without the chain's flag at its end.
+func stripChainFlag(l string) string {
+	return chainFlagRE.ReplaceAllString(strings.TrimRight(l, "\r"), "")
+}
+
+// stampLines are a module's lines as a stamp reads them: without the lines that only carry a
+// flag of the chains, and without the flag at the end of a line.
+func stampLines(lines []string) []string {
+	out := make([]string, 0, len(lines))
+	for _, l := range lines {
+		if chainFlagOnlyRE.MatchString(l) {
+			continue
+		}
+		out = append(out, stripChainFlag(l))
+	}
+	return out
 }
 
 // snippetHash — sha256 truncado em 8 hex. Truncado porque o carimbo mora numa linha de
@@ -349,13 +397,13 @@ func RefreshStamps(g *mapx.Graph, root, file string, write bool) ([]StampRefresh
 				continue
 			}
 			r := StampRefresh{Test: t, Line: i + 1, File: c.file, Anchor: c.anchor, Count: c.count, Old: c.hash}
-			atual, err := recomputeStamp(root, c)
+			atual, holds, err := stampHolds(root, c)
 			if err != nil {
 				r.Err = err.Error()
 				out = append(out, r)
 				continue
 			}
-			if atual == c.hash {
+			if holds {
 				continue
 			}
 			r.New = atual
@@ -375,10 +423,11 @@ func RefreshStamps(g *mapx.Graph, root, file string, write bool) ([]StampRefresh
 // StampSnippet returns the `count` lines that start at the unique `anchor` line of
 // `content` — the block a stamp covers — or false when the anchor is absent or repeated.
 func StampSnippet(content, anchor string, count int) (string, bool) {
-	linhas := strings.Split(content, "\n")
+	linhas := stampLines(strings.Split(content, "\n"))
+	anchor = stripChainFlag(anchor)
 	idx := -1
 	for i, l := range linhas {
-		if strings.TrimRight(l, "\r") == anchor {
+		if l == anchor {
 			if idx >= 0 {
 				return "", false
 			}
@@ -405,7 +454,7 @@ func StampsHolding(root, content string) map[string]bool {
 		if c.count <= 0 {
 			continue
 		}
-		if atual, err := recomputeStamp(root, c); err == nil && atual == c.hash {
+		if _, holds, err := stampHolds(root, c); err == nil && holds {
 			out[filepath.ToSlash(c.file)+"|"+c.hash] = true
 		}
 	}
@@ -429,8 +478,8 @@ func RefreshHeldStamps(root, content string, held map[string]bool) (string, int)
 		if c.count <= 0 || !held[filepath.ToSlash(c.file)+"|"+c.hash] {
 			continue
 		}
-		atual, err := recomputeStamp(root, c)
-		if err != nil || atual == c.hash {
+		atual, holds, err := stampHolds(root, c)
+		if err != nil || holds {
 			continue
 		}
 		lines[i] = l[:m[8]] + atual + l[m[9]:]
