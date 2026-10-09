@@ -21,6 +21,11 @@ What passes and what is barred, when the file is not in the map:
 Incremental: it validates only what the commit touches. It does not write to the map nor open issues
 (--no-record). Idempotent — reinstalling is safe; use --force to overwrite an
 existing pre-commit that was not written by this command.
+
+With --agent it installs, instead, the agent's hook in the project's Claude Code settings
+(.claude/settings.json): before and after each command of the agent it records the long
+ones, so 'anchors monitor' follows them and says how they ended. The rest of the settings is
+kept, and installing again adds nothing.
 ```
 
 ## Usage
@@ -33,6 +38,7 @@ anchors install-hooks [flags]
 
 | Flag | Default | What it does |
 | --- | --- | --- |
+| `--agent` |  | install the agent's hook (Claude Code) that records its long commands for `anchors monitor` |
 | `--force` |  | overwrite an existing pre-commit not managed by anchors |
 | `--root` | `.` | project root |
 

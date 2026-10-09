@@ -22,7 +22,7 @@ func childNames(c *cobra.Command) []string {
 }
 
 func TestRegister_attachesTheFlowCommandsOnce(t *testing.T) {
-	t.Run("FLRGF-B01: The root holds exactly the seventeen flow commands after registration", func(t *testing.T) {})
+	t.Run("FLRGF-B01: The root holds exactly the eighteen flow commands after registration", func(t *testing.T) {})
 	t.Run("FLRGF-I01: No flow command is attached twice", func(t *testing.T) {})
 	t.Run("FLRGF-X01: The progress command is not attached to the root", func(t *testing.T) {})
 	root := &cobra.Command{Use: "anchors"}
@@ -31,7 +31,7 @@ func TestRegister_attachesTheFlowCommandsOnce(t *testing.T) {
 	// Commands() already sorts and a duplicate would show up as a repeated name.
 	got := childNames(root)
 	want := []string{"backfill-labels", "decided", "deliver", "discard", "done", "drop", "escalate",
-		"merge-progress", "next", "pr-body", "queue", "reclaim", "report-bug", "task-status", "unblock", "watch", "work"}
+		"merge-progress", "monitor", "next", "pr-body", "queue", "reclaim", "report-bug", "task-status", "unblock", "watch", "work"}
 	if strings.Join(got, ",") != strings.Join(want, ",") {
 		t.Errorf("root children:\n got  %v\n want %v", got, want)
 	}

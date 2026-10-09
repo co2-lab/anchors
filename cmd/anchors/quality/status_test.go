@@ -5,14 +5,17 @@
 package quality
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/initx"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/runs"
 )
 
 // captureStatus runs status on a root and returns what it printed.
@@ -409,5 +412,28 @@ func TestStatusChangesNothing(t *testing.T) {
 		if after[p] != c {
 			t.Errorf("status changed %s", p)
 		}
+	}
+}
+
+func TestStatus_runs(t *testing.T) {
+	t.Run("PRSTP-B14: The status says what runs and what ended lately", func(t *testing.T) {})
+	dir := t.TempDir()
+	now := time.Date(2026, 10, 9, 12, 0, 0, 0, time.UTC)
+	_ = runs.Save(dir, runs.Run{ID: "live", Name: "jest", Command: "npx jest", PID: 77, By: runs.ByAgent, Started: now.Add(-time.Minute), State: runs.StateStalled})
+	for i := 0; i < 6; i++ {
+		end, code := now.Add(-time.Duration(i)*time.Minute), i
+		_ = runs.Save(dir, runs.Run{ID: fmt.Sprintf("e%d", i), Name: fmt.Sprintf("run%d", i), Command: "x", Started: now.Add(-time.Hour), Ended: &end, Exit: &code, State: runs.StateFinished})
+	}
+	var b strings.Builder
+	printRuns(&b, dir, now)
+	got := b.String()
+	if !strings.Contains(got, "jest — stalled, pid 77, 1m0s, by agent: npx jest") || !strings.Contains(got, "run0 — finished, exit 0") ||
+		!strings.Contains(got, "run4 —") || strings.Contains(got, "run5 —") {
+		t.Errorf("the running one and the latest five ended:\n%s", got)
+	}
+	b.Reset()
+	printRuns(&b, t.TempDir(), now)
+	if b.Len() != 0 {
+		t.Errorf("no record, nothing said: %q", b.String())
 	}
 }

@@ -7,16 +7,20 @@ package quality
 import (
 	"fmt"
 	"github.com/co2-lab/anchors/internal/i18n"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
+	"time"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gate"
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/initx"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/runs"
 	"github.com/spf13/cobra"
 )
 
@@ -59,6 +63,7 @@ It changes nothing.`,
 func runStatus(root string) error {
 	fmt.Println(i18n.T("status.header", root))
 	fmt.Println()
+	printRuns(os.Stdout, root, time.Now())
 
 	// 1. GIT — o substrato. Sem ele, metade do framework fica desligada em silêncio.
 	switch gitmeta.Check(root) {
@@ -281,4 +286,64 @@ func agentCards(cfg *config.Config) []agentCard {
 		cards = append(cards, agentCard{p[0], p[1], strings.TrimPrefix(p[2], "anchors:")})
 	}
 	return cards
+}
+
+// printRuns says what runs in the project, and the latest runs that ended, from the records
+// `anchors monitor` and the launchers keep (DESIGN-process-monitor.md): the user knows where
+// the long processes stand without asking the agent. With no record, it says nothing.
+func printRuns(w io.Writer, root string, now time.Time) {
+	all := runs.List(root)
+	if len(all) == 0 {
+		return
+	}
+	var live, ended []runs.Run
+	for _, r := range all {
+		if r.Done() {
+			ended = append(ended, r)
+		} else {
+			live = append(live, r)
+		}
+	}
+	fmt.Fprintln(w, "Running:")
+	if len(live) == 0 {
+		fmt.Fprintln(w, "  nothing")
+	}
+	for _, r := range live {
+		state := r.State
+		if state == "" {
+			state = runs.StateRunning
+		}
+		pid := ""
+		if r.PID > 0 {
+			pid = fmt.Sprintf(" pid %d,", r.PID)
+		}
+		fmt.Fprintf(w, "  %s — %s,%s %s, by %s: %s\n", runName(r), state, pid, now.Sub(r.Started).Round(time.Second), r.By, r.Command)
+	}
+	sort.Slice(ended, func(i, j int) bool { return ended[i].Ended.After(*ended[j].Ended) })
+	if len(ended) > 5 {
+		ended = ended[:5]
+	}
+	if len(ended) > 0 {
+		fmt.Fprintln(w, "Ended lately:")
+	}
+	for _, r := range ended {
+		how := r.State
+		if r.Exit != nil {
+			how = fmt.Sprintf("%s, exit %d", how, *r.Exit)
+		}
+		line := fmt.Sprintf("  %s — %s, at %s", runName(r), how, r.Ended.Local().Format("15:04"))
+		if r.Summary != "" {
+			line += " — " + r.Summary
+		}
+		fmt.Fprintln(w, line)
+	}
+	fmt.Fprintln(w, "  (`anchors monitor` follows them as they go)")
+	fmt.Fprintln(w)
+}
+
+func runName(r runs.Run) string {
+	if r.Name != "" {
+		return r.Name
+	}
+	return r.Command
 }

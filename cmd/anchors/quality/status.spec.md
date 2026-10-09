@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRSTP
-  updated_at: 2026-10-08
+  updated_at: 2026-10-09
   layer: comando
 -->
 # ProjectStatus — where the project stands in the cycle, and the one next step
@@ -52,6 +52,7 @@ It is read by a person and by an agent alike, and it changes nothing.
 | `PRSTP-B11` | The agent's own open cards, those whose last owner comment names this agent, are listed with number, title and state, and the agent is told to finish them instead of claiming new work. |
 | `PRSTP-B12` | Without an agent identity no card is attributed and the next step is to claim work. |
 | `PRSTP-B13` | A github project whose map holds only guides is sent to the first plan before any card. |
+| `PRSTP-B14` | When the project has records of its long processes, the status opens with what is running — each run's name, state, process, time and who launched it, or `nothing` — and the latest five that ended, each with how and when; with no record it says nothing of them. (`printRuns`) |
 
 ## Invariants
 

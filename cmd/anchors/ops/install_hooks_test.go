@@ -497,3 +497,41 @@ func TestHooksRunOnARealCommit(t *testing.T) {
 		t.Errorf("the commit landed, log:\n%s", out)
 	}
 }
+
+func TestInstallHooks_agent(t *testing.T) {
+	t.Run("INHKN-B14: The agent's hook goes into the project's Claude Code settings", func(t *testing.T) {})
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, config.DefaultFile), []byte("version: 7\nlayers: {}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	settings := filepath.Join(dir, ".claude", "settings.json")
+	_ = os.MkdirAll(filepath.Dir(settings), 0o755)
+	_ = os.WriteFile(settings, []byte(`{"permissions":{"allow":["Bash(ls:*)"]},"hooks":{"PreToolUse":[{"matcher":"Edit","hooks":[{"type":"command","command":"echo x"}]}]}}`), 0o644)
+	for i := 0; i < 2; i++ {
+		c := newInstallHooksCmd()
+		c.SetOut(io.Discard)
+		c.SetArgs([]string{"--root", dir, "--agent"})
+		if err := c.Execute(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	b, _ := os.ReadFile(settings)
+	got := string(b)
+	if strings.Count(got, agentHookCommand) != 2 || !strings.Contains(got, "Bash(ls:*)") || !strings.Contains(got, "echo x") ||
+		!strings.Contains(got, "PostToolUse") {
+		t.Errorf("theirs kept, the hook once before and once after:\n%s", got)
+	}
+	_ = os.WriteFile(settings, []byte("{broken"), 0o644)
+	c := newInstallHooksCmd()
+	c.SetOut(io.Discard)
+	c.SetArgs([]string{"--root", dir, "--agent"})
+	if err := c.Execute(); err == nil || !strings.Contains(err.Error(), "settings.json") {
+		t.Errorf("invalid settings are refused naming the file: %v", err)
+	}
+	c = newInstallHooksCmd()
+	c.SetOut(io.Discard)
+	c.SetArgs([]string{"--root", t.TempDir(), "--agent"})
+	if err := c.Execute(); err == nil || !strings.Contains(err.Error(), config.DefaultFile) {
+		t.Errorf("no anchors.yaml is refused: %v", err)
+	}
+}

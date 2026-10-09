@@ -176,6 +176,10 @@ type Config struct {
 	// `queue` —, flagged where it is called (`@dep[db]: transactions`). A kind not declared here
 	// is a finding of dep-honored.
 	DependencyKinds []string `yaml:"dependency_kinds,omitempty"`
+	// Monitor is how `anchors monitor` watches the project's long processes: its timing, the
+	// runners it recognizes beyond the built-in ones, the reports it reads and how many ended
+	// runs it keeps (DESIGN-process-monitor.md).
+	Monitor *Monitor `yaml:"monitor,omitempty"`
 	// Obligations são as OBRIGAÇÕES TRANSVERSAIS do projeto: "todo nó que carrega o
 	// atributo P deve aparecer em Q". Ver Obligation.
 	Obligations []Obligation `yaml:"obligations,omitempty"`
@@ -2810,6 +2814,36 @@ type DataStates struct {
 // DataStatesRequired says whether the project made its data states requirements.
 func (c *Config) DataStatesRequired() bool {
 	return c != nil && c.DataStates != nil && c.DataStates.Required
+}
+
+// Monitor is the monitor's configuration (see Config.Monitor). Durations are Go's
+// (`30s`, `5m`); an empty one takes the default, and the command's flags override them all.
+type Monitor struct {
+	Every     string `yaml:"every,omitempty"`
+	Heartbeat string `yaml:"heartbeat,omitempty"`
+	Progress  string `yaml:"progress,omitempty"`
+	Stall     string `yaml:"stall,omitempty"`
+	// Runners are the project's own kinds of long process, read before the built-in ones: a
+	// runner whose name is a built-in one replaces it.
+	Runners []MonitorRunner `yaml:"runners,omitempty"`
+	// Reports are globs of test reports (JUnit) whose landing is an event, beside the ones the
+	// suites declare.
+	Reports []string `yaml:"reports,omitempty"`
+	// Keep and KeepDays bound the records of ended runs: the latest Keep, within KeepDays.
+	Keep     int `yaml:"keep,omitempty"`
+	KeepDays int `yaml:"keep_days,omitempty"`
+}
+
+// MonitorRunner is a kind of long process: the pattern of its command line, how long it may
+// stay quiet, and the patterns of its output that say it passed, failed or advanced.
+type MonitorRunner struct {
+	Name     string `yaml:"name"`
+	Kind     string `yaml:"kind,omitempty"`
+	Match    string `yaml:"match"`
+	Stall    string `yaml:"stall,omitempty"`
+	Pass     string `yaml:"pass,omitempty"`
+	Fail     string `yaml:"fail,omitempty"`
+	Progress string `yaml:"progress,omitempty"`
 }
 
 // Navigation is the project's navigation (see Config.Navigation).

@@ -128,6 +128,10 @@
     "slug": "docs/cli/commands/migrate"
   },
   {
+    "label": "anchors monitor",
+    "slug": "docs/cli/commands/monitor"
+  },
+  {
     "label": "anchors mutation",
     "slug": "docs/cli/commands/mutation"
   },

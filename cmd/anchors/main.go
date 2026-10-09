@@ -11,6 +11,7 @@ import (
 	"os"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
+	"github.com/co2-lab/anchors/cmd/anchors/flow"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
@@ -48,7 +49,23 @@ func main() {
 	// não roda defers — por isso ele também chama o flush, explicitamente.
 	defer common.FlushTelemetry()
 
-	if err := newRootCmd().Execute(); err != nil {
+	err := newRootCmd().Execute()
+	exit := 0
+	if err != nil {
+		exit = 1
+		var ec flow.ExitCode
+		if errors.As(err, &ec) {
+			exit = ec.Code
+		}
+	}
+	// The run of a long command is recorded for the monitor, with how it ended.
+	flow.EndOwnRun(exit)
+	if err != nil {
+		var ec flow.ExitCode
+		if errors.As(err, &ec) {
+			common.FlushTelemetry()
+			os.Exit(ec.Code)
+		}
 		fmt.Fprintln(os.Stderr, i18n.T("error")+":", err)
 		// "não é regido" sai com código PRÓPRIO: quem automatiza (pre-commit, CI)
 		// precisa distinguir "não tenho jurisdição sobre este arquivo" de "este

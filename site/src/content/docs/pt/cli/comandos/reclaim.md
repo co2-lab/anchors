@@ -46,6 +46,7 @@ Comandos da mesma família — o que distingue cada um:
 | [`anchors report-bug`](/pt/docs/cli/commands/report-bug/) | Report a bug in Anchors itself at github.com/co2-lab/anchors |
 | [`anchors synthesize`](/pt/docs/cli/commands/synthesize/) | Two PRs conflicting in CONTENT become a synthesis card |
 | [`anchors watch`](/pt/docs/cli/commands/watch/) | The background watcher: sees changes and QUEUES work |
+| [`anchors monitor`](/pt/docs/cli/commands/monitor/) | Watch the project's long processes: one line when one starts, stalls, dies or ends |
 | [`anchors flow`](/pt/docs/cli/commands/flow/) | Operate the work flows (the puzzle of actions and results) |
 | [`anchors board`](/pt/docs/cli/commands/board/) | The project board — published by the pipeline, or served live |
 

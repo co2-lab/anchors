@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTC
 #   ref: PRSTP
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-09
 #   layer: feature
 
 @PRSTP
@@ -108,3 +108,9 @@ Feature: ProjectStatus — where the project stands in the cycle, and the one ne
     Given a project whose anchors.yaml holds an unknown key
     When the status runs
     Then it fails naming "load anchors.yaml"
+
+  @PRSTP-B14 @unit-level
+  Scenario: The status says what runs and what ended lately
+    Given a project with a running run, six ended ones, and then one with no record
+    When the status is asked for each
+    Then the first lists the running one and the latest five ended with how they ended, and the second says nothing of runs

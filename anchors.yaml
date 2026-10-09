@@ -131,7 +131,7 @@ layers:
   # how a mutation report is scored. Declarative, `anchors new spec` refused their spec
   # and every unit gate skipped them — rules nobody could state, let alone prove.
   infra:
-    pattern: "internal/{change,changelog,checklog,code,daemon,gitmeta,health,initx,issue,pack,queue,recode,shell,similarity,suggestion,testlist,testsig}/*.go"
+    pattern: "internal/{change,changelog,checklog,code,daemon,gitmeta,health,initx,issue,pack,queue,recode,runs,shell,similarity,suggestion,testlist,testsig}/*.go"
     kind: code
     tags: [infra]
     regime: comportamental

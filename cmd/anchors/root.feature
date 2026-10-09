@@ -2,7 +2,7 @@
 # @anchors
 #   code: RTFTR
 #   ref: CLRTC
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-09
 #   layer: feature
 
 @CLRTC
@@ -74,3 +74,9 @@ Feature: CliRoot — every command passes through one root that speaks the proje
     Given every registered command
     When the ones whose usage takes several files are confronted with the mark of the shared reading
     Then each carries it
+
+  @CLRTC-B09 @unit-level
+  Scenario: A hidden command shows no telemetry notice
+    Given a project with telemetry on and no notice shown yet
+    When the agent's hook runs in it
+    Then no notice is marked as shown

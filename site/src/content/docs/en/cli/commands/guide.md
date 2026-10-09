@@ -25,6 +25,7 @@ Subcommands print the guides for the specific rulers:
   anchors guide guide    how to write a guide (the ruler of a ruler)
   anchors guide header   the header block of every file (cross-cutting, mandatory)
   anchors guide navigation  an app's navigation (the screen's In and Out, the flag on each call)
+  anchors guide monitor     waiting on a long process: watch 'anchors monitor' and react to each line
   anchors guide work     how to work a card (the order, and a finding that is not its own)
   anchors guide review   how to review a PR (what is yours and what check already measured)
   anchors guide changelog  the technical changelog, and the product one an agent makes from it
@@ -117,6 +118,16 @@ the header block of every file (cross-cutting, mandatory).
 
 ```bash
 anchors guide header
+```
+
+### `anchors guide monitor`
+
+waiting on a long process: watch `anchors monitor` and react to each line.
+
+#### Usage
+
+```bash
+anchors guide monitor
 ```
 
 ### `anchors guide navigation`

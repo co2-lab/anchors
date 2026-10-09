@@ -66,8 +66,17 @@ propagates changes, runs the quality gates and reports the project's health.`,
 			// E há a propriedade que decide: o `PersistentPreRunE` roda ANTES do comando,
 			// então o aviso aparece antes de o primeiro evento sair. Com `next` ou
 			// `doctor`, o dado já teria ido.
-			common.NoticeTelemetry(cmd)
-			return refuseIfFrozen(cmd)
+			// A hidden command is called by a machine — the agent's hook, the watcher's loop —,
+			// and nobody reads its output to see a notice.
+			if !cmd.Hidden {
+				common.NoticeTelemetry(cmd)
+			}
+			if err := refuseIfFrozen(cmd); err != nil {
+				return err
+			}
+			// A long command records its run, for the monitor (DESIGN-process-monitor.md).
+			flow.BeginOwnRun(cmd)
+			return nil
 		},
 	}
 

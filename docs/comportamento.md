@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:78933a01e712867c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:6d1c5b638f7ae9a4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -838,6 +838,22 @@ teste prova.
 
 - [A failed or unreadable lookup yields nothing](layers/comando.md#esdps--escalateduplicate--find-the-open-cards-that-already-deal-with-the-target-of-an-escalation) `ESDPS-E01`
 
+- [The monitor reads once, or until every run ended](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B01`
+
+- [The timing comes from the defaults, the block and the flags](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B02`
+
+- [A wrapped command's run is recorded with its output and its exit](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B03`
+
+- [Before a command, the hook records the agent's long ones](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B04`
+
+- [After a command, the hook records its output file or its exit](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B05`
+
+- [Anchors' long commands record their own run](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B06`
+
+- [The agent's hook never blocks the agent](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-I01`
+
+- [A timing flag that does not read fails naming it](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-E01`
+
 - [Local mode reads notifications.md at the project root](layers/comando.md#ntfct--notifications--a-message-to-every-agent-read-from-one-file-and-printed-on-top-of-next) `NTFCT-B01`
 
 - [A file with only comments or nothing prints nothing](layers/comando.md#ntfct--notifications--a-message-to-every-agent-read-from-one-file-and-printed-on-top-of-next) `NTFCT-B02`
@@ -964,7 +980,7 @@ teste prova.
 
 - [A failed claim run is an error](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board) `WRQUW-E01`
 
-- [The root holds exactly the seventeen flow commands after registration](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each) `FLRGF-B01`
+- [The root holds exactly the eighteen flow commands after registration](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each) `FLRGF-B01`
 
 - [The watcher's controls live under watch](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each) `FLRGF-B02`
 
@@ -1962,6 +1978,8 @@ teste prova.
 
 - [The installed hooks run on a real commit, on every system](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B13`
 
+- [The agent's hook goes into the project's Claude Code settings](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B14`
+
 - [Both the map and the config reach the current format](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B01`
 
 - [A missing file is reported and the other still migrates](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B02`
@@ -2680,6 +2698,8 @@ teste prova.
 
 - [A configuration that does not load fails the status](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step) `PRSTP-E01`
 
+- [The status says what runs and what ended lately](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step) `PRSTP-B14`
+
 - [The selected suite runs at the root under a header naming it](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B01`
 
 - [The report this run wrote is ingested into the map](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B02`
@@ -2825,6 +2845,8 @@ teste prova.
 - [The language is read from a CRLF file](layers/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze) `CLRTC-B08`
 
 - [Every command that takes several files reads them the same way](layers/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze) `CLRTC-I02`
+
+- [A hidden command shows no telemetry notice](layers/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze) `CLRTC-B09`
 
 ## config
 
@@ -6713,6 +6735,54 @@ teste prova.
 - [A code is rewritten only where it is cited as a code, and the bare words left are listed](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-B09`
 
 - [A code inside an identifier with an underscore is not a mention](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-B10`
+
+- [A runner under the project that no record accounts for is a run found running](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B01`
+
+- [A quiet run is stalled once, and moving again is said](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B02`
+
+- [A run that ended is said once, by its exit, its summary, or nothing](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B03`
+
+- [A command of the agent takes the process that runs its program](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B04`
+
+- [A report that landed is said with its failures](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B05`
+
+- [The heartbeat says what runs, what ended, and the load](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B06`
+
+- [A re-armed monitor says what happened meanwhile, once](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B07`
+
+- [Progress is sparse](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B08`
+
+- [The settings are the defaults, then the project's block](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B09`
+
+- [An output's end gives its verdict, its summary and its last lines](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B10`
+
+- [Reports are read by their globs](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B11`
+
+- [The built-in runners recognize the common runners](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B12`
+
+- [Every run that ended is said once](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-I01`
+
+- [A monitor value that does not read is an error naming its key](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-E01`
+
+- [A record is written whole and read back as written](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-B01`
+
+- [Finishing a run records how it ended](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-B02`
+
+- [Pruning keeps the runs going and the latest ended ones](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-B03`
+
+- [The process table is read as the system prints it](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-B04`
+
+- [A process belongs to the project by its folder or its command line](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-B05`
+
+- [The process tree gives descendants, ancestors and the tree's CPU time](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-B06`
+
+- [Listing the system's processes includes the process asking](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-B07`
+
+- [The system gives a process's folder, whether it lives, and the load](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-B08`
+
+- [A reader never sees half a record](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-I01`
+
+- [Finishing a run that has no record fails](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-E01`
 
 - [The sh on PATH is the shell](layers/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands) `PSXSH-B01`
 

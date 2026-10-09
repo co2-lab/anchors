@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:2633d3385d58ab90 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:a7b75876798046a3 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -927,6 +927,24 @@ abra a página dela em `camadas/`.
 
 - [ESDPS-E01 — The board lookup fails, or answers with something that is not a list of cards.](layers/comando.md#esdps--escalateduplicate--find-the-open-cards-that-already-deal-with-the-target-of-an-escalation)
 
+### [MNCMD — MonitorCommand — `anchors monitor`, `anchors monitor run` and the agent's hook: watching the project's long processes and recording them](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+
+- [MNCMD-B01 — `anchors monitor --once` reads once, prints the lines of what it read and writes its memory; `--until-done` exits when nothing runs — saying so — or once every run it watched ended. (`runMonitor`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+
+- [MNCMD-B02 — The timing comes from the defaults, then the `monitor:` block, then the flags; a flag that is not a positive duration, or a block that does not read, fails the command naming it.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+
+- [MNCMD-B03 — `anchors monitor run -- <command>` runs the command with its output passed through, records its process, a copy of its output and its exit, and ends with the command's exit code. (`recordedRun`, `ExitCode`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+
+- [MNCMD-B04 — Before a command of the agent, the hook records it by the tool call's id when it runs in the background, has a timeout over two minutes, or is a runner's; a short command, one of Anchors' own long commands, the monitor and a command outside a project record nothing. The hook never prints and never fails. (`agentHook`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+
+- [MNCMD-B05 — After a command of the agent, the hook records the file the output of a background command goes to, as the answer names it, and ends a foreground command with its exit code.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+
+- [MNCMD-B06 — Anchors' long commands — test, mutation, check, verify, ingest, map build, docs build — record their run in a project that has an anchors.yaml, and close it with their exit code; another command, or a folder with no anchors.yaml, records nothing. (`BeginOwnRun`, `EndOwnRun`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+
+- [MNCMD-I01 — The agent's hook never blocks the agent: whatever its input, it prints nothing and returns no error.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+
+- [MNCMD-E01 — A timing flag that does not read, or is not positive.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+
 ### [NTFCT — Notifications — a message to every agent, read from one file and printed on top of `next`](layers/comando.md#ntfct--notifications--a-message-to-every-agent-read-from-one-file-and-printed-on-top-of-next)
 
 - [NTFCT-B01 — In local mode the message is the content of `notifications.md` at the project root, and a missing file is an empty message.](layers/comando.md#ntfct--notifications--a-message-to-every-agent-read-from-one-file-and-printed-on-top-of-next)
@@ -1065,7 +1083,7 @@ abra a página dela em `camadas/`.
 
 ### [FLRGF — FlowRegister — attach the flow domain's commands to the root command, once each](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
 
-- [FLRGF-B01 — After registration the root holds exactly the seventeen flow commands: backfill-labels, decided, deliver, discard, done, drop, escalate, merge-progress, next, pr-body, queue, reclaim, report-bug, task-status, unblock, watch and work.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
+- [FLRGF-B01 — After registration the root holds exactly the eighteen flow commands: backfill-labels, decided, deliver, discard, done, drop, escalate, merge-progress, monitor, next, pr-body, queue, reclaim, report-bug, task-status, unblock, watch and work.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
 
 - [FLRGF-B02 — The watcher's control commands (start, run, status, stop, pause, resume, logs) arrive under `watch`, not at the root.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
 
@@ -2163,6 +2181,8 @@ abra a página dela em `camadas/`.
 
 - [INHKN-B13 — On a real commit, on Linux, macOS and Windows alike, the installed pre-commit runs the project's blocking gates: a failing one refuses the commit, and a passing one lets it through.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
+- [INHKN-B14 — With `--agent`, the agent's hook goes into the project's Claude Code settings (`.claude/settings.json`), before and after each command of the agent: the rest of the settings is kept, installing again adds nothing, settings that are not valid JSON are refused naming the file, and a folder with no anchors.yaml is refused. (`installAgentHook`)](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
+
 - [INHKN-I01 — However many times the install runs, each merge attribute line appears once in `.gitattributes` and the user's own lines are kept intact.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-X01 — A hook the user wrote is never replaced without `--force`.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
@@ -2939,6 +2959,8 @@ abra a página dela em `camadas/`.
 
 - [PRSTP-B13 — A github project whose map holds only guides is sent to the first plan before any card.](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
 
+- [PRSTP-B14 — When the project has records of its long processes, the status opens with what is running — each run's name, state, process, time and who launched it, or `nothing` — and the latest five that ended, each with how and when; with no record it says nothing of them. (`printRuns`)](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
+
 - [PRSTP-I01 — Status never names a step beyond the first one missing.](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
 
 - [PRSTP-X01 — Status leaves the project as it found it: no file is created, changed or removed.](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
@@ -3092,6 +3114,8 @@ abra a página dela em `camadas/`.
 - [CLRTC-B07 — The root prints neither the error nor the usage of a failing command.](layers/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze)
 
 - [CLRTC-B08 — The project's `lang:` is read from a line ending in `\r\n` as from one ending in `\n`.](layers/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze)
+
+- [CLRTC-B09 — A hidden command — called by a machine: the agent's hook, the watcher's loop — shows no telemetry notice, for nobody reads its output to see it.](layers/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze)
 
 - [CLRTC-I01 — Every `anchors <command>` that the work guide and the pipeline workflows teach is a registered command.](layers/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze)
 
@@ -7436,6 +7460,58 @@ abra a página dela em `camadas/`.
 - [RCRWR-I01 — A text without the old code comes back unchanged with zero replacements, so rewriting a second time after a rewrite changes nothing.](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
 
 - [RCRWR-X01 — Never rewrites a longer code that contains the old one, nor a word that merely ends or starts with it.](layers/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
+
+### [MNTRS — RunMonitor — reading the project's runs tick by tick: what started, stalled, died, ended, and what runs](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B01 — A process under the project that a runner recognizes and no record accounts for is a run found running: a started line and a record by the process table. A launcher and the workers it starts are one run — the topmost; a process of another folder, the monitor and what is above it, and Anchors' own wrapping and watching processes are no run. (`Tick`, `projectRunners`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B02 — A run whose CPU time did not advance, whose output did not grow and under which no new process appeared for its runner's quiet time — the default one when it has no runner — gives one stalled line; when it moves again, a line says so. A process under it that ended is no sign of life.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B03 — A run that ended is said once: with its exit code when its record has one; by its output's summary when it does not; as died, with its output's last lines, when the output ends without a summary or when its launcher was to record its exit and did not; and as ended with its exit unknown when only the process table knew of it. (`endOf`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B04 — A record of the agent takes the topmost process under the project that runs the program its command names, past the launchers in front of it; a command of the agent no process runs, past its first tick, ended once its output — when known — stopped growing. (`findProcess`, `firstWord`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B05 — A test report modified since the last reading is a line with its tests, its failures and the first failure; a report already there before the monitor's memory began is no event.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B06 — Every heartbeat, a line says what runs — by name, the stalled marked —, or `running=[NOTHING]`; how many runs ended since the last heartbeat; and the load, marked HIGH above the number of CPUs.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B07 — The memory is kept between watches: a re-armed monitor says once what happened while nobody watched — a death included — and repeats nothing; a run that ended before the memory began is old news. (`LoadState`, `SaveState`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B08 — A run whose runner reads progress gives, at most once per progress interval, a line counting the progress marks in the end of its output.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B09 — The settings are the defaults — a tick of 30s, a heartbeat of 5m, progress every 5m, a quiet time of 5m, the built-in runners, 50 ended runs within 7 days —, then the project's `monitor:` block: its timing, its runners read first and replacing a built-in of the same name, its reports beside the suites' JUnit reports, and its bounds. A duration or a pattern that does not read, or a runner with no match, is an error naming it. (`Configure`, `DefaultTiming`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B10 — An output's end says failed when the runner's failure pattern is in it — even beside a pass —, passed when only the pass pattern is, and nothing when neither is; its summary line is the line carrying the verdict, and its last lines are the last non-blank ones. Reading an output gives its size and its end. (`Verdict`, `SummaryLine`, `LastLines`, `ReadOutput`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B11 — Reading the reports the globs find gives each one's path from the root and its time; a report modified since its known time is parsed for its tests, failures and first failure. (`ReadReports`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B12 — The built-in runners recognize jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins and Anchors' long commands, each with its kind and quiet time; a command line no runner matches has none. (`DefaultRunners`, `RunnerFor`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-I01 — Every run that ended is said, and said once: across ticks and re-armed monitors, no ended run is silent and none is repeated.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-E01 — A `monitor:` value that does not read — a duration that is not positive, a pattern that does not compile.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+### [PRCRN — ProcessRuns — the record of the project's long processes, and the operating system's view of them](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
+
+- [PRCRN-B01 — A record is written whole under `.anchors/runs/<id>.json`, by an id made of when the run started and its process, and read back as written; the records list oldest first, skipping any file that does not read as a record and the monitor's own state. (`Save`, `Load`, `List`, `NewID`)](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
+
+- [PRCRN-B02 — Finishing a run records when it ended, its exit code when known and its summary; a run still running or stalled becomes finished with an exit, and ended without one. (`Finish`)](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
+
+- [PRCRN-B03 — Pruning keeps every run still going and, of the ended ones, the latest `keep` that ended within the maximum age; it removes the rest and says how many. (`Prune`)](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
+
+- [PRCRN-B04 — The CPU time `ps` prints — `[dd-][hh:]mm:ss[.ss]` — reads as seconds; each `ps` line gives its process, parent, CPU time and the command line with its own spacing; and `lsof`'s working-directory listing gives each process its folder. (`parseCPUTime`, `parsePS`, `parseLsofCwd`)](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
+
+- [PRCRN-B05 — A process belongs to the project when its working directory is the root or under it — not a sibling folder that shares its prefix —, or, with no working directory, when its command line names the root. (`InProject`)](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
+
+- [PRCRN-B06 — The process tree gives each process's descendants at any depth, its ancestors nearest first, and the CPU time of a process with everything under it. (`NewTree`, `Descendants`, `Ancestors`, `TreeCPU`)](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
+
+- [PRCRN-B07 — Listing the system's processes includes the process asking. (`ListProcs`)](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
+
+- [PRCRN-B08 — The system says, of a process, its working directory — none on Windows, which gives it to no other process —, whether it is alive — never for a process id below one —, and the one-minute load average where it has one. (`Cwds`, `Alive`, `LoadAverage`)](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
+
+- [PRCRN-I01 — A reader never sees half a record: a record is written to a temporary file and renamed.](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
+
+- [PRCRN-E01 — Finishing a run that has no record.](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
 
 ### [PSXSH — Shell — the POSIX shell that runs a project's commands](layers/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands)
 

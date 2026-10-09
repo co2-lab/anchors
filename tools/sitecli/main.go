@@ -47,7 +47,7 @@ var families = []family{
 	{"map", "The map and its signals", "O mapa e seus sinais", []string{"map", "ingest", "test", "mutation", "keep-evidence", "stamp", "recode", "renumber", "generated-paths", "merge-progress"}},
 	{"judgment", "Judgment and review", "Julgamento e review", []string{"judge", "review", "suggest"}},
 	{"setup", "Setup and artifacts", "Configuração e artefatos", []string{"init", "new", "code", "guide", "docs", "install-hooks", "migrate", "settings", "touch"}},
-	{"queue", "The work queue", "A fila de trabalho", []string{"next", "queue", "work", "done", "drop", "reclaim", "deliver", "decided", "discard", "unblock", "escalate", "report-bug", "synthesize", "watch", "flow", "board"}},
+	{"queue", "The work queue", "A fila de trabalho", []string{"next", "queue", "work", "done", "drop", "reclaim", "deliver", "decided", "discard", "unblock", "escalate", "report-bug", "synthesize", "watch", "monitor", "flow", "board"}},
 	{"freeze", "Freezing the project", "Congelar o projeto", []string{"freeze", "thaw"}},
 	{"release", "Changelog and pull requests", "Changelog e pull requests", []string{"changelog", "commit-msg", "pr-body", "backfill-labels", "report"}},
 }

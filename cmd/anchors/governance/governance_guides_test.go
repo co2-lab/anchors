@@ -38,6 +38,7 @@ var guideTitles = map[string]string{
 	"guide":      "# Guide guide",
 	"header":     "# Header guide",
 	"navigation": "# Navigation guide",
+	"monitor":    "# Monitor guide",
 	"changelog":  "# Changelog guide",
 	"plan":       "# Plan guide",
 	"product":    "# Product doctrine guide",

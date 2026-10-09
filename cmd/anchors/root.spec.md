@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CLRTC
-  updated_at: 2026-10-08
+  updated_at: 2026-10-09
   layer: comando
 -->
 # CliRoot — every command passes through one root that speaks the project's language and honours the freeze
@@ -48,6 +48,7 @@ leaves printing to the entry point, which prints the error once and decides the 
 | `CLRTC-B06` | A top-level `lang:` of the project is applied before the command runs, even when the rest of the file does not parse; a nested or unsupported `lang:` is ignored. |
 | `CLRTC-B07` | The root prints neither the error nor the usage of a failing command. |
 | `CLRTC-B08` | The project's `lang:` is read from a line ending in `\r\n` as from one ending in `\n`. |
+| `CLRTC-B09` | A hidden command — called by a machine: the agent's hook, the watcher's loop — shows no telemetry notice, for nobody reads its output to see it. |
 
 ## Invariants
 

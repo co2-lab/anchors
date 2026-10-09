@@ -259,3 +259,22 @@ func TestEveryCommandTakesFilesTheSameWay(t *testing.T) {
 		t.Fatalf("found %d command(s) taking several files — keep-evidence, touch, stamp and renumber at least; the walk broke", multi)
 	}
 }
+
+func TestHiddenCommandShowsNoNotice(t *testing.T) {
+	t.Run("CLRTC-B09: A hidden command shows no telemetry notice", func(t *testing.T) {})
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 7\nlayers: {}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("ANCHORS_TELEMETRY", "on")
+	t.Chdir(dir)
+	root := newRootCmd()
+	root.SetIn(strings.NewReader("{}"))
+	root.SetArgs([]string{"monitor", "hook"})
+	if err := root.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".anchors", "telemetry-noticed")); err == nil {
+		t.Error("the hook showed the notice")
+	}
+}

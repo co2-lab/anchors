@@ -2,7 +2,7 @@
 # @anchors
 #   code: IHFNS
 #   ref: INHKN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-09
 #   layer: feature
 
 @INHKN
@@ -122,3 +122,9 @@ Feature: InstallHooks — the git hooks that confront every commit and push with
     Given a repository with the hooks installed, the anchors of this tree on PATH, and a blocking gate that fails
     When a commit is made, and made again after the gate passes
     Then the first is refused and the second lands
+
+  @INHKN-B14 @unit-level
+  Scenario: The agent's hook goes into the project's Claude Code settings
+    Given a project whose Claude Code settings already hold a permission and another hook
+    When the agent's hook is installed twice, then into settings that are not valid JSON, then into a folder with no anchors.yaml
+    Then the settings keep theirs and gain the hook once, before and after each command, and the last two are refused

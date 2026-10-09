@@ -2,14 +2,14 @@
 # @anchors
 #   code: RGFTR
 #   ref: FLRGF
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-09
 #   layer: feature
 
 @FLRGF
 Feature: FlowRegister — attach the flow domain's commands to the root command, once each
 
   @FLRGF-B01 @unit-level
-  Scenario: The root holds exactly the seventeen flow commands after registration
+  Scenario: The root holds exactly the eighteen flow commands after registration
     Given an empty root command
     When the flow domain registers its commands on it
     Then the root's children are exactly backfill-labels, decided, deliver, discard, done, drop, escalate, merge-progress, next, pr-body, queue, reclaim, report-bug, task-status, unblock, watch and work
