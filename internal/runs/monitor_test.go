@@ -62,9 +62,14 @@ func TestTick_findsRunnersUnderTheProject(t *testing.T) {
 		Proc{PID: pidNode, PPID: pidNpx, Cmd: "node node_modules/.bin/jest --ci", Cwd: root},
 		Proc{PID: pidOther, PPID: 1, Cmd: "node jest", Cwd: root + "-other"},
 		Proc{PID: pidWrap, PPID: pidAgent, Cmd: "anchors monitor run -- ./bin/jest", Cwd: root},
+		// A shell the agent typed `anchors check` in, and the check, which records its own run.
+		Proc{PID: pidKid, PPID: pidAgent, Cmd: "/bin/zsh -c anchors check --changed a.go", Cwd: root},
+		Proc{PID: pidKid + 1, PPID: pidKid, Cmd: "anchors check --changed a.go", Cwd: root},
 	)
 	st := &State{Runs: map[string]*Seen{}, Reports: map[string]time.Time{}}
-	evs, writes := tick(st, t0, procs, nil, nil)
+	check := Run{ID: "check", Name: "anchors check", Command: "anchors check --changed a.go", PID: pidKid + 1, By: ByAnchors, Started: t0}
+	st.Runs["check"] = &Seen{PID: pidKid + 1, LastMove: t0}
+	evs, writes := tick(st, t0, procs, []Run{check}, nil)
 	if kinds(evs, "started") != 1 || len(writes) != 1 || writes[0].PID != pidNpx || writes[0].By != ByOS || writes[0].Name != "jest" {
 		t.Errorf("one run, the topmost npx jest, by the process table:\n%s\n%+v", lines(evs), writes)
 	}

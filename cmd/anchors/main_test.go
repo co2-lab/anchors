@@ -7,6 +7,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -115,5 +116,14 @@ func TestMainTellsARenamedKeyFromATypo(t *testing.T) {
 	_, stderr, code := runMain(t, dir, "generated-paths")
 	if code != 1 || !strings.Contains(stderr, "anchors migrate") || !strings.Contains(stderr, "`trinca_opcional` was renamed") {
 		t.Errorf("exit %d, want the migrate advice:\n%s", code, stderr)
+	}
+}
+
+func TestExitCodeOf(t *testing.T) {
+	t.Run("CLMNC-B05: The exit code is the command's own, and the run's record ends with it", func(t *testing.T) {})
+	for err, want := range map[error]int{nil: 0, common.ExitCode{Code: 2}: 2, common.ErrNotGoverned{Path: "x"}: 3, errors.New("boom"): 1} {
+		if got := exitCodeOf(err); got != want {
+			t.Errorf("%v: %d, want %d", err, got, want)
+		}
 	}
 }

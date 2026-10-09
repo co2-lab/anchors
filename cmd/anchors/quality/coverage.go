@@ -372,7 +372,7 @@ func coverageDiff(root, ref, diffFile, lcov string, threshold float64) error {
 	fmt.Printf("\ndiff coverage: %.0f%% (%d/%d changed lines covered)\n", diffPct, totalInstr-totalUncov, totalInstr)
 	if diffPct < threshold {
 		fmt.Printf("✗ below the threshold (%.0f%%) — the changes introduce untested code\n", threshold)
-		os.Exit(1)
+		return common.ExitCode{Code: 1}
 	}
 	fmt.Println("✓ what you changed is covered")
 	return nil
@@ -407,8 +407,7 @@ func coverageDelta(g *mapx.Graph) error {
 		return nil
 	}
 	fmt.Printf("\n✗ %d file(s) lost coverage (worst: %.0f points)\n", dropped, worst)
-	os.Exit(1)
-	return nil
+	return common.ExitCode{Code: 1}
 }
 
 // matchCoverage acha a cobertura de um arquivo do diff, casando por sufixo de caminho

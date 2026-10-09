@@ -2,7 +2,7 @@
 # @anchors
 #   code: CCFCM
 #   ref: CMCLC
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-09
 #   layer: feature
 
 @CMCLC
@@ -67,3 +67,9 @@ Feature: CommonCLI — the contract every command shares: how a path becomes a n
     Given arguments with a file, a comma-separated list with blanks, and a file named twice
     When they are read as files, directly and through a command that takes files
     Then each file comes once, in order, and the command is marked as taking files
+
+  @CMCLC-B09 @unit-level
+  Scenario: An exit code is an error carrying the code
+    Given the exit code 4
+    When it is read as an error
+    Then it says exit status 4 and keeps its code

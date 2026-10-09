@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/runs"
 	"github.com/spf13/cobra"
@@ -220,7 +221,7 @@ ended even when nobody else watched it. The command's exit code is this command'
 				return err
 			}
 			if code != 0 {
-				return ExitCode{Code: code}
+				return common.ExitCode{Code: code}
 			}
 			return nil
 		},
@@ -229,12 +230,6 @@ ended even when nobody else watched it. The command's exit code is this command'
 	cmd.Flags().StringVar(&name, "name", "", "the run's name (default: the program it runs)")
 	return cmd
 }
-
-// ExitCode is an exit code a command passes through: `anchors monitor run` ends with the code of the
-// command it ran, and says nothing more — the command already said what it had to.
-type ExitCode struct{ Code int }
-
-func (e ExitCode) Error() string { return fmt.Sprintf("exit status %d", e.Code) }
 
 // recordedRun runs the command with its run recorded, and returns its exit code.
 func recordedRun(root, name string, args []string, in io.Reader, out, errOut io.Writer) (int, error) {

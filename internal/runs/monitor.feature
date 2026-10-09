@@ -9,7 +9,7 @@ Feature: RunMonitor — reading the project's runs tick by tick: what started, s
 
   @MNTRS-B01 @unit-level
   Scenario: A runner under the project that no record accounts for is a run found running
-    Given an npx jest with a node worker under the project, a jest of another folder, the monitor itself and an anchors run wrapper
+    Given an npx jest with a node worker under the project, a jest of another folder, the monitor itself, an anchors run wrapper, and a shell running a recorded anchors check
     When a tick reads them
     Then one run starts — the npx jest —, recorded by the process table, and the others are no run
 

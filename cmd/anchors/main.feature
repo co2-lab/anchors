@@ -2,7 +2,7 @@
 # @anchors
 #   code: MNFTM
 #   ref: CLMNC
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-09
 #   layer: feature
 
 @CLMNC
@@ -34,3 +34,9 @@ Feature: CliMain — the entry point that stamps the build identity, prints a fa
     Given an anchors.yaml in format 1 holding trinca_opcional
     When anchors generated-paths runs
     Then it exits 1 saying `trinca_opcional` was renamed and to run anchors migrate
+
+  @CLMNC-B05 @unit-level
+  Scenario: The exit code is the command's own, and the run's record ends with it
+    Given no error, a command ending with code 2, a file not governed, and another error
+    When the exit code is read for each
+    Then it is 0, 2, 3 and 1

@@ -148,3 +148,12 @@ func TestFileArgs_theListOfFiles(t *testing.T) {
 		t.Error("the command is marked as taking files")
 	}
 }
+
+func TestExitCode(t *testing.T) {
+	t.Run("CMCLC-B09: An exit code is an error carrying the code", func(t *testing.T) {})
+	var err error = ExitCode{Code: 4}
+	var ec ExitCode
+	if err.Error() != "exit status 4" || !errors.As(err, &ec) || ec.Code != 4 {
+		t.Errorf("got %v %+v", err, ec)
+	}
+}

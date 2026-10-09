@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -353,7 +354,10 @@ func childCoverage() bool {
 	}
 	cmd := newCoverageCmd()
 	cmd.SetArgs(strings.Split(raw, "\x1f"))
-	_ = cmd.Execute()
+	var ec common.ExitCode
+	if err := cmd.Execute(); errors.As(err, &ec) {
+		os.Exit(ec.Code) // as main does
+	}
 	return true
 }
 

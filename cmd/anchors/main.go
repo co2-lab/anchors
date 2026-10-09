@@ -50,33 +50,36 @@ func main() {
 	defer common.FlushTelemetry()
 
 	err := newRootCmd().Execute()
-	exit := 0
-	if err != nil {
-		exit = 1
-		var ec flow.ExitCode
-		if errors.As(err, &ec) {
-			exit = ec.Code
-		}
-	}
+	exit := exitCodeOf(err)
 	// The run of a long command is recorded for the monitor, with how it ended.
 	flow.EndOwnRun(exit)
-	if err != nil {
-		var ec flow.ExitCode
-		if errors.As(err, &ec) {
-			common.FlushTelemetry()
-			os.Exit(ec.Code)
-		}
-		fmt.Fprintln(os.Stderr, i18n.T("error")+":", err)
-		// "não é regido" sai com código PRÓPRIO: quem automatiza (pre-commit, CI)
-		// precisa distinguir "não tenho jurisdição sobre este arquivo" de "este
-		// arquivo reprovou". Sem isso, só resta grepar a mensagem — e foi assim que
-		// o pre-commit passou a deixar arquivo regido novo escapar sem unidade.
-		var nr common.ErrNotGoverned
-		if errors.As(err, &nr) {
-			common.FlushTelemetry()
-			os.Exit(common.ExitNotGoverned)
-		}
-		common.FlushTelemetry()
-		os.Exit(1)
+	if err == nil {
+		return
 	}
+	// A command that ends with an exit code already said what it had to.
+	var ec common.ExitCode
+	if !errors.As(err, &ec) {
+		fmt.Fprintln(os.Stderr, i18n.T("error")+":", err)
+	}
+	common.FlushTelemetry()
+	os.Exit(exit)
+}
+
+// exitCodeOf is the code the process exits with: 0 with no error; the code a command ended
+// with; its own code for "not governed" — whoever automates (pre-commit, CI) must tell "this
+// file is not mine to judge" from "this file failed", and grepping the message is how the
+// pre-commit once let a new governed file through without its unit —; and 1 otherwise.
+func exitCodeOf(err error) int {
+	if err == nil {
+		return 0
+	}
+	var ec common.ExitCode
+	if errors.As(err, &ec) {
+		return ec.Code
+	}
+	var nr common.ErrNotGoverned
+	if errors.As(err, &nr) {
+		return common.ExitNotGoverned
+	}
+	return 1
 }

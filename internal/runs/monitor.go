@@ -321,7 +321,7 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 func projectRunners(tree Tree, root string, runners []Runner, excluded, claimed map[int]bool) []Proc {
 	var cand []Proc
 	for _, p := range tree.ByPID {
-		if excluded[p.PID] || claimed[p.PID] || anchorsItself.MatchString(p.Cmd) {
+		if excluded[p.PID] || claimed[p.PID] || anchorsItself.MatchString(p.Cmd) || launchesClaimed(tree, p.PID, claimed) {
 			continue
 		}
 		if _, ok := RunnerFor(runners, p.Cmd); ok {
@@ -386,6 +386,18 @@ func newKid(before, now string) bool {
 	return false
 }
 
+// launchesClaimed says whether a process has, under it, a process a run already accounts
+// for: it is that run's launcher — the shell an agent ran `anchors check` in names the same
+// command, and was found as a second run that ended with its exit unknown (reported from MIF).
+func launchesClaimed(tree Tree, pid int, claimed map[int]bool) bool {
+	for _, d := range tree.Descendants(pid) {
+		if claimed[d] {
+			return true
+		}
+	}
+	return false
+}
+
 // anchorsItself are Anchors' own wrapping and watching processes: their command lines name
 // what they wrap or watch, and they are never a run of their own.
 var anchorsItself = regexp.MustCompile(`(^|[\s/])anchors (run|monitor|watch)(\s|$)`)
@@ -395,7 +407,7 @@ var anchorsItself = regexp.MustCompile(`(^|[\s/])anchors (run|monitor|watch)(\s|
 func findProcess(tree Tree, root, command string, excluded, claimed map[int]bool) int {
 	var cand []int
 	for _, p := range tree.ByPID {
-		if !excluded[p.PID] && !claimed[p.PID] && !anchorsItself.MatchString(p.Cmd) && sharesProgram(command, p.Cmd) {
+		if !excluded[p.PID] && !claimed[p.PID] && !anchorsItself.MatchString(p.Cmd) && !launchesClaimed(tree, p.PID, claimed) && sharesProgram(command, p.Cmd) {
 			cand = append(cand, p.PID)
 		}
 	}

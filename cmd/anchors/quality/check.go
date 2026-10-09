@@ -321,7 +321,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 				fmt.Println()
 				fmt.Println(i18n.T("check.blocked_by_judgment", pendentes))
 				espelho.Close()
-				os.Exit(1)
+				return common.ExitCode{Code: 1}
 			}
 
 			// O MAPA ESTÁ VELHO? — e esta pergunta é diferente de "o arquivo está no mapa".
@@ -366,11 +366,10 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			}
 
 			if !profile.Passed {
-				// `os.Exit` não roda os `defer`: sem fechar aqui, o espelho perderia
-				// o fim do relatório exatamente no caso em que ele mais importa — o
-				// da reprovação.
+				// Closed here, before the exit code goes back to main: the mirror must
+				// keep the end of the report exactly when it matters most — a failure.
 				espelho.Close()
-				os.Exit(1) // barra: há fail bloqueante
+				return common.ExitCode{Code: 1} // barra: há fail bloqueante
 			}
 			return nil
 		},

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:120a60faad5f1a39 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b2102dddad83fecf — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -563,6 +563,8 @@ teste prova.
 - [A path that cannot be related to the root is kept as given](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is) `CMCLC-E01`
 
 - [A list of files is read the same way by every command](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is) `CMCLC-B08`
+
+- [An exit code is an error carrying the code](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is) `CMCLC-B09`
 
 - [A value passed under the old name reaches the current flag](layers/comando.md#flalf--flagaliases--a-renamed-command-flag-keeps-answering-to-its-old-name) `FLALF-B01`
 
@@ -1343,6 +1345,8 @@ teste prova.
 - [The build version reaches the reported version and the map's generator](layers/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read) `CLMNC-B03`
 
 - [A renamed key in an older config points at migrate](layers/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read) `CLMNC-B04`
+
+- [The exit code is the command's own, and the run's record ends with it](layers/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read) `CLMNC-B05`
 
 - [Only the ingested failures whose rule carries no conclusion are listed, with the spec that declares them](layers/comando.md#flrsa--failures--the-observed-failures-that-the-spec-has-not-explained-yet) `FLRSA-B01`
 

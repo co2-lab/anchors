@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/runs"
 	"github.com/spf13/cobra"
 )
@@ -97,7 +98,7 @@ func TestRun_recordsAndPassesTheExit(t *testing.T) {
 	dir := monitorProject(t, "")
 	t.Setenv("MONITOR_HELPER", "3")
 	out, err := runCobra(t, newRunCmd(), "--root", dir, "--", os.Args[0])
-	var ec ExitCode
+	var ec common.ExitCode
 	if !errors.As(err, &ec) || ec.Code != 3 || !strings.Contains(out, "helper says hi") {
 		t.Fatalf("its output passes, its code is the command's: %v\n%s", err, out)
 	}

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CMCLC
-  updated_at: 2026-10-08
+  updated_at: 2026-10-09
   layer: comando
 -->
 # CommonCLI — the contract every command shares: how a path becomes a node, how "not governed" is signalled, what the binary says it is
@@ -47,6 +47,7 @@ says so plainly (`dev`, `none`, `unknown`) instead of pretending to be a release
 | `CMCLC-B06` | `RelSlug`: a task slug is the path without its last extension only. |
 | `CMCLC-B07` | A binary built without a stamp reports the version `dev`, the commit `none` and the date `unknown`. |
 | `CMCLC-B08` | A command that takes files reads each argument as a file or as several separated by commas — the list a `--changed` flag takes —, drops blanks, keeps a file named twice once, and keeps the order; `TakesFiles` gives a command that reading and marks it. (`FileArgs`, `TakesFiles`) |
+| `CMCLC-B09` | An exit code a command ends with is an error carrying the code, which says it: `exit status <code>`. (`ExitCode`) |
 
 ## Invariants
 

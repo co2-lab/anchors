@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:3ecac3d61e305a12 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:2f0f4bb830c36350 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -622,6 +622,8 @@ abra a página dela em `camadas/`.
 - [CMCLC-B07 — A binary built without a stamp reports the version `dev`, the commit `none` and the date `unknown`.](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is)
 
 - [CMCLC-B08 — A command that takes files reads each argument as a file or as several separated by commas — the list a `--changed` flag takes —, drops blanks, keeps a file named twice once, and keeps the order; `TakesFiles` gives a command that reading and marks it. (`FileArgs`, `TakesFiles`)](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is)
+
+- [CMCLC-B09 — An exit code a command ends with is an error carrying the code, which says it: `exit status <code>`. (`ExitCode`)](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is)
 
 - [CMCLC-I01 — The same file named root-relative or absolute resolves to the same node identifier.](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is)
 
@@ -1482,6 +1484,8 @@ abra a página dela em `camadas/`.
 - [CLMNC-B03 — The build version reaches the version the CLI reports and the generator the map records; a build without link-time values reports the development identity.](layers/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read)
 
 - [CLMNC-B04 — An unknown key that the migration renames, in a configuration of an older format, is reported as renamed, with the advice to run `anchors migrate`.](layers/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read)
+
+- [CLMNC-B05 — A command that ends with an exit code exits with it, printing nothing more; the exit code — 0, the command's own, 3 for a file not governed, 1 otherwise — is the one the record of a long command's run is closed with. (`exitCodeOf`)](layers/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read)
 
 - [CLMNC-I01 — REF[CLMNC-B02]: the not-governed signal and a real failure never share an exit code](layers/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read)
 
@@ -7465,7 +7469,7 @@ abra a página dela em `camadas/`.
 
 ### [MNTRS — RunMonitor — reading the project's runs tick by tick: what started, stalled, died, ended, and what runs](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
-- [MNTRS-B01 — A process under the project that a runner recognizes and no record accounts for is a run found running: a started line and a record by the process table. A launcher and the workers it starts are one run — the topmost; a process of another folder, the monitor and what is above it, and Anchors' own wrapping and watching processes are no run. (`Tick`, `projectRunners`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+- [MNTRS-B01 — A process under the project that a runner recognizes and no record accounts for is a run found running: a started line and a record by the process table. A launcher and the workers it starts are one run — the topmost; a process of another folder, the monitor and what is above it, Anchors' own wrapping and watching processes, and the launcher of a process a run already accounts for — the shell its command was typed in — are no run. (`Tick`, `projectRunners`, `launchesClaimed`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B02 — A run whose CPU time did not advance, whose output did not grow and under which no new process appeared for its runner's quiet time — the default one when it has no runner — gives one stalled line; when it moves again, a line says so. A process under it that ended is no sign of life.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 

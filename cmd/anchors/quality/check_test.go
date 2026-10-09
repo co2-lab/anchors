@@ -30,10 +30,10 @@ import (
 	"github.com/co2-lab/anchors/internal/shell"
 )
 
-// The check ends a blocking failure (and a queued judgment on `--changed`) with
-// os.Exit(1), which an in-process test cannot survive. TestCheckChildProcess plays the
-// check in a child copy of the test binary; runCheckInChild starts it and reads the
-// exit code and everything it printed.
+// The check ends a blocking failure (and a queued judgment on `--changed`) with an exit
+// code, which the process exits with. TestCheckChildProcess plays the check in a child copy
+// of the test binary, exiting as main does; runCheckInChild starts it and reads the exit
+// code and everything it printed.
 func TestCheckChildProcess(t *testing.T) {
 	args := os.Getenv("ANCHORS_CHECK_CHILD")
 	if args == "" {
@@ -43,6 +43,10 @@ func TestCheckChildProcess(t *testing.T) {
 	cmd.SetArgs(strings.Split(args, "\x1f"))
 	cmd.SilenceUsage = true
 	if err := cmd.Execute(); err != nil {
+		var ec common.ExitCode
+		if errors.As(err, &ec) {
+			os.Exit(ec.Code)
+		}
 		os.Stdout.WriteString("child error: " + err.Error() + "\n")
 		os.Exit(2)
 	}
