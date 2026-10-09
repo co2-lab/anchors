@@ -25,7 +25,9 @@ existing pre-commit that was not written by this command.
 With --agent it installs, instead, the agent's hook in the project's Claude Code settings
 (.claude/settings.json): before and after each command of the agent it records the long
 ones, so 'anchors monitor' follows them and says how they ended. The rest of the settings is
-kept, and installing again adds nothing.
+kept, and installing again adds nothing. With --agent --user it goes into the user's own
+settings (~/.claude/settings.json) instead — for a project whose settings are not to be
+written —, and records nothing outside a project with an anchors.yaml.
 ```
 
 ## Usage
@@ -41,6 +43,7 @@ anchors install-hooks [flags]
 | `--agent` |  | install the agent's hook (Claude Code) that records its long commands for `anchors monitor` |
 | `--force` |  | overwrite an existing pre-commit not managed by anchors |
 | `--root` | `.` | project root |
+| `--user` |  | with --agent: write the hook into the user's own Claude Code settings, not the project's |
 
 ## Setup and artifacts — family
 

@@ -535,3 +535,29 @@ func TestInstallHooks_agent(t *testing.T) {
 		t.Errorf("no anchors.yaml is refused: %v", err)
 	}
 }
+
+func TestInstallHooks_agentUser(t *testing.T) {
+	t.Run("INHKN-B15: The agent's hook goes into the user's own settings", func(t *testing.T) {})
+	home, dir := t.TempDir(), t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	c := newInstallHooksCmd()
+	c.SetOut(io.Discard)
+	c.SetArgs([]string{"--root", dir, "--agent", "--user"})
+	if err := c.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(home, ".claude", "settings.json"))
+	if err != nil || strings.Count(string(b), agentHookCommand) != 2 {
+		t.Errorf("the user's settings gain the hook: %v\n%s", err, b)
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".claude")); err == nil {
+		t.Error("the folder's settings are left untouched")
+	}
+	c = newInstallHooksCmd()
+	c.SetOut(io.Discard)
+	c.SetArgs([]string{"--root", dir, "--user"})
+	if err := c.Execute(); err == nil || !strings.Contains(err.Error(), "--agent") {
+		t.Errorf("--user alone is refused: %v", err)
+	}
+}

@@ -26,7 +26,7 @@ import (
 // É genérico: lê a raiz do repo git e o anchors.yaml; não sabe nada do projeto.
 func newInstallHooksCmd() *cobra.Command {
 	var root string
-	var force, agent bool
+	var force, agent, user bool
 	cmd := &cobra.Command{
 		Use:   "install-hooks",
 		Short: "Install the git pre-commit that runs the gates over staged files",
@@ -47,17 +47,26 @@ existing pre-commit that was not written by this command.
 With --agent it installs, instead, the agent's hook in the project's Claude Code settings
 (.claude/settings.json): before and after each command of the agent it records the long
 ones, so 'anchors monitor' follows them and says how they ended. The rest of the settings is
-kept, and installing again adds nothing.`,
+kept, and installing again adds nothing. With --agent --user it goes into the user's own
+settings (~/.claude/settings.json) instead — for a project whose settings are not to be
+written —, and records nothing outside a project with an anchors.yaml.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
+			if user && !agent {
+				return fmt.Errorf("--user goes with --agent: it says where the agent's hook goes")
+			}
 			if agent {
-				if _, err := os.Stat(filepath.Join(absRoot, config.DefaultFile)); err != nil {
+				if _, err := os.Stat(filepath.Join(absRoot, config.DefaultFile)); err != nil && !user {
 					return fmt.Errorf("%s not found in %s — run `anchors init` first", config.DefaultFile, absRoot)
 				}
-				msg, err := installAgentHook(absRoot)
+				path, err := agentSettingsPath(absRoot, user)
+				if err != nil {
+					return err
+				}
+				msg, err := installAgentHook(path)
 				if err != nil {
 					return err
 				}
@@ -69,6 +78,7 @@ kept, and installing again adds nothing.`,
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite an existing pre-commit not managed by anchors")
+	cmd.Flags().BoolVar(&user, "user", false, "with --agent: write the hook into the user's own Claude Code settings, not the project's")
 	cmd.Flags().BoolVar(&agent, "agent", false, "install the agent's hook (Claude Code) that records its long commands for `anchors monitor`")
 	return cmd
 }

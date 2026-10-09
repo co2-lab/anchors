@@ -55,6 +55,18 @@ outcome as the last line — for a watch that should end with the work.
 
 The user sees the same in 'anchors status', under "Running".
 
+## Without the agent hook
+
+The hook is optional, and a project may keep its settings unwritten. Without it the monitor
+still sees Anchors' own long commands, with their exit; whatever a runner recognizes under the
+project, from the process table; the test reports landing; and the heartbeat. What it loses is
+what only the hook knows of the agent's own commands: their exit code, the file their output
+goes to — so a runner's end is read from its summary only when 'anchors monitor run --' wraps
+it —, and the commands no runner recognizes, which it does not see at all. To keep the
+project's settings untouched and still have the hook, install it in your own settings:
+'anchors install-hooks --agent --user' — it records nothing outside a project with an
+anchors.yaml.
+
 ## Timing
 
 The defaults — read every 30s, heartbeat every 5m, a run stalled after its runner's quiet

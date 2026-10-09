@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:a7b75876798046a3 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:3ecac3d61e305a12 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2182,6 +2182,8 @@ abra a página dela em `camadas/`.
 - [INHKN-B13 — On a real commit, on Linux, macOS and Windows alike, the installed pre-commit runs the project's blocking gates: a failing one refuses the commit, and a passing one lets it through.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-B14 — With `--agent`, the agent's hook goes into the project's Claude Code settings (`.claude/settings.json`), before and after each command of the agent: the rest of the settings is kept, installing again adds nothing, settings that are not valid JSON are refused naming the file, and a folder with no anchors.yaml is refused. (`installAgentHook`)](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
+
+- [INHKN-B15 — With `--agent --user`, the agent's hook goes into the user's own Claude Code settings (`~/.claude/settings.json`), the same way, from any folder — the hook records nothing outside a project with an anchors.yaml —, and the project's settings are left untouched; `--user` without `--agent` is refused. (`agentSettingsPath`)](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-I01 — However many times the install runs, each merge attribute line appears once in `.gitattributes` and the user's own lines are kept intact.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 

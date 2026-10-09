@@ -16,16 +16,24 @@ import (
 // `anchors monitor` (DESIGN-process-monitor.md).
 const agentHookCommand = "anchors monitor hook"
 
-// agentSettingsPath is the project's Claude Code settings, shared with the team.
-func agentSettingsPath(root string) string {
-	return filepath.Join(root, ".claude", "settings.json")
+// agentSettingsPath is where the hook goes: the project's Claude Code settings, shared with
+// the team, or — with user — the user's own, which no project versions. A user-level hook
+// runs in every folder, and records nothing outside a project with an anchors.yaml.
+func agentSettingsPath(root string, user bool) (string, error) {
+	if user {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", fmt.Errorf("no home folder to write the user's settings in: %w", err)
+		}
+		return filepath.Join(home, ".claude", "settings.json"), nil
+	}
+	return filepath.Join(root, ".claude", "settings.json"), nil
 }
 
-// installAgentHook adds, to the project's Claude Code settings, the hook that runs before and
+// installAgentHook adds, to the Claude Code settings at path, the hook that runs before and
 // after each command of the agent and records the long ones. Everything else in the settings
 // is kept as it was, and a hook already there is not added twice. It says what it did.
-func installAgentHook(root string) (string, error) {
-	path := agentSettingsPath(root)
+func installAgentHook(path string) (string, error) {
 	settings := map[string]any{}
 	if b, err := os.ReadFile(path); err == nil {
 		if err := json.Unmarshal(b, &settings); err != nil {
@@ -50,7 +58,7 @@ func installAgentHook(root string) (string, error) {
 		added++
 	}
 	if added == 0 {
-		return fmt.Sprintf("✓ agent hook already in %s", filepath.ToSlash(rel(root, path))), nil
+		return fmt.Sprintf("✓ agent hook already in %s", filepath.ToSlash(path)), nil
 	}
 	settings["hooks"] = hooks
 	b, err := json.MarshalIndent(settings, "", "  ")
@@ -63,7 +71,7 @@ func installAgentHook(root string) (string, error) {
 	if err := os.WriteFile(path, append(b, '\n'), 0o644); err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("✓ agent hook written to %s — the agent's long commands are recorded for `anchors monitor`", filepath.ToSlash(rel(root, path))), nil
+	return fmt.Sprintf("✓ agent hook written to %s — the agent's long commands are recorded for `anchors monitor`", filepath.ToSlash(path)), nil
 }
 
 // hasAgentHook says whether a list of hook entries already runs the agent hook.
@@ -79,11 +87,4 @@ func hasAgentHook(list []any) bool {
 		}
 	}
 	return false
-}
-
-func rel(root, path string) string {
-	if r, err := filepath.Rel(root, path); err == nil {
-		return r
-	}
-	return path
 }

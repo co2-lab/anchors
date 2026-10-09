@@ -128,3 +128,9 @@ Feature: InstallHooks — the git hooks that confront every commit and push with
     Given a project whose Claude Code settings already hold a permission and another hook
     When the agent's hook is installed twice, then into settings that are not valid JSON, then into a folder with no anchors.yaml
     Then the settings keep theirs and gain the hook once, before and after each command, and the last two are refused
+
+  @INHKN-B15 @unit-level
+  Scenario: The agent's hook goes into the user's own settings
+    Given a home folder and a folder with no anchors.yaml
+    When the agent's hook is installed for the user, and --user is given without --agent
+    Then the user's settings gain the hook, the folder gets no settings, and the second is refused
