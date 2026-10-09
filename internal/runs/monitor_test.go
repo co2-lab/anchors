@@ -158,9 +158,15 @@ func TestTick_reports(t *testing.T) {
 		{Path: "old.xml", Modified: t0.Add(-time.Hour), Tests: 3},
 		{Path: "new.xml", Modified: t0.Add(30 * time.Second), Tests: 4, Failures: 1, First: "AuthScreen-A01"},
 	}}
+	snap.Reports = append(snap.Reports, Report{Path: "vr.xml", Modified: t0.Add(40 * time.Second)})
 	evs, _ := Tick(st, snap, DefaultRunners(), Timing{})
 	if kinds(evs, "report") != 1 || !strings.Contains(lines(evs), "✗ report new.xml: 4 test(s), 1 failure(s) — AuthScreen-A01") {
-		t.Errorf("only the new report:\n%s", lines(evs))
+		t.Errorf("only the new report, not the emptied one:\n%s", lines(evs))
+	}
+	snap.Now = t0.Add(2 * time.Minute)
+	snap.Reports = []Report{{Path: "vr.xml", Modified: t0.Add(90 * time.Second), Tests: 3}}
+	if evs, _ := Tick(st, snap, DefaultRunners(), Timing{}); kinds(evs, "report") != 1 || !strings.Contains(lines(evs), "✓ report vr.xml: 3 test(s)") {
+		t.Errorf("the emptied report, once it holds tests:\n%s", lines(evs))
 	}
 }
 

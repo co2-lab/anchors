@@ -34,9 +34,9 @@ Feature: RunMonitor — reading the project's runs tick by tick: what started, s
 
   @MNTRS-B05 @unit-level
   Scenario: A report that landed is said with its failures
-    Given a report there before the monitor's memory began, and one modified after
-    When a tick reads them
-    Then only the second is a line, with its tests, failures and first failure
+    Given a report there before the monitor's memory began, one modified after, and one emptied mid-run then written with tests
+    When ticks read them
+    Then the second is a line with its tests, failures and first failure, and the emptied one only once it holds tests
 
   @MNTRS-B06 @unit-level
   Scenario: The heartbeat says what runs, what ended, and the load

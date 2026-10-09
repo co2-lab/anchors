@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:a790736909e8144b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:74375f7f85aad72d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7477,7 +7477,7 @@ abra a página dela em `camadas/`.
 
 - [MNTRS-B04 — A record of the agent takes the topmost process under the project that runs the program its command's first line names, past the launchers in front of it, or that the same runner recognizes; a command of the agent no process runs, past its first tick, ended once its output — when known — stopped growing. (`findProcess`, `firstWord`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
-- [MNTRS-B05 — A test report modified since the last reading is a line with its tests, its failures and the first failure; a report already there before the monitor's memory began is no event.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+- [MNTRS-B05 — A test report modified since the last reading is a line with its tests, its failures and the first failure; a report already there before the monitor's memory began is no event, and neither is one that holds no test — emptied by a runner that writes it at the end, or cut short —: it is said once it holds tests.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B06 — Every heartbeat, a line says what runs — by name, the stalled marked —, or `running=[NOTHING]`; how many runs ended since the last heartbeat; and the load against the number of CPUs (`load=8.4/10`), marked HIGH above it — processes wait for a CPU.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 

@@ -301,6 +301,12 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 		if !seen && !rep.Modified.After(st.Cursor) {
 			continue // there before the monitor's memory began
 		}
+		// A report with no test is no result: a runner that empties its report when it starts
+		// and writes it at the end (vitest) left a "✓ 0 test(s)" mid-run, which read as a pass
+		// (reported from MIF). It is said once it holds tests.
+		if rep.Tests == 0 {
+			continue
+		}
 		mark := "✓"
 		if rep.Failures > 0 {
 			mark = "✗"
