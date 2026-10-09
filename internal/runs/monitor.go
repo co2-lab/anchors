@@ -513,10 +513,16 @@ func heartbeat(st *State, runs map[string]*Run, order []string, snap Snapshot) s
 	if ended > 0 && !st.LastHeartbeat.IsZero() {
 		line += fmt.Sprintf(" — %d run(s) ended since %s", ended, st.LastHeartbeat.Local().Format("15:04"))
 	}
+	// The load is said against the CPUs: a bare 8.4 says nothing to whoever does not know
+	// the machine has 10 of them — busy, with nothing waiting —, nor that 12 would mean a queue.
 	if snap.HasLoad {
-		line += fmt.Sprintf(" load=%.1f", snap.Load)
-		if snap.CPUs > 0 && snap.Load > float64(snap.CPUs) {
-			line += fmt.Sprintf(" (HIGH: above the %d CPUs — timeouts may be load)", snap.CPUs)
+		if snap.CPUs > 0 {
+			line += fmt.Sprintf(" load=%.1f/%d", snap.Load, snap.CPUs)
+			if snap.Load > float64(snap.CPUs) {
+				line += " (HIGH: processes wait for a CPU — timeouts may be load)"
+			}
+		} else {
+			line += fmt.Sprintf(" load=%.1f", snap.Load)
 		}
 	}
 	return line

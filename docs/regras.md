@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:2f0f4bb830c36350 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:3523b3a582cfb760 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7479,7 +7479,7 @@ abra a página dela em `camadas/`.
 
 - [MNTRS-B05 — A test report modified since the last reading is a line with its tests, its failures and the first failure; a report already there before the monitor's memory began is no event.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
-- [MNTRS-B06 — Every heartbeat, a line says what runs — by name, the stalled marked —, or `running=[NOTHING]`; how many runs ended since the last heartbeat; and the load, marked HIGH above the number of CPUs.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+- [MNTRS-B06 — Every heartbeat, a line says what runs — by name, the stalled marked —, or `running=[NOTHING]`; how many runs ended since the last heartbeat; and the load against the number of CPUs (`load=8.4/10`), marked HIGH above it — processes wait for a CPU.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B07 — The memory is kept between watches: a re-armed monitor says once what happened while nobody watched — a death included — and repeats nothing; a run that ended before the memory began is old news. (`LoadState`, `SaveState`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 

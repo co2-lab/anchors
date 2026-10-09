@@ -38,9 +38,10 @@ outcome as the last line — for a watch that should end with the work.
 - '✓/✗ <runner> ended' — with its exit code or its summary. Go on, or fix what failed.
 - '✓/✗ report <path>' — a test report landed, with its failures: triage them while the rest
   runs.
-- '<time> running=[...] load=<n>' — the heartbeat. 'running=[NOTHING]' while work is pending
-  means a step never started: start it. A load marked HIGH explains timeouts — do not chase
-  them as bugs before it falls.
+- '<time> running=[...] load=<n>/<cpus>' — the heartbeat. 'running=[NOTHING]' while work is
+  pending means a step never started: start it. The load is how many processes, on average
+  over the last minute, used or waited for a CPU: up to the number of CPUs nothing waits.
+  A load marked HIGH explains timeouts — do not chase them as bugs before it falls.
 
 ## What the monitor sees
 

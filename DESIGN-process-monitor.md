@@ -78,7 +78,7 @@ case.
   | stalled | `⏸ maestro: no output or CPU for 8 min (pid 901)` |
   | died | `☠ jest gone without a summary — last lines: …` |
   | finished | `✓ jest 1673/1673 (exit 0)` / `✗ jest 3 failed (exit 1)` |
-  | heartbeat | `14:05 running=[jest 1, maestro 1] load=12.4` / `running=[NOTHING] — 2 runs ended since 13:40` |
+  | heartbeat | `14:05 running=[jest 1, maestro 1] load=12.4/10 (HIGH)` / `running=[NOTHING] — 2 runs ended since 13:40` |
 
   The heartbeat is MIF's lesson: "nothing running" is the line that catches an agent that
   stopped. The load average goes on the heartbeat, flagged when high. Every terminal state is

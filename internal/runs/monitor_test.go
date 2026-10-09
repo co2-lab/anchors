@@ -179,7 +179,7 @@ func TestTick_heartbeat(t *testing.T) {
 	snap := Snapshot{Now: t0.Add(6 * time.Minute), Root: root, Self: pidSelf, Procs: procs, Records: recs, Load: 9, HasLoad: true, CPUs: 4}
 	evs, _ := Tick(st, snap, DefaultRunners(), DefaultTiming())
 	got := lines(evs)
-	if !strings.Contains(got, "running=[jest 1, maestro (stalled) 1]") || !strings.Contains(got, "1 run(s) ended since") || !strings.Contains(got, "load=9.0 (HIGH") {
+	if !strings.Contains(got, "running=[jest 1, maestro (stalled) 1]") || !strings.Contains(got, "1 run(s) ended since") || !strings.Contains(got, "load=9.0/4 (HIGH") {
 		t.Errorf("names, ended and load:\n%s", got)
 	}
 	st2 := &State{Runs: map[string]*Seen{}, Reports: map[string]time.Time{}}
