@@ -2,7 +2,7 @@
 # @anchors
 #   code: EVFTV
 #   ref: EVFRA
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-09
 #   layer: feature
 
 @EVFRA
@@ -86,3 +86,15 @@ Feature: EvidenceFreshness — a test's evidence expires when anything it exerci
     Given the Arena's Out table with rows A03 and A04, a flow asserting A03, and a flow that only passes through the Arena
     When row A04 changes, then row A03 changes, then row A03 is removed
     Then the A03 flow stays fresh, then goes stale naming its row, then goes stale again; the other flow stays fresh
+
+  @EVFRA-B12 @unit-level
+  Scenario: A test's closure is what it asserts, not the wiring
+    Given a flow capturing a screen, depending on a login util that reaches the navigator, the screen importing a hook and navigating to another
+    When the flow's closure is read
+    Then it holds the flow's util and the util it composes, the screen and what it imports, and neither the navigator nor the other screen
+
+  @EVFRA-B13 @unit-level
+  Scenario: A stored closure is read through today's rule
+    Given a proof stamped when its closure held the navigator, and a file no rule reaches
+    When the navigator changes, and then that file
+    Then the navigator stales nothing, and the file stales the proof as before

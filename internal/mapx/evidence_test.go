@@ -228,3 +228,58 @@ func TestEvidence_aNavigationRowStalesTheFlowThatAssertsIt(t *testing.T) {
 		t.Error("its row's removal stales the flow")
 	}
 }
+
+// wiringGraph: a flow captures the Goals screen and depends on a login util, which composes a
+// launch util and reaches the navigator; the Goals screen imports a hook and navigates to Detail.
+func wiringGraph() *Graph {
+	return &Graph{
+		Nodes: []Node{
+			{ID: "flows/GOALS-A01.yaml", Kind: KindTest, Code: "GOALS", Rev: "t1"},
+			{ID: "utils/login.yaml", Kind: KindTest, Rev: "u1"},
+			{ID: "utils/launch.yaml", Kind: KindTest, Rev: "u2"},
+			{ID: "src/RootNavigator.tsx", Kind: KindCode, Code: "ROOTN", Rev: "n1"},
+			{ID: "src/GoalsScreen.tsx", Kind: KindCode, Code: "GOALS", Rev: "g1"},
+			{ID: "src/useGoals.ts", Kind: KindCode, Code: "USEGL", Rev: "h1"},
+			{ID: "src/DetailScreen.tsx", Kind: KindCode, Code: "DETLS", Rev: "d1"},
+		},
+		Edges: []Edge{
+			{From: "flows/GOALS-A01.yaml", To: "utils/login.yaml", Type: EdgeDependsOn},
+			{From: "flows/GOALS-A01.yaml", To: "src/GoalsScreen.tsx", Type: EdgeCaptures},
+			{From: "utils/login.yaml", To: "utils/launch.yaml", Type: EdgeDependsOn},
+			{From: "utils/login.yaml", To: "src/RootNavigator.tsx", Type: EdgeDependsOn},
+			{From: "src/GoalsScreen.tsx", To: "src/useGoals.ts", Type: EdgeDependsOn},
+			{From: "src/GoalsScreen.tsx", To: "src/DetailScreen.tsx", Type: EdgeNavigatesTo},
+		},
+	}
+}
+
+func TestEvidenceClosure_followsTheAsserts(t *testing.T) {
+	t.Run("EVFRA-B12: A test's closure is what it asserts, not the wiring", func(t *testing.T) {})
+	got := wiringGraph().EvidenceClosure("flows/GOALS-A01.yaml")
+	for _, want := range []string{"utils/login.yaml", "utils/launch.yaml", "src/GoalsScreen.tsx", "src/useGoals.ts"} {
+		if _, ok := got[want]; !ok {
+			t.Errorf("%s is what the flow asserts or runs: %v", want, got)
+		}
+	}
+	for _, not := range []string{"src/RootNavigator.tsx", "src/DetailScreen.tsx"} {
+		if _, ok := got[not]; ok {
+			t.Errorf("%s is wiring: %v", not, got)
+		}
+	}
+}
+
+func TestEvidenceStaleFor_readsTheStoredClosureThroughTheRule(t *testing.T) {
+	t.Run("EVFRA-B13: A stored closure is read through today's rule", func(t *testing.T) {})
+	g := wiringGraph()
+	g.Nodes[0].Signal = &TestSignal{AtRev: "t1", ClosureRev: map[string]string{
+		"utils/login.yaml": "u1", "src/RootNavigator.tsx": "n0", "src/Other.ts": "o0",
+	}}
+	g.Nodes = append(g.Nodes, Node{ID: "src/Other.ts", Kind: KindCode, Rev: "o0"})
+	if ev := g.EvidenceStaleFor("flows/GOALS-A01.yaml"); ev != nil {
+		t.Errorf("the navigator changed, and it is wiring: %+v", ev)
+	}
+	g.Nodes[len(g.Nodes)-1].Rev = "o1"
+	if ev := g.EvidenceStaleFor("flows/GOALS-A01.yaml"); ev == nil || len(ev.Culprit) != 1 || ev.Culprit[0] != "src/Other.ts" {
+		t.Errorf("a file no rule reaches is judged as before: %+v", ev)
+	}
+}

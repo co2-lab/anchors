@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:487a50287f7568a2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:38b9ba737578e407 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -7133,6 +7133,10 @@ teste prova.
 - [A component whose capture diverged stales the captures of who uses it](layers/mapa.md#evfra-b10--a-component-whose-capture-diverged-stales-the-captures-of-who-uses-it) `EVFRA-B10`
 
 - [A flow that asserts a navigation goes stale when its Out row changes or goes, and a flow that passes through does not](layers/mapa.md#evfra-b11--a-flow-that-asserts-a-navigation-goes-stale-when-its-out-row-changes-or-goes-and-a-flow-that-passes-through-does-not) `EVFRA-B11`
+
+- [A test's closure is what it asserts, not the wiring](layers/mapa.md#evfra-b12--a-tests-closure-is-what-it-asserts-not-the-wiring) `EVFRA-B12`
+
+- [A stored closure is read through today's rule](layers/mapa.md#evfra-b13--a-stored-closure-is-read-through-todays-rule) `EVFRA-B13`
 
 - [The written format and the oldest readable format are both accepted](layers/mapa.md#mpfrm-b01--the-written-format-and-the-oldest-readable-format-are-both-accepted) `MPFRM-B01`
 

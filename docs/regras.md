@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:74375f7f85aad72d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:61100c369ae3f1bd — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7884,6 +7884,10 @@ abra a página dela em `camadas/`.
 - [EVFRA-B09 — A `captures` target — the unit a visual-regression test captures, and its images — enters the closure but the walk does not descend through it.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-B11 — A test that cites the rule of a row of a screen's Out table asserts that navigation: its evidence is stamped with the revision of that row alone, and goes stale when the row changes or is removed — naming the row —, not when another row or the rest of the spec changes. A test that cites no Out rule of a screen, passing through it on its way, is not tied to its navigation. (`OutRowKey`, `EvidenceClosure`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
+
+- [EVFRA-B12 — A test's closure is what it asserts, not the wiring that gets it there: it never follows navigation; and a test file the test depends on — a util — enters with the test files it composes, and the walk does not descend from it into code. (`EvidenceClosure`, DESIGN-evidence-follows-the-asserts.md)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
+
+- [EVFRA-B13 — A proof's stored closure is read through today's rule: a file it holds that the rule leaves out — a screen on the path, what a util reaches — stales nothing; a file no rule reaches is judged as before. (`EvidenceStaleFor`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-I01 — The closure never contains the test node itself.](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 

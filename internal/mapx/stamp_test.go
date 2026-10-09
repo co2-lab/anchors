@@ -591,13 +591,14 @@ func carryGraphs(spec, code Node) (novo, old *Graph) {
 				Signal: &TestSignal{AtRev: "s1", ProvenCodes: []string{"A-B01", "A-B02#01", "A-B02#02"},
 					ProvenBySuite:    map[string][]string{"unit": {"A-B01", "A-B02#01"}, "e2e": {"A-B02#02"}},
 					ProvenRevBySuite: map[string]string{"unit": "s1", "e2e": "s1"}}},
-			{ID: "a.ts", Kind: KindCode, Rev: "c1", EvidenceRev: "ce", LineRev: "cl",
+			{ID: "a.ts", Kind: KindCode, Code: "A", Rev: "c1", EvidenceRev: "ce", LineRev: "cl",
 				Signal: &TestSignal{AtRev: "c1", TotalLines: 9, CoverageBySuite: map[string]SuiteCoverage{"unit": {AtRev: "c1"}}}},
-			{ID: "a_test.ts", Kind: KindTest, Rev: "t1", Signal: &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.ts": "c1"}}},
+			{ID: "a_test.ts", Kind: KindTest, Code: "A", Rev: "t1", Signal: &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.ts": "c1"}}},
 		},
 		Edges: []Edge{{From: "a.spec.md", To: "a.ts", Stamp: &Stamp{ValidatedFromRev: "s1", ValidatedToRev: "c1"}}},
 	}
-	novo = &Graph{Nodes: []Node{spec, code, {ID: "a_test.ts", Kind: KindTest, Rev: "t1"}},
+	code.Code = "A"
+	novo = &Graph{Nodes: []Node{spec, code, {ID: "a_test.ts", Kind: KindTest, Code: "A", Rev: "t1"}},
 		Edges: []Edge{{From: "a.spec.md", To: "a.ts"}}}
 	return novo, old
 }
@@ -702,7 +703,7 @@ func TestAdvanceTo(t *testing.T) {
 	t.Run("EDSTD-B22: Advancing a node to its content carries the evidence its revisions show unchanged", func(t *testing.T) {})
 	before := []byte("export const a = 1\n")
 	ev := scan.EvidenceOf("code", before, nil)
-	g := &Graph{Nodes: []Node{{ID: "a.ts", Kind: KindCode}, {ID: "a_test.ts", Kind: KindTest, Rev: "t1"}}}
+	g := &Graph{Nodes: []Node{{ID: "a.ts", Kind: KindCode, Code: "A"}, {ID: "a_test.ts", Kind: KindTest, Code: "A", Rev: "t1"}}}
 	g.Nodes[0].setEvidence(scan.ShortHash(before), ev)
 	g.Nodes[1].Signal = &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.ts": scan.ShortHash(before)}}
 	if moved, carried := g.AdvanceTo("a.ts", []byte("export const a = 1 // @used-by: BBBBB\n"), nil); !moved || !carried {

@@ -57,7 +57,19 @@ func (g *Graph) EvidenceStaleFor(id string) *EvidenceStale {
 			revAtual[OutRowKey(x.ID, rule)] = r
 		}
 	}
+	// A stored closure is read through today's rule: what the rule leaves out — a screen on the
+	// path, what a util reaches — stales nothing, even in a proof stamped before the rule.
+	leftOut := map[string]bool{}
+	now := g.evidenceClosure(id, true)
+	for f := range g.evidenceClosure(id, false) {
+		if _, ok := now[f]; !ok {
+			leftOut[f] = true
+		}
+	}
 	for alvo, revNaIngestao := range n.Signal.ClosureRev {
+		if leftOut[alvo] {
+			continue
+		}
 		atual, ok := revAtual[alvo]
 		if ok && atual != revNaIngestao {
 			out.Culprit = append(out.Culprit, alvo)
@@ -87,6 +99,12 @@ func (g *Graph) EvidenceStaleFor(id string) *EvidenceStale {
 // afirma que mudanças nele não descem, e respeitar isso aqui evita que um arquivo
 // deliberadamente volátil vença a evidência de metade da suíte.
 func (g *Graph) EvidenceClosure(id string) map[string]string {
+	return g.evidenceClosure(id, true)
+}
+
+// evidenceClosure is the closure by today's rule — the asserts — or, with asserts false, by the
+// rule before it, which followed every edge: the difference is what the rule leaves out.
+func (g *Graph) evidenceClosure(id string, asserts bool) map[string]string {
 	adj := g.adjacency()
 	noProp := g.noPropSet()
 	revs := map[string]string{}
@@ -94,15 +112,24 @@ func (g *Graph) EvidenceClosure(id string) map[string]string {
 		revs[x.ID] = x.Rev
 	}
 
+	// What a test asserts, not the wiring that gets it there (DESIGN-evidence-follows-the-
+	// asserts.md): navigation is never followed — an asserted navigation is in the closure by
+	// its Out row —; and a test file the test depends on (a util) counts as a file, with the
+	// test files it composes, and the walk does not descend from it into code.
+	kind := map[string]Kind{}
+	for _, x := range g.Nodes {
+		kind[x.ID] = x.Kind
+	}
 	visto := map[string]bool{id: true}
 	fila := []string{id}
 	out := map[string]string{}
 	for len(fila) > 0 {
 		atual := fila[0]
 		fila = fila[1:]
+		wiring := asserts && atual != id && kind[atual] == KindTest
 		for _, e := range adj.out[atual] {
 			filho := e.To
-			if visto[filho] {
+			if visto[filho] || (asserts && e.Type == EdgeNavigatesTo) || (wiring && kind[filho] != KindTest) {
 				continue
 			}
 			visto[filho] = true
