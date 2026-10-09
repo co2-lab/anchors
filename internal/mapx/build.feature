@@ -2,7 +2,7 @@
 # @anchors
 #   code: BLFTA
 #   ref: GRBLG
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-09
 #   layer: feature
 
 @GRBLG
@@ -195,3 +195,9 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Given a file flagging the transactions table twice and the Stripe API
     When the map is built
     Then its node carries api:stripe and db:transactions, once each
+
+  @GRBLG-B28 @unit-level
+  Scenario: An edge carries whether its flag has a side effect on the tests
+    Given a screen importing a navigator for its types, importing a hook, navigating to a detail, and a file tying to one file twice
+    When the map is built, and then with a project list naming only @navigates
+    Then the type import and the navigation have no side effect, the hook has, the tie keeps the side effect, and the project's list decides

@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTC
 #   ref: CNFGO
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-09
 #   layer: feature
 
 @CNFGO
@@ -453,3 +453,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a config declaring the kinds db and api
     When it is loaded
     Then its dependency kinds are db and api, in order
+
+  @CNFGO-B67 @unit-level
+  Scenario: evidence.no_side_effect names the flags and sections with no side effect
+    Given no evidence block, then one naming its flags and sections
+    When they are read
+    Then the default flags and no sections, then the project's lists

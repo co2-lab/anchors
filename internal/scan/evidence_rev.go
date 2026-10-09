@@ -118,12 +118,20 @@ func headerSpan(lines []string) map[int]bool {
 	return out
 }
 
-// proveNothing are the titles of a spec's sections that prove nothing: its navigation —
+// proveNothing are the titles of a spec's sections with no side effect on the tests, as the
+// project declares them; by default its navigation —
 // each Out row has a revision of its own, which the flows asserting it read — and its
 // change history, in every language and as the project names them. An Out table under
 // another title is skipped by its heading.
 func proveNothing(cfg *config.Config) map[string]bool {
 	out := map[string]bool{}
+	// The project's own list replaces the defaults (`evidence.no_side_effect.sections`).
+	if own := cfg.NoSideEffectSections(); own != nil {
+		for _, t := range own {
+			out[strings.ToLower(strings.TrimSpace(evNoteRE.ReplaceAllString(t, "")))] = true
+		}
+		return out
+	}
 	for _, k := range []string{"navigation", "history"} {
 		for _, t := range i18n.AllTranslations("section.title." + k) {
 			out[strings.ToLower(t)] = true

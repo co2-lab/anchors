@@ -96,6 +96,11 @@ type Dialect struct {
 	GuardPatterns []string `yaml:"guard_patterns,omitempty"`
 	// ImportPattern casa uma linha de importação de dependência no proof-crosses-boundary.
 	ImportPattern string `yaml:"import_pattern,omitempty"`
+	// TypeImportPattern recognises an import statement that brings types only — nothing of
+	// the imported file runs with the importer —, read on the statement's first line. The
+	// dependency fixer flags such an import `@dep[type]:`. A family that has one knows it
+	// (TypeScript: `import type …`, `export type … from`).
+	TypeImportPattern string `yaml:"type_import_pattern,omitempty"`
 	// HandlePatterns recognise a path that HANDLES a failure instead of letting it escape.
 	//
 	// It is NOT "find the catch". Nailing `catch` would nail the syntax of one family of

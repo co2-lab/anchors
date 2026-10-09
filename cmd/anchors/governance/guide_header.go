@@ -173,12 +173,20 @@ them with the code (they are named in each line below).
   import that resolves to a file of the project; 'dep-honored' asks it to name the code of
   that file. A package of the ecosystem takes none.
     import { PALETTE } from './tokens' // ` + flagAt + `dep: TOKNS
+- '@dep[type]: <CODE>' — instead of '@dep:' on an import that brings types only: nothing of
+  that file runs with this one, so a change to it stales no test's proof ('anchors check
+  --fix' writes it on 'import type …'; the project's dialect says how a type import reads
+  in other languages, 'type_import_pattern').
+    import type { RootStackParamList } from '@/navigation/RootNavigator' // ` + flagAt + `dep[type]: RNIRT
 - '@dep[<kind>]: <name>' — what the code reaches that is no import (a table of the database,
   an external API, a queue), on the line that calls it. The kinds are the project's
   ('dependency_kinds:' in anchors.yaml); 'anchors map deps --kind <kind>' lists who reaches each.
     await db.query(sql) // ` + flagAt + `dep[db]: transactions
 - '` + flagAt + `no-dep: <reason>' — on the import line instead: this import stays out of the chain
-  (types only, a test double…).
+  (a test double…).
+- What has no side effect on the tests — '@navigates' and '@dep[type]' by default — ties no
+  test's proof: 'evidence.no_side_effect.flags' in anchors.yaml lists them, and
+  'evidence.no_side_effect.sections' the spec sections whose change proves nothing.
 - '@used-by: <CODE>[, <CODE>...]' — in the comment right above each symbol another file
   imports: exactly who imports it ('used-by-declared'). A default import is the module's
   'default', flagged above 'export default' or 'module.exports ='. Above an export list,

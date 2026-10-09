@@ -54,3 +54,9 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     Given a file flagging `@dep[db]: transactions` and `@dep[queue]: jobs` on its calls, in a project declaring the kind db
     When dep-honored runs
     Then only the queue flag is named, for its undeclared kind
+
+  @DCGDP-B09 @unit-level
+  Scenario: An import of types only is flagged as such
+    Given a TypeScript file with an unflagged type import, a type import with a plain flag, a runtime import flagged as types, and an inline type import the author flagged as types
+    When the fixer runs
+    Then the type imports carry `@dep[type]:`, the runtime one `@dep:`, the author's inline one stays, and dep-honored passes

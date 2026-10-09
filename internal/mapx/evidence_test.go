@@ -241,6 +241,7 @@ func wiringGraph() *Graph {
 			{ID: "src/GoalsScreen.tsx", Kind: KindCode, Code: "GOALS", Rev: "g1"},
 			{ID: "src/useGoals.ts", Kind: KindCode, Code: "USEGL", Rev: "h1"},
 			{ID: "src/DetailScreen.tsx", Kind: KindCode, Code: "DETLS", Rev: "d1"},
+			{ID: "src/GoalsScreen.test.tsx", Kind: KindTest, Code: "GOALS", Rev: "s1"},
 		},
 		Edges: []Edge{
 			{From: "flows/GOALS-A01.yaml", To: "utils/login.yaml", Type: EdgeDependsOn},
@@ -248,7 +249,11 @@ func wiringGraph() *Graph {
 			{From: "utils/login.yaml", To: "utils/launch.yaml", Type: EdgeDependsOn},
 			{From: "utils/login.yaml", To: "src/RootNavigator.tsx", Type: EdgeDependsOn},
 			{From: "src/GoalsScreen.tsx", To: "src/useGoals.ts", Type: EdgeDependsOn},
-			{From: "src/GoalsScreen.tsx", To: "src/DetailScreen.tsx", Type: EdgeNavigatesTo},
+			{From: "src/GoalsScreen.tsx", To: "src/DetailScreen.tsx", Type: EdgeNavigatesTo, NoSideEffect: true},
+			// A unit test of the screen imports it; the screen imports the navigator for its
+			// types only.
+			{From: "src/GoalsScreen.test.tsx", To: "src/GoalsScreen.tsx", Type: EdgeDependsOn},
+			{From: "src/GoalsScreen.tsx", To: "src/RootNavigator.tsx", Type: EdgeDependsOn, NoSideEffect: true},
 		},
 	}
 }
@@ -264,6 +269,15 @@ func TestEvidenceClosure_followsTheAsserts(t *testing.T) {
 	for _, not := range []string{"src/RootNavigator.tsx", "src/DetailScreen.tsx"} {
 		if _, ok := got[not]; ok {
 			t.Errorf("%s is wiring: %v", not, got)
+		}
+	}
+	unit := wiringGraph().EvidenceClosure("src/GoalsScreen.test.tsx")
+	if _, ok := unit["src/useGoals.ts"]; !ok {
+		t.Errorf("what the screen runs is in its test's closure: %v", unit)
+	}
+	for _, not := range []string{"src/RootNavigator.tsx", "src/DetailScreen.tsx"} {
+		if _, ok := unit[not]; ok {
+			t.Errorf("%s has no side effect on the test: %v", not, unit)
 		}
 	}
 }

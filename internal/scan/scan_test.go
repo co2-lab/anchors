@@ -1257,3 +1257,26 @@ func TestEvidenceOf_codeLeavesOutTheChainsFlags(t *testing.T) {
 func replaceOnce(b []byte, old, new []byte) []byte {
 	return []byte(strings.Replace(string(b), string(old), string(new), 1))
 }
+
+func TestTypeDep(t *testing.T) {
+	t.Run("RPSCR-B50: A type dependency is an import of types", func(t *testing.T) {})
+	got := extractCodeDeps([]byte("import type { Goal } from './types' // @dep[type]: TYPSU\n"))
+	if len(got) != 1 || got[0].Code != "TYPSU" || got[0].Kind != TypeDepKind || got[0].Name != "" || len(got[0].Symbols) != 1 || got[0].Symbols[0] != "Goal" {
+		t.Errorf("got %+v", got)
+	}
+}
+
+func TestEvidenceOf_projectSections(t *testing.T) {
+	t.Run("RPSCR-B51: The project's sections with no side effect are left out of the evidence", func(t *testing.T) {})
+	cfg := &config.Config{Evidence: &config.Evidence{NoSideEffect: &config.NoSideEffect{Sections: []string{"Implementation Notes"}}}}
+	spec := func(notes, history string) []byte {
+		return []byte("# A\n\n### A-B01 — joins\n\n## Implementation Notes\n\n" + notes + "\n\n## Change History\n\n- " + history + "\n")
+	}
+	base := EvidenceOf("spec", spec("uses a map", "created"), cfg)
+	if EvidenceOf("spec", spec("uses a set", "created"), cfg).Rev != base.Rev {
+		t.Error("the notes move nothing")
+	}
+	if EvidenceOf("spec", spec("uses a map", "edited"), cfg).Rev == base.Rev {
+		t.Error("the history, no longer listed, moves the evidence")
+	}
+}

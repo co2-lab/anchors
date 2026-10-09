@@ -113,9 +113,10 @@ func (g *Graph) evidenceClosure(id string, asserts bool) map[string]string {
 	}
 
 	// What a test asserts, not the wiring that gets it there (DESIGN-evidence-follows-the-
-	// asserts.md): navigation is never followed — an asserted navigation is in the closure by
-	// its Out row —; and a test file the test depends on (a util) counts as a file, with the
-	// test files it composes, and the walk does not descend from it into code.
+	// asserts.md): an edge with no side effect on the tests — a navigation, an import of
+	// types, as the project's flags say — is never followed (an asserted navigation is in the
+	// closure by its Out row); and a test file the test depends on (a util) counts as a file,
+	// with the test files it composes, and the walk does not descend from it into code.
 	kind := map[string]Kind{}
 	for _, x := range g.Nodes {
 		kind[x.ID] = x.Kind
@@ -129,7 +130,7 @@ func (g *Graph) evidenceClosure(id string, asserts bool) map[string]string {
 		wiring := asserts && atual != id && kind[atual] == KindTest
 		for _, e := range adj.out[atual] {
 			filho := e.To
-			if visto[filho] || (asserts && e.Type == EdgeNavigatesTo) || (wiring && kind[filho] != KindTest) {
+			if visto[filho] || (asserts && e.NoSideEffect) || (wiring && kind[filho] != KindTest) {
 				continue
 			}
 			visto[filho] = true
@@ -141,7 +142,7 @@ func (g *Graph) evidenceClosure(id string, asserts bool) map[string]string {
 			// to the next unit that is captured. A component the screen uses has its own
 			// capture, and its change stales that one, not this.
 			if e.Type == EdgeCaptures {
-				for d, r := range g.uncapturedDeps(filho, adj, revs) {
+				for d, r := range g.uncapturedDeps(filho, adj, revs, asserts) {
 					if !visto[d] && d != id {
 						visto[d] = true
 						out[d] = r
@@ -211,8 +212,8 @@ func (g *Graph) divergedParts(n *Node) []string {
 // uncapturedDeps are what a captured unit's code depends on that no test captures: the
 // declared dependencies of the spec that specifies it (`depends-on`), transitively through
 // the specs of those, stopping at any file a test captures — that one is proven by its own
-// capture.
-func (g *Graph) uncapturedDeps(code string, adj adjacency, revs map[string]string) map[string]string {
+// capture —, and, by today's rule, past no dependency with no side effect on the tests.
+func (g *Graph) uncapturedDeps(code string, adj adjacency, revs map[string]string, asserts bool) map[string]string {
 	captured := func(id string) bool {
 		for _, e := range adj.in[id] {
 			if e.Type == EdgeCaptures {
@@ -237,7 +238,7 @@ func (g *Graph) uncapturedDeps(code string, adj adjacency, revs map[string]strin
 		}
 		for _, owner := range owners {
 			for _, d := range adj.out[owner] {
-				if d.Type != EdgeDependsOn || seen[d.To] {
+				if d.Type != EdgeDependsOn || seen[d.To] || (asserts && d.NoSideEffect) {
 					continue
 				}
 				seen[d.To] = true

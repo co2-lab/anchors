@@ -70,7 +70,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 	g.Edges = append(g.Edges, scenarioEdges(files, colo)...)
 	g.Edges = append(g.Edges, governsEdges(files, cfg)...)
 	g.Edges = append(g.Edges, dependsOnEdges(files)...)
-	g.Edges = append(g.Edges, flagEdges(files)...)
+	g.Edges = append(g.Edges, flagEdges(files, cfg)...)
 	g.Edges = append(g.Edges, seedEdges(files)...)
 	g.Edges = append(g.Edges, captureEdges(files)...)
 	g.Edges = append(g.Edges, composesEdges(files)...)
@@ -84,7 +84,7 @@ func resourcesOf(f scan.File) []string {
 	seen := map[string]bool{}
 	var out []string
 	for _, d := range f.CodeDeps {
-		if d.Kind == "" || d.Name == "" {
+		if d.Kind == "" || d.Name == "" || d.Kind == scan.TypeDepKind {
 			continue
 		}
 		k := d.Kind + ":" + d.Name
@@ -936,8 +936,15 @@ func layerOfUnit(f scan.File) string {
 // import line is a `depends-on` to the file whose own code it is, carrying the symbols the
 // import brings; `@navigates: CODE` on a navigation call is a `navigates-to` to that file,
 // carrying the rule that triggers it. A code no file owns makes no edge — the gates name
-// the dangling flag.
-func flagEdges(files []scan.File) []Edge {
+// the dangling flag. An edge whose flag the project says has no side effect on the tests
+// (`evidence.no_side_effect.flags` — `@navigates` and `@dep[type]` by default) is marked so: a
+// test's evidence does not follow it. When two flags tie one file to another, one with a side
+// effect wins.
+func flagEdges(files []scan.File, cfg *config.Config) []Edge {
+	quiet := map[string]bool{}
+	for _, f := range cfg.NoSideEffectFlags() {
+		quiet[f] = true
+	}
 	byCode := map[string]string{}
 	for _, f := range files {
 		if f.HeaderCode != "" {
@@ -946,20 +953,30 @@ func flagEdges(files []scan.File) []Edge {
 			}
 		}
 	}
-	seen := map[string]bool{}
 	var edges []Edge
+	at := map[string]int{}
 	add := func(e Edge) {
 		k := e.From + "\x00" + e.To + "\x00" + string(e.Type)
-		if seen[k] || e.From == e.To {
+		if e.From == e.To {
 			return
 		}
-		seen[k] = true
+		if i, ok := at[k]; ok {
+			if !e.NoSideEffect {
+				edges[i].NoSideEffect = false
+			}
+			return
+		}
+		at[k] = len(edges)
 		edges = append(edges, e)
 	}
 	for _, f := range files {
 		for _, d := range f.CodeDeps {
 			if to, ok := byCode[d.Code]; ok && d.Code != "" {
-				add(Edge{From: f.Path, To: to, Type: EdgeDependsOn, Origin: OriginDeclared, Method: strings.Join(d.Symbols, ", ")})
+				flag := "@dep"
+				if d.Kind != "" {
+					flag = "@dep[" + d.Kind + "]"
+				}
+				add(Edge{From: f.Path, To: to, Type: EdgeDependsOn, Origin: OriginDeclared, Method: strings.Join(d.Symbols, ", "), NoSideEffect: quiet[flag]})
 			}
 		}
 		for _, nv := range f.Navigates {
@@ -968,7 +985,7 @@ func flagEdges(files []scan.File) []Edge {
 			}
 			for _, c := range nv.Codes {
 				if to, ok := byCode[c]; ok {
-					add(Edge{From: f.Path, To: to, Type: EdgeNavigatesTo, Origin: OriginDeclared, Method: nv.Rule})
+					add(Edge{From: f.Path, To: to, Type: EdgeNavigatesTo, Origin: OriginDeclared, Method: nv.Rule, NoSideEffect: quiet["@navigates"]})
 				}
 			}
 		}

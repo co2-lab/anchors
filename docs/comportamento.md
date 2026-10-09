@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:38b9ba737578e407 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:edc2b7066fce23f5 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3018,6 +3018,8 @@ teste prova.
 
 - [dependency_kinds declares the kinds of the dependencies that are no import](layers/config.md#cnfgo-b66--dependency-kinds-declares-the-kinds-of-the-dependencies-that-are-no-import) `CNFGO-B66`
 
+- [evidence.no_side_effect names the flags and sections with no side effect](layers/config.md#cnfgo-b67--evidenceno-side-effect-names-the-flags-and-sections-with-no-side-effect) `CNFGO-B67`
+
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](layers/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -3445,6 +3447,8 @@ teste prova.
 - [Tests, test support and flows take part in the chain](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B07`
 
 - [A kinded dependency needs a declared kind, and no import](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B08`
+
+- [An import of types only is flagged as such](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B09`
 
 - [A spec still carrying a Dependencies table diverges, pointing at the migration](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 
@@ -7108,6 +7112,8 @@ teste prova.
 
 - [A file's kinded dependencies are its resources in the map](layers/mapa.md#grblg-b27--a-files-kinded-dependencies-are-its-resources-in-the-map) `GRBLG-B27`
 
+- [An edge carries whether its flag has a side effect on the tests](layers/mapa.md#grblg-b28--an-edge-carries-whether-its-flag-has-a-side-effect-on-the-tests) `GRBLG-B28`
+
 - [A test that was never ingested has no verdict](layers/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 
 - [The test's own change expires its evidence](layers/mapa.md#evfra-b02--the-tests-own-change-expires-its-evidence) `EVFRA-B02`
@@ -7619,6 +7625,10 @@ teste prova.
 - [A spec's evidence leaves out its header, navigation, history and spacing](layers/scan.md#rpscr-b48--a-specs-evidence-leaves-out-its-header-navigation-history-and-spacing) `RPSCR-B48`
 
 - [A file's evidence leaves out its header and the chain's flags, and its line revision keeps the lines](layers/scan.md#rpscr-b49--a-files-evidence-leaves-out-its-header-and-the-chains-flags-and-its-line-revision-keeps-the-lines) `RPSCR-B49`
+
+- [A type dependency is an import of types](layers/scan.md#rpscr-b50--a-type-dependency-is-an-import-of-types) `RPSCR-B50`
+
+- [The project's sections with no side effect are left out of the evidence](layers/scan.md#rpscr-b51--the-projects-sections-with-no-side-effect-are-left-out-of-the-evidence) `RPSCR-B51`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRBLG
-  updated_at: 2026-10-08
+  updated_at: 2026-10-09
   layer: mapa
 -->
 # GraphBuild — projecting the declared structure onto the scanned files: one node per file, and the relations between them
@@ -98,6 +98,7 @@ of the nodes whose content did not change.
 | `GRBLG-B25` | Linking the incarnations of a scenario code across directories, a file's units are the ones it `ref:`s; only a file that refs none has its own `code:` as its unit — a test with a code of its own and `ref: X` is linked to X's feature by X's codes, and never by a code it only cites. |
 | `GRBLG-B26` | The code's flags become edges to the file whose own code they name: a dependency flag is a declared `depends-on` carrying the import's symbols, a navigation flag a `navigates-to` carrying the rule that triggers it; a code no file owns makes no edge, and a waiver makes none. (`flagEdges`) |
 | `GRBLG-B27` | A file's kinded dependency flags become its resources in the map — `kind:name`, once each, sorted —, and an incremental rebuild keeps those of the files it does not read again. (`Resources`) |
+| `GRBLG-B28` | An edge a flag declares carries whether that flag has no side effect on the tests — `@navigates` and `@dep[type]` by default, the project's list otherwise —; when two flags tie one file to another, one with a side effect wins; a type dependency names no resource. (`flagEdges`, `NoSideEffect`) |
 | `GRBLG-B23` | Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`) |
 
 ## Invariants

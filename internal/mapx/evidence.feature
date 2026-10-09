@@ -92,6 +92,7 @@ Feature: EvidenceFreshness — a test's evidence expires when anything it exerci
     Given a flow capturing a screen, depending on a login util that reaches the navigator, the screen importing a hook and navigating to another
     When the flow's closure is read
     Then it holds the flow's util and the util it composes, the screen and what it imports, and neither the navigator nor the other screen
+    And a unit test of the screen holds what the screen runs, and neither the navigator it imports for types nor the screen it navigates to
 
   @EVFRA-B13 @unit-level
   Scenario: A stored closure is read through today's rule

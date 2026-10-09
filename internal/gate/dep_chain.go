@@ -39,6 +39,8 @@ type RealImport struct {
 	Target  string // the file it resolves to; empty when outside the project
 	Dir     bool   // it resolves to a directory — a package of several files
 	Symbols []string
+	// TypeOnly: the statement brings types only (the dialect's type_import_pattern).
+	TypeOnly bool
 }
 
 // familyImportPattern is the import pattern a family knows, its path in the group `path`.
@@ -51,6 +53,32 @@ func familyImportPattern(family string) string {
 	}
 	return ""
 }
+
+// familyTypeImportPattern is the type-only import a family knows.
+func familyTypeImportPattern(family string) string {
+	switch strings.ToLower(family) {
+	case "ts", "typescript":
+		return `^\s*(?:import|export)\s+type\b`
+	}
+	return ""
+}
+
+// typeImportRE is the pattern of a type-only import: the project's, or the family's.
+func typeImportRE(d config.Dialect) *regexp.Regexp {
+	if p := strings.TrimSpace(d.TypeImportPattern); p != "" {
+		if re := d.Compile(p); re != nil {
+			return re
+		}
+	}
+	if p := familyTypeImportPattern(d.Family); p != "" {
+		return regexp.MustCompile(p)
+	}
+	return nil
+}
+
+// staticImportRE is a statement that is plainly an import of a module: `import …` or
+// `export … from` at the start of its line — not an inline `import('…')` in an expression.
+var staticImportRE = regexp.MustCompile(`^\s*(?:import|export)\b`)
 
 // familyExtensions are the extensions a family's import paths leave out.
 func familyExtensions(family string) []string {
@@ -94,6 +122,7 @@ func ImportsOf(content, rel string, d config.Dialect, g *mapx.Graph) []RealImpor
 		return nil
 	}
 	group := re.SubexpIndex("path")
+	typeRE := typeImportRE(d)
 	lines := strings.Split(content, "\n")
 	goBlocks := strings.EqualFold(d.Family, "go") && !isFlowFile(rel)
 	inBlock := false
@@ -138,6 +167,7 @@ func ImportsOf(content, rel string, d config.Dialect, g *mapx.Graph) []RealImpor
 			}
 		}
 		imp.Symbols = scan.ImportSymbols(strings.Join(lines[imp.First-1:imp.Line], " "))
+		imp.TypeOnly = typeRE != nil && !isFlowFile(rel) && typeRE.MatchString(lines[imp.First-1])
 		imp.Target, imp.Dir = resolveImport(rel, imp.Path, d, g)
 		out = append(out, imp)
 	}
@@ -291,7 +321,7 @@ func checkDepHonored(content string, n mapx.Node, root string, g *mapx.Graph, cf
 	imps := ImportsOf(content, n.ID, d, g)
 	var wrong []string
 	for _, f := range all {
-		if f.Kind != "" {
+		if f.Kind != "" && f.Kind != scan.TypeDepKind {
 			// What the code reaches that is no import: the kind must be one the project
 			// declares; the call is the author's to name.
 			if !contains(cfg.DependencyKinds, f.Kind) {
@@ -478,15 +508,29 @@ func fixDepFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 			continue
 		}
 		want := codes[0]
+		// An import of types only is flagged `@dep[type]:` — nothing of it runs, and the
+		// project's evidence may say so (`evidence.no_side_effect.flags`).
+		flag := "@dep: "
 		f := flags[i]
+		if imp.TypeOnly || (f != nil && f.Kind == scan.TypeDepKind && !staticImportRE.MatchString(lines[imp.First-1])) {
+			flag = "@dep[" + scan.TypeDepKind + "]: "
+		}
 		switch {
 		case f == nil:
-			lines[imp.Line-1] = strings.TrimRight(lines[imp.Line-1], " \t") + " " + marker + " @dep: " + want
+			lines[imp.Line-1] = strings.TrimRight(lines[imp.Line-1], " \t") + " " + marker + " " + flag + want
 			done = append(done, fmt.Sprintf("%d %s", imp.Line, want))
-		case f.Code != "" && f.Code != want:
+		// A type flag the author wrote stays unless the statement plainly runs: a static
+		// import the dialect does not read as types. An inline `import('…').T` in a type
+		// position reads like a dynamic import, and only the author knows which it is.
+		case f.Code != "" && (f.Code != want || (imp.TypeOnly && f.Kind != scan.TypeDepKind) ||
+			(!imp.TypeOnly && f.Kind == scan.TypeDepKind && staticImportRE.MatchString(lines[imp.First-1]))):
 			l := lines[f.Line-1]
-			lines[f.Line-1] = strings.Replace(l, "@dep: "+f.Code, "@dep: "+want, 1)
-			done = append(done, fmt.Sprintf("%d %s→%s", f.Line, f.Code, want))
+			had := "@dep: " + f.Code
+			if f.Kind != "" {
+				had = "@dep[" + f.Kind + "]: " + f.Code
+			}
+			lines[f.Line-1] = strings.Replace(l, had, flag+want, 1)
+			done = append(done, fmt.Sprintf("%d %s→%s%s", f.Line, f.Code, strings.TrimSuffix(flag, " "), want))
 		}
 	}
 	if len(done) == 0 {

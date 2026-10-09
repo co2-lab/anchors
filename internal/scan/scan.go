@@ -1464,6 +1464,10 @@ func GovernedTreeChanges(root string, cfg *config.Config) ([]string, error) {
 }
 
 // CodeDep is a `@dep:` flag on an import line (see File.CodeDeps).
+// TypeDepKind is the kind of an import of types only — `@dep[type]: CODE`: it names a file by
+// its code, as `@dep:` does, and nothing of that file runs with the importer's code.
+const TypeDepKind = "type"
+
 type CodeDep struct {
 	Code string // the used file's own code; empty for a waiver
 	// Kind and Name: what the code reaches that is no import — `@dep[db]: transactions` on
@@ -1581,6 +1585,12 @@ func extractCodeDeps(content []byte) []CodeDep {
 	var out []CodeDep
 	for i, line := range strings.Split(string(content), "\n") {
 		if m := kindedDepRE.FindStringSubmatch(line); m != nil {
+			// `@dep[type]: CODE` is an import, of types only: it names a file by its code,
+			// like `@dep:`, and the kind says nothing of it runs.
+			if m[1] == TypeDepKind {
+				out = append(out, CodeDep{Code: strings.TrimRight(m[2], ",;"), Kind: TypeDepKind, Symbols: importSymbols(line), Line: i + 1})
+				continue
+			}
 			out = append(out, CodeDep{Kind: m[1], Name: strings.TrimRight(m[2], ",;"), Line: i + 1})
 			continue
 		}

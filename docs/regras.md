@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:61100c369ae3f1bd — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:487b6a017321693f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3225,6 +3225,8 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B66 — `dependency_kinds:` declares the kinds of what the code reaches that is no import — `db`, `api`, `queue` —, read as a list. (`DependencyKinds`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
+- [CNFGO-B67 — `evidence.no_side_effect` names, as the project writes them, what changes nothing a test observes: its `flags` — `@navigates` and `@dep[type]` when not given — and its spec `sections`; a list given replaces its default. (`NoSideEffectFlags`, `NoSideEffectSections`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
@@ -3798,6 +3800,8 @@ abra a página dela em `camadas/`.
 - [DCGDP-B07 — Every artifact that imports takes part in the chain — code, tests, test support, flows —: a test's imports carry the dependency flag like the code's, a flow composing another (`runFlow:`, inline or by `file:`, relative to the flow) imports it, the fixer writes the flag in each artifact's own comment, and — when the used-by gate confronts tests (`on:` holds `test`) — a symbol a test imports lists the test in its used-by flag; with the gate on code alone, the used-by flags list the code that imports the symbol, as before. (`chainUnit`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B08 — A kinded dependency flag (`@dep[<kind>]: <name>`) is no import: `dep-honored` asks only that its kind is one the project declares in `dependency_kinds:`, naming the line, the kind and the name when it is not.](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+
+- [DCGDP-B09 — An import of types only — the dialect's `type_import_pattern`, or its family's (TypeScript: `import type …`, `export type … from`) — is flagged `@dep[type]: CODE` by the fixer, a plain flag on it is turned into one, and a type flag on a static import that runs is turned back — a type flag on an inline `import('…')`, which reads like a dynamic import, is the author's and stays; `dep-honored` confronts a type flag as it does an import's. (`fixDepFlags`, `familyTypeImportPattern`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 ### [DEPHN — DependencyHonored — a spec declares no dependency: the code does](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
@@ -7851,6 +7855,8 @@ abra a página dela em `camadas/`.
 
 - [GRBLG-B27 — A file's kinded dependency flags become its resources in the map — `kind:name`, once each, sorted —, and an incremental rebuild keeps those of the files it does not read again. (`Resources`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
+- [GRBLG-B28 — An edge a flag declares carries whether that flag has no side effect on the tests — `@navigates` and `@dep[type]` by default, the project's list otherwise —; when two flags tie one file to another, one with a side effect wins; a type dependency names no resource. (`flagEdges`, `NoSideEffect`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
+
 - [GRBLG-B23 — Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-I01 — The same files and configuration always build the same graph, whatever order the files arrive in.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
@@ -7885,7 +7891,7 @@ abra a página dela em `camadas/`.
 
 - [EVFRA-B11 — A test that cites the rule of a row of a screen's Out table asserts that navigation: its evidence is stamped with the revision of that row alone, and goes stale when the row changes or is removed — naming the row —, not when another row or the rest of the spec changes. A test that cites no Out rule of a screen, passing through it on its way, is not tied to its navigation. (`OutRowKey`, `EvidenceClosure`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
-- [EVFRA-B12 — A test's closure is what it asserts, not the wiring that gets it there: it never follows navigation; and a test file the test depends on — a util — enters with the test files it composes, and the walk does not descend from it into code. (`EvidenceClosure`, DESIGN-evidence-follows-the-asserts.md)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
+- [EVFRA-B12 — A test's closure is what it asserts, not the wiring that gets it there: it never follows an edge whose flag has no side effect on the tests — a navigation, an import of types —; and a test file the test depends on — a util — enters with the test files it composes, and the walk does not descend from it into code. (`EvidenceClosure`, DESIGN-evidence-follows-the-asserts.md)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-B13 — A proof's stored closure is read through today's rule: a file it holds that the rule leaves out — a screen on the path, what a util reaches — stales nothing; a file no rule reaches is judged as before. (`EvidenceStaleFor`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
@@ -8400,6 +8406,10 @@ abra a página dela em `camadas/`.
 - [RPSCR-B48 — A spec's evidence revision is its content without its `@anchors` header, its navigation and change-history sections — in any language of the catalog, or as the project names them — and an Out table under any title, with its blank lines and trailing spaces normalized; each rule it defines has a revision of its definition — its heading and what is under it, its table rows, its bold bullet —, and the rest of what it reads has one of its own. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B49 — Any other file's evidence revision is its content without its `@anchors` header and the chain's flags — dependency (kinded or not), used-by and navigation flags and their waivers, at a line's end or on lines of their own —; its line revision keeps every line in place, the header and the flag-only lines blank, so a flag at a line's end keeps it and a flag line moves it. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B50 — `@dep[type]: CODE` on an import line is an import of types only: read with its code and the symbols the import brings, apart from the dependencies that are no import. (`CodeDep`, `TypeDepKind`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B51 — The spec sections a project declares with no side effect (`evidence.no_side_effect.sections`) are the ones left out of its evidence, in place of navigation and change history. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

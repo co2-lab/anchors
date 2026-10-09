@@ -996,3 +996,35 @@ func TestBuild_resourcesOfAFile(t *testing.T) {
 		t.Errorf("a stand-in keeps the file's resources: %+v", again)
 	}
 }
+
+func TestBuild_edgesCarryTheirSideEffect(t *testing.T) {
+	t.Run("GRBLG-B28: An edge carries whether its flag has a side effect on the tests", func(t *testing.T) {})
+	files := []scan.File{
+		{Path: "Goals.tsx", Kind: "code", HeaderCode: "GOALS", CodeDeps: []scan.CodeDep{
+			{Code: "ROOTN", Kind: scan.TypeDepKind}, {Code: "USEGL"}}, Navigates: []scan.Navigation{{Codes: []string{"DETLS"}}}},
+		{Path: "Both.tsx", Kind: "code", HeaderCode: "BOTHB", CodeDeps: []scan.CodeDep{{Code: "ROOTN", Kind: scan.TypeDepKind}, {Code: "ROOTN"}}},
+		{Path: "Root.tsx", Kind: "code", HeaderCode: "ROOTN"},
+		{Path: "useGoals.ts", Kind: "code", HeaderCode: "USEGL"},
+		{Path: "Detail.tsx", Kind: "code", HeaderCode: "DETLS"},
+	}
+	quiet := func(g *Graph) map[string]bool {
+		out := map[string]bool{}
+		for _, e := range g.Edges {
+			if e.Origin == OriginDeclared {
+				out[e.From+">"+e.To] = e.NoSideEffect
+			}
+		}
+		return out
+	}
+	q := quiet(Build(files, &config.Config{}, nil))
+	if !q["Goals.tsx>Root.tsx"] || q["Goals.tsx>useGoals.ts"] || !q["Goals.tsx>Detail.tsx"] || q["Both.tsx>Root.tsx"] {
+		t.Errorf("types and navigation quiet, the hook and the tie not: %v", q)
+	}
+	if r := Build(files, &config.Config{}, nil).Node("Goals.tsx").Resources; len(r) != 0 {
+		t.Errorf("a type dependency names no resource: %v", r)
+	}
+	own := &config.Config{Evidence: &config.Evidence{NoSideEffect: &config.NoSideEffect{Flags: []string{"@navigates"}}}}
+	if q := quiet(Build(files, own, nil)); q["Goals.tsx>Root.tsx"] || !q["Goals.tsx>Detail.tsx"] {
+		t.Errorf("the project's list decides: %v", q)
+	}
+}

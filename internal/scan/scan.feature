@@ -2,7 +2,7 @@
 # @anchors
 #   code: SCFTC
 #   ref: RPSCR
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-09
 #   layer: feature
 
 @RPSCR
@@ -336,3 +336,15 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a module, the same with flags at the end of its lines, the same with a flag line of its own, and the same under headers of two dates
     When their evidence is read, and then with a change to the code
     Then they have one evidence, the line-end flags and the header's date keep the lines and the flag line moves them, and the code's change moves the evidence
+
+  @RPSCR-B50 @unit-level
+  Scenario: A type dependency is an import of types
+    Given an import line flagged `@dep[type]: TYPSU`
+    When the dependency flags are read
+    Then it has the code TYPSU, the kind type and the import's symbols, and names no resource
+
+  @RPSCR-B51 @unit-level
+  Scenario: The project's sections with no side effect are left out of the evidence
+    Given a project declaring its Implementation Notes section with no side effect
+    When a spec's notes change, and then its history
+    Then the notes move nothing, and the history — no longer in the list — moves the evidence

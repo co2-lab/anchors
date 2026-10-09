@@ -1775,3 +1775,15 @@ func TestDependencyKinds(t *testing.T) {
 		t.Errorf("got %+v %v", c.DependencyKinds, err)
 	}
 }
+
+func TestNoSideEffect(t *testing.T) {
+	t.Run("CNFGO-B67: evidence.no_side_effect names the flags and sections with no side effect", func(t *testing.T) {})
+	c, err := load(t, "version: 7\nlayers: {}\n")
+	if err != nil || strings.Join(c.NoSideEffectFlags(), ",") != "@navigates,@dep[type]" || c.NoSideEffectSections() != nil {
+		t.Errorf("defaults: %v %v %v", c.NoSideEffectFlags(), c.NoSideEffectSections(), err)
+	}
+	c, err = load(t, "version: 7\nlayers: {}\nevidence:\n  no_side_effect:\n    flags: [\"@navigates\"]\n    sections: [Implementation Notes]\n")
+	if err != nil || strings.Join(c.NoSideEffectFlags(), ",") != "@navigates" || strings.Join(c.NoSideEffectSections(), ",") != "Implementation Notes" {
+		t.Errorf("the project's: %v %v %v", c.NoSideEffectFlags(), c.NoSideEffectSections(), err)
+	}
+}

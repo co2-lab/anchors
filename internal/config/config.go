@@ -180,6 +180,9 @@ type Config struct {
 	// runners it recognizes beyond the built-in ones, the reports it reads and how many ended
 	// runs it keeps (DESIGN-process-monitor.md).
 	Monitor *Monitor `yaml:"monitor,omitempty"`
+	// Evidence says what has no side effect on the tests — the flags and the spec sections a
+	// change to which stales no proof (DESIGN-evidence-follows-the-asserts.md).
+	Evidence *Evidence `yaml:"evidence,omitempty"`
 	// Obligations são as OBRIGAÇÕES TRANSVERSAIS do projeto: "todo nó que carrega o
 	// atributo P deve aparecer em Q". Ver Obligation.
 	Obligations []Obligation `yaml:"obligations,omitempty"`
@@ -2814,6 +2817,42 @@ type DataStates struct {
 // DataStatesRequired says whether the project made its data states requirements.
 func (c *Config) DataStatesRequired() bool {
 	return c != nil && c.DataStates != nil && c.DataStates.Required
+}
+
+// Evidence is what the project says of its tests' evidence (see Config.Evidence).
+type Evidence struct {
+	NoSideEffect *NoSideEffect `yaml:"no_side_effect,omitempty"`
+}
+
+// NoSideEffect names, as the project writes them, what changes nothing a test observes: the
+// flags — a line carrying one ties no test's proof to what it names — and the titles of the
+// spec sections a change to which proves nothing. A list given replaces its default.
+type NoSideEffect struct {
+	Flags    []string `yaml:"flags,omitempty"`
+	Sections []string `yaml:"sections,omitempty"`
+}
+
+// DefaultNoSideEffectFlags: a navigation leads elsewhere, it is not what a screen does — a
+// test that asserts it is tied to its Out row —; and an import of types runs nothing.
+var DefaultNoSideEffectFlags = []string{"@navigates", "@dep[type]"}
+
+// NoSideEffectFlags are the flags with no side effect on the tests: the project's, or the
+// default ones.
+func (c *Config) NoSideEffectFlags() []string {
+	if c != nil && c.Evidence != nil && c.Evidence.NoSideEffect != nil && c.Evidence.NoSideEffect.Flags != nil {
+		return c.Evidence.NoSideEffect.Flags
+	}
+	return DefaultNoSideEffectFlags
+}
+
+// NoSideEffectSections are the titles of the spec sections with no side effect the project
+// declares; nil when it declares none, and the defaults — navigation and change history —
+// hold.
+func (c *Config) NoSideEffectSections() []string {
+	if c != nil && c.Evidence != nil && c.Evidence.NoSideEffect != nil {
+		return c.Evidence.NoSideEffect.Sections
+	}
+	return nil
 }
 
 // Monitor is the monitor's configuration (see Config.Monitor). Durations are Go's

@@ -256,3 +256,24 @@ func TestDepChain_kindedDependencies(t *testing.T) {
 		t.Errorf("only the undeclared kind is named, and no kinded flag is taken for an import: %v %s", v, msg)
 	}
 }
+
+func TestDepChain_typeImports(t *testing.T) {
+	t.Run("DCGDP-B09: An import of types only is flagged as such", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	body := "import type { Goal } from './types'\nimport type { Goal as G } from '@/ui/types' // @dep: TYPSU\nimport { PALETTE } from '../theme/tokens' // @dep[type]: TOKNS\ntype P = import('./types').Goal // @dep[type]: TYPSU\n"
+	if err := os.WriteFile(filepath.Join(root, "src/ui/Shop.tsx"), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	shop := mapx.Node{ID: "src/ui/Shop.tsx", Kind: mapx.KindCode, FileCode: "SHOPS"}
+	g.Nodes = append(g.Nodes, shop)
+	gates := []config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code"}}}
+	FixWithConfig(gates, []mapx.Node{shop}, root, g, cfg)
+	got := read(t, root, "src/ui/Shop.tsx")
+	want := "import type { Goal } from './types' // @dep[type]: TYPSU\nimport type { Goal as G } from '@/ui/types' // @dep[type]: TYPSU\nimport { PALETTE } from '../theme/tokens' // @dep: TOKNS\ntype P = import('./types').Goal // @dep[type]: TYPSU\n"
+	if got != want {
+		t.Errorf("type imports flagged as types, the runtime one plainly:\n%s", got)
+	}
+	if v, msg := checkDepHonored(got, shop, root, g, cfg); v == Fail {
+		t.Errorf("a type flag is confronted as an import: %s", msg)
+	}
+}

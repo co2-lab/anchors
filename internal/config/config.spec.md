@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNFGO
-  updated_at: 2026-10-08
+  updated_at: 2026-10-09
   layer: config
 -->
 # Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default
@@ -85,6 +85,7 @@ patterns a spec governs.
 | `CNFGO-B64` | `navigation.entry` (`Navigation`) declares the routes the app opens on — the roots from which every screen is reachable. |
 | `CNFGO-B65` | A gate confronts the repeats of what it declares unless the project wrote `duplicates: false` on it (`DuplicatesOn`). |
 | `CNFGO-B66` | `dependency_kinds:` declares the kinds of what the code reaches that is no import — `db`, `api`, `queue` —, read as a list. (`DependencyKinds`) |
+| `CNFGO-B67` | `evidence.no_side_effect` names, as the project writes them, what changes nothing a test observes: its `flags` — `@navigates` and `@dep[type]` when not given — and its spec `sections`; a list given replaces its default. (`NoSideEffectFlags`, `NoSideEffectSections`) |
 | `CNFGO-B60` | A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 

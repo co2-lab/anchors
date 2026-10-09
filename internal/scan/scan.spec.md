@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPSCR
-  updated_at: 2026-10-08
+  updated_at: 2026-10-09
   layer: scan
 -->
 # RepoScan — the repository read as text: which files exist, of which layer, and what each declares
@@ -121,6 +121,8 @@ heuristic decided.
 | `RPSCR-B47` | A navigation flag may carry `@dormant` with a colon and its reason after it: the call is kept for a feature not turned on, and the flag is read with that reason; a marker with no reason is no dormancy, and the flag stays a plain one. (`Navigation`) |
 | `RPSCR-B48` | A spec's evidence revision is its content without its `@anchors` header, its navigation and change-history sections — in any language of the catalog, or as the project names them — and an Out table under any title, with its blank lines and trailing spaces normalized; each rule it defines has a revision of its definition — its heading and what is under it, its table rows, its bold bullet —, and the rest of what it reads has one of its own. (`EvidenceOf`) |
 | `RPSCR-B49` | Any other file's evidence revision is its content without its `@anchors` header and the chain's flags — dependency (kinded or not), used-by and navigation flags and their waivers, at a line's end or on lines of their own —; its line revision keeps every line in place, the header and the flag-only lines blank, so a flag at a line's end keeps it and a flag line moves it. (`EvidenceOf`) |
+| `RPSCR-B50` | `@dep[type]: CODE` on an import line is an import of types only: read with its code and the symbols the import brings, apart from the dependencies that are no import. (`CodeDep`, `TypeDepKind`) |
+| `RPSCR-B51` | The spec sections a project declares with no side effect (`evidence.no_side_effect.sections`) are the ones left out of its evidence, in place of navigation and change history. (`EvidenceOf`) |
 | `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants

@@ -514,6 +514,10 @@ type Edge struct {
 	// (SPEC_TYPES §5). Vazio nas demais arestas. Habilita impacto fino ("mudou signIn
 	// → só as telas que usam signIn").
 	Method string `yaml:"method,omitempty"`
+	// NoSideEffect: the flag this edge comes from has no side effect on the tests — a
+	// navigation, an import of types —, and a test's evidence does not follow it
+	// (`evidence.no_side_effect.flags`, DESIGN-evidence-follows-the-asserts.md).
+	NoSideEffect bool `yaml:"no_side_effect,omitempty"`
 	// Dep — o código local (DEPn) da linha da Tabela de Dependências que originou esta
 	// aresta. Vazio nas demais arestas. Liga a aresta de volta à célula do data contract.
 	Dep   string `yaml:"dep,omitempty"`
