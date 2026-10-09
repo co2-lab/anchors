@@ -31,8 +31,8 @@ their exit.
 | `MNCMD-B01` | `anchors monitor --once` reads once, prints the lines of what it read and writes its memory; `--until-done` exits when nothing runs — saying so — or once every run it watched ended. (`runMonitor`) |
 | `MNCMD-B02` | The timing comes from the defaults, then the `monitor:` block, then the flags; a flag that is not a positive duration, or a block that does not read, fails the command naming it. |
 | `MNCMD-B03` | `anchors monitor run -- <command>` runs the command with its output passed through, records its process, a copy of its output and its exit, and ends with the command's exit code. (`recordedRun`, `ExitCode`) |
-| `MNCMD-B04` | Before a command of the agent, the hook records it by the tool call's id when it runs in the background, has a timeout over two minutes, or is a runner's; a short command, one of Anchors' own long commands, the monitor and a command outside a project record nothing. The hook never prints and never fails. (`agentHook`) |
-| `MNCMD-B05` | After a command of the agent, the hook records the file the output of a background command goes to, as the answer names it, and ends a foreground command with its exit code. |
+| `MNCMD-B04` | Before a command of the agent, the hook records it by the tool call's id only when it goes to the background, named by the runner its first line is; a foreground command — a long one is seen in the process table —, one of Anchors' own long commands, the monitor and a command outside a project record nothing. The hook never prints and never fails. (`agentHook`) |
+| `MNCMD-B05` | After a background command of the agent, the hook records the file its output goes to, as the answer names it; after a command it did not record, it does nothing. |
 | `MNCMD-B06` | Anchors' long commands — test, mutation, check, verify, ingest, map build, docs build — record their run in a project that has an anchors.yaml, and close it with their exit code; another command, or a folder with no anchors.yaml, records nothing. (`BeginOwnRun`, `EndOwnRun`) |
 
 ## Invariants

@@ -50,6 +50,7 @@ type Seen struct {
 	LastMove     time.Time `json:"last_move"`
 	LastProgress time.Time `json:"last_progress"`
 	Kids         string    `json:"kids,omitempty"`
+	SawAlive     bool      `json:"saw_alive,omitempty"`
 	Stalled      bool      `json:"stalled,omitempty"`
 	Done         bool      `json:"done,omitempty"`
 }
@@ -164,7 +165,7 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 		if r.Done() || r.PID > 0 || r.By != ByAgent {
 			continue
 		}
-		if pid := findProcess(tree, snap.Root, r.Command, excluded, claimed); pid > 0 {
+		if pid := findProcess(tree, snap.Root, r.Command, runners, excluded, claimed); pid > 0 {
 			r.PID = pid
 			writes = append(writes, *r)
 			claimed[pid] = true
@@ -212,9 +213,9 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 		if s.Done {
 			continue
 		}
-		rn, known := RunnerFor(runners, r.Command)
+		rn, known := RunnerFor(runners, FirstLine(r.Command))
 		if !known {
-			rn = Runner{Name: firstWord(r.Command), Kind: "other"}
+			rn = Runner{Name: firstWord(FirstLine(r.Command)), Kind: "other"}
 		}
 		if r.Name == "" {
 			r.Name = rn.Name
@@ -230,6 +231,9 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 		if r.PID > 0 {
 			s.PID = r.PID
 		}
+		if alive || (out.OK && out.Size != s.OutSize) {
+			s.SawAlive = true
+		}
 		if fresh {
 			events = append(events, Event{"started", id, startedLine(*r)})
 			if r.By == ByOS {
@@ -241,7 +245,7 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 		// its output — when the monitor knows it — stopped growing.
 		gone := r.By == ByAgent && r.PID == 0 && !fresh && (!out.OK || out.Size == s.OutSize)
 		if r.Done() || (r.PID > 0 && !alive) || gone {
-			ev, w := endOf(*r, rn, out, snap.Now)
+			ev, w := endOf(*r, rn, out, snap.Now, s.SawAlive)
 			events = append(events, ev)
 			s.Done = true
 			writes = append(writes, w)
@@ -276,7 +280,7 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 			s.Stalled = true
 			r.State = StateStalled
 			writes = append(writes, *r)
-			events = append(events, Event{"stalled", id, fmt.Sprintf("⏸ %s: no output or CPU for %s (pid %d) — %s", r.Name, round(quiet), r.PID, r.Command)})
+			events = append(events, Event{"stalled", id, fmt.Sprintf("⏸ %s: no output or CPU for %s (pid %d) — %s", r.Name, round(quiet), r.PID, Brief(r.Command))})
 		}
 		if rn.Progress != nil && out.OK && snap.Now.Sub(s.LastProgress) >= t.Progress && !fresh {
 			s.LastProgress = snap.Now
@@ -403,11 +407,21 @@ func launchesClaimed(tree Tree, pid int, claimed map[int]bool) bool {
 var anchorsItself = regexp.MustCompile(`(^|[\s/])anchors (run|monitor|watch)(\s|$)`)
 
 // findProcess is the topmost process under the project, not yet claimed, whose command line
-// runs the program a recorded command names; 0 when there is none.
-func findProcess(tree Tree, root, command string, excluded, claimed map[int]bool) int {
+// runs the program a recorded command names — or the runner its first line is —; 0 when there
+// is none.
+func findProcess(tree Tree, root, command string, runners []Runner, excluded, claimed map[int]bool) int {
+	first := FirstLine(command)
+	want, isRunner := RunnerFor(runners, first)
+	runs := func(p Proc) bool {
+		if sharesProgram(first, p.Cmd) {
+			return true
+		}
+		got, ok := RunnerFor(runners, p.Cmd)
+		return isRunner && ok && got.Name == want.Name
+	}
 	var cand []int
 	for _, p := range tree.ByPID {
-		if !excluded[p.PID] && !claimed[p.PID] && !anchorsItself.MatchString(p.Cmd) && !launchesClaimed(tree, p.PID, claimed) && sharesProgram(command, p.Cmd) {
+		if !excluded[p.PID] && !claimed[p.PID] && !anchorsItself.MatchString(p.Cmd) && !launchesClaimed(tree, p.PID, claimed) && runs(p) {
 			cand = append(cand, p.PID)
 		}
 	}
@@ -439,7 +453,7 @@ func findProcess(tree Tree, root, command string, excluded, claimed map[int]bool
 // endOf is the line, and the record, of a run that ended: by its exit when it has one, by its
 // output's summary when it does not, and as died when neither says how — unless nobody but
 // the process table knew of it, and then how it ended is simply unknown.
-func endOf(r Run, rn Runner, out OutputInfo, now time.Time) (Event, Run) {
+func endOf(r Run, rn Runner, out OutputInfo, now time.Time, sawAlive bool) (Event, Run) {
 	if r.Ended == nil {
 		r.Ended = &now
 	}
@@ -471,12 +485,17 @@ func endOf(r Run, rn Runner, out OutputInfo, now time.Time) (Event, Run) {
 	case r.By == ByOS:
 		r.State = StateEnded
 		return Event{"ended", r.ID, fmt.Sprintf("⏹ %s ended (%s) — exit unknown: seen only in the process table", r.Name, elapsed)}, r
+	case r.By == ByAgent && r.PID == 0 && !sawAlive:
+		// Launched while no monitor ran, and gone before one did: old news, said as such —
+		// not as a run that just ended after hours (reported from MIF).
+		r.State = StateEnded
+		return Event{"ended", r.ID, fmt.Sprintf("⏹ %s ended before the monitor saw it running (launched %s): %s", r.Name, r.Started.Local().Format("15:04"), Brief(r.Command))}, r
 	case r.By == ByAgent && r.PID == 0:
 		r.State = StateEnded
-		return Event{"ended", r.ID, fmt.Sprintf("⏹ %s is not in the process table (%s) — ended, exit unknown: %s", r.Name, elapsed, r.Command)}, r
+		return Event{"ended", r.ID, fmt.Sprintf("⏹ %s is not in the process table (%s) — ended, exit unknown: %s", r.Name, elapsed, Brief(r.Command))}, r
 	default:
 		r.State = StateDied
-		return Event{"died", r.ID, fmt.Sprintf("☠ %s gone without recording how it ended (%s) — %s", r.Name, elapsed, r.Command)}, r
+		return Event{"died", r.ID, fmt.Sprintf("☠ %s gone without recording how it ended (%s) — %s", r.Name, elapsed, Brief(r.Command))}, r
 	}
 }
 
@@ -534,7 +553,7 @@ func startedLine(r Run) string {
 	if r.PID > 0 {
 		pid = fmt.Sprintf(" (pid %d)", r.PID)
 	}
-	return fmt.Sprintf("▶ %s%s — %s: %s", r.Name, pid, who, r.Command)
+	return fmt.Sprintf("▶ %s%s — %s: %s", r.Name, pid, who, Brief(r.Command))
 }
 
 func stallOf(rn Runner, t Timing) time.Duration {
@@ -562,6 +581,31 @@ func suffix(s string) string {
 var launchers = map[string]bool{"cd": true, "env": true, "npx": true, "npm": true, "yarn": true, "pnpm": true,
 	"exec": true, "run": true, "sh": true, "bash": true, "zsh": true, "node": true, "time": true, "nohup": true,
 	"sudo": true, "&&": true, "||": true, ";": true, "-c": true, "go": true, "python": true, "python3": true}
+
+// FirstLine is a command's first line: what a heredoc or a script carries after it is no
+// command to recognize — a file edit that mentions jest is no jest run (reported from MIF).
+func FirstLine(cmd string) string {
+	line, _, _ := strings.Cut(strings.TrimSpace(cmd), "\n")
+	return strings.TrimSpace(line)
+}
+
+// briefMax is how much of a command's first line a line of the monitor shows.
+const briefMax = 100
+
+// Brief is a command as a line of the monitor shows it: its first line, cut at briefMax, and
+// how many lines it left out — a 60-line heredoc flooded the notification and cut the event
+// before its useful part.
+func Brief(cmd string) string {
+	cmd = strings.TrimSpace(cmd)
+	first := FirstLine(cmd)
+	if r := []rune(first); len(r) > briefMax {
+		first = string(r[:briefMax]) + "…"
+	}
+	if more := strings.Count(cmd, "\n"); more > 0 {
+		first += fmt.Sprintf(" [+%d lines]", more)
+	}
+	return first
+}
 
 // setup are the commands that prepare a command line rather than run its work.
 var setup = map[string]bool{"cd": true, "export": true, "source": true, ".": true, "set": true, "pushd": true, "ulimit": true}

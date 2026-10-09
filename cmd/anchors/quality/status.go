@@ -317,7 +317,7 @@ func printRuns(w io.Writer, root string, now time.Time) {
 		if r.PID > 0 {
 			pid = fmt.Sprintf(" pid %d,", r.PID)
 		}
-		fmt.Fprintf(w, "  %s — %s,%s %s, by %s: %s\n", runName(r), state, pid, now.Sub(r.Started).Round(time.Second), r.By, r.Command)
+		fmt.Fprintf(w, "  %s — %s,%s %s, by %s: %s\n", runName(r), state, pid, now.Sub(r.Started).Round(time.Second), r.By, runs.Brief(r.Command))
 	}
 	sort.Slice(ended, func(i, j int) bool { return ended[i].Ended.After(*ended[j].Ended) })
 	if len(ended) > 5 {
@@ -345,5 +345,5 @@ func runName(r runs.Run) string {
 	if r.Name != "" {
 		return r.Name
 	}
-	return r.Command
+	return runs.Brief(r.Command)
 }

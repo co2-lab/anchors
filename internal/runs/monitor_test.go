@@ -368,3 +368,38 @@ func TestTick_everyEndSaidOnce(t *testing.T) {
 		}
 	}
 }
+
+func TestBrief(t *testing.T) {
+	t.Run("MNTRS-B13: A command is recognized and shown by its first line", func(t *testing.T) {})
+	edit := "python3 - <<'EOF'\nsrc = open('jest.config.js').read()\nprint(src)\nEOF"
+	if _, ok := RunnerFor(DefaultRunners(), FirstLine(edit)); ok {
+		t.Error("a file edit that mentions jest is no jest run")
+	}
+	if got := Brief(edit); got != "python3 - <<'EOF' [+3 lines]" {
+		t.Errorf("first line and the lines left out: %q", got)
+	}
+	long := strings.Repeat("x", 150)
+	if got := Brief(long); len([]rune(got)) != briefMax+1 || !strings.HasSuffix(got, "…") {
+		t.Errorf("cut at a hundred: %q", got)
+	}
+}
+
+func TestTick_neverSeenRunning(t *testing.T) {
+	t.Run("MNTRS-B03: A run that ended is said once, by its exit, its summary, or nothing", func(t *testing.T) {})
+	t.Run("MNTRS-B04: A command of the agent takes the process that runs its program", func(t *testing.T) {})
+	st := &State{Runs: map[string]*Seen{}, Reports: map[string]time.Time{}}
+	old := Run{ID: "agent-old", Command: "maestro test flows/BAINB-A05.yaml", By: ByAgent, Started: t0.Add(-2 * time.Hour)}
+	tick(st, t0, agentAndSelf(), []Run{old}, nil)
+	evs, _ := tick(st, t0.Add(30*time.Second), agentAndSelf(), []Run{old}, nil)
+	if !strings.Contains(lines(evs), "ended before the monitor saw it running") {
+		t.Errorf("old news, said as such:\n%s", lines(evs))
+	}
+	// The first line's program is `timeout`; the maestro process its runner recognizes is the
+	// run's.
+	flow := Run{ID: "agent-flow", Command: "timeout 600 maestro test flows/A.yaml > out.log", By: ByAgent, Started: t0}
+	procs := append(agentAndSelf(), Proc{PID: pidNpx, PPID: pidAgent, Cmd: "/bin/bash /home/u/.maestro/bin/maestro test flows/A.yaml", Cwd: root})
+	_, writes := tick(&State{Runs: map[string]*Seen{}, Reports: map[string]time.Time{}}, t0, procs, []Run{flow}, nil)
+	if len(writes) == 0 || writes[0].PID != pidNpx {
+		t.Errorf("the maestro process is the run's: %+v", writes)
+	}
+}

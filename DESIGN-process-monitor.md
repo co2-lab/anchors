@@ -54,9 +54,11 @@ case.
   report), and at the end the exit code and the summary. Three writers:
   1. Anchors' own long commands (`test`, `mutation`, `map build`, `check --all`, the commit
      hook's run) write it themselves.
-  2. **An agent hook** (`anchors install-hooks --agent`) registers each long or background
-     command the agent runs — its command line and output file — and, when the harness reports
-     it, its exit.
+  2. **An agent hook** (`anchors install-hooks --agent`, or `--agent --user`) registers each
+     command the agent sends to the background — its command line and output file. A
+     foreground command is no run of the hook's: recording them all left a run behind each
+     failed one, which no hook closes (reported from MIF); a long one is seen in the process
+     table.
   3. `anchors monitor run -- <command>` wraps anything else and writes the same record (under
      `monitor`: a root `run` would read as the watcher's `watch run`).
 

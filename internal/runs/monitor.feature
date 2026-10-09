@@ -24,12 +24,13 @@ Feature: RunMonitor — reading the project's runs tick by tick: what started, s
     Given runs with an exit record, with a summary in their output, with an output cut short, with a launcher that never recorded the end, and seen only by the process table
     When their processes are gone
     Then each ends by its exit, its summary, as died with its last lines, as died, and as ended with its exit unknown
+    And a command of the agent the monitor never saw running is said to have ended before the monitor saw it
 
   @MNTRS-B04 @unit-level
   Scenario: A command of the agent takes the process that runs its program
     Given a record of the agent for "cd app && npx jest --ci" and the jest process under the project
     When a tick reads them
-    Then the record takes the process, and a command no process runs ends once its output stops growing
+    Then the record takes the process — or, for a maestro flow, the maestro process its runner recognizes —, and a command no process runs ends once its output stops growing
 
   @MNTRS-B05 @unit-level
   Scenario: A report that landed is said with its failures
@@ -78,6 +79,12 @@ Feature: RunMonitor — reading the project's runs tick by tick: what started, s
     Given command lines of the common runners and one of none
     When their runner is asked
     Then each is recognized with its kind, and the last has none
+
+  @MNTRS-B13 @unit-level
+  Scenario: A command is recognized and shown by its first line
+    Given a heredoc file edit that mentions jest in its body, and a long first line
+    When its runner and its brief are read
+    Then it is no jest run, and it shows its first line cut, with the lines it left out
 
   @MNTRS-I01 @unit-level
   Scenario: Every run that ended is said once

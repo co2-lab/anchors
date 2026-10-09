@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:3523b3a582cfb760 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:a790736909e8144b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -937,9 +937,9 @@ abra a página dela em `camadas/`.
 
 - [MNCMD-B03 — `anchors monitor run -- <command>` runs the command with its output passed through, records its process, a copy of its output and its exit, and ends with the command's exit code. (`recordedRun`, `ExitCode`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
-- [MNCMD-B04 — Before a command of the agent, the hook records it by the tool call's id when it runs in the background, has a timeout over two minutes, or is a runner's; a short command, one of Anchors' own long commands, the monitor and a command outside a project record nothing. The hook never prints and never fails. (`agentHook`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+- [MNCMD-B04 — Before a command of the agent, the hook records it by the tool call's id only when it goes to the background, named by the runner its first line is; a foreground command — a long one is seen in the process table —, one of Anchors' own long commands, the monitor and a command outside a project record nothing. The hook never prints and never fails. (`agentHook`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
-- [MNCMD-B05 — After a command of the agent, the hook records the file the output of a background command goes to, as the answer names it, and ends a foreground command with its exit code.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+- [MNCMD-B05 — After a background command of the agent, the hook records the file its output goes to, as the answer names it; after a command it did not record, it does nothing.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
 - [MNCMD-B06 — Anchors' long commands — test, mutation, check, verify, ingest, map build, docs build — record their run in a project that has an anchors.yaml, and close it with their exit code; another command, or a folder with no anchors.yaml, records nothing. (`BeginOwnRun`, `EndOwnRun`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
@@ -7473,9 +7473,9 @@ abra a página dela em `camadas/`.
 
 - [MNTRS-B02 — A run whose CPU time did not advance, whose output did not grow and under which no new process appeared for its runner's quiet time — the default one when it has no runner — gives one stalled line; when it moves again, a line says so. A process under it that ended is no sign of life.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
-- [MNTRS-B03 — A run that ended is said once: with its exit code when its record has one; by its output's summary when it does not; as died, with its output's last lines, when the output ends without a summary or when its launcher was to record its exit and did not; and as ended with its exit unknown when only the process table knew of it. (`endOf`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+- [MNTRS-B03 — A run that ended is said once: with its exit code when its record has one; by its output's summary when it does not; as died, with its output's last lines, when the output ends without a summary or when its launcher was to record its exit and did not; and as ended with its exit unknown when only the process table knew of it; a command of the agent the monitor never saw running — launched and gone while none ran — is said to have ended before the monitor saw it, with when it was launched. (`endOf`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
-- [MNTRS-B04 — A record of the agent takes the topmost process under the project that runs the program its command names, past the launchers in front of it; a command of the agent no process runs, past its first tick, ended once its output — when known — stopped growing. (`findProcess`, `firstWord`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+- [MNTRS-B04 — A record of the agent takes the topmost process under the project that runs the program its command's first line names, past the launchers in front of it, or that the same runner recognizes; a command of the agent no process runs, past its first tick, ended once its output — when known — stopped growing. (`findProcess`, `firstWord`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B05 — A test report modified since the last reading is a line with its tests, its failures and the first failure; a report already there before the monitor's memory began is no event.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
@@ -7492,6 +7492,8 @@ abra a página dela em `camadas/`.
 - [MNTRS-B11 — Reading the reports the globs find gives each one's path from the root and its time; a report modified since its known time is parsed for its tests, failures and first failure. (`ReadReports`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B12 — The built-in runners recognize jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins and Anchors' long commands, each with its kind and quiet time; a command line no runner matches has none. (`DefaultRunners`, `RunnerFor`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B13 — A command is recognized by its first line only — what a heredoc carries after it is no command —, and a line of the monitor shows it by that line, cut at a hundred characters, with how many lines it left out (`[+N lines]`). (`FirstLine`, `Brief`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-I01 — Every run that ended is said, and said once: across ticks and re-armed monitors, no ended run is silent and none is repeated.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 

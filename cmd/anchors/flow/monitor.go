@@ -269,10 +269,9 @@ func recordedRun(root, name string, args []string, in io.Reader, out, errOut io.
 }
 
 // THE AGENT HOOK. Claude Code runs a hook before and after each command of its agent; the
-// one `install-hooks --agent` writes calls this. Before a long or background command, it
-// records the run; after, it records the output file a background command writes to, or the
-// exit of one that ran in the foreground. It never blocks the agent: whatever happens, it
-// exits 0 and prints nothing.
+// one `install-hooks --agent` writes calls this. Before a command sent to the background, it
+// records the run; after, the file the command's output goes to. It never blocks the agent:
+// whatever happens, it exits 0 and prints nothing.
 func newMonitorHookCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:    "hook",
@@ -305,9 +304,6 @@ type hookInput struct {
 // output goes to: the answer says it in words ("Output is being written to: <path>").
 var outputPathRE = regexp.MustCompile(`written to:?\s*([^\s"\\]+)`)
 
-// exitCodeRE finds the exit code in the answer to a foreground command.
-var exitCodeRE = regexp.MustCompile(`"(?:exit_code|exitCode)"\s*:\s*(-?\d+)`)
-
 // agentHook records, from one hook call, what it can of the agent's command.
 func agentHook(raw []byte, now time.Time) {
 	var in hookInput
@@ -322,39 +318,27 @@ func agentHook(raw []byte, now time.Time) {
 	switch in.Event {
 	case "PreToolUse":
 		cmdLine := in.Input.Command
-		long := in.Input.Background || in.Input.Timeout > 120000
-		if _, ok := runs.RunnerFor(runs.DefaultRunners(), cmdLine); ok {
-			long = true
-		}
-		// Anchors' own long commands record themselves, and the monitor is not a run.
-		if anchorsOwn.MatchString(cmdLine) {
+		// Only a command sent to the background is a run of the agent's: a foreground one
+		// blocks the agent until it ends, and a long one is seen in the process table. Every
+		// foreground command recorded — a file edit, a grep — left a run behind when the
+		// command failed and no hook came after it (reported from MIF).
+		if !in.Input.Background || anchorsOwn.MatchString(runs.FirstLine(cmdLine)) {
 			return
 		}
-		if !long {
-			return
+		name := ""
+		if rn, ok := runs.RunnerFor(runs.DefaultRunners(), runs.FirstLine(cmdLine)); ok {
+			name = rn.Name
 		}
-		_ = runs.Save(root, runs.Run{ID: id, Command: cmdLine, Dir: in.Cwd, By: runs.ByAgent, Started: now, State: runs.StateRunning})
+		_ = runs.Save(root, runs.Run{ID: id, Name: name, Command: cmdLine, Dir: in.Cwd, By: runs.ByAgent, Started: now, State: runs.StateRunning})
 	case "PostToolUse":
 		r, err := runs.Load(root, id)
 		if err != nil {
 			return
 		}
-		answer := string(in.Response) + string(in.Output)
-		if in.Input.Background {
-			if m := outputPathRE.FindStringSubmatch(answer); m != nil {
-				r.Output = strings.TrimRight(m[1], ".,;")
-				_ = runs.Save(root, r)
-			}
-			return
+		if m := outputPathRE.FindStringSubmatch(string(in.Response) + string(in.Output)); m != nil {
+			r.Output = strings.TrimRight(m[1], ".,;")
+			_ = runs.Save(root, r)
 		}
-		var exit *int
-		if m := exitCodeRE.FindStringSubmatch(answer); m != nil {
-			var code int
-			fmt.Sscanf(m[1], "%d", &code)
-			exit = &code
-		}
-		_ = runs.Save(root, r)
-		_ = runs.Finish(root, id, now, exit, "")
 	}
 }
 

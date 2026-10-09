@@ -127,17 +127,23 @@ func TestAgentHook_before(t *testing.T) {
 	_ = os.MkdirAll(sub, 0o755)
 	now := time.Now()
 	agentHook(hookCall("PreToolUse", "toolu_1", sub, "./scripts/seed.sh", true, ""), now)
-	agentHook(hookCall("PreToolUse", "toolu_2", dir, "ls -la", false, ""), now)
+	agentHook(hookCall("PreToolUse", "toolu_5", dir, "npx jest --ci > out.log", true, ""), now)
+	agentHook(hookCall("PreToolUse", "toolu_6", dir, "npx jest --ci", false, ""), now)
+	agentHook(hookCall("PreToolUse", "toolu_2", dir, "python3 - <<'EOF'\nopen('jest.config.js')\nEOF", false, ""), now)
 	agentHook(hookCall("PreToolUse", "toolu_3", dir, "anchors test --all", true, ""), now)
 	agentHook(hookCall("PreToolUse", "toolu_4", t.TempDir(), "npx jest", true, ""), now)
 	recs := runs.List(dir)
-	if len(recs) != 1 || recs[0].ID != "agent-toolu_1" || recs[0].By != runs.ByAgent || recs[0].Command != "./scripts/seed.sh" {
-		t.Errorf("only the background command, by its id: %+v", recs)
+	got := map[string]string{}
+	for _, r := range recs {
+		got[r.ID] = r.Name
+	}
+	if len(recs) != 2 || got["agent-toolu_5"] != "jest" || got["agent-toolu_1"] != "" {
+		t.Errorf("only the two background commands, the jest named: %+v", recs)
 	}
 }
 
 func TestAgentHook_after(t *testing.T) {
-	t.Run("MNCMD-B05: After a command, the hook records its output file or its exit", func(t *testing.T) {})
+	t.Run("MNCMD-B05: After a command, the hook records its output file", func(t *testing.T) {})
 	dir := monitorProject(t, "")
 	now := time.Now()
 	agentHook(hookCall("PreToolUse", "toolu_bg", dir, "npx jest", true, ""), now)
@@ -145,12 +151,11 @@ func TestAgentHook_after(t *testing.T) {
 	agentHook(hookCall("PostToolUse", "toolu_bg", dir, "npx jest", true, `{"stdout":"Command running in background with ID: b1. Output is being written to: /tmp/tasks/b1.output"}`), now)
 	agentHook(hookCall("PostToolUse", "toolu_fg", dir, "npx jest --ci", false, `{"exit_code":1,"stdout":"x"}`), now)
 	bg, _ := runs.Load(dir, "agent-toolu_bg")
-	fg, _ := runs.Load(dir, "agent-toolu_fg")
 	if bg.Output != "/tmp/tasks/b1.output" || bg.Done() {
 		t.Errorf("the background command's output file: %+v", bg)
 	}
-	if !fg.Done() || fg.Exit == nil || *fg.Exit != 1 {
-		t.Errorf("the foreground command ended with its exit: %+v", fg)
+	if _, err := runs.Load(dir, "agent-toolu_fg"); err == nil {
+		t.Error("a foreground command leaves no record")
 	}
 }
 

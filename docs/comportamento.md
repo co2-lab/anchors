@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:23ece4be548a2ed6 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:575c3284bf688b88 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -848,7 +848,7 @@ teste prova.
 
 - [Before a command, the hook records the agent's long ones](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B04`
 
-- [After a command, the hook records its output file or its exit](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B05`
+- [After a command, the hook records its output file](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B05`
 
 - [Anchors' long commands record their own run](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B06`
 
@@ -6765,6 +6765,8 @@ teste prova.
 - [Reports are read by their globs](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B11`
 
 - [The built-in runners recognize the common runners](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B12`
+
+- [A command is recognized and shown by its first line](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B13`
 
 - [Every run that ended is said once](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-I01`
 

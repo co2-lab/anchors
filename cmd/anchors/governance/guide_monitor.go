@@ -47,8 +47,9 @@ outcome as the last line — for a watch that should end with the work.
 
 - Anchors' own long commands (test, mutation, check, verify — the commit hook —, map build,
   docs build, ingest) record their runs, with their exit.
-- The agent's long and background commands, when the project installed the agent hook
-  ('anchors install-hooks --agent'): their command line and the file their output goes to.
+- The agent's background commands, when the agent hook is installed ('anchors install-hooks
+  --agent', or '--agent --user'): their command line and the file their output goes to. A
+  foreground command is no run of the hook's: a long one is seen in the process table.
 - 'anchors monitor run -- <command>' records anything else, with its output and its exit.
 - Anything else a runner recognizes under the project — jest, vitest, go test, pytest,
   maestro, playwright, stryker —, from the process table. How such a process ended is known
@@ -61,9 +62,9 @@ The user sees the same in 'anchors status', under "Running".
 The hook is optional, and a project may keep its settings unwritten. Without it the monitor
 still sees Anchors' own long commands, with their exit; whatever a runner recognizes under the
 project, from the process table; the test reports landing; and the heartbeat. What it loses is
-what only the hook knows of the agent's own commands: their exit code, the file their output
-goes to — so a runner's end is read from its summary only when 'anchors monitor run --' wraps
-it —, and the commands no runner recognizes, which it does not see at all. To keep the
+what only the hook knows of the agent's background commands: the file their output goes to —
+so a runner's end is read from its summary only when 'anchors monitor run --' wraps it —, and
+the commands no runner recognizes, which it does not see at all. To keep the
 project's settings untouched and still have the hook, install it in your own settings:
 'anchors install-hooks --agent --user' — it records nothing outside a project with an
 anchors.yaml.

@@ -27,15 +27,15 @@ Feature: MonitorCommand — `anchors monitor`, `anchors monitor run` and the age
 
   @MNCMD-B04 @unit-level
   Scenario: Before a command, the hook records the agent's long ones
-    Given the agent running a background command, a short one, an anchors test, and a command outside a project
+    Given the agent running a background script, a background jest, a foreground jest, a short command, an anchors test, and a command outside a project
     When the hook is called before each
-    Then only the background command is recorded, by its tool call's id
+    Then only the two background commands are recorded, by their tool calls' ids, the jest named jest
 
   @MNCMD-B05 @unit-level
-  Scenario: After a command, the hook records its output file or its exit
-    Given a recorded background command and a recorded foreground one
+  Scenario: After a command, the hook records its output file
+    Given a recorded background command and a foreground one
     When the hook is called after each, with the answers the agent got
-    Then the first has its output file, and the second ended with its exit code
+    Then the first has its output file, and the second left no record
 
   @MNCMD-B06 @unit-level
   Scenario: Anchors' long commands record their own run
