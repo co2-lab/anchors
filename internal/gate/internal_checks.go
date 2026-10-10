@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
@@ -296,7 +297,7 @@ func checkUpdatedAt(content string, n mapx.Node, root string) (Verdict, string) 
 	}
 
 	// COMMITADO: compara com a data do último commit que tocou o arquivo (só o dia).
-	gitDate, ok := gitmeta.LastCommitDate(root, n.ID)
+	gitDate, ok := lastCommitDate(root, n.ID)
 	if !ok {
 		return Pending, i18n.T("gate.updated_at.no_commit")
 	}
@@ -961,6 +962,48 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 // no test in (it does not describe that file), the code counts anywhere in the file
 // outside comments — a comment cites another unit, it does not implement it. An error reading the declared source is returned, not taken for
 // "no test names it".
+// strippedTests holds, per map, each test file's text without its line comments: a spec with
+// no test linked reads every test of the project, and on MIF each of 727 specs read them all
+// again — two minutes of a check.
+type strippedTests struct {
+	g      *mapx.Graph
+	bodies map[string]string
+	missed map[string]bool
+}
+
+var (
+	strippedMu    sync.Mutex
+	strippedCache = map[string]*strippedTests{}
+)
+
+func strippedTest(root string, g *mapx.Graph, rel string) (string, bool) {
+	strippedMu.Lock()
+	c, ok := strippedCache[root]
+	if !ok || c.g != g {
+		c = &strippedTests{g: g, bodies: map[string]string{}, missed: map[string]bool{}}
+		strippedCache[root] = c
+	}
+	if b, ok := c.bodies[rel]; ok {
+		strippedMu.Unlock()
+		return b, true
+	}
+	if c.missed[rel] {
+		strippedMu.Unlock()
+		return "", false
+	}
+	strippedMu.Unlock()
+	raw, err := readFile(root, rel)
+	strippedMu.Lock()
+	defer strippedMu.Unlock()
+	if err != nil {
+		c.missed[rel] = true
+		return "", false
+	}
+	body := stripLineComments(string(raw))
+	c.bodies[rel] = body
+	return body, true
+}
+
 func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string, cfg *config.Config) (map[string]bool, error) {
 	written := map[string]bool{}
 	if g == nil || root == "" {
@@ -985,10 +1028,11 @@ func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string, cf
 		return nil, err
 	}
 	listed := listedFiles(tests)
+	byFile := testsByFile(tests)
 	var unread []string
 	for _, tp := range paths {
 		if declared && listed[tp] {
-			for _, t := range testsIn(tests, []string{tp}) {
+			for _, t := range byFile[tp] {
 				for _, c := range codes {
 					if strings.Contains(t.Title, c) {
 						written[c] = true
@@ -1000,11 +1044,10 @@ func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string, cf
 		}
 	}
 	for _, tp := range unread {
-		b, err := readFile(root, tp)
-		if err != nil {
+		body, ok := strippedTest(root, g, tp)
+		if !ok {
 			continue
 		}
-		body := stripLineComments(string(b))
 		for _, c := range codes {
 			if strings.Contains(body, c) {
 				written[c] = true

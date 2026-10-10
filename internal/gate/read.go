@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/co2-lab/anchors/internal/gitmeta"
 )
@@ -52,7 +53,66 @@ func uncommitted(root, rel string) (changed, known bool) {
 	if src != nil {
 		return src(root, rel)
 	}
+	if dirty, known := gitState(root).dirtyFiles(); known {
+		return dirty[filepath.ToSlash(rel)], true
+	}
 	return gitmeta.UncommittedChanges(root, rel)
+}
+
+// GIT, ONCE PER RUN. Asking git about each file — its status, its last commit — cost two
+// processes per file: on MIF's 5,003 files, `updated-at-atual` alone took two minutes of a
+// 14-minute check. One `git status` and one `git log` answer for every file. The answers
+// are a run's: they expire after gitStateTTL, and ForgetRunState drops them when a run
+// changes files (`check --fix`).
+
+const gitStateTTL = 2 * time.Minute
+
+type runGit struct {
+	root      string
+	at        time.Time
+	dirtyOnce sync.Once
+	dirty     map[string]bool
+	known     bool
+	datesOnce sync.Once
+	dates     map[string]string
+}
+
+var (
+	gitStateMu sync.Mutex
+	gitStates  = map[string]*runGit{}
+)
+
+func gitState(root string) *runGit {
+	gitStateMu.Lock()
+	defer gitStateMu.Unlock()
+	if s, ok := gitStates[root]; ok && time.Since(s.at) < gitStateTTL {
+		return s
+	}
+	s := &runGit{root: root, at: time.Now()}
+	gitStates[root] = s
+	return s
+}
+
+func (s *runGit) dirtyFiles() (map[string]bool, bool) {
+	s.dirtyOnce.Do(func() { s.dirty, s.known = gitmeta.DirtyFiles(s.root) })
+	return s.dirty, s.known
+}
+
+// ForgetRunState drops what the gates remember of git for this run: a run that wrote files
+// asks again.
+func ForgetRunState() {
+	gitStateMu.Lock()
+	gitStates = map[string]*runGit{}
+	gitStateMu.Unlock()
+}
+
+// lastCommitDate is the day of the last commit that touched the file, from one `git log`
+// of the whole project; false when no commit did.
+func lastCommitDate(root, rel string) (string, bool) {
+	s := gitState(root)
+	s.datesOnce.Do(func() { s.dates = gitmeta.AllCommitDatesUnder(root) })
+	d, ok := s.dates[filepath.ToSlash(rel)]
+	return d, ok
 }
 
 // SetFileSource makes the gates read project files through `read` (a path relative to the

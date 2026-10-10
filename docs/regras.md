@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:dc47713cefa4425d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:ad804c4b43eefd0f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4443,6 +4443,8 @@ abra a página dela em `camadas/`.
 
 - [GTENG-B29 — A gate whose `presupposes` names a configuration field the project does not declare is Pending on every target, naming the field and the opt-out, and a judgment gate queues no question; when every missing field is in `dialect.opt_out` it is Skip; with all declared it runs as usual. (`presupposedMissing`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
+- [GTENG-B30 — What the gates ask git — the files with uncommitted changes, each file's last commit day — is read once for the whole project and kept for a run, at most two minutes; a run that writes files (`check --fix`) forgets it, and the next question reads git again. (`ForgetRunState`, `lastCommitDate`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
 - [GTENG-B06 — An UNREADABLE target does not apply: better to stop charging than to charge blind.](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B07 — A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check.](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
@@ -6646,6 +6648,8 @@ abra a página dela em `camadas/`.
 - [GTMTG-B09 — Whether the commit being made changes a file is read from the index: a staged edit or an added file does, an unstaged edit does not; outside a repository it cannot be told. (`StagedChanges`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-B10 — The files with uncommitted changes — modified, staged, added, untracked — are read in a single `git status`, by their path relative to the root, files outside the root left out; outside git the answer is not known. (`DirtyFiles`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+
+- [GTMTG-B11 — The bulk date reader under a folder of the repository gives each file under it its most recent commit day, by its path relative to that folder, and leaves out the files outside it; at the repository's root it is the bulk reader itself. (`AllCommitDatesUnder`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-X01 — The dirty count never answers 0 when it could not count: outside a repository or without git it answers a negative number.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 

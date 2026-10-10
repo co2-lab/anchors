@@ -207,6 +207,8 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// para que o check seguinte já reflita o conserto.
 			if fix {
 				fixes := gate.FixWithConfig(cfg.Gates, nodes, absRoot, g, cfg)
+				// The fixes wrote files: what the gates remember of git is no longer true.
+				gate.ForgetRunState()
 				n := 0
 				for _, fr := range fixes {
 					if fr.Fixed {

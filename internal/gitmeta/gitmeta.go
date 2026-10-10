@@ -41,6 +41,26 @@ func LastCommitDate(root, rel string) (date string, ok bool) {
 // arquivo. Percorre o log com --name-only e associa a data de cada commit ao primeiro
 // aparecimento de cada arquivo (o mais recente, pois o log vem do mais novo ao antigo).
 // Mapa vazio se não for repo git.
+// AllCommitDatesUnder is AllCommitDates with each path relative to root, where root may be a
+// folder inside the repository.
+func AllCommitDatesUnder(root string) map[string]string {
+	all := AllCommitDates(root)
+	prefix := ""
+	if p, err := exec.Command("git", "-C", root, "rev-parse", "--show-prefix").Output(); err == nil {
+		prefix = strings.TrimSpace(string(p))
+	}
+	if prefix == "" {
+		return all
+	}
+	out := map[string]string{}
+	for f, d := range all {
+		if strings.HasPrefix(f, prefix) {
+			out[strings.TrimPrefix(f, prefix)] = d
+		}
+	}
+	return out
+}
+
 func AllCommitDates(root string) map[string]string {
 	cmd := exec.Command("git", "-C", root, "log", "--format=D:%ad", "--date=short", "--name-only")
 	out, err := cmd.Output()

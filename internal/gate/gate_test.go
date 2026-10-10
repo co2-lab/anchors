@@ -15,6 +15,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/shell"
 )
@@ -1373,5 +1374,27 @@ func TestRunOne_presupposedFieldMissingAsksNothing(t *testing.T) {
 	declared := &config.Config{Derived: &config.Derived{MockDetect: `jest\.mock\('([^']+)'`}}
 	if r := runOne(g, n, t.TempDir(), &mapx.Graph{}, declared); r.Verdict != Judge {
 		t.Errorf("declared: %v, want the judgment asked", r.Verdict)
+	}
+}
+
+func TestGitReadOncePerRun(t *testing.T) {
+	t.Run("GTENG-B30: Git is read once per run, and forgotten when the run writes files", func(t *testing.T) {})
+	spec := "<!-- @anchors\n  code: AAAAA\n  updated_at: 2024-03-05\n-->\n# A\n"
+	dir := fixRepo(t, "a.spec.md", spec)
+	ForgetRunState()
+	n := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
+	if v, msg := checkUpdatedAt(spec, n, dir); v != Pass {
+		t.Fatalf("the commit day: %v %s", v, msg)
+	}
+	today := strings.Replace(spec, "2024-03-05", gitmeta.Today(), 1)
+	if err := os.WriteFile(filepath.Join(dir, "a.spec.md"), []byte(today), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if v, _ := checkUpdatedAt(today, n, dir); v != Fail {
+		t.Errorf("within the run, git is not asked again: the file reads as committed, got %v", v)
+	}
+	ForgetRunState()
+	if v, msg := checkUpdatedAt(today, n, dir); v != Pass {
+		t.Errorf("forgotten, git is asked again and sees the edit: %v %s", v, msg)
 	}
 }

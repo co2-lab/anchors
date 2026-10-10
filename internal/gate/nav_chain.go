@@ -463,19 +463,31 @@ func NavEdges(root string, g *mapx.Graph) map[string]map[string]bool {
 	return out
 }
 
-// checkNavReachable: is the screen reachable from the app's entry routes?
-func checkNavReachable(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
-	s, idx := screenSpec(n, root, g)
-	if s == nil {
-		return Skip, i18n.T("gate.nav_chain.skip_not_screen")
-	}
-	if cfg == nil || cfg.Navigation == nil || len(cfg.Navigation.Entry) == 0 {
-		return Pending, i18n.T("gate.nav_chain.pending_no_entry")
+// reachable is the screens reachable from the entry routes, computed once per map: walking
+// the navigation for each screen read every screen's spec and code again — on MIF, 727 times,
+// four and a half minutes of a check.
+type reachable struct {
+	g     *mapx.Graph
+	entry string
+	seen  map[string]bool
+}
+
+var (
+	reachableMu    sync.Mutex
+	reachableCache = map[string]*reachable{}
+)
+
+func reachableScreens(root string, g *mapx.Graph, idx *screenIndex, entries []string) map[string]bool {
+	reachableMu.Lock()
+	defer reachableMu.Unlock()
+	key := strings.Join(entries, "\x00")
+	if r, ok := reachableCache[root]; ok && r.g == g && r.entry == key {
+		return r.seen
 	}
 	edges := NavEdges(root, g)
 	seen := map[string]bool{}
 	var queue []string
-	for _, e := range cfg.Navigation.Entry {
+	for _, e := range entries {
 		if t := idx.screenNamed(e); t != nil && !seen[t.Spec] {
 			seen[t.Spec] = true
 			queue = append(queue, t.Spec)
@@ -491,7 +503,20 @@ func checkNavReachable(content string, n mapx.Node, root string, g *mapx.Graph, 
 			}
 		}
 	}
-	if seen[s.Spec] {
+	reachableCache[root] = &reachable{g: g, entry: key, seen: seen}
+	return seen
+}
+
+// checkNavReachable: is the screen reachable from the app's entry routes?
+func checkNavReachable(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	s, idx := screenSpec(n, root, g)
+	if s == nil {
+		return Skip, i18n.T("gate.nav_chain.skip_not_screen")
+	}
+	if cfg == nil || cfg.Navigation == nil || len(cfg.Navigation.Entry) == 0 {
+		return Pending, i18n.T("gate.nav_chain.pending_no_entry")
+	}
+	if reachableScreens(root, g, idx, cfg.Navigation.Entry)[s.Spec] {
 		return Pass, ""
 	}
 	return Fail, i18n.T("gate.nav_chain.unreachable", s.Name, strings.Join(cfg.Navigation.Entry, ", ")) + i18n.T("gate.nav_chain.guide")

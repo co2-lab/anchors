@@ -60,8 +60,9 @@ func (g *Graph) EvidenceStaleFor(id string) *EvidenceStale {
 	// A stored closure is read through today's rule: what the rule leaves out — a screen on the
 	// path, what a util reaches — stales nothing, even in a proof stamped before the rule.
 	leftOut := map[string]bool{}
-	now := g.evidenceClosure(id, true)
-	for f := range g.evidenceClosure(id, false) {
+	adj := g.adjacency()
+	now := g.evidenceClosure(id, true, adj)
+	for f := range g.evidenceClosure(id, false, adj) {
 		if _, ok := now[f]; !ok {
 			leftOut[f] = true
 		}
@@ -108,13 +109,12 @@ func (g *Graph) EvidenceStaleFor(id string) *EvidenceStale {
 // afirma que mudanças nele não descem, e respeitar isso aqui evita que um arquivo
 // deliberadamente volátil vença a evidência de metade da suíte.
 func (g *Graph) EvidenceClosure(id string) map[string]string {
-	return g.evidenceClosure(id, true)
+	return g.evidenceClosure(id, true, g.adjacency())
 }
 
 // evidenceClosure is the closure by today's rule — the asserts — or, with asserts false, by the
 // rule before it, which followed every edge: the difference is what the rule leaves out.
-func (g *Graph) evidenceClosure(id string, asserts bool) map[string]string {
-	adj := g.adjacency()
+func (g *Graph) evidenceClosure(id string, asserts bool, adj adjacency) map[string]string {
 	noProp := g.noPropSet()
 	revs := map[string]string{}
 	for _, x := range g.Nodes {

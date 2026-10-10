@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTG
 #   ref: GTENG
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-10
 #   layer: feature
 
 @GTENG
@@ -253,3 +253,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Then it is Pending naming derived.mock_detect, and no judgment is asked
     And with mock_detect in dialect.opt_out it is Skip
     And with mock_detect declared it awaits its judgment
+
+  @GTENG-B30 @unit-level
+  Scenario: Git is read once per run, and forgotten when the run writes files
+    Given a committed spec whose header date is its commit day
+    When updated-at confronts it, the spec is then edited with today's date, and the run forgets what it read
+    Then it passes, keeps the first answer until the run forgets, and then passes on today's date

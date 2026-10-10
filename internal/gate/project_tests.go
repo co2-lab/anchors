@@ -98,6 +98,36 @@ func testsIn(tests []testlist.Test, files []string) []testlist.Test {
 	return out
 }
 
+// testsByFile indexes the project's tests by their file, once per reading of them: asking
+// testsIn for one file at a time walked every test of the project for each candidate file of
+// each spec — on MIF, two minutes of `scenario-coverage`.
+func testsByFile(tests []testlist.Test) map[string][]testlist.Test {
+	byFileMu.Lock()
+	defer byFileMu.Unlock()
+	if len(tests) > 0 && byFileOf == &tests[0] && byFileLen == len(tests) {
+		return byFileIdx
+	}
+	idx := map[string][]testlist.Test{}
+	for _, t := range tests {
+		idx[t.File] = append(idx[t.File], t)
+	}
+	for f := range idx {
+		ts := idx[f]
+		sort.SliceStable(ts, func(i, j int) bool { return ts[i].Line < ts[j].Line })
+	}
+	if len(tests) > 0 {
+		byFileOf, byFileLen, byFileIdx = &tests[0], len(tests), idx
+	}
+	return idx
+}
+
+var (
+	byFileMu  sync.Mutex
+	byFileOf  *testlist.Test
+	byFileLen int
+	byFileIdx map[string][]testlist.Test
+)
+
 // ONE READING PER SCAN, keyed like docs-fresh and duplication: the root, the map and the
 // configuration of the scan.
 var (

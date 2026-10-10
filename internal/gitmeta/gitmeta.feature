@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTA
 #   ref: GTMTG
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-10
 #   layer: feature
 
 @GTMTG
@@ -79,3 +79,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a repository whose project root is a subdirectory, with a clean file, an edited one, a new one, and an edit outside the root
     When the dirty files of the root are read
     Then the edited and the new file are listed by their path from the root, and nothing else; outside git the answer is unknown
+
+  @GTMTG-B11 @unit-level
+  Scenario: The bulk date reader under a folder gives paths relative to it
+    Given a repository with a file at its root and one under pkg, each committed on its own day
+    When the dates are read under pkg, and then at the root
+    Then pkg gives b.txt its day and leaves the root's file out, and the root gives both

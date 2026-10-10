@@ -300,3 +300,18 @@ func TestDirtyFiles(t *testing.T) {
 		t.Error("outside git the answer is not known")
 	}
 }
+
+func TestAllCommitDatesUnder(t *testing.T) {
+	t.Run("GTMTG-B11: The bulk date reader under a folder gives paths relative to it", func(t *testing.T) {})
+	d := gitRepo(t)
+	os.MkdirAll(filepath.Join(d, "pkg"), 0o755)
+	os.WriteFile(filepath.Join(d, "a.txt"), []byte("1"), 0o644)
+	os.WriteFile(filepath.Join(d, "pkg", "b.txt"), []byte("1"), 0o644)
+	commitOn(t, d, "2026-01-10", "first")
+	if got := AllCommitDatesUnder(filepath.Join(d, "pkg")); !reflect.DeepEqual(got, map[string]string{"b.txt": "2026-01-10"}) {
+		t.Errorf("under pkg: %v", got)
+	}
+	if got := AllCommitDatesUnder(d); len(got) != 2 {
+		t.Errorf("at the root, every file: %v", got)
+	}
+}
