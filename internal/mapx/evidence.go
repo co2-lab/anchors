@@ -66,6 +66,15 @@ func (g *Graph) EvidenceStaleFor(id string) *EvidenceStale {
 			leftOut[f] = true
 		}
 	}
+	// A file another test captures — a baseline image of a state this test does not compare
+	// against — and this one no longer does, is no dependency of its proof.
+	for _, e := range g.Edges {
+		if e.Type == EdgeCaptures && e.From != id {
+			if _, ok := now[e.To]; !ok {
+				leftOut[e.To] = true
+			}
+		}
+	}
 	for alvo, revNaIngestao := range n.Signal.ClosureRev {
 		if leftOut[alvo] {
 			continue

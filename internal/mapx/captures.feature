@@ -2,7 +2,7 @@
 # @anchors
 #   code: CPFTC
 #   ref: VRCPT
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-10
 #   layer: feature
 
 @VRCPT
@@ -67,3 +67,9 @@ Feature: Captures — a visual-regression test is tied to the unit it captures
     Given a captured screen whose code imports a hook, which imports a store, each import flagged with the code it uses
     When the map is built and the store changes
     Then the screen's capture is stale, naming the store, and the change's impact climbs to the hook and the screen
+
+  @VRCPT-B10 @unit-level
+  Scenario: A test captures the states it names, and no code a comment mentions
+    Given a flow naming a unit's VR code with no state, a flow naming another unit's code only in a comment, and the unit's tests of one state
+    When the capture edges are built
+    Then the first captures every image, the comment captures nothing, and each state's test its own images

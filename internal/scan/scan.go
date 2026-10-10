@@ -125,6 +125,10 @@ type File struct {
 	// Evidence are the revisions the file's proofs are measured against: its content without
 	// what proves nothing (see EvidenceOf).
 	Evidence Evidence
+	// CaptureCodes are the visual-regression and contract codes the file names outside its
+	// comment lines — `HOMEH-VR`, `HOMEH-VR-S02`, `PAYMX-CT` —, each whole with its state: what a
+	// capture test compares against. A code a comment mentions captures nothing.
+	CaptureCodes []string
 	// Composes are the units a spec's Parts Used section names — the components a screen is
 	// made of, by name (`BottomSheet`). The map ties the spec to each one's code, so a
 	// component whose capture diverged can ask the captures of who uses it again.
@@ -305,6 +309,7 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 		f.OutRows = extractOutRows(content)
 	}
 	f.Evidence = EvidenceOf(kind, rel, content, cfg)
+	f.CaptureCodes = captureCodes(rel, content)
 	// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
 	// project's vocabulary, not a claim on this project's units. Counting them would give
 	// the file an inferred identity it does not own.

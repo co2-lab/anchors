@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:98ea30745946f713 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:dc47713cefa4425d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -8191,7 +8191,7 @@ abra a página dela em `camadas/`.
 
 ### [VRCPT — Captures — a visual-regression test is tied to the unit it captures](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
-- [VRCPT-B01 — A test whose path or text names `{CODE}-VR` (with or without a state, `-S01`) gets a `captures` edge to the main code file of the unit that declares `{CODE}`, and one to each baseline image of that unit.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+- [VRCPT-B01 — A test whose path, or text outside its comment lines, names `{CODE}-VR` gets a `captures` edge to the main code file of the unit that declares `{CODE}`, and one to each baseline image of the states it names — every image when it names the code with no state.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
 - [VRCPT-B02 — A test naming no VR code, an image, and a VR code no spec declares get no `captures` edge.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
@@ -8206,6 +8206,8 @@ abra a página dela em `camadas/`.
 - [VRCPT-B09 — A dependency the code's flags declare — the dependency flag on each import line, one file to the next — reaches a capture's closure and the impact of a change like one a spec declares, transitively: a change to a store a hook imports stales the capture of the screen that imports the hook, and the impact of that change climbs to the hook and the screen. (`EvidenceStaleFor`, `AnalyzeImpact`)](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
 - [VRCPT-B05 — A contract test — its path or text names `{CODE}-CT` — gets a `captures` edge to the API unit's code file, to its spec (the OpenAPI is compiled from it) and to every OpenAPI document of the project (a file named `*openapi*.yaml`, `.yml` or `.json`), one level like a capture.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
+
+- [VRCPT-B10 — A code only a comment line mentions captures nothing, and a test of one state (`-S02`) is tied to that state's images alone: what a capture test compares against is what its proof depends on; a proof stamped when it captured another test's baseline is not staled by it. (`captureEdges`, `imagesOfStates`, `CaptureCodesIn`, `EvidenceStaleFor`)](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
 - [VRCPT-B04 — A visual-regression code is read whole with its state — `BUTTN-VR-S01` — by the scan and by the test-signal reader, as the gates read it.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 

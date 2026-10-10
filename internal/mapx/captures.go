@@ -31,7 +31,7 @@ import (
 // code, its spec — the OpenAPI is compiled from it — and the project's OpenAPI document when
 // the map knows it. A handler changed, or a contract regenerated, stales the contract test.
 func captureEdges(files []scan.File) []Edge {
-	vrRE := regexp.MustCompile(`\b([A-Z0-9]` + config.CodeLengthPattern() + `)-(VR|CT)\b`)
+	vrRE := regexp.MustCompile(`\b([A-Z0-9]` + config.CodeLengthPattern() + `)-(VR|CT)(?:-(S\d{2}))?\b`)
 	var openapiDocs []string
 	for _, f := range files {
 		if isOpenAPIPath(f.Path) {
@@ -70,14 +70,26 @@ func captureEdges(files []scan.File) []Edge {
 		if f.Kind != string(KindTest) || isImagePath(f.Path) {
 			continue
 		}
-		codes := map[string]string{} // unit code → VR or CT
-		for _, m := range vrRE.FindAllStringSubmatch(f.Path, -1) {
-			codes[m[1]] = m[2]
+		// What the test compares against: each unit code, VR or CT, and the states it names
+		// ("" = every state). A code only a comment mentions captures nothing; a test of one
+		// state is no test of the others (reported from MIF: a Home baseline staled the
+		// Alerts flow, whose comment named HOMEH-VR, and every test of another Home state).
+		codes := map[string]string{}
+		states := map[string]map[string]bool{}
+		note := func(code, kind, state string) {
+			codes[code] = kind
+			if _, seen := states[code]; !seen {
+				states[code] = map[string]bool{}
+			}
+			states[code][state] = true
 		}
-		for _, c := range f.Codes {
+		for _, m := range vrRE.FindAllStringSubmatch(f.Path, -1) {
+			note(m[1], m[2], m[3])
+		}
+		for _, c := range f.CaptureCodes {
 			for _, kind := range []string{"VR", "CT"} {
-				if i := strings.Index(c, "-"+kind); i > 0 && (len(c) == i+3 || c[i+3] == '-') {
-					codes[c[:i]] = kind
+				if i := strings.Index(c, "-"+kind); i > 0 {
+					note(c[:i], kind, strings.TrimPrefix(c[i+3:], "-"))
 				}
 			}
 		}
@@ -94,7 +106,7 @@ func captureEdges(files []scan.File) []Edge {
 				targets = append(targets, stem+".spec.md")
 				targets = append(targets, openapiDocs...)
 			}
-			imgs := append([]string(nil), images[code]...)
+			imgs := imagesOfStates(images[code], stem+"."+code+"-VR", states[code])
 			sort.Strings(imgs)
 			targets = append(targets, imgs...)
 			for _, t := range targets {
@@ -105,6 +117,28 @@ func captureEdges(files []scan.File) []Edge {
 		}
 	}
 	return edges
+}
+
+// imagesOfStates are the baseline images of the states named — all of them when a state
+// is left unnamed ("") —: `Home.HOMEH-VR-S02-loaded.png` is the image of S02.
+func imagesOfStates(imgs []string, prefix string, states map[string]bool) []string {
+	if states[""] {
+		return append([]string(nil), imgs...)
+	}
+	var out []string
+	for _, img := range imgs {
+		rest := strings.TrimPrefix(img, prefix)
+		for st := range states {
+			if strings.HasPrefix(rest, "-"+st) {
+				after := rest[len(st)+1:]
+				if after == "" || after[0] == '-' || after[0] == '.' {
+					out = append(out, img)
+					break
+				}
+			}
+		}
+	}
+	return out
 }
 
 func isImagePath(p string) bool {

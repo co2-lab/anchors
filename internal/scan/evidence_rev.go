@@ -274,3 +274,30 @@ func specEvidence(lines []string, header map[int]bool, cfg *config.Config) Evide
 	}
 	return ev
 }
+
+// captureCodeRE is a visual-regression or contract code, with its state when it has one.
+var captureCodeRE = regexp.MustCompile(`\b[A-Z0-9]{3,}-(?:VR|CT)(?:-S\d{2})?\b`)
+
+// captureCodes are the capture codes a file names outside its comment lines, sorted.
+func captureCodes(rel string, content []byte) []string {
+	lines := strings.Split(string(content), "\n")
+	comment := commentLines(lines, rel)
+	seen := map[string]bool{}
+	var out []string
+	for i, l := range lines {
+		if comment[i] {
+			continue
+		}
+		for _, c := range captureCodeRE.FindAllString(l, -1) {
+			if !seen[c] {
+				seen[c] = true
+				out = append(out, c)
+			}
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// CaptureCodesIn exposes the capture codes a file names outside its comment lines.
+func CaptureCodesIn(rel string, content []byte) []string { return captureCodes(rel, content) }

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2c0f95e6853135a2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f7fcfdcaa7928180 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -7427,6 +7427,8 @@ teste prova.
 - [The captures a changed file reaches](layers/mapx.md#vrcpt-b08--the-captures-a-changed-file-reaches) `VRCPT-B08`
 
 - [A dependency the code's flags declare reaches the capture's closure and the impact of a change, transitively](layers/mapx.md#vrcpt-b09--a-dependency-the-codes-flags-declare-reaches-the-captures-closure-and-the-impact-of-a-change-transitively) `VRCPT-B09`
+
+- [A test captures the states it names, and no code a comment mentions](layers/mapx.md#vrcpt-b10--a-test-captures-the-states-it-names-and-no-code-a-comment-mentions) `VRCPT-B10`
 
 ## migra
 

@@ -22,7 +22,7 @@ func captureFiles() []scan.File {
 		{Path: "ui/Button.BUTTN-VR-S01.png", Kind: "test", Rev: "p1"},
 		{Path: "ui/Button.BUTTN-VR-S02-dark.svg", Kind: "test", Rev: "p2"},
 		{Path: ".maestro/BUTTN-VR-S01.yaml", Kind: "test", Rev: "f1"},
-		{Path: "ui/Button.vr.test.ts", Kind: "test", Codes: []string{"BUTTN-VR-S02"}, Rev: "t1"},
+		{Path: "ui/Button.vr.test.ts", Kind: "test", CaptureCodes: []string{"BUTTN-VR-S02"}, Rev: "t1"},
 		{Path: "ui/Button.test.ts", Kind: "test", Codes: []string{"BUTTN-B01"}, Rev: "t2"},
 		{Path: ".maestro/ZZZZZ-VR.yaml", Kind: "test", Rev: "f2"},
 	}
@@ -43,8 +43,10 @@ func TestCaptureEdges_aVRTestCapturesItsUnit(t *testing.T) {
 	t.Run("VRCPT-B01: A VR test captures its unit's code file and images", func(t *testing.T) {})
 	t.Run("VRCPT-B02: What captures nothing gets no edge", func(t *testing.T) {})
 	edges := captureEdges(captureFiles())
-	want := "ui/Button.BUTTN-VR-S01.png,ui/Button.BUTTN-VR-S02-dark.svg,ui/Button.tsx"
-	for _, test := range []string{".maestro/BUTTN-VR-S01.yaml", "ui/Button.vr.test.ts"} {
+	for test, want := range map[string]string{
+		".maestro/BUTTN-VR-S01.yaml": "ui/Button.BUTTN-VR-S01.png,ui/Button.tsx",
+		"ui/Button.vr.test.ts":       "ui/Button.BUTTN-VR-S02-dark.svg,ui/Button.tsx",
+	} {
 		if got := strings.Join(capturesFrom(edges, test), ","); got != want {
 			t.Errorf("%s captures %s, want %s", test, got, want)
 		}
@@ -111,7 +113,7 @@ func TestCaptureEdges_aContractTestCapturesItsAPI(t *testing.T) {
 		{Path: "api/generate.spec.md", Kind: "spec", HeaderCode: "GENAP"},
 		{Path: "api/generate.go", Kind: "code"},
 		{Path: "docs/openapi.yaml", Kind: "doc"},
-		{Path: "api/generate_contract_test.go", Kind: "test", Codes: []string{"GENAP-CT"}},
+		{Path: "api/generate_contract_test.go", Kind: "test", CaptureCodes: []string{"GENAP-CT"}},
 	}
 	got := strings.Join(capturesFrom(captureEdges(files), "api/generate_contract_test.go"), ",")
 	if got != "api/generate.go,api/generate.spec.md,docs/openapi.yaml" {
@@ -211,5 +213,42 @@ func TestFlaggedChain_feedsTheCaptureAndTheImpact(t *testing.T) {
 		if !slices.Contains(up, want) {
 			t.Errorf("a change to the store reaches %s, who imports it through the chain: %v", want, up)
 		}
+	}
+}
+
+func TestCaptureEdges_whatTheTestComparesAgainst(t *testing.T) {
+	t.Run("VRCPT-B10: A test captures the states it names, and no code a comment mentions", func(t *testing.T) {})
+	files := append(captureFiles(),
+		scan.File{Path: ".maestro/BUTTN-VR.yaml", Kind: "test"},
+		scan.File{Path: ".maestro/ALRTS-VR.yaml", Kind: "test", CaptureCodes: nil},
+	)
+	edges := captureEdges(files)
+	if got := strings.Join(capturesFrom(edges, ".maestro/BUTTN-VR.yaml"), ","); got != "ui/Button.BUTTN-VR-S01.png,ui/Button.BUTTN-VR-S02-dark.svg,ui/Button.tsx" {
+		t.Errorf("a code with no state captures every state: %s", got)
+	}
+	if got := capturesFrom(edges, ".maestro/ALRTS-VR.yaml"); len(got) != 0 {
+		t.Errorf("a code no spec declares captures nothing: %v", got)
+	}
+	// The comment is the scan's: a code on a comment line is no capture code.
+	flow := []byte("appId: x\n# the Button has its own flow (BUTTN-VR)\n- takeScreenshot: ALRTS-VR-S01\n")
+	if got := scan.CaptureCodesIn(".maestro/ALRTS-VR.yaml", flow); strings.Join(got, ",") != "ALRTS-VR-S01" {
+		t.Errorf("only what the flow compares against: %v", got)
+	}
+}
+
+func TestEvidenceStaleFor_anotherTestsBaseline(t *testing.T) {
+	t.Run("VRCPT-B10: A test captures the states it names, and no code a comment mentions", func(t *testing.T) {})
+	g := Build(captureFiles(), &config.Config{}, nil)
+	flow := g.node(".maestro/BUTTN-VR-S01.yaml")
+	// Stamped when the flow captured every Button image.
+	flow.Signal = &TestSignal{AtRev: flow.Rev, ClosureRev: map[string]string{
+		"ui/Button.tsx": "c1", "ui/Button.BUTTN-VR-S01.png": "p1", "ui/Button.BUTTN-VR-S02-dark.svg": "p2"}}
+	g.node("ui/Button.BUTTN-VR-S02-dark.svg").Rev = "p3"
+	if ev := g.EvidenceStaleFor(flow.ID); ev != nil {
+		t.Errorf("another state's baseline stales nothing: %+v", ev)
+	}
+	g.node("ui/Button.BUTTN-VR-S01.png").Rev = "p4"
+	if ev := g.EvidenceStaleFor(flow.ID); ev == nil || strings.Join(ev.Culprit, ",") != "ui/Button.BUTTN-VR-S01.png" {
+		t.Errorf("its own baseline does: %+v", ev)
 	}
 }
