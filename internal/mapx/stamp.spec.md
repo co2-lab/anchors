@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EDSTD
-  updated_at: 2026-10-08
+  updated_at: 2026-10-09
   layer: mapa
 -->
 # EdgeStamping — recording on each relation that it was confronted, with what result, and since when
@@ -69,7 +69,7 @@ an unrelated gate erase a person's decision, which is what the check already ref
 | `EDSTD-B20` | A spec whose rule definitions alone changed — its rest held — is carried too, with the proven scenarios of the rules that changed, each variant `#NN`, marked stale; their proof stays recorded, and the others stand. A spec whose rest changed is carried nothing. (`CarryUnchangedEvidence`, `StaleCodes`) |
 | `EDSTD-B21` | A stale scenario is fresh again when a run proves it, and leaves the stale ones when no suite proves it any more; the author keeping the evidence clears them all. The fresh proofs are the proven ones without the stale. (`FreshProven`, `ClearStale`) |
 | `EDSTD-B22` | Advancing a node to its file's content moves its revisions and carries the evidence they show unchanged, saying whether the revision moved and whether the evidence went along; an unknown file is left alone. (`AdvanceTo`) |
-| `EDSTD-B23` | A map written before evidence revisions gets, for each file the new build moved, the evidence of its content at the map's revision — read from the commit's copy, or the index's —, taken only when its hash is that revision; a map that has evidence revisions is not read. The first build after the upgrade then carries what the edits since left proven. (`FillOldEvidence`) |
+| `EDSTD-B23` | Each file the new build moved has the evidence of its content at the map's revision read again by today's rule — the content read from the commit's copy, or the index's, taken only when its hash is that revision: a map written before evidence revisions, or by an older rule, compares an edit with what today's rule makes of the old content. (`FillOldEvidence`) |
 | `EDSTD-B14` | Judging a node or a single relation keeps a waived stamp recorded by another gate, or when no gate is named, and still records the judging gate's judgment; the gate that recorded the waiver replaces it, and a new waiver always replaces the stamp. |
 
 ## Invariants

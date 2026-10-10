@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:487b6a017321693f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:98ea30745946f713 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -8137,7 +8137,7 @@ abra a página dela em `camadas/`.
 
 - [EDSTD-B22 — Advancing a node to its file's content moves its revisions and carries the evidence they show unchanged, saying whether the revision moved and whether the evidence went along; an unknown file is left alone. (`AdvanceTo`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 
-- [EDSTD-B23 — A map written before evidence revisions gets, for each file the new build moved, the evidence of its content at the map's revision — read from the commit's copy, or the index's —, taken only when its hash is that revision; a map that has evidence revisions is not read. The first build after the upgrade then carries what the edits since left proven. (`FillOldEvidence`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
+- [EDSTD-B23 — Each file the new build moved has the evidence of its content at the map's revision read again by today's rule — the content read from the commit's copy, or the index's, taken only when its hash is that revision: a map written before evidence revisions, or by an older rule, compares an edit with what today's rule makes of the old content. (`FillOldEvidence`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 
 - [EDSTD-B14 — Judging a node or a single relation keeps a waived stamp recorded by another gate, or when no gate is named, and still records the judging gate's judgment; the gate that recorded the waiver replaces it, and a new waiver always replaces the stamp.](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 
@@ -8410,6 +8410,8 @@ abra a página dela em `camadas/`.
 - [RPSCR-B50 — `@dep[type]: CODE` on an import line is an import of types only: read with its code and the symbols the import brings, apart from the dependencies that are no import. (`CodeDep`, `TypeDepKind`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B51 — The spec sections a project declares with no side effect (`evidence.no_side_effect.sections`) are the ones left out of its evidence, in place of navigation and change history. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B52 — A line that is only a comment — in the line-comment marker of the file's language, or inside a block comment (`/* … */`, `{/* … */}`) that fills its lines, in the languages that write them — is left out of the file's evidence revision, and blank in its line revision; a comment at the end of a line of code, code after a block's end, and a file whose language has no known marker are read whole. (`EvidenceOf`, `commentLines`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

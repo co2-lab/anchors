@@ -304,7 +304,7 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 	if kind == "spec" {
 		f.OutRows = extractOutRows(content)
 	}
-	f.Evidence = EvidenceOf(kind, content, cfg)
+	f.Evidence = EvidenceOf(kind, rel, content, cfg)
 	// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
 	// project's vocabulary, not a claim on this project's units. Counting them would give
 	// the file an inferred identity it does not own.

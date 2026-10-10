@@ -702,7 +702,7 @@ func TestStaleCodes_freshAgainByARunOrTheAuthor(t *testing.T) {
 func TestAdvanceTo(t *testing.T) {
 	t.Run("EDSTD-B22: Advancing a node to its content carries the evidence its revisions show unchanged", func(t *testing.T) {})
 	before := []byte("export const a = 1\n")
-	ev := scan.EvidenceOf("code", before, nil)
+	ev := scan.EvidenceOf("code", "a.ts", before, nil)
 	g := &Graph{Nodes: []Node{{ID: "a.ts", Kind: KindCode, Code: "A"}, {ID: "a_test.ts", Kind: KindTest, Code: "A", Rev: "t1"}}}
 	g.Nodes[0].setEvidence(scan.ShortHash(before), ev)
 	g.Nodes[1].Signal = &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.ts": scan.ShortHash(before)}}
@@ -721,13 +721,13 @@ func TestAdvanceTo(t *testing.T) {
 }
 
 func TestFillOldEvidence(t *testing.T) {
-	t.Run("EDSTD-B23: A map written before evidence revisions gets them from the content at its revision", func(t *testing.T) {})
+	t.Run("EDSTD-B23: A moved file's old evidence is read again from the content at its revision", func(t *testing.T) {})
 	before := []byte("<!-- @anchors\n  code: A\n  updated_at: 2026-10-01\n-->\n# A\n\n### A-B01 — joins\n")
 	after := []byte("<!-- @anchors\n  code: A\n  updated_at: 2026-10-08\n-->\n# A\n\n### A-B01 — joins\n\n## Change History\n\n- navigation\n")
 	old := &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec, Rev: scan.ShortHash(before),
 		Signal: &TestSignal{AtRev: scan.ShortHash(before), ProvenCodes: []string{"A-B01"}}}}}
 	novo := &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec}}}
-	novo.Nodes[0].setEvidence(scan.ShortHash(after), scan.EvidenceOf("spec", after, nil))
+	novo.Nodes[0].setEvidence(scan.ShortHash(after), scan.EvidenceOf("spec", "a.spec.md", after, nil))
 	stale := func(string) ([]byte, bool) { return []byte("another content"), true }
 	FillOldEvidence(novo, old, stale, nil)
 	if old.Nodes[0].EvidenceRev != "" {
@@ -738,6 +738,10 @@ func TestFillOldEvidence(t *testing.T) {
 	if s := novo.Nodes[0].Signal; s == nil || novo.Nodes[0].SignalStale() {
 		t.Errorf("the upgrade carries the spec across a date and a history line, got %+v", s)
 	}
-	written := &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec, Rev: "r0", EvidenceRev: "e0"}}}
-	FillOldEvidence(novo, written, func(string) ([]byte, bool) { t.Error("a map with evidence revisions is not read"); return nil, false }, nil)
+	// A map written by an older rule: its evidence revision is read again by today's.
+	written := &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec, Rev: scan.ShortHash(before), EvidenceRev: "by-an-older-rule"}}}
+	FillOldEvidence(novo, written, func(string) ([]byte, bool) { return before, true }, nil)
+	if written.Nodes[0].EvidenceRev != scan.EvidenceOf("spec", "a.spec.md", before, nil).Rev {
+		t.Errorf("read again by today's rule: %q", written.Nodes[0].EvidenceRev)
+	}
 }

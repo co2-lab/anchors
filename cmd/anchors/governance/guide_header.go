@@ -184,8 +184,9 @@ them with the code (they are named in each line below).
     await db.query(sql) // ` + flagAt + `dep[db]: transactions
 - '` + flagAt + `no-dep: <reason>' — on the import line instead: this import stays out of the chain
   (a test double…).
-- What has no side effect on the tests — '@navigates' and '@dep[type]' by default — ties no
-  test's proof: 'evidence.no_side_effect.flags' in anchors.yaml lists them, and
+- What has no side effect on the tests ties no test's proof: a line that is only a comment
+  (a rule citation, a note), and the flags '@navigates' and '@dep[type]' by default —
+  'evidence.no_side_effect.flags' in anchors.yaml lists them, and
   'evidence.no_side_effect.sections' the spec sections whose change proves nothing.
 - '@used-by: <CODE>[, <CODE>...]' — in the comment right above each symbol another file
   imports: exactly who imports it ('used-by-declared'). A default import is the module's

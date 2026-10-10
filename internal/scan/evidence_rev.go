@@ -24,7 +24,8 @@ type Evidence struct {
 	// Rev is the hash of the content without its `@anchors` header — the date the hook
 	// writes —; in a spec, also without its navigation and change-history sections, with its
 	// spacing normalized; in any other file, without the chain's flags (`@dep`, `@used-by`,
-	// `@navigates`, `@no-dep`, `@no-nav`) — the lines that only carry one go with them.
+	// `@navigates`, `@no-dep`, `@no-nav`) and the lines that are only a comment — the lines
+	// that only carry a flag go with them.
 	Rev string
 	// LineRev is, outside specs, the hash of the content with every line kept in its place —
 	// the header and the flag-only lines blank: coverage and mutation name lines by number,
@@ -56,17 +57,19 @@ func StripChainFlag(l string) string {
 	return chainFlagEndRE.ReplaceAllString(l, "")
 }
 
-// EvidenceOf reads the evidence revisions of one file.
-func EvidenceOf(kind string, content []byte, cfg *config.Config) Evidence {
+// EvidenceOf reads the evidence revisions of one file, at rel — its extension says how its
+// comments are written.
+func EvidenceOf(kind, rel string, content []byte, cfg *config.Config) Evidence {
 	lines := strings.Split(string(content), "\n")
 	header := headerSpan(lines)
 	if kind == "spec" {
 		return specEvidence(lines, header, cfg)
 	}
+	comment := commentLines(lines, rel)
 	var kept, placed []string
 	for i, l := range lines {
 		switch {
-		case header[i] || ChainFlagOnlyRE.MatchString(l):
+		case header[i] || comment[i] || ChainFlagOnlyRE.MatchString(l):
 			placed = append(placed, "")
 		default:
 			l = StripChainFlag(l)
@@ -78,6 +81,56 @@ func EvidenceOf(kind string, content []byte, cfg *config.Config) Evidence {
 		Rev:     shortHash([]byte(strings.Join(kept, "\n"))),
 		LineRev: shortHash([]byte(strings.Join(placed, "\n"))),
 	}
+}
+
+// commentLines marks the lines that are nothing but a comment, in the markers of the file's
+// language: a line comment alone on its line, and a block comment (`/* … */`, `{/* … */}`)
+// whose lines it fills, in the languages that write them. Nothing a comment says runs — a
+// rule cited above the code that answers it staled every proof of the file (reported from
+// MIF). A comment at the end of a line of code stays: a `//` inside a string reads the same.
+func commentLines(lines []string, rel string) map[int]bool {
+	ext := ""
+	if i := strings.LastIndex(rel, "."); i >= 0 {
+		ext = strings.ToLower(rel[i:])
+	}
+	markers := config.MarkersFor(ext)
+	if len(markers) == 0 || markers[0] == "<!--" {
+		return nil
+	}
+	blocks := markers[0] == "//"
+	out := map[int]bool{}
+	inBlock := false
+	for i, l := range lines {
+		t := strings.TrimSpace(l)
+		if inBlock {
+			if end := strings.Index(t, "*/"); end >= 0 {
+				inBlock = false
+				if rest := strings.TrimSpace(t[end+2:]); rest != "" && rest != "}" {
+					continue // code after the comment's end: the line runs
+				}
+			}
+			out[i] = true
+			continue
+		}
+		if blocks && (strings.HasPrefix(t, "/*") || strings.HasPrefix(t, "{/*")) {
+			if end := strings.Index(t, "*/"); end >= 0 {
+				if rest := strings.TrimSpace(t[end+2:]); rest == "" || rest == "}" {
+					out[i] = true
+				}
+				continue
+			}
+			inBlock = true
+			out[i] = true
+			continue
+		}
+		for _, m := range markers {
+			if strings.HasPrefix(t, m) {
+				out[i] = true
+				break
+			}
+		}
+	}
+	return out
 }
 
 // headerSpan marks the lines of the `@anchors` header: the comment that opens with it near

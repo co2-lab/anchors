@@ -123,6 +123,7 @@ heuristic decided.
 | `RPSCR-B49` | Any other file's evidence revision is its content without its `@anchors` header and the chain's flags — dependency (kinded or not), used-by and navigation flags and their waivers, at a line's end or on lines of their own —; its line revision keeps every line in place, the header and the flag-only lines blank, so a flag at a line's end keeps it and a flag line moves it. (`EvidenceOf`) |
 | `RPSCR-B50` | `@dep[type]: CODE` on an import line is an import of types only: read with its code and the symbols the import brings, apart from the dependencies that are no import. (`CodeDep`, `TypeDepKind`) |
 | `RPSCR-B51` | The spec sections a project declares with no side effect (`evidence.no_side_effect.sections`) are the ones left out of its evidence, in place of navigation and change history. (`EvidenceOf`) |
+| `RPSCR-B52` | A line that is only a comment — in the line-comment marker of the file's language, or inside a block comment (`/* … */`, `{/* … */}`) that fills its lines, in the languages that write them — is left out of the file's evidence revision, and blank in its line revision; a comment at the end of a line of code, code after a block's end, and a file whose language has no known marker are read whole. (`EvidenceOf`, `commentLines`) |
 | `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants

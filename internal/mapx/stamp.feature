@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTE
 #   ref: EDSTD
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-09
 #   layer: feature
 
 @EDSTD
@@ -154,7 +154,7 @@ Feature: EdgeStamping — recording on each relation that it was confronted, wit
     Then the flag carries the evidence, the change does not, and the unknown file is left alone
 
   @EDSTD-B23 @unit-level
-  Scenario: A map written before evidence revisions gets them from the content at its revision
+  Scenario: A moved file's old evidence is read again from the content at its revision
     Given a proven spec in a map with no evidence revisions, edited since in its date and history alone
-    When the build reads a content that is not the node's revision, then the one that is
-    Then the first is not taken, the second carries the proof, and a map with evidence revisions is not read
+    When the build reads a content that is not the node's revision, then the one that is, then a map written by an older rule
+    Then the first is not taken, the second carries the proof, and the older rule's revision is read again by today's

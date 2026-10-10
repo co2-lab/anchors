@@ -44,8 +44,10 @@ flow asserting a navigation goes stale when its row changes (EVFRA-B11).
 - **What a spec's evidence leaves out:** the `@anchors` header (its `updated_at` above all), the
   change history section, the navigation sections and an Out table under any title (each Out
   row is confronted by its own revision already), and blank-line and trailing-space differences.
-- **What a code file's evidence leaves out:** the header — the hook dates code files too —, and
-  the chain's flags — `@dep` (kinded too), `@used-by`, `@navigates`, `@no-dep`, `@no-nav`, the line
+- **What a code file's evidence leaves out:** the header — the hook dates code files too —, the
+  lines that are only a comment, in the marker of the file's language (a rule cited above the
+  code that answers it staled five proofs at MIF; a comment at the end of a line of code stays,
+  for a `//` inside a string reads the same), and the chain's flags — `@dep` (kinded too), `@used-by`, `@navigates`, `@no-dep`, `@no-nav`, the line
   that only carries one —, read the way the mock stamps read them (MCSTM-B21, B22, one reading
   now). Coverage and mutation, which record line numbers, follow a `LineRev` that keeps every line
   in place: a flag appended to a line keeps their proof; a flag line inserted moves their lines,

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:edc2b7066fce23f5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2c0f95e6853135a2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -7368,7 +7368,7 @@ teste prova.
 
 - [Advancing a node to its content carries the evidence its revisions show unchanged](layers/mapa.md#edstd-b22--advancing-a-node-to-its-content-carries-the-evidence-its-revisions-show-unchanged) `EDSTD-B22`
 
-- [A map written before evidence revisions gets them from the content at its revision](layers/mapa.md#edstd-b23--a-map-written-before-evidence-revisions-gets-them-from-the-content-at-its-revision) `EDSTD-B23`
+- [A moved file's old evidence is read again from the content at its revision](layers/mapa.md#edstd-b23--a-moved-files-old-evidence-is-read-again-from-the-content-at-its-revision) `EDSTD-B23`
 
 - [Saving stamps the current format and the running binary's release](layers/mapa.md#grprg-b01--saving-stamps-the-current-format-and-the-running-binarys-release) `GRPRG-B01`
 
@@ -7629,6 +7629,8 @@ teste prova.
 - [A type dependency is an import of types](layers/scan.md#rpscr-b50--a-type-dependency-is-an-import-of-types) `RPSCR-B50`
 
 - [The project's sections with no side effect are left out of the evidence](layers/scan.md#rpscr-b51--the-projects-sections-with-no-side-effect-are-left-out-of-the-evidence) `RPSCR-B51`
+
+- [A line that is only a comment is no evidence](layers/scan.md#rpscr-b52--a-line-that-is-only-a-comment-is-no-evidence) `RPSCR-B52`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

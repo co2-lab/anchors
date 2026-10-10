@@ -348,3 +348,9 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a project declaring its Implementation Notes section with no side effect
     When a spec's notes change, and then its history
     Then the notes move nothing, and the history — no longer in the list — moves the evidence
+
+  @RPSCR-B52 @unit-level
+  Scenario: A line that is only a comment is no evidence
+    Given a module gaining a rule citation on a line of its own, a block comment, a JSX comment, and a flow gaining a comment line
+    When their evidence is read, and then with a comment at the end of a line of code changed, code after a block's end changed, and a file of no known language
+    Then the comments move no evidence but move the lines, and the others move the evidence

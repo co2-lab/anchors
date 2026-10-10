@@ -1207,25 +1207,25 @@ func TestEvidenceOf_specLeavesOutWhatProvesNothing(t *testing.T) {
 			"## Navegação\n\n### Saída\n\n| Destino | Regra |\n| --- | --- |\n| " + out + " | `ARNAA-B01` |\n\n" +
 			"## Change History\n\n- " + history + "\n")
 	}
-	base := EvidenceOf("spec", spec("2026-10-01", "Home", "created", "leaves"), nil)
-	quiet := EvidenceOf("spec", spec("2026-10-08", "Wallet", "Out row changed", "leaves"), nil)
+	base := EvidenceOf("spec", "a.spec.md", spec("2026-10-01", "Home", "created", "leaves"), nil)
+	quiet := EvidenceOf("spec", "a.spec.md", spec("2026-10-08", "Wallet", "Out row changed", "leaves"), nil)
 	if base.Rev == "" || base.Rev != quiet.Rev || base.Rest != quiet.Rest {
 		t.Errorf("a date, an Out row and a history line prove nothing: %+v %+v", base, quiet)
 	}
 	if len(base.Rules) != 3 || base.Rules["ARNAA-S01"] == "" {
 		t.Errorf("each rule — row or heading with what is under it — has its revision: %v", base.Rules)
 	}
-	rule := EvidenceOf("spec", spec("2026-10-01", "Home", "created", "leaves the match"), nil)
+	rule := EvidenceOf("spec", "a.spec.md", spec("2026-10-01", "Home", "created", "leaves the match"), nil)
 	if rule.Rev == base.Rev || rule.Rest != base.Rest || rule.Rules["ARNAA-B02"] == base.Rules["ARNAA-B02"] ||
 		rule.Rules["ARNAA-B01"] != base.Rules["ARNAA-B01"] || rule.Rules["ARNAA-S01"] != base.Rules["ARNAA-S01"] {
 		t.Errorf("a rule's change moves its own revision and the evidence, not the rest: %+v %+v", base, rule)
 	}
 	spaced := replaceOnce(spec("2026-10-01", "Home", "created", "leaves"), []byte("## Rules\n"), []byte("## Rules  \n\n\n"))
-	if EvidenceOf("spec", spaced, nil).Rev != base.Rev {
+	if EvidenceOf("spec", "a.spec.md", spaced, nil).Rev != base.Rev {
 		t.Error("blank lines and trailing spaces prove nothing")
 	}
 	prose := replaceOnce(spec("2026-10-01", "Home", "created", "leaves"), []byte("# Arena\n"), []byte("# Arena, the match room\n"))
-	if e := EvidenceOf("spec", prose, nil); e.Rest == base.Rest {
+	if e := EvidenceOf("spec", "a.spec.md", prose, nil); e.Rest == base.Rest {
 		t.Error("what is outside the rules is the rest, and moves it")
 	}
 }
@@ -1235,19 +1235,19 @@ func TestEvidenceOf_codeLeavesOutTheChainsFlags(t *testing.T) {
 	plain := "import { a } from './a'\nexport function f() {\n  return db.query(a)\n}\n"
 	ended := "import { a } from './a' // @dep: AAAAA\nexport function f() {\n  return db.query(a) // @dep[db]: transactions\n}\n"
 	above := "import { a } from './a'\n// @used-by: BBBBB (f)\nexport function f() {\n  return db.query(a)\n}\n"
-	p, e, ab := EvidenceOf("code", []byte(plain), nil), EvidenceOf("code", []byte(ended), nil), EvidenceOf("code", []byte(above), nil)
+	p, e, ab := EvidenceOf("code", "a.ts", []byte(plain), nil), EvidenceOf("code", "a.ts", []byte(ended), nil), EvidenceOf("code", "a.ts", []byte(above), nil)
 	if p.Rev != e.Rev || p.Rev != ab.Rev {
 		t.Errorf("flags at a line's end and on lines of their own prove nothing: %+v %+v %+v", p, e, ab)
 	}
 	if p.LineRev != e.LineRev || p.LineRev == ab.LineRev {
 		t.Errorf("a flag at a line's end keeps the lines; a flag line moves them: %+v %+v %+v", p, e, ab)
 	}
-	if EvidenceOf("code", []byte(strings.Replace(plain, "query", "exec", 1)), nil).Rev == p.Rev {
+	if EvidenceOf("code", "a.ts", []byte(strings.Replace(plain, "query", "exec", 1)), nil).Rev == p.Rev {
 		t.Error("a change to the code moves the evidence")
 	}
 	// The header's date is the hook's, and its lines stay in place.
 	dated := func(day string) Evidence {
-		return EvidenceOf("code", []byte("// @anchors\n//   code: AAAAA\n//   updated_at: 2026-10-0"+day+"\n"+plain), nil)
+		return EvidenceOf("code", "a.ts", []byte("// @anchors\n//   code: AAAAA\n//   updated_at: 2026-10-0"+day+"\n"+plain), nil)
 	}
 	if d1, d2 := dated("1"), dated("8"); d1.Rev != d2.Rev || d1.LineRev != d2.LineRev || d1.Rev != p.Rev || d1.LineRev == p.LineRev {
 		t.Errorf("the header proves nothing and keeps its lines: %+v %+v", d1, d2)
@@ -1272,11 +1272,40 @@ func TestEvidenceOf_projectSections(t *testing.T) {
 	spec := func(notes, history string) []byte {
 		return []byte("# A\n\n### A-B01 — joins\n\n## Implementation Notes\n\n" + notes + "\n\n## Change History\n\n- " + history + "\n")
 	}
-	base := EvidenceOf("spec", spec("uses a map", "created"), cfg)
-	if EvidenceOf("spec", spec("uses a set", "created"), cfg).Rev != base.Rev {
+	base := EvidenceOf("spec", "a.spec.md", spec("uses a map", "created"), cfg)
+	if EvidenceOf("spec", "a.spec.md", spec("uses a set", "created"), cfg).Rev != base.Rev {
 		t.Error("the notes move nothing")
 	}
-	if EvidenceOf("spec", spec("uses a map", "edited"), cfg).Rev == base.Rev {
+	if EvidenceOf("spec", "a.spec.md", spec("uses a map", "edited"), cfg).Rev == base.Rev {
 		t.Error("the history, no longer listed, moves the evidence")
+	}
+}
+
+func TestEvidenceOf_commentsProveNothing(t *testing.T) {
+	t.Run("RPSCR-B52: A line that is only a comment is no evidence", func(t *testing.T) {})
+	ev := func(rel, body string) Evidence { return EvidenceOf("code", rel, []byte(body), nil) }
+	code := "export function close() {\n  if (!open) return\n}\n"
+	for _, commented := range []string{
+		"export function close() {\n  // FLDIE-E01: closing a closed sheet does nothing.\n  if (!open) return\n}\n",
+		"/**\n * Closes the sheet.\n */\nexport function close() {\n  if (!open) return\n}\n",
+		"export function close() {\n  {/* the sheet */}\n  if (!open) return\n}\n",
+	} {
+		if a, b := ev("Sheet.tsx", code), ev("Sheet.tsx", commented); a.Rev != b.Rev || a.LineRev == b.LineRev {
+			t.Errorf("a comment line moves no evidence, and moves the lines:\n%s", commented)
+		}
+	}
+	flow := "appId: x\n---\n- tapOn: Save\n"
+	if ev("flow.yaml", flow).Rev != ev("flow.yaml", "appId: x\n---\n# FLDIE-A01\n- tapOn: Save\n").Rev {
+		t.Error("a flow's comment line moves no evidence")
+	}
+	for _, other := range []struct{ rel, a, b string }{
+		{"a.ts", "const u = 'http://x' // one\n", "const u = 'http://x' // two\n"},
+		{"a.ts", "/* note */ run()\n", "/* note */ stop()\n"},
+		{"a.c", "#include <a.h>\n", "#include <b.h>\n"},
+		{"a.foo", "// one\n", "// two\n"},
+	} {
+		if ev(other.rel, other.a).Rev == ev(other.rel, other.b).Rev {
+			t.Errorf("%s: read whole: %q vs %q", other.rel, other.a, other.b)
+		}
 	}
 }

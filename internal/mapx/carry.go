@@ -58,25 +58,21 @@ func (g *Graph) AdvanceTo(id string, content []byte, cfg *config.Config) (moved,
 		return false, false
 	}
 	n := g.Nodes[i]
-	n.setEvidence(rev, scan.EvidenceOf(string(n.Kind), content, cfg))
+	n.setEvidence(rev, scan.EvidenceOf(string(n.Kind), n.ID, content, cfg))
 	carried = len(CarryUnchangedEvidence(&Graph{Nodes: []Node{n}}, g)) > 0
-	g.Nodes[i].setEvidence(rev, scan.EvidenceOf(string(n.Kind), content, cfg))
+	g.Nodes[i].setEvidence(rev, scan.EvidenceOf(string(n.Kind), n.ID, content, cfg))
 	return true, carried
 }
 
-// FillOldEvidence gives a map written before evidence revisions the evidence of each file the
-// new build moved: its content at the map's revision is read by `read` — the commit's copy,
-// usually —, and taken only when its hash is that revision. Without it, the first build with
-// evidence revisions had nothing to compare a spec's edit with, and the upgrade carried
-// nothing. A map that has evidence revisions is left as it is.
+// FillOldEvidence gives each file the new build moved the evidence of its content at the
+// map's revision, read again by today's rule: the content is read by `read` — the commit's
+// copy, usually —, and taken only when its hash is that revision. A map written before
+// evidence revisions had nothing to compare an edit with; a map written by an older rule —
+// before comment lines left the evidence — compared an edit with a revision today's rule
+// never makes, and carried nothing.
 func FillOldEvidence(novo, old *Graph, read func(id string) ([]byte, bool), cfg *config.Config) {
 	if novo == nil || old == nil || read == nil {
 		return
-	}
-	for _, o := range old.Nodes {
-		if o.EvidenceRev != "" || o.RestRev != "" {
-			return
-		}
 	}
 	for _, n := range novo.Nodes {
 		i := old.nodeIndex(n.ID)
@@ -88,7 +84,7 @@ func FillOldEvidence(novo, old *Graph, read func(id string) ([]byte, bool), cfg 
 			continue
 		}
 		o := &old.Nodes[i]
-		o.setEvidence(o.Rev, scan.EvidenceOf(string(o.Kind), b, cfg))
+		o.setEvidence(o.Rev, scan.EvidenceOf(string(o.Kind), o.ID, b, cfg))
 	}
 }
 
