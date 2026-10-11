@@ -148,6 +148,9 @@ func loadReportCtx(root, mapPath string) (reportCtx, error) {
 		return reportCtx{}, fmt.Errorf("load map: %w (run `anchors map build`)", err)
 	}
 	cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile)) // pode faltar
+	// A frozen part is kept as it is by decision: its stale proofs, survived mutants and
+	// uncovered lines are no news (DESIGN-frozen-units.md).
+	g = g.Unfrozen()
 	return reportCtx{g: g, cfg: cfg, root: absRoot, when: time.Now().Format("2006-01-02 15:04")}, nil
 }
 
@@ -223,6 +226,7 @@ func renderTests(ctx reportCtx) string {
 			continue
 		}
 		declared, _ := codesInFileOfUnit(filepath.Join(root, n.ID), n.Code)
+		declared = n.WithoutFrozenRules(declared)
 		if len(declared) == 0 {
 			continue
 		}

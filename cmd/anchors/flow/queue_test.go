@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/board"
+	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/queue"
 	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/co2-lab/anchors/internal/settings"
@@ -634,5 +635,32 @@ func TestRequireSession(t *testing.T) {
 	t.Setenv("ANCHORS_SESSION", "devA")
 	if err := requireSession(); err != nil {
 		t.Errorf("a declared session was refused: %v", err)
+	}
+}
+
+func TestNextCmd_frozenTargetWarns(t *testing.T) {
+	t.Run("WRQUW-B21: A task on a frozen target carries the warning", func(t *testing.T) {})
+	root := queueProject(t)
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "src/a.ts", Kind: mapx.KindCode, Frozen: "the flag stays off"}}}
+	if err := mapx.Save(g, filepath.Join(root, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	enqueue(t, root, queue.Task{ID: "a-code", Changed: "src/a.ts", Kind: "code", Origin: "watch", SuggestedNext: "feature", Reason: "the code changed"})
+	out, err := runFlowCmd(t, newNextCmd(), "--root", root, "--worker", "w9")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "task claimed: a-code") || !strings.Contains(out, "❄ FROZEN: `src/a.ts` is frozen (the flag stays off)") {
+		t.Errorf("claimed, with the warning:\n%s", out)
+	}
+	g.Nodes[0].Code = "AAAAU"
+	if err := mapx.Save(g, filepath.Join(root, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	card := stdoutOf(t, func() {
+		printBoardWork(root, &board.Card{Number: 6, Title: "[AAAAU] Implementar spec — a", Body: "Código: `AAAAU`"}, "h/a")
+	})
+	if !strings.Contains(card, "❄ FROZEN: `src/a.ts` is frozen (the flag stays off)") || !strings.Contains(card, "DELIVERABLE") {
+		t.Errorf("the card is handed out with the warning:\n%s", card)
 	}
 }

@@ -2,7 +2,7 @@
 # @anchors
 #   code: QUFTQ
 #   ref: WRQUW
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @WRQUW
@@ -167,3 +167,9 @@ Feature: WorkQueue — list, pull, close and discard the work, from the local qu
     Given a claim run 78 that ended in failure with no card
     When it is reported
     Then it fails with "#78 ended as \"failure\""
+
+  @WRQUW-B21 @unit-level
+  Scenario: A task on a frozen target carries the warning
+    Given a queued task whose changed file the map says is frozen
+    When the next task is claimed
+    Then it is claimed and handed out with the freeze and its reason

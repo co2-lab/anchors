@@ -106,6 +106,7 @@ func runStatus(root string) error {
 		return nil
 	}
 	fmt.Println(i18n.T("status.map_ok", len(g.Nodes), len(g.Edges)))
+	printFreezes(os.Stdout, g)
 
 	// 3.5. MATURAÇÃO — o gate informativo que já está limpo (QUALITY §7).
 	//
@@ -346,4 +347,31 @@ func runName(r runs.Run) string {
 		return r.Name
 	}
 	return runs.Brief(r.Command)
+}
+
+// printFreezes lists what is frozen, by freeze, each with its reason and the places it
+// covers: a freeze has no date (DESIGN-frozen-units.md), and this is where nothing frozen is
+// forgotten. With nothing frozen it says nothing.
+func printFreezes(w io.Writer, g *mapx.Graph) {
+	parts := g.FrozenParts("")
+	if len(parts) == 0 {
+		return
+	}
+	byValue := map[string][]string{}
+	var values []string
+	for _, p := range parts {
+		if _, seen := byValue[p.Value]; !seen {
+			values = append(values, p.Value)
+		}
+		where := p.Path
+		if p.Rule != "" {
+			where += " " + p.Rule
+		}
+		byValue[p.Value] = append(byValue[p.Value], where)
+	}
+	sort.Strings(values)
+	fmt.Fprintf(w, "❄ %d frozen part(s) — kept as they are until someone thaws them:\n", len(parts))
+	for _, v := range values {
+		fmt.Fprintf(w, "    %s: %s\n", g.DescribeFreeze(v), strings.Join(byValue[v], ", "))
+	}
 }

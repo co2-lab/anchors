@@ -437,3 +437,29 @@ func TestStatus_runs(t *testing.T) {
 		t.Errorf("no record, nothing said: %q", b.String())
 	}
 }
+
+func TestStatus_listsFreezes(t *testing.T) {
+	t.Run("PRSTP-B15: The status lists what is frozen", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "pay/Pay.spec.md", Kind: mapx.KindSpec, Frozen: "QLDTQ-F01"},
+		{ID: "pay/Pay.ts", Kind: mapx.KindCode, Frozen: "QLDTQ-F01"},
+		{ID: "cart/Cart.spec.md", Kind: mapx.KindSpec, FrozenRules: map[string]string{"CARTU-B02": "the coupon waits for legal"}},
+		{ID: "product/q.doctrine.md", Kind: mapx.KindProduct, Freezes: map[string]string{"QLDTQ-F01": "the plan mode ships next quarter"}},
+	}}
+	var b strings.Builder
+	printFreezes(&b, g)
+	for _, want := range []string{
+		"❄ 3 frozen part(s)",
+		"QLDTQ-F01 — the plan mode ships next quarter: pay/Pay.spec.md, pay/Pay.ts",
+		"the coupon waits for legal: cart/Cart.spec.md CARTU-B02",
+	} {
+		if !strings.Contains(b.String(), want) {
+			t.Errorf("missing %q in:\n%s", want, b.String())
+		}
+	}
+	b.Reset()
+	printFreezes(&b, &mapx.Graph{Nodes: []mapx.Node{{ID: "a.ts"}}})
+	if b.Len() != 0 {
+		t.Errorf("nothing frozen, nothing said: %q", b.String())
+	}
+}

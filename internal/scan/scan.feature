@@ -2,7 +2,7 @@
 # @anchors
 #   code: SCFTC
 #   ref: RPSCR
-#   updated_at: 2026-10-09
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @RPSCR
@@ -354,3 +354,21 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a module gaining a rule citation on a line of its own, a block comment, a JSX comment, and a flow gaining a comment line
     When their evidence is read, and then with a comment at the end of a line of code changed, code after a block's end changed, and a file of no known language
     Then the comments move no evidence but move the lines, and the others move the evidence
+
+  @RPSCR-B53 @unit-level
+  Scenario: A frozen header is read with its value
+    Given a module whose header says it is frozen by QLDTQ-F01, and a spec frozen with a reason
+    When they are scanned
+    Then each is frozen with its value, and a file with no such line is not
+
+  @RPSCR-B54 @unit-level
+  Scenario: Frozen rules are read from their lines and from frozen headings
+    Given a spec with a rule frozen on its line, one frozen on the line below it, a frozen section of two rules, a rule after the section, and a mark in backticks
+    When its frozen rules are read
+    Then the four marked rules are frozen with their values, the rule after the section and the cited mark are not
+
+  @RPSCR-B55 @unit-level
+  Scenario: A doctrine's freeze entries are read with their reasons
+    Given a doctrine document with freezes as a heading, a table row and a bold bullet
+    When its freezes are read
+    Then each code has its reason, the rules of other letters are no freeze, and only a code of the freeze letter is a freeze's code

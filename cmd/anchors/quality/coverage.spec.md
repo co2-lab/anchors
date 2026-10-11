@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CVCMC
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: comando
 -->
 # CoverageCommand — answers the confidence questions from the ingested signals: by scenario, by line, of the diff and the delta
@@ -57,6 +57,7 @@ Against the previous ingestion: did any file lose line coverage? A drop fails th
 | `CVCMC-B13` | A file that lost more than a hundredth of a point of line coverage is listed with its old and new coverage, and the delta fails with exit status 1 naming the worst drop. |
 | `CVCMC-B14` | The diff coverage lists the changed files in path order, and a changed file whose path suffix matches several coverage entries is crossed with the first of them in path order, so the same inputs print the same report on every run. |
 | `CVCMC-B15` | The report counts a rule proven only when every scenario its features declare — each variant `#NN` — is proven, as `scenario-coverage` does. (`provenRules`) |
+| `CVCMC-B16` | The panorama leaves out what a freeze covers — its files, and the frozen rules of a spec —, and the coverage of a frozen spec says it is frozen, with the freeze, instead of its gaps. |
 
 ## Invariants
 

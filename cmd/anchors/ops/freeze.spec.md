@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FRZEX
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: comando
 -->
 # Freeze — the project is stopped in three layers with a written reason, and thawed by undoing exactly those layers
@@ -29,6 +29,14 @@ refuse the thaw. For the same reason, whoever fixes the problem passes: the admi
 the remote rule. Each remote layer that fails is a warning that says which half of the brake
 holds, never a failure that loses the local brake.
 
+With a scope — a unit, a rule, a file — the same verbs keep one PART of the project as it is,
+by decision, until someone thaws it (DESIGN-frozen-units.md). The freeze is recorded once,
+with its reason, as an entry of a doctrine document coded with the freeze letter, and each
+place it covers carries a mark with the code; with no doctrine, the marks carry the reason.
+The scoped freeze commits nothing and touches no remote: it is an edit of the project's text,
+reviewed like any other. Before the agent edits a frozen file, its hook tells it so, and the
+edit goes on: the order to change a frozen part comes from a person.
+
 ## Domain
 
 | Input | Accepts | Outside the domain | Who guarantees |
@@ -54,6 +62,12 @@ holds, never a failure that loses the local brake.
 | `FRZEX-B11` | When the remote has no freeze rule and no open freeze issue, the thaw deletes and closes nothing, without error. |
 | `FRZEX-B12` | The deprecated Portuguese flag names (`--motivo`, `--sem-ruleset`, `--sem-push`) still drive the commands. |
 | `FRZEX-B13` | A configuration that already declares a top-level `enabled:` or `freeze_reason:` (with any indented continuation lines) has those lines replaced, not stacked on: the frozen file holds exactly one of each key and still loads, frozen, with the new reason; the thaw then removes them and the project loads enabled. |
+| `FRZEX-B14` | With a scope — `--unit`, `--rule`, `--file`, each repeatable — and a reason, a PART is frozen instead of the project: the freeze is recorded with the next free freeze code of the project's doctrine document, as an entry under its Freezes section (created at the document's end when missing), and each place gets a mark with the code — `frozen:` in the header of the unit's owner or of the file, under its code or ref line, and `@frozen:` at the end of the rule's line, inside a table row's last cell. (`scopedFreeze`, `freezeScope`) |
+| `FRZEX-B15` | In a project with no doctrine document the marks carry the reason, and the command says the freeze is not traceable; with several documents `--in` names the one that records it, by path or code. A scope with no reason, several documents and no `--in`, a unit with no owner, a rule its unit does not define, a missing file, and a place already frozen by another freeze are refused, naming the cause. |
+| `FRZEX-B16` | A freeze's code with a scope adds the scope to that recorded freeze, recording nothing new; a code no doctrine records is refused. |
+| `FRZEX-B17` | `thaw` with a freeze's code removes every mark of it — in headers and on rule lines, leaving the marks of other freezes — and its entry in the doctrine — the Freezes section too, once its last entry is gone, so the document comes back as it was —, saying how many marks left; with a scope it removes the marks at those places, whatever they carry; a code neither recorded nor marked is refused. With neither, `thaw` is the project's brake, as before. |
+| `FRZEX-B18` | `freeze show` lists each freeze with its reason and the places it covers — a recorded freeze that marks nothing says so —, or that nothing is frozen; `freeze show <code>` lists every place that freeze covers, the ones it reaches through a unit included. (`showFreezes`) |
+| `FRZEX-B19` | The agent's hook before an edit (`freeze hook`) answers, for a file a freeze covers whole, a context that tells the agent the file is frozen, with the freeze's code and reason, that the edit is not blocked and goes through, and to undo it and ask when no person ordered it, and, for a file holding frozen rules, each rule with its freeze; it never denies the edit, and says nothing for any other file, outside a project, or for input it cannot read. (`freezeHook`) |
 
 ## Invariants
 

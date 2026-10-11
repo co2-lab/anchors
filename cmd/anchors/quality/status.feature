@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTC
 #   ref: PRSTP
-#   updated_at: 2026-10-09
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @PRSTP
@@ -114,3 +114,9 @@ Feature: ProjectStatus — where the project stands in the cycle, and the one ne
     Given a project with a running run, six ended ones, and then one with no record
     When the status is asked for each
     Then the first lists the running one and the latest five ended with how they ended, and the second says nothing of runs
+
+  @PRSTP-B15 @unit-level
+  Scenario: The status lists what is frozen
+    Given a map with a unit frozen by a recorded freeze and a rule frozen with a reason
+    When the freezes are printed, and then for a map with nothing frozen
+    Then each freeze is listed with its reason and the places it covers, and with nothing frozen nothing is printed

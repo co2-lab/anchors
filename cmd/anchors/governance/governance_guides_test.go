@@ -678,3 +678,19 @@ func TestSpecGuide_declaresNoDependency(t *testing.T) {
 		t.Error("the rule uses no longer cite DEPn rows")
 	}
 }
+
+func TestGuides_teachTheFreeze(t *testing.T) {
+	t.Run("GVGDG-B26: The guides teach the freeze", func(t *testing.T) {})
+	header := guideOut(t, "header")
+	for _, want := range []string{"'frozen: <code>'", "'@frozen: <code>'", "anchors freeze --reason", "anchors freeze show", "anchors thaw <code>", "DO NOT CHANGE IT WITHOUT\nAN ORDER FROM A PERSON"} {
+		if !strings.Contains(header, want) {
+			t.Errorf("the header guide lacks %q", want)
+		}
+	}
+	product := guideOut(t, "product")
+	for _, want := range []string{"## Freezes", "- **LIMIT-F01** — the plan mode ships next quarter", "freeze-consistent", "A freeze entry is not a rule to realize."} {
+		if !strings.Contains(product, want) {
+			t.Errorf("the product guide lacks %q", want)
+		}
+	}
+}

@@ -59,6 +59,8 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | [`doctrine-realized`](/pt/docs/gates/doctrine-realized/) | `product` | Every product rule is realised by some spec |
 | [`doctrine-not-duplicated`](/pt/docs/gates/doctrine-not-duplicated/) | `spec` | The spec references the doctrine instead of copying its text |
 | [`spec-realizes-doctrine`](/pt/docs/gates/spec-realizes-doctrine/) | `spec` | The spec's rules declare the product doctrine they realise |
+| [`freeze-consistent`](/pt/docs/gates/freeze-consistent/) | `spec` `product` `feature` `code` `test` | Every freeze mark names a freeze the doctrine records, and every recorded freeze marks something |
+| [`frozen-touched`](/pt/docs/gates/frozen-touched/) | `spec` `product` `feature` `code` `test` | A change to a frozen part is told, with the freeze's reason; it informs and never bars |
 | [`flag-scenario-grammar`](/pt/docs/gates/flag-scenario-grammar/) | `flag` | Each scenario's condition is written in the grammar |
 | [`flag-scenarios-complete`](/pt/docs/gates/flag-scenarios-complete/) | `flag` | The flag declares the ABSENT case |
 | [`flag-scenario-exists`](/pt/docs/gates/flag-scenario-exists/) | `spec` | The scenario the spec cites with `@gated-by` exists |

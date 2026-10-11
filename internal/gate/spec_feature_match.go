@@ -171,6 +171,11 @@ func definedRequirements(content string) []string {
 			continue
 		}
 		code := m[1]
+		// A FROZEN rule is kept as it is by decision: no scenario, test or realizer is
+		// asked of it until someone thaws it (frozen.go).
+		if ruleIsFrozen(code) {
+			continue
+		}
 		if !vistos[code] {
 			vistos[code] = true
 			out = append(out, code)

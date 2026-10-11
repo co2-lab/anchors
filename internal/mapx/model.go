@@ -244,6 +244,15 @@ type Node struct {
 	// OutRows: a screen spec's navigation rows, by rule, each with a revision of the row
 	// alone (scan.File.OutRows).
 	OutRows map[string]string `yaml:"out_rows,omitempty"`
+	// Frozen is the freeze that covers the whole node — its own header's, its unit's spec's,
+	// its doctrine document's —, by code or, with no doctrine, by reason
+	// (DESIGN-frozen-units.md, frozen.go).
+	Frozen string `yaml:"frozen,omitempty"`
+	// FrozenRules are the node's rules a freeze covers — marked on the rule or a heading
+	// above it, or realizing a frozen doctrine rule —, each with the freeze's value.
+	FrozenRules map[string]string `yaml:"frozen_rules,omitempty"`
+	// Freezes are a doctrine document's freeze entries, each code with its reason.
+	Freezes map[string]string `yaml:"freezes,omitempty"`
 	// EvidenceRev, LineRev, RuleRevs and RestRev are the revisions the file's proofs are
 	// measured against (scan.Evidence): its content without what proves nothing. A rebuild
 	// carries a file's evidence across an edit that left them as they were

@@ -2,7 +2,7 @@
 # @anchors
 #   code: CVFTC
 #   ref: CVCMC
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @CVCMC
@@ -155,3 +155,9 @@ Feature: CoverageCommand — answers the confidence questions from the ingested 
     Given a spec whose feature declares two variants of its rule, with only the first proven
     When the coverage of the spec is reported
     Then the rule is reported without a passing test
+
+  @CVCMC-B16 @unit-level
+  Scenario: The coverage leaves frozen parts out
+    Given the panorama's project with its gap rule frozen and a frozen code file below every threshold
+    When the panorama runs, and the coverage of a frozen spec
+    Then neither the frozen rule nor the frozen file is a gap, and the frozen spec says it is frozen with its freeze

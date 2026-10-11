@@ -185,6 +185,9 @@ act on it before the card.`,
 			fmt.Printf("  origin:     %s\n", t.Origin)
 			fmt.Printf("  suggestion: %s\n", t.SuggestedNext)
 			fmt.Printf("  reason:     %s%s\n\n", t.Reason, seedTally(absRoot, *t))
+			if note := frozenNote(absRoot, t.Changed); note != "" {
+				fmt.Println(note)
+			}
 			fmt.Printf("Run the step (see `anchors guide`). For the fine detail of what to\n")
 			fmt.Printf("propagate, run: anchors impact %s\n", t.Changed)
 			fmt.Printf("When done:      anchors done %s\n", t.ID)
@@ -738,6 +741,9 @@ func printBoardWork(root string, card *board.Card, agent string) {
 	unidade := alvo
 	if alvo == "" {
 		alvo = "<the unit of the card>"
+	}
+	if note := frozenNote(root, unidade); unidade != "" && note != "" {
+		fmt.Println(note)
 	}
 
 	switch {

@@ -8,13 +8,17 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
 )
+
+func strconvQuote(s string) string { return strconv.Quote(s) }
 
 const githubModeConfig = "version: 1\nworkflow:\n  mode: github\n  repo: acme/app\n  labels: [anchors]\n"
 
@@ -345,5 +349,250 @@ func TestFreezeReplacesAnExistingEnabledLine(t *testing.T) {
 	if cfg, lerr := config.Load(p); lerr != nil || cfg.FreezeReason != "x" {
 		b, _ := os.ReadFile(p)
 		t.Errorf("block reason: load err = %v\n%s", lerr, b)
+	}
+}
+
+// --- the freeze with a scope ---
+
+const scopedYAML = "version: 7\nlayers:\n" +
+	"  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n" +
+	"  code:\n    pattern: \"src/**/*.ts\"\n    kind: code\n" +
+	"  produto:\n    pattern: \"product/*.doctrine.md\"\n    kind: product\n" +
+	"derived:\n  anchor: spec\n  files:\n    code: [\"{{dir}}/{{name}}.ts\"]\n"
+
+// scopedProject is a project with two units, a file of its own and, unless bare, one
+// doctrine document.
+func scopedProject(t *testing.T, doctrine bool) string {
+	t.Helper()
+	root := t.TempDir()
+	files := map[string]string{
+		config.DefaultFile:      scopedYAML,
+		"src/pay/Pay.spec.md":   "<!-- @anchors\n  code: PAYUN\n  layer: spec\n-->\n# Pay\n\n## Effects\n\n| `PAYUN-B01` | pays |\n",
+		"src/pay/Pay.ts":        "// @anchors\n//   code: PAYCD\n//   ref: PAYUN\n\nexport const pay = 1\n",
+		"src/cart/Cart.spec.md": "<!-- @anchors\n  code: CARTU\n-->\n# Cart\n\n### CARTU-B01 — coupons\n\n| `CARTU-B02` | totals |\n",
+		"src/flags.ts":          "// @anchors\n//   code: FLAGS\n\nexport const on = false\n",
+	}
+	if doctrine {
+		files["product/q.doctrine.md"] = "<!-- @anchors\n  code: QLDTQ\n-->\n# Q\n\n## Rules\n\n### QLDTQ-R01 — a rule\n"
+	}
+	for rel, body := range files {
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return root
+}
+
+// runScoped runs a command and gives what it printed.
+func runScoped(t *testing.T, c *cobra.Command, args ...string) (string, error) {
+	t.Helper()
+	var b strings.Builder
+	c.SetArgs(args)
+	c.SetOut(&b)
+	c.SetErr(io.Discard)
+	err := c.Execute()
+	return b.String(), err
+}
+
+func readScoped(t *testing.T, root, rel string) string {
+	t.Helper()
+	b, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(rel)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
+
+func TestFreezeScoped_recordsAndMarks(t *testing.T) {
+	t.Run("FRZEX-B14: A freeze with a scope is recorded in the doctrine and marks every place", func(t *testing.T) {})
+	root := scopedProject(t, true)
+	out, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "the plan mode ships next quarter",
+		"--unit", "PAYUN", "--rule", "CARTU-B01", "--rule", "CARTU-B02", "--file", "src/flags.ts")
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	for rel, want := range map[string]string{
+		"product/q.doctrine.md": "## Freezes\n\n- **QLDTQ-F01** — the plan mode ships next quarter\n",
+		"src/pay/Pay.spec.md":   "  code: PAYUN\n  frozen: QLDTQ-F01\n",
+		"src/cart/Cart.spec.md": "### CARTU-B01 — coupons @frozen: QLDTQ-F01\n\n| `CARTU-B02` | totals @frozen: QLDTQ-F01 |\n",
+		"src/flags.ts":          "//   code: FLAGS\n//   frozen: QLDTQ-F01\n",
+	} {
+		if got := readScoped(t, root, rel); !strings.Contains(got, want) {
+			t.Errorf("%s:\n%s\nwant %q", rel, got, want)
+		}
+	}
+	if !strings.Contains(out, "QLDTQ-F01 recorded in product/q.doctrine.md") {
+		t.Errorf("says what it recorded:\n%s", out)
+	}
+	// The map reads what the command wrote: the unit's code is covered through its spec.
+	g, err := freezeGraph(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts := map[string]string{}
+	for _, p := range g.FrozenParts("QLDTQ-F01") {
+		parts[p.Path+" "+p.Rule] = p.Value
+	}
+	for _, want := range []string{"src/pay/Pay.spec.md ", "src/pay/Pay.ts ", "src/flags.ts ", "src/cart/Cart.spec.md CARTU-B01", "src/cart/Cart.spec.md CARTU-B02"} {
+		if parts[want] != "QLDTQ-F01" {
+			t.Errorf("the map misses %q: %v", want, parts)
+		}
+	}
+	// A second freeze takes the next code.
+	if _, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "waits for legal", "--rule", "PAYUN-B01"); err != nil {
+		t.Fatal(err)
+	}
+	if got := readScoped(t, root, "product/q.doctrine.md"); !strings.Contains(got, "- **QLDTQ-F01** — the plan mode ships next quarter\n- **QLDTQ-F02** — waits for legal\n") {
+		t.Errorf("the next freeze:\n%s", got)
+	}
+}
+
+func TestFreezeScoped_refusalsAndNoDoctrine(t *testing.T) {
+	t.Run("FRZEX-B15: Without a doctrine the marks carry the reason, and what cannot be frozen is refused", func(t *testing.T) {})
+	bare := scopedProject(t, false)
+	out, err := runScoped(t, newFreezeCmd(), "--root", bare, "--reason", "flag off until launch", "--file", "src/flags.ts")
+	if err != nil || !strings.Contains(out, "not traceable") || !strings.Contains(readScoped(t, bare, "src/flags.ts"), "//   frozen: flag off until launch\n") {
+		t.Errorf("no doctrine: %v\n%s", err, out)
+	}
+	root := scopedProject(t, true)
+	if err := os.WriteFile(filepath.Join(root, "product", "r.doctrine.md"), []byte("<!-- @anchors\n  code: RLDTR\n-->\n# R\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"--unit", "PAYUN"}, "needs its reason"},
+		{[]string{"--reason", "x", "--unit", "PAYUN"}, "--in"},
+		{[]string{"--reason", "x", "--unit", "NOPEX", "--in", "RLDTR"}, "NOPEX has no owner"},
+		{[]string{"--reason", "x", "--rule", "PAYUN-B09", "--in", "RLDTR"}, "PAYUN-B09 is not defined"},
+		{[]string{"--reason", "x", "--file", "src/none.ts", "--in", "RLDTR"}, "does not exist"},
+	} {
+		if _, err := runScoped(t, newFreezeCmd(), append([]string{"--root", root}, c.args...)...); err == nil || !strings.Contains(err.Error(), c.want) {
+			t.Errorf("%v: %v, want %q", c.args, err, c.want)
+		}
+	}
+	if _, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "x", "--file", "src/flags.ts", "--in", "product/r.doctrine.md"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(readScoped(t, root, "product/r.doctrine.md"), "- **RLDTR-F01** — x") {
+		t.Error("--in records the freeze in the document it names")
+	}
+	if _, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "y", "--file", "src/flags.ts", "--in", "RLDTR"); err == nil || !strings.Contains(err.Error(), "already frozen") {
+		t.Errorf("a part frozen by another freeze is refused: %v", err)
+	}
+}
+
+func TestFreezeScoped_addScope(t *testing.T) {
+	t.Run("FRZEX-B16: A recorded freeze gains a scope by its code", func(t *testing.T) {})
+	root := scopedProject(t, true)
+	if _, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "the plan mode", "--unit", "PAYUN"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runScoped(t, newFreezeCmd(), "QLDTQ-F01", "--root", root, "--unit", "CARTU"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(readScoped(t, root, "src/cart/Cart.spec.md"), "  code: CARTU\n  frozen: QLDTQ-F01\n") || strings.Contains(readScoped(t, root, "product/q.doctrine.md"), "F02") {
+		t.Errorf("the scope is added, no freeze recorded:\n%s", readScoped(t, root, "src/cart/Cart.spec.md"))
+	}
+	if _, err := runScoped(t, newFreezeCmd(), "QLDTQ-F09", "--root", root, "--unit", "CARTU"); err == nil || !strings.Contains(err.Error(), "QLDTQ-F09 is not a freeze") {
+		t.Errorf("an unrecorded code is refused: %v", err)
+	}
+}
+
+func TestFreezeScoped_thaw(t *testing.T) {
+	t.Run("FRZEX-B17: Thawing a freeze removes its marks and its record, and nothing else", func(t *testing.T) {})
+	root := scopedProject(t, true)
+	before := readScoped(t, root, "src/pay/Pay.spec.md")
+	if _, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "the plan mode", "--unit", "PAYUN", "--rule", "CARTU-B02", "--file", "src/flags.ts"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "legal", "--rule", "CARTU-B01"); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runScoped(t, newThawCmd(), "QLDTQ-F01", "--root", root)
+	if err != nil || !strings.Contains(out, "QLDTQ-F01 thawed: 3 mark(s) removed") {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	if got := readScoped(t, root, "src/pay/Pay.spec.md"); got != before {
+		t.Errorf("the unit's spec comes back as it was:\n%s", got)
+	}
+	cart := readScoped(t, root, "src/cart/Cart.spec.md")
+	if !strings.Contains(cart, "| `CARTU-B02` | totals |\n") || !strings.Contains(cart, "### CARTU-B01 — coupons @frozen: QLDTQ-F02") {
+		t.Errorf("the other freeze's mark stays:\n%s", cart)
+	}
+	if doc := readScoped(t, root, "product/q.doctrine.md"); strings.Contains(doc, "QLDTQ-F01") || !strings.Contains(doc, "QLDTQ-F02") {
+		t.Errorf("only its record leaves:\n%s", doc)
+	}
+	if _, err := runScoped(t, newThawCmd(), "--root", root, "--rule", "CARTU-B01"); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(readScoped(t, root, "src/cart/Cart.spec.md"), "@frozen") {
+		t.Error("a thaw by scope removes the mark at the place")
+	}
+	if _, err := runScoped(t, newThawCmd(), "QLDTQ-F02", "--root", root); err != nil {
+		t.Fatal(err)
+	}
+	if got := readScoped(t, root, "product/q.doctrine.md"); got != "<!-- @anchors\n  code: QLDTQ\n-->\n# Q\n\n## Rules\n\n### QLDTQ-R01 — a rule\n" {
+		t.Errorf("the last thaw gives the document back as it was:\n%q", got)
+	}
+	if _, err := runScoped(t, newThawCmd(), "QLDTQ-F07", "--root", root); err == nil {
+		t.Error("a code neither recorded nor marked is refused")
+	}
+}
+
+func TestFreezeScoped_show(t *testing.T) {
+	t.Run("FRZEX-B18: The freezes are listed, each with its reason and places", func(t *testing.T) {})
+	root := scopedProject(t, true)
+	if out, _ := runScoped(t, newFreezeCmd(), "show", "--root", root); !strings.Contains(out, "nothing is frozen") {
+		t.Errorf("nothing frozen: %s", out)
+	}
+	if _, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "the plan mode", "--unit", "PAYUN"); err != nil {
+		t.Fatal(err)
+	}
+	if err := addFreezeEntry(root, "product/q.doctrine.md", "QLDTQ-F02", "orphan"); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runScoped(t, newFreezeCmd(), "show", "--root", root)
+	if err != nil || !strings.Contains(out, "❄ QLDTQ-F01 — the plan mode\n  src/pay/Pay.spec.md\n  src/pay/Pay.ts\n") || !strings.Contains(out, "❄ QLDTQ-F02 — orphan\n  (marks nothing)") {
+		t.Errorf("%v\n%s", err, out)
+	}
+	if out, _ := runScoped(t, newFreezeCmd(), "show", "QLDTQ-F01", "--root", root); out != "QLDTQ-F01 — the plan mode\n  src/pay/Pay.spec.md\n  src/pay/Pay.ts\n" {
+		t.Errorf("one freeze:\n%q", out)
+	}
+}
+
+func TestFreezeScoped_hook(t *testing.T) {
+	t.Run("FRZEX-B19: Before an edit, the agent is told a file is frozen, and the edit goes on", func(t *testing.T) {})
+	root := scopedProject(t, true)
+	if _, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "the plan mode", "--file", "src/flags.ts", "--rule", "CARTU-B02"); err != nil {
+		t.Fatal(err)
+	}
+	g, err := freezeGraph(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := mapx.Save(g, filepath.Join(root, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	call := func(path string) string {
+		return freezeHook([]byte(`{"hook_event_name":"PreToolUse","cwd":` + strconvQuote(root) + `,"tool_input":{"file_path":` + strconvQuote(path) + `}}`))
+	}
+	flags := call(filepath.Join(root, "src", "flags.ts"))
+	if !strings.Contains(flags, `"additionalContext":"FROZEN: src/flags.ts is frozen (QLDTQ-F01 — the plan mode)`) || !strings.Contains(flags, "This edit is NOT blocked and goes through: if no person ordered it, undo it and ask.") ||
+		strings.Contains(flags, "permissionDecision") {
+		t.Errorf("a frozen file is told, never denied: %s", flags)
+	}
+	if cart := call("src/cart/Cart.spec.md"); !strings.Contains(cart, "holds frozen rules") || !strings.Contains(cart, "CARTU-B02 (QLDTQ-F01 — the plan mode)") {
+		t.Errorf("a file with frozen rules names them: %s", cart)
+	}
+	for _, none := range []string{call(filepath.Join(root, "src", "pay", "Pay.ts")), call(filepath.Join(t.TempDir(), "x.ts")), freezeHook([]byte("{broken"))} {
+		if none != "" {
+			t.Errorf("nothing to tell: %s", none)
+		}
 	}
 }

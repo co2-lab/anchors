@@ -161,6 +161,25 @@ fit a readable comment):
 An opt-out WAIVES the rule, never the record — it is the legitimate door, the opposite of the
 silent coverage hole.
 
+### Frozen parts ('frozen: <code>' and '` + flagAt + `frozen: <code>')
+
+A FROZEN part is kept as it is by decision — a feature that will not ship now, a flag left
+off until later — until someone thaws it:
+
+- 'frozen: <code>' in the header — the whole file is frozen; in a spec's header, the whole
+  unit: its code, feature and tests with it.
+- '` + flagAt + `frozen: <code>' on a rule's line, or on a heading above rules — those rules are
+  frozen, and so is every spec rule that realizes a frozen doctrine rule.
+
+The code names the freeze's record — an entry of the doctrine coded with the letter F, with
+its reason (see 'anchors guide product'). With no doctrine the mark carries the reason itself.
+Do not write the marks by hand: 'anchors freeze --reason "…" --unit/--rule/--file' writes the
+record and the marks, 'anchors freeze show' lists them, 'anchors thaw <code>' removes them.
+
+A frozen part answers "frozen" in every gate and leaves the reports and the runs. When you
+reach one — 'anchors work', 'next' and the agent's hook say so —, DO NOT CHANGE IT WITHOUT
+AN ORDER FROM A PERSON: frozen is a decision, not unfinished work to evolve.
+
 ## Flags beside the code: the dependency and navigation chain
 
 Outside the header, on the line they speak of, six flags tie files to files by their own

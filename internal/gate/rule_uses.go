@@ -182,7 +182,7 @@ func gateEntry(cfg *config.Config, check string) config.Gate {
 
 // defaultUsesExempt are the letters whose items are not rules that read data: an open
 // question, a plan's phase, a feature-flag scenario.
-var defaultUsesExempt = map[string]bool{"Q": true, config.PhaseLetter: true, "G": true}
+var defaultUsesExempt = map[string]bool{"Q": true, config.PhaseLetter: true, "G": true, config.FreezeLetter: true}
 
 // rule-uses-declared: every rule of the letters the gate asks about says what it uses — a
 // row of its own in Validations or Presentation validations, or a row in Rule uses. The

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b4c522d0bacf0a0f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:28017cbcea2da0c5 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -982,6 +982,8 @@ teste prova.
 
 - [A failed claim run is an error](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board) `WRQUW-E01`
 
+- [A task on a frozen target carries the warning](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board) `WRQUW-B21`
+
 - [The root holds exactly the eighteen flow commands after registration](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each) `FLRGF-B01`
 
 - [The watcher's controls live under watch](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each) `FLRGF-B02`
@@ -1184,6 +1186,8 @@ teste prova.
 
 - [The prompt cites one open-decisions title and value and the current names](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares) `WRPRW-X02`
 
+- [A frozen target is said before the work](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares) `WRPRW-B21`
+
 - [A file the map does not know is refused](layers/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-B01`
 
 - [Without impact the dossier covers the file alone](layers/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-B02`
@@ -1287,6 +1291,8 @@ teste prova.
 - [The header guide names the flags beside the code, and the navigation guide shows the screen's In and Out and the flag on every call](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B24`
 
 - [The spec guide says a spec declares no dependency](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B25`
+
+- [The guides teach the freeze](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B26`
 
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
@@ -1851,6 +1857,18 @@ teste prova.
 - [The configuration is never reserialized](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-X01`
 
 - [Freeze and thaw refuse a project without config](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-E01`
+
+- [A freeze with a scope is recorded in the doctrine and marks every place](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B14`
+
+- [Without a doctrine the marks carry the reason, and what cannot be frozen is refused](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B15`
+
+- [A recorded freeze gains a scope by its code](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B16`
+
+- [Thawing a freeze removes its marks and its record, and nothing else](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B17`
+
+- [The freezes are listed, each with its reason and places](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B18`
+
+- [Before an edit, the agent is told a file is frozen, and the edit goes on](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B19`
 
 - [The patterns match the map, the compiled docs and plan progress files only](layers/comando.md#gnptg--generatedpaths--the-product-names-the-files-it-derives-so-a-conflict-in-them-is-rebuilt-not-merged) `GNPTG-B01`
 
@@ -2448,6 +2466,8 @@ teste prova.
 
 - [The report counts a rule proven by all its variants](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B15`
 
+- [The coverage leaves frozen parts out](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B16`
+
 - [A page left out of date is compiled and staged](layers/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce) `DCSYN-B01`
 
 - [With the tree ahead, the page goes straight into the index](layers/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce) `DCSYN-B02`
@@ -2594,6 +2614,8 @@ teste prova.
 
 - [A destination that cannot be written fails the report](layers/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs) `RPRTS-E02`
 
+- [The reports leave frozen parts out](layers/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs) `RPRTS-B15`
+
 - [A file is placed in one of four boxes](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B01`
 
 - [The default takes stale below the minimum and never measured, and each flag opens a side](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B02`
@@ -2625,6 +2647,8 @@ teste prova.
 - [The tests of the rules a changed contract field reaches are taken](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B14`
 
 - [A file edited since the map was built is read as it is now](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B15`
+
+- [A frozen file is never run](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B16`
 
 - [Expired test evidence is listed before the stale edges](layers/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges) `STEDS-B01`
 
@@ -2705,6 +2729,8 @@ teste prova.
 - [A configuration that does not load fails the status](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step) `PRSTP-E01`
 
 - [The status says what runs and what ended lately](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step) `PRSTP-B14`
+
+- [The status lists what is frozen](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step) `PRSTP-B15`
 
 - [The selected suite runs at the root under a header naming it](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B01`
 
@@ -3971,6 +3997,20 @@ teste prova.
 - [A failing tests source fails flag-covered naming the error](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-E03`
 
 - [A flag scenario is green only by its own proof](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B19`
+
+- [A gate on a frozen part answers frozen, with the reason](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B01`
+
+- [A frozen rule leaves the questions asked of a rule](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B02`
+
+- [The freeze marks and records are confronted](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B03`
+
+- [A change to a frozen part is told and goes on](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B04`
+
+- [Frozen verdicts are counted apart](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B05`
+
+- [Thawing gives back the verdicts](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-I01`
+
+- [With no map the freezes are not confronted](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-E01`
 
 - [A gate reaches only the kinds it declares](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B01`
 
@@ -7434,6 +7474,16 @@ teste prova.
 
 - [A test captures the states it names, and no code a comment mentions](layers/mapx.md#vrcpt-b10--a-test-captures-the-states-it-names-and-no-code-a-comment-mentions) `VRCPT-B10`
 
+- [A frozen unit covers its files, and nothing that only cites it](layers/mapx.md#frscf-b01--a-frozen-unit-covers-its-files-and-nothing-that-only-cites-it) `FRSCF-B01`
+
+- [A frozen doctrine freezes the rules that realize it](layers/mapx.md#frscf-b02--a-frozen-doctrine-freezes-the-rules-that-realize-it) `FRSCF-B02`
+
+- [A freeze reads with its reason](layers/mapx.md#frscf-b03--a-freeze-reads-with-its-reason) `FRSCF-B03`
+
+- [The frozen parts of the project, and of one freeze](layers/mapx.md#frscf-b04--the-frozen-parts-of-the-project-and-of-one-freeze) `FRSCF-B04`
+
+- [No mark, no freeze](layers/mapx.md#frscf-i01--no-mark-no-freeze) `FRSCF-I01`
+
 ## migra
 
 - [A four-character code is widened, keeping it as the prefix](layers/migra.md#mgfcd-b01--a-four-character-code-is-widened-keeping-it-as-the-prefix) `MGFCD-B01`
@@ -7637,6 +7687,12 @@ teste prova.
 - [The project's sections with no side effect are left out of the evidence](layers/scan.md#rpscr-b51--the-projects-sections-with-no-side-effect-are-left-out-of-the-evidence) `RPSCR-B51`
 
 - [A line that is only a comment is no evidence](layers/scan.md#rpscr-b52--a-line-that-is-only-a-comment-is-no-evidence) `RPSCR-B52`
+
+- [A frozen header is read with its value](layers/scan.md#rpscr-b53--a-frozen-header-is-read-with-its-value) `RPSCR-B53`
+
+- [Frozen rules are read from their lines and from frozen headings](layers/scan.md#rpscr-b54--frozen-rules-are-read-from-their-lines-and-from-frozen-headings) `RPSCR-B54`
+
+- [A doctrine's freeze entries are read with their reasons](layers/scan.md#rpscr-b55--a-doctrines-freeze-entries-are-read-with-their-reasons) `RPSCR-B55`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

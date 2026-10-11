@@ -186,6 +186,9 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 	SetRuleLetters(cfg.RuleLetters())
 	SetProjectSectionTitles(cfg)
 	dataStatesRequired = cfg.DataStatesRequired()
+	// What a freeze covers answers `frozen`, and its rules leave every question asked of a
+	// rule (frozen.go).
+	setFreezes(graph)
 	// índice kind por nó já vem em node.Kind
 	var results []Result
 	for _, g := range gates {
@@ -216,12 +219,19 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 		}
 		switch g.ScopeForScan(completa) {
 		case config.ScopeBatch, config.ScopeProject:
+			if alvos = withoutFrozen(g, alvos); len(alvos) == 0 {
+				continue
+			}
 			inicio := time.Now()
 			agregado := runAggregate(g, alvos, root, completa, graph, cfg)
 			agregado.Duracao = time.Since(inicio)
 			results = append(results, agregado)
 		default:
 			for _, n := range alvos {
+				if r, ok := frozenResult(g, n); ok {
+					results = append(results, r)
+					continue
+				}
 				// DISPENSA POR ALVO: o gate roda, e só este nó é poupado. O veredito é
 				// `Skip` com o motivo escrito — some do placar de reprovações sem sumir
 				// do relatório, que é a diferença entre dispensar e esconder.

@@ -509,3 +509,26 @@ func TestCoverage_countsARuleByAllItsVariants(t *testing.T) {
 		t.Errorf("the rule with an unproven variant has no passing test:\n%s", out)
 	}
 }
+
+func TestCoverageLeavesFrozenOut(t *testing.T) {
+	t.Run("CVCMC-B16: The coverage leaves frozen parts out", func(t *testing.T) {})
+	g := coverageGraph()
+	g.Nodes[0].FrozenRules = map[string]string{"BBBBB-B02": "the coupon waits"}
+	g.Nodes = append(g.Nodes,
+		mapx.Node{ID: "frozen.go", Kind: mapx.KindCode, Frozen: "the plan mode", Signal: &mapx.TestSignal{TotalLines: 10, LineCoverage: 5, MutantsSurvived: 9}},
+		mapx.Node{ID: "f.spec.md", Kind: mapx.KindSpec, Code: "FFFFF", Frozen: "the plan mode"})
+	files := coverageFiles()
+	files["f.spec.md"] = "# F\n\n## FFFFF-B01 — one\n"
+	dir := qProject(t, "version: 2\nlayers: {}\n", files, g)
+	out, err := runQ(t, newCoverageCmd(), "--root", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "BBBBB-B02") || strings.Contains(out, "frozen.go") || strings.Contains(out, "f.spec.md") {
+		t.Errorf("frozen parts are no gap:\n%s", out)
+	}
+	out, err = runQ(t, newCoverageCmd(), "--root", dir, filepath.Join(dir, "f.spec.md"))
+	if err != nil || !strings.Contains(out, "f.spec.md is FROZEN (the plan mode)") {
+		t.Errorf("a frozen spec says so: %v\n%s", err, out)
+	}
+}

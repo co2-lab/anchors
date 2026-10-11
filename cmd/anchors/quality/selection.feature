@@ -2,7 +2,7 @@
 # @anchors
 #   code: SLFTS
 #   ref: SLCTN
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @SLCTN
@@ -103,3 +103,9 @@ Feature: RunSelection — a run takes only what is stale and below the minimum, 
     Given two passing tests measured at their revisions in the map, one edited on disk after the map was built and the other given only a dependency flag
     When the default run selects
     Then the edited one runs as never measured, and the flagged one is left out as fresh and passing
+
+  @SLCTN-B16 @unit-level
+  Scenario: A frozen file is never run
+    Given a stale failing test and a stale surviving code file, both frozen, beside the same unfrozen
+    When the test and the mutation runs select their files
+    Then only the unfrozen files run, and each run says it left one frozen file out

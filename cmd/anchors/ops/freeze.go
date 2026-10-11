@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/co2-lab/anchors/internal/i18n"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -43,11 +44,23 @@ import (
 func newFreezeCmd() *cobra.Command {
 	var root, motivo string
 	var semRuleset, semPush bool
+	var scope freezeScope
 
 	cmd := &cobra.Command{
-		Use:   "freeze",
-		Short: "Freeze the project: nobody works until `anchors thaw`",
-		Long: `Stops the work on the entire project, in three layers.
+		Use:   "freeze [freeze code]",
+		Short: "Freeze the project, or a part of it, until `anchors thaw`",
+		Long: `With a scope, keeps a PART of the project as it is, by decision, until someone thaws it:
+
+  anchors freeze --reason "the plan mode ships next quarter" --unit PAWAP --rule CARTU-B02 --file src/flags.ts
+  anchors freeze QLDTQ-F01 --unit HOMEH     add a scope to a recorded freeze
+  anchors freeze show [QLDTQ-F01]           the freezes, or every place one covers
+
+The freeze is recorded once, with its reason, in the project's doctrine document (--in when
+it has several), coded with the letter F; each place carries a mark with the code. With no
+doctrine, the marks carry the reason. A frozen part answers "frozen" in every gate, leaves the
+reports and the runs, and warns whoever reaches it — it never blocks.
+
+With no scope and no code, stops the work on the entire project, in three layers.
 
   1. writes 'enabled: false' and the reason into anchors.yaml, and PUSHES
   2. creates a ruleset on the remote that blocks push and merge on every branch
@@ -62,11 +75,21 @@ command has just activated would refuse the freeze itself.
 WHOEVER FIXES IT PASSES. The admin bypasses the ruleset, and '--no-verify' bypasses the
 hooks — the brake exists to stop work by INERTIA, not the fix that
 releases it.`,
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
+			}
+			// With a scope or a freeze's code, a PART of the project is frozen; the brake
+			// below is the form with neither.
+			if len(args) == 1 || !scope.empty() {
+				code := ""
+				if len(args) == 1 {
+					code = args[0]
+				}
+				return scopedFreeze(cmd.OutOrStdout(), absRoot, code, motivo, scope)
 			}
 			if strings.TrimSpace(motivo) == "" {
 				return errors.New(i18n.T("freeze.reason_required"))
@@ -138,6 +161,11 @@ releases it.`,
 	cmd.Flags().StringVar(&motivo, "reason", "", "why the project is being frozen (required)")
 	cmd.Flags().BoolVar(&semRuleset, "no-ruleset", false, "do not create the ruleset on the remote (only the local brake)")
 	cmd.Flags().BoolVar(&semPush, "no-push", false, "do not commit or push anchors.yaml")
+	cmd.Flags().StringArrayVar(&scope.units, "unit", nil, "freeze a whole unit, by its code (repeatable)")
+	cmd.Flags().StringArrayVar(&scope.rules, "rule", nil, "freeze one rule, by its code (repeatable)")
+	cmd.Flags().StringArrayVar(&scope.files, "file", nil, "freeze one file, by its path (repeatable)")
+	cmd.Flags().StringVar(&scope.in, "in", "", "the doctrine document that records the freeze, when the project has several")
+	cmd.AddCommand(newFreezeShowCmd(), newFreezeHookCmd())
 	common.AliasDeFlag(cmd, "reason", "motivo")
 	common.AliasDeFlag(cmd, "no-ruleset", "sem-ruleset")
 	common.AliasDeFlag(cmd, "no-push", "sem-push")
@@ -152,20 +180,38 @@ releases it.`,
 func newThawCmd() *cobra.Command {
 	var root string
 	var semPush bool
+	var scope freezeScope
 
 	cmd := &cobra.Command{
-		Use:   "thaw",
-		Short: "Thaw the project: work resumes",
-		Long: `Undoes the 'anchors freeze': removes the freeze from anchors.yaml, deletes the
-ruleset and closes the issue.
+		Use:   "thaw [freeze code]",
+		Short: "Thaw the project, or a frozen part of it",
+		Long: `With a freeze's code, removes every mark of it and its record in the doctrine:
+
+  anchors thaw QLDTQ-F01
+
+With a scope, removes the marks at those places, whatever they carry — the way to thaw a
+freeze whose marks carry their reason, in a project with no doctrine:
+
+  anchors thaw --unit PAWAP --rule CARTU-B02 --file src/flags.ts
+
+With neither, undoes the project's brake ('anchors freeze' with no scope): removes the freeze
+from anchors.yaml, deletes the ruleset and closes the issue.
 
 The commit and the push go out with --no-verify for the same reason as the freeze: while the
 remote still says 'frozen', the hooks would refuse the thaw itself.`,
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
+			}
+			if len(args) == 1 || !scope.empty() {
+				code := ""
+				if len(args) == 1 {
+					code = args[0]
+				}
+				return thawScoped(cmd.OutOrStdout(), absRoot, code, scope)
 			}
 			cfgPath := filepath.Join(absRoot, config.DefaultFile)
 			cfg, err := config.Load(cfgPath)
@@ -214,6 +260,9 @@ remote still says 'frozen', the hooks would refuse the thaw itself.`,
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().BoolVar(&semPush, "no-push", false, "do not commit or push anchors.yaml")
+	cmd.Flags().StringArrayVar(&scope.units, "unit", nil, "remove the freeze marks of a unit's header (repeatable)")
+	cmd.Flags().StringArrayVar(&scope.rules, "rule", nil, "remove the freeze mark of one rule (repeatable)")
+	cmd.Flags().StringArrayVar(&scope.files, "file", nil, "remove the freeze mark of a file's header (repeatable)")
 	common.AliasDeFlag(cmd, "no-push", "sem-push")
 	cmd.PreRunE = func(c *cobra.Command, _ []string) error {
 		return common.ResolveAliases(c, map[string]string{"no-push": "sem-push"})
@@ -398,4 +447,42 @@ func closeFreezeIssue(repo string) error {
 		return fmt.Errorf("%v — %s", err, strings.TrimSpace(string(o)))
 	}
 	return nil
+}
+
+func newFreezeShowCmd() *cobra.Command {
+	var root string
+	cmd := &cobra.Command{
+		Use:   "show [freeze code]",
+		Short: "List the freezes, or every place one covers",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
+			absRoot, err := config.AbsRoot(root)
+			if err != nil {
+				return err
+			}
+			code := ""
+			if len(args) == 1 {
+				code = args[0]
+			}
+			return showFreezes(cmd.OutOrStdout(), absRoot, code)
+		},
+	}
+	cmd.Flags().StringVar(&root, "root", ".", "project root")
+	return cmd
+}
+
+func newFreezeHookCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:    "hook",
+		Short:  "Tell the agent a file it is about to edit is frozen (called by the agent's hook)",
+		Hidden: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			b, _ := io.ReadAll(cmd.InOrStdin())
+			if out := freezeHook(b); out != "" {
+				fmt.Fprintln(cmd.OutOrStdout(), out)
+			}
+			return nil
+		},
+	}
 }

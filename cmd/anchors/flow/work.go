@@ -132,6 +132,11 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	} else {
 		fmt.Fprintf(&b, "# Work: %s of `%s`\n\n", artifact, rel)
 	}
+	// A FROZEN target is said before anything else: the work prompt is an order, and a
+	// frozen part changes only by a person's order (DESIGN-frozen-units.md).
+	if note := frozenNoteIn(g, rel); note != "" {
+		b.WriteString(note + "\n")
+	}
 
 	// PAPEL + a recusa antecipada. Uma camada RECONHECIDA não tem spec — dizer isso
 	// AQUI evita a rodada de descoberta (e o arquivo errado nascendo).
@@ -1262,4 +1267,64 @@ func ruleMarking(cfg *config.Config) string {
 	}
 	return "Implement each rule of the spec; cite the rule code (`{CODE}-B01`) in the " +
 		"comment of the excerpt that realizes it, if the project uses that pattern."
+}
+
+// frozenNoteIn is what a freeze says to whoever reaches the paths: each one frozen whole,
+// and the frozen rules of each one's unit, with the freeze and its reason — or nothing. It
+// warns and never stops the work: the order to change a frozen part comes from a person.
+func frozenNoteIn(g *mapx.Graph, paths ...string) string {
+	if g == nil {
+		return ""
+	}
+	byID := map[string]mapx.Node{}
+	for _, n := range g.Nodes {
+		byID[n.ID] = n
+	}
+	var lines []string
+	seen := map[string]bool{}
+	for _, p := range paths {
+		n, ok := byID[filepath.ToSlash(p)]
+		if !ok {
+			continue
+		}
+		if n.Frozen != "" {
+			lines = append(lines, fmt.Sprintf("❄ FROZEN: `%s` is frozen (%s) — do not change it without an order from a person.", n.ID, g.DescribeFreeze(n.Frozen)))
+			continue
+		}
+		rules := map[string]string{}
+		for _, u := range g.Nodes {
+			if u.Code == n.Code && n.Code != "" && u.CodeDeclarado {
+				for r, v := range u.FrozenRules {
+					rules[r] = v
+				}
+			}
+		}
+		for r, v := range n.FrozenRules {
+			rules[r] = v
+		}
+		var names []string
+		for r, v := range rules {
+			if !seen[r] {
+				seen[r] = true
+				names = append(names, r+" ("+g.DescribeFreeze(v)+")")
+			}
+		}
+		sort.Strings(names)
+		if len(names) > 0 {
+			lines = append(lines, fmt.Sprintf("❄ FROZEN rules of `%s` — leave them as they are without an order from a person: %s.", n.ID, strings.Join(names, "; ")))
+		}
+	}
+	if len(lines) == 0 {
+		return ""
+	}
+	return strings.Join(lines, "\n") + "\n"
+}
+
+// frozenNote is frozenNoteIn over the project's map on disk.
+func frozenNote(root string, paths ...string) string {
+	g, err := mapx.Load(filepath.Join(root, mapx.DefaultPath))
+	if err != nil {
+		return ""
+	}
+	return frozenNoteIn(g, paths...)
 }

@@ -31,7 +31,7 @@ import (
 // Duas cópias da mesma lista divergem na primeira letra nova — e esta ficou três atrás
 // (`E`, `I`, `Q`, `F`). O comentário do `config` já registra que "é a terceira vez que a
 // lista fica para trás de uma letra nova".
-var ruleLetters = "SRVAXBNMDEIQWGP"
+var ruleLetters = "SRVAXBNMDEIQWGPF"
 
 // codeLenPattern espelha `config.CodeLengthPattern()`. Duplicado pelo mesmo motivo que
 // `ruleLetters`: o pacote testsig não depende de scan nem de config, e o comprimento do

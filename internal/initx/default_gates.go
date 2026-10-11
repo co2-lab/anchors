@@ -1066,6 +1066,12 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures: "each declared value anchor matches the code below it, its spec rule's value, and every other declaration of the same key"})
 	add("code", config.Gate{Name: "updated-at-atual", On: []string{"spec", "feature", "code", "test"},
 		Measures: "the header's `updated_at` is the day of the file's last commit"})
+	// Frozen parts (DESIGN-frozen-units.md): the marks confronted with the doctrine's
+	// records, and a change to a frozen part told — it informs, and never bars.
+	add("spec", config.Gate{Name: "freeze-consistent", On: []string{"spec", "product", "feature", "code", "test"}, Scope: config.ScopeProject,
+		Measures: "every freeze mark names a freeze the doctrine records, and every recorded freeze marks something"})
+	add("spec", config.Gate{Name: "frozen-touched", On: []string{"spec", "product", "feature", "code", "test"},
+		Measures: "a change to a frozen part is told, with the freeze's reason; it informs and never bars"})
 	add("plan", config.Gate{Name: "progress-honest", On: []string{"plan"},
 		Measures: "the plan's progress file tells the truth about the disk"})
 	return out

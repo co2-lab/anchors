@@ -2,7 +2,7 @@
 # @anchors
 #   code: RPFTR
 #   ref: RPRTS
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @RPRTS
@@ -131,3 +131,9 @@ Feature: Reports — markdown perspectives on what Anchors already measures, wri
     Given a destination path under an existing file
     When the tests report is generated there
     Then it fails
+
+  @RPRTS-B15 @unit-level
+  Scenario: The reports leave frozen parts out
+    Given a project with a frozen code file below the line threshold and a spec whose unproven rule is frozen
+    When the test report is rendered
+    Then the frozen file is not listed and the frozen rule is not a gap

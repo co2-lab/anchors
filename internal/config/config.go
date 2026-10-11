@@ -703,7 +703,10 @@ func normalizeTitle(s string) string {
 // `CRED-V01` so' vale quando `CHKUT-G02`. E' a quarta letra a entrar; as tres metades da
 // decisao (esta lista, o catalogo de secoes, e a copia do `testsig`) foram atualizadas na
 // mesma mudanca, e os dois testes de guarda existem para cobrar exatamente isso.
-var DefaultRuleLetters = "SRVAXBNMDEIQWGP"
+// `F` (Freeze) is a doctrine entry that keeps a part of the project as it is until someone
+// thaws it (`FreezeLetter`, DESIGN-frozen-units.md): no section realizes it, and the marks
+// that cite it — `frozen: QLDTQ-F01` — need it canonical.
+var DefaultRuleLetters = "SRVAXBNMDEIQWGPF"
 
 // CodeLengths são os comprimentos de código de identidade que o engine reconhece.
 //

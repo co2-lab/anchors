@@ -380,3 +380,19 @@ func TestSelection_readsTheFileAsItIsNow(t *testing.T) {
 		t.Errorf("the edited test runs as never measured and the flagged one is left out with its result, got %v\n%s", got, out)
 	}
 }
+
+func TestSelection_FrozenNeverRuns(t *testing.T) {
+	t.Run("SLCTN-B16: A frozen file is never run", func(t *testing.T) {})
+	ft, fc := testNode("frozen_test.go", 0, 1, false), codeNode("frozen.go", 1, 3, 0, 0, false)
+	ft.Frozen, fc.Frozen = "QLDTQ-F01", "QLDTQ-F01"
+	g := &mapx.Graph{Nodes: []mapx.Node{ft, fc, testNode("a_test.go", 0, 1, false), codeNode("a.go", 1, 3, 0, 0, false)}}
+	for _, c := range []struct {
+		mutation bool
+		want     string
+	}{{false, "a_test.go"}, {true, "a.go"}} {
+		run, left := selectFiles(g, nil, "", c.mutation, "k", config.Suite{Layer: "unit"}, runSelection{IncludeFresh: true, IncludePassing: true})
+		if !reflect.DeepEqual(run, []string{c.want}) || left[frozen] != 1 || !strings.Contains(describeLeftOut(left), "1 frozen") {
+			t.Errorf("mutation=%v: run %v, left %v (%s)", c.mutation, run, left, describeLeftOut(left))
+		}
+	}
+}

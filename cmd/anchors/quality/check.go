@@ -1015,7 +1015,7 @@ func nameWidth(nomes []string) int {
 // obrigaria a coluna dos fails a reservar três casas para nada. Cada coluna com
 // a sua mantém os números alinhados à direita — que é o que permite compará-los
 // a olho — sem esticar a tabela.
-type counterWidths struct{ pass, fail, drift, pend, skip, judge int }
+type counterWidths struct{ pass, fail, drift, pend, skip, judge, frozen int }
 
 func places(n int) int { return len(fmt.Sprint(n)) }
 
@@ -1046,6 +1046,10 @@ func computeWidths(p gate.Profile) counterWidths {
 		}
 		w.skip = max(w.skip, s.Skip+s.Pending-pd)
 		w.judge = max(w.judge, s.Judge)
+		// The frozen column exists only when a frozen part was met, as the ⚠ one.
+		if s.Frozen > 0 {
+			w.frozen = max(w.frozen, s.Frozen)
+		}
 	}
 	return w
 }
@@ -1192,6 +1196,9 @@ func printLegenda(p gate.Profile, w counterWidths) {
 		partes = append(partes, "?  "+i18n.T("check.legend.pending"))
 	}
 	partes = append(partes, "~  "+i18n.T("check.legend.skip"))
+	if w.frozen > 0 {
+		partes = append(partes, "❄  "+i18n.T("check.legend.frozen"))
+	}
 	if temJudge {
 		partes = append(partes, "⏳ "+i18n.T("check.legend.judge"))
 	}
@@ -1503,11 +1510,12 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 		// drift empurrava o `~` para a esquerda só nelas, e a coluna passava a
 		// existir em dois lugares na mesma tabela — que é o pior caso: o olho
 		// desce a lista comparando números que não estão na mesma vertical.
-		fmt.Printf("  %-*s  %-11s  ✓%*d  ✗%*d%s%s%s%s  ~%*d\n", wn, name, tag,
+		fmt.Printf("  %-*s  %-11s  ✓%*d  ✗%*d%s%s%s%s  ~%*d%s%s\n", wn, name, tag,
 			w.pass, s.Pass, w.fail, s.Fail,
 			driftSeparator(w.drift), driftColumn(drift, w.drift),
 			driftSeparator(w.pend), statColumn("?", pend, w.pend),
-			w.skip, s.Skip+s.Pending-pend)
+			w.skip, s.Skip+s.Pending-pend,
+			driftSeparator(w.frozen), statColumn("❄", s.Frozen, w.frozen))
 	}
 	// O gate omitido continua tendo rodado, e o número diz isso. Sem esta linha o
 	// `--only-issues` pareceria uma varredura menor, e não a mesma varredura com a

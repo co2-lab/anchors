@@ -169,6 +169,16 @@ type File struct {
 	// `realizes` diz "concretiza esta regra transversal", o `gated-by` diz "so' vale
 	// quando a flag estiver assim".
 	GatedBy []Realizes
+	// Frozen is the freeze the file's header declares (`frozen: QLDTQ-F01`, or the reason
+	// itself where there is no doctrine): the whole file — a spec's whole unit — is kept as
+	// it is until someone thaws it (DESIGN-frozen-units.md).
+	Frozen string
+	// FrozenRules are the rules a spec or a doctrine document marks as frozen (`@frozen:`
+	// on the rule's line, or on a heading above it), each with its mark's value.
+	FrozenRules map[string]string
+	// Freezes are a doctrine document's freeze entries — its rules of the freeze letter —,
+	// each with its reason.
+	Freezes map[string]string
 }
 
 // Realizes e' uma declaracao `@realizes` — a regra local que concretiza uma regra de
@@ -304,6 +314,9 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 		CodeDeps:      extractCodeDeps(content),
 		UsedBy:        extractUsedBy(content),
 		Navigates:     extractNavigates(content),
+		Frozen:        extractFrozen(string(content)),
+		FrozenRules:   extractFrozenRules(kind, string(content)),
+		Freezes:       extractFreezes(kind, string(content)),
 	}
 	if kind == "spec" {
 		f.OutRows = extractOutRows(content)

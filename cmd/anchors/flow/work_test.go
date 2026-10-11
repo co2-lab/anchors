@@ -557,3 +557,31 @@ func TestDerivedPaths_cutsTheFeatureSuffix(t *testing.T) {
 		t.Errorf("test: %q — want apps/mobile/src/Login.test.ts", got)
 	}
 }
+
+func TestWork_frozenTargetIsSaid(t *testing.T) {
+	t.Run("WRPRW-B21: A frozen target is said before the work", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "src/pay.ts", Kind: mapx.KindCode, Code: "PAYUN", Frozen: "QLDTQ-F01"},
+		{ID: "src/cart.spec.md", Kind: mapx.KindSpec, Code: "CARTU", CodeDeclarado: true, FrozenRules: map[string]string{"CARTU-B02": "the coupon waits"}},
+		{ID: "src/cart.ts", Kind: mapx.KindCode, Code: "CARTU"},
+		{ID: "src/home.ts", Kind: mapx.KindCode, Code: "HOMEU"},
+		{ID: "product/q.doctrine.md", Kind: mapx.KindProduct, Freezes: map[string]string{"QLDTQ-F01": "the plan mode ships next quarter"}},
+	}}
+	cfg := cfgWithDeclarative()
+	out, err := composeWorkPrompt(t.TempDir(), "src/pay.ts", "code", cfg, g)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "❄ FROZEN: `src/pay.ts` is frozen (QLDTQ-F01 — the plan mode ships next quarter) — do not change it without an order from a person.") ||
+		!strings.HasPrefix(out, "# Work: code of `src/pay.ts`\n\n❄ FROZEN") {
+		t.Errorf("the freeze opens the prompt:\n%s", out)
+	}
+	if out, _ := composeWorkPrompt(t.TempDir(), "src/cart.ts", "code", cfg, g); !strings.Contains(out, "❄ FROZEN rules of `src/cart.ts`") || !strings.Contains(out, "CARTU-B02 (the coupon waits)") {
+		t.Errorf("the unit's frozen rule is named:\n%s", out)
+	}
+	for _, none := range []*mapx.Graph{g, nil} {
+		if out, _ := composeWorkPrompt(t.TempDir(), "src/home.ts", "code", cfg, none); strings.Contains(out, "FROZEN") {
+			t.Errorf("nothing frozen, no warning:\n%s", out)
+		}
+	}
+}

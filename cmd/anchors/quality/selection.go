@@ -38,6 +38,9 @@ const (
 	stalePassing
 	freshBelow
 	staleBelow
+	// frozen is a file a freeze covers: kept as it is by decision, no run takes it until
+	// someone thaws it (DESIGN-frozen-units.md).
+	frozen
 )
 
 // runSelection is which states a run takes. By default only what is stale AND below the
@@ -185,6 +188,12 @@ func selectFiles(g *mapx.Graph, cfg *config.Config, root string, mutation bool, 
 		if _, none := gateOf.NoSignalFor(n.ID); none {
 			continue
 		}
+		if n.Frozen != "" {
+			if mutation || ownedBy(n, key, layer) {
+				left[frozen]++
+			}
+			continue
+		}
 		// A file the gate does not confront is not measured for it: the gate reads no score
 		// there, so a run would spend its slot and the budget for nothing. In the reference
 		// app a budgeted mutation run picked 37 `resource.ts` files the gate excludes by
@@ -227,6 +236,7 @@ func describeLeftOut(left map[fileState]int) string {
 		{stalePassing, "stale but passing", "--include-passing"},
 		{freshBelow, "fresh and below the minimum", "--include-fresh"},
 		{unmeasured, "never measured", "drop --skip-unmeasured"},
+		{frozen, "frozen", "`anchors freeze show`; thaw to run them"},
 	} {
 		if n := left[c.st]; n > 0 {
 			parts = append(parts, fmt.Sprintf("%d %s (%s)", n, c.what, c.flag))

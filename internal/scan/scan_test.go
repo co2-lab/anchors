@@ -1309,3 +1309,48 @@ func TestEvidenceOf_commentsProveNothing(t *testing.T) {
 		}
 	}
 }
+
+func TestFrozen_headerMark(t *testing.T) {
+	t.Run("RPSCR-B53: A frozen header is read with its value", func(t *testing.T) {})
+	if got := FrozenOf([]byte("// @anchors\n//   code: PAWAP\n//   frozen: QLDTQ-F01\n\npackage x\n")); got != "QLDTQ-F01" {
+		t.Errorf("module: %q", got)
+	}
+	if got := FrozenOf([]byte("<!-- @anchors\n  code: PAWAP\n  frozen: the plan mode ships next quarter\n-->\n# X\n")); got != "the plan mode ships next quarter" {
+		t.Errorf("spec with a reason: %q", got)
+	}
+	if got := FrozenOf([]byte("// @anchors\n//   code: PAWAP\n\n// frozen: not in the header\n")); got != "" {
+		t.Errorf("no header line, no freeze: %q", got)
+	}
+}
+
+func TestFrozen_rules(t *testing.T) {
+	t.Run("RPSCR-B54: Frozen rules are read from their lines and from frozen headings", func(t *testing.T) {})
+	spec := "# X\n\n## Effects\n\n" +
+		"| `PAWAP-B01` | pays @frozen: QLDTQ-F01 |\n" +
+		"| `PAWAP-B02` | refunds |\n\n" +
+		"### PAWAP-B03 — retries\n@frozen: the retry policy is not decided\n\n" +
+		"## Plan mode @frozen: QLDTQ-F02\n\n### PAWAP-B04 — a\n\n#### detail\n\n- **PAWAP-B05** b\n\n" +
+		"## Later\n\n| `PAWAP-B06` | c, see the `@frozen: QLDTQ-F09` mark |\n"
+	got := extractFrozenRules("spec", spec)
+	want := map[string]string{"PAWAP-B01": "QLDTQ-F01", "PAWAP-B03": "the retry policy is not decided", "PAWAP-B04": "QLDTQ-F02", "PAWAP-B05": "QLDTQ-F02"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+	if extractFrozenRules("code", spec) != nil {
+		t.Error("only specs and doctrine mark rules")
+	}
+}
+
+func TestFrozen_entries(t *testing.T) {
+	t.Run("RPSCR-B55: A doctrine's freeze entries are read with their reasons", func(t *testing.T) {})
+	doc := "# Q\n\n## Rules\n\n### QLDTQ-R01 — a rule\n\n## Freezes\n\n### QLDTQ-F01 — the plan mode ships next quarter\n\n" +
+		"| `QLDTQ-F02` | the flag stays off |\n\n- **QLDTQ-F03** — waits for legal\n"
+	got := extractFreezes("product", doc)
+	want := map[string]string{"QLDTQ-F01": "the plan mode ships next quarter", "QLDTQ-F02": "the flag stays off", "QLDTQ-F03": "waits for legal"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+	if !IsFreezeCode("QLDTQ-F01") || IsFreezeCode("QLDTQ-R01") || IsFreezeCode("a reason") {
+		t.Error("only a code of the freeze letter is a freeze's code")
+	}
+}

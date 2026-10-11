@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SLCTN
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: comando
 -->
 # RunSelection — a run takes only what is stale and below the minimum, unless told otherwise
@@ -51,6 +51,7 @@ whole, saying so.
 | `SLCTN-B13` | A file the matching gate does not confront — outside its `on:` kinds, carrying one of its `exclude_tags`, lacking all of its `tags` — is never run for it; a gate entry that declares no kinds filters nothing. |
 | `SLCTN-B14` | A test run also takes the test files of the rules a contract field changed since the last commit reaches, when the suite runs them — saying which were added and why —, whatever state their own file is in. |
 | `SLCTN-B15` | The map is read as a build would leave it now: a file edited since the last build has no result — the build drops the result of another version — and is selected as never measured; an unchanged file keeps its result, and so does a file whose edit changed nothing its result proved — a flag of the chains —, as the build carries it. (`currentRevs`) |
+| `SLCTN-B16` | A file a freeze covers is never run, whatever its state, and the run counts it among what it left out, as frozen. (`selectFiles`) |
 
 ## Errors
 

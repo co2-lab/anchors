@@ -110,6 +110,23 @@ the RULES that cut across units. A slice may have doctrine, doctrine may span sl
 neither implies the other. The reasons are written down in the vertical-grouping doctrine
 (` + "`VGRUP`" + `).
 
+## Freezes: what is kept as it is, recorded here
+
+A FREEZE keeps a part of the project as it is, by decision, until someone thaws it — and the
+doctrine is where it is recorded, because it is a decision of the same kind. Each freeze is
+an entry coded with the letter F, with its reason, under a section of its own:
+
+    ## Freezes
+
+    - **LIMIT-F01** — the plan mode ships next quarter
+
+Every place it covers carries its code: ` + "`frozen: LIMIT-F01`" + ` in a header, ` + "`@frozen: LIMIT-F01`" + `
+on a rule's or a heading's line. A frozen doctrine rule, section or document freezes the spec
+rules that realize it. Write them with ` + "`anchors freeze --reason \"…\" --unit/--rule/--file`" + `, list them
+with ` + "`anchors freeze show`" + `, and thaw with ` + "`anchors thaw LIMIT-F01`" + `; the gate
+` + "`freeze-consistent`" + ` asks that every mark names a recorded freeze and every freeze marks
+something. A freeze entry is not a rule to realize.
+
 ## The plan seeds doctrine too
 
 A plan does not promise only the specs of the units; it promises the PRODUCT RULES they

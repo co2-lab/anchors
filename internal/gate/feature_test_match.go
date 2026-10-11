@@ -44,6 +44,14 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	testRegimes := regimesForTestSurface(cfg)
 	knownRegimes := knownRegimeTags(cfg)
 	scenarios := parseFeatureScenarios(content)
+	// A scenario of a FROZEN rule asks nothing of the test until someone thaws the rule.
+	live := scenarios[:0:0]
+	for _, sc := range scenarios {
+		if !ruleIsFrozen(sc.Code) {
+			live = append(live, sc)
+		}
+	}
+	scenarios = live
 	if len(scenarios) == 0 {
 		return Skip, "" // feature sem cenários codificados — nada a confrontar
 	}

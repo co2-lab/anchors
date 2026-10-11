@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WRPRW
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: comando
 -->
 # WorkPrompt — compose the work prompt of one stage over one target, from what the project declares
@@ -69,6 +69,7 @@ STOP: a production script under a heading that forbids the piece made workers cr
 | `WRPRW-B18` | The legitimate waivers are listed for the stage: `@no-mark` and `@no-scenario` for a spec, `@no-paginate` and `@allow-boundary` for code. |
 | `WRPRW-B19` | When the ruler does not decide, the spec stage is told to write the question in the spec's open-decisions section, or its "none" value; the other stages are told to read that section. |
 | `WRPRW-B20` | The code stage requires marking each rule in the code when the project's rule-marking policy is required, and only suggests it otherwise. |
+| `WRPRW-B21` | A target a freeze covers opens the prompt, after its title, with a warning naming the freeze and its reason and saying not to change it without an order from a person; a target whose unit holds frozen rules names each with its freeze; with no map, or nothing frozen, there is no warning. (`frozenNoteIn`, `frozenNote`) |
 
 ## Invariants
 

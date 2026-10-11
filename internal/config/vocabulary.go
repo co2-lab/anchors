@@ -81,4 +81,10 @@ const (
 	// OutcomeLetter is the letter of a result, of an action (`ACHCK-O01`) or of a flow
 	// fitted as a piece (`JUDGE-O01`).
 	OutcomeLetter = "O"
+	// FreezeLetter is the letter of a freeze, an entry of a doctrine document that keeps a
+	// part of the project as it is until someone thaws it: `QLDTQ-F01`
+	// (DESIGN-frozen-units.md). It is canonical, since specs and files cite it in their
+	// `frozen:` marks; a project that declares its own `rule_types` adds it to use coded
+	// freezes.
+	FreezeLetter = "F"
 )

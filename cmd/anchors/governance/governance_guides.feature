@@ -2,7 +2,7 @@
 # @anchors
 #   code: GGFGV
 #   ref: GVGDG
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @GVGDG
@@ -189,3 +189,8 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     When it is printed
     Then it says the spec names no file of the code, the imports are flagged in the code and the tests, a shared rule lives in the product, and the rule uses cite no DEPn
 
+  @GVGDG-B26 @unit-level
+  Scenario: The guides teach the freeze
+    Given the header and product guides
+    When they are printed
+    Then the header guide names both marks, the commands and the order from a person, and the product guide shows the Freezes section with an entry of the letter F

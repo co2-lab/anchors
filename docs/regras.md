@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:ad804c4b43eefd0f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:04eb2ceee82b41ac — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1075,6 +1075,8 @@ abra a página dela em `camadas/`.
 
 - [WRQUW-B20 — A role already declared is kept without asking; without a terminal (a pipe or the null device) nothing is asked and nothing recorded, and the output says how to declare the role.](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
 
+- [WRQUW-B21 — A task or a card whose target a freeze covers — whole, or some rules of its unit — is handed out with the warning that names the freeze and its reason and says not to change it without an order from a person; the work is still handed out.](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
+
 - [WRQUW-I01 — A cold start seeds at most one plan, however many still have work.](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
 
 - [WRQUW-X01 — `queue` claims nothing.](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
@@ -1297,6 +1299,8 @@ abra a página dela em `camadas/`.
 
 - [WRPRW-B20 — The code stage requires marking each rule in the code when the project's rule-marking policy is required, and only suggests it otherwise.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
+- [WRPRW-B21 — A target a freeze covers opens the prompt, after its title, with a warning naming the freeze and its reason and saying not to change it without an order from a person; a target whose unit holds frozen rules names each with its freeze; with no map, or nothing frozen, there is no warning. (`frozenNoteIn`, `frozenNote`)](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
+
 - [WRPRW-I01 — A prompt never both records a delivery and closes a review.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
 - [WRPRW-X01 — Composing the prompt writes nothing to the project.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
@@ -1398,6 +1402,8 @@ abra a página dela em `camadas/`.
 - [GVGDG-B24 — The header guide names the flags beside the code — the dependency flag on each import line and its waiver, the kinded dependency on a call that is no import (`@dep` with a kind the project declares), the used-by flag above each imported symbol (naming its symbol above an export list), the navigation flag on each call and its waiver —, the gates that confront each, and that the fixer writes what the code proves; the navigation guide, a subcommand of its own, shows a screen spec's In and Out tables, the flag on every navigation call, a back navigation included, the four navigation gates, the entry routes, and the page and command that show the map. Their examples are written so this repository does not read them as its own flags.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B25 — The spec guide says a spec names no file, method or file code — the files a unit imports are declared where the import is, in the code and the tests —, that a rule another unit shares lives in the product doctrine and is realized, not cited, and that the rule uses cite fields and the spec's own codes.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
+- [GVGDG-B26 — The header guide names the freeze marks — `frozen:` in a header, `@frozen:` on a rule's or a heading's line —, says they are written by `anchors freeze`, listed by `freeze show` and removed by `thaw`, and that a frozen part is not changed without an order from a person; the product guide says the doctrine records each freeze as an entry of the letter F with its reason, under a section of its own, and that a freeze entry is not a rule to realize.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -2043,6 +2049,18 @@ abra a página dela em `camadas/`.
 
 - [FRZEX-B13 — A configuration that already declares a top-level `enabled:` or `freeze_reason:` (with any indented continuation lines) has those lines replaced, not stacked on: the frozen file holds exactly one of each key and still loads, frozen, with the new reason; the thaw then removes them and the project loads enabled.](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
 
+- [FRZEX-B14 — With a scope — `--unit`, `--rule`, `--file`, each repeatable — and a reason, a PART is frozen instead of the project: the freeze is recorded with the next free freeze code of the project's doctrine document, as an entry under its Freezes section (created at the document's end when missing), and each place gets a mark with the code — `frozen:` in the header of the unit's owner or of the file, under its code or ref line, and `@frozen:` at the end of the rule's line, inside a table row's last cell. (`scopedFreeze`, `freezeScope`)](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
+
+- [FRZEX-B15 — In a project with no doctrine document the marks carry the reason, and the command says the freeze is not traceable; with several documents `--in` names the one that records it, by path or code. A scope with no reason, several documents and no `--in`, a unit with no owner, a rule its unit does not define, a missing file, and a place already frozen by another freeze are refused, naming the cause.](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
+
+- [FRZEX-B16 — A freeze's code with a scope adds the scope to that recorded freeze, recording nothing new; a code no doctrine records is refused.](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
+
+- [FRZEX-B17 — `thaw` with a freeze's code removes every mark of it — in headers and on rule lines, leaving the marks of other freezes — and its entry in the doctrine — the Freezes section too, once its last entry is gone, so the document comes back as it was —, saying how many marks left; with a scope it removes the marks at those places, whatever they carry; a code neither recorded nor marked is refused. With neither, `thaw` is the project's brake, as before.](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
+
+- [FRZEX-B18 — `freeze show` lists each freeze with its reason and the places it covers — a recorded freeze that marks nothing says so —, or that nothing is frozen; `freeze show <code>` lists every place that freeze covers, the ones it reaches through a unit included. (`showFreezes`)](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
+
+- [FRZEX-B19 — The agent's hook before an edit (`freeze hook`) answers, for a file a freeze covers whole, a context that tells the agent the file is frozen, with the freeze's code and reason, that the edit is not blocked and goes through, and to undo it and ask when no person ordered it, and, for a file holding frozen rules, each rule with its freeze; it never denies the edit, and says nothing for any other file, outside a project, or for input it cannot read. (`freezeHook`)](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
+
 - [FRZEX-I01 — A freeze followed by a thaw gives back the configuration byte for byte, when it declared no top-level `enabled:` or `freeze_reason:` of its own (otherwise see `FRZEX-B13`).](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
 
 - [FRZEX-X01 — The configuration is never reserialized: the freeze only adds its two lines (after removing any top-level `enabled:`/`freeze_reason:` already there) and the thaw only removes top-level lines with those keys.](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
@@ -2185,7 +2203,7 @@ abra a página dela em `camadas/`.
 
 - [INHKN-B13 — On a real commit, on Linux, macOS and Windows alike, the installed pre-commit runs the project's blocking gates: a failing one refuses the commit, and a passing one lets it through.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
-- [INHKN-B14 — With `--agent`, the agent's hook goes into the project's Claude Code settings (`.claude/settings.json`), before and after each command of the agent: the rest of the settings is kept, installing again adds nothing, settings that are not valid JSON are refused naming the file, and a folder with no anchors.yaml is refused. (`installAgentHook`)](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
+- [INHKN-B14 — With `--agent`, the agent's hook goes into the project's Claude Code settings (`.claude/settings.json`), before and after each command of the agent, and the freeze's hook before each of its edits (`anchors freeze hook`, `Edit](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-B15 — With `--agent --user`, the agent's hook goes into the user's own Claude Code settings (`~/.claude/settings.json`), the same way, from any folder — the hook records nothing outside a project with an anchors.yaml —, and the project's settings are left untouched; `--user` without `--agent` is refused. (`agentSettingsPath`)](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
@@ -2677,6 +2695,8 @@ abra a página dela em `camadas/`.
 
 - [CVCMC-B15 — The report counts a rule proven only when every scenario its features declare — each variant `#NN` — is proven, as `scenario-coverage` does. (`provenRules`)](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
 
+- [CVCMC-B16 — The panorama leaves out what a freeze covers — its files, and the frozen rules of a spec —, and the coverage of a frozen spec says it is frozen, with the freeze, instead of its gaps.](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
+
 - [CVCMC-I01 — The panorama never reports "nothing measured" as "nothing below the threshold": with no line or mutation signal it says NOT measured, in its section and in the summary.](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
 
 - [CVCMC-X01 — The diff coverage does not read the map.](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
@@ -2845,6 +2865,8 @@ abra a página dela em `camadas/`.
 
 - [RPRTS-B14 — Without anchors.yaml the perspectives say what is missing instead of inventing: the quality one that no gate is declared, the configuration one that the file was not found, the issues one its zero counts and empty queue, and the structure and inconsistencies ones that the health validator needs the file; the all form still writes every perspective.](layers/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs)
 
+- [RPRTS-B15 — The reports leave out what a freeze covers — its files, with the edges that touch them, and the frozen rules of a spec.](layers/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs)
+
 - [RPRTS-I01 — An issue waiting on the user is listed only as the user's, never also as agent work.](layers/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs)
 
 - [RPRTS-X01 — Generating the reports leaves the map as it was: they write only the report files.](layers/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs)
@@ -2884,6 +2906,8 @@ abra a página dela em `camadas/`.
 - [SLCTN-B14 — A test run also takes the test files of the rules a contract field changed since the last commit reaches, when the suite runs them — saying which were added and why —, whatever state their own file is in.](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
 - [SLCTN-B15 — The map is read as a build would leave it now: a file edited since the last build has no result — the build drops the result of another version — and is selected as never measured; an unchanged file keeps its result, and so does a file whose edit changed nothing its result proved — a flag of the chains —, as the build carries it. (`currentRevs`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
+
+- [SLCTN-B16 — A file a freeze covers is never run, whatever its state, and the run counts it among what it left out, as frozen. (`selectFiles`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
 - [SLCTN-E01 — The map cannot be loaded for a selective run](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
@@ -2966,6 +2990,8 @@ abra a página dela em `camadas/`.
 - [PRSTP-B13 — A github project whose map holds only guides is sent to the first plan before any card.](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
 
 - [PRSTP-B14 — When the project has records of its long processes, the status opens with what is running — each run's name, state, process, time and who launched it, or `nothing` — and the latest five that ended, each with how and when; with no record it says nothing of them. (`printRuns`)](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
+
+- [PRSTP-B15 — When something is frozen, the status lists it after the map, by freeze — each with its code and recorded reason, or its reason —, naming every file and rule it covers; with nothing frozen it says nothing of it. (`printFreezes`)](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
 
 - [PRSTP-I01 — Status never names a step beyond the first one missing.](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
 
@@ -3265,7 +3291,7 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B30 — The placeholder words are the declared ones, trimmed and without blanks, or the templates' single default marker word when none remain (`Placeholders`).](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
-- [CNFGO-B31 — The rule letters are the declared rule types' letters, upper-cased, one character each, without repeats, in declaration order; with none valid they are the canonical `SRVAXBNMDEIQWGP` (`RuleLetters`).](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+- [CNFGO-B31 — The rule letters are the declared rule types' letters, upper-cased, one character each, without repeats, in declaration order; with none valid they are the canonical `SRVAXBNMDEIQWGPF` (`RuleLetters`).](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B32 — A scenario tag maps to every letter whose rule type declares it, ignoring case and surrounding spaces; a tag no rule type declares is reported as unknown (`TagLetters`).](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -3473,7 +3499,7 @@ abra a página dela em `camadas/`.
 
 - [GTVCG-B02 — With a source registered, the default gate names are the ones it gives (`RegisterGateNames`).](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
-- [GTVCG-B03 — The letters of the artifacts that are not specs are fixed and English: a plan's phase is `W`, a flow's step `T`, an action's result `O`, and none is a canonical spec letter with another meaning; the phase letter is among the canonical rule letters, since specs cite phases in `needs:` (`PhaseLetter`, `StepLetter`, `OutcomeLetter`).](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
+- [GTVCG-B03 — The letters of the artifacts that are not specs are fixed and English: a plan's phase is `W`, a flow's step `T`, an action's result `O`, and none is a canonical spec letter with another meaning; the phase letter is among the canonical rule letters, since specs cite phases in `needs:` (`PhaseLetter`, `StepLetter`, `OutcomeLetter`). A freeze — a doctrine entry that keeps a part as it is — is `F`, a canonical letter too, since the freeze marks cite it (`FreezeLetter`).](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
 - [GTVCG-I01 — The answer always comes from the source registered last: registering again replaces the previous source.](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
@@ -4420,6 +4446,22 @@ abra a página dela em `camadas/`.
 - [FLSCF-E02 — The `flags/` folder, or a flag file in it, cannot be read when a spec cites a flag scenario.](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested)
 
 - [FLSCF-E03 — The project's tests source fails, or answers outside its contract](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested)
+
+### [FRGTF — Frozen gates — a frozen part is quiet, and told when touched](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
+
+- [FRGTF-B01 — A gate on a node a freeze covers whole answers `frozen` with the freeze as it reads — its code with its recorded reason, or the reason —, and does not confront it; the freeze's own gates still run on it; a gate of the set (batch or project) leaves frozen targets out, and does not run when every target is frozen. (`Frozen`, `setFreezes`, `frozenResult`, `withoutFrozen`)](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
+
+- [FRGTF-B02 — A rule a freeze covers leaves every question asked of a rule — its scenario, its test, what it uses, its realizer —, and a doctrine's freeze entries ask for no realizer and are no rule another doctrine could repeat. (`ruleIsFrozen`)](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
+
+- [FRGTF-B03 — `freeze-consistent` fails naming each mark whose freeze code no doctrine records, with its place, and each recorded freeze no mark carries, with its document; it passes when every code is recorded and every record marked, skips when there is no freeze, and does not confront a mark that carries a reason. (`checkFreezeConsistent`)](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
+
+- [FRGTF-B04 — `frozen-touched` tells a frozen file with an uncommitted change — or a file with frozen rules, naming each rule and its freeze — as a declared divergence, which informs and never bars; an unchanged frozen part passes, and a part with no freeze is skipped. (`checkFrozenTouched`)](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
+
+- [FRGTF-B05 — The run's profile counts the `frozen` verdicts of each gate apart, and a frozen verdict neither fails nor bars. (`GateSummary`)](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
+
+- [FRGTF-I01 — Thawing a part gives back the verdicts it had: the freeze only changes what is asked while it holds.](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
+
+- [FRGTF-E01 — `freeze-consistent` runs with no map.](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
 
 ### [GTENG — GateEngine — which gates reach which node, and what the run concludes](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
@@ -8217,6 +8259,18 @@ abra a página dela em `camadas/`.
 
 - [VRCPT-I01 — A change to the captured unit's code file or to one of its images stales the capture's evidence; a change to a component it uses does not.](layers/mapx.md#vrcpt--captures--a-visual-regression-test-is-tied-to-the-unit-it-captures)
 
+### [FRSCF — Frozen scope — the map carries each freeze to everything it covers](layers/mapx.md#frscf--frozen-scope--the-map-carries-each-freeze-to-everything-it-covers)
+
+- [FRSCF-B01 — A file's own `frozen:` freezes it; a unit's owner frozen — its spec, or the file that owns its code — freezes every file of the unit, the ones that `ref:` it and the ones derived beside its anchor; a file that only cites the unit's code in its text is not covered, and a file's own mark wins over the one it inherits. (`Frozen`)](layers/mapx.md#frscf--frozen-scope--the-map-carries-each-freeze-to-everything-it-covers)
+
+- [FRSCF-B02 — A rule's mark is carried on its node; a frozen doctrine document, or a frozen doctrine rule, freezes each spec rule that realizes it, with its value, unless that rule carries a mark of its own. (`FrozenRules`)](layers/mapx.md#frscf--frozen-scope--the-map-carries-each-freeze-to-everything-it-covers)
+
+- [FRSCF-B03 — A freeze's code reads with its recorded reason (`QLDTQ-F01 — the reason`), a reason reads as itself, and a code no doctrine records reads as the code. (`DescribeFreeze`, `FreezeRecords`, `FreezeRecord`)](layers/mapx.md#frscf--frozen-scope--the-map-carries-each-freeze-to-everything-it-covers)
+
+- [FRSCF-B04 — The frozen parts are every frozen file and every frozen rule of a file not frozen whole, by path and rule; with a value, only that freeze's; the project's frozen rules are every node's, and a path's freeze is its node's. (`FrozenParts`, `FrozenPart`, `FrozenAt`)](layers/mapx.md#frscf--frozen-scope--the-map-carries-each-freeze-to-everything-it-covers)
+
+- [FRSCF-I01 — A map with no freeze mark has no frozen node and no frozen rule.](layers/mapx.md#frscf--frozen-scope--the-map-carries-each-freeze-to-everything-it-covers)
+
 ## migra
 
 ### [MGFCD — FileCodes — every file a code of its own, of five characters](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
@@ -8418,6 +8472,12 @@ abra a página dela em `camadas/`.
 - [RPSCR-B51 — The spec sections a project declares with no side effect (`evidence.no_side_effect.sections`) are the ones left out of its evidence, in place of navigation and change history. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B52 — A line that is only a comment — in the line-comment marker of the file's language, or inside a block comment (`/* … */`, `{/* … */}`) that fills its lines, in the languages that write them — is left out of the file's evidence revision, and blank in its line revision; a comment at the end of a line of code, code after a block's end, and a file whose language has no known marker are read whole. (`EvidenceOf`, `commentLines`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B53 — A file's header may declare it frozen — `frozen:` with a freeze's code or, with no doctrine, the reason —, read with its value. (`Frozen`, `FrozenOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B54 — In a spec or a doctrine document, a `@frozen:` mark on a rule's line, or on a line of the rule's own block, freezes that rule; on a heading that defines no rule, it freezes every rule under it down to the next heading of its level or above; each is read with its mark's value, without the form's punctuation; a mark inside backticks is a citation, and freezes nothing. (`FrozenRules`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B55 — A doctrine document's rules of the freeze letter are its freeze entries, read with the text after the code as the reason, in any of the three forms a rule is written in; a value is a freeze's code when it is a code of that letter. (`Freezes`, `IsFreezeCode`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

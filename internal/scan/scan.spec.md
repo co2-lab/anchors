@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPSCR
-  updated_at: 2026-10-09
+  updated_at: 2026-10-11
   layer: scan
 -->
 # RepoScan — the repository read as text: which files exist, of which layer, and what each declares
@@ -124,6 +124,9 @@ heuristic decided.
 | `RPSCR-B50` | `@dep[type]: CODE` on an import line is an import of types only: read with its code and the symbols the import brings, apart from the dependencies that are no import. (`CodeDep`, `TypeDepKind`) |
 | `RPSCR-B51` | The spec sections a project declares with no side effect (`evidence.no_side_effect.sections`) are the ones left out of its evidence, in place of navigation and change history. (`EvidenceOf`) |
 | `RPSCR-B52` | A line that is only a comment — in the line-comment marker of the file's language, or inside a block comment (`/* … */`, `{/* … */}`) that fills its lines, in the languages that write them — is left out of the file's evidence revision, and blank in its line revision; a comment at the end of a line of code, code after a block's end, and a file whose language has no known marker are read whole. (`EvidenceOf`, `commentLines`) |
+| `RPSCR-B53` | A file's header may declare it frozen — `frozen:` with a freeze's code or, with no doctrine, the reason —, read with its value. (`Frozen`, `FrozenOf`) |
+| `RPSCR-B54` | In a spec or a doctrine document, a `@frozen:` mark on a rule's line, or on a line of the rule's own block, freezes that rule; on a heading that defines no rule, it freezes every rule under it down to the next heading of its level or above; each is read with its mark's value, without the form's punctuation; a mark inside backticks is a citation, and freezes nothing. (`FrozenRules`) |
+| `RPSCR-B55` | A doctrine document's rules of the freeze letter are its freeze entries, read with the text after the code as the reason, in any of the three forms a rule is written in; a value is a freeze's code when it is a code of that letter. (`Freezes`, `IsFreezeCode`) |
 | `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants

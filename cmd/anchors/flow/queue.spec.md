@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WRQUW
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: comando
 -->
 # WorkQueue — list, pull, close and discard the work, from the local queue or from the board
@@ -83,6 +83,7 @@ decide the product is told to escalate instead of asking whoever runs it.
 | Effect | Description |
 | --- | --- |
 | `WRQUW-B20` | A role already declared is kept without asking; without a terminal (a pipe or the null device) nothing is asked and nothing recorded, and the output says how to declare the role. |
+| `WRQUW-B21` | A task or a card whose target a freeze covers — whole, or some rules of its unit — is handed out with the warning that names the freeze and its reason and says not to change it without an order from a person; the work is still handed out. |
 
 ## Invariants
 

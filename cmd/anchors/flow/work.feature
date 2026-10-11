@@ -2,7 +2,7 @@
 # @anchors
 #   code: WRFTW
 #   ref: WRPRW
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @WRPRW
@@ -168,3 +168,9 @@ Feature: WorkPrompt — compose the work prompt of one stage over one target, fr
     When the spec, code and test prompts of "src/pricing.ts" and the feature and spec prompts of the waiving "models/user.ts" are composed
     Then the spec prompt names "## Open Decisions" and "none" in both the procedure and the gates' demands, and never "Decisões em aberto" nor "nenhuma"
     And the prompts cite "optional_unit_edges", "rule-implemented" and "tests-pass", and never "trinca_opcional", "regra-implementada" nor "testes-passam"
+
+  @WRPRW-B21 @unit-level
+  Scenario: A frozen target is said before the work
+    Given a map with a frozen code file, and a code file whose spec holds a frozen rule
+    When the work prompt is composed for each, and for a target with nothing frozen
+    Then the first opens with the freeze and its reason, the second names the frozen rule, and the third has no warning

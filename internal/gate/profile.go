@@ -31,6 +31,7 @@ type GateSummary struct {
 	Pending  int // could not measure
 	Diverge  int // measured and found something short of wrong
 	Judge    int // aguardando julgamento de IA
+	Frozen   int // a frozen part, kept as it is by decision (frozen.go)
 	// Duracao e' o tempo somado de todas as confrontacoes deste gate, e Pior e' a mais
 	// cara delas.
 	//
@@ -79,6 +80,8 @@ func Aggregate(results []Result) Profile {
 		case Judge:
 			s.Judge++
 			p.Judged = append(p.Judged, r)
+		case Frozen:
+			s.Frozen++
 		}
 		s.Duracao += r.Duracao
 		if r.Duracao > s.Pior {

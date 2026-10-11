@@ -180,6 +180,14 @@
         "slug": "docs/gates/spec-realizes-doctrine"
       },
       {
+        "label": "freeze-consistent",
+        "slug": "docs/gates/freeze-consistent"
+      },
+      {
+        "label": "frozen-touched",
+        "slug": "docs/gates/frozen-touched"
+      },
+      {
         "label": "flag-scenario-grammar",
         "slug": "docs/gates/flag-scenario-grammar"
       },

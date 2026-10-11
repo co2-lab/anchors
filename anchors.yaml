@@ -712,6 +712,15 @@ gates:
   - name: doctrine-not-duplicated
     blocking: true
 
+  # FROZEN PARTS (DESIGN-frozen-units.md): every freeze mark names a freeze the doctrine
+  # records, and every record marks something; a change to a frozen part is told — it
+  # informs, and never bars.
+  - name: freeze-consistent
+    blocking: true
+
+  - name: frozen-touched
+    blocking: false
+
   # THE WAY BACK OF EACH PAIR OF THE UNIT. `spec-feature-match` and `feature-test-match`
   # walk the ORIGIN looking for the destination; these walk the destination asking whether
   # the origin still exists — which is what catches what a revert leaves behind.

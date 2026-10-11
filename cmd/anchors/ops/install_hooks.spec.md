@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INHKN
-  updated_at: 2026-10-09
+  updated_at: 2026-10-11
   layer: comando
 -->
 # InstallHooks — the git hooks that confront every commit and push with the gates and the freeze, installed without taking a hook the user wrote
@@ -54,7 +54,7 @@ theirs and is not replaced without `--force`.
 | `INHKN-B11` | The install registers the map and progress merge drivers in the repository's git config and adds their attribute lines to `.gitattributes`. |
 | `INHKN-B12` | The installed pre-push warns, without refusing, when the map on the remote was written by a version other than the local binary, reading the writer from the map's `generated_by:` key or the legacy `gerado_por:`; the same version is silent. |
 | `INHKN-B13` | On a real commit, on Linux, macOS and Windows alike, the installed pre-commit runs the project's blocking gates: a failing one refuses the commit, and a passing one lets it through. |
-| `INHKN-B14` | With `--agent`, the agent's hook goes into the project's Claude Code settings (`.claude/settings.json`), before and after each command of the agent: the rest of the settings is kept, installing again adds nothing, settings that are not valid JSON are refused naming the file, and a folder with no anchors.yaml is refused. (`installAgentHook`) |
+| `INHKN-B14` | With `--agent`, the agent's hook goes into the project's Claude Code settings (`.claude/settings.json`), before and after each command of the agent, and the freeze's hook before each of its edits (`anchors freeze hook`, `Edit|Write|MultiEdit|NotebookEdit`): the rest of the settings is kept, installing again adds nothing, settings that are not valid JSON are refused naming the file, and a folder with no anchors.yaml is refused. (`installAgentHook`) |
 | `INHKN-B15` | With `--agent --user`, the agent's hook goes into the user's own Claude Code settings (`~/.claude/settings.json`), the same way, from any folder — the hook records nothing outside a project with an anchors.yaml —, and the project's settings are left untouched; `--user` without `--agent` is refused. (`agentSettingsPath`) |
 
 ## Invariants

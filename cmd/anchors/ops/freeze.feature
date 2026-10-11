@@ -2,7 +2,7 @@
 # @anchors
 #   code: FRFTF
 #   ref: FRZEX
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @FRZEX
@@ -115,3 +115,40 @@ Feature: Freeze — the project is stopped in three layers with a written reason
     Given a directory with no anchors.yaml
     When freeze and thaw run
     Then each fails with "load anchors.yaml"
+
+  @FRZEX-B14 @unit-level
+  Scenario: A freeze with a scope is recorded in the doctrine and marks every place
+    Given a project with a doctrine document, two units and a file of its own
+    When a unit, two rules of the other unit and the file are frozen with a reason, and then another rule
+    Then the doctrine records QLDTQ-F01 with the reason, each place carries its mark, the map covers the unit's code too, and the second freeze is QLDTQ-F02
+
+  @FRZEX-B15 @unit-level
+  Scenario: Without a doctrine the marks carry the reason, and what cannot be frozen is refused
+    Given a project with no doctrine, and one with two doctrine documents
+    When a file is frozen in the first, and in the second with no reason, with no --in, a unit with no owner, an undefined rule, a missing file, and a part frozen twice
+    Then the first marks the reason and says it is not traceable, --in records in the document it names, and each of the others is refused naming its cause
+
+  @FRZEX-B16 @unit-level
+  Scenario: A recorded freeze gains a scope by its code
+    Given a unit frozen by QLDTQ-F01
+    When QLDTQ-F01 is given another unit, and an unrecorded code is given one
+    Then the other unit is marked with no new record, and the unrecorded code is refused
+
+  @FRZEX-B17 @unit-level
+  Scenario: Thawing a freeze removes its marks and its record, and nothing else
+    Given a unit, a rule and a file frozen by QLDTQ-F01, and another rule by QLDTQ-F02
+    When QLDTQ-F01 is thawed, then the other rule by its scope, then an unknown code
+    Then the unit's spec is as it was, the other freeze's mark and record stay, the scope's thaw removes its mark, and the unknown code is refused
+
+  @FRZEX-B18 @unit-level
+  Scenario: The freezes are listed, each with its reason and places
+    Given a project with nothing frozen, then a unit frozen and an entry that marks nothing
+    When the freezes are shown, all and for one code
+    Then nothing frozen is said, then each freeze has its reason and places, the orphan marks nothing, and one code lists the spec and the code it reaches
+
+  @FRZEX-B19 @unit-level
+  Scenario: Before an edit, the agent is told a file is frozen, and the edit goes on
+    Given a frozen file and a spec with a frozen rule, in a project with its map
+    When the hook is called for each, for a file not frozen, for a file outside the project and for broken input
+    Then the frozen file is told with its freeze and reason and never denied, the spec names its frozen rule, and the others say nothing
+

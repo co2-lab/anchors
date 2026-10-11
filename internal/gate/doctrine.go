@@ -156,6 +156,11 @@ func checkDoctrineRealized(content string, n mapx.Node, root string, g *mapx.Gra
 			if isOpenQuestion(m[1]) {
 				continue
 			}
+			// A FREEZE entry is a record, not a rule to realize; a FROZEN rule is kept
+			// as it is, and asks for no realizer until someone thaws it.
+			if scan.IsFreezeCode(m[1]) || ruleIsFrozen(m[1]) {
+				continue
+			}
 			rules[m[1]] = true
 			if isDeferred {
 				deferred[m[1]] = true
@@ -419,7 +424,8 @@ func ruleTexts(content string) map[string]string {
 	ruleRE := doctrineRuleRE()
 	for _, line := range strings.Split(content, "\n") {
 		m := ruleRE.FindStringSubmatch(line)
-		if m == nil {
+		// A freeze entry's text is its reason, not a rule another doctrine could repeat.
+		if m == nil || scan.IsFreezeCode(m[1]) {
 			continue
 		}
 		rest := line[strings.Index(line, m[1])+len(m[1]):]
@@ -508,7 +514,7 @@ func checkSpecRealizesDoctrine(content string, n mapx.Node, root string, g *mapx
 			continue
 		}
 		seen[m[1]] = true
-		if defaultUsesExempt[ruleLetter(m[1])] {
+		if defaultUsesExempt[ruleLetter(m[1])] || ruleIsFrozen(m[1]) {
 			continue
 		}
 		if tbdLineRE.MatchString(line) {

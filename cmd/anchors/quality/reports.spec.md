@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPRTS
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: comando
 -->
 # Reports — markdown perspectives on what Anchors already measures, written into docs
@@ -53,6 +53,7 @@ the helpers they share.
 | `RPRTS-B12` | The inconsistencies perspective lists every health finding grouped by check, the failures of the quality gates, and the total. |
 | `RPRTS-B13` | A finding section takes the findings whose check starts with its name, titles itself with their count, caps the list at 25 saying how many are left, and is absent when there is none. |
 | `RPRTS-B14` | Without anchors.yaml the perspectives say what is missing instead of inventing: the quality one that no gate is declared, the configuration one that the file was not found, the issues one its zero counts and empty queue, and the structure and inconsistencies ones that the health validator needs the file; the all form still writes every perspective. |
+| `RPRTS-B15` | The reports leave out what a freeze covers — its files, with the edges that touch them, and the frozen rules of a spec. |
 
 ## Invariants
 

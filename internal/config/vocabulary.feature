@@ -2,7 +2,7 @@
 # @anchors
 #   code: VCFTV
 #   ref: GTVCG
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @GTVCG
@@ -24,7 +24,7 @@ Feature: GateVocabulary — the list of default gate names, injected into the co
   Scenario: The letters of plans, flows and actions
     Given the canonical rule letters
     When the phase, step and outcome letters are read
-    Then they are W, T and O, only the phase letter is canonical, and step and outcome are no spec letter
+    Then they are W, T and O, only the phase letter is canonical, and step and outcome are no spec letter, and the freeze letter F is canonical
 
   @GTVCG-I01 @unit-level
   Scenario: The answer always comes from the source registered last

@@ -68,6 +68,10 @@ Three complementary questions:
 			if err != nil {
 				return fmt.Errorf("load map: %w (run `anchors map build`)", err)
 			}
+			// A frozen part is kept as it is by decision: its coverage is no news.
+			if len(args) == 0 {
+				g = g.Unfrozen()
+			}
 			if delta {
 				return coverageDelta(g)
 			}
@@ -104,6 +108,11 @@ func coverageForSpec(g *mapx.Graph, root, specID string) error {
 	if err != nil {
 		return fmt.Errorf("read the spec: %w", err)
 	}
+	if node.Frozen != "" {
+		fmt.Printf("%s is FROZEN (%s) — its coverage is not asked until someone thaws it\n", specID, g.DescribeFreeze(node.Frozen))
+		return nil
+	}
+	declared = node.WithoutFrozenRules(declared)
 	if len(declared) == 0 {
 		fmt.Printf("%s declares no scenario codes (nothing to cover)\n", specID)
 		return nil
@@ -143,6 +152,7 @@ func coveragePanorama(g *mapx.Graph, root string, threshold float64) error {
 			continue
 		}
 		declared, _ := codesInFileOfUnit(filepath.Join(root, n.ID), n.Code)
+		declared = n.WithoutFrozenRules(declared)
 		if len(declared) == 0 {
 			continue
 		}

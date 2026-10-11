@@ -419,3 +419,19 @@ func TestHealthPerspectivesWithoutConfig(t *testing.T) {
 		t.Fatalf("report all without anchors.yaml: %v", err)
 	}
 }
+
+func TestReportsLeaveFrozenOut(t *testing.T) {
+	t.Run("RPRTS-B15: The reports leave frozen parts out", func(t *testing.T) {})
+	g := coverageGraph()
+	g.Nodes[0].FrozenRules = map[string]string{"BBBBB-B02": "the coupon waits"}
+	g.Nodes = append(g.Nodes, mapx.Node{ID: "frozen.go", Kind: mapx.KindCode, Frozen: "the plan mode", Signal: &mapx.TestSignal{TotalLines: 10, LineCoverage: 5}})
+	dir := qProject(t, reportYAML, coverageFiles(), g)
+	ctx, err := loadReportCtx(dir, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := renderTests(ctx)
+	if strings.Contains(out, "frozen.go") || strings.Contains(out, "BBBBB-B02") || !strings.Contains(out, "low.go") {
+		t.Errorf("frozen parts leave the report:\n%s", out)
+	}
+}

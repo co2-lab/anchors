@@ -518,7 +518,7 @@ func TestInstallHooks_agent(t *testing.T) {
 	b, _ := os.ReadFile(settings)
 	got := string(b)
 	if strings.Count(got, agentHookCommand) != 2 || !strings.Contains(got, "Bash(ls:*)") || !strings.Contains(got, "echo x") ||
-		!strings.Contains(got, "PostToolUse") {
+		!strings.Contains(got, "PostToolUse") || strings.Count(got, freezeHookCommand) != 1 || !strings.Contains(got, "Edit|Write|MultiEdit|NotebookEdit") {
 		t.Errorf("theirs kept, the hook once before and once after:\n%s", got)
 	}
 	_ = os.WriteFile(settings, []byte("{broken"), 0o644)

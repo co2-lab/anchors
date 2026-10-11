@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTVCG
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: config
 -->
 # GateVocabulary — the list of default gate names, injected into the configuration layer
@@ -35,7 +35,7 @@ renamed-key hint) belong to the configuration spec, `CNFGO`.
 | --- | --- |
 | `GTVCG-B01` | With no source registered, the default gate names are absent, and asking is not a failure (`DefaultGateNamesForTest`). |
 | `GTVCG-B02` | With a source registered, the default gate names are the ones it gives (`RegisterGateNames`). |
-| `GTVCG-B03` | The letters of the artifacts that are not specs are fixed and English: a plan's phase is `W`, a flow's step `T`, an action's result `O`, and none is a canonical spec letter with another meaning; the phase letter is among the canonical rule letters, since specs cite phases in `needs:` (`PhaseLetter`, `StepLetter`, `OutcomeLetter`). |
+| `GTVCG-B03` | The letters of the artifacts that are not specs are fixed and English: a plan's phase is `W`, a flow's step `T`, an action's result `O`, and none is a canonical spec letter with another meaning; the phase letter is among the canonical rule letters, since specs cite phases in `needs:` (`PhaseLetter`, `StepLetter`, `OutcomeLetter`). A freeze — a doctrine entry that keeps a part as it is — is `F`, a canonical letter too, since the freeze marks cite it (`FreezeLetter`). |
 
 ## Invariants
 

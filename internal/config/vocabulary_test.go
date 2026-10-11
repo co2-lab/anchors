@@ -77,6 +77,9 @@ func TestArtifactLetters(t *testing.T) {
 	if PhaseLetter != "W" || StepLetter != "T" || OutcomeLetter != "O" {
 		t.Fatalf("the letters are W, T and O, got %s %s %s", PhaseLetter, StepLetter, OutcomeLetter)
 	}
+	if FreezeLetter != "F" || !strings.Contains(DefaultRuleLetters, FreezeLetter) {
+		t.Errorf("the freeze letter is F and canonical: %s in %s", FreezeLetter, DefaultRuleLetters)
+	}
 	if !strings.Contains(DefaultRuleLetters, PhaseLetter) {
 		t.Errorf("specs cite phases in needs:, so %s must be canonical: %s", PhaseLetter, DefaultRuleLetters)
 	}
