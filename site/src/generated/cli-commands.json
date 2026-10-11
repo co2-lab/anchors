@@ -1,5 +1,9 @@
 [
   {
+    "label": "anchors affected-tests",
+    "slug": "docs/cli/commands/affected-tests"
+  },
+  {
     "label": "anchors audit",
     "slug": "docs/cli/commands/audit"
   },

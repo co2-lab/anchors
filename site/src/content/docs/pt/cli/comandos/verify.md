@@ -58,6 +58,7 @@ Comandos da mesma família — o que distingue cada um:
 | **`anchors verify`** | Run EVERYTHING the phase requires: Anchors gates + external tools |
 | [`anchors coverage`](/pt/docs/cli/commands/coverage/) | Show coverage by scenario, by line, of the DIFF and the delta |
 | [`anchors stale`](/pt/docs/cli/commands/stale/) | List stale edges — what changed and has not been reconfronted |
+| [`anchors affected-tests`](/pt/docs/cli/commands/affected-tests/) | List the tests a change can break — by rule and region where the project declares them |
 | [`anchors impact`](/pt/docs/cli/commands/impact/) | Impact analysis: what a change to this file reaches |
 | [`anchors failures`](/pt/docs/cli/commands/failures/) | The observed failures that the spec has not yet explained |
 
