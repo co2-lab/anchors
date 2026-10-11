@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:e9b1cbbeeeef904f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:0399df94a02d3875 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1405,6 +1405,8 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-B26 — The header guide names the freeze marks — `frozen:` in a header, `@frozen:` on a rule's or a heading's line —, says they are written by `anchors freeze`, listed by `freeze show` and removed by `thaw`, and that a frozen part is not changed without an order from a person; the product guide says the doctrine records each freeze as an entry of the letter F with its reason, under a section of its own, and that a freeze entry is not a rule to realize.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
+- [GVGDG-B27 — The review guide asks a rejection to register each item it asks to change as a finding of its own under the card (`anchors escalate … --card`), before the verdict line, because the text of a review is no state the next reviewer follows; and an approval to close the findings the PR answered.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B20 — The test guide strongly recommends a contract test for every API unit, validating the API against the OpenAPI compiled from the specs with the language's own tool, named by `{CODE}-CT`, loading the document instead of copying it, and asserting each error response's status, code and message.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
@@ -2206,6 +2208,8 @@ abra a página dela em `camadas/`.
 - [INHKN-B14 — With `--agent`, the agent's hook goes into the project's Claude Code settings (`.claude/settings.json`), before and after each command of the agent, and the freeze's hook before each of its edits (`anchors freeze hook`, `Edit](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-B15 — With `--agent --user`, the agent's hook goes into the user's own Claude Code settings (`~/.claude/settings.json`), the same way, from any folder — the hook records nothing outside a project with an anchors.yaml —, and the project's settings are left untouched; `--user` without `--agent` is refused. (`agentSettingsPath`)](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
+
+- [INHKN-B16 — The hooks speak the project's language (`lang`): each message they print is written in it when they are installed, its shell variables kept, and a message with no translation, or a configuration that does not load, stays in English; `install-hooks --force` rewrites them after the language changes. (`localizeHook`, `hookMessageKey`)](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-I01 — However many times the install runs, each merge attribute line appears once in `.gitattributes` and the user's own lines are kept intact.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
@@ -7322,6 +7326,8 @@ abra a página dela em `camadas/`.
 - [FLWRF-B20 — When the pull request body references one card and closes another, the review status and the move at the merge are for the closed card.](layers/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns)
 
 - [FLWRF-B21 — A rejected verdict sends the card back to to-do, owned again by the owner before the reviewer; an approved verdict leaves the card for the merge.](layers/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns)
+
+- [FLWRF-B22 — When the assigned reviewer's verdict is `approved` and findings are still open under the card (labeled `anchors:under-<card>`, or the old `anchors:sob-<card>`), the PR checks comment on the PR naming each, once per head commit, and do not change the review status: the approval stands, and the findings are seen.](layers/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns)
 
 - [FLWRF-I01 — What seeding writes is never outdated for the same configuration, whatever the integration branch.](layers/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns)
 

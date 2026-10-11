@@ -56,6 +56,7 @@ theirs and is not replaced without `--force`.
 | `INHKN-B13` | On a real commit, on Linux, macOS and Windows alike, the installed pre-commit runs the project's blocking gates: a failing one refuses the commit, and a passing one lets it through. |
 | `INHKN-B14` | With `--agent`, the agent's hook goes into the project's Claude Code settings (`.claude/settings.json`), before and after each command of the agent, and the freeze's hook before each of its edits (`anchors freeze hook`, `Edit|Write|MultiEdit|NotebookEdit`): the rest of the settings is kept, installing again adds nothing, settings that are not valid JSON are refused naming the file, and a folder with no anchors.yaml is refused. (`installAgentHook`) |
 | `INHKN-B15` | With `--agent --user`, the agent's hook goes into the user's own Claude Code settings (`~/.claude/settings.json`), the same way, from any folder — the hook records nothing outside a project with an anchors.yaml —, and the project's settings are left untouched; `--user` without `--agent` is refused. (`agentSettingsPath`) |
+| `INHKN-B16` | The hooks speak the project's language (`lang`): each message they print is written in it when they are installed, its shell variables kept, and a message with no translation, or a configuration that does not load, stays in English; `install-hooks --force` rewrites them after the language changes. (`localizeHook`, `hookMessageKey`) |
 
 ## Invariants
 

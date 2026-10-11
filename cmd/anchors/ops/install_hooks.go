@@ -5,15 +5,19 @@
 package ops
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/spf13/cobra"
 )
@@ -119,6 +123,10 @@ func runInstallHooks(root string, force bool) error {
 	}
 
 	hookPath := filepath.Join(hooksDir, "pre-commit")
+	// The hooks speak the project's language: loading the configuration sets it, and each
+	// message is translated as the script is written. A configuration that does not load
+	// leaves them in English — the hook still has to stop a broken commit.
+	_, _ = config.Load(filepath.Join(root, config.DefaultFile))
 
 	// 3. se já existe e não é nosso, respeita (a menos que --force).
 	if existing, rerr := os.ReadFile(hookPath); rerr == nil {
@@ -140,7 +148,7 @@ func runInstallHooks(root string, force bool) error {
 	if existing, rerr := os.ReadFile(msgHook); rerr == nil &&
 		!writtenByAnchors(existing) && !force {
 		fmt.Printf("⚠  %s exists and was not written by anchors — not overwritten.\n", msgHook)
-	} else if err := os.WriteFile(msgHook, []byte(commitMsgScript), 0o755); err != nil {
+	} else if err := os.WriteFile(msgHook, []byte(localizeHook(commitMsgScript)), 0o755); err != nil {
 		return fmt.Errorf("write %s: %w", msgHook, err)
 	}
 
@@ -152,11 +160,11 @@ func runInstallHooks(root string, force bool) error {
 	if existing, rerr := os.ReadFile(pushHook); rerr == nil &&
 		!writtenByAnchors(existing) && !force {
 		fmt.Printf("⚠  %s exists and was not written by anchors — not overwritten.\n", pushHook)
-	} else if err := os.WriteFile(pushHook, []byte(prePushScript), 0o755); err != nil {
+	} else if err := os.WriteFile(pushHook, []byte(localizeHook(prePushScript)), 0o755); err != nil {
 		return fmt.Errorf("write %s: %w", pushHook, err)
 	}
 
-	if err := os.WriteFile(hookPath, []byte(preCommitScript), 0o755); err != nil {
+	if err := os.WriteFile(hookPath, []byte(localizeHook(preCommitScript)), 0o755); err != nil {
 		return fmt.Errorf("write %s: %w", hookPath, err)
 	}
 
@@ -694,3 +702,29 @@ if [ -n "$remota_ver" ] && [ -n "$local_ver" ] && [ "$remota_ver" != "$local_ver
 fi
 exit 0
 `
+
+// hookEchoRE is a message a hook prints: an `echo "…"`, its text in the group.
+var hookEchoRE = regexp.MustCompile(`(echo ")((?:[^"\\]|\\.)*)(")`)
+
+// hookMessageKey is the catalog key of a hook message: derived from its English text, so a
+// message edited in the script is a new key, and an untranslated one stays in English.
+func hookMessageKey(msg string) string {
+	sum := sha256.Sum256([]byte(strings.TrimSpace(msg)))
+	return "hook." + hex.EncodeToString(sum[:])[:10]
+}
+
+// localizeHook writes each message of a hook script in the project's language. The script
+// carries the English; the hook is generated once per install, so it speaks the language
+// declared when it was installed — `install-hooks --force` regenerates it after a change.
+func localizeHook(script string) string {
+	return hookEchoRE.ReplaceAllStringFunc(script, func(m string) string {
+		sub := hookEchoRE.FindStringSubmatch(m)
+		key := hookMessageKey(sub[2])
+		t := i18n.T(key)
+		if t == key {
+			return m
+		}
+		lead := sub[2][:len(sub[2])-len(strings.TrimLeft(sub[2], " "))]
+		return sub[1] + lead + t + sub[3]
+	})
+}

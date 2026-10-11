@@ -4145,3 +4145,34 @@ func pipelineBash(t *testing.T, args ...string) *exec.Cmd {
 	}
 	return exec.Command("bash", args...)
 }
+
+func TestPRChecksTellsAnApprovalWithOpenFindings(t *testing.T) {
+	t.Run("FLWRF-B22: An approval with findings still open under the card is told", func(t *testing.T) {})
+	script := reviewScript(t)
+	env := map[string]string{"PR": "7", "HEAD_SHA": "abc123"}
+	rw := defaultReviewWorld()
+	rw.prComments = []map[string]any{prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: approved by agent-b")}
+	w := newGHWorld(t)
+	w.seedReview(rw)
+	w.fixture("issue_list", []map[string]any{{"number": 380, "title": "[ALLSL] ALLSL-I03 survives a mutation"}})
+	_, calls, _ := w.run(script, env)
+	if state, _ := publishedStatus(calls); state != "success" {
+		t.Errorf("the approval stands: %s\n%s", state, calls)
+	}
+	if !strings.Contains(calls, "CALL issue comment 7") || !strings.Contains(calls, "- #380 [ALLSL] ALLSL-I03 survives a mutation") || !strings.Contains(calls, "anchors-open-findings: abc123") {
+		t.Errorf("the PR is told the open finding:\n%s", calls)
+	}
+	rw.prComments = append(rw.prComments, prComment("2026-09-20T11:05:00Z", "OWNER", "⚠ Approved…\n<!-- anchors-open-findings: abc123 -->"))
+	w.seedReview(rw)
+	w.fixture("issue_list", []map[string]any{{"number": 380, "title": "[ALLSL] ALLSL-I03 survives a mutation"}})
+	if _, calls, _ := w.run(script, env); strings.Contains(calls, "CALL issue comment 7") {
+		t.Errorf("told once per head commit:\n%s", calls)
+	}
+	w.seedReview(defaultReviewWorld())
+	rw2 := defaultReviewWorld()
+	rw2.prComments = []map[string]any{prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: approved by agent-b")}
+	w.seedReview(rw2)
+	if _, calls, _ := w.run(script, env); strings.Contains(calls, "CALL issue comment 7") {
+		t.Errorf("nothing open, nothing said:\n%s", calls)
+	}
+}

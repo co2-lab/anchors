@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1e714b317f04bfcb — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8ffe2526a6f37b7e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1294,6 +1294,8 @@ teste prova.
 
 - [The guides teach the freeze](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B26`
 
+- [A rejection registers each item as a finding](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B27`
+
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
 - [A map without governance has an empty board](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B02`
@@ -2003,6 +2005,8 @@ teste prova.
 - [The agent's hook goes into the project's Claude Code settings](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B14`
 
 - [The agent's hook goes into the user's own settings](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B15`
+
+- [The hooks speak the project's language](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B16`
 
 - [Both the map and the config reach the current format](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B01`
 
@@ -6629,6 +6633,8 @@ teste prova.
 - [A pipeline that cannot be written fails the seeding](layers/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-E02`
 
 - [A template the binary does not carry fails the seeding](layers/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-E03`
+
+- [An approval with findings still open under the card is told](layers/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B22`
 
 - [A card whose marker only starts with the key is not the issue's](layers/infra.md#ghigt--githubissues--the-issue-lifecycle-on-the-repositorys-cards-when-the-project-works-on-github) `GHIGT-B01`
 

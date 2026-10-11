@@ -194,3 +194,10 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Given the header and product guides
     When they are printed
     Then the header guide names both marks, the commands and the order from a person, and the product guide shows the Freezes section with an entry of the letter F
+
+  @GVGDG-B27 @unit-level
+  Scenario: A rejection registers each item as a finding
+    Given the review guide
+    When it is printed
+    Then it asks each item of a rejection to be a finding registered under the card before the verdict, and an approval to close what the PR answered
+

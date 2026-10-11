@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLWRF
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: infra
 -->
 # FlowWorkflows — declare the pipelines of the work flow, find what is missing or broken, and seed them without taking over what the team owns
@@ -74,6 +74,7 @@ card back to its author, and at the merge says on the card when the work landed 
 | `FLWRF-B19` | An approved or rejected verdict releases the reviewer's ownership of the card, once; a review with no verdict releases nothing. |
 | `FLWRF-B20` | When the pull request body references one card and closes another, the review status and the move at the merge are for the closed card. |
 | `FLWRF-B21` | A rejected verdict sends the card back to to-do, owned again by the owner before the reviewer; an approved verdict leaves the card for the merge. |
+| `FLWRF-B22` | When the assigned reviewer's verdict is `approved` and findings are still open under the card (labeled `anchors:under-<card>`, or the old `anchors:sob-<card>`), the PR checks comment on the PR naming each, once per head commit, and do not change the review status: the approval stands, and the findings are seen. |
 
 ## Invariants
 

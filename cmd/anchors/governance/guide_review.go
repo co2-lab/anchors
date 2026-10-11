@@ -324,6 +324,15 @@ Approving is not "I found nothing": it is to state that you LOOKED at what is yo
 there is nothing to say, approve — the review that only glances is worse than none, because
 it creates the impression that someone checked.
 
+Rejecting? EACH item you ask to change is a finding of its own, registered under the card
+before the verdict line — a request with three items is three findings, not three paragraphs:
+
+    anchors escalate "<the item>" --about <file> --card <the PR's card>
+
+The text of a review is not state: the next reviewer follows what is registered, and an item
+that lives only in the paragraph is the one that vanishes. When you approve, close the
+findings the PR answered; the pipeline tells an approval that arrives with any still open.
+
 Found something that does not belong to this PR? Record it instead of only commenting:
 
     anchors escalate "<what is wrong>" --about <file> --card <the PR's card>

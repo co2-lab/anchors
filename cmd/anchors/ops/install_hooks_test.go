@@ -16,6 +16,7 @@ import (
 	"github.com/co2-lab/anchors/internal/testkit"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/shell"
 )
 
@@ -559,5 +560,44 @@ func TestInstallHooks_agentUser(t *testing.T) {
 	c.SetArgs([]string{"--root", dir, "--user"})
 	if err := c.Execute(); err == nil || !strings.Contains(err.Error(), "--agent") {
 		t.Errorf("--user alone is refused: %v", err)
+	}
+}
+
+func TestInstallHooks_speakTheProjectsLanguage(t *testing.T) {
+	t.Run("INHKN-B16: The hooks speak the project's language", func(t *testing.T) {})
+	t.Cleanup(func() { _ = i18n.Set("") })
+	root := newGitRepo(t)
+	writeFile(t, root, config.DefaultFile, "version: 7\nlang: pt-BR\nlayers: {}\n")
+	if err := runInstallHooks(root, true); err != nil {
+		t.Fatal(err)
+	}
+	hooks, _ := gitHooksDir(root)
+	for name, script := range map[string]string{"pre-commit": preCommitScript, "commit-msg": commitMsgScript, "pre-push": prePushScript} {
+		b, err := os.ReadFile(filepath.Join(hooks, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, m := range hookEchoRE.FindAllStringSubmatch(script, -1) {
+			key := hookMessageKey(m[2])
+			if i18n.T(key) == key {
+				continue // a message with no catalog entry stays as written
+			}
+			if strings.Contains(string(b), `echo "`+m[2]+`"`) {
+				t.Errorf("%s: left in English: %s", name, m[2])
+			}
+		}
+	}
+	push, _ := os.ReadFile(filepath.Join(hooks, "pre-push"))
+	if !strings.Contains(string(push), `echo "🛑 PUSH RECUSADO — este projeto exige 'anchors' $min_ver ou mais novo."`) || !strings.Contains(string(push), `echo "   Seu binário é o $local_ver."`) {
+		t.Errorf("translated with its variables and indentation:\n%s", push)
+	}
+	plain := newGitRepo(t)
+	writeFile(t, plain, config.DefaultFile, "version: 7\nlayers: {}\n")
+	if err := runInstallHooks(plain, true); err != nil {
+		t.Fatal(err)
+	}
+	ph, _ := gitHooksDir(plain)
+	if b, _ := os.ReadFile(filepath.Join(ph, "pre-push")); string(b) != prePushScript {
+		t.Error("with no lang the hook is the English script")
 	}
 }

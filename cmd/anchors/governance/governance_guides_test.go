@@ -697,3 +697,13 @@ func TestGuides_teachTheFreeze(t *testing.T) {
 		}
 	}
 }
+
+func TestReviewGuide_eachItemIsAFinding(t *testing.T) {
+	t.Run("GVGDG-B27: A rejection registers each item as a finding", func(t *testing.T) {})
+	review := guideOut(t, "review")
+	for _, want := range []string{"EACH item you ask to change is a finding of its own", "anchors escalate \"<the item>\" --about <file> --card <the PR's card>", "The text of a review is not state", "close the\nfindings the PR answered"} {
+		if !strings.Contains(review, want) {
+			t.Errorf("the review guide lacks %q", want)
+		}
+	}
+}

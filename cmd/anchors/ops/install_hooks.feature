@@ -134,3 +134,10 @@ Feature: InstallHooks — the git hooks that confront every commit and push with
     Given a home folder and a folder with no anchors.yaml
     When the agent's hook is installed for the user, and --user is given without --agent
     Then the user's settings gain the hook, the folder gets no settings, and the second is refused
+
+  @INHKN-B16 @unit-level
+  Scenario: The hooks speak the project's language
+    Given a project declaring lang pt-BR, and one declaring nothing
+    When the hooks are installed in each
+    Then the first's hooks print every message in Portuguese with their variables kept, and the second's are the English scripts
+

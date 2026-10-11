@@ -2,7 +2,7 @@
 # @anchors
 #   code: WRFTA
 #   ref: FLWRF
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @FLWRF
@@ -195,3 +195,10 @@ Feature: FlowWorkflows — declare the pipelines of the work flow, find what is 
     Given a binary that carries no pipeline template
     When the pipelines are seeded
     Then the seeding fails with an error about reading the template
+
+  @FLWRF-B22 @unit-level
+  Scenario: An approval with findings still open under the card is told
+    Given card 12 under review by agent-b, approved on PR 7, with one finding still open under the card
+    When the review step runs, then again on the same head commit, and with no finding open
+    Then the PR gets one comment naming the finding, the status is success, the second run adds none, and with nothing open nothing is said
+

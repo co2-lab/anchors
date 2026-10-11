@@ -382,6 +382,30 @@ jobs:
             fi
           fi
 
+          # AN APPROVAL WITH FINDINGS STILL OPEN UNDER THE CARD is told on the PR — never
+          # barred. A request for changes with several items lived only in the review's text:
+          # one item became a finding and was fixed, the other vanished, and the next reviewer
+          # approved what they were following (reported from the reference app, PR #364). The
+          # findings registered under the card (`anchors:under-<card>`, or the old `sob-`) are
+          # the list a reviewer can see; an approval that arrives with any still open says so,
+          # once per head commit.
+          if [ "$veredito" = "approved" ]; then
+            abertos=$( { gh issue list --state open --label "anchors:under-$card" --limit 50 \
+                           --json number,title --jq '.[] | "#\(.number) \(.title)"' 2>/dev/null || true
+                         gh issue list --state open --label "anchors:sob-$card" --limit 50 \
+                           --json number,title --jq '.[] | "#\(.number) \(.title)"' 2>/dev/null || true
+                       } | sed '/^$/d' | sort -u)
+            if [ -n "$abertos" ]; then
+              marca="anchors-open-findings: $sha"
+              ja=$(gh api "repos/$GH_REPO/issues/$PR/comments" --paginate \
+                --jq "[.[] | select(.body | contains(\"$marca\"))] | length" 2>/dev/null || echo 0)
+              if [ "${ja:-0}" = "0" ]; then
+                gh issue comment "$PR" --body "$(printf '⚠ Approved by %s with findings still open under card #%s:\n\n%s\n\nEach one is part of what this review round asked. Close it when the PR answers it, or say on it why it does not belong to this PR — the approval does not close them.\n\n<!-- %s -->' "$revisor" "$card" "$(printf '%s\n' "$abertos" | sed 's/^/- /')" "$marca")"
+                echo "PR #$PR: approved with $(printf '%s\n' "$abertos" | wc -l | tr -d ' ') finding(s) open under card #$card — told on the PR"
+              fi
+            fi
+          fi
+
   mover:
     runs-on: ubuntu-latest
     # AFTER `review`, and even when it failed or was skipped (`always()`): the card moves
