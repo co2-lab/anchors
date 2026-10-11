@@ -1,9 +1,9 @@
 <!-- @anchors
   code: QLCMQ
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: comando
 -->
-# QualityCommands — the quality domain puts its twelve commands under the root command
+# QualityCommands — the quality domain puts its thirteen commands under the root command
 
 > **Code**: `QLCMQ`
 
@@ -15,7 +15,7 @@ wrapper verify, the doctor, the status, the stale-edge listing, coverage, the re
 suites, the contract stamps and the date touch.
 
 This unit is that one place. It holds no behaviour of its own: each command's rules live in the spec of the
-file that builds it. What this unit guarantees is the set: exactly those twelve commands are registered,
+file that builds it. What this unit guarantees is the set: exactly those thirteen commands are registered,
 each one is reachable by its name from the root, and no two of them answer to the same name. A command
 built but never registered would exist in the code and be invisible to the user; a name registered twice
 would make one of the two unreachable.
@@ -30,7 +30,7 @@ would make one of the two unreachable.
 
 | Effect | Description |
 | --- | --- |
-| `QLCMQ-B01` | Registers exactly twelve commands under the root: check, verify, doctor, status, stale, coverage, report, test, mutation, stamp, touch and keep-evidence. |
+| `QLCMQ-B01` | Registers exactly thirteen commands under the root: check, verify, doctor, status, stale, affected-tests, coverage, report, test, mutation, stamp, touch and keep-evidence. |
 | `QLCMQ-B02` | Each registered command is reachable from the root by its name. |
 
 ## Invariants

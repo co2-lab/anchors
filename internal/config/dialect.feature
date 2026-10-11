@@ -173,3 +173,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     When its dialect is read against an OCaml module
     Then the top-level let and let rec are exported, a local let is not, Sys.getenv_opt names the variable, and open names the module it imports
 
+  @DLCTI-B25 @unit-level
+  Scenario: The import resolution declares imports by name
+    Given an anchors.yaml whose import_resolve says by_name with name_case lower_first
+    When it is loaded
+    Then the dialect resolves imports by name, lowering the first letter
+

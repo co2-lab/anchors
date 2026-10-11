@@ -2,7 +2,7 @@
 # @anchors
 #   code: PRFTD
 #   ref: PRJTS
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @PRJTS
@@ -49,3 +49,10 @@ Feature: ProjectTests — the gates read the project's tests through the source 
     Given a test file staged short and edited in the tree with a test far below, and one the same in both
     When the project's tests are listed under --index, by a pattern and by a script
     Then the pattern lists the staged file's test at its line, and the script's list keeps only the file the same in both
+
+  @PRJTS-B08 @unit-level
+  Scenario: The project's tests are offered to the commands
+    Given a Go project with one test case in its map's test file
+    When a command asks for the project's tests
+    Then it gets that case with its file and title, and that the project declares how its tests are written
+

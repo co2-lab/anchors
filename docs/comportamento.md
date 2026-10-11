@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:740908ed334039f7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1e714b317f04bfcb — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2192,6 +2192,18 @@ teste prova.
 
 - [A card that cannot be opened fails with the host's message](layers/comando.md#sycms--synthesizecommand--two-pull-requests-in-content-conflict-become-one-card-that-asks-for-the-best-of-each-and-every-end-points-at-it) `SYCMS-E01`
 
+- [A changed rule reaches its tests](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-B01`
+
+- [A changed region reaches its tests, and a change outside reaches the closure](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-B02`
+
+- [A changed test runs whole, and a frozen file reaches nothing](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-B03`
+
+- [The tests are printed for the runner](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-B04`
+
+- [With no tests source, the test files are printed](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-B05`
+
+- [An unknown format is refused](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-E01`
+
 - [The plan is the timed files fastest first, then the untimed](layers/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B01`
 
 - [Batches take what fits and then the untimed one by one](layers/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B02`
@@ -2570,13 +2582,13 @@ teste prova.
 
 - [A file the commit leaves as HEAD has it takes HEAD's measurement over one carried from the tree's edit](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B08`
 
-- [The quality domain registers exactly its twelve commands](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command) `QLCMQ-B01`
+- [The quality domain registers exactly its thirteen commands](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command) `QLCMQ-B01`
 
-- [Each quality command is reachable by its name](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command) `QLCMQ-B02`
+- [Each quality command is reachable by its name](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command) `QLCMQ-B02`
 
-- [No two quality commands share a name](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command) `QLCMQ-I01`
+- [No two quality commands share a name](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command) `QLCMQ-I01`
 
-- [Registering the quality commands prints nothing](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command) `QLCMQ-X01`
+- [Registering the quality commands prints nothing](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command) `QLCMQ-X01`
 
 - [A single perspective is written to docs or to the chosen file](layers/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs) `RPRTS-B01`
 
@@ -3122,6 +3134,8 @@ teste prova.
 
 - [The OCaml family reads OCaml](layers/config.md#dlcti-b24--the-ocaml-family-reads-ocaml) `DLCTI-B24`
 
+- [The import resolution declares imports by name](layers/config.md#dlcti-b25--the-import-resolution-declares-imports-by-name) `DLCTI-B25`
+
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
 - [A trigger naming a unit code charges that unit and not its neighbours in the same layer](layers/config.md#dcrqa-b02--a-trigger-naming-a-unit-code-charges-that-unit-and-not-its-neighbours-in-the-same-layer) `DCRQA-B02`
@@ -3481,6 +3495,8 @@ teste prova.
 - [A kinded dependency needs a declared kind, and no import](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B08`
 
 - [An import of types only is flagged as such](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B09`
+
+- [Imports by name are flagged per file](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B10`
 
 - [A spec still carrying a Dependencies table diverges, pointing at the migration](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 
@@ -4863,6 +4879,8 @@ teste prova.
 - [Support files are not read as tests](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B06`
 
 - [Under --index the tests are listed from the commit](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B07`
+
+- [The project's tests are offered to the commands](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B08`
 
 - [Returns an empty list of Promotable gates when profile contains no gates](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B01`
 

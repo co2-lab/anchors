@@ -637,4 +637,13 @@ type ImportResolve struct {
 	Extensions []string `yaml:"extensions,omitempty"`
 	// Aliases map a path prefix to a directory of the project: `"@/": "apps/mobile/src/"`.
 	Aliases map[string]string `yaml:"aliases,omitempty"`
+	// ByName: the import pattern captures a module NAME, not a path, wherever it stands on a
+	// line — a qualified reference in the middle of the code (OCaml's `Eval.apply`), with no
+	// import line to carry a flag. The name resolves to the project's code file named after
+	// it (NameCase, Extensions), and the file's `@dep:` flags are its own, one per module it
+	// uses, on lines of their own below the header.
+	ByName bool `yaml:"by_name,omitempty"`
+	// NameCase is how a module name becomes a file name: `lower_first` (`Js_pilha` →
+	// `js_pilha`), `lower`, or empty for the name as written.
+	NameCase string `yaml:"name_case,omitempty"`
 }

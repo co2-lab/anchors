@@ -50,6 +50,133 @@ func familyImportPattern(family string) string {
 		return `(?:\bfrom\s+|^\s*import\s+|\brequire\(\s*|\bimport\(\s*)['"](?P<path>[^'"]+)['"]`
 	case "go":
 		return `^\s*(?:import\s+)?(?:[\w.]+\s+)?"(?P<path>[^"]+)"\s*$`
+	case "ocaml":
+		// A module named after `open`, or qualifying a name anywhere: `Eval.apply`,
+		// `Galaxy_core.Eval.apply` (each module of the chain is read). A constructor —
+		// `Some x` — qualifies nothing, and is not read.
+		return `\bopen!?\s+(?P<path>[A-Z][A-Za-z0-9_']*)|\b(?P<path2>[A-Z][A-Za-z0-9_']*)\.[A-Za-z_(]`
+	}
+	return ""
+}
+
+// familyImportResolve is how a family's imports become files when the project declares
+// nothing: OCaml names a module, and dune names its file after it, first letter lowered.
+func familyImportResolve(family string) *config.ImportResolve {
+	switch strings.ToLower(family) {
+	case "ocaml":
+		return &config.ImportResolve{ByName: true, NameCase: "lower_first", Extensions: []string{".ml"}}
+	}
+	return nil
+}
+
+// importResolve is the project's import resolution, or its family's.
+func importResolve(d config.Dialect) *config.ImportResolve {
+	if d.ImportResolve != nil {
+		return d.ImportResolve
+	}
+	return familyImportResolve(d.Family)
+}
+
+// byName says whether the dialect's imports are module names read anywhere in the code,
+// flagged per file (config.ImportResolve.ByName).
+func byName(d config.Dialect) bool {
+	r := importResolve(d)
+	return r != nil && r.ByName
+}
+
+// fileName is a module name as its file is named.
+func fileName(name, nameCase string) string {
+	switch nameCase {
+	case "lower_first":
+		if name == "" {
+			return name
+		}
+		return strings.ToLower(name[:1]) + name[1:]
+	case "lower":
+		return strings.ToLower(name)
+	}
+	return name
+}
+
+// blockCommentRE is a block comment that opens and closes on one line, in the languages
+// whose only comment is a block: OCaml's.
+var blockCommentRE = regexp.MustCompile(`\(\*.*?\*\)`)
+
+// importsByName are the modules a file names, one import per module, at its first mention,
+// each resolved to the code file named after it. The file's comments name nothing.
+func importsByName(content, rel string, re *regexp.Regexp, d config.Dialect, g *mapx.Graph) []RealImport {
+	r := importResolve(d)
+	var groups []int
+	for i, name := range re.SubexpNames() {
+		if strings.HasPrefix(name, "path") {
+			groups = append(groups, i)
+		}
+	}
+	seen := map[string]bool{}
+	var out []RealImport
+	depth := 0
+	for i, ln := range strings.Split(content, "\n") {
+		ln = blockCommentRE.ReplaceAllString(ln, " ")
+		if depth > 0 {
+			if j := strings.Index(ln, "*)"); j >= 0 {
+				depth, ln = 0, ln[j+2:]
+			} else {
+				continue
+			}
+		}
+		if j := strings.Index(ln, "(*"); j >= 0 {
+			depth, ln = 1, ln[:j]
+		}
+		for _, m := range re.FindAllStringSubmatch(ln, -1) {
+			name := ""
+			for _, gi := range groups {
+				if m[gi] != "" {
+					name = m[gi]
+					break
+				}
+			}
+			if name == "" || seen[name] {
+				continue
+			}
+			seen[name] = true
+			target := resolveByName(rel, name, r, g)
+			out = append(out, RealImport{First: i + 1, Line: i + 1, Path: name, Target: target})
+		}
+	}
+	return out
+}
+
+// resolveByName is the code file named after the module: the one beside the importer when
+// there is one, or the only one in the project. A name several files carry, none of them
+// beside the importer, is not told apart — no target rather than a wrong one.
+func resolveByName(rel, name string, r *config.ImportResolve, g *mapx.Graph) string {
+	if g == nil || r == nil {
+		return ""
+	}
+	exts := r.Extensions
+	if len(exts) == 0 {
+		exts = []string{""}
+	}
+	stem := fileName(name, r.NameCase)
+	var near, all []string
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindCode || n.ID == rel {
+			continue
+		}
+		for _, e := range exts {
+			if path.Base(n.ID) == stem+e {
+				all = append(all, n.ID)
+				if path.Dir(n.ID) == path.Dir(rel) {
+					near = append(near, n.ID)
+				}
+			}
+		}
+	}
+	switch {
+	case len(near) == 1:
+		return near[0]
+	case len(all) == 1:
+		return all[0]
 	}
 	return ""
 }
@@ -120,6 +247,9 @@ func ImportsOf(content, rel string, d config.Dialect, g *mapx.Graph) []RealImpor
 	}
 	if re == nil {
 		return nil
+	}
+	if byName(d) && !isFlowFile(rel) {
+		return importsByName(content, rel, re, d, g)
 	}
 	group := re.SubexpIndex("path")
 	typeRE := typeImportRE(d)
@@ -294,10 +424,17 @@ func checkDepDeclared(content string, n mapx.Node, root string, g *mapx.Graph, c
 	}
 	imps := ImportsOf(content, n.ID, d, g)
 	flags := flagsByStatement(content, imps)
+	// By name, the flags are the file's: each module it uses is flagged once, anywhere.
+	fileFlags := map[string]bool{}
+	if byName(d) {
+		for _, f := range scan.CodeDepsIn([]byte(content)) {
+			fileFlags[f.Code] = true
+		}
+	}
 	var missing []string
 	for i, imp := range imps {
 		codes := codesOfTarget(imp, g)
-		if len(codes) == 0 || flags[i] != nil {
+		if len(codes) == 0 || flags[i] != nil || anyFlagged(codes, fileFlags) {
 			continue
 		}
 		missing = append(missing, fmt.Sprintf("%d `%s` → %s", imp.Line, imp.Path, strings.Join(codes, "|")))
@@ -331,6 +468,12 @@ func checkDepHonored(content string, n mapx.Node, root string, g *mapx.Graph, cf
 		}
 		if f.Code == "" {
 			continue // a waiver names no code
+		}
+		if byName(d) {
+			if !usesCode(imps, g, f.Code) {
+				wrong = append(wrong, i18n.T("gate.dep_chain.flag_unused_module", f.Line, f.Code))
+			}
+			continue
 		}
 		var imp *RealImport
 		for i := range imps {
@@ -495,6 +638,9 @@ func fixDepFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 	}
 	d := fixConfig.DialectFor()
 	imps := ImportsOf(content, n.ID, d, g)
+	if byName(d) {
+		return fixDepFlagsByName(content, n, imps, g)
+	}
 	if len(imps) == 0 {
 		return content, false, ""
 	}
@@ -668,3 +814,76 @@ var exportListLineRE = regexp.MustCompile(`^export\s+(?:type\s+)?\{([^}]*)\}`)
 
 // defaultDeclRE is the line that declares a module's default export.
 var defaultDeclRE = regexp.MustCompile(`^\s*export\s+default\b|^\s*module\.exports\s*=`)
+
+// anyFlagged says whether one of the codes is in the set.
+func anyFlagged(codes []string, set map[string]bool) bool {
+	for _, c := range codes {
+		if set[c] {
+			return true
+		}
+	}
+	return false
+}
+
+// usesCode says whether one of the file's imports resolves to a file of that code.
+func usesCode(imps []RealImport, g *mapx.Graph, code string) bool {
+	for _, imp := range imps {
+		if contains(codesOfTarget(imp, g), code) {
+			return true
+		}
+	}
+	return false
+}
+
+// fixDepFlagsByName writes, below the file's header, a flag line for each module the file
+// uses that none flags, and removes a flag line whose module it no longer uses: by name, the
+// flags are the file's, one per line, in its comment.
+func fixDepFlagsByName(content string, n mapx.Node, imps []RealImport, g *mapx.Graph) (string, bool, string) {
+	want := map[string]bool{}
+	for _, imp := range imps {
+		if codes := codesOfTarget(imp, g); len(codes) == 1 {
+			want[codes[0]] = true
+		}
+	}
+	have := map[string]bool{}
+	lines := strings.Split(content, "\n")
+	var kept []string
+	var done []string
+	for i, l := range lines {
+		if scan.ChainFlagOnlyRE.MatchString(l) {
+			if fs := scan.CodeDepsIn([]byte(l)); len(fs) == 1 && fs[0].Code != "" && fs[0].Kind == "" {
+				if !want[fs[0].Code] {
+					done = append(done, fmt.Sprintf("%d -%s", i+1, fs[0].Code))
+					continue
+				}
+				have[fs[0].Code] = true
+			}
+		}
+		kept = append(kept, l)
+	}
+	for _, f := range scan.CodeDepsIn([]byte(content)) {
+		have[f.Code] = true
+	}
+	var add []string
+	for c := range want {
+		if !have[c] {
+			add = append(add, c)
+		}
+	}
+	sort.Strings(add)
+	if len(add) == 0 && len(done) == 0 {
+		return content, false, ""
+	}
+	marker := config.LineCommentFor(n.ID)
+	var flagLines []string
+	for _, c := range add {
+		flagLines = append(flagLines, marker+" @dep: "+c+config.CommentCloseFor(marker))
+		done = append(done, c)
+	}
+	at := 0
+	if block := scan.AnchorsHeader([]byte(strings.Join(kept, "\n"))); block != nil {
+		at = strings.Count(strings.SplitN(strings.Join(kept, "\n"), string(block), 2)[0], "\n") + strings.Count(string(block), "\n") + 1
+	}
+	out := append(append(append([]string{}, kept[:at]...), flagLines...), kept[at:]...)
+	return strings.Join(out, "\n"), true, i18n.T("gate.fix.dep_written", strings.Join(done, ", "))
+}

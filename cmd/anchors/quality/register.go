@@ -13,6 +13,7 @@ func Register(root *cobra.Command) {
 	root.AddCommand(newDoctorCmd())
 	root.AddCommand(newStatusCmd())
 	root.AddCommand(newStaleCmd())
+	root.AddCommand(newAffectedTestsCmd())
 	root.AddCommand(newCoverageCmd())
 	root.AddCommand(newReportCmd())
 	root.AddCommand(newTestCmd())

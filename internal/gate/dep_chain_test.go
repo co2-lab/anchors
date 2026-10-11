@@ -277,3 +277,55 @@ func TestDepChain_typeImports(t *testing.T) {
 		t.Errorf("a type flag is confronted as an import: %s", msg)
 	}
 }
+
+func TestDepChain_byName(t *testing.T) {
+	t.Run("DCGDP-B10: Imports by name are flagged per file", func(t *testing.T) {})
+	root := t.TempDir()
+	parse := "(* @anchors\n  code: PARSR\n*)\n(* @dep: GHOST *)\nopen Lexer\n(* see Pars.old, Eval.legacy *)\nlet parse x = Eval.apply (Some x) |> List.map id\n"
+	for rel, body := range map[string]string{
+		"src/core/parse.ml":  parse,
+		"src/core/eval.ml":   "let apply x = x\n",
+		"src/front/lexer.ml": "let token x = x\n",
+		"src/ghost/ghost.ml": "let g = 1\n",
+	} {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "src/core/parse.ml", Kind: mapx.KindCode, FileCode: "PARSR"},
+		{ID: "src/core/eval.ml", Kind: mapx.KindCode, FileCode: "EVALC"},
+		{ID: "src/front/lexer.ml", Kind: mapx.KindCode, FileCode: "LEXRF"},
+		{ID: "src/ghost/ghost.ml", Kind: mapx.KindCode, FileCode: "GHOST"},
+	}}
+	cfg := &config.Config{Dialect: &config.Dialect{Family: "ocaml"}}
+	var targets []string
+	for _, imp := range ImportsOf(parse, "src/core/parse.ml", cfg.DialectFor(), g) {
+		if imp.Target != "" {
+			targets = append(targets, imp.Path+"="+imp.Target)
+		}
+	}
+	if strings.Join(targets, " ") != "Lexer=src/front/lexer.ml Eval=src/core/eval.ml" {
+		t.Errorf("imports: %v", targets)
+	}
+	n := g.Nodes[0]
+	if v, msg := checkDepDeclared(parse, n, root, g, cfg); v != Fail || !strings.Contains(msg, "LEXRF") || !strings.Contains(msg, "EVALC") {
+		t.Errorf("declared: %v %s", v, msg)
+	}
+	if v, msg := checkDepHonored(parse, n, root, g, cfg); v != Fail || !strings.Contains(msg, "GHOST") {
+		t.Errorf("honored: %v %s", v, msg)
+	}
+	FixWithConfig([]config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code"}}}, g.Nodes[:1], root, g, cfg)
+	got := read(t, root, "src/core/parse.ml")
+	if !strings.HasPrefix(got, "(* @anchors\n  code: PARSR\n*)\n(* @dep: EVALC *)\n(* @dep: LEXRF *)\nopen Lexer\n") || strings.Contains(got, "GHOST") {
+		t.Errorf("fixed:\n%s", got)
+	}
+	for _, check := range []func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string){checkDepDeclared, checkDepHonored} {
+		if v, msg := check(got, n, root, g, cfg); v != Pass {
+			t.Errorf("after the fix: %v %s", v, msg)
+		}
+	}
+}

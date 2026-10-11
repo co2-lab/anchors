@@ -200,3 +200,18 @@ func indexedRepo(t *testing.T) (top, root string) {
 	writeFile(t, root, "new.ts", "untracked\n")
 	return top, root
 }
+
+func TestProjectTests_offered(t *testing.T) {
+	t.Run("PRJTS-B08: The project's tests are offered to the commands", func(t *testing.T) {})
+	resetProjectTestsCache()
+	t.Cleanup(resetProjectTestsCache)
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "a_test.go"), []byte("t.Run(\"PAYUN-B01: pays\", nil)\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a_test.go", Kind: mapx.KindTest}}}
+	tests, declared, err := ProjectTests(root, g, &config.Config{Dialect: &config.Dialect{Family: "go"}})
+	if err != nil || !declared || len(tests) != 1 || tests[0].Title != "PAYUN-B01: pays" || tests[0].File != "a_test.go" {
+		t.Errorf("got %v %v %v", tests, declared, err)
+	}
+}

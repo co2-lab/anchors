@@ -60,3 +60,10 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     Given a TypeScript file with an unflagged type import, a type import with a plain flag, a runtime import flagged as types, and an inline type import the author flagged as types
     When the fixer runs
     Then the type imports carry `@dep[type]:`, the runtime one `@dep:`, the author's inline one stays, and dep-honored passes
+
+  @DCGDP-B10 @unit-level
+  Scenario: Imports by name are flagged per file
+    Given an OCaml module that opens a lexer, calls an evaluator by its qualified name, names a module in a comment, a standard-library module and a constructor, and flags a module it does not use
+    When the chain is confronted and fixed
+    Then the lexer and the evaluator are its imports, the missing flags are asked and the unused one refused, and the fixer writes one flag line per module below the header and removes the unused one
+

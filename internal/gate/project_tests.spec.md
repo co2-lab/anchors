@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRJTS
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: gate
 -->
 # ProjectTests — the gates read the project's tests through the source the project declares
@@ -33,6 +33,7 @@ syntax themselves, and a project on any other library had no title read at all.
 | `PRJTS-B05` | An error of the source is returned with the declaration, never taken for a project without tests. |
 | `PRJTS-B06` | Support files are not read as tests, and are dropped from any list of test paths the gates confront. |
 | `PRJTS-B07` | Under `--index` a test's line is a line of the content the gates read: a pattern scans the files through the current source, and what a script lists of a file whose tree holds something else than the source is left out. (`projectTests`, `sameAsSource`) |
+| `PRJTS-B08` | The project's tests are offered to the commands as the gates read them, with whether the project declares how its tests are written. (`ProjectTests`) |
 
 ## Errors
 

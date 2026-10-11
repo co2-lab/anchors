@@ -192,6 +192,10 @@ them with the code (they are named in each line below).
   import that resolves to a file of the project; 'dep-honored' asks it to name the code of
   that file. A package of the ecosystem takes none.
     import { PALETTE } from './tokens' // ` + flagAt + `dep: TOKNS
+  In a language whose code names modules with no import line to carry the flag — OCaml's
+  'Eval.apply' —, the flags are the FILE's: one per module it uses, on lines of their own
+  below the header ('import_resolve.by_name', the OCaml family's default).
+    (* ` + flagAt + `dep: EVALC *)
 - '@dep[type]: <CODE>' — instead of '@dep:' on an import that brings types only: nothing of
   that file runs with this one, so a change to it stales no test's proof ('anchors check
   --fix' writes it on 'import type …'; the project's dialect says how a type import reads

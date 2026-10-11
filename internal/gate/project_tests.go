@@ -62,6 +62,13 @@ func projectTests(root string, g *mapx.Graph, cfg *config.Config) (tests []testl
 	return tests, true, err
 }
 
+// ProjectTests are the project's tests as its dialect says they are written — each with its
+// file, line and title —, and whether the project declares how; an error when they could
+// not be read.
+func ProjectTests(root string, g *mapx.Graph, cfg *config.Config) ([]testlist.Test, bool, error) {
+	return projectTests(root, g, cfg)
+}
+
 // testsSource is the effective `tests` source of the project's dialect: its own, or its
 // family's.
 func testsSource(cfg *config.Config) testlist.Source {

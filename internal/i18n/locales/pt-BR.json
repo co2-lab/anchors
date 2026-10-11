@@ -285,6 +285,7 @@
   "gate.dep_chain.skip_no_flags": "nenhuma flag `@dep:` a confrontar",
   "gate.dep_chain.undeclared": "%d import(s) de arquivo regido sem a flag `@dep:`: %s. Todo import é uma dependência, e o mapa só conhece as marcadas: escreva `@dep: <código>` na linha do import (o `anchors check --fix` escreve), ou `@no-dep: <razão>`.",
   "gate.dep_chain.flag_without_import": "a linha %d marca `@dep: %s` e não importa nada — leve a flag para a linha do import, ou remova",
+  "gate.dep_chain.flag_unused_module": "a linha %d marca `@dep: %s` e o arquivo não usa nenhum módulo desse código — remova a flag, ou cite o módulo certo",
   "gate.dep_chain.flag_wrong_code": "a linha %d marca `@dep: %s`, e `%s` resolve para %s — o import mudou e a flag ficou (o `anchors check --fix` corrige)",
   "gate.dep_chain.used_by_missing": "`%s` é importado por %s e não tem `@used-by:` (o `anchors check --fix` escreve)",
   "gate.dep_chain.used_by_wrong": "`%s` diz `@used-by: %s`, e quem o importa é %s",

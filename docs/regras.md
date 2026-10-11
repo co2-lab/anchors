@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:4a25226777b0439d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:e9b1cbbeeeef904f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1399,7 +1399,7 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-B23 — The spec guide asks a unit that loads data for four states at least — loading, empty, load error and loaded —, the load error its own and never written as "no data" or "not found", its failure a rule naming the source it answers (`failure-declared`), each fallible call reading its error beside it (`failure-handled`), and points at the screen preset that writes them.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
-- [GVGDG-B24 — The header guide names the flags beside the code — the dependency flag on each import line and its waiver, the kinded dependency on a call that is no import (`@dep` with a kind the project declares), the used-by flag above each imported symbol (naming its symbol above an export list), the navigation flag on each call and its waiver —, the gates that confront each, and that the fixer writes what the code proves; the navigation guide, a subcommand of its own, shows a screen spec's In and Out tables, the flag on every navigation call, a back navigation included, the four navigation gates, the entry routes, and the page and command that show the map. Their examples are written so this repository does not read them as its own flags.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+- [GVGDG-B24 — The header guide names the flags beside the code — the dependency flag on each import line and its waiver, the kinded dependency on a call that is no import (`@dep` with a kind the project declares), the used-by flag above each imported symbol (naming its symbol above an export list), the navigation flag on each call and its waiver —, the gates that confront each, and that the fixer writes what the code proves; the navigation guide, a subcommand of its own, shows a screen spec's In and Out tables, the flag on every navigation call, a back navigation included, the four navigation gates, the entry routes, and the page and command that show the map. Their examples are written so this repository does not read them as its own flags. In a language that names modules with no import line, the header guide says the flags are the file's, one per module on lines of their own below the header.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B25 — The spec guide says a spec names no file, method or file code — the files a unit imports are declared where the import is, in the code and the tests —, that a rule another unit shares lives in the product doctrine and is realized, not cited, and that the rule uses cite fields and the spec's own codes.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -2429,6 +2429,20 @@ abra a página dela em `camadas/`.
 
 - [SYCMS-E01 — The card cannot be opened on the host.](layers/comando.md#sycms--synthesizecommand--two-pull-requests-in-content-conflict-become-one-card-that-asks-for-the-best-of-each-and-every-end-points-at-it)
 
+### [AFTSF — AffectedTests — which tests to run for what changed, by rule and region where the project declares them](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them)
+
+- [AFTSF-B01 — A spec whose rule's definition changed — added and removed rules included — reaches the tests whose title carries that rule's code; a change to the rest of the spec reaches none. (`affectedBy`, `changedRuleCodes`)](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them)
+
+- [AFTSF-B02 — A file whose region `#region [CODE]` changed — added and removed regions included — reaches the tests whose title carries CODE; a change outside every region reaches every test whose evidence closure holds the file, and so does a new or a deleted file. (`changedRegions`, `outsideRegions`)](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them)
+
+- [AFTSF-B03 — A changed test file runs whole, and a file a freeze covers reaches nothing.](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them)
+
+- [AFTSF-B04 — The tests are printed in the format asked: `lines` one title per line, `regex` one anchored alternation of the titles with their metacharacters escaped, `files` the test files once each, `json` each test with file, line and title; in file and line order. With no file given, the files are those that differ from the last commit. (`selectAffected`, `printAffected`)](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them)
+
+- [AFTSF-B05 — With no `dialect.tests` declared the titles cannot be read: the test files run whole are printed, and stderr says the tests by code are left out.](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them)
+
+- [AFTSF-E01 — A format outside the four.](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them)
+
 ### [BDGRN — BudgetRun — run a suite's files fastest first until a time budget is spent](layers/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent)
 
 - [BDGRN-B01 — The plan is the suite's timed files, fastest first with ties by path, then the files no suite has timed, by path; a file only other suites timed, a support file, and a file of another kind are left out.](layers/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent)
@@ -2825,15 +2839,15 @@ abra a página dela em `camadas/`.
 
 - [MPSYN-E01 — The index cannot be read or the map cannot be written or staged.](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
 
-### [QLCMQ — QualityCommands — the quality domain puts its twelve commands under the root command](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command)
+### [QLCMQ — QualityCommands — the quality domain puts its thirteen commands under the root command](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command)
 
-- [QLCMQ-B01 — Registers exactly twelve commands under the root: check, verify, doctor, status, stale, coverage, report, test, mutation, stamp, touch and keep-evidence.](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command)
+- [QLCMQ-B01 — Registers exactly thirteen commands under the root: check, verify, doctor, status, stale, affected-tests, coverage, report, test, mutation, stamp, touch and keep-evidence.](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command)
 
-- [QLCMQ-B02 — Each registered command is reachable from the root by its name.](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command)
+- [QLCMQ-B02 — Each registered command is reachable from the root by its name.](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command)
 
-- [QLCMQ-I01 — No two registered commands answer to the same name.](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command)
+- [QLCMQ-I01 — No two registered commands answer to the same name.](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command)
 
-- [QLCMQ-X01 — Registering runs no command and prints nothing; it only attaches the commands.](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command)
+- [QLCMQ-X01 — Registering runs no command and prints nothing; it only attaches the commands.](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command)
 
 ### [RPRTS — Reports — markdown perspectives on what Anchors already measures, written into docs](layers/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs)
 
@@ -3405,6 +3419,8 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B24 — The OCaml family reads an exported function as a top-level `let` or `let rec`, an environment read as `Sys.getenv` or `Sys.getenv_opt` with a literal name, a loop as `for` or `while`, and an import line as `open` (or `open!`) with its module; a family's import pattern fills the project's when it declares none.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
+- [DLCTI-B25 — The import resolution may declare that imports are module names (`by_name`) and how a name becomes a file name (`name_case`: `lower_first`, `lower`, or as written); both are read from `import_resolve`. (`ImportResolve`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B14 — The Go and TS families say how a test is written — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` — and a project that declares its own `tests` keeps it over the family's.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
@@ -3834,6 +3850,8 @@ abra a página dela em `camadas/`.
 - [DCGDP-B08 — A kinded dependency flag (`@dep[<kind>]: <name>`) is no import: `dep-honored` asks only that its kind is one the project declares in `dependency_kinds:`, naming the line, the kind and the name when it is not.](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B09 — An import of types only — the dialect's `type_import_pattern`, or its family's (TypeScript: `import type …`, `export type … from`) — is flagged `@dep[type]: CODE` by the fixer, a plain flag on it is turned into one, and a type flag on a static import that runs is turned back — a type flag on an inline `import('…')`, which reads like a dynamic import, is the author's and stays; `dep-honored` confronts a type flag as it does an import's. (`fixDepFlags`, `familyTypeImportPattern`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+
+- [DCGDP-B10 — Where the dialect resolves imports by name (`import_resolve.by_name`, the OCaml family's default), every module the code names — after `open`, or qualifying a name anywhere on a line, outside comments — is an import, read once per file and resolved to the code file named after it (`name_case`, `extensions`): the one beside the importer, or the only one in the project; a name of no project file (the standard library, a constructor) or of several files none beside the importer resolves to nothing. The flags are the file's: `dep-declared` asks one `@dep:` per module used, anywhere in the file, `dep-honored` refuses a flag whose code no module used resolves to, and the fixer writes each missing flag on a line of its own below the header, in the file's comment, and removes the flag line of a module no longer used.](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 ### [DEPHN — DependencyHonored — a spec declares no dependency: the code does](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
@@ -5392,6 +5410,8 @@ abra a página dela em `camadas/`.
 - [PRJTS-B06 — Support files are not read as tests, and are dropped from any list of test paths the gates confront.](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares)
 
 - [PRJTS-B07 — Under `--index` a test's line is a line of the content the gates read: a pattern scans the files through the current source, and what a script lists of a file whose tree holds something else than the source is left out. (`projectTests`, `sameAsSource`)](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares)
+
+- [PRJTS-B08 — The project's tests are offered to the commands as the gates read them, with whether the project declares how its tests are written. (`ProjectTests`)](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares)
 
 - [PRJTS-E01 — REF[PRJTS-B05]: the source fails or answers outside its contract](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares)
 

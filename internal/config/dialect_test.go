@@ -5,6 +5,8 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"sort"
@@ -564,5 +566,20 @@ func TestDialectFor_ocaml(t *testing.T) {
 	}
 	if own := (&Config{Dialect: &Dialect{Family: "ocaml", ImportPattern: "^use (.*)"}}).DialectFor(); own.ImportPattern != "^use (.*)" {
 		t.Error("a declared import pattern wins over the family")
+	}
+}
+
+func TestImportResolve_byName(t *testing.T) {
+	t.Run("DLCTI-B25: The import resolution declares imports by name", func(t *testing.T) {})
+	path := filepath.Join(t.TempDir(), "anchors.yaml")
+	if err := os.WriteFile(path, []byte("version: 7\ndialect:\n  family: ocaml\n  import_resolve:\n    by_name: true\n    name_case: lower_first\n    extensions: [.ml]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r := c.DialectFor().ImportResolve; r == nil || !r.ByName || r.NameCase != "lower_first" || r.Extensions[0] != ".ml" {
+		t.Errorf("resolution: %+v", r)
 	}
 }
