@@ -334,7 +334,7 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 		// as revs das pontas, então um veredito envelhece se o alvo mudar depois — e
 		// nesse caso volta a ser pergunta, que é o comportamento certo.
 		if graph != nil {
-			if v, ok := graph.JudgedBy(n.ID, g.Name); ok {
+			if v, ok := graph.JudgedBy(n.ID, g.Name, g.StaleOnConfig); ok {
 				switch v {
 				case "issue":
 					r.Verdict = Fail

@@ -42,6 +42,7 @@ var guideTitles = map[string]string{
 	"changelog":  "# Changelog guide",
 	"plan":       "# Plan guide",
 	"product":    "# Product doctrine guide",
+	"guidance":   "# Guidance guide",
 	"project":    "# Project guide",
 	"review":     "# Review guide",
 	"spec":       "# Spec guide",
@@ -704,6 +705,16 @@ func TestReviewGuide_eachItemIsAFinding(t *testing.T) {
 	for _, want := range []string{"EACH item you ask to change is a finding of its own", "anchors escalate \"<the item>\" --about <file> --card <the PR's card>", "The text of a review is not state", "close the\nfindings the PR answered"} {
 		if !strings.Contains(review, want) {
 			t.Errorf("the review guide lacks %q", want)
+		}
+	}
+}
+
+func TestGuidanceGuide(t *testing.T) {
+	t.Run("GVGDG-B28: The guidance guide says what the working agreement must say", func(t *testing.T) {})
+	g := guideOut(t, "guidance")
+	for _, want := range []string{"CONTRIBUTING.md — the working agreement", "'@AGENTS.md'", "THE ORDER OF THE WORK", "THE LAYERS", "WHERE WORK COMES FROM", "NEVER '--no-verify'", "WATCHING LONG WORK", "'anchors monitor run -- <command>'", "What contradicts the agreement", "'guidance-linked'", "'guidance-honored'"} {
+		if !strings.Contains(g, want) {
+			t.Errorf("the guidance guide lacks %q", want)
 		}
 	}
 }

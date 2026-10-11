@@ -2,7 +2,7 @@
 # @anchors
 #   code: DGFDF
 #   ref: DFGTD
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @DFGTD
@@ -30,10 +30,10 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     And feature-spec-match is seeded only with spec and feature, and test-feature-match only with test and feature
 
   @DFGTD-B04 @unit-level
-  Scenario: Choosing only guides seeds only the guide checklist gate
+  Scenario: Choosing only guides seeds the guide checklist and the guidance gates
     Given a project that chose only guides
     When the default gates are seeded
-    Then the only gate is guide-checklist
+    Then the gates are guide-checklist, guidance-linked and guidance-honored
 
   @DFGTD-B05 @unit-level
   Scenario: The parent gate confronts exactly the chosen artifacts among spec, plan and code

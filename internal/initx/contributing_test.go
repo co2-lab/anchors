@@ -175,3 +175,13 @@ func TestAgentEntryFilesPointToTheGuide(t *testing.T) {
 		t.Errorf("CLAUDE.md imports AGENTS.md:\n%s", files[1].Content)
 	}
 }
+
+func TestContributingNamesWorkAndForbidsNoVerify(t *testing.T) {
+	t.Run("CNGDC-B10: The guide names the task prompt and forbids skipping the hooks", func(t *testing.T) {})
+	s := ContributingSection(nil, "")
+	for _, want := range []string{"`anchors work <stage> --for <target>`", "Never commit with `--no-verify`", "`[skip-<rule>@<CODE>: why]`"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("missing %q in:\n%s", want, s)
+		}
+	}
+}

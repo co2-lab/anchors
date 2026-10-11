@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:02a186ef7ad64742 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f56ed14d70b07ab4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1295,6 +1295,8 @@ teste prova.
 - [The guides teach the freeze](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B26`
 
 - [A rejection registers each item as a finding](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B27`
+
+- [The guidance guide says what the working agreement must say](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B28`
 
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
@@ -3068,6 +3070,10 @@ teste prova.
 
 - [A configuration that is not valid YAML is fixed, not recreated](layers/config.md#cnfgo-e11--a-configuration-that-is-not-valid-yaml-is-fixed-not-recreated) `CNFGO-E11`
 
+- [The canonical guidance layer](layers/config.md#cnfgo-b68--the-canonical-guidance-layer) `CNFGO-B68`
+
+- [The configuration's revision](layers/config.md#cnfgo-b69--the-configurations-revision) `CNFGO-B69`
+
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](layers/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -4115,6 +4121,12 @@ teste prova.
 - [A gate presupposing an undeclared field asks nothing](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B29`
 
 - [Git is read once per run, and forgotten when the run writes files](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B30`
+
+- [The guidance points to the agreement](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B01`
+
+- [The catalog offers the guidance gates](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B02`
+
+- [A headless layer is asked no header](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B03`
 
 - [A layer the Estrutura does not have fails](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B01`
 
@@ -6310,6 +6322,8 @@ teste prova.
 
 - [The agents' entry files send the agent to the contributing guide](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B09`
 
+- [The guide names the task prompt and forbids skipping the hooks](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B10`
+
 - [The code layer names are listed sorted, and only code layers](layers/infra.md#indcn--initdecisions--the-pure-decisions-of-init-over-the-proposed-configuration-code-layers-tags-and-governs-rules) `INDCN-B01`
 
 - [Pruning removes the code layers not kept and never an artifact layer](layers/infra.md#indcn--initdecisions--the-pure-decisions-of-init-over-the-proposed-configuration-code-layers-tags-and-governs-rules) `INDCN-B02`
@@ -6328,7 +6342,7 @@ teste prova.
 
 - [The gates that cross spec and feature are seeded only when both are chosen](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B03`
 
-- [Choosing only guides seeds only the guide checklist gate](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B04`
+- [Choosing only guides seeds the guide checklist and the guidance gates](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B04`
 
 - [The parent gate confronts exactly the chosen artifacts among spec, plan and code](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B05`
 
@@ -7455,6 +7469,8 @@ teste prova.
 - [Advancing a node to its content carries the evidence its revisions show unchanged](layers/mapa.md#edstd-b22--advancing-a-node-to-its-content-carries-the-evidence-its-revisions-show-unchanged) `EDSTD-B22`
 
 - [A moved file's old evidence is read again from the content at its revision](layers/mapa.md#edstd-b23--a-moved-files-old-evidence-is-read-again-from-the-content-at-its-revision) `EDSTD-B23`
+
+- [A judgment on a node with no edge, and one about the configuration](layers/mapa.md#edstd-b24--a-judgment-on-a-node-with-no-edge-and-one-about-the-configuration) `EDSTD-B24`
 
 - [Saving stamps the current format and the running binary's release](layers/mapa.md#grprg-b01--saving-stamps-the-current-format-and-the-running-binarys-release) `GRPRG-B01`
 

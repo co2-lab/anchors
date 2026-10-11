@@ -52,6 +52,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"plan-doctrine-exists":            checkPlanDoctrineExists,
 	"doctrine-realized":               checkDoctrineRealized,
 	"freeze-consistent":               checkFreezeConsistent,
+	"guidance-linked":                 checkGuidanceLinked,
 	"frozen-touched":                  checkFrozenTouched,
 	"scenario-coverage":               checkScenarioCoverage,
 	"revision-orphans":                checkRevisionOrphans,
@@ -95,6 +96,9 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	// Precisa de `cfg` para ler a própria opção `enforce_section_language` — ver checkSpecSections.
 	"spec-sections": checkSpecSections,
 	"header-valid": func(content string, n mapx.Node, _ string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+		if cfg.LayerHeadless(n.Layer) {
+			return Skip, i18n.T("gate.header.skip_headless", n.Layer)
+		}
 		if v, msg := checkHeaderConforms(content, n, cfg); v != Pass {
 			return v, msg
 		}
@@ -329,14 +333,6 @@ func headerRefRE() *regexp.Regexp {
 
 var headerLayerRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `layer:\s*\S+`)
 
-// recognizedLayers são as tags de camadas RECONHECIDAS — declaradas na Estrutura só
-// para sair do escrutínio de spec (dao/infra/presentation/domain-types e afins). Um
-// arquivo dessas camadas não tem spec dona nem irmã a referenciar; sua identidade
-// mínima honesta é o `layer:` (a que layer pertence), não um code/ref inventado.
-var recognizedLayers = map[string]bool{
-	"dao": true, "infra": true, "presentation": true, "domain-types": true,
-}
-
 // headerLayerValueRE captura o VALOR do `layer:` declarado no header.
 var headerLayerValueRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `layer:\s*(\S+)`)
 
@@ -364,18 +360,11 @@ func isRecognizedLayer(n mapx.Node, content string) bool {
 	// com 19 regras e invariantes somados, 61 testes, toda mutação detectada — e o
 	// `unit-complete` respondia INDETERMINADO nas três, por causa do NOME da layer. Nem
 	// passa nem acusa, e parece cobertura.
-	if n.Regime != "" {
-		return false
-	}
-	// Fallback aos nomes canônicos, p/ projetos que ainda não declaram `regime:`.
-	for _, t := range n.Tags {
-		if recognizedLayers[t] {
-			return true
-		}
-	}
-	if m := headerLayerValueRE.FindStringSubmatch(content); m != nil {
-		return recognizedLayers[strings.TrimSpace(m[1])]
-	}
+	// NO NAME DECIDES. A fallback to fixed layer names (`dao`, `infra`, `presentation`,
+	// `domain-types`) used to exempt them when no regime was declared: a structure guessed
+	// from names, in a gate, against "Anchors proposes no structure". Only the regime the
+	// project declares makes a layer recognized (DESIGN-guidance-layer.md, GDLYG-D04;
+	// measured first: MIF and jokenpo declare `regime: declarativo` on all four).
 	return false
 }
 

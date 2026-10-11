@@ -78,6 +78,7 @@ func ContributingSection(cfg *config.Config, guideDir string) string {
 	} else {
 		b.WriteString("- `anchors next` — claim the next task from the local queue (`.anchors/tasks/`).\n")
 	}
+	b.WriteString("- `anchors work <stage> --for <target>` — the prompt of one task: what to read, where each piece goes, how to verify.\n")
 	b.WriteString("- `anchors check --changed <file>` — run the gates over what a change reaches.\n")
 	b.WriteString("- `anchors test` — run the test suites and ingest their results into the map.\n")
 	b.WriteString("- `anchors touch` — bump `updated_at` in the headers of the files that changed.\n")
@@ -107,6 +108,9 @@ func ContributingSection(cfg *config.Config, guideDir string) string {
 	if len(informing) > 0 {
 		b.WriteString("These only inform: " + quoteAll(informing) + ".\n")
 	}
+	b.WriteString("Never commit with `--no-verify`: the hooks are where this agreement is enforced. A gate\n")
+	b.WriteString("that fails is fixed, or waived in the commit message with its reason\n")
+	b.WriteString("(`[skip-<rule>@<CODE>: why]`).\n")
 	b.WriteString("A divergence (⚠) and a pending item (?) inform unless `severity` in `anchors.yaml`\n")
 	b.WriteString("says otherwise; `anchors check --show-drift` lists them.\n\n")
 

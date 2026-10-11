@@ -54,8 +54,8 @@ Example (markdown, in the owning SPEC) — the spec OWNS the code:
 The block opens with '@anchors' and the following lines are the markers. What does not
 apply, omit — but every file in the graph needs a CODE OF ITS OWN ('code:'), and the
 identity of where it belongs: the spec's own code is its unit's; the rest of the unit adds
-'ref:' to it; a file of a RECOGNIZED layer with no spec (infra/dao/presentation/domain
-vocabulary — see below) adds 'layer:'.
+'ref:' to it; a file of a RECOGNIZED layer with no spec (a layer the Structure declares
+'regime: declarativo' — see below) adds 'layer:'.
 
 ## The markers
 
@@ -80,9 +80,9 @@ file is named by its own 'code:'.
 
 ### RECOGNIZED layers: identity by 'layer:' (and 'dep:' for dependencies)
 
-Not every layer has a spec. The Structure may declare RECOGNIZED layers — infra
-(pure helpers), data access (dao), presentation (domain→UI map), domain
-vocabulary (enums/catalogs). They exist to LEAVE THE SCRUTINY of a spec (there is no rule
+Not every layer has a spec. The Structure may declare RECOGNIZED layers — with
+'regime: declarativo' on the layer; the regime decides, never the layer's name. For example:
+pure helpers, data access, a domain→UI map, a domain vocabulary (enums, catalogs). They exist to LEAVE THE SCRUTINY of a spec (there is no rule
 of their own to document), but they still need IDENTITY. Since they have no owning spec nor
 a sibling to reference, their minimal honest identity is the layer itself:
 

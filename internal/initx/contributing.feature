@@ -81,3 +81,9 @@ Feature: ContributingGuide — render the project's CONTRIBUTING.md from the con
     When they are rendered
     Then AGENTS.md and CLAUDE.md both point to CONTRIBUTING.md, AGENTS.md names the commands and the monitor, and CLAUDE.md imports AGENTS.md
 
+  @CNGDC-B10 @unit-level
+  Scenario: The guide names the task prompt and forbids skipping the hooks
+    Given any configuration
+    When the contributing section is rendered
+    Then it names anchors work for one task, and asks never to commit with --no-verify, waiving in the message instead
+

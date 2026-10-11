@@ -745,3 +745,30 @@ func TestFillOldEvidence(t *testing.T) {
 		t.Errorf("read again by today's rule: %q", written.Nodes[0].EvidenceRev)
 	}
 }
+
+func TestJudgedBy_nodeAndConfiguration(t *testing.T) {
+	t.Run("EDSTD-B24: A judgment on a node with no edge, and one about the configuration", func(t *testing.T) {})
+	g := &Graph{ConfigRev: "c1", Nodes: []Node{{ID: "CONTRIBUTING.md", Rev: "r1"}}}
+	if n := g.StampNodeByGate("CONTRIBUTING.md", "ok", "now", "guidance-honored"); n != 1 || len(g.Nodes[0].Judgments) != 1 {
+		t.Fatalf("stamped %d, judgments %+v", n, g.Nodes[0].Judgments)
+	}
+	if v, ok := g.JudgedBy("CONTRIBUTING.md", "guidance-honored", true); !ok || v != "ok" {
+		t.Errorf("the node's judgment answers: %q %v", v, ok)
+	}
+	rebuilt := &Graph{ConfigRev: "c1", Nodes: []Node{{ID: "CONTRIBUTING.md", Rev: "r1"}}}
+	PreserveStamps(rebuilt, g)
+	if _, ok := rebuilt.JudgedBy("CONTRIBUTING.md", "guidance-honored", true); !ok {
+		t.Error("the node's judgment survives a rebuild")
+	}
+	rebuilt.ConfigRev = "c2"
+	if _, ok := rebuilt.JudgedBy("CONTRIBUTING.md", "guidance-honored", true); ok {
+		t.Error("a judgment about the configuration expires when it moves")
+	}
+	if _, ok := rebuilt.JudgedBy("CONTRIBUTING.md", "guidance-honored"); !ok {
+		t.Error("a judgment not about the configuration holds when only the configuration moves")
+	}
+	rebuilt.Nodes[0].Rev = "r2"
+	if _, ok := rebuilt.JudgedBy("CONTRIBUTING.md", "guidance-honored"); ok {
+		t.Error("the judgment expires when the file changes")
+	}
+}

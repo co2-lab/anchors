@@ -562,7 +562,7 @@ func TestHeaderRegidoExigePosseOuReferencia(t *testing.T) {
 func TestHeaderReconhecidoPassaComLayer(t *testing.T) {
 	t.Run("INCHN-B13: A file of a recognised layer passes with the layer alone", func(t *testing.T) {})
 
-	reconhecida := mapx.Node{ID: "dao.ts", Kind: mapx.KindCode, Tags: []string{"frontend", "presentation"}}
+	reconhecida := mapx.Node{ID: "dao.ts", Kind: mapx.KindCode, Tags: []string{"frontend", "presentation"}, Regime: "declarativo"}
 	if v, _ := checkHeaderConforms("// @anchors\n//   layer: presentation\n", reconhecida, nil); v != Pass {
 		t.Error("camada reconhecida passa com a layer sozinha")
 	}

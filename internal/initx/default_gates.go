@@ -927,6 +927,9 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 // pending everywhere; the doctor names it instead, with the field (reported from
 // baas-proxy).
 func SeedFor(cfg *config.Config, gates []config.Gate, chosen map[string]bool) []config.Gate {
+	// The configuration init writes is measured as it will be loaded: with the canonical
+	// layers, whose gates relate to them.
+	cfg = cfg.WithCanonicalLayers()
 	var out []config.Gate
 	for _, g := range gates {
 		related := cfg.Relates(g)
@@ -1072,6 +1075,28 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures: "every freeze mark names a freeze the doctrine records, and every recorded freeze marks something"})
 	add("spec", config.Gate{Name: "frozen-touched", On: []string{"spec", "product", "feature", "code", "test"},
 		Measures: "a change to a frozen part is told, with the freeze's reason; it informs and never bars"})
+	// The guidance layer is canonical (DESIGN-guidance-layer.md): its gates are offered to
+	// every project that chose any artifact, whatever the artifacts.
+	if len(chosen) == 0 {
+		return out
+	}
+	out = append(out,
+		config.Gate{Name: "guidance-linked", ID: "guidance-linked", Check: "guidance-linked", On: []string{"doc"},
+			Tags: []string{config.GuidanceLayer}, Blocking: config.Bool(false),
+			Measures: "CONTRIBUTING.md holds the working agreement, and README.md, AGENTS.md and CLAUDE.md point to it"},
+		config.Gate{Name: "guidance-honored", ID: "guidance-honored", On: []string{"doc"},
+			Tags: []string{config.GuidanceLayer}, Blocking: config.Bool(false), StaleOnConfig: true,
+			Measures: config.MeasuresJudgment,
+			Ask: "This file is part of the project's guidance — what tells whoever arrives, person or coding " +
+				"agent, how the project is worked on. Read it against `anchors guide guidance` and against the " +
+				"project's anchors.yaml, and answer: does any passage CONTRADICT them? Fail it for an instruction " +
+				"to skip a gate, the hooks or the tests (`--no-verify`, 'tests can come later'); an order of work " +
+				"other than spec → feature → test → code; a layer named that anchors.yaml does not declare, or a " +
+				"folder layout proposed as the structure; a gate called blocking that the configuration does not " +
+				"block, or a blocking one presented as optional; long work left unwatched as the way to do it. Do " +
+				"NOT judge style, length or completeness: a short file that says nothing wrong passes. When failing " +
+				"it, quote each passage and PROPOSE the text that replaces it."},
+	)
 	add("plan", config.Gate{Name: "progress-honest", On: []string{"plan"},
 		Measures: "the plan's progress file tells the truth about the disk"})
 	return out

@@ -201,3 +201,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     When it is printed
     Then it asks each item of a rejection to be a finding registered under the card before the verdict, and an approval to close what the PR answered
 
+  @GVGDG-B28 @unit-level
+  Scenario: The guidance guide says what the working agreement must say
+    Given the guidance guide
+    When it is printed
+    Then it says what each of the four files is for, the five things the agreement says, what contradicts it, and the two gates
+

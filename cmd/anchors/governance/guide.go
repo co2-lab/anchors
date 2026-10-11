@@ -290,6 +290,7 @@ Subcommands print the guides for the specific rulers:
   anchors guide project  how to discover a project that does not yet exist (PROJECT.md)
   anchors guide plan     how to structure a plan (the origin of the movement)
   anchors guide product  the product doctrine (the rule that cuts across targets)
+  anchors guide guidance what README, CONTRIBUTING, AGENTS and CLAUDE must say (the working agreement)
   anchors guide flag     the feature flag (the scenarios a flag's value opens)
   anchors guide flow     actions and flows (work driven by shape, not by memory)
   anchors guide spec     how to write a spec (the source of truth)
@@ -323,6 +324,7 @@ Subcommands print the guides for the specific rulers:
 		newGuideSubCmd("project", "how to discover a project that does not yet exist (PROJECT.md + INSIGHTS.md)", projectGuide),
 		newGuidePlanCmd(),
 		newGuideProductCmd(),
+		newGuideGuidanceCmd(),
 		newGuideFlagCmd(),
 		newGuideFlowCmd(),
 		newGuideSubCmd("spec", "how to write a spec (the source of truth)", specGuide),
@@ -375,6 +377,20 @@ func newGuideProductCmd() *cobra.Command {
 single unit: it lives in product/, and the specs point at it with ` + "`@realizes`" + `.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Print(productGuide)
+			return nil
+		},
+	}
+}
+
+func newGuideGuidanceCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "guidance",
+		Short: "Print the guidance guide (what README, CONTRIBUTING, AGENTS and CLAUDE must say)",
+		Long: `The guidance guide is the ruler of the guidance layer: the files at the project's root
+that tell whoever arrives how the project is worked on. The gate guidance-honored reads each
+of them against it.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Print(guidanceGuide)
 			return nil
 		},
 	}

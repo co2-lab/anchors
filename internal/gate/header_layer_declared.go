@@ -25,6 +25,9 @@ import (
 //
 // A placeholder (`layer: TODO`) is left to `placeholder-filled`: one defect, one gate.
 func checkHeaderLayerDeclared(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if cfg.LayerHeadless(n.Layer) {
+		return Skip, i18n.T("gate.header.skip_headless", n.Layer)
+	}
 	layer := scan.HeaderLayerOf(content)
 	if layer == "" {
 		return Skip, i18n.T("gate.header_layer.skip_no_layer")

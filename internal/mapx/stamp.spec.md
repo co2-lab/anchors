@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EDSTD
-  updated_at: 2026-10-09
+  updated_at: 2026-10-11
   layer: mapa
 -->
 # EdgeStamping — recording on each relation that it was confronted, with what result, and since when
@@ -70,6 +70,7 @@ an unrelated gate erase a person's decision, which is what the check already ref
 | `EDSTD-B21` | A stale scenario is fresh again when a run proves it, and leaves the stale ones when no suite proves it any more; the author keeping the evidence clears them all. The fresh proofs are the proven ones without the stale. (`FreshProven`, `ClearStale`) |
 | `EDSTD-B22` | Advancing a node to its file's content moves its revisions and carries the evidence they show unchanged, saying whether the revision moved and whether the evidence went along; an unknown file is left alone. (`AdvanceTo`) |
 | `EDSTD-B23` | Each file the new build moved has the evidence of its content at the map's revision read again by today's rule — the content read from the commit's copy, or the index's, taken only when its hash is that revision: a map written before evidence revisions, or by an older rule, compares an edit with what today's rule makes of the old content. (`FillOldEvidence`) |
+| `EDSTD-B24` | A judgment given on a node with no edge is kept on the node, at its revision, and survives a rebuild; every judgment records the revision of the configuration the map was built with, and a gate whose judgment is about the configuration (`stale_on_config`) holds it only while that revision is the map's. (`JudgedBy`, `StampNodeByGate`) |
 | `EDSTD-B14` | Judging a node or a single relation keeps a waived stamp recorded by another gate, or when no gate is named, and still records the judging gate's judgment; the gate that recorded the waiver replaces it, and a new waiver always replaces the stamp. |
 
 ## Invariants

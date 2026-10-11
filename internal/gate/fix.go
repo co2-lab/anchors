@@ -164,7 +164,7 @@ func fixUpdatedAt(content string, n mapx.Node, root string) (string, bool) {
 // updates would otherwise have hundreds to write by hand — the map already knows each
 // file's unit.
 func fixMissingHeader(content string, n mapx.Node, _ string, g *mapx.Graph) (string, bool, string) {
-	if isBinary(content) || isExecutableScript(n) {
+	if isBinary(content) || isExecutableScript(n) || fixConfig.LayerHeadless(n.Layer) {
 		return content, false, ""
 	}
 	// With no header at the top, one is written there — even when a header-looking block

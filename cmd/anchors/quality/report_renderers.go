@@ -131,8 +131,11 @@ func renderConfig(ctx reportCtx) string {
 		b.WriteString("_anchors.yaml not found._ Run `anchors init`.\n")
 		return b.String()
 	}
-	fmt.Fprintf(&b, "## Declared layers (%d)\n\n| layer | kind | tags | code_prefix |\n|---|---|---|---|\n", len(ctx.cfg.Layers))
+	fmt.Fprintf(&b, "## Declared layers (%d)\n\n| layer | kind | tags | code_prefix |\n|---|---|---|---|\n", ctx.cfg.DeclaredLayers())
 	for _, name := range sortedKeys(ctx.cfg.Layers) {
+		if ctx.cfg.IsCanonicalLayer(name) {
+			continue // Anchors' own layer, not one the project declared
+		}
 		l := ctx.cfg.Layers[name]
 		fmt.Fprintf(&b, "| %s | %s | %s | %s |\n", name, l.Kind, strings.Join(l.Tags, ","), l.CodePrefix)
 	}

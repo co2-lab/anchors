@@ -2224,8 +2224,9 @@ func TestCheckSaysHowManyJudgmentsItQueued(t *testing.T) {
 func TestCheckWithoutGovernanceTipsPrintsNoPointer(t *testing.T) {
 	t.Run("CGPCH-B74: With no governance tip the full sweep prints neither a tip nor the pointer to the doctor", func(t *testing.T) {})
 	englishOutput(t)
-	// a project of a kind no catalog gate covers: no code, no test, nothing the tips ask about
-	yaml := "version: 2\nlayers:\n  notes:\n    kind: note\n    pattern: \"*.spec.md\"\ngates:\n  - name: spec-ok\n    on: [note]\n    run: \"true\"\n"
+	// a project of a kind no catalog gate covers: no code, no test, nothing the tips ask about —
+	// and the canonical guidance layer turned off, whose gates would be offered
+	yaml := "version: 2\nguidance: false\nlayers:\n  notes:\n    kind: note\n    pattern: \"*.spec.md\"\ngates:\n  - name: spec-ok\n    on: [note]\n    run: \"true\"\n"
 	dir := qProject(t, yaml, map[string]string{"a.spec.md": "# A\n"},
 		&mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: "note"}}})
 	out, err := runQ(t, newCheckCmd(), "--root", dir, "--all", "--no-record")

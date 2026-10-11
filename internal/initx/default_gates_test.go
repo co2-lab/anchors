@@ -181,10 +181,10 @@ func TestDefaultGatesEmpty(t *testing.T) {
 }
 
 func TestDefaultGatesGuideOnly(t *testing.T) {
-	t.Run("DFGTD-B04: Choosing only guides seeds only the guide checklist gate", func(t *testing.T) {})
+	t.Run("DFGTD-B04: Choosing only guides seeds the guide checklist and the guidance gates", func(t *testing.T) {})
 	g := DefaultGates(map[string]bool{"guide": true}, false)
-	if len(g) != 1 || g[0].Name != "guide-checklist" {
-		t.Errorf("guide alone should seed only guide-checklist, got %v", gateNames(g))
+	if got := gateNames(g); len(g) != 3 || !got["guide-checklist"] || !got["guidance-linked"] || !got["guidance-honored"] {
+		t.Errorf("guide alone should seed guide-checklist and the guidance gates every project gets, got %v", got)
 	}
 }
 
@@ -335,6 +335,7 @@ func TestJudgmentGateOnAPieceCarriesTheTBDInstruction(t *testing.T) {
 	exempt := map[string]string{
 		"no-test-proof-real": "asks about the proof of a permanent waiver (@no-test), " +
 			"not about a missing piece",
+		"guidance-honored": "asks about a guidance file of the project, not about a piece of a unit",
 	}
 
 	// EVERY artifact: gates are conditional on the choice, and a subset would leave out

@@ -721,6 +721,15 @@ gates:
   - name: frozen-touched
     blocking: false
 
+  # THE GUIDANCE LAYER (DESIGN-guidance-layer.md): the canonical layer of README, CONTRIBUTING,
+  # AGENTS and CLAUDE. The agreement lives in CONTRIBUTING.md and the others point to it; an AI
+  # judges each against `anchors guide guidance` and this file. Both inform.
+  - name: guidance-linked
+    blocking: false
+
+  - name: guidance-honored
+    blocking: false
+
   # THE WAY BACK OF EACH PAIR OF THE UNIT. `spec-feature-match` and `feature-test-match`
   # walk the ORIGIN looking for the destination; these walk the destination asking whether
   # the origin still exists — which is what catches what a revert leaves behind.

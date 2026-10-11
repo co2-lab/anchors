@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INCHN
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: gate
 -->
 # InternalChecks — the registry that routes a declared check name to a function
@@ -83,7 +83,7 @@ looked at.
 | `INCHN-B14` | A BINARY file steps aside from the header ruler: there is no comment syntax in an image, and charging one would bar every visual baseline commit. |
 | `INCHN-B33` | A governed file whose `@anchors` block stands below the top without `@fixed-header: <why>` fails the header ruler saying the block is not read as the header, and how to fix it. |
 | `INCHN-B34` | `scenario-coverage` counts a rule proven only when every scenario the spec's features declare for it is proven — each variant `#NN` a scenario of its own —, and names each variant left unproven: a skipped `#02` is not proven by the green `#01` beside it, nor by a proof recorded for the rule alone. (`checkScenarioCoverage`, `specScenarios`) |
-| `INCHN-B35` | `header-valid` reads the header's layer as the project declares it: a file whose header names a layer the Structure declares `regime: declarativo` has its identity in `layer:` alone, whatever the layer is called and whether or not the node carries a regime of its own; a layer declared with another regime still asks for `code:` or `ref:`. (`checkHeaderConforms`, `isRecognizedLayerCfg`) |
+| `INCHN-B35` | `header-valid` reads the header's layer as the project declares it: a file whose header names a layer the Structure declares `regime: declarativo` has its identity in `layer:` alone, whatever the layer is called and whether or not the node carries a regime of its own; a layer declared with another regime, or with none, still asks for `code:` or `ref:` — no layer name exempts a file by itself. (`checkHeaderConforms`, `isRecognizedLayerCfg`) |
 | `INCHN-B36` | `line-coverage` and `coverage-delta` skip a file a coverage report listed with no instrumentable line at its revision — there is nothing to cover —, and answer a divergence for one a whole run of its suite left out of the report — a tool omits a file with no instrumentable line, and also one outside what it collects —; a file never listed nor omitted is pending, never measured. (`coverageAbsence`) |
 | `INCHN-B37` | `mutation-score` skips a file the mutation tool listed at its current revision with no mutant — an alias, a re-export: it was measured and has nothing to mutate —; a file never listed, or listed at another revision, stays pending. |
 | `INCHN-B38` | `line-coverage` holds a code file to the floor of the first glob of the gate's `coverage_floors` that matches it, in name order, and otherwise to its `min_coverage`, 70% when undeclared; a file below a glob's floor fails naming the glob and its reason. (`CoverageFloorFor`) |

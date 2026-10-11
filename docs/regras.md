@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:9afdd77d4fbbabb1 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:a163ea1516ed3117 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1406,6 +1406,8 @@ abra a página dela em `camadas/`.
 - [GVGDG-B26 — The header guide names the freeze marks — `frozen:` in a header, `@frozen:` on a rule's or a heading's line —, says they are written by `anchors freeze`, listed by `freeze show` and removed by `thaw`, and that a frozen part is not changed without an order from a person; the product guide says the doctrine records each freeze as an entry of the letter F with its reason, under a section of its own, and that a freeze entry is not a rule to realize.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B27 — The review guide asks a rejection to register each item it asks to change as a finding of its own under the card (`anchors escalate … --card`), before the verdict line, because the text of a review is no state the next reviewer follows; and an approval to close the findings the PR answered.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
+- [GVGDG-B28 — `anchors guide guidance` says what each guidance file is for — `CONTRIBUTING.md` holds the agreement, `AGENTS.md` and `CLAUDE.md` send the agent to it and `CLAUDE.md` imports `AGENTS.md`, `README.md` points to it —, the five things the agreement says (the order of the work, the declared layers, `next` and `work`, what bars a commit and never `--no-verify`, watching long work with the monitor), what contradicts it, and the two gates; `anchors guide --help` lists it.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -3275,6 +3277,10 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B67 — `evidence.no_side_effect` names, as the project writes them, what changes nothing a test observes: its `flags` — `@navigates` and `@dep[type]` when not given — and its spec `sections`; a list given replaces its default. (`NoSideEffectFlags`, `NoSideEffectSections`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
+- [CNFGO-B68 — Every loaded configuration has the canonical `guidance` layer — `{README,CONTRIBUTING,AGENTS,CLAUDE}.md`, kind `doc`, regime `declarativo`, tag `guidance`, headless, with a priority above any declared pattern —, unless the project declares a layer of that name, which replaces it, or `guidance: false`; it is never written back by a save, it is not counted among the declared layers, and a catalog gate relates to it only when the gate carries its tag. (`CanonicalGuidance`, `IsCanonicalLayer`, `DeclaredLayers`, `LayerHeadless`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-B69 — A loaded configuration has the revision of its file (`Rev`), the same on every platform's line endings; a gate may declare `stale_on_config` — its judgment is about the configuration too —, and a project declaring a canonical gate keeps that from the catalog. (`Rev`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
@@ -4575,6 +4581,14 @@ abra a página dela em `camadas/`.
 
 - [GTENG-E02 — REF[GTENG-B08]: a required binary missing from the PATH is answered by B08: the gate steps aside](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
+### [GDGTG — Guidance gates — the working agreement is one file, and the others point to it](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it)
+
+- [GDGTG-B01 — `guidance-linked` passes `CONTRIBUTING.md`; another guidance file passes when it mentions `CONTRIBUTING.md` and that file exists beside it, fails naming the missing agreement when it does not exist, and fails naming the file when it does not point to it; a node outside the guidance layer is skipped. (`checkGuidanceLinked`)](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it)
+
+- [GDGTG-B02 — The catalog offers both guidance gates to every project that chose an artifact, informative, on the guidance layer's tag; `guidance-honored` is an AI judgment about the configuration too (`stale_on_config`), whose question asks for contradictions with the guide and with `anchors.yaml`, never for style, and a quoted passage with its replacement.](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it)
+
+- [GDGTG-B03 — The header gates leave a headless layer's files: `header-valid` and `header-layer-declared` skip them, and `--fix` writes them no header.](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it)
+
 ### [HDLYD — HeaderLayerDeclared — the layer a header declares is one the Estrutura has](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has)
 
 - [HDLYD-B01 — A header layer the Estrutura declares passes; one it does not fails, naming the layer and the declared layers in order. Only the `@anchors` header is read: a `layer:` line in the body is not a declaration.](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has)
@@ -4659,7 +4673,7 @@ abra a página dela em `camadas/`.
 
 - [INCHN-B34 — `scenario-coverage` counts a rule proven only when every scenario the spec's features declare for it is proven — each variant `#NN` a scenario of its own —, and names each variant left unproven: a skipped `#02` is not proven by the green `#01` beside it, nor by a proof recorded for the rule alone. (`checkScenarioCoverage`, `specScenarios`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
-- [INCHN-B35 — `header-valid` reads the header's layer as the project declares it: a file whose header names a layer the Structure declares `regime: declarativo` has its identity in `layer:` alone, whatever the layer is called and whether or not the node carries a regime of its own; a layer declared with another regime still asks for `code:` or `ref:`. (`checkHeaderConforms`, `isRecognizedLayerCfg`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
+- [INCHN-B35 — `header-valid` reads the header's layer as the project declares it: a file whose header names a layer the Structure declares `regime: declarativo` has its identity in `layer:` alone, whatever the layer is called and whether or not the node carries a regime of its own; a layer declared with another regime, or with none, still asks for `code:` or `ref:` — no layer name exempts a file by itself. (`checkHeaderConforms`, `isRecognizedLayerCfg`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B36 — `line-coverage` and `coverage-delta` skip a file a coverage report listed with no instrumentable line at its revision — there is nothing to cover —, and answer a divergence for one a whole run of its suite left out of the report — a tool omits a file with no instrumentable line, and also one outside what it collects —; a file never listed nor omitted is pending, never measured. (`coverageAbsence`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
@@ -6977,6 +6991,8 @@ abra a página dela em `camadas/`.
 
 - [CNGDC-B07 — The guides part names the project's guide folder when there is one.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 
+- [CNGDC-B10 — The day-to-day part names `anchors work` for the prompt of one task, and the blocking part asks never to commit with `--no-verify`: a failing gate is fixed, or waived in the commit message with its reason.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
+
 - [CNGDC-B08 — The section strongly recommends watching long commands and agents: launching each long command in the background through `anchors monitor run -- <command>`, keeping `anchors monitor` running while it works, and `anchors install-hooks --agent` for a coding agent; Anchors' own long commands record themselves.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 
 - [CNGDC-B09 — The agents' entry files — `AGENTS.md`, read by most coding agents, and `CLAUDE.md`, read by Claude Code — each send the agent to `CONTRIBUTING.md` before any change; `AGENTS.md` names the guide, work and next commands, the monitor and the ban on `--no-verify`, and `CLAUDE.md` imports `AGENTS.md`. (`RenderAgents`, `RenderClaude`, `AgentEntryFiles`)](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
@@ -7009,7 +7025,7 @@ abra a página dela em `camadas/`.
 
 - [DFGTD-B03 — The gates that cross spec and feature (spec-feature match, feature-spec match and scenario coverage) are seeded only when both are chosen, and the test-feature match only when test and feature are both chosen.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
-- [DFGTD-B04 — Choosing only guides seeds only the guide checklist gate.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
+- [DFGTD-B04 — Choosing only guides seeds the guide checklist gate and, as for any project with an artifact chosen, the guidance gates.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-B05 — The parent gate is seeded when spec, plan or code is chosen, and confronts exactly the chosen ones among them.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
@@ -8228,6 +8244,8 @@ abra a página dela em `camadas/`.
 - [EDSTD-B22 — Advancing a node to its file's content moves its revisions and carries the evidence they show unchanged, saying whether the revision moved and whether the evidence went along; an unknown file is left alone. (`AdvanceTo`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 
 - [EDSTD-B23 — Each file the new build moved has the evidence of its content at the map's revision read again by today's rule — the content read from the commit's copy, or the index's, taken only when its hash is that revision: a map written before evidence revisions, or by an older rule, compares an edit with what today's rule makes of the old content. (`FillOldEvidence`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
+
+- [EDSTD-B24 — A judgment given on a node with no edge is kept on the node, at its revision, and survives a rebuild; every judgment records the revision of the configuration the map was built with, and a gate whose judgment is about the configuration (`stale_on_config`) holds it only while that revision is the map's. (`JudgedBy`, `StampNodeByGate`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 
 - [EDSTD-B14 — Judging a node or a single relation keeps a waived stamp recorded by another gate, or when no gate is named, and still records the judging gate's judgment; the gate that recorded the waiver replaces it, and a new waiver always replaces the stamp.](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 

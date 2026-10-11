@@ -1503,7 +1503,7 @@ gates:
 	if err != nil {
 		t.Fatalf("a valid config must load: %v", err)
 	}
-	if len(c.Layers) != 1 || len(c.Governs) != 1 || len(c.Gates) != 1 {
+	if c.DeclaredLayers() != 1 || len(c.Governs) != 1 || len(c.Gates) != 1 {
 		t.Errorf("config loaded incomplete: %d layers, %d governs, %d gates",
 			len(c.Layers), len(c.Governs), len(c.Gates))
 	}
@@ -1818,5 +1818,67 @@ func TestLoad_invalidYAMLIsFixedNotRecreated(t *testing.T) {
 	}
 	if _, typo := Load(typoPath); typo == nil || strings.Contains(typo.Error(), "not valid YAML") {
 		t.Errorf("an unknown key is no syntax error: %v", typo)
+	}
+}
+
+func TestLoad_canonicalGuidanceLayer(t *testing.T) {
+	t.Run("CNFGO-B68: The canonical guidance layer", func(t *testing.T) {})
+	dir := t.TempDir()
+	load := func(name, body string) *Config {
+		t.Helper()
+		p := filepath.Join(dir, name)
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		c, err := Load(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return c
+	}
+	c := load("a.yaml", "version: 7\nlayers:\n  code:\n    pattern: \"**/*.go\"\n    kind: code\n")
+	g, ok := c.Layers[GuidanceLayer]
+	if !ok || g.Pattern != GuidancePattern || !g.Headless || g.Regime != "declarativo" || !c.IsCanonicalLayer(GuidanceLayer) || c.DeclaredLayers() != 1 || !c.LayerHeadless(GuidanceLayer) {
+		t.Errorf("canonical layer: %+v declared=%d", g, c.DeclaredLayers())
+	}
+	out := filepath.Join(dir, "saved.yaml")
+	if err := Save(c, out); err != nil {
+		t.Fatal(err)
+	}
+	if b, _ := os.ReadFile(out); strings.Contains(string(b), "guidance") {
+		t.Errorf("the canonical layer is never written back:\n%s", b)
+	}
+	untagged := Gate{Name: "x", On: []string{"doc"}}
+	tagged := Gate{Name: "y", On: []string{"doc"}, Tags: []string{GuidanceLayer}}
+	if c.Relates(untagged) || !c.Relates(tagged) {
+		t.Error("only a gate with the layer's tag relates to the canonical layer")
+	}
+	own := load("b.yaml", "version: 7\nlayers:\n  guidance:\n    pattern: \"docs/*.md\"\n    kind: doc\n")
+	if own.Layers[GuidanceLayer].Pattern != "docs/*.md" || own.IsCanonicalLayer(GuidanceLayer) {
+		t.Error("a declared guidance layer replaces the canonical one")
+	}
+	off := load("c.yaml", "version: 7\nguidance: false\nlayers: {}\n")
+	if _, ok := off.Layers[GuidanceLayer]; ok {
+		t.Error("guidance: false leaves the layer out")
+	}
+}
+
+func TestLoad_revision(t *testing.T) {
+	t.Run("CNFGO-B69: The configuration's revision", func(t *testing.T) {})
+	dir := t.TempDir()
+	rev := func(name, body string) string {
+		p := filepath.Join(dir, name)
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		c, err := Load(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return c.Rev()
+	}
+	lf, crlf, other := rev("a.yaml", "version: 7\nlayers: {}\n"), rev("b.yaml", "version: 7\r\nlayers: {}\r\n"), rev("c.yaml", "version: 7\nlayers: {}\nlang: en\n")
+	if lf == "" || lf != crlf || lf == other {
+		t.Errorf("revisions: %q %q %q", lf, crlf, other)
 	}
 }

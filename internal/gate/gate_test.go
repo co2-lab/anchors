@@ -190,7 +190,7 @@ func TestInternalCheckers(t *testing.T) {
 }
 
 func TestHeaderConformeRecognizedLayer(t *testing.T) {
-	presentation := mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "presentation"}}
+	presentation := mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "presentation"}, Regime: "declarativo"}
 	regida := mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "business-logic"}}
 	fn := func(content string, n mapx.Node) (Verdict, string) { return checkHeaderConforms(content, n, nil) }
 
@@ -216,7 +216,8 @@ func TestHeaderConformeTestOfRecognizedLayer(t *testing.T) {
 	// um TESTE de arquivo de camada reconhecida é classificado kind:test (perde a tag
 	// da camada), mas declara layer:presentation no header → deve passar com layer.
 	testNode := mapx.Node{Kind: mapx.KindTest, Tags: []string{"test"}}
-	fn := func(content string, n mapx.Node) (Verdict, string) { return checkHeaderConforms(content, n, nil) }
+	cfg := &config.Config{Layers: map[string]config.Layer{"presentation": {Regime: "declarativo"}}}
+	fn := func(content string, n mapx.Node) (Verdict, string) { return checkHeaderConforms(content, n, cfg) }
 	if v, _ := fn("// @anchors\n//   layer: presentation\nimport x", testNode); v != Pass {
 		t.Error("teste de presentation (kind:test) com layer no header deveria passar")
 	}

@@ -89,6 +89,8 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | [`obligation-honored`](/pt/docs/gates/obligation-honored/) | `spec` | The artifact fulfils the cross-cutting obligations it takes on |
 | [`updated-at-atual`](/pt/docs/gates/updated-at-atual/) | `spec` `feature` `code` `test` | The header's `updated_at` is the day of the file's last commit |
 | [`guide-checklist`](/pt/docs/gates/guide-checklist/) | `guide` | The guide has the conformance-points section (CKn) |
+| [`guidance-linked`](/pt/docs/gates/guidance-linked/) | `doc` | CONTRIBUTING.md holds the working agreement, and README.md, AGENTS.md and CLAUDE.md point to it |
+| [`guidance-honored`](/pt/docs/gates/guidance-honored/) | `doc` | This file is part of the project's guidance — what tells whoever arrives, person or coding agent, how the project is worked on |
 | [`docs-fresh`](/pt/docs/gates/docs-fresh/) | `spec` | The compiled `docs/*.md` reflects the spec it came from |
 | [`docs-covered`](/pt/docs/gates/docs-covered/) | `spec` | Every spec reaches some documentation page |
 | [`doc-required`](/pt/docs/gates/doc-required/) | `spec` | The contracted documents exist and mention the units that trigger them |

@@ -264,7 +264,7 @@ func runInit(root string) error {
 	if seedContributing {
 		reportContributing(root, cfg, p.GuideDir)
 	}
-	fmt.Printf("\n✓ %s written (%d layers, %d governs rules)\n", config.DefaultFile, len(cfg.Layers), len(cfg.Governs))
+	fmt.Printf("\n✓ %s written (%d layers, %d governs rules)\n", config.DefaultFile, cfg.DeclaredLayers(), len(cfg.Governs))
 	fmt.Println("  review it and run: anchors map build")
 	return nil
 }

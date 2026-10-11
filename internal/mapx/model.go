@@ -248,6 +248,9 @@ type Node struct {
 	// its doctrine document's —, by code or, with no doctrine, by reason
 	// (DESIGN-frozen-units.md, frozen.go).
 	Frozen string `yaml:"frozen,omitempty"`
+	// Judgments are the AI verdicts given on a node that has no edge to carry them — a
+	// guidance file, standing alone: kept on the node, at its rev.
+	Judgments []Judgment `yaml:"judgments,omitempty"`
 	// FrozenRules are the node's rules a freeze covers — marked on the rule or a heading
 	// above it, or realizing a frozen doctrine rule —, each with the freeze's value.
 	FrozenRules map[string]string `yaml:"frozen_rules,omitempty"`
@@ -508,6 +511,9 @@ type Judgment struct {
 	ValidatedFromRev string `yaml:"validated_from_rev,omitempty"`
 	ValidatedToRev   string `yaml:"validated_to_rev,omitempty"`
 	ChangedAt        string `yaml:"changed_at,omitempty"`
+	// ConfigRev is the revision of anchors.yaml when the judgment was given: a gate whose
+	// question is about the configuration too (`stale_on_config`) asks again when it moves.
+	ConfigRev string `yaml:"config_rev,omitempty"`
 }
 
 // Edge — uma relação dirigida (identidade ou dependência).
@@ -540,6 +546,9 @@ type Graph struct {
 	// é o que permite ao `check` acusar um binário mais VELHO que o mapa, que
 	// silenciosamente desfaz o que a versão nova escreveu.
 	GeradoPor string `yaml:"generated_by,omitempty"`
+	// ConfigRev is the revision of the anchors.yaml the map was built with — what a judgment
+	// about the configuration is measured against.
+	ConfigRev string `yaml:"config_rev,omitempty"`
 	Nodes     []Node `yaml:"nodes"`
 	Edges     []Edge `yaml:"edges"`
 	// Flow é o grafo dos FLUXOS DE TRABALHO, no mesmo arquivo e em chave SEPARADA.

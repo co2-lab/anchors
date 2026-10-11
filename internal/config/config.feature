@@ -466,3 +466,15 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     When each is loaded
     Then the first fails naming its line, saying to fix it there and not to run anchors init, with the doubled-quote hint, and only the missing one is advised to run anchors init
 
+  @CNFGO-B68 @unit-level
+  Scenario: The canonical guidance layer
+    Given a configuration declaring one layer, one that declares its own guidance layer, and one with guidance false
+    When each is loaded and the first saved again
+    Then the first has the guidance layer with its pattern, headless and canonical, counted apart and not written back; the second keeps its own; the third has none; and an untagged doc gate does not relate to it while a guidance-tagged one does
+
+  @CNFGO-B69 @unit-level
+  Scenario: The configuration's revision
+    Given the same anchors.yaml with LF and with CRLF line endings, and one changed
+    When each is loaded
+    Then the first two have the same revision, the third another
+

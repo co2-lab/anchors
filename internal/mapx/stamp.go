@@ -169,6 +169,23 @@ func (g *Graph) StampNodeByGate(id, verdict, now, gateName string) int {
 		}
 		stamped++
 	}
+	// A NODE WITH NO EDGE keeps the judgment on itself: with nowhere else to go, the verdict
+	// was lost and the gate asked the same question forever (a guidance file stands alone).
+	if stamped == 0 && gateName != "" {
+		if n := g.node(id); n != nil {
+			j := Judgment{Gate: gateName, Verdict: verdict, ValidatedFromRev: n.Rev, ChangedAt: now, ConfigRev: g.ConfigRev}
+			kept := n.Judgments[:0:0]
+			for _, old := range n.Judgments {
+				if old.Gate != gateName {
+					kept = append(kept, old)
+				} else if old.Verdict == verdict && old.ValidatedFromRev == n.Rev && old.ConfigRev == g.ConfigRev {
+					j.ChangedAt = old.ChangedAt
+				}
+			}
+			n.Judgments = append(kept, j)
+			stamped = 1
+		}
+	}
 	return stamped
 }
 
@@ -191,7 +208,15 @@ func keepsWaiver(atual *Stamp, verdict, gateName string) bool {
 // Basta UMA aresta viva: o `judge` registra em todas as que tocam o alvo, então
 // qualquer uma responde. Se o alvo mudou depois, o veredito envelhece e volta a ser
 // pergunta — julgamento não é selo permanente, é leitura datada.
-func (g *Graph) JudgedBy(id, gateName string) (verdict string, valido bool) {
+func (g *Graph) JudgedBy(id, gateName string, withConfig ...bool) (verdict string, valido bool) {
+	config := len(withConfig) > 0 && withConfig[0]
+	if n := g.node(id); n != nil {
+		for _, j := range n.Judgments {
+			if j.Gate == gateName && j.ValidatedFromRev == n.Rev && (!config || j.ConfigRev == g.ConfigRev) {
+				return j.Verdict, true
+			}
+		}
+	}
 	for _, e := range g.Edges {
 		if e.From != id && e.To != id {
 			continue
@@ -202,6 +227,9 @@ func (g *Graph) JudgedBy(id, gateName string) (verdict string, valido bool) {
 			}
 			if j.ValidatedFromRev != g.nodeRev(e.From) || j.ValidatedToRev != g.nodeRev(e.To) {
 				continue // envelheceu: o alvo mudou depois do julgamento
+			}
+			if config && j.ConfigRev != g.ConfigRev {
+				continue // the configuration it was judged against moved
 			}
 			return j.Verdict, true
 		}
@@ -241,6 +269,7 @@ func (g *Graph) recordJudgment(e *Edge, gateName, verdict, now string) {
 		ValidatedFromRev: g.nodeRev(e.From),
 		ValidatedToRev:   g.nodeRev(e.To),
 		ChangedAt:        now,
+		ConfigRev:        g.ConfigRev,
 	}
 	// Mesma regra do carimbo: rejulgar e achar o mesmo não é fato novo. Sem
 	// isto, cada `anchors judge` reescreveria a data de todos os julgamentos.

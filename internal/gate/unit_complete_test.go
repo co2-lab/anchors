@@ -100,7 +100,7 @@ func TestUnitComplete_specSozinhaReprovaCitandoAsTresPecas(t *testing.T) {
 
 func TestUnitComplete_camadaReconhecidaPula(t *testing.T) {
 	t.Run("UNTCP-B02: A recognised layer leaves without a verdict", func(t *testing.T) {})
-	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"dao"}}
+	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"dao"}, Regime: "declarativo"}
 	g := unitGraph(false, false, false)
 	if v, _ := checkUnitComplete("", n, "", g, &config.Config{}); v != Skip {
 		t.Errorf("camada reconhecida não tem unidade a cobrar, esperava Skip, got %v", v)
@@ -366,10 +366,10 @@ func TestIsRecognizedLayerCfg_oRegimeDeclaradoVence(t *testing.T) {
 		"infra": {Regime: "declarativo"},
 	}}
 
-	// Sem declaração, o fallback por nome vale — é o que serve a projeto que ainda não
-	// declarou regime, e tirá-lo mudaria o comportamento de quem depende dele.
-	if !isRecognizedLayerCfg(spec, header, semDeclaracao) {
-		t.Error("sem regime declarado, `infra` cai no fallback por nome")
+	// Sem regime declarado, NENHUM nome dispensa: `infra` é só um nome, e só o regime que o
+	// projeto declara decide (GDLYG-D04).
+	if isRecognizedLayerCfg(spec, header, semDeclaracao) {
+		t.Error("sem regime declarado, o nome `infra` não pode dispensar a unidade")
 	}
 	// Declarado comportamental, a unidade é COBRADA.
 	if isRecognizedLayerCfg(spec, header, comRegra) {

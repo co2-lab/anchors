@@ -30,7 +30,7 @@ import (
 // de alteração, TRACEABILITY §rev/updated_at) — vem do git, resolvido pelo chamador
 // (o mapx não invoca git para não acoplar). Pode ser nil (updated_at fica vazio).
 func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *Graph {
-	g := &Graph{Version: FormatoAtual}
+	g := &Graph{Version: FormatoAtual, ConfigRev: cfg.Rev()}
 	// A identidade de um artefato DERIVADO vem da âncora irmã, não do texto dele. Montado
 	// antes do laço porque a âncora pode aparecer depois na lista.
 	ancoraDeDerivado := anchorCodeByDerived(files, cfg)
@@ -742,6 +742,17 @@ func PreserveStamps(novo, antigo *Graph) {
 		return
 	}
 	preserveReviews(novo, antigo)
+	nodeJudgments := map[string][]Judgment{}
+	for _, n := range antigo.Nodes {
+		if len(n.Judgments) > 0 {
+			nodeJudgments[n.ID] = n.Judgments
+		}
+	}
+	for i := range novo.Nodes {
+		if js, ok := nodeJudgments[novo.Nodes[i].ID]; ok {
+			novo.Nodes[i].Judgments = js
+		}
+	}
 	carimbos := make(map[string]*Stamp, len(antigo.Edges))
 	// Os julgamentos de IA seguem o mesmo caminho do carimbo: reconstruir o mapa não
 	// pode apagar quem já leu. Sem isto, um `map build` entre o `judge` e o `check`

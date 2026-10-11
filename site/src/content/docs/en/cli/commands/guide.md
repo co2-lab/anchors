@@ -16,6 +16,7 @@ Subcommands print the guides for the specific rulers:
   anchors guide project  how to discover a project that does not yet exist (PROJECT.md)
   anchors guide plan     how to structure a plan (the origin of the movement)
   anchors guide product  the product doctrine (the rule that cuts across targets)
+  anchors guide guidance what README, CONTRIBUTING, AGENTS and CLAUDE must say (the working agreement)
   anchors guide flag     the feature flag (the scenarios a flag's value opens)
   anchors guide flow     actions and flows (work driven by shape, not by memory)
   anchors guide spec     how to write a spec (the source of truth)
@@ -98,6 +99,22 @@ its results) and FLOWS (the assembly that says where each result goes).
 
 ```bash
 anchors guide flow
+```
+
+### `anchors guide guidance`
+
+Print the guidance guide (what README, CONTRIBUTING, AGENTS and CLAUDE must say).
+
+```text
+The guidance guide is the ruler of the guidance layer: the files at the project's root
+that tell whoever arrives how the project is worked on. The gate guidance-honored reads each
+of them against it.
+```
+
+#### Usage
+
+```bash
+anchors guide guidance
 ```
 
 ### `anchors guide guide`

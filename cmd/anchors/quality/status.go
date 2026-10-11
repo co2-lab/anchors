@@ -96,7 +96,7 @@ func runStatus(root string) error {
 	if err != nil {
 		return fmt.Errorf("load %s: %w", config.DefaultFile, err)
 	}
-	fmt.Println(i18n.T("status.config_ok", len(cfg.Layers), len(cfg.Gates)))
+	fmt.Println(i18n.T("status.config_ok", cfg.DeclaredLayers(), len(cfg.Gates)))
 
 	// 3. O MAPA — todo arquivo novo só existe para os gates depois do `map build`.
 	mapPath := filepath.Join(root, mapx.DefaultPath)

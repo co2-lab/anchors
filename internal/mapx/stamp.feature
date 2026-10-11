@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTE
 #   ref: EDSTD
-#   updated_at: 2026-10-09
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @EDSTD
@@ -158,3 +158,10 @@ Feature: EdgeStamping — recording on each relation that it was confronted, wit
     Given a proven spec in a map with no evidence revisions, edited since in its date and history alone
     When the build reads a content that is not the node's revision, then the one that is, then a map written by an older rule
     Then the first is not taken, the second carries the proof, and the older rule's revision is read again by today's
+
+  @EDSTD-B24 @unit-level
+  Scenario: A judgment on a node with no edge, and one about the configuration
+    Given a guidance file with no edge in a map built with a configuration
+    When it is judged, the map rebuilt, then the file changed, and then only the configuration changed
+    Then the verdict is on the node and survives the rebuild, expires when the file changes, and expires on a configuration change only for a gate about the configuration
+

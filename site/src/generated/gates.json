@@ -280,6 +280,14 @@
         "slug": "docs/gates/guide-checklist"
       },
       {
+        "label": "guidance-linked",
+        "slug": "docs/gates/guidance-linked"
+      },
+      {
+        "label": "guidance-honored",
+        "slug": "docs/gates/guidance-honored"
+      },
+      {
         "label": "docs-fresh",
         "slug": "docs/gates/docs-fresh"
       },

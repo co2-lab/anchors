@@ -61,7 +61,7 @@ func (r Report) Warnings() []Finding {
 // Diagnose roda todas as verificações sistêmicas. root é a raiz (para checar o
 // disco). Puro em relação a (graph, cfg); toca o disco só para read/stat.
 func Diagnose(g *mapx.Graph, cfg *config.Config, root string) Report {
-	r := Report{Nodes: len(g.Nodes), Edges: len(g.Edges), Layers: len(cfg.Layers)}
+	r := Report{Nodes: len(g.Nodes), Edges: len(g.Edges), Layers: cfg.DeclaredLayers()}
 	r.Findings = append(r.Findings, checkMapFidelity(g, root)...)
 	r.Findings = append(r.Findings, checkOrphans(g)...)
 	r.Findings = append(r.Findings, checkDuplicateCodes(g)...)

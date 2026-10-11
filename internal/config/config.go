@@ -6,6 +6,8 @@ package config
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/bmatcuk/doublestar/v4"
@@ -114,8 +116,13 @@ type Config struct {
 	Version  int                 `yaml:"version"`
 	Comments map[string][]string `yaml:"comments,omitempty"` // override/extensão dos marcadores (D4)
 	Layers   map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
-	Derived  *Derived            `yaml:"derived,omitempty"`  // co-location dos derivados
-	Docs     *Docs               `yaml:"docs,omitempty"`     // as documentações que o projeto DEVE ter
+	// Guidance turns the canonical guidance layer off with `guidance: false`; absent or true,
+	// every project has it (DESIGN-guidance-layer.md, GuidanceLayer).
+	Guidance *bool `yaml:"guidance,omitempty"`
+	// rev is the revision of the file the configuration was loaded from (Rev).
+	rev     string
+	Derived *Derived `yaml:"derived,omitempty"` // co-location dos derivados
+	Docs    *Docs    `yaml:"docs,omitempty"`    // as documentações que o projeto DEVE ter
 	// Changelog says how `anchors changelog --write` writes the changelog: one file the
 	// new releases are added to the top of (`incremental`, the default), or one file per
 	// release (`per_version`), and the template that renders a release.
@@ -881,6 +888,9 @@ type Gate struct {
 	Measures string `yaml:"measures,omitempty"`
 	Guide    string `yaml:"guide,omitempty"` // (judgment) o arquivo-régua que a IA deve ler
 	Ask      string `yaml:"ask,omitempty"`   // (judgment) a pergunta específica do gate para a IA
+	// StaleOnConfig: the judgment is about the project's configuration too, so a change to
+	// anchors.yaml asks it again, as a change to the target does (guidance-honored).
+	StaleOnConfig bool `yaml:"stale_on_config,omitempty"`
 
 	// Requires restringe o gate aos alvos cujo CONTEÚDO contém este texto.
 	//
@@ -1518,6 +1528,13 @@ type Layer struct {
 	// (um pattern com muitas alternativas vencia outro que apontava para um subconjunto
 	// seu). Declare quando a heurística errar; o `check` avisa onde ela decidiu sozinha.
 	Priority int `yaml:"priority,omitempty"`
+	// Headless: the layer's files carry no `@anchors` header — the layer knows them by their
+	// pattern, and a header would be noise for every reader (a README). The header gates and
+	// the header fixer leave them.
+	Headless bool `yaml:"headless,omitempty"`
+	// canonical marks a layer Anchors added on its own (applyCanonicalLayers): it is never
+	// written back into a project's anchors.yaml.
+	canonical bool
 	// CodePrefix: prefixo de módulo (Camada 1 do código de identidade). Se a unidade
 	// cai nesta camada, o código começa por este prefixo + chars distintivos. É a
 	// ligação do gerador de identidade com a ESTRUTURA — o módulo do arquivo (auth,
@@ -1876,6 +1893,11 @@ func (c *Config) Relates(g Gate) bool {
 		if !slices.Contains(g.On, l.Kind) {
 			continue
 		}
+		// A canonical layer is Anchors' own, not one the project declared: only the gates
+		// written for it — tagged with its tag — relate to it.
+		if l.canonical && len(g.Tags) == 0 {
+			continue
+		}
 		if len(g.Tags) == 0 {
 			return true
 		}
@@ -1991,6 +2013,9 @@ func Load(path string) (*Config, error) {
 	if err := i18n.Set(c.Lang); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
+	c.applyCanonicalLayers()
+	sum := sha256.Sum256(bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n")))
+	c.rev = hex.EncodeToString(sum[:])[:12]
 	if err := c.validarIDsDeGate(); err != nil {
 		return nil, err
 	}
@@ -2372,6 +2397,10 @@ func mergeCanonical(g Gate) Gate {
 	if g.Ask == "" {
 		g.Ask = base.Ask
 	}
+	// A judgment that is about the configuration stays so where the project declares it.
+	if base.StaleOnConfig {
+		g.StaleOnConfig = true
+	}
 	// The premise travels with the question: a project inheriting the canonical `ask`
 	// inherits what the question presupposes.
 	if len(g.Presupposes) == 0 {
@@ -2458,7 +2487,16 @@ func (c *Config) Declares(path string) bool {
 
 // Save escreve o anchors.yaml.
 func Save(c *Config, path string) error {
-	data, err := yaml.Marshal(c)
+	// A canonical layer is Anchors' default, not the project's declaration: it is never
+	// written into the file.
+	out := *c
+	out.Layers = make(map[string]Layer, len(c.Layers))
+	for name, l := range c.Layers {
+		if !l.canonical {
+			out.Layers[name] = l
+		}
+	}
+	data, err := yaml.Marshal(&out)
 	if err != nil {
 		return err
 	}
@@ -2934,4 +2972,100 @@ type MonitorRunner struct {
 type Navigation struct {
 	// Entry are the routes the app opens on — the roots of reachability.
 	Entry []string `yaml:"entry,omitempty"`
+}
+
+// THE CANONICAL LAYERS — the ones Anchors knows without the project declaring them.
+//
+// Anchors proposes no code structure: every code layer is the project's. A canonical layer is
+// not about where code lives — it is about what every project under Anchors has whatever its
+// layout. The first is the GUIDANCE (DESIGN-guidance-layer.md): the files at the root that tell
+// whoever arrives, person or agent, how the project is worked on.
+
+// GuidanceLayer is the canonical layer of the project's guidance files.
+const GuidanceLayer = "guidance"
+
+// GuidancePattern are the guidance files: the readme, the contributing guide, and the files
+// coding agents read first.
+const GuidancePattern = "{README,CONTRIBUTING,AGENTS,CLAUDE}.md"
+
+// guidancePriority wins over any layer whose pattern also matches these four files at the
+// root: they are the guidance wherever else the project's patterns reach.
+const guidancePriority = 1000
+
+// CanonicalGuidance is the guidance layer as Anchors adds it.
+func CanonicalGuidance() Layer {
+	return Layer{Pattern: GuidancePattern, Kind: "doc", Regime: "declarativo", Tags: []string{GuidanceLayer},
+		Priority: guidancePriority, Headless: true, canonical: true}
+}
+
+// applyCanonicalLayers adds the canonical layers the project neither declares nor turns off:
+// a layer of the same name declared by the project replaces it, and `guidance: false` leaves
+// it out.
+func (c *Config) applyCanonicalLayers() {
+	if c.Guidance != nil && !*c.Guidance {
+		return
+	}
+	if _, declared := c.Layers[GuidanceLayer]; declared {
+		return
+	}
+	if c.Layers == nil {
+		c.Layers = map[string]Layer{}
+	}
+	c.Layers[GuidanceLayer] = CanonicalGuidance()
+}
+
+// LayerHeadless says whether the files of the layer carry no `@anchors` header.
+func (c *Config) LayerHeadless(layer string) bool {
+	if c == nil {
+		return false
+	}
+	return c.Layers[layer].Headless
+}
+
+// IsCanonicalLayer says whether the layer is one Anchors added on its own, not one the
+// project declared.
+func (c *Config) IsCanonicalLayer(name string) bool {
+	if c == nil {
+		return false
+	}
+	return c.Layers[name].canonical
+}
+
+// DeclaredLayers counts the layers the project declares — the canonical ones left out.
+func (c *Config) DeclaredLayers() int {
+	if c == nil {
+		return 0
+	}
+	n := 0
+	for _, l := range c.Layers {
+		if !l.canonical {
+			n++
+		}
+	}
+	return n
+}
+
+// Rev is the revision of the anchors.yaml the configuration was loaded from — empty for one
+// built in memory. A judgment about the configuration is measured against it.
+func (c *Config) Rev() string {
+	if c == nil {
+		return ""
+	}
+	return c.rev
+}
+
+// WithCanonicalLayers is a copy of the configuration with the canonical layers it neither
+// declares nor turns off: what a configuration built in memory — the one init writes — will
+// have once loaded.
+func (c *Config) WithCanonicalLayers() *Config {
+	if c == nil {
+		return nil
+	}
+	out := *c
+	out.Layers = make(map[string]Layer, len(c.Layers)+1)
+	for k, v := range c.Layers {
+		out.Layers[k] = v
+	}
+	out.applyCanonicalLayers()
+	return &out
 }
