@@ -196,7 +196,12 @@ func fixMissingHeader(content string, n mapx.Node, _ string, g *mapx.Graph) (str
 				field = "ref: " + strings.Join(codes, ", ")
 			}
 		}
-		if field == "" && n.Layer != "" && (n.Kind == mapx.KindGuide || n.Kind == mapx.KindDoc || n.Support) {
+		// A layer the project declares `regime: declarativo` originates no rule and has no
+		// spec: its files' identity is the layer, as a guide's is (reported from the bavel
+		// adoption: 564 OCaml files of no unit left with no code, so no `@dep:` could name
+		// them and the map had no edge).
+		declarative := fixConfig != nil && fixConfig.Layers[n.Layer].Regime == "declarativo"
+		if field == "" && n.Layer != "" && (n.Kind == mapx.KindGuide || n.Kind == mapx.KindDoc || n.Support || declarative) {
 			field = "layer: " + n.Layer
 		}
 		if field != "" {

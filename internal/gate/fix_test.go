@@ -248,6 +248,14 @@ func TestFixMissingHeader_fromTheMap(t *testing.T) {
 	if _, changed, _ := fixMissingHeader("package x\n", mapx.Node{ID: "x/orphan.go", Kind: mapx.KindCode}, "", g); changed {
 		t.Error("a file of no unit is left as it is")
 	}
+	// A file of a declarative layer — no spec, no rule — gets its own code and its layer.
+	prevCfg := fixConfig
+	fixConfig = &config.Config{Layers: map[string]config.Layer{"core-code": {Kind: "code", Regime: "declarativo"}}}
+	decl, declChanged, _ := fixMissingHeader("let x = 1\n", mapx.Node{ID: "src/core/eval.ml", Kind: mapx.KindCode, Layer: "core-code"}, "", g)
+	fixConfig = prevCfg
+	if decl = generatedCodeRE.ReplaceAllString(decl, "code: CODE"); !declChanged || !strings.HasPrefix(decl, "(* @anchors\n  code: CODE\n  layer: core-code\n*)\n") {
+		t.Errorf("a declarative layer's file gets its code and layer: %q", decl)
+	}
 	t.Run("FXIXX-B10: The fix gives a file with an identity and no code of its own a code unique in the map", func(t *testing.T) {})
 	in := "// @anchors\n//   ref: PAYMT\n\npackage src\n"
 	out, changed, _ := fixMissingHeader(in, mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode, Layer: "logic"}, "", g)

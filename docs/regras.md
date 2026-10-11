@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:a163ea1516ed3117 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:9bf8265cfe618e0b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4415,7 +4415,7 @@ abra a página dela em `camadas/`.
 
 - [FXIXX-B08 — The detail of each repair (fixed, or a write that failed) is written in the project's language, through i18n.](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
-- [FXIXX-B09 — `--fix` writes the header a governed file lacks, at its top after any shebang, in the comment of the file's language — a block comment (`<!--`, `(*`) with its fields indented and its closer on a line of its own: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document or a test support file; to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`)](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
+- [FXIXX-B09 — `--fix` writes the header a governed file lacks, at its top after any shebang, in the comment of the file's language — a block comment (`<!--`, `(*`) with its fields indented and its closer on a line of its own: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document, a test support file or a file of a layer the project declares `regime: declarativo` (which originates no rule and has no spec); to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`)](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
 - [FXIXX-B10 — `--fix` gives a file whose header has an identity (or gets one) and no `code:` of its own a code generated from its name and its type, unique among the codes in the map, written below `@anchors` beside the identity; a header with its own code is left as it is. (`fixMissingHeader`)](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
