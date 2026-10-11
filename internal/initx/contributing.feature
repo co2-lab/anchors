@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTD
 #   ref: CNGDC
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @CNGDC
@@ -68,3 +68,16 @@ Feature: ContributingGuide — render the project's CONTRIBUTING.md from the con
     Given an empty working folder
     When the guide is rendered
     Then the folder is still empty and the guide comes back as text
+
+  @CNGDC-B08 @unit-level
+  Scenario: The guide recommends watching long commands and agents
+    Given any configuration
+    When the contributing section is rendered
+    Then it strongly recommends anchors monitor run in the background, anchors monitor while it works, and the agent hook
+
+  @CNGDC-B09 @unit-level
+  Scenario: The agents' entry files send the agent to the contributing guide
+    Given the agents' entry files
+    When they are rendered
+    Then AGENTS.md and CLAUDE.md both point to CONTRIBUTING.md, AGENTS.md names the commands and the monitor, and CLAUDE.md imports AGENTS.md
+

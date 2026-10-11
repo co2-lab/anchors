@@ -2,7 +2,7 @@
 # @anchors
 #   code: INIFN
 #   ref: ININT
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @ININT
@@ -101,3 +101,10 @@ Feature: InitNonInteractive — the init that an agent answers with flags: it as
     When init runs with --artifacts=spec, gates seeded by default
     Then the success JSON's gate_scripts names `go run ./tools/gates <gate>` and shell
     And with --gates=false it carries no gate_scripts
+
+  @ININT-B13 @unit-level
+  Scenario: The agents' entry files are seeded beside the contributing guide
+    Given a project with no agent file, and one whose CLAUDE.md does not mention the guide
+    When init runs with the contributing answer yes
+    Then the first gets AGENTS.md and CLAUDE.md, and the second keeps its CLAUDE.md and is given the line to add
+

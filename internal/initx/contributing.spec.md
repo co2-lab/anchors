@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNGDC
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: infra
 -->
 # ContributingGuide — render the project's CONTRIBUTING.md from the configuration init writes
@@ -38,6 +38,8 @@ init never touches it: the section this unit renders is what init shows for the 
 | `CNGDC-B05` | The daily commands name the GitHub repository as the queue in `github` mode, and the local queue otherwise. |
 | `CNGDC-B06` | The gates whose failure blocks are named as barring the commit and the rest as informing; with no blocking gate, it says every gate only informs. Divergences and pending items are said to inform unless `severity` says otherwise. |
 | `CNGDC-B07` | The guides part names the project's guide folder when there is one. |
+| `CNGDC-B08` | The section strongly recommends watching long commands and agents: launching each long command in the background through `anchors monitor run -- <command>`, keeping `anchors monitor` running while it works, and `anchors install-hooks --agent` for a coding agent; Anchors' own long commands record themselves. |
+| `CNGDC-B09` | The agents' entry files — `AGENTS.md`, read by most coding agents, and `CLAUDE.md`, read by Claude Code — each send the agent to `CONTRIBUTING.md` before any change; `AGENTS.md` names the guide, work and next commands, the monitor and the ban on `--no-verify`, and `CLAUDE.md` imports `AGENTS.md`. (`RenderAgents`, `RenderClaude`, `AgentEntryFiles`) |
 
 ## Invariants
 

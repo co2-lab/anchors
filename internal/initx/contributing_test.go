@@ -144,3 +144,34 @@ func TestContributingWritesNothing(t *testing.T) {
 		t.Errorf("rendering wrote to disk: %v", entries)
 	}
 }
+
+func TestContributingRecommendsTheMonitor(t *testing.T) {
+	t.Run("CNGDC-B08: The guide recommends watching long commands and agents", func(t *testing.T) {})
+	s := ContributingSection(nil, "")
+	for _, want := range []string{"### Long commands and agents: watch them", "**Strongly recommended:**", "`anchors monitor run -- <command>`, in the background", "Keep `anchors monitor` running", "`anchors install-hooks --agent`"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("missing %q in:\n%s", want, s)
+		}
+	}
+}
+
+func TestAgentEntryFilesPointToTheGuide(t *testing.T) {
+	t.Run("CNGDC-B09: The agents' entry files send the agent to the contributing guide", func(t *testing.T) {})
+	files := AgentEntryFiles()
+	if len(files) != 2 || files[0].Name != "AGENTS.md" || files[1].Name != "CLAUDE.md" {
+		t.Fatalf("files: %+v", files)
+	}
+	for _, f := range files {
+		if !strings.Contains(f.Content, "Read `CONTRIBUTING.md` before any change") {
+			t.Errorf("%s does not send the agent to the guide:\n%s", f.Name, f.Content)
+		}
+	}
+	for _, want := range []string{"anchors guide", "anchors work <stage> --for <target>", "anchors next", "anchors monitor run -- <command>", "--no-verify"} {
+		if !strings.Contains(files[0].Content, want) {
+			t.Errorf("AGENTS.md lacks %q", want)
+		}
+	}
+	if !strings.Contains(files[1].Content, "\n@AGENTS.md\n") {
+		t.Errorf("CLAUDE.md imports AGENTS.md:\n%s", files[1].Content)
+	}
+}

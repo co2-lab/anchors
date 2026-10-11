@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:0399df94a02d3875 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:9afdd77d4fbbabb1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2111,6 +2111,8 @@ abra a página dela em `camadas/`.
 
 - [ININT-B12 — When the default gates are seeded, the success JSON carries `gate_scripts`: a gate step doing more than calling one tool is written in the project's language, with the family's example; with no gates seeded it carries none.](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
 
+- [ININT-B13 — With the contributing answer yes, a project with no `AGENTS.md` or `CLAUDE.md` gets each, pointing to `CONTRIBUTING.md`, and the success JSON lists them as written; one the project already has stays byte for byte, and when it does not mention `CONTRIBUTING.md` the success JSON carries the line to add.](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
+
 - [ININT-I01 — Either every answer is accepted and the file is written, or nothing is written.](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
 
 - [ININT-X01 — The non-interactive mode never prompts: every exchange is JSON on standard output.](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
@@ -2161,7 +2163,7 @@ abra a página dela em `camadas/`.
 
 - [INWZN-B22 — Before the code-layer question the init says that each candidate is a folder of the project, that Anchors proposes no structure, and gives layer kinds as illustration.](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave)
 
-- [INWZN-B23 — Accepting the contributing guide seeds `CONTRIBUTING.md` from the written configuration when the project has none; an existing one stays byte for byte, and the init prints the section that would be added.](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave)
+- [INWZN-B23 — Accepting the contributing guide seeds `CONTRIBUTING.md` from the written configuration when the project has none; an existing one stays byte for byte, and the init prints the section that would be added. The agents' entry files (`AGENTS.md`, `CLAUDE.md`) are seeded the same way, and an existing one that does not mention `CONTRIBUTING.md` gets the line to add printed.](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave)
 
 - [INWZN-B24 — When the language family has a coverage hint, the init prints how its tests emit the reports `anchors ingest` reads.](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave)
 
@@ -6974,6 +6976,10 @@ abra a página dela em `camadas/`.
 - [CNGDC-B06 — The gates whose failure blocks are named as barring the commit and the rest as informing; with no blocking gate, it says every gate only informs. Divergences and pending items are said to inform unless `severity` says otherwise.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 
 - [CNGDC-B07 — The guides part names the project's guide folder when there is one.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
+
+- [CNGDC-B08 — The section strongly recommends watching long commands and agents: launching each long command in the background through `anchors monitor run -- <command>`, keeping `anchors monitor` running while it works, and `anchors install-hooks --agent` for a coding agent; Anchors' own long commands record themselves.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
+
+- [CNGDC-B09 — The agents' entry files — `AGENTS.md`, read by most coding agents, and `CLAUDE.md`, read by Claude Code — each send the agent to `CONTRIBUTING.md` before any change; `AGENTS.md` names the guide, work and next commands, the monitor and the ban on `--no-verify`, and `CLAUDE.md` imports `AGENTS.md`. (`RenderAgents`, `RenderClaude`, `AgentEntryFiles`)](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 
 - [CNGDC-I01 — The guide never names a layer, gate or folder the configuration does not hold.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 

@@ -83,6 +83,20 @@ func ContributingSection(cfg *config.Config, guideDir string) string {
 	b.WriteString("- `anchors touch` — bump `updated_at` in the headers of the files that changed.\n")
 	b.WriteString("- `anchors install-hooks` — once per clone: the pre-commit runs the gates over what is staged.\n\n")
 
+	b.WriteString("### Long commands and agents: watch them\n\n")
+	b.WriteString("**Strongly recommended:** never leave a long command or an agent working unwatched. A\n")
+	b.WriteString("suite that hangs, a build that dies or an agent stuck on a prompt looks like work in\n")
+	b.WriteString("progress until someone notices — usually much later.\n\n")
+	b.WriteString("- Launch every long command — a test suite, a mutation run, a build, a script, an agent's\n")
+	b.WriteString("  task — through `anchors monitor run -- <command>`, in the background: its process, its\n")
+	b.WriteString("  output and its exit are recorded in `.anchors/runs/`. Anchors' own long commands\n")
+	b.WriteString("  (`anchors test`, `mutation`, `check`, `verify`) record themselves.\n")
+	b.WriteString("- Keep `anchors monitor` running while they work (`--until-done` to stop when they end):\n")
+	b.WriteString("  one line when a run starts, stalls, dies or ends, and a heartbeat with what is running.\n")
+	b.WriteString("  React to each line instead of waiting blind.\n")
+	b.WriteString("- Working with a coding agent: `anchors install-hooks --agent` records the long commands\n")
+	b.WriteString("  it sends to the background, so the monitor sees them too.\n\n")
+
 	b.WriteString("### What blocks and what informs\n\n")
 	blocking, informing := gateSplit(cfg)
 	if len(blocking) > 0 {
@@ -178,4 +192,45 @@ func quoteAll(names []string) string {
 		q[i] = "`" + n + "`"
 	}
 	return strings.Join(q, ", ")
+}
+
+// The agents' entry files. An agent reads its own file before anything else, and the way
+// work flows here is in CONTRIBUTING.md: each entry file sends it there, so the rules live in
+// one place.
+const (
+	// AgentsFile is read by most coding agents.
+	AgentsFile = "AGENTS.md"
+	// ClaudeFile is read by Claude Code, which imports AGENTS.md from it.
+	ClaudeFile = "CLAUDE.md"
+)
+
+// AgentsPointer is the line an agent's entry file needs: read the contributing guide first.
+const AgentsPointer = "Read `" + ContributingFile + "` before any change: it says how work flows here — the order spec → feature → test → code, the layers, the commands, the gates that bar a commit, and how to watch long commands with `anchors monitor`."
+
+// RenderAgents is the AGENTS.md for a project that has none.
+func RenderAgents() string {
+	return "# Agents\n\n" +
+		"This project is kept coherent by [Anchors](https://github.com/co2-lab/anchors).\n\n" +
+		AgentsPointer + "\n\n" +
+		"- `anchors guide` — the rules for writing each piece; `anchors work <stage> --for <target>`\n" +
+		"  — the prompt of one task; `anchors next` — the next task.\n" +
+		"- Launch every long command in the background through `anchors monitor run -- <command>`,\n" +
+		"  and keep `anchors monitor` running while it works.\n" +
+		"- Never commit with `--no-verify`: a gate that fails is fixed, or waived in the commit\n" +
+		"  message with its reason (`[skip-<rule>@<CODE>: why]`).\n"
+}
+
+// RenderClaude is the CLAUDE.md for a project that has none: it imports AGENTS.md, so both
+// agents read the same text.
+func RenderClaude() string {
+	return "# Claude Code\n\n" + AgentsPointer + "\n\n@" + AgentsFile + "\n"
+}
+
+// AgentEntryFiles are the agents' entry files init seeds beside the contributing guide, each
+// with its content.
+func AgentEntryFiles() []struct{ Name, Content string } {
+	return []struct{ Name, Content string }{
+		{AgentsFile, RenderAgents()},
+		{ClaudeFile, RenderClaude()},
+	}
 }

@@ -153,7 +153,7 @@ func runInit(root string) error {
 	// 0.7) CONTRIBUTING — o guia de quem chega, lido da configuração que este init grava.
 	// Num projeto que já tem o seu, nada é tocado: o trecho que seria acrescentado é
 	// mostrado para quem quiser colá-lo.
-	seedContributing := askConfirmDefault("Seed "+initx.ContributingFile+" (how work flows here, from this configuration)?", true)
+	seedContributing := askConfirmDefault("Seed "+initx.ContributingFile+" (how work flows here, from this configuration), with "+initx.AgentsFile+" and "+initx.ClaudeFile+" pointing to it?", true)
 
 	// 1) ARTEFATOS — SEMPRE perguntado. Pré-marca os detectados; num projeto vazio,
 	// o usuário marca o que PRETENDE usar. As layers de artefato são (re)construídas
@@ -439,9 +439,36 @@ func reportContributing(root string, cfg *config.Config, guideDir string) {
 	if _, err := os.Stat(dest); err == nil {
 		fmt.Printf("%s already exists — left untouched. The section Anchors would add:\n\n%s\n",
 			initx.ContributingFile, initx.ContributingSection(cfg, guideDir))
-		return
-	}
-	if os.WriteFile(dest, []byte(initx.RenderContributing(cfg, guideDir)), 0o644) == nil {
+	} else if os.WriteFile(dest, []byte(initx.RenderContributing(cfg, guideDir)), 0o644) == nil {
 		fmt.Printf("Contributing guide seeded: %s\n", initx.ContributingFile)
 	}
+	for _, r := range seedAgentFiles(root) {
+		switch {
+		case r.written:
+			fmt.Printf("Agents' entry file seeded: %s\n", r.name)
+		case r.missing:
+			fmt.Printf("%s already exists — left untouched. Add this line so agents read the contributing guide:\n\n  %s\n\n", r.name, initx.AgentsPointer)
+		}
+	}
+}
+
+// agentFileResult is what seeding one agent entry file did.
+type agentFileResult struct {
+	name             string
+	written, missing bool // written: seeded; missing: it exists and does not point to the guide
+}
+
+// seedAgentFiles writes each agent entry file the project lacks; one it has is never touched,
+// and is reported when it does not mention the contributing guide.
+func seedAgentFiles(root string) []agentFileResult {
+	var out []agentFileResult
+	for _, f := range initx.AgentEntryFiles() {
+		dest := filepath.Join(root, f.Name)
+		if b, err := os.ReadFile(dest); err == nil {
+			out = append(out, agentFileResult{name: f.Name, missing: !strings.Contains(string(b), initx.ContributingFile)})
+			continue
+		}
+		out = append(out, agentFileResult{name: f.Name, written: os.WriteFile(dest, []byte(f.Content), 0o644) == nil})
+	}
+	return out
 }

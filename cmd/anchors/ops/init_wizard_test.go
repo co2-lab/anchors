@@ -548,6 +548,7 @@ func TestRunInitLeavesAnExistingContributingAlone(t *testing.T) {
 	root := repoWithCode(t)
 	writeFile(t, root, config.DefaultFile, "version: 1\n")
 	writeFile(t, root, "CONTRIBUTING.md", "ours\n")
+	writeFile(t, root, "AGENTS.md", "ours too\n")
 	var runErr error
 	out, _ := driveLineMode(t, answerEverything(), func() { runErr = runInit(root) })
 	if runErr != nil {
@@ -558,6 +559,12 @@ func TestRunInitLeavesAnExistingContributingAlone(t *testing.T) {
 	}
 	if !strings.Contains(out, "already exists — left untouched") || !strings.Contains(out, "## Working with Anchors") {
 		t.Errorf("the init should print the section it would add:\n%s", out)
+	}
+	if b, _ := os.ReadFile(filepath.Join(root, "AGENTS.md")); string(b) != "ours too\n" || !strings.Contains(out, "AGENTS.md already exists — left untouched. Add this line") {
+		t.Errorf("the project's AGENTS.md is kept, and the line to add printed:\n%s", out)
+	}
+	if b, err := os.ReadFile(filepath.Join(root, "CLAUDE.md")); err != nil || !strings.Contains(string(b), "@AGENTS.md") {
+		t.Errorf("CLAUDE.md is seeded: %v %s", err, b)
 	}
 }
 

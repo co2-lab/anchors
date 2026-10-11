@@ -335,3 +335,36 @@ func TestNonInteractiveSeedingGatesAdvisesTheProjectLanguage(t *testing.T) {
 		t.Errorf("no gates seeded, no gate_scripts: %v %v\n%s", err, doc["gate_scripts"], out)
 	}
 }
+
+func TestNonInteractiveSeedsTheAgentFiles(t *testing.T) {
+	t.Run("ININT-B13: The agents' entry files are seeded beside the contributing guide", func(t *testing.T) {})
+	root := t.TempDir()
+	if err, doc, out := runNonInteractive(t, root, "--artifacts=spec"); err != nil || doc["escrito"] != true {
+		t.Fatalf("init: %v\n%s", err, out)
+	}
+	for _, f := range []string{"AGENTS.md", "CLAUDE.md"} {
+		if b, err := os.ReadFile(filepath.Join(root, f)); err != nil || !strings.Contains(string(b), "CONTRIBUTING.md") {
+			t.Errorf("%s not seeded pointing to the guide: %v\n%s", f, err, b)
+		}
+	}
+	ours := t.TempDir()
+	writeFile(t, ours, "CLAUDE.md", "mine\n")
+	err, doc, out := runNonInteractive(t, ours, "--artifacts=spec")
+	if err != nil {
+		t.Fatalf("init: %v\n%s", err, out)
+	}
+	if b, _ := os.ReadFile(filepath.Join(ours, "CLAUDE.md")); string(b) != "mine\n" {
+		t.Errorf("the project's CLAUDE.md was touched:\n%s", b)
+	}
+	c, _ := doc["contributing"].(map[string]any)
+	agents, _ := c["agentes"].([]any)
+	var claude map[string]any
+	for _, a := range agents {
+		if m, _ := a.(map[string]any); m["arquivo"] == "CLAUDE.md" {
+			claude = m
+		}
+	}
+	if trecho, _ := claude["trecho"].(string); claude == nil || claude["escrito"] != false || !strings.Contains(trecho, "CONTRIBUTING.md") {
+		t.Errorf("the line to add comes back: %v", c["agentes"])
+	}
+}

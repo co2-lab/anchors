@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INWZN
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: comando
 -->
 # InitWizard — the interactive init walks a person from an unconfigured directory to a reviewed anchors.yaml, and writes nothing on answers nobody gave
@@ -74,7 +74,7 @@ the file, which is a successful no.
 | `INWZN-B20` | Each guide found on disk gets a question asking which tag it governs. |
 | `INWZN-B21` | `--preset`, in either mode, is refused before anything runs, with an error saying Anchors proposes no structure and init reads the project's own folders; nothing is written. |
 | `INWZN-B22` | Before the code-layer question the init says that each candidate is a folder of the project, that Anchors proposes no structure, and gives layer kinds as illustration. |
-| `INWZN-B23` | Accepting the contributing guide seeds `CONTRIBUTING.md` from the written configuration when the project has none; an existing one stays byte for byte, and the init prints the section that would be added. |
+| `INWZN-B23` | Accepting the contributing guide seeds `CONTRIBUTING.md` from the written configuration when the project has none; an existing one stays byte for byte, and the init prints the section that would be added. The agents' entry files (`AGENTS.md`, `CLAUDE.md`) are seeded the same way, and an existing one that does not mention `CONTRIBUTING.md` gets the line to add printed. |
 | `INWZN-B24` | When the language family has a coverage hint, the init prints how its tests emit the reports `anchors ingest` reads. |
 | `INWZN-B25` | Accepting the default gates prints that a gate step doing more than calling one tool is written in the project's language, not in shell, with the family's example (INCTN-B11). |
 

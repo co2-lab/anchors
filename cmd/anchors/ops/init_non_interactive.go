@@ -262,6 +262,19 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta,
 		} else if os.WriteFile(dest, []byte(initx.RenderContributing(cfg, p.GuideDir)), 0o644) == nil {
 			*contributing = map[string]any{"escrito": true, "arquivo": initx.ContributingFile}
 		}
+		var agents []map[string]any
+		for _, r := range seedAgentFiles(root) {
+			a := map[string]any{"arquivo": r.name, "escrito": r.written}
+			if r.missing {
+				a["motivo"] = "exists"
+				a["trecho"] = initx.AgentsPointer
+			}
+			agents = append(agents, a)
+		}
+		if *contributing == nil {
+			*contributing = map[string]any{}
+		}
+		(*contributing)["agentes"] = agents
 	}
 	return nil
 }

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8ffe2526a6f37b7e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:02a186ef7ad64742 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1913,6 +1913,8 @@ teste prova.
 - [CONTRIBUTING.md is seeded when absent, and an existing one is left as it is](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B11`
 
 - [Seeding the gates tells to write gate steps in the project's language](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B12`
+
+- [The agents' entry files are seeded beside the contributing guide](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B13`
 
 - [An existing config is kept when the overwrite is not confirmed](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B01`
 
@@ -6303,6 +6305,10 @@ teste prova.
 - [The guide never names what the configuration does not hold](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-I01`
 
 - [Rendering writes nothing to disk](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-X01`
+
+- [The guide recommends watching long commands and agents](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B08`
+
+- [The agents' entry files send the agent to the contributing guide](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B09`
 
 - [The code layer names are listed sorted, and only code layers](layers/infra.md#indcn--initdecisions--the-pure-decisions-of-init-over-the-proposed-configuration-code-layers-tags-and-governs-rules) `INDCN-B01`
 
