@@ -9,6 +9,7 @@
 package initx
 
 import (
+	"github.com/co2-lab/anchors/internal/scan"
 	"io/fs"
 	"os"
 	"path"
@@ -65,14 +66,24 @@ func Infer(root string) (*Proposal, error) {
 	conventionCount := map[TestConvention]int{}
 	lidosParaHandle := 0
 
+	// The proposal sees what the map will see: the same ignore as the scan — the project's
+	// `.gitignore`, the built-in list, the nested checkouts. A folder the scan never walks
+	// proposed as a layer is a layer that never gets a node, or that maps third-party code
+	// the day the ignore changes (reported from the bavel adoption: `_build`, `_placar`,
+	// `.claude/worktrees`).
+	ig := scan.LoadIgnore(root)
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if d.IsDir() {
-			if ignoredDirs[d.Name()] {
+			rel := filepath.ToSlash(mustRelInfer(root, path))
+			if ignoredDirs[d.Name()] || (rel != "." && (ig.SkipDir(d.Name(), rel) || scan.NestedCheckout(path, rel))) {
 				return filepath.SkipDir
 			}
+			return nil
+		}
+		if rel := filepath.ToSlash(mustRelInfer(root, path)); ig.SkipFile(rel) {
 			return nil
 		}
 		// ToSlash uma vez, na fronteira: o que sai daqui alimenta isGuide/isPlan/topDir e
@@ -227,6 +238,8 @@ var codeExts = map[string]bool{
 	".ts": true, ".tsx": true, ".js": true, ".jsx": true, ".go": true,
 	".py": true, ".rb": true, ".java": true, ".rs": true, ".kt": true,
 	".swift": true, ".cs": true, ".php": true,
+	// OCaml and its generators (Menhir, ocamllex), and the C a binding stubs in.
+	".ml": true, ".mli": true, ".mly": true, ".mll": true, ".c": true, ".h": true,
 }
 
 func isCode(name string) bool {
@@ -307,4 +320,13 @@ func topKeys(m map[string]int, n int) []string {
 		out = append(out, k.k)
 	}
 	return out
+}
+
+// mustRelInfer is path relative to root; a path outside it is kept as it is.
+func mustRelInfer(root, path string) string {
+	rel, err := filepath.Rel(root, path)
+	if err != nil {
+		return path
+	}
+	return rel
 }

@@ -59,6 +59,10 @@ func featureHeader(id string, lang string) string {
 func lineHeader(idField string) func(id, outPath string) string {
 	return func(id, outPath string) string {
 		c := config.LineCommentFor(outPath)
+		if closer := config.CommentCloseFor(c); closer != "" {
+			return fmt.Sprintf("%s @anchors\n  %s: %s\n  updated_at: TODO\n  layer: test\n%s\n",
+				c, idField, id, strings.TrimSpace(closer))
+		}
 		return fmt.Sprintf("%s @anchors\n%s   %s: %s\n%s   updated_at: TODO\n%s   layer: test\n",
 			c, c, idField, id, c, c)
 	}

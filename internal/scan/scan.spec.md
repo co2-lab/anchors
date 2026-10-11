@@ -40,7 +40,7 @@ heuristic decided.
 | --- | --- |
 | `RPSCR-B01` | `Walk`: Only files that match a declared layer are returned, each with the layer and the kind of that layer; a file outside every layer is left out. |
 | `RPSCR-B02` | Directories and files the ignore set excludes (the project's `.gitignore`, the built-in list, editor ephemera) are not returned. |
-| `RPSCR-B03` | A directory that is another checkout — it holds its own `.git`, a file in a worktree or a directory in a clone — is not descended into. |
+| `RPSCR-B03` | A directory that is another checkout — it holds its own `.git`, a file in a worktree or a directory in a clone — is not descended into. (`NestedCheckout`) |
 | `RPSCR-B04` | A plan's progress companion is not returned, even when a layer matches it. |
 | `RPSCR-B05` | A workflow owned upstream enters with no rule codes of its own: the codes in its comments are the Anchors project's examples. |
 | `RPSCR-B06` | `ShortHash`: A file's revision is a short hash of its content with CRLF line endings normalized to LF, so the same content has the same revision on every machine, and different content a different one. |
@@ -127,6 +127,7 @@ heuristic decided.
 | `RPSCR-B53` | A file's header may declare it frozen — `frozen:` with a freeze's code or, with no doctrine, the reason —, read with its value. (`Frozen`, `FrozenOf`) |
 | `RPSCR-B54` | In a spec or a doctrine document, a `@frozen:` mark on a rule's line, or on a line of the rule's own block, freezes that rule; on a heading that defines no rule, it freezes every rule under it down to the next heading of its level or above; each is read with its mark's value, without the form's punctuation; a mark inside backticks is a citation, and freezes nothing. (`FrozenRules`) |
 | `RPSCR-B55` | A doctrine document's rules of the freeze letter are its freeze entries, read with the text after the code as the reason, in any of the three forms a rule is written in; a value is a freeze's code when it is a code of that letter. (`Freezes`, `IsFreezeCode`) |
+| `RPSCR-B56` | The chain's flags — dependency, waiver, used-by and navigation — may stand in an OCaml block comment closed by `*)` at the line's end, and are read as in any other comment; the evidence leaves them out the same way. |
 | `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants

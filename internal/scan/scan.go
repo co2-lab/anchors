@@ -202,7 +202,7 @@ type Dep struct {
 	Layer  string // tipo/camada declarado da dependência (p/ gate de limite de camada)
 }
 
-// nestedCheckout reports whether a directory below the root is another checkout — a git
+// NestedCheckout reports whether a directory below the root is another checkout — a git
 // worktree or a nested repository, marked by its own `.git` (a file in a worktree, a
 // directory in a clone). Its files belong to that checkout, not to this project.
 //
@@ -210,7 +210,7 @@ type Dep struct {
 // copies of the project's own files into the map. They were excluded in
 // `.git/info/exclude`, which the scan does not read — and should not need to: a checkout
 // inside the tree is never the project's material, whatever the ignore files say.
-func nestedCheckout(path, rel string) bool {
+func NestedCheckout(path, rel string) bool {
 	if rel == "." {
 		return false
 	}
@@ -245,7 +245,7 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 		// forma nativa de vazar para dentro do grafo.
 		rel := filepath.ToSlash(mustRel(root, path))
 		if d.IsDir() {
-			if ig.SkipDir(d.Name(), rel) || nestedCheckout(path, rel) {
+			if ig.SkipDir(d.Name(), rel) || NestedCheckout(path, rel) {
 				return filepath.SkipDir
 			}
 			return nil
@@ -385,7 +385,7 @@ func GovernedPaths(root string, cfg *config.Config) ([]string, error) {
 		}
 		rel := filepath.ToSlash(mustRel(root, path))
 		if d.IsDir() {
-			if ig.SkipDir(d.Name(), rel) || nestedCheckout(path, rel) {
+			if ig.SkipDir(d.Name(), rel) || NestedCheckout(path, rel) {
 				return filepath.SkipDir
 			}
 			return nil
@@ -1518,16 +1518,16 @@ var (
 	codeDepRE = regexp.MustCompile(`@dep:\s*([A-Z0-9]+)\b`)
 	// kindedDepRE is a dependency that is no import: `@dep[<kind>]: <name>`.
 	kindedDepRE = regexp.MustCompile(`@dep\[([a-z][a-z0-9-]*)\]:\s*([^\s*]+)`)
-	noDepRE     = regexp.MustCompile(`@no-dep:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
+	noDepRE     = regexp.MustCompile(`@no-dep:\s*(\S.*?)\s*(?:\*/|\*\)|-->)?\s*$`)
 	// usedByRE: the codes, and the symbol in parentheses when the flag stands above an
 	// export list — `// @used-by: ARNAA (Budget)` — where the next line names several.
-	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([A-Za-z_$][\w$]*)\s*\))?\s*(?:\*/|-->)?\s*$`)
+	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([A-Za-z_$][\w$]*)\s*\))?\s*(?:\*/|\*\)|-->)?\s*$`)
 	// exportListRE is an export list on one line: `export { X } from '…'`, `export type { A, B }`.
 	exportListRE = regexp.MustCompile(`^\s*export\s+(?:type\s+)?\{([^}]*)\}`)
 	// navigatesRE: the flag at the end of the line, or a block comment inside it — after the
 	// call on a JSX line, where text after the tag would render (`/* @navigates: X */}>`).
-	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-(?:[A-Z]\d{2}|DS-[A-Za-z0-9_-]+))\s*\])?\s*(?:@dormant:\s*(\S.*?)?)?\s*(?:\*/.*|-->.*)?$`)
-	noNavRE     = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*(?:\*/|-->)?\s*$`)
+	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-(?:[A-Z]\d{2}|DS-[A-Za-z0-9_-]+))\s*\])?\s*(?:@dormant:\s*(\S.*?)?)?\s*(?:\*/.*|\*\).*|-->.*)?$`)
+	noNavRE     = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*(?:\*/|\*\)|-->)?\s*$`)
 	// importSymbolsRE reads what an import line brings: the names inside braces, or the
 	// default name right after the keyword.
 	importBracesRE  = regexp.MustCompile(`\{([^}]*)\}`)

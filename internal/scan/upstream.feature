@@ -2,7 +2,7 @@
 # @anchors
 #   code: UPFTP
 #   ref: UPOWP
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @UPOWP
@@ -68,3 +68,10 @@ Feature: UpstreamOwnership — which files Anchors still owns in a project, and 
     When the header is read
     Then there is none
     And a comment opening with @anchors at the top opens it
+
+  @UPOWP-B09 @unit-level
+  Scenario: An OCaml or dune header is read
+    Given an OCaml module whose header is a (* @anchors *) block followed by code, and a dune file with a ; header
+    When their headers are read
+    Then each gives its code, and the OCaml block ends at its *)
+

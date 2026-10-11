@@ -5,6 +5,8 @@
 package initx
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -139,5 +141,19 @@ func TestTBDInstructionForbidsPassAndNamesTheAbsence(t *testing.T) {
 	// in the file makes every gate that reads it waive what it should charge.
 	if !strings.Contains(got, "stale") {
 		t.Errorf("the instruction does not cover the `@TBD` that stopped being true:\n%s", got)
+	}
+}
+
+func TestFamily_ocaml(t *testing.T) {
+	t.Run("INCTN-B12: OCaml is a family", func(t *testing.T) {})
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "dune-project"), []byte("(lang dune 3.0)\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if got := detectFamily(dir, map[string]int{".ts": 9}); got != "ocaml" {
+		t.Errorf("dune-project: %q", got)
+	}
+	if got := detectFamily(t.TempDir(), map[string]int{".ml": 9, ".c": 2}); got != "ocaml" {
+		t.Errorf("by extension: %q", got)
 	}
 }

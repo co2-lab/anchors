@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INPRN
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: infra
 -->
 # InferProposal — walks the project and proposes its structure deterministically, for init to confirm
@@ -63,6 +63,8 @@ The proposal carries the configuration built from it (BLCNB).
 | `INPRN-B10` | A test named by any convention inference knows (`_test.go`; `.test` and `.spec` with `.ts`, `.tsx`, `.js`, `.jsx`; `_test.py` and `test_*.py`; `_spec.rb` and `_test.rb`; `Test.java`, `Tests.java`, `Test.kt`, `Tests.cs`, `Test.cs`, `Test.php`) has the stem of the code it tests, so `foo_test.go` pairs with `foo.go` and `test_foo.py` with `foo.py` for colocation. |
 | `INPRN-B11` | The language family is the one a manifest at the root declares — `go.mod`, `Cargo.toml`, `pyproject.toml`, `setup.py`, `requirements.txt`, `Gemfile`, `composer.json`, `package.json`, checked in that order — or, with no manifest, the family of the most frequent code extension; with neither, there is no family. |
 | `INPRN-B12` | The test conventions are the naming forms the project's test files follow, most followed first, ties by name; a file follows the longest form it ends with (`.spec.tsx` before `.tsx`). |
+| `INPRN-B13` | The walk skips what the scan skips — the folders and files the project's `.gitignore` excludes, the scan's built-in list, and the nested checkouts (a worktree, a clone) —, so no folder the map will never walk is proposed as a layer. |
+| `INPRN-B14` | OCaml's files (`.ml`, `.mli`, `.mly`, `.mll`) and C's (`.c`, `.h`) are code: their folders are candidate code directories and their extensions code extensions. |
 
 ## Invariants
 

@@ -212,10 +212,12 @@ func TestFixMissingHeader_fromTheMap(t *testing.T) {
 			{ID: "src/pay.spec.md", Kind: mapx.KindSpec, Code: "PAYMT"},
 			{ID: "src/pay.feature", Kind: mapx.KindFeature},
 			{ID: "src/pay.go", Kind: mapx.KindCode},
+			{ID: "src/pay.ml", Kind: mapx.KindCode},
 			{ID: "src/pay_test.go", Kind: mapx.KindTest},
 		},
 		Edges: []mapx.Edge{
 			{From: "src/pay.spec.md", To: "src/pay.go", Type: mapx.EdgeSpecifies},
+			{From: "src/pay.spec.md", To: "src/pay.ml", Type: mapx.EdgeSpecifies},
 			{From: "src/pay.spec.md", To: "src/pay.feature", Type: mapx.EdgeCoveredBy},
 			{From: "src/pay.feature", To: "src/pay_test.go", Type: mapx.EdgeTestedBy},
 		},
@@ -228,6 +230,7 @@ func TestFixMissingHeader_fromTheMap(t *testing.T) {
 		{mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode}, "package src\n", "// @anchors\n//   code: CODE\n//   ref: PAYMT\n\npackage src\n"},
 		{mapx.Node{ID: "src/pay_test.go", Kind: mapx.KindTest}, "package src\n", "// @anchors\n//   code: CODE\n//   ref: PAYMT\n\n"},
 		{mapx.Node{ID: "guides/A.md", Kind: mapx.KindGuide, Layer: "guide"}, "# A\n", "<!-- @anchors\n  code: CODE\n  layer: guide\n-->\n\n# A\n"},
+		{mapx.Node{ID: "src/pay.ml", Kind: mapx.KindCode}, "let pay = 1\n", "(* @anchors\n  code: CODE\n  ref: PAYMT\n*)\n\nlet pay = 1\n"},
 		{mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode}, "// @anchors\n//   updated_at: 2026-01-01\npackage src\n", "// @anchors\n//   code: CODE\n//   ref: PAYMT\n//   updated_at: 2026-01-01\n"},
 	}
 	for _, c := range cases {

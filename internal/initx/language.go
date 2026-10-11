@@ -79,6 +79,7 @@ var manifestFamily = []struct {
 	{"pyproject.toml", "python"}, {"setup.py", "python"}, {"requirements.txt", "python"},
 	{"Gemfile", "ruby"},
 	{"composer.json", "php"},
+	{"dune-project", "ocaml"},
 	{"package.json", "ts"},
 }
 
@@ -86,6 +87,7 @@ var manifestFamily = []struct {
 var extFamily = map[string]string{
 	".go": "go", ".ts": "ts", ".tsx": "ts", ".js": "ts", ".jsx": "ts", ".py": "python",
 	".rs": "rust", ".rb": "ruby", ".php": "php", ".cs": "csharp", ".java": "java", ".kt": "kotlin",
+	".ml": "ocaml", ".mli": "ocaml", ".mly": "ocaml", ".mll": "ocaml",
 }
 
 // coverageHints are how each family's test runner emits what `anchors ingest` reads: the

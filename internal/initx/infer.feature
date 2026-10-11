@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTB
 #   ref: INPRN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @INPRN
@@ -103,3 +103,16 @@ Feature: InferProposal — walks the project and proposes its structure determin
     Given three `.spec.tsx` tests and one `.test.ts` test
     When the project is inferred
     Then the conventions are `.spec.tsx` then `.test.ts`
+
+  @INPRN-B13 @unit-level
+  Scenario: The proposal skips what the scan skips
+    Given code in src, in a _build folder and a third-party folder the .gitignore excludes, and in an agent worktree with its own .git
+    When the project is inferred
+    Then only src is a candidate code directory
+
+  @INPRN-B14 @unit-level
+  Scenario: OCaml and C are code
+    Given an OCaml core with its interfaces, a Menhir grammar, a lexer, and C stubs
+    When the project is inferred
+    Then the core and the stubs are candidate code directories, and the OCaml and C extensions are code extensions
+

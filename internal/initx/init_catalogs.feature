@@ -2,7 +2,7 @@
 # @anchors
 #   code: ICFNA
 #   ref: INCTN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @INCTN
@@ -78,3 +78,10 @@ Feature: InitCatalogs — the language dialect catalog and the @TBD instruction 
     Given the conventions, the family defaults and the manifests
     When each is inspected
     Then none carries a directory separator
+
+  @INCTN-B12 @unit-level
+  Scenario: OCaml is a family
+    Given a project with a dune-project at its root, and one of OCaml files with no manifest
+    When their family is detected
+    Then both are ocaml
+

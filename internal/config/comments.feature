@@ -2,7 +2,7 @@
 # @anchors
 #   code: CMFTA
 #   ref: CMMRC
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @CMMRC
@@ -55,3 +55,10 @@ Feature: CommentMarkers — which text opens a line comment in each kind of file
     Given the inputs ".GO", "go" and "main.go"
     When the reader asks for their line-comment prefixes
     Then none of them gets a prefix
+
+  @CMMRC-B07 @unit-level
+  Scenario: OCaml, Menhir and dune comment their own way, and a block comment is closed
+    Given an OCaml module, a Menhir grammar, a dune file and a Go file
+    When their markers and the closing of each marker are asked
+    Then OCaml answers (*, Menhir (* and /*, dune ; by its name, and each block opener has its closer while // has none
+

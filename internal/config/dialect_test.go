@@ -538,3 +538,31 @@ func TestDialect_importResolveAndNavigationCall(t *testing.T) {
 		t.Errorf("got %+v %q", d.ImportResolve, d.NavigationCall)
 	}
 }
+
+func TestDialectFor_ocaml(t *testing.T) {
+	t.Run("DLCTI-B24: The OCaml family reads OCaml", func(t *testing.T) {})
+	d := (&Config{Dialect: &Dialect{Family: "OCaml"}}).DialectFor()
+	src := "open Lexer\nopen! Base.Option\nlet parse x =\n  let local = x in local\nlet rec walk' t = t\nlet home = Sys.getenv_opt \"HOME\"\n"
+	var exported []string
+	for _, m := range regexp.MustCompile(d.ExportedFunc).FindAllStringSubmatch(src, -1) {
+		exported = append(exported, m[1])
+	}
+	if !reflect.DeepEqual(exported, []string{"parse", "walk'", "home"}) {
+		t.Errorf("exported %v", exported)
+	}
+	if m := regexp.MustCompile(d.EnvRead).FindStringSubmatch(src); m == nil || m[1] != "HOME" {
+		t.Errorf("env read: %v", m)
+	}
+	var opens []string
+	for _, l := range strings.Split(src, "\n") {
+		if m := regexp.MustCompile(d.ImportPattern).FindStringSubmatch(l); m != nil {
+			opens = append(opens, m[1])
+		}
+	}
+	if !reflect.DeepEqual(opens, []string{"Lexer", "Base.Option"}) || !regexp.MustCompile(d.Loop).MatchString("for i = 1 to 3 do () done") {
+		t.Errorf("opens %v", opens)
+	}
+	if own := (&Config{Dialect: &Dialect{Family: "ocaml", ImportPattern: "^use (.*)"}}).DialectFor(); own.ImportPattern != "^use (.*)" {
+		t.Error("a declared import pattern wins over the family")
+	}
+}

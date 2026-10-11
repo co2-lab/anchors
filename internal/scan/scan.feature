@@ -372,3 +372,10 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a doctrine document with freezes as a heading, a table row and a bold bullet
     When its freezes are read
     Then each code has its reason, the rules of other letters are no freeze, and only a code of the freeze letter is a freeze's code
+
+  @RPSCR-B56 @unit-level
+  Scenario: The chain's flags are read in an OCaml comment
+    Given OCaml lines carrying a dependency, a dependency waiver, a used-by and a navigation flag in (* … *) comments
+    When the flags and the evidence are read
+    Then each flag has its codes or reason without the closer, and the evidence is the code's alone
+

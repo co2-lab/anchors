@@ -43,8 +43,8 @@ var (
 	// ChainFlagOnlyRE is a line that is only a comment carrying a flag of the chains;
 	// chainFlagEndRE, such a comment at the end of a line of code; chainFlagBlockRE, one in a
 	// block comment, wherever it sits in the line — what follows it is code.
-	ChainFlagOnlyRE  = regexp.MustCompile(`^\s*(?://|#|--|/\*|<!--)\s*@(?:dep(?:\[[^\]]*\])?|no-dep|used-by|navigates|no-nav):.*$`)
-	chainFlagEndRE   = regexp.MustCompile(`\s*(?://|#|--|<!--)\s*@(?:dep(?:\[[^\]]*\])?|no-dep|used-by|navigates|no-nav):.*$`)
+	ChainFlagOnlyRE  = regexp.MustCompile(`^\s*(?://|#|--|/\*|\(\*|<!--)\s*@(?:dep(?:\[[^\]]*\])?|no-dep|used-by|navigates|no-nav):.*$`)
+	chainFlagEndRE   = regexp.MustCompile(`\s*(?://|#|--|<!--|\(\*)\s*@(?:dep(?:\[[^\]]*\])?|no-dep|used-by|navigates|no-nav):.*$`)
 	chainFlagBlockRE = regexp.MustCompile(`\s*/\*\s*@(?:dep(?:\[[^\]]*\])?|no-dep|used-by|navigates|no-nav):[^*]*\*/`)
 	evHeadingRE      = regexp.MustCompile(`^(#{1,6})\s+(.+?)\s*$`)
 	evNoteRE         = regexp.MustCompile(`\s*\([^)]*\)\s*$`)

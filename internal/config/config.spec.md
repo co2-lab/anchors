@@ -183,6 +183,7 @@ Most failures of the load are the refusals stated as behaviours; the rows below 
 | `CNFGO-E08` | REF[CNFGO-B11]: a pattern that does not compile is the refusal B11 states | — | — |
 | `CNFGO-E09` | REF[CNFGO-B12]: an unsupported language is the refusal B12 states | — | — |
 | `CNFGO-E10` | REF[CNFGO-B13]: a code length out of range is the refusal B13 states | — | — |
+| `CNFGO-E11` | The configuration file exists and is not valid YAML. | The load fails naming the line, says the file exists and is fixed at that line — never recreated with `anchors init` —, and, when that line or the one before holds a single quote, that a quote inside a single-quoted string is written twice; only a missing file is advised to run `anchors init`. (`InitHint`) | Recreating a file that only needed a fix replaces the configuration written by hand. |
 
 ## Open Decisions
 

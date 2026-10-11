@@ -144,7 +144,7 @@ map's edges by co-location (file names) and by scenario code
 			}
 			cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
 			if err != nil {
-				return fmt.Errorf("load %s: %w (run `anchors init` to create it)", config.DefaultFile, err)
+				return fmt.Errorf("load %s: %w%s", config.DefaultFile, err, config.InitHint(err))
 			}
 			files, err := scan.Walk(absRoot, cfg)
 			if err != nil {

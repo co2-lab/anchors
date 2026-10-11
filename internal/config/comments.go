@@ -43,10 +43,40 @@ var CommentMarkers = map[string][]string{
 	".sql": {"--"},
 	".lua": {"--"},
 	".hs":  {"--"},
+	// OCaml has only the block comment `(* … *)`; Menhir's grammars take it and `/* … */`.
+	// Like markup, a flag or a header field written in it is closed (CommentCloseFor).
+	".ml":  {"(*"},
+	".mli": {"(*"},
+	".mll": {"(*"},
+	".mly": {"(*", "/*"},
 	// markup — o comentário é de bloco; tratado à parte quando necessário
 	".md":   {"<!--"},
 	".html": {"<!--"},
 	".xml":  {"<!--"},
+}
+
+// CommentNamed are the comment markers of the files known by NAME, with no extension: a
+// dune build file comments with `;`.
+var CommentNamed = map[string][]string{
+	"dune":         {";"},
+	"dune-project": {";"},
+	"dune-file":    {";"},
+}
+
+// CommentCloseFor is what closes a comment opened with the marker, with its leading space —
+// ` -->` after `<!--`, ` *)` after `(*` —, or empty for a line comment, which the end of
+// the line closes. A flag written at a line's end in a block-comment language is closed
+// with it, or the comment would swallow the code that follows.
+func CommentCloseFor(marker string) string {
+	switch marker {
+	case "<!--":
+		return " -->"
+	case "(*":
+		return " *)"
+	case "/*":
+		return " */"
+	}
+	return ""
 }
 
 // MarkersFor devolve os prefixos de comentário de linha para uma extensão.
@@ -56,22 +86,32 @@ func MarkersFor(ext string) []string {
 	return CommentMarkers[ext]
 }
 
+// MarkersForPath are the comment markers of a file: by its extension, or by its name for
+// the files known by name (CommentNamed).
+func MarkersForPath(path string) []string {
+	base := path
+	if i := strings.LastIndexAny(path, "/\\"); i >= 0 {
+		base = path[i+1:]
+	}
+	if m, ok := CommentNamed[base]; ok {
+		return m
+	}
+	ext := ""
+	if i := strings.LastIndex(base, "."); i >= 0 {
+		ext = strings.ToLower(base[i:])
+	}
+	return CommentMarkers[ext]
+}
+
 // LineCommentFor devolve o marcador de comentário de LINHA para um caminho, pela
 // extensão. Default `#`: é o marcador da maioria das linguagens de script e de
 // configuração, e — o que decide — um `#` num arquivo C-like é visivelmente errado para
 // quem lê, enquanto um `//` num arquivo Python é sintaxe INVÁLIDA que quebra o arquivo.
 // Entre errar visível e errar quebrando, erra-se visível.
 func LineCommentFor(path string) string {
-	ext := path
-	if i := strings.LastIndex(path, "."); i >= 0 {
-		ext = strings.ToLower(path[i:])
-	}
 	// `.test.ts` / `_test.py`: a extensão real é sempre a última.
-	if markers, ok := CommentMarkers[ext]; ok { // every entry of the table has a prefix
-		if markers[0] == "<!--" {
-			return "<!--" // markup: quem chama trata o fechamento
-		}
-		return markers[0]
+	if markers := MarkersForPath(path); len(markers) > 0 { // every entry of the table has a prefix
+		return markers[0] // a block opener (`<!--`, `(*`): the caller closes it (CommentCloseFor)
 	}
 	return "#"
 }

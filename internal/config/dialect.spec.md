@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DLCTI
-  updated_at: 2026-10-08
+  updated_at: 2026-10-11
   layer: config
 -->
 # Dialect — the lexicon of the project's language, between an agnostic gate and concrete code
@@ -66,6 +66,7 @@ written in the configuration file).
 | `DLCTI-B21` | `fallible_patterns` (`FalliblePatterns`, each a `FalliblePattern` with `call`, `handled` and `window` — `DefaultFallibleWindow` lines when it declares none) are the project's; the family's fill them only when the project declares none. |
 | `DLCTI-B22` | A family knows what can fail in its stack and what handles it (`FamilyFalliblePatterns`: React Query, SWR, fetch and axios for `ts`; HTTP and SQL for `go`; `requests` for `python`), and does not impose them: a project that declared no `fallible_patterns` is measured with none until it adopts them. |
 | `DLCTI-B23` | The dialect declares how an import's path becomes a file (`import_resolve`: `extensions` tried in order and `aliases` of path prefixes — `ImportResolve`) and what a navigation call looks like (`navigation_call`, its destination in the group `route` — `NavigationCall`). |
+| `DLCTI-B24` | The OCaml family reads an exported function as a top-level `let` or `let rec`, an environment read as `Sys.getenv` or `Sys.getenv_opt` with a literal name, a loop as `for` or `while`, and an import line as `open` (or `open!`) with its module; a family's import pattern fills the project's when it declares none. |
 | `DLCTI-B19` | The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing. |
 | `DLCTI-B14` | The Go and TS families say how a test is written — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` — and a project that declares its own `tests` keeps it over the family's. |
 | `DLCTI-B15` | The TS family recognises a `catch` as handling a failure with or without its binding: `catch (e) {` and `catch {`. |

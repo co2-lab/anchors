@@ -1354,3 +1354,20 @@ func TestFrozen_entries(t *testing.T) {
 		t.Error("only a code of the freeze letter is a freeze's code")
 	}
 }
+
+func TestChainFlags_ocamlComment(t *testing.T) {
+	t.Run("RPSCR-B56: The chain's flags are read in an OCaml comment", func(t *testing.T) {})
+	if d := extractCodeDeps([]byte("open Lexer (* @dep: LEXRL *)\nopen Unix (* @no-dep: stdlib *)\n")); len(d) != 2 || d[0].Code != "LEXRL" || d[1].Waiver != "stdlib" {
+		t.Errorf("deps: %+v", d)
+	}
+	if n := extractNavigates([]byte("go () (* @navigates: HOMEH [HOMEH-B01] *)\n")); len(n) != 1 || n[0].Codes[0] != "HOMEH" || n[0].Rule != "HOMEH-B01" {
+		t.Errorf("navigates: %+v", n)
+	}
+	if u := extractUsedBy([]byte("(* @used-by: AAAAA, BBBBB *)\nlet x = 1\n")); len(u) != 1 || len(u[0].Codes) != 2 || u[0].Codes[1] != "BBBBB" {
+		t.Errorf("used-by: %+v", u)
+	}
+	ev := func(b string) Evidence { return EvidenceOf("code", "src/p.ml", []byte(b), nil) }
+	if ev("open Lexer\nlet x = 1\n").Rev != ev("open Lexer (* @dep: LEXRL *)\n(* @used-by: AAAAA *)\nlet x = 1\n").Rev {
+		t.Error("the flags are no evidence")
+	}
+}

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -422,4 +423,61 @@ func merge(ms ...map[string]string) map[string]string {
 		}
 	}
 	return out
+}
+
+func TestInfer_skipsWhatTheScanSkips(t *testing.T) {
+	t.Run("INPRN-B13: The proposal skips what the scan skips", func(t *testing.T) {})
+	dir := t.TempDir()
+	files := codeFiles("src/core", ".ts", "", 3)
+	for k, v := range codeFiles("_build/default", ".ts", "", 12) {
+		files[k] = v
+	}
+	for k, v := range codeFiles("third/_placar", ".ts", "", 12) {
+		files[k] = v
+	}
+	for k, v := range codeFiles(".claude/worktrees/agent-a/src", ".ts", "", 12) {
+		files[k] = v
+	}
+	files[".claude/worktrees/agent-a/.git"] = "gitdir: ../../.git/worktrees/agent-a\n"
+	files[".gitignore"] = "_build/\n_placar\n"
+	writeTree(t, dir, files)
+	p, err := Infer(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range p.CodeDirs {
+		if strings.Contains(d, "_build") || strings.Contains(d, "_placar") || strings.Contains(d, "worktrees") {
+			t.Errorf("a folder the scan skips is proposed: %v", p.CodeDirs)
+		}
+	}
+	if !slices.Contains(p.CodeDirs, "src/core") {
+		t.Errorf("the project's own code is proposed: %v", p.CodeDirs)
+	}
+}
+
+func TestInfer_ocamlAndCAreCode(t *testing.T) {
+	t.Run("INPRN-B14: OCaml and C are code", func(t *testing.T) {})
+	dir := t.TempDir()
+	files := codeFiles("src/core", ".ml", "", 4)
+	for k, v := range codeFiles("src/core", ".mli", "", 4) {
+		files[k] = v
+	}
+	files["src/frontends/parser.mly"] = "%token EOF\n"
+	files["src/frontends/lexer.mll"] = "rule token = parse eof { EOF }\n"
+	files["stubs/s.c"] = "int f(void){return 0;}\n"
+	writeTree(t, dir, files)
+	p, err := Infer(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range []string{"src/core", "src/frontends", "stubs"} {
+		if !slices.Contains(p.CodeDirs, d) {
+			t.Errorf("%s is code: %v", d, p.CodeDirs)
+		}
+	}
+	for _, e := range []string{".ml", ".mli", ".c"} {
+		if !slices.Contains(p.CodeExts, e) {
+			t.Errorf("%s is a code extension: %v", e, p.CodeExts)
+		}
+	}
 }

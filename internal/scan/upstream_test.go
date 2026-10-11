@@ -137,3 +137,17 @@ func TestAnchorsHeader_firstWordOpensIt(t *testing.T) {
 		t.Error("a comment opening with @anchors opens the header")
 	}
 }
+
+func TestAnchorsHeader_ocamlAndDune(t *testing.T) {
+	t.Run("UPOWP-B09: An OCaml or dune header is read", func(t *testing.T) {})
+	ml := "(* @anchors\n  code: PARSR\n  ref: PARSU\n*)\nopen Lexer\nlet code = 1\n"
+	if HeaderCodeOf(ml) != "PARSR" || !strings.HasSuffix(string(AnchorsHeader([]byte(ml))), "*)") {
+		t.Errorf("OCaml header: %q", AnchorsHeader([]byte(ml)))
+	}
+	if refs := extractHeaderRefs(ml); len(refs) != 1 || refs[0] != "PARSU" {
+		t.Errorf("OCaml refs: %v", refs)
+	}
+	if got := HeaderCodeOf("; @anchors\n;   code: DUNEB\n\n(library (name core))\n"); got != "DUNEB" {
+		t.Errorf("dune header: %q", got)
+	}
+}

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:28017cbcea2da0c5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:740908ed334039f7 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2898,6 +2898,8 @@ teste prova.
 
 - [The prefix lookup takes the extension as given and does not normalise it](layers/config.md#cmmrc-x01--the-prefix-lookup-takes-the-extension-as-given-and-does-not-normalise-it) `CMMRC-X01`
 
+- [OCaml, Menhir and dune comment their own way, and a block comment is closed](layers/config.md#cmmrc-b07--ocaml-menhir-and-dune-comment-their-own-way-and-a-block-comment-is-closed) `CMMRC-B07`
+
 - [An unknown key in the file is a load error naming the key](layers/config.md#cnfgo-b01--an-unknown-key-in-the-file-is-a-load-error-naming-the-key) `CNFGO-B01`
 
 - [An unknown key gets the misspelling and old-binary hypotheses](layers/config.md#cnfgo-b02--an-unknown-key-gets-the-misspelling-and-old-binary-hypotheses) `CNFGO-B02`
@@ -3046,6 +3048,8 @@ teste prova.
 
 - [evidence.no_side_effect names the flags and sections with no side effect](layers/config.md#cnfgo-b67--evidenceno-side-effect-names-the-flags-and-sections-with-no-side-effect) `CNFGO-B67`
 
+- [A configuration that is not valid YAML is fixed, not recreated](layers/config.md#cnfgo-e11--a-configuration-that-is-not-valid-yaml-is-fixed-not-recreated) `CNFGO-E11`
+
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](layers/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -3115,6 +3119,8 @@ teste prova.
 - [A family knows its fallible patterns and does not impose them on a project that declared none](layers/config.md#dlcti-b22--a-family-knows-its-fallible-patterns-and-does-not-impose-them-on-a-project-that-declared-none) `DLCTI-B22`
 
 - [import_resolve and navigation_call are read from the dialect](layers/config.md#dlcti-b23--import-resolve-and-navigation-call-are-read-from-the-dialect) `DLCTI-B23`
+
+- [The OCaml family reads OCaml](layers/config.md#dlcti-b24--the-ocaml-family-reads-ocaml) `DLCTI-B24`
 
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
@@ -6458,6 +6464,10 @@ teste prova.
 
 - [The test conventions are the forms the project's tests follow, most followed first](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B12`
 
+- [The proposal skips what the scan skips](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B13`
+
+- [OCaml and C are code](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B14`
+
 - [The @TBD instruction forbids pass, orders a waiver naming the absence, and names the piece asked about](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B04`
 
 - [A file is a test when its name carries a convention's prefix and suffix](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B06`
@@ -6479,6 +6489,8 @@ teste prova.
 - [Every family default is a convention of the catalog](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-I04`
 
 - [The catalog names no folder](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-X02`
+
+- [OCaml is a family](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B12`
 
 - [A known agent variable makes the operator an AI even with a terminal](layers/infra.md#opdtp--operatordetection--tell-whether-a-person-or-an-ai-is-running-init-and-whether-the-discovery-phase-is-still-to-be-done) `OPDTP-B01`
 
@@ -7694,6 +7706,8 @@ teste prova.
 
 - [A doctrine's freeze entries are read with their reasons](layers/scan.md#rpscr-b55--a-doctrines-freeze-entries-are-read-with-their-reasons) `RPSCR-B55`
 
+- [The chain's flags are read in an OCaml comment](layers/scan.md#rpscr-b56--the-chains-flags-are-read-in-an-ocaml-comment) `RPSCR-B56`
+
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 
 - [A Windows path under the workflow directory is recognised](layers/scan.md#upowp-b02--a-windows-path-under-the-workflow-directory-is-recognised) `UPOWP-B02`
@@ -7713,4 +7727,6 @@ teste prova.
 - [Only a header at the top is the header, unless it says why it stands lower](layers/scan.md#upowp-b07--only-a-header-at-the-top-is-the-header-unless-it-says-why-it-stands-lower) `UPOWP-B07`
 
 - [Only a comment whose first word is @anchors opens the header](layers/scan.md#upowp-b08--only-a-comment-whose-first-word-is-anchors-opens-the-header) `UPOWP-B08`
+
+- [An OCaml or dune header is read](layers/scan.md#upowp-b09--an-ocaml-or-dune-header-is-read) `UPOWP-B09`
 

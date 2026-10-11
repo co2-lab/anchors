@@ -6,13 +6,16 @@ package config
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/bmatcuk/doublestar/v4"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/i18n"
@@ -1849,7 +1852,7 @@ func SetCanonicalGateResolver(f func(name string) (Gate, bool)) { canonicalGate 
 // definition: the header was read by nineteen copies of this prefix, and the gate's lacked
 // `--` while the map's had it — a valid `-- ref: X` header failed `header-valid` as having
 // no identity (reported from baas-proxy).
-const HeaderLinePrefix = `^\s*(?://|#|--|<!--|\*)?\s*`
+const HeaderLinePrefix = `^\s*(?://|#|--|<!--|\*|;+)?\s*`
 
 // gateCatalog lists every canonical gate; injected by the package that owns the catalog,
 // for the same reason as canonicalGate.
@@ -1968,7 +1971,7 @@ func Load(path string) (*Config, error) {
 	dec := yaml.NewDecoder(bytes.NewReader(data))
 	dec.KnownFields(true)
 	if err := dec.Decode(&c); err != nil {
-		return nil, fmt.Errorf("%s: %w%s", filepath.Base(path), err, versionHint(err, data))
+		return nil, fmt.Errorf("%s: %w%s%s", filepath.Base(path), err, versionHint(err, data), syntaxHint(err, data))
 	}
 	for i := range c.Gates {
 		c.Gates[i] = mergeCanonical(c.Gates[i])
@@ -2024,6 +2027,45 @@ func Load(path string) (*Config, error) {
 		setSlots(CodeLengths)
 	}
 	return &c, nil
+}
+
+// yamlLineRE is the line a YAML syntax error names.
+var yamlLineRE = regexp.MustCompile(`yaml: line (\d+):`)
+
+// syntaxHint is what a configuration that is not valid YAML is told: the file exists and is
+// fixed at its line — never recreated with `anchors init`, which would write a new
+// configuration over the one written by hand. When the line, or the one before it, holds a
+// single quote, the commonest cause is named: inside a single-quoted string a quote is
+// written twice. An unknown key or a wrong type is no syntax error, and gets nothing here.
+func syntaxHint(err error, data []byte) string {
+	var te *yaml.TypeError
+	if errors.As(err, &te) {
+		return ""
+	}
+	m := yamlLineRE.FindStringSubmatch(err.Error())
+	if m == nil {
+		return ""
+	}
+	hint := "\n  The file exists and is not valid YAML: fix it at that line. Do not run `anchors init` — it would write a new configuration over yours."
+	n, _ := strconv.Atoi(m[1])
+	lines := strings.Split(string(data), "\n")
+	for i := n - 2; i < n && i < len(lines); i++ {
+		if i >= 0 && strings.Contains(lines[i], "'") {
+			hint += "\n  Inside a single-quoted YAML string, a quote is written twice: 'it''s'."
+			break
+		}
+	}
+	return hint
+}
+
+// InitHint is the advice that follows a failed load: `anchors init` only when the file is
+// missing. A file that exists and does not load is fixed where it is, and the load error
+// already says how.
+func InitHint(err error) string {
+	if errors.Is(err, fs.ErrNotExist) {
+		return " (run `anchors init` to create it)"
+	}
+	return ""
 }
 
 // setSlots é o gancho do gerador de código. Registrado por SetSlotsHook no main.

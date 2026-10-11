@@ -46,7 +46,7 @@ func IsUpstreamOwned(rel string, content []byte) bool {
 // comment, and not `@anchors-shared-code`, a mention in backticks, nor prose that names
 // the header — a package comment saying "the header @anchors (code:/ref:)" was read as the
 // header, and a header fix wrote the unit's `ref:` into the middle of that prose.
-var anchorsOpenerRE = regexp.MustCompile(`^(?://|#|/\*+|\*|--|<!--)\s*@anchors(?:\s|-->|$)`)
+var anchorsOpenerRE = regexp.MustCompile(`^(?://|#|/\*+|\*|--|<!--|\(\*+|;+)\s*@anchors(?:\s|-->|\*\)|$)`)
 
 // AnchorsHeader returns the text of the file's `@anchors` header block, or nil when the file
 // has none.
@@ -85,6 +85,8 @@ func AnchorsHeader(content []byte) []byte {
 			inBlock = "*/"
 		case strings.HasPrefix(t, "<!--") && !strings.Contains(t, "-->"):
 			inBlock = "-->"
+		case strings.HasPrefix(t, "(*") && !strings.Contains(t, "*)"):
+			inBlock = "*)"
 		case t == "" || isHeaderComment(t) || strings.HasPrefix(t, "#!"):
 		default:
 			codeBefore = true
@@ -123,6 +125,10 @@ func headerEnd(lines [][]byte, i int, t string) int {
 		if !strings.Contains(t, "*/") {
 			end = closingLine(lines, i+1, "*/")
 		}
+	case strings.HasPrefix(t, "(*"):
+		if !strings.Contains(t[strings.Index(t, "@anchors"):], "*)") {
+			end = closingLine(lines, i+1, "*)")
+		}
 	default:
 		for end < len(lines) && isHeaderComment(strings.TrimSpace(string(lines[end]))) {
 			end++
@@ -143,7 +149,7 @@ func closingLine(lines [][]byte, from int, close string) int {
 }
 
 func isHeaderComment(t string) bool {
-	for _, p := range []string{"//", "#", "/*", "*", "--", "<!--"} {
+	for _, p := range []string{"//", "#", "/*", "*", "--", "<!--", "(*", ";"} {
 		if strings.HasPrefix(t, p) {
 			return true
 		}

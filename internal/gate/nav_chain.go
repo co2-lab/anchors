@@ -553,7 +553,7 @@ func fixNavFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 			}
 			lines[c.Line-1] = l[:at] + " /* @navigates: " + t.Code + " */" + l[at:]
 		} else {
-			lines[c.Line-1] = strings.TrimRight(l, " \t") + " " + marker + " @navigates: " + t.Code
+			lines[c.Line-1] = strings.TrimRight(l, " \t") + " " + marker + " @navigates: " + t.Code + config.CommentCloseFor(marker)
 		}
 		done = append(done, fmt.Sprintf("%d %s", c.Line, t.Code))
 	}

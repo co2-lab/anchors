@@ -212,8 +212,9 @@ func fixMissingHeader(content string, n mapx.Node, _ string, g *mapx.Graph) (str
 	what := strings.Join(fields, ", ")
 	c := config.LineCommentFor(n.ID)
 	indent := c + "   "
-	if c == "<!--" {
-		indent = "  "
+	closer := config.CommentCloseFor(c)
+	if closer != "" {
+		indent = "  " // a block comment: its fields are indented, with no marker
 	}
 	var lines strings.Builder
 	for _, f := range fields {
@@ -230,8 +231,8 @@ func fixMissingHeader(content string, n mapx.Node, _ string, g *mapx.Graph) (str
 		return content[:opener] + lines.String() + content[opener:], true, i18n.T("gate.fix.header_written", what)
 	}
 	var header string
-	if c == "<!--" {
-		header = "<!-- @anchors" + lines.String() + "\n-->\n\n"
+	if closer != "" {
+		header = c + " @anchors" + lines.String() + "\n" + strings.TrimSpace(closer) + "\n\n"
 	} else {
 		header = c + " @anchors" + lines.String() + "\n\n"
 	}

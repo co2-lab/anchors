@@ -459,3 +459,10 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given no evidence block, then one naming its flags and sections
     When they are read
     Then the default flags and no sections, then the project's lists
+
+  @CNFGO-E11 @unit-level
+  Scenario: A configuration that is not valid YAML is fixed, not recreated
+    Given an anchors.yaml whose pattern holds a quote inside a single-quoted string, and one missing
+    When each is loaded
+    Then the first fails naming its line, saying to fix it there and not to run anchors init, with the doubled-quote hint, and only the missing one is advised to run anchors init
+

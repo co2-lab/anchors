@@ -66,3 +66,23 @@ func TestMarkersFor_exactLookup(t *testing.T) {
 		}
 	}
 }
+
+func TestMarkers_ocamlAndBlockClosers(t *testing.T) {
+	t.Run("CMMRC-B07: OCaml, Menhir and dune comment their own way, and a block comment is closed", func(t *testing.T) {})
+	for path, want := range map[string][]string{
+		"src/core/p.ml": {"(*"}, "src/core/p.mli": {"(*"}, "src/lex.mll": {"(*"},
+		"src/parse.mly": {"(*", "/*"}, "src/dune": {";"}, "dune-project": {";"}, "a/b.go": {"//"},
+	} {
+		if got := MarkersForPath(path); !reflect.DeepEqual(got, want) {
+			t.Errorf("%s: %v, want %v", path, got, want)
+		}
+	}
+	if LineCommentFor("src/core/p.ml") != "(*" || LineCommentFor("src/dune") != ";" {
+		t.Error("the comment a writer uses follows the file")
+	}
+	for marker, want := range map[string]string{"<!--": " -->", "(*": " *)", "/*": " */", "//": "", "#": "", ";": ""} {
+		if got := CommentCloseFor(marker); got != want {
+			t.Errorf("%s closes with %q, want %q", marker, got, want)
+		}
+	}
+}

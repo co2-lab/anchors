@@ -1787,3 +1787,36 @@ func TestNoSideEffect(t *testing.T) {
 		t.Errorf("the project's: %v %v %v", c.NoSideEffectFlags(), c.NoSideEffectSections(), err)
 	}
 }
+
+func TestLoad_invalidYAMLIsFixedNotRecreated(t *testing.T) {
+	t.Run("CNFGO-E11: A configuration that is not valid YAML is fixed, not recreated", func(t *testing.T) {})
+	dir := t.TempDir()
+	path := filepath.Join(dir, "anchors.yaml")
+	if err := os.WriteFile(path, []byte("version: 7\ndialect:\n  exported_func: '^let ([a-z_']*)'\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, err := Load(path)
+	if err == nil {
+		t.Fatal("an invalid file must fail the load")
+	}
+	msg := err.Error()
+	for _, want := range []string{"line 3", "fix it at that line", "Do not run `anchors init`", "a quote is written twice: 'it''s'"} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("missing %q in:\n%s", want, msg)
+		}
+	}
+	if InitHint(err) != "" {
+		t.Error("a file that exists is not advised to run anchors init")
+	}
+	_, missing := Load(filepath.Join(dir, "none.yaml"))
+	if !strings.Contains(InitHint(missing), "anchors init") {
+		t.Error("a missing file is advised to run anchors init")
+	}
+	typoPath := filepath.Join(dir, "typo.yaml")
+	if err := os.WriteFile(typoPath, []byte("version: 7\nlayerz: {}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, typo := Load(typoPath); typo == nil || strings.Contains(typo.Error(), "not valid YAML") {
+		t.Errorf("an unknown key is no syntax error: %v", typo)
+	}
+}

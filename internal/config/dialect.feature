@@ -2,7 +2,7 @@
 # @anchors
 #   code: DLFTA
 #   ref: DLCTI
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-11
 #   layer: feature
 
 @DLCTI
@@ -166,3 +166,10 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given a dialect declaring import extensions, an alias, and a navigation call with its route group
     When the config is loaded
     Then the dialect has the extensions, the alias and the navigation pattern
+
+  @DLCTI-B24 @unit-level
+  Scenario: The OCaml family reads OCaml
+    Given a project declaring the ocaml family and nothing else
+    When its dialect is read against an OCaml module
+    Then the top-level let and let rec are exported, a local let is not, Sys.getenv_opt names the variable, and open names the module it imports
+

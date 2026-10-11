@@ -431,6 +431,15 @@ var dialectFamilies = map[string]Dialect{
 		Loop:         `\b(do|while|for|foreach)\b`,
 		Cursor:       `(?i)(nextToken|continuationToken|nextPageToken)`,
 	},
+	// OCaml: a top-level `let` is visible from outside the module unless an `.mli` hides
+	// it; `open M` is the import line (reported from the bavel adoption, where these
+	// patterns were first declared by hand).
+	"ocaml": {
+		EnvRead:       "Sys\\.getenv(?:_opt)?\\s+\"([A-Za-z_][A-Za-z0-9_]*)\"",
+		ExportedFunc:  `(?m)^let\s+(?:rec\s+)?([a-z_][A-Za-z0-9_']*)`,
+		Loop:          `\b(for|while)\b`,
+		ImportPattern: `^\s*open!?\s+([A-Z][A-Za-z0-9_.]*)`,
+	},
 	"kotlin": {
 		EnvRead:      "System\\.getenv\\(\\s*\"([A-Za-z_]\\w*)\"\\s*\\)",
 		ExportedFunc: `(?m)^\s*(?:public\s+)?(?:suspend\s+)?fun\s+(\w+)\s*[\(<]`,
@@ -495,6 +504,9 @@ func (c *Config) DialectFor() Dialect {
 		}
 		if d.EnvRead == "" {
 			d.EnvRead = base.EnvRead
+		}
+		if d.ImportPattern == "" {
+			d.ImportPattern = base.ImportPattern
 		}
 		if len(d.HandlePatterns) == 0 {
 			d.HandlePatterns = base.HandlePatterns

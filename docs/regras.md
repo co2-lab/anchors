@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:04eb2ceee82b41ac — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:4a25226777b0439d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3173,6 +3173,8 @@ abra a página dela em `camadas/`.
 
 - [CMMRC-B06 — An extension with several prefixes gets the first one declared.](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
 
+- [CMMRC-B07 — OCaml's files (`.ml`, `.mli`, `.mll`) comment with `(*`, Menhir's grammars (`.mly`) with `(*` and `/*`, and dune's files, known by name (`dune`, `dune-project`, `dune-file`), with `;`; a block comment opened with ``, ` *)` or ` */`, and a line comment needs no closing. (`MarkersForPath`, `CommentNamed`, `CommentCloseFor`)](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
+
 - [CMMRC-I01 — For every extension in the table, the comment the writer uses is the first prefix the reader lists: reading and writing never disagree about a language.](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
 
 - [CMMRC-X01 — The reader looks the extension up exactly as given: it neither lowers its case nor extracts it from a path.](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
@@ -3343,6 +3345,8 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-E10 — REF[CNFGO-B13]: a code length out of range is the refusal B13 states](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
+- [CNFGO-E11 — The configuration file exists and is not valid YAML.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
 ### [CNTNR — Containers — what runs separately, and which layers run inside each](layers/config.md#cntnr--containers--what-runs-separately-and-which-layers-run-inside-each)
 
 - [CNTNR-B01 — The declared containers come back as written, with their talks; a missing configuration has none.](layers/config.md#cntnr--containers--what-runs-separately-and-which-layers-run-inside-each)
@@ -3398,6 +3402,8 @@ abra a página dela em `camadas/`.
 - [DLCTI-B22 — A family knows what can fail in its stack and what handles it (`FamilyFalliblePatterns`: React Query, SWR, fetch and axios for `ts`; HTTP and SQL for `go`; `requests` for `python`), and does not impose them: a project that declared no `fallible_patterns` is measured with none until it adopts them.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B23 — The dialect declares how an import's path becomes a file (`import_resolve`: `extensions` tried in order and `aliases` of path prefixes — `ImportResolve`) and what a navigation call looks like (`navigation_call`, its destination in the group `route` — `NavigationCall`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
+- [DLCTI-B24 — The OCaml family reads an exported function as a top-level `let` or `let rec`, an environment read as `Sys.getenv` or `Sys.getenv_opt` with a literal name, a loop as `for` or `while`, and an import line as `open` (or `open!`) with its module; a family's import pattern fills the project's when it declares none.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -4379,7 +4385,7 @@ abra a página dela em `camadas/`.
 
 - [FXIXX-B08 — The detail of each repair (fixed, or a write that failed) is written in the project's language, through i18n.](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
-- [FXIXX-B09 — `--fix` writes the header a governed file lacks, at its top after any shebang: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document or a test support file; to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`)](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
+- [FXIXX-B09 — `--fix` writes the header a governed file lacks, at its top after any shebang, in the comment of the file's language — a block comment (`<!--`, `(*`) with its fields indented and its closer on a line of its own: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document or a test support file; to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`)](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
 - [FXIXX-B10 — `--fix` gives a file whose header has an identity (or gets one) and no `code:` of its own a code generated from its name and its type, unique among the codes in the map, written below `@anchors` beside the identity; a header with its own code is left as it is. (`fixMissingHeader`)](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
@@ -7139,6 +7145,10 @@ abra a página dela em `camadas/`.
 
 - [INPRN-B12 — The test conventions are the naming forms the project's test files follow, most followed first, ties by name; a file follows the longest form it ends with (`.spec.tsx` before `.tsx`).](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm)
 
+- [INPRN-B13 — The walk skips what the scan skips — the folders and files the project's `.gitignore` excludes, the scan's built-in list, and the nested checkouts (a worktree, a clone) —, so no folder the map will never walk is proposed as a layer.](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm)
+
+- [INPRN-B14 — OCaml's files (`.ml`, `.mli`, `.mly`, `.mll`) and C's (`.c`, `.h`) are code: their folders are candidate code directories and their extensions code extensions.](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm)
+
 - [INPRN-I01 — REF[INPRN-B01]: nothing under a skipped directory ever reaches the proposal, whatever it holds](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm)
 
 - [INPRN-I02 — The same tree always gives the same code extensions, code directories and layer patterns, ties included.](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm)
@@ -7160,6 +7170,8 @@ abra a página dela em `camadas/`.
 - [INCTN-B10 — A family's coverage hint (`CoverageHint`) says how its test runner emits the JUnit and lcov reports `anchors ingest` reads; a family with no hint, or no family, gets none.](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates)
 
 - [INCTN-B11 — A family's gate script example (`GateScriptExample`) is how a gate step that does more than call one tool runs in the family's own language (`go run ./tools/gates <gate>` for go, `node tools/gates.mjs <gate>` for ts, `python -m tools.gates <gate>` for python); a family with no example gets the generic advice of a program in the project's own language.](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates)
+
+- [INCTN-B12 — A `dune-project` at the root declares the OCaml family, and so does a project whose commonest code extension is OCaml's (`.ml`, `.mli`, `.mly`, `.mll`).](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates)
 
 - [INCTN-B09 — With no test convention read from the project, the conventions are its family's default; with neither, there are none and no template.](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates)
 
@@ -8375,7 +8387,7 @@ abra a página dela em `camadas/`.
 
 - [RPSCR-B02 — Directories and files the ignore set excludes (the project's `.gitignore`, the built-in list, editor ephemera) are not returned.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B03 — A directory that is another checkout — it holds its own `.git`, a file in a worktree or a directory in a clone — is not descended into.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B03 — A directory that is another checkout — it holds its own `.git`, a file in a worktree or a directory in a clone — is not descended into. (`NestedCheckout`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B04 — A plan's progress companion is not returned, even when a layer matches it.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
@@ -8479,6 +8491,8 @@ abra a página dela em `camadas/`.
 
 - [RPSCR-B55 — A doctrine document's rules of the freeze letter are its freeze entries, read with the text after the code as the reason, in any of the three forms a rule is written in; a value is a freeze's code when it is a code of that letter. (`Freezes`, `IsFreezeCode`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
+- [RPSCR-B56 — The chain's flags — dependency, waiver, used-by and navigation — may stand in an OCaml block comment closed by `*)` at the line's end, and are read as in any other comment; the evidence leaves them out the same way.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-I01 — The classification of a path is the same on every run with the same configuration.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
@@ -8508,6 +8522,8 @@ abra a página dela em `camadas/`.
 - [UPOWP-B07 — The header is at the TOP: only blank lines, comments — line comments and the insides of `/* */` and `` blocks — and a shebang may precede it. A block below any other line is not the header unless it declares inside `@fixed-header: <why>`; a bare `@fixed-header` declares nothing. `HeaderOffTop` says a file carries such an undeclared block and no header.](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
 
 - [UPOWP-B08 — A comment opens the header only when `@anchors` is its first word, right after the comment marker; prose that names the header does not.](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
+
+- [UPOWP-B09 — A header in an OCaml block comment — `(* @anchors`, its fields on the lines below, closed by `*)` — and in dune's `;` comments is read like any other: its block ends where its comment does, and its fields are the file's. (`AnchorsHeader`)](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
 
 - [UPOWP-I01 — Nothing after the header's comment is part of the header, whichever of the comment forms opened it.](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
 

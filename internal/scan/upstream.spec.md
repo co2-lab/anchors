@@ -1,6 +1,6 @@
 <!-- @anchors
   code: UPOWP
-  updated_at: 2026-10-02
+  updated_at: 2026-10-11
   layer: scan
 -->
 # UpstreamOwnership — which files Anchors still owns in a project, and where a file's `@anchors` header begins and ends
@@ -42,6 +42,7 @@ token and ends where that comment ends, so consumers read header keys only insid
 | `UPOWP-B06` | A header comment that never closes runs to the end of the file. |
 | `UPOWP-B07` | The header is at the TOP: only blank lines, comments — line comments and the insides of `/* */` and `<!-- -->` blocks — and a shebang may precede it. A block below any other line is not the header unless it declares inside `@fixed-header: <why>`; a bare `@fixed-header` declares nothing. `HeaderOffTop` says a file carries such an undeclared block and no header. |
 | `UPOWP-B08` | A comment opens the header only when `@anchors` is its first word, right after the comment marker; prose that names the header does not. |
+| `UPOWP-B09` | A header in an OCaml block comment — `(* @anchors`, its fields on the lines below, closed by `*)` — and in dune's `;` comments is read like any other: its block ends where its comment does, and its fields are the file's. (`AnchorsHeader`) |
 
 ## Invariants
 

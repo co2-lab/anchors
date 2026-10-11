@@ -100,14 +100,14 @@ func WithHeaderCode(content, rel, c string) string {
 		}
 		opener := at + nl
 		line := marker + "   " + field
-		if marker == "<!--" {
-			line = "  " + field
+		if config.CommentCloseFor(marker) != "" {
+			line = "  " + field // a block comment: its fields are indented, with no marker
 		}
 		return content[:opener] + "\n" + line + content[opener:]
 	}
 	header := marker + " @anchors\n" + marker + "   " + field + "\n\n"
-	if marker == "<!--" {
-		header = "<!-- @anchors\n  " + field + "\n-->\n\n"
+	if closer := config.CommentCloseFor(marker); closer != "" {
+		header = marker + " @anchors\n  " + field + "\n" + strings.TrimSpace(closer) + "\n\n"
 	}
 	if strings.HasPrefix(content, "#!") {
 		if i := strings.Index(content, "\n"); i >= 0 {

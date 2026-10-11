@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CMMRC
-  updated_at: 2026-09-26
+  updated_at: 2026-10-11
   layer: config
 -->
 # CommentMarkers — which text opens a line comment in each kind of file
@@ -43,6 +43,7 @@ closing it is the caller's job.
 | `CMMRC-B04` | A markup file (Markdown, HTML, XML) gets the opening of a block comment; closing it is the caller's job. |
 | `CMMRC-B05` | A path with no extension, or with one the table does not know, gets the hash comment. |
 | `CMMRC-B06` | An extension with several prefixes gets the first one declared. |
+| `CMMRC-B07` | OCaml's files (`.ml`, `.mli`, `.mll`) comment with `(*`, Menhir's grammars (`.mly`) with `(*` and `/*`, and dune's files, known by name (`dune`, `dune-project`, `dune-file`), with `;`; a block comment opened with `<!--`, `(*` or `/*` is closed with ` -->`, ` *)` or ` */`, and a line comment needs no closing. (`MarkersForPath`, `CommentNamed`, `CommentCloseFor`) |
 
 ## Invariants
 

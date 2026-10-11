@@ -517,7 +517,7 @@ func fixDepFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 		}
 		switch {
 		case f == nil:
-			lines[imp.Line-1] = strings.TrimRight(lines[imp.Line-1], " \t") + " " + marker + " " + flag + want
+			lines[imp.Line-1] = strings.TrimRight(lines[imp.Line-1], " \t") + " " + marker + " " + flag + want + config.CommentCloseFor(marker)
 			done = append(done, fmt.Sprintf("%d %s", imp.Line, want))
 		// A type flag the author wrote stays unless the statement plainly runs: a static
 		// import the dialect does not read as types. An inline `import('…').T` in a type
@@ -575,7 +575,7 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 	for _, sym := range syms {
 		codes := want[sym]
 		at, listed := declarationLine(lines, sym)
-		text := marker + " @used-by: " + strings.Join(codes, ", ")
+		text := marker + " @used-by: " + strings.Join(codes, ", ") + config.CommentCloseFor(marker)
 		if listed {
 			text += " (" + sym + ")"
 		}
