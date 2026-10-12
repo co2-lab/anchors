@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GNPTG
-  updated_at: 2026-10-08
+  updated_at: 2026-10-12
   layer: comando
 -->
 # GeneratedPaths — the product names the files it derives, so a conflict in them is rebuilt, not merged
@@ -36,7 +36,7 @@ governed project.
 
 | Effect | Description |
 | --- | --- |
-| `GNPTG-B01` | The patterns name exactly the map at the root, the compiled documentation directory at the root, and any path ending in the plan progress suffix; nothing else matches them. |
+| `GNPTG-B01` | The patterns name exactly the map at the root, the compiled documentation directory at the root, the progress file at the root (`anchors.progress.md`), and any path ending in the legacy plan progress suffix; nothing else matches them. |
 | `GNPTG-B02` | By default the command prints one pattern per line. |
 | `GNPTG-B03` | With `--format re` it prints the same patterns joined by `|` on one line, a valid regular expression. |
 | `GNPTG-B04` | The dot of a path is escaped, so it matches only a literal dot: `anchorsXgraph.yaml` is not a generated file. |

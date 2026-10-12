@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTC
 #   ref: PRSTP
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-12
 #   layer: feature
 
 @PRSTP
@@ -120,3 +120,10 @@ Feature: ProjectStatus — where the project stands in the cycle, and the one ne
     Given a map with a unit frozen by a recorded freeze and a rule frozen with a reason
     When the freezes are printed, and then for a map with nothing frozen
     Then each freeze is listed with its reason and the places it covers, and with nothing frozen nothing is printed
+
+  @PRSTP-B16 @unit-level
+  Scenario: The status shows the progress
+    Given a project with a demand of two tasks, one done, and a per-plan progress file left
+    When the progress is printed, and then for a project with neither
+    Then it shows the whole progress, the demand and the file to migrate, and for the other nothing
+

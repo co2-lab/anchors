@@ -2,7 +2,7 @@
 # @anchors
 #   code: NWFTN
 #   ref: NWARN
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-12
 #   layer: feature
 
 @NWARN
@@ -92,10 +92,10 @@ Feature: NewArtifact — a new artifact is born beside its unit, with a resolved
     And the second fails because the file already exists
 
   @NWARN-B13 @unit-level
-  Scenario: A plan is born with its progress companion
+  Scenario: A plan is born tracked as a demand
     Given a plan at plans/0001-foundation.md
     When new plan runs
-    Then plans/0001-foundation-progress.md exists
+    Then anchors.progress.md tracks it as a demand, and no progress file is written beside it
     And no orphan warning is printed
 
   @NWARN-B14 @unit-level

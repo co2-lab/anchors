@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRFLP
-  updated_at: 2026-09-26
+  updated_at: 2026-10-12
   layer: scan
 -->
 # ProgressFile — a plan's progress companion: how it is named, and how two sides of it merge
@@ -42,6 +42,7 @@ other side has.
 | `PRFLP-B05` | Every line of our side that is not an item comes out unchanged and in its place. |
 | `PRFLP-B06` | A ticked mark promoted from their side keeps our side's indentation. |
 | `PRFLP-B07` | `ProgressDone`: The done count is the number of items ticked with `x` or `X`, at any indentation. |
+| `PRFLP-B08` | `anchors.progress.md` at the root is a progress file too — kept out of the map, as the per-plan files it replaces were; the same name elsewhere is not. (`ProgressFile`, `IsProgressFile`) |
 
 ## Invariants
 

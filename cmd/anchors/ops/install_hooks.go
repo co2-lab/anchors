@@ -19,6 +19,7 @@ import (
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
 )
 
@@ -210,16 +211,15 @@ func installMergeDrivers(root string) {
 	})
 	installMergeDriver(root, mergeDriver{
 		nome:    "anchors-progress",
-		attr:    "*-progress.md",
-		rotulo:  "anchors: merges the progress of the plans",
+		attr:    scan.ProgressFile,
+		rotulo:  "anchors: merges the project's progress",
 		comando: "anchors merge-progress %O %A %B",
 		assunto: "progress",
-		porque: "# The PROGRESS of a plan is marked by whoever delivers, and two branches that\n" +
-			"# deliver specs of the same plan mark neighboring checkboxes: git asks for manual\n" +
-			"# resolution every time (measured: three PRs in a row, identical resolution in all three).\n" +
-			"# The driver merges both sides, and `[x]` beats `[ ]` — unchecking by merge would erase\n" +
-			"# a delivery that already happened.",
-		efeito: "`git merge` now MERGES the progress items; `[x]` beats `[ ]`.",
+		porque: "# The PROGRESS is changed by every agent that adds or finishes a task, and two\n" +
+			"# branches change it at once: as text, git asks for a manual resolution every time.\n" +
+			"# The driver merges both sides by id — what each added stays, done beats open, and\n" +
+			"# an id both created for different work is renumbered on one side.",
+		efeito: "`git merge` now MERGES anchors.progress.md by id; done beats open.",
 	})
 }
 

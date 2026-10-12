@@ -44,8 +44,13 @@ func LockPath(mapPath string) string { return mapPath + ".lock" }
 // owner's pid and host. A lock whose owner is a dead process of this machine, or one
 // older than a minute, is taken over. It waits up to LockTimeout, and fails saying that
 // another process is writing the map. The returned function releases it.
-func Lock(mapPath string) (func(), error) {
-	lp := LockPath(mapPath)
+func Lock(mapPath string) (func(), error) { return LockNamed(mapPath, "the map") }
+
+// LockNamed takes the write lock of any file Anchors rewrites whole — the map, the progress
+// file —, named in its messages as `what`: the same exclusive file beside the target, the
+// same takeover of an abandoned one, the same wait.
+func LockNamed(target, what string) (func(), error) {
+	lp := LockPath(target)
 	host, _ := os.Hostname()
 	me := fmt.Sprintf("%d %s", os.Getpid(), host)
 	deadline := time.Now().Add(LockTimeout)
@@ -57,7 +62,7 @@ func Lock(mapPath string) (func(), error) {
 			cerr := f.Close()
 			if werr != nil || cerr != nil {
 				_ = os.Remove(lp)
-				return nil, fmt.Errorf("write the map lock %s: %v", lp, errors.Join(werr, cerr))
+				return nil, fmt.Errorf("write the lock of %s %s: %v", what, lp, errors.Join(werr, cerr))
 			}
 			return func() { _ = os.Remove(lp) }, nil
 		}
@@ -66,11 +71,11 @@ func Lock(mapPath string) (func(), error) {
 			// "access denied", not "exists": it is busy, not broken. Four writers at once
 			// failed on it. Wait as for a held lock; if it lasts, that is the error.
 			if runtime.GOOS != "windows" || !errors.Is(err, fs.ErrPermission) {
-				return nil, fmt.Errorf("take the map lock %s: %w", lp, err)
+				return nil, fmt.Errorf("take the lock of %s %s: %w", what, lp, err)
 			}
 			busy = err
 			if time.Now().After(deadline) {
-				return nil, fmt.Errorf("take the map lock %s: %w", lp, busy)
+				return nil, fmt.Errorf("take the lock of %s %s: %w", what, lp, busy)
 			}
 			time.Sleep(lockPoll)
 			continue
@@ -92,9 +97,9 @@ func Lock(mapPath string) (func(), error) {
 		}
 		if time.Now().After(deadline) {
 			owner, _ := os.ReadFile(lp)
-			return nil, fmt.Errorf("another process is writing the map (%s holds %s) and did not finish in %s — "+
+			return nil, fmt.Errorf("another process is writing %s (%s holds %s) and did not finish in %s — "+
 				"if no anchors process is running, remove the lock file",
-				strings.TrimSpace(string(owner)), lp, LockTimeout)
+				what, strings.TrimSpace(string(owner)), lp, LockTimeout)
 		}
 		time.Sleep(lockPoll)
 	}

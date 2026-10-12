@@ -126,6 +126,7 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`plan-change-justified`](/docs/gates/plan-change-justified/) | `plan` `spec` | The changed plan/spec records the revision that says why it changed |
 | [`open-questions-resolved`](/docs/gates/open-questions-resolved/) | `spec` | The spec has no open question — implementing is not guessing |
 | [`progress-honest`](/docs/gates/progress-honest/) | `plan` | The plan's progress file tells the truth about the disk |
+| [`progress-intact`](/docs/gates/progress-intact/) | `spec` `plan` `code` `doc` | Anchors.progress.md is the file `anchors progress` wrote: it parses and its sum matches — no hand edit |
 | [`revision-orphans`](/docs/gates/revision-orphans/) | `spec` | The revision names the sibling rules that speak of the same subject |
 
 ## Proof & Execution

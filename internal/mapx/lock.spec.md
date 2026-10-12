@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPLCK
-  updated_at: 2026-10-08
+  updated_at: 2026-10-12
   layer: mapa
 -->
 # MapLock — the map changed by one writer at a time, each applying only what it changes
@@ -38,6 +38,7 @@ holding its owner's pid and host. A lock left by a process that died holding it 
 | `MPLCK-B03` | A lock whose owner is a dead process of this host is taken over at once; a lock older than a minute is taken over whatever its owner; a lock of a live process, or of another host, is not. |
 | `MPLCK-B04` | A change is applied to the map re-read under the lock and written: writers in parallel processes, each changing its own part, all reach the map. (`Update`) |
 | `MPLCK-B05` | A function run under the lock releases it when it returns, with an error or without. (`WithLock`) |
+| `MPLCK-B06` | Any file Anchors rewrites whole takes the same lock beside it — the progress file's at `.anchors/progress.lock` —, its messages naming what it protects. (`LockNamed`) |
 
 ## Errors
 

@@ -44,42 +44,6 @@ anchors new <kind> <name> [flags]
 | `--with` |  | add OPTIONAL sections (csv) |
 | `--without` |  | remove DEFAULT sections (csv) |
 
-## Subcommands
-
-### `anchors new progress`
-
-Create the `-progress.md` of an existing plan (the STATE, outside the map).
-
-```text
-Creates the progress companion of a plan that already exists.
-
-A plan is DECISION; progress is STATE. While the phase checkboxes lived in the
-plan, marking `- [x]` was ALTERING the plan — and that charged a revision to whoever only
-finished a phase, besides knocking down the judgment of the spec that the phase
-delivered (the edge stamp holds the rev of both ends).
-
-The `anchors new plan` already creates the companion. This command is for the plans that
-were born before:
-
-  anchors new progress --for plans/0002-plataforma.md
-
-It does not overwrite: the file holds state, and rewriting it would erase what was
-already recorded.
-```
-
-#### Usage
-
-```bash
-anchors new progress --for <plano> [flags]
-```
-
-#### Flags
-
-| Flag | Default | What it does |
-| --- | --- | --- |
-| `--for` |  | the plan whose progress will be created |
-| `--root` | `.` | project root |
-
 ## Setup and artifacts — family
 
 Commands of the same family — what tells each apart:

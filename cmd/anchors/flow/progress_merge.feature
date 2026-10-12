@@ -2,7 +2,7 @@
 # @anchors
 #   code: PMFPR
 #   ref: PRMRP
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-12
 #   layer: feature
 
 @PRMRP
@@ -63,3 +63,10 @@ Feature: ProgressMerge — the git merge driver of a plan's progress file: unite
     Given our side that is read-only
     When `anchors merge-progress` runs
     Then it fails with "write the result"
+
+  @PRMRP-B05 @unit-level
+  Scenario: The project's progress file is merged by id
+    Given a base with one task, our side finishing it, their side adding a task
+    When the driver runs, and then with their side edited by hand
+    Then our side holds the finished task and theirs, readable by Anchors, and the hand edit fails the merge
+

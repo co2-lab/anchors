@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLRGF
-  updated_at: 2026-10-09
+  updated_at: 2026-10-12
   layer: comando
 -->
 # FlowRegister — attach the flow domain's commands to the root command, once each
@@ -13,12 +13,8 @@ The flow domain groups the commands an agent uses to move work along: take a tas
 `done`, `drop`, `reclaim`), compose the work prompt (`work`), record and confront a delivery
 (`deliver`, `merge-progress`), escalate and resolve what blocks (`escalate`, `decided`, `unblock`,
 `backfill-labels`, `discard`), report where a task stands (`task-status`, `pr-body`) and run the
-watcher (`watch`). This unit is the single place where those commands are attached to the root
-command of the CLI.
-
-The progress command is the exception on purpose: it creates a plan's progress file, which is an
-artifact, so it is exposed to the `new` domain (next to the other artifact generators) instead of
-being attached to the root here.
+watcher (`watch`), and track the project's progress (`progress`). This unit is the single place where
+those commands are attached to the root command of the CLI.
 
 ## Domain
 
@@ -30,7 +26,7 @@ being attached to the root here.
 
 | Effect | Description |
 | --- | --- |
-| `FLRGF-B01` | After registration the root holds exactly the eighteen flow commands: backfill-labels, decided, deliver, discard, done, drop, escalate, merge-progress, monitor, next, pr-body, queue, reclaim, report-bug, task-status, unblock, watch and work. |
+| `FLRGF-B01` | After registration the root holds exactly the nineteen flow commands: backfill-labels, decided, deliver, discard, done, drop, escalate, merge-progress, monitor, next, pr-body, progress, queue, reclaim, report-bug, task-status, unblock, watch and work. |
 | `FLRGF-B02` | The watcher's control commands (start, run, status, stop, pause, resume, logs) arrive under `watch`, not at the root. |
 
 ## Invariants
@@ -43,7 +39,6 @@ being attached to the root here.
 
 | Rule | Boundary | Why |
 | --- | --- | --- |
-| `FLRGF-X01` | The progress command is not attached to the root. | It generates an artifact, and artifact generators live under `new`; attaching it here would expose the same command under two paths. |
 
 ## Errors
 

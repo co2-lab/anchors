@@ -2,7 +2,7 @@
 # @anchors
 #   code: LCFTL
 #   ref: MPLCK
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-12
 #   layer: feature
 
 @MPLCK
@@ -55,3 +55,10 @@ Feature: MapLock — the map changed by one writer at a time, each applying only
     Given a map path in a directory that does not exist
     When the lock is taken
     Then the error names the lock file
+
+  @MPLCK-B06 @unit-level
+  Scenario: The lock protects any file by name
+    Given a lock taken for "the progress file"
+    When a second writer waits past the timeout
+    Then the error names the progress file, not the map
+

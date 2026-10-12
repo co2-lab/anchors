@@ -131,7 +131,7 @@ func TestNewSpecRefusesADeclarativeLayer(t *testing.T) {
 // A plan is born with its progress companion — the state lives there, not in the plan.
 func TestNewPlanIsBornWithItsProgress(t *testing.T) {
 	t.Run("NWARN-B05: Code pins the identity", func(t *testing.T) {})
-	t.Run("NWARN-B13: A plan is born with its progress companion", func(t *testing.T) {})
+	t.Run("NWARN-B13: A plan is born tracked as a demand", func(t *testing.T) {})
 	root := t.TempDir()
 	err, out := runNew(t, "plan", "Foundation", "--root", root, "--out", "plans/0001-foundation.md", "--code", "FNDTN")
 	if err != nil {
@@ -140,8 +140,11 @@ func TestNewPlanIsBornWithItsProgress(t *testing.T) {
 	if b, _ := os.ReadFile(filepath.Join(root, "plans", "0001-foundation.md")); !strings.Contains(string(b), "code: FNDTN") {
 		t.Errorf("--code did not pin the identity:\n%s", b)
 	}
-	if _, serr := os.Stat(filepath.Join(root, "plans", "0001-foundation-progress.md")); serr != nil {
-		t.Errorf("the progress companion was not created: %v\n%s", serr, out)
+	if _, serr := os.Stat(filepath.Join(root, "plans", "0001-foundation-progress.md")); serr == nil {
+		t.Error("no companion file is written beside the plan any more")
+	}
+	if b, rerr := os.ReadFile(filepath.Join(root, "anchors.progress.md")); rerr != nil || !strings.Contains(string(b), "(plan: plans/0001-foundation.md)") {
+		t.Errorf("the plan is tracked as a demand: %v\n%s\n%s", rerr, b, out)
 	}
 	if strings.Contains(out, "no spec found") {
 		t.Errorf("a plan OWNS its identity and must not get the orphan warning:\n%s", out)

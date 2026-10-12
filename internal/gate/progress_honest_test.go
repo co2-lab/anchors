@@ -7,13 +7,55 @@ package gate
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/progress"
 	"github.com/co2-lab/anchors/internal/scan"
 )
+
+// trackPlan writes, in anchors.progress.md, the plan's demand as the legacy text describes it:
+// each `- [ ]`/`- [x]` line a task (done when checked), each heading a stage. The tests keep
+// the progress they always described; the file is the one the gate now reads.
+func trackPlan(t *testing.T, root, plan, legacy string) {
+	t.Helper()
+	item := regexp.MustCompile(`^\s*- \[([ xX])\]\s+(.+?)\s*$`)
+	stage := regexp.MustCompile(`^#{2,4}\s+(.+?)\s*$`)
+	if err := progress.Update(root, "", func(f *progress.File) error {
+		d, err := f.AddDemand("plan", plan)
+		if err != nil {
+			return err
+		}
+		parent := d
+		for _, line := range strings.Split(legacy, "\n") {
+			if m := stage.FindStringSubmatch(line); m != nil {
+				if parent, err = f.AddStage(d, m[1]); err != nil {
+					return err
+				}
+				continue
+			}
+			m := item.FindStringSubmatch(line)
+			if m == nil {
+				continue
+			}
+			id, err := f.AddTask(parent, m[2], 1, false)
+			if err != nil {
+				return err
+			}
+			if strings.ToLower(m[1]) == "x" {
+				if err := f.Done(id, "agent", "2026-10-12"); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
 
 // O `-progress.md` é o único artefato do Anchors que nada confrontava — e "fora do mapa"
 // virou "fora de qualquer verificação", que não é a mesma coisa.
@@ -34,10 +76,7 @@ func TestProgressHonest(t *testing.T) {
 			t.Fatal(err)
 		}
 		if progresso != "" {
-			prog := filepath.Join(root, "plans", "0002-plataforma-progress.md")
-			if err := os.WriteFile(prog, []byte(progresso), 0o644); err != nil {
-				t.Fatal(err)
-			}
+			trackPlan(t, root, plano, progresso)
 		}
 		for _, f := range existentes {
 			p := filepath.Join(root, f)
@@ -146,25 +185,25 @@ func TestProgressHonest(t *testing.T) {
 
 	// AUSÊNCIA do progresso não é falha DESTE gate: o plano pode ter nascido antes do
 	// mecanismo. São duas perguntas diferentes — "existe?" e "é verdade?".
-	t.Run("PRHNP-B02: A plan with no companion progress file is skipped, not failed", func(t *testing.T) {
+	t.Run("PRHNP-B02: An untracked plan is skipped, not failed", func(t *testing.T) {
 		root, n := monta(t, "")
 		if v, d := checkProgressHonest("", n, root, nil, nil); v != Skip {
 			t.Fatalf("veredito %v, queria Skip: %s", v, d)
 		}
 	})
 
-	t.Run("PRHNP-B03: The skip for a missing companion says how to create it", func(t *testing.T) {
+	t.Run("PRHNP-B03: The skip for an untracked plan says how to track it", func(t *testing.T) {
 		root, n := monta(t, "")
 		v, d := checkProgressHonest("", n, root, nil, nil)
 		if v != Skip {
 			t.Fatalf("veredito %v, queria Skip: %s", v, d)
 		}
-		if !strings.Contains(d, "anchors new progress --for") {
+		if !strings.Contains(d, "anchors progress add demand") {
 			t.Errorf("o Skip não diz como corrigir:\n%s", d)
 		}
 	})
 
-	t.Run("PRHNP-X01: The gate does not charge the existence of the progress file", func(t *testing.T) {
+	t.Run("PRHNP-X01: The gate does not charge that the plan is tracked", func(t *testing.T) {
 		root, n := monta(t, "")
 		if v, d := checkProgressHonest("", n, root, nil, nil); v == Fail {
 			t.Errorf("a ausência do companheiro é outra pergunta — não pode reprovar aqui: %s", d)
@@ -222,38 +261,26 @@ func TestProgressHonest(t *testing.T) {
 	})
 }
 
-// O sufixo tem UMA definição, no `scan` — é ele que precisa manter o arquivo fora do
-// mapa. Duas constantes divergiriam em silêncio, e o gate passaria a procurar um arquivo
-// que não existe.
+// The progress file's name has ONE definition, the scanner's — it is what keeps the file out
+// of the map. Two constants would diverge in silence, and the gate would read a file nobody
+// writes.
 func TestProgressHonest_caminhoDerivaDoScan(t *testing.T) {
-	t.Run("PRHNP-I01: The companion's path has one definition, derived from the scanner", func(t *testing.T) {})
-	casos := map[string]string{
-		"plans/0002-plataforma.md": "plans/0002-plataforma-progress.md",
-		"plans/0017-mutacao.md":    "plans/0017-mutacao-progress.md",
-		"sem-extensao":             "sem-extensao-progress.md",
-	}
-	for plano, quer := range casos {
-		if got := progressPathOf(plano); got != quer {
-			t.Errorf("progressPathOf(%q) = %q, queria %q", plano, got, quer)
-		}
-		// E a resposta é a MESMA que a do scan — que é quem detém a definição.
-		if got, doScan := progressPathOf(plano), scan.ProgressPathFor(plano); got != doScan {
-			t.Errorf("o gate divergiu do scan em %q: %q vs %q", plano, got, doScan)
-		}
+	t.Run("PRHNP-I01: The progress file's name has one definition, derived from the scanner", func(t *testing.T) {})
+	if progress.FileName != scan.ProgressFile || progress.Path("r") != filepath.Join("r", scan.ProgressFile) {
+		t.Errorf("the gate's file %q diverged from the scanner's %q", progress.FileName, scan.ProgressFile)
 	}
 }
 
-// O companheiro fica FORA do mapa de propósito: ele existe para MUDAR, e um gate que o
-// alcançasse como nó cobraria justificativa de cada edição do artefato que registra
-// trabalho.
+// The progress file stays OUT of the map on purpose: it exists to CHANGE, and a gate that
+// reached it as a node would charge a justification for every change of the artifact that
+// records work.
 func TestProgressHonest_companheiroForaDoMapa(t *testing.T) {
 	t.Run("PRHNP-X03: The gate does not put the progress file into the map", func(t *testing.T) {})
-	prog := progressPathOf("plans/0002-plataforma.md")
-	if !scan.IsProgressFile(prog) {
-		t.Fatalf("%q devia ser reconhecido como companheiro pelo scan — é assim que ele fica fora do mapa", prog)
+	if !scan.IsProgressFile(progress.FileName) {
+		t.Fatalf("%q must be recognized by the scan — that is how it stays out of the map", progress.FileName)
 	}
 	if scan.IsProgressFile("plans/0002-plataforma.md") {
-		t.Errorf("o PLANO não é companheiro: ele precisa continuar sendo nó, ou o gate perde a âncora")
+		t.Errorf("the PLAN is no progress file: it stays a node, or the gate loses its anchor")
 	}
 }
 
@@ -277,10 +304,7 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 		if err := os.WriteFile(filepath.Join(root, rel), []byte(plano), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		prog := filepath.Join(root, "plans", "0002-plataforma-progress.md")
-		if err := os.WriteFile(prog, []byte(progresso), 0o644); err != nil {
-			t.Fatal(err)
-		}
+		trackPlan(t, root, rel, progresso)
 		return root, mapx.Node{ID: rel, Kind: mapx.KindPlan}, plano
 	}
 
@@ -358,10 +382,7 @@ func writeProgress(t *testing.T, plan, progress string) (root, planPath string) 
 	if err := os.WriteFile(filepath.Join(root, planPath), []byte(plan), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	prog := filepath.Join(root, "plans/0017-mutacao-progress.md")
-	if err := os.WriteFile(prog, []byte(progress), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	trackPlan(t, root, planPath, progress)
 	return root, planPath
 }
 
@@ -432,5 +453,35 @@ func TestProgressHonest_ignoresProseWithTODO(t *testing.T) {
 
 	if v, msg := checkProgressHonest(plan, n, root, nil, nil); v == Fail {
 		t.Errorf("prose with TODO was accused as an item: %s", msg)
+	}
+}
+
+func TestProgressHonest_unreadableIsPending(t *testing.T) {
+	t.Run("PRHNP-E01: An unreadable progress file is pending", func(t *testing.T) {})
+	root := t.TempDir()
+	trackPlan(t, root, "plans/0001.md", "- [ ] `a.spec.md`\n")
+	b, _ := os.ReadFile(progress.Path(root))
+	if err := os.WriteFile(progress.Path(root), append(b, []byte("hand edit\n")...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if v, d := checkProgressHonest("", mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}, root, nil, nil); v != Pending || !strings.Contains(d, "edited by hand") {
+		t.Errorf("%v %s", v, d)
+	}
+}
+
+func TestProgressIntact(t *testing.T) {
+	t.Run("PRHNP-B13: The progress file is the one Anchors wrote", func(t *testing.T) {})
+	root := t.TempDir()
+	if v, _ := checkProgressIntact("", mapx.Node{}, root, nil, nil); v != Skip {
+		t.Errorf("no file: %v", v)
+	}
+	trackPlan(t, root, "plans/0001.md", "- [ ] `a.spec.md`\n")
+	if v, d := checkProgressIntact("", mapx.Node{}, root, nil, nil); v != Pass {
+		t.Errorf("written by anchors: %v %s", v, d)
+	}
+	b, _ := os.ReadFile(progress.Path(root))
+	_ = os.WriteFile(progress.Path(root), []byte(strings.Replace(string(b), "plan", "PLAN", 1)), 0o644)
+	if v, d := checkProgressIntact("", mapx.Node{}, root, nil, nil); v != Fail || !strings.Contains(d, "edited by hand") {
+		t.Errorf("hand edit: %v %s", v, d)
 	}
 }

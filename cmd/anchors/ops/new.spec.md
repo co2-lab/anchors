@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NWARN
-  updated_at: 2026-10-08
+  updated_at: 2026-10-12
   layer: comando
 -->
 # NewArtifact — a new artifact is born beside its unit, with a resolved identity and the sections of the project's ruler
@@ -26,8 +26,8 @@ or a spec preset that fixes the set and the reading order. The text follows the 
 section title comes from the target layer's titles, then the project's titles, then the rule
 type of its letter, then the project's language; the bodies are translated too; the feature
 keywords and the test syntax follow the project's declared dialect; the unit regime tag comes
-from the project's mapping, or a visible placeholder asks for it. A plan is born with its
-progress companion.
+from the project's mapping, or a visible placeholder asks for it. A plan is born tracked as a
+demand of `anchors.progress.md`, one stage per phase.
 
 ## Domain
 
@@ -55,7 +55,7 @@ progress companion.
 | `NWARN-B10` | The feature's language line and keywords follow the project's declared Gherkin language, and the test body follows the project's declared language family. |
 | `NWARN-B11` | The unit regime tag is the first project tag mapped to the unit regime; with none, a visible placeholder asks for the mapping. |
 | `NWARN-B12` | The artifact is written at `--out`, the output names its identity and the check to run next, and a second `new` onto the same path is refused. |
-| `NWARN-B13` | A plan is born with its progress companion beside it. |
+| `NWARN-B13` | A plan is born tracked as a demand of `anchors.progress.md`, titled as the plan, with one stage per phase its headers declare; no companion file is written beside it. |
 | `NWARN-B14` | `--list-sections` prints the kind's sections, marking defaults and optional ones, and the presets only for specs. |
 | `NWARN-B15` | The target layer of a spec or feature is the layer of the unit it describes: an existing code file wins, otherwise the most specific extension that a layer claims. |
 | `NWARN-B16` | The help and the unknown-kind refusal name every kind of the catalog (action, feature, flow, plan, product, spec, test), and the help of `--out` says it is mandatory, with no default. |

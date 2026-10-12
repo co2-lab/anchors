@@ -2,7 +2,7 @@
 # @anchors
 #   code: IHFNS
 #   ref: INHKN
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-12
 #   layer: feature
 
 @INHKN
@@ -80,7 +80,7 @@ Feature: InstallHooks — the git hooks that confront every commit and push with
   Scenario: Both merge drivers are registered in git config and .gitattributes
     Given a governed repository
     When install-hooks runs
-    Then .gitattributes holds "anchors.graph.yaml merge=anchors-map" and "*-progress.md merge=anchors-progress" once
+    Then .gitattributes holds "anchors.graph.yaml merge=anchors-map" and "anchors.progress.md merge=anchors-progress" once
     And git config holds both driver commands
 
   @INHKN-I01 @unit-level

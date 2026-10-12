@@ -752,8 +752,8 @@ func printBoardWork(root string, card *board.Card, agent string) {
 		fmt.Println("  A single job — the plan is the input, the specs are the output.")
 		fmt.Println()
 		fmt.Printf("    anchors work spec --for <target the plan lists>\n\n")
-		fmt.Println("  The plan's `-progress.md` is where you mark what you delivered, and the gate")
-		fmt.Println("  `progress-honest` confronts each `[x]` against the disk.")
+		fmt.Println("  The plan is a demand of anchors.progress.md: mark what you delivered with")
+		fmt.Println("  `anchors progress done <task>`, and the gate `progress-honest` confronts it with the disk.")
 
 	case strings.Contains(card.Title, "Implementar spec"):
 		fmt.Println("DELIVERABLE: code + feature + test + documentation.")

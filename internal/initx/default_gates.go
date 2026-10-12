@@ -1081,6 +1081,9 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		return out
 	}
 	out = append(out,
+		config.Gate{Name: "progress-intact", ID: "progress-intact", Check: "progress-intact", On: []string{"spec", "plan", "code", "doc"},
+			Scope: config.ScopeProject, Blocking: config.Bool(false),
+			Measures: "anchors.progress.md is the file `anchors progress` wrote: it parses and its sum matches — no hand edit"},
 		config.Gate{Name: "guidance-linked", ID: "guidance-linked", Check: "guidance-linked", On: []string{"doc"},
 			Tags: []string{config.GuidanceLayer}, Blocking: config.Bool(false),
 			Measures: "CONTRIBUTING.md holds the working agreement, and README.md, AGENTS.md and CLAUDE.md point to it"},

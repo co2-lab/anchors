@@ -131,7 +131,7 @@ layers:
   # how a mutation report is scored. Declarative, `anchors new spec` refused their spec
   # and every unit gate skipped them — rules nobody could state, let alone prove.
   infra:
-    pattern: "internal/{change,changelog,checklog,code,daemon,gitmeta,health,initx,issue,pack,queue,recode,runs,shell,similarity,suggestion,testlist,testsig}/*.go"
+    pattern: "internal/{change,changelog,checklog,code,daemon,gitmeta,health,initx,issue,pack,progress,queue,recode,runs,shell,similarity,suggestion,testlist,testsig}/*.go"
     kind: code
     tags: [infra]
     regime: comportamental
@@ -728,6 +728,11 @@ gates:
     blocking: false
 
   - name: guidance-honored
+    blocking: false
+
+  # THE PROGRESS FILE IS WRITTEN ONLY BY `anchors progress`. A hand edit breaks its sum, and the
+  # gate says so; the file is optional, so its absence is skipped.
+  - name: progress-intact
     blocking: false
 
   # THE WAY BACK OF EACH PAIR OF THE UNIT. `spec-feature-match` and `feature-test-match`

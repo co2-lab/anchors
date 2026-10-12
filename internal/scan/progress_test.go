@@ -151,3 +151,10 @@ func TestMergeProgress_differentWordingIsTwoItems(t *testing.T) {
 		t.Errorf("both wordings should be kept:\n%s", got)
 	}
 }
+
+func TestProgress_projectFile(t *testing.T) {
+	t.Run("PRFLP-B08: The project's progress file stays out of the map", func(t *testing.T) {})
+	if !IsProgressFile(ProgressFile) || IsProgressFile("docs/"+ProgressFile) {
+		t.Error("only the root anchors.progress.md is the project's progress file")
+	}
+}

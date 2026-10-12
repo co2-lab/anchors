@@ -44,6 +44,8 @@ func TestGeneratedPathsRegexSeparatesNoiseFromDivergence(t *testing.T) {
 		"anchors.graph.yaml":         true,
 		"docs/arquitetura.md":        true,
 		"plans/0001-progress.md":     true,
+		"anchors.progress.md":        true,
+		"sub/anchors.progress.md":    false,
 		"anchorsXgraph.yaml":         false, // an unescaped dot would match this
 		"sub/anchors.graph.yaml":     false,
 		"internal/gate/x.spec.md":    false,
@@ -71,8 +73,8 @@ func TestGeneratedPathsLinesAndConfigRequired(t *testing.T) {
 	if got := strings.Join(strings.Fields(lines), "|"); got != strings.TrimSpace(alt) {
 		t.Errorf("lines %q and the alternation %q disagree", lines, alt)
 	}
-	if n := len(strings.Fields(lines)); n != 3 {
-		t.Errorf("want three patterns (map, docs, progress), got %d:\n%s", n, lines)
+	if n := len(strings.Fields(lines)); n != 4 {
+		t.Errorf("want four patterns (map, docs, progress file, legacy progress), got %d:\n%s", n, lines)
 	}
 	if _, err := generatedPaths(t, t.TempDir()); err == nil {
 		t.Error("a project without anchors.yaml must be refused")

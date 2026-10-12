@@ -19,8 +19,10 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/flowx"
 	"github.com/co2-lab/anchors/internal/gate"
+	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/migra"
+	"github.com/co2-lab/anchors/internal/progress"
 	"github.com/co2-lab/anchors/internal/recode"
 	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
@@ -140,6 +142,29 @@ running it again changes nothing.
 
 			// The specs' Dependencies tables: no format step — they run while one is left.
 			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+
+			// The per-plan progress files: no format step either — each run moves the ones
+			// left into anchors.progress.md (DESIGN-progress-tracking.md).
+			moved, err := progress.MigrateProject(absRoot, cfg.ProgressUnit(), gitmeta.Today(), dryRun)
+			if err != nil {
+				return err
+			}
+			for _, m := range moved {
+				verb := "moved"
+				if dryRun {
+					verb = "would be moved"
+				}
+				into := "demand " + m.Demand
+				if m.Demand == "" {
+					into = "its plan's existing demand (file deleted)"
+				}
+				revise := ""
+				if m.Tasks > 0 {
+					revise = ", weights 1 to revise (`anchors progress weigh`)"
+				}
+				fmt.Printf("✓ %s %s into %s: %d task(s), %d done%s\n", m.File, verb, into, m.Tasks, m.Done, revise)
+			}
+			mudou = mudou || len(moved) > 0
 			reports, err := migrateSpecDependencies(absRoot, cfg, dryRun)
 			if err != nil {
 				return err

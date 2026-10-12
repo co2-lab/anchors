@@ -14,12 +14,12 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
-	"github.com/co2-lab/anchors/cmd/anchors/flow"
 	"github.com/co2-lab/anchors/internal/code"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/migra"
+	"github.com/co2-lab/anchors/internal/progress"
 	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
 )
@@ -179,21 +179,22 @@ the identity by hand.`,
 			}
 			fmt.Printf("✓ %s created (%s: %s)\n", outPath, tpl.idField, id)
 
-			// O PLANO nasce com o companheiro de progresso. Ver `progress.go`: o
-			// checkbox no plano fazia "terminei uma fase" ser indistinguível de "mudei a
-			// decisão", e derrubava o julgamento da spec que a fase entregou.
-			//
-			// Criar aqui, e não pedir ao usuário, é o que faz a separação ser o default.
-			// Um plano sem companheiro convida a marcar `[x]` no próprio plano — que é o
-			// caminho que já existia e o que se está removendo.
+			// THE PLAN is tracked as a demand of anchors.progress.md from the start, one stage
+			// per phase (DESIGN-progress-tracking.md): progress is state and lives apart from
+			// the decision, and a plan with no demand invites marking `[x]` in the plan itself.
 			if kind == "plan" {
-				prog, err := flow.WriteInitialProgress(outPath, content, id)
-				if err != nil {
-					// Não é falha do `new`: o plano nasceu. O progresso se cria à mão.
-					fmt.Printf("  ⚠ progress not created: %v\n", err)
+				planRel := common.RelTo(absRoot, outPath)
+				var demand string
+				if err := progress.Update(absRoot, cfg.ProgressUnit(), func(f *progress.File) error {
+					var e error
+					demand, e = f.PlanDemand(planRel, content, "")
+					return e
+				}); err != nil {
+					// Not a failure of `new`: the plan was born; it is tracked by hand.
+					fmt.Printf("  ⚠ not tracked in %s: %v\n", progress.FileName, err)
 				} else {
-					fmt.Printf("✓ %s created (the STATE of the plan; mark `[x]` here, never in the plan)\n",
-						common.RelTo(absRoot, prog))
+					fmt.Printf("✓ tracked as demand %s in %s — `anchors progress add task %s …` adds its work\n",
+						demand, progress.FileName, demand)
 				}
 			}
 
@@ -213,7 +214,7 @@ the identity by hand.`,
 			return nil
 		},
 	}
-	cmd.AddCommand(flow.NewProgressCmd())
+
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().StringVar(&codeStr, "code", "", "use this identity code (otherwise generate a unique one)")
 	// It said "default: <name><ext> at the root" — but --out is mandatory, and the root

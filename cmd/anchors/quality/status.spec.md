@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRSTP
-  updated_at: 2026-10-11
+  updated_at: 2026-10-12
   layer: comando
 -->
 # ProjectStatus — where the project stands in the cycle, and the one next step
@@ -54,6 +54,7 @@ It is read by a person and by an agent alike, and it changes nothing.
 | `PRSTP-B13` | A github project whose map holds only guides is sent to the first plan before any card. |
 | `PRSTP-B14` | When the project has records of its long processes, the status opens with what is running — each run's name, state, process, time and who launched it, or `nothing` — and the latest five that ended, each with how and when; with no record it says nothing of them. (`printRuns`) |
 | `PRSTP-B15` | When something is frozen, the status lists it after the map, by freeze — each with its code and recorded reason, or its reason —, naming every file and rule it covers; with nothing frozen it says nothing of it. (`printFreezes`) |
+| `PRSTP-B16` | When the project tracks progress, the status shows the whole progress with its unit and each demand with its percent and open tasks; it warns, naming them, while per-plan `-progress.md` files are left to migrate; with neither it says nothing of progress. (`printProgress`) |
 
 ## Invariants
 

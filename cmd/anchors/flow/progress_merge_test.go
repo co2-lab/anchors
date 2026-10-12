@@ -5,6 +5,7 @@
 package flow
 
 import (
+	"github.com/co2-lab/anchors/internal/progress"
 	"os"
 	"path/filepath"
 	"strings"
@@ -133,5 +134,33 @@ func TestProgressMergeCmd_unwritableResultFails(t *testing.T) {
 	}
 	if _, err := runProgressMerge(t, ours, ours, filepath.Join(dir, "theirs.md")); err == nil || !strings.Contains(err.Error(), "write the result") {
 		t.Errorf("an unwritable result must fail the merge, got %v", err)
+	}
+}
+
+func TestProgressMergeCmd_mergesTheProgressFileByID(t *testing.T) {
+	t.Run("PRMRP-B05: The project's progress file is merged by id", func(t *testing.T) {})
+	dir := t.TempDir()
+	base := &progress.File{}
+	d, _ := base.AddDemand("A", "")
+	_, _ = base.AddTask(d, "first", 1, false)
+	ours, _ := progress.Parse(progress.Render(base))
+	_ = ours.Done("D01.T1", "a", "2026-10-12")
+	theirs, _ := progress.Parse(progress.Render(base))
+	_, _ = theirs.AddTask(d, "second", 2, false)
+	writeFile(t, dir, "base", progress.Render(base))
+	writeFile(t, dir, "ours", progress.Render(ours))
+	writeFile(t, dir, "theirs", progress.Render(theirs))
+	oursPath := filepath.Join(dir, "ours")
+	if _, err := runProgressMerge(t, filepath.Join(dir, "base"), oursPath, filepath.Join(dir, "theirs")); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(oursPath)
+	merged, err := progress.Parse(string(b))
+	if err != nil || merged.Task("D01.T1").State != progress.Done || merged.Task("D01.T2") == nil {
+		t.Errorf("merged: %v\n%s", err, b)
+	}
+	writeFile(t, dir, "theirs", progress.Render(theirs)+"hand edit\n")
+	if _, err := runProgressMerge(t, filepath.Join(dir, "base"), oursPath, filepath.Join(dir, "theirs")); err == nil {
+		t.Error("a hand-edited side fails the merge")
 	}
 }

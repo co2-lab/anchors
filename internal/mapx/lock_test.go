@@ -266,3 +266,20 @@ func TestProcessAlive(t *testing.T) {
 		t.Errorf("a child that exited (pid %d) is not alive", c.Process.Pid)
 	}
 }
+
+func TestLockNamed_namesWhatItProtects(t *testing.T) {
+	t.Run("MPLCK-B06: The lock protects any file by name", func(t *testing.T) {})
+	prev := LockTimeout
+	LockTimeout = 200 * time.Millisecond
+	defer func() { LockTimeout = prev }()
+	target := filepath.Join(t.TempDir(), "progress")
+	unlock, err := LockNamed(target, "the progress file")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer unlock()
+	_, err = LockNamed(target, "the progress file")
+	if err == nil || !strings.Contains(err.Error(), "writing the progress file") || strings.Contains(err.Error(), "the map") {
+		t.Errorf("%v", err)
+	}
+}

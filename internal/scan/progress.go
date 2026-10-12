@@ -27,9 +27,14 @@ import (
 // cada projeto. Ver `anchors generated-paths`.
 const SufixoProgresso = "-progress.md"
 
+// ProgressFile is the project's progress file, anchors.progress.md (progress.FileName): state
+// that exists to change, kept out of the map as the per-plan files it replaces were
+// (DESIGN-progress-tracking.md).
+const ProgressFile = "anchors.progress.md"
+
 // IsProgressFile diz se o caminho é o companheiro de estado de um plano.
 func IsProgressFile(caminho string) bool {
-	return strings.HasSuffix(caminho, SufixoProgresso)
+	return caminho == ProgressFile || strings.HasSuffix(caminho, SufixoProgresso)
 }
 
 // ProgressPathFor devolve o caminho do companheiro de progresso de um plano.

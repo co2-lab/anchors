@@ -16,7 +16,8 @@ The plan's progress file tells the truth about the disk.
 
 ## How it measures
 
-The `-progress.md` is the only Anchors artifact that nothing confronted, and its exclusion
+The plan's progress — once a `-progress.md` beside it, now its demand in `anchors.progress.md`
+(DESIGN-progress-tracking.md) — is the only Anchors artifact that nothing confronted, and its exclusion
 from the map is deliberate: it exists in order to CHANGE, and the gates that demand a
 justification for change cannot reach it.
 

@@ -13,7 +13,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
-	"github.com/co2-lab/anchors/internal/scan"
+	"github.com/co2-lab/anchors/internal/progress"
 )
 
 // --- o PROGRESSO tem de dizer a verdade sobre o disco ---
@@ -46,8 +46,6 @@ import (
 // Só o que cita CAMINHO é confrontável. Um item em prosa ("revisar com o time") fica de
 // fora por construção — não há o que conferir, e reprovar por isso cobraria de quem
 // escreveu um progresso legítimo.
-var progressItemRE = regexp.MustCompile(
-	"(?m)^[ \t]*-[ \t]+\\[([ xX])\\][ \t]+`([^`]+\\.(?:md|ts|tsx|js|jsx|json|ya?ml|feature|py|go))`")
 
 // placeholderItemRE captura o item de progresso que NÃO cita caminho nenhum.
 //
@@ -62,8 +60,6 @@ var progressItemRE = regexp.MustCompile(
 // O efeito é o oposto do que o gate protege: um `[ ]` eterno faz o plano parecer
 // incompleto para sempre. O `anchors next` volta a ele, e quem lê não sabe se falta
 // trabalho ou falta limpar o arquivo.
-var placeholderItemRE = regexp.MustCompile(
-	`(?m)^[ \t]*-[ \t]+\[[ xX]\][ \t]*(TODO|FIXME|XXX|\.\.\.)\b.*$`)
 
 // planSeedInListRE captura as specs que o plano SEMEIA — as do item de lista, não as
 // mencionadas em prosa.
@@ -87,47 +83,50 @@ func checkProgressHonest(planContent string, n mapx.Node, root string, _ *mapx.G
 	if n.Kind != mapx.KindPlan {
 		return Skip, i18n.T("gate.progress_honest.skip_not_plan")
 	}
-	// O companheiro vive ao lado, com sufixo fixo. A definição canônica é do `scan`, que
-	// é quem precisa mantê-lo fora do mapa — repeti-la aqui deixaria as duas divergirem.
-	prog := progressPathOf(n.ID)
-	conteudo, err := readFile(root, prog)
+	// The plan's progress is its demand in anchors.progress.md (DESIGN-progress-tracking.md):
+	// the demand whose `plan:` is this plan.
+	file, err := progress.Load(root)
 	if err != nil {
-		// Ausência NÃO é falha deste gate: o plano pode ter nascido antes do mecanismo
-		// (`anchors new progress --for` existe para isso), e acusar aqui misturaria duas
-		// perguntas diferentes — "o progresso existe?" e "o progresso é verdade?".
-		return Skip, i18n.T("gate.progress_honest.skip_no_progress_file", prog, n.ID)
+		return Pending, i18n.T("gate.progress_honest.unreadable", err)
+	}
+	var d *progress.Demand
+	for _, x := range file.Demands {
+		if x.Plan == n.ID {
+			d = x
+			break
+		}
+	}
+	if d == nil {
+		return Skip, i18n.T("gate.progress_honest.skip_no_demand", n.ID)
 	}
 
-	var abertoMasFeito, marcadoMasAusente []string
-	for _, m := range progressItemRE.FindAllStringSubmatch(string(conteudo), -1) {
-		marcado := strings.ToLower(m[1]) == "x"
-		caminho := m[2]
+	var abertoMasFeito, marcadoMasAusente, placeholders []string
+	var cited strings.Builder
+	for _, t := range d.AllTasks() {
+		if t.State == progress.Cancelled {
+			continue
+		}
+		cited.WriteString(t.Title + "\n")
+		if placeholderTitleRE.MatchString(t.Title) {
+			placeholders = append(placeholders, t.ID+" "+t.Title)
+			continue
+		}
+		m := taskPathRE.FindStringSubmatch(t.Title)
+		if m == nil {
+			continue
+		}
+		caminho := m[1]
 		_, errStat := os.Stat(filepath.Join(root, caminho))
 		existe := errStat == nil
 		switch {
-		case existe && !marcado:
-			abertoMasFeito = append(abertoMasFeito, caminho)
-		case !existe && marcado:
-			marcadoMasAusente = append(marcadoMasAusente, caminho)
+		case existe && t.State != progress.Done:
+			abertoMasFeito = append(abertoMasFeito, t.ID+" "+caminho)
+		case !existe && t.State == progress.Done:
+			marcadoMasAusente = append(marcadoMasAusente, t.ID+" "+caminho)
 		}
 	}
 
-	// A TERCEIRA DIREÇÃO: semente que o plano promete e o progresso não lista.
-	//
-	// As duas primeiras conferem os itens QUE EXISTEM no progresso. Um gate que só olha
-	// para dentro do arquivo nunca vê o que falta nele — e foi assim que este gate passou
-	// com `✓15` num plano que acabara de ganhar uma spec semeada (o `MutualTls.spec.md`,
-	// migrado do 0016 por `PLTFR-R0004`).
-	//
-	// O efeito é o mesmo que o `[x]` mentiroso: o progresso diz que a fase acabou, e o
-	// `anchors next` seguiu para outro plano com trabalho declarado por fazer.
-	naoListadas := seedsMissingFromProgress(string(conteudo), planContent)
-
-	// A QUARTA DIREÇÃO: o item que não promete arquivo nenhum.
-	var placeholders []string
-	for _, m := range placeholderItemRE.FindAllString(string(conteudo), -1) {
-		placeholders = append(placeholders, strings.TrimSpace(m))
-	}
+	naoListadas := seedsMissingFromProgress(cited.String(), planContent)
 
 	if len(abertoMasFeito) == 0 && len(marcadoMasAusente) == 0 &&
 		len(naoListadas) == 0 && len(placeholders) == 0 {
@@ -135,8 +134,6 @@ func checkProgressHonest(planContent string, n mapx.Node, root string, _ *mapx.G
 	}
 
 	var b strings.Builder
-	// A ordem importa: o `[x]` sem arquivo vem primeiro porque é o dano mais caro —
-	// ele declara pronto o que não está, e quem lê o board decide com base nisso.
 	if len(marcadoMasAusente) > 0 {
 		b.WriteString(i18n.T("gate.progress_honest.marked_but_missing",
 			len(marcadoMasAusente), strings.Join(marcadoMasAusente, ", ")))
@@ -157,14 +154,22 @@ func checkProgressHonest(planContent string, n mapx.Node, root string, _ *mapx.G
 	return Fail, b.String()
 }
 
-// progressPathOf devolve o companheiro de um plano.
-//
-// Deriva do `scan.ProgressPathFor` para que o sufixo tenha UMA definição: o `scan` é quem
-// precisa manter o arquivo fora do mapa, e uma segunda constante aqui poderia divergir
-// dela em silêncio — o gate passaria a confrontar um arquivo que o scanner indexa, ou a
-// procurar um que não existe.
-func progressPathOf(plano string) string {
-	return scan.ProgressPathFor(plano)
+// taskPathRE is the file a task cites, between backticks: the work it delivers.
+var taskPathRE = regexp.MustCompile("`([^`]+\\.(?:md|ts|tsx|js|jsx|json|ya?ml|feature|py|go|ml|mli|rs|rb|java|kt|cs|swift|php))`")
+
+// placeholderTitleRE is a task that cites no work yet: a TODO left from a template.
+var placeholderTitleRE = regexp.MustCompile(`^(TODO|FIXME|XXX|\.\.\.)\b`)
+
+// checkProgressIntact: anchors.progress.md is the file Anchors wrote — it parses, and its
+// sum matches its content. A hand edit breaks the format Anchors edits deterministically.
+func checkProgressIntact(_ string, _ mapx.Node, root string, _ *mapx.Graph, _ *config.Config) (Verdict, string) {
+	if _, err := os.Stat(progress.Path(root)); err != nil {
+		return Skip, i18n.T("gate.progress_intact.skip_absent")
+	}
+	if _, err := progress.Load(root); err != nil {
+		return Fail, err.Error()
+	}
+	return Pass, ""
 }
 
 // seedsMissingFromProgress devolve as specs que o plano promete e o progresso não lista.

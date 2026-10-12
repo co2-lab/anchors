@@ -118,7 +118,7 @@ func TestInstallHooksWritesTheHooksAndTheMergeDrivers(t *testing.T) {
 		}
 	}
 	attrs, _ := os.ReadFile(filepath.Join(root, ".gitattributes"))
-	for _, line := range []string{"anchors.graph.yaml merge=anchors-map", "*-progress.md merge=anchors-progress"} {
+	for _, line := range []string{"anchors.graph.yaml merge=anchors-map", "anchors.progress.md merge=anchors-progress"} {
 		if strings.Count(string(attrs), line) != 1 {
 			t.Errorf(".gitattributes should hold %q once:\n%s", line, attrs)
 		}

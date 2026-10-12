@@ -152,6 +152,10 @@
     "slug": "docs/cli/commands/pr-body"
   },
   {
+    "label": "anchors progress",
+    "slug": "docs/cli/commands/progress"
+  },
+  {
     "label": "anchors queue",
     "slug": "docs/cli/commands/queue"
   },

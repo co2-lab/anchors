@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTC
 #   ref: CNFGO
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-12
 #   layer: feature
 
 @CNFGO
@@ -477,4 +477,10 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given the same anchors.yaml with LF and with CRLF line endings, and one changed
     When each is loaded
     Then the first two have the same revision, the third another
+
+  @CNFGO-B70 @unit-level
+  Scenario: The progress unit
+    Given a configuration naming its progress unit hours, and one naming none
+    When their unit is asked
+    Then the first is hours and the second empty
 

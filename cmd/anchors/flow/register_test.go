@@ -22,16 +22,15 @@ func childNames(c *cobra.Command) []string {
 }
 
 func TestRegister_attachesTheFlowCommandsOnce(t *testing.T) {
-	t.Run("FLRGF-B01: The root holds exactly the eighteen flow commands after registration", func(t *testing.T) {})
+	t.Run("FLRGF-B01: The root holds exactly the nineteen flow commands after registration", func(t *testing.T) {})
 	t.Run("FLRGF-I01: No flow command is attached twice", func(t *testing.T) {})
-	t.Run("FLRGF-X01: The progress command is not attached to the root", func(t *testing.T) {})
 	root := &cobra.Command{Use: "anchors"}
 	Register(root)
 
 	// Commands() already sorts and a duplicate would show up as a repeated name.
 	got := childNames(root)
 	want := []string{"backfill-labels", "decided", "deliver", "discard", "done", "drop", "escalate",
-		"merge-progress", "monitor", "next", "pr-body", "queue", "reclaim", "report-bug", "task-status", "unblock", "watch", "work"}
+		"merge-progress", "monitor", "next", "pr-body", "progress", "queue", "reclaim", "report-bug", "task-status", "unblock", "watch", "work"}
 	if strings.Join(got, ",") != strings.Join(want, ",") {
 		t.Errorf("root children:\n got  %v\n want %v", got, want)
 	}
@@ -41,9 +40,6 @@ func TestRegister_attachesTheFlowCommandsOnce(t *testing.T) {
 		if seen[n] > 1 {
 			t.Errorf("%q is attached more than once", n)
 		}
-	}
-	if seen["progress"] != 0 {
-		t.Error("progress belongs to the `new` domain and must not be attached to the root")
 	}
 }
 

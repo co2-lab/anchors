@@ -183,7 +183,7 @@ func TestDefaultGatesEmpty(t *testing.T) {
 func TestDefaultGatesGuideOnly(t *testing.T) {
 	t.Run("DFGTD-B04: Choosing only guides seeds the guide checklist and the guidance gates", func(t *testing.T) {})
 	g := DefaultGates(map[string]bool{"guide": true}, false)
-	if got := gateNames(g); len(g) != 3 || !got["guide-checklist"] || !got["guidance-linked"] || !got["guidance-honored"] {
+	if got := gateNames(g); len(g) != 4 || !got["guide-checklist"] || !got["guidance-linked"] || !got["guidance-honored"] || !got["progress-intact"] {
 		t.Errorf("guide alone should seed guide-checklist and the guidance gates every project gets, got %v", got)
 	}
 }

@@ -86,9 +86,10 @@ plan is a sequence, not a bucket:
   ## Phase 2 — <name> (depends on Phase 1)
   - features/larder/ExpiryAlert.spec.md — expiry alert
 
-**PROGRESS DOES NOT LIVE HERE.** It lives in the companion file ending in
-'-progress.md', beside the plan, and that is where '[x]' is marked. 'anchors new' creates it
-alongside.
+**PROGRESS DOES NOT LIVE HERE.** It lives in 'anchors.progress.md', where the plan is a
+DEMAND — one stage per phase, and a task, with its weight, per piece of work. 'anchors new
+plan' tracks it there; 'anchors progress add task', 'start' and 'done' move it, and only those
+commands write the file.
 
 The reason is the difference the plan must preserve: the plan is a DECISION, and changing it
 must mean the decision changed. While the checkboxes lived here, marking a
@@ -99,7 +100,7 @@ Finishing the phase invalidated the verification of what the phase produced.
 
 The progress file stays out of the map on purpose: it exists to change, and
 no gate should demand a justification from a file whose job is to record that the
-work moved.
+work moved. 'anchors progress summary' shows each plan and its phases with their progress.
 
 ### 5. Out of scope
 What this plan deliberately does NOT do. It closes the door to leaking scope. Each

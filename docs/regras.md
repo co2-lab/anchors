@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:9bf8265cfe618e0b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:dc56995e477cd08c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -989,39 +989,17 @@ abra a página dela em `camadas/`.
 
 - [PRBDP-E01 — The lookup of the findings under a root fails or returns unreadable output.](layers/comando.md#prbdp--prbody--write-the-lines-that-link-a-pull-request-to-its-cards-in-the-platforms-syntax)
 
-### [PLPRP — PlanProgress — create a plan's progress file, the state that lives beside the decision and outside the map](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
-- [PLPRP-B01 — The progress file sits beside the plan, with the plan's name and the `-progress.md` suffix in place of its extension.](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
-- [PLPRP-B02 — WriteInitialProgress creates the progress file with one `## <phase code> — <title>` section per phase declared in the plan's level-two to level-four headers, each with an unchecked item.](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
-- [PLPRP-B03 — The length of a phase's code follows the project's configured code lengths.](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
-- [PLPRP-B04 — A plan with no declared phase still gets its progress file, with a note saying the plan declares no phases yet and what to add when it does.](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
-- [PLPRP-B05 — An existing progress file is never overwritten; the creation fails and the file keeps its content.](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
-- [PLPRP-B06 — `new progress --for <plan>` (NewProgressCmd, exposed to the `new` domain rather than registered here) reads the plan relative to the project root, takes the code from the plan's header, creates the progress titled with that code, and says what it created.](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
-- [PLPRP-B07 — `new progress` without `--for` is refused, with an example of the flag.](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
-- [PLPRP-I01 — The suffix this unit writes is the one the scanner keeps out of the map.](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
-- [PLPRP-X01 — The progress file's code is never taken from an argument, only from the plan's header.](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
-- [PLPRP-E01 — The plan declares no `code:` in its header.](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
-- [PLPRP-E02 — The plan cannot be read.](layers/comando.md#plprp--planprogress--create-a-plans-progress-file-the-state-that-lives-beside-the-decision-and-outside-the-map)
-
 ### [PRMRP — ProgressMerge — the git merge driver of a plan's progress file: unite both sides, done beats pending](layers/comando.md#prmrp--progressmerge--the-git-merge-driver-of-a-plans-progress-file-unite-both-sides-done-beats-pending)
 
 - [PRMRP-B01 — The driver takes exactly three arguments; any other count is refused.](layers/comando.md#prmrp--progressmerge--the-git-merge-driver-of-a-plans-progress-file-unite-both-sides-done-beats-pending)
 
 - [PRMRP-B02 — The united result is written into our side, where an item done on either side is done.](layers/comando.md#prmrp--progressmerge--the-git-merge-driver-of-a-plans-progress-file-unite-both-sides-done-beats-pending)
 
-- [PRMRP-B03 — The base is not read: a missing base does not stop the merge.](layers/comando.md#prmrp--progressmerge--the-git-merge-driver-of-a-plans-progress-file-unite-both-sides-done-beats-pending)
+- [PRMRP-B03 — For a per-plan progress file the base is not read: a missing base does not stop the merge.](layers/comando.md#prmrp--progressmerge--the-git-merge-driver-of-a-plans-progress-file-unite-both-sides-done-beats-pending)
 
 - [PRMRP-B04 — Standard error reports how many items are done after the merge, and how many came from the other side when it added any.](layers/comando.md#prmrp--progressmerge--the-git-merge-driver-of-a-plans-progress-file-unite-both-sides-done-beats-pending)
+
+- [PRMRP-B05 — `anchors.progress.md` — known by its header — is merged by id over the base: what each side added stays, the further state wins, and an id both sides created for different work is renumbered on their side; a side that is not a file Anchors wrote fails the merge, left to a person. (`mergeProgressFile`)](layers/comando.md#prmrp--progressmerge--the-git-merge-driver-of-a-plans-progress-file-unite-both-sides-done-beats-pending)
 
 - [PRMRP-I01 — An item done on our side stays done after the merge, whatever the other side says.](layers/comando.md#prmrp--progressmerge--the-git-merge-driver-of-a-plans-progress-file-unite-both-sides-done-beats-pending)
 
@@ -1032,6 +1010,20 @@ abra a página dela em `camadas/`.
 - [PRMRP-E02 — Their side cannot be read.](layers/comando.md#prmrp--progressmerge--the-git-merge-driver-of-a-plans-progress-file-unite-both-sides-done-beats-pending)
 
 - [PRMRP-E03 — The result cannot be written into our side.](layers/comando.md#prmrp--progressmerge--the-git-merge-driver-of-a-plans-progress-file-unite-both-sides-done-beats-pending)
+
+### [LDCML — LedgerCommand — `anchors progress`, the only writer of the project's progress file](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
+
+- [LDCML-B01 — `add demand` adds a demand by title; with `--plan`, the plan becomes a demand titled as the plan, with one stage per phase; `add stage` and `add task --weight` add to it; each says the id it gave. (`newProgressTrackCmd`)](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
+
+- [LDCML-B02 — `start`, `done`, `reopen`, `cancel --reason` and `weigh` change one task; `start` and `done` record who (`--by`, or this agent) and today, and `start` refuses a task another holds unless `--take`.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
+
+- [LDCML-B03 — `summary` prints the whole progress with the project's unit, then one line per demand and, indented, per stage, with the percent, the weights, the open and in-progress tasks and the weights still estimates; with nothing tracked it says how to start; `--json` prints the rows. (`printSummary`)](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
+
+- [LDCML-B04 — `show` prints every task of the file, or of one demand, as the file renders them without its header and sum line; `--json` prints the file's records. (`progressBody`)](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
+
+- [LDCML-B05 — The weight's unit is `progress.unit` of `anchors.yaml`, `points` when it names none.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
+
+- [LDCML-E01 — A change the file refuses — an unknown id, a held task, a title the format cannot read, a hand-edited file — or `add demand` with neither title nor plan.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
 
 ### [WRQUW — WorkQueue — list, pull, close and discard the work, from the local queue or from the board](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
 
@@ -1087,13 +1079,11 @@ abra a página dela em `camadas/`.
 
 ### [FLRGF — FlowRegister — attach the flow domain's commands to the root command, once each](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
 
-- [FLRGF-B01 — After registration the root holds exactly the eighteen flow commands: backfill-labels, decided, deliver, discard, done, drop, escalate, merge-progress, monitor, next, pr-body, queue, reclaim, report-bug, task-status, unblock, watch and work.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
+- [FLRGF-B01 — After registration the root holds exactly the nineteen flow commands: backfill-labels, decided, deliver, discard, done, drop, escalate, merge-progress, monitor, next, pr-body, progress, queue, reclaim, report-bug, task-status, unblock, watch and work.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
 
 - [FLRGF-B02 — The watcher's control commands (start, run, status, stop, pause, resume, logs) arrive under `watch`, not at the root.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
 
 - [FLRGF-I01 — Each flow command is attached to the root exactly once.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
-
-- [FLRGF-X01 — The progress command is not attached to the root.](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each)
 
 ### [RPBUG — ReportBug — report a bug in Anchors itself, where it is fixed for every project](layers/comando.md#rpbug--reportbug--report-a-bug-in-anchors-itself-where-it-is-fixed-for-every-project)
 
@@ -2075,7 +2065,7 @@ abra a página dela em `camadas/`.
 
 ### [GNPTG — GeneratedPaths — the product names the files it derives, so a conflict in them is rebuilt, not merged](layers/comando.md#gnptg--generatedpaths--the-product-names-the-files-it-derives-so-a-conflict-in-them-is-rebuilt-not-merged)
 
-- [GNPTG-B01 — The patterns name exactly the map at the root, the compiled documentation directory at the root, and any path ending in the plan progress suffix; nothing else matches them.](layers/comando.md#gnptg--generatedpaths--the-product-names-the-files-it-derives-so-a-conflict-in-them-is-rebuilt-not-merged)
+- [GNPTG-B01 — The patterns name exactly the map at the root, the compiled documentation directory at the root, the progress file at the root (`anchors.progress.md`), and any path ending in the legacy plan progress suffix; nothing else matches them.](layers/comando.md#gnptg--generatedpaths--the-product-names-the-files-it-derives-so-a-conflict-in-them-is-rebuilt-not-merged)
 
 - [GNPTG-B02 — By default the command prints one pattern per line.](layers/comando.md#gnptg--generatedpaths--the-product-names-the-files-it-derives-so-a-conflict-in-them-is-rebuilt-not-merged)
 
@@ -2261,6 +2251,8 @@ abra a página dela em `camadas/`.
 
 - [MGCMM-B18 — Taking a spec's Dependencies table out proves nothing new: what held at the spec's revision before — its scenarios' proofs, its stamps — moves, in the map, to the content without the table.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
+- [MGCMM-B19 — Every run also moves the per-plan `-progress.md` files left into `anchors.progress.md` — each plan a demand, its phases stages, its items tasks weighing 1 as estimates — and deletes them, saying for each what it became; a dry run says it and writes nothing. No format step: it runs while one is left.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
 - [MGCMM-B06 — After a real migration the command tells the user to commit it.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-I01 — The migration is idempotent: a second run reports the files as current, asks for no commit, and leaves them byte for byte as the first run wrote them.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
@@ -2299,7 +2291,7 @@ abra a página dela em `camadas/`.
 
 - [NWARN-B12 — The artifact is written at `--out`, the output names its identity and the check to run next, and a second `new` onto the same path is refused.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
-- [NWARN-B13 — A plan is born with its progress companion beside it.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
+- [NWARN-B13 — A plan is born tracked as a demand of `anchors.progress.md`, titled as the plan, with one stage per phase its headers declare; no companion file is written beside it.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-B14 — `--list-sections` prints the kind's sections, marking defaults and optional ones, and the presets only for specs.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
@@ -3015,6 +3007,8 @@ abra a página dela em `camadas/`.
 
 - [PRSTP-B15 — When something is frozen, the status lists it after the map, by freeze — each with its code and recorded reason, or its reason —, naming every file and rule it covers; with nothing frozen it says nothing of it. (`printFreezes`)](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
 
+- [PRSTP-B16 — When the project tracks progress, the status shows the whole progress with its unit and each demand with its percent and open tasks; it warns, naming them, while per-plan `-progress.md` files are left to migrate; with neither it says nothing of progress. (`printProgress`)](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
+
 - [PRSTP-I01 — Status never names a step beyond the first one missing.](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
 
 - [PRSTP-X01 — Status leaves the project as it found it: no file is created, changed or removed.](layers/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step)
@@ -3280,6 +3274,8 @@ abra a página dela em `camadas/`.
 - [CNFGO-B68 — Every loaded configuration has the canonical `guidance` layer — `{README,CONTRIBUTING,AGENTS,CLAUDE}.md`, kind `doc`, regime `declarativo`, tag `guidance`, headless, with a priority above any declared pattern —, unless the project declares a layer of that name, which replaces it, or `guidance: false`; it is never written back by a save, it is not counted among the declared layers, and a catalog gate relates to it only when the gate carries its tag. (`CanonicalGuidance`, `IsCanonicalLayer`, `DeclaredLayers`, `LayerHeadless`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B69 — A loaded configuration has the revision of its file (`Rev`), the same on every platform's line endings; a gate may declare `stale_on_config` — its judgment is about the configuration too —, and a project declaring a canonical gate keeps that from the catalog. (`Rev`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-B70 — `progress.unit` names what a task's weight measures; with none declared the unit is empty, and the progress file counts in `points`. (`ProgressUnit`, `ProgressConfig`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -5377,9 +5373,9 @@ abra a página dela em `camadas/`.
 
 - [PRHNP-B01 — An artifact that is not a plan leaves the confrontation without a verdict: the gate is anchored on the plan, which is what the map holds.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
-- [PRHNP-B02 — A plan with NO companion progress file is skipped, not failed — "does the progress exist" is a different question from "is the progress true".](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
+- [PRHNP-B02 — A plan no demand of `anchors.progress.md` tracks — the demand whose `plan:` is the plan — is skipped, not failed: "is the progress tracked" is a different question from "is the progress true". The demand's tasks are its items, a cancelled task leaves the confrontation, and a done task is a ticked item.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
-- [PRHNP-B03 — The skip for a missing companion says HOW to create it, so the reader does not have to look the command up.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
+- [PRHNP-B03 — The skip for an untracked plan says HOW to track it (`anchors progress add demand --plan`), so the reader does not have to look the command up.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
 - [PRHNP-B04 — A TICKED item whose file does not exist FAILS: it declares done what is not.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
@@ -5399,7 +5395,9 @@ abra a página dela em `camadas/`.
 
 - [PRHNP-B12 — The verdict carries only the directions that found something: a direction with nothing to accuse adds no heading, because a "0 item(s)" finding reads as a defect that is not there.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
-- [PRHNP-I01 — The companion's path has ONE definition, derived from the scanner. The scanner is what must keep the file out of the map; a second constant here would diverge from it in silence, and the gate would confront a file the scanner indexes, or hunt for one that does not exist.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
+- [PRHNP-B13 — `progress-intact` passes an `anchors.progress.md` that parses and whose sum matches its content, fails one edited by hand naming why, and skips a project with none. (`checkProgressIntact`)](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
+
+- [PRHNP-I01 — The progress file's name has ONE definition, the scanner's. The scanner is what must keep the file out of the map; a second constant here would diverge from it in silence, and the gate would read a file nobody writes.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
 - [PRHNP-I02 — A seed is matched by PATH, never by the item's text. The wording can be shortened, translated or moved between phases without ceasing to be the same item — what identifies it is the file.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
@@ -5407,13 +5405,13 @@ abra a página dela em `camadas/`.
 
 - [PRHNP-I04 — A template file is never a seeded spec. The mould is the shape work is poured into, not work to be done.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
-- [PRHNP-X01 — Does not charge the EXISTENCE of the progress file.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
+- [PRHNP-X01 — Does not charge that the plan is tracked.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
 - [PRHNP-X02 — Does not judge the CONTENT of an item beyond the path it cites.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
 - [PRHNP-X03 — Does not put the progress file into the map, nor demand a justification for changing it.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
-- [PRHNP-E01 — REF[PRHNP-B02]: a companion progress file that cannot be read is answered as the missing one of B02: skipped, not failed](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
+- [PRHNP-E01 — `anchors.progress.md` cannot be read — edited by hand, or broken.](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
 ### [PRJTS — ProjectTests — the gates read the project's tests through the source the project declares](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares)
 
@@ -7025,7 +7023,7 @@ abra a página dela em `camadas/`.
 
 - [DFGTD-B03 — The gates that cross spec and feature (spec-feature match, feature-spec match and scenario coverage) are seeded only when both are chosen, and the test-feature match only when test and feature are both chosen.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
-- [DFGTD-B04 — Choosing only guides seeds the guide checklist gate and, as for any project with an artifact chosen, the guidance gates.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
+- [DFGTD-B04 — Choosing only guides seeds the guide checklist gate and, as for any project with an artifact chosen, the guidance gates and `progress-intact`.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-B05 — The parent gate is seeded when spec, plan or code is chosen, and confronts exactly the chosen ones among them.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
@@ -7442,6 +7440,30 @@ abra a página dela em `camadas/`.
 - [OBPCB-E03 — A pack file is not valid YAML, or does not exist.](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project)
 
 - [OBPCB-E04 — A required value or a placeholder of a pack is not declared by the project.](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project)
+
+### [DMLDD — DemandLedger — the project's progress file: demands, stages and weighted tasks, written only by Anchors](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B01 — A rendered file opens with the header that says who writes it, gives the whole progress with the unit, then each demand (`## Dnn — title (plan: path) — P% (done/total)`), its stage-less tasks, its stages (`### Dnn.Sn — …`) and their tasks (`- [ ] Dnn.Tn — title · weight`, ` (estimate)` when it is one, and who and when for a task started or done, the reason for a cancelled one), and closes with the sum of the content; parsing it gives back the same file. (`Render`, `Parse`, `File`, `Demand`, `Stage`, `Task`, `State`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B02 — Progress is the done weight over the weight of the tasks not cancelled, rounded down, per stage, per demand and over the file; with no weight counted it is `—`. (`Totals`, `Percent`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B03 — Demands, stages and tasks are numbered in order — a task's number is unique across its demand, its stages included —; a task joins a demand or one of its stages, with a positive weight, at any time. (`AddDemand`, `AddStage`, `AddTask`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B04 — A task is started by someone — refused when another holds it, unless taken over —, done, reopened, or cancelled with its reason; a done task is never deleted; weighing a task sets its weight, which is an estimate no more. (`Start`, `Done`, `Reopen`, `Cancel`, `Weigh`, `Task`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B05 — A change is made under the file's lock, on the file as it is on disk, and written atomically: changes made at once by several processes are all kept; an absent file is an empty one. (`Update`, `Load`, `Path`, `FileName`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B06 — The summary is one row per demand and one per stage, with the done and total weight, the percent, the open and in-progress tasks and the weights still estimates — never the tasks. (`Summary`, `Row`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B07 — Two branches' files are merged over their base: what each side added is kept; a task both sides moved takes the further state (done, then cancelled, then in progress, then to do); a weight changed on one side only takes that side's; an id both sides created for different work is renumbered on their side. (`Merge`, `IsFile`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B08 — A plan becomes a demand titled as the plan's title (or the one given), with one stage per phase its headers declare; a plan already tracked is refused. (`PlanDemand`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B09 — A per-plan `-progress.md` beside a plan becomes its plan's demand: each heading a stage, each checkbox a task weighing 1 as an estimate, done when it was checked; the placeholder items of an unfilled template are left out; a plan already tracked keeps its demand; the migration of a project moves every such file, titles each demand as its plan, and deletes the file; and a dry run writes nothing. (`LegacyFiles`, `MigrateLegacy`, `MigrateProject`, `Migrated`, `LegacySuffix`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-E01 — The file's content does not match its sum, or holds a line this unit does not write.](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-E02 — A title or reason that is empty, spans lines or holds ` · `; a weight that is not positive; an id that does not exist.](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
 ### [TSQUT — TaskQueue — the file-backed queue between "something changed" and "someone works on it"](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it)
 
@@ -8139,6 +8161,8 @@ abra a página dela em `camadas/`.
 
 - [MPLCK-B05 — A function run under the lock releases it when it returns, with an error or without. (`WithLock`)](layers/mapa.md#mplck--maplock--the-map-changed-by-one-writer-at-a-time-each-applying-only-what-it-changes)
 
+- [MPLCK-B06 — Any file Anchors rewrites whole takes the same lock beside it — the progress file's at `.anchors/progress.lock` —, its messages naming what it protects. (`LockNamed`)](layers/mapa.md#mplck--maplock--the-map-changed-by-one-writer-at-a-time-each-applying-only-what-it-changes)
+
 - [MPLCK-E01 — Another writer holds the lock past the timeout.](layers/mapa.md#mplck--maplock--the-map-changed-by-one-writer-at-a-time-each-applying-only-what-it-changes)
 
 - [MPLCK-E02 — The map cannot be read under the lock, or the change refuses.](layers/mapa.md#mplck--maplock--the-map-changed-by-one-writer-at-a-time-each-applying-only-what-it-changes)
@@ -8394,6 +8418,8 @@ abra a página dela em `camadas/`.
 - [PRFLP-B06 — A ticked mark promoted from their side keeps our side's indentation.](layers/scan.md#prflp--progressfile--a-plans-progress-companion-how-it-is-named-and-how-two-sides-of-it-merge)
 
 - [PRFLP-B07 — `ProgressDone`: The done count is the number of items ticked with `x` or `X`, at any indentation.](layers/scan.md#prflp--progressfile--a-plans-progress-companion-how-it-is-named-and-how-two-sides-of-it-merge)
+
+- [PRFLP-B08 — `anchors.progress.md` at the root is a progress file too — kept out of the map, as the per-plan files it replaces were; the same name elsewhere is not. (`ProgressFile`, `IsProgressFile`)](layers/scan.md#prflp--progressfile--a-plans-progress-companion-how-it-is-named-and-how-two-sides-of-it-merge)
 
 - [PRFLP-I01 — Merging a side with itself changes nothing, and the done count is the same before and after.](layers/scan.md#prflp--progressfile--a-plans-progress-companion-how-it-is-named-and-how-two-sides-of-it-merge)
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRMRP
-  updated_at: 2026-10-08
+  updated_at: 2026-10-12
   layer: comando
 -->
 # ProgressMerge — the git merge driver of a plan's progress file: unite both sides, done beats pending
@@ -36,8 +36,9 @@ edits the file, and that edit arrives as one side.
 | --- | --- |
 | `PRMRP-B01` | The driver takes exactly three arguments; any other count is refused. |
 | `PRMRP-B02` | The united result is written into our side, where an item done on either side is done. |
-| `PRMRP-B03` | The base is not read: a missing base does not stop the merge. |
+| `PRMRP-B03` | For a per-plan progress file the base is not read: a missing base does not stop the merge. |
 | `PRMRP-B04` | Standard error reports how many items are done after the merge, and how many came from the other side when it added any. |
+| `PRMRP-B05` | `anchors.progress.md` — known by its header — is merged by id over the base: what each side added stays, the further state wins, and an id both sides created for different work is renumbered on their side; a side that is not a file Anchors wrote fails the merge, left to a person. (`mergeProgressFile`) |
 
 ## Invariants
 

@@ -117,5 +117,6 @@ Comandos da mesma família — o que distingue cada um:
 | [`anchors monitor`](/pt/docs/cli/commands/monitor/) | Watch the project's long processes: one line when one starts, stalls, dies or ends |
 | [`anchors flow`](/pt/docs/cli/commands/flow/) | Operate the work flows (the puzzle of actions and results) |
 | [`anchors board`](/pt/docs/cli/commands/board/) | The project board — published by the pipeline, or served live |
+| [`anchors progress`](/pt/docs/cli/commands/progress/) | Track the project's demands, stages and weighted tasks in anchors.progress.md |
 
 <!-- cli-reference:end -->

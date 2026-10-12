@@ -73,7 +73,7 @@ It is a single source: when a path changes, every project follows.`,
 
 			// O PROGRESSO de cada plano. É sufixo e não diretório: o companheiro vive ao
 			// lado do plano, onde quer que ele esteja.
-			padroes = append(padroes, regexEscape(scan.SufixoProgresso)+"$")
+			padroes = append(padroes, "^"+regexEscape(scan.ProgressFile)+"$", regexEscape(scan.SufixoProgresso)+"$")
 
 			if formato == "re" {
 				fmt.Fprintln(cmd.OutOrStdout(), strings.Join(padroes, "|"))

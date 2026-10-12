@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGCMM
-  updated_at: 2026-10-08
+  updated_at: 2026-10-12
   layer: comando
 -->
 # MigrateCommand — the command the format error promises, bringing the map and the config up to this binary's format
@@ -54,6 +54,7 @@ machine makes the next agent migrate again and produce the same diff.
 | `MGCMM-B16` | Crossing format 7, a code is rewritten only where it is cited as a code (`RewriteCited`: its rule codes, the header fields, backticks, a Gherkin tag) — in the project's files, the config and the map —; a bare word with its letters, and an identifier that holds them (`CODE_URL`), are left as they were, and each bare mention is listed with its file and line for a person to judge. |
 | `MGCMM-B17` | The migration takes the dependencies out of the specs, whatever the format: it removes every section whose table rows open with a `DEPn`, under any title, and the `DEPn` from what each rule uses (Rule uses, Validations, Presentation validations); it names, per spec, the rows that named no file of the project — to flag in the code with a kind —, the rules whose uses held nothing else, and the lines that still cite a `DEPn`. A second run changes nothing. (`SpecDepsReport`) |
 | `MGCMM-B18` | Taking a spec's Dependencies table out proves nothing new: what held at the spec's revision before — its scenarios' proofs, its stamps — moves, in the map, to the content without the table. |
+| `MGCMM-B19` | Every run also moves the per-plan `-progress.md` files left into `anchors.progress.md` — each plan a demand, its phases stages, its items tasks weighing 1 as estimates — and deletes them, saying for each what it became; a dry run says it and writes nothing. No format step: it runs while one is left. |
 | `MGCMM-B06` | After a real migration the command tells the user to commit it. |
 
 ## Invariants

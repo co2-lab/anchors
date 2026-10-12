@@ -53,6 +53,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"doctrine-realized":               checkDoctrineRealized,
 	"freeze-consistent":               checkFreezeConsistent,
 	"guidance-linked":                 checkGuidanceLinked,
+	"progress-intact":                 checkProgressIntact,
 	"frozen-touched":                  checkFrozenTouched,
 	"scenario-coverage":               checkScenarioCoverage,
 	"revision-orphans":                checkRevisionOrphans,

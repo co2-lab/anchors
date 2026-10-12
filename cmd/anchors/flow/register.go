@@ -11,6 +11,7 @@ func Register(root *cobra.Command) {
 	root.AddCommand(newWorkCmd())
 	root.AddCommand(newWatchCmd())
 	root.AddCommand(newMonitorCmd())
+	root.AddCommand(newProgressTrackCmd())
 	root.AddCommand(newQueueCmd())
 	root.AddCommand(newNextCmd())
 	root.AddCommand(newDoneCmd())

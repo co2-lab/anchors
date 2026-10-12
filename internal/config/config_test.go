@@ -1882,3 +1882,10 @@ func TestLoad_revision(t *testing.T) {
 		t.Errorf("revisions: %q %q %q", lf, crlf, other)
 	}
 }
+
+func TestProgressUnit(t *testing.T) {
+	t.Run("CNFGO-B70: The progress unit", func(t *testing.T) {})
+	if (&Config{Progress: &ProgressConfig{Unit: " hours "}}).ProgressUnit() != "hours" || (&Config{}).ProgressUnit() != "" || (*Config)(nil).ProgressUnit() != "" {
+		t.Error("the unit is the declared one, trimmed, or empty")
+	}
+}

@@ -2,7 +2,7 @@
 # @anchors
 #   code: MGFTM
 #   ref: MGCMM
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-12
 #   layer: feature
 
 @MGCMM
@@ -144,4 +144,10 @@ Feature: MigrateCommand — the command the format error promises, bringing the 
     Given a spec with a Dependencies table whose scenarios are proven at its revision in the map
     When the migration takes the table out
     Then the spec's revision and its proofs in the map follow the new content
+
+  @MGCMM-B19 @unit-level
+  Scenario: The per-plan progress files are moved into anchors.progress.md
+    Given a plan with its -progress.md, one item checked and one open
+    When migrate runs with --dry-run, and then for real
+    Then the dry run says it would move it and writes nothing, and the real run makes it a demand and deletes the file
 

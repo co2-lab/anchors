@@ -2,7 +2,7 @@
 # @anchors
 #   code: PHFPR
 #   ref: PRHNP
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-12
 #   layer: feature
 
 @PRHNP
@@ -15,18 +15,18 @@ Feature: ProgressHonest — the progress file tells the truth about the disk
     Then it returns Skip, because the gate is anchored on the plan, which is what the map holds
 
   @PRHNP-B02 @unit-level
-  Scenario: A plan with no companion progress file is skipped, not failed
-    Given a plan with no progress file beside it
+  Scenario: An untracked plan is skipped, not failed
+    Given a plan no demand of anchors.progress.md tracks
     When the gate confronts it
-    Then it returns Skip, because "does the progress exist" is a different question
+    Then it returns Skip, because "is the progress tracked" is a different question
       from "is the progress true"
 
   @PRHNP-B03 @unit-level
-  Scenario: The skip for a missing companion says how to create it
-    Given a plan with no progress file beside it
+  Scenario: The skip for an untracked plan says how to track it
+    Given a plan no demand of anchors.progress.md tracks
     When the gate confronts it
-    Then the verdict names the command that creates the companion, so the reader does not
-      have to look it up
+    Then the verdict names the command that tracks it, so the reader does not have to look
+      it up
 
   @PRHNP-B04 @unit-level
   Scenario: A ticked item whose file does not exist is failed
@@ -88,11 +88,11 @@ Feature: ProgressHonest — the progress file tells the truth about the disk
       that found nothing, because a zero-item finding reads as a defect that is not there
 
   @PRHNP-I01 @unit-level
-  Scenario: The companion's path has one definition, derived from the scanner
-    Given several plan paths, with and without an extension
-    When the companion of each is derived
-    Then each answer matches the scanner's, because a second constant here would diverge
-      in silence and the gate would hunt for a file that does not exist
+  Scenario: The progress file's name has one definition, derived from the scanner
+    Given the progress file's name as the gate reads it
+    When it is compared with the scanner's
+    Then they are the same, because a second constant here would diverge in silence and the
+      gate would read a file nobody writes
 
   @PRHNP-I02 @unit-level
   Scenario: A seed is matched by path, never by the item's text
@@ -117,8 +117,8 @@ Feature: ProgressHonest — the progress file tells the truth about the disk
     Then it returns Pass, because the mould is the shape work is poured into, not work to be done
 
   @PRHNP-X01 @unit-level
-  Scenario: The gate does not charge the existence of the progress file
-    Given a plan that predates the progress mechanism and has no companion
+  Scenario: The gate does not charge that the plan is tracked
+    Given a plan that predates the progress file and no demand tracks
     When the gate confronts it
     Then it does not return Fail, because merging "does it exist" with "is it true"
       would report two different debts as one finding
@@ -136,3 +136,16 @@ Feature: ProgressHonest — the progress file tells the truth about the disk
     When the map is built
     Then the progress file is not a node, because a gate reaching it would charge every
       edit of the artifact that exists in order to change
+
+  @PRHNP-E01 @unit-level
+  Scenario: An unreadable progress file is pending
+    Given an anchors.progress.md edited by hand
+    When the gate confronts a plan
+    Then it is pending, naming why, and does not fail — progress-intact fails the file
+
+  @PRHNP-B13 @unit-level
+  Scenario: The progress file is the one Anchors wrote
+    Given a project with no progress file, one written by anchors progress, and one edited by hand
+    When progress-intact runs on each
+    Then it skips the first, passes the second and fails the third naming the hand edit
+

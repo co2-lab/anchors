@@ -7,7 +7,9 @@ package flow
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/co2-lab/anchors/internal/progress"
 	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
 )
@@ -67,6 +69,18 @@ The result is written to <ours>, which is what git expects.`,
 				return fmt.Errorf("read the other side (%s): %w", deles, err)
 			}
 
+			// anchors.progress.md: merged by id over the common base (progress.Merge).
+			if progress.IsFile(string(bNosso)) || progress.IsFile(string(bDeles)) {
+				res, err := mergeProgressFile(args[0], string(bNosso), string(bDeles))
+				if err != nil {
+					return err
+				}
+				if err := os.WriteFile(nosso, []byte(res), 0o644); err != nil {
+					return fmt.Errorf("write the result: %w", err)
+				}
+				fmt.Fprintln(os.Stderr, "anchors: anchors.progress.md merged by id")
+				return nil
+			}
 			antes := scan.ProgressDone(string(bNosso))
 			res := scan.MergeProgress(string(bNosso), string(bDeles))
 
@@ -84,4 +98,33 @@ The result is written to <ours>, which is what git expects.`,
 		},
 	}
 	return cmd
+}
+
+// mergeProgressFile merges two sides of anchors.progress.md over their base. A side that is
+// not a file Anchors wrote — edited by hand — leaves the merge to a person.
+func mergeProgressFile(basePath, ours, theirs string) (string, error) {
+	parse := func(name, text string) (*progress.File, error) {
+		if strings.TrimSpace(text) == "" {
+			return &progress.File{}, nil
+		}
+		f, err := progress.Parse(text)
+		if err != nil {
+			return nil, fmt.Errorf("%s side: %w", name, err)
+		}
+		return f, nil
+	}
+	b, _ := os.ReadFile(basePath)
+	base, err := parse("base", string(b))
+	if err != nil {
+		return "", err
+	}
+	o, err := parse("our", ours)
+	if err != nil {
+		return "", err
+	}
+	t, err := parse("their", theirs)
+	if err != nil {
+		return "", err
+	}
+	return progress.Render(progress.Merge(base, o, t)), nil
 }

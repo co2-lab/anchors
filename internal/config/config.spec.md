@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNFGO
-  updated_at: 2026-10-11
+  updated_at: 2026-10-12
   layer: config
 -->
 # Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default
@@ -88,6 +88,7 @@ patterns a spec governs.
 | `CNFGO-B67` | `evidence.no_side_effect` names, as the project writes them, what changes nothing a test observes: its `flags` — `@navigates` and `@dep[type]` when not given — and its spec `sections`; a list given replaces its default. (`NoSideEffectFlags`, `NoSideEffectSections`) |
 | `CNFGO-B68` | Every loaded configuration has the canonical `guidance` layer — `{README,CONTRIBUTING,AGENTS,CLAUDE}.md`, kind `doc`, regime `declarativo`, tag `guidance`, headless, with a priority above any declared pattern —, unless the project declares a layer of that name, which replaces it, or `guidance: false`; it is never written back by a save, it is not counted among the declared layers, and a catalog gate relates to it only when the gate carries its tag. (`CanonicalGuidance`, `IsCanonicalLayer`, `DeclaredLayers`, `LayerHeadless`) |
 | `CNFGO-B69` | A loaded configuration has the revision of its file (`Rev`), the same on every platform's line endings; a gate may declare `stale_on_config` — its judgment is about the configuration too —, and a project declaring a canonical gate keeps that from the catalog. (`Rev`) |
+| `CNFGO-B70` | `progress.unit` names what a task's weight measures; with none declared the unit is empty, and the progress file counts in `points`. (`ProgressUnit`, `ProgressConfig`) |
 | `CNFGO-B60` | A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 

@@ -404,3 +404,28 @@ func TestMigrateKeepsTheSpecsEvidence(t *testing.T) {
 		t.Errorf("the spec's proofs follow its new content: %+v", n)
 	}
 }
+
+func TestMigrateMovesThePlanProgressFiles(t *testing.T) {
+	t.Run("MGCMM-B19: The per-plan progress files are moved into anchors.progress.md", func(t *testing.T) {})
+	root := t.TempDir()
+	writeFile(t, root, config.DefaultFile, "version: 7\nlayers: {}\n")
+	writeFile(t, root, "plans/0001-x.md", "# X\n")
+	writeFile(t, root, "plans/0001-x-progress.md", "# Progress — XXXXX\n\n## XXXXX-W01 — Base\n\n- [x] `a.spec.md`\n- [ ] `b.spec.md`\n")
+	err, out := runCmd(t, newMigrateCmd(), "--root", root, "--dry-run")
+	if err != nil || !strings.Contains(out, "plans/0001-x-progress.md would be moved into demand D01: 2 task(s), 1 done") {
+		t.Fatalf("dry run: %v\n%s", err, out)
+	}
+	if _, serr := os.Stat(filepath.Join(root, "anchors.progress.md")); serr == nil {
+		t.Error("the dry run wrote the progress file")
+	}
+	err, out = runCmd(t, newMigrateCmd(), "--root", root)
+	if err != nil || !strings.Contains(out, "plans/0001-x-progress.md moved into demand D01") {
+		t.Fatalf("migrate: %v\n%s", err, out)
+	}
+	if _, serr := os.Stat(filepath.Join(root, "plans", "0001-x-progress.md")); serr == nil {
+		t.Error("the per-plan file is deleted")
+	}
+	if b, _ := os.ReadFile(filepath.Join(root, "anchors.progress.md")); !strings.Contains(string(b), "(plan: plans/0001-x.md)") {
+		t.Errorf("the demand: %s", b)
+	}
+}

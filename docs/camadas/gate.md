@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:d407affe31bc4578 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:02ca095ecdd00b77 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 87 unidades e 1392 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 87 unidades e 1393 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2876,7 +2876,8 @@ actually confronted, and which of them failed a blocking gate.
 
 ## PRHNP — ProgressHonest — the progress file tells the truth about the disk
 
-The `-progress.md` is the only Anchors artifact that nothing confronted, and its exclusion
+The plan's progress — once a `-progress.md` beside it, now its demand in `anchors.progress.md`
+(DESIGN-progress-tracking.md) — is the only Anchors artifact that nothing confronted, and its exclusion
 from the map is deliberate: it exists in order to CHANGE, and the gates that demand a
 justification for change cannot reach it.
 
@@ -2905,9 +2906,9 @@ is the only way to reach a file that, by design, is not a node.
 
 - **PRHNP-B01** — An artifact that is not a plan leaves the confrontation without a verdict: the gate is anchored on the plan, which is what the map holds.
 
-- **PRHNP-B02** — A plan with NO companion progress file is skipped, not failed — "does the progress exist" is a different question from "is the progress true".
+- **PRHNP-B02** — A plan no demand of `anchors.progress.md` tracks — the demand whose `plan:` is the plan — is skipped, not failed: "is the progress tracked" is a different question from "is the progress true". The demand's tasks are its items, a cancelled task leaves the confrontation, and a done task is a ticked item.
 
-- **PRHNP-B03** — The skip for a missing companion says HOW to create it, so the reader does not have to look the command up.
+- **PRHNP-B03** — The skip for an untracked plan says HOW to track it (`anchors progress add demand --plan`), so the reader does not have to look the command up.
 
 - **PRHNP-B04** — A TICKED item whose file does not exist FAILS: it declares done what is not.
 
@@ -2927,7 +2928,9 @@ is the only way to reach a file that, by design, is not a node.
 
 - **PRHNP-B12** — The verdict carries only the directions that found something: a direction with nothing to accuse adds no heading, because a "0 item(s)" finding reads as a defect that is not there.
 
-- **PRHNP-I01** — The companion's path has ONE definition, derived from the scanner. The scanner is what must keep the file out of the map; a second constant here would diverge from it in silence, and the gate would confront a file the scanner indexes, or hunt for one that does not exist.
+- **PRHNP-B13** — `progress-intact` passes an `anchors.progress.md` that parses and whose sum matches its content, fails one edited by hand naming why, and skips a project with none. (`checkProgressIntact`)
+
+- **PRHNP-I01** — The progress file's name has ONE definition, the scanner's. The scanner is what must keep the file out of the map; a second constant here would diverge from it in silence, and the gate would read a file nobody writes.
 
 - **PRHNP-I02** — A seed is matched by PATH, never by the item's text. The wording can be shortened, translated or moved between phases without ceasing to be the same item — what identifies it is the file.
 
@@ -2935,13 +2938,13 @@ is the only way to reach a file that, by design, is not a node.
 
 - **PRHNP-I04** — A template file is never a seeded spec. The mould is the shape work is poured into, not work to be done.
 
-- **PRHNP-X01** — Does not charge the EXISTENCE of the progress file.
+- **PRHNP-X01** — Does not charge that the plan is tracked.
 
 - **PRHNP-X02** — Does not judge the CONTENT of an item beyond the path it cites.
 
 - **PRHNP-X03** — Does not put the progress file into the map, nor demand a justification for changing it.
 
-- **PRHNP-E01** — REF[PRHNP-B02]: a companion progress file that cannot be read is answered as the missing one of B02: skipped, not failed
+- **PRHNP-E01** — `anchors.progress.md` cannot be read — edited by hand, or broken.
 
 
 ## PRJTS — ProjectTests — the gates read the project's tests through the source the project declares

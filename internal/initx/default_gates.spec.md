@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DFGTD
-  updated_at: 2026-10-11
+  updated_at: 2026-10-12
   layer: infra
 -->
 # DefaultGates — the gates a project is born with, by artifact and by project age, and the canonical gate catalog
@@ -56,7 +56,7 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 | `DFGTD-B01` | A project with no artifact chosen is seeded with no gate, new or existing. |
 | `DFGTD-B02` | A project with spec, feature and test is born with the gates of each, among them the spec completeness, feature non-emptiness, green tests, line coverage and scenario coverage gates. |
 | `DFGTD-B03` | The gates that cross spec and feature (spec-feature match, feature-spec match and scenario coverage) are seeded only when both are chosen, and the test-feature match only when test and feature are both chosen. |
-| `DFGTD-B04` | Choosing only guides seeds the guide checklist gate and, as for any project with an artifact chosen, the guidance gates. |
+| `DFGTD-B04` | Choosing only guides seeds the guide checklist gate and, as for any project with an artifact chosen, the guidance gates and `progress-intact`. |
 | `DFGTD-B05` | The parent gate is seeded when spec, plan or code is chosen, and confronts exactly the chosen ones among them. |
 | `DFGTD-B06` | In an existing project every gate is born informative, except two born blocking by nature: the leaked-secret and the contracted-document gates. |
 | `DFGTD-B07` | In a new project every gate is born blocking, except the gates that read an ingested report. |

@@ -2,7 +2,7 @@
 # @anchors
 #   code: PRFTF
 #   ref: PRFLP
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-12
 #   layer: feature
 
 @PRFLP
@@ -69,3 +69,10 @@ Feature: ProgressFile — a plan's progress companion: how it is named, and how 
     Given our side has the item "a — first wording" and their side has "a — second wording" ticked
     When the sides are merged
     Then both wordings are in the result
+
+  @PRFLP-B08 @unit-level
+  Scenario: The project's progress file stays out of the map
+    Given anchors.progress.md at the root and in a subfolder
+    When each is asked whether it is a progress file
+    Then the root one is, the other is not
+

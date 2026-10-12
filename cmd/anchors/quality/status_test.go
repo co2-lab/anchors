@@ -6,6 +6,7 @@ package quality
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/progress"
 	"os"
 	"path/filepath"
 	"strings"
@@ -461,5 +462,33 @@ func TestStatus_listsFreezes(t *testing.T) {
 	printFreezes(&b, &mapx.Graph{Nodes: []mapx.Node{{ID: "a.ts"}}})
 	if b.Len() != 0 {
 		t.Errorf("nothing frozen, nothing said: %q", b.String())
+	}
+}
+
+func TestStatus_showsProgress(t *testing.T) {
+	t.Run("PRSTP-B16: The status shows the progress", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := progress.Update(root, "", func(f *progress.File) error {
+		d, _ := f.AddDemand("Checkout", "")
+		_, _ = f.AddTask(d, "a", 1, false)
+		_, _ = f.AddTask(d, "b", 1, false)
+		return f.Done("D01.T1", "x", "2026-10-12")
+	}); err != nil {
+		t.Fatal(err)
+	}
+	_ = os.MkdirAll(filepath.Join(root, "plans"), 0o755)
+	_ = os.WriteFile(filepath.Join(root, "plans", "0001.md"), []byte("# p\n"), 0o644)
+	_ = os.WriteFile(filepath.Join(root, "plans", "0001-progress.md"), []byte("- [ ] x\n"), 0o644)
+	var b strings.Builder
+	printProgress(&b, root)
+	for _, want := range []string{"⚠ 1 per-plan progress file(s) (plans/0001-progress.md) — `anchors migrate`", "▸ progress 50% (1/2 points)", "D01 Checkout — 50% · 1 open"} {
+		if !strings.Contains(b.String(), want) {
+			t.Errorf("missing %q in:\n%s", want, b.String())
+		}
+	}
+	b.Reset()
+	printProgress(&b, t.TempDir())
+	if b.Len() != 0 {
+		t.Errorf("nothing to say: %q", b.String())
 	}
 }

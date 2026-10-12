@@ -119,6 +119,8 @@ type Config struct {
 	// Guidance turns the canonical guidance layer off with `guidance: false`; absent or true,
 	// every project has it (DESIGN-guidance-layer.md, GuidanceLayer).
 	Guidance *bool `yaml:"guidance,omitempty"`
+	// Progress configures the progress file, anchors.progress.md (DESIGN-progress-tracking.md).
+	Progress *ProgressConfig `yaml:"progress,omitempty"`
 	// rev is the revision of the file the configuration was loaded from (Rev).
 	rev     string
 	Derived *Derived `yaml:"derived,omitempty"` // co-location dos derivados
@@ -3068,4 +3070,18 @@ func (c *Config) WithCanonicalLayers() *Config {
 	}
 	out.applyCanonicalLayers()
 	return &out
+}
+
+// ProgressConfig is the `progress:` block: what the tasks' weights measure.
+type ProgressConfig struct {
+	// Unit names the weight of a task — points, hours, files —; empty is `points`.
+	Unit string `yaml:"unit,omitempty"`
+}
+
+// ProgressUnit is the unit of the tasks' weights the project names, or empty.
+func (c *Config) ProgressUnit() string {
+	if c == nil || c.Progress == nil {
+		return ""
+	}
+	return strings.TrimSpace(c.Progress.Unit)
 }

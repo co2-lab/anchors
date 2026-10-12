@@ -398,6 +398,10 @@
         "slug": "docs/gates/progress-honest"
       },
       {
+        "label": "progress-intact",
+        "slug": "docs/gates/progress-intact"
+      },
+      {
         "label": "revision-orphans",
         "slug": "docs/gates/revision-orphans"
       }

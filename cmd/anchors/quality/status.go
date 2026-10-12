@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/initx"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/progress"
 	"github.com/co2-lab/anchors/internal/runs"
 	"github.com/spf13/cobra"
 )
@@ -107,6 +109,7 @@ func runStatus(root string) error {
 	}
 	fmt.Println(i18n.T("status.map_ok", len(g.Nodes), len(g.Edges)))
 	printFreezes(os.Stdout, g)
+	printProgress(os.Stdout, root)
 
 	// 3.5. MATURAÇÃO — o gate informativo que já está limpo (QUALITY §7).
 	//
@@ -373,5 +376,31 @@ func printFreezes(w io.Writer, g *mapx.Graph) {
 	fmt.Fprintf(w, "❄ %d frozen part(s) — kept as they are until someone thaws them:\n", len(parts))
 	for _, v := range values {
 		fmt.Fprintf(w, "    %s: %s\n", g.DescribeFreeze(v), strings.Join(byValue[v], ", "))
+	}
+}
+
+// printProgress shows where the project's progress stands: the whole and each demand
+// (DESIGN-progress-tracking.md), and the per-plan progress files still to migrate. With no
+// progress file and none to migrate it says nothing.
+func printProgress(w io.Writer, root string) {
+	if legacy, _ := progress.LegacyFiles(root); len(legacy) > 0 {
+		fmt.Fprintf(w, "⚠ %d per-plan progress file(s) (%s) — `anchors migrate` moves them into %s\n",
+			len(legacy), strings.Join(legacy, ", "), progress.FileName)
+	}
+	f, err := progress.Load(root)
+	if err != nil {
+		fmt.Fprintf(w, "✗ %v\n", err)
+		return
+	}
+	if len(f.Demands) == 0 {
+		return
+	}
+	done, total := progress.Totals(f.AllTasks())
+	fmt.Fprintf(w, "▸ progress %s (%s/%s %s) — `anchors progress summary` for the stages\n",
+		progress.Percent(done, total), strconv.FormatFloat(done, 'f', -1, 64), strconv.FormatFloat(total, 'f', -1, 64), f.Unit)
+	for _, r := range progress.Summary(f) {
+		if !r.Stage {
+			fmt.Fprintf(w, "    %s %s — %s · %d open\n", r.ID, r.Title, r.Percent, r.Open)
+		}
 	}
 }
