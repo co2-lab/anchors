@@ -18,6 +18,11 @@ reaction:
   ✓/✗ a test report landed, with its failures    … progress, sparse
   and a heartbeat with what runs — "running=[NOTHING]" included — and the load.
 
+With --summary (or "summary: true" in the monitor block), every time it speaks — an event, the
+heartbeat, its exit — it also says how far the work is: the summary of anchors.progress.md,
+each demand and its stages; a change of the file is said even on a quiet tick. Off by default;
+--summary=false silences a summary the block turns on.
+
 Run it inside your watch tool, after launching the long command in the background, and react
 to each line. Its state stays in .anchors/runs/: re-armed, it says what happened while nobody
 watched, and nothing twice.
@@ -41,6 +46,7 @@ anchors monitor [flags]
 | `--progress` |  | least time between two progress lines of one run (default 5m) |
 | `--root` | `.` | project root |
 | `--stall` |  | quiet time before a run of no declared runner is stalled (default 5m) |
+| `--summary` |  | also say the progress summary each time it speaks (default off, or monitor.summary) |
 | `--until-done` |  | exit when the runs it watches have all ended |
 
 ## Subcommands

@@ -6,6 +6,8 @@ package flow
 
 import (
 	"bufio"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,6 +22,7 @@ import (
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/progress"
 	"github.com/co2-lab/anchors/internal/runs"
 	"github.com/spf13/cobra"
 )
@@ -30,7 +33,7 @@ import (
 // `anchors monitor` is the command it watches.
 func newMonitorCmd() *cobra.Command {
 	var root, every, heartbeat, progress, stall string
-	var untilDone, once bool
+	var untilDone, once, summary bool
 	cmd := &cobra.Command{
 		Use:   "monitor",
 		Short: "Watch the project's long processes: one line when one starts, stalls, dies or ends",
@@ -43,6 +46,11 @@ reaction:
   ☠ died (gone without an exit or a summary)    ✓/✗ ended, with its exit or its summary
   ✓/✗ a test report landed, with its failures    … progress, sparse
   and a heartbeat with what runs — "running=[NOTHING]" included — and the load.
+
+With --summary (or "summary: true" in the monitor block), every time it speaks — an event, the
+heartbeat, its exit — it also says how far the work is: the summary of anchors.progress.md,
+each demand and its stages; a change of the file is said even on a quiet tick. Off by default;
+--summary=false silences a summary the block turns on.
 
 Run it inside your watch tool, after launching the long command in the background, and react
 to each line. Its state stays in .anchors/runs/: re-armed, it says what happened while nobody
@@ -75,6 +83,9 @@ Timing comes from the defaults, then the "monitor:" block of anchors.yaml, then 
 				}
 				*f.to = d
 			}
+			if cmd.Flags().Changed("summary") {
+				set.Summary = summary
+			}
 			return runMonitor(cmd.OutOrStdout(), absRoot, set, untilDone, once)
 		},
 	}
@@ -83,6 +94,7 @@ Timing comes from the defaults, then the "monitor:" block of anchors.yaml, then 
 	cmd.Flags().StringVar(&heartbeat, "heartbeat", "", "how often to say what runs, even when nothing changed (default 5m)")
 	cmd.Flags().StringVar(&progress, "progress", "", "least time between two progress lines of one run (default 5m)")
 	cmd.Flags().StringVar(&stall, "stall", "", "quiet time before a run of no declared runner is stalled (default 5m)")
+	cmd.Flags().BoolVar(&summary, "summary", false, "also say the progress summary each time it speaks (default off, or monitor.summary)")
 	cmd.Flags().BoolVar(&untilDone, "until-done", false, "exit when the runs it watches have all ended")
 	cmd.Flags().BoolVar(&once, "once", false, "read once, print what changed, and exit")
 	cmd.AddCommand(newMonitorHookCmd(), newRunCmd())
@@ -116,15 +128,23 @@ func runMonitor(w io.Writer, root string, set runs.Settings, untilDone, once boo
 		for _, e := range events {
 			fmt.Fprintln(w, e.Line)
 		}
-		runs.Prune(root, set.Keep, set.MaxAge, now)
-		if err := runs.SaveState(root, st); err != nil {
-			fmt.Fprintf(w, "⚠ monitor: cannot write its state (%v) — a re-armed monitor may repeat events\n", err)
-		}
 		live := 0
 		for _, s := range st.Runs {
 			if !s.Done {
 				live++
 			}
+		}
+		// The progress goes with what the monitor says: on a tick that printed, on its exit, and
+		// on a change of the file.
+		exiting := once || (untilDone && live == 0)
+		if set.Summary {
+			for _, l := range progressLines(st, root, len(events) > 0 || exiting) {
+				fmt.Fprintln(w, l)
+			}
+		}
+		runs.Prune(root, set.Keep, set.MaxAge, now)
+		if err := runs.SaveState(root, st); err != nil {
+			fmt.Fprintf(w, "⚠ monitor: cannot write its state (%v) — a re-armed monitor may repeat events\n", err)
 		}
 		if live > 0 {
 			sawRun = true
@@ -146,6 +166,36 @@ func runMonitor(w io.Writer, root string, set runs.Settings, untilDone, once boo
 		case <-time.After(set.Timing.Every):
 		}
 	}
+}
+
+// progressLines are the summary of anchors.progress.md (DESIGN-progress-tracking.md) the
+// monitor says with what it says: when it speaks (said), and on a change of the file even
+// when it has nothing else to say. A file edited by hand is one warning. No file, nothing.
+func progressLines(st *runs.State, root string, said bool) []string {
+	b, err := os.ReadFile(progress.Path(root))
+	if err != nil {
+		st.ProgressSum = ""
+		return nil
+	}
+	h := sha256.Sum256(b)
+	sum := hex.EncodeToString(h[:6])
+	changed := sum != st.ProgressSum
+	if !said && !changed {
+		return nil
+	}
+	st.ProgressSum = sum
+	f, err := progress.Load(root)
+	if err != nil {
+		if !changed {
+			return nil
+		}
+		return []string{"⚠ progress: " + err.Error()}
+	}
+	var buf strings.Builder
+	_ = printSummary(&buf, f, false)
+	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	lines[0] = "▸ " + lines[0]
+	return lines
 }
 
 // ownRunCommands are Anchors' long commands, which record their own runs: the monitor then

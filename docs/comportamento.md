@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:3f3c1fcebecfff2e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:01695f82dd69ba54 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -851,6 +851,8 @@ teste prova.
 - [After a command, the hook records its output file](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B05`
 
 - [Anchors' long commands record their own run](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B06`
+
+- [The monitor says the progress summary with what it says, when asked](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B07`
 
 - [The agent's hook never blocks the agent](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-I01`
 

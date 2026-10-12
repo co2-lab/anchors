@@ -23,6 +23,9 @@ type Settings struct {
 	Reports []string
 	Keep    int
 	MaxAge  time.Duration
+	// Summary is whether the monitor also says the progress of anchors.progress.md each time
+	// it speaks; off unless the block or the command asks for it.
+	Summary bool
 }
 
 // Configure reads the project's `monitor:` block over the defaults: its timing, its runners
@@ -55,6 +58,7 @@ func Configure(cfg *config.Config) (Settings, error) {
 			return s, fmt.Errorf("monitor.%s: %w", d.name, err)
 		}
 	}
+	s.Summary = m.Summary
 	var own []Runner
 	replaced := map[string]bool{}
 	for _, r := range m.Runners {

@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/co2-lab/anchors/internal/progress"
 	"os"
 	"path/filepath"
 	"strings"
@@ -207,5 +208,76 @@ func TestAgentHook_neverBlocks(t *testing.T) {
 		if err := c.Execute(); err != nil || out.Len() != 0 {
 			t.Errorf("%q: %v, printed %q", in, err, out.String())
 		}
+	}
+}
+
+func TestMonitor_saysTheProgressSummary(t *testing.T) {
+	t.Run("MNCMD-B07: The monitor says the progress summary with what it says, when asked", func(t *testing.T) {})
+	dir := monitorProject(t, "")
+	if err := progress.Update(dir, "", func(f *progress.File) error {
+		id, err := f.AddDemand("Checkout", "")
+		if err != nil {
+			return err
+		}
+		s, err := f.AddStage(id, "Payment")
+		if err != nil {
+			return err
+		}
+		_, err = f.AddTask(s, "refunds", 2, false)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	run := func(args ...string) string {
+		t.Helper()
+		out, err := runCobra(t, newMonitorCmd(), append([]string{"--root", dir, "--once", "--heartbeat", "1h"}, args...)...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out
+	}
+	if out := run(); strings.Contains(out, "Progress") {
+		t.Errorf("off by default:\n%s", out)
+	}
+	if out := run("--summary"); !strings.Contains(out, "▸ Progress — 0% (0/2 points)") || !strings.Contains(out, "D01.S1 Payment") {
+		t.Errorf("on its exit, the summary, stages included:\n%s", out)
+	}
+
+	st := runs.LoadState(dir)
+	if l := progressLines(st, dir, false); l != nil {
+		t.Errorf("a quiet tick, the file unchanged: nothing, got %v", l)
+	}
+	if l := progressLines(st, dir, true); len(l) == 0 || !strings.HasPrefix(l[0], "▸ Progress") {
+		t.Errorf("a tick that speaks says the summary, got %v", l)
+	}
+	if err := progress.Update(dir, "", func(f *progress.File) error { return f.Done("D01.T1", "a", "2026-10-12") }); err != nil {
+		t.Fatal(err)
+	}
+	if l := progressLines(st, dir, false); len(l) == 0 || !strings.Contains(l[0], "100% (2/2 points)") {
+		t.Errorf("a change is said even on a quiet tick, got %v", l)
+	}
+	b, _ := os.ReadFile(progress.Path(dir))
+	_ = os.WriteFile(progress.Path(dir), []byte(strings.Replace(string(b), "Checkout", "Cart", 1)), 0o644)
+	if l := progressLines(st, dir, true); len(l) != 1 || !strings.HasPrefix(l[0], "⚠ progress:") {
+		t.Errorf("a hand edit is a warning, got %v", l)
+	}
+	if l := progressLines(st, dir, true); l != nil {
+		t.Errorf("the warning is said once, got %v", l)
+	}
+
+	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 7\nlayers: {}\nmonitor:\n  summary: true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(progress.Path(dir)); err != nil {
+		t.Fatal(err)
+	}
+	if err := progress.Update(dir, "", func(f *progress.File) error { _, err := f.AddDemand("Open", ""); return err }); err != nil {
+		t.Fatal(err)
+	}
+	if out := run("--summary=false"); strings.Contains(out, "Progress") {
+		t.Errorf("--summary=false silences the block:\n%s", out)
+	}
+	if out := run(); !strings.Contains(out, "▸ Progress") {
+		t.Errorf("the block turns it on with no flag:\n%s", out)
 	}
 }

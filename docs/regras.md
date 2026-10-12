@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:dc56995e477cd08c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:7a4fd9532d8c865c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -942,6 +942,8 @@ abra a página dela em `camadas/`.
 - [MNCMD-B05 — After a background command of the agent, the hook records the file its output goes to, as the answer names it; after a command it did not record, it does nothing.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
 - [MNCMD-B06 — Anchors' long commands — test, mutation, check, verify, ingest, map build, docs build — record their run in a project that has an anchors.yaml, and close it with their exit code; another command, or a folder with no anchors.yaml, records nothing. (`BeginOwnRun`, `EndOwnRun`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+
+- [MNCMD-B07 — The progress summary is off by default; `--summary` or `summary: true` in the `monitor:` block turns it on, and `--summary=false` turns off the block's. On, each time the monitor speaks — a tick with events, the heartbeat among them, or its exit with `--once` or `--until-done` — it also says the summary of `anchors.progress.md`: the overall progress, then each demand and its stages; a change of the file is said even on a quiet tick; a file edited by hand is one warning; no file, nothing. (`progressLines`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
 - [MNCMD-I01 — The agent's hook never blocks the agent: whatever its input, it prints nothing and returns no error.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
@@ -7617,7 +7619,7 @@ abra a página dela em `camadas/`.
 
 - [MNTRS-B08 — A run whose runner reads progress gives, at most once per progress interval, a line counting the progress marks in the end of its output.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
-- [MNTRS-B09 — The settings are the defaults — a tick of 30s, a heartbeat of 5m, progress every 5m, a quiet time of 5m, the built-in runners, 50 ended runs within 7 days —, then the project's `monitor:` block: its timing, its runners read first and replacing a built-in of the same name, its reports beside the suites' JUnit reports, and its bounds. A duration or a pattern that does not read, or a runner with no match, is an error naming it. (`Configure`, `DefaultTiming`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+- [MNTRS-B09 — The settings are the defaults — a tick of 30s, a heartbeat of 5m, progress every 5m, a quiet time of 5m, no progress summary, the built-in runners, 50 ended runs within 7 days —, then the project's `monitor:` block: its timing, the progress summary turned on, its runners read first and replacing a built-in of the same name, its reports beside the suites' JUnit reports, and its bounds. A duration or a pattern that does not read, or a runner with no match, is an error naming it. (`Configure`, `DefaultTiming`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B10 — An output's end says failed when the runner's failure pattern is in it — even beside a pass —, passed when only the pass pattern is, and nothing when neither is; its summary line is the line carrying the verdict, and its last lines are the last non-blank ones. Reading an output gives its size and its end. (`Verdict`, `SummaryLine`, `LastLines`, `ReadOutput`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 

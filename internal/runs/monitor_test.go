@@ -243,14 +243,14 @@ func TestConfigure(t *testing.T) {
 		t.Fatalf("the defaults: %+v %v", s, err)
 	}
 	cfg := &config.Config{Tests: []config.Suite{{JUnit: "out/junit.xml"}}, Monitor: &config.Monitor{
-		Every: "10s", Heartbeat: "2m", Keep: 5, KeepDays: 1, Reports: []string{"e2e/*.xml"},
+		Every: "10s", Heartbeat: "2m", Summary: true, Keep: 5, KeepDays: 1, Reports: []string{"e2e/*.xml"},
 		Runners: []config.MonitorRunner{{Name: "jest", Kind: "unit", Match: "craco test", Stall: "1m"}, {Name: "seed", Match: "seed\\.sh"}},
 	}}
 	s, err = Configure(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s.Timing.Every != 10*time.Second || s.Timing.Heartbeat != 2*time.Minute || s.Timing.Stall != 5*time.Minute || s.Keep != 5 || s.MaxAge != 24*time.Hour {
+	if s.Timing.Every != 10*time.Second || s.Timing.Heartbeat != 2*time.Minute || s.Timing.Stall != 5*time.Minute || !s.Summary || s.Keep != 5 || s.MaxAge != 24*time.Hour {
 		t.Errorf("the block's timing and bounds: %+v", s)
 	}
 	if s.Runners[0].Name != "jest" || s.Runners[0].Match.String() != "craco test" || s.Runners[1].Name != "seed" || s.Runners[1].Kind != "other" || len(s.Runners) != len(DefaultRunners())+1 {

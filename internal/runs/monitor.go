@@ -62,6 +62,9 @@ type State struct {
 	LastHeartbeat time.Time            `json:"last_heartbeat"`
 	Runs          map[string]*Seen     `json:"runs"`
 	Reports       map[string]time.Time `json:"reports"`
+	// ProgressSum is the progress file as the monitor last reported it: a change is said even
+	// on a tick with nothing else to say.
+	ProgressSum string `json:"progress_sum,omitempty"`
 }
 
 // LoadState reads the monitor's state; a missing or unreadable one is a fresh start.

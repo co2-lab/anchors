@@ -76,6 +76,11 @@ Measured: MIF has no progress file at all; jokenpo has one, still the unfilled t
     as the per-plan files are today.
 - **Where it shows.** `anchors status` shows the overall progress and each demand's, and warns while
   per-plan progress files are left to migrate; `anchors progress summary` shows the stages.
+- **The monitor posts it, when asked** (the user, 2026-10-12: "por default o monitor não deve mostrar o
+  summary … a não ser que receba um argumento, mas pode ser configurado como default no anchors.yaml").
+  Not a monitor of its own: the project's monitor, with `--summary` (or `monitor.summary: true`),
+  says the summary each time it speaks — an event, the heartbeat, its exit — and on a change of
+  the file; `--summary=false` silences the block's. No monitor running, no summary.
 
 ## The migration (the user, 2026-10-12)
 
