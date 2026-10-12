@@ -81,6 +81,12 @@ Measured: MIF has no progress file at all; jokenpo has one, still the unfilled t
   Not a monitor of its own: the project's monitor, with `--summary` (or `monitor.summary: true`),
   says the summary each time it speaks — an event, the heartbeat, its exit — and on a change of
   the file; `--summary=false` silences the block's. No monitor running, no summary.
+  A line addressed to the agent comes before the summary, apart from it, asking it to show the
+  user the summary as it comes — apart, because an instruction inside the summary would be shown
+  to the user too (the user, 2026-10-12). The CONTRIBUTING.md and AGENTS.md Anchors generates say
+  the same, and that a filter over the monitor's output must let those lines through.
+  Measured with headless Claude Code sessions given one monitor notification: with the line, 3 of
+  3 showed the summary as a block and none showed the line; without it, 3 of 3 paraphrased it.
 
 ## The migration (the user, 2026-10-12)
 

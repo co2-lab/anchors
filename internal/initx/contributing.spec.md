@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNGDC
-  updated_at: 2026-10-11
+  updated_at: 2026-10-12
   layer: infra
 -->
 # ContributingGuide — render the project's CONTRIBUTING.md from the configuration init writes
@@ -39,8 +39,8 @@ init never touches it: the section this unit renders is what init shows for the 
 | `CNGDC-B06` | The gates whose failure blocks are named as barring the commit and the rest as informing; with no blocking gate, it says every gate only informs. Divergences and pending items are said to inform unless `severity` says otherwise. |
 | `CNGDC-B07` | The guides part names the project's guide folder when there is one. |
 | `CNGDC-B10` | The day-to-day part names `anchors work` for the prompt of one task, and the blocking part asks never to commit with `--no-verify`: a failing gate is fixed, or waived in the commit message with its reason. |
-| `CNGDC-B08` | The section strongly recommends watching long commands and agents: launching each long command in the background through `anchors monitor run -- <command>`, keeping `anchors monitor` running while it works, and `anchors install-hooks --agent` for a coding agent; Anchors' own long commands record themselves. |
-| `CNGDC-B09` | The agents' entry files — `AGENTS.md`, read by most coding agents, and `CLAUDE.md`, read by Claude Code — each send the agent to `CONTRIBUTING.md` before any change; `AGENTS.md` names the guide, work and next commands, the monitor and the ban on `--no-verify`, and `CLAUDE.md` imports `AGENTS.md`. (`RenderAgents`, `RenderClaude`, `AgentEntryFiles`) |
+| `CNGDC-B08` | The section strongly recommends watching long commands and agents: launching each long command in the background through `anchors monitor run -- <command>`, keeping `anchors monitor` running while it works, and `anchors install-hooks --agent` for a coding agent; Anchors' own long commands record themselves; and, when the monitor posts the progress summary, it tells the agent to show it to the user as it comes, without the line meant for the agent, and a filter over the output to let it through. |
+| `CNGDC-B09` | The agents' entry files — `AGENTS.md`, read by most coding agents, and `CLAUDE.md`, read by Claude Code — each send the agent to `CONTRIBUTING.md` before any change; `AGENTS.md` names the guide, work and next commands, the monitor — and showing the user the progress summary it posts — and the ban on `--no-verify`, and `CLAUDE.md` imports `AGENTS.md`. (`RenderAgents`, `RenderClaude`, `AgentEntryFiles`) |
 
 ## Invariants
 

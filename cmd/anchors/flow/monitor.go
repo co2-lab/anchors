@@ -168,6 +168,11 @@ func runMonitor(w io.Writer, root string, set runs.Settings, untilDone, once boo
 	}
 }
 
+// SummaryInstruction is the line the monitor puts before the progress summary, apart from it:
+// a summary the agent only reads never reaches the user, and an instruction inside the summary
+// would be shown to the user with it (the user, 2026-10-12).
+const SummaryInstruction = "· to the agent: show the user the progress summary on the next lines, as it comes and in full — this line is for you, not for them"
+
 // progressLines are the summary of anchors.progress.md (DESIGN-progress-tracking.md) the
 // monitor says with what it says: when it speaks (said), and on a change of the file even
 // when it has nothing else to say. A file edited by hand is one warning. No file, nothing.
@@ -195,7 +200,7 @@ func progressLines(st *runs.State, root string, said bool) []string {
 	_ = printSummary(&buf, f, false)
 	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
 	lines[0] = "▸ " + lines[0]
-	return lines
+	return append([]string{SummaryInstruction}, lines...)
 }
 
 // ownRunCommands are Anchors' long commands, which record their own runs: the monitor then

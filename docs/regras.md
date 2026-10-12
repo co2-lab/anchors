@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:89979cb1a8af7d67 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:384e6bcb5ff19781 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -943,7 +943,7 @@ abra a página dela em `camadas/`.
 
 - [MNCMD-B06 — Anchors' long commands — test, mutation, check, verify, ingest, map build, docs build — record their run in a project that has an anchors.yaml, and close it with their exit code; another command, or a folder with no anchors.yaml, records nothing. (`BeginOwnRun`, `EndOwnRun`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
-- [MNCMD-B07 — The progress summary is off by default; `--summary` or `summary: true` in the `monitor:` block turns it on, and `--summary=false` turns off the block's. On, each time the monitor speaks — a tick with events, the heartbeat among them, or its exit with `--once` or `--until-done` — it also says the summary of `anchors.progress.md`: the overall progress, then each demand and its stages; a change of the file is said even on a quiet tick; a file edited by hand is one warning; no file, nothing. (`progressLines`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+- [MNCMD-B07 — The progress summary is off by default; `--summary` or `summary: true` in the `monitor:` block turns it on, and `--summary=false` turns off the block's. On, each time the monitor speaks — a tick with events, the heartbeat among them, or its exit with `--once` or `--until-done` — it also says the summary of `anchors.progress.md`: a line to the agent, apart, asking it to show the user the lines that follow as they come, then the overall progress and each demand and its stages; a change of the file is said even on a quiet tick; a file edited by hand is one warning; no file, nothing. (`progressLines`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
 - [MNCMD-I01 — The agent's hook never blocks the agent: whatever its input, it prints nothing and returns no error.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
@@ -6993,9 +6993,9 @@ abra a página dela em `camadas/`.
 
 - [CNGDC-B10 — The day-to-day part names `anchors work` for the prompt of one task, and the blocking part asks never to commit with `--no-verify`: a failing gate is fixed, or waived in the commit message with its reason.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 
-- [CNGDC-B08 — The section strongly recommends watching long commands and agents: launching each long command in the background through `anchors monitor run -- <command>`, keeping `anchors monitor` running while it works, and `anchors install-hooks --agent` for a coding agent; Anchors' own long commands record themselves.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
+- [CNGDC-B08 — The section strongly recommends watching long commands and agents: launching each long command in the background through `anchors monitor run -- <command>`, keeping `anchors monitor` running while it works, and `anchors install-hooks --agent` for a coding agent; Anchors' own long commands record themselves; and, when the monitor posts the progress summary, it tells the agent to show it to the user as it comes, without the line meant for the agent, and a filter over the output to let it through.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 
-- [CNGDC-B09 — The agents' entry files — `AGENTS.md`, read by most coding agents, and `CLAUDE.md`, read by Claude Code — each send the agent to `CONTRIBUTING.md` before any change; `AGENTS.md` names the guide, work and next commands, the monitor and the ban on `--no-verify`, and `CLAUDE.md` imports `AGENTS.md`. (`RenderAgents`, `RenderClaude`, `AgentEntryFiles`)](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
+- [CNGDC-B09 — The agents' entry files — `AGENTS.md`, read by most coding agents, and `CLAUDE.md`, read by Claude Code — each send the agent to `CONTRIBUTING.md` before any change; `AGENTS.md` names the guide, work and next commands, the monitor — and showing the user the progress summary it posts — and the ban on `--no-verify`, and `CLAUDE.md` imports `AGENTS.md`. (`RenderAgents`, `RenderClaude`, `AgentEntryFiles`)](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 
 - [CNGDC-I01 — The guide never names a layer, gate or folder the configuration does not hold.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 

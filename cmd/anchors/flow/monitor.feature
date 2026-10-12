@@ -47,7 +47,7 @@ Feature: MonitorCommand — `anchors monitor`, `anchors monitor run` and the age
   Scenario: The monitor says the progress summary with what it says, when asked
     Given a project with a demand whose stage has an open task
     When the monitor reads once with no flag, then with --summary; a quiet tick, a tick with an event, a quiet tick after a change, a hand edit twice; and a block turning it on, silenced by --summary=false
-    Then nothing, then the summary; then nothing, the summary, the summary of the change, one warning; then nothing, and with the block alone the summary
+    Then nothing, then the line to the agent and the summary under it; then nothing, the summary, the summary of the change, one warning; then nothing, and with the block alone the summary
 
   @MNCMD-I01 @unit-level
   Scenario: The agent's hook never blocks the agent

@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTD
 #   ref: CNGDC
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-12
 #   layer: feature
 
 @CNGDC
@@ -73,13 +73,13 @@ Feature: ContributingGuide — render the project's CONTRIBUTING.md from the con
   Scenario: The guide recommends watching long commands and agents
     Given any configuration
     When the contributing section is rendered
-    Then it strongly recommends anchors monitor run in the background, anchors monitor while it works, and the agent hook
+    Then it strongly recommends anchors monitor run in the background, anchors monitor while it works, and the agent hook, and tells the agent to show the user the progress summary the monitor posts
 
   @CNGDC-B09 @unit-level
   Scenario: The agents' entry files send the agent to the contributing guide
     Given the agents' entry files
     When they are rendered
-    Then AGENTS.md and CLAUDE.md both point to CONTRIBUTING.md, AGENTS.md names the commands and the monitor, and CLAUDE.md imports AGENTS.md
+    Then AGENTS.md and CLAUDE.md both point to CONTRIBUTING.md, AGENTS.md names the commands, the monitor and showing the user its progress summary, and CLAUDE.md imports AGENTS.md
 
   @CNGDC-B10 @unit-level
   Scenario: The guide names the task prompt and forbids skipping the hooks

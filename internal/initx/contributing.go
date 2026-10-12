@@ -96,7 +96,11 @@ func ContributingSection(cfg *config.Config, guideDir string) string {
 	b.WriteString("  one line when a run starts, stalls, dies or ends, and a heartbeat with what is running.\n")
 	b.WriteString("  React to each line instead of waiting blind.\n")
 	b.WriteString("- Working with a coding agent: `anchors install-hooks --agent` records the long commands\n")
-	b.WriteString("  it sends to the background, so the monitor sees them too.\n\n")
+	b.WriteString("  it sends to the background, so the monitor sees them too.\n")
+	b.WriteString("- With `--summary` (or `monitor.summary: true`) the monitor also posts the progress summary —\n")
+	b.WriteString("  the `▸ Progress` line and the indented ones under it —, after a line addressed to the agent.\n")
+	b.WriteString("  **Agent: show that summary to the user as it comes and in full, without the line meant for\n")
+	b.WriteString("  you.** A filter over the monitor's output (`| grep …`) must let those lines through.\n\n")
 
 	b.WriteString("### What blocks and what informs\n\n")
 	blocking, informing := gateSplit(cfg)
@@ -219,7 +223,8 @@ func RenderAgents() string {
 		"- `anchors guide` — the rules for writing each piece; `anchors work <stage> --for <target>`\n" +
 		"  — the prompt of one task; `anchors next` — the next task.\n" +
 		"- Launch every long command in the background through `anchors monitor run -- <command>`,\n" +
-		"  and keep `anchors monitor` running while it works.\n" +
+		"  and keep `anchors monitor` running while it works. When it posts the progress summary\n" +
+		"  (`▸ Progress` and the lines under it), show that summary to the user as it comes.\n" +
 		"- Never commit with `--no-verify`: a gate that fails is fixed, or waived in the commit\n" +
 		"  message with its reason (`[skip-<rule>@<CODE>: why]`).\n"
 }

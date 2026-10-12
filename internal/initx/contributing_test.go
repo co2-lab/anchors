@@ -148,7 +148,7 @@ func TestContributingWritesNothing(t *testing.T) {
 func TestContributingRecommendsTheMonitor(t *testing.T) {
 	t.Run("CNGDC-B08: The guide recommends watching long commands and agents", func(t *testing.T) {})
 	s := ContributingSection(nil, "")
-	for _, want := range []string{"### Long commands and agents: watch them", "**Strongly recommended:**", "`anchors monitor run -- <command>`, in the background", "Keep `anchors monitor` running", "`anchors install-hooks --agent`"} {
+	for _, want := range []string{"### Long commands and agents: watch them", "**Strongly recommended:**", "`anchors monitor run -- <command>`, in the background", "Keep `anchors monitor` running", "`anchors install-hooks --agent`", "show that summary to the user as it comes and in full", "must let those lines through"} {
 		if !strings.Contains(s, want) {
 			t.Errorf("missing %q in:\n%s", want, s)
 		}
@@ -166,7 +166,7 @@ func TestAgentEntryFilesPointToTheGuide(t *testing.T) {
 			t.Errorf("%s does not send the agent to the guide:\n%s", f.Name, f.Content)
 		}
 	}
-	for _, want := range []string{"anchors guide", "anchors work <stage> --for <target>", "anchors next", "anchors monitor run -- <command>", "--no-verify"} {
+	for _, want := range []string{"anchors guide", "anchors work <stage> --for <target>", "anchors next", "anchors monitor run -- <command>", "show that summary to the user as it comes", "--no-verify"} {
 		if !strings.Contains(files[0].Content, want) {
 			t.Errorf("AGENTS.md lacks %q", want)
 		}

@@ -247,13 +247,13 @@ func TestMonitor_saysTheProgressSummary(t *testing.T) {
 	if l := progressLines(st, dir, false); l != nil {
 		t.Errorf("a quiet tick, the file unchanged: nothing, got %v", l)
 	}
-	if l := progressLines(st, dir, true); len(l) == 0 || !strings.HasPrefix(l[0], "▸ Progress") {
-		t.Errorf("a tick that speaks says the summary, got %v", l)
+	if l := progressLines(st, dir, true); len(l) < 2 || l[0] != SummaryInstruction || !strings.HasPrefix(l[1], "▸ Progress") || strings.Contains(l[1], "agent") {
+		t.Errorf("a tick that speaks says the line to the agent, apart, then the summary; got %v", l)
 	}
 	if err := progress.Update(dir, "", func(f *progress.File) error { return f.Done("D01.T1", "a", "2026-10-12") }); err != nil {
 		t.Fatal(err)
 	}
-	if l := progressLines(st, dir, false); len(l) == 0 || !strings.Contains(l[0], "100% (2/2 points)") {
+	if l := progressLines(st, dir, false); len(l) < 2 || !strings.Contains(l[1], "100% (2/2 points)") {
 		t.Errorf("a change is said even on a quiet tick, got %v", l)
 	}
 	b, _ := os.ReadFile(progress.Path(dir))
