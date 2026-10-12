@@ -7,6 +7,7 @@ package mapx
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -282,4 +283,32 @@ func TestLockNamed_namesWhatItProtects(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "writing the progress file") || strings.Contains(err.Error(), "the map") {
 		t.Errorf("%v", err)
 	}
+}
+
+func TestLock_releaseInsists(t *testing.T) {
+	t.Run("MPLCK-B07: The release insists on a removal refused for a moment", func(t *testing.T) {})
+	target := filepath.Join(t.TempDir(), "x.md")
+	release, err := LockNamed(target, "x")
+	if err != nil {
+		t.Fatal(err)
+	}
+	refused := 0
+	removeFile = func(p string) error {
+		if refused < 2 {
+			refused++
+			return fs.ErrPermission
+		}
+		return os.Remove(p)
+	}
+	defer func() { removeFile = os.Remove }()
+	release()
+	if _, err := os.Stat(LockPath(target)); !errors.Is(err, fs.ErrNotExist) || refused != 2 {
+		t.Fatalf("the lock is gone after two refusals: %v, refused %d", err, refused)
+	}
+	shortTimeout(t, 200*time.Millisecond)
+	again, err := LockNamed(target, "x")
+	if err != nil {
+		t.Fatalf("another writer takes it at once: %v", err)
+	}
+	again()
 }

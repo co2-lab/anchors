@@ -64,7 +64,7 @@ func LockNamed(target, what string) (func(), error) {
 				_ = os.Remove(lp)
 				return nil, fmt.Errorf("write the lock of %s %s: %v", what, lp, errors.Join(werr, cerr))
 			}
-			return func() { _ = os.Remove(lp) }, nil
+			return func() { releaseLock(lp) }, nil
 		}
 		if !errors.Is(err, fs.ErrExist) {
 			// On Windows a lock another writer is deleting at this instant answers
@@ -100,6 +100,22 @@ func LockNamed(target, what string) (func(), error) {
 			return nil, fmt.Errorf("another process is writing %s (%s holds %s) and did not finish in %s — "+
 				"if no anchors process is running, remove the lock file",
 				what, strings.TrimSpace(string(owner)), lp, LockTimeout)
+		}
+		time.Sleep(lockPoll)
+	}
+}
+
+// removeFile is os.Remove; a test replaces it to play the Windows refusal.
+var removeFile = os.Remove
+
+// releaseLock removes the lock, and insists. On Windows a waiter reading the lock at that
+// instant makes the delete fail ("used by another process"): a release that gave up there left
+// a held lock of a live process behind, and every writer waited the whole timeout (measured in
+// CI: 20 writers at once, 2 min). It retries until the file is gone, for at most a few seconds.
+func releaseLock(lp string) {
+	for i := 0; i < 100; i++ {
+		if err := removeFile(lp); err == nil || errors.Is(err, fs.ErrNotExist) {
+			return
 		}
 		time.Sleep(lockPoll)
 	}

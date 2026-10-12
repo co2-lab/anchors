@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:01695f82dd69ba54 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:c41c113dc536b3bd — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -7397,6 +7397,8 @@ teste prova.
 - [A lock that cannot be created names the file](layers/mapa.md#mplck-e03--a-lock-that-cannot-be-created-names-the-file) `MPLCK-E03`
 
 - [The lock protects any file by name](layers/mapa.md#mplck-b06--the-lock-protects-any-file-by-name) `MPLCK-B06`
+
+- [The release insists on a removal refused for a moment](layers/mapa.md#mplck-b07--the-release-insists-on-a-removal-refused-for-a-moment) `MPLCK-B07`
 
 - [A relation never stamped is stale](layers/mapa.md#grmdg-b01--a-relation-never-stamped-is-stale) `GRMDG-B01`
 

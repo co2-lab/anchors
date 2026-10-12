@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:7a4fd9532d8c865c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:89979cb1a8af7d67 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -8164,6 +8164,8 @@ abra a página dela em `camadas/`.
 - [MPLCK-B05 — A function run under the lock releases it when it returns, with an error or without. (`WithLock`)](layers/mapa.md#mplck--maplock--the-map-changed-by-one-writer-at-a-time-each-applying-only-what-it-changes)
 
 - [MPLCK-B06 — Any file Anchors rewrites whole takes the same lock beside it — the progress file's at `.anchors/progress.lock` —, its messages naming what it protects. (`LockNamed`)](layers/mapa.md#mplck--maplock--the-map-changed-by-one-writer-at-a-time-each-applying-only-what-it-changes)
+
+- [MPLCK-B07 — Releasing the lock insists: a removal the system refuses for a moment — Windows refuses to delete a file a waiter is reading — is tried again until the file is gone, for a few seconds at most. (`releaseLock`)](layers/mapa.md#mplck--maplock--the-map-changed-by-one-writer-at-a-time-each-applying-only-what-it-changes)
 
 - [MPLCK-E01 — Another writer holds the lock past the timeout.](layers/mapa.md#mplck--maplock--the-map-changed-by-one-writer-at-a-time-each-applying-only-what-it-changes)
 

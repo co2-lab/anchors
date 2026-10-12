@@ -39,6 +39,7 @@ holding its owner's pid and host. A lock left by a process that died holding it 
 | `MPLCK-B04` | A change is applied to the map re-read under the lock and written: writers in parallel processes, each changing its own part, all reach the map. (`Update`) |
 | `MPLCK-B05` | A function run under the lock releases it when it returns, with an error or without. (`WithLock`) |
 | `MPLCK-B06` | Any file Anchors rewrites whole takes the same lock beside it — the progress file's at `.anchors/progress.lock` —, its messages naming what it protects. (`LockNamed`) |
+| `MPLCK-B07` | Releasing the lock insists: a removal the system refuses for a moment — Windows refuses to delete a file a waiter is reading — is tried again until the file is gone, for a few seconds at most. (`releaseLock`) |
 
 ## Errors
 

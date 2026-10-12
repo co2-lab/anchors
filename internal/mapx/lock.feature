@@ -62,3 +62,8 @@ Feature: MapLock — the map changed by one writer at a time, each applying only
     When a second writer waits past the timeout
     Then the error names the progress file, not the map
 
+  @MPLCK-B07 @unit-level
+  Scenario: The release insists on a removal refused for a moment
+    Given a held lock whose removal the system refuses twice
+    When it is released
+    Then the lock file is gone, and another writer takes it at once
