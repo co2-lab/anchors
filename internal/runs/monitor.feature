@@ -97,3 +97,9 @@ Feature: RunMonitor — reading the project's runs tick by tick: what started, s
     Given a monitor block whose heartbeat does not read
     When the settings are read
     Then the error names monitor.heartbeat
+
+  @MNTRS-B14 @unit-level
+  Scenario: A check with nothing to confront is no failure
+    Given Anchors' check ended with exit 3, Anchors' check ended with exit 1, and a wrapped go test ended with exit 3
+    When each ending is said
+    Then the first reads nothing to confront, with no failure mark, and the others read as failures

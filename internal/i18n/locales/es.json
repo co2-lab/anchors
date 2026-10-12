@@ -34,6 +34,7 @@
   "map.written_to": "  escrito en %s",
   "map.version_mismatch": "⚠ el mapa fue escrito por `anchors %s` y este es %s.\n  Versiones distintas escriben el mapa de formas distintas: la más vieja DESHACE lo que la más nueva escribió, y el mapa empieza a oscilar — conflicto en cada PR, sin que nadie se equivoque.\n  Actualiza el binario (o ejecuta `anchors map build` con el nuevo y haz commit) antes de seguir.",
   "not_governed": "%q no está regido por la Estructura (no coincide con ninguna capa de `layers:`) — nada que confrontar",
+  "own_file": "%q es un archivo del propio Anchors — lo escriben y mantienen sus comandos, nada que confrontar para los gates",
   "check.no_deterministic_gate": "ningún gate determinista que ejecutar (todos son de juicio).",
   "check.no_gate_for_slice": "ningún gate que ejecutar para este recorte (fase=%q categoría=%q).",
   "check.awaiting_ai_judgment": "%d objetivo(s) esperan juicio de IA — ejecuta `anchors next` (o `anchors judge --pending`)",

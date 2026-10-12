@@ -409,3 +409,22 @@ func TestTick_neverSeenRunning(t *testing.T) {
 		t.Errorf("the maestro process is the run's: %+v", writes)
 	}
 }
+
+func TestEndOf_nothingToConfront(t *testing.T) {
+	t.Run("MNTRS-B14: A check with nothing to confront is no failure", func(t *testing.T) {})
+	three, one := 3, 1
+	end := t0.Add(time.Second)
+	for _, c := range []struct {
+		r    Run
+		want string
+	}{
+		{Run{ID: "a", Name: "anchors check", By: ByAnchors, Started: t0, Ended: &end, Exit: &three}, "· anchors check ended (exit 3, 1s) — nothing to confront"},
+		{Run{ID: "b", Name: "anchors check", By: ByAnchors, Started: t0, Ended: &end, Exit: &one}, "✗ anchors check ended (exit 1"},
+		{Run{ID: "c", Name: "go test", By: ByRun, Started: t0, Ended: &end, Exit: &three}, "✗ go test ended (exit 3"},
+	} {
+		ev, _ := endOf(c.r, Runner{}, OutputInfo{}, end, true)
+		if !strings.HasPrefix(ev.Line, c.want) {
+			t.Errorf("%s: got %q, want prefix %q", c.r.ID, ev.Line, c.want)
+		}
+	}
+}

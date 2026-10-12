@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CGPCH
-  updated_at: 2026-10-08
+  updated_at: 2026-10-12
   layer: comando
 -->
 # CheckGatePipeline — confronts the map's nodes against the declared gates, records the verdicts and reports the profile
@@ -72,6 +72,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-B91` | A full sweep names, in one line, the catalog gates that cover the declared layers and are not declared, at most six by name, and points to the doctor; with none it says nothing. |
 | `CGPCH-B93` | The catalog line leaves out a gate whose premise the project has not declared: declared, it would only wait. |
 | `CGPCH-B94` | `check --fix` carries, in the map, the evidence of each file its repairs changed to the file's new content — the repairs write comments, and prove nothing new —, with the declaration on the node; the line-level signals (coverage, mutation) go only when the repair moved no line. (`keepFixedEvidence`) |
+| `CGPCH-B95` | Anchors' own files — the map and `anchors.progress.md` — in a change are not confronted and not said to be outside the Structure: a change of only them reads as Anchors' own files with nothing to confront (still exit 3, so the hook passes it); the progress file is read, and one edited by hand is a warning that does not fail. |
 | `CGPCH-B92` | A gate the project declares counts as declared in the catalog line and the governance tips even when this run leaves it out — `when: [manual]`, `skip_on`, another phase. |
 | `CGPCH-B08` | A gate that declares no perspective to skip runs both on the full sweep and on changed files. |
 | `CGPCH-B09` | A gate that declares it skips the change perspective is not charged on changed files and is charged on the full sweep. |

@@ -7,6 +7,7 @@ package quality
 import (
 	"errors"
 	"fmt"
+	"github.com/co2-lab/anchors/internal/progress"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -2888,5 +2889,41 @@ func TestKeepFixedEvidence(t *testing.T) {
 	}
 	if !got.Node("b.ts").EvidenceKept[0].Lines == false || got.Node("a.ts").EvidenceKept[0].Lines != true {
 		t.Errorf("line-level signals go only where no line moved: a=%v b=%v", got.Node("a.ts").EvidenceKept[0].Lines, got.Node("b.ts").EvidenceKept[0].Lines)
+	}
+}
+
+// Committing the progress file answered "not governed by the Structure" (reported from MIF) —
+// and, in a project whose doc layer takes every .md, "governed but not in the map", which bars
+// the commit for good: `map build` never adds it.
+func TestSelectNodes_ownFiles(t *testing.T) {
+	t.Run("CGPCH-B95: Anchors' own files in a change have nothing to confront", func(t *testing.T) {})
+	dir := t.TempDir()
+	if err := progress.Update(dir, "", func(f *progress.File) error { _, err := f.AddDemand("A", ""); return err }); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, mapx.DefaultPath), []byte("version: 7\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cfg := governanceConfig() // its doc layer takes every .md, the progress file's name included
+	g := &mapx.Graph{}
+	for _, changed := range [][]string{{progress.FileName}, {progress.FileName, mapx.DefaultPath}} {
+		_, _, err := selectNodes(g, cfg, false, changed, dir)
+		var nr errNotGoverned
+		if !errors.As(err, &nr) || !nr.own || !strings.Contains(err.Error(), "Anchors' own file") {
+			t.Errorf("%v: Anchors' own files, nothing to confront — got %v", changed, err)
+		}
+	}
+	os.MkdirAll(filepath.Join(dir, "src", "hooks"), 0o755)
+	os.WriteFile(filepath.Join(dir, "src", "hooks", "a.ts"), []byte("x"), 0o644)
+	if _, _, err := selectNodes(g, cfg, false, []string{progress.FileName, "src/hooks/a.ts"}, dir); err == nil || strings.Contains(err.Error(), "own file") {
+		t.Errorf("a governed file outside the map still fails beside them: %v", err)
+	}
+	b, _ := os.ReadFile(progress.Path(dir))
+	os.WriteFile(progress.Path(dir), []byte(strings.Replace(string(b), "— A", "— B", 1)), 0o644)
+	var err error
+	out := capturaSaida(t, func() { _, _, err = selectNodes(g, cfg, false, []string{progress.FileName}, dir) })
+	var nr errNotGoverned
+	if !strings.Contains(out, "⚠ anchors.progress.md:") || !errors.As(err, &nr) || !nr.own {
+		t.Errorf("a hand edit is a warning, not a failure: %v\n%s", err, out)
 	}
 }

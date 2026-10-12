@@ -44,6 +44,7 @@ configuration too.
 | `MNTRS-B11` | Reading the reports the globs find gives each one's path from the root and its time; a report modified since its known time is parsed for its tests, failures and first failure. (`ReadReports`) |
 | `MNTRS-B12` | The built-in runners recognize jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins and Anchors' long commands, each with its kind and quiet time; a command line no runner matches has none. (`DefaultRunners`, `RunnerFor`) |
 | `MNTRS-B13` | A command is recognized by its first line only — what a heredoc carries after it is no command —, and a line of the monitor shows it by that line, cut at a hundred characters, with how many lines it left out (`[+N lines]`). (`FirstLine`, `Brief`) |
+| `MNTRS-B14` | An `anchors check` or `anchors verify` run of Anchors' own that ended with exit 3 — nothing to confront — is said with `·` and "nothing to confront", not as a failure; exit 3 of any other run, or another exit of these, is said as usual. (`NothingToConfront`, `ExitNothingToConfront`) |
 
 ## Invariants
 

@@ -34,6 +34,7 @@
   "map.written_to": "  written to %s",
   "map.version_mismatch": "⚠ the map was written by `anchors %s` and this is %s.\n  Different versions write the map differently: the older one UNDOES what the newer wrote, and the map starts oscillating — a conflict on every PR, with nobody at fault.\n  Update the binary (or run `anchors map build` with the new one and commit) before going on.",
   "not_governed": "%q is not governed by the Structure (matches no layer in `layers:`) — nothing to confront",
+  "own_file": "%q is Anchors' own file — written and kept by its commands, nothing for the gates to confront",
   "check.no_deterministic_gate": "no deterministic gate to run (all of them are judgment gates).",
   "check.no_gate_for_slice": "no gate to run for this slice (phase=%q category=%q).",
   "check.awaiting_ai_judgment": "%d target(s) awaiting AI judgment — run `anchors next` (or `anchors judge --pending`)",

@@ -27,6 +27,7 @@ import (
 	"github.com/co2-lab/anchors/internal/health"
 	"github.com/co2-lab/anchors/internal/issue"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/progress"
 	"github.com/co2-lab/anchors/internal/queue"
 	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
@@ -830,9 +831,18 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn, 
 // The exit code is a CODE, not text to grep, because the pre-commit must tell this from a
 // real failure. There is one constant, in common: this package kept a second copy, and two
 // copies of an exit code only agree until someone changes one of them.
-type errNotGoverned struct{ target string }
+//
+// own marks Anchors' own files — the map, the progress file —: written by its commands, kept
+// by them, never confronted by the gates; said as such, not as files the Structure misses.
+type errNotGoverned struct {
+	target string
+	own    bool
+}
 
 func (e errNotGoverned) Error() string {
+	if e.own {
+		return i18n.T("own_file", e.target)
+	}
 	return i18n.T("not_governed", e.target)
 }
 
@@ -862,7 +872,7 @@ func selectNodes(g *mapx.Graph, cfg *config.Config, all bool, changed []string, 
 	// conjunto, uma vez por peça dela.
 	vistos := map[string]bool{}
 	var ordem []string
-	var naoRegidos int
+	var naoRegidos, own int
 	for _, c := range changed {
 		ids, err := impactOf(g, cfg, c, root)
 		if err != nil {
@@ -871,6 +881,9 @@ func selectNodes(g *mapx.Graph, cfg *config.Config, all bool, changed []string, 
 				// Não-regido não contamina o lote: o Anchors só não tem jurisdição sobre
 				// ele. Com TODOS não-regidos, o erro sobe (o chamador decide o exit 3).
 				naoRegidos++
+				if ng, ok := err.(errNotGoverned); ok && ng.own {
+					own++
+				}
 				continue
 			}
 			return nil, "", err
@@ -890,7 +903,7 @@ func selectNodes(g *mapx.Graph, cfg *config.Config, all bool, changed []string, 
 		if len(changed) > 1 {
 			alvo = fmt.Sprintf("%s (and %d more)", changed[0], len(changed)-1)
 		}
-		return nil, "", errNotGoverned{target: alvo}
+		return nil, "", errNotGoverned{target: alvo, own: own == len(changed)}
 	}
 	for _, n := range g.Nodes {
 		if vistos[n.ID] {
@@ -907,6 +920,19 @@ func selectNodes(g *mapx.Graph, cfg *config.Config, all bool, changed []string, 
 // propaga a partir dele, o que o valida, e as peças da mesma unidade).
 func impactOf(g *mapx.Graph, cfg *config.Config, changed, root string) ([]string, error) {
 	target := common.RelTo(root, changed)
+	// Anchors' own files: the map and the progress file are written by its commands and
+	// confronted by them, never by a gate over a change. Committing them alone answered
+	// "not governed by the Structure" (reported from MIF: every commit after an `anchors
+	// progress` change). The progress file is still read here: one edited by hand is said —
+	// a warning, as `progress-intact` informs.
+	if p := filepath.ToSlash(target); p == filepath.ToSlash(mapx.DefaultPath) || p == scan.ProgressFile {
+		if p == scan.ProgressFile {
+			if _, err := progress.Load(root); err != nil {
+				fmt.Printf("⚠ %s: %v\n", p, err)
+			}
+		}
+		return nil, errNotGoverned{target: target, own: true}
+	}
 	if !common.NodeExists(g, target) {
 		if _, statErr := os.Stat(filepath.Join(root, target)); statErr != nil {
 			return nil, fmt.Errorf("%q exists neither on disk nor in the map — check the path", target)

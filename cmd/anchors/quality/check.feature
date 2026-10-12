@@ -2,7 +2,7 @@
 # @anchors
 #   code: CHFTA
 #   ref: CGPCH
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-12
 #   layer: feature
 
 @CGPCH
@@ -640,3 +640,9 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a map with two proven files, one repaired on its own line, one with a line inserted
     When the repaired files' evidence is kept
     Then both proofs are at the new content with the declaration, and only the first carries its line-level signals
+
+  @CGPCH-B95 @unit-level
+  Scenario: Anchors' own files in a change have nothing to confront
+    Given a project with its map and a progress file, then the progress file edited by hand
+    When the nodes are selected for the progress file, for it with the map, and for it with a governed file outside the map
+    Then the first two read as Anchors' own files, not as outside the Structure, the third fails on the governed file, and the hand edit is only a warning

@@ -459,6 +459,18 @@ func findProcess(tree Tree, root, command string, runners []Runner, excluded, cl
 	return 0
 }
 
+// ExitNothingToConfront is the exit of `anchors check` and `anchors verify` when no file of
+// the change is theirs to confront — a commit of configuration, or of Anchors' own files.
+const ExitNothingToConfront = 3
+
+// NothingToConfront says whether a run is one of Anchors' checks that found nothing to
+// confront: no failure, though its exit is not 0. Read as a failure, every commit of such
+// files showed ✗ (reported from MIF).
+func NothingToConfront(r Run) bool {
+	return r.By == ByAnchors && r.Exit != nil && *r.Exit == ExitNothingToConfront &&
+		(r.Name == "anchors check" || r.Name == "anchors verify")
+}
+
 // endOf is the line, and the record, of a run that ended: by its exit when it has one, by its
 // output's summary when it does not, and as died when neither says how — unless nobody but
 // the process table knew of it, and then how it ended is simply unknown.
@@ -478,6 +490,12 @@ func endOf(r Run, rn Runner, out OutputInfo, now time.Time, sawAlive bool) (Even
 		mark := "✓"
 		if *r.Exit != 0 {
 			mark = "✗"
+		}
+		if NothingToConfront(r) {
+			mark = "·"
+			if summary == "" {
+				summary = "nothing to confront"
+			}
 		}
 		return Event{"finished", r.ID, fmt.Sprintf("%s %s ended (exit %d, %s)%s", mark, r.Name, *r.Exit, elapsed, suffix(summary))}, r
 	case out.OK:

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:384e6bcb5ff19781 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:139de11dfcb29eca — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2496,6 +2496,8 @@ abra a página dela em `camadas/`.
 - [CGPCH-B93 — The catalog line leaves out a gate whose premise the project has not declared: declared, it would only wait.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B94 — `check --fix` carries, in the map, the evidence of each file its repairs changed to the file's new content — the repairs write comments, and prove nothing new —, with the declaration on the node; the line-level signals (coverage, mutation) go only when the repair moved no line. (`keepFixedEvidence`)](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
+- [CGPCH-B95 — Anchors' own files — the map and `anchors.progress.md` — in a change are not confronted and not said to be outside the Structure: a change of only them reads as Anchors' own files with nothing to confront (still exit 3, so the hook passes it); the progress file is read, and one edited by hand is a warning that does not fail.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B92 — A gate the project declares counts as declared in the catalog line and the governance tips even when this run leaves it out — `when: [manual]`, `skip_on`, another phase.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
@@ -7628,6 +7630,8 @@ abra a página dela em `camadas/`.
 - [MNTRS-B12 — The built-in runners recognize jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins and Anchors' long commands, each with its kind and quiet time; a command line no runner matches has none. (`DefaultRunners`, `RunnerFor`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B13 — A command is recognized by its first line only — what a heredoc carries after it is no command —, and a line of the monitor shows it by that line, cut at a hundred characters, with how many lines it left out (`[+N lines]`). (`FirstLine`, `Brief`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B14 — An `anchors check` or `anchors verify` run of Anchors' own that ended with exit 3 — nothing to confront — is said with `·` and "nothing to confront", not as a failure; exit 3 of any other run, or another exit of these, is said as usual. (`NothingToConfront`, `ExitNothingToConfront`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-I01 — Every run that ended is said, and said once: across ticks and re-armed monitors, no ended run is silent and none is repeated.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
