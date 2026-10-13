@@ -170,8 +170,13 @@ func runMonitor(w io.Writer, root string, set runs.Settings, untilDone, once boo
 
 // SummaryInstruction is the line the monitor puts before the progress summary, apart from it:
 // a summary the agent only reads never reaches the user, and an instruction inside the summary
-// would be shown to the user with it (the user, 2026-10-12).
-const SummaryInstruction = "· to the agent: show the user the progress summary on the next lines, as it comes and in full — this line is for you, not for them"
+// would be shown to the user with it (the user, 2026-10-12). It counts the lines and asks for a
+// code block: asked to show them "as they come", agents rewrote them, and with one demand they
+// folded the total into it and dropped its line (measured with MIF's summary, 3 of 3); asked
+// for N lines verbatim in a code block, the total included, 4 of 4 kept it.
+func SummaryInstruction(lines int) string {
+	return fmt.Sprintf("· to the agent: copy the next %d lines to the user verbatim, inside a code block, the first line (the total) included — this line is for you, not for them", lines)
+}
 
 // progressLines are the summary of anchors.progress.md (DESIGN-progress-tracking.md) the
 // monitor says with what it says: when it speaks (said), and on a change of the file even
@@ -200,7 +205,7 @@ func progressLines(st *runs.State, root string, said bool) []string {
 	_ = printSummary(&buf, f, false)
 	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
 	lines[0] = "▸ " + lines[0]
-	return append([]string{SummaryInstruction}, lines...)
+	return append([]string{SummaryInstruction(len(lines))}, lines...)
 }
 
 // ownRunCommands are Anchors' long commands, which record their own runs: the monitor then

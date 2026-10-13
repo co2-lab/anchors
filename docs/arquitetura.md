@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/arquitetura.md.tmpl — inputs:2aef6fa468aa05ce — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/arquitetura.md.tmpl — inputs:d00f5a57505cdbde — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Arquitetura

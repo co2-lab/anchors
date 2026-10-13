@@ -247,7 +247,7 @@ func TestMonitor_saysTheProgressSummary(t *testing.T) {
 	if l := progressLines(st, dir, false); l != nil {
 		t.Errorf("a quiet tick, the file unchanged: nothing, got %v", l)
 	}
-	if l := progressLines(st, dir, true); len(l) < 2 || l[0] != SummaryInstruction || !strings.HasPrefix(l[1], "▸ Progress") || strings.Contains(l[1], "agent") {
+	if l := progressLines(st, dir, true); len(l) < 2 || l[0] != SummaryInstruction(len(l)-1) || !strings.Contains(l[0], "next 3 lines") || !strings.HasPrefix(l[1], "▸ Progress") || strings.Contains(l[1], "agent") {
 		t.Errorf("a tick that speaks says the line to the agent, apart, then the summary; got %v", l)
 	}
 	if err := progress.Update(dir, "", func(f *progress.File) error { return f.Done("D01.T1", "a", "2026-10-12") }); err != nil {

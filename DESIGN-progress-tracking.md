@@ -87,6 +87,9 @@ Measured: MIF has no progress file at all; jokenpo has one, still the unfilled t
   the same, and that a filter over the monitor's output must let those lines through.
   Measured with headless Claude Code sessions given one monitor notification: with the line, 3 of
   3 showed the summary as a block and none showed the line; without it, 3 of 3 paraphrased it.
+  With MIF's summary — one demand, its total equal to the file's — "as it comes" was rewritten
+  and the total line dropped (3 of 3); the line now counts the lines and asks for them verbatim
+  in a code block, the total included: 4 of 4 kept it.
 
 ## The migration (the user, 2026-10-12)
 

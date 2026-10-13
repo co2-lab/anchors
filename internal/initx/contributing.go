@@ -99,8 +99,9 @@ func ContributingSection(cfg *config.Config, guideDir string) string {
 	b.WriteString("  it sends to the background, so the monitor sees them too.\n")
 	b.WriteString("- With `--summary` (or `monitor.summary: true`) the monitor also posts the progress summary —\n")
 	b.WriteString("  the `▸ Progress` line and the indented ones under it —, after a line addressed to the agent.\n")
-	b.WriteString("  **Agent: show that summary to the user as it comes and in full, without the line meant for\n")
-	b.WriteString("  you.** A filter over the monitor's output (`| grep …`) must let those lines through.\n\n")
+	b.WriteString("  **Agent: copy that summary to the user verbatim, in a code block, the total line included —\n")
+	b.WriteString("  without the line meant for you.** A filter over the monitor's output (`| grep …`) must let\n")
+	b.WriteString("  those lines through.\n\n")
 
 	b.WriteString("### What blocks and what informs\n\n")
 	blocking, informing := gateSplit(cfg)
@@ -224,7 +225,7 @@ func RenderAgents() string {
 		"  — the prompt of one task; `anchors next` — the next task.\n" +
 		"- Launch every long command in the background through `anchors monitor run -- <command>`,\n" +
 		"  and keep `anchors monitor` running while it works. When it posts the progress summary\n" +
-		"  (`▸ Progress` and the lines under it), show that summary to the user as it comes.\n" +
+		"  (`▸ Progress` and the lines under it), copy it to the user verbatim, in a code block.\n" +
 		"- Never commit with `--no-verify`: a gate that fails is fixed, or waived in the commit\n" +
 		"  message with its reason (`[skip-<rule>@<CODE>: why]`).\n"
 }
