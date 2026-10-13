@@ -79,6 +79,9 @@ type State struct {
 	// IdleTasks are the tasks in progress said to have no activity from their holder, until
 	// it moves again (DESIGN-agent-activity.md).
 	IdleTasks map[string]bool `json:"idle_tasks,omitempty"`
+	// Watching is when the monitor began to watch: a holder's silence is never counted from
+	// before it — at MIF a first tick said "no activity for 11h08m" of agents at work.
+	Watching time.Time `json:"watching,omitempty"`
 }
 
 // LoadState reads the monitor's state; a missing or unreadable one is a fresh start.

@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -166,4 +167,50 @@ func Prune(root string, keep int, maxAge time.Duration, now time.Time) int {
 		}
 	}
 	return removed
+}
+
+// seenDir holds, per session, when its agent last ran a command: an agent that works with
+// quick commands only — an edit, a grep, a short test — starts no long run, and is busy all
+// the same (reported from MIF).
+const seenDir = "seen"
+
+// MarkSeen records that session was active at the moment given.
+func MarkSeen(root, session string, at time.Time) error {
+	if session == "" {
+		return nil
+	}
+	dir := filepath.Join(dirOf(root), seenDir)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return err
+	}
+	name := regexp.MustCompile(`[^A-Za-z0-9._-]`).ReplaceAllString(session, "_")
+	b, _ := json.Marshal(map[string]any{"session": session, "at": at})
+	tmp := filepath.Join(dir, name+".tmp")
+	if err := os.WriteFile(tmp, b, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, filepath.Join(dir, name+".json"))
+}
+
+// LastSeen is when each session was last marked active.
+func LastSeen(root string) map[string]time.Time {
+	out := map[string]time.Time{}
+	entries, _ := os.ReadDir(filepath.Join(dirOf(root), seenDir))
+	for _, e := range entries {
+		if !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		var m struct {
+			Session string    `json:"session"`
+			At      time.Time `json:"at"`
+		}
+		b, err := os.ReadFile(filepath.Join(dirOf(root), seenDir, e.Name()))
+		if err != nil || json.Unmarshal(b, &m) != nil || m.Session == "" {
+			continue
+		}
+		if m.At.After(out[m.Session]) {
+			out[m.Session] = m.At
+		}
+	}
+	return out
 }

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:89d6280a8090b9b3 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:efa1e8d74a264285 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -947,7 +947,9 @@ abra a página dela em `camadas/`.
 
 - [MNCMD-B08 — `--level action` (or `level: action` in the block) says only what calls for a reaction, each line waking the agent watching; `all`, the default, says everything; another level fails the command naming it.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
-- [MNCMD-B09 — A task in progress whose holder has no run alive and no activity — a run of theirs starting, moving or ending, a task of theirs started — for `--idle` (`monitor.idle`, default 10m) is said once, `⏸ <task> in progress — no activity from <holder> for <time>`, at every level; activity again says `▶ <task> moving again (<holder>)`; `off` silences it, and a value neither a duration nor off fails the command naming it. Anchors' own runs, `monitor run` and the agent hook record who launched each run. (`idleTaskLines`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+- [MNCMD-B09 — A task in progress whose holder has no run alive and no activity — a run of theirs starting, moving or ending, a command of theirs through the agent's hook, a task of theirs started — for `--idle` (`monitor.idle`, default 10m) is said once, `⏸ <task> in progress — no activity from <holder> for <time>`, at every level; the silence is counted from the last activity, never from before the monitor began to watch, so a first tick says nothing; activity again says `▶ <task> moving again (<holder>)`; `off` silences it, and a value neither a duration nor off fails the command naming it. Anchors' own runs, `monitor run` and the agent hook record who launched each run, and the hook marks its agent active at every command. (`idleTaskLines`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+
+- [MNCMD-B11 — A holder's activity in another worktree of the same repository — its runs and its commands, recorded there — counts as its activity.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
 - [MNCMD-B10 — The agent's hook records a subagent as a run: SubagentStart opens it, of kind agent, named by its type, with its transcript beside the session's as its output; a command the subagent sends to the background is recorded with the subagent's id; SubagentStop closes it with the first line of its last message, named by its task's description when the hook carries one. A subagent outside a project, or with no id, records nothing. (`subagentHook`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
@@ -6749,6 +6751,8 @@ abra a página dela em `camadas/`.
 
 - [GTMTG-B11 — The bulk date reader under a folder of the repository gives each file under it its most recent commit day, by its path relative to that folder, and leaves out the files outside it; at the repository's root it is the bulk reader itself. (`AllCommitDatesUnder`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
+- [GTMTG-B12 — The worktrees of a repository are listed each at the place the given folder holds in its own tree; outside a repository, or with no git, the folder alone. (`Worktrees`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+
 - [GTMTG-X01 — The dirty count never answers 0 when it could not count: outside a repository or without git it answers a negative number.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-X02 — The pending-change question never answers "known" when it could not ask: outside a repository it answers not known and no change.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
@@ -7668,6 +7672,8 @@ abra a página dela em `camadas/`.
 - [PRCRN-B07 — Listing the system's processes includes the process asking. (`ListProcs`)](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
 
 - [PRCRN-B08 — The system says, of a process, its working directory — none on Windows, which gives it to no other process —, whether it is alive — never for a process id below one —, and the one-minute load average where it has one. (`Cwds`, `Alive`, `LoadAverage`)](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
+
+- [PRCRN-B09 — A session marked active keeps the latest moment it was marked; reading them gives each session's last mark; a session with no name marks nothing. (`MarkSeen`, `LastSeen`)](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
 
 - [PRCRN-I01 — A reader never sees half a record: a record is written to a temporary file and renamed.](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them)
 

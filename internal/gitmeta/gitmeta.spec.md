@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTMTG
-  updated_at: 2026-10-10
+  updated_at: 2026-10-13
   layer: infra
 -->
 # GitMeta — what git knows about the files: last commit dates, pending changes, HEAD, dirty count
@@ -46,6 +46,7 @@ snapshot that never existed.
 | `GTMTG-B09` | Whether the commit being made changes a file is read from the index: a staged edit or an added file does, an unstaged edit does not; outside a repository it cannot be told. (`StagedChanges`) |
 | `GTMTG-B10` | The files with uncommitted changes — modified, staged, added, untracked — are read in a single `git status`, by their path relative to the root, files outside the root left out; outside git the answer is not known. (`DirtyFiles`) |
 | `GTMTG-B11` | The bulk date reader under a folder of the repository gives each file under it its most recent commit day, by its path relative to that folder, and leaves out the files outside it; at the repository's root it is the bulk reader itself. (`AllCommitDatesUnder`) |
+| `GTMTG-B12` | The worktrees of a repository are listed each at the place the given folder holds in its own tree; outside a repository, or with no git, the folder alone. (`Worktrees`) |
 
 ## Constraints
 

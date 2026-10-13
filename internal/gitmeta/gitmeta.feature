@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTA
 #   ref: GTMTG
-#   updated_at: 2026-10-10
+#   updated_at: 2026-10-13
 #   layer: feature
 
 @GTMTG
@@ -85,3 +85,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a repository with a file at its root and one under pkg, each committed on its own day
     When the dates are read under pkg, and then at the root
     Then pkg gives b.txt its day and leaves the root's file out, and the root gives both
+
+  @GTMTG-B12 @unit-level
+  Scenario: The worktrees of a repository are listed
+    Given a repository with a subfolder and a second worktree, and a folder outside any repository
+    When the worktrees of the subfolder are listed, and of the folder outside
+    Then both trees are listed at that subfolder, and the folder outside lists itself

@@ -27,6 +27,15 @@
 >     command carried its id.
 >   - A long-lived teammate could not be probed from a headless session; part 1 covers it,
 >     through the task it holds.
+>
+> CORRECTED on 2026-10-13, from MIF's first session with it: the first tick said "no activity
+> for 11h08m" of five tasks whose agents were at work. Three causes, three fixes:
+> - The agents work in worktrees of their own, and their runs are recorded there. The monitor
+>   now reads every worktree of the repository.
+> - An agent that only runs quick commands starts no run. The agent's hook now marks its
+>   session active at every command.
+> - The silence was counted from the task's start. It is now counted from the last activity,
+>   never from before the monitor began to watch, so a first tick says nothing.
 
 ## The problem
 
@@ -61,7 +70,8 @@ Two gaps:
   identity, the same one `anchors progress` writes as a task's holder (`ANCHORS_SESSION`, else
   the agent's identity). Anchors' own commands, `monitor run` and the agent hook all write it.
 - **A holder's last activity** is the latest of:
-  - a run of theirs starting, ending or growing its output;
+  - a run of theirs starting, ending or growing its output, in any worktree of the repository;
+  - a command of theirs, quick ones too, through the agent's hook;
   - a progress change they made;
   - for a subagent, its transcript growing.
 - **The event.** A task in progress whose holder has no live run and no activity for

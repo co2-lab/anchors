@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/co2-lab/anchors/internal/progress"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -326,37 +327,88 @@ func TestMonitor_idleTask(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	run := func(args ...string) string {
+	run := func(root string, args ...string) string {
 		t.Helper()
-		out, err := runCobra(t, newMonitorCmd(), append([]string{"--root", dir, "--once", "--heartbeat", "1h"}, args...)...)
+		out, err := runCobra(t, newMonitorCmd(), append([]string{"--root", root, "--once", "--heartbeat", "1h"}, args...)...)
 		if err != nil {
 			t.Fatal(err)
 		}
 		return out
 	}
-	if out := run(); !strings.Contains(out, "⏸ D01.T1 in progress — no activity from a for 2") {
-		t.Errorf("quiet past the default 10m, the task is said:\n%s", out)
+	// A monitor that just began watching says nothing of a silence it did not see (reported
+	// from MIF: "no activity for 11h08m" of agents at work, on the first tick).
+	if out := run(dir); strings.Contains(out, "D01.T1") {
+		t.Errorf("the first tick never says a task quiet:\n%s", out)
 	}
-	if out := run(); strings.Contains(out, "D01.T1") {
-		t.Errorf("said once:\n%s", out)
-	}
-	end, ok := time.Now(), 0
-	if err := runs.Save(dir, runs.Run{ID: "r", Name: "jest", Command: "npx jest", By: runs.ByRun, Session: "a", Started: end.Add(-time.Second), Ended: &end, Exit: &ok}); err != nil {
+	watched := runs.LoadState(dir)
+	watched.Watching = time.Now().Add(-30 * time.Minute)
+	if err := runs.SaveState(dir, watched); err != nil {
 		t.Fatal(err)
 	}
-	if out := run(); !strings.Contains(out, "▶ D01.T1 moving again (a)") {
-		t.Errorf("a run of the holder moves it again:\n%s", out)
+	if out := run(dir); !strings.Contains(out, "⏸ D01.T1 in progress — no activity from a for 2") {
+		t.Errorf("quiet past the default 10m while watched, the task is said:\n%s", out)
 	}
+	if out := run(dir); strings.Contains(out, "D01.T1") {
+		t.Errorf("said once:\n%s", out)
+	}
+	if err := runs.MarkSeen(dir, "a", time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if out := run(dir); !strings.Contains(out, "▶ D01.T1 moving again (a)") {
+		t.Errorf("a command of the holder, quick ones included, moves it again:\n%s", out)
+	}
+
 	other := monitorProject(t, "")
 	if err := os.WriteFile(progress.Path(other), mustRead(t, progress.Path(dir)), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	out, err := runCobra(t, newMonitorCmd(), "--root", other, "--once", "--heartbeat", "1h", "--idle", "off")
-	if err != nil || strings.Contains(out, "D01.T1") {
-		t.Errorf("off says nothing: %v\n%s", err, out)
+	if out := run(other, "--idle", "off"); strings.Contains(out, "D01.T1") {
+		t.Errorf("off says nothing:\n%s", out)
 	}
 	if _, err := runCobra(t, newMonitorCmd(), "--root", other, "--once", "--idle", "soon"); err == nil || !strings.Contains(err.Error(), `"soon"`) {
 		t.Errorf("an idle that does not read is refused, named: %v", err)
+	}
+}
+
+// The holder works in a worktree of its own: its runs are recorded there, and they count.
+func TestMonitor_idleTaskAcrossWorktrees(t *testing.T) {
+	t.Run("MNCMD-B11: A holder's activity in another worktree of the repository counts", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	main := monitorProject(t, "")
+	git := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", main}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+	}
+	git("init", "-q")
+	git("add", "anchors.yaml")
+	git("commit", "-q", "-m", "init")
+	wt := filepath.Join(t.TempDir(), "wt")
+	git("worktree", "add", "-q", "--detach", wt)
+	if err := progress.Update(main, "", func(f *progress.File) error {
+		id, _ := f.AddDemand("A", "")
+		tid, _ := f.AddTask(id, "x", 1, false)
+		return f.Start(tid, "a", time.Now().Add(-time.Hour).Format(progress.StartedAt), false)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	st := runs.LoadState(main)
+	st.Watching = time.Now().Add(-time.Hour)
+	if err := runs.SaveState(main, st); err != nil {
+		t.Fatal(err)
+	}
+	end, ok := time.Now(), 0
+	if err := runs.Save(wt, runs.Run{ID: "w", Name: "jest", Command: "npx jest", By: runs.ByRun, Session: "a", Started: end.Add(-time.Minute), Ended: &end, Exit: &ok}); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runCobra(t, newMonitorCmd(), "--root", main, "--once", "--heartbeat", "1h")
+	if err != nil || strings.Contains(out, "D01.T1") {
+		t.Errorf("a run of the holder in another worktree is activity: %v\n%s", err, out)
 	}
 }
 

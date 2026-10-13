@@ -23,6 +23,7 @@ import (
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/progress"
 	"github.com/co2-lab/anchors/internal/runs"
 	"github.com/spf13/cobra"
@@ -286,10 +287,23 @@ func idleTaskLines(st *runs.State, root string, recs []runs.Run, now time.Time, 
 	if err != nil {
 		return nil
 	}
+	if st.Watching.IsZero() {
+		st.Watching = now
+	}
 	last, live := map[string]time.Time{}, map[string]bool{}
 	seen := func(who string, at time.Time) {
 		if at.After(last[who]) {
 			last[who] = at
+		}
+	}
+	// The other worktrees of the repository: agents work in their own, and their runs and
+	// commands are recorded there.
+	for _, dir := range gitmeta.Worktrees(root) {
+		if same, _ := sameDir(dir, root); !same {
+			recs = append(recs, runs.List(dir)...)
+		}
+		for who, at := range runs.LastSeen(dir) {
+			seen(who, at)
 		}
 	}
 	for _, r := range recs {
@@ -323,11 +337,16 @@ func idleTaskLines(st *runs.State, root string, recs []runs.Run, now time.Time, 
 	var out []string
 	for _, t := range doing {
 		held[t.ID] = true
-		quiet := !live[t.By] && !last[t.By].IsZero() && now.Sub(last[t.By]) >= idle
+		// Silence is counted from the last activity, never from before the monitor watched.
+		from := last[t.By]
+		if from.Before(st.Watching) {
+			from = st.Watching
+		}
+		quiet := !live[t.By] && now.Sub(from) >= idle
 		switch {
 		case quiet && !st.IdleTasks[t.ID]:
 			st.IdleTasks[t.ID] = true
-			out = append(out, fmt.Sprintf("⏸ %s in progress — no activity from %s for %s", t.ID, t.By, minutes(now.Sub(last[t.By]))))
+			out = append(out, fmt.Sprintf("⏸ %s in progress — no activity from %s for %s", t.ID, t.By, minutes(now.Sub(from))))
 		case !quiet && st.IdleTasks[t.ID]:
 			delete(st.IdleTasks, t.ID)
 			out = append(out, fmt.Sprintf("▶ %s moving again (%s)", t.ID, t.By))
@@ -339,6 +358,19 @@ func idleTaskLines(st *runs.State, root string, recs []runs.Run, now time.Time, 
 		}
 	}
 	return out
+}
+
+// sameDir says whether two paths are the same folder, through symlinks.
+func sameDir(a, b string) (bool, error) {
+	ra, err := filepath.EvalSymlinks(a)
+	if err != nil {
+		return false, err
+	}
+	rb, err := filepath.EvalSymlinks(b)
+	if err != nil {
+		return false, err
+	}
+	return ra == rb, nil
 }
 
 // minutes says a duration to the minute: 12m, 2h05m.
@@ -587,6 +619,8 @@ func agentHook(raw []byte, now time.Time) {
 	id := "agent-" + idChars.ReplaceAllString(in.ToolUseID, "")
 	switch in.Event {
 	case "PreToolUse":
+		// Every command, quick ones too, says its agent is at work.
+		_ = runs.MarkSeen(root, agentID(), now)
 		cmdLine := in.Input.Command
 		// Only a command sent to the background is a run of the agent's: a foreground one
 		// blocks the agent until it ends, and a long one is seen in the process table. Every

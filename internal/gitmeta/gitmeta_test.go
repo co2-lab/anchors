@@ -315,3 +315,37 @@ func TestAllCommitDatesUnder(t *testing.T) {
 		t.Errorf("at the root, every file: %v", got)
 	}
 }
+
+func TestWorktrees(t *testing.T) {
+	t.Run("GTMTG-B12: The worktrees of a repository are listed", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	repo := t.TempDir()
+	git := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", repo}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+	}
+	sub := filepath.Join(repo, "pkg")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	_ = os.WriteFile(filepath.Join(sub, "a.txt"), []byte("a"), 0o644)
+	git("init", "-q")
+	git("add", ".")
+	git("commit", "-q", "-m", "init")
+	wt := filepath.Join(t.TempDir(), "wt")
+	git("worktree", "add", "-q", "--detach", wt)
+	got := Worktrees(sub)
+	if len(got) != 2 || filepath.Base(got[0]) != "pkg" || filepath.Base(got[1]) != "pkg" || !strings.Contains(filepath.ToSlash(got[1]), "/wt/") {
+		t.Errorf("both trees, at the subfolder: %v", got)
+	}
+	outside := t.TempDir()
+	if got := Worktrees(outside); len(got) != 1 || got[0] != outside {
+		t.Errorf("outside a repository, the folder alone: %v", got)
+	}
+}

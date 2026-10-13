@@ -9,6 +9,7 @@ package gitmeta
 
 import (
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -203,4 +204,40 @@ func DirtyFiles(root string) (dirty map[string]bool, known bool) {
 		dirty[path] = true
 	}
 	return dirty, true
+}
+
+// Worktrees are the folders of every worktree of the repository root belongs to, each at the
+// same place inside it as root is in its own: agents working in parallel run in worktrees of
+// their own, and what they do there is the project's too (reported from MIF). Without git, or
+// outside a repository, it is root alone.
+func Worktrees(root string) []string {
+	top, err := exec.Command("git", "-C", root, "rev-parse", "--show-toplevel").Output()
+	if err != nil {
+		return []string{root}
+	}
+	rel, err := filepath.Rel(strings.TrimSpace(string(top)), root)
+	if err != nil {
+		rel = "."
+	}
+	if r, err := filepath.EvalSymlinks(root); err == nil {
+		if t, err := filepath.EvalSymlinks(strings.TrimSpace(string(top))); err == nil {
+			if x, err := filepath.Rel(t, r); err == nil {
+				rel = x
+			}
+		}
+	}
+	out, err := exec.Command("git", "-C", root, "worktree", "list", "--porcelain").Output()
+	if err != nil {
+		return []string{root}
+	}
+	var dirs []string
+	for _, line := range strings.Split(string(out), "\n") {
+		if p, ok := strings.CutPrefix(line, "worktree "); ok {
+			dirs = append(dirs, filepath.Join(filepath.FromSlash(p), rel))
+		}
+	}
+	if len(dirs) == 0 {
+		return []string{root}
+	}
+	return dirs
 }

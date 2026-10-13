@@ -204,3 +204,24 @@ func TestSystemReadings(t *testing.T) {
 		t.Errorf("the load where the system has one: %v %v", load, ok)
 	}
 }
+
+func TestMarkSeen(t *testing.T) {
+	t.Run("PRCRN-B09: A session's last activity is kept", func(t *testing.T) {})
+	dir := t.TempDir()
+	t1, t2 := time.Now().Add(-time.Hour).Round(time.Second), time.Now().Round(time.Second)
+	for _, m := range []struct {
+		who string
+		at  time.Time
+	}{{"host/a", t1}, {"host/a", t2}, {"b", t1}, {"", t2}} {
+		if err := MarkSeen(dir, m.who, m.at); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got := LastSeen(dir)
+	if !got["host/a"].Equal(t2) || !got["b"].Equal(t1) || len(got) != 2 {
+		t.Errorf("each session's last mark: %v", got)
+	}
+	if len(List(dir)) != 0 {
+		t.Error("marks are no runs")
+	}
+}

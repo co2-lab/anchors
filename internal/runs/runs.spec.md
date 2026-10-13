@@ -36,6 +36,7 @@ its command line (DESIGN-process-monitor.md).
 | `PRCRN-B06` | The process tree gives each process's descendants at any depth, its ancestors nearest first, and the CPU time of a process with everything under it. (`NewTree`, `Descendants`, `Ancestors`, `TreeCPU`) |
 | `PRCRN-B07` | Listing the system's processes includes the process asking. (`ListProcs`) |
 | `PRCRN-B08` | The system says, of a process, its working directory — none on Windows, which gives it to no other process —, whether it is alive — never for a process id below one —, and the one-minute load average where it has one. (`Cwds`, `Alive`, `LoadAverage`) |
+| `PRCRN-B09` | A session marked active keeps the latest moment it was marked; reading them gives each session's last mark; a session with no name marks nothing. (`MarkSeen`, `LastSeen`) |
 
 ## Invariants
 

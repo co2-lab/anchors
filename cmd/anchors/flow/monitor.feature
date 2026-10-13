@@ -58,8 +58,14 @@ Feature: MonitorCommand — `anchors monitor`, `anchors monitor run` and the age
   @MNCMD-B09 @unit-level
   Scenario: A task in progress with no activity from its holder is said
     Given a task started 20 minutes ago by a, and no run of a
-    When the monitor reads, again, after a run of a ended now, with --idle off, and with an idle that does not read
-    Then the task is said quiet once, then nothing, then moving again; off says nothing, and the bad value is refused, named
+    When the monitor reads for the first time, then having watched for 30 minutes, again, after a command of a, with --idle off, and with an idle that does not read
+    Then the first tick says nothing; then the task is said quiet once, then nothing, then moving again; off says nothing, and the bad value is refused, named
+
+  @MNCMD-B11 @unit-level
+  Scenario: A holder's activity in another worktree of the repository counts
+    Given a repository with a worktree, a task held by a for an hour, and a run of a recorded in the worktree
+    When the monitor of the main tree reads, having watched for an hour
+    Then the task is not said quiet
 
   @MNCMD-B10 @unit-level
   Scenario: The agent's hook records a subagent as a run

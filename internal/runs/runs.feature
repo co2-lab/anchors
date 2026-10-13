@@ -66,3 +66,9 @@ Feature: ProcessRuns — the record of the project's long processes, and the ope
     Given no record
     When a run is finished
     Then the error is returned and nothing is written
+
+  @PRCRN-B09 @unit-level
+  Scenario: A session's last activity is kept
+    Given a project with no mark
+    When session a is marked twice and session b once, and an empty session is marked
+    Then a reads its latest mark, b its own, and the empty one is not there
