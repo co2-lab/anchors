@@ -55,6 +55,18 @@ Feature: MonitorCommand — `anchors monitor`, `anchors monitor run` and the age
     When the monitor reads at the action level, twice, and with an unknown level
     Then the jest and the failure go out and the check does not, idle goes out once, and the unknown level is refused, named
 
+  @MNCMD-B09 @unit-level
+  Scenario: A task in progress with no activity from its holder is said
+    Given a task started 20 minutes ago by a, and no run of a
+    When the monitor reads, again, after a run of a ended now, with --idle off, and with an idle that does not read
+    Then the task is said quiet once, then nothing, then moving again; off says nothing, and the bad value is refused, named
+
+  @MNCMD-B10 @unit-level
+  Scenario: The agent's hook records a subagent as a run
+    Given the payloads a real session sent: a subagent starting, a background command of its own, and the subagent stopping
+    When the hook receives each, and a subagent start outside a project
+    Then the subagent is a run of kind agent with its transcript, the command carries its id, the stop closes it with its last message and its task's name, and outside a project nothing is recorded
+
   @MNCMD-I01 @unit-level
   Scenario: The agent's hook never blocks the agent
     Given invalid input, another tool, a command outside a project and a valid call

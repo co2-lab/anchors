@@ -2,7 +2,7 @@
 # @anchors
 #   code: PFFPR
 #   ref: DMLDD
-#   updated_at: 2026-10-12
+#   updated_at: 2026-10-13
 #   layer: feature
 
 @DMLDD
@@ -61,6 +61,12 @@ Feature: DemandLedger — the project's progress file
     Given a plan's -progress.md with a phase, a checked item, an open item and a TODO placeholder
     When the project is migrated
     Then the plan is a demand titled as the plan, with a stage, two tasks weighing 1 as estimates, one done, the file is deleted, and a dry run writes nothing
+
+  @DMLDD-B10 @unit-level
+  Scenario: A task in progress says when it was started
+    Given a task started at a minute, and a line of an older file with only the date
+    When the file is written and read back
+    Then the minute is kept and read, and the older line reads as the start of its day
 
   @DMLDD-E01 @unit-level
   Scenario: A hand edit is refused

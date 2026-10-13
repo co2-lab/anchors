@@ -518,7 +518,7 @@ func TestInstallHooks_agent(t *testing.T) {
 	}
 	b, _ := os.ReadFile(settings)
 	got := string(b)
-	if strings.Count(got, agentHookCommand) != 2 || !strings.Contains(got, "Bash(ls:*)") || !strings.Contains(got, "echo x") ||
+	if strings.Count(got, agentHookCommand) != 4 || !strings.Contains(got, "SubagentStart") || !strings.Contains(got, "SubagentStop") || !strings.Contains(got, "Bash(ls:*)") || !strings.Contains(got, "echo x") ||
 		!strings.Contains(got, "PostToolUse") || strings.Count(got, freezeHookCommand) != 1 || !strings.Contains(got, "Edit|Write|MultiEdit|NotebookEdit") {
 		t.Errorf("theirs kept, the hook once before and once after:\n%s", got)
 	}
@@ -549,7 +549,7 @@ func TestInstallHooks_agentUser(t *testing.T) {
 		t.Fatal(err)
 	}
 	b, err := os.ReadFile(filepath.Join(home, ".claude", "settings.json"))
-	if err != nil || strings.Count(string(b), agentHookCommand) != 2 {
+	if err != nil || strings.Count(string(b), agentHookCommand) != 4 {
 		t.Errorf("the user's settings gain the hook: %v\n%s", err, b)
 	}
 	if _, err := os.Stat(filepath.Join(dir, ".claude")); err == nil {

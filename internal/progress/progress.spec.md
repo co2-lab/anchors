@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DMLDD
-  updated_at: 2026-10-12
+  updated_at: 2026-10-13
   layer: infra
 -->
 # DemandLedger — the project's progress file: demands, stages and weighted tasks, written only by Anchors
@@ -38,6 +38,7 @@ plan as a demand with one stage per phase, and moves the per-plan `-progress.md`
 | `DMLDD-B07` | Two branches' files are merged over their base: what each side added is kept; a task both sides moved takes the further state (done, then cancelled, then in progress, then to do); a weight changed on one side only takes that side's; an id both sides created for different work is renumbered on their side. (`Merge`, `IsFile`) |
 | `DMLDD-B08` | A plan becomes a demand titled as the plan's title (or the one given), with one stage per phase its headers declare; a plan already tracked is refused. (`PlanDemand`) |
 | `DMLDD-B09` | A per-plan `-progress.md` beside a plan becomes its plan's demand: each heading a stage, each checkbox a task weighing 1 as an estimate, done when it was checked; the placeholder items of an unfilled template are left out; a plan already tracked keeps its demand; the migration of a project moves every such file, titles each demand as its plan, and deletes the file; and a dry run writes nothing. (`LegacyFiles`, `MigrateLegacy`, `MigrateProject`, `Migrated`, `LegacySuffix`) |
+| `DMLDD-B10` | A task in progress records when it was started to the minute (`doing since 2026-10-12 21:31 by a`), and says when, in local time; a task of a file written before, with only the date, still reads, counted from the start of that day. (`StartedAt`, `Since`) |
 
 ## Errors
 

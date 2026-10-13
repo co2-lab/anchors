@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -32,7 +33,7 @@ import (
 // Anchors cannot wake the agent, but the agent's watch tool can, one notification per line:
 // `anchors monitor` is the command it watches.
 func newMonitorCmd() *cobra.Command {
-	var root, every, heartbeat, progress, stall, summaryEvery, level string
+	var root, every, heartbeat, progress, stall, summaryEvery, level, idle string
 	var untilDone, once, summary bool
 	cmd := &cobra.Command{
 		Use:   "monitor",
@@ -51,6 +52,10 @@ With --summary (or "summary: true" in the monitor block), it says the summary of
 anchors.progress.md — each demand and its stages — when it changes, with what the total was;
 --summary-every 30m repeats it unchanged at most that often. Off by default; --summary=false
 silences a summary the block turns on.
+
+A task in progress whose holder has no process alive and no activity for --idle (default 10m,
+"idle:" in the block, off to silence it) is said once — "⏸ D01.T7 in progress — no activity
+from fix-datas for 12m" — and again when it moves.
 
 --level action (or "level: action") says only what calls for a reaction: failures, deaths,
 stalls, the runs the agent launched ending, failing reports, a change of progress, and the
@@ -98,6 +103,17 @@ Timing comes from the defaults, then the "monitor:" block of anchors.yaml, then 
 				}
 				set.SummaryEvery = d
 			}
+			switch idle {
+			case "":
+			case "off":
+				set.Idle = 0
+			default:
+				d, err := time.ParseDuration(idle)
+				if err != nil || d <= 0 {
+					return fmt.Errorf("--idle %q is not a positive duration, nor off", idle)
+				}
+				set.Idle = d
+			}
 			if level != "" {
 				if err := runs.CheckLevel(level); err != nil {
 					return fmt.Errorf("--level: %w", err)
@@ -115,6 +131,7 @@ Timing comes from the defaults, then the "monitor:" block of anchors.yaml, then 
 	cmd.Flags().BoolVar(&summary, "summary", false, "say the progress summary when it changes (default off, or monitor.summary)")
 	cmd.Flags().StringVar(&summaryEvery, "summary-every", "", "repeat the progress summary unchanged at most this often (default never)")
 	cmd.Flags().StringVar(&level, "level", "", "all (default), or action: only what calls for a reaction")
+	cmd.Flags().StringVar(&idle, "idle", "", "how long a task in progress may go without activity from its holder before it is said (default 10m; off)")
 	cmd.Flags().BoolVar(&untilDone, "until-done", false, "exit when the runs it watches have all ended")
 	cmd.Flags().BoolVar(&once, "once", false, "read once, print what changed, and exit")
 	cmd.AddCommand(newMonitorHookCmd(), newRunCmd())
@@ -166,6 +183,11 @@ func runMonitor(w io.Writer, root string, set runs.Settings, untilDone, once boo
 				continue
 			}
 			fmt.Fprintln(w, e.Line)
+		}
+		recs := append([]runs.Run(nil), snap.Records...)
+		recs = append(recs, writes...)
+		for _, l := range idleTaskLines(st, root, recs, now, set.Idle) {
+			fmt.Fprintln(w, l)
 		}
 		if set.Summary {
 			for _, l := range progressLines(st, root, now, set.SummaryEvery) {
@@ -250,6 +272,84 @@ func progressLines(st *runs.State, root string, now time.Time, every time.Durati
 	return append([]string{SummaryInstruction(len(lines))}, lines...)
 }
 
+// idleTaskLines confront the tasks in progress with their holders' activity
+// (DESIGN-agent-activity.md): `[~]` says only that someone ran `start`. A holder is active while
+// a run of theirs is alive; else their last activity is the latest of a run of theirs
+// starting, moving or ending, and of a task of theirs started. Quiet for idle, the task is
+// said once; moving again, it is said again. At MIF a teammate sat idle for hours, its task
+// "in progress", until the user asked.
+func idleTaskLines(st *runs.State, root string, recs []runs.Run, now time.Time, idle time.Duration) []string {
+	if idle <= 0 {
+		return nil
+	}
+	f, err := progress.Load(root)
+	if err != nil {
+		return nil
+	}
+	last, live := map[string]time.Time{}, map[string]bool{}
+	seen := func(who string, at time.Time) {
+		if at.After(last[who]) {
+			last[who] = at
+		}
+	}
+	for _, r := range recs {
+		if r.Session == "" {
+			continue
+		}
+		seen(r.Session, r.Started)
+		if r.Ended != nil {
+			seen(r.Session, *r.Ended)
+		}
+		if s := st.Runs[r.ID]; s != nil {
+			seen(r.Session, s.LastMove)
+			if !s.Done && r.Ended == nil {
+				live[r.Session] = true
+			}
+		}
+	}
+	var doing []*progress.Task
+	for _, t := range f.AllTasks() {
+		if t.State == progress.Doing {
+			doing = append(doing, t)
+			if at, ok := t.Since(); ok {
+				seen(t.By, at)
+			}
+		}
+	}
+	if st.IdleTasks == nil {
+		st.IdleTasks = map[string]bool{}
+	}
+	held := map[string]bool{}
+	var out []string
+	for _, t := range doing {
+		held[t.ID] = true
+		quiet := !live[t.By] && !last[t.By].IsZero() && now.Sub(last[t.By]) >= idle
+		switch {
+		case quiet && !st.IdleTasks[t.ID]:
+			st.IdleTasks[t.ID] = true
+			out = append(out, fmt.Sprintf("⏸ %s in progress — no activity from %s for %s", t.ID, t.By, minutes(now.Sub(last[t.By]))))
+		case !quiet && st.IdleTasks[t.ID]:
+			delete(st.IdleTasks, t.ID)
+			out = append(out, fmt.Sprintf("▶ %s moving again (%s)", t.ID, t.By))
+		}
+	}
+	for id := range st.IdleTasks {
+		if !held[id] {
+			delete(st.IdleTasks, id)
+		}
+	}
+	return out
+}
+
+// minutes says a duration to the minute: 12m, 2h05m.
+func minutes(d time.Duration) string {
+	m := int(d.Round(time.Minute) / time.Minute)
+	if m < 60 {
+		return fmt.Sprintf("%dm", m)
+	}
+	return fmt.Sprintf("%dh%02dm", m/60, m%60)
+}
+
 // ownRunCommands are Anchors' long commands, which record their own runs: the monitor then
 // knows their exit, and the commit hook's run (`verify`) is seen.
 var ownRunCommands = map[string]bool{
@@ -280,7 +380,7 @@ func BeginOwnRun(cmd *cobra.Command) {
 	}
 	now := time.Now()
 	r := runs.Run{ID: runs.NewID(now, os.Getpid()), Kind: "anchors", Name: "anchors " + path,
-		Command: strings.Join(os.Args, " "), Dir: absRoot, PID: os.Getpid(), By: runs.ByAnchors,
+		Command: strings.Join(os.Args, " "), Dir: absRoot, PID: os.Getpid(), By: runs.ByAnchors, Session: agentID(),
 		Started: now, State: runs.StateRunning}
 	if runs.Save(absRoot, r) == nil {
 		ownRun, ownRoot = &r, absRoot
@@ -356,7 +456,7 @@ func recordedRun(root, name string, args []string, in io.Reader, out, errOut io.
 		name = filepath.Base(args[0])
 	}
 	r := runs.Run{ID: id, Name: name, Command: strings.Join(args, " "), Dir: root, PID: c.Process.Pid,
-		By: runs.ByRun, Started: now, Output: logPath, State: runs.StateRunning}
+		By: runs.ByRun, Session: agentID(), Started: now, Output: logPath, State: runs.StateRunning}
 	_ = runs.Save(root, r)
 	code := 0
 	if err := c.Wait(); err != nil {
@@ -400,6 +500,67 @@ type hookInput struct {
 	} `json:"tool_input"`
 	Response json.RawMessage `json:"tool_response"`
 	Output   json.RawMessage `json:"tool_output"`
+	// The subagent the call comes from, and what its own hooks carry (measured on a real
+	// session: SubagentStart has agent_id, agent_type and the session's transcript;
+	// SubagentStop adds the subagent's transcript, its last message and the background tasks,
+	// whose description names it; neither carries a verdict).
+	AgentID         string `json:"agent_id"`
+	AgentType       string `json:"agent_type"`
+	Transcript      string `json:"transcript_path"`
+	AgentTranscript string `json:"agent_transcript_path"`
+	LastMessage     string `json:"last_assistant_message"`
+	BackgroundTasks []struct {
+		ID          string `json:"id"`
+		Description string `json:"description"`
+	} `json:"background_tasks"`
+}
+
+// idChars are the characters a record's file name keeps of an id the harness gave.
+var idChars = regexp.MustCompile(`[^A-Za-z0-9_-]`)
+
+// subagentHook records a subagent as a run (DESIGN-agent-activity.md): SubagentStart opens it
+// — no process of its own, its transcript as its output —, SubagentStop closes it with the
+// first line of its last message, named by its task's description when the hook carries it.
+func subagentHook(in hookInput, now time.Time) {
+	root := projectRootFrom(in.Cwd)
+	if root == "" || in.AgentID == "" {
+		return
+	}
+	id := "subagent-" + idChars.ReplaceAllString(in.AgentID, "")
+	switch in.Event {
+	case "SubagentStart":
+		r := runs.Run{ID: id, Kind: runs.KindAgent, Name: "agent " + in.AgentType, Command: "agent " + in.AgentType,
+			Dir: in.Cwd, By: runs.ByAgent, Session: agentID(), Agent: in.AgentID, Started: now, State: runs.StateRunning}
+		// The subagent's transcript, beside the session's: <session>/subagents/agent-<id>.jsonl.
+		if in.Transcript != "" {
+			r.Output = strings.TrimSuffix(in.Transcript, ".jsonl") + "/subagents/agent-" + in.AgentID + ".jsonl"
+		}
+		_ = runs.Save(root, r)
+	case "SubagentStop":
+		r, err := runs.Load(root, id)
+		if err != nil {
+			return
+		}
+		for _, t := range in.BackgroundTasks {
+			if t.ID == in.AgentID && t.Description != "" {
+				r.Name = "agent " + strconv.Quote(t.Description)
+			}
+		}
+		if in.AgentTranscript != "" {
+			r.Output = in.AgentTranscript
+		}
+		_ = runs.Save(root, r)
+		_ = runs.Finish(root, id, now, nil, briefMessage(in.LastMessage))
+	}
+}
+
+// briefMessage is a message's first line, cut to fit a line of the monitor.
+func briefMessage(s string) string {
+	s = strings.TrimSpace(runs.FirstLine(strings.TrimSpace(s)))
+	if r := []rune(s); len(r) > 100 {
+		s = string(r[:100]) + "…"
+	}
+	return s
 }
 
 // outputPathRE finds, in what the harness answered for a background command, the file its
@@ -409,14 +570,21 @@ var outputPathRE = regexp.MustCompile(`written to:?\s*([^\s"\\]+)`)
 // agentHook records, from one hook call, what it can of the agent's command.
 func agentHook(raw []byte, now time.Time) {
 	var in hookInput
-	if json.Unmarshal(raw, &in) != nil || in.Tool != "Bash" || in.ToolUseID == "" {
+	if json.Unmarshal(raw, &in) != nil {
+		return
+	}
+	if in.Event == "SubagentStart" || in.Event == "SubagentStop" {
+		subagentHook(in, now)
+		return
+	}
+	if in.Tool != "Bash" || in.ToolUseID == "" {
 		return
 	}
 	root := projectRootFrom(in.Cwd)
 	if root == "" {
 		return
 	}
-	id := "agent-" + regexp.MustCompile(`[^A-Za-z0-9_-]`).ReplaceAllString(in.ToolUseID, "")
+	id := "agent-" + idChars.ReplaceAllString(in.ToolUseID, "")
 	switch in.Event {
 	case "PreToolUse":
 		cmdLine := in.Input.Command
@@ -431,7 +599,7 @@ func agentHook(raw []byte, now time.Time) {
 		if rn, ok := runs.RunnerFor(runs.DefaultRunners(), runs.FirstLine(cmdLine)); ok {
 			name = rn.Name
 		}
-		_ = runs.Save(root, runs.Run{ID: id, Name: name, Command: cmdLine, Dir: in.Cwd, By: runs.ByAgent, Started: now, State: runs.StateRunning})
+		_ = runs.Save(root, runs.Run{ID: id, Name: name, Command: cmdLine, Dir: in.Cwd, By: runs.ByAgent, Session: agentID(), Agent: in.AgentID, Started: now, State: runs.StateRunning})
 	case "PostToolUse":
 		r, err := runs.Load(root, id)
 		if err != nil {

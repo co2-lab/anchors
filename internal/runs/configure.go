@@ -30,6 +30,9 @@ type Settings struct {
 	SummaryEvery time.Duration
 	// Level is LevelAll, the default, or LevelAction.
 	Level string
+	// Idle is how long a task in progress may go without activity from its holder before
+	// the monitor says so; 0 is off (DESIGN-agent-activity.md).
+	Idle time.Duration
 }
 
 // Configure reads the project's `monitor:` block over the defaults: its timing, its runners
@@ -37,7 +40,8 @@ type Settings struct {
 // its suites declare and the ones it adds, and how many ended runs to keep. A duration or a
 // pattern that does not read is an error, naming it.
 func Configure(cfg *config.Config) (Settings, error) {
-	s := Settings{Timing: DefaultTiming(), Runners: DefaultRunners(), Keep: 50, MaxAge: 7 * 24 * time.Hour, Level: LevelAll}
+	s := Settings{Timing: DefaultTiming(), Runners: DefaultRunners(), Keep: 50, MaxAge: 7 * 24 * time.Hour, Level: LevelAll,
+		Idle: DefaultIdle}
 	if cfg == nil {
 		return s, nil
 	}
@@ -65,6 +69,13 @@ func Configure(cfg *config.Config) (Settings, error) {
 	s.Summary = m.Summary
 	if err := setDuration(m.SummaryEvery, &s.SummaryEvery); err != nil {
 		return s, fmt.Errorf("monitor.summary_every: %w", err)
+	}
+	if m.Idle == "off" {
+		s.Idle = 0
+	} else if err := setDuration(m.Idle, &s.Idle); err != nil {
+		return s, fmt.Errorf("monitor.idle: %w, nor off", err)
+	} else if m.Idle != "" {
+		s.Timing.AgentStall = s.Idle // the same quiet time, for a held task and a subagent
 	}
 	if m.Level != "" {
 		if err := CheckLevel(m.Level); err != nil {
@@ -117,6 +128,10 @@ func Configure(cfg *config.Config) (Settings, error) {
 	}
 	return s, nil
 }
+
+// DefaultIdle is how long a held task may go without activity from its holder before the
+// monitor says so: 10 minutes (the user, 2026-10-13).
+const DefaultIdle = 10 * time.Minute
 
 // CheckLevel refuses a level that is neither all nor action.
 func CheckLevel(level string) error {

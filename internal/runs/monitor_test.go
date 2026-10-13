@@ -243,14 +243,14 @@ func TestConfigure(t *testing.T) {
 		t.Fatalf("the defaults: %+v %v", s, err)
 	}
 	cfg := &config.Config{Tests: []config.Suite{{JUnit: "out/junit.xml"}}, Monitor: &config.Monitor{
-		Every: "10s", Heartbeat: "2m", Summary: true, SummaryEvery: "30m", Level: "action", Keep: 5, KeepDays: 1, Reports: []string{"e2e/*.xml"},
+		Every: "10s", Heartbeat: "2m", Summary: true, SummaryEvery: "30m", Level: "action", Idle: "off", Keep: 5, KeepDays: 1, Reports: []string{"e2e/*.xml"},
 		Runners: []config.MonitorRunner{{Name: "jest", Kind: "unit", Match: "craco test", Stall: "1m"}, {Name: "seed", Match: "seed\\.sh"}},
 	}}
 	s, err = Configure(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s.Timing.Every != 10*time.Second || s.Timing.Heartbeat != 2*time.Minute || s.Timing.Stall != 5*time.Minute || !s.Summary || s.SummaryEvery != 30*time.Minute || s.Level != LevelAction || s.Keep != 5 || s.MaxAge != 24*time.Hour {
+	if s.Timing.Every != 10*time.Second || s.Timing.Heartbeat != 2*time.Minute || s.Timing.Stall != 5*time.Minute || !s.Summary || s.SummaryEvery != 30*time.Minute || s.Level != LevelAction || s.Idle != 0 || s.Keep != 5 || s.MaxAge != 24*time.Hour {
 		t.Errorf("the block's timing and bounds: %+v", s)
 	}
 	if s.Runners[0].Name != "jest" || s.Runners[0].Match.String() != "craco test" || s.Runners[1].Name != "seed" || s.Runners[1].Kind != "other" || len(s.Runners) != len(DefaultRunners())+1 {
@@ -259,7 +259,7 @@ func TestConfigure(t *testing.T) {
 	if strings.Join(s.Reports, " ") != "out/junit.xml e2e/*.xml" {
 		t.Errorf("the suites' reports and the block's: %v", s.Reports)
 	}
-	for _, bad := range []config.Monitor{{Every: "soon"}, {Level: "loud"}, {SummaryEvery: "later"}, {Runners: []config.MonitorRunner{{Name: "x", Match: "("}}}, {Runners: []config.MonitorRunner{{Name: "y"}}}} {
+	for _, bad := range []config.Monitor{{Every: "soon"}, {Level: "loud"}, {SummaryEvery: "later"}, {Idle: "never"}, {Runners: []config.MonitorRunner{{Name: "x", Match: "("}}}, {Runners: []config.MonitorRunner{{Name: "y"}}}} {
 		b := bad
 		if _, err := Configure(&config.Config{Monitor: &b}); err == nil {
 			t.Errorf("%+v does not read", bad)
@@ -468,5 +468,31 @@ func TestForAction(t *testing.T) {
 	st.NoteState(false, false)
 	if st.NoteState(true, false); !st.ForAction(hb, nil, true, false) {
 		t.Error("idle again, after running, goes out again")
+	}
+}
+
+func TestTick_subagent(t *testing.T) {
+	t.Run("MNTRS-B16: A subagent lives by its transcript and waits on its own commands", func(t *testing.T) {})
+	sub := Run{ID: "subagent-a1", Kind: KindAgent, Name: "agent general-purpose", Command: "agent general-purpose", By: ByAgent, Agent: "a1", Started: t0, Output: "a1.jsonl"}
+	cmd := Run{ID: "agent-toolu_1", Name: "jest", Command: "npx jest", PID: pidNpx, By: ByAgent, Agent: "a1", Started: t0}
+	alive := append(agentAndSelf(), Proc{PID: pidNpx, PPID: 1, Cmd: "npx jest", CPU: 1})
+	out := map[string]OutputInfo{"a1.jsonl": {OK: true, Size: 100}}
+	st := &State{Cursor: t0.Add(-time.Hour), Runs: map[string]*Seen{}, Reports: map[string]time.Time{}}
+	tick(st, t0, alive, []Run{sub, cmd}, out)
+	evs, _ := tick(st, t0.Add(11*time.Minute), alive, []Run{sub, cmd}, out)
+	if got := lines(evs); strings.Contains(got, "agent general-purpose:") {
+		t.Errorf("waiting on its own command, the subagent is not stalled:\n%s", got)
+	}
+	end := t0.Add(12 * time.Minute)
+	cmd.Ended = &end
+	evs, _ = tick(st, t0.Add(23*time.Minute), agentAndSelf(), []Run{sub, cmd}, out)
+	if got := lines(evs); !strings.Contains(got, "⏸ agent general-purpose: its transcript quiet for 1") {
+		t.Errorf("quiet with no command of its own, it is stalled:\n%s", got)
+	}
+	done := t0.Add(24 * time.Minute)
+	sub.Ended, sub.Summary = &done, "bg-probe"
+	evs, _ = tick(st, t0.Add(25*time.Minute), agentAndSelf(), []Run{sub, cmd}, out)
+	if got := lines(evs); !strings.Contains(got, "⏹ agent general-purpose ended (24m0s) — bg-probe") {
+		t.Errorf("its end, with its last message:\n%s", got)
 	}
 }

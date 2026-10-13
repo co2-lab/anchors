@@ -2,7 +2,7 @@
 # @anchors
 #   code: IHFNS
 #   ref: INHKN
-#   updated_at: 2026-10-12
+#   updated_at: 2026-10-13
 #   layer: feature
 
 @INHKN
@@ -127,7 +127,7 @@ Feature: InstallHooks — the git hooks that confront every commit and push with
   Scenario: The agent's hook goes into the project's Claude Code settings
     Given a project whose Claude Code settings already hold a permission and another hook
     When the agent's hook is installed twice, then into settings that are not valid JSON, then into a folder with no anchors.yaml
-    Then the settings keep theirs and gain the hook once, before and after each command, and the freeze's hook once before each edit, and the last two are refused
+    Then the settings keep theirs and gain the hook once, before and after each command and when a subagent starts and stops, and the freeze's hook once before each edit, and the last two are refused
 
   @INHKN-B15 @unit-level
   Scenario: The agent's hook goes into the user's own settings

@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
@@ -147,7 +148,7 @@ Each change takes the file's lock, so agents working at once lose nothing.`,
 		RunE: func(c *cobra.Command, args []string) error {
 			c.SilenceUsage = true
 			return change(c, func(f *progress.File) (string, error) {
-				return "~ " + args[0] + " in progress, held by " + who(), f.Start(args[0], who(), gitmeta.Today(), take)
+				return "~ " + args[0] + " in progress, held by " + who(), f.Start(args[0], who(), time.Now().Format(progress.StartedAt), take)
 			})
 		},
 	}

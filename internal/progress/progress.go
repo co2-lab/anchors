@@ -18,6 +18,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
@@ -91,7 +92,7 @@ var (
 	demandRE = regexp.MustCompile(`^## D(\d+) — (.+?)(?: \(plan: ([^)]+)\))? — (?:\d+%|—) \([0-9.]+/[0-9.]+\)$`)
 	stageRE  = regexp.MustCompile(`^### D(\d+)\.S(\d+) — (.+) — (?:\d+%|—) \([0-9.]+/[0-9.]+\)$`)
 	taskRE   = regexp.MustCompile(`^- \[([ ~x-])\] D(\d+)\.T(\d+) — (.+)$`)
-	doingRE  = regexp.MustCompile(`^doing since (\S+) by (\S+)$`)
+	doingRE  = regexp.MustCompile(`^doing since (\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2})?) by (\S+)$`)
 	doneRE   = regexp.MustCompile(`^done (\S+) by (\S+)$`)
 )
 
@@ -450,6 +451,20 @@ func (f *File) task(id string) (*Task, error) {
 		return t, nil
 	}
 	return nil, fmt.Errorf("no task %s", id)
+}
+
+// StartedAt is the form of the moment a task is started: the date and the minute, so the
+// monitor can tell how long a held task has gone without activity (DESIGN-agent-activity.md).
+const StartedAt = "2006-01-02 15:04"
+
+// Since is when a task in progress was started, in local time: a file written before the
+// minute was recorded holds only the date, which counts from the start of that day.
+func (t *Task) Since() (time.Time, bool) {
+	if at, err := time.ParseInLocation(StartedAt, t.At, time.Local); err == nil {
+		return at, true
+	}
+	at, err := time.ParseInLocation("2006-01-02", t.At, time.Local)
+	return at, err == nil
 }
 
 // Start marks a task in progress, held by who. A task another agent holds is refused

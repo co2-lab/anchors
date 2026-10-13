@@ -2954,6 +2954,9 @@ type Monitor struct {
 	// Level is how much the monitor says: all (the default), or action — only what calls for
 	// a reaction.
 	Level string `yaml:"level,omitempty"`
+	// Idle is how long a task in progress may go without activity from its holder before the
+	// monitor says so (default 10m); off turns it off.
+	Idle string `yaml:"idle,omitempty"`
 	// Runners are the project's own kinds of long process, read before the built-in ones: a
 	// runner whose name is a built-in one replaces it.
 	Runners []MonitorRunner `yaml:"runners,omitempty"`

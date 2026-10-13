@@ -33,13 +33,17 @@ type Timing struct {
 	Heartbeat time.Duration // how often it says what runs, even when nothing changed
 	Progress  time.Duration // the least time between two progress lines of one run
 	Stall     time.Duration // quiet time before a run of no declared runner is stalled
+	// AgentStall is the quiet time of a subagent's transcript, with no command of its own
+	// alive, before it is stalled: an agent thinks for minutes (the user, 2026-10-13).
+	AgentStall time.Duration
 }
 
 // DefaultTiming comes from MIF's experience with its own monitors: a tick of 30 s caught
 // every report within one tick, and a heartbeat of 5 min was frequent enough to catch an
 // agent that stopped and sparse enough not to flood the conversation.
 func DefaultTiming() Timing {
-	return Timing{Every: 30 * time.Second, Heartbeat: 5 * time.Minute, Progress: 5 * time.Minute, Stall: 5 * time.Minute}
+	return Timing{Every: 30 * time.Second, Heartbeat: 5 * time.Minute, Progress: 5 * time.Minute, Stall: 5 * time.Minute,
+		AgentStall: 10 * time.Minute}
 }
 
 // Seen is what the monitor remembers of one run between ticks.
@@ -72,6 +76,9 @@ type State struct {
 	// and a high load, each said once per stretch.
 	SaidIdle bool `json:"said_idle,omitempty"`
 	SaidHigh bool `json:"said_high,omitempty"`
+	// IdleTasks are the tasks in progress said to have no activity from their holder, until
+	// it moves again (DESIGN-agent-activity.md).
+	IdleTasks map[string]bool `json:"idle_tasks,omitempty"`
 }
 
 // LoadState reads the monitor's state; a missing or unreadable one is a fresh start.
@@ -172,7 +179,7 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 	// the topmost process under the project that runs the program its command names.
 	for _, id := range order {
 		r := runs[id]
-		if r.Done() || r.PID > 0 || r.By != ByAgent {
+		if r.Done() || r.PID > 0 || r.By != ByAgent || r.Kind == KindAgent {
 			continue
 		}
 		if pid := findProcess(tree, snap.Root, r.Command, runners, excluded, claimed); pid > 0 {
@@ -206,6 +213,16 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 		if _, ok := runs[r.ID]; !ok {
 			runs[r.ID] = &r
 			order = append(order, r.ID)
+		}
+	}
+
+	// The subagents waiting on a command of their own: while it is alive, the subagent's
+	// silence is waiting, and the command is the one watched for a stall.
+	waiting := map[string]bool{}
+	for _, id := range order {
+		r := runs[id]
+		if r.Agent != "" && r.Kind != KindAgent && !r.Done() && (st.Runs[id] == nil || !st.Runs[id].Done) {
+			waiting[r.Agent] = true
 		}
 	}
 
@@ -253,7 +270,7 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 
 		// A command of the agent no process runs any more, past its first tick, ended: once
 		// its output — when the monitor knows it — stopped growing.
-		gone := r.By == ByAgent && r.PID == 0 && !fresh && (!out.OK || out.Size == s.OutSize)
+		gone := r.By == ByAgent && r.Kind != KindAgent && r.PID == 0 && !fresh && (!out.OK || out.Size == s.OutSize)
 		if r.Done() || (r.PID > 0 && !alive) || gone {
 			ev, w := endOf(*r, rn, out, snap.Now, s.SawAlive)
 			events = append(events, ev)
@@ -271,7 +288,7 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 		}
 		moved := cpu > s.CPU || newKid(s.Kids, kids) || (out.OK && out.Size != s.OutSize)
 		s.Kids = kids
-		if fresh {
+		if fresh || (r.Kind == KindAgent && waiting[r.Agent]) {
 			moved = true
 		}
 		s.CPU = cpu
@@ -280,13 +297,18 @@ func Tick(st *State, snap Snapshot, runners []Runner, t Timing) ([]Event, []Run)
 		}
 		if moved {
 			if s.Stalled {
-				events = append(events, Event{"resumed", id, fmt.Sprintf("▶ %s moving again (pid %d)", r.Name, r.PID)})
+				events = append(events, Event{"resumed", id, resumedLine(*r)})
 				s.Stalled = false
 				r.State = StateRunning
 				writes = append(writes, *r)
 			}
 			s.LastMove = snap.Now
-		} else if quiet := snap.Now.Sub(s.LastMove); !s.Stalled && quiet >= stallOf(rn, t) {
+		} else if quiet := snap.Now.Sub(s.LastMove); r.Kind == KindAgent && !s.Stalled && quiet >= t.AgentStall {
+			s.Stalled = true
+			r.State = StateStalled
+			writes = append(writes, *r)
+			events = append(events, Event{"stalled", id, fmt.Sprintf("⏸ %s: its transcript quiet for %s, and no command of its own running", r.Name, round(quiet))})
+		} else if quiet := snap.Now.Sub(s.LastMove); r.Kind != KindAgent && !s.Stalled && quiet >= stallOf(rn, t) {
 			s.Stalled = true
 			r.State = StateStalled
 			writes = append(writes, *r)
@@ -539,6 +561,11 @@ func endOf(r Run, rn Runner, out OutputInfo, now time.Time, sawAlive bool) (Even
 	}
 	r.Summary = summary
 	switch {
+	case r.Kind == KindAgent:
+		// The SubagentStop hook says that it ended, and with what last message; not whether
+		// it succeeded — the hook carries no verdict (measured on a real session).
+		r.State = StateEnded
+		return Event{"ended", r.ID, fmt.Sprintf("⏹ %s ended (%s)%s", r.Name, elapsed, suffix(r.Summary))}, r
 	case r.Exit != nil:
 		r.State = StateFinished
 		mark := "✓"
@@ -626,6 +653,13 @@ func heartbeat(st *State, runs map[string]*Run, order []string, snap Snapshot) s
 		}
 	}
 	return line
+}
+
+func resumedLine(r Run) string {
+	if r.Kind == KindAgent {
+		return fmt.Sprintf("▶ %s moving again", r.Name)
+	}
+	return fmt.Sprintf("▶ %s moving again (pid %d)", r.Name, r.PID)
 }
 
 func startedLine(r Run) string {

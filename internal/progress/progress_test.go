@@ -299,3 +299,36 @@ func TestChanges_refused(t *testing.T) {
 		t.Errorf("an unknown task: %v", err)
 	}
 }
+
+func TestTask_since(t *testing.T) {
+	t.Run("DMLDD-B10: A task in progress says when it was started", func(t *testing.T) {})
+	f := &File{}
+	id, _ := f.AddDemand("A", "")
+	tid, _ := f.AddTask(id, "x", 1, false)
+	if err := f.Start(tid, "a", "2026-10-12 21:31", false); err != nil {
+		t.Fatal(err)
+	}
+	g, err := Parse(Render(f))
+	if err != nil {
+		t.Fatal(err)
+	}
+	at, ok := g.Task(tid).Since()
+	if !ok || at.Format(StartedAt) != "2026-10-12 21:31" || !strings.Contains(Render(g), "doing since 2026-10-12 21:31 by a") {
+		t.Errorf("the minute is kept: %v %v\n%s", at, ok, Render(g))
+	}
+	old := &Task{At: "2026-10-12"}
+	if at, ok := old.Since(); !ok || at.Format(StartedAt) != "2026-10-12 00:00" {
+		t.Errorf("a date alone counts from the start of its day: %v %v", at, ok)
+	}
+	text := strings.Replace(Render(g), "2026-10-12 21:31", "2026-10-12", 1)
+	if _, err := Parse(fixSum(text)); err != nil {
+		t.Errorf("a line with only the date still reads: %v", err)
+	}
+}
+
+// fixSum gives a text edited by a test the sum Anchors would have written.
+func fixSum(text string) string {
+	i := strings.LastIndex(text, "<!-- anchors:progress sum=")
+	content := text[:i]
+	return content + "<!-- anchors:progress sum=" + sumOf(content) + " -->\n"
+}

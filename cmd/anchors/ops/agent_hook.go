@@ -76,11 +76,13 @@ func installAgentHook(path string) (string, error) {
 }
 
 // agentHooks are the hooks `install-hooks --agent` writes: the monitor's, before and after
-// each command, and the freeze's, before each edit — a file a freeze covers is told to the
+// each command and when a subagent starts and stops (DESIGN-agent-activity.md), and the freeze's, before each edit — a file a freeze covers is told to the
 // agent with the freeze's reason, and the edit goes on (DESIGN-frozen-units.md).
 var agentHooks = []struct{ event, matcher, command string }{
 	{"PreToolUse", "Bash", agentHookCommand},
 	{"PostToolUse", "Bash", agentHookCommand},
+	{"SubagentStart", "", agentHookCommand},
+	{"SubagentStop", "", agentHookCommand},
 	{"PreToolUse", "Edit|Write|MultiEdit|NotebookEdit", freezeHookCommand},
 }
 

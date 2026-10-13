@@ -29,7 +29,7 @@ Each change takes the file's lock, so agents working at once lose nothing.
 ## Usage
 
 ```bash
-anchors progress [flags]
+anchors progress
 ```
 
 ## Flags
@@ -47,7 +47,7 @@ Add a demand, a stage or a task.
 #### Usage
 
 ```bash
-anchors progress add [flags]
+anchors progress add
 ```
 
 ### `anchors progress cancel`
@@ -89,7 +89,7 @@ Put a task back to do.
 #### Usage
 
 ```bash
-anchors progress reopen <task> [flags]
+anchors progress reopen <task>
 ```
 
 ### `anchors progress show`
@@ -148,7 +148,7 @@ Set a task's weight.
 #### Usage
 
 ```bash
-anchors progress weigh <task> <weight> [flags]
+anchors progress weigh <task> <weight>
 ```
 
 ## The work queue — family

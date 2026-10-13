@@ -23,6 +23,10 @@ anchors.progress.md — each demand and its stages — when it changes, with wha
 --summary-every 30m repeats it unchanged at most that often. Off by default; --summary=false
 silences a summary the block turns on.
 
+A task in progress whose holder has no process alive and no activity for --idle (default 10m,
+"idle:" in the block, off to silence it) is said once — "⏸ D01.T7 in progress — no activity
+from fix-datas for 12m" — and again when it moves.
+
 --level action (or "level: action") says only what calls for a reaction: failures, deaths,
 stalls, the runs the agent launched ending, failing reports, a change of progress, and the
 heartbeat only when the project falls idle or the load is high. For an agent that watches —
@@ -47,6 +51,7 @@ anchors monitor [flags]
 | --- | --- | --- |
 | `--every` |  | how often to read the processes (default 30s, or monitor.every) |
 | `--heartbeat` |  | how often to say what runs, even when nothing changed (default 5m) |
+| `--idle` |  | how long a task in progress may go without activity from its holder before it is said (default 10m; off) |
 | `--level` |  | all (default), or action: only what calls for a reaction |
 | `--once` |  | read once, print what changed, and exit |
 | `--progress` |  | least time between two progress lines of one run (default 5m) |

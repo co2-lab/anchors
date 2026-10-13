@@ -33,13 +33,21 @@ const (
 // once it ended — how. A record written by whoever launched the process knows its exit; one
 // the monitor wrote from the process table knows only that it ended.
 type Run struct {
-	ID      string     `json:"id"`
-	Kind    string     `json:"kind"`
-	Name    string     `json:"name"`
-	Command string     `json:"command"`
-	Dir     string     `json:"dir,omitempty"`
-	PID     int        `json:"pid,omitempty"`
-	By      string     `json:"by"`
+	ID      string `json:"id"`
+	Kind    string `json:"kind"`
+	Name    string `json:"name"`
+	Command string `json:"command"`
+	Dir     string `json:"dir,omitempty"`
+	PID     int    `json:"pid,omitempty"`
+	By      string `json:"by"`
+	// Session is who launched the run: the identity `anchors progress` writes as a task's
+	// holder, so the monitor can tell a held task's holder from its activity
+	// (DESIGN-agent-activity.md).
+	Session string `json:"session,omitempty"`
+	// Agent is the subagent a run belongs to: the subagent itself, for a run of KindAgent,
+	// or the one that launched a command. A subagent waiting on a command of its own is not
+	// stalled (DESIGN-agent-activity.md).
+	Agent   string     `json:"agent,omitempty"`
 	Started time.Time  `json:"started"`
 	Output  string     `json:"output,omitempty"`
 	Ended   *time.Time `json:"ended,omitempty"`
@@ -48,6 +56,10 @@ type Run struct {
 	// State is the monitor's last reading: running, stalled, died, finished or ended.
 	State string `json:"state,omitempty"`
 }
+
+// KindAgent is the kind of a subagent's run: no process of its own; it lives from the
+// agent's SubagentStart hook to its SubagentStop, and moves while its transcript grows.
+const KindAgent = "agent"
 
 // Done says whether the run ended, by any account.
 func (r Run) Done() bool { return r.Ended != nil }

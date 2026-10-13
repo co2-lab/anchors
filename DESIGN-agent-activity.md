@@ -10,6 +10,23 @@
 > que deveria continuar"). Decisions D01–D03 below; D03 as the user set it: "não é só o agente
 > pensando, às vezes o agente fica parado esperando outro processo, então o stale do agente não
 > deve contar, mas o do processo que ele espera sim".
+>
+> IMPLEMENTED on 2026-10-13. Measured:
+> - W01: a task started 20 min ago with no run of its holder reads `⏸` once; a run of the
+>   holder brings `▶`; a line of the older format, with only the date, still reads.
+> - W02: the probe, on real Claude Code sessions, corrected the documentation.
+>   - `SubagentStart` carries `agent_id`, `agent_type` and the session's transcript, not the
+>     subagent's.
+>   - `SubagentStop` carries `agent_transcript_path`, `last_assistant_message` and
+>     `background_tasks`, whose `description` names the task. It has no `stop_reason`, so
+>     the end reads `⏹`, with no verdict.
+>   - A `PreToolUse` inside a subagent carries its `agent_id`.
+>   - Both events fire for a background subagent.
+>   - Through the hook Anchors installs, a real background subagent read
+>     `▶ agent "Run sleep and echo command"` and then `⏹ … ended — <its last message>`, and its
+>     command carried its id.
+>   - A long-lived teammate could not be probed from a headless session; part 1 covers it,
+>     through the task it holds.
 
 ## The problem
 
@@ -70,7 +87,7 @@ The hook command records them as runs, the way it records the agent's background
 - `SubagentStop` closes it with the reason, one of completed, failed, interrupted or stopped,
   and with the first line of its last message:
   - `✓ agent code-reviewer ended (completed, 12m) — "No blocking issues…"`;
-  - failed reads `✗`, interrupted or stopped reads `⏹`.
+  - measured: the hook carries no verdict, so every end reads `⏹`.
 - The heartbeat counts agents beside commands: `running=[agent 2, jest 1]`.
 
 **Facts the design rests on, from the Claude Code documentation, to be measured before

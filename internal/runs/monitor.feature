@@ -109,3 +109,9 @@ Feature: RunMonitor — reading the project's runs tick by tick: what started, s
     Given a death, a stall, a start, a progress mark, reports passing and failing, runs ending by Anchors, by the agent and before the monitor saw them, and heartbeats idle, busy and with a high load
     When each is filtered at the action level
     Then the death, the stall, the failing report, the failure and the agent's run go out; idle and high load go out once each, and again after they stopped and came back
+
+  @MNTRS-B16 @unit-level
+  Scenario: A subagent lives by its transcript and waits on its own commands
+    Given a subagent's run, its transcript quiet, first with a command of its own alive and then without
+    When the monitor ticks past the agent stall time, then the subagent's record ends
+    Then it is not stalled while its command runs, it is stalled after, and it ends with its last message

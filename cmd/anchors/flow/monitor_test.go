@@ -308,3 +308,95 @@ func TestMonitor_actionLevel(t *testing.T) {
 		t.Errorf("an unknown level is refused, named: %v", err)
 	}
 }
+
+func TestMonitor_idleTask(t *testing.T) {
+	t.Run("MNCMD-B09: A task in progress with no activity from its holder is said", func(t *testing.T) {})
+	dir := monitorProject(t, "")
+	started := time.Now().Add(-20 * time.Minute).Format(progress.StartedAt)
+	if err := progress.Update(dir, "", func(f *progress.File) error {
+		id, err := f.AddDemand("A", "")
+		if err != nil {
+			return err
+		}
+		tid, err := f.AddTask(id, "x", 1, false)
+		if err != nil {
+			return err
+		}
+		return f.Start(tid, "a", started, false)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	run := func(args ...string) string {
+		t.Helper()
+		out, err := runCobra(t, newMonitorCmd(), append([]string{"--root", dir, "--once", "--heartbeat", "1h"}, args...)...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out
+	}
+	if out := run(); !strings.Contains(out, "⏸ D01.T1 in progress — no activity from a for 2") {
+		t.Errorf("quiet past the default 10m, the task is said:\n%s", out)
+	}
+	if out := run(); strings.Contains(out, "D01.T1") {
+		t.Errorf("said once:\n%s", out)
+	}
+	end, ok := time.Now(), 0
+	if err := runs.Save(dir, runs.Run{ID: "r", Name: "jest", Command: "npx jest", By: runs.ByRun, Session: "a", Started: end.Add(-time.Second), Ended: &end, Exit: &ok}); err != nil {
+		t.Fatal(err)
+	}
+	if out := run(); !strings.Contains(out, "▶ D01.T1 moving again (a)") {
+		t.Errorf("a run of the holder moves it again:\n%s", out)
+	}
+	other := monitorProject(t, "")
+	if err := os.WriteFile(progress.Path(other), mustRead(t, progress.Path(dir)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runCobra(t, newMonitorCmd(), "--root", other, "--once", "--heartbeat", "1h", "--idle", "off")
+	if err != nil || strings.Contains(out, "D01.T1") {
+		t.Errorf("off says nothing: %v\n%s", err, out)
+	}
+	if _, err := runCobra(t, newMonitorCmd(), "--root", other, "--once", "--idle", "soon"); err == nil || !strings.Contains(err.Error(), `"soon"`) {
+		t.Errorf("an idle that does not read is refused, named: %v", err)
+	}
+}
+
+func mustRead(t *testing.T, path string) []byte {
+	t.Helper()
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return b
+}
+
+// The payloads are those a real session sent (DESIGN-agent-activity.md, the probe), with the
+// paths made the test's own.
+func TestAgentHook_subagent(t *testing.T) {
+	t.Run("MNCMD-B10: The agent's hook records a subagent as a run", func(t *testing.T) {})
+	dir := monitorProject(t, "")
+	now := time.Now()
+	session := filepath.ToSlash(filepath.Join(t.TempDir(), "6c892989.jsonl"))
+	start := fmt.Sprintf(`{"session_id":"6c892989","transcript_path":%q,"cwd":%q,"agent_id":"aa9c71386fc76b9f4","agent_type":"general-purpose","hook_event_name":"SubagentStart"}`, session, dir)
+	agentHook([]byte(start), now)
+	r, err := runs.Load(dir, "subagent-aa9c71386fc76b9f4")
+	if err != nil || r.Kind != runs.KindAgent || r.Name != "agent general-purpose" || r.Agent != "aa9c71386fc76b9f4" ||
+		r.Output != strings.TrimSuffix(session, ".jsonl")+"/subagents/agent-aa9c71386fc76b9f4.jsonl" || r.Done() {
+		t.Fatalf("the subagent opens as a run of kind agent, its transcript its output: %+v %v", r, err)
+	}
+	bash := fmt.Sprintf(`{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"toolu_9","cwd":%q,"agent_id":"aa9c71386fc76b9f4","agent_type":"general-purpose","tool_input":{"command":"npx jest","run_in_background":true}}`, dir)
+	agentHook([]byte(bash), now)
+	if c, err := runs.Load(dir, "agent-toolu_9"); err != nil || c.Agent != "aa9c71386fc76b9f4" {
+		t.Errorf("the subagent's command carries its id: %+v %v", c, err)
+	}
+	stop := fmt.Sprintf(`{"session_id":"6c892989","cwd":%q,"agent_id":"aa9c71386fc76b9f4","agent_type":"general-purpose","hook_event_name":"SubagentStop","stop_hook_active":false,"agent_transcript_path":"/t/agent-aa9c71386fc76b9f4.jsonl","last_assistant_message":"bg-probe\nmore","background_tasks":[{"id":"aa9c71386fc76b9f4","type":"subagent","status":"running","description":"Run background sleep probe","agent_type":"general-purpose"}]}`, dir)
+	agentHook([]byte(stop), now.Add(time.Minute))
+	r, _ = runs.Load(dir, "subagent-aa9c71386fc76b9f4")
+	if !r.Done() || r.Summary != "bg-probe" || r.Name != `agent "Run background sleep probe"` || r.Output != "/t/agent-aa9c71386fc76b9f4.jsonl" {
+		t.Errorf("the stop closes it with its last message and its task's name: %+v", r)
+	}
+	outside := t.TempDir()
+	agentHook([]byte(fmt.Sprintf(`{"hook_event_name":"SubagentStart","cwd":%q,"agent_id":"x1","agent_type":"Explore"}`, outside)), now)
+	if len(runs.List(outside)) != 0 {
+		t.Error("outside a project nothing is recorded")
+	}
+}
