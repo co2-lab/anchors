@@ -2,7 +2,7 @@
 # @anchors
 #   code: CDFTC
 #   ref: CDCMC
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-13
 #   layer: feature
 
 @CDCMC
@@ -126,3 +126,9 @@ Feature: CodeCommand — a new unit gets an identity code that no other unit in 
     Given a map where one code is taken
     When a code is generated for that taken code's shape, for a free code's shape, and for a unit name
     Then the first two also say the code is taken or free and point at --check, and the unit name gets no note
+
+  @CDCMC-B16 @unit-level
+  Scenario: A file's own code is taken
+    Given a map with a code file whose own code is UPRHS and whose unit is UPWRU
+    When UPRHS is checked, and the codes in use are listed
+    Then UPRHS is already used, naming the file, and the list holds it

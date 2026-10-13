@@ -526,9 +526,17 @@ func readCodes(mapPath string) (*codeIndex, error) {
 	codeDecl := map[string]bool{}
 	seen := map[string]bool{}
 	for _, n := range g.Nodes {
-		// A file's own code is taken as much as a unit's: it is the file's address.
-		if n.FileCode != "" {
+		// A file's own code is taken as much as a unit's: it is the file's address. It has an
+		// owner too: `--check` and `code list` read the owners, and a file code taken with no
+		// owner was said free (reported from MIF: three `code:` of code files, each with a
+		// `ref:` to its spec, were offered again).
+		if n.FileCode != "" && n.FileCode != n.Code {
 			taken[n.FileCode] = true
+			key := n.FileCode + "\x00" + n.ID
+			if !seen[key] {
+				seen[key] = true
+				owners[n.FileCode] = append(owners[n.FileCode], n.ID)
+			}
 		}
 		if n.Code == "" {
 			continue

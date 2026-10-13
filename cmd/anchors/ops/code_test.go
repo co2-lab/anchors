@@ -459,3 +459,22 @@ func TestCode_aCodeShapedNameGetsItsStatus(t *testing.T) {
 		t.Errorf("a unit name gets no note:\n%s", out)
 	}
 }
+
+// Reported from MIF: three `code:` of code files, each with a `ref:` to its spec, were said
+// free by --check, and another agent took them.
+func TestCodeCheckSeesFileCodes(t *testing.T) {
+	t.Run("CDCMC-B16: A file's own code is taken", func(t *testing.T) {})
+	root := codeProject(t, "version: 1\n", `    - id: apps/mobile/src/features/auth/hooks/usePasswordReset.ts
+      kind: code
+      code: UPWRU
+      file_code: UPRHS
+`)
+	err, out := runCode(t, "--root", root, "--check", "UPRHS")
+	if !errors.Is(err, errCollision) || !strings.Contains(out, "UPRHS is already used by: apps/mobile/src/features/auth/hooks/usePasswordReset.ts") {
+		t.Errorf("the file's own code is taken, named: %v\n%s", err, out)
+	}
+	_, list := runCode(t, "list", "--root", root)
+	if !strings.Contains(list, "UPRHS") {
+		t.Errorf("code list holds it:\n%s", list)
+	}
+}

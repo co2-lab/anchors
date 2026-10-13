@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f8a39d1391848f98 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:ad91b5cbaa195c0a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1779,6 +1779,8 @@ teste prova.
 - [The length check points each divergence to anchors recode, and there is no --fix](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B14`
 
 - [A name shaped like a code also gets that code's status](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B15`
+
+- [A file's own code is taken](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B16`
 
 - [The subject is the first line that is neither blank nor a comment](layers/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-B01`
 

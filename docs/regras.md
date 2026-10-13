@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:780a0655716ab327 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:1948fca4ad4ab23d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1958,6 +1958,8 @@ abra a página dela em `camadas/`.
 - [CDCMC-B14 — When the length check accuses codes, it ends with the exact `anchors recode <old> <new>` command for each one, to be reviewed in its dry-run and applied with `--apply`; the check itself changes nothing and has no `--fix`.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
 - [CDCMC-B15 — A name shaped like an identity code — capitals and digits at a length `code_lengths` allows — still gets its suggestion, and the command also says whether that code is free or who uses it, pointing at `--check`; a name with lower case gets no such note. (`codeShapeRE`)](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
+
+- [CDCMC-B16 — A file's own code — the `code:` of a file whose `ref:` names its unit — is taken: `--check` names the file that holds it, a generated code avoids it, and `code list` lists it.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
 - [CDCMC-I01 — REF[CDCMC-B02]: a suggested code is never one the map already holds — the taken canonical is always adjusted](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
