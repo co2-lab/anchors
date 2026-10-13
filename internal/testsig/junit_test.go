@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -246,5 +247,21 @@ func TestPassedCodes_aGreenCaptureProvesTheState(t *testing.T) {
 	}
 	if passed["BUTTN-S02"] || !seen["BUTTN-S02"] {
 		t.Errorf("a red capture proves nothing and is still seen: passed %v seen %v", passed, seen)
+	}
+}
+
+func TestParseJUnit_failureText(t *testing.T) {
+	t.Run("JUIJN-B13: A failed case carries what its failure says", func(t *testing.T) {})
+	path := filepath.Join(t.TempDir(), "junit.xml")
+	xml := `<testsuites><testsuite name="s"><testcase name="A-B01: x" file="a.test.ts"><failure message="Exceeded timeout of 20000 ms">at Object.afterEach (a.test.ts:3:5)</failure></testcase><testcase name="A-B02: y"/></testsuite></testsuites>`
+	if err := os.WriteFile(path, []byte(xml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	rep, err := ParseJUnit(path)
+	if err != nil || len(rep.Cases) != 2 {
+		t.Fatalf("%v %+v", err, rep)
+	}
+	if f := rep.Cases[0].Failure; !strings.Contains(f, "Exceeded timeout of 20000 ms") || !strings.Contains(f, "a.test.ts:3:5") || rep.Cases[1].Failure != "" {
+		t.Errorf("the failure's message and stack, and nothing for a pass: %q / %q", f, rep.Cases[1].Failure)
 	}
 }

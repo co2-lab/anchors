@@ -336,9 +336,20 @@ func runFiles(cs suiteCommand, s config.Suite, absRoot, target string, ids []str
 		}
 		fmt.Printf("━━━ %s [%s%s] %d file(s) ━━━\n%s\n\n", cs.nome, workspaceLabel(s), s.Layer, len(batch), linha)
 		start := time.Now()
+		sampler := sampleLoad()
 		errRun := execAtRoot(linha, absRoot)
+		peak, measured := sampler.Stop()
 		if err := ingestIfRecent(absRoot, absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), absPath(absRoot, s.Report), s, start, true); err != nil {
 			return fmt.Errorf("layer %q: ingest report: %w", s.Layer, err)
+		}
+		if errRun != nil && s.Report == "" {
+			passes, err := retryOnLoad(s, absRoot, target, absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), peak, measured)
+			if err != nil {
+				return err
+			}
+			if passes {
+				errRun = nil
+			}
 		}
 		if errRun != nil {
 			return fmt.Errorf("layer %q failed: %w", s.Layer, errRun)

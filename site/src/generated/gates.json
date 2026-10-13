@@ -466,6 +466,10 @@
       {
         "label": "test-traceable",
         "slug": "docs/gates/test-traceable"
+      },
+      {
+        "label": "tests-retried",
+        "slug": "docs/gates/tests-retried"
       }
     ]
   },

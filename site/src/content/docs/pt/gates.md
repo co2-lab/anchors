@@ -146,6 +146,7 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | [`single-test-per-unit`](/pt/docs/gates/single-test-per-unit/) | `code` | A unit has one test file per test layer, or declares the split with a reason |
 | [`test-level-codes`](/pt/docs/gates/test-level-codes/) | — |  |
 | [`test-traceable`](/pt/docs/gates/test-traceable/) | `test` | The test cites the code of what it proves (visible to the relational gates) |
+| [`tests-retried`](/pt/docs/gates/tests-retried/) | — |  |
 
 ## Segurança e Higiene
 

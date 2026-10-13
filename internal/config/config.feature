@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTC
 #   ref: CNFGO
-#   updated_at: 2026-10-12
+#   updated_at: 2026-10-13
 #   layer: feature
 
 @CNFGO
@@ -484,3 +484,8 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     When their unit is asked
     Then the first is hours and the second empty
 
+  @CNFGO-B71 @unit-level
+  Scenario: A suite's retry on load reads its threshold and its retries
+    Given retry_on_load with no values, with 1.5x and max 2, and with lots
+    When the threshold and the retries are read
+    Then 2 and 1, then 1.5 and 2, and lots is refused naming it

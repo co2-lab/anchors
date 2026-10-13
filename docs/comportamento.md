@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:990a8929283ba69a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:874d037d137a246b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2808,6 +2808,14 @@ teste prova.
 
 - [An impact path over the ceiling runs in batches](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B14`
 
+- [A test that ran out of time under load runs once more, and says so](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B15`
+
+- [Without load a timeout is not retried](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B16`
+
+- [A failed assertion is never retried, and without retry_on_load nothing is](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B17`
+
+- [A load threshold that does not read fails naming it](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-E08`
+
 - [Only a date inside the header at the top of the file is bumped](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B01`
 
 - [A real change and a new file are bumped to the date](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B02`
@@ -3083,6 +3091,8 @@ teste prova.
 - [The configuration's revision](layers/config.md#cnfgo-b69--the-configurations-revision) `CNFGO-B69`
 
 - [The progress unit](layers/config.md#cnfgo-b70--the-progress-unit) `CNFGO-B70`
+
+- [A suite's retry on load reads its threshold and its retries](layers/config.md#cnfgo-b71--a-suites-retry-on-load-reads-its-threshold-and-its-retries) `CNFGO-B71`
 
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
@@ -5756,6 +5766,10 @@ teste prova.
 
 - [An unreadable flow or source leaves the verdict pending](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-E02`
 
+- [A test file with no retry passes](camadas/gate.md#rtsrt--testsretried--a-test-that-passed-only-on-a-retry-under-load-stays-in-sight) `RTSRT-B01`
+
+- [A test file with tests passed on retry is listed](camadas/gate.md#rtsrt--testsretried--a-test-that-passed-only-on-a-retry-under-load-stays-in-sight) `RTSRT-B02`
+
 - [Non-spec artifacts skip confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B01`
 
 - [Specifications without cited triggers skip confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B02`
@@ -7112,6 +7126,8 @@ teste prova.
 
 - [A green capture of a state proves the state](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report) `JUIJN-B12`
 
+- [A failed case carries what its failure says](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report) `JUIJN-B13`
+
 - [Each record becomes one file's coverage in report order](layers/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B01`
 
 - [A line with hits is covered and a line without is not](layers/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B02`
@@ -7195,6 +7211,16 @@ teste prova.
 - [A canonical-format report under the gremlins format is refused naming format](layers/infra.md#gring--gremlinsingest--the-mutation-score-per-file-read-from-a-gremlins-report) `GRING-E01`
 
 - [A report without files is refused](layers/infra.md#gring--gremlinsingest--the-mutation-score-per-file-read-from-a-gremlins-report) `GRING-E02`
+
+- [A failure past its timeout ran out of time](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion) `TFSTM-B01`
+
+- [A wait that ran out is told by its line](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion) `TFSTM-B02`
+
+- [A failed assertion is not a timeout](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion) `TFSTM-B03`
+
+- [The tests that passed on a retry are kept](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion) `TFSTM-B04`
+
+- [An unreadable test file counts for nothing](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion) `TFSTM-B05`
 
 ## mapa
 

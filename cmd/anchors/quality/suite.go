@@ -299,7 +299,9 @@ func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, a
 			}
 
 			inicio := time.Now()
+			sampler := sampleLoad()
 			errRun := execAtRoot(linha, absRoot)
+			peak, measured := sampler.Stop()
 
 			// A ingestão acontece MESMO se o comando saiu != 0, e essa é a regra menos
 			// óbvia daqui. Um runner sai != 0 exatamente quando há o que reportar: o jest
@@ -322,6 +324,15 @@ func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, a
 			mapcmd.MutationTargets = nil
 			if err := errIngest; err != nil {
 				return fmt.Errorf("layer %q: ingest report: %w", s.Layer, err)
+			}
+			if errRun != nil && mutation == "" {
+				passes, err := retryOnLoad(s, absRoot, target, junit, lcov, peak, measured)
+				if err != nil {
+					return err
+				}
+				if passes {
+					errRun = nil
+				}
 			}
 			if errRun != nil {
 				return fmt.Errorf("layer %q failed: %w", s.Layer, errRun)

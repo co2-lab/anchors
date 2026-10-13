@@ -1889,3 +1889,17 @@ func TestProgressUnit(t *testing.T) {
 		t.Error("the unit is the declared one, trimmed, or empty")
 	}
 }
+
+func TestRetryOnLoad(t *testing.T) {
+	t.Run("CNFGO-B71: A suite's retry on load reads its threshold and its retries", func(t *testing.T) {})
+	if f, err := (RetryOnLoad{}).Factor(); err != nil || f != 2 || (RetryOnLoad{}).Retries() != 1 {
+		t.Errorf("defaults: %v %v", f, err)
+	}
+	r := RetryOnLoad{Load: "1.5x", Max: 2}
+	if f, err := r.Factor(); err != nil || f != 1.5 || r.Retries() != 2 {
+		t.Errorf("declared: %v %v", f, err)
+	}
+	if _, err := (RetryOnLoad{Load: "lots"}).Factor(); err == nil || !strings.Contains(err.Error(), `"lots"`) {
+		t.Errorf("refused, named: %v", err)
+	}
+}

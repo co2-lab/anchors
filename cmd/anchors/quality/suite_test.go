@@ -14,6 +14,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/testsig"
 )
 
 // A `run:` that uses {{target}} cannot run without a target. Replacing it with nothing
@@ -668,5 +669,102 @@ func TestSuiteIncrementalBatchesOverTheCeiling(t *testing.T) {
 	lines := strings.Split(strings.TrimSpace(readQ(t, filepath.Join(dir, "got.txt"))), "\n")
 	if len(lines) != 2 || strings.Contains(lines[0], " ") || strings.Contains(lines[1], " ") {
 		t.Errorf("run_changed runs twice, one file each; got %q", lines)
+	}
+}
+
+// retryProject is a suite whose run leaves first.xml as its report and fails, and whose
+// retry leaves again.xml and passes or fails as told; the reports are MIF's failures.
+func retryProject(t *testing.T, retry string, first, again string) string {
+	t.Helper()
+	yaml := suiteLayers + `tests:
+  - layer: unit
+    run: "cat first.xml > junit.xml; exit 1"
+    run_changed: "cat first.xml > junit.xml; exit 1"
+    junit: "junit.xml"
+` + retry
+	files := suiteFiles()
+	files["first.xml"] = first
+	files["again.xml"] = again
+	return qProject(t, yaml, files, suiteGraph())
+}
+
+func playLoad(t *testing.T, v float64) {
+	t.Helper()
+	old, every := loadAverage, loadSampleEvery
+	loadAverage = func() (float64, bool) { return v, true }
+	loadSampleEvery = time.Millisecond
+	t.Cleanup(func() { loadAverage, loadSampleEvery = old, every })
+}
+
+const (
+	hookTimedOut = `<testsuites><testsuite name="s"><testcase name="IPSBI-V06#01: exibe errorMessage" file="a_test.go"><failure message="thrown: Exceeded timeout of 20000 ms for a hook.">at Object.afterEach (node_modules/x/index.ts:15:5)</failure></testcase><testcase name="ok" file="a_test.go"/></testsuite></testsuites>`
+	assertFailed = `<testsuites><testsuite name="s"><testcase name="IPSBI-V07: soma" file="a_test.go"><failure message="expect(received).toBe(expected)">Expected: 2 Received: 3</failure></testcase></testsuite></testsuites>`
+	allPassed    = `<testsuites><testsuite name="s"><testcase name="IPSBI-V06#01: exibe errorMessage" file="a_test.go"/></testsuite></testsuites>`
+)
+
+func TestRetryOnLoad_retriesATimeoutUnderLoad(t *testing.T) {
+	t.Run("STPRS-B15: A test that ran out of time under load runs once more, and says so", func(t *testing.T) {})
+	playLoad(t, 1000)
+	dir := retryProject(t, `    retry_on_load:
+      load: 2x
+      run: "echo {{files}} > retried.txt; cat again.xml > junit.xml"
+`, hookTimedOut, allPassed)
+	out, err := runQ(t, newTestCmd(), "--root", dir)
+	if err != nil {
+		t.Fatalf("every failure ran out of time and passed on retry: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "1 test(s) passed on retry (load 1000.0/") || !strings.Contains(out, "IPSBI-V06#01") {
+		t.Errorf("the retry is said:\n%s", out)
+	}
+	if got := readQ(t, filepath.Join(dir, "retried.txt")); !strings.Contains(got, filepath.ToSlash(dir)+"/a_test.go") {
+		t.Errorf("only the failed file runs again: %q", got)
+	}
+	if rec := testsig.LoadRetried(dir); len(rec) != 1 || rec[0].Name != "IPSBI-V06#01: exibe errorMessage" || rec[0].Load != 1000 {
+		t.Errorf("the pass on retry is recorded: %+v", rec)
+	}
+	changed := retryProject(t, `    retry_on_load:
+      run: "cat again.xml > junit.xml"
+`, hookTimedOut, allPassed)
+	if out, err := runQ(t, newTestCmd(), "--root", changed, "--changed", "a.go"); err != nil || !strings.Contains(out, "passed on retry") {
+		t.Errorf("with --changed too: %v\n%s", err, out)
+	}
+}
+
+func TestRetryOnLoad_notWithoutLoad(t *testing.T) {
+	t.Run("STPRS-B16: Without load a timeout is not retried", func(t *testing.T) {})
+	playLoad(t, 0.1)
+	dir := retryProject(t, `    retry_on_load:
+      load: 2x
+      run: "cat again.xml > junit.xml"
+`, hookTimedOut, allPassed)
+	out, err := runQ(t, newTestCmd(), "--root", dir)
+	if err == nil || !strings.Contains(out, "under 2x the CPUs: no retry") {
+		t.Errorf("under the threshold, the failure stands: %v\n%s", err, out)
+	}
+}
+
+func TestRetryOnLoad_neverAnAssertion(t *testing.T) {
+	t.Run("STPRS-B17: A failed assertion is never retried, and without retry_on_load nothing is", func(t *testing.T) {})
+	playLoad(t, 1000)
+	dir := retryProject(t, `    retry_on_load:
+      run: "echo ran > retried.txt; cat again.xml > junit.xml"
+`, assertFailed, allPassed)
+	if out, err := runQ(t, newTestCmd(), "--root", dir); err == nil || strings.Contains(out, "retry") {
+		t.Errorf("a failed assertion stands, not retried: %v\n%s", err, out)
+	}
+	off := retryProject(t, "", hookTimedOut, allPassed)
+	if out, err := runQ(t, newTestCmd(), "--root", off); err == nil || strings.Contains(out, "retry") {
+		t.Errorf("a suite without retry_on_load retries nothing: %v\n%s", err, out)
+	}
+}
+
+func TestRetryOnLoad_badThreshold(t *testing.T) {
+	t.Run("STPRS-E08: A load threshold that does not read fails naming it", func(t *testing.T) {})
+	playLoad(t, 1000)
+	dir := retryProject(t, `    retry_on_load:
+      load: lots
+`, hookTimedOut, allPassed)
+	if _, err := runQ(t, newTestCmd(), "--root", dir); err == nil || !strings.Contains(err.Error(), `"lots"`) {
+		t.Errorf("named: %v", err)
 	}
 }

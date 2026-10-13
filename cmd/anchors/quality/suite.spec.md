@@ -57,6 +57,9 @@ coverage, or the check over the run's own scope: the same changed files, or the 
 | `STPRS-B11` | After every suite passed, a chain naming check runs the check over the run's own scope: the changed files of an incremental run, the full sweep otherwise. |
 | `STPRS-B13` | A report whose modification time is up to two seconds before the run's start is this run's: a file system's clock is coarser than the process's (Linux stamps from a tick behind `now`, FAT to two seconds), and a report written in the run's first milliseconds must not read as older. |
 | `STPRS-B14` | An impact path whose command line would pass the platform's ceiling runs in batches, each under it and each ingested as a partial run, saying how many; a path that fits runs in one invocation. (`batchLabel`) |
+| `STPRS-B15` | With `retry_on_load:`, a run whose failed tests ran out of time (`TimedOut`) while the run's highest load passed the threshold (`load`, 2x the CPUs by default) runs those tests' files once more — `retry_on_load.run`, or `run_changed`, over the failed files —, ingests the retry, records each test that passed on it (`passed on retry`, with the load), and passes when every failure ran out of time and passed again; up to `max` retries. (`retryOnLoad`, `sampleLoad`) |
+| `STPRS-B16` | A run whose timeouts came under the threshold is not retried, and says the load and the threshold. |
+| `STPRS-B17` | A failed assertion is never retried, and a suite without `retry_on_load:` retries nothing. |
 | `STPRS-B12` | An incremental run hands each suite only the impact files its `paths:` cover; a suite the impact path does not reach says so and runs nothing. |
 
 ## Invariants
@@ -81,6 +84,7 @@ coverage, or the check over the run's own scope: the same changed files, or the 
 | `STPRS-E04` | Declared filters that match no suite together are refused. | Error naming the filters. | A silent success with nothing run would read as a green suite. |
 | `STPRS-E05` | The command declares a target placeholder and no target was given. | Error asking for the target. | An empty target would make a mutation tool mutate the whole project. |
 | `STPRS-E06` | Changed files were given and the suite declares no incremental command. | Error showing how to declare one. | Falling back to the full run would be expensive and would lie about what ran. |
+| `STPRS-E08` | The `retry_on_load.load` threshold does not read as a multiple of the CPUs, or `timeout_pattern` is not a regular expression. | The command fails naming the value. | A threshold guessed would retry what the project did not ask for. |
 | `STPRS-E07` | One invocation is longer than the platform's ceiling (overridable by an environment variable): a full run, or a single file of the impact path. | Error before running, with the ceiling and the ways out. | Past the ceiling the command fails without writing anything, and that failure looks like a red test. |
 | `STPRS-E08` | The chain names a command other than check or coverage. | Error naming what is accepted. | The chain is not a disguised shell runner. |
 | `STPRS-E09` | The incremental mode without a map points at the map build. | Error pointing at `anchors map build`. | The impact path is read from the map. |

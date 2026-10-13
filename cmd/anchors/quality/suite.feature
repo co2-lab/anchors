@@ -168,3 +168,27 @@ Feature: SuiteProxy — runs the test and mutation suites the project declared, 
     Given the argv ceiling set so one impact file fits and two do not
     When the test command runs with --changed
     Then it says it runs in 2 batches, and run_changed runs twice, one file each
+
+  @STPRS-B15 @unit-level
+  Scenario: A test that ran out of time under load runs once more, and says so
+    Given a suite with retry_on_load whose run fails a test on a hook past its timeout, under a load far past the CPUs
+    When the test command runs, whole and with --changed
+    Then only the failed file runs again, the retry passes, the run passes, and the test is recorded as passed on retry with the load
+
+  @STPRS-B16 @unit-level
+  Scenario: Without load a timeout is not retried
+    Given the same failure under a load below the threshold
+    When the test command runs
+    Then it fails, saying the load stayed under 2x the CPUs
+
+  @STPRS-B17 @unit-level
+  Scenario: A failed assertion is never retried, and without retry_on_load nothing is
+    Given a failed assertion under load with retry_on_load, and a timeout under load without it
+    When the test command runs on each
+    Then both fail with no retry
+
+  @STPRS-E08 @unit-level
+  Scenario: A load threshold that does not read fails naming it
+    Given retry_on_load with the load "lots"
+    When the test command runs after a timeout under load
+    Then it fails naming "lots"

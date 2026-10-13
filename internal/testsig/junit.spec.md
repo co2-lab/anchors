@@ -1,6 +1,6 @@
 <!-- @anchors
   code: JUIJN
-  updated_at: 2026-10-08
+  updated_at: 2026-10-13
   layer: infra
 -->
 # JUnitIngest — the run's outcome per test case, and the scenario codes each case proves, read from a JUnit report
@@ -34,6 +34,7 @@ case's NAME by the rule code grammar, in the project's vocabulary.
 | `JUIJN-B10` | Each case carries its run time in seconds from its `time` attribute; a missing, malformed or negative time reads as 0. |
 | `JUIJN-B12` | A case naming a visual-regression code of a state — `{CODE}-VR-S01` — also proves (and is seen for) the state it captures, `{CODE}-S01`: a green capture shows the state under its condition, looking as the spec says. |
 | `JUIJN-B11` | The codes a report proves and sees carry the variant a case names (`CODE-B02#02`): a case of one variant never stands for its sibling. (`ScenarioCodesInCase`, `PassedCodes`, `SeenCodes`) |
+| `JUIJN-B13` | A failed case carries what its failure says — the message and the body, its stack included — so a timeout can be told from a failed assertion; a case that passed carries nothing. |
 
 ## Domain
 

@@ -2,7 +2,7 @@
 # @anchors
 #   code: JNFTJ
 #   ref: JUIJN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-13
 #   layer: feature
 
 @JUIJN
@@ -104,3 +104,8 @@ Feature: JUnitIngest — the run's outcome per test case, and the scenario codes
     When the passed and seen codes are read
     Then BUTTN-VR-S01 and BUTTN-S01 are proven, BUTTN-S02 is seen and not proven
 
+  @JUIJN-B13 @unit-level
+  Scenario: A failed case carries what its failure says
+    Given a report with a case failed with a message and a stack, and a case that passed
+    When it is read
+    Then the failed case carries the message and the stack, and the passed one nothing

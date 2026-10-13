@@ -26,6 +26,8 @@ type CaseResult struct {
 	Skipped bool
 	// Seconds is the case's run time, from its `time` attribute; 0 when absent or unreadable.
 	Seconds float64
+	// Failure is what the failure says: its message and its body, the stack included.
+	Failure string
 }
 
 // SuiteResult agrupa casos por arquivo/suite.
@@ -61,6 +63,7 @@ type junitTestcase struct {
 
 type junitDetail struct {
 	Message string `xml:"message,attr"`
+	Text    string `xml:",chardata"`
 }
 
 // ParseJUnit lê um arquivo JUnit XML e devolve os casos, aceitando tanto a raiz
@@ -95,6 +98,12 @@ func collectSuite(s junitTestsuite, rep *ExecReport) {
 		if file == "" {
 			file = s.File
 		}
+		failure := ""
+		for _, d := range []*junitDetail{c.Failure, c.Error} {
+			if d != nil {
+				failure += d.Message + "\n" + d.Text + "\n"
+			}
+		}
 		rep.Cases = append(rep.Cases, CaseResult{
 			Name:    c.Name,
 			Class:   c.Classname,
@@ -102,6 +111,7 @@ func collectSuite(s junitTestsuite, rep *ExecReport) {
 			Failed:  c.Failure != nil || c.Error != nil,
 			Skipped: c.Skipped != nil,
 			Seconds: caseSeconds(c.Time),
+			Failure: failure,
 		})
 	}
 	for _, nested := range s.Suites {

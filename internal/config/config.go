@@ -2624,6 +2624,45 @@ type Suite struct {
 	// ou também contra o dos dependentes (`full`). Importa: com os dois ingeridos, o
 	// gate julga pelo ISOLADO, que é bem mais duro.
 	Scope string `yaml:"scope,omitempty"`
+	// RetryOnLoad turns on, for this suite, the single retry of a test that failed on time
+	// while the machine was loaded (DESIGN-retry-on-load.md); off when absent.
+	RetryOnLoad *RetryOnLoad `yaml:"retry_on_load,omitempty"`
+	// TimeoutPattern is what tells a failure as a timeout, over its message and the line of
+	// the test where it failed; empty, the built-in patterns.
+	TimeoutPattern string `yaml:"timeout_pattern,omitempty"`
+}
+
+// RetryOnLoad is how a suite retries a test that failed on time under load.
+type RetryOnLoad struct {
+	// Load is the threshold, as a multiple of the CPUs: "2x" (the default).
+	Load string `yaml:"load,omitempty"`
+	// Max is how many retries a test gets: 1 by default.
+	Max int `yaml:"max,omitempty"`
+	// Run is the command of the retry, with the failed files in {{files}}; empty, the
+	// suite's run_changed.
+	Run string `yaml:"run,omitempty"`
+}
+
+// Factor is the load threshold as a multiple of the CPUs. A value that is not a positive
+// number followed by x is an error naming it.
+func (r RetryOnLoad) Factor() (float64, error) {
+	v := strings.TrimSpace(r.Load)
+	if v == "" {
+		return 2, nil
+	}
+	f, err := strconv.ParseFloat(strings.TrimSuffix(strings.ToLower(v), "x"), 64)
+	if err != nil || f <= 0 || !strings.HasSuffix(strings.ToLower(v), "x") {
+		return 0, fmt.Errorf("retry_on_load.load: %q is not a multiple of the CPUs, like 2x", r.Load)
+	}
+	return f, nil
+}
+
+// Retries is how many retries a test gets: Max, or 1.
+func (r RetryOnLoad) Retries() int {
+	if r.Max > 0 {
+		return r.Max
+	}
+	return 1
 }
 
 // SelecionaSuites filtra pelos DOIS eixos e devolve o que sobra na ordem em que foi

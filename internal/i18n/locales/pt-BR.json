@@ -670,6 +670,8 @@
   "gate.progress_honest.unreadable": "o anchors.progress.md não pode ser lido: %v",
   "gate.progress_honest.skip_no_demand": "nenhuma demanda do anchors.progress.md desenvolve `%s` — `anchors progress add demand \"<título>\" --plan %s` passa a acompanhá-lo",
   "gate.progress_intact.skip_absent": "sem anchors.progress.md",
+  "gate.tests_retried.fail": "passou só num retry sob carga nos últimos 7 dias: %s",
+  "gate.tests_retried.unstable": "instável: sob carga, estoura o tempo",
   "gate.progress_honest.skip_no_progress_file": "o plano não tem `%s` ao lado — crie com `anchors new progress --for %s`",
   "gate.progress_honest.marked_but_missing": "%d item(ns) marcado(s) `[x]` cujo arquivo NÃO EXISTE: %s.\n  O progresso dá como pronto o que não está — quem lê o quadro decide em cima disso.\n",
   "gate.progress_honest.open_but_exists": "%d item(ns) `[ ]` cujo arquivo JÁ EXISTE: %s.\n  O trabalho foi feito e ninguém marcou — o próximo a olhar vai refazer.\n",

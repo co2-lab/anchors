@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:5143f7e135deaaa4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:5d25cf9eb091f954 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 87 unidades e 1393 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 88 unidades e 1395 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -4484,6 +4484,20 @@ governs spec-level declaration.
 - **TQETS-E01** — The project declares an E2E surface, but the directory its pattern points to does not exist on disk.
 
 - **TQETS-E02** — A flow of the E2E surface, or a source file of the project, cannot be read.
+
+
+## RTSRT — TestsRetried — a test that passed only on a retry under load stays in sight
+
+A suite with `retry_on_load:` runs once more a test that ran out of time while the machine was
+loaded, and the run passes when the retry does (DESIGN-retry-on-load.md). The retry lets the
+work go on. This informative gate keeps it from hiding a test that keeps running out of time:
+over a test file, it lists the tests that passed only on a retry in the last 7 days, how many
+times, and under what load the last time. A test that needed 3 retries reads as unstable.
+
+
+- **RTSRT-B01** — A test file with no test passed on retry in the last 7 days passes. (`checkTestsRetried`)
+
+- **RTSRT-B02** — A test file whose tests passed on retry in the last 7 days fails, informing: each test, how many times, the load of the last one; a test retried 3 times or more reads as unstable. A retry older than 7 days, or of another file, does not count.
 
 
 ## TRDCT — TriggerDeclared — cited compliance triggers and obligations must exist in the declared vocabulary

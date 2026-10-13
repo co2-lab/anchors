@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:efa1e8d74a264285 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:c625a8f6a9ddd857 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3055,6 +3055,12 @@ abra a página dela em `camadas/`.
 
 - [STPRS-B14 — An impact path whose command line would pass the platform's ceiling runs in batches, each under it and each ingested as a partial run, saying how many; a path that fits runs in one invocation. (`batchLabel`)](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
+- [STPRS-B15 — With `retry_on_load:`, a run whose failed tests ran out of time (`TimedOut`) while the run's highest load passed the threshold (`load`, 2x the CPUs by default) runs those tests' files once more — `retry_on_load.run`, or `run_changed`, over the failed files —, ingests the retry, records each test that passed on it (`passed on retry`, with the load), and passes when every failure ran out of time and passed again; up to `max` retries. (`retryOnLoad`, `sampleLoad`)](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
+
+- [STPRS-B16 — A run whose timeouts came under the threshold is not retried, and says the load and the threshold.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
+
+- [STPRS-B17 — A failed assertion is never retried, and a suite without `retry_on_load:` retries nothing.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
+
 - [STPRS-B12 — An incremental run hands each suite only the impact files its `paths:` cover; a suite the impact path does not reach says so and runs nothing.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
 - [STPRS-I01 — Only a report written during this run reaches the map; one older than the run's start is left out and named.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
@@ -3073,9 +3079,9 @@ abra a página dela em `camadas/`.
 
 - [STPRS-E06 — Changed files were given and the suite declares no incremental command.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
-- [STPRS-E07 — One invocation is longer than the platform's ceiling (overridable by an environment variable): a full run, or a single file of the impact path.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
+- [STPRS-E08 — The `retry_on_load.load` threshold does not read as a multiple of the CPUs, or `timeout_pattern` is not a regular expression.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
-- [STPRS-E08 — The chain names a command other than check or coverage.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
+- [STPRS-E07 — One invocation is longer than the platform's ceiling (overridable by an environment variable): a full run, or a single file of the impact path.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
 - [STPRS-E09 — The incremental mode without a map points at the map build.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
@@ -3290,6 +3296,8 @@ abra a página dela em `camadas/`.
 - [CNFGO-B69 — A loaded configuration has the revision of its file (`Rev`), the same on every platform's line endings; a gate may declare `stale_on_config` — its judgment is about the configuration too —, and a project declaring a canonical gate keeps that from the catalog. (`Rev`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B70 — `progress.unit` names what a task's weight measures; with none declared the unit is empty, and the progress file counts in `points`. (`ProgressUnit`, `ProgressConfig`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-B71 — A suite's `retry_on_load` reads its threshold as a multiple of the CPUs — `2x` when absent —, refusing a value that is not one, and its retries as `max` — 1 when absent. (`RetryOnLoad`, `Factor`, `Retries`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -6359,6 +6367,12 @@ abra a página dela em `camadas/`.
 
 - [TQETS-E02 — A flow of the E2E surface, or a source file of the project, cannot be read.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
+### [RTSRT — TestsRetried — a test that passed only on a retry under load stays in sight](camadas/gate.md#rtsrt--testsretried--a-test-that-passed-only-on-a-retry-under-load-stays-in-sight)
+
+- [RTSRT-B01 — A test file with no test passed on retry in the last 7 days passes. (`checkTestsRetried`)](camadas/gate.md#rtsrt--testsretried--a-test-that-passed-only-on-a-retry-under-load-stays-in-sight)
+
+- [RTSRT-B02 — A test file whose tests passed on retry in the last 7 days fails, informing: each test, how many times, the load of the last one; a test retried 3 times or more reads as unstable. A retry older than 7 days, or of another file, does not count.](camadas/gate.md#rtsrt--testsretried--a-test-that-passed-only-on-a-retry-under-load-stays-in-sight)
+
 ### [TRDCT — TriggerDeclared — cited compliance triggers and obligations must exist in the declared vocabulary](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary)
 
 - [TRDCT-B01 — When the confronted node is not of kind spec, the gate skips confrontation.](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary)
@@ -7855,6 +7869,8 @@ abra a página dela em `camadas/`.
 
 - [JUIJN-B11 — The codes a report proves and sees carry the variant a case names (`CODE-B02#02`): a case of one variant never stands for its sibling. (`ScenarioCodesInCase`, `PassedCodes`, `SeenCodes`)](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
 
+- [JUIJN-B13 — A failed case carries what its failure says — the message and the body, its stack included — so a timeout can be told from a failed assertion; a case that passed carries nothing.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
+
 - [JUIJN-I01 — Every proven code is also a seen code: a run cannot prove what it did not measure.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
 
 - [JUIJN-I02 — A scenario is proven only by a case that ran, passed, and names exactly that scenario: a skipped or failed case proves nothing, and a variant is never proven by its sibling or by its rule.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
@@ -7952,6 +7968,18 @@ abra a página dela em `camadas/`.
 - [GRING-E01 — The report is not a gremlins report — a canonical-format report under `format: gremlins`, or no JSON.](layers/infra.md#gring--gremlinsingest--the-mutation-score-per-file-read-from-a-gremlins-report)
 
 - [GRING-E02 — The report has no file.](layers/infra.md#gring--gremlinsingest--the-mutation-score-per-file-read-from-a-gremlins-report)
+
+### [TFSTM — TimeoutFailure — telling a test that ran out of time from one that failed its assertion](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion)
+
+- [TFSTM-B01 — A failed case whose failure matches the pattern — a test or a hook past its timeout — ran out of time. (`TimedOut`, `DefaultTimeoutPattern`)](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion)
+
+- [TFSTM-B02 — A failed case whose failure does not say it, but whose stack points at a line of its own test file that matches the pattern — a wait — ran out of time.](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion)
+
+- [TFSTM-B03 — A failed case whose failure and pointed lines match nothing failed its assertion; a line of another file the stack points at does not count; a case that passed did not run out of time.](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion)
+
+- [TFSTM-B05 — A test file the stack points at that cannot be read counts for nothing: the case is told by its failure alone — a missing file never turns a failure into a retry.](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion)
+
+- [TFSTM-B04 — The tests that passed only on a retry are kept, each with when and under what load; added entries join the earlier ones, the latest 500 kept; a missing or unreadable record is empty. (`Retried`, `AddRetried`, `LoadRetried`, `RetriedFile`)](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion)
 
 ## mapa
 
