@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:dc0e2ba7a3bc2de2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:23f699757335647b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2797,6 +2797,8 @@ teste prova.
 - [The incremental mode without a map points at the map build](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-E09`
 
 - [An incremental run hands each suite only its own impact files](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B12`
+
+- [An impact path over the ceiling runs in batches](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B14`
 
 - [Only a date inside the header at the top of the file is bumped](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B01`
 

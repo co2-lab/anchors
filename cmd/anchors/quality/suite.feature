@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTD
 #   ref: STPRS
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-13
 #   layer: feature
 
 @STPRS
@@ -162,3 +162,9 @@ Feature: SuiteProxy — runs the test and mutation suites the project declared, 
     Given two suites whose paths split the project, and a change whose impact path reaches only the first
     When the incremental run goes
     Then the first receives its files and the second says the impact path does not reach it
+
+  @STPRS-B14 @unit-level
+  Scenario: An impact path over the ceiling runs in batches
+    Given the argv ceiling set so one impact file fits and two do not
+    When the test command runs with --changed
+    Then it says it runs in 2 batches, and run_changed runs twice, one file each

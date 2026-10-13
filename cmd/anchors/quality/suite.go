@@ -270,47 +270,62 @@ func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, a
 			fmt.Printf("[%s%s] the impact path reaches none of this suite's `paths:` — nothing to run\n\n", workspaceLabel(s), s.Layer)
 			continue
 		}
-		linha, err := pickCommand(s, mine, target)
-		if err != nil {
-			return fmt.Errorf("layer %q: %w", s.Layer, err)
-		}
-		fmt.Printf("━━━ %s [%s%s%s] ━━━\n%s\n\n", cs.nome, workspaceLabel(s), s.Layer, scopeLabel(s), linha)
-
-		if teto := suiteArgvLimit(); len(linha) > teto {
-			return fmt.Errorf("layer %q: the command line came out with %d characters (ceiling %d on this platform).\n"+
-				"  The impact path is too big for a single invocation. Run the full mode,\n"+
-				"  narrow the --changed, or adjust ANCHORS_ARGV_MAX if you know your shell can take it",
-				s.Layer, len(linha), teto)
-		}
-
-		inicio := time.Now()
-		errRun := execAtRoot(linha, absRoot)
-
 		junit, lcov, mutation := absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), absPath(absRoot, s.Report)
-		// A ingestão acontece MESMO se o comando saiu != 0, e essa é a regra menos
-		// óbvia daqui. Um runner sai != 0 exatamente quando há o que reportar: o jest
-		// quando um teste falha, o Stryker quando o score fica abaixo do próprio
-		// `thresholds.break`. Pular a ingestão nesse caso deixaria justamente a unidade
-		// PROBLEMÁTICA sem sinal no mapa — o gate seguiria dizendo "sem sinal ingerido"
-		// sobre a única que já se sabe ruim, e o vermelho pareceria ausência de medida.
-		//
-		// O relatório é a evidência do que aconteceu, não um prêmio por ter passado.
-		// The files a targeted mutation run handed to the tool: one its report omits gave no
-		// mutant (see mapcmd.MutationTargets).
-		mapcmd.MutationTargets = nil
-		if mutation != "" {
-			mapcmd.MutationTargets = mine
-			if target != "" {
-				mapcmd.MutationTargets = []string{target}
+		// An impact path too long for one command line runs in batches, each ingested as a
+		// partial run, the way a budget's batches are. Refusing it left the agent to run the
+		// whole suite and ingest it by hand (reported from MIF: a change to files every test
+		// imports gave 138 thousand characters over a ceiling of 100 thousand).
+		teto := suiteArgvLimit()
+		batches := [][]string{mine}
+		if len(mine) > 1 {
+			if whole, err := pickCommand(s, mine, target); err == nil && len(whole) > teto {
+				batches = argvBatches(s, mine, teto)
+				fmt.Printf("[%s%s] the impact path takes %d characters, over this platform's ceiling of %d: it runs in %d batches, each ingested as a partial run\n\n",
+					workspaceLabel(s), s.Layer, len(whole), teto, len(batches))
 			}
 		}
-		errIngest := ingestIfRecent(absRoot, junit, lcov, mutation, s, inicio, len(alvos) > 0)
-		mapcmd.MutationTargets = nil
-		if err := errIngest; err != nil {
-			return fmt.Errorf("layer %q: ingest report: %w", s.Layer, err)
-		}
-		if errRun != nil {
-			return fmt.Errorf("layer %q failed: %w", s.Layer, errRun)
+		for i, batch := range batches {
+			linha, err := pickCommand(s, batch, target)
+			if err != nil {
+				return fmt.Errorf("layer %q: %w", s.Layer, err)
+			}
+			fmt.Printf("━━━ %s [%s%s%s]%s ━━━\n%s\n\n", cs.nome, workspaceLabel(s), s.Layer, scopeLabel(s), batchLabel(i, len(batches), batch), linha)
+
+			if len(linha) > teto {
+				return fmt.Errorf("layer %q: the command line came out with %d characters (ceiling %d on this platform).\n"+
+					"  One invocation cannot take it. Run the full mode, narrow the --changed,\n"+
+					"  or adjust ANCHORS_ARGV_MAX if you know your shell can take it",
+					s.Layer, len(linha), teto)
+			}
+
+			inicio := time.Now()
+			errRun := execAtRoot(linha, absRoot)
+
+			// A ingestão acontece MESMO se o comando saiu != 0, e essa é a regra menos
+			// óbvia daqui. Um runner sai != 0 exatamente quando há o que reportar: o jest
+			// quando um teste falha, o Stryker quando o score fica abaixo do próprio
+			// `thresholds.break`. Pular a ingestão nesse caso deixaria justamente a unidade
+			// PROBLEMÁTICA sem sinal no mapa — o gate seguiria dizendo "sem sinal ingerido"
+			// sobre a única que já se sabe ruim, e o vermelho pareceria ausência de medida.
+			//
+			// O relatório é a evidência do que aconteceu, não um prêmio por ter passado.
+			// The files a targeted mutation run handed to the tool: one its report omits gave no
+			// mutant (see mapcmd.MutationTargets).
+			mapcmd.MutationTargets = nil
+			if mutation != "" {
+				mapcmd.MutationTargets = batch
+				if target != "" {
+					mapcmd.MutationTargets = []string{target}
+				}
+			}
+			errIngest := ingestIfRecent(absRoot, junit, lcov, mutation, s, inicio, len(alvos) > 0)
+			mapcmd.MutationTargets = nil
+			if err := errIngest; err != nil {
+				return fmt.Errorf("layer %q: ingest report: %w", s.Layer, err)
+			}
+			if errRun != nil {
+				return fmt.Errorf("layer %q failed: %w", s.Layer, errRun)
+			}
 		}
 
 		if junit == "" && lcov == "" && mutation == "" {
@@ -323,6 +338,14 @@ func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, a
 		fmt.Println()
 	}
 	return nil
+}
+
+// batchLabel names a batch in the run's header, when the impact path was split.
+func batchLabel(i, n int, batch []string) string {
+	if n < 2 {
+		return ""
+	}
+	return fmt.Sprintf(" batch %d/%d, %d file(s)", i+1, n, len(batch))
 }
 
 // ingestIfRecent só ingere o relatório que ESTA rodada produziu. A checagem de mtime

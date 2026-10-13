@@ -1,6 +1,6 @@
 <!-- @anchors
   code: STPRS
-  updated_at: 2026-10-08
+  updated_at: 2026-10-13
   layer: comando
 -->
 # SuiteProxy — runs the test and mutation suites the project declared, and binds their reports to the map
@@ -56,6 +56,7 @@ coverage, or the check over the run's own scope: the same changed files, or the 
 | `STPRS-B10` | An impact path with no code file runs nothing. |
 | `STPRS-B11` | After every suite passed, a chain naming check runs the check over the run's own scope: the changed files of an incremental run, the full sweep otherwise. |
 | `STPRS-B13` | A report whose modification time is up to two seconds before the run's start is this run's: a file system's clock is coarser than the process's (Linux stamps from a tick behind `now`, FAT to two seconds), and a report written in the run's first milliseconds must not read as older. |
+| `STPRS-B14` | An impact path whose command line would pass the platform's ceiling runs in batches, each under it and each ingested as a partial run, saying how many; a path that fits runs in one invocation. (`batchLabel`) |
 | `STPRS-B12` | An incremental run hands each suite only the impact files its `paths:` cover; a suite the impact path does not reach says so and runs nothing. |
 
 ## Invariants
@@ -80,7 +81,7 @@ coverage, or the check over the run's own scope: the same changed files, or the 
 | `STPRS-E04` | Declared filters that match no suite together are refused. | Error naming the filters. | A silent success with nothing run would read as a green suite. |
 | `STPRS-E05` | The command declares a target placeholder and no target was given. | Error asking for the target. | An empty target would make a mutation tool mutate the whole project. |
 | `STPRS-E06` | Changed files were given and the suite declares no incremental command. | Error showing how to declare one. | Falling back to the full run would be expensive and would lie about what ran. |
-| `STPRS-E07` | The command line is longer than the platform's ceiling (overridable by an environment variable). | Error before running, with the ceiling and the ways out. | Past the ceiling the command fails without writing anything, and that failure looks like a red test. |
+| `STPRS-E07` | One invocation is longer than the platform's ceiling (overridable by an environment variable): a full run, or a single file of the impact path. | Error before running, with the ceiling and the ways out. | Past the ceiling the command fails without writing anything, and that failure looks like a red test. |
 | `STPRS-E08` | The chain names a command other than check or coverage. | Error naming what is accepted. | The chain is not a disguised shell runner. |
 | `STPRS-E09` | The incremental mode without a map points at the map build. | Error pointing at `anchors map build`. | The impact path is read from the map. |
 

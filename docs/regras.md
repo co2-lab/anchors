@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:f2a341b2d91db5bb — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:87291cbd500e7cd1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3045,6 +3045,8 @@ abra a página dela em `camadas/`.
 
 - [STPRS-B13 — A report whose modification time is up to two seconds before the run's start is this run's: a file system's clock is coarser than the process's (Linux stamps from a tick behind `now`, FAT to two seconds), and a report written in the run's first milliseconds must not read as older.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
+- [STPRS-B14 — An impact path whose command line would pass the platform's ceiling runs in batches, each under it and each ingested as a partial run, saying how many; a path that fits runs in one invocation. (`batchLabel`)](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
+
 - [STPRS-B12 — An incremental run hands each suite only the impact files its `paths:` cover; a suite the impact path does not reach says so and runs nothing.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
 - [STPRS-I01 — Only a report written during this run reaches the map; one older than the run's start is left out and named.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
@@ -3063,7 +3065,7 @@ abra a página dela em `camadas/`.
 
 - [STPRS-E06 — Changed files were given and the suite declares no incremental command.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
-- [STPRS-E07 — The command line is longer than the platform's ceiling (overridable by an environment variable).](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
+- [STPRS-E07 — One invocation is longer than the platform's ceiling (overridable by an environment variable): a full run, or a single file of the impact path.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
 - [STPRS-E08 — The chain names a command other than check or coverage.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 

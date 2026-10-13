@@ -7,6 +7,7 @@ package quality
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -641,5 +642,31 @@ func TestIngestIfRecentToleratesACoarseClock(t *testing.T) {
 	out := captureStdout(t, func() { _ = ingestIfRecent(dir, "", filepath.Join(dir, "lcov.info"), "", s, start, false) })
 	if !strings.Contains(out, "report OLDER than this run") {
 		t.Errorf("a report ten seconds before the start is still older, got %q", out)
+	}
+}
+
+// Reported from MIF: a change to files every test imports gave a command line of 138
+// thousand characters over a ceiling of 100 thousand, and the run was refused.
+func TestSuiteIncrementalBatchesOverTheCeiling(t *testing.T) {
+	t.Run("STPRS-B14: An impact path over the ceiling runs in batches", func(t *testing.T) {})
+	yaml := suiteLayers + `tests:
+  - layer: unit
+    run: "echo FULL > got.txt"
+    run_changed: "echo {{files}} >> got.txt"
+`
+	dir := qProject(t, yaml, suiteFiles(), suiteGraph())
+	root := filepath.ToSlash(dir)
+	longest := len(root + "/a_test.go")
+	t.Setenv("ANCHORS_ARGV_MAX", strconv.Itoa(len("echo  >> got.txt")+longest+2))
+	out, err := runQ(t, newTestCmd(), "--root", dir, "--changed", "a.go")
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	if !strings.Contains(out, "it runs in 2 batches, each ingested as a partial run") || !strings.Contains(out, "batch 2/2, 1 file(s)") {
+		t.Errorf("the split is said:\n%s", out)
+	}
+	lines := strings.Split(strings.TrimSpace(readQ(t, filepath.Join(dir, "got.txt"))), "\n")
+	if len(lines) != 2 || strings.Contains(lines[0], " ") || strings.Contains(lines[1], " ") {
+		t.Errorf("run_changed runs twice, one file each; got %q", lines)
 	}
 }
