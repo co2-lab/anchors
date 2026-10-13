@@ -68,6 +68,12 @@ Feature: DemandLedger — the project's progress file
     When the file is written and read back
     Then the minute is kept and read, and the older line reads as the start of its day
 
+  @DMLDD-B11 @unit-level
+  Scenario: A demand, a stage or a task is renamed
+    Given a demand with a stage holding a done task
+    When each is renamed, then an id that names nothing, then a title with the separator
+    Then the titles change and the ids, the task's state and history stay, and the last two are refused
+
   @DMLDD-E01 @unit-level
   Scenario: A hand edit is refused
     Given a progress file with a line added by hand

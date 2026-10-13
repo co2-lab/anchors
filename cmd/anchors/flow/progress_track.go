@@ -41,6 +41,7 @@ done weight over the weight not cancelled.
   anchors progress start D01.T4         (held by you; --take to take another agent's)
   anchors progress done D01.T4
   anchors progress reopen D01.T4 | cancel D01.T4 --reason "…" | weigh D01.T4 8
+  anchors progress rename D01.S2 "Unplanned"   a new title; the id and the history stay
   anchors progress summary              the demands and their stages, with their progress
   anchors progress show [D01] [--json]  every task
 
@@ -199,6 +200,16 @@ Each change takes the file's lock, so agents working at once lose nothing.`,
 		},
 	}
 
+	rename := &cobra.Command{
+		Use: "rename <demand|stage|task> <title>", Short: "Give a demand, a stage or a task a new title; its id and history stay", Args: cobra.ExactArgs(2),
+		RunE: func(c *cobra.Command, args []string) error {
+			c.SilenceUsage = true
+			return change(c, func(f *progress.File) (string, error) {
+				return "✎ " + args[0] + " — " + args[1], f.Rename(args[0], args[1])
+			})
+		},
+	}
+
 	var asJSON bool
 	read := func() (*progress.File, error) {
 		abs, _, err := rootOf()
@@ -243,7 +254,7 @@ Each change takes the file's lock, so agents working at once lose nothing.`,
 	for _, c := range []*cobra.Command{summary, show} {
 		c.Flags().BoolVar(&asJSON, "json", false, "print JSON")
 	}
-	cmd.AddCommand(add, start, done, reopen, cancel, weigh, summary, show)
+	cmd.AddCommand(add, start, done, reopen, cancel, weigh, rename, summary, show)
 	return cmd
 }
 

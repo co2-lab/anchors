@@ -39,6 +39,7 @@ plan as a demand with one stage per phase, and moves the per-plan `-progress.md`
 | `DMLDD-B08` | A plan becomes a demand titled as the plan's title (or the one given), with one stage per phase its headers declare; a plan already tracked is refused. (`PlanDemand`) |
 | `DMLDD-B09` | A per-plan `-progress.md` beside a plan becomes its plan's demand: each heading a stage, each checkbox a task weighing 1 as an estimate, done when it was checked; the placeholder items of an unfilled template are left out; a plan already tracked keeps its demand; the migration of a project moves every such file, titles each demand as its plan, and deletes the file; and a dry run writes nothing. (`LegacyFiles`, `MigrateLegacy`, `MigrateProject`, `Migrated`, `LegacySuffix`) |
 | `DMLDD-B10` | A task in progress records when it was started to the minute (`doing since 2026-10-12 21:31 by a`), and says when, in local time; a task of a file written before, with only the date, still reads, counted from the start of that day. (`StartedAt`, `Since`) |
+| `DMLDD-B11` | A demand, a stage or a task takes a new title, with the same rules as a new one; its id, its tasks, their state and their history stay; an id that names nothing is refused. (`Rename`) |
 
 ## Errors
 

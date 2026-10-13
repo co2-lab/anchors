@@ -170,3 +170,17 @@ func TestProgressCmd_refused(t *testing.T) {
 		t.Error("a refused change writes nothing")
 	}
 }
+
+func TestProgressCmd_rename(t *testing.T) {
+	t.Run("LDCML-B06: A stage is renamed by command", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "Checkout")
+	mustProg(t, root, "add", "stage", "D01", "Sob demanda")
+	mustProg(t, root, "add", "task", "D01.S1", "x", "--weight", "2")
+	if out := mustProg(t, root, "rename", "D01.S1", "Não planejadas"); !strings.Contains(out, "✎ D01.S1 — Não planejadas") {
+		t.Errorf("said: %s", out)
+	}
+	if out := mustProg(t, root, "summary"); !strings.Contains(out, "D01.S1 Não planejadas — 0% (0/2)") {
+		t.Errorf("the new title, the same id and task: %s", out)
+	}
+}

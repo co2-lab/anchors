@@ -31,6 +31,7 @@ keeps the shape Anchors reads back. The weight's unit is the one `anchors.yaml` 
 | `LDCML-B03` | `summary` prints the whole progress with the project's unit, then one line per demand and, indented, per stage, with the percent, the weights, the open and in-progress tasks and the weights still estimates; with nothing tracked it says how to start; `--json` prints the rows. (`printSummary`) |
 | `LDCML-B04` | `show` prints every task of the file, or of one demand, as the file renders them without its header and sum line; `--json` prints the file's records. (`progressBody`) |
 | `LDCML-B05` | The weight's unit is `progress.unit` of `anchors.yaml`, `points` when it names none. |
+| `LDCML-B06` | `rename <id> <title>` gives a demand, a stage or a task a new title, keeping its id and history, and says it. |
 
 ## Errors
 

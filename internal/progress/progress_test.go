@@ -332,3 +332,34 @@ func fixSum(text string) string {
 	content := text[:i]
 	return content + "<!-- anchors:progress sum=" + sumOf(content) + " -->\n"
 }
+
+func TestRename(t *testing.T) {
+	t.Run("DMLDD-B11: A demand, a stage or a task is renamed", func(t *testing.T) {})
+	f := &File{}
+	id, _ := f.AddDemand("A", "")
+	sid, _ := f.AddStage(id, "Sob demanda")
+	tid, _ := f.AddTask(sid, "x", 1, false)
+	if err := f.Done(tid, "a", "2026-10-13"); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range [][2]string{{id, "Checkout"}, {sid, "Não planejadas"}, {tid, "y"}} {
+		if err := f.Rename(c[0], c[1]); err != nil {
+			t.Fatalf("%s: %v", c[0], err)
+		}
+	}
+	g, err := Parse(Render(f))
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := g.Demand(id)
+	task := g.Task(tid)
+	if d.Title != "Checkout" || d.Stages[0].Title != "Não planejadas" || d.Stages[0].ID != sid || task.Title != "y" || task.State != Done || task.By != "a" {
+		t.Errorf("renamed, the rest kept: %+v %+v", d, task)
+	}
+	if err := f.Rename("D09", "z"); err == nil {
+		t.Error("an id that names nothing is refused")
+	}
+	if err := f.Rename(tid, "a · b"); err == nil {
+		t.Error("a title with the separator is refused, as a new one")
+	}
+}

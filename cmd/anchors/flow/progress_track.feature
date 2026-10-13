@@ -38,6 +38,12 @@ Feature: LedgerCommand — anchors progress
     When a task is added
     Then the file counts in points
 
+  @LDCML-B06 @unit-level
+  Scenario: A stage is renamed by command
+    Given a demand with a stage holding a task
+    When the stage is renamed
+    Then the summary shows the new title under the same id, with its task
+
   @LDCML-E01 @unit-level
   Scenario: A refused change writes nothing
     Given a progress file

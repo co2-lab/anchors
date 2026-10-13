@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:874d037d137a246b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d3ea280261adffec — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -933,6 +933,8 @@ teste prova.
 - [Show prints the tasks](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-B04`
 
 - [The unit is the project's](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-B05`
+
+- [A stage is renamed by command](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-B06`
 
 - [A refused change writes nothing](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-E01`
 
@@ -6779,6 +6781,8 @@ teste prova.
 - [Per-plan progress files are migrated](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B09`
 
 - [A task in progress says when it was started](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B10`
+
+- [A demand, a stage or a task is renamed](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B11`
 
 - [A hand edit is refused](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-E01`
 

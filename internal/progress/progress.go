@@ -533,6 +533,33 @@ func (f *File) Weigh(id string, weight float64) error {
 	return nil
 }
 
+// Rename gives a demand, a stage or a task a new title; its id, its tasks and their history
+// stay. Without it, the only way to change a name was to cancel the tasks and add them again
+// (reported from MIF).
+func (f *File) Rename(id, title string) error {
+	if err := checkText("title", title); err != nil {
+		return err
+	}
+	title = strings.TrimSpace(title)
+	if d := f.Demand(id); d != nil {
+		d.Title = title
+		return nil
+	}
+	for _, d := range f.Demands {
+		for _, s := range d.Stages {
+			if s.ID == id {
+				s.Title = title
+				return nil
+			}
+		}
+	}
+	if t := f.Task(id); t != nil {
+		t.Title = title
+		return nil
+	}
+	return fmt.Errorf("no demand, stage or task %s", id)
+}
+
 func stateName(s State) string {
 	switch s {
 	case Doing:

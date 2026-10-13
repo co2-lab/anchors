@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:c625a8f6a9ddd857 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:7f2336c15cb4ddfb — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1032,6 +1032,8 @@ abra a página dela em `camadas/`.
 - [LDCML-B04 — `show` prints every task of the file, or of one demand, as the file renders them without its header and sum line; `--json` prints the file's records. (`progressBody`)](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
 
 - [LDCML-B05 — The weight's unit is `progress.unit` of `anchors.yaml`, `points` when it names none.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
+
+- [LDCML-B06 — `rename <id> <title>` gives a demand, a stage or a task a new title, keeping its id and history, and says it.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
 
 - [LDCML-E01 — A change the file refuses — an unknown id, a held task, a title the format cannot read, a hand-edited file — or `add demand` with neither title nor plan.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
 
@@ -7492,6 +7494,8 @@ abra a página dela em `camadas/`.
 - [DMLDD-B09 — A per-plan `-progress.md` beside a plan becomes its plan's demand: each heading a stage, each checkbox a task weighing 1 as an estimate, done when it was checked; the placeholder items of an unfilled template are left out; a plan already tracked keeps its demand; the migration of a project moves every such file, titles each demand as its plan, and deletes the file; and a dry run writes nothing. (`LegacyFiles`, `MigrateLegacy`, `MigrateProject`, `Migrated`, `LegacySuffix`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
 - [DMLDD-B10 — A task in progress records when it was started to the minute (`doing since 2026-10-12 21:31 by a`), and says when, in local time; a task of a file written before, with only the date, still reads, counted from the start of that day. (`StartedAt`, `Since`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B11 — A demand, a stage or a task takes a new title, with the same rules as a new one; its id, its tasks, their state and their history stay; an id that names nothing is refused. (`Rename`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
 - [DMLDD-E01 — The file's content does not match its sum, or holds a line this unit does not write.](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 

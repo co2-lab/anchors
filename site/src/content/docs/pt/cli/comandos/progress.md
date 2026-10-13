@@ -19,6 +19,7 @@ done weight over the weight not cancelled.
   anchors progress start D01.T4         (held by you; --take to take another agent's)
   anchors progress done D01.T4
   anchors progress reopen D01.T4 | cancel D01.T4 --reason "…" | weigh D01.T4 8
+  anchors progress rename D01.S2 "Unplanned"   a new title; the id and the history stay
   anchors progress summary              the demands and their stages, with their progress
   anchors progress show [D01] [--json]  every task
 
@@ -81,6 +82,16 @@ anchors progress done <task> [flags]
 | Flag | Padrão | O que faz |
 | --- | --- | --- |
 | `--by` |  | who (default: this agent's identity) |
+
+### `anchors progress rename`
+
+Give a demand, a stage or a task a new title; its id and history stay.
+
+#### Uso
+
+```bash
+anchors progress rename <demand|stage|task> <title> [flags]
+```
 
 ### `anchors progress reopen`
 
