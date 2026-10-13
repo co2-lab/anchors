@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:91524e0e1a248242 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d880ee7102a3fd4d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -861,6 +861,8 @@ teste prova.
 - [A holder's activity in another worktree of the repository counts](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B11`
 
 - [The agent's hook records a subagent as a run](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B10`
+
+- [A holder's quiet tasks are said in one line, and a file they changed is activity](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B12`
 
 - [The agent's hook never blocks the agent](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-I01`
 

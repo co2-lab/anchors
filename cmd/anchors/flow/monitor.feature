@@ -73,6 +73,12 @@ Feature: MonitorCommand — `anchors monitor`, `anchors monitor run` and the age
     When the hook receives each, and a subagent start outside a project
     Then the subagent is a run of kind agent with its transcript, the command carries its id, the stop closes it with its last message and its task's name, and outside a project nothing is recorded
 
+  @MNCMD-B12 @unit-level
+  Scenario: A holder's quiet tasks are said in one line, and a file they changed is activity
+    Given a worktree where a ran a run an hour ago, and three tasks held by a for an hour
+    When the monitor reads, then after a file is changed in that worktree
+    Then the three tasks are said quiet in one line, then moving again in one line
+
   @MNCMD-I01 @unit-level
   Scenario: The agent's hook never blocks the agent
     Given invalid input, another tool, a command outside a project and a valid call

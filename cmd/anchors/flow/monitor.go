@@ -24,6 +24,7 @@ import (
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/progress"
 	"github.com/co2-lab/anchors/internal/runs"
 	"github.com/spf13/cobra"
@@ -276,9 +277,11 @@ func progressLines(st *runs.State, root string, now time.Time, every time.Durati
 // idleTaskLines confront the tasks in progress with their holders' activity
 // (DESIGN-agent-activity.md): `[~]` says only that someone ran `start`. A holder is active while
 // a run of theirs is alive; else their last activity is the latest of a run of theirs
-// starting, moving or ending, and of a task of theirs started. Quiet for idle, the task is
-// said once; moving again, it is said again. At MIF a teammate sat idle for hours, its task
-// "in progress", until the user asked.
+// starting, moving or ending, a task of theirs started, a command of theirs through the
+// agent's hook, and — before a holder is said quiet — a file changed in a worktree where
+// their runs are. Quiet for idle, a holder's tasks are said once, in one line; moving again,
+// they are said again. At MIF a teammate sat idle for hours, its task "in progress", until
+// the user asked.
 func idleTaskLines(st *runs.State, root string, recs []runs.Run, procs []runs.Proc, now time.Time, idle time.Duration) []string {
 	if idle <= 0 {
 		return nil
@@ -300,20 +303,40 @@ func idleTaskLines(st *runs.State, root string, recs []runs.Run, procs []runs.Pr
 			last[who] = at
 		}
 	}
+	// Where each holder works: the trees where their runs are.
+	dirsOf := map[string]map[string]bool{}
+	workIn := func(who, dir string) {
+		if dirsOf[who] == nil {
+			dirsOf[who] = map[string]bool{}
+		}
+		dirsOf[who][dir] = true
+	}
+	type located struct {
+		run runs.Run
+		dir string
+	}
+	var all []located
+	for _, r := range recs {
+		all = append(all, located{r, root})
+	}
 	// The other worktrees of the repository: agents work in their own, and their runs and
 	// commands are recorded there.
 	for _, dir := range gitmeta.Worktrees(root) {
 		if same, _ := sameDir(dir, root); !same {
-			recs = append(recs, runs.List(dir)...)
+			for _, r := range runs.List(dir) {
+				all = append(all, located{r, dir})
+			}
 		}
 		for who, at := range runs.LastSeen(dir) {
 			seen(who, at)
 		}
 	}
-	for _, r := range recs {
+	for _, l := range all {
+		r := l.run
 		if r.Session == "" {
 			continue
 		}
+		workIn(r.Session, l.dir)
 		seen(r.Session, r.Started)
 		if r.Ended != nil {
 			seen(r.Session, *r.Ended)
@@ -344,26 +367,57 @@ func idleTaskLines(st *runs.State, root string, recs []runs.Run, procs []runs.Pr
 			}
 		}
 	}
+	// Silence is counted from the last activity, never from before the monitor watched.
+	from := func(who string) time.Time {
+		if last[who].Before(st.Watching) {
+			return st.Watching
+		}
+		return last[who]
+	}
+	edited := map[string]time.Time{}
+	quiet := map[string]bool{}
+	for _, t := range doing {
+		who := t.By
+		if _, done := quiet[who]; done {
+			continue
+		}
+		q := !live[who] && now.Sub(from(who)) >= idle
+		// Before saying a holder quiet, the files they changed: an agent that only edits —
+		// no command, no run — is at work all the same (reported from MIF).
+		if q {
+			for dir := range dirsOf[who] {
+				at, ok := edited[dir]
+				if !ok {
+					at = lastEdit(dir)
+					edited[dir] = at
+				}
+				seen(who, at)
+			}
+			q = now.Sub(from(who)) >= idle
+		}
+		quiet[who] = q
+	}
 	if st.IdleTasks == nil {
 		st.IdleTasks = map[string]bool{}
 	}
 	held := map[string]bool{}
-	var out []string
+	stopped, moving := map[string][]string{}, map[string][]string{}
+	var holders []string
 	for _, t := range doing {
 		held[t.ID] = true
-		// Silence is counted from the last activity, never from before the monitor watched.
-		from := last[t.By]
-		if from.Before(st.Watching) {
-			from = st.Watching
-		}
-		quiet := !live[t.By] && now.Sub(from) >= idle
 		switch {
-		case quiet && !st.IdleTasks[t.ID]:
+		case quiet[t.By] && !st.IdleTasks[t.ID]:
 			st.IdleTasks[t.ID] = true
-			out = append(out, fmt.Sprintf("⏸ %s in progress — no activity from %s for %s", t.ID, t.By, minutes(now.Sub(from))))
-		case !quiet && st.IdleTasks[t.ID]:
+			if len(stopped[t.By])+len(moving[t.By]) == 0 {
+				holders = append(holders, t.By)
+			}
+			stopped[t.By] = append(stopped[t.By], t.ID)
+		case !quiet[t.By] && st.IdleTasks[t.ID]:
 			delete(st.IdleTasks, t.ID)
-			out = append(out, fmt.Sprintf("▶ %s moving again (%s)", t.ID, t.By))
+			if len(stopped[t.By])+len(moving[t.By]) == 0 {
+				holders = append(holders, t.By)
+			}
+			moving[t.By] = append(moving[t.By], t.ID)
 		}
 	}
 	for id := range st.IdleTasks {
@@ -371,7 +425,54 @@ func idleTaskLines(st *runs.State, root string, recs []runs.Run, procs []runs.Pr
 			delete(st.IdleTasks, id)
 		}
 	}
+	// One line per holder: an agent holding 17 tasks gave 17 lines, each waking the agent
+	// watching (reported from MIF).
+	var out []string
+	for _, who := range holders {
+		switch ids := stopped[who]; {
+		case len(ids) == 1:
+			out = append(out, fmt.Sprintf("⏸ %s in progress — no activity from %s for %s", ids[0], who, minutes(now.Sub(from(who)))))
+		case len(ids) > 1:
+			out = append(out, fmt.Sprintf("⏸ %s: %d tasks in progress with no activity for %s — %s", who, len(ids), minutes(now.Sub(from(who))), someIDs(ids)))
+		}
+		switch ids := moving[who]; {
+		case len(ids) == 1:
+			out = append(out, fmt.Sprintf("▶ %s moving again (%s)", ids[0], who))
+		case len(ids) > 1:
+			out = append(out, fmt.Sprintf("▶ %s moving again: %d tasks — %s", who, len(ids), someIDs(ids)))
+		}
+	}
 	return out
+}
+
+// someIDs names the first tasks of a list, and how many more.
+func someIDs(ids []string) string {
+	const shown = 5
+	if len(ids) <= shown {
+		return strings.Join(ids, ", ")
+	}
+	return fmt.Sprintf("%s and %d more", strings.Join(ids[:shown], ", "), len(ids)-shown)
+}
+
+// lastEdit is when a file was last changed among those git says are changed in a tree,
+// Anchors' own files left out; zero when none is, or git cannot tell.
+func lastEdit(dir string) time.Time {
+	dirty, ok := gitmeta.DirtyFiles(dir)
+	var at time.Time
+	if !ok {
+		return at
+	}
+	for rel := range dirty {
+		// Anchors' own files are written by Anchors — its records, its map, the progress —,
+		// not by the agent's work.
+		if strings.HasPrefix(rel, ".anchors/") || rel == mapx.DefaultPath || rel == progress.FileName {
+			continue
+		}
+		if fi, err := os.Stat(filepath.Join(dir, filepath.FromSlash(rel))); err == nil && fi.ModTime().After(at) {
+			at = fi.ModTime()
+		}
+	}
+	return at
 }
 
 // sameDir says whether two paths are the same folder, through symlinks.

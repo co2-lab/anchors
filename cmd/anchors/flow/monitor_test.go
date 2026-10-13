@@ -465,3 +465,63 @@ func TestAgentHook_subagent(t *testing.T) {
 		t.Error("outside a project nothing is recorded")
 	}
 }
+
+func TestMonitor_idleTasksGroupedAndEdits(t *testing.T) {
+	t.Run("MNCMD-B12: A holder's quiet tasks are said in one line, and a file they changed is activity", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	main := monitorProject(t, "")
+	git := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", main}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+	}
+	git("init", "-q")
+	git("add", "anchors.yaml")
+	git("commit", "-q", "-m", "init")
+	wt := filepath.Join(t.TempDir(), "wt")
+	git("worktree", "add", "-q", "--detach", wt)
+	old := time.Now().Add(-time.Hour)
+	if err := progress.Update(main, "", func(f *progress.File) error {
+		id, _ := f.AddDemand("A", "")
+		for _, title := range []string{"x", "y", "z"} {
+			tid, _ := f.AddTask(id, title, 1, false)
+			if err := f.Start(tid, "a", old.Format(progress.StartedAt), false); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	st := runs.LoadState(main)
+	st.Watching = old
+	if err := runs.SaveState(main, st); err != nil {
+		t.Fatal(err)
+	}
+	ended, ok := old, 0
+	if err := runs.Save(wt, runs.Run{ID: "w", Name: "jest", Command: "npx jest", By: runs.ByRun, Session: "a", Dir: wt, Started: old, Ended: &ended, Exit: &ok}); err != nil {
+		t.Fatal(err)
+	}
+	run := func() string {
+		t.Helper()
+		out, err := runCobra(t, newMonitorCmd(), "--root", main, "--once", "--heartbeat", "1h")
+		if err != nil {
+			t.Fatal(err)
+		}
+		return out
+	}
+	if out := run(); !strings.Contains(out, "⏸ a: 3 tasks in progress with no activity for 1h00m — D01.T1, D01.T2, D01.T3") || strings.Count(out, "⏸") != 1 {
+		t.Errorf("the holder's quiet tasks, in one line:\n%s", out)
+	}
+	if err := os.WriteFile(filepath.Join(wt, "edited.ts"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out := run(); !strings.Contains(out, "▶ a moving again: 3 tasks — D01.T1, D01.T2, D01.T3") {
+		t.Errorf("a file changed in the holder's worktree is activity, said in one line:\n%s", out)
+	}
+}
