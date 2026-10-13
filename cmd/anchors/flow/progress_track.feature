@@ -50,6 +50,12 @@ Feature: LedgerCommand — anchors progress
     When a task is added unplanned, the planned one is marked unplanned and then unmarked
     Then the summary says the unplanned weight of the demand and the stage, and show marks the task
 
+  @LDCML-B08 @unit-level
+  Scenario: Found work moves into the stage it arose in
+    Given a demand with a stage of its work and a separate stage of found work holding an unplanned task
+    When the task is moved to the stage of its work and the emptied stage is dropped
+    Then the summary shows the unplanned weight inside that stage, and the separate stage is gone
+
   @LDCML-E01 @unit-level
   Scenario: A refused change writes nothing
     Given a progress file

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1393f8ec4467b012 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f8a39d1391848f98 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -937,6 +937,8 @@ teste prova.
 - [A stage is renamed by command](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-B06`
 
 - [Unplanned work is marked and shown](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-B07`
+
+- [Found work moves into the stage it arose in](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-B08`
 
 - [A refused change writes nothing](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-E01`
 
@@ -6793,6 +6795,8 @@ teste prova.
 - [A demand, a stage or a task is renamed](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B11`
 
 - [A task is marked unplanned](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B12`
+
+- [A task moves within its demand, and an empty stage is removed](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B13`
 
 - [A hand edit is refused](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-E01`
 

@@ -25,6 +25,8 @@ Work the plan does not list, done for it, is recorded before it is done — wher
 marked so it is seen:
   anchors progress add task D01.S2 "fix the date parser" --weight 2 --unplanned
   anchors progress unplanned D01.T31 [--undo]   mark a task already added
+  anchors progress move D01.T31 D01.S2         take a task to the stage it arose in
+  anchors progress drop D01.S8                 remove a stage left with no task
   anchors progress summary              the demands and their stages, with their progress
   anchors progress show [D01] [--json]  every task
 
@@ -87,6 +89,26 @@ anchors progress done <task> [flags]
 | Flag | Padrão | O que faz |
 | --- | --- | --- |
 | `--by` |  | who (default: this agent's identity) |
+
+### `anchors progress drop`
+
+Remove a stage left with no task.
+
+#### Uso
+
+```bash
+anchors progress drop <stage> [flags]
+```
+
+### `anchors progress move`
+
+Take a task to another stage of its demand; its id and history stay.
+
+#### Uso
+
+```bash
+anchors progress move <task> <demand|stage> [flags]
+```
 
 ### `anchors progress rename`
 

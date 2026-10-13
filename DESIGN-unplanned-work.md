@@ -41,6 +41,11 @@ Measured at MIF on 2026-10-13, while a plan was developed:
   line like an estimate: `- [x] D01.T31 — fix the date parser · 2 (unplanned) · done …`. New
   tasks that appear on the way are not set apart, so they are not hidden (the user, D01).
 - `unplanned` marks a task added before, such as MIF's 20 tasks; `--undo` takes the mark off.
+- **`move <task> <stage>`** takes a task to the stage it arose in, keeping its id and history.
+  **`drop <stage>`** removes a stage left with no task. At MIF the found work stood in a stage of
+  its own, set apart from the stages it arose in. The user wants it inside them, so each stage
+  shows how much of it was not planned. Without `move`, the only way was to cancel the tasks and
+  add them again.
 
 ### 2. Where it shows
 

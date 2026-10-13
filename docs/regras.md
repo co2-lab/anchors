@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:2f6ed9a2724e5d4f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:780a0655716ab327 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1036,6 +1036,8 @@ abra a página dela em `camadas/`.
 - [LDCML-B06 — `rename <id> <title>` gives a demand, a stage or a task a new title, keeping its id and history, and says it.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
 
 - [LDCML-B07 — `add task --unplanned` adds a task marked unplanned, where it arises; `unplanned <task>` marks one added before and `--undo` takes the mark off; the summary says, on a demand or stage with unplanned work, `· <n> of <total> <unit> unplanned`.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
+
+- [LDCML-B08 — `move <task> <demand](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
 
 - [LDCML-E01 — A change the file refuses — an unknown id, a held task, a title the format cannot read, a hand-edited file — or `add demand` with neither title nor plan.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
 
@@ -7506,6 +7508,8 @@ abra a página dela em `camadas/`.
 - [DMLDD-B11 — A demand, a stage or a task takes a new title, with the same rules as a new one; its id, its tasks, their state and their history stay; an id that names nothing is refused. (`Rename`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
 - [DMLDD-B12 — A task can be marked unplanned — work the plan did not list, kept where it arose —, in its line beside the weight (`2 (unplanned)`, `2 (estimate, unplanned)`), and the mark taken off; the summary says each demand's and stage's unplanned weight, cancelled tasks left out; a merge keeps the side that changed the mark; a mark other than estimate or unplanned is refused; the flow's advice says to record such work before doing it. (`MarkUnplanned`, `UnplannedAdvice`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B13 — A task moves to another stage of its demand, or to the demand itself, keeping its id, state, marks and history; a stage or demand that is not its demand's is refused. A stage left with no task can be removed; one that still holds a task is refused. (`Relocate`, `DropStage`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
 - [DMLDD-E01 — The file's content does not match its sum, or holds a line this unit does not write.](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 

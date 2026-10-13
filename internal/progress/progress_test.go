@@ -411,3 +411,42 @@ func TestMarkUnplanned(t *testing.T) {
 		t.Error("the advice says the command")
 	}
 }
+
+func TestMoveAndDropStage(t *testing.T) {
+	t.Run("DMLDD-B13: A task moves within its demand, and an empty stage is removed", func(t *testing.T) {})
+	f := &File{}
+	id, _ := f.AddDemand("A", "")
+	s1, _ := f.AddStage(id, "Payment")
+	_, _ = f.AddTask(s1, "refunds", 5, false)
+	found, _ := f.AddStage(id, "Found on the way")
+	tid, _ := f.AddTask(found, "fix the parser", 2, false)
+	_ = f.MarkUnplanned(tid, true)
+	_ = f.Done(tid, "a", "2026-10-13")
+	other, _ := f.AddDemand("B", "")
+	if err := f.Relocate(tid, s1); err != nil {
+		t.Fatal(err)
+	}
+	g, err := Parse(Render(f))
+	if err != nil {
+		t.Fatalf("%v\n%s", err, Render(f))
+	}
+	st := g.Demand(id).Stages[0]
+	if len(st.Tasks) != 2 || st.Tasks[1].ID != tid || st.Tasks[1].State != Done || !st.Tasks[1].Unplanned || len(g.Demand(id).Stages[1].Tasks) != 0 {
+		t.Errorf("moved to the stage, kept: %+v", st.Tasks)
+	}
+	if err := f.Relocate(tid, id); err != nil || len(f.Demand(id).Tasks) != 1 {
+		t.Errorf("to the demand itself: %v", err)
+	}
+	if err := f.Relocate(tid, other); err == nil {
+		t.Error("another demand is refused")
+	}
+	if err := f.DropStage(s1); err == nil {
+		t.Error("a stage still holding a task is refused")
+	}
+	if err := f.DropStage(found); err != nil || len(f.Demand(id).Stages) != 1 {
+		t.Errorf("the empty stage goes: %v", err)
+	}
+	if _, err := Parse(Render(f)); err != nil {
+		t.Errorf("the file still reads: %v", err)
+	}
+}

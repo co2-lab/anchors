@@ -206,3 +206,23 @@ func TestProgressCmd_unplanned(t *testing.T) {
 		t.Errorf("show marks the task:\n%s", show)
 	}
 }
+
+func TestProgressCmd_moveAndDrop(t *testing.T) {
+	t.Run("LDCML-B08: Found work moves into the stage it arose in", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "Checkout")
+	mustProg(t, root, "add", "stage", "D01", "Payment")
+	mustProg(t, root, "add", "task", "D01.S1", "refunds", "--weight", "8")
+	mustProg(t, root, "add", "stage", "D01", "Não planejadas")
+	mustProg(t, root, "add", "task", "D01.S2", "fix the parser", "--weight", "2", "--unplanned")
+	if out := mustProg(t, root, "move", "D01.T2", "D01.S1"); !strings.Contains(out, "→ D01.T2 now in D01.S1") {
+		t.Errorf("said: %s", out)
+	}
+	if out := mustProg(t, root, "drop", "D01.S2"); !strings.Contains(out, "✗ stage D01.S2 removed") {
+		t.Errorf("said: %s", out)
+	}
+	out := mustProg(t, root, "summary")
+	if !strings.Contains(out, "D01.S1 Payment — 0% (0/10) · 2 open · 2 of 10 points unplanned") || strings.Contains(out, "Não planejadas") {
+		t.Errorf("the found work inside its stage, the separate one gone:\n%s", out)
+	}
+}

@@ -574,6 +574,70 @@ func (f *File) MarkUnplanned(id string, on bool) error {
 	return nil
 }
 
+// Relocate takes a task to another stage of its demand, or to the demand itself; its id, its
+// state and its history stay. Work found on the way belongs with the stage it arose in
+// (DESIGN-unplanned-work.md): without it, a task added to the wrong stage could only be
+// cancelled and added again (reported from MIF). Another demand is refused: the task's id
+// names its demand.
+func (f *File) Relocate(id, to string) error {
+	t, err := f.task(id)
+	if err != nil {
+		return err
+	}
+	demand, _, _ := strings.Cut(id, ".")
+	if d, _, _ := strings.Cut(to, "."); d != demand {
+		return fmt.Errorf("%s belongs to %s: a task moves within its demand only", id, demand)
+	}
+	d := f.Demand(demand)
+	var target *[]*Task
+	if to == demand {
+		target = &d.Tasks
+	}
+	for _, s := range d.Stages {
+		if s.ID == to {
+			target = &s.Tasks
+		}
+	}
+	if target == nil {
+		return fmt.Errorf("no stage %s", to)
+	}
+	remove := func(list *[]*Task) {
+		for i, x := range *list {
+			if x == t {
+				*list = append((*list)[:i:i], (*list)[i+1:]...)
+				return
+			}
+		}
+	}
+	remove(&d.Tasks)
+	for _, s := range d.Stages {
+		remove(&s.Tasks)
+	}
+	*target = append(*target, t)
+	return nil
+}
+
+// DropStage removes a stage left with no task; one that still holds a task is refused, so
+// no work is lost with it.
+func (f *File) DropStage(id string) error {
+	demand, _, _ := strings.Cut(id, ".")
+	d := f.Demand(demand)
+	if d == nil {
+		return fmt.Errorf("no stage %s", id)
+	}
+	for i, s := range d.Stages {
+		if s.ID != id {
+			continue
+		}
+		if len(s.Tasks) > 0 {
+			return fmt.Errorf("%s still holds %d task(s) — move them first (`anchors progress move`)", id, len(s.Tasks))
+		}
+		d.Stages = append(d.Stages[:i:i], d.Stages[i+1:]...)
+		return nil
+	}
+	return fmt.Errorf("no stage %s", id)
+}
+
 // Rename gives a demand, a stage or a task a new title; its id, its tasks and their history
 // stay. Without it, the only way to change a name was to cancel the tasks and add them again
 // (reported from MIF).

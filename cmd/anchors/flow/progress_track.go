@@ -47,6 +47,8 @@ Work the plan does not list, done for it, is recorded before it is done — wher
 marked so it is seen:
   anchors progress add task D01.S2 "fix the date parser" --weight 2 --unplanned
   anchors progress unplanned D01.T31 [--undo]   mark a task already added
+  anchors progress move D01.T31 D01.S2         take a task to the stage it arose in
+  anchors progress drop D01.S8                 remove a stage left with no task
   anchors progress summary              the demands and their stages, with their progress
   anchors progress show [D01] [--json]  every task
 
@@ -219,6 +221,25 @@ Each change takes the file's lock, so agents working at once lose nothing.`,
 		},
 	}
 
+	move := &cobra.Command{
+		Use: "move <task> <demand|stage>", Short: "Take a task to another stage of its demand; its id and history stay", Args: cobra.ExactArgs(2),
+		RunE: func(c *cobra.Command, args []string) error {
+			c.SilenceUsage = true
+			return change(c, func(f *progress.File) (string, error) {
+				return "→ " + args[0] + " now in " + args[1], f.Relocate(args[0], args[1])
+			})
+		},
+	}
+	drop := &cobra.Command{
+		Use: "drop <stage>", Short: "Remove a stage left with no task", Args: cobra.ExactArgs(1),
+		RunE: func(c *cobra.Command, args []string) error {
+			c.SilenceUsage = true
+			return change(c, func(f *progress.File) (string, error) {
+				return "✗ stage " + args[0] + " removed", f.DropStage(args[0])
+			})
+		},
+	}
+
 	var undo bool
 	markUnplanned := &cobra.Command{
 		Use: "unplanned <task> [--undo]", Short: "Mark a task as work the plan did not list (--undo takes the mark off)", Args: cobra.ExactArgs(1),
@@ -279,7 +300,7 @@ Each change takes the file's lock, so agents working at once lose nothing.`,
 	for _, c := range []*cobra.Command{summary, show} {
 		c.Flags().BoolVar(&asJSON, "json", false, "print JSON")
 	}
-	cmd.AddCommand(add, start, done, reopen, cancel, weigh, rename, markUnplanned, summary, show)
+	cmd.AddCommand(add, start, done, reopen, cancel, weigh, rename, move, drop, markUnplanned, summary, show)
 	return cmd
 }
 

@@ -41,6 +41,7 @@ plan as a demand with one stage per phase, and moves the per-plan `-progress.md`
 | `DMLDD-B10` | A task in progress records when it was started to the minute (`doing since 2026-10-12 21:31 by a`), and says when, in local time; a task of a file written before, with only the date, still reads, counted from the start of that day. (`StartedAt`, `Since`) |
 | `DMLDD-B11` | A demand, a stage or a task takes a new title, with the same rules as a new one; its id, its tasks, their state and their history stay; an id that names nothing is refused. (`Rename`) |
 | `DMLDD-B12` | A task can be marked unplanned — work the plan did not list, kept where it arose —, in its line beside the weight (`2 (unplanned)`, `2 (estimate, unplanned)`), and the mark taken off; the summary says each demand's and stage's unplanned weight, cancelled tasks left out; a merge keeps the side that changed the mark; a mark other than estimate or unplanned is refused; the flow's advice says to record such work before doing it. (`MarkUnplanned`, `UnplannedAdvice`) |
+| `DMLDD-B13` | A task moves to another stage of its demand, or to the demand itself, keeping its id, state, marks and history; a stage or demand that is not its demand's is refused. A stage left with no task can be removed; one that still holds a task is refused. (`Relocate`, `DropStage`) |
 
 ## Errors
 

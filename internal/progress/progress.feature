@@ -80,6 +80,12 @@ Feature: DemandLedger — the project's progress file
     When the file is written and read back, a mark is taken off, the other side of a merge marks a task, and a line with an unknown mark is read
     Then the marks are kept in the lines, the summary says the unplanned weight without the cancelled, the mark comes off, the merge keeps it, and the unknown mark is refused
 
+  @DMLDD-B13 @unit-level
+  Scenario: A task moves within its demand, and an empty stage is removed
+    Given a demand with a stage of found work holding a done unplanned task, another stage, and a second demand
+    When the task moves to the other stage, then to the demand, then to the second demand; the emptied stage is removed, and the other stage, still holding a task, is not
+    Then it keeps its id, state and mark wherever it goes within the demand, the other demand is refused, and only the empty stage goes
+
   @DMLDD-E01 @unit-level
   Scenario: A hand edit is refused
     Given a progress file with a line added by hand
