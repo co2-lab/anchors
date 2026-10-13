@@ -2947,9 +2947,13 @@ type Monitor struct {
 	Heartbeat string `yaml:"heartbeat,omitempty"`
 	Progress  string `yaml:"progress,omitempty"`
 	Stall     string `yaml:"stall,omitempty"`
-	// Summary turns on the monitor's summary of anchors.progress.md, off by default: when on,
-	// every time the monitor speaks it also says how far the work is.
-	Summary bool `yaml:"summary,omitempty"`
+	// Summary turns on the monitor's summary of anchors.progress.md, off by default: said
+	// when it changes, with what it was. SummaryEvery repeats it unchanged at that interval.
+	Summary      bool   `yaml:"summary,omitempty"`
+	SummaryEvery string `yaml:"summary_every,omitempty"`
+	// Level is how much the monitor says: all (the default), or action — only what calls for
+	// a reaction.
+	Level string `yaml:"level,omitempty"`
 	// Runners are the project's own kinds of long process, read before the built-in ones: a
 	// runner whose name is a built-in one replaces it.
 	Runners []MonitorRunner `yaml:"runners,omitempty"`

@@ -23,9 +23,13 @@ type Settings struct {
 	Reports []string
 	Keep    int
 	MaxAge  time.Duration
-	// Summary is whether the monitor also says the progress of anchors.progress.md each time
-	// it speaks; off unless the block or the command asks for it.
-	Summary bool
+	// Summary is whether the monitor says the progress of anchors.progress.md when it
+	// changes; off unless the block or the command asks for it. SummaryEvery repeats it
+	// unchanged at that interval; 0, the default, never.
+	Summary      bool
+	SummaryEvery time.Duration
+	// Level is LevelAll, the default, or LevelAction.
+	Level string
 }
 
 // Configure reads the project's `monitor:` block over the defaults: its timing, its runners
@@ -33,7 +37,7 @@ type Settings struct {
 // its suites declare and the ones it adds, and how many ended runs to keep. A duration or a
 // pattern that does not read is an error, naming it.
 func Configure(cfg *config.Config) (Settings, error) {
-	s := Settings{Timing: DefaultTiming(), Runners: DefaultRunners(), Keep: 50, MaxAge: 7 * 24 * time.Hour}
+	s := Settings{Timing: DefaultTiming(), Runners: DefaultRunners(), Keep: 50, MaxAge: 7 * 24 * time.Hour, Level: LevelAll}
 	if cfg == nil {
 		return s, nil
 	}
@@ -59,6 +63,15 @@ func Configure(cfg *config.Config) (Settings, error) {
 		}
 	}
 	s.Summary = m.Summary
+	if err := setDuration(m.SummaryEvery, &s.SummaryEvery); err != nil {
+		return s, fmt.Errorf("monitor.summary_every: %w", err)
+	}
+	if m.Level != "" {
+		if err := CheckLevel(m.Level); err != nil {
+			return s, fmt.Errorf("monitor.level: %w", err)
+		}
+		s.Level = m.Level
+	}
 	var own []Runner
 	replaced := map[string]bool{}
 	for _, r := range m.Runners {
@@ -103,6 +116,14 @@ func Configure(cfg *config.Config) (Settings, error) {
 		s.MaxAge = time.Duration(m.KeepDays) * 24 * time.Hour
 	}
 	return s, nil
+}
+
+// CheckLevel refuses a level that is neither all nor action.
+func CheckLevel(level string) error {
+	if level != LevelAll && level != LevelAction {
+		return fmt.Errorf("%q is neither %s nor %s", level, LevelAll, LevelAction)
+	}
+	return nil
 }
 
 func setDuration(val string, to *time.Duration) error {

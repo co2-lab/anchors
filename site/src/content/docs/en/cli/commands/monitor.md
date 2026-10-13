@@ -18,10 +18,15 @@ reaction:
   ✓/✗ a test report landed, with its failures    … progress, sparse
   and a heartbeat with what runs — "running=[NOTHING]" included — and the load.
 
-With --summary (or "summary: true" in the monitor block), every time it speaks — an event, the
-heartbeat, its exit — it also says how far the work is: the summary of anchors.progress.md,
-each demand and its stages; a change of the file is said even on a quiet tick. Off by default;
---summary=false silences a summary the block turns on.
+With --summary (or "summary: true" in the monitor block), it says the summary of
+anchors.progress.md — each demand and its stages — when it changes, with what the total was;
+--summary-every 30m repeats it unchanged at most that often. Off by default; --summary=false
+silences a summary the block turns on.
+
+--level action (or "level: action") says only what calls for a reaction: failures, deaths,
+stalls, the runs the agent launched ending, failing reports, a change of progress, and the
+heartbeat only when the project falls idle or the load is high. For an agent that watches —
+each line wakes a turn.
 
 Run it inside your watch tool, after launching the long command in the background, and react
 to each line. Its state stays in .anchors/runs/: re-armed, it says what happened while nobody
@@ -42,11 +47,13 @@ anchors monitor [flags]
 | --- | --- | --- |
 | `--every` |  | how often to read the processes (default 30s, or monitor.every) |
 | `--heartbeat` |  | how often to say what runs, even when nothing changed (default 5m) |
+| `--level` |  | all (default), or action: only what calls for a reaction |
 | `--once` |  | read once, print what changed, and exit |
 | `--progress` |  | least time between two progress lines of one run (default 5m) |
 | `--root` | `.` | project root |
 | `--stall` |  | quiet time before a run of no declared runner is stalled (default 5m) |
-| `--summary` |  | also say the progress summary each time it speaks (default off, or monitor.summary) |
+| `--summary` |  | say the progress summary when it changes (default off, or monitor.summary) |
+| `--summary-every` |  | repeat the progress summary unchanged at most this often (default never) |
 | `--until-done` |  | exit when the runs it watches have all ended |
 
 ## Subcommands

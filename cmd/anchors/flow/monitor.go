@@ -32,7 +32,7 @@ import (
 // Anchors cannot wake the agent, but the agent's watch tool can, one notification per line:
 // `anchors monitor` is the command it watches.
 func newMonitorCmd() *cobra.Command {
-	var root, every, heartbeat, progress, stall string
+	var root, every, heartbeat, progress, stall, summaryEvery, level string
 	var untilDone, once, summary bool
 	cmd := &cobra.Command{
 		Use:   "monitor",
@@ -47,10 +47,15 @@ reaction:
   ✓/✗ a test report landed, with its failures    … progress, sparse
   and a heartbeat with what runs — "running=[NOTHING]" included — and the load.
 
-With --summary (or "summary: true" in the monitor block), every time it speaks — an event, the
-heartbeat, its exit — it also says how far the work is: the summary of anchors.progress.md,
-each demand and its stages; a change of the file is said even on a quiet tick. Off by default;
---summary=false silences a summary the block turns on.
+With --summary (or "summary: true" in the monitor block), it says the summary of
+anchors.progress.md — each demand and its stages — when it changes, with what the total was;
+--summary-every 30m repeats it unchanged at most that often. Off by default; --summary=false
+silences a summary the block turns on.
+
+--level action (or "level: action") says only what calls for a reaction: failures, deaths,
+stalls, the runs the agent launched ending, failing reports, a change of progress, and the
+heartbeat only when the project falls idle or the load is high. For an agent that watches —
+each line wakes a turn.
 
 Run it inside your watch tool, after launching the long command in the background, and react
 to each line. Its state stays in .anchors/runs/: re-armed, it says what happened while nobody
@@ -86,6 +91,19 @@ Timing comes from the defaults, then the "monitor:" block of anchors.yaml, then 
 			if cmd.Flags().Changed("summary") {
 				set.Summary = summary
 			}
+			if summaryEvery != "" {
+				d, err := time.ParseDuration(summaryEvery)
+				if err != nil || d <= 0 {
+					return fmt.Errorf("%q is not a positive duration", summaryEvery)
+				}
+				set.SummaryEvery = d
+			}
+			if level != "" {
+				if err := runs.CheckLevel(level); err != nil {
+					return fmt.Errorf("--level: %w", err)
+				}
+				set.Level = level
+			}
 			return runMonitor(cmd.OutOrStdout(), absRoot, set, untilDone, once)
 		},
 	}
@@ -94,7 +112,9 @@ Timing comes from the defaults, then the "monitor:" block of anchors.yaml, then 
 	cmd.Flags().StringVar(&heartbeat, "heartbeat", "", "how often to say what runs, even when nothing changed (default 5m)")
 	cmd.Flags().StringVar(&progress, "progress", "", "least time between two progress lines of one run (default 5m)")
 	cmd.Flags().StringVar(&stall, "stall", "", "quiet time before a run of no declared runner is stalled (default 5m)")
-	cmd.Flags().BoolVar(&summary, "summary", false, "also say the progress summary each time it speaks (default off, or monitor.summary)")
+	cmd.Flags().BoolVar(&summary, "summary", false, "say the progress summary when it changes (default off, or monitor.summary)")
+	cmd.Flags().StringVar(&summaryEvery, "summary-every", "", "repeat the progress summary unchanged at most this often (default never)")
+	cmd.Flags().StringVar(&level, "level", "", "all (default), or action: only what calls for a reaction")
 	cmd.Flags().BoolVar(&untilDone, "until-done", false, "exit when the runs it watches have all ended")
 	cmd.Flags().BoolVar(&once, "once", false, "read once, print what changed, and exit")
 	cmd.AddCommand(newMonitorHookCmd(), newRunCmd())
@@ -125,20 +145,30 @@ func runMonitor(w io.Writer, root string, set runs.Settings, untilDone, once boo
 		for _, r := range writes {
 			_ = runs.Save(root, r)
 		}
-		for _, e := range events {
-			fmt.Fprintln(w, e.Line)
-		}
 		live := 0
 		for _, s := range st.Runs {
 			if !s.Done {
 				live++
 			}
 		}
-		// The progress goes with what the monitor says: on a tick that printed, on its exit, and
-		// on a change of the file.
-		exiting := once || (untilDone && live == 0)
+		idle := live == 0
+		high := snap.HasLoad && snap.CPUs > 0 && snap.Load > float64(snap.CPUs)
+		st.NoteState(idle, high)
+		byID := map[string]*runs.Run{}
+		for i := range snap.Records {
+			byID[snap.Records[i].ID] = &snap.Records[i]
+		}
+		for i := range writes {
+			byID[writes[i].ID] = &writes[i]
+		}
+		for _, e := range events {
+			if set.Level == runs.LevelAction && !st.ForAction(e, byID[e.Run], idle, high) {
+				continue
+			}
+			fmt.Fprintln(w, e.Line)
+		}
 		if set.Summary {
-			for _, l := range progressLines(st, root, len(events) > 0 || exiting) {
+			for _, l := range progressLines(st, root, now, set.SummaryEvery) {
 				fmt.Fprintln(w, l)
 			}
 		}
@@ -178,33 +208,45 @@ func SummaryInstruction(lines int) string {
 	return fmt.Sprintf("· to the agent: copy the next %d lines to the user verbatim, inside a code block, the first line (the total) included — this line is for you, not for them", lines)
 }
 
-// progressLines are the summary of anchors.progress.md (DESIGN-progress-tracking.md) the
-// monitor says with what it says: when it speaks (said), and on a change of the file even
-// when it has nothing else to say. A file edited by hand is one warning. No file, nothing.
-func progressLines(st *runs.State, root string, said bool) []string {
-	b, err := os.ReadFile(progress.Path(root))
-	if err != nil {
-		st.ProgressSum = ""
+// progressLines are the summary of anchors.progress.md the monitor says
+// (DESIGN-monitor-signal.md): when it changed since it last said it, with what its total was,
+// and the same again only after every (0: never). A summary said each time the monitor spoke
+// woke the watching agent every minute or two to repeat 9 unchanged lines (measured at MIF, a
+// 3-hour session at 50%). A file edited by hand is one warning. No file, nothing.
+func progressLines(st *runs.State, root string, now time.Time, every time.Duration) []string {
+	if _, err := os.Stat(progress.Path(root)); err != nil {
+		st.ProgressSum, st.ProgressWas = "", ""
 		return nil
 	}
-	h := sha256.Sum256(b)
-	sum := hex.EncodeToString(h[:6])
-	changed := sum != st.ProgressSum
-	if !said && !changed {
-		return nil
-	}
-	st.ProgressSum = sum
 	f, err := progress.Load(root)
 	if err != nil {
-		if !changed {
+		b, _ := os.ReadFile(progress.Path(root))
+		h := sha256.Sum256(b)
+		key := "edited " + hex.EncodeToString(h[:6])
+		if key == st.ProgressSum {
 			return nil
 		}
+		st.ProgressSum = key
 		return []string{"⚠ progress: " + err.Error()}
 	}
 	var buf strings.Builder
 	_ = printSummary(&buf, f, false)
-	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	text := strings.TrimRight(buf.String(), "\n")
+	h := sha256.Sum256([]byte(text))
+	key := hex.EncodeToString(h[:6])
+	changed := key != st.ProgressSum
+	due := every > 0 && now.Sub(st.LastSummary) >= every
+	if !changed && !due {
+		return nil
+	}
+	done, total := progress.Totals(f.AllTasks())
+	was := fmt.Sprintf("%s (%s/%s)", progress.Percent(done, total), num(done), num(total))
+	lines := strings.Split(text, "\n")
 	lines[0] = "▸ " + lines[0]
+	if st.ProgressWas != "" && st.ProgressWas != was {
+		lines[0] += " — was " + st.ProgressWas
+	}
+	st.ProgressSum, st.ProgressWas, st.LastSummary = key, was, now
 	return append([]string{SummaryInstruction(len(lines))}, lines...)
 }
 

@@ -62,9 +62,16 @@ type State struct {
 	LastHeartbeat time.Time            `json:"last_heartbeat"`
 	Runs          map[string]*Seen     `json:"runs"`
 	Reports       map[string]time.Time `json:"reports"`
-	// ProgressSum is the progress file as the monitor last reported it: a change is said even
-	// on a tick with nothing else to say.
-	ProgressSum string `json:"progress_sum,omitempty"`
+	// ProgressSum is the progress summary as the monitor last said it, ProgressWas its total,
+	// and LastSummary when: the summary goes out when it changes, with what it was
+	// (DESIGN-monitor-signal.md), and again only after Settings.SummaryEvery.
+	ProgressSum string    `json:"progress_sum,omitempty"`
+	ProgressWas string    `json:"progress_was,omitempty"`
+	LastSummary time.Time `json:"last_summary,omitempty"`
+	// SaidIdle and SaidHigh are the heartbeat of the action level: the project falling idle,
+	// and a high load, each said once per stretch.
+	SaidIdle bool `json:"said_idle,omitempty"`
+	SaidHigh bool `json:"said_high,omitempty"`
 }
 
 // LoadState reads the monitor's state; a missing or unreadable one is a fresh start.
@@ -457,6 +464,53 @@ func findProcess(tree Tree, root, command string, runners []Runner, excluded, cl
 		}
 	}
 	return 0
+}
+
+// The levels of what the monitor says (DESIGN-monitor-signal.md): everything, or only what
+// calls for a reaction — each line wakes a turn of the agent watching.
+const (
+	LevelAll    = "all"
+	LevelAction = "action"
+)
+
+// ForAction says whether an event goes out at the action level: a failure, a death, a stall
+// and its end, a run the agent launched ending either way — it waits for it —, a report
+// with failures; and the heartbeat only when it says something: the project fell idle, or
+// the load is high, each once per stretch. idle and high are the project's state now.
+func (st *State) ForAction(e Event, r *Run, idle, high bool) bool {
+	switch e.Kind {
+	case "died", "stalled", "resumed":
+		return true
+	case "report":
+		return strings.HasPrefix(e.Line, "✗")
+	case "finished", "ended":
+		if strings.HasPrefix(e.Line, "✗") {
+			return true
+		}
+		if r == nil || (r.By != ByAgent && r.By != ByRun) {
+			return false
+		}
+		return !strings.Contains(e.Line, "before the monitor saw it running")
+	case "heartbeat":
+		keep := (idle && !st.SaidIdle) || (high && !st.SaidHigh)
+		if keep {
+			st.SaidIdle = st.SaidIdle || idle
+			st.SaidHigh = st.SaidHigh || high
+		}
+		return keep
+	}
+	return false
+}
+
+// NoteState clears what the action level said once, when it stops being true: the project
+// runs something again, the load came down.
+func (st *State) NoteState(idle, high bool) {
+	if !idle {
+		st.SaidIdle = false
+	}
+	if !high {
+		st.SaidHigh = false
+	}
 }
 
 // ExitNothingToConfront is the exit of `anchors check` and `anchors verify` when no file of

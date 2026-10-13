@@ -212,7 +212,7 @@ func TestAgentHook_neverBlocks(t *testing.T) {
 }
 
 func TestMonitor_saysTheProgressSummary(t *testing.T) {
-	t.Run("MNCMD-B07: The monitor says the progress summary with what it says, when asked", func(t *testing.T) {})
+	t.Run("MNCMD-B07: The monitor says the progress summary when it changes, when asked", func(t *testing.T) {})
 	dir := monitorProject(t, "")
 	if err := progress.Update(dir, "", func(f *progress.File) error {
 		id, err := f.AddDemand("Checkout", "")
@@ -230,7 +230,7 @@ func TestMonitor_saysTheProgressSummary(t *testing.T) {
 	}
 	run := func(args ...string) string {
 		t.Helper()
-		out, err := runCobra(t, newMonitorCmd(), append([]string{"--root", dir, "--once", "--heartbeat", "1h"}, args...)...)
+		out, err := runCobra(t, newMonitorCmd(), append([]string{"--root", dir, "--once", "--heartbeat", "1ns"}, args...)...)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -239,30 +239,28 @@ func TestMonitor_saysTheProgressSummary(t *testing.T) {
 	if out := run(); strings.Contains(out, "Progress") {
 		t.Errorf("off by default:\n%s", out)
 	}
-	if out := run("--summary"); !strings.Contains(out, "▸ Progress — 0% (0/2 points)") || !strings.Contains(out, "D01.S1 Payment") {
-		t.Errorf("on its exit, the summary, stages included:\n%s", out)
+	if out := run("--summary"); !strings.Contains(out, "▸ Progress — 0% (0/2 points)\n") || !strings.Contains(out, "D01.S1 Payment") || !strings.Contains(out, "copy the next 3 lines") {
+		t.Errorf("the first time, the line to the agent and the summary, stages included:\n%s", out)
 	}
-
-	st := runs.LoadState(dir)
-	if l := progressLines(st, dir, false); l != nil {
-		t.Errorf("a quiet tick, the file unchanged: nothing, got %v", l)
+	if out := run("--summary"); strings.Contains(out, "Progress") || !strings.Contains(out, "running=") {
+		t.Errorf("unchanged, a heartbeat goes out without the summary:\n%s", out)
 	}
-	if l := progressLines(st, dir, true); len(l) < 2 || l[0] != SummaryInstruction(len(l)-1) || !strings.Contains(l[0], "next 3 lines") || !strings.HasPrefix(l[1], "▸ Progress") || strings.Contains(l[1], "agent") {
-		t.Errorf("a tick that speaks says the line to the agent, apart, then the summary; got %v", l)
+	if out := run("--summary", "--summary-every", "1ns"); !strings.Contains(out, "▸ Progress — 0% (0/2 points)\n") {
+		t.Errorf("with summary_every past, the same summary again, with no was:\n%s", out)
 	}
 	if err := progress.Update(dir, "", func(f *progress.File) error { return f.Done("D01.T1", "a", "2026-10-12") }); err != nil {
 		t.Fatal(err)
 	}
-	if l := progressLines(st, dir, false); len(l) < 2 || !strings.Contains(l[1], "100% (2/2 points)") {
-		t.Errorf("a change is said even on a quiet tick, got %v", l)
+	if out := run("--summary"); !strings.Contains(out, "▸ Progress — 100% (2/2 points) — was 0% (0/2)") {
+		t.Errorf("a change goes out with what the total was:\n%s", out)
 	}
 	b, _ := os.ReadFile(progress.Path(dir))
 	_ = os.WriteFile(progress.Path(dir), []byte(strings.Replace(string(b), "Checkout", "Cart", 1)), 0o644)
-	if l := progressLines(st, dir, true); len(l) != 1 || !strings.HasPrefix(l[0], "⚠ progress:") {
-		t.Errorf("a hand edit is a warning, got %v", l)
+	if out := run("--summary"); !strings.Contains(out, "⚠ progress:") {
+		t.Errorf("a hand edit is a warning:\n%s", out)
 	}
-	if l := progressLines(st, dir, true); l != nil {
-		t.Errorf("the warning is said once, got %v", l)
+	if out := run("--summary"); strings.Contains(out, "progress") {
+		t.Errorf("the warning is said once:\n%s", out)
 	}
 
 	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 7\nlayers: {}\nmonitor:\n  summary: true\n"), 0o644); err != nil {
@@ -279,5 +277,34 @@ func TestMonitor_saysTheProgressSummary(t *testing.T) {
 	}
 	if out := run(); !strings.Contains(out, "▸ Progress") {
 		t.Errorf("the block turns it on with no flag:\n%s", out)
+	}
+}
+
+func TestMonitor_actionLevel(t *testing.T) {
+	t.Run("MNCMD-B08: At the action level the monitor says only what calls for a reaction", func(t *testing.T) {})
+	dir := monitorProject(t, "")
+	end, ok, bad := time.Now(), 0, 1
+	for _, r := range []runs.Run{
+		{ID: "own", Name: "anchors check", Command: "anchors check", By: runs.ByAnchors, Started: end.Add(-time.Minute), Ended: &end, Exit: &ok},
+		{ID: "mine", Name: "jest", Command: "npx jest", By: runs.ByRun, Started: end.Add(-time.Minute), Ended: &end, Exit: &ok},
+		{ID: "fail", Name: "go test", Command: "go test", By: runs.ByAnchors, Started: end.Add(-time.Minute), Ended: &end, Exit: &bad},
+	} {
+		if err := runs.Save(dir, r); err != nil {
+			t.Fatal(err)
+		}
+	}
+	out, err := runCobra(t, newMonitorCmd(), "--root", dir, "--once", "--level", "action", "--heartbeat", "1ns")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "anchors check ended") || !strings.Contains(out, "✓ jest ended") || !strings.Contains(out, "✗ go test ended") || !strings.Contains(out, "running=[NOTHING]") {
+		t.Errorf("an own run that passed is left out; the agent's run and a failure go out; idle is said:\n%s", out)
+	}
+	out, err = runCobra(t, newMonitorCmd(), "--root", dir, "--once", "--level", "action", "--heartbeat", "1ns")
+	if err != nil || strings.Contains(out, "running=") {
+		t.Errorf("idle is said once per stretch: %v\n%s", err, out)
+	}
+	if _, err := runCobra(t, newMonitorCmd(), "--root", dir, "--once", "--level", "loud"); err == nil || !strings.Contains(err.Error(), `"loud"`) {
+		t.Errorf("an unknown level is refused, named: %v", err)
 	}
 }

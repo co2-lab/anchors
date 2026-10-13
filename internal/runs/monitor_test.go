@@ -243,14 +243,14 @@ func TestConfigure(t *testing.T) {
 		t.Fatalf("the defaults: %+v %v", s, err)
 	}
 	cfg := &config.Config{Tests: []config.Suite{{JUnit: "out/junit.xml"}}, Monitor: &config.Monitor{
-		Every: "10s", Heartbeat: "2m", Summary: true, Keep: 5, KeepDays: 1, Reports: []string{"e2e/*.xml"},
+		Every: "10s", Heartbeat: "2m", Summary: true, SummaryEvery: "30m", Level: "action", Keep: 5, KeepDays: 1, Reports: []string{"e2e/*.xml"},
 		Runners: []config.MonitorRunner{{Name: "jest", Kind: "unit", Match: "craco test", Stall: "1m"}, {Name: "seed", Match: "seed\\.sh"}},
 	}}
 	s, err = Configure(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s.Timing.Every != 10*time.Second || s.Timing.Heartbeat != 2*time.Minute || s.Timing.Stall != 5*time.Minute || !s.Summary || s.Keep != 5 || s.MaxAge != 24*time.Hour {
+	if s.Timing.Every != 10*time.Second || s.Timing.Heartbeat != 2*time.Minute || s.Timing.Stall != 5*time.Minute || !s.Summary || s.SummaryEvery != 30*time.Minute || s.Level != LevelAction || s.Keep != 5 || s.MaxAge != 24*time.Hour {
 		t.Errorf("the block's timing and bounds: %+v", s)
 	}
 	if s.Runners[0].Name != "jest" || s.Runners[0].Match.String() != "craco test" || s.Runners[1].Name != "seed" || s.Runners[1].Kind != "other" || len(s.Runners) != len(DefaultRunners())+1 {
@@ -259,7 +259,7 @@ func TestConfigure(t *testing.T) {
 	if strings.Join(s.Reports, " ") != "out/junit.xml e2e/*.xml" {
 		t.Errorf("the suites' reports and the block's: %v", s.Reports)
 	}
-	for _, bad := range []config.Monitor{{Every: "soon"}, {Runners: []config.MonitorRunner{{Name: "x", Match: "("}}}, {Runners: []config.MonitorRunner{{Name: "y"}}}} {
+	for _, bad := range []config.Monitor{{Every: "soon"}, {Level: "loud"}, {SummaryEvery: "later"}, {Runners: []config.MonitorRunner{{Name: "x", Match: "("}}}, {Runners: []config.MonitorRunner{{Name: "y"}}}} {
 		b := bad
 		if _, err := Configure(&config.Config{Monitor: &b}); err == nil {
 			t.Errorf("%+v does not read", bad)
@@ -426,5 +426,47 @@ func TestEndOf_nothingToConfront(t *testing.T) {
 		if !strings.HasPrefix(ev.Line, c.want) {
 			t.Errorf("%s: got %q, want prefix %q", c.r.ID, ev.Line, c.want)
 		}
+	}
+}
+
+func TestForAction(t *testing.T) {
+	t.Run("MNTRS-B15: The action level keeps what calls for a reaction", func(t *testing.T) {})
+	st := &State{}
+	own, agent, ran := &Run{By: ByAnchors}, &Run{By: ByAgent}, &Run{By: ByRun}
+	for _, c := range []struct {
+		e    Event
+		r    *Run
+		want bool
+	}{
+		{Event{"died", "x", "☠ jest gone"}, ran, true},
+		{Event{"stalled", "x", "⏸ jest stalled"}, ran, true},
+		{Event{"resumed", "x", "▶ jest moving again"}, ran, true},
+		{Event{"started", "x", "▶ jest started"}, agent, false},
+		{Event{"progress", "x", "… jest 40%"}, agent, false},
+		{Event{"report", "r", "✓ report a.xml: 3 test(s), 0 failure(s)"}, nil, false},
+		{Event{"report", "r", "✗ report a.xml: 3 test(s), 1 failure(s)"}, nil, true},
+		{Event{"finished", "x", "✓ anchors check ended (exit 0, 1s)"}, own, false},
+		{Event{"finished", "x", "✗ anchors check ended (exit 1, 1s)"}, own, true},
+		{Event{"finished", "x", "✓ jest ended (exit 0, 1s)"}, ran, true},
+		{Event{"ended", "x", "⏹ npx jest is not in the process table"}, agent, true},
+		{Event{"ended", "x", "⏹ npx jest ended before the monitor saw it running (launched 10:00): npx jest"}, agent, false},
+	} {
+		if got := st.ForAction(c.e, c.r, false, false); got != c.want {
+			t.Errorf("%q: got %v, want %v", c.e.Line, got, c.want)
+		}
+	}
+	hb := Event{"heartbeat", "", "10:00 running=[NOTHING]"}
+	if st.NoteState(false, false); st.ForAction(hb, nil, false, false) {
+		t.Error("a busy heartbeat stays out")
+	}
+	if st.NoteState(true, false); !st.ForAction(hb, nil, true, false) || st.ForAction(hb, nil, true, false) {
+		t.Error("idle goes out once per stretch")
+	}
+	if st.NoteState(false, true); !st.ForAction(hb, nil, false, true) || st.ForAction(hb, nil, false, true) {
+		t.Error("a high load goes out once per stretch")
+	}
+	st.NoteState(false, false)
+	if st.NoteState(true, false); !st.ForAction(hb, nil, true, false) {
+		t.Error("idle again, after running, goes out again")
 	}
 }

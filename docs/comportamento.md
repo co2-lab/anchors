@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:23f699757335647b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8a82307fe26584de — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -852,7 +852,9 @@ teste prova.
 
 - [Anchors' long commands record their own run](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B06`
 
-- [The monitor says the progress summary with what it says, when asked](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B07`
+- [The monitor says the progress summary when it changes, when asked](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B07`
+
+- [At the action level the monitor says only what calls for a reaction](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-B08`
 
 - [The agent's hook never blocks the agent](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them) `MNCMD-I01`
 
@@ -6905,6 +6907,8 @@ teste prova.
 - [A monitor value that does not read is an error naming its key](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-E01`
 
 - [A check with nothing to confront is no failure](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B14`
+
+- [The action level keeps what calls for a reaction](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B15`
 
 - [A record is written whole and read back as written](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-B01`
 

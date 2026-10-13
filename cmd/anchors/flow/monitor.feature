@@ -44,10 +44,16 @@ Feature: MonitorCommand — `anchors monitor`, `anchors monitor run` and the age
     Then only the first is recorded, ended with exit 2
 
   @MNCMD-B07 @unit-level
-  Scenario: The monitor says the progress summary with what it says, when asked
+  Scenario: The monitor says the progress summary when it changes, when asked
     Given a project with a demand whose stage has an open task
-    When the monitor reads once with no flag, then with --summary; a quiet tick, a tick with an event, a quiet tick after a change, a hand edit twice; and a block turning it on, silenced by --summary=false
-    Then nothing, then the line to the agent and the summary under it; then nothing, the summary, the summary of the change, one warning; then nothing, and with the block alone the summary
+    When the monitor reads with no flag, with --summary twice, with summary-every past, after a task is done, after a hand edit twice, and with a block turning it on, silenced by --summary=false
+    Then nothing; the summary, then only the heartbeat; the summary again; the summary with what it was; one warning; nothing, and with the block alone the summary
+
+  @MNCMD-B08 @unit-level
+  Scenario: At the action level the monitor says only what calls for a reaction
+    Given Anchors' check passed, a wrapped jest passed and a go test failed, with nothing running
+    When the monitor reads at the action level, twice, and with an unknown level
+    Then the jest and the failure go out and the check does not, idle goes out once, and the unknown level is refused, named
 
   @MNCMD-I01 @unit-level
   Scenario: The agent's hook never blocks the agent

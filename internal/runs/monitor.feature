@@ -103,3 +103,9 @@ Feature: RunMonitor — reading the project's runs tick by tick: what started, s
     Given Anchors' check ended with exit 3, Anchors' check ended with exit 1, and a wrapped go test ended with exit 3
     When each ending is said
     Then the first reads nothing to confront, with no failure mark, and the others read as failures
+
+  @MNTRS-B15 @unit-level
+  Scenario: The action level keeps what calls for a reaction
+    Given a death, a stall, a start, a progress mark, reports passing and failing, runs ending by Anchors, by the agent and before the monitor saw them, and heartbeats idle, busy and with a high load
+    When each is filtered at the action level
+    Then the death, the stall, the failing report, the failure and the agent's run go out; idle and high load go out once each, and again after they stopped and came back
