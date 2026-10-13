@@ -185,3 +185,13 @@ func TestContributingNamesWorkAndForbidsNoVerify(t *testing.T) {
 		}
 	}
 }
+
+func TestContributing_unplannedWork(t *testing.T) {
+	t.Run("CNGDC-B11: The guide and AGENTS.md say how to record unplanned work", func(t *testing.T) {})
+	if s := ContributingSection(nil, ""); !strings.Contains(s, "`anchors progress`") || !strings.Contains(s, "--unplanned") {
+		t.Errorf("the guide says it:\n%s", s)
+	}
+	if a := AgentEntryFiles()[0].Content; !strings.Contains(a, "--unplanned") {
+		t.Errorf("AGENTS.md says it:\n%s", a)
+	}
+}

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: LDCML
-  updated_at: 2026-10-12
+  updated_at: 2026-10-13
   layer: comando
 -->
 # LedgerCommand — `anchors progress`, the only writer of the project's progress file
@@ -32,6 +32,7 @@ keeps the shape Anchors reads back. The weight's unit is the one `anchors.yaml` 
 | `LDCML-B04` | `show` prints every task of the file, or of one demand, as the file renders them without its header and sum line; `--json` prints the file's records. (`progressBody`) |
 | `LDCML-B05` | The weight's unit is `progress.unit` of `anchors.yaml`, `points` when it names none. |
 | `LDCML-B06` | `rename <id> <title>` gives a demand, a stage or a task a new title, keeping its id and history, and says it. |
+| `LDCML-B07` | `add task --unplanned` adds a task marked unplanned, where it arises; `unplanned <task>` marks one added before and `--undo` takes the mark off; the summary says, on a demand or stage with unplanned work, `· <n> of <total> <unit> unplanned`. |
 
 ## Errors
 

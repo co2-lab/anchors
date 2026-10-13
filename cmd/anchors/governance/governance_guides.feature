@@ -2,7 +2,7 @@
 # @anchors
 #   code: GGFGV
 #   ref: GVGDG
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-13
 #   layer: feature
 
 @GVGDG
@@ -207,3 +207,8 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     When it is printed
     Then it says what each of the four files is for, the five things the agreement says, what contradicts it, and the two gates
 
+  @GVGDG-B29 @unit-level
+  Scenario: The plan guide says how to record unplanned work
+    Given the plan guide
+    When it is printed
+    Then it says to record work the plan does not list with --unplanned, without rewriting the plan

@@ -2,7 +2,7 @@
 # @anchors
 #   code: WRFTW
 #   ref: WRPRW
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-13
 #   layer: feature
 
 @WRPRW
@@ -174,3 +174,9 @@ Feature: WorkPrompt — compose the work prompt of one stage over one target, fr
     Given a map with a frozen code file, and a code file whose spec holds a frozen rule
     When the work prompt is composed for each, and for a target with nothing frozen
     Then the first opens with the freeze and its reason, the second names the frozen rule, and the third has no warning
+
+  @WRPRW-B22 @unit-level
+  Scenario: The prompt says how to record unplanned work
+    Given any target
+    When its work prompt is composed
+    Then it says to record work the plan does not list with anchors progress add task --unplanned

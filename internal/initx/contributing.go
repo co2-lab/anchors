@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/progress"
 )
 
 // THE CONTRIBUTING GUIDE IS THE PROJECT'S OWN CONFIGURATION, READ ALOUD.
@@ -82,7 +83,8 @@ func ContributingSection(cfg *config.Config, guideDir string) string {
 	b.WriteString("- `anchors check --changed <file>` — run the gates over what a change reaches.\n")
 	b.WriteString("- `anchors test` — run the test suites and ingest their results into the map.\n")
 	b.WriteString("- `anchors touch` — bump `updated_at` in the headers of the files that changed.\n")
-	b.WriteString("- `anchors install-hooks` — once per clone: the pre-commit runs the gates over what is staged.\n\n")
+	b.WriteString("- `anchors install-hooks` — once per clone: the pre-commit runs the gates over what is staged.\n")
+	b.WriteString("- `anchors progress` — the only writer of `anchors.progress.md`. " + progress.UnplannedAdvice + "\n\n")
 
 	b.WriteString("### Long commands and agents: watch them\n\n")
 	b.WriteString("**Strongly recommended:** never leave a long command or an agent working unwatched. A\n")
@@ -227,6 +229,7 @@ func RenderAgents() string {
 		"- Launch every long command in the background through `anchors monitor run -- <command>`,\n" +
 		"  and keep `anchors monitor` running while it works. When it posts the progress summary\n" +
 		"  (`▸ Progress` and the lines under it), copy it to the user verbatim, in a code block.\n" +
+		"- " + progress.UnplannedAdvice + "\n" +
 		"- Never commit with `--no-verify`: a gate that fails is fixed, or waived in the commit\n" +
 		"  message with its reason (`[skip-<rule>@<CODE>: why]`).\n"
 }

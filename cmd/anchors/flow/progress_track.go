@@ -41,7 +41,12 @@ done weight over the weight not cancelled.
   anchors progress start D01.T4         (held by you; --take to take another agent's)
   anchors progress done D01.T4
   anchors progress reopen D01.T4 | cancel D01.T4 --reason "…" | weigh D01.T4 8
-  anchors progress rename D01.S2 "Unplanned"   a new title; the id and the history stay
+  anchors progress rename D01.S2 "Payment"     a new title; the id and the history stay
+
+Work the plan does not list, done for it, is recorded before it is done — where it arises,
+marked so it is seen:
+  anchors progress add task D01.S2 "fix the date parser" --weight 2 --unplanned
+  anchors progress unplanned D01.T31 [--undo]   mark a task already added
   anchors progress summary              the demands and their stages, with their progress
   anchors progress show [D01] [--json]  every task
 
@@ -121,19 +126,23 @@ Each change takes the file's lock, so agents working at once lose nothing.`,
 		},
 	}
 	var weight float64
-	var estimate bool
+	var estimate, unplanned bool
 	addTask := &cobra.Command{
 		Use: "task <demand|stage> <title> --weight <n>", Short: "Add a task, with its weight", Args: cobra.ExactArgs(2),
 		RunE: func(c *cobra.Command, args []string) error {
 			c.SilenceUsage = true
 			return change(c, func(f *progress.File) (string, error) {
 				id, err := f.AddTask(args[0], args[1], weight, estimate)
+				if err == nil && unplanned {
+					err = f.MarkUnplanned(id, true)
+				}
 				return "✓ task " + id + " — " + args[1], err
 			})
 		},
 	}
 	addTask.Flags().Float64Var(&weight, "weight", 0, "the task's weight — an estimate of its effort (required)")
 	addTask.Flags().BoolVar(&estimate, "estimate", false, "the weight is a placeholder still to be estimated")
+	addTask.Flags().BoolVar(&unplanned, "unplanned", false, "work the plan did not list, found on the way: kept where it arose, marked so it is seen")
 	add.AddCommand(addDemand, addStage, addTask)
 
 	var by string
@@ -210,6 +219,22 @@ Each change takes the file's lock, so agents working at once lose nothing.`,
 		},
 	}
 
+	var undo bool
+	markUnplanned := &cobra.Command{
+		Use: "unplanned <task> [--undo]", Short: "Mark a task as work the plan did not list (--undo takes the mark off)", Args: cobra.ExactArgs(1),
+		RunE: func(c *cobra.Command, args []string) error {
+			c.SilenceUsage = true
+			return change(c, func(f *progress.File) (string, error) {
+				said := "◇ " + args[0] + " unplanned"
+				if undo {
+					said = "◇ " + args[0] + " planned"
+				}
+				return said, f.MarkUnplanned(args[0], !undo)
+			})
+		},
+	}
+	markUnplanned.Flags().BoolVar(&undo, "undo", false, "take the mark off")
+
 	var asJSON bool
 	read := func() (*progress.File, error) {
 		abs, _, err := rootOf()
@@ -254,7 +279,7 @@ Each change takes the file's lock, so agents working at once lose nothing.`,
 	for _, c := range []*cobra.Command{summary, show} {
 		c.Flags().BoolVar(&asJSON, "json", false, "print JSON")
 	}
-	cmd.AddCommand(add, start, done, reopen, cancel, weigh, rename, summary, show)
+	cmd.AddCommand(add, start, done, reopen, cancel, weigh, rename, markUnplanned, summary, show)
 	return cmd
 }
 
@@ -296,6 +321,9 @@ func printSummary(w io.Writer, f *progress.File, asJSON bool) error {
 		}
 		if r.Estimate > 0 {
 			extra += fmt.Sprintf(", %d weight(s) still estimates", r.Estimate)
+		}
+		if r.Unplanned > 0 {
+			extra += fmt.Sprintf(" · %s of %s %s unplanned", num(r.Unplanned), num(r.Total), unit)
 		}
 		fmt.Fprintf(w, "%s%s %s%s — %s (%s/%s) · %s\n", indent, r.ID, r.Title, plan, r.Percent, num(r.Done), num(r.Total), extra)
 	}

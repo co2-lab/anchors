@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GVGDG
-  updated_at: 2026-10-11
+  updated_at: 2026-10-13
   layer: comando
 -->
 # GovernanceGuides — the guides an agent reads to operate Anchors, and the contracts other code relies on
@@ -55,6 +55,7 @@ The review and work guides are also the two that tell an agent what to do with w
 | `GVGDG-B26` | The header guide names the freeze marks — `frozen:` in a header, `@frozen:` on a rule's or a heading's line —, says they are written by `anchors freeze`, listed by `freeze show` and removed by `thaw`, and that a frozen part is not changed without an order from a person; the product guide says the doctrine records each freeze as an entry of the letter F with its reason, under a section of its own, and that a freeze entry is not a rule to realize. |
 | `GVGDG-B27` | The review guide asks a rejection to register each item it asks to change as a finding of its own under the card (`anchors escalate … --card`), before the verdict line, because the text of a review is no state the next reviewer follows; and an approval to close the findings the PR answered. |
 | `GVGDG-B28` | `anchors guide guidance` says what each guidance file is for — `CONTRIBUTING.md` holds the agreement, `AGENTS.md` and `CLAUDE.md` send the agent to it and `CLAUDE.md` imports `AGENTS.md`, `README.md` points to it —, the five things the agreement says (the order of the work, the declared layers, `next` and `work`, what bars a commit and never `--no-verify`, watching long work with the monitor), what contradicts it, and the two gates; `anchors guide --help` lists it. |
+| `GVGDG-B29` | The plan guide says that work the plan does not list, found on the way, is recorded in the progress before it is done, marked unplanned, and the plan is not rewritten for it. |
 | `GVGDG-B21` | The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state. |
 | `GVGDG-B20` | The test guide strongly recommends a contract test for every API unit, validating the API against the OpenAPI compiled from the specs with the language's own tool, named by `{CODE}-CT`, loading the document instead of copying it, and asserting each error response's status, code and message. |
 | `GVGDG-B19` | The test guide strongly recommends a visual-regression test for every state a visual unit's spec registers, tied both ways — a VR scenario per state, a VR test naming `{CODE}-VR-<state>` and a baseline image per scenario, every scenario of a state and every test of a scenario, a state with no visual value exempted by `@no-vr: <reason>` on its line —, the spec guide points every state of a visual unit to it, and the feature guide asks for one VR scenario per state. |

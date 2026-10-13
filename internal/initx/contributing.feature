@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTD
 #   ref: CNGDC
-#   updated_at: 2026-10-12
+#   updated_at: 2026-10-13
 #   layer: feature
 
 @CNGDC
@@ -87,3 +87,8 @@ Feature: ContributingGuide — render the project's CONTRIBUTING.md from the con
     When the contributing section is rendered
     Then it names anchors work for one task, and asks never to commit with --no-verify, waiving in the message instead
 
+  @CNGDC-B11 @unit-level
+  Scenario: The guide and AGENTS.md say how to record unplanned work
+    Given any configuration
+    When the contributing section and the agents' entry files are rendered
+    Then both say to record work the plan does not list with --unplanned

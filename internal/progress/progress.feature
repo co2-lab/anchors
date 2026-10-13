@@ -74,6 +74,12 @@ Feature: DemandLedger — the project's progress file
     When each is renamed, then an id that names nothing, then a title with the separator
     Then the titles change and the ids, the task's state and history stay, and the last two are refused
 
+  @DMLDD-B12 @unit-level
+  Scenario: A task is marked unplanned
+    Given a demand with a stage holding a task marked unplanned, an estimate also unplanned, a cancelled unplanned one and a planned one
+    When the file is written and read back, a mark is taken off, the other side of a merge marks a task, and a line with an unknown mark is read
+    Then the marks are kept in the lines, the summary says the unplanned weight without the cancelled, the mark comes off, the merge keeps it, and the unknown mark is refused
+
   @DMLDD-E01 @unit-level
   Scenario: A hand edit is refused
     Given a progress file with a line added by hand

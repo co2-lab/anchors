@@ -91,6 +91,11 @@ DEMAND — one stage per phase, and a task, with its weight, per piece of work. 
 plan' tracks it there; 'anchors progress add task', 'start' and 'done' move it, and only those
 commands write the file.
 
+WORK THE PLAN DOES NOT LIST, found on the way and done for it — a fix, a missing helper, a
+test the plan forgot — is recorded before it is done, where it arises:
+'anchors progress add task <demand|stage> "<what>" --weight <n> --unplanned'. The plan is not
+rewritten for it — it says what was decided —; the progress counts it, marked so it is seen.
+
 The reason is the difference the plan must preserve: the plan is a DECISION, and changing it
 must mean the decision changed. While the checkboxes lived here, marking a
 phase done was CHANGING the plan — and the gate that demands a justification for a change could

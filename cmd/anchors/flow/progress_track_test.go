@@ -184,3 +184,25 @@ func TestProgressCmd_rename(t *testing.T) {
 		t.Errorf("the new title, the same id and task: %s", out)
 	}
 }
+
+func TestProgressCmd_unplanned(t *testing.T) {
+	t.Run("LDCML-B07: Unplanned work is marked and shown", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "Checkout")
+	mustProg(t, root, "add", "stage", "D01", "Payment")
+	mustProg(t, root, "add", "task", "D01.S1", "refunds", "--weight", "8")
+	mustProg(t, root, "add", "task", "D01.S1", "fix the date parser", "--weight", "2", "--unplanned")
+	if out := mustProg(t, root, "unplanned", "D01.T1"); !strings.Contains(out, "◇ D01.T1 unplanned") {
+		t.Errorf("said: %s", out)
+	}
+	if out := mustProg(t, root, "unplanned", "D01.T1", "--undo"); !strings.Contains(out, "◇ D01.T1 planned") {
+		t.Errorf("said: %s", out)
+	}
+	out := mustProg(t, root, "summary")
+	if !strings.Contains(out, "D01 Checkout — 0% (0/10) · 2 open · 2 of 10 points unplanned") || !strings.Contains(out, "D01.S1 Payment — 0% (0/10) · 2 open · 2 of 10 points unplanned") {
+		t.Errorf("the unplanned weight of the demand and the stage:\n%s", out)
+	}
+	if show := mustProg(t, root, "show"); !strings.Contains(show, "fix the date parser · 2 (unplanned)") || strings.Contains(show, "refunds · 8 (unplanned)") {
+		t.Errorf("show marks the task:\n%s", show)
+	}
+}

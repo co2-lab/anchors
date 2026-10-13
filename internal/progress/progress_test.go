@@ -363,3 +363,51 @@ func TestRename(t *testing.T) {
 		t.Error("a title with the separator is refused, as a new one")
 	}
 }
+
+func TestMarkUnplanned(t *testing.T) {
+	t.Run("DMLDD-B12: A task is marked unplanned", func(t *testing.T) {})
+	f := &File{}
+	id, _ := f.AddDemand("A", "")
+	sid, _ := f.AddStage(id, "S")
+	t1, _ := f.AddTask(sid, "fix", 2, false)
+	t2, _ := f.AddTask(sid, "helper", 3, true)
+	t3, _ := f.AddTask(sid, "gone", 5, false)
+	_, _ = f.AddTask(sid, "planned", 10, false)
+	for _, x := range []string{t1, t2, t3} {
+		if err := f.MarkUnplanned(x, true); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := f.Cancel(t3, "no need"); err != nil {
+		t.Fatal(err)
+	}
+	text := Render(f)
+	if !strings.Contains(text, "fix · 2 (unplanned)") || !strings.Contains(text, "helper · 3 (estimate, unplanned)") {
+		t.Errorf("the marks in the lines:\n%s", text)
+	}
+	g, err := Parse(text)
+	if err != nil || !g.Task(t1).Unplanned || !g.Task(t2).Unplanned || !g.Task(t2).Estimate {
+		t.Fatalf("read back: %v", err)
+	}
+	if rows := Summary(g); rows[0].Unplanned != 5 || rows[1].Unplanned != 5 {
+		t.Errorf("the unplanned weight, cancelled left out: %+v", rows)
+	}
+	if err := g.MarkUnplanned(t1, false); err != nil || g.Task(t1).Unplanned {
+		t.Errorf("the mark comes off: %v", err)
+	}
+	base, _ := Parse(text)
+	ours, _ := Parse(text)
+	theirs, _ := Parse(text)
+	_ = theirs.MarkUnplanned(t1, false)
+	merged := Merge(base, ours, theirs)
+	if merged.Task(t1).Unplanned {
+		t.Error("the merge keeps the side that changed the mark")
+	}
+	bad := strings.Replace(text, "fix · 2 (unplanned)", "fix · 2 (urgent)", 1)
+	if _, err := Parse(fixSum(bad)); err == nil || !strings.Contains(err.Error(), `"urgent"`) {
+		t.Errorf("an unknown mark is refused, named: %v", err)
+	}
+	if !strings.Contains(UnplannedAdvice, "--unplanned") {
+		t.Error("the advice says the command")
+	}
+}

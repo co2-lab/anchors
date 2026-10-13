@@ -2,7 +2,7 @@
 # @anchors
 #   code: PCFPR
 #   ref: LDCML
-#   updated_at: 2026-10-12
+#   updated_at: 2026-10-13
 #   layer: feature
 
 @LDCML
@@ -43,6 +43,12 @@ Feature: LedgerCommand — anchors progress
     Given a demand with a stage holding a task
     When the stage is renamed
     Then the summary shows the new title under the same id, with its task
+
+  @LDCML-B07 @unit-level
+  Scenario: Unplanned work is marked and shown
+    Given a demand with a stage holding a planned task
+    When a task is added unplanned, the planned one is marked unplanned and then unmarked
+    Then the summary says the unplanned weight of the demand and the stage, and show marks the task
 
   @LDCML-E01 @unit-level
   Scenario: A refused change writes nothing

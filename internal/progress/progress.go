@@ -51,10 +51,13 @@ type Task struct {
 	Title    string  `json:"title"`
 	Weight   float64 `json:"weight"`
 	Estimate bool    `json:"estimate,omitempty"` // a weight nobody estimated yet (a migrated task)
-	State    State   `json:"state"`
-	At       string  `json:"at,omitempty"`     // when it was started or done
-	By       string  `json:"by,omitempty"`     // who started or did it
-	Reason   string  `json:"reason,omitempty"` // why it was cancelled
+	// Unplanned is work the plan did not list, done for it: kept where it arose, marked so it
+	// is seen (DESIGN-unplanned-work.md).
+	Unplanned bool   `json:"unplanned,omitempty"`
+	State     State  `json:"state"`
+	At        string `json:"at,omitempty"`     // when it was started or done
+	By        string `json:"by,omitempty"`     // who started or did it
+	Reason    string `json:"reason,omitempty"` // why it was cancelled
 }
 
 // Stage is an optional step of a demand, holding some of its tasks.
@@ -173,8 +176,19 @@ func parseTask(line string) (*Task, int, error) {
 	}
 	t := &Task{ID: taskID(dn, tn), num: tn, Title: parts[0], State: State(m[1])}
 	w := parts[1]
-	if strings.HasSuffix(w, " (estimate)") {
-		t.Estimate, w = true, strings.TrimSuffix(w, " (estimate)")
+	// The weight's marks, in parentheses: `2 (estimate)`, `2 (unplanned)`, `2 (estimate, unplanned)`.
+	if i := strings.Index(w, " ("); i >= 0 && strings.HasSuffix(w, ")") {
+		for _, mark := range strings.Split(w[i+2:len(w)-1], ", ") {
+			switch mark {
+			case "estimate":
+				t.Estimate = true
+			case "unplanned":
+				t.Unplanned = true
+			default:
+				return nil, 0, fmt.Errorf("task %s: the weight's mark %q is neither estimate nor unplanned", t.ID, mark)
+			}
+		}
+		w = w[:i]
 	}
 	weight, err := strconv.ParseFloat(w, 64)
 	if err != nil || weight <= 0 {
@@ -285,8 +299,15 @@ func Render(f *File) string {
 
 func taskLine(t *Task) string {
 	line := "- [" + string(t.State) + "] " + t.ID + " — " + t.Title + " · " + weightText(t.Weight)
+	var marks []string
 	if t.Estimate {
-		line += " (estimate)"
+		marks = append(marks, "estimate")
+	}
+	if t.Unplanned {
+		marks = append(marks, "unplanned")
+	}
+	if len(marks) > 0 {
+		line += " (" + strings.Join(marks, ", ") + ")"
 	}
 	switch t.State {
 	case Doing:
@@ -533,6 +554,26 @@ func (f *File) Weigh(id string, weight float64) error {
 	return nil
 }
 
+// UnplannedAdvice is what the flow tells an agent about work the plan does not list, in the
+// plan guide, the work prompt and the generated CONTRIBUTING.md and AGENTS.md: recorded
+// where it arises, marked, before it is done — unrecorded, it never enters the progress
+// (DESIGN-unplanned-work.md).
+const UnplannedAdvice = "Work the plan does not list, found on the way and done for it — a fix, a missing helper, " +
+	"a test the plan forgot — is recorded before it is done: " +
+	"`anchors progress add task <demand|stage> \"<what>\" --weight <n> --unplanned`. " +
+	"The plan is not rewritten for it; the progress counts it, marked so it is seen."
+
+// MarkUnplanned marks a task as work the plan did not list, or, with on false, takes the
+// mark off (DESIGN-unplanned-work.md).
+func (f *File) MarkUnplanned(id string, on bool) error {
+	t, err := f.task(id)
+	if err != nil {
+		return err
+	}
+	t.Unplanned = on
+	return nil
+}
+
 // Rename gives a demand, a stage or a task a new title; its id, its tasks and their history
 // stay. Without it, the only way to change a name was to cancel the tasks and add them again
 // (reported from MIF).
@@ -586,6 +627,8 @@ type Row struct {
 	Open     int     `json:"open"`               // tasks to do or in progress
 	Doing    int     `json:"doing"`              // tasks in progress
 	Estimate int     `json:"estimate,omitempty"` // tasks whose weight is still an estimate
+	// Unplanned is the weight of the work the plan did not list, cancelled tasks left out.
+	Unplanned float64 `json:"unplanned,omitempty"`
 }
 
 // Summary is the short view of what is in progress: one row per demand, and one per stage
@@ -605,6 +648,9 @@ func Summary(f *File) []Row {
 			}
 			if t.Estimate && t.State != Cancelled {
 				r.Estimate++
+			}
+			if t.Unplanned && t.State != Cancelled {
+				r.Unplanned += t.Weight
 			}
 		}
 		return r
@@ -772,6 +818,9 @@ func mergeTask(bt, ot, tt *Task) {
 	}
 	if bt != nil && (tt.Weight != bt.Weight || tt.Estimate != bt.Estimate) && ot.Weight == bt.Weight && ot.Estimate == bt.Estimate {
 		ot.Weight, ot.Estimate = tt.Weight, tt.Estimate
+	}
+	if bt != nil && tt.Unplanned != bt.Unplanned && ot.Unplanned == bt.Unplanned {
+		ot.Unplanned = tt.Unplanned
 	}
 }
 

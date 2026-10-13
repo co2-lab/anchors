@@ -19,7 +19,12 @@ done weight over the weight not cancelled.
   anchors progress start D01.T4         (held by you; --take to take another agent's)
   anchors progress done D01.T4
   anchors progress reopen D01.T4 | cancel D01.T4 --reason "…" | weigh D01.T4 8
-  anchors progress rename D01.S2 "Unplanned"   a new title; the id and the history stay
+  anchors progress rename D01.S2 "Payment"     a new title; the id and the history stay
+
+Work the plan does not list, done for it, is recorded before it is done — where it arises,
+marked so it is seen:
+  anchors progress add task D01.S2 "fix the date parser" --weight 2 --unplanned
+  anchors progress unplanned D01.T31 [--undo]   mark a task already added
   anchors progress summary              the demands and their stages, with their progress
   anchors progress show [D01] [--json]  every task
 
@@ -151,6 +156,22 @@ anchors progress summary [flags]
 | Flag | Padrão | O que faz |
 | --- | --- | --- |
 | `--json` |  | print JSON |
+
+### `anchors progress unplanned`
+
+Mark a task as work the plan did not list (--undo takes the mark off).
+
+#### Uso
+
+```bash
+anchors progress unplanned <task> [--undo] [flags]
+```
+
+#### Flags
+
+| Flag | Padrão | O que faz |
+| --- | --- | --- |
+| `--undo` |  | take the mark off |
 
 ### `anchors progress weigh`
 

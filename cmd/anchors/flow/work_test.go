@@ -585,3 +585,9 @@ func TestWork_frozenTargetIsSaid(t *testing.T) {
 		}
 	}
 }
+
+func TestComposeWorkPrompt_unplannedWork(t *testing.T) {
+	t.Run("WRPRW-B22: The prompt says how to record unplanned work", func(t *testing.T) {})
+	out := prompt(t, t.TempDir(), "src/pricing.ts", "code", workCfg())
+	wantAll(t, out, "Work the plan does not list", "--unplanned")
+}

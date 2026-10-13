@@ -18,6 +18,7 @@ import (
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/issue"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/progress"
 	"github.com/co2-lab/anchors/internal/queue"
 	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
@@ -260,6 +261,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	for _, s := range outOfScope(artifact) {
 		fmt.Fprintf(&b, "- %s\n", s)
 	}
+	b.WriteString("\n" + progress.UnplannedAdvice + "\n")
 
 	// PROCEDIMENTO: universal + override do projeto (híbrido).
 	b.WriteString("\n## Procedure\n\n")

@@ -718,3 +718,13 @@ func TestGuidanceGuide(t *testing.T) {
 		}
 	}
 }
+
+func TestPlanGuide_unplannedWork(t *testing.T) {
+	t.Run("GVGDG-B29: The plan guide says how to record unplanned work", func(t *testing.T) {})
+	g := guideOut(t, "plan")
+	for _, want := range []string{"WORK THE PLAN DOES NOT LIST", "--unplanned", "The plan is not\nrewritten for it"} {
+		if !strings.Contains(g, want) {
+			t.Errorf("the plan guide lacks %q", want)
+		}
+	}
+}

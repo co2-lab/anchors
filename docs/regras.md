@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:7f2336c15cb4ddfb — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:2f6ed9a2724e5d4f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1035,6 +1035,8 @@ abra a página dela em `camadas/`.
 
 - [LDCML-B06 — `rename <id> <title>` gives a demand, a stage or a task a new title, keeping its id and history, and says it.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
 
+- [LDCML-B07 — `add task --unplanned` adds a task marked unplanned, where it arises; `unplanned <task>` marks one added before and `--undo` takes the mark off; the summary says, on a demand or stage with unplanned work, `· <n> of <total> <unit> unplanned`.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
+
 - [LDCML-E01 — A change the file refuses — an unknown id, a held task, a title the format cannot read, a hand-edited file — or `add demand` with neither title nor plan.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
 
 ### [WRQUW — WorkQueue — list, pull, close and discard the work, from the local queue or from the board](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
@@ -1303,6 +1305,8 @@ abra a página dela em `camadas/`.
 
 - [WRPRW-B21 — A target a freeze covers opens the prompt, after its title, with a warning naming the freeze and its reason and saying not to change it without an order from a person; a target whose unit holds frozen rules names each with its freeze; with no map, or nothing frozen, there is no warning. (`frozenNoteIn`, `frozenNote`)](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
+- [WRPRW-B22 — After what is not its scope, the prompt says that work the plan does not list, found on the way, is recorded before it is done, with `anchors progress add task … --unplanned`.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
+
 - [WRPRW-I01 — A prompt never both records a delivery and closes a review.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
 - [WRPRW-X01 — Composing the prompt writes nothing to the project.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
@@ -1410,6 +1414,8 @@ abra a página dela em `camadas/`.
 - [GVGDG-B27 — The review guide asks a rejection to register each item it asks to change as a finding of its own under the card (`anchors escalate … --card`), before the verdict line, because the text of a review is no state the next reviewer follows; and an approval to close the findings the PR answered.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B28 — `anchors guide guidance` says what each guidance file is for — `CONTRIBUTING.md` holds the agreement, `AGENTS.md` and `CLAUDE.md` send the agent to it and `CLAUDE.md` imports `AGENTS.md`, `README.md` points to it —, the five things the agreement says (the order of the work, the declared layers, `next` and `work`, what bars a commit and never `--no-verify`, watching long work with the monitor), what contradicts it, and the two gates; `anchors guide --help` lists it.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
+- [GVGDG-B29 — The plan guide says that work the plan does not list, found on the way, is recorded in the progress before it is done, marked unplanned, and the plan is not rewritten for it.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -7023,6 +7029,8 @@ abra a página dela em `camadas/`.
 
 - [CNGDC-B10 — The day-to-day part names `anchors work` for the prompt of one task, and the blocking part asks never to commit with `--no-verify`: a failing gate is fixed, or waived in the commit message with its reason.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 
+- [CNGDC-B11 — The guide's commands name `anchors progress` and say, as `AGENTS.md` does, that work the plan does not list is recorded before it is done, marked unplanned.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
+
 - [CNGDC-B08 — The section strongly recommends watching long commands and agents: launching each long command in the background through `anchors monitor run -- <command>`, keeping `anchors monitor` running while it works, and `anchors install-hooks --agent` for a coding agent; Anchors' own long commands record themselves; and, when the monitor posts the progress summary, it tells the agent to copy it to the user verbatim in a code block, the total included, without the line meant for the agent; and an agent that watches runs the monitor with `--level action`, with no filter of its own.](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
 
 - [CNGDC-B09 — The agents' entry files — `AGENTS.md`, read by most coding agents, and `CLAUDE.md`, read by Claude Code — each send the agent to `CONTRIBUTING.md` before any change; `AGENTS.md` names the guide, work and next commands, the monitor — and showing the user the progress summary it posts — and the ban on `--no-verify`, and `CLAUDE.md` imports `AGENTS.md`. (`RenderAgents`, `RenderClaude`, `AgentEntryFiles`)](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes)
@@ -7496,6 +7504,8 @@ abra a página dela em `camadas/`.
 - [DMLDD-B10 — A task in progress records when it was started to the minute (`doing since 2026-10-12 21:31 by a`), and says when, in local time; a task of a file written before, with only the date, still reads, counted from the start of that day. (`StartedAt`, `Since`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
 - [DMLDD-B11 — A demand, a stage or a task takes a new title, with the same rules as a new one; its id, its tasks, their state and their history stay; an id that names nothing is refused. (`Rename`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+- [DMLDD-B12 — A task can be marked unplanned — work the plan did not list, kept where it arose —, in its line beside the weight (`2 (unplanned)`, `2 (estimate, unplanned)`), and the mark taken off; the summary says each demand's and stage's unplanned weight, cancelled tasks left out; a merge keeps the side that changed the mark; a mark other than estimate or unplanned is refused; the flow's advice says to record such work before doing it. (`MarkUnplanned`, `UnplannedAdvice`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
 - [DMLDD-E01 — The file's content does not match its sum, or holds a line this unit does not write.](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
