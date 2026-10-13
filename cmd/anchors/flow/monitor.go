@@ -187,7 +187,7 @@ func runMonitor(w io.Writer, root string, set runs.Settings, untilDone, once boo
 		}
 		recs := append([]runs.Run(nil), snap.Records...)
 		recs = append(recs, writes...)
-		for _, l := range idleTaskLines(st, root, recs, now, set.Idle) {
+		for _, l := range idleTaskLines(st, root, recs, procs, now, set.Idle) {
 			fmt.Fprintln(w, l)
 		}
 		if set.Summary {
@@ -279,7 +279,7 @@ func progressLines(st *runs.State, root string, now time.Time, every time.Durati
 // starting, moving or ending, and of a task of theirs started. Quiet for idle, the task is
 // said once; moving again, it is said again. At MIF a teammate sat idle for hours, its task
 // "in progress", until the user asked.
-func idleTaskLines(st *runs.State, root string, recs []runs.Run, now time.Time, idle time.Duration) []string {
+func idleTaskLines(st *runs.State, root string, recs []runs.Run, procs []runs.Proc, now time.Time, idle time.Duration) []string {
 	if idle <= 0 {
 		return nil
 	}
@@ -291,6 +291,10 @@ func idleTaskLines(st *runs.State, root string, recs []runs.Run, now time.Time, 
 		st.Watching = now
 	}
 	last, live := map[string]time.Time{}, map[string]bool{}
+	alive := map[int]bool{}
+	for _, p := range procs {
+		alive[p.PID] = true
+	}
 	seen := func(who string, at time.Time) {
 		if at.After(last[who]) {
 			last[who] = at
@@ -318,6 +322,16 @@ func idleTaskLines(st *runs.State, root string, recs []runs.Run, now time.Time, 
 			seen(r.Session, s.LastMove)
 			if !s.Done && r.Ended == nil {
 				live[r.Session] = true
+			}
+		} else if r.Ended == nil && r.PID > 0 && alive[r.PID] {
+			// A run of another worktree, which this monitor does not follow: alive while its
+			// process is (reported from MIF: a test of 10 minutes in a worktree read as silence).
+			live[r.Session] = true
+		}
+		// Its output growing is activity, wherever the run is.
+		if r.Output != "" {
+			if fi, err := os.Stat(r.Output); err == nil {
+				seen(r.Session, fi.ModTime())
 			}
 		}
 	}

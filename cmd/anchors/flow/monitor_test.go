@@ -410,6 +410,19 @@ func TestMonitor_idleTaskAcrossWorktrees(t *testing.T) {
 	if err != nil || strings.Contains(out, "D01.T1") {
 		t.Errorf("a run of the holder in another worktree is activity: %v\n%s", err, out)
 	}
+
+	// A run still going in the worktree, started an hour ago: alive while its process is
+	// (reported from MIF: a test of 10 minutes in a worktree read as silence).
+	if err := os.Remove(filepath.Join(wt, ".anchors", "runs", "w.json")); err != nil {
+		t.Fatal(err)
+	}
+	if err := runs.Save(wt, runs.Run{ID: "long", Name: "anchors test", Command: "anchors test", By: runs.ByAnchors, Session: "a", PID: os.Getpid(), Started: time.Now().Add(-time.Hour)}); err != nil {
+		t.Fatal(err)
+	}
+	out, err = runCobra(t, newMonitorCmd(), "--root", main, "--once", "--heartbeat", "1h")
+	if err != nil || strings.Contains(out, "D01.T1") {
+		t.Errorf("a run still going in another worktree keeps its holder active: %v\n%s", err, out)
+	}
 }
 
 func mustRead(t *testing.T, path string) []byte {

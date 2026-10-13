@@ -63,9 +63,9 @@ Feature: MonitorCommand — `anchors monitor`, `anchors monitor run` and the age
 
   @MNCMD-B11 @unit-level
   Scenario: A holder's activity in another worktree of the repository counts
-    Given a repository with a worktree, a task held by a for an hour, and a run of a recorded in the worktree
+    Given a repository with a worktree, a task held by a for an hour, and a run of a recorded in the worktree, ended now, then one still running there for an hour
     When the monitor of the main tree reads, having watched for an hour
-    Then the task is not said quiet
+    Then the task is not said quiet either time
 
   @MNCMD-B10 @unit-level
   Scenario: The agent's hook records a subagent as a run

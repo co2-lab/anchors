@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:1948fca4ad4ab23d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:9311cd94fa417094 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -949,7 +949,7 @@ abra a página dela em `camadas/`.
 
 - [MNCMD-B09 — A task in progress whose holder has no run alive and no activity — a run of theirs starting, moving or ending, a command of theirs through the agent's hook, a task of theirs started — for `--idle` (`monitor.idle`, default 10m) is said once, `⏸ <task> in progress — no activity from <holder> for <time>`, at every level; the silence is counted from the last activity, never from before the monitor began to watch, so a first tick says nothing; activity again says `▶ <task> moving again (<holder>)`; `off` silences it, and a value neither a duration nor off fails the command naming it. Anchors' own runs, `monitor run` and the agent hook record who launched each run, and the hook marks its agent active at every command. (`idleTaskLines`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
-- [MNCMD-B11 — A holder's activity in another worktree of the same repository — its runs and its commands, recorded there — counts as its activity.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+- [MNCMD-B11 — A holder's activity in another worktree of the same repository — its runs and its commands, recorded there — counts as its activity; a run there not yet ended keeps its holder active while its process is alive, and a run's output growing is activity wherever it runs.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
 - [MNCMD-B10 — The agent's hook records a subagent as a run: SubagentStart opens it, of kind agent, named by its type, with its transcript beside the session's as its output; a command the subagent sends to the background is recorded with the subagent's id; SubagentStop closes it with the first line of its last message, named by its task's description when the hook carries one. A subagent outside a project, or with no id, records nothing. (`subagentHook`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
