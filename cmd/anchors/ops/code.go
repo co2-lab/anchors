@@ -13,10 +13,12 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/code"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
@@ -60,6 +62,8 @@ uses them, choose the code by hand and validate it with --check.`,
 			if err != nil {
 				return fmt.Errorf("read the map: %w (run `anchors map build`)", err)
 			}
+			resPath := reservationsPath(absRoot)
+			addReservations(loadReservations(resPath, time.Now()), taken, owners)
 
 			// modo --check: valida um código proposto
 			if check != "" {
@@ -101,6 +105,20 @@ uses them, choose the code by hand and validate it with --check.`,
 				}
 			}
 
+			// The suggestion is reserved, under a lock shared by every worktree of the repository:
+			// called again before the map knows the code, `anchors code` gave the same one —
+			// BLA0B three times in a row, for three flows (reported from MIF).
+			if err := os.MkdirAll(filepath.Dir(resPath), 0o755); err != nil {
+				return fmt.Errorf("the folder of the reserved codes: %w", err)
+			}
+			unlock, lerr := mapx.LockNamed(resPath, "the reserved codes")
+			if lerr != nil {
+				return lerr
+			}
+			defer unlock()
+			reserved := loadReservations(resPath, time.Now())
+			addReservations(reserved, taken, owners)
+
 			var canonical, unique string
 			switch {
 			case prefix != "":
@@ -114,6 +132,10 @@ uses them, choose the code by hand and validate it with --check.`,
 				unique = code.GenerateUnique(name, taken)
 			}
 
+			reserved = append(reserved, reservation{Code: unique, Name: args[0], At: time.Now()})
+			if err := saveReservations(resPath, reserved); err != nil {
+				fmt.Printf("· the code could not be reserved (%v): call `anchors map build` before the next one\n", err)
+			}
 			fmt.Printf("✓ free code: %s\n", unique)
 			// An argument shaped like a code is often a check asked the wrong way: an agent
 			// ran `anchors code ABCD` to learn whether ABCD was free and read the suggestion as
@@ -502,6 +524,68 @@ type codeIndex struct {
 	file map[string]string
 	// declared marca os códigos cuja identidade é DECLARADA — os únicos que o --check confere.
 	declared map[string]bool
+}
+
+// reservation is a code `anchors code` suggested, kept until the map knows it.
+type reservation struct {
+	Code string    `json:"code"`
+	Name string    `json:"name"`
+	At   time.Time `json:"at"`
+}
+
+// reservationKeep is how long a suggested code stays reserved: by then it is in the map, or
+// it was not used.
+const reservationKeep = 7 * 24 * time.Hour
+
+// reservationsPath is where the reserved codes live: in the folder git shares between the
+// repository's worktrees, so an agent in one worktree does not get a code another was given;
+// outside git, in the project's `.anchors/`.
+func reservationsPath(absRoot string) string {
+	if dir, ok := gitmeta.CommonDir(absRoot); ok {
+		return filepath.Join(dir, "anchors-reserved-codes.json")
+	}
+	return filepath.Join(absRoot, ".anchors", "reserved-codes.json")
+}
+
+// loadReservations reads the codes reserved in the last 7 days; a missing or unreadable file
+// is none.
+func loadReservations(path string, now time.Time) []reservation {
+	var all, out []reservation
+	if b, err := os.ReadFile(path); err == nil {
+		_ = json.Unmarshal(b, &all)
+	}
+	for _, r := range all {
+		if now.Sub(r.At) <= reservationKeep {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+func saveReservations(path string, rs []reservation) error {
+	b, err := json.MarshalIndent(rs, "", "  ")
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, b, 0o644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, path)
+}
+
+// addReservations marks the reserved codes taken; one the map does not know yet is said as
+// reserved, for what and when.
+func addReservations(rs []reservation, taken map[string]bool, owners map[string][]string) {
+	for _, r := range rs {
+		taken[r.Code] = true
+		if len(owners[r.Code]) == 0 {
+			owners[r.Code] = []string{fmt.Sprintf("a code suggested for %q on %s, not in the map yet", r.Name, r.At.Format("2006-01-02 15:04"))}
+		}
+	}
 }
 
 // takenCodes lê o mapa e devolve o conjunto de códigos em uso + quem os usa (por

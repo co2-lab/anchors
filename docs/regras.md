@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:bfc407a8af076a44 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:6e1bb48cdc61a5ec — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1962,6 +1962,8 @@ abra a página dela em `camadas/`.
 - [CDCMC-B15 — A name shaped like an identity code — capitals and digits at a length `code_lengths` allows — still gets its suggestion, and the command also says whether that code is free or who uses it, pointing at `--check`; a name with lower case gets no such note. (`codeShapeRE`)](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
 - [CDCMC-B16 — A file's own code — the `code:` of a file whose `ref:` names its unit — is taken: `--check` names the file that holds it, a generated code avoids it, and `code list` lists it.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
+
+- [CDCMC-B17 — A code `anchors code` suggests is reserved for 7 days, under a lock, in the folder git shares between the repository's worktrees (in `.anchors/` outside git): the same name asked again, here or in another worktree, gets another code, and `--check` says the reserved one is taken — suggested for what, and when — until the map knows it.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
 - [CDCMC-I01 — REF[CDCMC-B02]: a suggested code is never one the map already holds — the taken canonical is always adjusted](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
@@ -6780,6 +6782,8 @@ abra a página dela em `camadas/`.
 - [GTMTG-B11 — The bulk date reader under a folder of the repository gives each file under it its most recent commit day, by its path relative to that folder, and leaves out the files outside it; at the repository's root it is the bulk reader itself. (`AllCommitDatesUnder`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-B12 — The worktrees of a repository are listed each at the place the given folder holds in its own tree; outside a repository, or with no git, the folder alone. (`Worktrees`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+
+- [GTMTG-B13 — The folder git shares between a repository's worktrees is the same, absolute, from the main tree and from a worktree; outside a repository there is none. (`CommonDir`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-X01 — The dirty count never answers 0 when it could not count: outside a repository or without git it answers a negative number.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 

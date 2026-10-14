@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTA
 #   ref: GTMTG
-#   updated_at: 2026-10-13
+#   updated_at: 2026-10-14
 #   layer: feature
 
 @GTMTG
@@ -91,3 +91,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a repository with a subfolder and a second worktree, and a folder outside any repository
     When the worktrees of the subfolder are listed, and of the folder outside
     Then both trees are listed at that subfolder, and the folder outside lists itself
+
+  @GTMTG-B13 @unit-level
+  Scenario: The worktrees share one git folder
+    Given a repository with a second worktree, and a folder outside any repository
+    When the shared git folder is asked from each
+    Then both trees give the same absolute folder, and the folder outside gives none

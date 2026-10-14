@@ -2,7 +2,7 @@
 # @anchors
 #   code: CDFTC
 #   ref: CDCMC
-#   updated_at: 2026-10-13
+#   updated_at: 2026-10-14
 #   layer: feature
 
 @CDCMC
@@ -132,3 +132,9 @@ Feature: CodeCommand — a new unit gets an identity code that no other unit in 
     Given a map with a code file whose own code is UPRHS and whose unit is UPWRU
     When UPRHS is checked, and the codes in use are listed
     Then UPRHS is already used, naming the file, and the list holds it
+
+  @CDCMC-B17 @unit-level
+  Scenario: A suggested code is reserved
+    Given a repository with a worktree and an empty map, and a reservation 8 days old
+    When the same name is asked twice in the main tree and once in the worktree, and the first code and the old one are checked
+    Then the three codes differ, the first is said reserved, and the old one is free

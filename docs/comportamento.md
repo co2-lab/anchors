@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f0063d72cb0d912b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:c2a87cb13904f10e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1783,6 +1783,8 @@ teste prova.
 - [A name shaped like a code also gets that code's status](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B15`
 
 - [A file's own code is taken](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B16`
+
+- [A suggested code is reserved](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B17`
 
 - [The subject is the first line that is neither blank nor a comment](layers/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-B01`
 
@@ -6141,6 +6143,8 @@ teste prova.
 - [The bulk date reader under a folder gives paths relative to it](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B11`
 
 - [The worktrees of a repository are listed](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B12`
+
+- [The worktrees share one git folder](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B13`
 
 - [Only an administrator whose protection spares administrators can bypass it](layers/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B01`
 

@@ -241,3 +241,20 @@ func Worktrees(root string) []string {
 	}
 	return dirs
 }
+
+// CommonDir is the folder git shares between every worktree of the repository root belongs
+// to — the main `.git` —, absolute; false outside a repository, or with no git.
+func CommonDir(root string) (string, bool) {
+	out, err := exec.Command("git", "-C", root, "rev-parse", "--git-common-dir").Output()
+	if err != nil {
+		return "", false
+	}
+	dir := strings.TrimSpace(string(out))
+	if dir == "" {
+		return "", false
+	}
+	if !filepath.IsAbs(dir) {
+		dir = filepath.Join(root, dir)
+	}
+	return dir, true
+}

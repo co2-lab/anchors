@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTMTG
-  updated_at: 2026-10-13
+  updated_at: 2026-10-14
   layer: infra
 -->
 # GitMeta — what git knows about the files: last commit dates, pending changes, HEAD, dirty count
@@ -47,6 +47,7 @@ snapshot that never existed.
 | `GTMTG-B10` | The files with uncommitted changes — modified, staged, added, untracked — are read in a single `git status`, by their path relative to the root, files outside the root left out; outside git the answer is not known. (`DirtyFiles`) |
 | `GTMTG-B11` | The bulk date reader under a folder of the repository gives each file under it its most recent commit day, by its path relative to that folder, and leaves out the files outside it; at the repository's root it is the bulk reader itself. (`AllCommitDatesUnder`) |
 | `GTMTG-B12` | The worktrees of a repository are listed each at the place the given folder holds in its own tree; outside a repository, or with no git, the folder alone. (`Worktrees`) |
+| `GTMTG-B13` | The folder git shares between a repository's worktrees is the same, absolute, from the main tree and from a worktree; outside a repository there is none. (`CommonDir`) |
 
 ## Constraints
 

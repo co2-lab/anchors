@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CDCMC
-  updated_at: 2026-10-13
+  updated_at: 2026-10-14
   layer: comando
 -->
 # CodeCommand — a new unit gets an identity code that no other unit in the map already owns, and the codes in use are listed from the map
@@ -61,6 +61,7 @@ rename rewrites the whole project and deserves its own dry-run.
 | `CDCMC-B14` | When the length check accuses codes, it ends with the exact `anchors recode <old> <new>` command for each one, to be reviewed in its dry-run and applied with `--apply`; the check itself changes nothing and has no `--fix`. |
 | `CDCMC-B15` | A name shaped like an identity code — capitals and digits at a length `code_lengths` allows — still gets its suggestion, and the command also says whether that code is free or who uses it, pointing at `--check`; a name with lower case gets no such note. (`codeShapeRE`) |
 | `CDCMC-B16` | A file's own code — the `code:` of a file whose `ref:` names its unit — is taken: `--check` names the file that holds it, a generated code avoids it, and `code list` lists it. |
+| `CDCMC-B17` | A code `anchors code` suggests is reserved for 7 days, under a lock, in the folder git shares between the repository's worktrees (in `.anchors/` outside git): the same name asked again, here or in another worktree, gets another code, and `--check` says the reserved one is taken — suggested for what, and when — until the map knows it. |
 
 ## Invariants
 

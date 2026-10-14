@@ -8,14 +8,18 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/co2-lab/anchors/internal/code"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -476,5 +480,57 @@ func TestCodeCheckSeesFileCodes(t *testing.T) {
 	_, list := runCode(t, "list", "--root", root)
 	if !strings.Contains(list, "UPRHS") {
 		t.Errorf("code list holds it:\n%s", list)
+	}
+}
+
+// Reported from MIF: called again before the map knew the code, `anchors code` gave the same
+// one — BLA0B three times in a row, for three Maestro flows.
+func TestCodeReservesItsSuggestion(t *testing.T) {
+	t.Run("CDCMC-B17: A suggested code is reserved", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	main := codeProject(t, "version: 1\n", "")
+	git := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", main}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+	}
+	git("init", "-q")
+	git("add", ".")
+	git("commit", "-q", "-m", "init")
+	wt := filepath.Join(t.TempDir(), "wt")
+	git("worktree", "add", "-q", "--detach", wt)
+	writeFile(t, wt, mapx.DefaultPath, "version: 7\nnodes:\nedges: []\n")
+	common, _ := gitmeta.CommonDir(main)
+	old := []reservation{{Code: "OLDCD", Name: "old", At: time.Now().Add(-8 * 24 * time.Hour)}}
+	if err := saveReservations(filepath.Join(common, "anchors-reserved-codes.json"), old); err != nil {
+		t.Fatal(err)
+	}
+	codeOf := func(root string) string {
+		t.Helper()
+		err, out := runCode(t, "--root", root, "BalanceFlow")
+		if err != nil {
+			t.Fatalf("%v\n%s", err, out)
+		}
+		m := regexp.MustCompile(`free code: (\S+)`).FindStringSubmatch(out)
+		if m == nil {
+			t.Fatalf("no code in:\n%s", out)
+		}
+		return m[1]
+	}
+	a, b, c := codeOf(main), codeOf(main), codeOf(wt)
+	if a == b || a == c || b == c {
+		t.Errorf("the same name asked three times gets three codes: %s %s %s", a, b, c)
+	}
+	err, out := runCode(t, "--root", wt, "--check", a)
+	if !errors.Is(err, errCollision) || !strings.Contains(out, `a code suggested for "BalanceFlow"`) {
+		t.Errorf("the reserved code is taken, from another worktree too: %v\n%s", err, out)
+	}
+	if err, out := runCode(t, "--root", main, "--check", "OLDCD"); err != nil || !strings.Contains(out, "OLDCD is free") {
+		t.Errorf("a reservation older than 7 days is gone: %v\n%s", err, out)
 	}
 }
