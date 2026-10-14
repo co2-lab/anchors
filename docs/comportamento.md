@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:c2a87cb13904f10e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e7e0d3a9dd62cfcf — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -7315,6 +7315,8 @@ teste prova.
 - [A file's kinded dependencies are its resources in the map](layers/mapa.md#grblg-b27--a-files-kinded-dependencies-are-its-resources-in-the-map) `GRBLG-B27`
 
 - [An edge carries whether its flag has a side effect on the tests](layers/mapa.md#grblg-b28--an-edge-carries-whether-its-flag-has-a-side-effect-on-the-tests) `GRBLG-B28`
+
+- [A proof set aside comes back with its revision](layers/mapa.md#grblg-b29--a-proof-set-aside-comes-back-with-its-revision) `GRBLG-B29`
 
 - [A test that was never ingested has no verdict](layers/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 

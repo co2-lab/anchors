@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:6e1bb48cdc61a5ec — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:09fea1febcc47852 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -8066,6 +8066,8 @@ abra a página dela em `camadas/`.
 - [GRBLG-B27 — A file's kinded dependency flags become its resources in the map — `kind:name`, once each, sorted —, and an incremental rebuild keeps those of the files it does not read again. (`Resources`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-B28 — An edge a flag declares carries whether that flag has no side effect on the tests — `@navigates` and `@dep[type]` by default, the project's list otherwise —; when two flags tie one file to another, one with a side effect wins; a type dependency names no resource. (`flagEdges`, `NoSideEffect`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
+
+- [GRBLG-B29 — A rebuild that leaves a node's signal behind, its revision changed, sets each suite's proof aside with the revision it proved; when the node's content returns to that revision, the proofs set aside for it come back, for the suites its signal does not hold; a proof with no recorded revision is not set aside, and a node keeps the latest 20. (`ParkedProof`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-B23 — Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 

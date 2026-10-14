@@ -2,7 +2,7 @@
 # @anchors
 #   code: BLFTA
 #   ref: GRBLG
-#   updated_at: 2026-10-09
+#   updated_at: 2026-10-14
 #   layer: feature
 
 @GRBLG
@@ -201,3 +201,9 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Given a screen importing a navigator for its types, importing a hook, navigating to a detail, and a file tying to one file twice
     When the map is built, and then with a project list naming only @navigates
     Then the type import and the navigation have no side effect, the hook has, the tie keeps the side effect, and the project's list decides
+
+  @GRBLG-B29 @unit-level
+  Scenario: A proof set aside comes back with its revision
+    Given a spec at R1 proven by an e2e suite and a unit suite, then at R2 proven by the unit suite alone
+    When the map is rebuilt at R2, the unit suite measures it, and the map is rebuilt with the spec back at R1
+    Then at R2 the proofs are set aside, and back at R1 the e2e proof and the unit proof of R1 come back, the unit proof of R2 set aside

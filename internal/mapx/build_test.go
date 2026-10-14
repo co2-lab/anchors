@@ -1028,3 +1028,35 @@ func TestBuild_edgesCarryTheirSideEffect(t *testing.T) {
 		t.Errorf("the project's list decides: %v", q)
 	}
 }
+
+// Reported from MIF: a spec put at an intermediate version and back lost the proof of its
+// Maestro flows, a suite that did not run meanwhile.
+func TestPreserveStamps_parksAndRestoresProofs(t *testing.T) {
+	t.Run("GRBLG-B29: A proof set aside comes back with its revision", func(t *testing.T) {})
+	const spec = "s.spec.md"
+	at := func(rev string, sig *TestSignal) *Graph {
+		return &Graph{Nodes: []Node{{ID: spec, Kind: KindSpec, Rev: rev, Signal: sig}}}
+	}
+	r1 := at("r1", &TestSignal{
+		ProvenBySuite:    map[string][]string{"maestro/S-R01.xml": {"S-R01"}, "junit.xml": {"S-B01"}},
+		ProvenRevBySuite: map[string]string{"maestro/S-R01.xml": "r1", "junit.xml": "r1"},
+		ProvenCodes:      []string{"S-B01", "S-R01"}, AtRev: "r1",
+	})
+	r2 := at("r2", nil)
+	PreserveStamps(r2, r1)
+	if n := r2.Nodes[0]; n.Signal != nil || len(n.ParkedProofs) != 2 {
+		t.Fatalf("at R2 the proofs of R1 are set aside: %+v %+v", n.Signal, n.ParkedProofs)
+	}
+	// the unit suite measures R2
+	r2.Nodes[0].Signal = &TestSignal{ProvenBySuite: map[string][]string{"junit.xml": {"S-B01"}}, ProvenRevBySuite: map[string]string{"junit.xml": "r2"}, ProvenCodes: []string{"S-B01"}, AtRev: "r2"}
+	back := at("r1", nil)
+	PreserveStamps(back, r2)
+	n := back.Nodes[0]
+	if n.Signal == nil || !slices.Equal(n.Signal.ProvenBySuite["maestro/S-R01.xml"], []string{"S-R01"}) || n.Signal.ProvenRevBySuite["maestro/S-R01.xml"] != "r1" ||
+		n.Signal.ProvenRevBySuite["junit.xml"] != "r1" || !slices.Contains(n.Signal.ProvenCodes, "S-R01") || n.Signal.AtRev != "r1" {
+		t.Errorf("back at R1, the proofs of R1 come back: %+v", n.Signal)
+	}
+	if len(n.ParkedProofs) != 1 || n.ParkedProofs[0].Rev != "r2" || n.ParkedProofs[0].Suite != "junit.xml" {
+		t.Errorf("the unit proof of R2 is set aside: %+v", n.ParkedProofs)
+	}
+}

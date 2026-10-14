@@ -808,13 +808,90 @@ func preservarSinais(novo, antigo *Graph) {
 		}
 	}
 	// The declarations of kept evidence go with the signal: both speak of this revision.
+	parked := make(map[string][]ParkedProof, len(antigo.Nodes))
+	for i := range antigo.Nodes {
+		if len(antigo.Nodes[i].ParkedProofs) > 0 {
+			parked[antigo.Nodes[i].ID] = antigo.Nodes[i].ParkedProofs
+		}
+	}
 	for i := range novo.Nodes {
 		n := &novo.Nodes[i]
-		if s, ok := sinais[n.ID]; ok && revs[n.ID] == n.Rev {
+		s, had := sinais[n.ID]
+		if had && revs[n.ID] == n.Rev {
 			n.Signal = s
 			n.EvidenceKept = kept[n.ID]
 		}
+		// A signal left behind sets its suites' proofs aside, each at the revision it proved;
+		// the proofs set aside for the revision the file has now come back.
+		set := parked[n.ID]
+		if had && revs[n.ID] != n.Rev && s != nil {
+			set = parkProofs(set, s)
+		}
+		n.ParkedProofs = restoreProofs(n, set)
 	}
+}
+
+// parkedKeep bounds the proofs a node keeps set aside: the latest ones.
+const parkedKeep = 20
+
+// parkProofs adds a signal's proofs, by suite and revision, to those set aside; a suite's
+// proof of a revision already set aside replaces it.
+func parkProofs(set []ParkedProof, s *TestSignal) []ParkedProof {
+	suites := make([]string, 0, len(s.ProvenBySuite))
+	for suite := range s.ProvenBySuite {
+		suites = append(suites, suite)
+	}
+	sort.Strings(suites)
+	for _, suite := range suites {
+		rev := s.ProvenRevBySuite[suite]
+		if rev == "" {
+			continue // a proof with no recorded revision cannot be trusted back
+		}
+		kept := set[:0:0]
+		for _, p := range set {
+			if p.Suite != suite || p.Rev != rev {
+				kept = append(kept, p)
+			}
+		}
+		set = append(kept, ParkedProof{Suite: suite, Rev: rev, Codes: append([]string(nil), s.ProvenBySuite[suite]...)})
+	}
+	if len(set) > parkedKeep {
+		set = set[len(set)-parkedKeep:]
+	}
+	return set
+}
+
+// restoreProofs gives the node back the proofs set aside for the revision it has now, for
+// the suites its signal does not hold, and returns the rest still set aside.
+func restoreProofs(n *Node, set []ParkedProof) []ParkedProof {
+	var rest []ParkedProof
+	restored := false
+	for _, p := range set {
+		if p.Rev != n.Rev {
+			rest = append(rest, p)
+			continue
+		}
+		if n.Signal == nil {
+			n.Signal = &TestSignal{}
+		}
+		if _, has := n.Signal.ProvenBySuite[p.Suite]; has {
+			continue
+		}
+		if n.Signal.ProvenBySuite == nil {
+			n.Signal.ProvenBySuite = map[string][]string{}
+		}
+		if n.Signal.ProvenRevBySuite == nil {
+			n.Signal.ProvenRevBySuite = map[string]string{}
+		}
+		n.Signal.ProvenBySuite[p.Suite] = p.Codes
+		n.Signal.ProvenRevBySuite[p.Suite] = p.Rev
+		restored = true
+	}
+	if restored {
+		n.Signal.ProvenCodes = unionProven(n.Signal.ProvenBySuite)
+		n.Signal.AtRev = unionRev(n.Signal, n.Rev)
+	}
+	return rest
 }
 
 // FillSignals gives each node of `novo` that has no signal the one `src` holds for the same

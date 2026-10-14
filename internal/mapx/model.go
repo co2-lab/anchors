@@ -241,6 +241,11 @@ type Node struct {
 	// On the node, not in the signal: a signal means something was measured, and a file
 	// with nothing measured must not look measured because someone kept its stamps.
 	EvidenceKept []EvidenceKeep `yaml:"evidence_kept,omitempty"`
+	// ParkedProofs: the proofs of each suite a rebuild set aside when the file changed, each
+	// with the revision it proved. Content that returns to that revision gets them back:
+	// a temporary version of a spec cost it the proof of a suite that did not run meanwhile
+	// (reported from MIF). On the node, not in the signal: set aside, they prove nothing now.
+	ParkedProofs []ParkedProof `yaml:"parked_proofs,omitempty"`
 	// OutRows: a screen spec's navigation rows, by rule, each with a revision of the row
 	// alone (scan.File.OutRows).
 	OutRows map[string]string `yaml:"out_rows,omitempty"`
@@ -291,6 +296,13 @@ type FailureSignal struct {
 	// spec muda: a falha observada era da versão anterior da regra, e tratá-la como
 	// atual afirmaria sobre o que não foi medido.
 	Rev string `yaml:"rev,omitempty"`
+}
+
+// ParkedProof is one suite's proof of a revision the file no longer has.
+type ParkedProof struct {
+	Suite string   `yaml:"suite"`
+	Rev   string   `yaml:"rev"`
+	Codes []string `yaml:"codes"`
 }
 
 // TestSignal são os sinais de qualidade de teste amarrados a um nó (código ou teste).
