@@ -182,11 +182,11 @@ func TestTick_heartbeat(t *testing.T) {
 		{ID: "c", Name: "go test", Command: "go test", By: ByRun, Started: t0, Ended: &end},
 	}
 	procs := append(agentAndSelf(), Proc{PID: pidNpx, PPID: 1, Cmd: "npx jest"}, Proc{PID: pidNpx + 1, PPID: 1, Cmd: "maestro test"})
-	snap := Snapshot{Now: t0.Add(6 * time.Minute), Root: root, Self: pidSelf, Procs: procs, Records: recs, Load: 9, HasLoad: true, CPUs: 4}
+	snap := Snapshot{Now: t0.Add(6 * time.Minute), Root: root, Self: pidSelf, Procs: procs, Records: recs, Load: 9, HasLoad: true, CPUs: 4, Busy: 95, HasBusy: true}
 	evs, _ := Tick(st, snap, DefaultRunners(), DefaultTiming())
 	got := lines(evs)
-	if !strings.Contains(got, "running=[jest 1, maestro (stalled) 1]") || !strings.Contains(got, "1 run(s) ended since") || !strings.Contains(got, "load=9.0/4 (HIGH") {
-		t.Errorf("names, ended and load:\n%s", got)
+	if !strings.Contains(got, "running=[jest 1, maestro (stalled) 1]") || !strings.Contains(got, "1 run(s) ended since") || !strings.Contains(got, "load=9.0/4 cpu=95% (HIGH") {
+		t.Errorf("names, ended, load and cpu:\n%s", got)
 	}
 	st2 := &State{Runs: map[string]*Seen{}, Reports: map[string]time.Time{}}
 	evs, _ = Tick(st2, Snapshot{Now: t0, Root: root, Self: pidSelf}, DefaultRunners(), DefaultTiming())
@@ -494,5 +494,36 @@ func TestTick_subagent(t *testing.T) {
 	evs, _ = tick(st, t0.Add(25*time.Minute), agentAndSelf(), []Run{sub, cmd}, out)
 	if got := lines(evs); !strings.Contains(got, "⏹ agent general-purpose ended (24m0s) — bg-probe") {
 		t.Errorf("its end, with its last message:\n%s", got)
+	}
+}
+
+func TestOverloaded(t *testing.T) {
+	t.Run("MNTRS-B17: The machine is overloaded when the load passes the CPUs and the CPUs are busy", func(t *testing.T) {})
+	for _, c := range []struct {
+		snap Snapshot
+		want bool
+	}{
+		{Snapshot{Load: 10, HasLoad: true, CPUs: 10, Busy: 65, HasBusy: true}, false}, // the user's: load 10, CPUs 65% busy
+		{Snapshot{Load: 12, HasLoad: true, CPUs: 10, Busy: 65, HasBusy: true}, false},
+		{Snapshot{Load: 12, HasLoad: true, CPUs: 10, Busy: 95, HasBusy: true}, true},
+		{Snapshot{Load: 12, HasLoad: true, CPUs: 10}, true},                          // no CPU reading yet: the load alone
+		{Snapshot{Load: 25, HasLoad: true, CPUs: 10, Busy: 40, HasBusy: true}, true}, // past twice the CPUs, whatever the use
+		{Snapshot{Load: 8, HasLoad: true, CPUs: 10, Busy: 100, HasBusy: true}, false},
+		{Snapshot{Busy: 100, HasBusy: true, CPUs: 10}, false},
+	} {
+		if got := c.snap.Overloaded(); got != c.want {
+			t.Errorf("%+v: got %v, want %v", c.snap, got, c.want)
+		}
+	}
+	st := &State{}
+	if _, ok := st.MeasureBusy([]Proc{{PID: 1, CPU: 100}, {PID: 2, CPU: 50}}, t0, 4); ok {
+		t.Error("the first reading measures nothing")
+	}
+	busy, ok := st.MeasureBusy([]Proc{{PID: 1, CPU: 120}, {PID: 2, CPU: 70}}, t0.Add(20*time.Second), 4)
+	if !ok || busy != 50 {
+		t.Errorf("40 CPU seconds over 20s on 4 CPUs is 50%%: %v %v", busy, ok)
+	}
+	if busy, _ := st.MeasureBusy([]Proc{{PID: 1, CPU: 500}}, t0.Add(21*time.Second), 4); busy != 100 {
+		t.Errorf("never past 100: %v", busy)
 	}
 }

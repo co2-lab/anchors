@@ -115,3 +115,9 @@ Feature: RunMonitor — reading the project's runs tick by tick: what started, s
     Given a subagent's run, its transcript quiet, first with a command of its own alive and then without
     When the monitor ticks past the agent stall time, then the subagent's record ends
     Then it is not stalled while its command runs, it is stalled after, and it ends with its last message
+
+  @MNTRS-B17 @unit-level
+  Scenario: The machine is overloaded when the load passes the CPUs and the CPUs are busy
+    Given the load at 10 on 10 CPUs 65% busy, at 12 on CPUs 65% and 95% busy, at 12 with the CPUs not measured yet, at 25 with the CPUs 40% busy, and two readings of the processes' CPU seconds
+    When the machine's state and the CPUs' use are read
+    Then only the load past the CPUs with the CPUs 95% busy, or not measured, or past twice the CPUs, is overloaded, and the use is 50%, never past 100

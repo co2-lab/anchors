@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:534849f4c19852b4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:bfc407a8af076a44 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7665,7 +7665,7 @@ abra a página dela em `camadas/`.
 
 - [MNTRS-B05 — A test report modified since the last reading is a line with its tests, its failures and the first failure; a report already there before the monitor's memory began is no event, and neither is one that holds no test — emptied by a runner that writes it at the end, or cut short —: it is said once it holds tests.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
-- [MNTRS-B06 — Every heartbeat, a line says what runs — by name, the stalled marked —, or `running=[NOTHING]`; how many runs ended since the last heartbeat; and the load against the number of CPUs (`load=8.4/10`), marked HIGH above it — processes wait for a CPU.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+- [MNTRS-B06 — Every heartbeat, a line says what runs — by name, the stalled marked —, or `running=[NOTHING]`; how many runs ended since the last heartbeat; and the load against the number of CPUs (`load=8.4/10`) with the CPUs' use (`cpu=65%`), marked HIGH when the machine is overloaded (MNTRS-B17) — processes wait for a CPU.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B07 — The memory is kept between watches: a re-armed monitor says once what happened while nobody watched — a death included — and repeats nothing; a run that ended before the memory began is old news. (`LoadState`, `SaveState`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
@@ -7686,6 +7686,8 @@ abra a página dela em `camadas/`.
 - [MNTRS-B15 — At the action level an event goes out when it calls for a reaction: a death, a stall and its end, a failure of any run, a run the agent or `monitor run` launched ending either way (not one that ended before the monitor saw it), a report with failures; a start, a progress mark, a passing report and Anchors' own passing runs stay out; the heartbeat goes out only when the project fell idle or the load is high, each once per stretch, said again after the state changed. (`ForAction`, `NoteState`, `LevelAll`, `LevelAction`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B16 — A subagent's run has no process: it lives until its record ends, moves while its transcript grows, and is stalled only when its transcript stayed quiet for the agent stall time (10m, or `monitor.idle`) with no command of its own alive — while one is, it waits, and the command is the one watched; it ends as `⏹ <name> ended (<time>) — <its last message>`. (`KindAgent`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B17 — The CPUs' use since the last tick is measured from the CPU seconds of every process (`cpu=65%`), never above 100, nothing on the first reading; the machine is overloaded — the heartbeat's `HIGH`, the action level's high load — when the load passes the CPUs and the CPUs are at least 90% busy, or, before the CPUs are measured, on the load alone; a load past twice the CPUs is overload whatever their use, which errs low. (`Overloaded`, `MeasureBusy`, `BusyThreshold`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-I01 — Every run that ended is said, and said once: across ticks and re-armed monitors, no ended run is silent and none is repeated.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 

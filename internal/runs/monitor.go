@@ -75,7 +75,11 @@ type State struct {
 	// SaidIdle and SaidHigh are the heartbeat of the action level: the project falling idle,
 	// and a high load, each said once per stretch.
 	SaidIdle bool `json:"said_idle,omitempty"`
-	SaidHigh bool `json:"said_high,omitempty"`
+	// CPUTime and CPUAt are the CPU seconds of every process, and when they were read: the
+	// next tick measures the CPUs' use from them.
+	CPUTime  float64   `json:"cpu_time,omitempty"`
+	CPUAt    time.Time `json:"cpu_at,omitempty"`
+	SaidHigh bool      `json:"said_high,omitempty"`
 	// IdleTasks are the tasks in progress said to have no activity from their holder, until
 	// it moves again (DESIGN-agent-activity.md).
 	IdleTasks map[string]bool `json:"idle_tasks,omitempty"`
@@ -136,6 +140,12 @@ type Snapshot struct {
 	Load    float64
 	HasLoad bool
 	CPUs    int
+	// Busy is the share of the CPUs in use since the last tick, from 0 to 100, and HasBusy
+	// whether it was measured: the load average counts what waits — for a CPU, but on macOS
+	// for a disk too — and stays high after a peak, so a load of 10 on 10 CPUs came with
+	// the CPUs 65% busy (reported by the user).
+	Busy    float64
+	HasBusy bool
 	Reports []Report
 	Output  func(path string) OutputInfo
 }
@@ -648,14 +658,53 @@ func heartbeat(st *State, runs map[string]*Run, order []string, snap Snapshot) s
 	if snap.HasLoad {
 		if snap.CPUs > 0 {
 			line += fmt.Sprintf(" load=%.1f/%d", snap.Load, snap.CPUs)
-			if snap.Load > float64(snap.CPUs) {
-				line += " (HIGH: processes wait for a CPU — timeouts may be load)"
-			}
 		} else {
 			line += fmt.Sprintf(" load=%.1f", snap.Load)
 		}
 	}
+	if snap.HasBusy {
+		line += fmt.Sprintf(" cpu=%.0f%%", snap.Busy)
+	}
+	if snap.Overloaded() {
+		line += " (HIGH: processes wait for a CPU — timeouts may be load)"
+	}
 	return line
+}
+
+// BusyThreshold is how busy the CPUs must be, with the load past their number, for the machine
+// to be overloaded.
+const BusyThreshold = 90
+
+// Overloaded says whether processes wait for a CPU: the load past the CPUs and, when measured,
+// the CPUs at least BusyThreshold busy; or the load past twice the CPUs, whatever the CPUs'
+// use. The load alone overstated it: it counts what waits for a disk too, and lags behind a
+// peak. The use, measured from the processes' CPU seconds, errs low — a process that ends
+// takes its seconds with it (measured against top: 16% for 34%) —, so a load that high is
+// overload on its own.
+func (snap Snapshot) Overloaded() bool {
+	if !snap.HasLoad || snap.CPUs <= 0 || snap.Load <= float64(snap.CPUs) {
+		return false
+	}
+	return !snap.HasBusy || snap.Busy >= BusyThreshold || snap.Load > 2*float64(snap.CPUs)
+}
+
+// MeasureBusy gives the share of the CPUs in use since the last reading, from the CPU seconds
+// of every process now, and keeps the reading for the next; false on the first reading or
+// when no time passed. A process that ended in between takes its seconds with it, so the
+// share errs low, never high.
+func (st *State) MeasureBusy(procs []Proc, now time.Time, cpus int) (float64, bool) {
+	total := 0.0
+	for _, p := range procs {
+		total += p.CPU
+	}
+	prev, at := st.CPUTime, st.CPUAt
+	st.CPUTime, st.CPUAt = total, now
+	elapsed := now.Sub(at).Seconds()
+	if at.IsZero() || elapsed <= 0 || cpus <= 0 || len(procs) == 0 {
+		return 0, false
+	}
+	busy := (total - prev) / (elapsed * float64(cpus)) * 100
+	return max(0, min(100, busy)), true
 }
 
 func resumedLine(r Run) string {

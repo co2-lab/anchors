@@ -159,6 +159,9 @@ func runMonitor(w io.Writer, root string, set runs.Settings, untilDone, once boo
 		}
 		snap.Procs = procs
 		snap.Load, snap.HasLoad = runs.LoadAverage()
+		if err == nil {
+			snap.Busy, snap.HasBusy = st.MeasureBusy(procs, now, snap.CPUs)
+		}
 		snap.Reports = runs.ReadReports(root, set.Reports, st.Reports)
 		events, writes := runs.Tick(st, snap, set.Runners, set.Timing)
 		for _, r := range writes {
@@ -171,7 +174,7 @@ func runMonitor(w io.Writer, root string, set runs.Settings, untilDone, once boo
 			}
 		}
 		idle := live == 0
-		high := snap.HasLoad && snap.CPUs > 0 && snap.Load > float64(snap.CPUs)
+		high := snap.Overloaded()
 		st.NoteState(idle, high)
 		byID := map[string]*runs.Run{}
 		for i := range snap.Records {
