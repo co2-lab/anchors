@@ -2,7 +2,7 @@
 # @anchors
 #   code: RDFRT
 #   ref: RTDCL
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @RTDCL
@@ -70,3 +70,9 @@ Feature: RouteDeclared — a screen declares how one arrives, and names its neig
     When the gate confronts it
     Then it returns Pass, because the ruler here is the spec's internal coherence and
       confronting the name against the router is a different confrontation
+
+  @RTDCL-B06 @unit-level
+  Scenario: A navigation section ends at any heading
+    Given a screen whose Saída names each origin of a goBack, followed by a ## section whose table says "tela de origem", and a screen whose Saída itself says "Tela de planos"
+    When each is confronted
+    Then the first passes, and the second fails naming "Tela de" and its row

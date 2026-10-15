@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
@@ -66,6 +67,7 @@ func Diagnose(g *mapx.Graph, cfg *config.Config, root string) Report {
 	r.Findings = append(r.Findings, checkOrphans(g)...)
 	r.Findings = append(r.Findings, checkDuplicateCodes(g)...)
 	r.Findings = append(r.Findings, checkLooseLayers(g, cfg)...)
+	r.Findings = append(r.Findings, checkCommitMsgHook(root)...)
 	r.Findings = append(r.Findings, checkGateCoverage(g, cfg)...)
 	r.Findings = append(r.Findings, checkSkipOnValid(cfg)...)
 	r.Findings = append(r.Findings, checkMissingTools(cfg)...)
@@ -247,6 +249,28 @@ func checkOrphans(g *mapx.Graph) []Finding {
 	return out
 }
 
+// managedHook is the line every hook `anchors install-hooks` writes carries.
+const managedHook = "managed-by: anchors install-hooks"
+
+// checkCommitMsgHook reports a pre-commit Anchors installed with no commit-msg of its own:
+// the pre-commit then bars a failure at once, and a waiver in the commit message
+// (`[skip-<gate>@<CODE>: why]`) has no hook to read it. Hooks installed before commit-msg
+// existed stayed so (reported from MIF: a waiver never worked there).
+func checkCommitMsgHook(root string) []Finding {
+	dir, ok := gitmeta.HooksDir(root)
+	if !ok {
+		return nil
+	}
+	pre, err := os.ReadFile(filepath.Join(dir, "pre-commit"))
+	if err != nil || !strings.Contains(string(pre), managedHook) {
+		return nil
+	}
+	if msg, err := os.ReadFile(filepath.Join(dir, "commit-msg")); err == nil && strings.Contains(string(msg), managedHook) {
+		return nil
+	}
+	return []Finding{{"hooks-desatualizados", Warn, filepath.ToSlash(filepath.Join(dir, "commit-msg")), i18n.T("health.commit_msg_missing")}}
+}
+
 // --- pilares frouxos: camada declarada sem arquivos; guide que não rege nada ---
 
 func checkLooseLayers(g *mapx.Graph, cfg *config.Config) []Finding {
@@ -258,7 +282,7 @@ func checkLooseLayers(g *mapx.Graph, cfg *config.Config) []Finding {
 	}
 	// camada declarada na config mas sem nenhum nó do seu kind
 	for name, l := range cfg.Layers {
-		if kindCount[mapx.Kind(l.Kind)] == 0 {
+		if kindCount[mapx.Kind(l.Kind)] == 0 && !l.MayBeEmpty {
 			out = append(out, Finding{"camada-vazia", Warn, name, i18n.T("health.empty_layer")})
 		}
 	}

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:5a1df23fab313950 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1a80ef54bc603276 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -5198,6 +5198,8 @@ teste prova.
 
 - [The declared route is not confronted against the real router](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-X02`
 
+- [A navigation section ends at any heading](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B06`
+
 - [Non-spec artifacts skip confrontation](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B01`
 
 - [Specifications without declared routes skip confrontation](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B02`
@@ -6150,6 +6152,8 @@ teste prova.
 
 - [The worktrees share one git folder](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B13`
 
+- [The hooks folder is found](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B14`
+
 - [Only an administrator whose protection spares administrators can bypass it](layers/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B01`
 
 - [Each refusal of the bypass names its reason](layers/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B02`
@@ -6269,6 +6273,8 @@ teste prova.
 - [An ingested report that reached no test is told apart from no report](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B26`
 
 - [A gate declared over a field the project neither declares nor waives is named](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B27`
+
+- [A pre-commit with no commit-msg beside it is reported](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B28`
 
 - [A spec with two open decisions gives one warning carrying the count](layers/infra.md#pndcp--pendingdecisions--the-doctor-lists-the-specs-that-still-hold-open-decisions-the-heaviest-first) `PNDCP-B01`
 

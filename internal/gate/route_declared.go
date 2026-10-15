@@ -44,7 +44,10 @@ var navGenericTermRE = []*regexp.Regexp{
 // the name as a whole word.
 var navHeadingRE = regexp.MustCompile(`(?i)^###\s+(?:Entrada|Sa[íi]da|Entry|Exit|In|Out|Incoming|Outgoing|Navigation)\b`)
 
-// navSections returns the body of every navigation section, each up to the next `###`.
+// navSections returns the body of every navigation section, each up to the next heading of
+// any level: a `##` after `### Saída` ends it too — read up to the next `###` only, the
+// actions and rules that followed were taken for navigation, and a rule's "tela de origem"
+// failed a screen for a generic term (reported from MIF).
 //
 // A single regex ending a match at `\n###` CONSUMED that heading, so a navigation section
 // right after another (`### Entrada` then `### Saída`) was never read, and a generic term
@@ -54,7 +57,7 @@ func navSections(content string) []string {
 	var out []string
 	var cur *strings.Builder
 	for _, line := range strings.Split(content, "\n") {
-		if strings.HasPrefix(strings.TrimSpace(line), "###") {
+		if strings.HasPrefix(strings.TrimSpace(line), "#") {
 			if cur != nil {
 				out = append(out, cur.String())
 				cur = nil
@@ -91,8 +94,8 @@ func checkRouteDeclared(content string, n mapx.Node) (Verdict, string) {
 				continue // só linhas de tabela de navegação
 			}
 			for _, term := range navGenericTermRE {
-				if term.MatchString(line) {
-					return Fail, i18n.T("gate.route.generic")
+				if m := term.FindString(line); m != "" {
+					return Fail, i18n.T("gate.route.generic", strings.TrimSpace(m), strings.TrimSpace(line))
 				}
 			}
 		}

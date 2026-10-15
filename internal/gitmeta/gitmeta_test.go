@@ -381,3 +381,35 @@ func TestCommonDir(t *testing.T) {
 		t.Error("outside a repository, none")
 	}
 }
+
+func TestHooksDir(t *testing.T) {
+	t.Run("GTMTG-B14: The hooks folder is found", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	repo := t.TempDir()
+	git := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", repo}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+	}
+	_ = os.WriteFile(filepath.Join(repo, "a.txt"), []byte("a"), 0o644)
+	git("init", "-q")
+	git("add", ".")
+	git("commit", "-q", "-m", "init")
+	wt := filepath.Join(t.TempDir(), "wt")
+	git("worktree", "add", "-q", "--detach", wt)
+	a, okA := HooksDir(repo)
+	b, okB := HooksDir(wt)
+	ra, _ := filepath.EvalSymlinks(a)
+	rb, _ := filepath.EvalSymlinks(b)
+	if !okA || !okB || !filepath.IsAbs(a) || ra != rb || filepath.Base(a) != "hooks" {
+		t.Errorf("the repository's hooks folder, from both: %q %q", a, b)
+	}
+	if _, ok := HooksDir(t.TempDir()); ok {
+		t.Error("outside a repository, none")
+	}
+}

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RTDCL
-  updated_at: 2026-10-08
+  updated_at: 2026-10-15
   layer: gate
 -->
 # RouteDeclared — a screen declares how one arrives, and names its neighbours
@@ -46,6 +46,7 @@ closes the question in one line.
 | `RTDCL-B03` | A screen whose navigation table carries a generic term FAILS — an edge that names no concrete screen points nowhere. Every navigation section is read, one right after another included; a section is navigation only when its heading names it as a whole word (`### In`, not `### Integração`). |
 | `RTDCL-B04` | A screen with a named route and concrete neighbours passes. |
 | `RTDCL-B05` | Route and navigation are recognised in either declared language, so a project writing in its own language is measured and not silently approved. |
+| `RTDCL-B06` | A navigation section ends at the next heading of any level: the table of a `##` section after `### Saída` — actions, rules — is not navigation, and its words fail nothing; a generic term found in navigation is named in the failure, with its row. |
 
 ## Invariants
 

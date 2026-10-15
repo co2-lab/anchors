@@ -2,7 +2,7 @@
 # @anchors
 #   code: HLFTH
 #   ref: DCTRO
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @DCTRO
@@ -182,3 +182,9 @@ Feature: Doctor — the global health check that hunts the systemic loose ends o
     Given mock-stamped presupposing derived.mock_detect, mock-typed presupposing derived.mock_contract waived, and a gate presupposing nothing
     When the configuration is diagnosed
     Then there is one warning, on mock-stamped, naming derived.mock_detect
+
+  @DCTRO-B28 @unit-level
+  Scenario: A pre-commit with no commit-msg beside it is reported
+    Given a repository whose pre-commit Anchors installed, with no commit-msg
+    When the doctor runs, then after a commit-msg of Anchors is installed, and in a folder with no git
+    Then the missing commit-msg is reported, then nothing, and nothing outside git

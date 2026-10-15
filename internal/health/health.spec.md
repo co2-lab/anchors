@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCTRO
-  updated_at: 2026-10-08
+  updated_at: 2026-10-15
   layer: infra
 -->
 # Doctor — the global health check that hunts the systemic loose ends of a project
@@ -69,7 +69,7 @@ same diagnosis and sorted into the same report.
 
 | Effect | Description |
 | --- | --- |
-| `DCTRO-B12` | A declared layer with no node of its kind is a warning `camada-vazia`. |
+| `DCTRO-B12` | A declared layer with no node of its kind is a warning `camada-vazia`, unless it declares `may_be_empty: true` — a layer empty on purpose most of the time. |
 | `DCTRO-B13` | A guide that is the source of no `governs` edge is a warning `guide-sem-governo`. |
 | `DCTRO-B14` | A spec, feature or test kind present in the map that no gate confronts is a warning `kind-sem-gate`; code and documents may legitimately have no gate of their own. |
 
@@ -104,6 +104,7 @@ same diagnosis and sorted into the same report.
 | `DCTRO-B24` | Tests in the map with no ingested result at all, and code with no ingested coverage at all, are each a warning `sinal-ausente`. One node with the signal is enough. |
 | `DCTRO-B26` | Tests with no result when a JUnit report WAS ingested — the specs hold scenarios it proved — are the warning that the report reached no test file, saying the report names no file the map knows and how to make it; with no report ingested, the warning is the one to run the ingest. |
 | `DCTRO-B27` | A declared gate whose `presupposes` names a field the project neither declares nor waives in `dialect.opt_out` is a warning `premissa-ausente` on the gate, naming the field and how to declare or waive it. |
+| `DCTRO-B28` | A pre-commit Anchors installed with no commit-msg of its own beside it is a warning `hooks-desatualizados`: a waiver in the commit message is never read; the way out is `anchors install-hooks --force`. A repository whose pre-commit is not Anchors', or that has both, or no git, gives nothing. (`checkCommitMsgHook`) |
 | `DCTRO-B25` | Code with no mutation signal is an informational `sinal-ausente`; code where only some files have it is an informational `sinal-ausente` on the partial mutation, carrying how many of how many. |
 
 ## Invariants

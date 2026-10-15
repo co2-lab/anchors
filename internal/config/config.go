@@ -1511,11 +1511,14 @@ type Layer struct {
 	// Fallible: the layer reaches what can fail — a network, a database, a device: the
 	// hooks that read, the repositories, the services. A unit whose spec depends on a file
 	// of such a layer consumes a fallible source, and its spec declares how it fails.
-	Fallible bool     `yaml:"fallible,omitempty"`
-	Kind     string   `yaml:"kind"`              // spec|feature|test|code|doc|guide|plan
-	Tags     []string `yaml:"tags,omitempty"`    // rótulos p/ governs (ex.: frontend, mobile)
-	Regime   string   `yaml:"regime,omitempty"`  // comportamental|declarativo|misto
-	Exclude  []string `yaml:"exclude,omitempty"` // globs a excluir (derivados que casam o glob amplo)
+	Fallible bool `yaml:"fallible,omitempty"`
+	// MayBeEmpty: the layer has no file on purpose most of the time — plans under review
+	// that are moved on once decided — and the doctor does not report it empty.
+	MayBeEmpty bool     `yaml:"may_be_empty,omitempty"`
+	Kind       string   `yaml:"kind"`              // spec|feature|test|code|doc|guide|plan
+	Tags       []string `yaml:"tags,omitempty"`    // rótulos p/ governs (ex.: frontend, mobile)
+	Regime     string   `yaml:"regime,omitempty"`  // comportamental|declarativo|misto
+	Exclude    []string `yaml:"exclude,omitempty"` // globs a excluir (derivados que casam o glob amplo)
 	// Support: globs, among the files of this layer, of files that SUPPORT the tests
 	// without being tests — sub-flows other flows call, suite aggregators, helper files.
 	// They stay in the map (a change to a helper still reaches every test that uses it),

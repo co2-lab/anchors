@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/mapx"
@@ -142,5 +143,21 @@ func TestRouteDeclared_X02_routeIsNotConfrontedAgainstRouter(t *testing.T) {
 		"> **Route**: `ARouteNoRouterDefines`\n\n### In\n| Origin | Screen |\n| --- | --- |\n| MainTabs | HomeScreen |\n"
 	if v, msg := checkRouteDeclared(content, mapx.Node{}); v != Pass {
 		t.Errorf("the gate must not confront the route against the router; got %v (%s)", v, msg)
+	}
+}
+
+// Reported from MIF: PlanLimitScreen's Saída named each origin of its goBack, and the rule
+// "devolve à tela de origem" in the `## Ações Permitidas` after it failed the screen.
+func TestRouteDeclared_sectionEndsAtAnyHeading(t *testing.T) {
+	t.Run("RTDCL-B06: A navigation section ends at any heading", func(t *testing.T) {})
+	screen := "<!-- @anchors\n  code: PLIMP\n  layer: screen\n-->\n# PlanLimitScreen\n\n> **Rota**: `PlanLimit`\n\n## Navegação\n\n### Saída\n\n" +
+		"| Regra | Destino | Ação |\n| --- | --- | --- |\n| `PLIMP-A02` | BudgetsScreen | Voltar (`goBack` à origem) |\n| `PLIMP-A02` | GoalsScreen | Voltar (`goBack` à origem) |\n\n" +
+		"## Ações Permitidas\n\n| Ação | Descrição |\n| --- | --- |\n| `PLIMP-A02` | Voltar: fecha o bloqueio e devolve à tela de origem. |\n"
+	if v, d := checkRouteDeclared(screen, mapx.Node{}); v != Pass {
+		t.Errorf("the actions after the navigation are not navigation: %v %s", v, d)
+	}
+	generic := strings.Replace(screen, "| `PLIMP-A02` | GoalsScreen |", "| `PLIMP-A02` | Tela de planos |", 1)
+	if v, d := checkRouteDeclared(generic, mapx.Node{}); v != Fail || !strings.Contains(d, "Tela de") || !strings.Contains(d, "Tela de planos") {
+		t.Errorf("a generic term in navigation fails, named with its row: %v %s", v, d)
 	}
 }

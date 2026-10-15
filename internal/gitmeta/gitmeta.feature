@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTA
 #   ref: GTMTG
-#   updated_at: 2026-10-14
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @GTMTG
@@ -97,3 +97,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a repository with a second worktree, and a folder outside any repository
     When the shared git folder is asked from each
     Then both trees give the same absolute folder, and the folder outside gives none
+
+  @GTMTG-B14 @unit-level
+  Scenario: The hooks folder is found
+    Given a repository with a second worktree, and a folder outside any repository
+    When the hooks folder is asked from each
+    Then both give the repository's hooks folder, absolute, and the folder outside gives none

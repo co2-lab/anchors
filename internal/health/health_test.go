@@ -127,6 +127,10 @@ func TestDiagnose_looseLayers(t *testing.T) {
 	if !hasFinding(r, "camada-vazia", "feature") {
 		t.Error("it should detect the 'feature' layer declared but empty")
 	}
+	cfg.Layers["feature"] = config.Layer{Kind: "feature", MayBeEmpty: true}
+	if hasFinding(Diagnose(g, cfg, root), "camada-vazia", "feature") {
+		t.Error("a layer that may be empty is not reported")
+	}
 	if !hasFinding(r, "guide-sem-governo", "guides/G.md") {
 		t.Error("it should detect a guide that governs nothing")
 	}
@@ -694,5 +698,30 @@ func TestPresupposedFieldsAreNamed(t *testing.T) {
 	fs := checkPresupposedFields(cfg)
 	if len(fs) != 1 || fs[0].Subject != "mock-stamped" || fs[0].Severity != Warn || !strings.Contains(fs[0].Detail, "derived.mock_detect") {
 		t.Errorf("only the undeclared, unwaived field is named: %+v", fs)
+	}
+}
+
+// Reported from MIF: hooks installed before commit-msg existed; a waiver never worked.
+func TestCheckCommitMsgHook(t *testing.T) {
+	t.Run("DCTRO-B28: A pre-commit with no commit-msg beside it is reported", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	root := t.TempDir()
+	if out, err := exec.Command("git", "-C", root, "init", "-q").CombinedOutput(); err != nil {
+		t.Fatalf("%v %s", err, out)
+	}
+	hooks := filepath.Join(root, ".git", "hooks")
+	_ = os.MkdirAll(hooks, 0o755)
+	_ = os.WriteFile(filepath.Join(hooks, "pre-commit"), []byte("#!/bin/sh\n# "+managedHook+"\n"), 0o755)
+	if f := checkCommitMsgHook(root); len(f) != 1 || f[0].Check != "hooks-desatualizados" {
+		t.Errorf("the missing commit-msg is reported: %+v", f)
+	}
+	_ = os.WriteFile(filepath.Join(hooks, "commit-msg"), []byte("#!/bin/sh\n# "+managedHook+"\n"), 0o755)
+	if f := checkCommitMsgHook(root); len(f) != 0 {
+		t.Errorf("with both, nothing: %+v", f)
+	}
+	if f := checkCommitMsgHook(t.TempDir()); len(f) != 0 {
+		t.Errorf("outside git, nothing: %+v", f)
 	}
 }

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:333f119ee7f33b21 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:3e8f7fd9586cead3 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -5743,6 +5743,8 @@ abra a página dela em `camadas/`.
 
 - [RTDCL-B05 — Route and navigation are recognised in either declared language, so a project writing in its own language is measured and not silently approved.](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours)
 
+- [RTDCL-B06 — A navigation section ends at the next heading of any level: the table of a `##` section after `### Saída` — actions, rules — is not navigation, and its words fail nothing; a generic term found in navigation is named in the failure, with its row.](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours)
+
 - [RTDCL-I01 — The header's declared layer is the source of truth of identity, and the node's tags are only the fallback when the header is silent. The header is what the author wrote on purpose; a tag can come from inference.](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours)
 
 - [RTDCL-I02 — Only TABLE ROWS of the navigation sections are confronted, never surrounding prose. An explanatory sentence mentioning "the next screen" is the author writing, not an edge being declared.](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours)
@@ -6789,6 +6791,8 @@ abra a página dela em `camadas/`.
 
 - [GTMTG-B13 — The folder git shares between a repository's worktrees is the same, absolute, from the main tree and from a worktree; outside a repository there is none. (`CommonDir`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
+- [GTMTG-B14 — The folder git runs a repository's hooks from is given absolute — the shared `.git/hooks`, from a worktree too; outside a repository there is none. (`HooksDir`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+
 - [GTMTG-X01 — The dirty count never answers 0 when it could not count: outside a repository or without git it answers a negative number.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-X02 — The pending-change question never answers "known" when it could not ask: outside a repository it answers not known and no change.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
@@ -6893,7 +6897,7 @@ abra a página dela em `camadas/`.
 
 - [DCTRO-B11 — A file that declares its codes as shared (`@anchors-shared-code`) is not an owner of them.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
 
-- [DCTRO-B12 — A declared layer with no node of its kind is a warning `camada-vazia`.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
+- [DCTRO-B12 — A declared layer with no node of its kind is a warning `camada-vazia`, unless it declares `may_be_empty: true` — a layer empty on purpose most of the time.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
 
 - [DCTRO-B13 — A guide that is the source of no `governs` edge is a warning `guide-sem-governo`.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
 
@@ -6922,6 +6926,8 @@ abra a página dela em `camadas/`.
 - [DCTRO-B26 — Tests with no result when a JUnit report WAS ingested — the specs hold scenarios it proved — are the warning that the report reached no test file, saying the report names no file the map knows and how to make it; with no report ingested, the warning is the one to run the ingest.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
 
 - [DCTRO-B27 — A declared gate whose `presupposes` names a field the project neither declares nor waives in `dialect.opt_out` is a warning `premissa-ausente` on the gate, naming the field and how to declare or waive it.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
+
+- [DCTRO-B28 — A pre-commit Anchors installed with no commit-msg of its own beside it is a warning `hooks-desatualizados`: a waiver in the commit message is never read; the way out is `anchors install-hooks --force`. A repository whose pre-commit is not Anchors', or that has both, or no git, gives nothing. (`checkCommitMsgHook`)](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
 
 - [DCTRO-B25 — Code with no mutation signal is an informational `sinal-ausente`; code where only some files have it is an informational `sinal-ausente` on the partial mutation, carrying how many of how many.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
 

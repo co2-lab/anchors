@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:5e7e019a4433a625 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:9f95f3fbf64e307f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 88 unidades e 1395 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 88 unidades e 1396 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -3419,6 +3419,8 @@ closes the question in one line.
 - **RTDCL-B04** — A screen with a named route and concrete neighbours passes.
 
 - **RTDCL-B05** — Route and navigation are recognised in either declared language, so a project writing in its own language is measured and not silently approved.
+
+- **RTDCL-B06** — A navigation section ends at the next heading of any level: the table of a `##` section after `### Saída` — actions, rules — is not navigation, and its words fail nothing; a generic term found in navigation is named in the failure, with its row.
 
 - **RTDCL-I01** — The header's declared layer is the source of truth of identity, and the node's tags are only the fallback when the header is silent. The header is what the author wrote on purpose; a tag can come from inference.
 

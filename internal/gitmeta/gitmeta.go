@@ -258,3 +258,20 @@ func CommonDir(root string) (string, bool) {
 	}
 	return dir, true
 }
+
+// HooksDir is the folder git runs the repository's hooks from — `core.hooksPath` when set,
+// the common `.git/hooks` otherwise —, absolute; false outside a repository, or with no git.
+func HooksDir(root string) (string, bool) {
+	out, err := exec.Command("git", "-C", root, "rev-parse", "--git-path", "hooks").Output()
+	if err != nil {
+		return "", false
+	}
+	dir := strings.TrimSpace(string(out))
+	if dir == "" {
+		return "", false
+	}
+	if !filepath.IsAbs(dir) {
+		dir = filepath.Join(root, dir)
+	}
+	return dir, true
+}
