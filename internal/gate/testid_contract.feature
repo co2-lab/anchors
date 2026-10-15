@@ -2,7 +2,7 @@
 # @anchors
 #   code: TCFTS
 #   ref: TICTS
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @TICTS
@@ -15,10 +15,10 @@ Feature: TestIDContract — a test handle is one contract with four ends: the co
     Then the first returns Skip and the second Pending
 
   @TICTS-B02 @unit-level
-  Scenario: Without a declared handle attribute the gate skips
-    Given a spec whose code exposes ":abcd-screen", in a project that declares no test handle attribute
+  Scenario: Without the exposed patterns declared the gate is pending, naming the field
+    Given a spec whose code exposes ":abcd-screen", in a project that declares the attribute testID and no test handle patterns, and in one with no dialect
     When testid-consistent confronts the spec
-    Then it returns Skip
+    Then it returns Pending, naming dialect.test_handles.exposed
 
   @TICTS-B03 @unit-level
   Scenario: A spec with no readable linked code skips
@@ -85,6 +85,12 @@ Feature: TestIDContract — a test handle is one contract with four ends: the co
     Given code with testID={k === 'push' ? ':abcd-toggle' : undefined}, and a spec declaring "abcd-toggle"
     When testid-consistent confronts the spec
     Then it returns Pass, and "push" is not an exposed handle
+
+  @TICTS-B25 @unit-level
+  Scenario: A pattern says what it captures, and a project helper is read like any other
+    Given the project's patterns for testID literals and for its helper getOptionTestID(base, option), and code using both
+    When the exposed handles are read
+    Then the literal is a handle, the helper's base is the head "abcd-period-*", a value captured as a prefix is not also a handle, and the order is the source's
 
   @TICTS-B14 @unit-level
   Scenario: The inventory is read only inside the test surface section

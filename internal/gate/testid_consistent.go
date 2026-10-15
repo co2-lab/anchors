@@ -52,12 +52,14 @@ func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph
 	if g == nil {
 		return pendingNoMap()
 	}
-	attr := testHandleAttr(cfg)
-	if attr == "" {
-		// Inferir `testID` por default faria o gate reportar VERDE sobre o que não
-		// conferiu — a pior falha possível num medidor.
-		return Skip, i18n.T("gate.testid_consistent.skip_no_test_handle")
+	exposed := exposedPatterns(cfg)
+	if len(exposed) == 0 {
+		// The core knows no syntax of a handle: with no pattern declared, the gate has
+		// nothing to read the code with — and assuming JSX would answer green over what it
+		// never read.
+		return Pending, i18n.T("gate.testid.no_patterns", "dialect.test_handles.exposed")
 	}
+	attr := testHandleAttr(cfg)
 
 	// PONTA 1 — o código: o que a unidade realmente expõe.
 	var expostos []string
@@ -67,7 +69,7 @@ func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph
 			continue
 		}
 		if b, err := readFile(root, e.To); err == nil {
-			expostos = append(expostos, exposedTestIDs(string(b), attr)...)
+			expostos = append(expostos, handlesIn(string(b), exposed)...)
 			arquivo = filepath.Base(e.To)
 		}
 	}
@@ -82,7 +84,7 @@ func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph
 		// Nem toda unidade tem superfície de teste. Cobrar inventário de quem não marca
 		// elemento algum transformaria o gate em ruído sobre toda unidade de
 		// apresentação pura.
-		return Skip, i18n.T("gate.testid_consistent.skip_no_handles_exposed", attr)
+		return Skip, i18n.T("gate.testid_consistent.skip_no_handles_exposed")
 	}
 
 	// PONTAS 3 e 4 — os consumidores, separados por natureza porque respondem a

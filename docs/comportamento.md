@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:eb060af8da4cda8c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e2a625aeedffb3c5 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3192,6 +3192,10 @@ teste prova.
 
 - [A family's fallible patterns say when a call propagates](layers/config.md#dlcti-b26--a-familys-fallible-patterns-say-when-a-call-propagates) `DLCTI-B26`
 
+- [The test handle patterns are read and checked on load](layers/config.md#dlcti-b27--the-test-handle-patterns-are-read-and-checked-on-load) `DLCTI-B27`
+
+- [The ts family has an example of the test handle patterns, never applied by itself](layers/config.md#dlcti-b28--the-ts-family-has-an-example-of-the-test-handle-patterns-never-applied-by-itself) `DLCTI-B28`
+
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
 - [A trigger naming a unit code charges that unit and not its neighbours in the same layer](layers/config.md#dcrqa-b02--a-trigger-naming-a-unit-code-charges-that-unit-and-not-its-neighbours-in-the-same-layer) `DCRQA-B02`
@@ -4223,6 +4227,8 @@ teste prova.
 - [A spec under a bracketed directory still has its baselines confronted](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-E02`
 
 - [A testID prefix with a code the project renamed to this unit's, or to another unit's, passes](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B12`
+
+- [The testIDs are read by the project's patterns, and without them the gate is pending](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B13`
 
 - [A declared name routes to the function registered under it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B01`
 
@@ -5700,7 +5706,7 @@ teste prova.
 
 - [The gate skips what is not a spec, and is Pending without a map](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B01`
 
-- [Without a declared handle attribute the gate skips](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B02`
+- [Without the exposed patterns declared the gate is pending, naming the field](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B02`
 
 - [A spec with no readable linked code skips](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B03`
 
@@ -5723,6 +5729,8 @@ teste prova.
 - [A template handle, or a prefix prop, exposes the prefix as a wildcard](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B12`
 
 - [Only the branches of a conditional handle are handles, never its condition](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B13`
+
+- [A pattern says what it captures, and a project helper is read like any other](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B25`
 
 - [The inventory is read only inside the test surface section](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B14`
 
@@ -5752,7 +5760,7 @@ teste prova.
 
 - [Linked code that cannot be read is not an end](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-E01`
 
-- [The gate skips when no test handle attribute is declared](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B01`
+- [Without the exposed and queried patterns declared the gate is pending, naming the field](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B01`
 
 - [The gate skips when no E2E surface is configured](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B02`
 
@@ -5780,7 +5788,7 @@ teste prova.
 
 - [A terminal suffix composed from a prop counts as exposed](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B14`
 
-- [A handle appearing only in test files does not count as exposed](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B15`
+- [A handle appearing only in a test file does not count as exposed](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B15`
 
 - [Missing configuration never reports a pass](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-I01`
 
@@ -5792,7 +5800,7 @@ teste prova.
 
 - [Flow expressions requiring runtime execution are not evaluated](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-X02`
 
-- [Default test handle attributes are not inferred](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-X03`
+- [No default pattern is assumed](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-X03`
 
 - [A declared E2E directory missing from disk skips the gate](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-E01`
 
@@ -6226,6 +6234,8 @@ teste prova.
 
 - [A family's fallible patterns are suggested to a project that declared none, and declining silences it](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B09`
 
+- [A project with a handle gate and no test handle patterns is offered the family's example](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B10`
+
 - [The report is sorted by check then subject, and counts the map](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B01`
 
 - [Warnings keeps only the warnings](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B02`
@@ -6367,6 +6377,8 @@ teste prova.
 - [The test layer's pattern is the project's test convention](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B08`
 
 - [A new project's dialect carries what its family knows can fail](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B09`
+
+- [A new project's dialect carries the family's example of its test handle patterns](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B10`
 
 - [The whole guide is a title, a seeding note and the section](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B01`
 

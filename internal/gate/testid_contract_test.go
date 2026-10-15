@@ -15,10 +15,11 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// cfgHandle returns a config that DECLARES the anchoring attribute — without it the
-// inventory gates skip, which is the opt-in behaviour.
+// cfgHandle returns a config that DECLARES the anchoring attribute and the ts family's
+// example patterns for it — without the patterns the inventory gates measure nothing.
 func cfgHandle(attr string) *config.Config {
-	return &config.Config{Derived: &config.Derived{Anchor: "code", TestHandle: attr}}
+	return &config.Config{Derived: &config.Derived{Anchor: "code", TestHandle: attr},
+		Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", attr)}}
 }
 
 // inventoryFixture: a spec linked (specifies) to a unit whose content the test
@@ -70,7 +71,7 @@ func e2eConfig() *config.Config {
 		Anchor: "code", TestHandle: "testID",
 		Surfaces: map[string]string{"e2e": "e2e"},
 		Files:    map[string]config.Padroes{"e2e": {"e2e/{{name}}.yaml"}},
-	}}
+	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}}
 }
 
 // --- when the gate confronts at all ---
@@ -86,22 +87,19 @@ func TestTestIDContract_skipsWhatItCannotConfront(t *testing.T) {
 	}
 }
 
-func TestTestIDDeclared_withoutDeclaredHandleSkips(t *testing.T) {
-	t.Run("TICTS-B02: Without a declared handle attribute the gate skips", func(t *testing.T) {})
-	// The point of the opt-in: without `derived.test_handle` the gate has no attribute to
-	// look for. Inferring `testID` by default would have the gate report GREEN over what
-	// it never checked — in an Android project, in any backend.
+func TestTestIDDeclared_withoutPatternsIsPending(t *testing.T) {
+	t.Run("TICTS-B02: Without the exposed patterns declared the gate is pending, naming the field", func(t *testing.T) {})
+	// The core reads no syntax of a handle: without `dialect.test_handles.exposed` the gate
+	// has nothing to read the code with. Assuming JSX would have it report GREEN over what
+	// it never checked — in an Android project, in any backend —, and the attribute alone
+	// (`derived.test_handle`) says nothing of how a handle is written.
 	n, g, root := inventoryFixture(t, `<View testID=":abcd-screen" />`)
-	if v, _ := checkTestIDCoherent("", n, root, g, &config.Config{}); v != Skip {
-		t.Errorf("without test_handle the gate must skip: %v", v)
+	cfg := &config.Config{Derived: &config.Derived{Anchor: "code", TestHandle: "testID"}}
+	if v, d := checkTestIDCoherent("", n, root, g, cfg); v != Pending || !strings.Contains(d, "dialect.test_handles.exposed") {
+		t.Errorf("without patterns the gate is pending, naming the field: %v %s", v, d)
 	}
-}
-
-func TestTestIDHonored_withoutDeclaredHandleSkips(t *testing.T) {
-	t.Run("TICTS-B02: Without a declared handle attribute the gate skips", func(t *testing.T) {})
-	n, g, root := consumerFixture(t, `render(<X />)`)
-	if v, _ := checkTestIDCoherent(sectionOK, n, root, g, &config.Config{}); v != Skip {
-		t.Errorf("without test_handle the gate must skip: %v", v)
+	if v, _ := checkTestIDCoherent(sectionOK, n, root, g, &config.Config{}); v != Pending {
+		t.Errorf("without a dialect the gate is pending: %v", v)
 	}
 }
 
@@ -304,7 +302,7 @@ func TestExposedTestIDs_collectsEveryOccurrence(t *testing.T) {
 	t.Run("TICTS-B13: Only the branches of a conditional handle are handles, never its condition", func(t *testing.T) {})
 	src := "<View testID={`row-${id}`} /><Text testID={`cell-${i}`} />\n" +
 		"<Icon testID={on ? 'icon-on' : 'icon-off'} />\n"
-	got := exposedTestIDs(src, "testID")
+	got := handlesIn(src, config.FamilyTestHandles("ts", "testID").Exposed)
 	want := []string{"row-*", "cell-*", "icon-on", "icon-off"}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("every template and both ternary branches:\n got %v\nwant %v", got, want)
@@ -497,7 +495,7 @@ func TestTestIDHonored_surfaceWithoutFilesInventsNoPath(t *testing.T) {
 	cfg := &config.Config{Derived: &config.Derived{
 		Anchor: "code", TestHandle: "testID",
 		Surfaces: map[string]string{"e2e": "e2e"}, // no files["e2e"]
-	}}
+	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}}
 	if v, msg := checkTestIDCoherent(sectionOK, n, root, g, cfg); v != Pass {
 		t.Errorf("a surface with no declared path must not become an accusation: %v (%s)", v, msg)
 	}
@@ -518,7 +516,7 @@ func TestTestIDContract_e2eSurfaceFromAnOverride(t *testing.T) {
 		Anchor: "code", TestHandle: "testID",
 		Surfaces:  map[string]string{"e2e": "e2e"},
 		Overrides: []config.DerivedOverride{{Files: map[string]config.Padroes{"e2e": {"flows/{{name}}.yaml"}}}},
-	}}
+	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}}
 	v, msg := checkTestIDCoherent(sectionOK, n, root, g, cfg)
 	if v != Fail || !strings.Contains(msg, "queried ✗\n") {
 		t.Errorf("the override's flows are a consumer surface that does not query the id: %v (%s)", v, msg)
@@ -753,5 +751,27 @@ func TestTestIDContract_reportShowsTheFeatureEnd(t *testing.T) {
 	}
 	if l := lineOf(":abcd-other"); !strings.Contains(l, "feature ✗") {
 		t.Errorf("the feature does not describe :abcd-other, the line must read feature ✗: %q", l)
+	}
+}
+
+// Reported from MIF: SegmentedControl's handles are composed by a helper,
+// `getOptionTestID(base, option)`, and the core, which knew only JSX, never saw them. The
+// project says how its handles are written, its helpers included.
+func TestHandlesIn_groups(t *testing.T) {
+	t.Run("TICTS-B25: A pattern says what it captures, and a project helper is read like any other", func(t *testing.T) {})
+	patterns := []string{
+		`testID=["'](?P<testid>:?[a-z][a-z0-9-]*)["']`,
+		`testIDPrefix=["'](?P<prefix>:?[a-z][a-z0-9-]*)["']`,
+		`[a-zA-Z]+=["'](?P<testid>:?[a-z][a-z0-9-]*)["']`, // also matches the Prefix prop's value
+		`getOptionTestID\(\s*["'](?P<prefix>:?[a-z][a-z0-9-]*)["']`,
+		"`\\$\\{\\w+\\}(?P<suffix>-[a-z]+)",
+	}
+	src := `<A testID=":abcd-root" />
+<B testIDPrefix=":abcd-otp" />
+<C testID={getOptionTestID(':abcd-period', option)} />
+<D testID={` + "`${testID}-row`" + `} />`
+	got := strings.Join(handlesIn(src, patterns), ",")
+	if want := ":abcd-root,:abcd-otp-*,:abcd-period-*,*-row-*"; got != want {
+		t.Errorf("got %s, want %s", got, want)
 	}
 }

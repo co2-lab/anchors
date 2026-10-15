@@ -13,7 +13,7 @@ Every handle an end-to-end flow queries is exposed somewhere in the code.
 | Confronts | `test` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
-| Presupposes | `derived.test_handle` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
+| Presupposes | `dialect.test_handles.exposed` `dialect.test_handles.queried` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 

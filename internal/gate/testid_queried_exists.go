@@ -7,7 +7,6 @@ package gate
 import (
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -42,11 +41,17 @@ import (
 // automatizado, e o `testid-coerente` já reporta o consumo por spec, onde a pergunta
 // tem dono.
 func checkQueriedTestIDExists(_ string, _ mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
-	attr := testHandleAttr(cfg)
-	if attr == "" {
-		// Inferir `testID` por default faria o gate reportar VERDE sobre o que não
-		// conferiu — a pior falha possível num medidor.
-		return Skip, i18n.T("gate.testid_queried_exists.skip_no_test_handle")
+	// The core knows no syntax of a handle, in the code or in a flow: with no pattern
+	// declared, there is nothing to read either side with — and assuming one would answer
+	// green over what it never read.
+	th := testHandles(cfg)
+	switch {
+	case th == nil || len(th.Exposed) == 0:
+		return Pending, i18n.T("gate.testid.no_patterns", "dialect.test_handles.exposed")
+	case len(th.Queried) == 0:
+		return Pending, i18n.T("gate.testid.no_patterns", "dialect.test_handles.queried")
+	case g == nil:
+		return pendingNoMap()
 	}
 	flows := e2eSurfaceFiles(root, cfg)
 	if len(flows) == 0 {
@@ -55,13 +60,13 @@ func checkQueriedTestIDExists(_ string, _ mapx.Node, root string, g *mapx.Graph,
 		return Skip, i18n.T("gate.testid_queried_exists.skip_no_e2e_surface")
 	}
 
-	// O universo do que o CÓDIGO expõe. Varremos o projeto inteiro, não o grafo: um
-	// handle pode nascer num componente que nenhuma spec de tela reivindica (o
-	// `tabBarButtonTestID` do navegador é o caso real — `:tab-import` não pertence a
-	// tela nenhuma), e cobrar dele por ausência no grafo acusaria quem cumpre.
-	expostos, codigoIlegivel := projectExposedHandles(root, attr, cfg)
+	// O universo do que o CÓDIGO expõe: every code file of the map, not only the ones a
+	// spec claims — a handle may be born in a component no screen spec claims (the
+	// navigator's `tabBarButtonTestID`: `:tab-import` belongs to no screen), and charging
+	// its absence would accuse who complies.
+	expostos, codigoIlegivel := projectExposedHandles(root, g, th)
 	if len(expostos) == 0 && len(codigoIlegivel) == 0 {
-		return Skip, i18n.T("gate.testid_queried_exists.skip_no_handles_found", attr)
+		return Skip, i18n.T("gate.testid_queried_exists.skip_no_handles_found")
 	}
 
 	type achado struct{ id, onde string }
@@ -80,7 +85,7 @@ func checkQueriedTestIDExists(_ string, _ mapx.Node, root string, g *mapx.Graph,
 			fluxoIlegivel = append(fluxoIlegivel, rel)
 			continue
 		}
-		for _, id := range queriedHandles(string(b)) {
+		for _, id := range queriedHandles(string(b), th.Queried) {
 			if vistos[id+"|"+rel] {
 				continue
 			}
@@ -164,53 +169,24 @@ func e2eSurfaceFiles(root string, cfg *config.Config) []e2eFile {
 		if err != nil || info.IsDir() {
 			return nil
 		}
-		// Só os flows. `.js` da mesma árvore são utilitários de runner (dataLoader),
-		// que não consultam handle.
-		if ext := strings.ToLower(filepath.Ext(p)); ext != ".yaml" && ext != ".yml" {
-			return nil
-		}
+		// Every file of the surface: what a flow is, and how it queries, is the project's
+		// `queried` patterns' — a utility of the runner beside the flows matches none.
 		out = append(out, e2eFile{path: p})
 		return nil
 	})
 	return out
 }
 
-// queriedHandleRE captura o valor de `id:` nos flows — a forma como o Maestro (e
-// runners equivalentes) referenciam o handle.
-//
-// Aceita aspas simples e duplas em ALTERNÂNCIA, não por retrovisor: a RE2 do Go não
-// tem `\1`, e usá-lo aborta o binário no init (medido). Os dois grupos são
-// mutuamente exclusivos — o que casou é o que vem preenchido.
-// A aspa dupla é o caso da INTERPOLAÇÃO (`id: "${':bgcr-' + output.data.ns}"`),
-// descartada adiante.
-var queriedHandleRE = regexp.MustCompile(`(?m)^\s*id:\s*(?:'([^']*)'|"([^"]*)")\s*$`)
-
-// queriedHandles extrai os handles que um flow procura, descartando as formas em
-// que o id é COMPOSTO em runtime — nelas o gate não tem como saber o valor final, e
-// acusar seria inventar defeito.
-func queriedHandles(src string) []string {
+// queriedHandles extracts the handles a flow queries, by the project's `queried` patterns:
+// a `testid` group is the handle, a `prefix` group the head of a query by pattern
+// (`id: ':revi-.*'`), confronted as a head. A query the patterns do not capture — one the
+// runner composes at run time — is not confronted: the gate cannot know its final value.
+func queriedHandles(src string, patterns []string) []string {
 	var out []string
-	for _, m := range queriedHandleRE.FindAllStringSubmatch(src, -1) {
-		// Grupo 1 = aspa simples, grupo 2 = aspa dupla; só um vem preenchido.
-		bruto := strings.TrimSpace(m[1])
-		if bruto == "" {
-			bruto = strings.TrimSpace(m[2])
-		}
-		if bruto == "" {
-			continue
-		}
-		// INTERPOLADO (`${...}`): o valor sai de expressão JS avaliada pelo runner. A
-		// parte estática dá para extrair, mas o SUFIXO é dado (namespace do mutante, id
-		// de registro) — confrontá-lo exigiria executar o flow.
-		if strings.Contains(bruto, "${") {
-			continue
-		}
-		id := strings.TrimPrefix(bruto, ":")
-		// REGEX (`.*`, `.+`): o flow procura por PADRÃO, de propósito — o id real leva
-		// sufixo dinâmico. Cortamos no primeiro metacaractere e confrontamos a cabeça,
-		// que é a parte que o código tem de expor.
-		if i := strings.IndexAny(id, ".*+?[](){}|^$\\"); i >= 0 {
-			id = id[:i]
+	for _, h := range handlesIn(src, patterns) {
+		id := strings.TrimPrefix(h, ":")
+		if strings.HasSuffix(id, "-*") {
+			id = strings.TrimSuffix(id, "*")
 		}
 		id = strings.TrimRight(id, "-")
 		// Cabeça curta demais não identifica nada: confrontá-la daria falso positivo em
@@ -224,67 +200,32 @@ func queriedHandles(src string) []string {
 	return out
 }
 
-// projectExposedHandles varre o código do projeto e devolve tudo que ele marca com
-// o atributo declarado.
+// projectExposedHandles reads every code file of the map with the `exposed` and the
+// `mentioned` patterns, and returns every handle they find.
 //
-// Varre por EXTENSÃO de fonte e ignora as pastas que não são código do projeto
-// (dependências, artefatos de build). Um handle presente só num arquivo de teste
-// (`.test.tsx`) NÃO conta como exposto: teste consulta handle, não o cria — e foi
-// exatamente assim que um id fantasma (`:recent-import-item` no app de referência) sobreviveu
-// referenciado por um teste de unidade.
-func projectExposedHandles(root, attr string, cfg *config.Config) (out, unreadable []string) {
-	ignorar := map[string]bool{
-		"node_modules": true, ".git": true, "dist": true, "build": true,
-		".anchors": true, "coverage": true, "ios": true, "android": true,
-		"test-output": true, ".next": true,
-	}
-	_ = filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
+// The map's code, not a walk by extension: which files are source and which are tests is
+// the project's layers', not a list of extensions in the core. A handle only a test
+// mentions does not count — a test queries a handle, it does not create it; that is how a
+// phantom id (`:recent-import-item` in the reference app) survived, referenced by a unit
+// test. A component no spec claims is still a code node, so its handles count.
+//
+// The `mentioned` patterns answer a looser question than `exposed`: not "who owns this
+// handle", but "does it exist anywhere in the code?" — a fallback (`btn.testID ?? …`), a
+// table of handles, a suffix composed in a child. In a gate that ACCUSES absence, being
+// loose (letting an orphan pass) costs far less than being strict (accusing who complies).
+func projectExposedHandles(root string, g *mapx.Graph, th *config.TestHandles) (out, unreadable []string) {
+	patterns := append(append([]string(nil), th.Exposed...), th.Mentioned...)
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindCode {
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(n.ID)))
 		if err != nil {
-			if rel, e := filepath.Rel(root, p); e == nil {
-				unreadable = append(unreadable, filepath.ToSlash(rel))
-			}
-			return nil
+			unreadable = append(unreadable, n.ID)
+			continue
 		}
-		if info.IsDir() {
-			if ignorar[info.Name()] {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		switch strings.ToLower(filepath.Ext(p)) {
-		case ".tsx", ".ts", ".jsx", ".js", ".kt", ".swift", ".vue", ".svelte":
-		default:
-			return nil
-		}
-		// Arquivo de teste não EXPÕE handle — ele consulta.
-		if strings.Contains(info.Name(), ".test.") || strings.Contains(info.Name(), ".spec.") {
-			return nil
-		}
-		b, e := os.ReadFile(p)
-		if e != nil {
-			if rel, e2 := filepath.Rel(root, p); e2 == nil {
-				unreadable = append(unreadable, filepath.ToSlash(rel))
-			}
-			return nil
-		}
-		src := string(b)
-		out = append(out, exposedTestIDs(src, attr)...)
-		// O reconhecedor compartilhado é CONSERVADOR de propósito: ele responde "quem é
-		// o dono deste handle", e para isso só conta o que está colado ao atributo. Aqui
-		// a pergunta é outra — "este handle existe em ALGUM lugar do código?" — e as duas
-		// formas abaixo escapavam dele, gerando falso positivo (medido: 2 dos 18 achados
-		// da primeira rodada):
-		//
-		//   testID={btn.testID ?? `:aerx-alert-sheet-button-${i}`}   fallback com template
-		//   Family: ':navigate-to-family',                            handle em tabela
-		//
-		// Num gate que ACUSA ausência, o erro de ser frouxo (deixar passar um id órfão)
-		// é muito menos grave que o de ser estrito (acusar quem cumpre) — por isso aqui
-		// colhemos todo literal com cara de handle do arquivo.
-		out = append(out, looseLiteralHandles(src)...)
-		out = append(out, propComposedSuffixes(src)...)
-		return nil
-	})
+		out = append(out, handlesIn(string(b), patterns)...)
+	}
 	return out, unreadable
 }
 
@@ -323,58 +264,4 @@ func handleExists(expostos []string, id string) bool {
 		}
 	}
 	return false
-}
-
-// looseLiteralHandleRE casa qualquer literal MARCADO (`':foo-bar'`) no fonte, sem exigir
-// que esteja colado ao atributo de teste.
-//
-// A marca (`:`) é o que torna isso seguro: no app de referência todo handle a carrega por convenção, e
-// exigi-la evita colher string de domínio ('card_invoice', 'pt-BR') como se fosse handle.
-// Num projeto que não marque, este reconhecedor simplesmente não acha nada — e o gate cai
-// no reconhecedor estrito, que é o comportamento correto por omissão.
-var looseLiteralHandleRE = regexp.MustCompile("[\"'`](:[a-zA-Z][a-zA-Z0-9._-]*)")
-
-// looseLiteralHandles colhe os literais marcados do arquivo, normalizando o template
-// (`:foo-${i}` vira `foo-*`) do mesmo jeito que o reconhecedor estrito faz.
-func looseLiteralHandles(src string) []string {
-	var out []string
-	for _, m := range looseLiteralHandleRE.FindAllStringSubmatch(src, -1) {
-		id := m[1]
-		// Template interrompido pelo `${`: o regex para no `$`, então um id que termine
-		// em `-` é cabeça de composição e entra como curinga.
-		if strings.HasSuffix(id, "-") {
-			out = append(out, strings.TrimSuffix(id, "-")+"-*")
-			continue
-		}
-		out = append(out, id)
-	}
-	return out
-}
-
-// propComposedSuffixRE casa a composição de handle a partir de uma PROP recebida:
-//
-//	testID={testID ? `${testID}-row-${index}` : undefined}
-//
-// O id final (`:ctdt-list-row-0`) só existe em runtime: a CABEÇA vem de quem renderiza
-// (`testID=":ctdt-list"`) e o SUFIXO nasce aqui, num componente filho que não sabe de
-// que tela é. Nenhum dos dois arquivos contém a string inteira.
-//
-// Sem reconhecer isto o gate acusava todo flow que toca linha de lista — 8 flows do app de referência
-// numa tacada, todos corretos. O que colhemos é o SUFIXO (`-row-*`), que adiante é
-// casado contra qualquer cabeça exposta.
-var propComposedSuffixRE = regexp.MustCompile("`\\$\\{[a-zA-Z_][a-zA-Z0-9_.]*\\}(-[a-zA-Z][a-zA-Z0-9-]*)")
-
-// propComposedSuffixes devolve os sufixos de composição na forma `*-row-*`: casam
-// qualquer cabeça, porque a cabeça vem de fora do arquivo.
-func propComposedSuffixes(src string) []string {
-	var out []string
-	for _, m := range propComposedSuffixRE.FindAllStringSubmatch(src, -1) {
-		// `-row-${index}` → `-row-`; o que interessa é o segmento ESTÁTICO.
-		seg := strings.TrimRight(m[1], "-")
-		if seg == "" {
-			continue
-		}
-		out = append(out, "*"+seg+"-*")
-	}
-	return out
 }

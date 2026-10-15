@@ -2,7 +2,7 @@
 # @anchors
 #   code: GVFTA
 #   ref: GVOPG
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @GVOPG
@@ -74,3 +74,9 @@ Feature: GovernanceOpportunities — the doctor suggests the canonical gates and
     Given a ts project with code that declared no fallible patterns, one that declined with an empty list, and one with its own
     When the governance opportunities are read
     Then only the first is offered the family's patterns, with the block to copy
+
+  @GVOPG-B10 @unit-level
+  Scenario: A project with a handle gate and no test handle patterns is offered the family's example
+    Given a ts project declaring testid-consistent and the attribute data-testid with no patterns, one with its own patterns, and one with no handle gate
+    When the governance opportunities are read
+    Then only the first is offered the example for data-testid, as YAML that reads back

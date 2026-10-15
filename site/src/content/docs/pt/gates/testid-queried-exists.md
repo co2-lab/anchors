@@ -13,7 +13,7 @@ Every handle an end-to-end flow queries is exposed somewhere in the code.
 | Confronta | `test` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
-| Pressupõe | `derived.test_handle` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
+| Pressupõe | `dialect.test_handles.exposed` `dialect.test_handles.queried` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

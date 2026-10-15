@@ -5,6 +5,7 @@
 package config
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
@@ -128,6 +129,11 @@ type Dialect struct {
 	// or not anybody wrote it down: the failure gates ask its spec for the failure, and
 	// each call for its handling.
 	FalliblePatterns []FalliblePattern `yaml:"fallible_patterns,omitempty"`
+	// TestHandles say how this project's code exposes a test handle, and how its flows query
+	// one — the patterns the handle gates read (testid-consistent, testid-queried-exists,
+	// identity-consistent). The core knows no syntax of its own: with none declared, those
+	// gates measure nothing. FamilyTestHandles gives a family's example to start from.
+	TestHandles *TestHandles `yaml:"test_handles,omitempty"`
 	// ImportResolve says how an import's path becomes a file of the project: the
 	// extensions and index files tried, and the aliases the project's build maps. The
 	// dependency gates resolve each real import with it, to confront it with its `@dep:`.
@@ -640,6 +646,98 @@ func FamilyFalliblePatterns(family string) []FalliblePattern {
 		return nil
 	}
 	return append([]FalliblePattern(nil), base.FalliblePatterns...)
+}
+
+// TestHandles are the patterns that find test handles in code and in flows (see
+// Dialect.TestHandles). Each pattern names what it captures in a group:
+//
+//   - `testid`: a handle, whole — `testID=":abcd-save"`.
+//   - `prefix`: the head of a family of handles the rest of which is runtime data — a
+//     template, a helper composing `${base}-${option}` —; it reads as `head-*`. A value one
+//     pattern captures as a prefix is not also a whole handle by another.
+//   - `suffix` (Mentioned only): a segment composed onto a head that comes from outside the
+//     file — `${testID}-row`; it reads as `*-row-*`.
+type TestHandles struct {
+	// Exposed: where the code exposes a handle. What these find is what a unit owns — the
+	// handles its spec declares, the acronyms its identity is confronted by.
+	Exposed []string `yaml:"exposed,omitempty"`
+	// Mentioned: what else in the code makes a handle exist without exposing it at the
+	// attribute — a fallback, a table of handles, a suffix composed in a child. Only
+	// testid-queried-exists reads it, to know a queried handle exists somewhere.
+	Mentioned []string `yaml:"mentioned,omitempty"`
+	// Queried: how an end-to-end flow queries a handle — testid-queried-exists reads it.
+	Queried []string `yaml:"queried,omitempty"`
+}
+
+// validate says which pattern does not compile, or captures with no group its list reads:
+// a pattern with none would find nothing, and the gate would answer as if the code exposed
+// no handle.
+func (th *TestHandles) validate() error {
+	for _, l := range []struct {
+		field    string
+		patterns []string
+		groups   []string
+	}{
+		{"exposed", th.Exposed, []string{"testid", "prefix"}},
+		{"mentioned", th.Mentioned, []string{"testid", "prefix", "suffix"}},
+		{"queried", th.Queried, []string{"testid", "prefix"}},
+	} {
+		for i, p := range l.patterns {
+			re, err := regexp.Compile(p)
+			if err != nil {
+				return fmt.Errorf("`dialect.test_handles.%s[%d]` does not compile: %w", l.field, i, err)
+			}
+			named := false
+			for _, g := range l.groups {
+				if re.SubexpIndex(g) >= 0 {
+					named = true
+				}
+			}
+			if !named {
+				return fmt.Errorf("`dialect.test_handles.%s[%d]` captures with none of the groups %s: name what it captures, e.g. `(?P<testid>…)`",
+					l.field, i, strings.Join(l.groups, ", "))
+			}
+		}
+	}
+	return nil
+}
+
+// FamilyTestHandles is the family's example of TestHandles for the attribute the project
+// marks its elements with (`testID`, `data-testid`): what `anchors init` writes and the
+// governance tips suggest. It is never applied by itself — the gates read only what the
+// project declares. A family with no example, or no attribute, gives none.
+func FamilyTestHandles(family, attr string) *TestHandles {
+	if strings.ToLower(family) != "ts" || strings.TrimSpace(attr) == "" {
+		return nil
+	}
+	// The attribute, or a prop derived from it (`backTestID`, `confirmTestID`), as a JSX
+	// attribute or an object key.
+	a := `(?i)\b[a-z]*` + regexp.QuoteMeta(attr) + `[a-z]*`
+	id := `:?[a-zA-Z][a-zA-Z0-9._-]*`
+	return &TestHandles{
+		Exposed: []string{
+			a + `\s*[=:]\s*\{?["'](?P<testid>` + id + `)["']`,
+			// A prop ending in Prefix gives a child the head of its handles.
+			a + `prefix\s*[=:]\s*\{?["'](?P<prefix>` + id + `)["']`,
+			a + "\\s*[=:]\\s*\\{?`(?P<testid>" + id + ")`",
+			a + "\\s*[=:]\\s*\\{?`(?P<prefix>" + id + ")\\$\\{",
+			// A conditional handle: the literal of each branch, not of the condition.
+			a + `\s*=\s*\{[^{}?]*\?\s*["'](?P<testid>` + id + `)["']`,
+			a + `\s*=\s*\{[^{}?]*\?[^{}]*["']\s*:\s*["'](?P<testid>` + id + `)["']`,
+		},
+		Mentioned: []string{
+			// A handle marked with `:` anywhere: a fallback, a table of handles.
+			"[\"'`](?P<testid>:[a-zA-Z][a-zA-Z0-9._-]*[a-zA-Z0-9._])[\"'`]",
+			"[\"'`](?P<prefix>:[a-zA-Z][a-zA-Z0-9._-]*)\\$\\{",
+			// A segment a child composes onto the head its parent gives it.
+			"`\\$\\{[a-zA-Z_][a-zA-Z0-9_.]*\\}(?P<suffix>-[a-zA-Z][a-zA-Z0-9-]*)",
+		},
+		// Maestro flows: `id: ':abcd-save'`, or a regular expression whose head is static.
+		Queried: []string{
+			`(?m)^\s*id:\s*["'](?P<testid>` + id + `)["']\s*$`,
+			`(?m)^\s*id:\s*["'](?P<prefix>:?[a-zA-Z][a-zA-Z0-9_-]*)[.*+?\[(]`,
+		},
+	}
 }
 
 // ImportResolve is how an import's path becomes a file (see Dialect.ImportResolve).

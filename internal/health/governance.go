@@ -47,6 +47,36 @@ func checkGovernanceOpportunities(g *mapx.Graph, cfg *config.Config) []Finding {
 		}
 	}
 
+	// 0b. test handles: a handle gate is declared and the project says nothing of how its
+	// code exposes a handle — the gate is pending, since the core reads no syntax of its
+	// own. The family's example shows how to write it, for the attribute the project marks
+	// its elements with.
+	if cfg.Dialect == nil || cfg.Dialect.TestHandles == nil {
+		for _, name := range []string{"testid-consistent", "testid-queried-exists", "identity-consistent"} {
+			if _, ok := gateMap[name]; !ok {
+				continue
+			}
+			family, attr := "", "testID"
+			if cfg.Dialect != nil {
+				family = cfg.Dialect.Family
+			}
+			if cfg.Derived != nil && strings.TrimSpace(cfg.Derived.TestHandle) != "" {
+				attr = strings.TrimSpace(cfg.Derived.TestHandle)
+			}
+			example := config.FamilyTestHandles(family, attr)
+			if example == nil {
+				example = config.FamilyTestHandles("ts", attr)
+			}
+			out = append(out, Finding{
+				Check:    "sugestao-test-handles",
+				Severity: Info,
+				Subject:  "test_handles",
+				Detail:   i18n.T("health.opportunity.test_handles", name, testHandlesYAML(example)),
+			})
+			break
+		}
+	}
+
 	// 1. evidence-fresh: projeto tem testes e código, mas não monitora frescor (teste stale)
 	if hasKind[mapx.KindTest] && hasKind[mapx.KindCode] {
 		if _, ok := gateMap["evidence-fresh"]; !ok {
@@ -170,6 +200,26 @@ func QuickGovernanceHints(g *mapx.Graph, cfg *config.Config) []Finding {
 }
 
 // fallibleYAML is the family's fallible patterns as the `dialect:` block to copy.
+// testHandlesYAML writes the example as the `dialect:` block it goes in, each pattern
+// single-quoted with its quotes doubled.
+func testHandlesYAML(th *config.TestHandles) string {
+	var b strings.Builder
+	b.WriteString("\n    test_handles:")
+	for _, l := range []struct {
+		key      string
+		patterns []string
+	}{{"exposed", th.Exposed}, {"mentioned", th.Mentioned}, {"queried", th.Queried}} {
+		if len(l.patterns) == 0 {
+			continue
+		}
+		fmt.Fprintf(&b, "\n      %s:", l.key)
+		for _, p := range l.patterns {
+			fmt.Fprintf(&b, "\n        - '%s'", strings.ReplaceAll(p, "'", "''"))
+		}
+	}
+	return b.String()
+}
+
 func fallibleYAML(ps []config.FalliblePattern) string {
 	var b strings.Builder
 	b.WriteString("\n    fallible_patterns:")

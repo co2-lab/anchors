@@ -1,6 +1,6 @@
 <!-- @anchors
   code: IDCND
-  updated_at: 2026-10-08
+  updated_at: 2026-10-15
   layer: gate
 -->
 # IdentityConsistent — a unit's spec identity must match its exposed testID and visual baseline
@@ -68,6 +68,7 @@ a baseline is the physical proof of THIS specific unit, not a pointer to where i
 | `IDCND-B10` | When no orphan testID prefixes or baseline discrepancies exist, the gate passes. |
 | `IDCND-B11` | A baseline of one of the unit's rules (`<Unit>.<CODE>-B04-VR-<variant>.png`) is read by its unit code, the part before the first hyphen: it passes when that is the spec's code and fails when it is another unit's. |
 | `IDCND-B12` | A testID prefix that `anchors.renames.yaml` records as renamed to this unit's code, or to another unit's, is the same identity under its old name and passes — a testID is a contract with the E2E runner and its flows; a baseline passes under an old code only when it was renamed to this unit's. |
+| `IDCND-B13` | The testIDs are what the project's `dialect.test_handles.exposed` patterns capture, whole or as the head of a family, a helper's included; without those patterns declared the gate is Pending, naming the field. (`testIDAcronyms`) |
 
 ## Invariants
 

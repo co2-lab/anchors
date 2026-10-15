@@ -13,7 +13,7 @@ The spec's code is the only identity across its surfaces: testID prefixes and vi
 | Confronta | `spec` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
-| Pressupõe | `derived.test_handle` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
+| Pressupõe | `dialect.test_handles.exposed` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

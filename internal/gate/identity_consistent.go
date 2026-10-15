@@ -60,6 +60,12 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		return Skip, i18n.T("gate.identity_consistent.skip_no_code")
 	}
 
+	exposed := exposedPatterns(cfg)
+	if len(exposed) == 0 {
+		// The testIDs are read by the project's patterns; the core knows no syntax of
+		// a handle, and assuming JSX would answer over code it never read.
+		return Pending, i18n.T("gate.testid.no_patterns", "dialect.test_handles.exposed")
+	}
 	conhecidos := mapCodes(g)
 	// A code the project renamed is still the same identity under its old name: a testID is
 	// a contract with the E2E runner and its flows, and renaming the code does not rename
@@ -83,7 +89,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		if err != nil {
 			continue
 		}
-		for _, sigla := range testIDAcronyms(string(b)) {
+		for _, sigla := range testIDAcronyms(string(b), exposed) {
 			if strings.EqualFold(sigla, code) || conhecidos[strings.ToUpper(sigla)] || isAlias(sigla) {
 				continue
 			}
@@ -129,18 +135,22 @@ func mapCodes(g *mapx.Graph) map[string]bool {
 	return out
 }
 
-// testIDAcronymRE captura o prefixo de um testID literal ou de template. O `:` de
-// marcação é opcional: a convenção é do projeto, e um projeto sem ela deve ser
-// confrontado do mesmo jeito.
-var testIDAcronymRE = regexp.MustCompile("testID=\\{?[`\"']:?([A-Za-z]{4,5})-")
+// testIDAcronymRE captura o prefixo de um testID. O `:` de marcação é opcional: a
+// convenção é do projeto, e um projeto sem ela deve ser confrontado do mesmo jeito.
+var testIDAcronymRE = regexp.MustCompile(`^:?([A-Za-z]{4,5})-`)
 
-// testIDAcronyms devolve os prefixos com FORMA DE CÓDIGO (4-5 letras) usados como
-// testID. A forma é o primeiro filtro; quem decide se a sigla é órfã é o chamador,
-// confrontando-a com os códigos do mapa.
-func testIDAcronyms(src string) []string {
+// testIDAcronyms devolve os prefixos com FORMA DE CÓDIGO (4-5 letras) dos testIDs que os
+// padrões `exposed` do projeto acham — inteiros ou cabeças de template. A forma é o
+// primeiro filtro; quem decide se a sigla é órfã é o chamador, confrontando-a com os
+// códigos do mapa.
+func testIDAcronyms(src string, exposed []string) []string {
 	visto := map[string]bool{}
 	var out []string
-	for _, m := range testIDAcronymRE.FindAllStringSubmatch(src, -1) {
+	for _, id := range handlesIn(src, exposed) {
+		m := testIDAcronymRE.FindStringSubmatch(id)
+		if m == nil {
+			continue
+		}
 		s := strings.ToUpper(m[1])
 		if !visto[s] {
 			visto[s] = true

@@ -203,3 +203,14 @@ func TestBuildConfigSeedsTheFamilysFalliblePatterns(t *testing.T) {
 		t.Errorf("no family, no dialect: %+v", c.Dialect)
 	}
 }
+
+func TestBuildConfigSeedsTheFamilysTestHandles(t *testing.T) {
+	t.Run("BLCNB-B10: A new project's dialect carries the family's example of its test handle patterns", func(t *testing.T) {})
+	c := (&Proposal{Family: "ts", TestHandle: "testID"}).buildConfig()
+	if c.Dialect == nil || !reflect.DeepEqual(c.Dialect.TestHandles, config.FamilyTestHandles("ts", "testID")) {
+		t.Errorf("the ts project marking with testID starts with the family's example: %+v", c.Dialect)
+	}
+	if c := (&Proposal{Family: "ts"}).buildConfig(); c.Dialect == nil || c.Dialect.TestHandles != nil {
+		t.Errorf("no attribute found, no patterns: %+v", c.Dialect)
+	}
+}

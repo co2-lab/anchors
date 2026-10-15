@@ -13,7 +13,7 @@ The spec's testID inventory, the IDs the code exposes, and the tests that query 
 | Confronta | `spec` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
-| Pressupõe | `derived.test_handle` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
+| Pressupõe | `dialect.test_handles.exposed` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 | Duplicidade | uma declaração que ele controla repetida no mesmo arquivo o reprova; `duplicates: false` desliga |
 
 ## Como declarar

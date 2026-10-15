@@ -637,3 +637,40 @@ func TestImportResolve_byName(t *testing.T) {
 		t.Errorf("resolution: %+v", r)
 	}
 }
+
+func TestDialect_testHandles(t *testing.T) {
+	t.Run("DLCTI-B27: The test handle patterns are read and checked on load", func(t *testing.T) {})
+	c, err := load(t, "version: 7\nlayers: {}\ndialect:\n  test_handles:\n    exposed: ['testID=\"(?P<testid>[a-z-]+)\"']\n    mentioned: ['-(?P<suffix>row)']\n    queried: ['id: (?P<prefix>[a-z-]+)']\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if th := c.Dialect.TestHandles; th == nil || len(th.Exposed) != 1 || len(th.Mentioned) != 1 || len(th.Queried) != 1 {
+		t.Errorf("the three lists are read: %+v", c.Dialect.TestHandles)
+	}
+	for _, c := range []struct{ yaml, names string }{
+		{"exposed: ['(?P<testid>[a-z']", "test_handles.exposed[0]` does not compile"},
+		{"queried: ['id: ([a-z]+)']", "test_handles.queried[0]` captures with none of the groups testid, prefix"},
+		{"exposed: ['-(?P<suffix>row)']", "test_handles.exposed[0]` captures with none"},
+	} {
+		if _, err := load(t, "version: 7\nlayers: {}\ndialect:\n  test_handles:\n    "+c.yaml+"\n"); err == nil || !strings.Contains(err.Error(), c.names) {
+			t.Errorf("%s: the config is refused naming the pattern, got %v", c.yaml, err)
+		}
+	}
+}
+
+func TestFamilyTestHandles_anExampleNeverApplied(t *testing.T) {
+	t.Run("DLCTI-B28: The ts family has an example of the test handle patterns, never applied by itself", func(t *testing.T) {})
+	ex := FamilyTestHandles("TS", "data-testid")
+	if ex == nil || len(ex.Exposed) == 0 || len(ex.Queried) == 0 || !strings.Contains(ex.Exposed[0], "data-testid") {
+		t.Fatalf("the ts example reads the project's attribute: %+v", ex)
+	}
+	if !regexp.MustCompile(ex.Exposed[0]).MatchString(`<div data-testid="abcd-root">`) {
+		t.Errorf("the example finds a data-testid: %s", ex.Exposed[0])
+	}
+	if FamilyTestHandles("go", "testID") != nil || FamilyTestHandles("ts", " ") != nil {
+		t.Error("another family, or no attribute, gives no example")
+	}
+	if got := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor().TestHandles; got != nil {
+		t.Errorf("a project that declared none is measured with none: %+v", got)
+	}
+}

@@ -3,7 +3,7 @@
 //   ref: TICTS
 
 // Helpers de testID: reconhecer o handle nas duas pontas que o ESCREVEM — o código
-// (JSX/atributo) e a spec (tabela de inventário).
+// (pelos padrões do projeto, `dialect.test_handles`) e a spec (tabela de inventário).
 //
 // Este arquivo já foi `testid_declared.go`, sede do gate homônimo. O gate foi
 // aposentado por `testid-coerente`, que confronta a unidade inteira em vez de duas
@@ -12,92 +12,86 @@ package gate
 
 import (
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
 )
 
-// reExposto/reTemplate são construídos a partir do ATRIBUTO que o projeto declara
-// (`derived.test_handle`) — `testID`, `data-testid`, `contentDescription`. O nome é do
-// ecossistema, não do framework; cravá-lo aqui tornaria o gate específico de React
-// Native e inútil (ou pior, silenciosamente verde) em qualquer outro projeto.
+// handlesIn returns the handles the patterns find in a source: a `testid` group as the
+// handle, a `prefix` group as `head-*` and a `suffix` group as `*-seg-*`. The patterns are
+// the project's (`dialect.test_handles`): the core reads no syntax of its own. It knew JSX —
+// the attribute, a template, a prop ending in Prefix, a conditional — and a project whose
+// handles a helper composes (`getOptionTestID(base, option)`, at MIF) had no way to say so.
 //
-// Duas formas por atributo:
-//   - LITERAL   `handle="foo"` / `handle={"foo"}`
-//   - TEMPLATE  handle={`foo-${id}`} — captura só a parte ESTÁTICA. O sufixo varia em
-//     runtime; exigir que a spec declare `foo-42` seria exigir que ela declare o DADO.
-//     Entra no inventário como `foo-*`, que é como a spec o declara.
-//
-// O sufixo `[a-zA-Z]*` antes do atributo cobre as props DERIVADAS que carregam um
-// handle sem se chamarem exatamente como ele (`backTestID`, `optionTestIDPrefix`,
-// `confirmTestID`). O valor delas termina num handle real dentro do componente
-// filho — ignorá-las fazia o gate declarar inexistente um id que a spec documenta
-// corretamente e que os flows usam.
-// O `(?:[a-zA-Z]*(?:Prefix)?)?` NÃO entra aqui: a prop terminada em `Prefix` é a
-// CABEÇA de um id montado no filho, não um id — ela é tratada à parte, virando
-// `cabeça-*`. Deixá-la casar o regex literal registraria `otp-input` (que nunca
-// aparece na tela) como se fosse um handle exposto.
-var prefixSuffixRE = regexp.MustCompile(`(?i)prefix$`)
-
-// O `(?i)` é essencial e não é frouxidão: a prop derivada CAPITALIZA o atributo ao
-// compô-lo (`testID` → `backTestID`, `confirmTestID`). Sem ignorar a caixa, o regex
-// casaria só a forma exata e perderia todas as derivadas — que é como o gate acabou
-// declarando inexistentes ids que a spec documenta e os flows usam.
-func handleRegex(attr string) (literal, template *regexp.Regexp) {
-	a := `(?i)([a-z]*` + regexp.QuoteMeta(attr) + `[a-z]*)`
-	return regexp.MustCompile(a + `\s*[=:]\s*\{?["'](:?[a-zA-Z][a-zA-Z0-9._-]*)["']`),
-		regexp.MustCompile(a + "\\s*[=:]\\s*\\{?`(:?[a-zA-Z][a-zA-Z0-9._-]*)\\$?\\{?")
-}
-
-// exposedTestIDs devolve os handles que a unidade oferece ao mundo. O template
-// entra na forma `prefixo-*`, que é como a spec o declara.
-func exposedTestIDs(src string, attr string) []string {
-	testIDExpostoRE, testIDTemplateRE := handleRegex(attr)
-	visto := map[string]bool{}
+// A value one pattern captures as a prefix is not also a whole handle by another: a prop
+// that gives a child the head of its handles (`testIDPrefix=":otp-input"`) also matches the
+// pattern of the attribute, and `otp-input` never shows on screen.
+func handlesIn(src string, patterns []string) []string {
+	type span struct{ from, to int }
+	type found struct {
+		at    span
+		value string // as it reads: `id`, `head-*`, `*-seg-*`
+		whole bool
+	}
+	heads := map[span]bool{}
+	var all []found
+	for _, p := range patterns {
+		re, err := regexp.Compile(p)
+		if err != nil {
+			continue // the config refuses it on load (validate); a pattern that fails here finds nothing
+		}
+		ti, pi, si := re.SubexpIndex("testid"), re.SubexpIndex("prefix"), re.SubexpIndex("suffix")
+		for _, m := range re.FindAllStringSubmatchIndex(src, -1) {
+			group := func(i int) (span, string, bool) {
+				if i < 0 || m[2*i] < 0 {
+					return span{}, "", false
+				}
+				return span{m[2*i], m[2*i+1]}, src[m[2*i]:m[2*i+1]], true
+			}
+			if at, v, ok := group(pi); ok && strings.TrimSuffix(v, "-") != "" {
+				heads[at] = true
+				all = append(all, found{at, strings.TrimSuffix(v, "-") + "-*", false})
+			}
+			if at, v, ok := group(si); ok {
+				if seg := strings.TrimRight(v, "-"); seg != "" {
+					all = append(all, found{at, "*" + seg + "-*", false})
+				}
+			}
+			if at, v, ok := group(ti); ok && v != "" {
+				all = append(all, found{at, v, true})
+			}
+		}
+	}
+	// In the order they stand in the source, whichever pattern found them.
+	sort.SliceStable(all, func(i, j int) bool { return all[i].at.from < all[j].at.from })
+	seen := map[string]bool{}
 	var out []string
-	add := func(s string) {
-		if !visto[s] {
-			visto[s] = true
-			out = append(out, s)
-		}
-	}
-	// m[1] = nome da prop, m[2] = valor. A prop terminada em `Prefix` é a CABEÇA de um
-	// id que o FILHO completa (`testIDPrefix=":otp-input"` → `otp-input-0`…`-5`):
-	// entra como `cabeça-*`, não como id. Registrá-la literalmente cobraria da spec um
-	// `otp-input` que nunca aparece na tela, e acusaria de inexistentes os
-	// `otp-input-N` que a spec documenta e que 6 flows usam.
-	for _, m := range testIDExpostoRE.FindAllStringSubmatch(src, -1) {
-		if prefixSuffixRE.MatchString(m[1]) {
-			add(strings.TrimSuffix(m[2], "-") + "-*")
+	for _, f := range all {
+		if (f.whole && heads[f.at]) || seen[f.value] {
 			continue
 		}
-		add(m[2])
-	}
-	for _, m := range testIDTemplateRE.FindAllStringSubmatch(src, -1) {
-		add(strings.TrimSuffix(m[2], "-") + "-*")
-	}
-	// LITERAL DENTRO DE EXPRESSÃO: `testID={i === 0 ? ':goal-new-icon-option-0' :
-	// undefined}`. Os regexes acima exigem o valor colado ao `=`, então param no `{`
-	// e perdem o id — que existe, é consultado pelo teste e aparece no flow. A
-	// expressão é delimitada por `{...}` sem aninhamento (é o formato destes
-	// ternários), e dentro dela todo literal kebab-case é candidato a handle.
-	for _, m := range regexp.MustCompile(
-		`(?i)[a-z]*`+regexp.QuoteMeta(attr)+`[a-z]*\s*=\s*\{([^{}]*\?[^{}]*)\}`,
-	).FindAllStringSubmatch(src, -1) {
-		// Só o que vem DEPOIS do primeiro `?`. A CONDIÇÃO também tem literais, e eles
-		// são estado de domínio (`target === 'email'`, `c2.k === 'push'`) — colhê-los
-		// registraria `email` e `push` como handles expostos e o gate cobraria da spec
-		// a declaração de um id que não existe.
-		i := strings.Index(m[1], "?")
-		if i < 0 {
-			continue
-		}
-		for _, lit := range regexp.MustCompile(`["'](:?[a-z][a-z0-9-]*)["']`).
-			FindAllStringSubmatch(m[1][i+1:], -1) {
-			add(lit[1])
-		}
+		seen[f.value] = true
+		out = append(out, f.value)
 	}
 	return out
+}
+
+// testHandles are the patterns the project declares for its test handles, or nil.
+func testHandles(cfg *config.Config) *config.TestHandles {
+	if cfg == nil || cfg.Dialect == nil {
+		return nil
+	}
+	return cfg.Dialect.TestHandles
+}
+
+// exposedPatterns are the patterns of where the code exposes a handle; none when the
+// project declares none, and then the handle gates measure nothing.
+func exposedPatterns(cfg *config.Config) []string {
+	if th := testHandles(cfg); th != nil {
+		return th.Exposed
+	}
+	return nil
 }
 
 // testHandleAttr — o atributo com que ESTE projeto marca elementos para alcance

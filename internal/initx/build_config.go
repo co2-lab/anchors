@@ -78,6 +78,10 @@ func (p *Proposal) buildConfig() *config.Config {
 		// ask each fetch for its failure and its handling, on a project that has nothing
 		// to unlearn. An existing project is offered them by the governance tips instead.
 		c.Dialect.FalliblePatterns = config.FamilyFalliblePatterns(p.Family)
+		// How the handles the inference found are exposed and queried, from the family's
+		// example: the handle gates read only these patterns, and a new project starts
+		// with them written down, to adapt to its own helpers.
+		c.Dialect.TestHandles = config.FamilyTestHandles(p.Family, p.TestHandle)
 	}
 
 	// governs fica VAZIO — é a parte semântica, preenchida na P&R (guide↔tag).

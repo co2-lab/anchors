@@ -10,6 +10,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"gopkg.in/yaml.v3"
 )
 
 func hasOpportunity(fs []Finding, check, subject string) bool {
@@ -251,5 +252,40 @@ func TestCheckGovernanceOpportunities_FalliblePatternsOfTheFamily(t *testing.T) 
 	}
 	if ok, _ := has(&config.Config{Dialect: &config.Dialect{Family: "ts", FalliblePatterns: []config.FalliblePattern{{Call: `x\(`}}}}); ok {
 		t.Error("a project with its own patterns is not offered the family's")
+	}
+}
+
+func TestCheckGovernanceOpportunities_TestHandlesOfTheFamily(t *testing.T) {
+	t.Run("GVOPG-B10: A project with a handle gate and no test handle patterns is offered the family's example", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "Screen.tsx", Kind: mapx.KindCode}}}
+	has := func(cfg *config.Config) (bool, string) {
+		for _, f := range checkGovernanceOpportunities(g, cfg) {
+			if f.Check == "sugestao-test-handles" {
+				return true, f.Detail
+			}
+		}
+		return false, ""
+	}
+	withGate := func(d *config.Dialect) *config.Config {
+		return &config.Config{Dialect: d, Derived: &config.Derived{TestHandle: "data-testid"},
+			Gates: []config.Gate{{Name: "testid-consistent"}}}
+	}
+	ok, detail := has(withGate(&config.Dialect{Family: "ts"}))
+	if !ok || !strings.Contains(detail, "test_handles:") || !strings.Contains(detail, "data-testid") {
+		t.Fatalf("the project is offered the example for its attribute: %v %s", ok, detail)
+	}
+	// The block reads back as YAML: the patterns' quotes are doubled inside single quotes.
+	block := detail[strings.Index(detail, "test_handles:"):]
+	var back struct {
+		TestHandles config.TestHandles `yaml:"test_handles"`
+	}
+	if err := yaml.Unmarshal([]byte(strings.ReplaceAll(block, "\n    ", "\n")), &back); err != nil || len(back.TestHandles.Exposed) == 0 {
+		t.Errorf("the block reads back: %v %+v", err, back)
+	}
+	if ok, _ := has(withGate(&config.Dialect{Family: "ts", TestHandles: &config.TestHandles{Exposed: []string{`(?P<testid>x)`}}})); ok {
+		t.Error("a project with its own patterns is offered nothing")
+	}
+	if ok, _ := has(&config.Config{Dialect: &config.Dialect{Family: "ts"}}); ok {
+		t.Error("a project with no handle gate is offered nothing")
 	}
 }

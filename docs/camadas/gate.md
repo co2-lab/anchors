@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:3783015891b3c269 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:f384e8c266d6ee9b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 88 unidades e 1399 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 88 unidades e 1401 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1678,6 +1678,8 @@ a baseline is the physical proof of THIS specific unit, not a pointer to where i
 - **IDCND-B11** — A baseline of one of the unit's rules (`<Unit>.<CODE>-B04-VR-<variant>.png`) is read by its unit code, the part before the first hyphen: it passes when that is the spec's code and fails when it is another unit's.
 
 - **IDCND-B12** — A testID prefix that `anchors.renames.yaml` records as renamed to this unit's code, or to another unit's, is the same identity under its old name and passes — a testID is a contract with the E2E runner and its flows; a baseline passes under an old code only when it was renamed to this unit's.
+
+- **IDCND-B13** — The testIDs are what the project's `dialect.test_handles.exposed` patterns capture, whole or as the head of a family, a helper's included; without those patterns declared the gate is Pending, naming the field. (`testIDAcronyms`)
 
 - **IDCND-I01** — Without a map graph the gate never approves. It returns Pending because concordance cannot be evaluated without the global code inventory.
 
@@ -4366,7 +4368,7 @@ belongs to a project-scope gate.
 
 - **TICTS-B01** — The gate skips a node that is not a spec, and is Pending without a map.
 
-- **TICTS-B02** — Without a declared handle attribute the gate skips.
+- **TICTS-B02** — Without the patterns of `dialect.test_handles.exposed` declared the gate is Pending, naming the field: the core reads no syntax of a handle, and the attribute alone (`derived.test_handle`) does not say how one is written.
 
 - **TICTS-B03** — A spec with no readable linked code skips: there is no end that exposes a handle.
 
@@ -4382,13 +4384,15 @@ belongs to a project-scope gate.
 
 - **TICTS-B09** — When there is no consumer surface at all, the queried end is not charged, and the report shows a dash in its place.
 
-- **TICTS-B10** — The handle is read under the attribute the project declares, whatever its ecosystem.
+- **TICTS-B10** — The handles of the code are what the project's `exposed` patterns capture, whatever its ecosystem: with the `ts` family's example for `data-testid`, the `data-testid` values.
 
-- **TICTS-B11** — A literal handle value counts, also when it reaches the code through a derived prop or an object key whose name contains the attribute.
+- **TICTS-B11** — With the `ts` family's example patterns, a literal handle value counts, also when it reaches the code through a derived prop or an object key whose name contains the attribute.
 
-- **TICTS-B12** — A template handle, whose suffix is runtime data, and a prop that gives a child the head of its handles, both expose the static prefix as a wildcard.
+- **TICTS-B12** — With the `ts` family's example patterns, a template handle, whose suffix is runtime data, and a prop that gives a child the head of its handles, both expose the static prefix as a wildcard.
 
-- **TICTS-B13** — In a conditional handle only the literals of the branches are handles; the literals of the condition are not.
+- **TICTS-B13** — With the `ts` family's example patterns, in a conditional handle only the literals of the branches are handles; the literals of the condition are not.
+
+- **TICTS-B25** — A pattern says what it captures in a group: `testid` is a handle, `prefix` the head of a family read as `head-*`, `suffix` a segment composed onto a head read as `*-seg-*`. A value one pattern captures as a prefix is not also a whole handle by another, and the handles are listed in the order they stand in the source. (`handlesIn`)
 
 - **TICTS-B14** — The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading.
 
@@ -4447,7 +4451,7 @@ by any flow) is not an issue: not every marked UI element requires an automated 
 governs spec-level declaration.
 
 
-- **TQETS-B01** — When the project does not declare a test handle attribute, the gate skips without asserting green.
+- **TQETS-B01** — Without the patterns of `dialect.test_handles.exposed` and `dialect.test_handles.queried` declared the gate is Pending, naming the field missing: the core reads no syntax of a handle, in the code or in a flow.
 
 - **TQETS-B02** — When the project does not declare an E2E surface, the gate skips honestly rather than reporting compliance.
 
@@ -4463,21 +4467,21 @@ governs spec-level declaration.
 
 - **TQETS-B08** — A code template handle (`:item-*`) satisfies a concrete instance queried by a flow (`:item-3`).
 
-- **TQETS-B09** — A regex pattern queried by a flow matches against the exposed prefix head in code.
+- **TQETS-B09** — A query the `queried` patterns capture in a `prefix` group — a flow querying by regular expression — is confronted as a head against the exposed handles.
 
-- **TQETS-B10** — A dynamic runtime expression interpolated by the runner (`${...}`) is skipped without failing.
+- **TQETS-B10** — A query the `queried` patterns do not capture — one the runner interpolates at run time (`${...}`) — is not confronted, and fails nothing.
 
-- **TQETS-B11** — A marked handle literal defined in a lookup table or constant object counts as exposed.
+- **TQETS-B11** — A handle the `mentioned` patterns find — a marked literal in a lookup table or a constant object — counts as existing in the code.
 
-- **TQETS-B12** — A template handle defined behind a nullish coalescing fallback (`??`) counts as exposed.
+- **TQETS-B12** — A head the `mentioned` patterns find behind a fallback (`??`) counts as existing, and covers its instances.
 
-- **TQETS-B13** — A suffix composed in a child component from a parent prop (`*-row-*`) satisfies queries against composite IDs.
+- **TQETS-B13** — A segment the `mentioned` patterns capture in a `suffix` group — composed in a child onto a prop from its parent (`*-row-*`) — covers the queries of composite ids holding it.
 
-- **TQETS-B14** — A terminal suffix composed from a prop (`-toggle`) satisfies composite IDs ending with that segment.
+- **TQETS-B14** — A `suffix` segment covers the composite ids that end with it (`-toggle`), not only the ones holding it in the middle.
 
-- **TQETS-B15** — Handles referenced only within test files (`.test.tsx`, `.spec.ts`) do not count as exposed in application code.
+- **TQETS-B15** — Only the map's code files are read for handles: a file the map holds as a test exposes none, whatever its name — a test queries a handle, it does not create it.
 
-- **TQETS-I01** — Lack of configuration never produces a false approval. Without an explicit test handle or E2E surface, the gate returns Skip.
+- **TQETS-I01** — Lack of configuration never produces a false approval. Without the patterns, or an E2E surface, the gate returns Pending or Skip, never Pass.
 
 - **TQETS-I02** — Findings are grouped by handle ID across flows so that a single missing handle queried multiple times does not multiply reported defects.
 
@@ -4487,11 +4491,11 @@ governs spec-level declaration.
 
 - **TQETS-X02** — Does not execute flows or evaluate runtime JavaScript expressions.
 
-- **TQETS-X03** — Does not assume a default test handle attribute (such as `testID`).
+- **TQETS-X03** — Does not assume default patterns for a handle or for a flow's query (such as JSX's `testID=` or Maestro's `id:`).
 
 - **TQETS-E01** — The project declares an E2E surface, but the directory its pattern points to does not exist on disk.
 
-- **TQETS-E02** — A flow of the E2E surface, or a source file of the project, cannot be read.
+- **TQETS-E02** — A flow of the E2E surface, or a code file of the map, cannot be read.
 
 
 ## RTSRT — TestsRetried — a test that passed only on a retry under load stays in sight

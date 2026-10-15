@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BLCNB
-  updated_at: 2026-10-08
+  updated_at: 2026-10-15
   layer: infra
 -->
 # BuildConfig — builds the configuration that inference proposes as the default for the init questions
@@ -51,6 +51,7 @@ breaking a convention the project never promised.
 | `BLCNB-B07` | The proposal's dialect is the language family inference found (INPRN-B11); with no family, no dialect is written. |
 | `BLCNB-B08` | The test layer's pattern (`TestPattern`) is the project's test convention, several written as a set, its family's default with no test yet, and `**/*.test.*` when neither is known. |
 | `BLCNB-B09` | A new project whose family is detected starts with the family's fallible patterns in its dialect (`config.FamilyFalliblePatterns`): the failure gates ask each fetch for its failure and handling from the first day, on a project that has nothing to unlearn. |
+| `BLCNB-B10` | A new project whose family has an example of the test handle patterns, and whose inference found the attribute it marks its elements with, starts with that example in its dialect (`config.FamilyTestHandles`); a project with no attribute found starts with none. |
 
 ## Invariants
 

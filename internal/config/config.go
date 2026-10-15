@@ -2265,6 +2265,11 @@ func (c *Config) validarPadroes() error {
 				return err
 			}
 		}
+		if th := d.TestHandles; th != nil {
+			if err := th.validate(); err != nil {
+				return err
+			}
+		}
 		for field, ps := range map[string][]string{
 			"guard_patterns": d.GuardPatterns, "handle_patterns": d.HandlePatterns, "log_patterns": d.LogPatterns,
 		} {

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:14aeb007fb73d156 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:d04091fb29e22178 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3475,6 +3475,10 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B26 — A family's fallible patterns say, in their `propagates` group, when a call hands its failure to the caller: for `ts` a call `return`ed or an arrow's body, with or without `await`; for `go`'s HTTP and `python`'s `requests`, a call `return`ed. A call kept in a variable propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
+- [DLCTI-B27 — `dialect.test_handles` declares the patterns the handle gates read — `exposed`, `mentioned`, `queried`; a pattern that does not compile, or captures with none of its list's groups (`testid`, `prefix`, and `suffix` for `mentioned`), refuses the config, naming it. (`TestHandles`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
+- [DLCTI-B28 — The `ts` family has an example of the test handle patterns for the attribute a project marks its elements with; another family, or no attribute, has none; and the example is never applied by itself — a project that declared none is measured with none. (`FamilyTestHandles`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B14 — The Go and TS families say how a test is written — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` — and a project that declares its own `tests` keeps it over the family's.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
@@ -4670,6 +4674,8 @@ abra a página dela em `camadas/`.
 - [IDCND-B11 — A baseline of one of the unit's rules (`<Unit>.<CODE>-B04-VR-<variant>.png`) is read by its unit code, the part before the first hyphen: it passes when that is the spec's code and fails when it is another unit's.](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline)
 
 - [IDCND-B12 — A testID prefix that `anchors.renames.yaml` records as renamed to this unit's code, or to another unit's, is the same identity under its old name and passes — a testID is a contract with the E2E runner and its flows; a baseline passes under an old code only when it was renamed to this unit's.](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline)
+
+- [IDCND-B13 — The testIDs are what the project's `dialect.test_handles.exposed` patterns capture, whole or as the head of a family, a helper's included; without those patterns declared the gate is Pending, naming the field. (`testIDAcronyms`)](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline)
 
 - [IDCND-I01 — Without a map graph the gate never approves. It returns Pending because concordance cannot be evaluated without the global code inventory.](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline)
 
@@ -6299,7 +6305,7 @@ abra a página dela em `camadas/`.
 
 - [TICTS-B01 — The gate skips a node that is not a spec, and is Pending without a map.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
-- [TICTS-B02 — Without a declared handle attribute the gate skips.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
+- [TICTS-B02 — Without the patterns of `dialect.test_handles.exposed` declared the gate is Pending, naming the field: the core reads no syntax of a handle, and the attribute alone (`derived.test_handle`) does not say how one is written.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
 - [TICTS-B03 — A spec with no readable linked code skips: there is no end that exposes a handle.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
@@ -6315,13 +6321,15 @@ abra a página dela em `camadas/`.
 
 - [TICTS-B09 — When there is no consumer surface at all, the queried end is not charged, and the report shows a dash in its place.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
-- [TICTS-B10 — The handle is read under the attribute the project declares, whatever its ecosystem.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
+- [TICTS-B10 — The handles of the code are what the project's `exposed` patterns capture, whatever its ecosystem: with the `ts` family's example for `data-testid`, the `data-testid` values.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
-- [TICTS-B11 — A literal handle value counts, also when it reaches the code through a derived prop or an object key whose name contains the attribute.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
+- [TICTS-B11 — With the `ts` family's example patterns, a literal handle value counts, also when it reaches the code through a derived prop or an object key whose name contains the attribute.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
-- [TICTS-B12 — A template handle, whose suffix is runtime data, and a prop that gives a child the head of its handles, both expose the static prefix as a wildcard.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
+- [TICTS-B12 — With the `ts` family's example patterns, a template handle, whose suffix is runtime data, and a prop that gives a child the head of its handles, both expose the static prefix as a wildcard.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
-- [TICTS-B13 — In a conditional handle only the literals of the branches are handles; the literals of the condition are not.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
+- [TICTS-B13 — With the `ts` family's example patterns, in a conditional handle only the literals of the branches are handles; the literals of the condition are not.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
+
+- [TICTS-B25 — A pattern says what it captures in a group: `testid` is a handle, `prefix` the head of a family read as `head-*`, `suffix` a segment composed onto a head read as `*-seg-*`. A value one pattern captures as a prefix is not also a whole handle by another, and the handles are listed in the order they stand in the source. (`handlesIn`)](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
 - [TICTS-B14 — The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
@@ -6353,7 +6361,7 @@ abra a página dela em `camadas/`.
 
 ### [TQETS — TestidQueriedExists — every handle queried by an E2E flow must exist in code](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-- [TQETS-B01 — When the project does not declare a test handle attribute, the gate skips without asserting green.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
+- [TQETS-B01 — Without the patterns of `dialect.test_handles.exposed` and `dialect.test_handles.queried` declared the gate is Pending, naming the field missing: the core reads no syntax of a handle, in the code or in a flow.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
 - [TQETS-B02 — When the project does not declare an E2E surface, the gate skips honestly rather than reporting compliance.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
@@ -6369,21 +6377,21 @@ abra a página dela em `camadas/`.
 
 - [TQETS-B08 — A code template handle (`:item-*`) satisfies a concrete instance queried by a flow (`:item-3`).](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-- [TQETS-B09 — A regex pattern queried by a flow matches against the exposed prefix head in code.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
+- [TQETS-B09 — A query the `queried` patterns capture in a `prefix` group — a flow querying by regular expression — is confronted as a head against the exposed handles.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-- [TQETS-B10 — A dynamic runtime expression interpolated by the runner (`${...}`) is skipped without failing.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
+- [TQETS-B10 — A query the `queried` patterns do not capture — one the runner interpolates at run time (`${...}`) — is not confronted, and fails nothing.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-- [TQETS-B11 — A marked handle literal defined in a lookup table or constant object counts as exposed.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
+- [TQETS-B11 — A handle the `mentioned` patterns find — a marked literal in a lookup table or a constant object — counts as existing in the code.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-- [TQETS-B12 — A template handle defined behind a nullish coalescing fallback (`??`) counts as exposed.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
+- [TQETS-B12 — A head the `mentioned` patterns find behind a fallback (`??`) counts as existing, and covers its instances.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-- [TQETS-B13 — A suffix composed in a child component from a parent prop (`*-row-*`) satisfies queries against composite IDs.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
+- [TQETS-B13 — A segment the `mentioned` patterns capture in a `suffix` group — composed in a child onto a prop from its parent (`*-row-*`) — covers the queries of composite ids holding it.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-- [TQETS-B14 — A terminal suffix composed from a prop (`-toggle`) satisfies composite IDs ending with that segment.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
+- [TQETS-B14 — A `suffix` segment covers the composite ids that end with it (`-toggle`), not only the ones holding it in the middle.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-- [TQETS-B15 — Handles referenced only within test files (`.test.tsx`, `.spec.ts`) do not count as exposed in application code.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
+- [TQETS-B15 — Only the map's code files are read for handles: a file the map holds as a test exposes none, whatever its name — a test queries a handle, it does not create it.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-- [TQETS-I01 — Lack of configuration never produces a false approval. Without an explicit test handle or E2E surface, the gate returns Skip.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
+- [TQETS-I01 — Lack of configuration never produces a false approval. Without the patterns, or an E2E surface, the gate returns Pending or Skip, never Pass.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
 - [TQETS-I02 — Findings are grouped by handle ID across flows so that a single missing handle queried multiple times does not multiply reported defects.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
@@ -6393,11 +6401,11 @@ abra a página dela em `camadas/`.
 
 - [TQETS-X02 — Does not execute flows or evaluate runtime JavaScript expressions.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-- [TQETS-X03 — Does not assume a default test handle attribute (such as `testID`).](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
+- [TQETS-X03 — Does not assume default patterns for a handle or for a flow's query (such as JSX's `testID=` or Maestro's `id:`).](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
 - [TQETS-E01 — The project declares an E2E surface, but the directory its pattern points to does not exist on disk.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
-- [TQETS-E02 — A flow of the E2E surface, or a source file of the project, cannot be read.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
+- [TQETS-E02 — A flow of the E2E surface, or a code file of the map, cannot be read.](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
 ### [RTSRT — TestsRetried — a test that passed only on a retry under load stays in sight](camadas/gate.md#rtsrt--testsretried--a-test-that-passed-only-on-a-retry-under-load-stays-in-sight)
 
@@ -6879,6 +6887,8 @@ abra a página dela em `camadas/`.
 
 - [GVOPG-B09 — A project with code, a family that knows fallible patterns and no `dialect.fallible_patterns` declared is offered them, as the block to copy under `dialect:`; one that declined (`fallible_patterns: []`) or declared its own is not. (`fallibleYAML`)](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
+- [GVOPG-B10 — A project that declares a handle gate (`testid-consistent`, `testid-queried-exists`, `identity-consistent`) and no `dialect.test_handles` is offered the family's example, for the attribute it declares, as the block to copy under `dialect:`, its quotes escaped for YAML; one that declares the patterns, or no handle gate, is offered nothing.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
+
 - [GVOPG-I01 — Every opportunity is informational: this unit never raises a warning.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
 - [GVOPG-X01 — A gate the project already declares (blocking, for the secret gate) is never suggested again, and a project with JUnit output is not told to add it.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
@@ -7036,6 +7046,8 @@ abra a página dela em `camadas/`.
 - [BLCNB-B08 — The test layer's pattern (`TestPattern`) is the project's test convention, several written as a set, its family's default with no test yet, and `**/*.test.*` when neither is known.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
 - [BLCNB-B09 — A new project whose family is detected starts with the family's fallible patterns in its dialect (`config.FamilyFalliblePatterns`): the failure gates ask each fetch for its failure and handling from the first day, on a project that has nothing to unlearn.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
+
+- [BLCNB-B10 — A new project whose family has an example of the test handle patterns, and whose inference found the attribute it marks its elements with, starts with that example in its dialect (`config.FamilyTestHandles`); a project with no attribute found starts with none.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
 - [BLCNB-I01 — REF[BLCNB-B05]: a proposal never carries a test handle the project does not use](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 

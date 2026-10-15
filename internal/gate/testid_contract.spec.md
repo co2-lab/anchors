@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TICTS
-  updated_at: 2026-10-08
+  updated_at: 2026-10-15
   layer: gate
 -->
 # TestIDContract — a test handle is one contract with four ends: the code exposes it, the spec declares it, a consumer queries it
@@ -49,7 +49,7 @@ belongs to a project-scope gate.
 | Effect | Description |
 | --- | --- |
 | `TICTS-B01` | The gate skips a node that is not a spec, and is Pending without a map. |
-| `TICTS-B02` | Without a declared handle attribute the gate skips. |
+| `TICTS-B02` | Without the patterns of `dialect.test_handles.exposed` declared the gate is Pending, naming the field: the core reads no syntax of a handle, and the attribute alone (`derived.test_handle`) does not say how one is written. |
 | `TICTS-B03` | A spec with no readable linked code skips: there is no end that exposes a handle. |
 | `TICTS-B04` | A unit whose code exposes no handle and whose spec declares none skips: it has no test surface to contract. |
 
@@ -67,10 +67,11 @@ belongs to a project-scope gate.
 
 | Effect | Description |
 | --- | --- |
-| `TICTS-B10` | The handle is read under the attribute the project declares, whatever its ecosystem. |
-| `TICTS-B11` | A literal handle value counts, also when it reaches the code through a derived prop or an object key whose name contains the attribute. |
-| `TICTS-B12` | A template handle, whose suffix is runtime data, and a prop that gives a child the head of its handles, both expose the static prefix as a wildcard. |
-| `TICTS-B13` | In a conditional handle only the literals of the branches are handles; the literals of the condition are not. |
+| `TICTS-B10` | The handles of the code are what the project's `exposed` patterns capture, whatever its ecosystem: with the `ts` family's example for `data-testid`, the `data-testid` values. |
+| `TICTS-B11` | With the `ts` family's example patterns, a literal handle value counts, also when it reaches the code through a derived prop or an object key whose name contains the attribute. |
+| `TICTS-B12` | With the `ts` family's example patterns, a template handle, whose suffix is runtime data, and a prop that gives a child the head of its handles, both expose the static prefix as a wildcard. |
+| `TICTS-B13` | With the `ts` family's example patterns, in a conditional handle only the literals of the branches are handles; the literals of the condition are not. |
+| `TICTS-B25` | A pattern says what it captures in a group: `testid` is a handle, `prefix` the head of a family read as `head-*`, `suffix` a segment composed onto a head read as `*-seg-*`. A value one pattern captures as a prefix is not also a whole handle by another, and the handles are listed in the order they stand in the source. (`handlesIn`) |
 | `TICTS-B14` | The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading. |
 | `TICTS-B15` | In a table row of the inventory only the first cell is the id; on any other line every quoted id counts. |
 | `TICTS-B16` | The attribute's own name, quoted in the inventory, is not a declared id. |

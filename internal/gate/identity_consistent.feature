@@ -2,7 +2,7 @@
 # @anchors
 #   code: ICFDN
 #   ref: IDCND
-#   updated_at: 2026-10-04
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @IDCND
@@ -128,3 +128,9 @@ Feature: IdentityConsistent — a unit's spec identity must match its exposed te
     Given a spec ARNAA whose code exposes arna-, home- and bdge- testIDs, and a renames file recording ARNA → ARNAA and HOME → HOMEH
     When identity-consistent runs
     Then arna and home pass as old names of known units, and bdge still fails as orphan
+
+  @IDCND-B13 @unit-level
+  Scenario: The testIDs are read by the project's patterns, and without them the gate is pending
+    Given a unit whose orphan acronym appears only through the project's helper getOptionTestID, and a project with no test handle patterns
+    When identity-consistent confronts the spec
+    Then the helper's acronym is charged under the project's patterns, and without patterns the gate is pending

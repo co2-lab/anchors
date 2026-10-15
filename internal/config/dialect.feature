@@ -185,3 +185,15 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     When return useQuery, an arrow whose body is an awaited fetch, return http.Get and a query kept in a variable are matched
     Then the first three match their propagates group, and the query kept in a variable does not
 
+  @DLCTI-B27 @unit-level
+  Scenario: The test handle patterns are read and checked on load
+    Given a dialect declaring exposed, mentioned and queried patterns, one with a pattern that does not compile, and one whose pattern captures with no group
+    When the config is loaded
+    Then the first is read, and the others refuse the config naming the pattern
+
+  @DLCTI-B28 @unit-level
+  Scenario: The ts family has an example of the test handle patterns, never applied by itself
+    Given the ts family with the attribute data-testid, the go family, the ts family with no attribute, and a ts project that declared none
+    When the examples and the project's dialect are read
+    Then the ts example reads data-testid, the others give none, and the project has no patterns
+

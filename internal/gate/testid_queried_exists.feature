@@ -2,17 +2,17 @@
 # @anchors
 #   code: TQEFT
 #   ref: TQETS
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @TQETS
 Feature: TestidQueriedExists — every handle queried by an E2E flow must exist in code
 
   @TQETS-B01 @unit-level
-  Scenario: The gate skips when no test handle attribute is declared
-    Given a configuration without a declared test handle attribute
+  Scenario: Without the exposed and queried patterns declared the gate is pending, naming the field
+    Given a configuration with no queried patterns, one with no exposed patterns, and one with no dialect
     When the gate confronts the artifact
-    Then it returns Skip, avoiding false approval when no handle attribute was configured
+    Then it returns Pending each time, naming the field missing
 
   @TQETS-B02 @unit-level
   Scenario: The gate skips when no E2E surface is configured
@@ -102,11 +102,11 @@ Feature: TestidQueriedExists — every handle queried by an E2E flow must exist 
     Then it returns Pass, recognizing composite handles ending in dynamic suffixes
 
   @TQETS-B15 @unit-level
-  Scenario: A handle appearing only in test files does not count as exposed
-    Given a handle cited exclusively in a test file
+  Scenario: A handle appearing only in a test file does not count as exposed
+    Given a handle cited only in a file the map holds as a test
     And a flow querying that handle
     When the gate confronts the artifact
-    Then it returns Fail, because test files consume handles rather than exposing them
+    Then it returns Fail
 
   @TQETS-I01 @unit-level
   Scenario: Missing configuration never reports a pass
@@ -140,10 +140,10 @@ Feature: TestidQueriedExists — every handle queried by an E2E flow must exist 
     Then it restricts analysis to static segments without launching a runtime engine
 
   @TQETS-X03 @unit-level
-  Scenario: Default test handle attributes are not inferred
-    Given a project configuration without derived test handle settings
+  Scenario: No default pattern is assumed
+    Given a project configuration without test handle patterns
     When the gate confronts the artifact
-    Then it skips execution instead of presuming testID or data-testid conventions
+    Then it is pending instead of presuming testID or Maestro conventions
 
   @TQETS-E01 @unit-level
   Scenario: A declared E2E directory missing from disk skips the gate

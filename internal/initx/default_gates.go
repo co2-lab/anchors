@@ -1052,16 +1052,16 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		add("spec", config.Gate{Name: "rule-implemented", On: []string{"spec"},
 			Measures: "every rule the spec catalogs is marked in its code target, unless waived on its line with `@no-mark: <reason>`"})
 	}
-	add("spec", config.Gate{Name: "identity-consistent", On: []string{"spec"}, Presupposes: []string{"derived.test_handle"},
+	add("spec", config.Gate{Name: "identity-consistent", On: []string{"spec"}, Presupposes: []string{"dialect.test_handles.exposed"},
 		Measures: "the spec's code is the only identity across its surfaces: testID prefixes and visual baselines"})
-	add("spec", config.Gate{Name: "testid-consistent", On: []string{"spec"}, Presupposes: []string{"derived.test_handle"},
+	add("spec", config.Gate{Name: "testid-consistent", On: []string{"spec"}, Presupposes: []string{"dialect.test_handles.exposed"},
 		Measures: "the spec's testID inventory, the IDs the code exposes, and the tests that query them agree"})
 	add("spec", config.Gate{Name: "route-declared", On: []string{"spec"}, Tags: []string{"screen"},
 		Measures: "a screen spec declares its route and names its neighbour screens"})
 	add("spec", config.Gate{Name: "route-exists", On: []string{"spec"}, Tags: []string{"screen"}, Presupposes: []string{"route_registry"},
 		Measures: "the route the spec declares is registered where the app registers its routes"})
 	add("test", config.Gate{Name: "testid-queried-exists", On: []string{"test"}, Scope: config.ScopeProject,
-		Presupposes: []string{"derived.test_handle"},
+		Presupposes: []string{"dialect.test_handles.exposed", "dialect.test_handles.queried"},
 		Measures:    "every handle an end-to-end flow queries is exposed somewhere in the code"})
 	add("code", config.Gate{Name: "region-pair-honored", On: []string{"code", "test"},
 		Measures: "every `#region [CODE]` closes, and closes with its own code"})

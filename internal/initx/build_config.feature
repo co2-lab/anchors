@@ -2,7 +2,7 @@
 # @anchors
 #   code: BCFBL
 #   ref: BLCNB
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @BLCNB
@@ -84,3 +84,9 @@ Feature: BuildConfig — builds the configuration that inference proposes as the
     Given a proposal for a ts project and one with no family
     When the config is built
     Then the ts project's dialect has the family's fallible patterns, and the other has no dialect
+
+  @BLCNB-B10 @unit-level
+  Scenario: A new project's dialect carries the family's example of its test handle patterns
+    Given a proposal for a ts project marking with testID, and one with no attribute found
+    When the config is built
+    Then the first's dialect has the family's example for testID, and the second has none

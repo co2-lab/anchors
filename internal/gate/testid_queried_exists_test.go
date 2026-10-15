@@ -34,8 +34,31 @@ func fixtureConsultado(t *testing.T, codigo, flow string) (string, *config.Confi
 		TestHandle: "testID",
 		Surfaces:   map[string]string{"e2e": "e2e"},
 		Files:      map[string]config.Padroes{"e2e": {"flows"}},
-	}}
+	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}}
 	return root, cfg
+}
+
+// codeGraph is the map of the fixture: each file outside the flows is a code node, or a
+// test node when its name says so — what the project's layers would give the map.
+func codeGraph(t *testing.T, root string) *mapx.Graph {
+	t.Helper()
+	g := &mapx.Graph{}
+	_ = filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() {
+			return nil
+		}
+		rel, _ := filepath.Rel(root, p)
+		rel = filepath.ToSlash(rel)
+		switch {
+		case strings.HasPrefix(rel, "flows/"):
+		case strings.Contains(info.Name(), ".test.") || strings.Contains(info.Name(), ".spec."):
+			g.Nodes = append(g.Nodes, mapx.Node{ID: rel, Kind: mapx.KindTest})
+		default:
+			g.Nodes = append(g.Nodes, mapx.Node{ID: rel, Kind: mapx.KindCode})
+		}
+		return nil
+	})
+	return g
 }
 
 func TestConsultadoExiste_handleQueExistePassa(t *testing.T) {
@@ -44,7 +67,7 @@ func TestConsultadoExiste_handleQueExistePassa(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		`<View testID=":abcd-tela" />`,
 		"- assertVisible:\n    id: ':abcd-tela'\n")
-	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Pass {
 		t.Fatalf("handle exposto pelo código deveria passar, veio %v: %s", v, d)
 	}
@@ -57,7 +80,7 @@ func TestConsultadoExiste_handleInventadoReprova(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		`<View testID=":abcd-tela" />`,
 		"- tapOn:\n    id: ':abcd-botao-que-ninguem-expoe'\n")
-	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Fail {
 		t.Fatalf("handle inexistente deveria reprovar, veio %v: %s", v, d)
 	}
@@ -77,7 +100,7 @@ func TestConsultadoExiste_assertNotVisibleVacuoReprova(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		`<View testID=":abcd-tela" />`,
 		"- assertNotVisible:\n    id: ':abcd-controles-de-edicao'\n")
-	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Fail {
 		t.Fatalf("assertNotVisible sobre id inexistente é verde-por-vacuidade e deve reprovar, veio %v", v)
 	}
@@ -90,7 +113,7 @@ func TestConsultadoExiste_templateCobreInstancia(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		"<View testID={`:abcd-item-${id}`} />",
 		"- tapOn:\n    id: ':abcd-item-3'\n")
-	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Pass {
 		t.Fatalf("instância de template exposto deveria passar, veio %v: %s", v, d)
 	}
@@ -102,7 +125,7 @@ func TestConsultadoExiste_regexDoFlowCasaCabeca(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		"<View testID={`:abcd-linha-${i}`} />",
 		"- tapOn:\n    id: ':abcd-linha-.*maestro-001'\n")
-	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Pass {
 		t.Fatalf("regex do flow deve casar a cabeça exposta, veio %v: %s", v, d)
 	}
@@ -116,7 +139,7 @@ func TestConsultadoExiste_interpolacaoDoFlowNaoAcusa(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		`<View testID=":abcd-tela" />`,
 		"- tapOn:\n    id: \"${':abcd-x-' + output.data.ns}\"\n")
-	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Pass {
 		t.Fatalf("id interpolado pelo runner não é confrontável e não deve acusar, veio %v: %s", v, d)
 	}
@@ -129,7 +152,7 @@ func TestConsultadoExiste_handleEmTabelaConta(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		"const rotas = { Family: ':abcd-navigate-to-family' }",
 		"- tapOn:\n    id: ':abcd-navigate-to-family'\n")
-	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Pass {
 		t.Fatalf("handle em tabela de consulta existe no código e não deve acusar, veio %v: %s", v, d)
 	}
@@ -141,7 +164,7 @@ func TestConsultadoExiste_templateAtrasDeFallbackConta(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		"<Btn testID={btn.testID ?? `:abcd-alert-sheet-button-${i}`} />",
 		"- tapOn:\n    id: ':abcd-alert-sheet-button-1'\n")
-	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Pass {
 		t.Fatalf("template atrás de `??` existe no código e não deve acusar, veio %v: %s", v, d)
 	}
@@ -161,7 +184,7 @@ func TestConsultadoExiste_sufixoCompostoNoFilhoConta(t *testing.T) {
 		[]byte("<Row testID={testID ? `${testID}-row-${index}` : undefined} />"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Pass {
 		t.Fatalf("sufixo composto no filho existe em runtime e não deve acusar, veio %v: %s", v, d)
 	}
@@ -181,7 +204,7 @@ func TestConsultadoExiste_sufixoTerminalConta(t *testing.T) {
 		[]byte("<Btn testID={testID ? `${testID}-toggle` : undefined} />"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Pass {
 		t.Fatalf("sufixo terminal composto existe em runtime e não deve acusar, veio %v: %s", v, d)
 	}
@@ -190,7 +213,7 @@ func TestConsultadoExiste_sufixoTerminalConta(t *testing.T) {
 // Arquivo de TESTE não expõe handle — ele consulta. Foi assim que um id fantasma
 // sobreviveu no app de referência, referenciado só por um teste de unidade.
 func TestConsultadoExiste_testeNaoContaComoExposicao(t *testing.T) {
-	t.Run("TQETS-B15: A handle appearing only in test files does not count as exposed", func(t *testing.T) {})
+	t.Run("TQETS-B15: A handle appearing only in a test file does not count as exposed", func(t *testing.T) {})
 	root, cfg := fixtureConsultado(t,
 		`<View testID=":abcd-tela" />`,
 		"- tapOn:\n    id: ':abcd-fantasma'\n")
@@ -198,23 +221,31 @@ func TestConsultadoExiste_testeNaoContaComoExposicao(t *testing.T) {
 		[]byte(`getByTestId(':abcd-fantasma')`), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Fail {
 		t.Fatalf("id presente só em arquivo de teste não está exposto e deve reprovar, veio %v", v)
 	}
 }
 
-// Sem `test_handle` declarado o gate PULA — inferir `testID` faria ele reportar verde
-// sobre o que não conferiu.
-func TestConsultadoExiste_semHandleDeclaradoPula(t *testing.T) {
-	t.Run("TQETS-B01: The gate skips when no test handle attribute is declared", func(t *testing.T) {})
+// With no pattern declared the gate measures nothing: the core reads no syntax of a
+// handle, and assuming JSX or Maestro would report green over what it never read.
+func TestConsultadoExiste_semPadroesFicaPendente(t *testing.T) {
+	t.Run("TQETS-B01: Without the exposed and queried patterns declared the gate is pending, naming the field", func(t *testing.T) {})
 	t.Run("TQETS-I01: Missing configuration never reports a pass", func(t *testing.T) {})
-	t.Run("TQETS-X03: Default test handle attributes are not inferred", func(t *testing.T) {})
+	t.Run("TQETS-X03: No default pattern is assumed", func(t *testing.T) {})
 	root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`, "- tapOn:\n    id: ':abcd-x'\n")
-	cfg.Derived.TestHandle = ""
-	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
-	if v != Skip {
-		t.Fatalf("sem atributo declarado o gate deve pular, veio %v", v)
+	queried := cfg.Dialect.TestHandles.Queried
+	cfg.Dialect.TestHandles.Queried = nil
+	if v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg); v != Pending || !strings.Contains(d, "dialect.test_handles.queried") {
+		t.Fatalf("with no queried pattern the gate is pending, naming it: %v %s", v, d)
+	}
+	cfg.Dialect.TestHandles = &config.TestHandles{Queried: queried}
+	if v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg); v != Pending || !strings.Contains(d, "dialect.test_handles.exposed") {
+		t.Fatalf("with no exposed pattern the gate is pending, naming it: %v %s", v, d)
+	}
+	cfg.Dialect = nil
+	if v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg); v != Pending {
+		t.Fatalf("with no dialect the gate is pending, got %v", v)
 	}
 }
 
@@ -224,7 +255,7 @@ func TestConsultadoExiste_semSuperficieE2EPula(t *testing.T) {
 	t.Run("TQETS-B02: The gate skips when no E2E surface is configured", func(t *testing.T) {})
 	root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`, "- tapOn:\n    id: ':abcd-x'\n")
 	cfg.Derived.Files = map[string]config.Padroes{}
-	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Skip {
 		t.Fatalf("sem superfície declarada o gate deve pular, veio %v", v)
 	}
@@ -233,7 +264,7 @@ func TestConsultadoExiste_semSuperficieE2EPula(t *testing.T) {
 func TestConsultadoExiste_semHandlesExpostosNoCodigoPula(t *testing.T) {
 	t.Run("TQETS-B03: The gate skips when no exposed handles exist in code", func(t *testing.T) {})
 	root, cfg := fixtureConsultado(t, `const x = 1;`, "- tapOn:\n    id: ':abcd-x'\n")
-	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Skip {
 		t.Fatalf("sem handles no código o gate deve pular, veio %v", v)
 	}
@@ -246,7 +277,7 @@ func TestConsultadoExiste_agrupaAchadosPorHandleID(t *testing.T) {
 		[]byte("- tapOn:\n    id: ':abcd-inexistente'\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 	if v != Fail {
 		t.Fatalf("esperava Fail, veio %v: %s", v, d)
 	}
@@ -264,7 +295,7 @@ func TestQueriedTestIDExists_Errors(t *testing.T) {
 		if err := os.RemoveAll(filepath.Join(root, "flows")); err != nil {
 			t.Fatal(err)
 		}
-		v, msg := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+		v, msg := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 		if v != Skip {
 			t.Fatalf("a declared but missing E2E directory must skip, got %v: %s", v, msg)
 		}
@@ -286,7 +317,7 @@ func TestConsultadoExiste_unreadableIsPending(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.Chmod(hidden, 0o644)
-	if v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg); v != Pending || !strings.Contains(d, "F-A02.yaml") {
+	if v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg); v != Pending || !strings.Contains(d, "F-A02.yaml") {
 		t.Fatalf("an unreadable flow must leave the verdict Pending naming it, got %v: %s", v, d)
 	}
 
@@ -297,7 +328,7 @@ func TestConsultadoExiste_unreadableIsPending(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer os.Chmod(src, 0o644)
-	if v, d := checkQueriedTestIDExists("", mapx.Node{}, root2, nil, cfg2); v != Pending || !strings.Contains(d, "other.tsx") {
+	if v, d := checkQueriedTestIDExists("", mapx.Node{}, root2, codeGraph(t, root2), cfg2); v != Pending || !strings.Contains(d, "other.tsx") {
 		t.Fatalf("with a source unread, the missing handle is not accused: want Pending naming it, got %v: %s", v, d)
 	}
 }
@@ -314,9 +345,9 @@ func TestConsultadoExiste_reportDetails(t *testing.T) {
 		root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`,
 			"- tapOn:\n    id: ':abcd-b-missing'\n") // F-A01.yaml
 		writeFlow(t, root, "F-Z01.yaml", "- tapOn:\n    id: ':abcd-a-missing'\n- tapOn:\n    id: ':abcd-b-missing'\n")
-		writeFlow(t, root, "helper.js", "// id: ':abcd-js-missing'\n")             // not a flow
+		writeFlow(t, root, "helper.js", "// id: ':abcd-js-missing'\n")             // matches no queried pattern
 		writeFlow(t, root, "F-Y01.yml", "- tapOn:\n    id: ':abcd-yml-missing'\n") // .yml is a flow
-		v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+		v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg)
 		if v != Fail {
 			t.Fatalf("got %v: %s", v, d)
 		}
@@ -328,7 +359,7 @@ func TestConsultadoExiste_reportDetails(t *testing.T) {
 			t.Errorf("the flows of one handle are listed in path order: %s", d)
 		}
 		if !strings.Contains(d, "abcd-yml-missing") || strings.Contains(d, "abcd-js-missing") {
-			t.Errorf(".yml flows are read, .js helpers are not: %s", d)
+			t.Errorf("a flow is what the queried patterns find, not an extension: %s", d)
 		}
 	})
 
@@ -339,7 +370,7 @@ func TestConsultadoExiste_reportDetails(t *testing.T) {
 			{Files: map[string]config.Padroes{"code": {"src"}}}, // no e2e pattern here
 			{Files: map[string]config.Padroes{"e2e": {"flows"}}},
 		}
-		if v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg); v != Fail {
+		if v, d := checkQueriedTestIDExists("", mapx.Node{}, root, codeGraph(t, root), cfg); v != Fail {
 			t.Errorf("the override's surface is confronted: %v (%s)", v, d)
 		}
 	})
@@ -355,7 +386,9 @@ func TestConsultadoExiste_reportDetails(t *testing.T) {
 			t.Fatal(err)
 		}
 		t.Cleanup(func() { _ = os.Chmod(locked, 0o755) })
-		v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+		g := codeGraph(t, root)
+		g.Nodes = append(g.Nodes, mapx.Node{ID: "locked/x.tsx", Kind: mapx.KindCode})
+		v, d := checkQueriedTestIDExists("", mapx.Node{}, root, g, cfg)
 		if v != Pending || !strings.Contains(d, "locked") {
 			t.Errorf("the unreadable directory is named: %v (%s)", v, d)
 		}
@@ -368,7 +401,7 @@ func TestQueriedHandles(t *testing.T) {
 		"- tapOn:\n    id: 'abc'\n" + // below the floor
 		"- tapOn:\n    id: '.*-row-x'\n" + // a pattern with no static head
 		"- tapOn:\n    id: 'abcd-list-.*'\n"
-	got := queriedHandles(flow)
+	got := queriedHandles(flow, config.FamilyTestHandles("ts", "testID").Queried)
 	want := []string{"abcd-one", "abcd-two", "ab-c", "abcd-list"}
 	if strings.Join(got, ",") != strings.Join(want, ",") {
 		t.Errorf("got %v, want %v", got, want)
@@ -378,10 +411,7 @@ func TestQueriedHandles(t *testing.T) {
 func TestExposedHandleRecognisers_collectEveryOccurrence(t *testing.T) {
 	src := "const m = { A: ':abcd-one', B: ':abcd-two' }\n" +
 		"testID={`${testID}-row-${i}`} other={`${id}-cell-${j}`}\n"
-	if got := looseLiteralHandles(src); strings.Join(got, ",") != ":abcd-one,:abcd-two" {
-		t.Errorf("looseLiteralHandles = %v", got)
-	}
-	if got := propComposedSuffixes(src); strings.Join(got, ",") != "*-row-*,*-cell-*" {
-		t.Errorf("propComposedSuffixes = %v", got)
+	if got := handlesIn(src, config.FamilyTestHandles("ts", "testID").Mentioned); strings.Join(got, ",") != ":abcd-one,:abcd-two,*-row-*,*-cell-*" {
+		t.Errorf("the mentioned patterns find every occurrence = %v", got)
 	}
 }
