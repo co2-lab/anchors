@@ -171,9 +171,16 @@ Feature: Failure — the failure a spec declares must be handled, recorded, and 
 
   @FLRAI-B23 @unit-level
   Scenario: A fallible call whose result is returned hands its failure to the caller
-    Given a unit returning a query, an arrow whose body is a query, a function returning an awaited fetch, and a query kept in a variable with no handling
+    Given a pattern whose propagates group reads return, an arrow and await, and whose prefix also requires a call position
+    And a unit returning a query, an arrow whose body is a query, a function returning an awaited fetch, and a query kept in a variable with no handling
     When failure-handled runs
     Then only the query kept in the variable is charged
+
+  @FLRAI-B26 @unit-level
+  Scenario: A pattern with no propagates group propagates nothing
+    Given the same unit and a pattern with no propagates group
+    When failure-handled runs
+    Then the returned calls are charged too
 
   @FLRAI-B24 @unit-level
   Scenario: A fallible call is cited by the name its pattern's name group says

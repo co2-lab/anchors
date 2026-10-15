@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:13ec7d6e915ec062 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:87b1d581eb11b25b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3190,6 +3190,8 @@ teste prova.
 
 - [The import resolution declares imports by name](layers/config.md#dlcti-b25--the-import-resolution-declares-imports-by-name) `DLCTI-B25`
 
+- [A family's fallible patterns say when a call propagates](layers/config.md#dlcti-b26--a-familys-fallible-patterns-say-when-a-call-propagates) `DLCTI-B26`
+
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
 - [A trigger naming a unit code charges that unit and not its neighbours in the same layer](layers/config.md#dcrqa-b02--a-trigger-naming-a-unit-code-charges-that-unit-and-not-its-neighbours-in-the-same-layer) `DCRQA-B02`
@@ -3927,6 +3929,8 @@ teste prova.
 - [A fallible call with no handling in its window fails, named by its line](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B22`
 
 - [A fallible call whose result is returned hands its failure to the caller](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B23`
+
+- [A pattern with no propagates group propagates nothing](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B26`
 
 - [A fallible call is cited by the name its pattern's name group says](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B24`
 

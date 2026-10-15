@@ -2,7 +2,7 @@
 # @anchors
 #   code: DLFTA
 #   ref: DLCTI
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @DLCTI
@@ -178,4 +178,10 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given an anchors.yaml whose import_resolve says by_name with name_case lower_first
     When it is loaded
     Then the dialect resolves imports by name, lowering the first letter
+
+  @DLCTI-B26 @unit-level
+  Scenario: A family's fallible patterns say when a call propagates
+    Given the ts family's patterns and go's HTTP pattern
+    When return useQuery, an arrow whose body is an awaited fetch, return http.Get and a query kept in a variable are matched
+    Then the first three match their propagates group, and the query kept in a variable does not
 

@@ -293,13 +293,15 @@ var dialectFamilies = map[string]Dialect{
 		// mutation), SWR, fetch and axios. A project with its own data hooks adds them, or
 		// declares `fallible_patterns: []` to turn these off.
 		FalliblePatterns: []FalliblePattern{
-			// Each names the function a failure cites in its `name` group, and takes a type
-			// argument (`useQuery<Budget>(`): the generic call is the common one in TS.
-			{Call: `\b(?P<name>use(?:Query|SuspenseQuery|InfiniteQuery|SuspenseInfiniteQuery|Queries|Mutation))(?:<[^()]*>)?\(`,
+			// Each names the function a failure cites in its `name` group, takes a type
+			// argument (`useQuery<Budget>(`): the generic call is the common one in TS, and
+			// says in its `propagates` group that a call `return`ed or an arrow's body, with or
+			// without `await`, hands its failure to the caller.
+			{Call: `(?P<propagates>(?:\breturn|=>)\s*(?:await\s+)?)?\b(?P<name>use(?:Query|SuspenseQuery|InfiniteQuery|SuspenseInfiniteQuery|Queries|Mutation))(?:<[^()]*>)?\(`,
 				Handled: `\bisError\b|\berror\b|\bonError\b|\bthrowOnError\b|\bstatus\b|\bcatch\b`},
-			{Call: `\b(?P<name>useSWR(?:Infinite|Immutable|Mutation)?)(?:<[^()]*>)?\(`, Handled: `\berror\b|\bonError\b`},
-			{Call: `\b(?P<name>fetch)\(`, Handled: `\.catch\(|\bcatch\b|\.ok\b|\bthrow\b`},
-			{Call: `\b(?P<name>axios)(?:\.\w+)?(?:<[^()]*>)?\(`, Handled: `\.catch\(|\bcatch\b`},
+			{Call: `(?P<propagates>(?:\breturn|=>)\s*(?:await\s+)?)?\b(?P<name>useSWR(?:Infinite|Immutable|Mutation)?)(?:<[^()]*>)?\(`, Handled: `\berror\b|\bonError\b`},
+			{Call: `(?P<propagates>(?:\breturn|=>)\s*(?:await\s+)?)?\b(?P<name>fetch)\(`, Handled: `\.catch\(|\bcatch\b|\.ok\b|\bthrow\b`},
+			{Call: `(?P<propagates>(?:\breturn|=>)\s*(?:await\s+)?)?\b(?P<name>axios)(?:\.\w+)?(?:<[^()]*>)?\(`, Handled: `\.catch\(|\bcatch\b`},
 		},
 		EnvRead:      "process\\.env\\.([A-Za-z_][A-Za-z0-9_]*)|process\\.env\\[\\s*['\"`]([A-Za-z_][A-Za-z0-9_]*)['\"`]\\s*\\]|import\\.meta\\.env\\.([A-Za-z_][A-Za-z0-9_]*)",
 		ExportedFunc: `(?m)^export\s+(?:async\s+)?function\s+(\w+)\s*\(|^export\s+const\s+(\w+)\s*=\s*(?:async\s+)?[\(<]`,
@@ -338,7 +340,7 @@ var dialectFamilies = map[string]Dialect{
 		// answered by reading their error.
 		FalliblePatterns: []FalliblePattern{
 			// Each names the function a failure cites in its `name` group.
-			{Call: `\bhttp\.(?P<name>Get|Post|Head|PostForm)\(`, Handled: `\berr\s*!=\s*nil|\berrors\.`},
+			{Call: `(?P<propagates>\breturn\s+)?\bhttp\.(?P<name>Get|Post|Head|PostForm)\(`, Handled: `\berr\s*!=\s*nil|\berrors\.`},
 			{Call: `\.(?P<name>Do)\(`, Handled: `\berr\s*!=\s*nil|\berrors\.`},
 			{Call: `\.(?P<name>(?:Query|QueryRow|Exec)(?:Context)?)\(`, Handled: `\berr\s*!=\s*nil|\.Err\(\)|\berrors\.`},
 		},
@@ -389,7 +391,7 @@ var dialectFamilies = map[string]Dialect{
 	"python": {
 		// What can fail in Python and what handles it: an HTTP request through `requests`.
 		FalliblePatterns: []FalliblePattern{
-			{Call: `\brequests\.(?P<name>get|post|put|patch|delete|head|request)\(`, Handled: `\bexcept\b|raise_for_status|status_code`},
+			{Call: `(?P<propagates>\breturn\s+)?\brequests\.(?P<name>get|post|put|patch|delete|head|request)\(`, Handled: `\bexcept\b|raise_for_status|status_code`},
 		},
 		EnvRead: "os\\.(?:getenv|environ\\.get)\\(\\s*['\"]([A-Za-z_]\\w*)['\"]|os\\.environ\\[\\s*['\"]([A-Za-z_]\\w*)['\"]\\s*\\]",
 		// Sem palavra-chave de exportação: convenção é o underscore inicial marcar o
@@ -613,7 +615,10 @@ func (d Dialect) EnvReadPattern() string {
 type FalliblePattern struct {
 	// Call recognises the call that can fail (a regular expression). Its `name` group, when
 	// it has one — `\b(?P<name>apiCall)(?:<[^()]*>)?\(` —, is the name a failure cites the
-	// call by: the pattern knows its language, and the core reads no syntax of its own.
+	// call by: the pattern knows its language, and the core reads no syntax of its own. Its
+	// `propagates` group, when it takes part in the match —
+	// `(?P<propagates>\breturn\s+)?\bhttp\.(?P<name>Get)\(` —, says the call's result is the
+	// unit's own, so its failure is the caller's to handle.
 	Call string `yaml:"call"`
 	// Handled recognises its handling — the error read, a catch, an error callback.
 	Handled string `yaml:"handled,omitempty"`

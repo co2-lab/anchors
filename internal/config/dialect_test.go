@@ -553,6 +553,36 @@ func TestFalliblePatterns_familyKnowsThemAndDoesNotImposeThem(t *testing.T) {
 	}
 }
 
+func TestFalliblePatterns_familySaysWhatPropagates(t *testing.T) {
+	t.Run("DLCTI-B26: A family's fallible patterns say when a call propagates", func(t *testing.T) {})
+	propagates := func(fam, text string) bool {
+		for _, p := range FamilyFalliblePatterns(fam) {
+			re := regexp.MustCompile(p.Call)
+			if m := re.FindStringSubmatchIndex(text); m != nil {
+				i := re.SubexpIndex("propagates")
+				return i >= 0 && m[2*i] >= 0
+			}
+		}
+		t.Fatalf("%s: no pattern matches %q", fam, text)
+		return false
+	}
+	for _, c := range []struct {
+		fam, text string
+		want      bool
+	}{
+		{"ts", "  return useQuery<Budget>(key)", true},
+		{"ts", "const load = async () => await fetch(url)", true},
+		{"go", "\treturn http.Get(url)", true},
+		{"python", "    return requests.get(url)", true},
+		{"ts", "const q = useQuery(key)", false},
+		{"go", "resp, err := http.Get(url)", false},
+	} {
+		if got := propagates(c.fam, c.text); got != c.want {
+			t.Errorf("%s %q: propagates=%v, want %v", c.fam, c.text, got, c.want)
+		}
+	}
+}
+
 func TestDialect_importResolveAndNavigationCall(t *testing.T) {
 	t.Run("DLCTI-B23: import_resolve and navigation_call are read from the dialect", func(t *testing.T) {})
 	c, err := load(t, "version: 7\nlayers: {}\ndialect:\n  import_resolve:\n    extensions: [.ts, /index.ts]\n    aliases:\n      \"@/\": \"src/\"\n  navigation_call: 'navigate\\(''(?P<route>\\w+)'''\n")

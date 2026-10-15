@@ -664,21 +664,25 @@ func unhandledCalls(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) [
 	return out
 }
 
-// propagatedRE is a call whose result is the unit's own result: `return useQuery(…)`,
-// `=> useQuery(…)`, with or without `await`.
-var propagatedRE = regexp.MustCompile(`(?:\breturn|=>)\s*(?:await\s+)?$`)
-
 // propagated says whether a fallible call hands its failure to the unit's caller — a hook
 // that returns the query, a function that returns the fetch's promise. The handling is the
 // caller's; the unit's spec still names the failure (failure-declared).
+//
+// The pattern says it, in its `propagates` group: the call propagates when that group took
+// part in the match (`(?P<propagates>(?:\breturn|=>)\s*(?:await\s+)?)?\bfetch\(`). The core
+// read the text before the match for `return`, `=>` and `await` — one family's grammar —, and
+// a pattern that required a call position in its own prefix moved that text into the match:
+// at MIF the propagation stopped, and dozens of `@no-handle` were written before anyone saw
+// why. A pattern with no such group propagates nothing.
 func propagated(d config.Dialect, c FallibleCall) bool {
 	re := d.Compile(c.Pattern.Call)
 	if re == nil {
 		return false
 	}
-	loc := re.FindStringIndex(c.Text)
-	if loc == nil {
+	i := re.SubexpIndex("propagates")
+	if i < 0 {
 		return false
 	}
-	return propagatedRE.MatchString(c.Text[:loc[0]])
+	m := re.FindStringSubmatchIndex(c.Text)
+	return m != nil && m[2*i] >= 0
 }
