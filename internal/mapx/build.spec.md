@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRBLG
-  updated_at: 2026-10-14
+  updated_at: 2026-10-15
   layer: mapa
 -->
 # GraphBuild — projecting the declared structure onto the scanned files: one node per file, and the relations between them
@@ -100,6 +100,7 @@ of the nodes whose content did not change.
 | `GRBLG-B27` | A file's kinded dependency flags become its resources in the map — `kind:name`, once each, sorted —, and an incremental rebuild keeps those of the files it does not read again. (`Resources`) |
 | `GRBLG-B28` | An edge a flag declares carries whether that flag has no side effect on the tests — `@navigates` and `@dep[type]` by default, the project's list otherwise —; when two flags tie one file to another, one with a side effect wins; a type dependency names no resource. (`flagEdges`, `NoSideEffect`) |
 | `GRBLG-B29` | A rebuild that leaves a node's signal behind, its revision changed, sets each suite's proof aside with the revision it proved; when the node's content returns to that revision, the proofs set aside for it come back, for the suites its signal does not hold; a proof with no recorded revision is not set aside, and a node keeps the latest 20. (`ParkedProof`) |
+| `GRBLG-B30` | A spec whose header declares its unit's layer (`layer: screen`), another than its file's, is tagged with it, and so is the feature that covers it: a gate scoped by tag confronts a unit by what it is. |
 | `GRBLG-B23` | Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`) |
 
 ## Invariants

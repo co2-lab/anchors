@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:164c53ad0fd82692 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:5a1df23fab313950 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -7321,6 +7321,8 @@ teste prova.
 - [An edge carries whether its flag has a side effect on the tests](layers/mapa.md#grblg-b28--an-edge-carries-whether-its-flag-has-a-side-effect-on-the-tests) `GRBLG-B28`
 
 - [A proof set aside comes back with its revision](layers/mapa.md#grblg-b29--a-proof-set-aside-comes-back-with-its-revision) `GRBLG-B29`
+
+- [A unit's declared layer is a tag of its spec and its feature](layers/mapa.md#grblg-b30--a-units-declared-layer-is-a-tag-of-its-spec-and-its-feature) `GRBLG-B30`
 
 - [A test that was never ingested has no verdict](layers/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 

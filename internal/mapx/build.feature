@@ -2,7 +2,7 @@
 # @anchors
 #   code: BLFTA
 #   ref: GRBLG
-#   updated_at: 2026-10-14
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @GRBLG
@@ -207,3 +207,9 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Given a spec at R1 proven by an e2e suite and a unit suite, then at R2 proven by the unit suite alone
     When the map is rebuilt at R2, the unit suite measures it, and the map is rebuilt with the spec back at R1
     Then at R2 the proofs are set aside, and back at R1 the e2e proof and the unit proof of R1 come back, the unit proof of R2 set aside
+
+  @GRBLG-B30 @unit-level
+  Scenario: A unit's declared layer is a tag of its spec and its feature
+    Given a spec whose header declares the layer screen, covered by a feature, and a spec whose header names its own file's layer
+    When the unit's layer is given as tags
+    Then the screen spec and its feature carry screen, and the other spec gains nothing

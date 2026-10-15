@@ -528,7 +528,7 @@ func TestCheckAllReportsWithoutRecording(t *testing.T) {
 		"code-ok",
 		"code-flagged",
 		// a declared gate that no node reached is named, not silently dropped
-		"    never-applies\n",
+		"    never-applies  on: [feature]\n",
 		"output mirrored to .anchors/",
 	} {
 		if !strings.Contains(out, want) {

@@ -1060,3 +1060,26 @@ func TestPreserveStamps_parksAndRestoresProofs(t *testing.T) {
 		t.Errorf("the unit proof of R2 is set aside: %+v", n.ParkedProofs)
 	}
 }
+
+// Reported from MIF: route-exists, route-declared and vr-baseline, declared blocking, had no
+// node to measure — they ask the tag `screen`, and a screen's spec only carried `spec`.
+func TestUnitLayerTags(t *testing.T) {
+	t.Run("GRBLG-B30: A unit's declared layer is a tag of its spec and its feature", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{
+			{ID: "s/Home.spec.md", Kind: KindSpec, Tags: []string{"spec"}},
+			{ID: "s/Home.feature", Kind: KindFeature, Tags: []string{"feature"}},
+			{ID: "s/Util.spec.md", Kind: KindSpec, Tags: []string{"spec"}},
+		},
+		Edges: []Edge{{From: "s/Home.spec.md", To: "s/Home.feature", Type: EdgeCoveredBy}},
+	}
+	files := []scan.File{
+		{Path: "s/Home.spec.md", Kind: "spec", Layer: "spec", HeaderLayer: "screen"},
+		{Path: "s/Home.feature", Kind: "feature", Layer: "feature"},
+		{Path: "s/Util.spec.md", Kind: "spec", Layer: "spec", HeaderLayer: "spec"},
+	}
+	unitLayerTags(g, files)
+	if !slices.Equal(g.Nodes[0].Tags, []string{"spec", "screen"}) || !slices.Equal(g.Nodes[1].Tags, []string{"feature", "screen"}) || !slices.Equal(g.Nodes[2].Tags, []string{"spec"}) {
+		t.Errorf("the screen unit's spec and feature tagged screen, the other untouched: %v %v %v", g.Nodes[0].Tags, g.Nodes[1].Tags, g.Nodes[2].Tags)
+	}
+}

@@ -125,7 +125,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-B32` | On an incremental check, the map nodes whose content moved since the map build are warned about on the error output, the first three named; the full sweep does not warn. |
 | `CGPCH-B33` | When the map was written by another version than the running binary, a warning names both versions and says to rebuild the map. |
 | `CGPCH-B34` | A map that does not record which version wrote it raises no version warning. |
-| `CGPCH-B35` | A declared gate that no node reached is named in a warning instead of vanishing from the table. |
+| `CGPCH-B35` | A declared gate that no node reached is named in a warning instead of vanishing from the table, with the kinds it confronts and the tags a node must carry — its own, or those it inherits from the catalog. |
 | `CGPCH-B36` | The local backlog is printed on the full sweep of a mode other than github, and never on an incremental check. |
 | `CGPCH-B37` | The governance tips are printed on the full sweep only, with the pointer to the doctor. |
 | `CGPCH-B74` | When there is no governance tip to give, the full sweep prints neither a tip nor the pointer to the doctor. |

@@ -7,6 +7,7 @@ package mapx
 import (
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -73,6 +74,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 	g.Edges = append(g.Edges, flagEdges(files, cfg)...)
 	g.Edges = append(g.Edges, seedEdges(files)...)
 	g.Edges = append(g.Edges, captureEdges(files)...)
+	unitLayerTags(g, files)
 	g.Edges = append(g.Edges, composesEdges(files)...)
 	applyFreezes(g, files, ancoraDeDerivado)
 
@@ -1008,6 +1010,39 @@ func RuleRoot(codigo string) string {
 		return codigo[:i]
 	}
 	return codigo
+}
+
+// unitLayerTags tags a spec with the layer its header declares for the unit (`layer:
+// screen`), and the feature that covers it with the same: a gate scoped by tag (`screen`,
+// `component`, inherited from the catalog) confronts a unit by what it is, not by the layer
+// of its file. A spec's file is in the spec layer, tagged `spec`, so a screen's spec never
+// carried `screen` — and route-exists, route-declared and vr-baseline, declared blocking,
+// had no node to measure in the whole project (reported from MIF).
+func unitLayerTags(g *Graph, files []scan.File) {
+	unit := map[string]string{}
+	for _, f := range files {
+		if f.Kind == string(KindSpec) && f.HeaderLayer != "" && f.HeaderLayer != f.Layer {
+			unit[f.Path] = f.HeaderLayer
+		}
+	}
+	if len(unit) == 0 {
+		return
+	}
+	tag := func(id, layer string) {
+		i := g.nodeIndex(id)
+		if i < 0 || slices.Contains(g.Nodes[i].Tags, layer) {
+			return
+		}
+		g.Nodes[i].Tags = append(append([]string(nil), g.Nodes[i].Tags...), layer)
+	}
+	for id, layer := range unit {
+		tag(id, layer)
+	}
+	for _, e := range g.Edges {
+		if layer, ok := unit[e.From]; ok && e.Type == EdgeCoveredBy {
+			tag(e.To, layer)
+		}
+	}
 }
 
 // layerOfUnit devolve a camada da UNIDADE de um arquivo.

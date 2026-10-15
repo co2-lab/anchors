@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:6af5ccea4a72dbb8 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:333f119ee7f33b21 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2599,7 +2599,7 @@ abra a página dela em `camadas/`.
 
 - [CGPCH-B34 — A map that does not record which version wrote it raises no version warning.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
-- [CGPCH-B35 — A declared gate that no node reached is named in a warning instead of vanishing from the table.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+- [CGPCH-B35 — A declared gate that no node reached is named in a warning instead of vanishing from the table, with the kinds it confronts and the tags a node must carry — its own, or those it inherits from the catalog.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B36 — The local backlog is printed on the full sweep of a mode other than github, and never on an incremental check.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
@@ -8072,6 +8072,8 @@ abra a página dela em `camadas/`.
 - [GRBLG-B28 — An edge a flag declares carries whether that flag has no side effect on the tests — `@navigates` and `@dep[type]` by default, the project's list otherwise —; when two flags tie one file to another, one with a side effect wins; a type dependency names no resource. (`flagEdges`, `NoSideEffect`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-B29 — A rebuild that leaves a node's signal behind, its revision changed, sets each suite's proof aside with the revision it proved; when the node's content returns to that revision, the proofs set aside for it come back, for the suites its signal does not hold; a proof with no recorded revision is not set aside, and a node keeps the latest 20. (`ParkedProof`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
+
+- [GRBLG-B30 — A spec whose header declares its unit's layer (`layer: screen`), another than its file's, is tagged with it, and so is the feature that covers it: a gate scoped by tag confronts a unit by what it is.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-B23 — Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 

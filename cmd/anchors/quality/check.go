@@ -1256,10 +1256,17 @@ func warnGatesWithoutTarget(declarados []config.Gate, p gate.Profile) {
 	for _, n := range p.GateNames() {
 		avaliados[n] = true
 	}
+	// Each gate says what a node must match: its kinds and, when it has them, its tags — a
+	// gate of the catalog inherits them when the declaration names none, and the tags were
+	// the filter no node passed (reported from MIF: route-exists asks `screen`).
 	var semAlvo []string
 	for _, gt := range declarados {
 		if gt.Name != "" && !avaliados[gt.Name] {
-			semAlvo = append(semAlvo, gt.Name)
+			line := gt.Name + "  on: [" + strings.Join(gt.On, ", ") + "]"
+			if len(gt.Tags) > 0 {
+				line += "  tags: [" + strings.Join(gt.Tags, ", ") + "]"
+			}
+			semAlvo = append(semAlvo, line)
 		}
 	}
 	if len(semAlvo) == 0 {
