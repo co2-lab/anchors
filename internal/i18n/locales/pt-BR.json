@@ -383,6 +383,7 @@
   "gate.scenario.no_assert": "%d cenário(s) com passo de resultado que não afirma resultado: %s. Passos de resultado devem afirmar o desfecho",
   "gate.route.missing": "spec de TELA sem rota declarada — adicione a linha de rota",
   "gate.route.generic": "a navegação usa termo genérico, %q — nomeie a tela concreta: %s",
+  "gate.failure.pattern_unnamed": "(o padrão `%s` não nomeia função nenhuma: declare o grupo name, `(?P<name>…)`, no fallible_patterns.call)",
   "gate.proof.boundary": "regra(s) que falam de relação com outra unidade SEM a marcação `@cross-boundary`",
   "gate.proof.missing_import": "regra(s) que afirmam relação com outra unidade sem o código IMPORTAR a unidade alvo",
   "gate.code_reference.invalid": "cita %d código(s) que não existem no projeto: %s.",

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:08344f289c84ca1e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:86b8d41634a6c5cd — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3926,7 +3926,9 @@ teste prova.
 
 - [A fallible call whose result is returned hands its failure to the caller](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B23`
 
-- [A generic call is cited by the name it calls](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B24`
+- [A fallible call is cited by the name its pattern's name group says](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B24`
+
+- [A pattern with no name group names no function](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B25`
 
 - [Non-feature artifacts skip confrontation](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B01`
 

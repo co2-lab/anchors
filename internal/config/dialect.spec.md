@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DLCTI
-  updated_at: 2026-10-11
+  updated_at: 2026-10-15
   layer: config
 -->
 # Dialect — the lexicon of the project's language, between an agnostic gate and concrete code
@@ -64,7 +64,7 @@ written in the configuration file).
 | `DLCTI-B13` | The Go family recognises both shapes of error handling: `if err != nil` and `if err := f(); err != nil`. The second is the commoner, and matching only the first left the handling of most Go code invisible to the failure gates. |
 | `DLCTI-B20` | Each language family declares how its code reads an environment variable (`env_read`), capturing the name; the project's own pattern wins, and with no family declared `EnvReadPattern` is every family's together. |
 | `DLCTI-B21` | `fallible_patterns` (`FalliblePatterns`, each a `FalliblePattern` with `call`, `handled` and `window` — `DefaultFallibleWindow` lines when it declares none) are the project's; the family's fill them only when the project declares none. |
-| `DLCTI-B22` | A family knows what can fail in its stack and what handles it (`FamilyFalliblePatterns`: React Query, SWR, fetch and axios for `ts`; HTTP and SQL for `go`; `requests` for `python`), and does not impose them: a project that declared no `fallible_patterns` is measured with none until it adopts them. |
+| `DLCTI-B22` | A family knows what can fail in its stack and what handles it (`FamilyFalliblePatterns`: React Query, SWR, fetch and axios for `ts`, a type argument taken; HTTP and SQL for `go`; `requests` for `python`; each with the `name` group that says the function a failure cites), and does not impose them: a project that declared no `fallible_patterns` is measured with none until it adopts them. |
 | `DLCTI-B23` | The dialect declares how an import's path becomes a file (`import_resolve`: `extensions` tried in order and `aliases` of path prefixes — `ImportResolve`) and what a navigation call looks like (`navigation_call`, its destination in the group `route` — `NavigationCall`). |
 | `DLCTI-B24` | The OCaml family reads an exported function as a top-level `let` or `let rec`, an environment read as `Sys.getenv` or `Sys.getenv_opt` with a literal name, a loop as `for` or `while`, and an import line as `open` (or `open!`) with its module; a family's import pattern fills the project's when it declares none. |
 | `DLCTI-B25` | The import resolution may declare that imports are module names (`by_name`) and how a name becomes a file name (`name_case`: `lower_first`, `lower`, or as written); both are read from `import_resolve`. (`ImportResolve`) |

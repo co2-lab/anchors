@@ -176,7 +176,13 @@ Feature: Failure — the failure a spec declares must be handled, recorded, and 
     Then only the query kept in the variable is charged
 
   @FLRAI-B24 @unit-level
-  Scenario: A generic call is cited by the name it calls
-    Given a unit whose code calls fetchData<{ n: number }>(…), recognised as fallible with its type argument
-    When its spec declares a failure naming fetchData, and when it declares none
-    Then the declared failure answers the call, and with none the call fails the gate
+  Scenario: A fallible call is cited by the name its pattern's name group says
+    Given a unit whose code calls fetchData<{ n: number }>(…) and sql`…`, each recognised by a pattern with a name group
+    When its spec declares failures naming fetchData and sql, and then only fetchData
+    Then both calls are answered, and then sql fails the gate
+
+  @FLRAI-B25 @unit-level
+  Scenario: A pattern with no name group names no function
+    Given a unit whose fallible call is recognised by a pattern with no name group
+    When its spec declares a failure naming the function
+    Then the call is not answered, and the failure says the pattern names no function and to declare (?P<name>…)

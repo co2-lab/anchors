@@ -521,6 +521,30 @@ func TestFalliblePatterns_familyKnowsThemAndDoesNotImposeThem(t *testing.T) {
 			t.Errorf("%s knows its fallible patterns", fam)
 		}
 	}
+	// Every pattern of every family says the function a failure cites, in its name group,
+	// and the ts ones take a type argument.
+	for _, fam := range []string{"ts", "go", "python"} {
+		for _, p := range FamilyFalliblePatterns(fam) {
+			if re := regexp.MustCompile(p.Call); re.SubexpIndex("name") < 0 {
+				t.Errorf("%s: %q has no name group", fam, p.Call)
+			}
+		}
+	}
+	for _, p := range FamilyFalliblePatterns("ts") {
+		re := regexp.MustCompile(p.Call)
+		if m := re.FindStringSubmatch("const q = useQuery<Budget>(key)"); m != nil && m[re.SubexpIndex("name")] != "useQuery" {
+			t.Errorf("useQuery<Budget>( is named useQuery: %v", m)
+		}
+	}
+	matched := false
+	for _, p := range FamilyFalliblePatterns("ts") {
+		if regexp.MustCompile(p.Call).MatchString("useQuery<Budget>(key)") {
+			matched = true
+		}
+	}
+	if !matched {
+		t.Error("the ts family recognises a generic useQuery")
+	}
 	if FamilyFalliblePatterns("cobol") != nil {
 		t.Error("an unknown family knows none")
 	}

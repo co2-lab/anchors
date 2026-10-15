@@ -383,6 +383,7 @@
   "gate.scenario.no_assert": "%d scenario(s) with result step that does not assert result: %s. Result steps must assert outcome",
   "gate.route.missing": "SCREEN spec without declared route — add route line",
   "gate.route.generic": "navigation uses a generic term, %q — name the concrete screen: %s",
+  "gate.failure.pattern_unnamed": "(the pattern `%s` names no function: declare its name group, `(?P<name>…)`, in fallible_patterns.call)",
   "gate.proof.boundary": "rule(s) mentioning relationship with another unit WITHOUT marking `@cross-boundary`",
   "gate.proof.missing_import": "rule(s) asserting relationship with another unit without code IMPORTING target unit",
   "gate.code_reference.invalid": "cites %d code(s) that do not exist in project: %s.",

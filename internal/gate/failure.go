@@ -451,10 +451,11 @@ func fallibleSources(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config
 	var out []FallibleSource
 	for _, c := range fallibleCalls(n, root, g, d) {
 		src := FallibleSource{Label: fmt.Sprintf("%s:%d", c.File, c.Line)}
-		if re := d.Compile(c.Pattern.Call); re != nil {
-			if m := calledNameRE.FindStringSubmatch(re.FindString(c.Text)); m != nil {
-				src.Names = append(src.Names, m[1])
-			}
+		re := d.Compile(c.Pattern.Call)
+		if name := calledName(re, c.Text); name != "" {
+			src.Names = append(src.Names, name)
+		} else if re != nil && re.SubexpIndex("name") < 0 {
+			src.Label += " " + i18n.T("gate.failure.pattern_unnamed", c.Pattern.Call)
 		}
 		out = append(out, src)
 	}
@@ -505,11 +506,24 @@ func fallibleSources(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config
 	return out
 }
 
-// calledNameRE is the name a matched call calls: the identifier right before its parenthesis,
-// past a type argument — `fetchData<{ n: number }>(`, `parse::<T>(`. Without it a generic
-// call named no function, and no failure could answer it (reported from MIF: every
-// `apiCall<T>(` and `useQuery<T>(`).
-var calledNameRE = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9_]*)\s*(?:::)?(?:<[^()]*>)?\s*\(`)
+// calledName is the name a fallible call is cited by: the `name` group of the project's own
+// pattern (`\b(?P<name>apiCall)(?:<[^()]*>)?\(`). The pattern knows its language; the core
+// reads no syntax of its own. It read the identifier before the parenthesis — the grammar of
+// one family of languages —, and a generic call, `apiCall<T>(`, named no function (reported
+// from MIF). A pattern with no `name` group names nothing, and the gate says so.
+func calledName(re *regexp.Regexp, text string) string {
+	if re == nil {
+		return ""
+	}
+	i := re.SubexpIndex("name")
+	if i < 0 {
+		return ""
+	}
+	if m := re.FindStringSubmatch(text); m != nil {
+		return m[i]
+	}
+	return ""
+}
 
 // identRE is a name the code can import.
 var identRE = regexp.MustCompile(`^[A-Za-z_$][\w$]*$`)

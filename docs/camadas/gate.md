@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:6eeaa588802179ad — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:7dc90f788b9f714e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 88 unidades e 1397 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 88 unidades e 1398 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1197,7 +1197,7 @@ not match) closes its failure section with `none — <why>`, and that satisfies 
 
 - **FLRAI-B19** — A failure rule and its conclusion are read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a 7-character `-E` rule is a declared failure.
 
-- **FLRAI-B20** — `failure-declared`: each fallible source of a unit — a call of its code that a `dialect.fallible_patterns` entry recognises (comment lines and trailing comments do not count) — is named by a declared failure (`-E`): its row, or its row of the rules' uses, cites the name called as a whole word; a failure that does not name it ("not found") does not answer it. Unanswered, the gate fails naming each source by file and line, unless the Errors section is closed with `none — <reason>` or the spec waives with `@no-failure: <reason>`. (`fallibleSources`, `fallibleCalls`, `FallibleCall`, `FallibleSource`, `uncoveredSources`)
+- **FLRAI-B20** — `failure-declared`: each fallible source of a unit — a call of its code that a `dialect.fallible_patterns` entry recognises (comment lines and trailing comments do not count) — is named by a declared failure (`-E`): its row, or its row of the rules' uses, cites the name its pattern's `name` group says (FLRAI-B24) as a whole word; a failure that does not name it ("not found") does not answer it. Unanswered, the gate fails naming each source by file and line, unless the Errors section is closed with `none — <reason>` or the spec waives with `@no-failure: <reason>`. (`fallibleSources`, `fallibleCalls`, `FallibleCall`, `FallibleSource`, `uncoveredSources`)
 
 - **FLRAI-B21** — A file of a layer the project marks `fallible: true` that the unit's code imports — by its `@dep:` flag — is a fallible source too, named by its path and answered by a failure citing the file's stem (`useBudget`) or a name the code imports from it; while a spec still declares the dependency in a table, its `DEPn` names it as well. A dependency on any other layer is not a source. (`FallibleSource`)
 
@@ -1205,7 +1205,9 @@ not match) closes its failure section with `none — <why>`, and that satisfies 
 
 - **FLRAI-B23** — A fallible call whose result is the unit's own — `return`ed, or the body of an arrow (`=>`), with or without `await` — hands its failure to the caller: `failure-handled` does not charge it, and `failure-declared` still asks the unit's spec to name it. (`propagated`)
 
-- **FLRAI-B24** — A fallible call with a type argument — `fetchData<{ n: number }>(`, `parse::<T>(` — is cited by the name it calls, the type argument left out, so the failure that names the function answers it.
+- **FLRAI-B24** — The name a fallible call is cited by is the `name` group of the pattern that recognises it (`\b(?P<name>fetchData)(?:<[^()]*>)?\(`): the pattern knows its language — a type argument, a template call —, and the core reads no syntax of its own. (`calledName`)
+
+- **FLRAI-B25** — A pattern with no `name` group names no function: its call is answered by no failure, and the gate's failure says so, naming the pattern and the group to declare.
 
 - **FLRAI-I01** — `failure-handled` and `failure-logged` never both fail the same spec: with no handling the first charges and the second steps aside, and with handling that records nothing it is the other way round.
 

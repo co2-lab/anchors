@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:53b79aaa42d074e9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:1b02b599858b0198 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3463,7 +3463,7 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B21 — `fallible_patterns` (`FalliblePatterns`, each a `FalliblePattern` with `call`, `handled` and `window` — `DefaultFallibleWindow` lines when it declares none) are the project's; the family's fill them only when the project declares none.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B22 — A family knows what can fail in its stack and what handles it (`FamilyFalliblePatterns`: React Query, SWR, fetch and axios for `ts`; HTTP and SQL for `go`; `requests` for `python`), and does not impose them: a project that declared no `fallible_patterns` is measured with none until it adopts them.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B22 — A family knows what can fail in its stack and what handles it (`FamilyFalliblePatterns`: React Query, SWR, fetch and axios for `ts`, a type argument taken; HTTP and SQL for `go`; `requests` for `python`; each with the `name` group that says the function a failure cites), and does not impose them: a project that declared no `fallible_patterns` is measured with none until it adopts them.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B23 — The dialect declares how an import's path becomes a file (`import_resolve`: `extensions` tried in order and `aliases` of path prefixes — `ImportResolve`) and what a navigation call looks like (`navigation_call`, its destination in the group `route` — `NavigationCall`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -4351,7 +4351,7 @@ abra a página dela em `camadas/`.
 
 - [FLRAI-B19 — A failure rule and its conclusion are read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a 7-character `-E` rule is a declared failure.](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
-- [FLRAI-B20 — `failure-declared`: each fallible source of a unit — a call of its code that a `dialect.fallible_patterns` entry recognises (comment lines and trailing comments do not count) — is named by a declared failure (`-E`): its row, or its row of the rules' uses, cites the name called as a whole word; a failure that does not name it ("not found") does not answer it. Unanswered, the gate fails naming each source by file and line, unless the Errors section is closed with `none — <reason>` or the spec waives with `@no-failure: <reason>`. (`fallibleSources`, `fallibleCalls`, `FallibleCall`, `FallibleSource`, `uncoveredSources`)](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
+- [FLRAI-B20 — `failure-declared`: each fallible source of a unit — a call of its code that a `dialect.fallible_patterns` entry recognises (comment lines and trailing comments do not count) — is named by a declared failure (`-E`): its row, or its row of the rules' uses, cites the name its pattern's `name` group says (FLRAI-B24) as a whole word; a failure that does not name it ("not found") does not answer it. Unanswered, the gate fails naming each source by file and line, unless the Errors section is closed with `none — <reason>` or the spec waives with `@no-failure: <reason>`. (`fallibleSources`, `fallibleCalls`, `FallibleCall`, `FallibleSource`, `uncoveredSources`)](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
 - [FLRAI-B21 — A file of a layer the project marks `fallible: true` that the unit's code imports — by its `@dep:` flag — is a fallible source too, named by its path and answered by a failure citing the file's stem (`useBudget`) or a name the code imports from it; while a spec still declares the dependency in a table, its `DEPn` names it as well. A dependency on any other layer is not a source. (`FallibleSource`)](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
@@ -4359,7 +4359,9 @@ abra a página dela em `camadas/`.
 
 - [FLRAI-B23 — A fallible call whose result is the unit's own — `return`ed, or the body of an arrow (`=>`), with or without `await` — hands its failure to the caller: `failure-handled` does not charge it, and `failure-declared` still asks the unit's spec to name it. (`propagated`)](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
-- [FLRAI-B24 — A fallible call with a type argument — `fetchData<{ n: number }>(`, `parse::<T>(` — is cited by the name it calls, the type argument left out, so the failure that names the function answers it.](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
+- [FLRAI-B24 — The name a fallible call is cited by is the `name` group of the pattern that recognises it (`\b(?P<name>fetchData)(?:<[^()]*>)?\(`): the pattern knows its language — a type argument, a template call —, and the core reads no syntax of its own. (`calledName`)](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
+
+- [FLRAI-B25 — A pattern with no `name` group names no function: its call is answered by no failure, and the gate's failure says so, naming the pattern and the group to declare.](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
 - [FLRAI-I01 — `failure-handled` and `failure-logged` never both fail the same spec: with no handling the first charges and the second steps aside, and with handling that records nothing it is the other way round.](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
