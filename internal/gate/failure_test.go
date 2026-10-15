@@ -423,3 +423,21 @@ func TestFailureHandled_propagatedCallIsTheCallers(t *testing.T) {
 		}
 	}
 }
+
+// Reported from MIF: `apiCall<T>(`, `useQuery<T>(` named no function, and the failure that
+// named it answered nothing.
+func TestFailureDeclared_genericCall(t *testing.T) {
+	t.Run("FLRAI-B24: A generic call is cited by the name it calls", func(t *testing.T) {})
+	code := "export async function load() {\n  try {\n    const r = await fetchData<{ n: number }>('x')\n    return r.n\n  } catch { return 0 }\n}\n"
+	root, n, g, cfg := failureProject(t, "# X\n\n| `CREDT-B01` | loads |\n", code)
+	cfg.Dialect.FalliblePatterns = []config.FalliblePattern{{Call: `\bfetchData(?:<[^()]*>)?\(`, Handled: `\bcatch\b`}}
+	if v, msg := checkFailureDeclared("# X\n\n| `CREDT-E01` | `fetchData` fails | answers 0 |\n", n, root, g, cfg); v == Fail {
+		t.Errorf("the failure naming fetchData answers the generic call: %s", msg)
+	}
+	if v, _ := checkFailureDeclared("# X\n\n| `CREDT-B01` | loads |\n", n, root, g, cfg); v != Fail {
+		t.Error("with no failure declared, the call still fails the gate")
+	}
+	if m := calledNameRE.FindStringSubmatch("parse::<T>("); m == nil || m[1] != "parse" {
+		t.Errorf("a turbofish call names its function: %v", m)
+	}
+}

@@ -2,7 +2,7 @@
 # @anchors
 #   code: FLFTB
 #   ref: FLRAI
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @FLRAI
@@ -174,3 +174,9 @@ Feature: Failure — the failure a spec declares must be handled, recorded, and 
     Given a unit returning a query, an arrow whose body is a query, a function returning an awaited fetch, and a query kept in a variable with no handling
     When failure-handled runs
     Then only the query kept in the variable is charged
+
+  @FLRAI-B24 @unit-level
+  Scenario: A generic call is cited by the name it calls
+    Given a unit whose code calls fetchData<{ n: number }>(…), recognised as fallible with its type argument
+    When its spec declares a failure naming fetchData, and when it declares none
+    Then the declared failure answers the call, and with none the call fails the gate

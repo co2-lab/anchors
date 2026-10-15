@@ -505,8 +505,11 @@ func fallibleSources(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config
 	return out
 }
 
-// calledNameRE is the name a matched call calls: the identifier right before its parenthesis.
-var calledNameRE = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9_]*)\s*\(`)
+// calledNameRE is the name a matched call calls: the identifier right before its parenthesis,
+// past a type argument — `fetchData<{ n: number }>(`, `parse::<T>(`. Without it a generic
+// call named no function, and no failure could answer it (reported from MIF: every
+// `apiCall<T>(` and `useQuery<T>(`).
+var calledNameRE = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9_]*)\s*(?:::)?(?:<[^()]*>)?\s*\(`)
 
 // identRE is a name the code can import.
 var identRE = regexp.MustCompile(`^[A-Za-z_$][\w$]*$`)

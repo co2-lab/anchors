@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLRAI
-  updated_at: 2026-10-08
+  updated_at: 2026-10-15
   layer: gate
 -->
 # Failure — the failure a spec declares must be handled, recorded, and every handling declared
@@ -95,6 +95,7 @@ not match) closes its failure section with `none — <why>`, and that satisfies 
 | `FLRAI-B21` | A file of a layer the project marks `fallible: true` that the unit's code imports — by its `@dep:` flag — is a fallible source too, named by its path and answered by a failure citing the file's stem (`useBudget`) or a name the code imports from it; while a spec still declares the dependency in a table, its `DEPn` names it as well. A dependency on any other layer is not a source. (`FallibleSource`) |
 | `FLRAI-B22` | `failure-handled`: each fallible call of the unit's code has its handling in its window — the call's statement from its first line (a destructuring above it that reads the error; the climb stops at a blank line or at one ending a statement, `;`, `}` or `)`), and the pattern's `window` after it (`DefaultFallibleWindow` when it declares none) —, matched by the pattern's `handled` or, when it declares none, the project's `handle_patterns`; a call with none fails, named by file, line and text, unless its line or the line above waives it with `@no-handle: <reason>`. (`unhandledCalls`) |
 | `FLRAI-B23` | A fallible call whose result is the unit's own — `return`ed, or the body of an arrow (`=>`), with or without `await` — hands its failure to the caller: `failure-handled` does not charge it, and `failure-declared` still asks the unit's spec to name it. (`propagated`) |
+| `FLRAI-B24` | A fallible call with a type argument — `fetchData<{ n: number }>(`, `parse::<T>(` — is cited by the name it calls, the type argument left out, so the failure that names the function answers it. |
 
 ## Invariants
 
