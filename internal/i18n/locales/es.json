@@ -141,6 +141,7 @@
   "check.tag.blocking": "bloqueante",
   "check.tag.judgment": "juicio",
   "check.tag.blocks_mark": "BLOQUEA",
+  "check.gate_guide_hint": "  → `anchors guide gates %s` explica un gate: qué mide, si bloquea aquí y las salidas de un fallo",
   "check.judge_pending_table": "⏳%*d pendiente(s) de IA",
   "check.governance_tip": "Consejo de Gobernanza",
   "check.doctor_learn_more": "(ejecute `anchors doctor` para el diagnóstico completo)",

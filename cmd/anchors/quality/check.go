@@ -1619,6 +1619,10 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 				fmt.Print(indent(r.Detail, "      "))
 			}
 		}
+		// What a gate measures, and the ways out of its failure, are one command away.
+		if len(listed) > 0 {
+			fmt.Println(i18n.T("check.gate_guide_hint", listed[0].Gate))
+		}
 	}
 
 	fmt.Println()

@@ -141,6 +141,7 @@
   "check.tag.blocking": "blocking",
   "check.tag.judgment": "judgment",
   "check.tag.blocks_mark": "BLOCKS",
+  "check.gate_guide_hint": "  → `anchors guide gates %s` explains a gate: what it measures, whether it bars here, and the ways out of a failure",
   "check.judge_pending_table": "⏳%*d AI pending",
   "check.governance_tip": "Governance Tip",
   "check.doctor_learn_more": "(run `anchors doctor` for full diagnostics)",

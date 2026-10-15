@@ -2,7 +2,7 @@
 # @anchors
 #   code: CHFTA
 #   ref: CGPCH
-#   updated_at: 2026-10-12
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @CGPCH
@@ -646,3 +646,9 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a project with its map and a progress file, then the progress file edited by hand
     When the nodes are selected for the progress file, for it with the map, and for it with a governed file outside the map
     Then the first two read as Anchors' own files, not as outside the Structure, the third fails on the governed file, and the hand edit is only a warning
+
+  @CGPCH-B96 @unit-level
+  Scenario: The findings point to the gate's guide
+    Given a check with a blocking failure of g1, and one with no finding
+    When their profiles are printed
+    Then the first ends its findings with the line to anchors guide gates g1, and the second has none

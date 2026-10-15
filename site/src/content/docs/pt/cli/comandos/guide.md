@@ -27,6 +27,7 @@ Subcommands print the guides for the specific rulers:
   anchors guide header   the header block of every file (cross-cutting, mandatory)
   anchors guide navigation  an app's navigation (the screen's In and Out, the flag on each call)
   anchors guide monitor     waiting on a long process: watch 'anchors monitor' and react to each line
+  anchors guide gates [gate]  the gates: what each one measures, whether it bars here, the ways out
   anchors guide work     how to work a card (the order, and a finding that is not its own)
   anchors guide review   how to review a PR (what is yours and what check already measured)
   anchors guide changelog  the technical changelog, and the product one an agent makes from it
@@ -100,6 +101,31 @@ its results) and FLOWS (the assembly that says where each result goes).
 ```bash
 anchors guide flow
 ```
+
+### `anchors guide gates`
+
+the gates: what each one measures, whether it bars here, and the ways out of a failure.
+
+```text
+With no gate, lists the gates this project declares in anchors.yaml — what each one
+measures, and whether it bars a commit or only informs. With --all, every gate of the catalog.
+
+With a gate's name, explains it: what it measures, what it confronts, whether it bars here,
+the question an AI answers for a judgment gate, and the ways out of a failure.
+```
+
+#### Uso
+
+```bash
+anchors guide gates [gate] [flags]
+```
+
+#### Flags
+
+| Flag | Padrão | O que faz |
+| --- | --- | --- |
+| `--all` |  | list every gate of the catalog, declared or not |
+| `--root` | `.` | project root |
 
 ### `anchors guide guidance`
 

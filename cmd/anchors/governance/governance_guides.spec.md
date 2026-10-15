@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GVGDG
-  updated_at: 2026-10-13
+  updated_at: 2026-10-15
   layer: comando
 -->
 # GovernanceGuides — the guides an agent reads to operate Anchors, and the contracts other code relies on
@@ -33,7 +33,7 @@ The review and work guides are also the two that tell an agent what to do with w
 | Effect | Description |
 | --- | --- |
 | `GVGDG-B01` | `anchors guide` with no subcommand prints the operating playbook. |
-| `GVGDG-B02` | `anchors guide` has exactly fifteen subcommands — changelog, code, feature, flag, flow, guide, header, plan, product, project, report-bug, review, spec, test, work — each with a short description, each printing its own guide. |
+| `GVGDG-B02` | `anchors guide` has its subcommands — changelog, code, feature, flag, flow, gates, guidance, guide, header, monitor, navigation, plan, product, project, report-bug, review, spec, test, work — each with a short description, each printing its own guide. |
 | `GVGDG-B03` | `guide review` and `guide work` print their guide followed by the autonomy section of the root given by `--root`; a root that is not a project still prints, with the section for no role declared. |
 | `GVGDG-B04` | Registering this package adds exactly `guide`, `audit`, `governs` and `compliance` to the root. |
 | `GVGDG-B05` | The review guide teaches that only the reviewer the claim assigned counts, only with a line posted after the assignment, that the last line wins, and that a line inside a code block is an example, not a verdict. |
@@ -56,6 +56,7 @@ The review and work guides are also the two that tell an agent what to do with w
 | `GVGDG-B27` | The review guide asks a rejection to register each item it asks to change as a finding of its own under the card (`anchors escalate … --card`), before the verdict line, because the text of a review is no state the next reviewer follows; and an approval to close the findings the PR answered. |
 | `GVGDG-B28` | `anchors guide guidance` says what each guidance file is for — `CONTRIBUTING.md` holds the agreement, `AGENTS.md` and `CLAUDE.md` send the agent to it and `CLAUDE.md` imports `AGENTS.md`, `README.md` points to it —, the five things the agreement says (the order of the work, the declared layers, `next` and `work`, what bars a commit and never `--no-verify`, watching long work with the monitor), what contradicts it, and the two gates; `anchors guide --help` lists it. |
 | `GVGDG-B29` | The plan guide says that work the plan does not list, found on the way, is recorded in the progress before it is done, marked unplanned, and the plan is not rewritten for it. |
+| `GVGDG-B30` | `anchors guide gates` lists the gates the project declares, each with what it measures and whether it bars or informs, and with `--all` the catalog's others; `anchors guide gates <gate>` explains one — what it measures, whether it bars here or is not declared, what measures it, what it confronts, its question when it is a judgment, the ways out of a failure with the waiver in the gate's name, and its page on the site; a name in neither the project nor the catalog is refused, pointing to `--all`. (`newGuideGatesCmd`) |
 | `GVGDG-B21` | The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state. |
 | `GVGDG-B20` | The test guide strongly recommends a contract test for every API unit, validating the API against the OpenAPI compiled from the specs with the language's own tool, named by `{CODE}-CT`, loading the document instead of copying it, and asserting each error response's status, code and message. |
 | `GVGDG-B19` | The test guide strongly recommends a visual-regression test for every state a visual unit's spec registers, tied both ways — a VR scenario per state, a VR test naming `{CODE}-VR-<state>` and a baseline image per scenario, every scenario of a state and every test of a scenario, a state with no visual value exempted by `@no-vr: <reason>` on its line —, the spec guide points every state of a visual unit to it, and the feature guide asks for one VR scenario per state. |
@@ -74,7 +75,7 @@ The review and work guides are also the two that tell an agent what to do with w
 
 | Rule | Boundary | Why |
 | --- | --- | --- |
-| `GVGDG-X01` | Only `guide review` and `guide work` depend on the project: they alone take `--root`, and every other guide prints its text alone. | The other rulers are the framework's and read the same everywhere; only the autonomy section depends on a local declaration. |
+| `GVGDG-X01` | Only `guide review`, `guide work` and `guide gates` depend on the project: they alone take `--root`, and every other guide prints its text alone. | The other rulers are the framework's and read the same everywhere; only the autonomy section, and which gates the project declares and whether they bar, depend on the project. |
 
 ## Errors
 

@@ -134,6 +134,8 @@ need to remember what comes next; the queue tells you.
   anchors check --changed <file>      incremental, what the change touched
   anchors check --all                 the whole project
   • A BLOCKING gate that failed prevents promotion (exit 1); an informative one only records.
+  • What a gate measures, whether it bars here, and the ways out of its failure:
+      anchors guide gates <gate>      (with no gate: the gates this project declares)
   • REPORT to the user the gates that failed and why. Fix them and run again.
   • NEVER close the task (done) with a blocking gate still red.
 
@@ -254,6 +256,7 @@ while the fix does not come.
   anchors impact <file>             what a change reaches (↓propagates / ↑validates)
   anchors check --changed <file>    runs the gates over the impact path
   anchors check --all               runs the gates over everything
+  anchors guide gates [<gate>]      the gates: what each measures, whether it bars, the ways out
   anchors ingest --junit/--lcov     ingests test signals from the runner (execution/coverage)
   anchors coverage [<spec>]         coverage by scenario (requirement proven?) and by line
   anchors coverage --diff <base> --lcov <c>   is what I CHANGED covered? (patch coverage)
@@ -301,6 +304,7 @@ Subcommands print the guides for the specific rulers:
   anchors guide header   the header block of every file (cross-cutting, mandatory)
   anchors guide navigation  an app's navigation (the screen's In and Out, the flag on each call)
   anchors guide monitor     waiting on a long process: watch 'anchors monitor' and react to each line
+  anchors guide gates [gate]  the gates: what each one measures, whether it bars here, the ways out
   anchors guide work     how to work a card (the order, and a finding that is not its own)
   anchors guide review   how to review a PR (what is yours and what check already measured)
   anchors guide changelog  the technical changelog, and the product one an agent makes from it
@@ -335,6 +339,7 @@ Subcommands print the guides for the specific rulers:
 		newGuideSubCmd("header", "the header block of every file (cross-cutting, mandatory)", headerGuide),
 		newGuideSubCmd("navigation", "an app's navigation: the screen's In and Out, the flag on each call", navigationGuide),
 		newGuideSubCmd("monitor", "waiting on a long process: watch `anchors monitor` and react to each line", monitorGuide),
+		newGuideGatesCmd(),
 		newGuideSubCmd("changelog", "the technical changelog, and the product one an agent makes from it", changelogGuide),
 		newGuideSubCmd("report-bug", "when Anchors itself is wrong: how to tell, report it, and go on", reportBugGuide),
 	)

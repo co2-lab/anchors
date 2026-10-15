@@ -2927,3 +2927,19 @@ func TestSelectNodes_ownFiles(t *testing.T) {
 		t.Errorf("a hand edit is a warning, not a failure: %v\n%s", err, out)
 	}
 }
+
+func TestFindingsPointToTheGateGuide(t *testing.T) {
+	t.Run("CGPCH-B96: The findings point to the gate's guide", func(t *testing.T) {})
+	block := gate.Result{Gate: "g1", Target: "a.go", Verdict: gate.Fail, Blocking: true, Detail: "broken"}
+	out := captureProfile(t, func() {
+		printProfile(gate.Profile{Results: []gate.Result{block}, Failures: []gate.Result{block}}, false, false)
+	})
+	if !strings.Contains(out, "→ `anchors guide gates g1` explains a gate") {
+		t.Errorf("the findings point to the gate's guide:\n%s", out)
+	}
+	pass := gate.Result{Gate: "g", Target: "a.go", Verdict: gate.Pass}
+	out = captureProfile(t, func() { printProfile(gate.Profile{Passed: true, Results: []gate.Result{pass}}, false, false) })
+	if strings.Contains(out, "anchors guide gates") {
+		t.Errorf("no finding, no line:\n%s", out)
+	}
+}

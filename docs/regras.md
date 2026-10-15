@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:09fea1febcc47852 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:6af5ccea4a72dbb8 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1375,7 +1375,7 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-B01 — `anchors guide` with no subcommand prints the operating playbook.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
-- [GVGDG-B02 — `anchors guide` has exactly fifteen subcommands — changelog, code, feature, flag, flow, guide, header, plan, product, project, report-bug, review, spec, test, work — each with a short description, each printing its own guide.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+- [GVGDG-B02 — `anchors guide` has its subcommands — changelog, code, feature, flag, flow, gates, guidance, guide, header, monitor, navigation, plan, product, project, report-bug, review, spec, test, work — each with a short description, each printing its own guide.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B03 — `guide review` and `guide work` print their guide followed by the autonomy section of the root given by `--root`; a root that is not a project still prints, with the section for no role declared.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -1421,6 +1421,8 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-B29 — The plan guide says that work the plan does not list, found on the way, is recorded in the progress before it is done, marked unplanned, and the plan is not rewritten for it.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
+- [GVGDG-B30 — `anchors guide gates` lists the gates the project declares, each with what it measures and whether it bars or informs, and with `--all` the catalog's others; `anchors guide gates <gate>` explains one — what it measures, whether it bars here or is not declared, what measures it, what it confronts, its question when it is a judgment, the ways out of a failure with the waiver in the gate's name, and its page on the site; a name in neither the project nor the catalog is refused, pointing to `--all`. (`newGuideGatesCmd`)](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B20 — The test guide strongly recommends a contract test for every API unit, validating the API against the OpenAPI compiled from the specs with the language's own tool, named by `{CODE}-CT`, loading the document instead of copying it, and asserting each error response's status, code and message.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
@@ -1437,7 +1439,7 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-I03 — Each verdict line the review guide teaches, with a name in place of `<you>`, is read by the pull-request pipeline as that verdict by that name.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
-- [GVGDG-X01 — Only `guide review` and `guide work` depend on the project: they alone take `--root`, and every other guide prints its text alone.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+- [GVGDG-X01 — Only `guide review`, `guide work` and `guide gates` depend on the project: they alone take `--root`, and every other guide prints its text alone.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 ### [GVRNS — Governs — who each guide governs, and how many, read from the map](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map)
 
@@ -2522,6 +2524,8 @@ abra a página dela em `camadas/`.
 - [CGPCH-B94 — `check --fix` carries, in the map, the evidence of each file its repairs changed to the file's new content — the repairs write comments, and prove nothing new —, with the declaration on the node; the line-level signals (coverage, mutation) go only when the repair moved no line. (`keepFixedEvidence`)](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B95 — Anchors' own files — the map and `anchors.progress.md` — in a change are not confronted and not said to be outside the Structure: a change of only them reads as Anchors' own files with nothing to confront (still exit 3, so the hook passes it); the progress file is read, and one edited by hand is a warning that does not fail.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
+- [CGPCH-B96 — After the findings, one line points to `anchors guide gates <gate>`, named after the first finding, for what a gate measures and the ways out of its failure; with no finding there is no such line.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B92 — A gate the project declares counts as declared in the catalog line and the governance tips even when this run leaves it out — `when: [manual]`, `skip_on`, another phase.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 

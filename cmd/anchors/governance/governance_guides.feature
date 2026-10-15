@@ -2,7 +2,7 @@
 # @anchors
 #   code: GGFGV
 #   ref: GVGDG
-#   updated_at: 2026-10-13
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @GVGDG
@@ -119,10 +119,10 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Then it extracts approved and rejected, each by agent-b
 
   @GVGDG-X01 @unit-level
-  Scenario: Only the review and work guides depend on the project
-    Given the thirteen guide subcommands
+  Scenario: Only the review, work and gates guides depend on the project
+    Given the guide subcommands
     When their flags and output are inspected
-    Then only review and work take --root
+    Then only review, work and gates take --root
     And no other guide prints the autonomy section
 
   @GVGDG-B15 @unit-level
@@ -212,3 +212,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Given the plan guide
     When it is printed
     Then it says to record work the plan does not list with --unplanned, without rewriting the plan
+
+  @GVGDG-B30 @unit-level
+  Scenario: The gates guide explains the project's gates
+    Given a project declaring a blocking gate and an informative one
+    When the gates guide lists them, with --all, explains the blocking one, one of the catalog it does not declare, a judgment gate, and a name nowhere
+    Then each is listed with bars or informs, the catalog's others appear with --all, each explanation says what it measures, whether it bars here, the ways out with the waiver in its name and its page, the judgment's question, and the unknown name is refused pointing to --all

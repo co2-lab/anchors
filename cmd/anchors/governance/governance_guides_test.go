@@ -49,6 +49,7 @@ var guideTitles = map[string]string{
 	"test":       "# Test guide",
 	"work":       "# Work guide",
 	"report-bug": "# Report-bug guide",
+	"gates":      "# Gates guide",
 }
 
 // captureOut collects what fn writes to os.Stdout: the guides print with fmt.Print.
@@ -185,14 +186,14 @@ func TestReviewAndWorkAppendTheAutonomySection(t *testing.T) {
 }
 
 func TestOnlyReviewAndWorkDependOnTheProject(t *testing.T) {
-	t.Run("GVGDG-X01: Only the review and work guides depend on the project", func(t *testing.T) {})
+	t.Run("GVGDG-X01: Only the review, work and gates guides depend on the project", func(t *testing.T) {})
 	guide, _, err := governanceRoot().Find([]string{"guide"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, c := range guide.Commands() {
 		hasRoot := c.Flags().Lookup("root") != nil
-		wants := c.Name() == "review" || c.Name() == "work"
+		wants := c.Name() == "review" || c.Name() == "work" || c.Name() == "gates"
 		if hasRoot != wants {
 			t.Errorf("`guide %s` takes --root = %v, want %v", c.Name(), hasRoot, wants)
 		}
@@ -726,5 +727,41 @@ func TestPlanGuide_unplannedWork(t *testing.T) {
 		if !strings.Contains(g, want) {
 			t.Errorf("the plan guide lacks %q", want)
 		}
+	}
+}
+
+func TestGatesGuide(t *testing.T) {
+	t.Run("GVGDG-B30: The gates guide explains the project's gates", func(t *testing.T) {})
+	root := t.TempDir()
+	yaml := "version: 7\nlayers: {}\ngates:\n  - name: unit-complete\n    blocking: true\n  - name: progress-intact\n    blocking: false\n"
+	if err := os.WriteFile(filepath.Join(root, "anchors.yaml"), []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	list := guideOut(t, "gates", "--root", root)
+	if !strings.HasPrefix(list, "# Gates guide") || !regexp.MustCompile(`unit-complete\s+bars`).MatchString(list) ||
+		!regexp.MustCompile(`progress-intact\s+informs`).MatchString(list) || strings.Contains(list, "scenario-coverage") {
+		t.Errorf("the project's gates, bars or informs:\n%s", list)
+	}
+	if all := guideOut(t, "gates", "--root", root, "--all"); !strings.Contains(all, "scenario-coverage") {
+		t.Errorf("--all lists the catalog's others:\n%s", all)
+	}
+	one := guideOut(t, "gates", "unit-complete", "--root", root)
+	for _, want := range []string{"# Gate: unit-complete", "it BARS", "[skip-unit-complete@<CODE>: why]", "anchors check --changed", "https://anchors.co2lab.io/docs/gates/unit-complete"} {
+		if !strings.Contains(one, want) {
+			t.Errorf("the explanation lacks %q:\n%s", want, one)
+		}
+	}
+	if other := guideOut(t, "gates", "scenario-coverage", "--root", root); !strings.Contains(other, "not declared") {
+		t.Errorf("a catalog gate the project does not declare says so:\n%s", other)
+	}
+	if j := guideOut(t, "gates", "rule-fulfilled", "--root", root); !strings.Contains(j, "a judgment") || !strings.Contains(j, "The question:") {
+		t.Errorf("a judgment gate says its question:\n%s", j)
+	}
+	r := governanceRoot()
+	r.SetArgs([]string{"guide", "gates", "nowhere-gate", "--root", root})
+	var err error
+	captureOut(t, func() { err = r.Execute() })
+	if err == nil || !strings.Contains(err.Error(), "--all") {
+		t.Errorf("an unknown gate is refused, pointing to --all: %v", err)
 	}
 }
