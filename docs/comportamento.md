@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:86b8d41634a6c5cd — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:13ec7d6e915ec062 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1491,6 +1491,8 @@ teste prova.
 - [A JUnit case with no file finds its test by its class's folder and the one file defining its test](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B19`
 
 - [A targeted file that gave no mutant is measured with nothing to mutate](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B20`
+
+- [A full run keeps the external proof of the scenarios it does not name](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B21`
 
 - [The legacy spelling of the waiver is a waiver all the way to the stamp](layers/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B01`
 
@@ -7424,7 +7426,7 @@ teste prova.
 
 - [A partial run changes only what it saw](layers/mapa.md#sgina-b07--a-partial-run-changes-only-what-it-saw) `SGINA-B07`
 
-- [External suites are dropped and the union recomputed](layers/mapa.md#sgina-b08--external-suites-are-dropped-and-the-union-recomputed) `SGINA-B08`
+- [The external proof a full run measured again is dropped](layers/mapa.md#sgina-b08--the-external-proof-a-full-run-measured-again-is-dropped) `SGINA-B08`
 
 - [Coverage with no suite records the percentage and the baseline](layers/mapa.md#sgina-b09--coverage-with-no-suite-records-the-percentage-and-the-baseline) `SGINA-B09`
 
@@ -7473,6 +7475,8 @@ teste prova.
 - [A file the coverage report lists, or leaves out, says so](layers/mapa.md#sgina-b29--a-file-the-coverage-report-lists-or-leaves-out-says-so) `SGINA-B29`
 
 - [A suite that ran none of a file's lines leaves its coverage](layers/mapa.md#sgina-b30--a-suite-that-ran-none-of-a-files-lines-leaves-its-coverage) `SGINA-B30`
+
+- [The external coverage goes only from the files the run covered](layers/mapa.md#sgina-b31--the-external-coverage-goes-only-from-the-files-the-run-covered) `SGINA-B31`
 
 - [The suites another measurement holds and this signal does not are adopted, and the ones it has stay](layers/mapa.md#sgina-b24--the-suites-another-measurement-holds-and-this-signal-does-not-are-adopted-and-the-ones-it-has-stay) `SGINA-B24`
 

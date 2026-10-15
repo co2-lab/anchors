@@ -230,7 +230,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				if len(byFile) > 0 && mf == 0 {
 					fmt.Println("  warning: no test file matched — the report names no file the map knows: use a reporter that writes the 'file' attribute, or check that each case's class names its test's folder and that one test file there defines the top-level test")
 				}
-				dropExternal(g, key, partial)
+				dropExternal(g, key, partial, rep.SeenCodes())
 			}
 
 			if lcov != "" {
@@ -262,7 +262,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 						}
 					}
 				}
-				dropExternal(g, key, partial)
+				dropExternal(g, key, partial, nil)
 			}
 
 			if mutation != "" {
@@ -473,15 +473,22 @@ func suiteKey(absRoot, report string) string {
 }
 
 // dropExternal removes, after a FULL run of a suite inside the repository, what reports
-// from outside it left in the map (see mapx.DropExternalSuites). A partial run measured
-// only its cut, so it replaces nothing it did not run; and an external report does not
-// drop its own kind.
-func dropExternal(g *mapx.Graph, key string, partial bool) {
+// from outside it left in the map for what this run measured again: the scenarios it saw
+// (`seen`, a JUnit run) or the files it covered (`seen` nil, an lcov run) — see
+// mapx.DropExternalProof. A partial run measured only its cut, so it replaces nothing it did
+// not run; and an external report does not drop its own kind.
+func dropExternal(g *mapx.Graph, key string, partial bool, seen map[string]bool) {
 	if partial || strings.HasPrefix(key, mapx.ExternalSuitePrefix) {
 		return
 	}
-	if dropped := g.DropExternalSuites(); len(dropped) > 0 {
-		fmt.Printf("  dropped the proof of %d suite(s) ingested from outside the repository: %s — this run replaces that ad-hoc one\n",
+	var dropped []string
+	if seen != nil {
+		dropped = g.DropExternalProof(seen)
+	} else {
+		dropped = g.DropExternalCoverage(key)
+	}
+	if len(dropped) > 0 {
+		fmt.Printf("  dropped, from %d suite(s) ingested from outside the repository, what this run measured again: %s — the rest of their proof stays\n",
 			len(dropped), strings.Join(dropped, ", "))
 	}
 }

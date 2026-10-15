@@ -267,44 +267,65 @@ func TestIngestPartialRunKeepsWhatItDidNotSee(t *testing.T) {
 }
 
 // A report ingested from outside the repository is an ad-hoc run that never runs again. Its proof
-// must not keep the node stale forever: a full run of an in-repo suite drops it, and the in-repo
-// proof stands alone and fresh.
-func TestDropExternalSuites(t *testing.T) {
-	t.Run("SGINA-B08: External suites are dropped and the union recomputed", func(t *testing.T) {})
-	g := &Graph{Nodes: []Node{
-		{ID: "a.spec.md", Kind: KindSpec, Rev: "rev1"},
-		{ID: "a.go", Kind: KindCode, Rev: "c1"},
-	}}
-	decl := map[string][]string{"a.spec.md": {"AAAAA-B01", "AAAAA-B02"}}
+// must not keep the node stale forever: a full run of an in-repo suite drops what it measured
+// again, and the in-repo proof stands alone and fresh. What the run did not see — another layer's
+// scenarios — keeps its external proof.
+func TestDropExternalProof(t *testing.T) {
+	t.Run("SGINA-B08: The external proof a full run measured again is dropped", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec, Rev: "rev1"}}}
+	decl := map[string][]string{"a.spec.md": {"AAAAA-B01", "AAAAA-B02", "AAAAA-V01"}}
 
-	g.IngestExecutionSuite(nil, map[string]bool{"AAAAA-B02": true}, nil, decl, "", ExternalSuitePrefix+"report.xml", "t1")
-	g.IngestCoverageSuite(map[string]FileCov{"a.go": {Covered: 1, Total: 2, Lines: map[int]bool{1: true, 2: false}}}, ExternalSuitePrefix+"lcov.info", "t1")
+	g.IngestExecutionSuite(nil, map[string]bool{"AAAAA-B02": true, "AAAAA-V01": true}, nil, decl, "", ExternalSuitePrefix+"report.xml", "t1")
 	g.Nodes[0].Rev = "rev2"
 	g.IngestExecutionSuite(nil, map[string]bool{"AAAAA-B01": true}, nil, decl, "", ".anchors/junit.xml", "t2")
-	if !g.Nodes[0].SignalStale() {
-		t.Fatal("precondition: the external suite measured rev1 and keeps the node stale")
-	}
 
-	dropped := g.DropExternalSuites()
-	if len(dropped) != 2 || dropped[0] != "external/lcov.info" || dropped[1] != "external/report.xml" {
-		t.Fatalf("both external suites are dropped and named: %v", dropped)
+	dropped := g.DropExternalProof(map[string]bool{"AAAAA-B01": true, "AAAAA-B02": true})
+	if len(dropped) != 1 || dropped[0] != "external/report.xml" {
+		t.Fatalf("the external suite is named: %v", dropped)
 	}
 	spec := g.Nodes[0].Signal
+	if got := spec.ProvenBySuite["external/report.xml"]; len(got) != 1 || got[0] != "AAAAA-V01" {
+		t.Errorf("the scenario the run did not see keeps its external proof: %v", spec.ProvenBySuite)
+	}
+	if spec.ProvenRevBySuite["external/report.xml"] != "rev1" || !g.Nodes[0].SignalStale() {
+		t.Errorf("the kept proof keeps the revision it measured, and the node stays stale: %v", spec.ProvenRevBySuite)
+	}
+	if strings.Join(spec.ProvenCodes, ",") != "AAAAA-B01,AAAAA-V01" {
+		t.Errorf("the union is recomputed: %v", spec.ProvenCodes)
+	}
+
+	if again := g.DropExternalProof(map[string]bool{"AAAAA-V01": true}); len(again) != 1 {
+		t.Fatalf("the rest goes once a run sees it: %v", again)
+	}
 	if g.Nodes[0].SignalStale() {
 		t.Errorf("with the external suite gone, the in-repo suite is fresh (at_rev=%s)", spec.AtRev)
 	}
-	if len(spec.ProvenCodes) != 1 || spec.ProvenCodes[0] != "AAAAA-B01" {
-		t.Errorf("only the in-repo proof remains: %v", spec.ProvenCodes)
+	if _, ok := spec.ProvenBySuite["external/report.xml"]; ok || len(spec.ProvenCodes) != 1 || spec.ProvenCodes[0] != "AAAAA-B01" {
+		t.Errorf("only the in-repo proof remains: %v", spec.ProvenBySuite)
 	}
-	if _, ok := spec.ProvenBySuite[".anchors/junit.xml"]; !ok {
-		t.Errorf("the in-repo suite must stay: %v", spec.ProvenBySuite)
-	}
-	code := g.Nodes[1].Signal
-	if len(code.CoverageBySuite) != 0 || code.TotalLines != 0 || code.LineCoverage != 0 {
-		t.Errorf("the external coverage leaves no number behind: %+v", code)
-	}
-	if again := g.DropExternalSuites(); len(again) != 0 {
+	if again := g.DropExternalProof(map[string]bool{"AAAAA-B01": true}); len(again) != 0 {
 		t.Errorf("nothing left to drop, dropped %v", again)
+	}
+}
+
+// The external coverage goes only from the files the in-repo run covered.
+func TestDropExternalCoverage(t *testing.T) {
+	t.Run("SGINA-B31: The external coverage goes only from the files the run covered", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "a.go", Kind: KindCode, Rev: "c1"}, {ID: "b.go", Kind: KindCode, Rev: "c1"}}}
+	half := FileCov{Covered: 1, Total: 2, Lines: map[int]bool{1: true, 2: false}}
+	g.IngestCoverageSuite(map[string]FileCov{"a.go": half, "b.go": half}, ExternalSuitePrefix+"lcov.info", "t1")
+	g.IngestCoverageSuite(map[string]FileCov{"a.go": {Covered: 2, Total: 2, Lines: map[int]bool{1: true, 2: true}}}, ".anchors/lcov.info", "t2")
+
+	dropped := g.DropExternalCoverage(".anchors/lcov.info")
+	if len(dropped) != 1 || dropped[0] != "external/lcov.info" {
+		t.Fatalf("the external suite is named: %v", dropped)
+	}
+	a, b := g.Nodes[0].Signal, g.Nodes[1].Signal
+	if _, ok := a.CoverageBySuite["external/lcov.info"]; ok || a.LineCoverage != 100 {
+		t.Errorf("the covered file keeps only the repository's coverage: %+v", a)
+	}
+	if _, ok := b.CoverageBySuite["external/lcov.info"]; !ok || b.LineCoverage != 50 {
+		t.Errorf("the file the run did not cover keeps the external coverage: %+v", b)
 	}
 }
 

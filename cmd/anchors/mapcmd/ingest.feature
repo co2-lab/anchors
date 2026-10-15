@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTN
 #   ref: NGSTI
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @NGSTI
@@ -55,7 +55,7 @@ Feature: Ingest — binds the test and log signals the project produced to the n
   Scenario: A full run of a suite inside the repository drops the suites ingested from outside it
     Given a map holding the proof of an execution report ingested from outside the repository
     When a full execution report inside the repository is ingested
-    Then it says the proof of one external suite was dropped and no external suite remains on the spec
+    Then it says what it measured again was dropped from one external suite, and no external suite remains on the spec
 
   @NGSTI-B09 @unit-level
   Scenario: A partial run or another external report drops no external suite
@@ -171,4 +171,10 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     Given a targeted mutation run over src/login.ts whose report, in the format, lists no file
     When the report is ingested
     Then src/login.ts is measured at its revision with no mutant
+
+  @NGSTI-B21 @unit-level
+  Scenario: A full run keeps the external proof of the scenarios it does not name
+    Given a map holding the proof of a visual report ingested from outside the repository
+    When a full unit report inside the repository, naming none of the visual scenarios, is ingested
+    Then the visual scenarios keep their external proof
 

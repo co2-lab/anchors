@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:1b02b599858b0198 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:21e683159b37b467 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1605,7 +1605,7 @@ abra a página dela em `camadas/`.
 
 - [NGSTI-B07 — The suite key is the report's path from the project root; a report outside the repository is keyed by the external prefix and its file name, the same on every machine.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
-- [NGSTI-B08 — A full run of a suite inside the repository drops from the map the suites ingested from outside it, and says so.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+- [NGSTI-B08 — A full run of a suite inside the repository drops, from the suites ingested from outside it, what it measured again — the scenarios its report names, or the files its coverage covers — and says so.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B09 — A partial run, or another report from outside the repository, drops no external suite.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
@@ -1626,6 +1626,8 @@ abra a página dela em `camadas/`.
 - [NGSTI-B18 — A whole-run coverage report a declared test suite names in its `lcov:` marks as omitted every code file the suite covers and the report left out, and says how many; a partial run, or a report no suite declares, marks nothing. (`suiteOfLcov`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B20 — A file a targeted mutation run handed to the tool (`MutationTargets`) that its report does not list is recorded as measured at its revision with no mutant, so `mutation-score` answers "nothing to mutate".](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+
+- [NGSTI-B21 — A scenario a full in-repository run does not name keeps the proof a report from outside the repository gave it — another layer's run, such as a visual suite, is not replaced by it.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B19 — A JUnit case with no `file` finds its test file from its class and name: the class names a test folder of the map by path suffix (segments split by `/`, or by `.` when it has none, dropped from the front until one exists; the root's folder when none does), and the case's file is the one test file there whose dialect `definition` defines the case's top-level test, the name before `/`; no folder, no file, or two files give the case no file. (`caseFileResolver`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
@@ -8199,7 +8201,7 @@ abra a página dela em `camadas/`.
 
 - [SGINA-B07 — A partial run changes only what it saw: a node none of whose declared rules the run named keeps its proof, a rule it named takes this run's result, and a rule it did not name keeps its earlier proof.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
-- [SGINA-B08 — Dropping the external suites removes the proof and coverage recorded by reports from outside the repository, recomputes the node's union, freshness and coverage from what remains, and names each suite dropped, sorted.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
+- [SGINA-B08 — Dropping the external proof a full run measured again removes, from each suite of a report from outside the repository, the scenarios the run saw — the suite's entry goes when none is left, the scenarios the run did not see keep their proof and its revision — recomputes the node's union and freshness from what remains, and names each suite touched, sorted. (`DropExternalProof`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B09 — With no suite named, a code node matched by a report path receives its covered and total lines, its percentage and its revision, and the percentage it replaces is kept as the baseline for the delta.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
@@ -8240,6 +8242,8 @@ abra a página dela em `camadas/`.
 - [SGINA-B29 — A code file a coverage report lists — with lines or with none — records the revision it was listed at; a code file a whole run of its suite left out of the report records the revision it was omitted at, unless a report listed it at that revision. (`IngestCoverageSuite`, `MarkCoverageOmitted`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B30 — A suite that ran none of a file's lines at the current revision leaves the file's line and branch coverage when another suite ran it: its instrumented lines and branches say nothing about which run; with no suite having run the file, the coverage is none of its lines. (`unionCoverage`, `unionBranches`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
+
+- [SGINA-B31 — Dropping the external coverage for a full run removes the coverage of the reports from outside the repository only on the files that run covered, recomputes their coverage from what remains, and names each suite touched; a file the run did not cover keeps it. (`DropExternalCoverage`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B24 — The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. A node whose evidence revisions held carries its evidence, as a rebuild does — the tests reaching it stay fresh. (`RefreshRevs`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 

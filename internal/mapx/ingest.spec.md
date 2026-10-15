@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SGINA
-  updated_at: 2026-10-08
+  updated_at: 2026-10-15
   layer: mapa
 -->
 # SignalIngestion — hanging the runner's results on the map's nodes: executions, proven rules, coverage and mutation
@@ -64,7 +64,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B05` | A suite that no longer proves anything on a node leaves the union and leaves no empty entry behind. |
 | `SGINA-B06` | The union is only as fresh as its oldest contributor: the node reads stale while any contributing suite measured an earlier revision, and an entry with no recorded revision is never fresh. |
 | `SGINA-B07` | A partial run changes only what it saw: a node none of whose declared rules the run named keeps its proof, a rule it named takes this run's result, and a rule it did not name keeps its earlier proof. |
-| `SGINA-B08` | Dropping the external suites removes the proof and coverage recorded by reports from outside the repository, recomputes the node's union, freshness and coverage from what remains, and names each suite dropped, sorted. |
+| `SGINA-B08` | Dropping the external proof a full run measured again removes, from each suite of a report from outside the repository, the scenarios the run saw — the suite's entry goes when none is left, the scenarios the run did not see keep their proof and its revision — recomputes the node's union and freshness from what remains, and names each suite touched, sorted. (`DropExternalProof`) |
 
 ### Coverage
 
@@ -100,6 +100,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B28` | A proven scenario code counts for the node that declares its rule, and is kept with its variant (`CODE-B02#02`): the node records which scenarios of its rules were proven, not only the rules. (`IngestExecutionSuite`) |
 | `SGINA-B29` | A code file a coverage report lists — with lines or with none — records the revision it was listed at; a code file a whole run of its suite left out of the report records the revision it was omitted at, unless a report listed it at that revision. (`IngestCoverageSuite`, `MarkCoverageOmitted`) |
 | `SGINA-B30` | A suite that ran none of a file's lines at the current revision leaves the file's line and branch coverage when another suite ran it: its instrumented lines and branches say nothing about which run; with no suite having run the file, the coverage is none of its lines. (`unionCoverage`, `unionBranches`) |
+| `SGINA-B31` | Dropping the external coverage for a full run removes the coverage of the reports from outside the repository only on the files that run covered, recomputes their coverage from what remains, and names each suite touched; a file the run did not cover keeps it. (`DropExternalCoverage`) |
 | `SGINA-B24` | The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. A node whose evidence revisions held carries its evidence, as a rebuild does — the tests reaching it stay fresh. (`RefreshRevs`) |
 | `SGINA-B23` | A run time Anchors measured itself is recorded on the node under the suite; a node the map does not have is ignored. (`RecordRunSeconds`) |
 | `SGINA-B24` | `AdoptMissingSuites` gives a signal the proofs of each suite another measurement holds and it does not, at that suite's own revision, and recomputes the union and its revision; a suite the signal already has stays as it is. |

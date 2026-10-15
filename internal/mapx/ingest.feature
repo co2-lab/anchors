@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTD
 #   ref: SGINA
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @SGINA
@@ -51,10 +51,10 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Then money keeps both proofs and member keeps only B01, and a later partial run seeing only money's B01 leaves money's B02 proven
 
   @SGINA-B08 @unit-level
-  Scenario: External suites are dropped and the union recomputed
-    Given a spec proven by an external report at rev1 and by the repository suite at rev2, and a code file covered only by an external report
-    When the external suites are dropped
-    Then external/lcov.info and external/report.xml are named, the spec is fresh with only the repository proof, and the code file has no coverage left
+  Scenario: The external proof a full run measured again is dropped
+    Given a spec whose B02 and visual V01 an external report proved at rev1, and the repository suite proving B01 at rev2
+    When the external proof of the scenarios the run saw, B01 and B02, is dropped
+    Then external/report.xml is named, V01 keeps its external proof at rev1, B02 is gone, and once V01 is seen too the spec is fresh with only the repository proof
 
   @SGINA-B09 @unit-level
   Scenario: Coverage with no suite records the percentage and the baseline
@@ -200,6 +200,12 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a file whose unit suite covered all its lines and whose integration suite instrumented other lines and ran none
     When both are ingested
     Then the file's coverage is the unit suite's, and with neither having run it the coverage is none
+
+  @SGINA-B31 @unit-level
+  Scenario: The external coverage goes only from the files the run covered
+    Given two code files covered by an external report, and the repository suite covering only the first
+    When the external coverage for the repository suite is dropped
+    Then external/lcov.info is named, the first file keeps only the repository's coverage, and the second keeps the external one
 
   @SGINA-B24 @unit-level
   Scenario: The suites another measurement holds and this signal does not are adopted, and the ones it has stay

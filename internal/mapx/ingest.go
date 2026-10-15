@@ -182,11 +182,12 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 }
 
 // ExternalSuitePrefix marks the suite of a report ingested from OUTSIDE the repository
-// (`anchors ingest --junit /tmp/report.xml`). See DropExternalSuites.
+// (`anchors ingest --junit /tmp/report.xml`). See DropExternalProof.
 const ExternalSuitePrefix = "external/"
 
-// DropExternalSuites removes the proof and the coverage that reports from outside the
-// repository left in the map, and returns the suites it removed.
+// DropExternalProof removes, from the suites of reports ingested from outside the
+// repository, the proof of the scenarios a full run of an in-repo suite measured again
+// (`seen`), recomputes each node's union and freshness, and returns the suites it touched.
 //
 // Such a report is an ad-hoc run: nothing in the project writes it again, so its suite
 // never runs a second time. Since a partial run keeps the other suites' proof (see
@@ -194,30 +195,44 @@ const ExternalSuitePrefix = "external/"
 // its old rev kept the node STALE forever through `unionRev`, since the suite that
 // could refresh it does not exist. Measured in this repository: `external/report.xml`,
 // left by one manual `go test | go-junit-report > /tmp/report.xml`, sat on 20 nodes
-// after every later `anchors test`. The caller drops them when a FULL run of a suite
-// inside the repository lands: that run is the measurement the ad-hoc one stood in for.
-func (g *Graph) DropExternalSuites() (dropped []string) {
-	seen := map[string]bool{}
+// after every later `anchors test`. The full run is the measurement the ad-hoc one stood
+// in for — but only for what it measured.
+//
+// Only the scenarios the run saw. Dropping every external suite map-wide erased what the
+// run never measures: at MIF, `anchors test unit --all` dropped the visual suite's junit,
+// ingested from outside the repository, and 118 specs read their visual scenarios as
+// "test written and no run ingested". A scenario the run did not see keeps its external
+// proof, with the revision that proof measured.
+func (g *Graph) DropExternalProof(seen map[string]bool) (dropped []string) {
+	touched := map[string]bool{}
 	for i := range g.Nodes {
 		sig := g.Nodes[i].Signal
 		if sig == nil {
 			continue
 		}
-		execChanged := false
-		for s := range sig.ProvenBySuite {
-			if strings.HasPrefix(s, ExternalSuitePrefix) {
+		changed := false
+		for s, codes := range sig.ProvenBySuite {
+			if !strings.HasPrefix(s, ExternalSuitePrefix) {
+				continue
+			}
+			var keep []string
+			for _, c := range codes {
+				if !seen[c] {
+					keep = append(keep, c)
+				}
+			}
+			if len(keep) == len(codes) {
+				continue
+			}
+			touched[s], changed = true, true
+			if len(keep) == 0 {
 				delete(sig.ProvenBySuite, s)
 				delete(sig.ProvenRevBySuite, s)
-				seen[s], execChanged = true, true
+			} else {
+				sig.ProvenBySuite[s] = keep
 			}
 		}
-		for s := range sig.ProvenRevBySuite {
-			if strings.HasPrefix(s, ExternalSuitePrefix) {
-				delete(sig.ProvenRevBySuite, s)
-				seen[s], execChanged = true, true
-			}
-		}
-		if execChanged {
+		if changed {
 			sig.ProvenCodes = unionProven(sig.ProvenBySuite)
 			sig.refreshStale(nil)
 			sig.AtRev = unionRev(sig, g.Nodes[i].Rev)
@@ -225,14 +240,32 @@ func (g *Graph) DropExternalSuites() (dropped []string) {
 				sig.ProvenBySuite, sig.ProvenRevBySuite = nil, nil
 			}
 		}
-		covChanged := false
+	}
+	return sortedKeys(touched)
+}
+
+// DropExternalCoverage removes the coverage that reports from outside the repository left
+// on the code nodes a full run of the in-repo suite `run` covered, recomputes their
+// coverage from what remains, and returns the suites it touched. A file the run did not
+// cover keeps the external coverage — the same reason as DropExternalProof.
+func (g *Graph) DropExternalCoverage(run string) (dropped []string) {
+	touched := map[string]bool{}
+	for i := range g.Nodes {
+		sig := g.Nodes[i].Signal
+		if sig == nil {
+			continue
+		}
+		if _, measured := sig.CoverageBySuite[run]; !measured {
+			continue
+		}
+		changed := false
 		for s := range sig.CoverageBySuite {
 			if strings.HasPrefix(s, ExternalSuitePrefix) {
 				delete(sig.CoverageBySuite, s)
-				seen[s], covChanged = true, true
+				touched[s], changed = true, true
 			}
 		}
-		if covChanged {
+		if changed {
 			c, t := unionCoverage(sig.CoverageBySuite, g.Nodes[i].Rev)
 			sig.CoveredLines, sig.TotalLines, sig.LineCoverage = c, t, 0
 			sig.BranchTotal, sig.BranchMissed = unionBranches(sig.CoverageBySuite, g.Nodes[i].Rev)
@@ -245,11 +278,17 @@ func (g *Graph) DropExternalSuites() (dropped []string) {
 			}
 		}
 	}
-	for s := range seen {
-		dropped = append(dropped, s)
+	return sortedKeys(touched)
+}
+
+// sortedKeys are a set's members, sorted.
+func sortedKeys(set map[string]bool) []string {
+	out := make([]string, 0, len(set))
+	for k := range set {
+		out = append(out, k)
 	}
-	sort.Strings(dropped)
-	return dropped
+	sort.Strings(out)
+	return out
 }
 
 func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now string) (matched int) {

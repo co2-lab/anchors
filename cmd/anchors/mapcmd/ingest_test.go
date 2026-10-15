@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -111,7 +112,7 @@ func TestIngest_fullRunDropsTheExternalSuite(t *testing.T) {
 
 	writeProjectFile(t, root, "reports/junit.xml", junitReport)
 	out := runCmd(t, newIngestCmd(), "--root", root, "--junit", filepath.Join(root, "reports/junit.xml"))
-	if !strings.Contains(out, "dropped the proof of 1 suite(s) ingested from outside the repository") {
+	if !strings.Contains(out, "dropped, from 1 suite(s) ingested from outside the repository, what this run measured again") {
 		t.Errorf("the external suite was not dropped:\n%s", out)
 	}
 	spec := node(t, root, "src/login.spec.md").Signal
@@ -119,6 +120,32 @@ func TestIngest_fullRunDropsTheExternalSuite(t *testing.T) {
 		if strings.HasPrefix(suite, mapx.ExternalSuitePrefix) {
 			t.Errorf("the external suite is still in the map: %v", spec.ProvenBySuite)
 		}
+	}
+}
+
+// A full run of one layer does not replace the proof of another layer ingested from outside
+// the repository: at MIF, `anchors test unit --all` dropped the visual suite's junit, and 118
+// specs read their visual scenarios as never run.
+func TestIngest_fullRunKeepsWhatItDidNotName(t *testing.T) {
+	t.Run("NGSTI-B21: A full run keeps the external proof of the scenarios it does not name", func(t *testing.T) {})
+	root := fixtureProjectWith(t, "", "<!-- @anchors\n  code: LOGIN\n-->\n# Login\n\nLOGIN-B01 — the password is checked.\nLOGIN-V01 — the screen looks right.\n")
+	visual := filepath.Join(t.TempDir(), "vr.xml")
+	if err := os.WriteFile(visual, []byte(`<?xml version="1.0"?>
+<testsuites><testsuite name="vr" file="src/login.test.ts">
+  <testcase name="LOGIN-V01: the screen looks right" file="src/login.test.ts"/>
+</testsuite></testsuites>`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	runCmd(t, newIngestCmd(), "--root", root, "--junit", visual)
+
+	writeProjectFile(t, root, "reports/junit.xml", junitReport)
+	runCmd(t, newIngestCmd(), "--root", root, "--junit", filepath.Join(root, "reports/junit.xml"))
+	spec := node(t, root, "src/login.spec.md").Signal
+	if got := spec.ProvenBySuite[mapx.ExternalSuitePrefix+"vr.xml"]; len(got) != 1 || got[0] != "LOGIN-V01" {
+		t.Errorf("the visual proof must stay, the suites are %v", spec.ProvenBySuite)
+	}
+	if !slices.Contains(spec.ProvenCodes, "LOGIN-V01") || !slices.Contains(spec.ProvenCodes, "LOGIN-B01") {
+		t.Errorf("both layers prove the spec, proven %v", spec.ProvenCodes)
 	}
 }
 
@@ -358,7 +385,7 @@ func TestDropExternal(t *testing.T) {
 		{"another external report", "external/other.xml", false, false},
 	} {
 		g := graph()
-		dropExternal(g, c.key, c.partial)
+		dropExternal(g, c.key, c.partial, map[string]bool{"AAAAA-B01": true})
 		_, kept := g.Nodes[0].Signal.ProvenBySuite["external/report.xml"]
 		if kept == c.drops {
 			t.Errorf("%s: external suite kept=%v, want dropped=%v", c.name, kept, c.drops)
