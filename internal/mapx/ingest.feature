@@ -203,9 +203,9 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
 
   @SGINA-B31 @unit-level
   Scenario: The external coverage goes only from the files the run covered
-    Given two code files covered by an external report, and the repository suite covering only the first
-    When the external coverage for the repository suite is dropped
-    Then external/lcov.info is named, the first file keeps only the repository's coverage, and the second keeps the external one
+    Given two code files covered by an external unit report and the first also by an external integration report, and the repository's integration suite covering only the first
+    When the external coverage for the repository's integration run is dropped
+    Then external/it.lcov is named, the first file keeps the repository's coverage and the external unit one, and the second keeps the external unit one
 
   @SGINA-B24 @unit-level
   Scenario: The suites another measurement holds and this signal does not are adopted, and the ones it has stay

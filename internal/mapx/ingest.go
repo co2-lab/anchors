@@ -244,11 +244,16 @@ func (g *Graph) DropExternalProof(seen map[string]bool) (dropped []string) {
 	return sortedKeys(touched)
 }
 
-// DropExternalCoverage removes the coverage that reports from outside the repository left
-// on the code nodes a full run of the in-repo suite `run` covered, recomputes their
-// coverage from what remains, and returns the suites it touched. A file the run did not
-// cover keeps the external coverage — the same reason as DropExternalProof.
-func (g *Graph) DropExternalCoverage(run string) (dropped []string) {
+// DropExternalCoverage removes the coverage that reports of the same test layer from
+// outside the repository left on the code nodes a full run of the in-repo suite `run`
+// covered, recomputes their coverage from what remains, and returns the suites it touched.
+// A file the run did not cover keeps the external coverage — the same reason as
+// DropExternalProof —, and so does another layer's: an integration run covering a file
+// measured none of the lines its unit tests run. At MIF, `anchors test integration --all`
+// dropped a unit lcov ingested from outside the repository, and pdfText fell from 100% of
+// its branches to 20%.
+func (g *Graph) DropExternalCoverage(run, layer string) (dropped []string) {
+	layer = coverageLayer(layer)
 	touched := map[string]bool{}
 	for i := range g.Nodes {
 		sig := g.Nodes[i].Signal
@@ -259,8 +264,8 @@ func (g *Graph) DropExternalCoverage(run string) (dropped []string) {
 			continue
 		}
 		changed := false
-		for s := range sig.CoverageBySuite {
-			if strings.HasPrefix(s, ExternalSuitePrefix) {
+		for s, c := range sig.CoverageBySuite {
+			if strings.HasPrefix(s, ExternalSuitePrefix) && c.Layer == layer {
 				delete(sig.CoverageBySuite, s)
 				touched[s], changed = true, true
 			}
@@ -291,7 +296,16 @@ func sortedKeys(set map[string]bool) []string {
 	return out
 }
 
-func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now string) (matched int) {
+// coverageLayer is the layer a coverage entry records: empty for `unit`, the default, so a
+// map written before the layer was recorded reads as unit.
+func coverageLayer(layer string) string {
+	if layer == "unit" {
+		return ""
+	}
+	return layer
+}
+
+func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, layer, now string) (matched int) {
 	for i := range g.Nodes {
 		n := &g.Nodes[i]
 		if n.Kind != KindCode {
@@ -323,6 +337,7 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now stri
 				BranchTotal:  len(cov.Branches),
 				BranchMissed: missedBranches(cov.Branches),
 				AtRev:        n.Rev,
+				Layer:        layer,
 			}
 			if cov.Predates {
 				e := n.Signal.CoverageBySuite[suite]
@@ -636,8 +651,13 @@ func (g *Graph) IngestCoverage(byFile map[string]FileCov, now string) (matched i
 // is ingested after it. An empty suite keeps the previous behaviour — the report is the
 // whole measurement.
 func (g *Graph) IngestCoverageSuite(byFile map[string]FileCov, suite, now string) (matched int) {
+	return g.IngestCoverageLayer(byFile, suite, "", now)
+}
+
+// IngestCoverageLayer is IngestCoverageSuite with the test layer whose run measured it.
+func (g *Graph) IngestCoverageLayer(byFile map[string]FileCov, suite, layer, now string) (matched int) {
 	if suite != "" {
-		return g.ingestCoverageBySuite(byFile, suite, now)
+		return g.ingestCoverageBySuite(byFile, suite, coverageLayer(layer), now)
 	}
 	for i := range g.Nodes {
 		n := &g.Nodes[i]

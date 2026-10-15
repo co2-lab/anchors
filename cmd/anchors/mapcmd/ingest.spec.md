@@ -41,7 +41,7 @@ spec declares is reported, never bound to an invented owner.
 | `NGSTI-B05` | An ingestion run by the test commands never complains, even when the project refuses manual ingestion. |
 | `NGSTI-B06` | A project with no test or mutation suite declared, or with no configuration at all, is not asked to use the test commands. |
 | `NGSTI-B07` | The suite key is the report's path from the project root; a report outside the repository is keyed by the external prefix and its file name, the same on every machine. |
-| `NGSTI-B08` | A full run of a suite inside the repository drops, from the suites ingested from outside it, what it measured again — the scenarios its report names, or the files its coverage covers — and says so. |
+| `NGSTI-B08` | A full run of a suite inside the repository drops, from the suites ingested from outside it, what it measured again — the scenarios its report names, or the files its coverage covers in its own test layer — and says so. |
 | `NGSTI-B09` | A partial run, or another report from outside the repository, drops no external suite. |
 | `NGSTI-B10` | When two paths of one report name the same node, the path equal to the node id wins, whatever order the report lists them in. |
 | `NGSTI-B11` | A line coverage entry for a file changed after the report was written is marked as predating the file; a file older than the report, or one not on disk, is not. |

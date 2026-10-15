@@ -230,7 +230,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				if len(byFile) > 0 && mf == 0 {
 					fmt.Println("  warning: no test file matched — the report names no file the map knows: use a reporter that writes the 'file' attribute, or check that each case's class names its test's folder and that one test file there defines the top-level test")
 				}
-				dropExternal(g, key, partial, rep.SeenCodes())
+				dropExternal(g, key, layer, partial, rep.SeenCodes())
 			}
 
 			if lcov != "" {
@@ -250,7 +250,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				if key == "" {
 					key = suiteKey(absRoot, lcov)
 				}
-				m := g.IngestCoverageSuite(byFile, key, now)
+				m := g.IngestCoverageLayer(byFile, key, layer, now)
 				fmt.Printf("coverage: %d file(s) in the lcov, %d code node(s) matched\n", len(rep.Files), m)
 				// A whole run of the suite that declares this report: the files it covers and
 				// the report left out are recorded as omitted — the coverage gates tell that
@@ -262,7 +262,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 						}
 					}
 				}
-				dropExternal(g, key, partial, nil)
+				dropExternal(g, key, layer, partial, nil)
 			}
 
 			if mutation != "" {
@@ -474,10 +474,11 @@ func suiteKey(absRoot, report string) string {
 
 // dropExternal removes, after a FULL run of a suite inside the repository, what reports
 // from outside it left in the map for what this run measured again: the scenarios it saw
-// (`seen`, a JUnit run) or the files it covered (`seen` nil, an lcov run) — see
+// (`seen`, a JUnit run) or the files it covered in its own test layer (`seen` nil, an lcov
+// run) — see
 // mapx.DropExternalProof. A partial run measured only its cut, so it replaces nothing it did
 // not run; and an external report does not drop its own kind.
-func dropExternal(g *mapx.Graph, key string, partial bool, seen map[string]bool) {
+func dropExternal(g *mapx.Graph, key, layer string, partial bool, seen map[string]bool) {
 	if partial || strings.HasPrefix(key, mapx.ExternalSuitePrefix) {
 		return
 	}
@@ -485,7 +486,7 @@ func dropExternal(g *mapx.Graph, key string, partial bool, seen map[string]bool)
 	if seen != nil {
 		dropped = g.DropExternalProof(seen)
 	} else {
-		dropped = g.DropExternalCoverage(key)
+		dropped = g.DropExternalCoverage(key, layer)
 	}
 	if len(dropped) > 0 {
 		fmt.Printf("  dropped, from %d suite(s) ingested from outside the repository, what this run measured again: %s — the rest of their proof stays\n",

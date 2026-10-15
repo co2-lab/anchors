@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:a496c8523e0c116c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:14aeb007fb73d156 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1605,7 +1605,7 @@ abra a página dela em `camadas/`.
 
 - [NGSTI-B07 — The suite key is the report's path from the project root; a report outside the repository is keyed by the external prefix and its file name, the same on every machine.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
-- [NGSTI-B08 — A full run of a suite inside the repository drops, from the suites ingested from outside it, what it measured again — the scenarios its report names, or the files its coverage covers — and says so.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+- [NGSTI-B08 — A full run of a suite inside the repository drops, from the suites ingested from outside it, what it measured again — the scenarios its report names, or the files its coverage covers in its own test layer — and says so.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B09 — A partial run, or another report from outside the repository, drops no external suite.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
@@ -8247,7 +8247,7 @@ abra a página dela em `camadas/`.
 
 - [SGINA-B30 — A suite that ran none of a file's lines at the current revision leaves the file's line and branch coverage when another suite ran it: its instrumented lines and branches say nothing about which run; with no suite having run the file, the coverage is none of its lines. (`unionCoverage`, `unionBranches`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
-- [SGINA-B31 — Dropping the external coverage for a full run removes the coverage of the reports from outside the repository only on the files that run covered, recomputes their coverage from what remains, and names each suite touched; a file the run did not cover keeps it. (`DropExternalCoverage`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
+- [SGINA-B31 — Dropping the external coverage for a full run removes the coverage of the reports from outside the repository only on the files that run covered and only of the run's own test layer — an entry with no layer recorded is `unit`, the default —, recomputes their coverage from what remains, and names each suite touched; a file the run did not cover, and another layer's coverage, keep it. (`DropExternalCoverage`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B24 — The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. A node whose evidence revisions held carries its evidence, as a rebuild does — the tests reaching it stay fresh. (`RefreshRevs`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 

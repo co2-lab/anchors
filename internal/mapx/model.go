@@ -139,6 +139,10 @@ type SuiteCoverage struct {
 	BranchTotal  int    `yaml:"branch_total,omitempty"`
 	BranchMissed string `yaml:"branch_missed,omitempty"`
 	AtRev        string `yaml:"at_rev,omitempty"`
+	// Layer is the test layer whose run measured it (`--layer`); empty is `unit`, the
+	// default. A run of one layer replaces no external coverage of another (see
+	// DropExternalCoverage).
+	Layer string `yaml:"layer,omitempty"`
 }
 
 // Origin — como a aresta entrou no mapa (TRACEABILITY §4).

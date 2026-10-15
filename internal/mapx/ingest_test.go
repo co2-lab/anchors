@@ -312,20 +312,31 @@ func TestDropExternalProof(t *testing.T) {
 func TestDropExternalCoverage(t *testing.T) {
 	t.Run("SGINA-B31: The external coverage goes only from the files the run covered", func(t *testing.T) {})
 	g := &Graph{Nodes: []Node{{ID: "a.go", Kind: KindCode, Rev: "c1"}, {ID: "b.go", Kind: KindCode, Rev: "c1"}}}
-	half := FileCov{Covered: 1, Total: 2, Lines: map[int]bool{1: true, 2: false}}
-	g.IngestCoverageSuite(map[string]FileCov{"a.go": half, "b.go": half}, ExternalSuitePrefix+"lcov.info", "t1")
-	g.IngestCoverageSuite(map[string]FileCov{"a.go": {Covered: 2, Total: 2, Lines: map[int]bool{1: true, 2: true}}}, ".anchors/lcov.info", "t2")
+	line := func(n int) FileCov {
+		return FileCov{Covered: 1, Total: 3, Lines: map[int]bool{1: n == 1, 2: n == 2, 3: n == 3}}
+	}
+	// The unit one was ingested with no layer, as a map written before the layer was recorded.
+	g.IngestCoverageSuite(map[string]FileCov{"a.go": line(1), "b.go": line(1)}, ExternalSuitePrefix+"unit.lcov", "t1")
+	g.IngestCoverageLayer(map[string]FileCov{"a.go": line(2)}, ExternalSuitePrefix+"it.lcov", "integration", "t1")
+	g.IngestCoverageLayer(map[string]FileCov{"a.go": line(3)}, ".anchors/it.lcov", "integration", "t2")
 
-	dropped := g.DropExternalCoverage(".anchors/lcov.info")
-	if len(dropped) != 1 || dropped[0] != "external/lcov.info" {
-		t.Fatalf("the external suite is named: %v", dropped)
+	dropped := g.DropExternalCoverage(".anchors/it.lcov", "integration")
+	if len(dropped) != 1 || dropped[0] != "external/it.lcov" {
+		t.Fatalf("only the external suite of the run's layer is named: %v", dropped)
 	}
 	a, b := g.Nodes[0].Signal, g.Nodes[1].Signal
-	if _, ok := a.CoverageBySuite["external/lcov.info"]; ok || a.LineCoverage != 100 {
-		t.Errorf("the covered file keeps only the repository's coverage: %+v", a)
+	if _, ok := a.CoverageBySuite["external/it.lcov"]; ok || a.CoveredLines != 2 {
+		t.Errorf("the covered file keeps the repository's coverage and the external unit one: %+v", a.CoverageBySuite)
 	}
-	if _, ok := b.CoverageBySuite["external/lcov.info"]; !ok || b.LineCoverage != 50 {
+	if _, ok := b.CoverageBySuite["external/unit.lcov"]; !ok {
 		t.Errorf("the file the run did not cover keeps the external coverage: %+v", b)
+	}
+	if got := g.DropExternalCoverage(".anchors/unit.lcov", "unit"); len(got) != 0 {
+		t.Errorf("a file the unit run did not cover keeps the unit coverage: %v", got)
+	}
+	g.IngestCoverageLayer(map[string]FileCov{"a.go": line(1)}, ".anchors/unit.lcov", "unit", "t3")
+	if got := g.DropExternalCoverage(".anchors/unit.lcov", "unit"); len(got) != 1 || got[0] != "external/unit.lcov" {
+		t.Errorf("a unit run drops the external unit coverage, the entry with no layer read as unit: %v", got)
 	}
 }
 

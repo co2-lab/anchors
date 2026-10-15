@@ -385,7 +385,7 @@ func TestDropExternal(t *testing.T) {
 		{"another external report", "external/other.xml", false, false},
 	} {
 		g := graph()
-		dropExternal(g, c.key, c.partial, map[string]bool{"AAAAA-B01": true})
+		dropExternal(g, c.key, "", c.partial, map[string]bool{"AAAAA-B01": true})
 		_, kept := g.Nodes[0].Signal.ProvenBySuite["external/report.xml"]
 		if kept == c.drops {
 			t.Errorf("%s: external suite kept=%v, want dropped=%v", c.name, kept, c.drops)
