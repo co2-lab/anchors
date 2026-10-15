@@ -329,3 +329,11 @@ func TestDepChain_byName(t *testing.T) {
 		}
 	}
 }
+
+func TestDeclarationLine_unicodeName(t *testing.T) {
+	t.Run("DCGDP-B11: The fixer finds a declaration whose name ends in a letter outside ASCII", func(t *testing.T) {})
+	lines := []string{"export const caféForte = 1", "export const café = 2"}
+	if at, _ := declarationLine(lines, "café"); at != 1 {
+		t.Errorf("café is declared on the second line, got %d", at)
+	}
+}

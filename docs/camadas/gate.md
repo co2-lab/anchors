@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:f384e8c266d6ee9b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:d8f6d641760bc0b7 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 88 unidades e 1401 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 88 unidades e 1402 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -495,6 +495,8 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 - **DCGDP-B09** — An import of types only — the dialect's `type_import_pattern`, or its family's (TypeScript: `import type …`, `export type … from`) — is flagged `@dep[type]: CODE` by the fixer, a plain flag on it is turned into one, and a type flag on a static import that runs is turned back — a type flag on an inline `import('…')`, which reads like a dynamic import, is the author's and stays; `dep-honored` confronts a type flag as it does an import's. (`fixDepFlags`, `familyTypeImportPattern`)
 
 - **DCGDP-B10** — Where the dialect resolves imports by name (`import_resolve.by_name`, the OCaml family's default), every module the code names — after `open`, or qualifying a name anywhere on a line, outside comments — is an import, read once per file and resolved to the code file named after it (`name_case`, `extensions`): the one beside the importer, or the only one in the project; a name of no project file (the standard library, a constructor) or of several files none beside the importer resolves to nothing. The flags are the file's: `dep-declared` asks one `@dep:` per module used, anywhere in the file, `dep-honored` refuses a flag whose code no module used resolves to, and the fixer writes each missing flag on a line of its own below the header, in the file's comment, and removes the flag line of a module no longer used.
+
+- **DCGDP-B11** — The fixer finds the declaration of a symbol whose name ends in a letter outside ASCII (`café`), and does not take a longer name that begins with it (`caféForte`) for it. (`declarationLine`)
 
 
 ## DEPHN — DependencyHonored — a spec declares no dependency: the code does

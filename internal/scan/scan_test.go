@@ -1371,3 +1371,20 @@ func TestChainFlags_ocamlComment(t *testing.T) {
 		t.Error("the flags are no evidence")
 	}
 }
+
+// Reported from MIF: `categoriasDoOrçamento` was read as `categoriasDoOr`, and the used-by
+// flag named a symbol the file does not declare.
+func TestUsedBy_unicodeIdentifiers(t *testing.T) {
+	t.Run("RPSCR-B57: An identifier the chain reads may hold letters of any script", func(t *testing.T) {})
+	src := "// @used-by: ABCDE\nexport function categoriasDoOrçamento() {}\n// @used-by: ABCDE (orçamentoTotal)\nexport { orçamentoTotal, outro } from './x'\n"
+	var got []string
+	for _, u := range UsedByIn([]byte(src)) {
+		got = append(got, u.Symbol)
+	}
+	if strings.Join(got, ",") != "categoriasDoOrçamento,orçamentoTotal" {
+		t.Errorf("the symbols are read whole: %v", got)
+	}
+	if got := ImportSymbols("type T = import('./x').café"); len(got) != 1 || got[0] != "café" {
+		t.Errorf("the inline import brings café: %v", got)
+	}
+}

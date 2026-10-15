@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:d04091fb29e22178 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:7d5fff0fbc13cdf6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3910,6 +3910,8 @@ abra a página dela em `camadas/`.
 - [DCGDP-B09 — An import of types only — the dialect's `type_import_pattern`, or its family's (TypeScript: `import type …`, `export type … from`) — is flagged `@dep[type]: CODE` by the fixer, a plain flag on it is turned into one, and a type flag on a static import that runs is turned back — a type flag on an inline `import('…')`, which reads like a dynamic import, is the author's and stays; `dep-honored` confronts a type flag as it does an import's. (`fixDepFlags`, `familyTypeImportPattern`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B10 — Where the dialect resolves imports by name (`import_resolve.by_name`, the OCaml family's default), every module the code names — after `open`, or qualifying a name anywhere on a line, outside comments — is an import, read once per file and resolved to the code file named after it (`name_case`, `extensions`): the one beside the importer, or the only one in the project; a name of no project file (the standard library, a constructor) or of several files none beside the importer resolves to nothing. The flags are the file's: `dep-declared` asks one `@dep:` per module used, anywhere in the file, `dep-honored` refuses a flag whose code no module used resolves to, and the fixer writes each missing flag on a line of its own below the header, in the file's comment, and removes the flag line of a module no longer used.](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+
+- [DCGDP-B11 — The fixer finds the declaration of a symbol whose name ends in a letter outside ASCII (`café`), and does not take a longer name that begins with it (`caféForte`) for it. (`declarationLine`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 ### [DEPHN — DependencyHonored — a spec declares no dependency: the code does](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
@@ -8690,6 +8692,8 @@ abra a página dela em `camadas/`.
 - [RPSCR-B55 — A doctrine document's rules of the freeze letter are its freeze entries, read with the text after the code as the reason, in any of the three forms a rule is written in; a value is a freeze's code when it is a code of that letter. (`Freezes`, `IsFreezeCode`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B56 — The chain's flags — dependency, waiver, used-by and navigation — may stand in an OCaml block comment closed by `*)` at the line's end, and are read as in any other comment; the evidence leaves them out the same way.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B57 — An identifier the chain reads — the symbol a used-by flag names or the declaration below it declares, the name an import brings — is any run of letters, digits, `_` and `$` in any script, not only ASCII's: `categoriasDoOrçamento` is read whole.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

@@ -1521,7 +1521,11 @@ var (
 	noDepRE     = regexp.MustCompile(`@no-dep:\s*(\S.*?)\s*(?:\*/|\*\)|-->)?\s*$`)
 	// usedByRE: the codes, and the symbol in parentheses when the flag stands above an
 	// export list — `// @used-by: ARNAA (Budget)` — where the next line names several.
-	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([A-Za-z_$][\w$]*)\s*\))?\s*(?:\*/|\*\)|-->)?\s*$`)
+	//
+	// An identifier is any letter, not only ASCII's: `[A-Za-z_$][\w$]*` read
+	// `categoriasDoOrçamento` as `categoriasDoOr` (reported from MIF), and the flag named a
+	// symbol the file does not declare.
+	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([\p{L}_$][\p{L}\p{N}_$]*)\s*\))?\s*(?:\*/|\*\)|-->)?\s*$`)
 	// exportListRE is an export list on one line: `export { X } from '…'`, `export type { A, B }`.
 	exportListRE = regexp.MustCompile(`^\s*export\s+(?:type\s+)?\{([^}]*)\}`)
 	// navigatesRE: the flag at the end of the line, or a block comment inside it — after the
@@ -1531,13 +1535,13 @@ var (
 	// importSymbolsRE reads what an import line brings: the names inside braces, or the
 	// default name right after the keyword.
 	importBracesRE  = regexp.MustCompile(`\{([^}]*)\}`)
-	importDefaultRE = regexp.MustCompile(`^\s*import\s+(?:type\s+)?([A-Za-z_$][\w$]*)\b`)
+	importDefaultRE = regexp.MustCompile(`^\s*import\s+(?:type\s+)?([\p{L}_$][\p{L}\p{N}_$]*)`)
 	// importInlineRE is an import inside an expression or a type — `import('./x').Name`:
 	// it brings the member it reads, or the module's default.
 	importDestructRE = regexp.MustCompile(`\{([^}]*)\}\s*=\s*(?:await\s+)?(?:import|require)\(`)
-	importInlineRE   = regexp.MustCompile(`\b(?:import|require)\(\s*['"][^'"]+['"]\s*\)(?:\.([A-Za-z_$][\w$]*))?`)
+	importInlineRE   = regexp.MustCompile(`\b(?:import|require)\(\s*['"][^'"]+['"]\s*\)(?:\.([\p{L}_$][\p{L}\p{N}_$]*))?`)
 	// declaredNameRE is the name a declaration line declares, in the common shapes.
-	declaredNameRE = regexp.MustCompile(`\b(?:function\*?|const|let|var|class|interface|type|enum|func|def)\s+(?:\([^)]*\)\s*)?([A-Za-z_$][\w$]*)`)
+	declaredNameRE = regexp.MustCompile(`\b(?:function\*?|const|let|var|class|interface|type|enum|func|def)\s+(?:\([^)]*\)\s*)?([\p{L}_$][\p{L}\p{N}_$]*)`)
 )
 
 // splitCodes splits a list of codes written with commas or spaces.

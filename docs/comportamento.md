@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e2a625aeedffb3c5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f20c862777bfc320 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3557,6 +3557,8 @@ teste prova.
 - [An import of types only is flagged as such](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B09`
 
 - [Imports by name are flagged per file](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B10`
+
+- [The fixer finds a declaration whose name ends in a letter outside ASCII](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B11`
 
 - [A spec still carrying a Dependencies table diverges, pointing at the migration](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 
@@ -7899,6 +7901,8 @@ teste prova.
 - [A doctrine's freeze entries are read with their reasons](layers/scan.md#rpscr-b55--a-doctrines-freeze-entries-are-read-with-their-reasons) `RPSCR-B55`
 
 - [The chain's flags are read in an OCaml comment](layers/scan.md#rpscr-b56--the-chains-flags-are-read-in-an-ocaml-comment) `RPSCR-B56`
+
+- [An identifier the chain reads may hold letters of any script](layers/scan.md#rpscr-b57--an-identifier-the-chain-reads-may-hold-letters-of-any-script) `RPSCR-B57`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

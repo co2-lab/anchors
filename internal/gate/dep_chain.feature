@@ -67,3 +67,9 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     When the chain is confronted and fixed
     Then the lexer and the evaluator are its imports, the missing flags are asked and the unused one refused, and the fixer writes one flag line per module below the header and removes the unused one
 
+  @DCGDP-B11 @unit-level
+  Scenario: The fixer finds a declaration whose name ends in a letter outside ASCII
+    Given a file declaring caféForte and then café
+    When the declaration of café is looked up
+    Then it is the second line, not the first
+

@@ -781,7 +781,7 @@ func declarationLine(lines []string, sym string) (int, bool) {
 		}
 		return -1, false
 	}
-	re := regexp.MustCompile(`^(?:export\s+)?(?:default\s+)?(?:async\s+)?(?:function\*?|const|let|var|class|interface|type|enum|func|def)\s+(?:\([^)]*\)\s*)?` + regexp.QuoteMeta(sym) + `\b`)
+	re := regexp.MustCompile(`^(?:export\s+)?(?:default\s+)?(?:async\s+)?(?:function\*?|const|let|var|class|interface|type|enum|func|def)\s+(?:\([^)]*\)\s*)?` + regexp.QuoteMeta(sym) + `(?:[^\p{L}\p{N}_$]|$)`) // `\b` is ASCII's: it fails after `é`
 	// A re-export declares the name too: `export { X } from '…'`, `export type { A, X }`,
 	// or the name on a line of an export list that spans lines.
 	openList := -1

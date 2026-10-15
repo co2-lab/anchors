@@ -2,7 +2,7 @@
 # @anchors
 #   code: SCFTC
 #   ref: RPSCR
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-15
 #   layer: feature
 
 @RPSCR
@@ -378,4 +378,10 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given OCaml lines carrying a dependency, a dependency waiver, a used-by and a navigation flag in (* … *) comments
     When the flags and the evidence are read
     Then each flag has its codes or reason without the closer, and the evidence is the code's alone
+
+  @RPSCR-B57 @unit-level
+  Scenario: An identifier the chain reads may hold letters of any script
+    Given a used-by flag above "export function categoriasDoOrçamento", one naming (orçamentoTotal) above an export list, and "import('./x').café"
+    When the chain's flags and imports are read
+    Then the symbols are categoriasDoOrçamento and orçamentoTotal, and the inline import brings café
 
