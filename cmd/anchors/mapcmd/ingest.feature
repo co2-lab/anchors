@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTN
 #   ref: NGSTI
-#   updated_at: 2026-10-15
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @NGSTI
@@ -177,4 +177,10 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     Given a map holding the proof of a visual report ingested from outside the repository
     When a full unit report inside the repository, naming none of the visual scenarios, is ingested
     Then the visual scenarios keep their external proof
+
+  @NGSTI-B22 @unit-level
+  Scenario: With no layer named, a report a suite declares takes the suite's layer
+    Given an e2e suite declaring reports/e2e.xml, and a report no suite declares
+    When each is ingested with no layer
+    Then the first is recorded under e2e and the second under unit
 

@@ -91,3 +91,9 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     When its imports are read with the python example and the separator
     Then each resolves to its file, the package to its __init__.py, and requests to nothing
 
+  @DCGDP-B15 @unit-level
+  Scenario: The symbol of a listed used-by flag is written inside the comment
+    Given a listed symbol and the line comment, the OCaml block comment and the markup comment
+    When the used-by flag is written
+    Then the symbol stands before each closer, and an unlisted symbol is not named
+

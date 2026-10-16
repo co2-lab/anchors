@@ -633,10 +633,7 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 	for _, sym := range syms {
 		codes := want[sym]
 		at, listed := declarationLine(content, n.ID, d, sym)
-		text := marker + " @used-by: " + strings.Join(codes, ", ") + config.CommentCloseFor(marker)
-		if listed {
-			text += " (" + sym + ")"
-		}
+		text := usedByFlag(marker, codes, sym, listed)
 		if at, ok := flagLine[sym]; ok {
 			indent := lines[at][:len(lines[at])-len(strings.TrimLeft(lines[at], " \t"))]
 			if strings.TrimSpace(lines[at]) != text {
@@ -680,6 +677,17 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 	}
 	sort.Strings(done)
 	return strings.Join(lines, "\n"), true, i18n.T("gate.fix.used_by_written", strings.Join(done, ", "))
+}
+
+// usedByFlag is the used-by flag the fixer writes, in the file's comment: the symbol, when a
+// list declares it, goes inside the comment — after a block comment's closer (`*)`, `-->`)
+// it would be code.
+func usedByFlag(marker string, codes []string, sym string, listed bool) string {
+	text := marker + " @used-by: " + strings.Join(codes, ", ")
+	if listed {
+		text += " (" + sym + ")"
+	}
+	return text + config.CommentCloseFor(marker)
 }
 
 // declarationLine is the 0-based line that declares a symbol, by the dialect's

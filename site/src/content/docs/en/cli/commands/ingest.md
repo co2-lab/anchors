@@ -34,7 +34,7 @@ anchors ingest [flags]
 | Flag | Default | What it does |
 | --- | --- | --- |
 | `--junit` |  | JUnit XML file (execution result) |
-| `--layer` |  | test layer of this suite (unit\|integration\|e2e…); default unit — merges several |
+| `--layer` |  | test layer of this suite (unit\|integration\|e2e…); default the layer of the suite in anchors.yaml whose junit/lcov is this report, or unit |
 | `--lcov` |  | lcov .info file (line coverage) |
 | `--logs` |  | scan the logs declared in `logs.paths` and bind the failure occurrences to the specs that declare them |
 | `--map` |  | path to the map |

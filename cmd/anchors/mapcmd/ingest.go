@@ -90,7 +90,7 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 	cmd.Flags().StringVar(&junit, "junit", "", "JUnit XML file (execution result)")
 	cmd.Flags().StringVar(&lcov, "lcov", "", "lcov .info file (line coverage)")
 	cmd.Flags().StringVar(&mutation, "mutation", "", "mutation JSON report. The FORMAT belongs to the project: declare it in the mutation-score gate of anchors.yaml, key 'format' (default 'mutation-testing-elements' — Stryker/PIT/Infection/mutmut; 'gremlins' for Go)")
-	cmd.Flags().StringVar(&layer, "layer", "", "test layer of this suite (unit|integration|e2e…); default unit — merges several")
+	cmd.Flags().StringVar(&layer, "layer", "", "test layer of this suite (unit|integration|e2e…); default the layer of the suite in anchors.yaml whose junit/lcov is this report, or unit")
 	cmd.Flags().BoolVar(&partial, "partial", false, "the report is a PARTIAL run (only some tests): scenarios it did not run keep their earlier proof. `anchors test --changed` sets it")
 	cmd.Flags().StringVar(&suite, "suite", "", "name of this suite in the map (default: the JUnit path relative to the root). Proofs are kept per suite, so each workspace's report only speaks for itself")
 	cmd.Flags().StringVar(&scope, "scope", "", "scope of the suite that ran the mutants: `isolated` (only the unit's test) or `full` (with the dependents). Ingesting both allows reading the DIFFERENCE — how much the unit depends on third parties to prove itself")
@@ -104,6 +104,9 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite string, partial bool) error {
 	if err := warnIfManualIngest(absRoot); err != nil {
 		return err
+	}
+	if layer == "" {
+		layer = layerOfReports(absRoot, junit, lcov)
 	}
 	{
 		{
@@ -659,6 +662,41 @@ func markPredating(byFile map[string]mapx.FileCov, absRoot, report string) {
 }
 
 // suiteOfLcov is the declared test suite whose `lcov:` is this report.
+// layerOfReports is the layer of the suite that declares one of the reports (`junit:` or
+// `lcov:` in `tests:`) when the ingestion names none: a flow's report ingested by hand is the
+// e2e suite's, not `unit`'s. A report no suite declares gets none here, and is read as `unit`.
+func layerOfReports(absRoot, junit, lcov string) string {
+	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil {
+		return ""
+	}
+	for _, r := range []struct {
+		path string
+		of   func(config.Suite) string
+	}{{junit, func(s config.Suite) string { return s.JUnit }}, {lcov, func(s config.Suite) string { return s.Lcov }}} {
+		if r.path == "" {
+			continue
+		}
+		for _, s := range cfg.Tests {
+			if p := r.of(s); p != "" && sameReport(absRoot, p, r.path) && s.Layer != "" {
+				return s.Layer
+			}
+		}
+	}
+	return ""
+}
+
+// sameReport says whether two paths name the same report, relative to the root or not.
+func sameReport(absRoot, a, b string) bool {
+	abs := func(p string) string {
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(absRoot, p)
+		}
+		return filepath.Clean(p)
+	}
+	return abs(a) == abs(b)
+}
+
 func suiteOfLcov(absRoot, lcov string) (config.Suite, bool) {
 	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
 	if err != nil {

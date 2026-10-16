@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:62edb9286330a60d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:2489781ac85a8c20 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1628,6 +1628,8 @@ abra a página dela em `camadas/`.
 - [NGSTI-B20 — A file a targeted mutation run handed to the tool (`MutationTargets`) that its report does not list is recorded as measured at its revision with no mutant, so `mutation-score` answers "nothing to mutate".](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B21 — A scenario a full in-repository run does not name keeps the proof a report from outside the repository gave it — another layer's run, such as a visual suite, is not replaced by it.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+
+- [NGSTI-B22 — With no layer named, a report a suite of `tests:` declares (its `junit` or `lcov`) is ingested under that suite's layer; a report no suite declares is read as `unit`. (`layerOfReports`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B19 — A JUnit case with no `file` finds its test file from its class and name: the class names a test folder of the map by path suffix (segments split by `/`, or by `.` when it has none, dropped from the front until one exists; the root's folder when none does), and the case's file is the one test file there whose dialect `definition` defines the case's top-level test, the name before `/`; no folder, no file, or two files give the case no file. (`caseFileResolver`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
@@ -3924,6 +3926,8 @@ abra a página dela em `camadas/`.
 - [DCGDP-B13 — A region of `imports` reads a list of imports as one each: with the `go` example, every path of an import block is an import on its own line, flagged there, and a slice of strings outside the block is none.](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B14 — An import path whose directories `import_resolve.separator` divides (Python's `.`) resolves as if divided by `/`: `app.core.money` through an alias, `.helpers` beside the importer, `..core` one directory up, a package by its extensions (`/__init__.py`). (`withSlashes`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+
+- [DCGDP-B15 — The used-by flag the fixer writes names a listed symbol inside the file's comment: in a block-comment language the closer (`*)`, `-->`) follows the symbol, never precedes it. (`usedByFlag`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 ### [DEPHN — DependencyHonored — a spec declares no dependency: the code does](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 

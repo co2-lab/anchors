@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:207820d69e46a129 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:01167914ff60e207 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1493,6 +1493,8 @@ teste prova.
 - [A targeted file that gave no mutant is measured with nothing to mutate](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B20`
 
 - [A full run keeps the external proof of the scenarios it does not name](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B21`
+
+- [With no layer named, a report a suite declares takes the suite's layer](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B22`
 
 - [The legacy spelling of the waiver is a waiver all the way to the stamp](layers/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B01`
 
@@ -3571,6 +3573,8 @@ teste prova.
 - [A Go import block is read import by import](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B13`
 
 - [An import path divided by another separator resolves by it](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B14`
+
+- [The symbol of a listed used-by flag is written inside the comment](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B15`
 
 - [A spec still carrying a Dependencies table diverges, pointing at the migration](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 

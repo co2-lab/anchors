@@ -629,3 +629,21 @@ func TestIngest_aTargetedFileWithNoMutantIsMeasured(t *testing.T) {
 		t.Errorf("the targeted file is measured at its revision with no mutant: %+v", n.Signal)
 	}
 }
+
+// A flow's report ingested by hand, with no --layer, is the e2e suite's: the suite that
+// declares the report says its layer (reported from MIF: Maestro flows read as `unit`).
+func TestIngest_layerOfTheDeclaringSuite(t *testing.T) {
+	t.Run("NGSTI-B22: With no layer named, a report a suite declares takes the suite's layer", func(t *testing.T) {})
+	root := fixtureProjectWith(t, "tests:\n  - layer: e2e\n    run: \"true\"\n    junit: reports/e2e.xml\n", fixtureSpec)
+	writeProjectFile(t, root, "reports/e2e.xml", junitReport)
+	runCmd(t, newIngestCmd(), "--root", root, "--junit", filepath.Join(root, "reports/e2e.xml"))
+	sig := node(t, root, "src/login.test.ts").Signal
+	if sig == nil || len(sig.ByLayer) != 1 || sig.ByLayer["e2e"].Passed == 0 && sig.ByLayer["e2e"].Failed == 0 {
+		t.Errorf("the declared suite's layer, e2e: %+v", sig)
+	}
+	writeProjectFile(t, root, "reports/other.xml", junitReport)
+	runCmd(t, newIngestCmd(), "--root", root, "--junit", filepath.Join(root, "reports/other.xml"))
+	if sig := node(t, root, "src/login.test.ts").Signal; sig == nil || sig.ByLayer["unit"].Passed == 0 && sig.ByLayer["unit"].Failed == 0 {
+		t.Errorf("a report no suite declares is read as unit: %+v", sig)
+	}
+}

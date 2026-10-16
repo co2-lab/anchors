@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NGSTI
-  updated_at: 2026-10-15
+  updated_at: 2026-10-16
   layer: comando
 -->
 # Ingest — binds the test and log signals the project produced to the nodes of the map
@@ -53,6 +53,7 @@ spec declares is reported, never bound to an invented owner.
 | `NGSTI-B18` | A whole-run coverage report a declared test suite names in its `lcov:` marks as omitted every code file the suite covers and the report left out, and says how many; a partial run, or a report no suite declares, marks nothing. (`suiteOfLcov`) |
 | `NGSTI-B20` | A file a targeted mutation run handed to the tool (`MutationTargets`) that its report does not list is recorded as measured at its revision with no mutant, so `mutation-score` answers "nothing to mutate". |
 | `NGSTI-B21` | A scenario a full in-repository run does not name keeps the proof a report from outside the repository gave it — another layer's run, such as a visual suite, is not replaced by it. |
+| `NGSTI-B22` | With no layer named, a report a suite of `tests:` declares (its `junit` or `lcov`) is ingested under that suite's layer; a report no suite declares is read as `unit`. (`layerOfReports`) |
 | `NGSTI-B19` | A JUnit case with no `file` finds its test file from its class and name: the class names a test folder of the map by path suffix (segments split by `/`, or by `.` when it has none, dropped from the front until one exists; the root's folder when none does), and the case's file is the one test file there whose dialect `definition` defines the case's top-level test, the name before `/`; no folder, no file, or two files give the case no file. (`caseFileResolver`) |
 | `NGSTI-B15` | A report's signals are kept under its path relative to the root; a report outside the repository is kept under `external/` and its file name. (`SuiteKey`) |
 

@@ -398,3 +398,19 @@ func TestDepChain_separator(t *testing.T) {
 		t.Errorf("got  %v\nwant %s", got, want)
 	}
 }
+
+func TestUsedByFlag_insideTheComment(t *testing.T) {
+	t.Run("DCGDP-B15: The symbol of a listed used-by flag is written inside the comment", func(t *testing.T) {})
+	for marker, want := range map[string]string{
+		"//":   "// @used-by: AAAAA, BBBBB (Mode)",
+		"(*":   "(* @used-by: AAAAA, BBBBB (Mode) *)",
+		"<!--": "<!-- @used-by: AAAAA, BBBBB (Mode) -->",
+	} {
+		if got := usedByFlag(marker, []string{"AAAAA", "BBBBB"}, "Mode", true); got != want {
+			t.Errorf("%s: got %q, want %q", marker, got, want)
+		}
+	}
+	if got := usedByFlag("(*", []string{"AAAAA"}, "x", false); got != "(* @used-by: AAAAA *)" {
+		t.Errorf("an unlisted symbol is not named: %q", got)
+	}
+}
