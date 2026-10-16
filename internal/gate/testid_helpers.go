@@ -27,7 +27,7 @@ import (
 // A value one pattern captures as a prefix is not also a whole handle by another: a prop
 // that gives a child the head of its handles (`testIDPrefix=":otp-input"`) also matches the
 // pattern of the attribute, and `otp-input` never shows on screen.
-func handlesIn(src string, patterns []string) []string {
+func handlesIn(src, rel string, patterns config.Patterns) []string {
 	type span struct{ from, to int }
 	type found struct {
 		at    span
@@ -36,31 +36,18 @@ func handlesIn(src string, patterns []string) []string {
 	}
 	heads := map[span]bool{}
 	var all []found
-	for _, p := range patterns {
-		re, err := regexp.Compile(p)
-		if err != nil {
-			continue // the config refuses it on load (validate); a pattern that fails here finds nothing
+	for _, m := range patterns.FindAll(src, rel) {
+		if c, ok := m.Groups["prefix"]; ok && strings.TrimSuffix(c.Value, "-") != "" {
+			heads[span{c.Start, c.End}] = true
+			all = append(all, found{span{c.Start, c.End}, strings.TrimSuffix(c.Value, "-") + "-*", false})
 		}
-		ti, pi, si := re.SubexpIndex("testid"), re.SubexpIndex("prefix"), re.SubexpIndex("suffix")
-		for _, m := range re.FindAllStringSubmatchIndex(src, -1) {
-			group := func(i int) (span, string, bool) {
-				if i < 0 || m[2*i] < 0 {
-					return span{}, "", false
-				}
-				return span{m[2*i], m[2*i+1]}, src[m[2*i]:m[2*i+1]], true
+		if c, ok := m.Groups["suffix"]; ok {
+			if seg := strings.TrimRight(c.Value, "-"); seg != "" {
+				all = append(all, found{span{c.Start, c.End}, "*" + seg + "-*", false})
 			}
-			if at, v, ok := group(pi); ok && strings.TrimSuffix(v, "-") != "" {
-				heads[at] = true
-				all = append(all, found{at, strings.TrimSuffix(v, "-") + "-*", false})
-			}
-			if at, v, ok := group(si); ok {
-				if seg := strings.TrimRight(v, "-"); seg != "" {
-					all = append(all, found{at, "*" + seg + "-*", false})
-				}
-			}
-			if at, v, ok := group(ti); ok && v != "" {
-				all = append(all, found{at, v, true})
-			}
+		}
+		if c, ok := m.Groups["testid"]; ok && c.Value != "" {
+			all = append(all, found{span{c.Start, c.End}, c.Value, true})
 		}
 	}
 	// In the order they stand in the source, whichever pattern found them.
@@ -87,7 +74,7 @@ func testHandles(cfg *config.Config) *config.TestHandles {
 
 // exposedPatterns are the patterns of where the code exposes a handle; none when the
 // project declares none, and then the handle gates measure nothing.
-func exposedPatterns(cfg *config.Config) []string {
+func exposedPatterns(cfg *config.Config) config.Patterns {
 	if th := testHandles(cfg); th != nil {
 		return th.Exposed
 	}

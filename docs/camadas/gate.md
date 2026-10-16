@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:d8f6d641760bc0b7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:40ce8798a8cf9fd0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 88 unidades e 1402 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 88 unidades e 1404 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -469,14 +469,15 @@ with flags the agent writes beside the code and Anchors confronts with the code
 - `used-by-declared` — every symbol another file imports carries the used-by flag with exactly
   the codes of who imports it.
 
-Anchors does not parse the language: it reads the import's path with a pattern — the
-dialect's `import_pattern` with the path in the group `path`, or the family's (`ts`, `go`) —
-and resolves it with `import_resolve` (relative paths, the project's aliases, the extensions).
+Anchors does not parse the language: it reads each import statement with the project's
+patterns — the dialect's `imports`, the path in the group `path`, and `import_names` for what
+it brings — and resolves the path with `import_resolve` (relative paths, the project's aliases,
+the extensions). The core knows no syntax of an import (DESIGN-chain-patterns.md).
 An import that resolves to no file of the map — a package of the ecosystem — is no link of
 the chain. A test takes no part: it is tied to its unit by its `ref:`.
 
 
-- **DCGDP-B01** — The import statements of a file are read by the dialect's pattern — a statement whose names span lines is one, its path on its last line, an alias read as the name it aliases — and each path resolved to a file of the map: relative to the importer or through an alias, as written or with each extension; a path naming a directory of code files is a package; anything else is outside the project. With no pattern for the dialect, nothing is read. (`ImportsOf`, `RealImport`)
+- **DCGDP-B01** — The import statements of a file are the matches of the dialect's `imports` that read its files — a match may span lines, its first line the statement's and the line of its `path` the one its flag goes on; what it brings are the captures of `import_names` on its text — and each path is resolved to a file of the map: relative to the importer or through an alias, as written or with each extension of `import_resolve`; a path naming a directory of code files is a package; anything else is outside the project. (`ImportsOf`, `resolveImport`)
 
 - **DCGDP-B02** — `dep-declared` fails naming each import of a governed file with no dependency flag on its statement, by line, path and the code it would carry; an import outside the project, or one with a waiver, is not charged, and a vendored file is skipped. Each failure of the chain points at `anchors guide header`, where the flags are. (`checkDepDeclared`)
 
@@ -486,17 +487,21 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 
 - **DCGDP-B05** — The fixers write the dependency flag on each unflagged import of a single governed file, correct a flag naming another code, write above each imported symbol the used-by flag with exactly who imports it, and remove a used-by flag nobody answers; an import of a package of several files is left for the author. (`fixDepFlags`, `fixUsedBy`)
 
-- **DCGDP-B06** — A re-export declares the names it lists — `export { X } from`, `export type { A, B }`, or a list spanning lines —, and the fixer writes each name's used-by flag above the list, naming its symbol in parentheses; an inline import (`import('…').Name`) brings the member it reads and carries its dependency flag on its line. (`declarationLine`)
+- **DCGDP-B06** — A re-export declares the names it lists — with the `ts` example, `export { X } from`, `export type { A, B }`, or a list spanning lines —, and the fixer writes each name's used-by flag above the list, naming its symbol in parentheses; an inline import (`import('…').Name`) brings the member it reads and carries its dependency flag on its line. (`declarationLine`)
 
-- **DCGDP-B07** — Every artifact that imports takes part in the chain — code, tests, test support, flows —: a test's imports carry the dependency flag like the code's, a flow composing another (`runFlow:`, inline or by `file:`, relative to the flow) imports it, the fixer writes the flag in each artifact's own comment, and — when the used-by gate confronts tests (`on:` holds `test`) — a symbol a test imports lists the test in its used-by flag; with the gate on code alone, the used-by flags list the code that imports the symbol, as before. (`chainUnit`)
+- **DCGDP-B07** — Every artifact that imports takes part in the chain — code, tests, test support, flows —: a test's imports carry the dependency flag like the code's; a flow composing another imports it when a pattern of `imports` narrowed to the flows reads it, its path relative to the flow when the pattern says `relative` (the `ts` example: `runFlow:`, inline or by `file:`); the fixer writes the flag in each artifact's own comment, and — when the used-by gate confronts tests (`on:` holds `test`) — a symbol a test imports lists the test.
 
 - **DCGDP-B08** — A kinded dependency flag (`@dep[<kind>]: <name>`) is no import: `dep-honored` asks only that its kind is one the project declares in `dependency_kinds:`, naming the line, the kind and the name when it is not.
 
-- **DCGDP-B09** — An import of types only — the dialect's `type_import_pattern`, or its family's (TypeScript: `import type …`, `export type … from`) — is flagged `@dep[type]: CODE` by the fixer, a plain flag on it is turned into one, and a type flag on a static import that runs is turned back — a type flag on an inline `import('…')`, which reads like a dynamic import, is the author's and stays; `dep-honored` confronts a type flag as it does an import's. (`fixDepFlags`, `familyTypeImportPattern`)
+- **DCGDP-B09** — An import of types only — the statement the dialect's `type_import_pattern` reads (the `ts` example: `import type …`, `export type … from`) — is flagged `@dep[type]: CODE` by the fixer and a plain flag on it is turned into one; a type flag on a statement whose pattern says it `runs` is turned back, and on any other — an inline `import('…')`, which reads like a dynamic import — it is the author's and stays; `dep-honored` confronts a type flag as an import.
 
-- **DCGDP-B10** — Where the dialect resolves imports by name (`import_resolve.by_name`, the OCaml family's default), every module the code names — after `open`, or qualifying a name anywhere on a line, outside comments — is an import, read once per file and resolved to the code file named after it (`name_case`, `extensions`): the one beside the importer, or the only one in the project; a name of no project file (the standard library, a constructor) or of several files none beside the importer resolves to nothing. The flags are the file's: `dep-declared` asks one `@dep:` per module used, anywhere in the file, `dep-honored` refuses a flag whose code no module used resolves to, and the fixer writes each missing flag on a line of its own below the header, in the file's comment, and removes the flag line of a module no longer used.
+- **DCGDP-B10** — Where the dialect resolves imports by name (`import_resolve.by_name`, the `ocaml` example), every module the `imports` patterns read on a line outside its comments is an import, read once per file and resolved to the code file named after it (`name_case`, `extensions`): the one beside the importer, or the only one in the project; a name of several files, none beside the importer, resolves to none. The fixer writes the file's flags one per line below its header, and removes a flag of a module it no longer uses.
 
 - **DCGDP-B11** — The fixer finds the declaration of a symbol whose name ends in a letter outside ASCII (`café`), and does not take a longer name that begins with it (`caféForte`) for it. (`declarationLine`)
+
+- **DCGDP-B12** — Without `dialect.imports` the chain gates are Pending, naming the field — no family reads a project's imports by itself —; and an import commented out, on its own line or after code, is no import. (`hasImports`, `blankComments`)
+
+- **DCGDP-B13** — A region of `imports` reads a list of imports as one each: with the `go` example, every path of an import block is an import on its own line, flagged there, and a slice of strings outside the block is none.
 
 
 ## DEPHN — DependencyHonored — a spec declares no dependency: the code does
@@ -4238,7 +4243,7 @@ a definition looks like), or — for the `ref:` — when a call the project decl
 
 - **TSRCH-B01** — `test-exercises-unit`: a test that names, as a whole word, something its unit defines passes; one that neither imports the unit nor names anything it defines fails naming the unit. Every unit the derivation pairs with the test is confronted.
 
-- **TSRCH-B02** — An import line of the test — by the dialect's `import_pattern` when declared, or the forms most languages share — that names the unit's file name without extension, or its directory as a path, reaches the unit; the name elsewhere in the test, or a unit at the root with no directory, does not count as an import. (`importsModule`)
+- **TSRCH-B02** — An import line of the test — a statement of the dialect's `imports`, or a line of the forms most languages share — that names the unit's file name without extension, or its directory as a path, reaches the unit; the name elsewhere in the test, or a unit at the root with no directory, does not count as an import. (`importsModule`)
 
 - **TSRCH-B03** — A test that defines a name its unit defines fails naming the unit and the names, sorted — even when it reaches the unit otherwise: it is exercising its own copy. A name it copies does not count as reaching.
 

@@ -282,10 +282,41 @@ func TestCheckGovernanceOpportunities_TestHandlesOfTheFamily(t *testing.T) {
 	if err := yaml.Unmarshal([]byte(strings.ReplaceAll(block, "\n    ", "\n")), &back); err != nil || len(back.TestHandles.Exposed) == 0 {
 		t.Errorf("the block reads back: %v %+v", err, back)
 	}
-	if ok, _ := has(withGate(&config.Dialect{Family: "ts", TestHandles: &config.TestHandles{Exposed: []string{`(?P<testid>x)`}}})); ok {
+	if ok, _ := has(withGate(&config.Dialect{Family: "ts", TestHandles: &config.TestHandles{Exposed: config.Patterns{{Re: `(?P<testid>x)`}}}})); ok {
 		t.Error("a project with its own patterns is offered nothing")
 	}
 	if ok, _ := has(&config.Config{Dialect: &config.Dialect{Family: "ts"}}); ok {
 		t.Error("a project with no handle gate is offered nothing")
+	}
+}
+
+func TestCheckGovernanceOpportunities_ChainPatternsOfTheFamily(t *testing.T) {
+	t.Run("GVOPG-B11: A project with a chain gate and no import patterns is offered the family's example", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "Screen.tsx", Kind: mapx.KindCode}}}
+	has := func(cfg *config.Config) (bool, string) {
+		for _, f := range checkGovernanceOpportunities(g, cfg) {
+			if f.Check == "sugestao-chain-patterns" {
+				return true, f.Detail
+			}
+		}
+		return false, ""
+	}
+	withGate := func(d *config.Dialect) *config.Config {
+		return &config.Config{Dialect: d, Gates: []config.Gate{{Name: "used-by-declared"}}}
+	}
+	ok, detail := has(withGate(&config.Dialect{Family: "ts"}))
+	if !ok || !strings.Contains(detail, "used-by-declared") || !strings.Contains(detail, "imports:") {
+		t.Fatalf("the ts project is offered the example, naming the gate: %v %s", ok, detail)
+	}
+	block := detail[strings.Index(detail, "\n    ")+len("\n    "):]
+	var back config.Dialect
+	if err := yaml.Unmarshal([]byte(strings.ReplaceAll(block, "\n    ", "\n")), &back); err != nil || len(back.Imports) == 0 || len(back.Declarations) == 0 || back.ImportResolve == nil {
+		t.Errorf("the block reads back: %v %+v", err, back)
+	}
+	if ok, _ := has(withGate(&config.Dialect{Family: "ts", Imports: config.Patterns{{Re: `(?P<path>x)`}}})); ok {
+		t.Error("a project with its own imports is offered nothing")
+	}
+	if ok, _ := has(&config.Config{Dialect: &config.Dialect{Family: "ts"}}); ok {
+		t.Error("a project with no chain gate is offered nothing")
 	}
 }

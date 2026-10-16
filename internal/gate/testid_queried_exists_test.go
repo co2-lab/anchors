@@ -401,7 +401,7 @@ func TestQueriedHandles(t *testing.T) {
 		"- tapOn:\n    id: 'abc'\n" + // below the floor
 		"- tapOn:\n    id: '.*-row-x'\n" + // a pattern with no static head
 		"- tapOn:\n    id: 'abcd-list-.*'\n"
-	got := queriedHandles(flow, config.FamilyTestHandles("ts", "testID").Queried)
+	got := queriedHandles(flow, "flows/f.yaml", config.FamilyTestHandles("ts", "testID").Queried)
 	want := []string{"abcd-one", "abcd-two", "ab-c", "abcd-list"}
 	if strings.Join(got, ",") != strings.Join(want, ",") {
 		t.Errorf("got %v, want %v", got, want)
@@ -411,7 +411,7 @@ func TestQueriedHandles(t *testing.T) {
 func TestExposedHandleRecognisers_collectEveryOccurrence(t *testing.T) {
 	src := "const m = { A: ':abcd-one', B: ':abcd-two' }\n" +
 		"testID={`${testID}-row-${i}`} other={`${id}-cell-${j}`}\n"
-	if got := handlesIn(src, config.FamilyTestHandles("ts", "testID").Mentioned); strings.Join(got, ",") != ":abcd-one,:abcd-two,*-row-*,*-cell-*" {
+	if got := handlesIn(src, "x.tsx", config.FamilyTestHandles("ts", "testID").Mentioned); strings.Join(got, ",") != ":abcd-one,:abcd-two,*-row-*,*-cell-*" {
 		t.Errorf("the mentioned patterns find every occurrence = %v", got)
 	}
 }

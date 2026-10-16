@@ -2248,7 +2248,7 @@ func (c *Config) validarPadroes() error {
 			"exported_func": d.ExportedFunc, "param_name": d.ParamName, "loop": d.Loop,
 			"collection_query": d.CollectionQuery, "cursor": d.Cursor, "set_promise": d.SetPromise,
 			"set_slice": d.SetSlice, "http_status": d.HTTPStatus, "http_status_dynamic": d.HTTPStatusDynamic,
-			"import_pattern": d.ImportPattern, "definition": d.Definition,
+			"definition": d.Definition, "type_import_pattern": d.TypeImportPattern,
 		} {
 			if err := check("dialect."+field, p); err != nil {
 				return err
@@ -2262,6 +2262,19 @@ func (c *Config) validarPadroes() error {
 				return err
 			}
 			if err := check("dialect.tests.assertion", t.Assertion); err != nil {
+				return err
+			}
+		}
+		for _, l := range []struct {
+			field    string
+			patterns Patterns
+			groups   []string
+		}{
+			{"dialect.imports", d.Imports, []string{"path"}},
+			{"dialect.import_names", d.ImportNames, []string{"name", "default"}},
+			{"dialect.declarations", d.Declarations, []string{"name", "default"}},
+		} {
+			if err := l.patterns.Validate(l.field, l.groups); err != nil {
 				return err
 			}
 		}

@@ -69,7 +69,7 @@ func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph
 			continue
 		}
 		if b, err := readFile(root, e.To); err == nil {
-			expostos = append(expostos, handlesIn(string(b), exposed)...)
+			expostos = append(expostos, handlesIn(string(b), e.To, exposed)...)
 			arquivo = filepath.Base(e.To)
 		}
 	}

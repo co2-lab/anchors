@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -60,7 +61,8 @@ func chainProject(t *testing.T) (string, *mapx.Graph, *config.Config) {
 		{ID: "src/hooks/useToast.ts", Kind: mapx.KindCode, FileCode: "USTST"},
 		{ID: "src/ui/types.ts", Kind: mapx.KindCode, FileCode: "TYPSU"},
 	}}
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts", ImportResolve: &config.ImportResolve{Aliases: map[string]string{"@/": "src/"}}}}
+	cfg := &config.Config{Dialect: withChain("ts")}
+	cfg.Dialect.ImportResolve.Aliases = map[string]string{"@/": "src/"}
 	importersMu.Lock()
 	delete(importersCache, root)
 	importersMu.Unlock()
@@ -301,7 +303,7 @@ func TestDepChain_byName(t *testing.T) {
 		{ID: "src/front/lexer.ml", Kind: mapx.KindCode, FileCode: "LEXRF"},
 		{ID: "src/ghost/ghost.ml", Kind: mapx.KindCode, FileCode: "GHOST"},
 	}}
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "ocaml"}}
+	cfg := &config.Config{Dialect: withChain("ocaml")}
 	var targets []string
 	for _, imp := range ImportsOf(parse, "src/core/parse.ml", cfg.DialectFor(), g) {
 		if imp.Target != "" {
@@ -332,8 +334,46 @@ func TestDepChain_byName(t *testing.T) {
 
 func TestDeclarationLine_unicodeName(t *testing.T) {
 	t.Run("DCGDP-B11: The fixer finds a declaration whose name ends in a letter outside ASCII", func(t *testing.T) {})
-	lines := []string{"export const caféForte = 1", "export const café = 2"}
-	if at, _ := declarationLine(lines, "café"); at != 1 {
+	content := "export const caféForte = 1\nexport const café = 2\n"
+	if at, _ := declarationLine(content, "x.ts", *withChain("ts"), "café"); at != 1 {
 		t.Errorf("café is declared on the second line, got %d", at)
+	}
+}
+
+// withChain is a dialect of the family holding the family's example of the chain patterns —
+// what a project of that family declares.
+func withChain(family string) *config.Dialect {
+	d := config.FamilyChain(family)
+	d.Family = family
+	if d.ImportResolve == nil {
+		d.ImportResolve = &config.ImportResolve{}
+	}
+	return d
+}
+
+func TestDepChain_noPatternsAndComments(t *testing.T) {
+	t.Run("DCGDP-B12: Without import patterns the chain is pending, and a commented import is none", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	content := "import { PALETTE } from '../theme/tokens'\n// import useToast from '../hooks/useToast'\nconst x = 1 // import { Goal } from './types'\n"
+	imps := ImportsOf(content, "src/ui/Arena.tsx", *cfg.Dialect, g)
+	if len(imps) != 1 || imps[0].Path != "../theme/tokens" {
+		t.Errorf("the commented imports are none: %+v", imps)
+	}
+	n := mapx.Node{ID: "src/ui/Arena.tsx", Kind: mapx.KindCode, FileCode: "ARSCR"}
+	bare := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	if v, msg := checkDepDeclared(content, n, root, g, bare); v != Pending || !strings.Contains(msg, "dialect.imports") {
+		t.Errorf("no imports declared: pending, naming the field — %v %s", v, msg)
+	}
+}
+
+func TestDepChain_goBlocks(t *testing.T) {
+	t.Run("DCGDP-B13: A Go import block is read import by import", func(t *testing.T) {})
+	src := "package x\n\nimport \"example.com/m/a\"\n\nimport (\n\t\"example.com/m/b\"\n\tc \"example.com/m/c\"\n)\n\nvar s = []string{\n\t\"example.com/m/d\",\n}\n"
+	var got []string
+	for _, imp := range ImportsOf(src, "x/x.go", *withChain("go"), &mapx.Graph{}) {
+		got = append(got, fmt.Sprintf("%s@%d", imp.Path, imp.Line))
+	}
+	if strings.Join(got, ",") != "example.com/m/a@3,example.com/m/b@6,example.com/m/c@7" {
+		t.Errorf("each import on its line, the slice none: %v", got)
 	}
 }

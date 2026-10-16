@@ -57,9 +57,9 @@ func TestTestReach_importsReachTheModule(t *testing.T) {
 			t.Errorf("%q names the unit outside an import", test)
 		}
 	}
-	declared := &config.Config{Dialect: &config.Dialect{ImportPattern: `^load\s`}}
+	declared := &config.Config{Dialect: &config.Dialect{Imports: config.Patterns{{Re: `(?m)^load\s+"(?P<path>[^"]+)"`}}}}
 	if !importsModule("load \"pay\"\n", "src/pay.ts", declared) || importsModule("load \"pay\"\n", "src/pay.ts", nil) {
-		t.Error("the dialect's import_pattern names what an import line is")
+		t.Error("the dialect's imports name what an import statement is")
 	}
 	if importsModule("import x from 'lib'\n", "pay.ts", nil) {
 		t.Error("a unit at the root has no directory to import")

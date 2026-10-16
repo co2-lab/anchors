@@ -73,3 +73,15 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     When the declaration of café is looked up
     Then it is the second line, not the first
 
+  @DCGDP-B12 @unit-level
+  Scenario: Without import patterns the chain is pending, and a commented import is none
+    Given a ts file with an import, one commented out on its own line and one after code, in a project with the ts example and in one declaring no imports
+    When dep-declared runs
+    Then the commented imports are not read, and with no imports declared the gate is pending naming dialect.imports
+
+  @DCGDP-B13 @unit-level
+  Scenario: A Go import block is read import by import
+    Given a Go file with a single import, a block of two and a slice of strings, in a project with the go example
+    When its imports are read
+    Then there are three imports, each on its own line, and the slice is none
+

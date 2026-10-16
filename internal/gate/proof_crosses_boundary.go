@@ -294,23 +294,24 @@ func importsUnit(code, alvo string, cfg *config.Config) bool {
 	return false
 }
 
-// importLines are the lines of `code` that import something: the dialect's `import_pattern`
-// when declared, or the forms most languages share (`import`, `require`, `from `, `use `,
+// importLines are the lines of `code` that import something: the statements the dialect's
+// `imports` read, and the forms most languages share (`import`, `require`, `from `, `use `,
 // `using `, `#include`). A name mentioned in a string is not a dependency, so only these
 // lines are read for one.
 func importLines(code string, cfg *config.Config) []string {
-	var reImport *regexp.Regexp
+	var out []string
 	if cfg != nil {
-		d := cfg.DialectFor()
-		if strings.TrimSpace(d.ImportPattern) != "" {
-			reImport = d.Compile(d.ImportPattern)
+		// The statements the dialect's `imports` read, whichever file they apply to: the
+		// caller knows only the code.
+		for _, p := range cfg.DialectFor().Imports {
+			for _, m := range p.FindAll(code) {
+				out = append(out, code[m.Start:m.End])
+			}
 		}
 	}
-	var out []string
 	for _, linha := range strings.Split(code, "\n") {
 		l := strings.TrimSpace(linha)
-		if reImport != nil && reImport.MatchString(l) ||
-			strings.Contains(l, "import") || strings.Contains(l, "require") ||
+		if strings.Contains(l, "import") || strings.Contains(l, "require") ||
 			strings.Contains(l, "from ") || strings.HasPrefix(l, "use ") ||
 			strings.HasPrefix(l, "using ") || strings.HasPrefix(l, "#include") {
 			out = append(out, l)

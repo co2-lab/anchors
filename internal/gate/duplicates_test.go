@@ -166,7 +166,7 @@ func TestDuplicates_flagsCodeAndFeatures(t *testing.T) {
 	n := mapx.Node{ID: "x"}
 	keys := func(occ []Occurrence) string { return strings.Join(keysOf(occ), ",") }
 	usedBy := "// @used-by: AAAAA\n// @used-by: BBBBB\nexport const PALETTE = {}\n\n// @used-by: AAAAA\nexport const OTHER = 1\n"
-	if got := keys(usedByOccurrences(usedBy, n, "", nil, nil)); got != "PALETTE" {
+	if got := keys(usedByOccurrences(usedBy, n, "", nil, &config.Config{Dialect: withChain("ts")})); got != "PALETTE" {
 		t.Errorf("two used-by flags on one symbol: %q", got)
 	}
 	cfg := &config.Config{Derived: &config.Derived{TestHandle: "testID"}}

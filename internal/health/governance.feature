@@ -2,7 +2,7 @@
 # @anchors
 #   code: GVFTA
 #   ref: GVOPG
-#   updated_at: 2026-10-15
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @GVOPG
@@ -80,3 +80,9 @@ Feature: GovernanceOpportunities — the doctor suggests the canonical gates and
     Given a ts project declaring testid-consistent and the attribute data-testid with no patterns, one with its own patterns, and one with no handle gate
     When the governance opportunities are read
     Then only the first is offered the example for data-testid, as YAML that reads back
+
+  @GVOPG-B11 @unit-level
+  Scenario: A project with a chain gate and no import patterns is offered the family's example
+    Given a ts project declaring used-by-declared with no import patterns, one with its own, and one with no chain gate
+    When the governance opportunities are read
+    Then only the first is offered the ts example, naming the gate, as YAML that reads back

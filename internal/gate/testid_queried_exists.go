@@ -85,7 +85,7 @@ func checkQueriedTestIDExists(_ string, _ mapx.Node, root string, g *mapx.Graph,
 			fluxoIlegivel = append(fluxoIlegivel, rel)
 			continue
 		}
-		for _, id := range queriedHandles(string(b), th.Queried) {
+		for _, id := range queriedHandles(string(b), rel, th.Queried) {
 			if vistos[id+"|"+rel] {
 				continue
 			}
@@ -181,9 +181,9 @@ func e2eSurfaceFiles(root string, cfg *config.Config) []e2eFile {
 // a `testid` group is the handle, a `prefix` group the head of a query by pattern
 // (`id: ':revi-.*'`), confronted as a head. A query the patterns do not capture — one the
 // runner composes at run time — is not confronted: the gate cannot know its final value.
-func queriedHandles(src string, patterns []string) []string {
+func queriedHandles(src, rel string, patterns config.Patterns) []string {
 	var out []string
-	for _, h := range handlesIn(src, patterns) {
+	for _, h := range handlesIn(src, rel, patterns) {
 		id := strings.TrimPrefix(h, ":")
 		if strings.HasSuffix(id, "-*") {
 			id = strings.TrimSuffix(id, "*")
@@ -214,7 +214,7 @@ func queriedHandles(src string, patterns []string) []string {
 // table of handles, a suffix composed in a child. In a gate that ACCUSES absence, being
 // loose (letting an orphan pass) costs far less than being strict (accusing who complies).
 func projectExposedHandles(root string, g *mapx.Graph, th *config.TestHandles) (out, unreadable []string) {
-	patterns := append(append([]string(nil), th.Exposed...), th.Mentioned...)
+	patterns := append(append(config.Patterns(nil), th.Exposed...), th.Mentioned...)
 	for _, n := range g.Nodes {
 		if n.Kind != mapx.KindCode {
 			continue
@@ -224,7 +224,7 @@ func projectExposedHandles(root string, g *mapx.Graph, th *config.TestHandles) (
 			unreadable = append(unreadable, n.ID)
 			continue
 		}
-		out = append(out, handlesIn(string(b), patterns)...)
+		out = append(out, handlesIn(string(b), n.ID, patterns)...)
 	}
 	return out, unreadable
 }

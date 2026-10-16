@@ -302,7 +302,7 @@ func TestExposedTestIDs_collectsEveryOccurrence(t *testing.T) {
 	t.Run("TICTS-B13: Only the branches of a conditional handle are handles, never its condition", func(t *testing.T) {})
 	src := "<View testID={`row-${id}`} /><Text testID={`cell-${i}`} />\n" +
 		"<Icon testID={on ? 'icon-on' : 'icon-off'} />\n"
-	got := handlesIn(src, config.FamilyTestHandles("ts", "testID").Exposed)
+	got := handlesIn(src, "x.tsx", config.FamilyTestHandles("ts", "testID").Exposed)
 	want := []string{"row-*", "cell-*", "icon-on", "icon-off"}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("every template and both ternary branches:\n got %v\nwant %v", got, want)
@@ -759,18 +759,18 @@ func TestTestIDContract_reportShowsTheFeatureEnd(t *testing.T) {
 // project says how its handles are written, its helpers included.
 func TestHandlesIn_groups(t *testing.T) {
 	t.Run("TICTS-B25: A pattern says what it captures, and a project helper is read like any other", func(t *testing.T) {})
-	patterns := []string{
-		`testID=["'](?P<testid>:?[a-z][a-z0-9-]*)["']`,
-		`testIDPrefix=["'](?P<prefix>:?[a-z][a-z0-9-]*)["']`,
-		`[a-zA-Z]+=["'](?P<testid>:?[a-z][a-z0-9-]*)["']`, // also matches the Prefix prop's value
-		`getOptionTestID\(\s*["'](?P<prefix>:?[a-z][a-z0-9-]*)["']`,
-		"`\\$\\{\\w+\\}(?P<suffix>-[a-z]+)",
+	patterns := config.Patterns{
+		{Re: `testID=["'](?P<testid>:?[a-z][a-z0-9-]*)["']`},
+		{Re: `testIDPrefix=["'](?P<prefix>:?[a-z][a-z0-9-]*)["']`},
+		{Re: `[a-zA-Z]+=["'](?P<testid>:?[a-z][a-z0-9-]*)["']`}, // also matches the Prefix prop's value
+		{Re: `getOptionTestID\(\s*["'](?P<prefix>:?[a-z][a-z0-9-]*)["']`},
+		{Re: "`\\$\\{\\w+\\}(?P<suffix>-[a-z]+)"},
 	}
 	src := `<A testID=":abcd-root" />
 <B testIDPrefix=":abcd-otp" />
 <C testID={getOptionTestID(':abcd-period', option)} />
 <D testID={` + "`${testID}-row`" + `} />`
-	got := strings.Join(handlesIn(src, patterns), ",")
+	got := strings.Join(handlesIn(src, "x.tsx", patterns), ",")
 	if want := ":abcd-root,:abcd-otp-*,:abcd-period-*,*-row-*"; got != want {
 		t.Errorf("got %s, want %s", got, want)
 	}

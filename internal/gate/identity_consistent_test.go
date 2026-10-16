@@ -237,7 +237,7 @@ func TestIdentityConsistent_readsTheProjectsPatterns(t *testing.T) {
 	g := &mapx.Graph{Nodes: []mapx.Node{n, {ID: "x.tsx", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "x.spec.md", To: "x.tsx", Type: mapx.EdgeSpecifies}}}
 	cfg := &config.Config{Dialect: &config.Dialect{TestHandles: &config.TestHandles{
-		Exposed: []string{`getOptionTestID\(\s*["'](?P<prefix>:?[a-z][a-z0-9-]*)["']`}}}}
+		Exposed: config.Patterns{{Re: `getOptionTestID\(\s*["'](?P<prefix>:?[a-z][a-z0-9-]*)["']`}}}}}
 	if v, msg := checkIdentityConsistent("", n, root, g, cfg); v != Fail || !strings.Contains(msg, "ZZZZ") {
 		t.Errorf("the helper's orphan acronym is charged: %v %s", v, msg)
 	}

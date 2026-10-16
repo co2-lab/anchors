@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DLCTI
-  updated_at: 2026-10-15
+  updated_at: 2026-10-16
   layer: config
 -->
 # Dialect — the lexicon of the project's language, between an agnostic gate and concrete code
@@ -70,7 +70,10 @@ written in the configuration file).
 | `DLCTI-B25` | The import resolution may declare that imports are module names (`by_name`) and how a name becomes a file name (`name_case`: `lower_first`, `lower`, or as written); both are read from `import_resolve`. (`ImportResolve`) |
 | `DLCTI-B26` | A family's fallible patterns say, in their `propagates` group, when a call hands its failure to the caller: for `ts` a call `return`ed or an arrow's body, with or without `await`; for `go`'s HTTP and `python`'s `requests`, a call `return`ed. A call kept in a variable propagates nothing. |
 | `DLCTI-B27` | `dialect.test_handles` declares the patterns the handle gates read — `exposed`, `mentioned`, `queried`; a pattern that does not compile, or captures with none of its list's groups (`testid`, `prefix`, and `suffix` for `mentioned`), refuses the config, naming it. (`TestHandles`) |
-| `DLCTI-B28` | The `ts` family has an example of the test handle patterns for the attribute a project marks its elements with; another family, or no attribute, has none; and the example is never applied by itself — a project that declared none is measured with none. (`FamilyTestHandles`) |
+| `DLCTI-B28` | The `ts` family has an example of the test handle patterns for the attribute a project marks its elements with — a conditional handle read as a region, every literal of its branches, nested or not, and none of its condition —; another family, or no attribute, has none; and the example is never applied by itself — a project that declared none is measured with none. (`FamilyTestHandles`) |
+| `DLCTI-B29` | A dialect pattern is a regular expression run over the whole content — a match may span lines, and each capture keeps its offset and its line —, or a region (`within`, its `within` group) with what repeats in it (`each`), every capture of one region sharing its start and read as one of a list; `files` narrows it to the files its glob matches, and it is written as text or as a map. A pattern that does not compile, a region missing its half or its `within` group, a capture with none of its list's groups, or a glob that is no glob refuses the config, naming it. (`Pattern`, `Patterns`) |
+| `DLCTI-B30` | `dialect.imports` (a `path` group), `import_names` and `declarations` (a `name` or a `default` group) are the patterns the chain gates read, checked on load like any dialect pattern; a family gives none of them, nor its import resolution, by itself. (`Imports`, `ImportNames`, `Declarations`) |
+| `DLCTI-B31` | The `ts`, `go`, `python` and `ocaml` families have an example of the chain patterns — `ts`: imports with lists across lines, side effects, `require`/`import()` and a flow's `runFlow:`, the names they bring, the declarations at the top level and export lists, type imports, the extensions; `go`: single imports and import blocks, top-level declarations; `python`: `from … import` and `import`; `ocaml`: modules opened or qualifying a name, resolved by name —; another family has none. (`FamilyChain`) |
 | `DLCTI-B19` | The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing. |
 | `DLCTI-B14` | The Go and TS families say how a test is written — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` — and a project that declares its own `tests` keeps it over the family's. |
 | `DLCTI-B15` | The TS family recognises a `catch` as handling a failure with or without its binding: `catch (e) {` and `catch {`. |

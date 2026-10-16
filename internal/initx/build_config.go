@@ -82,6 +82,15 @@ func (p *Proposal) buildConfig() *config.Config {
 		// example: the handle gates read only these patterns, and a new project starts
 		// with them written down, to adapt to its own helpers.
 		c.Dialect.TestHandles = config.FamilyTestHandles(p.Family, p.TestHandle)
+		// How its imports and declarations are written, from the family's example: the chain
+		// gates read only these patterns.
+		if ex := config.FamilyChain(p.Family); ex != nil {
+			c.Dialect.Imports, c.Dialect.ImportNames, c.Dialect.Declarations = ex.Imports, ex.ImportNames, ex.Declarations
+			c.Dialect.TypeImportPattern = ex.TypeImportPattern
+			if c.Dialect.ImportResolve == nil {
+				c.Dialect.ImportResolve = ex.ImportResolve
+			}
+		}
 	}
 
 	// governs fica VAZIO — é a parte semântica, preenchida na P&R (guide↔tag).

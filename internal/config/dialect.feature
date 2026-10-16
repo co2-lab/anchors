@@ -2,7 +2,7 @@
 # @anchors
 #   code: DLFTA
 #   ref: DLCTI
-#   updated_at: 2026-10-15
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @DLCTI
@@ -193,7 +193,25 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
 
   @DLCTI-B28 @unit-level
   Scenario: The ts family has an example of the test handle patterns, never applied by itself
-    Given the ts family with the attribute data-testid, the go family, the ts family with no attribute, and a ts project that declared none
+    Given the ts family with the attribute data-testid, the go family, the ts family with no attribute, a ts project that declared none, and a nested conditional handle whose branch is a template
     When the examples and the project's dialect are read
-    Then the ts example reads data-testid, the others give none, and the project has no patterns
+    Then the ts example reads data-testid and every branch of the conditional, none of its condition, the others give none, and the project has no patterns
+
+  @DLCTI-B29 @unit-level
+  Scenario: A dialect pattern runs over the whole content, as an expression or a region
+    Given a pattern spanning lines, a region of three names, a pattern narrowed to Go files, and patterns written as text and as a map
+    When they are matched and loaded, and five broken patterns are loaded
+    Then each capture keeps its line, the region's names share its start and read as listed, the Go pattern skips a TS file, and each broken pattern refuses the config naming it
+
+  @DLCTI-B30 @unit-level
+  Scenario: The chain patterns are the dialect's, and a family gives none by itself
+    Given a dialect declaring imports, import names and declarations, one whose import pattern has no path group, and a ts project that declared none
+    When the configs are loaded and the dialect read
+    Then the first is read, the second refuses naming the field, and the ts project has no import patterns nor import resolution
+
+  @DLCTI-B31 @unit-level
+  Scenario: The families have an example of the chain patterns
+    Given the ts, go, python and ocaml examples and an unknown family
+    When each reads a source of its language
+    Then ts reads a list across lines, a side effect, a destructured dynamic import and a flow, go reads an import and a block, python reads from-imports, ocaml reads opened modules, and the unknown family has none
 

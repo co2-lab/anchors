@@ -89,7 +89,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		if err != nil {
 			continue
 		}
-		for _, sigla := range testIDAcronyms(string(b), exposed) {
+		for _, sigla := range testIDAcronyms(string(b), e.To, exposed) {
 			if strings.EqualFold(sigla, code) || conhecidos[strings.ToUpper(sigla)] || isAlias(sigla) {
 				continue
 			}
@@ -143,10 +143,10 @@ var testIDAcronymRE = regexp.MustCompile(`^:?([A-Za-z]{4,5})-`)
 // padrões `exposed` do projeto acham — inteiros ou cabeças de template. A forma é o
 // primeiro filtro; quem decide se a sigla é órfã é o chamador, confrontando-a com os
 // códigos do mapa.
-func testIDAcronyms(src string, exposed []string) []string {
+func testIDAcronyms(src, rel string, exposed config.Patterns) []string {
 	visto := map[string]bool{}
 	var out []string
-	for _, id := range handlesIn(src, exposed) {
+	for _, id := range handlesIn(src, rel, exposed) {
 		m := testIDAcronymRE.FindStringSubmatch(id)
 		if m == nil {
 			continue

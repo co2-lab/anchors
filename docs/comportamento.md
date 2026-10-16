@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f20c862777bfc320 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:04d0966229bc8d2a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3196,6 +3196,12 @@ teste prova.
 
 - [The ts family has an example of the test handle patterns, never applied by itself](layers/config.md#dlcti-b28--the-ts-family-has-an-example-of-the-test-handle-patterns-never-applied-by-itself) `DLCTI-B28`
 
+- [A dialect pattern runs over the whole content, as an expression or a region](layers/config.md#dlcti-b29--a-dialect-pattern-runs-over-the-whole-content-as-an-expression-or-a-region) `DLCTI-B29`
+
+- [The chain patterns are the dialect's, and a family gives none by itself](layers/config.md#dlcti-b30--the-chain-patterns-are-the-dialects-and-a-family-gives-none-by-itself) `DLCTI-B30`
+
+- [The families have an example of the chain patterns](layers/config.md#dlcti-b31--the-families-have-an-example-of-the-chain-patterns) `DLCTI-B31`
+
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
 - [A trigger naming a unit code charges that unit and not its neighbours in the same layer](layers/config.md#dcrqa-b02--a-trigger-naming-a-unit-code-charges-that-unit-and-not-its-neighbours-in-the-same-layer) `DCRQA-B02`
@@ -3559,6 +3565,10 @@ teste prova.
 - [Imports by name are flagged per file](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B10`
 
 - [The fixer finds a declaration whose name ends in a letter outside ASCII](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B11`
+
+- [Without import patterns the chain is pending, and a commented import is none](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B12`
+
+- [A Go import block is read import by import](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B13`
 
 - [A spec still carrying a Dependencies table diverges, pointing at the migration](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 
@@ -6238,6 +6248,8 @@ teste prova.
 
 - [A project with a handle gate and no test handle patterns is offered the family's example](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B10`
 
+- [A project with a chain gate and no import patterns is offered the family's example](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B11`
+
 - [The report is sorted by check then subject, and counts the map](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B01`
 
 - [Warnings keeps only the warnings](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B02`
@@ -6381,6 +6393,8 @@ teste prova.
 - [A new project's dialect carries what its family knows can fail](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B09`
 
 - [A new project's dialect carries the family's example of its test handle patterns](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B10`
+
+- [A new project's dialect carries the family's example of the chain patterns](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B11`
 
 - [The whole guide is a title, a seeding note and the section](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B01`
 

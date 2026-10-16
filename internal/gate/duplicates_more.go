@@ -30,9 +30,9 @@ func flagScenarioOccurrences(content string, n mapx.Node, _ string, _ *mapx.Grap
 
 // usedByOccurrences: each symbol a used-by flag stands above. Two flags on one symbol say two
 // things of who imports it, and the gate reads only one of them.
-func usedByOccurrences(content string, _ mapx.Node, _ string, _ *mapx.Graph, _ *config.Config) []Occurrence {
+func usedByOccurrences(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) []Occurrence {
 	var out []Occurrence
-	for _, u := range scan.UsedByIn([]byte(content)) {
+	for _, u := range scan.UsedByIn([]byte(content), n.ID, cfg.DialectFor()) {
 		if u.Symbol != "" {
 			out = append(out, Occurrence{Key: u.Symbol, Line: u.Line})
 		}

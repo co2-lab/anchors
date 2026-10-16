@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"path"
 	"regexp"
-	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -26,9 +25,10 @@ import (
 //	dep-honored       every `@dep:` names the code of the file its import resolves to
 //	used-by-declared  every imported symbol carries `@used-by:` with exactly who imports it
 //
-// Anchors does not parse the language. It reads the import's PATH with a pattern — the
-// dialect's `import_pattern`, with its path in the group `path`, or the family's —, and
-// resolves it to a file of the map with the dialect's `import_resolve`. An import of a
+// Anchors does not parse the language. It reads each import statement with the project's
+// patterns — the dialect's `imports`, the path in the group `path`; `import_names` for what
+// it brings —, and resolves the path to a file of the map with the dialect's
+// `import_resolve`. The core knows no syntax of an import (DESIGN-chain-patterns.md). An import of a
 // package outside the project resolves to nothing, and is no dependency of the chain.
 
 // RealImport is one import statement of a file, as the code writes it.
@@ -41,41 +41,14 @@ type RealImport struct {
 	Symbols []string
 	// TypeOnly: the statement brings types only (the dialect's type_import_pattern).
 	TypeOnly bool
+	// Relative: the pattern that read it says its path is relative to the importer.
+	Relative bool
+	// Runs: the pattern that read it says the statement plainly runs.
+	Runs bool
 }
 
-// familyImportPattern is the import pattern a family knows, its path in the group `path`.
-func familyImportPattern(family string) string {
-	switch strings.ToLower(family) {
-	case "ts", "js", "typescript", "javascript":
-		return `(?:\bfrom\s+|^\s*import\s+|\brequire\(\s*|\bimport\(\s*)['"](?P<path>[^'"]+)['"]`
-	case "go":
-		return `^\s*(?:import\s+)?(?:[\w.]+\s+)?"(?P<path>[^"]+)"\s*$`
-	case "ocaml":
-		// A module named after `open`, or qualifying a name anywhere: `Eval.apply`,
-		// `Galaxy_core.Eval.apply` (each module of the chain is read). A constructor —
-		// `Some x` — qualifies nothing, and is not read.
-		return `\bopen!?\s+(?P<path>[A-Z][A-Za-z0-9_']*)|\b(?P<path2>[A-Z][A-Za-z0-9_']*)\.[A-Za-z_(]`
-	}
-	return ""
-}
-
-// familyImportResolve is how a family's imports become files when the project declares
-// nothing: OCaml names a module, and dune names its file after it, first letter lowered.
-func familyImportResolve(family string) *config.ImportResolve {
-	switch strings.ToLower(family) {
-	case "ocaml":
-		return &config.ImportResolve{ByName: true, NameCase: "lower_first", Extensions: []string{".ml"}}
-	}
-	return nil
-}
-
-// importResolve is the project's import resolution, or its family's.
-func importResolve(d config.Dialect) *config.ImportResolve {
-	if d.ImportResolve != nil {
-		return d.ImportResolve
-	}
-	return familyImportResolve(d.Family)
-}
+// importResolve is the project's import resolution: nil when it declares none.
+func importResolve(d config.Dialect) *config.ImportResolve { return d.ImportResolve }
 
 // byName says whether the dialect's imports are module names read anywhere in the code,
 // flagged per file (config.ImportResolve.ByName).
@@ -104,14 +77,8 @@ var blockCommentRE = regexp.MustCompile(`\(\*.*?\*\)`)
 
 // importsByName are the modules a file names, one import per module, at its first mention,
 // each resolved to the code file named after it. The file's comments name nothing.
-func importsByName(content, rel string, re *regexp.Regexp, d config.Dialect, g *mapx.Graph) []RealImport {
+func importsByName(content, rel string, d config.Dialect, g *mapx.Graph) []RealImport {
 	r := importResolve(d)
-	var groups []int
-	for i, name := range re.SubexpNames() {
-		if strings.HasPrefix(name, "path") {
-			groups = append(groups, i)
-		}
-	}
 	seen := map[string]bool{}
 	var out []RealImport
 	depth := 0
@@ -127,14 +94,8 @@ func importsByName(content, rel string, re *regexp.Regexp, d config.Dialect, g *
 		if j := strings.Index(ln, "(*"); j >= 0 {
 			depth, ln = 1, ln[:j]
 		}
-		for _, m := range re.FindAllStringSubmatch(ln, -1) {
-			name := ""
-			for _, gi := range groups {
-				if m[gi] != "" {
-					name = m[gi]
-					break
-				}
-			}
+		for _, m := range d.Imports.FindAll(ln, rel) {
+			name := m.Groups["path"].Value
 			if name == "" || seen[name] {
 				continue
 			}
@@ -181,124 +142,63 @@ func resolveByName(rel, name string, r *config.ImportResolve, g *mapx.Graph) str
 	return ""
 }
 
-// familyTypeImportPattern is the type-only import a family knows.
-func familyTypeImportPattern(family string) string {
-	switch strings.ToLower(family) {
-	case "ts", "typescript":
-		return `^\s*(?:import|export)\s+type\b`
-	}
-	return ""
-}
+// hasImports says whether the project declares how its imports are written: without it
+// the chain gates have nothing to read the code with (DESIGN-chain-patterns.md).
+func hasImports(d config.Dialect) bool { return len(d.Imports) > 0 }
 
-// typeImportRE is the pattern of a type-only import: the project's, or the family's.
-func typeImportRE(d config.Dialect) *regexp.Regexp {
-	if p := strings.TrimSpace(d.TypeImportPattern); p != "" {
-		if re := d.Compile(p); re != nil {
-			return re
+// blankComments is the content with each comment — a line of comment, or what follows the
+// code on a line — turned into spaces, its offsets and lines kept: an import commented out
+// is no import.
+func blankComments(content string) string {
+	lines := strings.Split(content, "\n")
+	for i, ln := range lines {
+		switch {
+		case commentLine(ln):
+			lines[i] = strings.Repeat(" ", len(ln))
+		default:
+			if code := cutInlineComment(ln); len(code) < len(ln) {
+				lines[i] = code + strings.Repeat(" ", len(ln)-len(code))
+			}
 		}
 	}
-	if p := familyTypeImportPattern(d.Family); p != "" {
-		return regexp.MustCompile(p)
-	}
-	return nil
+	return strings.Join(lines, "\n")
 }
-
-// staticImportRE is a statement that is plainly an import of a module: `import …` or
-// `export … from` at the start of its line — not an inline `import('…')` in an expression.
-var staticImportRE = regexp.MustCompile(`^\s*(?:import|export)\b`)
-
-// familyExtensions are the extensions a family's import paths leave out.
-func familyExtensions(family string) []string {
-	switch strings.ToLower(family) {
-	case "ts", "js", "typescript", "javascript":
-		return []string{".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx", "/index.js"}
-	}
-	return nil
-}
-
-// importPathRE is the pattern that reads an import's path: the project's `import_pattern`
-// when it captures `path`, or the family's.
-func importPathRE(d config.Dialect) *regexp.Regexp {
-	if p := strings.TrimSpace(d.ImportPattern); p != "" {
-		if re := d.Compile(p); re != nil && re.SubexpIndex("path") >= 0 {
-			return re
-		}
-	}
-	if p := familyImportPattern(d.Family); p != "" {
-		return regexp.MustCompile(p)
-	}
-	return nil
-}
-
-var (
-	importKeywordRE   = regexp.MustCompile(`^\s*import\b`)
-	importBlockOpenRE = regexp.MustCompile(`^\s*import\s*\(\s*$`)
-	// listOpenRE opens a list of names that spans lines: `import {`, `import type {`,
-	// `import X, {`, `export {`.
-	listOpenRE = regexp.MustCompile(`^(?:import|export)\b[^'"]*\{[^}]*$`)
-)
 
 // ImportsOf are the import statements of a file's content, resolved against the map's files.
-// Without a pattern for the dialect, there is nothing to read.
+// Each is a match of one of the dialect's `imports` patterns: the match is the statement, its
+// `path` group the path and the line its flag goes on. Without patterns there is nothing to
+// read.
 func ImportsOf(content, rel string, d config.Dialect, g *mapx.Graph) []RealImport {
-	re := importPathRE(d)
-	if isFlowFile(rel) {
-		re = flowImportRE
-	}
-	if re == nil {
+	if !hasImports(d) {
 		return nil
 	}
-	if byName(d) && !isFlowFile(rel) {
-		return importsByName(content, rel, re, d, g)
+	if byName(d) {
+		return importsByName(content, rel, d, g)
 	}
-	group := re.SubexpIndex("path")
-	typeRE := typeImportRE(d)
-	lines := strings.Split(content, "\n")
-	goBlocks := strings.EqualFold(d.Family, "go") && !isFlowFile(rel)
-	inBlock := false
+	var typeRE *regexp.Regexp
+	if p := strings.TrimSpace(d.TypeImportPattern); p != "" {
+		typeRE = d.Compile(p)
+	}
+	code := blankComments(content)
+	seen := map[int]bool{} // a path captured by two patterns is one import
 	var out []RealImport
-	for i, ln := range lines {
-		if goBlocks {
-			// Go: a string alone on a line is an import only inside an import block, or
-			// after the keyword — a slice literal of strings is not one.
-			t := strings.TrimSpace(ln)
-			if importBlockOpenRE.MatchString(ln) {
-				inBlock = true
-				continue
-			}
-			if inBlock && t == ")" {
-				inBlock = false
-				continue
-			}
-			if !inBlock && !importKeywordRE.MatchString(ln) {
-				continue
-			}
-		}
-		code := cutInlineComment(ln)
-		m := re.FindStringSubmatch(code)
-		if m == nil || m[group] == "" {
+	for _, m := range d.Imports.FindAll(code, rel) {
+		p, ok := m.Groups["path"]
+		if !ok || p.Value == "" || seen[p.Start] {
 			continue
 		}
-		imp := RealImport{First: i + 1, Line: i + 1, Path: m[group]}
-		// The statement's first line: only a line that CLOSES a list of names (`} from '…'`)
-		// opens above, at the `import {` or `export {` that opened the list. A `require(…)`
-		// or an `export … from` on its own line is a statement of its own — climbing from
-		// them took the names and the flag of the import above.
-		if !goBlocks && strings.HasPrefix(strings.TrimSpace(code), "}") {
-			for j := i - 1; j >= 0 && i-j <= 60; j-- {
-				t := strings.TrimSpace(cutInlineComment(lines[j]))
-				if listOpenRE.MatchString(t) {
-					imp.First = j + 1
-					break
-				}
-				if strings.Contains(t, " from ") || strings.HasSuffix(t, ";") || t == "" {
-					break // another statement: this one opens no list above
-				}
-			}
+		seen[p.Start] = true
+		statement := code[m.Start:m.End]
+		imp := RealImport{
+			First:    config.LineOf(code, m.Start+len(statement)-len(strings.TrimLeft(statement, " \t\n"))),
+			Line:     config.LineOf(code, p.Start),
+			Path:     p.Value,
+			Relative: m.Relative,
+			Runs:     m.Runs,
+			Symbols:  d.NamesBrought(statement, rel),
+			TypeOnly: typeRE != nil && typeRE.MatchString(statement),
 		}
-		imp.Symbols = scan.ImportSymbols(strings.Join(lines[imp.First-1:imp.Line], " "))
-		imp.TypeOnly = typeRE != nil && !isFlowFile(rel) && typeRE.MatchString(lines[imp.First-1])
-		imp.Target, imp.Dir = resolveImport(rel, imp.Path, d, g)
+		imp.Target, imp.Dir = resolveImport(rel, imp, d, g)
 		out = append(out, imp)
 	}
 	return out
@@ -308,14 +208,16 @@ func ImportsOf(content, rel string, d config.Dialect, g *mapx.Graph) []RealImpor
 // or through an alias the project declares; then as written, or with each extension. A
 // path that names a directory of governed files is a package. Anything else is outside
 // the project.
-func resolveImport(rel, p string, d config.Dialect, g *mapx.Graph) (string, bool) {
+func resolveImport(rel string, imp RealImport, d config.Dialect, g *mapx.Graph) (string, bool) {
 	if g == nil {
 		return "", false
 	}
+	p := imp.Path
 	var base string
 	switch {
-	// A flow names the flow it composes relative to itself, with or without `./`.
-	case strings.HasPrefix(p, "./") || strings.HasPrefix(p, "../") || p == "." || p == ".." || isFlowFile(rel):
+	// A pattern may say its paths are relative to the importer without `./` — a flow names
+	// the flow it runs that way.
+	case strings.HasPrefix(p, "./") || strings.HasPrefix(p, "../") || p == "." || p == ".." || imp.Relative:
 		base = path.Clean(path.Join(path.Dir(rel), p))
 	default:
 		var aliases map[string]string
@@ -333,8 +235,8 @@ func resolveImport(rel, p string, d config.Dialect, g *mapx.Graph) (string, bool
 		}
 		base = path.Clean(aliases[best] + strings.TrimPrefix(p, best))
 	}
-	exts := familyExtensions(d.Family)
-	if d.ImportResolve != nil && len(d.ImportResolve.Extensions) > 0 {
+	var exts []string
+	if d.ImportResolve != nil {
 		exts = d.ImportResolve.Extensions
 	}
 	if n := g.Node(base); n != nil {
@@ -402,16 +304,6 @@ func chainUnit(n mapx.Node) bool {
 	return (n.Kind == mapx.KindCode || n.Kind == mapx.KindTest) && !n.Upstream
 }
 
-// flowImportRE is a flow composing another — Maestro's `runFlow:`, inline or with `file:` on
-// its own line —: the import of an e2e flow, whatever the code's family.
-var flowImportRE = regexp.MustCompile(`^\s*(?:-\s*)?(?:runFlow:|file:)\s*['"]?(?P<path>[^'"\s#{}]+\.ya?ml)\b`)
-
-// isFlowFile says whether a file is a flow, read by flowImportRE.
-func isFlowFile(rel string) bool {
-	l := strings.ToLower(rel)
-	return strings.HasSuffix(l, ".yaml") || strings.HasSuffix(l, ".yml")
-}
-
 // checkDepDeclared: does every import of a governed file carry `@dep:` with a code, or a
 // waiver?
 func checkDepDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
@@ -419,7 +311,7 @@ func checkDepDeclared(content string, n mapx.Node, root string, g *mapx.Graph, c
 		return Skip, i18n.T("gate.dep_chain.skip_not_code")
 	}
 	d := cfg.DialectFor()
-	if importPathRE(d) == nil {
+	if !hasImports(d) {
 		return Pending, i18n.T("gate.dep_chain.pending_no_pattern")
 	}
 	imps := ImportsOf(content, n.ID, d, g)
@@ -589,12 +481,12 @@ func checkUsedByDeclared(content string, n mapx.Node, root string, g *mapx.Graph
 		return Skip, i18n.T("gate.dep_chain.skip_not_code")
 	}
 	d := cfg.DialectFor()
-	if importPathRE(d) == nil || g == nil {
+	if !hasImports(d) || g == nil {
 		return Pending, i18n.T("gate.dep_chain.pending_no_pattern")
 	}
 	want := UsedByOf(root, n.ID, g, d, testsInChain(cfg))
 	have := map[string][]string{}
-	for _, u := range scan.UsedByIn([]byte(content)) {
+	for _, u := range scan.UsedByIn([]byte(content), n.ID, d) {
 		if u.Symbol != "" {
 			codes := append([]string(nil), u.Codes...)
 			sort.Strings(codes)
@@ -658,18 +550,18 @@ func fixDepFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 		// project's evidence may say so (`evidence.no_side_effect.flags`).
 		flag := "@dep: "
 		f := flags[i]
-		if imp.TypeOnly || (f != nil && f.Kind == scan.TypeDepKind && !staticImportRE.MatchString(lines[imp.First-1])) {
+		// A type flag the author wrote stays unless the statement plainly runs (its pattern
+		// says `runs`): an inline `import('…').T` in a type position reads like any other
+		// import, and only the author knows which it is.
+		if imp.TypeOnly || (f != nil && f.Kind == scan.TypeDepKind && !imp.Runs) {
 			flag = "@dep[" + scan.TypeDepKind + "]: "
 		}
 		switch {
 		case f == nil:
 			lines[imp.Line-1] = strings.TrimRight(lines[imp.Line-1], " \t") + " " + marker + " " + flag + want + config.CommentCloseFor(marker)
 			done = append(done, fmt.Sprintf("%d %s", imp.Line, want))
-		// A type flag the author wrote stays unless the statement plainly runs: a static
-		// import the dialect does not read as types. An inline `import('…').T` in a type
-		// position reads like a dynamic import, and only the author knows which it is.
 		case f.Code != "" && (f.Code != want || (imp.TypeOnly && f.Kind != scan.TypeDepKind) ||
-			(!imp.TypeOnly && f.Kind == scan.TypeDepKind && staticImportRE.MatchString(lines[imp.First-1]))):
+			(!imp.TypeOnly && f.Kind == scan.TypeDepKind && imp.Runs)):
 			l := lines[f.Line-1]
 			had := "@dep: " + f.Code
 			if f.Kind != "" {
@@ -693,13 +585,13 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 		return content, false, ""
 	}
 	d := fixConfig.DialectFor()
-	if importPathRE(d) == nil {
+	if !hasImports(d) {
 		return content, false, ""
 	}
 	want := UsedByOf(root, n.ID, g, d, testsInChain(fixConfig))
 	lines := strings.Split(content, "\n")
 	flagLine := map[string]int{} // symbol → 0-based line of its flag
-	for _, u := range scan.UsedByIn([]byte(content)) {
+	for _, u := range scan.UsedByIn([]byte(content), n.ID, d) {
 		if u.Symbol != "" {
 			flagLine[u.Symbol] = u.Line - 1
 		}
@@ -720,7 +612,7 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 	sort.Strings(syms)
 	for _, sym := range syms {
 		codes := want[sym]
-		at, listed := declarationLine(lines, sym)
+		at, listed := declarationLine(content, n.ID, d, sym)
 		text := marker + " @used-by: " + strings.Join(codes, ", ") + config.CommentCloseFor(marker)
 		if listed {
 			text += " (" + sym + ")"
@@ -770,50 +662,18 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 	return strings.Join(lines, "\n"), true, i18n.T("gate.fix.used_by_written", strings.Join(done, ", "))
 }
 
-// declarationLine is the 0-based line that declares a symbol at the top level of the file,
-// or -1; listed when that line opens an export list, where a flag must name its symbol.
-func declarationLine(lines []string, sym string) (int, bool) {
-	if sym == "default" {
-		for i, l := range lines {
-			if defaultDeclRE.MatchString(l) {
-				return i, false
-			}
-		}
-		return -1, false
-	}
-	re := regexp.MustCompile(`^(?:export\s+)?(?:default\s+)?(?:async\s+)?(?:function\*?|const|let|var|class|interface|type|enum|func|def)\s+(?:\([^)]*\)\s*)?` + regexp.QuoteMeta(sym) + `(?:[^\p{L}\p{N}_$]|$)`) // `\b` is ASCII's: it fails after `é`
-	// A re-export declares the name too: `export { X } from '…'`, `export type { A, X }`,
-	// or the name on a line of an export list that spans lines.
-	openList := -1
-	for i, l := range lines {
-		if re.MatchString(l) {
-			return i, false
-		}
-		t := strings.TrimSpace(cutInlineComment(l))
-		if m := exportListLineRE.FindStringSubmatch(t); m != nil {
-			if slices.Contains(scan.ExportListNames(m[1]), sym) {
-				return i, true
-			}
-			continue
-		}
-		switch {
-		case strings.HasPrefix(t, "export") && listOpenRE.MatchString(t):
-			openList = i
-		case openList >= 0 && strings.HasPrefix(t, "}"):
-			if slices.Contains(scan.ExportListNames(strings.Join(lines[openList+1:i], " ")), sym) {
-				return openList, true
-			}
-			openList = -1
+// declarationLine is the 0-based line that declares a symbol, by the dialect's
+// `declarations` — where the statement of the declaration starts —, or -1; listed when the
+// declaration is one of a list, where a flag must name its symbol.
+func declarationLine(content, rel string, d config.Dialect, sym string) (int, bool) {
+	code := blankComments(content)
+	for _, m := range d.Declarations.FindAll(code, rel) {
+		if (sym == "default" && m.Has("default")) || (sym != "default" && m.Groups["name"].Value == sym) {
+			return config.LineOf(code, m.Region) - 1, m.Listed
 		}
 	}
 	return -1, false
 }
-
-// exportListLineRE is an export list on one line.
-var exportListLineRE = regexp.MustCompile(`^export\s+(?:type\s+)?\{([^}]*)\}`)
-
-// defaultDeclRE is the line that declares a module's default export.
-var defaultDeclRE = regexp.MustCompile(`^\s*export\s+default\b|^\s*module\.exports\s*=`)
 
 // anyFlagged says whether one of the codes is in the set.
 func anyFlagged(codes []string, set map[string]bool) bool {

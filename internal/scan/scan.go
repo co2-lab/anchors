@@ -311,8 +311,8 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 		SharedCode:    sharedCodeRE.Match(content),
 		Deps:          depsFor(kind, content, root, rel),
 		Composes:      composesFor(kind, content, cfg),
-		CodeDeps:      extractCodeDeps(content),
-		UsedBy:        extractUsedBy(content),
+		CodeDeps:      extractCodeDeps(content, rel, cfg.DialectFor()),
+		UsedBy:        extractUsedBy(content, rel, cfg.DialectFor()),
 		Navigates:     extractNavigates(content),
 		Frozen:        extractFrozen(string(content)),
 		FrozenRules:   extractFrozenRules(kind, string(content)),
@@ -1522,26 +1522,14 @@ var (
 	// usedByRE: the codes, and the symbol in parentheses when the flag stands above an
 	// export list — `// @used-by: ARNAA (Budget)` — where the next line names several.
 	//
-	// An identifier is any letter, not only ASCII's: `[A-Za-z_$][\w$]*` read
-	// `categoriasDoOrçamento` as `categoriasDoOr` (reported from MIF), and the flag named a
-	// symbol the file does not declare.
-	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([\p{L}_$][\p{L}\p{N}_$]*)\s*\))?\s*(?:\*/|\*\)|-->)?\s*$`)
-	// exportListRE is an export list on one line: `export { X } from '…'`, `export type { A, B }`.
-	exportListRE = regexp.MustCompile(`^\s*export\s+(?:type\s+)?\{([^}]*)\}`)
+	// The symbol is whatever stands in the parentheses: the flag is Anchors' syntax, the name
+	// is the language's, and the core says nothing of what a name is. `[A-Za-z_$][\w$]*`
+	// read `categoriasDoOrçamento` as `categoriasDoOr` (reported from MIF).
+	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([^()\s]+)\s*\))?\s*(?:\*/|\*\)|-->)?\s*$`)
 	// navigatesRE: the flag at the end of the line, or a block comment inside it — after the
 	// call on a JSX line, where text after the tag would render (`/* @navigates: X */}>`).
 	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-(?:[A-Z]\d{2}|DS-[A-Za-z0-9_-]+))\s*\])?\s*(?:@dormant:\s*(\S.*?)?)?\s*(?:\*/.*|\*\).*|-->.*)?$`)
 	noNavRE     = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*(?:\*/|\*\)|-->)?\s*$`)
-	// importSymbolsRE reads what an import line brings: the names inside braces, or the
-	// default name right after the keyword.
-	importBracesRE  = regexp.MustCompile(`\{([^}]*)\}`)
-	importDefaultRE = regexp.MustCompile(`^\s*import\s+(?:type\s+)?([\p{L}_$][\p{L}\p{N}_$]*)`)
-	// importInlineRE is an import inside an expression or a type — `import('./x').Name`:
-	// it brings the member it reads, or the module's default.
-	importDestructRE = regexp.MustCompile(`\{([^}]*)\}\s*=\s*(?:await\s+)?(?:import|require)\(`)
-	importInlineRE   = regexp.MustCompile(`\b(?:import|require)\(\s*['"][^'"]+['"]\s*\)(?:\.([\p{L}_$][\p{L}\p{N}_$]*))?`)
-	// declaredNameRE is the name a declaration line declares, in the common shapes.
-	declaredNameRE = regexp.MustCompile(`\b(?:function\*?|const|let|var|class|interface|type|enum|func|def)\s+(?:\([^)]*\)\s*)?([\p{L}_$][\p{L}\p{N}_$]*)`)
 )
 
 // splitCodes splits a list of codes written with commas or spaces.
@@ -1555,85 +1543,59 @@ func splitCodes(s string) []string {
 	return out
 }
 
-// importSymbols are the names an import line brings: those inside its braces (an alias
-// `A as B` brings A), and `default` for its default import — the local name a default
-// import binds is the importer's choice, and the symbol it uses is the module's default.
-func importSymbols(line string) []string {
-	var out []string
-	if !strings.Contains(line, " from ") && !strings.HasPrefix(strings.TrimSpace(line), "import ") {
-		if m := importInlineRE.FindStringSubmatch(line); m != nil {
-			// `const { a, b: c } = await import('./x')` brings a and b; `import('./x').Name`,
-			// Name; bound whole (`typeof import('./x')`, `const mod = await import('./x')`) it
-			// brings the module's namespace — no symbol of it in particular, as `import * as`.
-			if d := importDestructRE.FindStringSubmatch(line); d != nil {
-				for _, part := range strings.Split(d[1], ",") {
-					if name := strings.TrimSpace(strings.SplitN(part, ":", 2)[0]); name != "" {
-						out = append(out, name)
-					}
-				}
-				return out
-			}
-			if m[1] != "" {
-				return []string{m[1]}
-			}
-			return nil
-		}
-	}
-	if m := importDefaultRE.FindStringSubmatch(line); m != nil && m[1] != "type" && m[1] != "from" {
-		out = append(out, "default")
-	}
-	if m := importBracesRE.FindStringSubmatch(line); m != nil {
-		for _, part := range strings.Split(m[1], ",") {
-			// `A as B` and a destructuring's `A: B` both bring A.
-			part = strings.SplitN(strings.TrimPrefix(strings.TrimSpace(part), "type "), ":", 2)[0]
-			name := strings.Fields(strings.TrimSpace(part))
-			if len(name) > 0 {
-				out = append(out, name[0])
-			}
-		}
-	}
-	return out
-}
-
-// defaultExportRE is the line that declares a module's default export.
-var defaultExportRE = regexp.MustCompile(`^\s*export\s+default\b|^\s*module\.exports\s*=`)
-
 // extractCodeDeps reads the `@dep:` and `@no-dep:` flags, one per import line. The flags
 // are comment text, read in any dialect: a line that carries one is the import it flags.
-func extractCodeDeps(content []byte) []CodeDep {
+func extractCodeDeps(content []byte, rel string, d config.Dialect) []CodeDep {
 	if !strings.Contains(string(content), "@dep:") && !strings.Contains(string(content), "@no-dep:") && !strings.Contains(string(content), "@dep[") {
 		return nil
 	}
+	// What the flagged import brings, by the dialect: the names of the statement whose lines
+	// hold the flag. A dialect with no import patterns says nothing of them.
+	src := string(content)
+	statements := d.Imports.FindAll(src, rel)
+	importSymbols := func(i int) []string {
+		line := i + 1
+		for _, m := range statements {
+			if config.LineOf(src, m.Start) <= line && line <= config.LineOf(src, m.End) {
+				return d.NamesBrought(src[m.Start:m.End], rel)
+			}
+		}
+		return nil
+	}
 	var out []CodeDep
-	for i, line := range strings.Split(string(content), "\n") {
+	for i, line := range strings.Split(src, "\n") {
 		if m := kindedDepRE.FindStringSubmatch(line); m != nil {
 			// `@dep[type]: CODE` is an import, of types only: it names a file by its code,
 			// like `@dep:`, and the kind says nothing of it runs.
 			if m[1] == TypeDepKind {
-				out = append(out, CodeDep{Code: strings.TrimRight(m[2], ",;"), Kind: TypeDepKind, Symbols: importSymbols(line), Line: i + 1})
+				out = append(out, CodeDep{Code: strings.TrimRight(m[2], ",;"), Kind: TypeDepKind, Symbols: importSymbols(i), Line: i + 1})
 				continue
 			}
 			out = append(out, CodeDep{Kind: m[1], Name: strings.TrimRight(m[2], ",;"), Line: i + 1})
 			continue
 		}
 		if m := codeDepRE.FindStringSubmatch(line); m != nil {
-			out = append(out, CodeDep{Code: m[1], Symbols: importSymbols(line), Line: i + 1})
+			out = append(out, CodeDep{Code: m[1], Symbols: importSymbols(i), Line: i + 1})
 			continue
 		}
 		if m := noDepRE.FindStringSubmatch(line); m != nil {
-			out = append(out, CodeDep{Symbols: importSymbols(line), Line: i + 1, Waiver: m[1]})
+			out = append(out, CodeDep{Symbols: importSymbols(i), Line: i + 1, Waiver: m[1]})
 		}
 	}
 	return out
 }
 
-// extractUsedBy reads each `@used-by:` flag and the symbol declared on the next line that
-// declares one.
-func extractUsedBy(content []byte) []UsedBy {
+// extractUsedBy reads each `@used-by:` flag, and the symbol it speaks of: the one in its
+// parentheses, or the one the first declaration in the five lines below it declares, by the
+// dialect's `declarations`. A declaration of several names — an export list — needs the
+// flag to name its symbol.
+func extractUsedBy(content []byte, rel string, d config.Dialect) []UsedBy {
 	if !strings.Contains(string(content), "@used-by:") {
 		return nil
 	}
-	lines := strings.Split(string(content), "\n")
+	src := string(content)
+	decls := d.Declarations.FindAll(src, rel)
+	lines := strings.Split(src, "\n")
 	var out []UsedBy
 	for i, line := range lines {
 		m := usedByRE.FindStringSubmatch(line)
@@ -1641,26 +1603,52 @@ func extractUsedBy(content []byte) []UsedBy {
 			continue
 		}
 		u := UsedBy{Codes: splitCodes(m[1]), Line: i + 1, Symbol: m[2]}
-		for j := i + 1; u.Symbol == "" && j < len(lines) && j <= i+5; j++ {
-			if l := exportListRE.FindStringSubmatch(lines[j]); l != nil {
-				// A list of one name declares it; a list of several needs the name on the flag.
-				if names := ExportListNames(l[1]); len(names) == 1 {
-					u.Symbol = names[0]
-				}
-				break
-			}
-			if defaultExportRE.MatchString(lines[j]) {
-				u.Symbol = "default"
-				break
-			}
-			if d := declaredNameRE.FindStringSubmatch(lines[j]); d != nil {
-				u.Symbol = d[1]
-				break
-			}
+		if u.Symbol == "" {
+			u.Symbol = declaredBelow(src, decls, i+1)
 		}
 		out = append(out, u)
 	}
 	return out
+}
+
+// declaredBelow is the symbol the first declaration starting in the five lines after `line`
+// declares: its name, or `default`. Two patterns reading the same statement — `export default
+// function Simulator` is a default and a name — are not a list: the first pattern speaks for
+// it. A list is a region: of several names it gives none, and the flag must name its symbol.
+func declaredBelow(src string, decls []config.Match, line int) string {
+	region := -1
+	var first string
+	var listed []string
+	for _, m := range decls {
+		at := config.LineOf(src, m.Region)
+		if at <= line || at > line+5 {
+			continue
+		}
+		if region < 0 || m.Region < region {
+			region, first, listed = m.Region, "", nil
+		}
+		if m.Region != region {
+			continue
+		}
+		name := m.Groups["name"].Value
+		if m.Has("default") {
+			name = "default"
+		}
+		switch {
+		case name == "":
+		case m.Listed:
+			listed = append(listed, name)
+		case first == "":
+			first = name
+		}
+	}
+	switch {
+	case len(listed) == 1:
+		return listed[0]
+	case len(listed) > 1:
+		return ""
+	}
+	return first
 }
 
 // extractNavigates reads each `@navigates:` and `@no-nav:` flag. A flag on a line of its
@@ -1693,10 +1681,13 @@ func extractNavigates(content []byte) []Navigation {
 }
 
 // CodeDepsIn are the dependency flags of a file's content (see File.CodeDeps).
-func CodeDepsIn(content []byte) []CodeDep { return extractCodeDeps(content) }
+func CodeDepsIn(content []byte) []CodeDep { return extractCodeDeps(content, "", config.Dialect{}) }
 
-// UsedByIn are the used-by flags of a file's content (see File.UsedBy).
-func UsedByIn(content []byte) []UsedBy { return extractUsedBy(content) }
+// UsedByIn are the used-by flags of a file's content (see File.UsedBy), the symbols read by
+// the dialect's declarations.
+func UsedByIn(content []byte, rel string, d config.Dialect) []UsedBy {
+	return extractUsedBy(content, rel, d)
+}
 
 // NavigatesIn are the navigation flags of a file's content (see File.Navigates).
 func NavigatesIn(content []byte) []Navigation { return extractNavigates(content) }
@@ -1742,19 +1733,3 @@ func extractOutRows(content []byte) map[string]string {
 	}
 	return out
 }
-
-// ExportListNames are the names an export list exports — the alias when it renames:
-// `A, type B, C as D` exports A, B and D.
-func ExportListNames(list string) []string {
-	var out []string
-	for _, part := range strings.Split(list, ",") {
-		f := strings.Fields(strings.TrimPrefix(strings.TrimSpace(part), "type "))
-		if len(f) > 0 {
-			out = append(out, f[len(f)-1])
-		}
-	}
-	return out
-}
-
-// ImportSymbols are the names an import statement brings (see importSymbols).
-func ImportSymbols(statement string) []string { return importSymbols(statement) }

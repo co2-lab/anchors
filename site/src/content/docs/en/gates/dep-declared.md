@@ -13,6 +13,7 @@ Every import of a governed file carries `@dep:` with the code of the file it use
 | Confronts | `code` `test` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Presupposes | `dialect.imports` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 
@@ -28,9 +29,10 @@ with flags the agent writes beside the code and Anchors confronts with the code
 - `used-by-declared` — every symbol another file imports carries the used-by flag with exactly
   the codes of who imports it.
 
-Anchors does not parse the language: it reads the import's path with a pattern — the
-dialect's `import_pattern` with the path in the group `path`, or the family's (`ts`, `go`) —
-and resolves it with `import_resolve` (relative paths, the project's aliases, the extensions).
+Anchors does not parse the language: it reads each import statement with the project's
+patterns — the dialect's `imports`, the path in the group `path`, and `import_names` for what
+it brings — and resolves the path with `import_resolve` (relative paths, the project's aliases,
+the extensions). The core knows no syntax of an import (DESIGN-chain-patterns.md).
 An import that resolves to no file of the map — a package of the ecosystem — is no link of
 the chain. A test takes no part: it is tied to its unit by its `ref:`.
 

@@ -1100,7 +1100,7 @@ func TestCodeFlags_depUsedByNavigates(t *testing.T) {
 		"import useToast from '../hooks/useToast' // @dep: USTST\n" +
 		"import type { Goal } from './types' // @no-dep: types only, erased at compile time\n" +
 		"import React from 'react'\n"
-	got := extractCodeDeps([]byte(src))
+	got := extractCodeDeps([]byte(src), "x.ts", tsd())
 	want := []CodeDep{
 		{Code: "TOKNS", Symbols: []string{"PALETTE", "withAlpha"}, Line: 1},
 		{Code: "USTST", Symbols: []string{"default"}, Line: 2},
@@ -1111,7 +1111,7 @@ func TestCodeFlags_depUsedByNavigates(t *testing.T) {
 	}
 	t.Run("RPSCR-B42: Each @used-by flag is read with the symbol declared below it", func(t *testing.T) {})
 	exp := "// @used-by: ARNAA, WLLTW\nexport const PALETTE = {}\n\n// @used-by: ARNAA\nexport function withAlpha(c: string) {}\n\n// @used-by: WLLTW\nexport default {}\n"
-	if got := extractUsedBy([]byte(exp)); !reflect.DeepEqual(got, []UsedBy{
+	if got := extractUsedBy([]byte(exp), "x.ts", tsd()); !reflect.DeepEqual(got, []UsedBy{
 		{Symbol: "PALETTE", Codes: []string{"ARNAA", "WLLTW"}, Line: 1},
 		{Symbol: "withAlpha", Codes: []string{"ARNAA"}, Line: 4},
 		{Symbol: "default", Codes: []string{"WLLTW"}, Line: 7},
@@ -1119,16 +1119,16 @@ func TestCodeFlags_depUsedByNavigates(t *testing.T) {
 		t.Errorf("got %+v", got)
 	}
 	reexp := "// @used-by: ARNAA\nexport { PALETTE } from './tokens'\n// @used-by: WLLTW (Mode)\nexport type { Goal, Mode }\n"
-	if got := extractUsedBy([]byte(reexp)); !reflect.DeepEqual(got, []UsedBy{
+	if got := extractUsedBy([]byte(reexp), "x.ts", tsd()); !reflect.DeepEqual(got, []UsedBy{
 		{Symbol: "PALETTE", Codes: []string{"ARNAA"}, Line: 1},
 		{Symbol: "Mode", Codes: []string{"WLLTW"}, Line: 3},
 	}) {
 		t.Errorf("a list of one name declares it; above a list of several, the flag names its symbol: %+v", got)
 	}
-	if got := ImportSymbols("type R = { item: import('@/hooks/useFeed').AuditItem }"); !reflect.DeepEqual(got, []string{"AuditItem"}) {
+	if got := tsd().NamesBrought("type R = { item: import('@/hooks/useFeed').AuditItem }", "x.ts"); !reflect.DeepEqual(got, []string{"AuditItem"}) {
 		t.Errorf("an inline import brings the member it reads: %v", got)
 	}
-	if got := ImportSymbols("const { resolve, open: openFile } = await import('@/utils/files') // @dep: FILES"); !reflect.DeepEqual(got, []string{"resolve", "open"}) {
+	if got := tsd().NamesBrought("const { resolve, open: openFile } = await import('@/utils/files') // @dep: FILES", "x.ts"); !reflect.DeepEqual(got, []string{"resolve", "open"}) {
 		t.Errorf("a destructured dynamic import brings the names it destructures: %v", got)
 	}
 	for line, want := range map[string]string{
@@ -1136,12 +1136,12 @@ func TestCodeFlags_depUsedByNavigates(t *testing.T) {
 		"  require('@/test/vr/gorhom').gorhomVr({ nasceAberto: false }), // @dep: GRVRG":              "gorhomVr",
 		"import { handler, audit as a } from './handler'":                                             "handler,audit",
 	} {
-		if got := strings.Join(ImportSymbols(line), ","); got != want {
+		if got := strings.Join(tsd().NamesBrought(line, "x.ts"), ","); got != want {
 			t.Errorf("%q brings %q, want %q", line, got, want)
 		}
 	}
 	for _, whole := range []string{"const mod = await import('./x')", "jest.mock('./x', (): Partial<typeof import('./x')> => ({}))"} {
-		if got := ImportSymbols(whole); got != nil {
+		if got := tsd().NamesBrought(whole, "x.ts"); got != nil {
 			t.Errorf("an import bound whole brings the namespace, no symbol in particular: %q → %v", whole, got)
 		}
 	}
@@ -1181,7 +1181,7 @@ func TestOutRows_eachNavigationRowWithItsOwnRevision(t *testing.T) {
 
 func TestKindedDep_readWithItsKindAndName(t *testing.T) {
 	t.Run("RPSCR-B46: A kinded dependency is read with its kind and name", func(t *testing.T) {})
-	got := extractCodeDeps([]byte("await db.query(sql) // @dep[db]: transactions\nimport { a } from './a' // @dep: AAAAA\n"))
+	got := extractCodeDeps([]byte("await db.query(sql) // @dep[db]: transactions\nimport { a } from './a' // @dep: AAAAA\n"), "x.ts", tsd())
 	if len(got) != 2 || got[0].Kind != "db" || got[0].Name != "transactions" || got[0].Code != "" || got[1].Code != "AAAAA" || got[1].Kind != "" {
 		t.Errorf("got %+v", got)
 	}
@@ -1260,7 +1260,7 @@ func replaceOnce(b []byte, old, new []byte) []byte {
 
 func TestTypeDep(t *testing.T) {
 	t.Run("RPSCR-B50: A type dependency is an import of types", func(t *testing.T) {})
-	got := extractCodeDeps([]byte("import type { Goal } from './types' // @dep[type]: TYPSU\n"))
+	got := extractCodeDeps([]byte("import type { Goal } from './types' // @dep[type]: TYPSU\n"), "x.ts", tsd())
 	if len(got) != 1 || got[0].Code != "TYPSU" || got[0].Kind != TypeDepKind || got[0].Name != "" || len(got[0].Symbols) != 1 || got[0].Symbols[0] != "Goal" {
 		t.Errorf("got %+v", got)
 	}
@@ -1357,13 +1357,13 @@ func TestFrozen_entries(t *testing.T) {
 
 func TestChainFlags_ocamlComment(t *testing.T) {
 	t.Run("RPSCR-B56: The chain's flags are read in an OCaml comment", func(t *testing.T) {})
-	if d := extractCodeDeps([]byte("open Lexer (* @dep: LEXRL *)\nopen Unix (* @no-dep: stdlib *)\n")); len(d) != 2 || d[0].Code != "LEXRL" || d[1].Waiver != "stdlib" {
+	if d := extractCodeDeps([]byte("open Lexer (* @dep: LEXRL *)\nopen Unix (* @no-dep: stdlib *)\n"), "x.ts", tsd()); len(d) != 2 || d[0].Code != "LEXRL" || d[1].Waiver != "stdlib" {
 		t.Errorf("deps: %+v", d)
 	}
 	if n := extractNavigates([]byte("go () (* @navigates: HOMEH [HOMEH-B01] *)\n")); len(n) != 1 || n[0].Codes[0] != "HOMEH" || n[0].Rule != "HOMEH-B01" {
 		t.Errorf("navigates: %+v", n)
 	}
-	if u := extractUsedBy([]byte("(* @used-by: AAAAA, BBBBB *)\nlet x = 1\n")); len(u) != 1 || len(u[0].Codes) != 2 || u[0].Codes[1] != "BBBBB" {
+	if u := extractUsedBy([]byte("(* @used-by: AAAAA, BBBBB *)\nlet x = 1\n"), "p.ml", config.Dialect{}); len(u) != 1 || len(u[0].Codes) != 2 || u[0].Codes[1] != "BBBBB" {
 		t.Errorf("used-by: %+v", u)
 	}
 	ev := func(b string) Evidence { return EvidenceOf("code", "src/p.ml", []byte(b), nil) }
@@ -1378,13 +1378,24 @@ func TestUsedBy_unicodeIdentifiers(t *testing.T) {
 	t.Run("RPSCR-B57: An identifier the chain reads may hold letters of any script", func(t *testing.T) {})
 	src := "// @used-by: ABCDE\nexport function categoriasDoOrçamento() {}\n// @used-by: ABCDE (orçamentoTotal)\nexport { orçamentoTotal, outro } from './x'\n"
 	var got []string
-	for _, u := range UsedByIn([]byte(src)) {
+	for _, u := range UsedByIn([]byte(src), "x.ts", tsd()) {
 		got = append(got, u.Symbol)
 	}
 	if strings.Join(got, ",") != "categoriasDoOrçamento,orçamentoTotal" {
 		t.Errorf("the symbols are read whole: %v", got)
 	}
-	if got := ImportSymbols("type T = import('./x').café"); len(got) != 1 || got[0] != "café" {
+	if got := tsd().NamesBrought("type T = import('./x').café", "x.ts"); len(got) != 1 || got[0] != "café" {
 		t.Errorf("the inline import brings café: %v", got)
+	}
+}
+
+// tsd is the ts family's example of the chain patterns: what a ts project declares.
+func tsd() config.Dialect { return *config.FamilyChain("ts") }
+
+func TestUsedBy_defaultFunction(t *testing.T) {
+	t.Run("RPSCR-B42: Each @used-by flag is read with the symbol declared below it", func(t *testing.T) {})
+	src := "// @used-by: HLCHH\nexport default function Simulator() {}\n"
+	if got := extractUsedBy([]byte(src), "x.tsx", tsd()); len(got) != 1 || got[0].Symbol != "default" {
+		t.Errorf("a default function is the module's default, not a list of two: %+v", got)
 	}
 }

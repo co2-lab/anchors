@@ -13,6 +13,7 @@ Every import of a governed file carries `@dep:` with the code of the file it use
 | Confronta | `code` `test` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Pressupõe | `dialect.imports` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

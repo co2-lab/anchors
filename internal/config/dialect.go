@@ -5,7 +5,6 @@
 package config
 
 import (
-	"fmt"
 	"regexp"
 	"sort"
 	"strings"
@@ -95,12 +94,23 @@ type Dialect struct {
 	// GuardPatterns lista padrões adicionais ou customizados que caracterizam uma
 	// guarda de parâmetro no sibling-guard. Use `{{param}}` onde o nome do parâmetro deve casar.
 	GuardPatterns []string `yaml:"guard_patterns,omitempty"`
-	// ImportPattern casa uma linha de importação de dependência no proof-crosses-boundary.
-	ImportPattern string `yaml:"import_pattern,omitempty"`
+	// Imports are the import statements of this project's files, each pattern capturing the
+	// imported path in its `path` group; the match is the statement, the line of `path` is
+	// where its `@dep:` goes. A statement may span lines — the pattern says how. The chain
+	// gates (dep-declared, dep-honored, used-by-declared) read imports only through them: the
+	// core knows no syntax of an import (DESIGN-chain-patterns.md).
+	Imports Patterns `yaml:"imports,omitempty"`
+	// ImportNames are what an import statement brings, read on the statement's text: a
+	// `name` group per name brought, or a `default` group for the module's default.
+	ImportNames Patterns `yaml:"import_names,omitempty"`
+	// Declarations are what a line of a file declares for others to import, read below a
+	// `@used-by:` flag and by its fixer: a `name` group per name, or a `default` group for the
+	// module's default. A region (`within`/`each`) is a list: its names need the flag to
+	// say which one it speaks of.
+	Declarations Patterns `yaml:"declarations,omitempty"`
 	// TypeImportPattern recognises an import statement that brings types only — nothing of
-	// the imported file runs with the importer —, read on the statement's first line. The
-	// dependency fixer flags such an import `@dep[type]:`. A family that has one knows it
-	// (TypeScript: `import type …`, `export type … from`).
+	// the imported file runs with the importer —, read on the statement's text. The
+	// dependency fixer flags such an import `@dep[type]:`.
 	TypeImportPattern string `yaml:"type_import_pattern,omitempty"`
 	// HandlePatterns recognise a path that HANDLES a failure instead of letting it escape.
 	//
@@ -447,10 +457,9 @@ var dialectFamilies = map[string]Dialect{
 	// it; `open M` is the import line (reported from the bavel adoption, where these
 	// patterns were first declared by hand).
 	"ocaml": {
-		EnvRead:       "Sys\\.getenv(?:_opt)?\\s+\"([A-Za-z_][A-Za-z0-9_]*)\"",
-		ExportedFunc:  `(?m)^let\s+(?:rec\s+)?([a-z_][A-Za-z0-9_']*)`,
-		Loop:          `\b(for|while)\b`,
-		ImportPattern: `^\s*open!?\s+([A-Z][A-Za-z0-9_.]*)`,
+		EnvRead:      "Sys\\.getenv(?:_opt)?\\s+\"([A-Za-z_][A-Za-z0-9_]*)\"",
+		ExportedFunc: `(?m)^let\s+(?:rec\s+)?([a-z_][A-Za-z0-9_']*)`,
+		Loop:         `\b(for|while)\b`,
 	},
 	"kotlin": {
 		EnvRead:      "System\\.getenv\\(\\s*\"([A-Za-z_]\\w*)\"\\s*\\)",
@@ -516,9 +525,6 @@ func (c *Config) DialectFor() Dialect {
 		}
 		if d.EnvRead == "" {
 			d.EnvRead = base.EnvRead
-		}
-		if d.ImportPattern == "" {
-			d.ImportPattern = base.ImportPattern
 		}
 		if len(d.HandlePatterns) == 0 {
 			d.HandlePatterns = base.HandlePatterns
@@ -660,43 +666,28 @@ func FamilyFalliblePatterns(family string) []FalliblePattern {
 type TestHandles struct {
 	// Exposed: where the code exposes a handle. What these find is what a unit owns — the
 	// handles its spec declares, the acronyms its identity is confronted by.
-	Exposed []string `yaml:"exposed,omitempty"`
+	Exposed Patterns `yaml:"exposed,omitempty"`
 	// Mentioned: what else in the code makes a handle exist without exposing it at the
 	// attribute — a fallback, a table of handles, a suffix composed in a child. Only
 	// testid-queried-exists reads it, to know a queried handle exists somewhere.
-	Mentioned []string `yaml:"mentioned,omitempty"`
+	Mentioned Patterns `yaml:"mentioned,omitempty"`
 	// Queried: how an end-to-end flow queries a handle — testid-queried-exists reads it.
-	Queried []string `yaml:"queried,omitempty"`
+	Queried Patterns `yaml:"queried,omitempty"`
 }
 
-// validate says which pattern does not compile, or captures with no group its list reads:
-// a pattern with none would find nothing, and the gate would answer as if the code exposed
-// no handle.
+// validate says which pattern is wrong (see Pattern.Validate).
 func (th *TestHandles) validate() error {
 	for _, l := range []struct {
 		field    string
-		patterns []string
+		patterns Patterns
 		groups   []string
 	}{
 		{"exposed", th.Exposed, []string{"testid", "prefix"}},
 		{"mentioned", th.Mentioned, []string{"testid", "prefix", "suffix"}},
 		{"queried", th.Queried, []string{"testid", "prefix"}},
 	} {
-		for i, p := range l.patterns {
-			re, err := regexp.Compile(p)
-			if err != nil {
-				return fmt.Errorf("`dialect.test_handles.%s[%d]` does not compile: %w", l.field, i, err)
-			}
-			named := false
-			for _, g := range l.groups {
-				if re.SubexpIndex(g) >= 0 {
-					named = true
-				}
-			}
-			if !named {
-				return fmt.Errorf("`dialect.test_handles.%s[%d]` captures with none of the groups %s: name what it captures, e.g. `(?P<testid>…)`",
-					l.field, i, strings.Join(l.groups, ", "))
-			}
+		if err := l.patterns.Validate("dialect.test_handles."+l.field, l.groups); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -714,30 +705,124 @@ func FamilyTestHandles(family, attr string) *TestHandles {
 	// attribute or an object key.
 	a := `(?i)\b[a-z]*` + regexp.QuoteMeta(attr) + `[a-z]*`
 	id := `:?[a-zA-Z][a-zA-Z0-9._-]*`
+	re := func(s string) Pattern { return Pattern{Re: s} }
 	return &TestHandles{
-		Exposed: []string{
-			a + `\s*[=:]\s*\{?["'](?P<testid>` + id + `)["']`,
+		Exposed: Patterns{
+			re(a + `\s*[=:]\s*\{?["'](?P<testid>` + id + `)["']`),
 			// A prop ending in Prefix gives a child the head of its handles.
-			a + `prefix\s*[=:]\s*\{?["'](?P<prefix>` + id + `)["']`,
-			a + "\\s*[=:]\\s*\\{?`(?P<testid>" + id + ")`",
-			a + "\\s*[=:]\\s*\\{?`(?P<prefix>" + id + ")\\$\\{",
-			// A conditional handle: the literal of each branch, not of the condition.
-			a + `\s*=\s*\{[^{}?]*\?\s*["'](?P<testid>` + id + `)["']`,
-			a + `\s*=\s*\{[^{}?]*\?[^{}]*["']\s*:\s*["'](?P<testid>` + id + `)["']`,
+			re(a + `prefix\s*[=:]\s*\{?["'](?P<prefix>` + id + `)["']`),
+			re(a + "\\s*[=:]\\s*\\{?`(?P<testid>" + id + ")`"),
+			re(a + "\\s*[=:]\\s*\\{?`(?P<prefix>" + id + ")\\$\\{"),
+			// A conditional handle: every literal right after a `?` or a `:` of it — its
+			// branches, nested or not —, never a condition's (`kind === 'email'`). The region
+			// starts at the first `?`, and may hold templates (`${i}`).
+			{Within: a + "\\s*=\\s*\\{[^?{}]*(?P<within>\\?(?:[^{}]|\\$\\{[^{}]*\\})*)\\}",
+				Each: `[?:]\s*["'](?P<testid>` + id + `)["']|[?:]\s*` + "`(?P<prefix>" + id + ")\\$\\{"},
 		},
-		Mentioned: []string{
+		Mentioned: Patterns{
 			// A handle marked with `:` anywhere: a fallback, a table of handles.
-			"[\"'`](?P<testid>:[a-zA-Z][a-zA-Z0-9._-]*[a-zA-Z0-9._])[\"'`]",
-			"[\"'`](?P<prefix>:[a-zA-Z][a-zA-Z0-9._-]*)\\$\\{",
+			re("[\"'`](?P<testid>:[a-zA-Z][a-zA-Z0-9._-]*[a-zA-Z0-9._])[\"'`]"),
+			re("[\"'`](?P<prefix>:[a-zA-Z][a-zA-Z0-9._-]*)\\$\\{"),
 			// A segment a child composes onto the head its parent gives it.
-			"`\\$\\{[a-zA-Z_][a-zA-Z0-9_.]*\\}(?P<suffix>-[a-zA-Z][a-zA-Z0-9-]*)",
+			re("`\\$\\{[a-zA-Z_][a-zA-Z0-9_.]*\\}(?P<suffix>-[a-zA-Z][a-zA-Z0-9-]*)"),
 		},
 		// Maestro flows: `id: ':abcd-save'`, or a regular expression whose head is static.
-		Queried: []string{
-			`(?m)^\s*id:\s*["'](?P<testid>` + id + `)["']\s*$`,
-			`(?m)^\s*id:\s*["'](?P<prefix>:?[a-zA-Z][a-zA-Z0-9_-]*)[.*+?\[(]`,
+		Queried: Patterns{
+			re(`(?m)^\s*id:\s*["'](?P<testid>` + id + `)["']\s*$`),
+			re(`(?m)^\s*id:\s*["'](?P<prefix>:?[a-zA-Z][a-zA-Z0-9_-]*)[.*+?\[(]`),
 		},
 	}
+}
+
+// FamilyChain is the family's example of the chain patterns — Imports, ImportNames,
+// Declarations, TypeImportPattern, ImportResolve —, as a dialect holding only them: what
+// `anchors init` writes and the governance tips suggest. It is never applied by itself: the
+// chain gates read only what the project declares. A family with no example gives nil.
+func FamilyChain(family string) *Dialect {
+	ident := `[\p{L}_$][\p{L}\p{N}_$]*`
+	re := func(s string) Pattern { return Pattern{Re: s} }
+	switch strings.ToLower(family) {
+	case "ts":
+		code := "**/*.{ts,tsx,js,jsx,mjs,cjs,mts,cts}"
+		return &Dialect{
+			Imports: Patterns{
+				// `import … from '…'` and `export … from '…'`: a list of names in braces may
+				// span lines; anything else stays on the keyword's line.
+				// Both plainly run, unless `import type`.
+				{Re: `(?m)^[ \t]*(?:import|export)\b(?:[^'";{}\n]|\{[^}]*\})*?\bfrom\s*['"](?P<path>[^'"]+)['"]`, Files: code, Runs: true},
+				// An import for its effect alone: `import './polyfills'`.
+				{Re: `(?m)^[ \t]*import\s*['"](?P<path>[^'"]+)['"]`, Files: code, Runs: true},
+				// `require('…')` and `import('…')`, with what is destructured from them or the
+				// member read from them.
+				{Re: `(?:\{[^{}]*\}\s*=\s*(?:await\s+)?)?\b(?:require|import)\(\s*['"](?P<path>[^'"]+)['"]\s*\)(?:\.` + ident + `)?`, Files: code},
+				// A Maestro flow running another, relative to itself.
+				{Re: `(?m)^\s*(?:-\s*)?(?:runFlow:|file:)\s*['"]?(?P<path>[^'"\s#{}]+\.ya?ml)\b`, Files: "**/*.{yaml,yml}", Relative: true},
+			},
+			ImportNames: Patterns{
+				// The names in braces: `{ A, B as C }` brings A and B, `type A` brings A.
+				{Within: `^[ \t]*(?:import|export)\b[^{'"]*\{(?P<within>[^}]*)\}`, Each: `(?:^|,)\s*(?:type\s+)?(?P<name>` + ident + `)`},
+				// The default import: `import X from`, `import X, { … } from`.
+				re(`^[ \t]*import\s+(?:type\s+)?(?P<default>` + ident + `)\s*(?:,|\s+from\b)`),
+				// A destructuring of a dynamic import: `const { a, b: c } = await import('…')`.
+				{Within: `\{(?P<within>[^{}]*)\}\s*=\s*(?:await\s+)?(?:require|import)\(`, Each: `(?:^|,)\s*(?P<name>` + ident + `)`},
+				// A member read from it: `import('…').Name`.
+				re(`\b(?:require|import)\([^)]*\)\.(?P<name>` + ident + `)`),
+			},
+			Declarations: Patterns{
+				// At the top level of the file: a name declared inside a function is no one's to
+				// import.
+				re(`(?m)^export\s+default\b(?P<default>)`),
+				re(`(?m)^module\.exports\s*=(?P<default>)`),
+				re(`(?m)^(?:export\s+)?(?:declare\s+)?(?:default\s+)?(?:abstract\s+)?(?:async\s+)?(?:function\*?|const|let|var|class|interface|type|enum)\s+(?P<name>` + ident + `)`),
+				// An export list, on one line or several: `export { A, B as C } from '…'`
+				// declares A and C.
+				{Within: `(?m)^export\s+(?:type\s+)?\{(?P<within>[^}]*)\}`, Each: `(?P<name>` + ident + `)\s*(?:,|$)`},
+			},
+			TypeImportPattern: `^\s*(?:import|export)\s+type\b`,
+			ImportResolve:     &ImportResolve{Extensions: []string{".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx", "/index.js"}},
+		}
+	case "go":
+		goIdent := `[\p{L}_][\p{L}\p{N}_]*`
+		return &Dialect{
+			Imports: Patterns{
+				{Re: `(?m)^import\s+(?:[\w.]+\s+)?"(?P<path>[^"]+)"`, Files: "**/*.go"},
+				// An import block: each path on its own line.
+				{Within: `(?m)^import\s*\((?P<within>[^)]*)\)`, Each: `(?m)^[ \t]*(?:[\w.]+\s+)?"(?P<path>[^"]+)"`, Files: "**/*.go"},
+			},
+			Declarations: Patterns{
+				re(`(?m)^func\s+(?:\([^)]*\)\s*)?(?P<name>` + goIdent + `)`),
+				re(`(?m)^(?:type|var|const)\s+(?P<name>` + goIdent + `)`),
+			},
+		}
+	case "python":
+		pyIdent := `[\p{L}_][\p{L}\p{N}_]*`
+		return &Dialect{
+			Imports: Patterns{
+				{Re: `(?m)^[ \t]*from\s+(?P<path>[\w.]+)\s+import\b[^\n(]*(?:\([^)]*\))?`, Files: "**/*.py"},
+				{Re: `(?m)^[ \t]*import\s+(?P<path>[\w.]+)`, Files: "**/*.py"},
+			},
+			ImportNames: Patterns{
+				{Within: `\bimport\s+\(?(?P<within>[^)]*)\)?`, Each: `(?:^|,)\s*(?P<name>` + pyIdent + `)`},
+			},
+			Declarations: Patterns{
+				re(`(?m)^(?:async\s+)?def\s+(?P<name>` + pyIdent + `)`),
+				re(`(?m)^class\s+(?P<name>` + pyIdent + `)`),
+				re(`(?m)^(?P<name>` + pyIdent + `)\s*(?::[^=\n]*)?=`),
+			},
+		}
+	case "ocaml":
+		return &Dialect{
+			Imports: Patterns{
+				// A module named after `open`, or qualifying a name anywhere: `Eval.apply`. A
+				// constructor — `Some x` — qualifies nothing, and is not read.
+				{Re: `\bopen!?\s+(?P<path>[A-Z][A-Za-z0-9_']*)`, Files: "**/*.ml"},
+				{Re: `\b(?P<path>[A-Z][A-Za-z0-9_']*)\.[A-Za-z_(]`, Files: "**/*.ml"},
+			},
+			// dune names a module's file after it, first letter lowered.
+			ImportResolve: &ImportResolve{ByName: true, NameCase: "lower_first", Extensions: []string{".ml"}},
+		}
+	}
+	return nil
 }
 
 // ImportResolve is how an import's path becomes a file (see Dialect.ImportResolve).

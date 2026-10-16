@@ -10,8 +10,11 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestDialectFor_withoutDeclarationOnlyTheNamingDefaults(t *testing.T) {
@@ -609,17 +612,18 @@ func TestDialectFor_ocaml(t *testing.T) {
 	if m := regexp.MustCompile(d.EnvRead).FindStringSubmatch(src); m == nil || m[1] != "HOME" {
 		t.Errorf("env read: %v", m)
 	}
+	if !regexp.MustCompile(d.Loop).MatchString("for i = 1 to 3 do () done") {
+		t.Error("the loop is OCaml's")
+	}
 	var opens []string
-	for _, l := range strings.Split(src, "\n") {
-		if m := regexp.MustCompile(d.ImportPattern).FindStringSubmatch(l); m != nil {
-			opens = append(opens, m[1])
-		}
+	for _, m := range FamilyChain("ocaml").Imports.FindAll(src, "src/p.ml") {
+		opens = append(opens, m.Groups["path"].Value)
 	}
-	if !reflect.DeepEqual(opens, []string{"Lexer", "Base.Option"}) || !regexp.MustCompile(d.Loop).MatchString("for i = 1 to 3 do () done") {
-		t.Errorf("opens %v", opens)
+	if !reflect.DeepEqual(opens, []string{"Lexer", "Base", "Base", "Sys"}) { // opened, then qualifying Option: one import, deduplicated by the gate
+		t.Errorf("the example reads the modules opened and qualified: %v", opens)
 	}
-	if own := (&Config{Dialect: &Dialect{Family: "ocaml", ImportPattern: "^use (.*)"}}).DialectFor(); own.ImportPattern != "^use (.*)" {
-		t.Error("a declared import pattern wins over the family")
+	if len(d.Imports) != 0 {
+		t.Error("the family's import patterns are an example, never applied by themselves")
 	}
 }
 
@@ -661,16 +665,130 @@ func TestDialect_testHandles(t *testing.T) {
 func TestFamilyTestHandles_anExampleNeverApplied(t *testing.T) {
 	t.Run("DLCTI-B28: The ts family has an example of the test handle patterns, never applied by itself", func(t *testing.T) {})
 	ex := FamilyTestHandles("TS", "data-testid")
-	if ex == nil || len(ex.Exposed) == 0 || len(ex.Queried) == 0 || !strings.Contains(ex.Exposed[0], "data-testid") {
+	if ex == nil || len(ex.Exposed) == 0 || len(ex.Queried) == 0 || !strings.Contains(ex.Exposed[0].Re, "data-testid") {
 		t.Fatalf("the ts example reads the project's attribute: %+v", ex)
 	}
-	if !regexp.MustCompile(ex.Exposed[0]).MatchString(`<div data-testid="abcd-root">`) {
-		t.Errorf("the example finds a data-testid: %s", ex.Exposed[0])
+	if !regexp.MustCompile(ex.Exposed[0].Re).MatchString(`<div data-testid="abcd-root">`) {
+		t.Errorf("the example finds a data-testid: %s", ex.Exposed[0].Re)
 	}
 	if FamilyTestHandles("go", "testID") != nil || FamilyTestHandles("ts", " ") != nil {
 		t.Error("another family, or no attribute, gives no example")
 	}
 	if got := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor().TestHandles; got != nil {
 		t.Errorf("a project that declared none is measured with none: %+v", got)
+	}
+	// Reported from MIF: a conditional nested three deep, one branch a template. Every branch
+	// is read; the condition's literal (`'email'`) is not.
+	src := "testID={\n  i === 0\n    ? ':import-source-gallery'\n    : i === 1\n      ? ':import-source-camera'\n      : kind === 'email'\n        ? `:urpt-row-${i}-delete`\n        : ':import-manual-entry-button'\n}"
+	var got []string
+	for _, m := range FamilyTestHandles("ts", "testID").Exposed.FindAll(src, "x.tsx") {
+		for _, g := range []string{"testid", "prefix"} {
+			if c, ok := m.Groups[g]; ok {
+				got = append(got, g+"="+c.Value)
+			}
+		}
+	}
+	if want := "testid=:import-source-gallery,testid=:import-source-camera,prefix=:urpt-row-,testid=:import-manual-entry-button"; strings.Join(got, ",") != want {
+		t.Errorf("every branch of the nested conditional, none of its condition:\n got %v\nwant %s", got, want)
+	}
+}
+
+func TestPattern_engine(t *testing.T) {
+	t.Run("DLCTI-B29: A dialect pattern runs over the whole content, as an expression or a region", func(t *testing.T) {})
+	src := "a\nimport {\n  One,\n  Two as Deux,\n  Three\n} from './x'\n"
+	across := Pattern{Re: `import\s*\{[^}]*\}\s*from\s*'(?P<path>[^']+)'`}
+	ms := across.FindAll(src)
+	if len(ms) != 1 || LineOf(src, ms[0].Start) != 2 || LineOf(src, ms[0].Groups["path"].Start) != 6 || ms[0].Listed {
+		t.Fatalf("one match from line 2, its path on line 6: %+v", ms)
+	}
+	region := Pattern{Within: `\{(?P<within>[^}]*)\}`, Each: `(?P<name>\w+)\s*(?:,|$)`}
+	var names []string
+	for _, m := range region.FindAll(src) {
+		if !m.Listed || m.Region != ms[0].Start+len("import ") {
+			t.Errorf("the region's names share its start and are listed: %+v", m)
+		}
+		names = append(names, m.Groups["name"].Value+"@"+strconv.Itoa(LineOf(src, m.Start)))
+	}
+	if strings.Join(names, ",") != "One@3,Deux@4,Three@5" {
+		t.Errorf("each name of the region, on its line: %v", names)
+	}
+	goOnly := Patterns{{Re: `(?P<path>x)`, Files: "**/*.go"}}
+	if len(goOnly.FindAll("x", "a/b.ts")) != 0 || len(goOnly.FindAll("x", "a/b.go")) != 1 {
+		t.Error("files narrows the pattern to its glob")
+	}
+	var loaded struct {
+		P Patterns `yaml:"p"`
+	}
+	if err := yaml.Unmarshal([]byte("p:\n  - '(?P<path>a)'\n  - within: '(?P<within>b)'\n    each: '(?P<path>c)'\n    files: '**/*.go'\n"), &loaded); err != nil ||
+		len(loaded.P) != 2 || loaded.P[0].Re != "(?P<path>a)" || loaded.P[1].Each != "(?P<path>c)" || loaded.P[1].Files != "**/*.go" {
+		t.Errorf("written as text or as a map: %v %+v", err, loaded.P)
+	}
+	if out, _ := yaml.Marshal(loaded.P); !strings.HasPrefix(string(out), "- (?P<path>a)\n- within:") {
+		t.Errorf("a pattern that is only an expression is written as text:\n%s", out)
+	}
+	for _, c := range []struct {
+		p    Pattern
+		says string
+	}{
+		{Pattern{Re: `(?P<path>[`}, "does not compile"},
+		{Pattern{Within: `(?P<within>x)`}, "a region needs both"},
+		{Pattern{Within: `(x)`, Each: `(?P<path>x)`}, "has no `within` group"},
+		{Pattern{Re: `(x)`}, "captures with none of the groups path"},
+		{Pattern{Re: `(?P<path>x)`, Files: "[a"}, "not a valid glob"},
+	} {
+		if err := (Patterns{c.p}).Validate("dialect.imports", []string{"path"}); err == nil || !strings.Contains(err.Error(), c.says) || !strings.Contains(err.Error(), "dialect.imports[0]") {
+			t.Errorf("%+v: refused naming it (%q), got %v", c.p, c.says, err)
+		}
+	}
+}
+
+func TestDialect_chainPatterns(t *testing.T) {
+	t.Run("DLCTI-B30: The chain patterns are the dialect's, and a family gives none by itself", func(t *testing.T) {})
+	c, err := load(t, "version: 7\nlayers: {}\ndialect:\n  imports: ['from (?P<path>\\S+)']\n  import_names: ['import (?P<name>\\w+)']\n  declarations: ['def (?P<name>\\w+)', 'export default(?P<default>)']\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d := c.DialectFor(); len(d.Imports) != 1 || len(d.ImportNames) != 1 || len(d.Declarations) != 2 {
+		t.Errorf("the three lists are read: %+v", d)
+	}
+	if _, err := load(t, "version: 7\nlayers: {}\ndialect:\n  imports: ['from (\\S+)']\n"); err == nil || !strings.Contains(err.Error(), "dialect.imports[0]") {
+		t.Errorf("an import pattern with no path group refuses the config: %v", err)
+	}
+	if d := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor(); len(d.Imports) != 0 || d.ImportResolve != nil || d.TypeImportPattern != "" {
+		t.Errorf("the family gives no import pattern nor resolution by itself: %+v", d)
+	}
+}
+
+func TestFamilyChain_examples(t *testing.T) {
+	t.Run("DLCTI-B31: The families have an example of the chain patterns", func(t *testing.T) {})
+	paths := func(family, src, rel string) []string {
+		var out []string
+		for _, m := range FamilyChain(family).Imports.FindAll(src, rel) {
+			out = append(out, m.Groups["path"].Value)
+		}
+		return out
+	}
+	ts := "import {\n  A,\n  B,\n} from './ab'\nimport './polyfills'\nconst { c } = await import('./c')\nconst x = 'from'\n"
+	if got := paths("ts", ts, "src/x.ts"); strings.Join(got, ",") != "./ab,./polyfills,./c" {
+		t.Errorf("ts: %v", got)
+	}
+	if got := paths("ts", "- runFlow:\n    file: login.yaml\n", "e2e/a.yaml"); strings.Join(got, ",") != "login.yaml" {
+		t.Errorf("ts flows: %v", got)
+	}
+	goSrc := "package x\n\nimport \"fmt\"\n\nimport (\n\t\"os\"\n\tx \"example.com/m/x\"\n)\n\nvar s = []string{\n\t\"not\",\n}\n"
+	if got := paths("go", goSrc, "a.go"); strings.Join(got, ",") != "fmt,os,example.com/m/x" {
+		t.Errorf("go: %v", got)
+	}
+	if got := paths("python", "from app.core import (\n    a,\n    b,\n)\nimport os\n", "a.py"); strings.Join(got, ",") != "app.core,os" {
+		t.Errorf("python: %v", got)
+	}
+	if got := FamilyChain("python").NamesBrought("from app.core import (\n    a,\n    b,\n)", "a.py"); strings.Join(got, ",") != "a,b" {
+		t.Errorf("python names: %v", got)
+	}
+	if got := paths("ocaml", "open Lexer\nlet x = Eval.apply 1\n", "a.ml"); strings.Join(got, ",") != "Lexer,Eval" {
+		t.Errorf("ocaml: %v", got)
+	}
+	if FamilyChain("cobol") != nil {
+		t.Error("an unknown family has no example")
 	}
 }

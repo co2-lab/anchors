@@ -9,6 +9,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"gopkg.in/yaml.v3"
 	"strings"
 )
 
@@ -74,6 +75,42 @@ func checkGovernanceOpportunities(g *mapx.Graph, cfg *config.Config) []Finding {
 				Detail:   i18n.T("health.opportunity.test_handles", name, testHandlesYAML(example)),
 			})
 			break
+		}
+	}
+
+	// 0c. chain patterns: a chain gate is declared and the project says nothing of how its
+	// imports are written — the gates are pending. The family's example shows how.
+	if cfg.Dialect == nil || len(cfg.Dialect.Imports) == 0 {
+		var chain []string
+		for _, name := range []string{"dep-declared", "dep-honored", "used-by-declared"} {
+			if _, ok := gateMap[name]; ok {
+				chain = append(chain, name)
+			}
+		}
+		family := ""
+		if cfg.Dialect != nil {
+			family = cfg.Dialect.Family
+		}
+		if ex := config.FamilyChain(family); len(chain) > 0 && ex != nil {
+			block := map[string]any{"imports": ex.Imports}
+			if len(ex.ImportNames) > 0 {
+				block["import_names"] = ex.ImportNames
+			}
+			if len(ex.Declarations) > 0 {
+				block["declarations"] = ex.Declarations
+			}
+			if ex.TypeImportPattern != "" {
+				block["type_import_pattern"] = ex.TypeImportPattern
+			}
+			if ex.ImportResolve != nil && (cfg.Dialect == nil || cfg.Dialect.ImportResolve == nil) {
+				block["import_resolve"] = ex.ImportResolve
+			}
+			out = append(out, Finding{
+				Check:    "sugestao-chain-patterns",
+				Severity: Info,
+				Subject:  "chain_patterns",
+				Detail:   i18n.T("health.opportunity.chain_patterns", strings.Join(chain, ", "), dialectBlockYAML(block)),
+			})
 		}
 	}
 
@@ -200,24 +237,23 @@ func QuickGovernanceHints(g *mapx.Graph, cfg *config.Config) []Finding {
 }
 
 // fallibleYAML is the family's fallible patterns as the `dialect:` block to copy.
-// testHandlesYAML writes the example as the `dialect:` block it goes in, each pattern
-// single-quoted with its quotes doubled.
+// testHandlesYAML writes the example as the `dialect:` block it goes in.
 func testHandlesYAML(th *config.TestHandles) string {
-	var b strings.Builder
-	b.WriteString("\n    test_handles:")
-	for _, l := range []struct {
-		key      string
-		patterns []string
-	}{{"exposed", th.Exposed}, {"mentioned", th.Mentioned}, {"queried", th.Queried}} {
-		if len(l.patterns) == 0 {
-			continue
-		}
-		fmt.Fprintf(&b, "\n      %s:", l.key)
-		for _, p := range l.patterns {
-			fmt.Fprintf(&b, "\n        - '%s'", strings.ReplaceAll(p, "'", "''"))
-		}
+	return dialectBlockYAML(map[string]any{"test_handles": th})
+}
+
+// dialectBlockYAML writes fields of the dialect as the block to copy under `dialect:`,
+// indented as the tips show it. yaml quotes each pattern as it must be quoted.
+func dialectBlockYAML(fields map[string]any) string {
+	b, err := yaml.Marshal(fields)
+	if err != nil {
+		return ""
 	}
-	return b.String()
+	var out strings.Builder
+	for _, l := range strings.Split(strings.TrimRight(string(b), "\n"), "\n") {
+		out.WriteString("\n    " + l)
+	}
+	return out.String()
 }
 
 func fallibleYAML(ps []config.FalliblePattern) string {

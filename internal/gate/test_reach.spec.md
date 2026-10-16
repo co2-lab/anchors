@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSRCH
-  updated_at: 2026-10-08
+  updated_at: 2026-10-16
   layer: gate
 -->
 # TestReach — a test reaches the unit it says it tests
@@ -38,7 +38,7 @@ a definition looks like), or — for the `ref:` — when a call the project decl
 | Effect | Description |
 | --- | --- |
 | `TSRCH-B01` | `test-exercises-unit`: a test that names, as a whole word, something its unit defines passes; one that neither imports the unit nor names anything it defines fails naming the unit. Every unit the derivation pairs with the test is confronted. |
-| `TSRCH-B02` | An import line of the test — by the dialect's `import_pattern` when declared, or the forms most languages share — that names the unit's file name without extension, or its directory as a path, reaches the unit; the name elsewhere in the test, or a unit at the root with no directory, does not count as an import. (`importsModule`) |
+| `TSRCH-B02` | An import line of the test — a statement of the dialect's `imports`, or a line of the forms most languages share — that names the unit's file name without extension, or its directory as a path, reaches the unit; the name elsewhere in the test, or a unit at the root with no directory, does not count as an import. (`importsModule`) |
 | `TSRCH-B03` | A test that defines a name its unit defines fails naming the unit and the names, sorted — even when it reaches the unit otherwise: it is exercising its own copy. A name it copies does not count as reaching. |
 | `TSRCH-B04` | A defined name shorter than three characters is anyone's, and neither reaches nor copies; a definition's first non-empty capture group is its name. (`definedNames`) |
 | `TSRCH-B05` | `test-ref-matches-unit`: a test that reaches any of the code files the `ref:`'s spec governs passes; one that reaches none fails naming the `ref:` and the files, sorted. |

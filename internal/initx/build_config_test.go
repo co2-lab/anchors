@@ -214,3 +214,16 @@ func TestBuildConfigSeedsTheFamilysTestHandles(t *testing.T) {
 		t.Errorf("no attribute found, no patterns: %+v", c.Dialect)
 	}
 }
+
+func TestBuildConfigSeedsTheFamilysChain(t *testing.T) {
+	t.Run("BLCNB-B11: A new project's dialect carries the family's example of the chain patterns", func(t *testing.T) {})
+	ex := config.FamilyChain("ts")
+	c := (&Proposal{Family: "ts"}).buildConfig()
+	if c.Dialect == nil || !reflect.DeepEqual(c.Dialect.Imports, ex.Imports) || !reflect.DeepEqual(c.Dialect.ImportNames, ex.ImportNames) ||
+		!reflect.DeepEqual(c.Dialect.Declarations, ex.Declarations) || !reflect.DeepEqual(c.Dialect.ImportResolve, ex.ImportResolve) {
+		t.Errorf("the ts project starts with the example: %+v", c.Dialect)
+	}
+	if c := (&Proposal{Family: "kotlin"}).buildConfig(); c.Dialect == nil || len(c.Dialect.Imports) != 0 {
+		t.Errorf("a family with no example starts with no import patterns: %+v", c.Dialect)
+	}
+}
