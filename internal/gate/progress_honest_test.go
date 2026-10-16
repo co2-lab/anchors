@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -92,7 +93,7 @@ func TestProgressHonest(t *testing.T) {
 
 	t.Run("PRHNP-B04: A ticked item whose file does not exist is failed", func(t *testing.T) {
 		root, n := monta(t, "- [x] `packages/shared/Nunca.spec.md` — nunca existiu\n")
-		v, d := checkProgressHonest("", n, root, nil, nil)
+		v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
 		}
@@ -104,7 +105,7 @@ func TestProgressHonest(t *testing.T) {
 
 	t.Run("PRHNP-B11: The verdict names each offending path", func(t *testing.T) {
 		root, n := monta(t, "- [x] `packages/shared/Nunca.spec.md` — nunca existiu\n")
-		v, d := checkProgressHonest("", n, root, nil, nil)
+		v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
 		}
@@ -118,7 +119,7 @@ func TestProgressHonest(t *testing.T) {
 		root, n := monta(t,
 			"- [ ] `packages/shared/Feito.spec.md` — entregue e não marcado\n",
 			"packages/shared/Feito.spec.md")
-		v, d := checkProgressHonest("", n, root, nil, nil)
+		v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
 		}
@@ -135,7 +136,7 @@ func TestProgressHonest(t *testing.T) {
 			"- [ ] `packages/shared/Feito.spec.md` — já entregue\n"+
 				"- [x] `packages/shared/Nunca.spec.md` — nunca existiu\n",
 			"packages/shared/Feito.spec.md")
-		v, d := checkProgressHonest("", n, root, nil, nil)
+		v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
 		}
@@ -152,7 +153,7 @@ func TestProgressHonest(t *testing.T) {
 		root, n := monta(t,
 			"- [x] `a.spec.md` — feito\n- [ ] `b.spec.md` — por fazer\n",
 			"a.spec.md")
-		if v, d := checkProgressHonest("", n, root, nil, nil); v != Pass {
+		if v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil)); v != Pass {
 			t.Errorf("veredito %v, queria Pass: %s", v, d)
 		}
 	})
@@ -161,7 +162,7 @@ func TestProgressHonest(t *testing.T) {
 	// progresso legítimo — a fase pode ser "revisar com o time".
 	t.Run("PRHNP-B09: An item in prose citing no path is not charged", func(t *testing.T) {
 		root, n := monta(t, "- [ ] revisar com o time antes de seguir\n- [x] alinhado na daily\n")
-		if v, d := checkProgressHonest("", n, root, nil, nil); v != Pass {
+		if v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil)); v != Pass {
 			t.Errorf("veredito %v, queria Pass — prosa não é confrontável: %s", v, d)
 		}
 	})
@@ -171,7 +172,7 @@ func TestProgressHonest(t *testing.T) {
 	// quem lê não sabe se falta trabalho ou falta limpar o arquivo.
 	t.Run("PRHNP-B07: A checkbox item promising no file at all is failed", func(t *testing.T) {
 		root, n := monta(t, "- [ ] TODO: um item por spec que esta fase semeia\n- [ ] FIXME: a outra fase\n")
-		v, d := checkProgressHonest("", n, root, nil, nil)
+		v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
 		}
@@ -187,14 +188,14 @@ func TestProgressHonest(t *testing.T) {
 	// mecanismo. São duas perguntas diferentes — "existe?" e "é verdade?".
 	t.Run("PRHNP-B02: An untracked plan is skipped, not failed", func(t *testing.T) {
 		root, n := monta(t, "")
-		if v, d := checkProgressHonest("", n, root, nil, nil); v != Skip {
+		if v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil)); v != Skip {
 			t.Fatalf("veredito %v, queria Skip: %s", v, d)
 		}
 	})
 
 	t.Run("PRHNP-B03: The skip for an untracked plan says how to track it", func(t *testing.T) {
 		root, n := monta(t, "")
-		v, d := checkProgressHonest("", n, root, nil, nil)
+		v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil))
 		if v != Skip {
 			t.Fatalf("veredito %v, queria Skip: %s", v, d)
 		}
@@ -205,7 +206,7 @@ func TestProgressHonest(t *testing.T) {
 
 	t.Run("PRHNP-X01: The gate does not charge that the plan is tracked", func(t *testing.T) {
 		root, n := monta(t, "")
-		if v, d := checkProgressHonest("", n, root, nil, nil); v == Fail {
+		if v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil)); v == Fail {
 			t.Errorf("a ausência do companheiro é outra pergunta — não pode reprovar aqui: %s", d)
 		}
 	})
@@ -216,7 +217,7 @@ func TestProgressHonest(t *testing.T) {
 		root, n := monta(t,
 			"- [x] `a.spec.md` — a spec do relatorio mensal de faturamento\n",
 			"a.spec.md")
-		if v, d := checkProgressHonest("", n, root, nil, nil); v != Pass {
+		if v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil)); v != Pass {
 			t.Errorf("veredito %v, queria Pass — a descrição não é confrontada: %s", v, d)
 		}
 	})
@@ -228,7 +229,7 @@ func TestProgressHonest(t *testing.T) {
 		root, n := monta(t,
 			"- [ ] `packages/shared/Feito.spec.md` — entregue e não marcado\n",
 			"packages/shared/Feito.spec.md")
-		v, d := checkProgressHonest("", n, root, nil, nil)
+		v, d := checkProgressHonest("", n, root, nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
 		}
@@ -243,7 +244,7 @@ func TestProgressHonest(t *testing.T) {
 		}
 
 		root, n = monta(t, "- [x] `packages/shared/Nunca.spec.md` — nunca existiu\n")
-		v, d = checkProgressHonest("", n, root, nil, nil)
+		v, d = checkProgressHonest("", n, root, nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
 		}
@@ -255,7 +256,7 @@ func TestProgressHonest(t *testing.T) {
 	t.Run("PRHNP-B01: An artifact that is not a plan leaves without a verdict", func(t *testing.T) {
 		root := t.TempDir()
 		n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}
-		if v, _ := checkProgressHonest("", n, root, nil, nil); v != Skip {
+		if v, _ := checkProgressHonest("", n, root, nil, testkit.WithComments(nil)); v != Skip {
 			t.Errorf("veredito %v, queria Skip", v)
 		}
 	})
@@ -317,7 +318,7 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 				"- [ ] `packages/infra/MutualTls.spec.md` — o canal\n",
 			"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n"+
 				"- [ ] `packages/infra/Cache.spec.md` — o cache\n")
-		v, d := checkProgressHonest(conteudo, n, root, nil, nil)
+		v, d := checkProgressHonest(conteudo, n, root, nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
 		}
@@ -343,7 +344,7 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 			"> **PLTFR-R0003:** o `DataStore.spec.md` deixa de guardar estado de incidente.\n\n"+
 				"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n",
 			"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n")
-		if v, d := checkProgressHonest(conteudo, n, root, nil, nil); v != Pass {
+		if v, d := checkProgressHonest(conteudo, n, root, nil, testkit.WithComments(nil)); v != Pass {
 			t.Errorf("veredito %v, queria Pass — a menção em prosa não é promessa: %s", v, d)
 		}
 	})
@@ -354,7 +355,7 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 		root, n, conteudo := monta(t,
 			"- [ ] `packages/infra/DataStore.spec.md` — a tabela DynamoDB e o que vive nela\n",
 			"- [x] `packages/infra/DataStore.spec.md`\n")
-		if v, d := checkProgressHonest(conteudo, n, root, nil, nil); v == Fail &&
+		if v, d := checkProgressHonest(conteudo, n, root, nil, testkit.WithComments(nil)); v == Fail &&
 			(strings.Contains(d, "NÃO lista") || strings.Contains(d, "DOES NOT list") ||
 				strings.Contains(d, "NO lista")) {
 			t.Errorf("acusou por descrição diferente — o caminho é o que identifica:\n%s", d)
@@ -365,7 +366,7 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 		root, n, conteudo := monta(t,
 			"- [ ] `packages/_TEMPLATE_Area.spec.md` — o gabarito\n",
 			"# Progresso — PLTFR\n")
-		if v, d := checkProgressHonest(conteudo, n, root, nil, nil); v != Pass {
+		if v, d := checkProgressHonest(conteudo, n, root, nil, testkit.WithComments(nil)); v != Pass {
 			t.Errorf("veredito %v, queria Pass — molde não é spec semeada: %s", v, d)
 		}
 	})
@@ -410,7 +411,7 @@ func TestProgressHonest_accusesTheTODOPlaceholder(t *testing.T) {
 	root, planPath := writeProgress(t, plan, progress)
 	n := mapx.Node{ID: planPath, Kind: mapx.KindPlan, Code: "MTUAO"}
 
-	v, msg := checkProgressHonest(plan, n, root, nil, nil)
+	v, msg := checkProgressHonest(plan, n, root, nil, testkit.WithComments(nil))
 
 	if v != Fail {
 		t.Fatalf("the placeholder passed: %v — %s", v, msg)
@@ -436,7 +437,7 @@ func TestProgressHonest_doesNotAccuseAnItemWithAValidPath(t *testing.T) {
 	}
 	n := mapx.Node{ID: planPath, Kind: mapx.KindPlan, Code: "MTUAO"}
 
-	if v, msg := checkProgressHonest(plan, n, root, nil, nil); v != Pass {
+	if v, msg := checkProgressHonest(plan, n, root, nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the normal case was accused: %v — %s", v, msg)
 	}
 }
@@ -451,7 +452,7 @@ func TestProgressHonest_ignoresProseWithTODO(t *testing.T) {
 	root, planPath := writeProgress(t, plan, progress)
 	n := mapx.Node{ID: planPath, Kind: mapx.KindPlan, Code: "MTUAO"}
 
-	if v, msg := checkProgressHonest(plan, n, root, nil, nil); v == Fail {
+	if v, msg := checkProgressHonest(plan, n, root, nil, testkit.WithComments(nil)); v == Fail {
 		t.Errorf("prose with TODO was accused as an item: %s", msg)
 	}
 }
@@ -464,7 +465,7 @@ func TestProgressHonest_unreadableIsPending(t *testing.T) {
 	if err := os.WriteFile(progress.Path(root), append(b, []byte("hand edit\n")...), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if v, d := checkProgressHonest("", mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}, root, nil, nil); v != Pending || !strings.Contains(d, "edited by hand") {
+	if v, d := checkProgressHonest("", mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}, root, nil, testkit.WithComments(nil)); v != Pending || !strings.Contains(d, "edited by hand") {
 		t.Errorf("%v %s", v, d)
 	}
 }
@@ -472,16 +473,16 @@ func TestProgressHonest_unreadableIsPending(t *testing.T) {
 func TestProgressIntact(t *testing.T) {
 	t.Run("PRHNP-B13: The progress file is the one Anchors wrote", func(t *testing.T) {})
 	root := t.TempDir()
-	if v, _ := checkProgressIntact("", mapx.Node{}, root, nil, nil); v != Skip {
+	if v, _ := checkProgressIntact("", mapx.Node{}, root, nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("no file: %v", v)
 	}
 	trackPlan(t, root, "plans/0001.md", "- [ ] `a.spec.md`\n")
-	if v, d := checkProgressIntact("", mapx.Node{}, root, nil, nil); v != Pass {
+	if v, d := checkProgressIntact("", mapx.Node{}, root, nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("written by anchors: %v %s", v, d)
 	}
 	b, _ := os.ReadFile(progress.Path(root))
 	_ = os.WriteFile(progress.Path(root), []byte(strings.Replace(string(b), "plan", "PLAN", 1)), 0o644)
-	if v, d := checkProgressIntact("", mapx.Node{}, root, nil, nil); v != Fail || !strings.Contains(d, "edited by hand") {
+	if v, d := checkProgressIntact("", mapx.Node{}, root, nil, testkit.WithComments(nil)); v != Fail || !strings.Contains(d, "edited by hand") {
 		t.Errorf("hand edit: %v %s", v, d)
 	}
 }

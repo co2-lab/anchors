@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:2489781ac85a8c20 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:358c48291223a41b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -781,7 +781,7 @@ abra a página dela em `camadas/`.
 
 - [DLVRE-B01 — The command refuses without `--stage` or `--unit`, with a stage outside spec, code, feature, test and plan, with a blank `--intent`, and without `--date`, saying the tool does not read the clock.](layers/comando.md#dlvre--deliver--record-what-a-stage-delivered-where-the-reviewer-reads-it-and-send-the-author-to-the-review)
 
-- [DLVRE-B02 — A unit that does not exist is accepted when a piece of the same unit exists (its spec, feature, test or code by the same stem); the output says the unit does not exist yet, names the piece found, and that the record keeps the unit given — which it does. The unit and every file given as an absolute path are recorded relative to the root.](layers/comando.md#dlvre--deliver--record-what-a-stage-delivered-where-the-reviewer-reads-it-and-send-the-author-to-the-review)
+- [DLVRE-B02 — A unit that does not exist is accepted when a piece of the same unit exists (its spec or feature beside it, a piece where the project's `derived.files` put it, or its code by the same unit name in the code layers' extensions); the output says the unit does not exist yet, names the piece found, and that the record keeps the unit given — which it does. The unit and every file given as an absolute path are recorded relative to the root.](layers/comando.md#dlvre--deliver--record-what-a-stage-delivered-where-the-reviewer-reads-it-and-send-the-author-to-the-review)
 
 - [DLVRE-B03 — Each `--decision` and `--uncovered` value is one item even when it holds commas, while `--file` splits on commas.](layers/comando.md#dlvre--deliver--record-what-a-stage-delivered-where-the-reviewer-reads-it-and-send-the-author-to-the-review)
 
@@ -819,7 +819,7 @@ abra a página dela em `camadas/`.
 
 - [DLCND-B04 — A declared file that git reports modified is not listed, and neither is a file inside a new directory that git reports as a whole.](layers/comando.md#dlcnd--deliveryconfront--confront-what-a-delivery-declares-against-the-disk-at-the-moment-it-is-declared)
 
-- [DLCND-B05 — A unit that has a test file beside it and no mutation signal in the map is warned that no mutation signal was ingested; a unit without a test, a unit already measured, or no unit, gets no warning.](layers/comando.md#dlcnd--deliveryconfront--confront-what-a-delivery-declares-against-the-disk-at-the-moment-it-is-declared)
+- [DLCND-B05 — A unit that has a test where the project's `derived.files` put it (`config.PiecePaths`) and no mutation signal in the map is warned that no mutation signal was ingested; a unit without a test, a unit already measured, or no unit, gets no warning.](layers/comando.md#dlcnd--deliveryconfront--confront-what-a-delivery-declares-against-the-disk-at-the-moment-it-is-declared)
 
 - [DLCND-B06 — The project's gates run on the map's nodes of the declared files and the unit, and each failing gate is listed as gate, target and the first sentence of its detail — informative gates included.](layers/comando.md#dlcnd--deliveryconfront--confront-what-a-delivery-declares-against-the-disk-at-the-moment-it-is-declared)
 
@@ -937,7 +937,7 @@ abra a página dela em `camadas/`.
 
 - [MNCMD-B03 — `anchors monitor run -- <command>` runs the command with its output passed through, records its process, a copy of its output and its exit, and ends with the command's exit code. (`recordedRun`, `ExitCode`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
-- [MNCMD-B04 — Before a command of the agent, the hook records it by the tool call's id only when it goes to the background, named by the runner its first line is; a foreground command — a long one is seen in the process table —, one of Anchors' own long commands, the monitor and a command outside a project record nothing. The hook never prints and never fails. (`agentHook`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
+- [MNCMD-B04 — Before a command of the agent, the hook records it by the tool call's id only when it goes to the background, named by the runner its first line is — the project's `monitor.runners`, then Anchors' own; a foreground command — a long one is seen in the process table —, one of Anchors' own long commands, the monitor and a command outside a project record nothing. The hook never prints and never fails. (`agentHook`)](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
 - [MNCMD-B05 — After a background command of the agent, the hook records the file its output goes to, as the answer names it; after a command it did not record, it does nothing.](layers/comando.md#mncmd--monitorcommand--anchors-monitor-anchors-monitor-run-and-the-agents-hook-watching-the-projects-long-processes-and-recording-them)
 
@@ -1237,7 +1237,7 @@ abra a página dela em `camadas/`.
 
 - [WTCHA-B12 — A delivery record at the root of `changes/` for a plan queues the review of the whole plan; for a unit it queues the review only once the unit has code and a test, and otherwise says the review waits for the unit to close; a record under `changes/reviewed/` queues nothing.](layers/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue)
 
-- [WTCHA-B13 — A unit whose layer waives the test is reviewed as soon as its code exists, a test beside the code in any supported language closes the unit, and a record with no readable unit does not hold the review.](layers/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue)
+- [WTCHA-B13 — A unit whose layer waives the test is reviewed as soon as its code exists, a test where the project's `derived.files` put it closes the unit (`config.PiecePaths`), and a record with no readable unit does not hold the review.](layers/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue)
 
 - [WTCHA-B14 — A delivery record is any `.md` directly under `changes/`; one without a unit line is still a delivery.](layers/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue)
 
@@ -1269,7 +1269,7 @@ abra a página dela em `camadas/`.
 
 - [WRPRW-B01 — The command refuses an artifact outside the stages it composes, a missing `--for`, and a project whose configuration does not load.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
-- [WRPRW-B02 — A target in a spec, feature or test layer is redirected to its unit — the file the map says that spec specifies (also through the spec a feature or test is linked to), else the code file with the same stem beside it — with a note on standard error; a code file is not redirected, and a piece whose unit does not exist is not redirected.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
+- [WRPRW-B02 — A target in a spec, feature or test layer is redirected to its unit — the file the map says that spec specifies (also through the spec a feature or test is linked to), else the code file beside it with the same unit name (`config.UnitName`), in the extensions its code layers declare — with a note on standard error; a code file is not redirected, and a piece whose unit does not exist is not redirected.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
 - [WRPRW-B03 — When the target's layer waives the stage's piece, the prompt is only a STOP saying the layer waives it and not to create it.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
@@ -1957,7 +1957,7 @@ abra a página dela em `camadas/`.
 
 - [CDCMC-B10 — `list --check` accuses only DECLARED codes whose length is outside the accepted lengths, proposing the canonical code of the unit's name, resolved against the conforming codes; a cited code is counted and not accused; the check fails when anything diverges and passes with a summary otherwise.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
-- [CDCMC-B11 — The unit name of a path drops the `.spec.md`, `.feature` and `.test.<ext>` suffixes, or the plain extension.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
+- [CDCMC-B11 — The unit name of a path is the one the project's layers say (`config.UnitName`): it drops Anchors' `.spec.md` and `.feature`, what a `derived.files` template adds after `{{name}}`, or the plain extension.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
 - [CDCMC-B12 — A map with no identity node makes `list` say so and point at `anchors map build`.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
@@ -2285,6 +2285,8 @@ abra a página dela em `camadas/`.
 
 - [MGCMM-B19 — Every run also moves the per-plan `-progress.md` files left into `anchors.progress.md` — each plan a demand, its phases stages, its items tasks weighing 1 as estimates — and deletes them, saying for each what it became; a dry run says it and writes nothing. No format step: it runs while one is left.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
+- [MGCMM-B20 — When the project crosses format 8, the examples of what the old binary read by itself are written into its anchors.yaml where it declared nothing (MGSYN), each field named, and what no example can say printed as `! by hand` — a binary file, a NUL in its first 8000 bytes, needing no comments —; this runs before the file codes, which write a header in each file's comments — read, under `--dry-run`, as the examples would make them. A configuration that does not load with the examples is not written.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
+
 - [MGCMM-B06 — After a real migration the command tells the user to commit it.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-I01 — The migration is idempotent: a second run reports the files as current, asks for no commit, and leaves them byte for byte as the first run wrote them.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
@@ -2305,7 +2307,7 @@ abra a página dela em `camadas/`.
 
 - [NWARN-B03 — A spec is born with a code no node of the map holds; a target path in a layer with a module prefix gets that prefix, a generic basename takes the parent directory's identity, and a bare name gets its canonical code.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
-- [NWARN-B04 — A feature or test takes its code from the header of the sibling spec with the same stem, and says where it read it; with no sibling spec it gets a generated code and a warning that it is born orphaned.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
+- [NWARN-B04 — A feature or test takes its code from the header of the sibling spec with the same unit name (`config.UnitName`), and says where it read it; with no sibling spec it gets a generated code and a warning that it is born orphaned.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
 - [NWARN-B05 — `--code` pins the identity written in the header.](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler)
 
@@ -3219,25 +3221,25 @@ abra a página dela em `camadas/`.
 
 ## config
 
-### [CMMRC — CommentMarkers — which text opens a line comment in each kind of file](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
+### [CMMRC — Comments — how the project's files write a comment, declared in the dialect](layers/config.md#cmmrc--comments--how-the-projects-files-write-a-comment-declared-in-the-dialect)
 
-- [CMMRC-B01 — A known extension answers with all of its line-comment prefixes, in declared order (PHP accepts both the double slash and the hash) (`MarkersFor`).](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
+- [CMMRC-B01 — A file's syntax is Anchors' own for its formats — Markdown (``), Gherkin (`#`) —, else the first entry whose glob matches it, a glob written `**/x` reading files at the root too; a file nothing covers has none. (`CommentsFor`)](layers/config.md#cmmrc--comments--how-the-projects-files-write-a-comment-declared-in-the-dialect)
 
-- [CMMRC-B02 — An unknown extension answers with no prefix at all, so the reader has no anchor to claim.](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
+- [CMMRC-B02 — Blanking a content turns every comment — a line marker to the end of its line, a block from its opener to its closer, across lines — into spaces, keeping each line and offset; a marker inside a string is text, a string ends at its delimiter or, unless the delimiter spans lines, at the end of its line, and a backslash escapes in a one-character string. No syntax blanks nothing. (`Blank`)](layers/config.md#cmmrc--comments--how-the-projects-files-write-a-comment-declared-in-the-dialect)
 
-- [CMMRC-B03 — The comment used to write into a path follows the path's last extension, ignoring case: a test file named after its subject is the language of its last extension (`LineCommentFor`).](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
+- [CMMRC-B03 — A line is only a comment when it is not blank and blanks entirely, a block's inner lines included; the code of a content is its lines blanked, trimmed on the right, the lines that were only a comment dropped; a line cut is the line without its comment. (`CommentOnly`, `Code`, `CutLine`)](layers/config.md#cmmrc--comments--how-the-projects-files-write-a-comment-declared-in-the-dialect)
 
-- [CMMRC-B04 — A markup file (Markdown, HTML, XML) gets the opening of a block comment; closing it is the caller's job.](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
+- [CMMRC-B04 — The writer's marker is the first line marker, else the first block's opener, closed with its closer after a space; a line the entry's `no_line_after` matches takes no comment at its end. (`LineMarker`, `CloseFor`, `TakesLineComment`)](layers/config.md#cmmrc--comments--how-the-projects-files-write-a-comment-declared-in-the-dialect)
 
-- [CMMRC-B05 — A path with no extension, or with one the table does not know, gets the hash comment.](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
+- [CMMRC-B05 — An entry with no marker, an empty marker, a glob that is no glob, or a `no_line_after` that does not compile refuses the config, naming it; a block is written `[open, close]`. (`Delims`)](layers/config.md#cmmrc--comments--how-the-projects-files-write-a-comment-declared-in-the-dialect)
 
-- [CMMRC-B06 — An extension with several prefixes gets the first one declared.](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
+- [CMMRC-B06 — Each family has an example of the entries for its stack and the configuration and scripts beside it — `ts` with `//`, `{/* */}` and `/* */`, a template literal across lines and no comment after a JSX tag; `python` with `#` and triple-quoted strings; `ocaml` with `(* *)` and dune's `;` —, and every family's together for migrating a project; none is applied by itself. (`FamilyComments`, `AllComments`)](layers/config.md#cmmrc--comments--how-the-projects-files-write-a-comment-declared-in-the-dialect)
 
-- [CMMRC-B07 — OCaml's files (`.ml`, `.mli`, `.mll`) comment with `(*`, Menhir's grammars (`.mly`) with `(*` and `/*`, and dune's files, known by name (`dune`, `dune-project`, `dune-file`), with `;`; a block comment opened with ``, ` *)` or ` */`, and a line comment needs no closing. (`MarkersForPath`, `CommentNamed`, `CommentCloseFor`)](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
+- [CMMRC-B07 — The entries of the examples that cover a set of files are those of every family whose glob matches one of them, in the examples' order, Anchors' own formats needing none; the extensions no example covers — a file's name when it has none — are given sorted, for `init` and `migrate` to write and name. (`CommentsCovering`)](layers/config.md#cmmrc--comments--how-the-projects-files-write-a-comment-declared-in-the-dialect)
 
-- [CMMRC-I01 — For every extension in the table, the comment the writer uses is the first prefix the reader lists: reading and writing never disagree about a language.](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
+- [CMMRC-I01 — Blanking never changes a content's length nor the place of a line break: an offset or a line number read on the blanked content is the original's.](layers/config.md#cmmrc--comments--how-the-projects-files-write-a-comment-declared-in-the-dialect)
 
-- [CMMRC-X01 — The reader looks the extension up exactly as given: it neither lowers its case nor extracts it from a path.](layers/config.md#cmmrc--commentmarkers--which-text-opens-a-line-comment-in-each-kind-of-file)
+- [CMMRC-X01 — No language's comment is built in.](layers/config.md#cmmrc--comments--how-the-projects-files-write-a-comment-declared-in-the-dialect)
 
 ### [CNFGO — Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -3322,6 +3324,12 @@ abra a página dela em `camadas/`.
 - [CNFGO-B70 — `progress.unit` names what a task's weight measures; with none declared the unit is empty, and the progress file counts in `points`. (`ProgressUnit`, `ProgressConfig`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B71 — A suite's `retry_on_load` reads its threshold as a multiple of the CPUs — `2x` when absent —, refusing a value that is not one, and its retries as `max` — 1 when absent. (`RetryOnLoad`, `Factor`, `Retries`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-B72 — A file's unit name is its basename without the longest suffix a layer adds to a unit's name — the part after `{{name}}` in a `derived.files` template, `{{ext}}` standing for any extension, or Anchors' `.spec.md` and `.feature` —, else without its last extension; the core knows no language's way to name a test. (`UnitName`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-B73 — The code extensions are those the code layers' patterns end with — `*.go`, `*.{ts,tsx}` —, layer by layer in name order, each once. (`CodeExtensions`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-B74 — The example runners — jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins — each say how their command line and output read, with a kind and a quiet time, and none is applied by itself; a unit's piece paths are the `derived.files` patterns of the piece, the overrides of its layer first, rendered for it — its folder, unit name, module and extension, a spec taking its layer's —, and a layer's extensions are those its pattern ends with. (`ExampleRunners`, `PiecePaths`, `LayerExtensions`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -3437,15 +3445,15 @@ abra a página dela em `camadas/`.
 
 ### [DLCTI — Dialect — the lexicon of the project's language, between an agnostic gate and concrete code](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B01 — A project that declares no dialect gets only the naming defaults: no language lexicon at all.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B01 — A project's dialect is what it declares: no family's lexicon and no naming default fills a field it left empty, a family named alone included (`DialectFor`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B02 — The family fills every lexicon field the project left empty, and a field the project declared wins over the family (`DialectFor`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B02 — Each family has an example of the lexicon the gates read — with its statement end, signature end, limits and guards —, handed out as a copy and never applied by itself: `anchors init` and `anchors migrate` write it, the doctor offers it (`FamilyLexicon`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B03 — The family name is matched ignoring case.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B03 — The family name is matched ignoring case. (`FamilyLexicon`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B04 — An unknown family contributes nothing; the known families are listed in alphabetical order for the messages that name them (`KnownDialectFamilies`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B04 — An unknown family has no example; the known families are listed in alphabetical order for the messages that name them (`KnownDialectFamilies`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B05 — The two naming conventions (the set-promise and the set-slice verbs) apply whatever the family, and a declared one replaces its default.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B05 — Every family's example carries the two naming conventions (the set-promise and the set-slice verbs, `NamingExample`); a project declares its own, or none.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B06 — The Gherkin language defaults to English and is looked up ignoring case, answering the table's own spelling of the code, so `PT` is `pt` and `zh-cn` is `zh-CN`; a language outside the table keeps its code as declared and gets the English keywords (`GherkinFor`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -3463,7 +3471,7 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B13 — The Go family recognises both shapes of error handling: `if err != nil` and `if err := f(); err != nil`. The second is the commoner, and matching only the first left the handling of most Go code invisible to the failure gates.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B20 — Each language family declares how its code reads an environment variable (`env_read`), capturing the name; the project's own pattern wins, and with no family declared `EnvReadPattern` is every family's together.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B20 — Each language family's example says how its code reads an environment variable (`env_read`), capturing the name; what is read is the project's own pattern, and with none `EnvReadPattern` is empty.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B21 — `fallible_patterns` (`FalliblePatterns`, each a `FalliblePattern` with `call`, `handled` and `window` — `DefaultFallibleWindow` lines when it declares none) are the project's; the family's fill them only when the project declares none.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -3487,15 +3495,17 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B31 — The `ts`, `go`, `python` and `ocaml` families have an example of the chain patterns — `ts`: imports with lists across lines, side effects, `require`/`import()` and a flow's `runFlow:`, the names they bring, the declarations at the top level and export lists, type imports, the extensions; `go`: single imports and import blocks, top-level declarations; `python`: `from … import` and `import`; `ocaml`: modules opened or qualifying a name, resolved by name —; another family has none. (`FamilyChain`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
+- [DLCTI-B32 — The `ts` family has an example of the mock shapes — `mock_detect` for `jest.mock`/`vi.mock`, the contract, a factory passed and a factory typed — and of `route_pattern` — `name="X"`, a stack's param list, `addResource('x')` —; `python` one of `mock_detect` (`patch`); another family none; never applied by themselves. (`FamilyMocks`, `FamilyRoutePattern`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B14 — The Go and TS families say how a test is written — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` — and a project that declares its own `tests` keeps it over the family's.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B14 — The Go and TS families' examples say how a test is written, its title in a `title` group — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` —, and a project's own `tests` is read as declared.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B15 — The TS family recognises a `catch` as handling a failure with or without its binding: `catch (e) {` and `catch {`.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B16 — The Go and TS families say what an assertion is (`tests.assertion`). A project that declares only its assertion keeps the family's way to open a test; one that declares its own pattern or script reads its tests another way and does not take the family's assertion.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B16 — The Go and TS families' examples say what an assertion is (`tests.assertion`). A project's `tests` is read as declared: one declaring only its assertion has no way to open a test, one with its own script no assertion.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B17 — The Go, TS and Python families say how code defines a name (`definition`) — Go's functions, methods and types, TS's functions, classes and constants bound to an arrow function, Python's `def` and `class` — and a declared one wins over the family's. A capture group named `owner` is the type a member belongs to, not the name: Go's captures a method's receiver type.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B17 — The Go, TS and Python families say how code defines a name (`definition`) — Go's functions, methods and types, TS's functions, classes and constants bound to an arrow function, Python's `def` and `class` — and a project's own is read as declared. A capture group named `owner` is the type a member belongs to, not the name: Go's captures a method's receiver type.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B18 — The recognised keywords that open an outline's examples are those of every language in the table, each once, in alphabetical order (`GherkinExamplesAlternatives`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -4237,7 +4247,7 @@ abra a página dela em `camadas/`.
 
 - [ENVDC-B04 — A read inside a comment is no read.](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
 
-- [ENVDC-B05 — With no language family declared, the reads of every family are recognised.](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
+- [ENVDC-B05 — With no `dialect.env_read` declared the gate is pending, naming the field: how code reads a variable is the language's, and the core knows none.](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
 
 - [ENVDC-E01 — A specified code file cannot be read.](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
 
@@ -4761,7 +4771,7 @@ abra a página dela em `camadas/`.
 
 - [INCHN-B42 — `scenario-coverage` reads the rules whose scenarios are stale — their rule changed since they were proven, and nothing else of the spec did — as stale, apart from the rest: Pending naming them when every other rule is proven, and named beside the failing ones otherwise. (`checkScenarioCoverage`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
-- [INCHN-B15 — An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
+- [INCHN-B15 — A file of a layer the project declares `headless` — the flows of an E2E runner, whose identity is in their file name and whose format is the runner's — steps aside from the header ruler; the core knows no runner's format, and a test of another layer is still charged.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B16 — A guide with no compliance-points section, or with the section and no item in it, fails — the AI judgment gate would otherwise fall back on vague heuristics.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
@@ -4883,7 +4893,7 @@ abra a página dela em `camadas/`.
 
 - [MRPRM-X02 — Does not decide WHICH rules live at two ends.](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it)
 
-- [MRPRM-X03 — Does not read files whose extension is not in the text list.](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it)
+- [MRPRM-X03 — Does not read a file whose comments the project does not declare (`dialect.comments`) — a binary among them.](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it)
 
 ### [MKSTP — MockStampGenerator — writes the missing `@contract` stamps, and never rewrites one](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
 
@@ -4891,9 +4901,9 @@ abra a página dela em `camadas/`.
 
 - [MKSTP-B02 — A specifier matching several files resolves to the one sharing the longest directory prefix with the test; a tie is skipped and reported, never guessed.](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
 
-- [MKSTP-B03 — Each factory key that names an export of the module gets its own stamp, anchored on that export and covering its block — a change to another member does not make it diverge.](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
+- [MKSTP-B03 — Each export of the module (by the project's export pattern) that the double's call names — inside its parentheses, the test's strings and comments blanked as its syntax says; no object literal of a language is read — gets its own stamp, anchored on that export and covering its block — a change to another member does not make it diverge.](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
 
-- [MKSTP-B04 — With no factory key naming an export (an automock, for instance), one stamp covers the whole module — which is what an automock replaces.](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
+- [MKSTP-B04 — With no export named by the call (an automock, for instance), one stamp covers the whole module — which is what an automock replaces.](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
 
 - [MKSTP-B05 — A double of a module outside the map (a third-party library) is not stamped.](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
 
@@ -4985,7 +4995,7 @@ abra a página dela em `camadas/`.
 
 - [MCTYM-B03 — The charge is per MODULE, not per file: one loose double among several is enough to fail, and the verdict counts only the loose ones.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
-- [MCTYM-B04 — A double with no factory is not charged: the automock derives from the real module by construction, so it cannot drift, and charging it would be noise one learns to ignore.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
+- [MCTYM-B04 — A double with no factory — the factory pattern read from its own call, never a later double's — is not charged: the automock derives from the real module by construction, so it cannot drift, and charging it would be noise one learns to ignore.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
 - [MCTYM-B05 — Without `derived.mock_contract` declared the gate is Pending, naming the field and the opt-out; with `mock_contract` in `dialect.opt_out` it skips.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
@@ -5565,7 +5575,7 @@ abra a página dela em `camadas/`.
 
 - [PCBPR-B13 — A rule with no relation claim at all leaves without a verdict — there was nothing to charge.](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side)
 
-- [PCBPR-B14 — Imports in other language shapes (`require`, `from `, `use `, `using `, `#include`, or the project's configured pattern) satisfy the charge the same way.](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side)
+- [PCBPR-B14 — An import is what the project's `dialect.imports` declares, in whatever shape its language writes it (`use`, `using`, `#include`…); the gate knows none of them by itself.](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side)
 
 - [PCBPR-E01 — A spec is confronted with no map built.](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side)
 
@@ -5793,17 +5803,17 @@ abra a página dela em `camadas/`.
 
 - [RTEXR-B02 — When the specification does not declare a route, the gate skips confrontation.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
 
-- [RTEXR-B03 — When project configuration defines no route registry glob patterns, confrontation returns Pending.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
+- [RTEXR-B03 — When project configuration defines no route registry glob patterns, or no `derived.route_pattern`, confrontation returns Pending.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
 
 - [RTEXR-B04 — When route registry glob pattern is invalid, the gate returns Pending reporting the glob error.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
 
 - [RTEXR-B05 — When route registry files are inspected but zero registered routes are discovered, the gate returns Pending.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
 
-- [RTEXR-B06 — When a declared screen name matches a component navigation prop in registered route files, the gate passes.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
+- [RTEXR-B06 — Read with the TS family's example of `route_pattern`: when a declared screen name matches a component navigation prop in registered route files, the gate passes.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
 
-- [RTEXR-B07 — When a declared screen name matches a navigation stack parameter type entry in registered route files, the gate passes.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
+- [RTEXR-B07 — Read with the TS family's example: when a declared screen name matches a navigation stack parameter type entry in registered route files, the gate passes.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
 
-- [RTEXR-B08 — When a declared backend route matches an added HTTP resource registration, the gate passes.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
+- [RTEXR-B08 — Read with the TS family's example: when a declared backend route matches an added HTTP resource registration, the gate passes.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
 
 - [RTEXR-B09 — When a declared route includes an HTTP method verb prefix, the gate strips the verb and passes if the route path exists.](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
 
@@ -6741,7 +6751,7 @@ abra a página dela em `camadas/`.
 
 - [CFPCD-B02 — A unit whose file name is generic takes its code from its parent folder's name; one with no parent folder keeps its own name. (`GenerateFromPath`)](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path)
 
-- [CFPCD-B03 — The unit's base name drops `.spec.md`, `.feature`, or everything from `.test.` on, and otherwise the extension, so every artifact of a unit compresses the same name.](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path)
+- [CFPCD-B03 — The code comes from the unit's name the caller gives — the basename without what the project's layers add to it (`config.UnitName`) —, so every artifact of a unit compresses the same name. (`GenerateFromPath`)](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path)
 
 - [CFPCD-B04 — A file name that is not generic gives the generator's code for that name when it is free.](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path)
 
@@ -6911,6 +6921,10 @@ abra a página dela em `camadas/`.
 
 - [GVOPG-B12 — A project that declares `nav-annotated` and no `dialect.navigation_call`, of a family with an example, is offered it as the block to copy under `dialect:`; one that declares its own, or not the gate, is offered nothing.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
+- [GVOPG-B13 — A map whose code or test files have no `dialect.comments` entry is offered the families' examples for the extensions they know, as the block to copy under `dialect:`, and the others named alone; Anchors' own formats and a project covering every file are offered nothing.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
+
+- [GVOPG-B14 — A project whose family has an example of the lexicon, and which declares a gate presupposing a `dialect` field it left empty and the example has, is offered the example of those fields, named, as the block to copy under `dialect:`; a field it declares, or a family with no example, is offered nothing.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
+
 - [GVOPG-I01 — Every opportunity is informational: this unit never raises a warning.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
 - [GVOPG-X01 — A gate the project already declares (blocking, for the secret gate) is never suggested again, and a project with JUnit output is not told to add it.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
@@ -6935,7 +6949,7 @@ abra a página dela em `camadas/`.
 
 - [DCTRO-B09 — Only specs, features, tests and code own a code; documents, guides and plans only reference it and never collide.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
 
-- [DCTRO-B10 — The files of one unit (its spec, feature, test and code, same folder and name) count as one owner.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
+- [DCTRO-B10 — The files of one unit (its spec, feature, test and code, same folder and unit name — what the layers' templates add to a name taken off, `config.UnitName`) count as one owner.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
 
 - [DCTRO-B11 — A file that declares its codes as shared (`@anchors-shared-code`) is not an owner of them.](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project)
 
@@ -7075,6 +7089,8 @@ abra a página dela em `camadas/`.
 
 - [BLCNB-B12 — A new project whose family has an example of a navigation call starts with it as its `navigation_call` (`config.FamilyNavigationCall`); a family with none starts with none.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
+- [BLCNB-B13 — A new project of a family with an example starts with the family's lexicon in its dialect (`config.FamilyLexicon`), and every new project with code starts with the comments of the examples covering its extensions and its family's configuration and scripts (`config.CommentsCovering`, `config.FamilyComments`); with neither, it has no dialect.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
+
 - [BLCNB-I01 — REF[BLCNB-B05]: a proposal never carries a test handle the project does not use](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
 - [BLCNB-X01 — The proposal creates no artifact layer and no governs rule.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
@@ -7159,7 +7175,7 @@ abra a página dela em `camadas/`.
 
 - [DFGTD-B17 — `no-duplication` is seeded as the native `duplication` check on code files, needing `npx`: one verdict per file read from jscpd's report, not a project-wide command judged by its exit code.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
-- [DFGTD-B18 — The mock gates name the field each one reads: `mock-detect-covers-dialect` and `mock-stamped` presuppose `derived.mock_detect`, `mock-typed` presupposes `derived.mock_contract`; where it is not declared nothing is asked or measured (GTENG-B29), and the doctor names it (DCTRO-B27).](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
+- [DFGTD-B18 — The mock gates name the field each one reads: `mock-detect-covers-dialect` and `mock-stamped` presuppose `derived.mock_detect`, `mock-typed` presupposes `derived.mock_detect` and `derived.mock_contract`; where it is not declared nothing is asked or measured (GTENG-B29), and the doctor names it (DCTRO-B27).](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-B19 — `rule-fulfilled` is judged and also marked to review: the marks it judges were put by the agents who wrote the code, and a second look is a different thing from their judgment.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
@@ -7733,13 +7749,13 @@ abra a página dela em `camadas/`.
 
 - [MNTRS-B08 — A run whose runner reads progress gives, at most once per progress interval, a line counting the progress marks in the end of its output.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
-- [MNTRS-B09 — The settings are the defaults — a tick of 30s, a heartbeat of 5m, progress every 5m, a quiet time of 5m, no progress summary, the built-in runners, 50 ended runs within 7 days —, then the project's `monitor:` block: its timing, the progress summary turned on and its `summary_every`, the `level` (all or action), the `idle` time of a held task (10m by default, or off), its runners read first and replacing a built-in of the same name, its reports beside the suites' JUnit reports, and its bounds. A duration or a pattern that does not read, a level other than all or action, an idle neither a duration nor off, or a runner with no match, is an error naming it. (`Configure`, `DefaultTiming`, `CheckLevel`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+- [MNTRS-B09 — The settings are the defaults — a tick of 30s, a heartbeat of 5m, progress every 5m, a quiet time of 5m, no progress summary, Anchors' own runners, 50 ended runs within 7 days —, then the project's `monitor:` block: its timing, the progress summary turned on and its `summary_every`, the `level` (all or action), the `idle` time of a held task (10m by default, or off), its runners read first and replacing one of Anchors' of the same name, its reports beside the suites' JUnit reports, and its bounds. A duration or a pattern that does not read, a level other than all or action, an idle neither a duration nor off, or a runner with no match, is an error naming it. (`Configure`, `DefaultTiming`, `CheckLevel`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B10 — An output's end says failed when the runner's failure pattern is in it — even beside a pass —, passed when only the pass pattern is, and nothing when neither is; its summary line is the line carrying the verdict, and its last lines are the last non-blank ones. Reading an output gives its size and its end. (`Verdict`, `SummaryLine`, `LastLines`, `ReadOutput`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B11 — Reading the reports the globs find gives each one's path from the root and its time; a report modified since its known time is parsed for its tests, failures and first failure. (`ReadReports`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
-- [MNTRS-B12 — The built-in runners recognize jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins and Anchors' long commands, each with its kind and quiet time; a command line no runner matches has none. (`DefaultRunners`, `RunnerFor`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+- [MNTRS-B12 — The monitor knows by itself only Anchors' long commands; every other tool is the project's `monitor.runners`, and the examples (`config.ExampleRunners`) recognize jest, vitest, go test, pytest, maestro, playwright, stryker and gremlins, each with its kind and quiet time; a command line no runner matches has none. (`OwnRunners`, `CompileRunners`, `RunnerFor`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B13 — A command is recognized by its first line only — what a heredoc carries after it is no command —, and a line of the monitor shows it by that line, cut at a hundred characters, with how many lines it left out (`[+N lines]`). (`FirstLine`, `Brief`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
@@ -7853,11 +7869,11 @@ abra a página dela em `camadas/`.
 
 ### [TSTLS — TestList — the project's tests, read the way the project says they are written](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
 
-- [TSTLS-B01 — With a pattern, each call it opens that is followed by a string literal is a test: the literal is its title, and the line is the line where the call starts.](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
+- [TSTLS-B01 — With a pattern, each match is a test: its title is what the pattern's `title` group captured, and its line the line where the match starts.](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
 
-- [TSTLS-B02 — A title may be quoted with single quotes, double quotes or backticks; a backslash escapes the next character inside the first two, and only a backtick title may span lines.](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
+- [TSTLS-B02 — A pattern may name several title groups — `title`, `title2`… —, one for each way its language quotes a title; the title is the first that took part, read as captured: the core resolves no escape and knows no quote.](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
 
-- [TSTLS-B03 — A call whose next token is not a string literal is not a test this reading can name, and is left out.](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
+- [TSTLS-B03 — A match whose title groups captured nothing is not a test this reading can name, and is left out.](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
 
 - [TSTLS-B04 — The pattern's tests come in file order, then in the order they appear in each file.](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
 
@@ -7880,6 +7896,8 @@ abra a página dela em `camadas/`.
 - [TSTLS-E03 — The script exits with an error](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
 
 - [TSTLS-E04 — REF[TSTLS-B06]: the script answers outside the contract](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
+
+- [TSTLS-E05 — The pattern names no `title` group](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
 
 ### [RCGRL — RuleCodeGrammar — the grammar that recognizes a scenario code in a test's name, in the project's vocabulary](layers/infra.md#rcgrl--rulecodegrammar--the-grammar-that-recognizes-a-scenario-code-in-a-tests-name-in-the-projects-vocabulary)
 
@@ -8075,7 +8093,7 @@ abra a página dela em `camadas/`.
 
 - [GRBLG-B02 — The identity declared in a file's header wins over everything else, including an anchor's identity and codes cited earlier in the text.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
-- [GRBLG-B03 — A derived file with no header takes the declared identity of the anchor with the same stem in the same directory; another unit in that directory does not receive it.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
+- [GRBLG-B03 — A derived file with no header takes the declared identity of the anchor with the same unit name in the same directory — what the `derived.files` templates add to a name taken off (`config.UnitName`) —; another unit in that directory does not receive it.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-B04 — With neither header nor anchor, the identity is the root (`RuleRoot`) of the first rule code in the text, and empty when there is none.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
@@ -8183,7 +8201,7 @@ abra a página dela em `camadas/`.
 
 - [MPFRM-B05 — The two refusals do not mix: the refusal of a newer map never names the migration command.](layers/mapa.md#mpfrm--mapformat--the-maps-format-number-decides-whether-this-binary-may-read-it)
 
-- [MPFRM-I01 — The binary writes format 7 and reads only format 7 — format 7 gave every governed file a code of its own and widened the four-character codes to five, and a map not migrated would name files by codes the project no longer has; every other format is refused.](layers/mapa.md#mpfrm--mapformat--the-maps-format-number-decides-whether-this-binary-may-read-it)
+- [MPFRM-I01 — The binary writes format 8 and reads only format 8 — format 8 moved what the core knew of a language into the project's dialect, and a project not migrated would have its headers and flags read in no file; every other format is refused.](layers/mapa.md#mpfrm--mapformat--the-maps-format-number-decides-whether-this-binary-may-read-it)
 
 - [MPFRM-X01 — Format 1 is not read, even though earlier binaries wrote it: it is migrated.](layers/mapa.md#mpfrm--mapformat--the-maps-format-number-decides-whether-this-binary-may-read-it)
 
@@ -8525,6 +8543,24 @@ abra a página dela em `camadas/`.
 
 - [MGFCD-B08 — `WithHeaderDate`: The `updated_at` of the `@anchors` header is set to the day given; one outside the header, or a header without it, is left as it was.](layers/migra.md#mgfcd--filecodes--every-file-a-code-of-its-own-of-five-characters)
 
+### [MGSYN — Declared syntax — what the core knew of a language, written into the project at format 8](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
+
+- [MGSYN-B01 — With no `dialect.comments`, the entries of the examples whose glob covers one of the files are added, in the examples' order, Anchors' own formats left out; an extension no example covers is named, to be declared by hand. A project that declares comments gets none. (`DeclaredSyntax`)](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
+
+- [MGSYN-B02 — Every lexicon field the project left empty is filled from its family's example (`config.FamilyLexicon`); with no family, only the two naming conventions, which the old binary applied to any project, and `env-declared` with no `env_read` is named. (`DeclaredSyntax`)](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
+
+- [MGSYN-B03 — A project with no `dialect.tests` gets the family's whole; inside its own, only what the old binary filled: the family's way to open a test and its assertion when it declared neither a pattern nor a script, and the shape of a block. A pattern with no `title` group is named. (`DeclaredSyntax`)](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
+
+- [MGSYN-B04 — A project declaring `route-exists` with no `route_pattern` gets the family's, else the ts example the old binary fell back to; one declaring `mock-typed` gets the mock shapes it left empty, the ts example's when its family has none; a test layer of YAML files not yet `headless` becomes so. (`DeclaredSyntax`)](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
+
+- [MGSYN-B05 — The additions are written at the end of their block, indented as its children are; a list of short texts on one line; a one-line flow mapping takes them inline. The rest of the text — comments, order, quoting — is kept, and the result reads back with nothing left to add. The fields added are named a line each. (`WithSyntax`, `Fields`)](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
+
+- [MGSYN-B06 — A section the file lacks is written whole: a top-level one at the end, after a blank line. One written in flow style that cannot take the fields is refused, naming it. (`WithSyntax`)](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
+
+- [MGSYN-B07 — The example runners (`config.ExampleRunners`) whose command line some suite's `run` is — tests or mutation — are added under `monitor.runners`, after the project's own, one it declares by name left out: the old monitor knew them by itself. (`DeclaredSyntax`, `WithSyntax`)](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
+
+- [MGSYN-E01 — REF[MGSYN-B06]: a section in flow style cannot take the fields](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
+
 ## scan
 
 ### [SCIGS — ScanIgnore — what the scan never sees: the built-in list, the project's `.gitignore`, and editor noise](layers/scan.md#scigs--scanignore--what-the-scan-never-sees-the-built-in-list-the-projects-gitignore-and-editor-noise)
@@ -8629,7 +8665,7 @@ abra a página dela em `camadas/`.
 
 - [RPSCR-B11 — `LayerOfUnit`: The layer of a file's UNIT is the `layer:` its header declares; without one it is the file's classified layer.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B12 — The rule codes a file owns are those outside `//` line comments and `/* */` block comments, each listed once in order of first appearance.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B12 — The rule codes a file owns are those outside its comments, in the syntax the project declares for it (`dialect.comments`), each listed once in order of first appearance; in Anchors' own formats (a spec, a feature) and in a file whose comments nobody declared, every code counts.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B13 — `ScenarioCodeRE`, `SetRuleLetters`: Rule codes are recognised with the rule letters the project declares, not a fixed set.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
@@ -8701,13 +8737,13 @@ abra a página dela em `camadas/`.
 
 - [RPSCR-B48 — A spec's evidence revision is its content without its `@anchors` header, its navigation and change-history sections — in any language of the catalog, or as the project names them — and an Out table under any title, with its blank lines and trailing spaces normalized; each rule it defines has a revision of its definition — its heading and what is under it, its table rows, its bold bullet —, and the rest of what it reads has one of its own. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B49 — Any other file's evidence revision is its content without its `@anchors` header and the chain's flags — dependency (kinded or not), used-by and navigation flags and their waivers, at a line's end or on lines of their own —; its line revision keeps every line in place, the header and the flag-only lines blank, so a flag at a line's end keeps it and a flag line moves it. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B49 — Any other file's evidence revision is its content without its `@anchors` header and without its comments, in the syntax the project declares for it — the chain's flags with them —; its line revision keeps every line in place, the header and the lines that were only a comment blank. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B50 — `@dep[type]: CODE` on an import line is an import of types only: read with its code and the symbols the import brings, apart from the dependencies that are no import. (`CodeDep`, `TypeDepKind`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B51 — The spec sections a project declares with no side effect (`evidence.no_side_effect.sections`) are the ones left out of its evidence, in place of navigation and change history. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B52 — A line that is only a comment — in the line-comment marker of the file's language, or inside a block comment (`/* … */`, `{/* … */}`) that fills its lines, in the languages that write them — is left out of the file's evidence revision, and blank in its line revision; a comment at the end of a line of code, code after a block's end, and a file whose language has no known marker are read whole. (`EvidenceOf`, `commentLines`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B52 — A comment, in the syntax the project declares for the file, is no evidence: a line that is only a comment — a block's inner lines included — is left out and blank in the line revision, and a comment at the end of a line of code leaves the line as its code; a marker inside a string is code. A file whose comments nobody declared is read whole. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B53 — A file's header may declare it frozen — `frozen:` with a freeze's code or, with no doctrine, the reason —, read with its value. (`Frozen`, `FrozenOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
@@ -8715,7 +8751,7 @@ abra a página dela em `camadas/`.
 
 - [RPSCR-B55 — A doctrine document's rules of the freeze letter are its freeze entries, read with the text after the code as the reason, in any of the three forms a rule is written in; a value is a freeze's code when it is a code of that letter. (`Freezes`, `IsFreezeCode`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B56 — The chain's flags — dependency, waiver, used-by and navigation — may stand in an OCaml block comment closed by `*)` at the line's end, and are read as in any other comment; the evidence leaves them out the same way.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B56 — The chain's flags — dependency, waiver, used-by and navigation — may stand in a block comment of the file's syntax (OCaml's `(* … *)`): each reads to the comment's closer, and the evidence leaves them out like any other comment. (`flagText`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B57 — The symbol a used-by flag names in parentheses is whatever stands there, in any script — the flag is Anchors' syntax, the name the language's —, and the names the dialect's patterns capture are kept whole: `categoriasDoOrçamento` is read as written.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
@@ -8745,7 +8781,7 @@ abra a página dela em `camadas/`.
 
 - [UPOWP-B06 — A header comment that never closes runs to the end of the file.](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
 
-- [UPOWP-B07 — The header is at the TOP: only blank lines, comments — line comments and the insides of `/* */` and `` blocks — and a shebang may precede it. A block below any other line is not the header unless it declares inside `@fixed-header: <why>`; a bare `@fixed-header` declares nothing. `HeaderOffTop` says a file carries such an undeclared block and no header.](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
+- [UPOWP-B07 — The header is at the TOP: only blank lines, comments — as the file's comment syntax reads them — and a shebang may precede it. A block below any other line is not the header unless it declares inside `@fixed-header: <why>`; a bare `@fixed-header` declares nothing. `HeaderRange` says where the header stands among the lines, and `HeaderOffTop` that a file carries such an undeclared block and no header.](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
 
 - [UPOWP-B08 — A comment opens the header only when `@anchors` is its first word, right after the comment marker; prose that names the header does not.](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
 

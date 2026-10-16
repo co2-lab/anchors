@@ -45,6 +45,8 @@ items, is the short hint other commands can show without getting in the way.
 | `GVOPG-B10` | A project that declares a handle gate (`testid-consistent`, `testid-queried-exists`, `identity-consistent`) and no `dialect.test_handles` is offered the family's example, for the attribute it declares, as the block to copy under `dialect:`, its quotes escaped for YAML; one that declares the patterns, or no handle gate, is offered nothing. |
 | `GVOPG-B11` | A project that declares a chain gate (`dep-declared`, `dep-honored`, `used-by-declared`) and no `dialect.imports`, of a family with an example, is offered the example — imports, the names they bring, declarations, the type pattern, and the resolution when it declares none — as the block to copy under `dialect:`, naming the gates; one that declares its imports, or no chain gate, is offered nothing. |
 | `GVOPG-B12` | A project that declares `nav-annotated` and no `dialect.navigation_call`, of a family with an example, is offered it as the block to copy under `dialect:`; one that declares its own, or not the gate, is offered nothing. |
+| `GVOPG-B13` | A map whose code or test files have no `dialect.comments` entry is offered the families' examples for the extensions they know, as the block to copy under `dialect:`, and the others named alone; Anchors' own formats and a project covering every file are offered nothing. |
+| `GVOPG-B14` | A project whose family has an example of the lexicon, and which declares a gate presupposing a `dialect` field it left empty and the example has, is offered the example of those fields, named, as the block to copy under `dialect:`; a field it declares, or a family with no example, is offered nothing. |
 
 ## Invariants
 

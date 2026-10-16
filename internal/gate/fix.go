@@ -105,7 +105,7 @@ func Fix(gates []config.Gate, nodes []mapx.Node, root string, g *mapx.Graph) []F
 				out = append(out, FixResult{Gate: gt.Name, Target: n.ID, Detail: i18n.T("gate.fix.write_failed", err)})
 				continue
 			}
-			moved := linesMoved(string(content), newContent)
+			moved := linesMoved(string(content), newContent, fixConfig.CommentsFor(n.ID))
 			out = append(out, FixResult{Gate: gt.Name, Target: n.ID, Fixed: true, Detail: detail, LinesMoved: moved})
 		}
 	}
@@ -164,13 +164,14 @@ func fixUpdatedAt(content string, n mapx.Node, root string) (string, bool) {
 // updates would otherwise have hundreds to write by hand — the map already knows each
 // file's unit.
 func fixMissingHeader(content string, n mapx.Node, _ string, g *mapx.Graph) (string, bool, string) {
-	if isBinary(content) || isExecutableScript(n) || fixConfig.LayerHeadless(n.Layer) {
-		return content, false, ""
+	cs := fixConfig.CommentsFor(n.ID)
+	if isBinary(content) || cs == nil || fixConfig.LayerHeadless(n.Layer) {
+		return content, false, "" // no comment to write it in: the project declares none for the file
 	}
 	// With no header at the top, one is written there — even when a header-looking block
 	// stands lower: in a guide or a template that is an example inside a string or a code
 	// fence, and the top header makes it read as the text it is.
-	block := scan.AnchorsHeader([]byte(content))
+	block := scan.AnchorsHeader([]byte(content), cs)
 	var b string
 	if block != nil {
 		b = string(block)
@@ -215,9 +216,9 @@ func fixMissingHeader(content string, n mapx.Node, _ string, g *mapx.Graph) (str
 		return content, false, ""
 	}
 	what := strings.Join(fields, ", ")
-	c := config.LineCommentFor(n.ID)
+	c := cs.LineMarker()
 	indent := c + "   "
-	closer := config.CommentCloseFor(c)
+	closer := cs.CloseFor(c)
 	if closer != "" {
 		indent = "  " // a block comment: its fields are indented, with no marker
 	}
@@ -254,7 +255,7 @@ func fixMissingHeader(content string, n mapx.Node, _ string, g *mapx.Graph) (str
 // the same position is neither the old one extended (a flag appended to it), nor a comment
 // that replaced a comment, nor the same code with another trailing comment (a flag rewritten). An insertion and a removal elsewhere keep the
 // count and still move every line between them.
-func linesMoved(before, after string) bool {
+func linesMoved(before, after string, cs *config.Comments) bool {
 	a, b := strings.Split(before, "\n"), strings.Split(after, "\n")
 	if len(a) != len(b) {
 		return true
@@ -266,10 +267,10 @@ func linesMoved(before, after string) bool {
 		if strings.HasPrefix(b[i], strings.TrimRight(a[i], " \t")) {
 			continue
 		}
-		if commentLine(a[i]) && commentLine(b[i]) {
+		if cs.CommentOnly([]string{a[i], b[i]})[0] && cs.CommentOnly([]string{b[i]})[0] {
 			continue
 		}
-		if strings.TrimRight(cutInlineComment(a[i]), " \t") == strings.TrimRight(cutInlineComment(b[i]), " \t") {
+		if cs != nil && cs.CutLine(a[i]) == cs.CutLine(b[i]) {
 			continue // only the trailing comment changed: a flag rewritten in place
 		}
 		return true

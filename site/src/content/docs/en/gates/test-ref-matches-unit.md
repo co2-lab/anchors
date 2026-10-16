@@ -13,6 +13,7 @@ A test reaches the unit its `ref:` names — by import, a name it defines, or a 
 | Confronts | `test` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Presupposes | `dialect.definition` `dialect.imports` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCTRO
-  updated_at: 2026-10-15
+  updated_at: 2026-10-16
   layer: infra
 -->
 # Doctor — the global health check that hunts the systemic loose ends of a project
@@ -62,7 +62,7 @@ same diagnosis and sorted into the same report.
 | `DCTRO-B07` | A code owned by units of DIFFERENT domains is a warning `identidade-duplicada` on the code, naming the owning units. A domain is the `features/<name>` segment of the path, or its top directory outside `features/`. |
 | `DCTRO-B08` | Units of the same domain sharing one code are deliberate and give no finding. |
 | `DCTRO-B09` | Only specs, features, tests and code own a code; documents, guides and plans only reference it and never collide. |
-| `DCTRO-B10` | The files of one unit (its spec, feature, test and code, same folder and name) count as one owner. |
+| `DCTRO-B10` | The files of one unit (its spec, feature, test and code, same folder and unit name — what the layers' templates add to a name taken off, `config.UnitName`) count as one owner. |
 | `DCTRO-B11` | A file that declares its codes as shared (`@anchors-shared-code`) is not an owner of them. |
 
 ### Structure

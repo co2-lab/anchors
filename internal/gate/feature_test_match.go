@@ -31,6 +31,7 @@ import (
 //     é sinalizado como aviso no detalhe (não derruba se o código casa), porque texto
 //     livre varia; a ausência do CÓDIGO é o que reprova.
 func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	ph := placeholderOf(cfg)
 	if n.Kind != mapx.KindFeature {
 		return Skip, "" // só confronta features
 	}
@@ -78,7 +79,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		if err != nil {
 			continue
 		}
-		testBody.WriteString(stripLineComments(string(b)))
+		testBody.WriteString(stripComments(string(b), tp, cfg.DialectFor()))
 		testBody.WriteString("\n")
 		bodyComComentarios.Write(b)
 		bodyComComentarios.WriteString("\n")
@@ -140,19 +141,19 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		// others are held to a looser ruler than the first — only a DIVERGENT title is said —,
 		// since several tests of one rule legitimately name its variations.
 		for _, other := range otherTitlesFor(mine, sc.Code) {
-			if titleCovers(sc.Title, other) {
+			if titleCovers(sc.Title, other, ph) {
 				continue
 			}
-			if v, score := similarity.Classify(sc.Title, withoutPlaceholders(other), pesos); v == similarity.Divergente {
+			if v, score := similarity.Classify(sc.Title, withoutPlaceholders(other, ph), pesos); v == similarity.Divergente {
 				driftDesc = append(driftDesc, i18n.T("gate.feature_test_match.another_test_diverges", sc.Code, other, score*100))
 			}
 		}
 		switch {
 		case temTitulo && !compartilhado:
-			if titleCovers(sc.Title, titulo) {
+			if titleCovers(sc.Title, titulo, ph) {
 				break
 			}
-			if v, score := similarity.Classify(sc.Title, withoutPlaceholders(titulo), pesos); v != similarity.Identico {
+			if v, score := similarity.Classify(sc.Title, withoutPlaceholders(titulo, ph), pesos); v != similarity.Identico {
 				driftDesc = append(driftDesc, fmt.Sprintf("%s (%s, %.0f%%)", sc.Code, verdictLabel(v), score*100))
 			}
 		case !descriptionMatches(sc.Title, bodyNorm):
@@ -196,11 +197,12 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 // titleCovers says whether a test's title says what the scenario's title says: the same
 // words, in order — case and punctuation aside —, optionally followed by detail
 // (`<title> — <detail>`, `<title> (<detail>)`, `<title>: <detail>`). A table-driven
-// test's placeholders (`%s`, `%d`, `$name`, `${name}`) are not words of the title. The
+// test's placeholders — the dialect's `tests.placeholder` (`%s`, `$name` in Jest's), and an
+// outline's `<name>`, Gherkin's — are not words of the title. The
 // ruler stays equality of what the scenario asserts: a test that says it and more says it;
 // one that says something else does not.
-func titleCovers(scenario, test string) bool {
-	want, got := titleWords(withoutPlaceholders(scenario)), titleWords(withoutPlaceholders(test))
+func titleCovers(scenario, test string, ph *regexp.Regexp) bool {
+	want, got := titleWords(withoutPlaceholders(scenario, ph)), titleWords(withoutPlaceholders(test, ph))
 	if len(want) == 0 || len(got) < len(want) {
 		return false
 	}
@@ -212,12 +214,27 @@ func titleCovers(scenario, test string) bool {
 	return true
 }
 
-// tablePlaceholderRE is a placeholder of a parameterised title: printf verbs (`%s`, `%d`,
-// `%#`), `$name` / `${name}` interpolations, and an outline's `<name>`.
-var tablePlaceholderRE = regexp.MustCompile(`%[#a-zA-Z%]|\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_.]*|<[A-Za-z_][\w -]*>`)
+// outlinePlaceholderRE is a Scenario Outline's `<name>` — Gherkin's, Anchors' own format.
+var outlinePlaceholderRE = regexp.MustCompile(`<[A-Za-z_][\w -]*>`)
 
-// withoutPlaceholders drops a table-driven test's placeholders from its title.
-func withoutPlaceholders(title string) string { return tablePlaceholderRE.ReplaceAllString(title, " ") }
+// withoutPlaceholders drops a parameterised title's placeholders: an outline's `<name>`, and
+// what the dialect's `tests.placeholder` matches in a table-driven test's title (Jest's
+// `%s`, `$name`, `${name}`); `ph` nil drops only the outline's.
+func withoutPlaceholders(title string, ph *regexp.Regexp) string {
+	title = outlinePlaceholderRE.ReplaceAllString(title, " ")
+	if ph != nil {
+		title = ph.ReplaceAllString(title, " ")
+	}
+	return title
+}
+
+// placeholderOf is the dialect's `tests.placeholder`, compiled, or nil.
+func placeholderOf(cfg *config.Config) *regexp.Regexp {
+	if t := cfg.DialectFor().Tests; t != nil {
+		return compileOrNil(t.Placeholder)
+	}
+	return nil
+}
 
 var titleWordRE = regexp.MustCompile(`[\p{L}\p{N}]+`)
 
@@ -411,29 +428,6 @@ func knownRegimeTags(cfg *config.Config) map[string]bool {
 	return out
 }
 
-// stripLineComments remove comentários de linha (`//`, `#`, `--`) e de bloco simples para que os
-// códigos citados em comentário do teste NÃO contem como implementação (coerente com
-// extractCodes: comentário é referência, não posse). Barato e suficiente aqui.
-func stripLineComments(s string) string {
-	var b strings.Builder
-	for _, ln := range strings.Split(s, "\n") {
-		t := strings.TrimSpace(ln)
-		if strings.HasPrefix(t, "//") || strings.HasPrefix(t, "*") || strings.HasPrefix(t, "/*") ||
-			strings.HasPrefix(t, "--") {
-			continue
-		}
-		if strings.HasPrefix(t, "#") && !strings.HasPrefix(t, "#include") &&
-			!strings.HasPrefix(t, "#define") && !strings.HasPrefix(t, "#pragma") &&
-			!strings.HasPrefix(t, "#if") && !strings.HasPrefix(t, "#else") &&
-			!strings.HasPrefix(t, "#endif") {
-			continue
-		}
-		b.WriteString(cutInlineComment(ln))
-		b.WriteString("\n")
-	}
-	return b.String()
-}
-
 var nonWordRE = regexp.MustCompile(`[^\p{L}\p{N}]+`)
 
 // stopwords PT/EN comuns + termos de Gherkin/teste — ruído que não distingue cenários.
@@ -582,39 +576,6 @@ func leadingCodesRE(code string) *regexp.Regexp {
 
 // leadingCodesCache avoids recompiling per scenario (large features have 40+).
 var leadingCodesCache = map[string]*regexp.Regexp{}
-
-// cutInlineComment drops a trailing comment from a code line, and only a comment.
-//
-// It scanned for the markers anywhere, strings included: `"--label"` cut the line at the
-// dashes, so every symbol after a CLI flag argument vanished and dependency-honored
-// accused dependencies the code does use; `"https://…"` cut a URL; and a Go/TS `i--`
-// cut the loop body that followed it. Markers now count only OUTSIDE quotes, and `--`
-// and `#` only after whitespace — the SQL/Lua and shell forms — never glued to a name.
-func cutInlineComment(ln string) string {
-	var quote byte
-	for i := 0; i < len(ln); i++ {
-		c := ln[i]
-		if quote != 0 {
-			if c == '\\' && quote != '`' {
-				i++
-			} else if c == quote {
-				quote = 0
-			}
-			continue
-		}
-		switch {
-		case c == '"' || c == '\'' || c == '`':
-			quote = c
-		case c == '/' && i+1 < len(ln) && ln[i+1] == '/':
-			return ln[:i]
-		case (c == '-' && i+1 < len(ln) && ln[i+1] == '-') || c == '#':
-			if i > 0 && (ln[i-1] == ' ' || ln[i-1] == '\t') {
-				return ln[:i]
-			}
-		}
-	}
-	return ln
-}
 
 // verdictLabel is the similarity verdict in the project's language. The verdict's own
 // `String` used to be printed here, and it was Portuguese ("divergente", "limítrofe") in

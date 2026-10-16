@@ -2,7 +2,7 @@
 # @anchors
 #   code: CDFTC
 #   ref: CDCMC
-#   updated_at: 2026-10-14
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @CDCMC
@@ -77,8 +77,8 @@ Feature: CodeCommand — a new unit gets an identity code that no other unit in 
     And and filtered to a conforming folder it passes counting the cited code
 
   @CDCMC-B11 @unit-level
-  Scenario: The unit name drops the artifact suffixes
-    Given the paths Login.spec.md, Login.feature, Login.test.ts and NewLogin.tsx
+  Scenario: The unit name drops what the layers add to it
+    Given a project whose test template is {{name}}.test.{{ext}}, and the paths Login.spec.md, Login.feature, Login.test.ts and NewLogin.tsx
     When their unit names are taken
     Then they are Login, Login, Login and NewLogin
 

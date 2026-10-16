@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WRPRW
-  updated_at: 2026-10-13
+  updated_at: 2026-10-16
   layer: comando
 -->
 # WorkPrompt — compose the work prompt of one stage over one target, from what the project declares
@@ -40,7 +40,7 @@ STOP: a production script under a heading that forbids the piece made workers cr
 | Effect | Description |
 | --- | --- |
 | `WRPRW-B01` | The command refuses an artifact outside the stages it composes, a missing `--for`, and a project whose configuration does not load. |
-| `WRPRW-B02` | A target in a spec, feature or test layer is redirected to its unit — the file the map says that spec specifies (also through the spec a feature or test is linked to), else the code file with the same stem beside it — with a note on standard error; a code file is not redirected, and a piece whose unit does not exist is not redirected. |
+| `WRPRW-B02` | A target in a spec, feature or test layer is redirected to its unit — the file the map says that spec specifies (also through the spec a feature or test is linked to), else the code file beside it with the same unit name (`config.UnitName`), in the extensions its code layers declare — with a note on standard error; a code file is not redirected, and a piece whose unit does not exist is not redirected. |
 
 ### When the stage must not happen
 

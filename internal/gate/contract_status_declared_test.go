@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +28,7 @@ func rodaContrato(t *testing.T, spec, codigo string) (Verdict, string) {
 		},
 		Edges: []mapx.Edge{{From: "handler.spec.md", To: "handler.ts", Type: mapx.EdgeSpecifies}},
 	}
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
 	return checkContractStatusDeclared(spec, mapx.Node{ID: "handler.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 }
 
@@ -339,7 +340,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(200)
 }`
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}})
 	v, msg := rodaContratoComDialeto(t, spec, codigo, "handler.go", cfg)
 	if v != Fail {
 		t.Fatalf("o 403 do `http.StatusForbidden` devia ser cobrado; obteve %v (%s)", v, msg)
@@ -362,9 +363,9 @@ func TestContrato_dialetoExplicitoEnsinaLexicoProprio(t *testing.T) {
   return render_error(422) unless valido?
   render json: {}, status: 200
 end`
-	cfg := &config.Config{Dialect: &config.Dialect{
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{
 		HTTPStatus: `status:\s*(\d{3})|render_error\(\s*(\d{3})\s*\)`,
-	}}
+	}})
 	v, msg := rodaContratoComDialeto(t, spec, codigo, "handler.rb", cfg)
 	if v != Fail {
 		t.Fatalf("o 422 devia ser cobrado pelo léxico declarado; obteve %v (%s)", v, msg)
@@ -397,11 +398,11 @@ func TestContrato_optOutEhSkip(t *testing.T) {
 | 200 | ok |
 `
 	codigo := `export const handler = async () => ({ statusCode: 200 })`
-	cfg := &config.Config{
+	cfg := testkit.WithComments(&config.Config{
 		Dialect: &config.Dialect{
 			OptOut: []string{"http_status"},
 		},
-	}
+	})
 	v, _ := rodaContratoComDialeto(t, spec, codigo, "handler.ts", cfg)
 	if v != Skip {
 		t.Fatalf("com opt_out de http_status devia ser Skip; obteve %v", v)
@@ -419,7 +420,7 @@ func TestContrato_secaoOutputContractEmIngles(t *testing.T) {
   if (!item) return { statusCode: 404, body: '{}' }
   return { statusCode: 200, body: '{}' }
 }`
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
 	v, msg := rodaContratoComDialeto(t, spec, codigo, "handler.ts", cfg)
 	if v != Pass {
 		t.Fatalf("seção ## Output Contract devia passar; obteve %v (%s)", v, msg)
@@ -445,7 +446,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 }`
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}})
 	v, msg := rodaContratoComDialeto(t, spec, codigo, "handler.go", cfg)
 	if v != Fail {
 		t.Fatalf("o 403 escrito só como constante devia ser cobrado; obteve %v (%s)", v, msg)
@@ -519,14 +520,14 @@ func TestContractStatusDeclared_Errors(t *testing.T) {
 	}
 
 	t.Run("CSDCN-E01: Without a built map the confrontation is pending", func(t *testing.T) {
-		v, msg := checkContractStatusDeclared(spec, specNode, t.TempDir(), nil, nil)
+		v, msg := checkContractStatusDeclared(spec, specNode, t.TempDir(), nil, testkit.WithComments(nil))
 		if v != Pending || !strings.Contains(msg, "map") {
 			t.Fatalf("expected Pending with the no-map message, got %v (%s)", v, msg)
 		}
 	})
 
 	t.Run("CSDCN-E02: Linked code gone from disk is pending, not a code without status", func(t *testing.T) {
-		cfg := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+		cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
 		v, msg := checkContractStatusDeclared(spec, specNode, t.TempDir(), linkedTo("gone.ts"), cfg)
 		if v != Pending || !strings.Contains(msg, "could not be read") {
 			t.Fatalf("expected Pending saying the code could not be read, got %v (%s)", v, msg)
@@ -538,7 +539,7 @@ func TestContractStatusDeclared_Errors(t *testing.T) {
 		if err := os.WriteFile(filepath.Join(root, "h.ts"), []byte("export const h = () => ({ statusCode: 200 })"), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		cfg := &config.Config{Dialect: &config.Dialect{HTTPStatus: `[`}}
+		cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{HTTPStatus: `[`}})
 		v, msg := checkContractStatusDeclared(spec, specNode, root, linkedTo("h.ts"), cfg)
 		if v != Pending || !strings.Contains(msg, "compile") {
 			t.Fatalf("expected Pending saying the pattern does not compile, got %v (%s)", v, msg)

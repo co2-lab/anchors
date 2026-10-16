@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -207,6 +208,9 @@ func TestFixUpdatedAt(t *testing.T) {
 
 func TestFixMissingHeader_fromTheMap(t *testing.T) {
 	t.Run("FXIXX-B09: The fix writes the missing header from the map", func(t *testing.T) {})
+	prevCfg := fixConfig
+	fixConfig = testkit.WithComments(nil)
+	defer func() { fixConfig = prevCfg }()
 	g := &mapx.Graph{
 		Nodes: []mapx.Node{
 			{ID: "src/pay.spec.md", Kind: mapx.KindSpec, Code: "PAYMT"},
@@ -249,10 +253,9 @@ func TestFixMissingHeader_fromTheMap(t *testing.T) {
 		t.Error("a file of no unit is left as it is")
 	}
 	// A file of a declarative layer — no spec, no rule — gets its own code and its layer.
-	prevCfg := fixConfig
-	fixConfig = &config.Config{Layers: map[string]config.Layer{"core-code": {Kind: "code", Regime: "declarativo"}}}
+	fixConfig = testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"core-code": {Kind: "code", Regime: "declarativo"}}})
 	decl, declChanged, _ := fixMissingHeader("let x = 1\n", mapx.Node{ID: "src/core/eval.ml", Kind: mapx.KindCode, Layer: "core-code"}, "", g)
-	fixConfig = prevCfg
+	fixConfig = testkit.WithComments(nil)
 	if decl = generatedCodeRE.ReplaceAllString(decl, "code: CODE"); !declChanged || !strings.HasPrefix(decl, "(* @anchors\n  code: CODE\n  layer: core-code\n*)\n") {
 		t.Errorf("a declarative layer's file gets its code and layer: %q", decl)
 	}
@@ -290,7 +293,7 @@ func TestFixWithConfig_theDialectAndTheMovedLines(t *testing.T) {
 	if moved["src/ui/Arena.tsx"] || !moved["src/theme/tokens.ts"] {
 		t.Errorf("a flag on the import's line moves no line, a used-by line inserted does: %+v", moved)
 	}
-	if !linesMoved("a\nb\nc", "x\na\nc") || linesMoved("a // @dep: X\nb", "a // @dep: Y\nb") {
+	if !linesMoved("a\nb\nc", "x\na\nc", testkit.Comments("x.ts")) || linesMoved("a // @dep: X\nb", "a // @dep: Y\nb", testkit.Comments("x.ts")) {
 		t.Error("an insertion with a removal moves lines; a flag rewritten in place does not")
 	}
 }

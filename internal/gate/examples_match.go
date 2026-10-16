@@ -65,7 +65,7 @@ func checkExamplesMatch(content string, n mapx.Node, root string, g *mapx.Graph,
 		var bodies []string
 		for _, t := range tests {
 			if strings.Contains(t.Title, o.code) {
-				bodies = append(bodies, testBody(bodyOf(t.File), t, labels))
+				bodies = append(bodies, testBody(bodyOf(t.File), t, labels, newLayout(bodyOf(t.File), t.File, cfg)))
 			}
 		}
 		if len(bodies) == 0 {

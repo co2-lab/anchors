@@ -36,8 +36,8 @@ func newStampCmd() *cobra.Command {
 		Long: `Writes, above every double of a governed module that has no stamp, the
 ` + "`@contract`" + ` stamp that the mock-stamped gate recomputes against the real module.
 
-Each key of the double's factory that names an export of the module gets its own stamp,
-covering that export's block. With no such key, one stamp covers the whole module.
+Each export of the module that the double's call names gets its own stamp, covering
+that export's block. With none named, one stamp covers the whole module.
 
 It only ADDS stamps. An existing stamp is never rewritten, even when it diverges — the
 divergence is the gate telling you the double may be stale, and that calls for a person
@@ -153,7 +153,7 @@ func refreshStamps(root string, g *mapx.Graph, files []string, dryRun bool) erro
 	total := 0
 	for _, f := range files {
 		rel := common.RelTo(root, f)
-		found, err := gate.RefreshStamps(g, root, rel, !dryRun)
+		found, err := gate.RefreshStamps(g, root, rel, !dryRun, stampCfg(root))
 		if err != nil {
 			return err
 		}
@@ -181,8 +181,8 @@ func refreshStamps(root string, g *mapx.Graph, files []string, dryRun bool) erro
 				continue
 			}
 			fmt.Printf("  %s:%d  `%s`  (%s → %s)\n", r.Test, r.Line, r.Anchor, r.Old, r.New)
-			velho, okV := gate.StampSnippet(string(antigo), r.Anchor, r.Count)
-			atual, okA := gate.StampSnippet(string(novo), r.Anchor, r.Count)
+			velho, okV := gate.StampSnippet(string(antigo), r.Anchor, r.Count, stampCfg(root).CommentsFor(rel))
+			atual, okA := gate.StampSnippet(string(novo), r.Anchor, r.Count, stampCfg(root).CommentsFor(rel))
 			if okV && okA {
 				for _, l := range blockDiff(velho, atual) {
 					fmt.Printf("      %s\n", l)
@@ -233,4 +233,10 @@ func blockDiff(velho, atual string) []string {
 		out = append(out, "+ "+l)
 	}
 	return out
+}
+
+// stampCfg is the project's configuration, for the comments the stamps are read without.
+func stampCfg(root string) *config.Config {
+	cfg, _ := config.Load(filepath.Join(root, config.DefaultFile))
+	return cfg
 }

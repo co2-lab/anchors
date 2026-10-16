@@ -129,7 +129,7 @@ func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 		// limite em vez do cursor, o que é menos preciso, mas aponta a mesma função e o
 		// conserto (devolver o cursor) está entre as saídas que ela oferece.
 		// limite que o CHAMADOR escolhe é decisão dele; default escondido não é.
-		if lim, temDefault := hiddenLimit(f.body, f.params); lim != "" {
+		if lim, temDefault := hiddenLimit(f.body, n.ID, f.params, d); lim != "" {
 			if !temDefault {
 				continue // o chamador passa o limite: página deliberada, sem promessa quebrada
 			}
@@ -190,57 +190,57 @@ func paginatesAll(body string, d config.Dialect) bool {
 	return cursor.MatchString(body) && laço.MatchString(body)
 }
 
-// limiteEscondido devolve o nome do limite e se ele é ESCONDIDO do chamador.
+// hiddenLimit devolve o limite e se ele é ESCONDIDO do chamador.
 //
 // Esta é a distinção central do gate, e ela é conceitual (não de linguagem): um limite que
 // o chamador PASSA é contrato — ele sabe que existe mais. Um limite que mora no código
 // (default na assinatura, literal na query, constante do módulo) é truncamento que o
 // chamador não tem como saber que existe.
 //
-// Os nomes procurados (`limit`, `max`, `pageSize`, `take`, `top`) são vocabulário de
-// API de dados, difundido em toda stack — a mesma classe de universalidade de `list`/
-// `getAll`. A ASSOCIAÇÃO nome↔valor é que varia por sintaxe, e vem em duas formas que
-// cobrem as linguagens correntes: `nome = valor` (default de parâmetro) e `nome: valor`
-// ou `nome=valor` (campo de objeto / argumento nomeado).
-var limitNamePattern = `(?i)\b(limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b`
-
-// `[^=\n]*?` deixa passar uma anotação de tipo (`limit: number = 100`, `limit: int = 100`)
-// sem atravessar a linha. Sem esse cuidado, `limit: number` — parâmetro OBRIGATÓRIO, que o
-// chamador escolhe — é lido como default e vira falso positivo (aconteceu, e o teste pegou).
-var limitDefaultRE = regexp.MustCompile(limitNamePattern + `[^=\n]*?=\s*(\d+)`)
-var limitLiteralRE = regexp.MustCompile(limitNamePattern + `\s*[:=]\s*(\d+)`)
-
-// O valor tem de ser um IDENTIFICADOR que o chamador possa ter passado — não um nome de
-// TIPO. `limit: number` (TS), `limit: int` (Python) e `limit: Int` (Kotlin) são anotações
-// de tipo na assinatura, não a passagem do limite para a consulta; lê-las como valor faz o
-// gate concluir "escondido" justamente no caso em que o chamador escolheu. O teste pegou.
-var commonTypesRE = regexp.MustCompile(`(?i)^(number|int|integer|long|short|byte|float|double|decimal|uint\d*|int\d*|usize|i\d+|u\d+|Int|Long|Integer|Number|BigInt|size_t)$`)
-
-var limitParamRE = regexp.MustCompile(limitNamePattern + `\s*[:=]\s*(\w+)`)
-
-func hiddenLimit(body string, params []string) (string, bool) {
-	// default na assinatura: `limit = 100` — o chamador pode omitir e nem saber do corte.
-	if m := limitDefaultRE.FindStringSubmatch(body); m != nil {
-		return m[1] + " = " + m[2], true
-	}
-	// literal cravado na query: `Limit: 50` — ninguém escolheu, está no código.
-	if m := limitLiteralRE.FindStringSubmatch(body); m != nil {
-		return m[1] + ": " + m[2], true
-	}
-	// limite que vem de um parâmetro SEM default: o chamador escolheu, é contrato dele.
-	// Varre TODAS as ocorrências: a primeira pode ser a anotação de tipo na assinatura
-	// (`limit: number`) e a que interessa vir depois, na consulta (`Limit: limit`).
-	for _, m := range limitParamRE.FindAllStringSubmatch(body, -1) {
-		if commonTypesRE.MatchString(m[2]) {
-			continue // anotação de tipo, não a passagem do valor
-		}
-		for _, p := range params {
-			if p == m[2] {
-				return m[1], false
+// COMO um limite se escreve é do projeto (`dialect.limits`, DESIGN-core-without-syntax.md):
+// cada padrão captura o nome do limite (`name`) e o seu valor — um literal (`value`): está
+// no código, escondido; um identificador (`param`): contrato quando é parâmetro da função,
+// escondido quando não é (uma constante do módulo). Um padrão com o grupo `type` lê uma
+// anotação de tipo (`limit: number`): não é a passagem do valor, e o que outro padrão leia
+// no mesmo lugar é ignorado — lê-la como valor fazia o gate concluir "escondido" justamente
+// no caso em que o chamador escolheu.
+func hiddenLimit(body, rel string, params []string, d config.Dialect) (string, bool) {
+	matches := d.Limits.FindAll(body, rel)
+	typed := map[int]bool{}
+	for _, m := range matches {
+		if c, ok := m.Groups["type"]; ok {
+			for i := m.Start; i < c.End; i++ {
+				typed[i] = true
 			}
 		}
-		// vem de uma constante do módulo, não do chamador → escondido.
-		return m[1] + ": " + m[2], true
+	}
+	name := func(m config.Match) string {
+		if c, ok := m.Groups["name"]; ok {
+			return c.Value
+		}
+		return strings.TrimSpace(body[m.Start:m.End])
+	}
+	// Na ordem do código: um default ou um literal antes de tudo esconde; um parâmetro do
+	// chamador é contrato; um identificador que não é parâmetro vem de fora — escondido.
+	for _, m := range matches {
+		if _, isType := m.Groups["type"]; isType {
+			continue
+		}
+		if v, ok := m.Groups["value"]; ok && !typed[v.Start] {
+			return name(m) + " = " + v.Value, true
+		}
+	}
+	for _, m := range matches {
+		p, ok := m.Groups["param"]
+		if !ok || typed[p.Start] {
+			continue
+		}
+		for _, x := range params {
+			if x == p.Value {
+				return name(m), false
+			}
+		}
+		return name(m) + ": " + p.Value, true
 	}
 	return "", false
 }

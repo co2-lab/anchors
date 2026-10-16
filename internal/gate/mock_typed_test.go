@@ -5,6 +5,8 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -16,7 +18,30 @@ import (
 func testNode() mapx.Node { return mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest} }
 
 func cfgComContrato() *config.Config {
-	return &config.Config{Derived: &config.Derived{MockContract: "Partial<typeof {{module}}>"}}
+	return withTSMocks(testkit.WithComments(&config.Config{Derived: &config.Derived{MockContract: "Partial<typeof {{module}}>"}}))
+}
+
+// withTSMocks gives a test's configuration the ts example of the mock fields it leaves
+// empty (config.FamilyMocks), and the import resolution the tests' specifiers use: `@/` is the
+// root, `@backend/` the backend package.
+func withTSMocks(cfg *config.Config) *config.Config {
+	ex := config.FamilyMocks("ts")
+	if cfg.Derived == nil {
+		cfg.Derived = &config.Derived{}
+	}
+	for _, f := range []struct {
+		dst *string
+		src string
+	}{
+		{&cfg.Derived.MockDetect, ex.MockDetect}, {&cfg.Derived.MockFactory, ex.MockFactory}, {&cfg.Derived.MockTyped, ex.MockTyped},
+	} {
+		if *f.dst == "" {
+			*f.dst = f.src
+		}
+	}
+	cfg.Dialect.ImportResolve = &config.ImportResolve{Extensions: []string{".ts", ".tsx"},
+		Aliases: map[string]string{"@backend/": "packages/backend/", "@app/": "", "@/": ""}}
+	return cfg
 }
 
 // grafoDoProjeto — os módulos que o projeto REGE. Só eles são cobrados; a biblioteca
@@ -99,6 +124,12 @@ func TestMockTipado_automockNaoEhCobrado(t *testing.T) {
 	if v, msg := rodaMock(t, src, cfgComContrato()); v != Skip {
 		t.Errorf("automock não tem fábrica que possa mentir: %v (%s)", v, msg)
 	}
+	// An automock followed by a third party's double with a factory: the next call's factory
+	// is not the automock's.
+	next := "jest.mock('@backend/repositories/lotes')\njest.mock('react-native', () => ({ Platform: {} }))\n"
+	if v, msg := rodaMock(t, next, cfgComContrato()); v == Fail {
+		t.Errorf("the automock does not borrow the next double's factory: %v (%s)", v, msg)
+	}
 }
 
 // Sem `derived.mock_contract` o gate PULA. Inferir `Partial<typeof …>` assumiria
@@ -107,14 +138,14 @@ func TestMockTipado_automockNaoEhCobrado(t *testing.T) {
 func TestMockTipado_semContratoDeclaradoPula(t *testing.T) {
 	t.Run("MCTYM-B05: Without the tie shape declared the gate goes quiet", func(t *testing.T) {})
 	src := `jest.mock('a', () => ({ f: jest.fn() }))`
-	v, msg := rodaMock(t, src, &config.Config{})
+	v, msg := rodaMock(t, src, testkit.WithComments(&config.Config{}))
 	if v != Pending {
 		t.Errorf("with no tie shape declared the gate did not check, and says so: %v", v)
 	}
 	if !strings.Contains(msg, "mock_contract") || !strings.Contains(msg, "opt_out") {
 		t.Errorf("the message names the field and the opt-out: %s", msg)
 	}
-	if v, _ := rodaMock(t, src, &config.Config{Dialect: &config.Dialect{OptOut: []string{"mock_contract"}}}); v != Skip {
+	if v, _ := rodaMock(t, src, testkit.WithComments(&config.Config{Dialect: &config.Dialect{OptOut: []string{"mock_contract"}}})); v != Skip {
 		t.Errorf("a waived field is the project's decision, and skips: %v", v)
 	}
 	// testa com config nil
@@ -200,12 +231,12 @@ func TestMockTipado_relativoEhProprio(t *testing.T) {
 
 func TestMockTipado_mockDetectGenerico(t *testing.T) {
 	t.Run("MCTYM-B12: Another ecosystem's dialect is charged the same way", func(t *testing.T) {})
-	cfg := &config.Config{
+	cfg := testkit.WithComments(&config.Config{
 		Derived: &config.Derived{
 			MockDetect:   `(?:mock\.)?patch\(['"]([^'"]+)`,
 			MockContract: "autospec=True",
 		},
-	}
+	})
 	srcSemAmarra := `@patch('src/a')
 def test_foo():
     pass`
@@ -261,7 +292,7 @@ func TestMockTipado_formaNaoDeclaradaPulaEmVezDeAdivinhar(t *testing.T) {
 	t.Run("MCTYM-I02: An undeclared tie shape skips instead of guessing one", func(t *testing.T) {})
 	src := `jest.mock('src/a', () => ({ f: jest.fn() }))`
 	// Sem forma declarada: Skip.
-	v, _ := rodaMock(t, src, &config.Config{Derived: &config.Derived{}})
+	v, _ := rodaMock(t, src, testkit.WithComments(&config.Config{Derived: &config.Derived{}}))
 	if v != Pending {
 		t.Fatalf("with no shape declared the gate is pending, never guessing; got %v", v)
 	}
@@ -327,11 +358,11 @@ func TestMockTipado_semFormaNemDialetoNaoSeAplica(t *testing.T) {
 func (repoFalso) Listar() []int { return nil }
 func TestX(t *testing.T) { usar(repoFalso{}) }`
 	v, msg := checkMockTyped(src, mapx.Node{ID: "x_test.go", Kind: mapx.KindTest},
-		"", grafoDoProjeto(), &config.Config{Derived: &config.Derived{}})
+		"", grafoDoProjeto(), testkit.WithComments(&config.Config{Derived: &config.Derived{}}))
 	if v != Pending {
 		t.Fatalf("with no shape and no dialect the gate is pending until the project decides; got %v (%s)", v, msg)
 	}
-	waived := &config.Config{Derived: &config.Derived{}, Dialect: &config.Dialect{OptOut: []string{"mock_contract"}}}
+	waived := testkit.WithComments(&config.Config{Derived: &config.Derived{}, Dialect: &config.Dialect{OptOut: []string{"mock_contract"}}})
 	if v, _ := checkMockTyped(src, mapx.Node{ID: "x_test.go", Kind: mapx.KindTest}, "", grafoDoProjeto(), waived); v != Skip {
 		t.Errorf("the project said the gate does not apply: Skip, got %v", v)
 	}
@@ -447,7 +478,9 @@ func TestMockTyped_skipReasons(t *testing.T) {
 	})
 }
 
-func TestMockHasFactory(t *testing.T) {
+// The ts example says what a double WITH a factory looks like (derived.mock_factory).
+func TestMockFactoryExample(t *testing.T) {
+	factory := regexp.MustCompile(config.FamilyMocks("ts").MockFactory)
 	cases := []struct {
 		text string
 		want bool
@@ -455,16 +488,14 @@ func TestMockHasFactory(t *testing.T) {
 		{"jest.mock('x', () => ({}))", true},
 		{"jest.mock('x')", false},
 		{"jest.mock('x', { spy: true })", false},
-		{"('x', () => ({}))", true},                             // the call's paren opens the text
 		{"jest.mock(require.resolve('./x'), () => ({}))", true}, // a nested call in the first argument
 		{"jest.mock(\n  'x',\n)\nconst f = () => 1", false},     // prettier's trailing comma: no factory
-		{"jest.mock('it\\'s', () => ({}))", true},               // an escaped quote inside the name
-		{"jest.mock('x', factory", true},                        // unclosed: read to the end
+		{"vi.mock('x', factory", true},                          // unclosed: read to the end
 		{"no call here", false},
 	}
 	for _, c := range cases {
-		if got := mockHasFactory(c.text); got != c.want {
-			t.Errorf("mockHasFactory(%q) = %v, want %v", c.text, got, c.want)
+		if got := factory.MatchString(c.text); got != c.want {
+			t.Errorf("mock_factory(%q) = %v, want %v", c.text, got, c.want)
 		}
 	}
 }

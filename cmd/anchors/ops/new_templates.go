@@ -30,10 +30,10 @@ var templates = map[string]template{
 
 // ─── header helpers (dialeto de comentário por artefato, HEADER_GUIDE) ──────────
 
-func mdHeader(idField string) func(id, outPath string) string {
+func mdHeader(idField string) func(id, outPath string, _ *config.Comments) string {
 	// A spec é sempre Markdown (é o formato do Anchors, não da linguagem do projeto):
 	// o dialeto de comentário aqui é fixo com razão.
-	return func(id, _ string) string {
+	return func(id, _ string, _ *config.Comments) string {
 		return fmt.Sprintf("<!-- @anchors\n  %s: %s\n  updated_at: TODO\n  layer: TODO\n-->\n", idField, id)
 	}
 }
@@ -43,23 +43,24 @@ func mdHeader(idField string) func(id, outPath string) string {
 // Cravar `pt` obrigava todo projeto a escrever feature em português — a língua de quem
 // fez o framework, não a de quem o usa. Default `en`, o idioma nativo do Gherkin.
 // Ver dialect.GherkinFor().
-func featureHeader(id string, lang string) string {
+func featureHeader(id string, lang string, _ *config.Comments) string {
 	if lang == "" {
 		lang = "en"
 	}
 	return fmt.Sprintf("# language: %s\n# @anchors\n#   ref: %s\n#   updated_at: TODO\n#   layer: feature\n", lang, id)
 }
 
-// lineHeader emite o header no dialeto de comentário do ARQUIVO que está sendo criado —
-// deduzido da extensão do caminho de saída, via config.CommentMarkers (que já cobre 20+
-// linguagens). Fixar `//` aqui gerava um `.py` com comentário de JavaScript: sintaxe
-// inválida, arquivo que nem roda. O `anchors init` oferece 18 stacks (Java, Python, Go,
-// Rust, PHP, Ruby, Elixir, Dart, C++…); emitir só um dialeto contradizia a própria
-// promessa do init.
-func lineHeader(idField string) func(id, outPath string) string {
-	return func(id, outPath string) string {
-		c := config.LineCommentFor(outPath)
-		if closer := config.CommentCloseFor(c); closer != "" {
+// lineHeader emite o header nos comentários que o projeto declara para o ARQUIVO que está
+// sendo criado (`dialect.comments`). Fixar `//` aqui gerava um `.py` com comentário de
+// JavaScript: sintaxe inválida, arquivo que nem roda. Um arquivo cujos comentários ninguém
+// declarou nasce sem header — o `header-valid` avisa.
+func lineHeader(idField string) func(id, outPath string, cs *config.Comments) string {
+	return func(id, outPath string, cs *config.Comments) string {
+		c := cs.LineMarker()
+		if c == "" {
+			return ""
+		}
+		if closer := cs.CloseFor(c); closer != "" {
 			return fmt.Sprintf("%s @anchors\n  %s: %s\n  updated_at: TODO\n  layer: test\n%s\n",
 				c, idField, id, strings.TrimSpace(closer))
 		}
@@ -838,7 +839,7 @@ var productTemplate = template{
 // A camada é do alvo que uma spec descreve, e a doutrina não tem alvo: ela é o artefato.
 // O `mdHeader` emite `layer: TODO`, que aqui seria um campo que ninguém pode preencher —
 // e um placeholder eterno é exatamente o que o `placeholder-filled` existe para acusar.
-func productHeader(id, outPath string) string {
+func productHeader(id, outPath string, _ *config.Comments) string {
 	return fmt.Sprintf("<!-- @anchors\n  code: %s\n  updated_at: TODO\n-->\n", id)
 }
 

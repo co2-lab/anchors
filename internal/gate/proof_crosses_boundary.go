@@ -247,7 +247,7 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 		// SEM comentários, e é o ponto do gate: `orgPlans.ts` cita `orgBilling.ts`
 		// duas vezes em comentário e não importa uma linha. Contar o comentário
 		// aprovaria justamente o caso que motivou o gate.
-		corpo.WriteString(stripLineComments(string(b)))
+		corpo.WriteString(stripComments(string(b), cp, cfg.DialectFor()))
 		corpo.WriteString("\n")
 	}
 	code := corpo.String()
@@ -294,10 +294,10 @@ func importsUnit(code, alvo string, cfg *config.Config) bool {
 	return false
 }
 
-// importLines are the lines of `code` that import something: the statements the dialect's
-// `imports` read, and the forms most languages share (`import`, `require`, `from `, `use `,
-// `using `, `#include`). A name mentioned in a string is not a dependency, so only these
-// lines are read for one.
+// importLines are the statements of `code` the dialect's `imports` read — only them: the core
+// knows no language's import (DESIGN-core-without-syntax.md), and a project that declares
+// none has the gates that read them pending (presupposes). A name mentioned in a string is
+// not a dependency, so only these statements are read for one.
 func importLines(code string, cfg *config.Config) []string {
 	var out []string
 	if cfg != nil {
@@ -307,14 +307,6 @@ func importLines(code string, cfg *config.Config) []string {
 			for _, m := range p.FindAll(code) {
 				out = append(out, code[m.Start:m.End])
 			}
-		}
-	}
-	for _, linha := range strings.Split(code, "\n") {
-		l := strings.TrimSpace(linha)
-		if strings.Contains(l, "import") || strings.Contains(l, "require") ||
-			strings.Contains(l, "from ") || strings.HasPrefix(l, "use ") ||
-			strings.HasPrefix(l, "using ") || strings.HasPrefix(l, "#include") {
-			out = append(out, l)
 		}
 	}
 	return out

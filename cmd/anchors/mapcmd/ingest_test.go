@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -581,7 +582,7 @@ func TestIngest_junitWithNoFileFindsTheTestByClassAndName(t *testing.T) {
 	useEnglish(t)
 	root := t.TempDir()
 	for p, c := range map[string]string{
-		"anchors.yaml": "version: 6\ndialect:\n  family: go\nlayers:\n" +
+		"anchors.yaml": "version: 6\ndialect:\n  family: go\n  definition: " + strconv.Quote(config.FamilyLexicon("go").Definition) + "\nlayers:\n" +
 			"  spec: {pattern: \"src/**/*.spec.md\", kind: spec}\n" +
 			"  code: {pattern: \"src/**/*.go\", kind: code, exclude: [\"**/*_test.go\"]}\n" +
 			"  test: {pattern: \"src/**/*_test.go\", kind: test}\n" +

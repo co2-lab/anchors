@@ -2,27 +2,27 @@
 # @anchors
 #   code: TSFTT
 #   ref: TSTLS
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @TSTLS
 Feature: TestList — the project's tests, read the way the project says they are written
 
   @TSTLS-B01 @unit-level
-  Scenario: A pattern reads each call followed by a literal as a test
-    Given a test file with two calls the pattern opens, each followed by a quoted title
+  Scenario: A pattern reads each match as a test, titled by its title group
+    Given a test file with two calls the pattern matches, each title in its title group
     When the tests are listed through the pattern
-    Then each is a test with its title and the line where its call starts
+    Then each is a test with its title and the line where its match starts
 
   @TSTLS-B02 @unit-level
-  Scenario: Titles may be quoted three ways, with escapes
-    Given titles quoted with single quotes, double quotes and backticks, one with an escaped quote and one backtick title over two lines
+  Scenario: A pattern names a title group for each way a title is quoted
+    Given a pattern with title groups for single quotes, double quotes and backticks, and a title with an escaped quote
     When the tests are listed through the pattern
-    Then each title is read whole, the escape resolved, and a quoted title that breaks the line is left out
+    Then each title is the group that took part, read as captured, the escape kept
 
   @TSTLS-B03 @unit-level
-  Scenario: A call without a literal title is left out
-    Given a call the pattern opens followed by a variable
+  Scenario: A match whose title groups captured nothing is left out
+    Given a call the pattern matches whose title is a variable, which no title group captures
     When the tests are listed through the pattern
     Then that call is not a test
 
@@ -67,6 +67,12 @@ Feature: TestList — the project's tests, read the way the project says they ar
     Given a pattern that does not compile
     When the tests are listed through it
     Then an error names the compile error
+
+  @TSTLS-E05 @unit-level
+  Scenario: A pattern with no title group is refused
+    Given a pattern that names no title group
+    When the tests are listed through it
+    Then an error says where to name the title
 
   @TSTLS-E03 @unit-level
   Scenario: A failing script is an error naming why

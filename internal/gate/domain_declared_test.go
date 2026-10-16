@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -13,7 +14,7 @@ import (
 
 func rodaDominio(t *testing.T, spec string) (Verdict, string) {
 	t.Helper()
-	return checkDomainDeclared(spec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+	return checkDomainDeclared(spec, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 }
 
 const cabecalhoDominio = "## Domínio\n\n| Entrada | Aceita | Fora do domínio | Quem garante |\n| --- | --- | --- | --- |\n"
@@ -106,7 +107,7 @@ func TestAnArtifactThatIsNotASpecLeavesWithoutAVerdict(t *testing.T) {
 	t.Run("DMDCD-B01: An artifact that is not a spec leaves without a verdict", func(t *testing.T) {})
 	spec := cabecalhoDominio + "| x | y | z |  |\n"
 	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
-		if v, _ := checkDomainDeclared(spec, mapx.Node{Kind: k}, "", nil, nil); v != Skip {
+		if v, _ := checkDomainDeclared(spec, mapx.Node{Kind: k}, "", nil, testkit.WithComments(nil)); v != Skip {
 			t.Errorf("kind %s deveria ser Skip, foi %s", k, v)
 		}
 	}
@@ -133,7 +134,7 @@ func TestANonAnswerInTheOwnerColumnIsNotAnOwnerRealCase(t *testing.T) {
 | --- | --- | --- | --- |
 | ` + "`chave`" + ` | texto livre | — | não valido (MTVRX-X04) |
 `
-	v, d := checkDomainDeclared(comoEstava, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+	v, d := checkDomainDeclared(comoEstava, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("transportar o \"não valido\" para a coluna do dono deveria REPROVAR. Foi %s (%s)", v, d)
 	}
@@ -141,7 +142,7 @@ func TestANonAnswerInTheOwnerColumnIsNotAnOwnerRealCase(t *testing.T) {
 
 	comDono := strings.Replace(comoEstava, "não valido (MTVRX-X04)",
 		"a interface de cadastro (KVEDX-V02) rejeita chave reservada", 1)
-	if v, _ := checkDomainDeclared(comDono, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil); v != Pass {
+	if v, _ := checkDomainDeclared(comDono, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil)); v != Pass {
 		t.Fatal("com dono nomeado deveria passar")
 	}
 }

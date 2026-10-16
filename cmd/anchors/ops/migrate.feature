@@ -2,7 +2,7 @@
 # @anchors
 #   code: MGFTM
 #   ref: MGCMM
-#   updated_at: 2026-10-12
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @MGCMM
@@ -151,3 +151,9 @@ Feature: MigrateCommand — the command the format error promises, bringing the 
     When migrate runs with --dry-run, and then for real
     Then the dry run says it would move it and writes nothing, and the real run makes it a demand and deletes the file
 
+  @MGCMM-B20 @unit-level
+  Scenario: Crossing format 8 writes the families' examples before the file codes
+    Given a project at format 6 with TS code and no dialect, declaring route-exists
+    When migrate runs with --dry-run, and then for real
+    Then the dry run names the comments and the route pattern it would write and writes nothing
+    And the real run writes them, and the code file gets its header in its own comment syntax

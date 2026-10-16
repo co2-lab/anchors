@@ -5,6 +5,7 @@
 package ops
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"slices"
@@ -83,14 +84,14 @@ func TestHeaderDialectsFollowTheArtifact(t *testing.T) {
 	t.Run("NWTMN-B02: A markdown header is an HTML comment with the identity and placeholders", func(t *testing.T) {})
 	t.Run("NWTMN-B03: A feature header opens with the Gherkin language line", func(t *testing.T) {})
 	t.Run("NWTMN-B04: A test header uses the line comment of the output file", func(t *testing.T) {})
-	if got := specTemplate.headerFn("ABCDE", "a/X.spec.md"); got != "<!-- @anchors\n  code: ABCDE\n  updated_at: TODO\n  layer: TODO\n-->\n" {
+	if got := specTemplate.headerFn("ABCDE", "a/X.spec.md", testkit.WithComments(nil).CommentsFor("x.test.ts")); got != "<!-- @anchors\n  code: ABCDE\n  updated_at: TODO\n  layer: TODO\n-->\n" {
 		t.Errorf("spec header = %q", got)
 	}
-	if got := featureHeader("ABCDE", ""); !strings.HasPrefix(got, "# language: en\n# @anchors\n#   ref: ABCDE\n") ||
+	if got := featureHeader("ABCDE", "", nil); !strings.HasPrefix(got, "# language: en\n# @anchors\n#   ref: ABCDE\n") ||
 		!strings.Contains(got, "#   layer: feature\n") {
 		t.Errorf("feature header without a language = %q", got)
 	}
-	if got := featureHeader("ABCDE", "pt"); !strings.HasPrefix(got, "# language: pt\n") {
+	if got := featureHeader("ABCDE", "pt", nil); !strings.HasPrefix(got, "# language: pt\n") {
 		t.Errorf("feature header in pt = %q", got)
 	}
 	for out, prefix := range map[string]string{
@@ -98,7 +99,7 @@ func TestHeaderDialectsFollowTheArtifact(t *testing.T) {
 		"a/calc.test.ts": "// @anchors\n//   ref: ABCDE\n",
 		"a/calc_test.go": "// @anchors\n//   ref: ABCDE\n",
 	} {
-		if got := testTemplate.headerFn("ABCDE", out); !strings.HasPrefix(got, prefix) || !strings.Contains(got, "layer: test") {
+		if got := testTemplate.headerFn("ABCDE", out, testkit.WithComments(nil).CommentsFor(out)); !strings.HasPrefix(got, prefix) || !strings.Contains(got, "layer: test") {
 			t.Errorf("test header for %s = %q, want the prefix %q", out, got, prefix)
 		}
 	}
@@ -162,7 +163,7 @@ func TestNewProduct_doesNotInheritTheSpecBody(t *testing.T) {
 	// Doctrine has no TARGET: the layer belongs to the target a spec describes, and a
 	// `layer: TODO` here would be a field nobody can fill — the eternal placeholder that
 	// `placeholder-filled` exists to accuse.
-	if strings.Contains(tpl.headerFn("CRLMT", "product/x.doctrine.md"), "layer:") {
+	if strings.Contains(tpl.headerFn("CRLMT", "product/x.doctrine.md", testkit.WithComments(nil).CommentsFor("x.test.ts")), "layer:") {
 		t.Error("the doctrine header must not declare `layer:`")
 	}
 }

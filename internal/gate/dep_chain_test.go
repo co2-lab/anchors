@@ -6,6 +6,7 @@ package gate
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -61,7 +62,7 @@ func chainProject(t *testing.T) (string, *mapx.Graph, *config.Config) {
 		{ID: "src/hooks/useToast.ts", Kind: mapx.KindCode, FileCode: "USTST"},
 		{ID: "src/ui/types.ts", Kind: mapx.KindCode, FileCode: "TYPSU"},
 	}}
-	cfg := &config.Config{Dialect: withChain("ts")}
+	cfg := testkit.WithComments(&config.Config{Dialect: withChain("ts")})
 	cfg.Dialect.ImportResolve.Aliases = map[string]string{"@/": "src/"}
 	importersMu.Lock()
 	delete(importersCache, root)
@@ -303,7 +304,7 @@ func TestDepChain_byName(t *testing.T) {
 		{ID: "src/front/lexer.ml", Kind: mapx.KindCode, FileCode: "LEXRF"},
 		{ID: "src/ghost/ghost.ml", Kind: mapx.KindCode, FileCode: "GHOST"},
 	}}
-	cfg := &config.Config{Dialect: withChain("ocaml")}
+	cfg := testkit.WithComments(&config.Config{Dialect: withChain("ocaml")})
 	var targets []string
 	for _, imp := range ImportsOf(parse, "src/core/parse.ml", cfg.DialectFor(), g) {
 		if imp.Target != "" {
@@ -360,7 +361,7 @@ func TestDepChain_noPatternsAndComments(t *testing.T) {
 		t.Errorf("the commented imports are none: %+v", imps)
 	}
 	n := mapx.Node{ID: "src/ui/Arena.tsx", Kind: mapx.KindCode, FileCode: "ARSCR"}
-	bare := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	bare := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
 	if v, msg := checkDepDeclared(content, n, root, g, bare); v != Pending || !strings.Contains(msg, "dialect.imports") {
 		t.Errorf("no imports declared: pending, naming the field — %v %s", v, msg)
 	}
@@ -401,16 +402,16 @@ func TestDepChain_separator(t *testing.T) {
 
 func TestUsedByFlag_insideTheComment(t *testing.T) {
 	t.Run("DCGDP-B15: The symbol of a listed used-by flag is written inside the comment", func(t *testing.T) {})
-	for marker, want := range map[string]string{
-		"//":   "// @used-by: AAAAA, BBBBB (Mode)",
-		"(*":   "(* @used-by: AAAAA, BBBBB (Mode) *)",
-		"<!--": "<!-- @used-by: AAAAA, BBBBB (Mode) -->",
+	for rel, want := range map[string]string{
+		"a.ts": "// @used-by: AAAAA, BBBBB (Mode)",
+		"a.ml": "(* @used-by: AAAAA, BBBBB (Mode) *)",
+		"a.md": "<!-- @used-by: AAAAA, BBBBB (Mode) -->",
 	} {
-		if got := usedByFlag(marker, []string{"AAAAA", "BBBBB"}, "Mode", true); got != want {
-			t.Errorf("%s: got %q, want %q", marker, got, want)
+		if got := usedByFlag(testkit.Comments(rel), []string{"AAAAA", "BBBBB"}, "Mode", true); got != want {
+			t.Errorf("%s: got %q, want %q", rel, got, want)
 		}
 	}
-	if got := usedByFlag("(*", []string{"AAAAA"}, "x", false); got != "(* @used-by: AAAAA *)" {
+	if got := usedByFlag(testkit.Comments("a.ml"), []string{"AAAAA"}, "x", false); got != "(* @used-by: AAAAA *)" {
 		t.Errorf("an unlisted symbol is not named: %q", got)
 	}
 }

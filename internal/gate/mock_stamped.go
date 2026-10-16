@@ -79,7 +79,7 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 	// adoção, e opt-out por unidade com razão escrita onde a decisão for deliberada.
 	var semCarimbo []string
 	for _, modulo := range detectedDoubles(content, detector) {
-		if !isGovernedModule(modulo, g) {
+		if !isGovernedModule(modulo, n.ID, cfg.DialectFor(), g) {
 			continue // biblioteca de terceiro não é cobrada (ver `ehModuloRegido`)
 		}
 		if !moduleHasStamp(modulo, carimbos) {
@@ -96,7 +96,7 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 
 	var divergentes []string
 	for _, c := range carimbos {
-		atual, holds, err := stampHolds(root, c)
+		atual, holds, err := stampHolds(root, c, cfg)
 		if err != nil {
 			divergentes = append(divergentes, fmt.Sprintf("%s (%v)", c.anchor, err))
 			continue
@@ -197,8 +197,8 @@ func declaredStamps(content string) []declaredStamp {
 // stampHolds says whether a stamp matches its module today: by the snippet read without the
 // chain's flags, or — for a stamp taken while the flags were already in the module — by the
 // snippet as written.
-func stampHolds(root string, c declaredStamp) (current string, holds bool, err error) {
-	h, raw, err := recomputeStampBoth(root, c)
+func stampHolds(root string, c declaredStamp, cfg *config.Config) (current string, holds bool, err error) {
+	h, raw, err := recomputeStampBoth(root, c, cfg)
 	if err != nil {
 		return "", false, err
 	}
@@ -210,13 +210,14 @@ func stampHolds(root string, c declaredStamp) (current string, holds bool, err e
 // inserted above a symbol change no contract (reported from MIF: 270 stamps broken by the
 // chain's `--fix`) —, and the hash of the snippet as written, when its anchor is still found
 // as written.
-func recomputeStampBoth(root string, c declaredStamp) (string, string, error) {
+func recomputeStampBoth(root string, c declaredStamp, cfg *config.Config) (string, string, error) {
+	cs := cfg.CommentsFor(c.file)
 	b, err := readFile(root, c.file)
 	if err != nil {
 		return "", "", fmt.Errorf(i18n.T("gate.mock_stamped.err_module_not_found"), c.file)
 	}
 	written := strings.Split(string(b), "\n")
-	h, err := snippetOf(stampLines(written), stripChainFlag(c.anchor), c.count)
+	h, err := snippetOf(stampLines(written, cs), stripChainFlag(c.anchor, cs), c.count)
 	if err != nil {
 		return "", "", err
 	}
@@ -258,17 +259,17 @@ func snippetOf(linhas []string, anchor string, count int) (string, error) {
 
 // stripChainFlag is a line without the chain's flags (scan.StripChainFlag) — the reading the
 // map's evidence revisions share, kinded dependencies (`@dep[db]:`) included.
-func stripChainFlag(l string) string { return scan.StripChainFlag(l) }
+func stripChainFlag(l string, cs *config.Comments) string { return scan.StripChainFlag(l, cs) }
 
 // stampLines are a module's lines as a stamp reads them: without the lines that only carry a
 // flag of the chains, and without the flag at the end of a line.
-func stampLines(lines []string) []string {
+func stampLines(lines []string, cs *config.Comments) []string {
 	out := make([]string, 0, len(lines))
 	for _, l := range lines {
-		if scan.ChainFlagOnlyRE.MatchString(l) {
+		if scan.ChainFlagOnly(l, cs) {
 			continue
 		}
-		out = append(out, stripChainFlag(l))
+		out = append(out, stripChainFlag(l, cs))
 	}
 	return out
 }
@@ -369,7 +370,7 @@ type StampRefresh struct {
 // which new line the double now stands for.
 //
 // With write=false it only reports.
-func RefreshStamps(g *mapx.Graph, root, file string, write bool) ([]StampRefresh, error) {
+func RefreshStamps(g *mapx.Graph, root, file string, write bool, cfg *config.Config) ([]StampRefresh, error) {
 	var out []StampRefresh
 	for _, t := range TestsStamping(g, root, file) {
 		path := filepath.Join(root, t)
@@ -390,7 +391,7 @@ func RefreshStamps(g *mapx.Graph, root, file string, write bool) ([]StampRefresh
 				continue
 			}
 			r := StampRefresh{Test: t, Line: i + 1, File: c.file, Anchor: c.anchor, Count: c.count, Old: c.hash}
-			atual, holds, err := stampHolds(root, c)
+			atual, holds, err := stampHolds(root, c, cfg)
 			if err != nil {
 				r.Err = err.Error()
 				out = append(out, r)
@@ -415,9 +416,9 @@ func RefreshStamps(g *mapx.Graph, root, file string, write bool) ([]StampRefresh
 
 // StampSnippet returns the `count` lines that start at the unique `anchor` line of
 // `content` — the block a stamp covers — or false when the anchor is absent or repeated.
-func StampSnippet(content, anchor string, count int) (string, bool) {
-	linhas := stampLines(strings.Split(content, "\n"))
-	anchor = stripChainFlag(anchor)
+func StampSnippet(content, anchor string, count int, cs *config.Comments) (string, bool) {
+	linhas := stampLines(strings.Split(content, "\n"), cs)
+	anchor = stripChainFlag(anchor, cs)
 	idx := -1
 	for i, l := range linhas {
 		if l == anchor {
@@ -441,13 +442,13 @@ func StampSnippet(content, anchor string, count int) (string, bool) {
 // today, keyed `<module>|<hash>`. Taken before a mechanical rewrite of the project (a
 // migration renaming codes inside the stamped snippets), it is what tells the stamps the
 // rewrite broke from the ones that were already stale.
-func StampsHolding(root, content string) map[string]bool {
+func StampsHolding(root, content string, cfg *config.Config) map[string]bool {
 	out := map[string]bool{}
 	for _, c := range declaredStamps(content) {
 		if c.count <= 0 {
 			continue
 		}
-		if _, holds, err := stampHolds(root, c); err == nil && holds {
+		if _, holds, err := stampHolds(root, c, cfg); err == nil && holds {
 			out[filepath.ToSlash(c.file)+"|"+c.hash] = true
 		}
 	}
@@ -458,7 +459,7 @@ func StampsHolding(root, content string) map[string]bool {
 // `<module>|<hash>` key is in `held` and that no longer matches its module: the stamps that
 // held before a mechanical rewrite follow it, and a stamp already stale stays stale. It
 // returns the content and how many stamps it refreshed.
-func RefreshHeldStamps(root, content string, held map[string]bool) (string, int) {
+func RefreshHeldStamps(root, content string, held map[string]bool, cfg *config.Config) (string, int) {
 	lines := strings.Split(content, "\n")
 	n := 0
 	for i, l := range lines {
@@ -471,7 +472,7 @@ func RefreshHeldStamps(root, content string, held map[string]bool) (string, int)
 		if c.count <= 0 || !held[filepath.ToSlash(c.file)+"|"+c.hash] {
 			continue
 		}
-		atual, holds, err := stampHolds(root, c)
+		atual, holds, err := stampHolds(root, c, cfg)
 		if err != nil || holds {
 			continue
 		}

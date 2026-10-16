@@ -6,6 +6,7 @@ package initx
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -235,5 +236,25 @@ func TestBuildConfigSeedsTheFamilysNavigationCall(t *testing.T) {
 	}
 	if c := (&Proposal{Family: "go"}).buildConfig(); c.Dialect == nil || c.Dialect.NavigationCall != "" {
 		t.Errorf("a family with none starts with none: %+v", c.Dialect)
+	}
+}
+
+func TestBuildConfigSeedsTheFamilysLexiconAndComments(t *testing.T) {
+	t.Run("BLCNB-B13: A new project's dialect carries the family's lexicon and the comments of its files", func(t *testing.T) {})
+	ex := config.FamilyLexicon("go")
+	c := (&Proposal{Family: "go", CodeExts: []string{".go", ".py"}}).buildConfig()
+	if c.Dialect == nil || c.Dialect.Family != "go" || c.Dialect.ExportedFunc != ex.ExportedFunc ||
+		!reflect.DeepEqual(c.Dialect.Tests, ex.Tests) || c.Dialect.StatementEnd != ex.StatementEnd {
+		t.Fatalf("the go project starts with the family's lexicon: %+v", c.Dialect)
+	}
+	var globs []string
+	for _, e := range c.Dialect.Comments {
+		globs = append(globs, e.Files)
+	}
+	if strings.Join(globs, " ") != "**/*.go **/*.py **/*.{yaml,yml,toml,sh,bash,zsh}" {
+		t.Errorf("the comments of its files and of the family's scripts, got %v", globs)
+	}
+	if c := (&Proposal{CodeExts: []string{".rb"}}).buildConfig(); c.Dialect == nil || c.Dialect.ExportedFunc != "" || len(c.Dialect.Comments) != 1 {
+		t.Errorf("no family: the comments of its files alone, got %+v", c.Dialect)
 	}
 }

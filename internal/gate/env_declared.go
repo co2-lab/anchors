@@ -29,7 +29,7 @@ var (
 // being read: it is on its way out.
 //
 // The code is the files the spec `specifies`, comments removed, read with the dialect's
-// `env_read` — the family's, or every family's together when the project declares none.
+// `env_read`; a project that declares none leaves the gate pending, naming the field.
 // A read by a computed name (`process.env[name]`) is out of reach of the text.
 func checkEnvDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec || g == nil {
@@ -54,12 +54,18 @@ func checkEnvDeclared(content string, n mapx.Node, root string, g *mapx.Graph, c
 			continue
 		}
 		if b, err := readFile(root, e.To); err == nil {
-			body.WriteString(stripLineComments(string(b)))
+			body.WriteString(stripComments(string(b), e.To, cfg.DialectFor()))
 			body.WriteString("\n")
 		}
 	}
 	read := map[string]bool{}
-	if pat := cfg.DialectFor().EnvReadPattern(); pat != "" {
+	pat := cfg.DialectFor().EnvReadPattern()
+	if pat == "" {
+		// How code reads a variable is the language's: with no `env_read`, nothing can be
+		// confronted (DESIGN-core-without-syntax.md).
+		return Pending, i18n.T("gate.field_undeclared", "dialect.env_read")
+	}
+	if pat != "" {
 		if re, err := regexp.Compile(pat); err == nil {
 			for _, m := range re.FindAllStringSubmatch(body.String(), -1) {
 				for _, name := range m[1:] {

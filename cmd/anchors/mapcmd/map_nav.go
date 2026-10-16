@@ -40,7 +40,8 @@ code's ` + "`@navigates:`" + ` flags:
 			if len(args) == 1 {
 				only = args[0]
 			}
-			lines, ok := NavLines(gate.NavEdges(absRoot, g), only)
+			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			lines, ok := NavLines(gate.NavEdges(absRoot, g, cfg), only)
 			if !ok {
 				return fmt.Errorf("%s is no screen of the app", only)
 			}

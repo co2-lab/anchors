@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -31,7 +32,7 @@ func TestEvidenceFreshSemCarimboEhSkipNaoFail(t *testing.T) {
 	// (rodar a primeira vez, não revalidar), e misturá-las é o defeito que afoga a lista
 	// do `stale` de arestas: 30 "nunca validadas" perdidas em 1419 "avançou de rev".
 	g := grafoEv()
-	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, nil)
+	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("sem sinal tem de ser Skip, veio %v — %s", v, msg)
 	}
@@ -42,7 +43,7 @@ func TestEvidenceFreshSemCarimboTampoucoAprova(t *testing.T) {
 	t.Run("EVFRV-I02: A test that never ran is never approved either", func(t *testing.T) {})
 	t.Run("EVFRV-X01: The gate does not charge the absence of a green test", func(t *testing.T) {})
 	g := grafoEv()
-	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, nil)
+	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, testkit.WithComments(nil))
 	if v == Pass {
 		t.Errorf("teste que nunca rodou não pode ser aprovado — %s", msg)
 	}
@@ -63,7 +64,7 @@ func TestEvidenceFreshCarimboFrescoPassa(t *testing.T) {
 	// A configuração vai NIL de propósito: a verdade confrontada vive no mapa, e uma
 	// régua que dependesse de ajuste poderia ser desligada por um padrão que ninguém
 	// escolheu.
-	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, nil)
+	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, testkit.WithComments(nil))
 	if v != Pass {
 		t.Fatalf("fecho intacto tem de passar, veio %v — %s", v, msg)
 	}
@@ -86,7 +87,7 @@ func TestEvidenceFreshVenceQuandoDependenciaMuda(t *testing.T) {
 		ClosureRev: map[string]string{"utils/login.yaml": "u1"},
 	}
 	g.Nodes[1].Rev = "u2" // o util mudou; o roteiro NÃO
-	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, nil)
+	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("esperava Fail, veio %v — %s", v, msg)
 	}
@@ -109,7 +110,7 @@ func TestEvidenceFreshArquivoProprioMudado(t *testing.T) {
 		ClosureRev: map[string]string{"utils/login.yaml": "u1"},
 	}
 	g.Nodes[0].Rev = "t2" // o próprio roteiro mudou; o fecho NÃO
-	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, nil)
+	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("esperava Fail, veio %v — %s", v, msg)
 	}
@@ -135,7 +136,7 @@ func TestEvidenceFreshTruncaListaLonga(t *testing.T) {
 		closure[id] = "velho"
 	}
 	g.Nodes[0].Signal = &mapx.TestSignal{Passed: 1, AtRev: "r", ClosureRev: closure}
-	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, nil)
+	v, msg := checkEvidenceFresh("", g.Nodes[0], "", g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("esperava Fail, veio %v", v)
 	}
@@ -149,7 +150,7 @@ func TestEvidenceFreshSoOlhaTeste(t *testing.T) {
 	t.Run("EVFRV-B01: An artifact that is not a test leaves without a verdict", func(t *testing.T) {})
 	g := grafoEv()
 	code := mapx.Node{ID: "src/Tela.tsx", Kind: mapx.KindCode, Rev: "x"}
-	if v, _ := checkEvidenceFresh("", code, "", g, nil); v != Skip {
+	if v, _ := checkEvidenceFresh("", code, "", g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("nó de código não tem placar de execução, veio %v", v)
 	}
 }
@@ -159,7 +160,7 @@ func TestEvidenceFreshSemMapaNaoJulga(t *testing.T) {
 	t.Run("EVFRV-B02: Without a built map the gate stays quiet", func(t *testing.T) {})
 	n := mapx.Node{ID: "suites/SS-03.yaml", Kind: mapx.KindTest, Rev: "t1",
 		Signal: &mapx.TestSignal{Passed: 1, AtRev: "t1"}}
-	if v, msg := checkEvidenceFresh("", n, "", nil, nil); v != Skip {
+	if v, msg := checkEvidenceFresh("", n, "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("sem grafo o gate não pode julgar, veio %v — %s", v, msg)
 	}
 }

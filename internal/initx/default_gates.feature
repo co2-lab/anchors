@@ -2,7 +2,7 @@
 # @anchors
 #   code: DGFDF
 #   ref: DFGTD
-#   updated_at: 2026-10-12
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @DFGTD
@@ -162,7 +162,7 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
   Scenario: The mock dialect judgment presupposes the pattern it asks about
     Given the default gates of a project with tests
     When the mock gates are inspected
-    Then mock-detect-covers-dialect and mock-stamped presuppose derived.mock_detect, and mock-typed presupposes derived.mock_contract
+    Then mock-detect-covers-dialect and mock-stamped presuppose derived.mock_detect, and mock-typed presupposes derived.mock_detect and derived.mock_contract
 
   @DFGTD-B19 @unit-level
   Scenario: rule-fulfilled is judged and marked to review

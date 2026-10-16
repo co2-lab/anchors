@@ -74,6 +74,12 @@ func (p *Proposal) buildConfig() *config.Config {
 	// language's tests, exports and comments from the first check.
 	if p.Family != "" {
 		c.Dialect = &config.Dialect{Family: p.Family}
+		// The language's lexicon, from the family's example: the gates read only what the
+		// project declares, and a new project starts with it written down.
+		if ex := config.FamilyLexicon(p.Family); ex != nil {
+			*c.Dialect = *ex
+			c.Dialect.Family = p.Family
+		}
 		// What can fail in this stack, written down from the first day: the failure gates
 		// ask each fetch for its failure and its handling, on a project that has nothing
 		// to unlearn. An existing project is offered them by the governance tips instead.
@@ -96,8 +102,37 @@ func (p *Proposal) buildConfig() *config.Config {
 		}
 	}
 
+	// How the project's files comment, from the examples covering the extensions found and
+	// the family's configuration and scripts: a file no entry covers has no header read.
+	files := make([]string, 0, len(p.CodeExts))
+	for _, ext := range p.CodeExts {
+		files = append(files, "x"+ext)
+	}
+	comments, _ := config.CommentsCovering(files)
+	for _, fc := range config.FamilyComments(p.Family) {
+		if !hasEntry(comments, fc.Files) {
+			comments = append(comments, fc)
+		}
+	}
+	if len(comments) > 0 {
+		if c.Dialect == nil {
+			c.Dialect = &config.Dialect{}
+		}
+		c.Dialect.Comments = comments
+	}
+
 	// governs fica VAZIO — é a parte semântica, preenchida na P&R (guide↔tag).
 	return c
+}
+
+// hasEntry says whether the comments list holds an entry for the glob.
+func hasEntry(list []config.Comments, files string) bool {
+	for _, c := range list {
+		if c.Files == files {
+			return true
+		}
+	}
+	return false
 }
 
 // LayerNameFor deriva um nome de layer legível de um diretório (apps/mobile →

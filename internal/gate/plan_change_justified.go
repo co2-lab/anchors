@@ -129,7 +129,7 @@ func checkPlanChangeJustified(content string, n mapx.Node, root string, g *mapx.
 	// migration or a recode renamed (`anchors.renames.yaml`). Demanding a revision of each
 	// file `anchors migrate` touched asked a project for 114 revision lines that said only
 	// "migration" — the noise that buries the real ones (reported from MIF).
-	if onlyMechanical(root, n.ID, content) {
+	if onlyMechanical(root, n.ID, content, cfg.CommentsFor(n.ID)) {
 		return Skip, i18n.T("gate.plan_change_justified.skip_mechanical")
 	}
 
@@ -273,7 +273,7 @@ var mechanicalWordRE = regexp.MustCompile(`[A-Za-z0-9_]+`)
 // onlyMechanical says whether the file differs from its committed version only in its
 // `@anchors` header and in codes the project renamed: both versions, without the header and
 // with every renamed code read as its current one, are the same text.
-func onlyMechanical(root, path, content string) bool {
+func onlyMechanical(root, path, content string, cs *config.Comments) bool {
 	cmd := exec.Command("git", "show", "HEAD:"+filepath.ToSlash(path))
 	cmd.Dir = root
 	before, err := cmd.Output()
@@ -282,7 +282,7 @@ func onlyMechanical(root, path, content string) bool {
 	}
 	renamed := migra.Renames(root)
 	norm := func(s string) string {
-		if block := scan.AnchorsHeader([]byte(s)); block != nil {
+		if block := scan.AnchorsHeader([]byte(s), cs); block != nil {
 			s = strings.Replace(s, string(block), "", 1)
 		}
 		s = strings.ReplaceAll(s, "\r\n", "\n")

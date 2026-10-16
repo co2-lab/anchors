@@ -277,7 +277,7 @@ func checkAPIErrorsDeclared(_ string, n mapx.Node, root string, _ *mapx.Graph, _
 //
 // The code read is the unit's main file and every file its spec `specifies`, comments out:
 // a code written only in a comment is no answer the client receives.
-func checkErrorCodesHonored(_ string, n mapx.Node, root string, g *mapx.Graph, _ *config.Config) (Verdict, string) {
+func checkErrorCodesHonored(_ string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	u, why, ok := readAPIUnit(n, root)
 	if !ok {
 		return Skip, why
@@ -302,7 +302,7 @@ func checkErrorCodesHonored(_ string, n mapx.Node, root string, g *mapx.Graph, _
 	var body strings.Builder
 	for _, p := range paths {
 		if b, err := readFile(root, p); err == nil {
-			body.WriteString(stripLineComments(string(b)))
+			body.WriteString(stripComments(string(b), p, cfg.DialectFor()))
 			body.WriteString("\n")
 		}
 	}

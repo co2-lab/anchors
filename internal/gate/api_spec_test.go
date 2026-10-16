@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -69,7 +70,7 @@ func TestAPISpec_contractsResolve(t *testing.T) {
 		"| 201 | created | application/json | `GHOST` |\n| 400 | refused | application/json | |\n| 204 | nothing | — | — |\n"
 	root, g := apiProject(t, map[string]string{"api/generate.spec.md": spec,
 		"api/nodom.spec.md": "<!-- @anchors\n  code: NODOM\n-->\n# No domain\n\n## Overview\n\nx\n"})
-	v, d := checkAPIContractsResolve("", mapx.Node{ID: "api/generate.go", Kind: mapx.KindCode}, root, g, nil)
+	v, d := checkAPIContractsResolve("", mapx.Node{ID: "api/generate.go", Kind: mapx.KindCode}, root, g, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(d, "not said for: 400") || !strings.Contains(d, "no spec of the project: GHOST") ||
 		!strings.Contains(d, "no Domain table to give the fields: NODOM") || strings.Contains(d, "204") {
 		t.Errorf("each kind of gap is named: %v %s", v, d)
@@ -84,7 +85,7 @@ func TestAPISpec_errorsDeclared(t *testing.T) {
 		"| `QRGEN-E02` | provider down | 503 | PROVIDER_DOWN | \"Try again\" |\n" +
 		"| `QRGEN-E03` | forbidden | 403 | WALLET_FORBIDDEN | |\n"
 	root, g := apiProject(t, map[string]string{"api/generate.spec.md": spec})
-	v, d := checkAPIErrorsDeclared("", mapx.Node{ID: "api/generate.go", Kind: mapx.KindCode}, root, g, nil)
+	v, d := checkAPIErrorsDeclared("", mapx.Node{ID: "api/generate.go", Kind: mapx.KindCode}, root, g, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(d, "QRGEN-E02 (503)") || !strings.Contains(d, "without an error code or a message: QRGEN-E03") ||
 		strings.Contains(d, "QRGEN-E01") {
 		t.Errorf("503 is undeclared, E03 has no message, 404 is in 4xx: %v %s", v, d)
@@ -102,7 +103,7 @@ func TestAPISpec_errorCodesHonored(t *testing.T) {
 		"api/generate.go": "package api\n// WALLET_FORBIDDEN is handled upstream\nvar errNoWallet = apiError(404, \"WALLET_NOT_FOUND\")\n",
 		"api/errors.go":   "package api\nvar errDown = apiError(503, \"PROVIDER_DOWN\")\n",
 	}, "api/errors.go", "api/missing.go")
-	v, d := checkErrorCodesHonored("", mapx.Node{ID: "api/generate.go", Kind: mapx.KindCode}, root, g, nil)
+	v, d := checkErrorCodesHonored("", mapx.Node{ID: "api/generate.go", Kind: mapx.KindCode}, root, g, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(d, "WALLET_FORBIDDEN") || strings.Contains(d, "WALLET_NOT_FOUND,") || strings.Contains(d, "PROVIDER_DOWN") {
 		t.Errorf("only the code in a comment is absent: %v %s", v, d)
 	}
@@ -114,19 +115,19 @@ func TestAPISpec_anyLanguage(t *testing.T) {
 		"## Respostas de Erro\n| Regra | Quando | Status | Código de erro | Mensagem |\n| --- | --- | --- | --- | --- |\n" +
 		"| `QRGEN-E01` | sem carteira | 404 | WALLET_NOT_FOUND | \"Carteira não encontrada\" |\n"
 	root, g := apiProject(t, map[string]string{"api/generate.spec.md": spec})
-	if v, d := checkAPIErrorsDeclared("", mapx.Node{ID: "api/generate.go", Kind: mapx.KindCode}, root, g, nil); v != Pass {
+	if v, d := checkAPIErrorsDeclared("", mapx.Node{ID: "api/generate.go", Kind: mapx.KindCode}, root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("a Portuguese spec is read: %v %s", v, d)
 	}
 }
 
 func TestAPISpec_projectSectionTitles(t *testing.T) {
 	t.Run("APISP-B06: A section renamed by the project is found", func(t *testing.T) {})
-	SetProjectSectionTitles(&config.Config{Layers: map[string]config.Layer{"api": {SectionTitles: config.SectionTitles{"error-responses": "Recusas da API"}}}})
+	SetProjectSectionTitles(testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"api": {SectionTitles: config.SectionTitles{"error-responses": "Recusas da API"}}}}))
 	t.Cleanup(func() { SetProjectSectionTitles(nil) })
 	spec := apiHead + "## Responses\n| Status | When | Content type | Contract |\n| --- | --- | --- | --- |\n| 4xx | refused | application/json | — |\n\n" +
 		"## Recusas da API\n| Rule | When | Status | Error code | Message |\n| --- | --- | --- | --- | --- |\n| `QRGEN-E01` | x | 503 | DOWN | \"Down\" |\n"
 	root, g := apiProject(t, map[string]string{"api/generate.spec.md": spec})
-	if v, d := checkAPIErrorsDeclared("", mapx.Node{ID: "api/generate.go", Kind: mapx.KindCode}, root, g, nil); v != Fail || !strings.Contains(d, "QRGEN-E01 (503)") {
+	if v, d := checkAPIErrorsDeclared("", mapx.Node{ID: "api/generate.go", Kind: mapx.KindCode}, root, g, testkit.WithComments(nil)); v != Fail || !strings.Contains(d, "QRGEN-E01 (503)") {
 		t.Errorf("the renamed section is read: %v %s", v, d)
 	}
 }

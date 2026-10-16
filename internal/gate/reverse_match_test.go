@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,7 +49,7 @@ func TestFeatureSpecMatch_scenarioWithoutRuleIsReported(t *testing.T) {
 	t.Run("RVMTR-B05: A scenario whose rule the spec no longer declares fails, named as written", func(t *testing.T) {})
 	root, g := withSpec(t, "### UNITX-B01 — the rule that stayed\n")
 
-	v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, nil)
+	v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("scenario B10 has no rule and the verdict was %v", v)
 	}
@@ -64,7 +65,7 @@ func TestFeatureSpecMatch_allBackedByRulesPasses(t *testing.T) {
 	t.Run("RVMTR-B05: A scenario whose rule the spec no longer declares fails, named as written", func(t *testing.T) {})
 	root, g := withSpec(t, "### UNITX-B01 — stayed\n\n### UNITX-B10 — also stayed\n")
 
-	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, nil); v != Pass {
+	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("both rules exist and the verdict was %v: %s", v, msg)
 	}
 }
@@ -77,7 +78,7 @@ func TestFeatureSpecMatch_doesNotChargeAnotherUnitsCode(t *testing.T) {
 	root, g := withSpec(t, "### UNITX-B01 — the rule\n")
 	withNeighbour := "@UNITX\nFeature: X\n\n  @UNITX-B01 @OTHER-B07\n  Scenario: runs against the neighbour\n"
 
-	if v, msg := checkFeatureSpecMatch(withNeighbour, featNodeRev(), root, g, nil); v != Pass {
+	if v, msg := checkFeatureSpecMatch(withNeighbour, featNodeRev(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the neighbour's code was charged: %v / %s", v, msg)
 	}
 }
@@ -87,12 +88,12 @@ func TestFeatureSpecMatch_skips(t *testing.T) {
 	t.Run("RVMTR-B03: A feature no spec covers is Pending", func(t *testing.T) {})
 	t.Run("RVMTR-I01: Neither gate answers Pass when it had nothing to match against", func(t *testing.T) {})
 	notFeature := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}
-	if v, _ := checkFeatureSpecMatch(featureWithOrphan, notFeature, "", nil, nil); v != Skip {
+	if v, _ := checkFeatureSpecMatch(featureWithOrphan, notFeature, "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("not a feature and the verdict was %v", v)
 	}
 	// No linked spec: Pending, because whoever charges the spec's existence is co-location.
 	noEdge := &mapx.Graph{Nodes: []mapx.Node{featNodeRev()}}
-	if v, _ := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), t.TempDir(), noEdge, nil); v != Pending {
+	if v, _ := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), t.TempDir(), noEdge, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("with no linked spec Pending was expected, got %v", v)
 	}
 }
@@ -121,7 +122,7 @@ func TestTestFeatureMatch_testProvesCodeWithoutScenario(t *testing.T) {
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: the one that stayed\n")
 	test := "it('UNITX-B01 ok', () => {})\nit('UNITX-B10 orphan', () => {})\n"
 
-	v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, nil)
+	v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("the test proves B10 without a scenario and the verdict was %v", v)
 	}
@@ -136,7 +137,7 @@ func TestTestFeatureMatch_commentDoesNotCount(t *testing.T) {
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: the one that stayed\n")
 	test := "// UNITX-B10 was reverted, see #811\nit('UNITX-B01 ok', () => {})\n"
 
-	if v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, nil); v != Pass {
+	if v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the code in a COMMENT was charged: %v / %s", v, msg)
 	}
 }
@@ -146,7 +147,7 @@ func TestTestFeatureMatch_doesNotChargeAnotherUnitsCode(t *testing.T) {
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: the one that stayed\n")
 	test := "it('UNITX-B01 ok', () => { buildFixture(OTHER-B07) })\n"
 
-	if v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, nil); v != Pass {
+	if v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the neighbour's code was charged: %v / %s", v, msg)
 	}
 }
@@ -155,11 +156,11 @@ func TestTestFeatureMatch_skips(t *testing.T) {
 	t.Run("RVMTR-B10: test-feature-match skips what is not a test, and a test no feature exercises", func(t *testing.T) {})
 	t.Run("RVMTR-I01: Neither gate answers Pass when it had nothing to match against", func(t *testing.T) {})
 	notTest := mapx.Node{ID: "x.feature", Kind: mapx.KindFeature}
-	if v, _ := checkTestFeatureMatch("", notTest, "", nil, nil); v != Skip {
+	if v, _ := checkTestFeatureMatch("", notTest, "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("not a test and the verdict was %v", v)
 	}
 	noEdge := &mapx.Graph{Nodes: []mapx.Node{testNodeRev()}}
-	if v, msg := checkTestFeatureMatch("it('x')", testNodeRev(), t.TempDir(), noEdge, nil); v != Skip || !strings.Contains(msg, "unit") {
+	if v, msg := checkTestFeatureMatch("it('x')", testNodeRev(), t.TempDir(), noEdge, testkit.WithComments(nil)); v != Skip || !strings.Contains(msg, "unit") {
 		t.Errorf("with no linked feature there is nothing to confront, got %v: %s", v, msg)
 	}
 }
@@ -180,7 +181,7 @@ func TestFeatureSpecMatch_variantIsNotAnotherRule(t *testing.T) {
 		"  @UNITX-B01#01\n  Scenario: first slice\n\n" +
 		"  @UNITX-B01#02\n  Scenario: second slice\n"
 
-	if v, msg := checkFeatureSpecMatch(withVariants, featNodeRev(), root, g, nil); v != Pass {
+	if v, msg := checkFeatureSpecMatch(withVariants, featNodeRev(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the variants belong to B01, which exists: %v / %s", v, msg)
 	}
 }
@@ -191,7 +192,7 @@ func TestFeatureSpecMatch_variantOfMissingRuleIsReported(t *testing.T) {
 	root, g := withSpec(t, "### UNITX-B01 — the rule that stayed\n")
 	withOrphan := "@UNITX\nFeature: X\n\n  @UNITX-B10#01\n  Scenario: variant of the reverted one\n"
 
-	v, msg := checkFeatureSpecMatch(withOrphan, featNodeRev(), root, g, nil)
+	v, msg := checkFeatureSpecMatch(withOrphan, featNodeRev(), root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("B10 does not exist and the verdict was %v", v)
 	}
@@ -205,11 +206,11 @@ func TestTestFeatureMatch_variantIsNotAnotherRule(t *testing.T) {
 	t.Run("RVMTR-B13: A test naming the bare rule where the feature declares its variants", func(t *testing.T) {})
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01#01\n  Scenario: slice\n")
 	bare := "it('UNITX-B01 exercises the rule', () => {})\n"
-	if v, msg := checkTestFeatureMatch(bare, testNodeRev(), root, g, nil); v != Fail || !strings.Contains(msg, "UNITX-B01") || !strings.Contains(msg, "variant") {
+	if v, msg := checkTestFeatureMatch(bare, testNodeRev(), root, g, testkit.WithComments(nil)); v != Fail || !strings.Contains(msg, "UNITX-B01") || !strings.Contains(msg, "variant") {
 		t.Errorf("the bare rule proves none of its variants, got %v / %s", v, msg)
 	}
 	named := "it('UNITX-B01#01 exercises the slice', () => {})\n"
-	if v, msg := checkTestFeatureMatch(named, testNodeRev(), root, g, nil); v != Pass {
+	if v, msg := checkTestFeatureMatch(named, testNodeRev(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("naming the declared variant passes, got %v / %s", v, msg)
 	}
 }
@@ -218,7 +219,7 @@ func TestTestFeatureMatch_undeclaredVariant(t *testing.T) {
 	t.Run("RVMTR-B18: A test naming a variant its feature does not declare", func(t *testing.T) {})
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B03\n  Scenario Outline: each example\n")
 	test := "it.each(rows)('UNITX-B03#01 first example', () => {})\n"
-	if v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, nil); v != Fail || !strings.Contains(msg, "UNITX-B03#01") {
+	if v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, testkit.WithComments(nil)); v != Fail || !strings.Contains(msg, "UNITX-B03#01") {
 		t.Errorf("an undeclared variant fails, named, got %v / %s", v, msg)
 	}
 }
@@ -235,7 +236,7 @@ func TestTestFeatureMatch_revisionIsNotReported(t *testing.T) {
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: the rule\n")
 	test := "describe('UNITX-R0002 — the decision', () => {\n  it('UNITX-B01 ok', () => {})\n})\n"
 
-	if v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, nil); v != Pass {
+	if v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the revision was charged as a rule: %v / %s", v, msg)
 	}
 }
@@ -268,7 +269,7 @@ func TestFeatureSpecMatch_dataStatesAreDefinedByName(t *testing.T) {
 		"  @TREXX-DS-data-empty\n  Scenario: data empty\n\n" +
 		"  @TREXX-DS-filter\n  Scenario: a state no spec defines\n"
 
-	v, msg := checkFeatureSpecMatch(feature, node, root, g, nil)
+	v, msg := checkFeatureSpecMatch(feature, node, root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("DS-filter is not defined and the verdict was %v", v)
 	}
@@ -289,7 +290,7 @@ func TestFeatureSpecMatch_visualBaselineIsNotCharged(t *testing.T) {
 	withVR := "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: rule\n\n" +
 		"  @UNITX-VR @nivel-vr\n  Scenario: the screen's picture\n"
 
-	if v, msg := checkFeatureSpecMatch(withVR, featNodeRev(), root, g, nil); v != Pass {
+	if v, msg := checkFeatureSpecMatch(withVR, featNodeRev(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the VR baseline was charged as an orphan: %v / %s", v, msg)
 	}
 }
@@ -300,14 +301,14 @@ func TestReverseMatch_noMapAndNothingToConfront(t *testing.T) {
 	t.Run("RVMTR-I01: Neither gate answers Pass when it had nothing to match against", func(t *testing.T) {})
 	t.Run("RVMTR-B01: feature-spec-match skips a node that is not a feature, and a feature with no coded scenario", func(t *testing.T) {})
 	t.Run("RVMTR-B02: Without a map both gates are Pending", func(t *testing.T) {})
-	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), "", nil, nil); v != Pending || !strings.Contains(msg, "map") {
+	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), "", nil, testkit.WithComments(nil)); v != Pending || !strings.Contains(msg, "map") {
 		t.Errorf("feature-spec-match with no map: %v / %s", v, msg)
 	}
-	if v, msg := checkTestFeatureMatch("it('UNITX-B01')", testNodeRev(), "", nil, nil); v != Pending || !strings.Contains(msg, "map") {
+	if v, msg := checkTestFeatureMatch("it('UNITX-B01')", testNodeRev(), "", nil, testkit.WithComments(nil)); v != Pending || !strings.Contains(msg, "map") {
 		t.Errorf("test-feature-match with no map: %v / %s", v, msg)
 	}
 	root, g := withSpec(t, "### UNITX-B01 — the rule\n")
-	if v, _ := checkFeatureSpecMatch("@UNITX\nFeature: X\n", featNodeRev(), root, g, nil); v != Skip {
+	if v, _ := checkFeatureSpecMatch("@UNITX\nFeature: X\n", featNodeRev(), root, g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("a feature with no scenario should Skip, got %v", v)
 	}
 }
@@ -317,11 +318,11 @@ func TestReverseMatch_originDeclaringNothingIsPending(t *testing.T) {
 	t.Run("RVMTR-B04: A covering spec that defines no requirement leaves feature-spec-match Pending", func(t *testing.T) {})
 	t.Run("RVMTR-B11: A linked feature with no coded scenario leaves test-feature-match Pending", func(t *testing.T) {})
 	root, g := withSpec(t, "# A spec with prose only\n")
-	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, nil); v != Pending || !strings.Contains(msg, "no requirement") {
+	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, testkit.WithComments(nil)); v != Pending || !strings.Contains(msg, "no requirement") {
 		t.Errorf("a spec with no requirement: %v / %s", v, msg)
 	}
 	root, g = withFeature(t, "Feature: X\n\n  Scenario: uncoded\n")
-	if v, msg := checkTestFeatureMatch("it('UNITX-B10')", testNodeRev(), root, g, nil); v != Pending || !strings.Contains(msg, "no coded scenario") {
+	if v, msg := checkTestFeatureMatch("it('UNITX-B10')", testNodeRev(), root, g, testkit.WithComments(nil)); v != Pending || !strings.Contains(msg, "no coded scenario") {
 		t.Errorf("a feature with no coded scenario: %v / %s", v, msg)
 	}
 }
@@ -334,14 +335,14 @@ func TestReverseMatch_unreadableOriginIsPending(t *testing.T) {
 		Nodes: []mapx.Node{featNodeRev()},
 		Edges: []mapx.Edge{{From: "missing.spec.md", To: "x.feature", Type: mapx.EdgeCoveredBy}},
 	}
-	if v, _ := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), t.TempDir(), g, nil); v != Pending {
+	if v, _ := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), t.TempDir(), g, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("an unreadable spec: expected Pending, got %v", v)
 	}
 	gt := &mapx.Graph{
 		Nodes: []mapx.Node{testNodeRev()},
 		Edges: []mapx.Edge{{From: "missing.feature", To: "x.test.ts", Type: mapx.EdgeTestedBy}},
 	}
-	if v, _ := checkTestFeatureMatch("it('UNITX-B10')", testNodeRev(), t.TempDir(), gt, nil); v != Pending {
+	if v, _ := checkTestFeatureMatch("it('UNITX-B10')", testNodeRev(), t.TempDir(), gt, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("an unreadable feature: expected Pending, got %v", v)
 	}
 }
@@ -362,7 +363,7 @@ func TestFeatureSpecMatch_unionOfCoveringSpecs(t *testing.T) {
 			{From: "b.spec.md", To: "x.feature", Type: mapx.EdgeCoveredBy},
 		},
 	}
-	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, nil); v != Pass {
+	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("B01 and B10 are each defined by one of the specs: %v / %s", v, msg)
 	}
 }
@@ -381,7 +382,7 @@ func TestDataStatesOf_readsEveryDeclaredCodeLength(t *testing.T) {
 func TestTestFeatureMatch_SkipsSupport(t *testing.T) {
 	t.Run("RVMTR-B16: A support file is not confronted as a test", func(t *testing.T) {})
 	n := mapx.Node{ID: "utils/login.yaml", Kind: mapx.KindTest, Support: true}
-	if v, msg := checkTestFeatureMatch("", n, "", &mapx.Graph{Nodes: []mapx.Node{n}}, nil); v != Skip || !strings.Contains(msg, "support") {
+	if v, msg := checkTestFeatureMatch("", n, "", &mapx.Graph{Nodes: []mapx.Node{n}}, testkit.WithComments(nil)); v != Skip || !strings.Contains(msg, "support") {
 		t.Fatalf("a support file must be skipped saying why, got %v (%s)", v, msg)
 	}
 }
@@ -391,8 +392,8 @@ func TestTestFeatureMatch_DeclarativeUnit(t *testing.T) {
 	resetTestedUnits()
 	t.Cleanup(resetTestedUnits)
 	// Code is the anchor and its test sits beside it: no spec, so no edge to the test.
-	cfg := &config.Config{Derived: &config.Derived{Anchor: "code",
-		Files: map[string]config.Padroes{"test": {"{{dir}}/{{name}}.test.{{ext}}"}}}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{Anchor: "code",
+		Files: map[string]config.Padroes{"test": {"{{dir}}/{{name}}.test.{{ext}}"}}}})
 	g := &mapx.Graph{Nodes: []mapx.Node{
 		{ID: "utils/fmt.ts", Kind: mapx.KindCode, Regime: "declarativo"},
 		{ID: "screens/home.tsx", Kind: mapx.KindCode, Regime: "comportamental"},

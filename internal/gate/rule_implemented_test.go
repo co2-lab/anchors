@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +26,7 @@ func rodaRegraImpl(t *testing.T, spec, codigo string) (Verdict, string) {
 		cabecalho = "<!-- @anchors\n  code: AAAAX\n-->\n"
 	}
 	return checkRuleImplemented(cabecalho+spec,
-		mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil)
+		mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, ruleCfg())
 }
 
 // TestSpecQueFalaSozinhaEhAcusada guarda o defeito que motivou o gate: uma spec de handler
@@ -52,7 +53,7 @@ func TestSpecQueFalaSozinhaEhAcusada(t *testing.T) {
 | ` + "`MRHMX-B04`" + ` | aciona a migração |
 | ` + "`MRHMX-B05`" + ` | a ordem é migrar depois mudar o estado |
 `
-	v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "h.spec.md"}, root, nil, nil)
+	v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "h.spec.md"}, root, nil, ruleCfg())
 	if v != Fail {
 		t.Fatalf("spec com regra que o código ignora deve reprovar; veio %v (%s)", v, msg)
 	}
@@ -78,7 +79,7 @@ func TestDispensaDeclaradaFechaAConta(t *testing.T) {
 | ` + "`MTVRX-B01`" + ` | resolve a versão |
 | ` + "`MTVRX-X01`" + ` | NÃO faz I/O |
 `
-	v, msg := checkRuleImplemented(semDispensa, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil)
+	v, msg := checkRuleImplemented(semDispensa, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, ruleCfg())
 	if v != Fail {
 		t.Fatalf("X01 sem código e sem dispensa deve reprovar; veio %v (%s)", v, msg)
 	}
@@ -89,14 +90,14 @@ func TestDispensaDeclaradaFechaAConta(t *testing.T) {
 	comDispensa := strings.Replace(semDispensa,
 		"| `MTVRX-X01` | NÃO faz I/O |",
 		"| `MTVRX-X01` | NÃO faz I/O @no-code: satisfeita pela ausência de import |", 1)
-	if v, msg := checkRuleImplemented(comDispensa, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(comDispensa, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, ruleCfg()); v != Pass {
 		t.Errorf("dispensa declarada COM razão fecha a conta; veio %v (%s)", v, msg)
 	}
 
 	// Marcador nu não dispensa nada — a razão escrita é o que torna a dispensa uma
 	// prestação de contas em vez de um jeito de calar o gate.
 	nu := strings.Replace(semDispensa, "| `MTVRX-X01` | NÃO faz I/O |", "| `MTVRX-X01` | NÃO faz I/O @no-code: |", 1)
-	if v, _ := checkRuleImplemented(nu, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Fail {
+	if v, _ := checkRuleImplemented(nu, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, ruleCfg()); v != Fail {
 		t.Errorf("`@no-code:` sem razão não pode dispensar; veio %v", v)
 	}
 }
@@ -110,7 +111,7 @@ func TestUnidadeAnteriorAPraticaEhPendencia(t *testing.T) {
 	must(t, os.WriteFile(filepath.Join(root, "v.ts"), []byte("export const f = 1\n"), 0o644))
 	spec := "<!-- @anchors\n  code: ANTGX\n-->\n| `ANTGX-B01` | faz algo |\n| `ANTGX-B02` | faz outro |\n"
 
-	v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "v.spec.md"}, root, nil, nil)
+	v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "v.spec.md"}, root, nil, ruleCfg())
 	if v != Diverge {
 		t.Errorf("nenhuma regra declarada = dívida de migração (Pending); veio %v (%s)", v, msg)
 	}
@@ -124,7 +125,7 @@ func TestUnidadeAnteriorAPraticaEhPendencia(t *testing.T) {
 func TestSemCodigoNaoEhAssunto(t *testing.T) {
 	t.Run("RLIMR-B05: A spec with no linked code is not this gate's subject", func(t *testing.T) {})
 	spec := "<!-- @anchors\n  code: NOVAX\n-->\n| `NOVAX-B01` | faz algo |\n"
-	if v, _ := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "x.spec.md"}, t.TempDir(), nil, nil); v != Skip {
+	if v, _ := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "x.spec.md"}, t.TempDir(), nil, ruleCfg()); v != Skip {
 		t.Errorf("sem código, Skip; veio %v", v)
 	}
 }
@@ -152,12 +153,12 @@ func TestRegraImplementada_marcacaoExigidaVenceAPendencia(t *testing.T) {
 	n := mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}
 
 	// Sem declaração: migração em curso, pendência (o comportamento de hoje).
-	if v, _ := checkRuleImplemented(spec, n, root, nil, nil); v != Diverge {
+	if v, _ := checkRuleImplemented(spec, n, root, nil, ruleCfg()); v != Diverge {
 		t.Errorf("sem `rule_marking` a dívida é pendência: %v", v)
 	}
 
 	// Declarado: a migração acabou, e a unidade é cobrada como qualquer outra.
-	cfg := &config.Config{Derived: &config.Derived{RuleMarkingPolicy: "required"}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{RuleMarkingPolicy: "required"}, Layers: ruleCfg().Layers})
 	v, msg := checkRuleImplemented(spec, n, root, nil, cfg)
 	if v != Fail {
 		t.Fatalf("com `rule_marking: required` a pendência vira reprovação: %v", v)
@@ -175,7 +176,7 @@ func TestRegraImplementada_marcacaoExigidaNaoPuneQuemMarca(t *testing.T) {
 	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
 		"// SBNKX-B01: inclui a conta\nexport function addAccount() {}\n"), 0o644))
 	spec := "<!-- @anchors\n  code: SBNKX\n-->\n| `SBNKX-B01` | incluir conta | acrescenta à lista |\n"
-	cfg := &config.Config{Derived: &config.Derived{RuleMarkingPolicy: "required"}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{RuleMarkingPolicy: "required"}, Layers: ruleCfg().Layers})
 
 	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"},
 		root, nil, cfg); v != Pass {
@@ -202,19 +203,19 @@ func TestNoMarkComAlvoNomeado(t *testing.T) {
 	n := mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}
 
 	// Sem dispensa, as duas reprovam.
-	if v, _ := checkRuleImplemented(base, n, root, nil, nil); v != Fail {
+	if v, _ := checkRuleImplemented(base, n, root, nil, ruleCfg()); v != Fail {
 		t.Fatal("preparo: X01 e X02 sem código deveriam reprovar")
 	}
 
 	// UMA linha nomeando AS DUAS fecha a conta das duas.
 	agrupada := base + "\n> `@no-mark:[MTVRX-X01, MTVRX-X02]` satisfeitas pela AUSÊNCIA de código\n"
-	if v, msg := checkRuleImplemented(agrupada, n, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(agrupada, n, root, nil, ruleCfg()); v != Pass {
 		t.Errorf("a declaração agrupada deveria dispensar as duas; veio %v (%s)", v, msg)
 	}
 
 	// E o alvo MANDA: nomear X01 numa linha que fala de X02 dispensa X01, não X02.
 	soUma := base + "\n> `@no-mark:[MTVRX-X01]` só esta\n"
-	v, msg := checkRuleImplemented(soUma, n, root, nil, nil)
+	v, msg := checkRuleImplemented(soUma, n, root, nil, ruleCfg())
 	if v != Fail {
 		t.Fatalf("X02 continua sem dispensa e deve reprovar; veio %v", v)
 	}
@@ -239,7 +240,7 @@ func TestNomeAntigoNoCodeContinuaValendo(t *testing.T) {
 		"| Regra | Efeito |\n| --- | --- |\n" +
 		"| `MTVRX-B01` | resolve a versão |\n" +
 		"| `MTVRX-X01` | NÃO faz I/O @no-code: satisfeita pela ausência |\n"
-	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, ruleCfg()); v != Pass {
 		t.Errorf("`@no-code` deveria continuar dispensando; veio %v (%s)", v, msg)
 	}
 }
@@ -262,12 +263,12 @@ func TestNoMarkSemAlvoValeParaTodas(t *testing.T) {
 		"| `MTVRX-X01` | NÃO faz I/O |\n" +
 		"\n> `@no-mark:` esta unidade descreve configuração, e nada nela recebe marcação\n"
 	n := mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}
-	if v, msg := checkRuleImplemented(spec, n, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(spec, n, root, nil, ruleCfg()); v != Pass {
 		t.Errorf("sem alvo deveria dispensar todas; veio %v (%s)", v, msg)
 	}
 	// `[all]` explícito é a mesma coisa, escrita para quem prefere ver a intenção.
 	explicito := strings.Replace(spec, "@no-mark:", "@no-mark:[all]", 1)
-	if v, msg := checkRuleImplemented(explicito, n, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(explicito, n, root, nil, ruleCfg()); v != Pass {
 		t.Errorf("`[all]` explícito deveria dispensar todas; veio %v (%s)", v, msg)
 	}
 }
@@ -281,7 +282,7 @@ func TestRegraImplementada_naoJulgaSeAImplementacaoEstaCerta(t *testing.T) {
 	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
 		"// MTVRX-B01: resolve a versão vigente\nexport function f() { return 42 }\n"), 0o644))
 	spec := "<!-- @anchors\n  code: MTVRX\n-->\n| `MTVRX-B01` | resolve a versão |\n"
-	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, ruleCfg()); v != Pass {
 		t.Errorf("o gate julgou o MÉRITO da implementação, e a régua é a marca: %v (%s)", v, msg)
 	}
 }
@@ -302,7 +303,7 @@ func TestRegraImplementada_naoExigeMarcaDeTodaRegra(t *testing.T) {
 | ` + "`MTVRX-B01`" + ` | resolve a versão |
 | ` + "`MTVRX-X01`" + ` | NÃO faz I/O @no-code: satisfeita pela ausência de import |
 `
-	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, ruleCfg()); v != Pass {
 		t.Errorf("a restrição dispensada com razão fecha a conta: %v (%s)", v, msg)
 	}
 }
@@ -316,7 +317,7 @@ func TestRuleImplemented_Errors(t *testing.T) {
 			t.Skip("the file is still readable (running as root): the condition cannot be built here")
 		}
 		spec := "<!-- @anchors\n  code: SBNKX\n-->\n| `SBNKX-B01` | does something |\n"
-		v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil)
+		v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, ruleCfg())
 		if v != Pending || !strings.Contains(msg, "u.ts") {
 			t.Fatalf("expected Pending naming u.ts, got %v (%s)", v, msg)
 		}
@@ -332,11 +333,16 @@ func TestRuleImplemented_dataStatesWhenRequired(t *testing.T) {
 		"## Data States\n| State | When |\n| --- | --- |\n| `DS-hero-income` | income > 0 |\n| `DS-hero-empty` | income = 0 |\n"
 	defer func() { dataStatesRequired = false }()
 	n := mapx.Node{Kind: mapx.KindSpec, ID: "h.spec.md"}
-	if v, msg := checkRuleImplemented(spec, n, root, nil, nil); v == Fail {
+	if v, msg := checkRuleImplemented(spec, n, root, nil, ruleCfg()); v == Fail {
 		t.Errorf("off: the data states are not asked of the code: %v %s", v, msg)
 	}
 	dataStatesRequired = true
-	if v, msg := checkRuleImplemented(spec, n, root, nil, nil); v != Fail || !strings.Contains(msg, "HOMEH-DS-hero-empty") || strings.Contains(msg, "hero-income") {
+	if v, msg := checkRuleImplemented(spec, n, root, nil, ruleCfg()); v != Fail || !strings.Contains(msg, "HOMEH-DS-hero-empty") || strings.Contains(msg, "hero-income") {
 		t.Errorf("on: the data state the code does not cite is named: %v %s", v, msg)
 	}
+}
+
+// ruleCfg is a project whose code is TypeScript: where a spec's code is looked for.
+func ruleCfg() *config.Config {
+	return testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"code": {Pattern: "**/*.ts", Kind: "code"}}})
 }

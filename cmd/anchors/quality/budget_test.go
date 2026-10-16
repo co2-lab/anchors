@@ -5,6 +5,7 @@
 package quality
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -139,7 +140,7 @@ func budgetProject(t *testing.T, section, runChanged string, g *mapx.Graph) stri
   - layer: unit
     run: "echo full"
     run_changed: "` + runChanged + `"
-` + report + "\n"
+` + report + "\ndialect:\n" + testkit.CommentsYAML
 	files := map[string]string{"run.sh": budgetRunner, "mut.sh": budgetMutator, "out/.keep": ""}
 	// The run reads each file's revision from its content: a node measured at its own rev
 	// keeps being so under the file's real one.

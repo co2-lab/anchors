@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPFRM
-  updated_at: 2026-10-03
+  updated_at: 2026-10-16
   layer: mapa
 -->
 # MapFormat — the map's format number decides whether this binary may read it
@@ -48,7 +48,7 @@ ignores.
 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
-| `MPFRM-I01` | The binary writes format 7 and reads only format 7 — format 7 gave every governed file a code of its own and widened the four-character codes to five, and a map not migrated would name files by codes the project no longer has; every other format is refused. | walks every format from below the range to above it and checks accept or refuse for each |
+| `MPFRM-I01` | The binary writes format 8 and reads only format 8 — format 8 moved what the core knew of a language into the project's dialect, and a project not migrated would have its headers and flags read in no file; every other format is refused. | walks every format from below the range to above it and checks accept or refuse for each |
 
 ## Constraints
 

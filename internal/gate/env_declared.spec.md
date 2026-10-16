@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ENVDC
-  updated_at: 2026-10-03
+  updated_at: 2026-10-16
   layer: gate
 -->
 # EnvDeclared — the environment variables a unit reads are the ones its spec declares
@@ -37,7 +37,7 @@ read by a computed name is out of reach of the text.
 | `ENVDC-B02` | Each variable the code reads and the spec does not declare is named. |
 | `ENVDC-B03` | Each variable the spec declares and the code does not read is named — unless it is declared deprecated (`yes`, or `yes: use X`). |
 | `ENVDC-B04` | A read inside a comment is no read. |
-| `ENVDC-B05` | With no language family declared, the reads of every family are recognised. |
+| `ENVDC-B05` | With no `dialect.env_read` declared the gate is pending, naming the field: how code reads a variable is the language's, and the core knows none. |
 
 ## Errors
 

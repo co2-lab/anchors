@@ -2,7 +2,7 @@
 # @anchors
 #   code: PCBFP
 #   ref: PCBPR
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @PCBPR
@@ -100,12 +100,13 @@ Feature: ProofCrossesBoundary — when a rule claims a relation, the proof must 
     Then it returns Skip, because there was nothing to charge
 
   @PCBPR-B14 @unit-level
-  Scenario: Imports in other language shapes satisfy the charge
+  Scenario: An import is what the project's dialect declares
     Given a marked rule citing another unit's file
-    And the governed code reaches it through a require, a from, a use or an include line
+    And the project declares its imports as use, using and include lines
+    And the governed code reaches the file through each of them
     When the gate confronts the spec
-    Then it returns Pass, because the ruler is the import line and not one ecosystem's
-      spelling of it
+    Then it returns Pass, because the ruler is the project's import pattern and not one
+      ecosystem's spelling built into the gate
 
   @PCBPR-E01 @unit-level
   Scenario: Without a map the demand is left pending, not approved

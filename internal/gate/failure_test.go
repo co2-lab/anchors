@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,7 +23,7 @@ func failureProject(t *testing.T, spec, code string) (string, mapx.Node, *mapx.G
 	}
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}
 	g := &mapx.Graph{Edges: []mapx.Edge{{From: "x.spec.md", To: "x.go", Type: mapx.EdgeSpecifies}}}
-	return root, n, g, &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	return root, n, g, testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}})
 }
 
 const specWithFailure = "| `CREDT-E01` | insufficient balance | refuses |\n"
@@ -145,7 +146,7 @@ func TestFailureHandled_bareResilientMarkerDoesNotCount(t *testing.T) {
 // recognise would stamp what was never checked.
 func TestFailureHandled_noDialectIsUndetermined(t *testing.T) {
 	root, n, g, _ := failureProject(t, specWithFailure, "func f() int { return 1 }\n")
-	if v, _ := checkFailureHandled(specWithFailure, n, root, g, &config.Config{}); v != Pending {
+	if v, _ := checkFailureHandled(specWithFailure, n, root, g, testkit.WithComments(&config.Config{})); v != Pending {
 		t.Errorf("with no dialect expected Pending, got %v", v)
 	}
 }
@@ -244,11 +245,11 @@ func TestFailureGates_undeterminedWithoutTheDialectPatterns(t *testing.T) {
 	code := "func f() error {\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn nil\n}\n"
 	root, n, g, _ := failureProject(t, specWithFailure, code)
 	for name, check := range failureGates {
-		if v, msg := check(specWithFailure, n, root, g, &config.Config{}); v != Pending {
+		if v, msg := check(specWithFailure, n, root, g, testkit.WithComments(&config.Config{})); v != Pending {
 			t.Errorf("%s with no dialect: expected Pending, got %v (%s)", name, v, msg)
 		}
 	}
-	handleOnly := &config.Config{Dialect: &config.Dialect{HandlePatterns: []string{`if\s+err\s*!=\s*nil`}}}
+	handleOnly := testkit.WithComments(&config.Config{Dialect: &config.Dialect{HandlePatterns: []string{`if\s+err\s*!=\s*nil`}}})
 	if v, msg := checkFailureLogged(specWithFailure, n, root, g, handleOnly); v != Pending {
 		t.Errorf("failure-logged with no log patterns: expected Pending, got %v (%s)", v, msg)
 	}
@@ -397,6 +398,7 @@ func TestFailureHandled_eachFallibleCallHasItsHandling(t *testing.T) {
 		"func d() {\n\t// @no-handle: the cache answers offline\n\tv := useQuery(\"d\")\n\t_ = v\n}\n" // line 22: waived
 	root, n, g, cfg := failureProject(t, specWithFailure, code)
 	cfg.Dialect.FalliblePatterns = []config.FalliblePattern{{Call: `\buseQuery\(`, Handled: `\bisError\b`, Window: 3}}
+	cfg.Dialect.StatementEnd = `[;})]$` // the destructuring above line 7 is its statement
 	v, msg := checkFailureHandled(specWithFailure, n, root, g, cfg)
 	if v != Fail || !strings.Contains(msg, "x.go:16") {
 		t.Fatalf("the unhandled call is named: %v %s", v, msg)

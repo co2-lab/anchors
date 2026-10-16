@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTC
 #   ref: CNFGO
-#   updated_at: 2026-10-13
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @CNFGO
@@ -489,3 +489,23 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given retry_on_load with no values, with 1.5x and max 2, and with lots
     When the threshold and the retries are read
     Then 2 and 1, then 1.5 and 2, and lots is refused naming it
+
+  @CNFGO-B72 @unit-level
+  Scenario: A file's unit name drops what the layers add to it
+    Given templates naming a test {{name}}.test.{{ext}} and {{name}}_test.go
+    When the unit names of Login.test.tsx, pay_test.go, Login.spec.md, app.config.ts and Makefile are taken
+    Then they are Login, pay, Login, app.config and Makefile
+    And with no template Login.test.tsx is Login.test
+
+  @CNFGO-B73 @unit-level
+  Scenario: The code extensions are the code layers'
+    Given a code layer of *.{ts,tsx}, one of *.go, and a test layer of *.py
+    When the code extensions are listed
+    Then they are .go, .ts and .tsx, in the layers' name order
+
+  @CNFGO-B74 @unit-level
+  Scenario: The example runners, a unit's piece paths and a layer's extensions
+    Given the example runners, and a project whose test is {{name}}.test.{{ext}} with an override for its api layer
+    When they are read, and the test paths of web/Login.tsx, api/pay.go and web/Login.spec.md are asked for
+    Then every example runner compiles with a kind and a quiet time
+    And Login's test is web/Login.test.tsx, pay's the override's first, and the spec's takes its layer's extension

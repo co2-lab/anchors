@@ -102,3 +102,10 @@ Feature: BuildConfig — builds the configuration that inference proposes as the
     Given a proposal for a ts project and one for a go project
     When the config is built
     Then the first's navigation call is the ts example, and the second has none
+
+  @BLCNB-B13 @unit-level
+  Scenario: A new project's dialect carries the family's lexicon and the comments of its files
+    Given a proposal for a go project with .go and .py code, and one with .rb code and no family
+    When the config is built
+    Then the first has the go lexicon and the comments of Go, Python and the family's scripts
+    And the second has only the Ruby comments

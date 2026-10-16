@@ -13,6 +13,7 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -1652,6 +1653,13 @@ type Derived struct {
 	// distingue "dublê parcial deliberado" de "dublê defasado". Para esse resto existe
 	// o CARIMBO (`MockStamp`), que é agnóstico de linguagem.
 	MockContract string `yaml:"mock_contract,omitempty"`
+	// MockFactory matches a double's call (its line and the next ones) when it passes a
+	// FACTORY: only those have a hand-written contract to bind (`mock-typed`); an automock
+	// mirrors the module. Empty: every double is charged.
+	MockFactory string `yaml:"mock_factory,omitempty"`
+	// MockTyped matches the beginning of a double's call when a type binds its factory,
+	// besides the contract's form — a TS return annotation, `(): Partial<…> =>`.
+	MockTyped string `yaml:"mock_typed,omitempty"`
 
 	// MockStamp — o CARIMBO DE CONTRATO: a marca que um dublê carrega do trecho de
 	// código que ele substitui, para o gate recalcular e detectar quando ele mudou.
@@ -2249,6 +2257,7 @@ func (c *Config) validarPadroes() error {
 			"collection_query": d.CollectionQuery, "cursor": d.Cursor, "set_promise": d.SetPromise,
 			"set_slice": d.SetSlice, "http_status": d.HTTPStatus, "http_status_dynamic": d.HTTPStatusDynamic,
 			"definition": d.Definition, "type_import_pattern": d.TypeImportPattern,
+			"statement_end": d.StatementEnd, "signature_end": d.SignatureEnd,
 		} {
 			if err := check("dialect."+field, p); err != nil {
 				return err
@@ -2273,8 +2282,14 @@ func (c *Config) validarPadroes() error {
 			{"dialect.imports", d.Imports, []string{"path"}},
 			{"dialect.import_names", d.ImportNames, []string{"name", "default"}},
 			{"dialect.declarations", d.Declarations, []string{"name", "default"}},
+			{"dialect.limits", d.Limits, []string{"value", "param", "type"}},
 		} {
 			if err := l.patterns.Validate(l.field, l.groups); err != nil {
+				return err
+			}
+		}
+		for i, cs := range d.Comments {
+			if err := cs.validate(fmt.Sprintf("dialect.comments[%d]", i)); err != nil {
 				return err
 			}
 		}
@@ -2296,6 +2311,7 @@ func (c *Config) validarPadroes() error {
 	if d := c.Derived; d != nil {
 		for field, p := range map[string]string{
 			"mock_detect": d.MockDetect, "export_detect": d.ExportDetect,
+			"mock_factory": d.MockFactory, "mock_typed": d.MockTyped,
 			"route_pattern": d.RoutePattern, "value_anchor": d.ValueAnchor,
 		} {
 			if err := check("derived."+field, p); err != nil {
@@ -3017,8 +3033,8 @@ type Monitor struct {
 	// Idle is how long a task in progress may go without activity from its holder before the
 	// monitor says so (default 10m); off turns it off.
 	Idle string `yaml:"idle,omitempty"`
-	// Runners are the project's own kinds of long process, read before the built-in ones: a
-	// runner whose name is a built-in one replaces it.
+	// Runners are the project's kinds of long process: the monitor knows no tool by itself,
+	// only Anchors' own commands (ExampleRunners are the examples).
 	Runners []MonitorRunner `yaml:"runners,omitempty"`
 	// Reports are globs of test reports (JUnit) whose landing is an event, beside the ones the
 	// suites declare.
@@ -3038,6 +3054,29 @@ type MonitorRunner struct {
 	Pass     string `yaml:"pass,omitempty"`
 	Fail     string `yaml:"fail,omitempty"`
 	Progress string `yaml:"progress,omitempty"`
+}
+
+// ExampleRunners are the examples of `monitor.runners` for the common test, end-to-end and
+// mutation tools — jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins —:
+// what `anchors migrate` writes for the suites a project runs with them. None is applied by
+// itself: the monitor knows only the project's runners and Anchors' own commands.
+func ExampleRunners() []MonitorRunner {
+	return []MonitorRunner{
+		{Name: "jest", Kind: "unit", Match: `(^|[\s/])jest(\s|$)`, Stall: "10m",
+			Pass: `(?m)^Tests:\s+(\d+ \w+, )*\d+ passed`, Fail: `(?m)^Tests:\s+(\d+ \w+, )*\d+ failed`, Progress: `(?m)^(PASS|FAIL) `},
+		{Name: "vitest", Kind: "unit", Match: `(^|[\s/])vitest(\s|$)`, Stall: "10m",
+			Pass: `(?m)^\s*Tests\s+.*\d+ passed`, Fail: `(?m)^\s*Tests\s+.*\d+ failed`},
+		{Name: "go test", Kind: "unit", Match: `(^|[\s/])go test(\s|$)|\.test(\s|$)`, Stall: "10m",
+			Pass: `(?m)^ok\s`, Fail: `(?m)^(FAIL|--- FAIL)`, Progress: `(?m)^(ok|FAIL)\s`},
+		{Name: "pytest", Kind: "unit", Match: `(^|[\s/])pytest(\s|$)|-m pytest`, Stall: "10m",
+			Pass: `(?m)^=+ .*\d+ passed`, Fail: `(?m)^=+ .*\d+ failed`},
+		{Name: "maestro", Kind: "e2e", Match: `(^|[\s/])maestro (test|--device)`, Stall: "6m",
+			Pass: `Flows? Passed`, Fail: `\[Failed\]|Flows? Failed`, Progress: `(?m)^\s*\[(Passed|Failed)\]`},
+		{Name: "playwright", Kind: "e2e", Match: `playwright test`, Stall: "6m",
+			Pass: `(?m)^\s*\d+ passed`, Fail: `(?m)^\s*\d+ failed`},
+		{Name: "stryker", Kind: "mutation", Match: `(^|[\s/])stryker(\s|$)`, Stall: "15m", Pass: `Final mutation score`},
+		{Name: "gremlins", Kind: "mutation", Match: `(^|[\s/])gremlins(\s|$)`, Stall: "15m"},
+	}
 }
 
 // Navigation is the project's navigation (see Config.Navigation).
@@ -3092,6 +3131,150 @@ func (c *Config) LayerHeadless(layer string) bool {
 		return false
 	}
 	return c.Layers[layer].Headless
+}
+
+// UnitName is the name of the unit a file belongs to: its basename without what a layer adds
+// to the unit's name — the part after `{{name}}` in a `derived.files` template or an
+// override's, `{{ext}}`
+// standing for any extension (`_test.go`, `.test.{{ext}}`) —, nor Anchors' own suffixes
+// (`.spec.md`, `.feature`); with none of them, without its last extension. The longest suffix
+// that fits wins. The core knows no language's way to name a test: the templates say it.
+func (c *Config) UnitName(rel string) string {
+	base := path.Base(strings.ReplaceAll(rel, "\\", "/"))
+	best := -1
+	for _, re := range c.unitSuffixes() {
+		if loc := re.FindStringIndex(base); loc != nil && loc[0] > 0 && (best < 0 || loc[0] < best) {
+			best = loc[0]
+		}
+	}
+	if best > 0 {
+		return base[:best]
+	}
+	if i := strings.LastIndex(base, "."); i > 0 {
+		return base[:i]
+	}
+	return base
+}
+
+// unitSuffixes are the suffixes a layer adds to a unit's name, as patterns anchored at the end.
+func (c *Config) unitSuffixes() []*regexp.Regexp {
+	suffixes := []string{".spec.md", ".feature"}
+	if c != nil && c.Derived != nil {
+		all := []map[string]Padroes{c.Derived.PadroesDe()}
+		for _, ov := range c.Derived.Overrides {
+			all = append(all, ov.PadroesDe())
+		}
+		for _, files := range all {
+			for _, tpls := range files {
+				for _, t := range tpls {
+					if i := strings.LastIndex(t, "{{name}}"); i >= 0 {
+						if suf := t[i+len("{{name}}"):]; suf != "" && !strings.Contains(suf, "/") {
+							suffixes = append(suffixes, suf)
+						}
+					}
+				}
+			}
+		}
+	}
+	out := make([]*regexp.Regexp, 0, len(suffixes))
+	for _, suf := range suffixes {
+		parts := strings.Split(suf, "{{ext}}")
+		for i := range parts {
+			parts[i] = regexp.QuoteMeta(parts[i])
+		}
+		if re, err := regexp.Compile(strings.Join(parts, `[^./]+`) + `$`); err == nil {
+			out = append(out, re)
+		}
+	}
+	return out
+}
+
+// PiecePaths are the paths the project's `derived.files` give a unit's piece (`test`,
+// `feature`, `spec`…): every pattern of the piece, the overrides of the unit's layer first,
+// rendered for the unit at rel — `{{dir}}` its folder, `{{name}}` its unit name, `{{module}}`
+// the folder's name, `{{ext}}` its extension, or its layer's for a spec. Where the project
+// says a piece lives, never a guess of a language's convention.
+func (c *Config) PiecePaths(rel, layer, piece string) []string {
+	if c == nil || c.Derived == nil {
+		return nil
+	}
+	rel = strings.ReplaceAll(rel, "\\", "/")
+	dir := path.Dir(rel)
+	var tpls []string
+	for _, ov := range c.Derived.Overrides {
+		if ov.When == layer {
+			tpls = append(tpls, ov.PadroesDe()[piece]...)
+		}
+	}
+	tpls = append(tpls, c.Derived.PadroesDe()[piece]...)
+	ext := strings.TrimPrefix(path.Ext(rel), ".")
+	if ext == "" || ext == "md" || ext == "feature" {
+		ext = ""
+		if exts := c.LayerExtensions(layer); len(exts) > 0 {
+			ext = strings.TrimPrefix(exts[0], ".")
+		}
+	}
+	r := strings.NewReplacer("{{dir}}", dir, "{{name}}", c.UnitName(rel), "{{module}}", path.Base(dir), "{{ext}}", ext)
+	var out []string
+	seen := map[string]bool{}
+	for _, t := range tpls {
+		if strings.Contains(t, "{{ext}}") && ext == "" {
+			continue
+		}
+		if p := path.Clean(r.Replace(t)); !seen[p] && p != rel {
+			seen[p] = true
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// LayerExtensions are the extensions the layer's pattern ends with — `*.go`, `*.{ts,tsx}` —,
+// or none.
+func (c *Config) LayerExtensions(layer string) []string {
+	if c == nil {
+		return nil
+	}
+	m := layerExtRE.FindStringSubmatch(c.Layers[layer].Pattern)
+	if m == nil {
+		return nil
+	}
+	var out []string
+	for _, e := range strings.Split(strings.Trim(m[1], "{}"), ",") {
+		if e = strings.TrimSpace(e); e != "" {
+			out = append(out, "."+e)
+		}
+	}
+	return out
+}
+
+var layerExtRE = regexp.MustCompile(`\*\.(\{[^}/]*\}|[^./{}*]+)$`)
+
+// CodeExtensions are the extensions the code layers' patterns name — `*.ts`, `*.{ts,tsx}` —,
+// layer by layer in name order, each once: where a unit's code may be, by what the project
+// declares and not by a list of languages.
+func (c *Config) CodeExtensions() []string {
+	if c == nil {
+		return nil
+	}
+	names := make([]string, 0, len(c.Layers))
+	for n, l := range c.Layers {
+		if l.Kind == "code" {
+			names = append(names, n)
+		}
+	}
+	sort.Strings(names)
+	var out []string
+	seen := map[string]bool{}
+	for _, n := range names {
+		for _, e := range c.LayerExtensions(n) {
+			if !seen[e] {
+				seen[e] = true
+				out = append(out, e)
+			}
+		}
+	}
+	return out
 }
 
 // IsCanonicalLayer says whether the layer is one Anchors added on its own, not one the

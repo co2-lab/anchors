@@ -13,6 +13,7 @@ The failure handling RECORDS the occurrence.
 | Confronta | `spec` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Pressupõe | `dialect.handle_patterns` `dialect.log_patterns` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

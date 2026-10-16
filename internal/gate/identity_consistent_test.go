@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -39,7 +40,7 @@ func identidadeFixture(t *testing.T, code, unitSrc string, outros ...string) (ma
 func TestIdentityConsistent_naoSpecPula(t *testing.T) {
 	t.Run("IDCND-B01: Confronting an artifact that is not a spec skips", func(t *testing.T) {})
 	n := mapx.Node{ID: "x.tsx", Kind: mapx.KindCode, Code: "BGET"}
-	if v, _ := checkIdentityConsistent("", n, "", &mapx.Graph{}, &config.Config{}); v != Skip {
+	if v, _ := checkIdentityConsistent("", n, "", &mapx.Graph{}, testkit.WithComments(&config.Config{})); v != Skip {
 		t.Errorf("não-spec deve pular: %v", v)
 	}
 }
@@ -48,7 +49,7 @@ func TestIdentityConsistent_semGrafoNaoAfirma(t *testing.T) {
 	t.Run("IDCND-B02: Confronting without a graph returns Pending", func(t *testing.T) {})
 	t.Run("IDCND-I01: Without a map graph the relational gate never approves", func(t *testing.T) {})
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Code: "BGET"}
-	if v, _ := checkIdentityConsistent("", n, "", nil, &config.Config{}); v != Pending {
+	if v, _ := checkIdentityConsistent("", n, "", nil, testkit.WithComments(&config.Config{})); v != Pending {
 		t.Errorf("sem mapa o gate relacional não pode afirmar nada: %v", v)
 	}
 }
@@ -222,7 +223,7 @@ func TestIdentityConsistent_renamedCodeIsAnAlias(t *testing.T) {
 
 // identityCfg declares the ts family's example patterns: the testIDs are read by them.
 func identityCfg() *config.Config {
-	return &config.Config{Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}}
+	return testkit.WithComments(&config.Config{Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}})
 }
 
 // The testIDs are what the project's patterns capture — its helpers too —, and without
@@ -236,12 +237,12 @@ func TestIdentityConsistent_readsTheProjectsPatterns(t *testing.T) {
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Code: "ABCD"}
 	g := &mapx.Graph{Nodes: []mapx.Node{n, {ID: "x.tsx", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "x.spec.md", To: "x.tsx", Type: mapx.EdgeSpecifies}}}
-	cfg := &config.Config{Dialect: &config.Dialect{TestHandles: &config.TestHandles{
-		Exposed: config.Patterns{{Re: `getOptionTestID\(\s*["'](?P<prefix>:?[a-z][a-z0-9-]*)["']`}}}}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{TestHandles: &config.TestHandles{
+		Exposed: config.Patterns{{Re: `getOptionTestID\(\s*["'](?P<prefix>:?[a-z][a-z0-9-]*)["']`}}}}})
 	if v, msg := checkIdentityConsistent("", n, root, g, cfg); v != Fail || !strings.Contains(msg, "ZZZZ") {
 		t.Errorf("the helper's orphan acronym is charged: %v %s", v, msg)
 	}
-	if v, msg := checkIdentityConsistent("", n, root, g, &config.Config{}); v != Pending || !strings.Contains(msg, "dialect.test_handles.exposed") {
+	if v, msg := checkIdentityConsistent("", n, root, g, testkit.WithComments(&config.Config{})); v != Pending || !strings.Contains(msg, "dialect.test_handles.exposed") {
 		t.Errorf("without patterns the gate is pending, naming the field: %v %s", v, msg)
 	}
 }

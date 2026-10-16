@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +29,7 @@ const featVR = `Funcionalidade: Tela
 
 func TestVR_NotFeatureReturnsSkip(t *testing.T) {
 	t.Run("VRBSV-B01: Artifacts that are not feature files leave with verdict Skip", func(t *testing.T) {})
-	v, _ := checkVRBaseline("some content", mapx.Node{Kind: mapx.KindCode, ID: "tela/T.go"}, t.TempDir(), nil, nil)
+	v, _ := checkVRBaseline("some content", mapx.Node{Kind: mapx.KindCode, ID: "tela/T.go"}, t.TempDir(), nil, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("expected Skip for non-feature, got %v", v)
 	}
@@ -39,7 +40,7 @@ func TestVR_NotFeatureReturnsSkip(t *testing.T) {
 func TestFeatureSemCenarioVisualNaoEhAssunto(t *testing.T) {
 	t.Run("VRBSV-B02: Feature files declaring no visual regression scenarios leave with verdict Skip", func(t *testing.T) {})
 	sem := "Funcionalidade: X\n\n  @estado @ABCDX-S01 @nivel-unit\n  Cenário: algo\n"
-	if v, _ := checkVRBaseline(sem, mapx.Node{Kind: mapx.KindFeature, ID: "x.feature"}, t.TempDir(), nil, nil); v != Skip {
+	if v, _ := checkVRBaseline(sem, mapx.Node{Kind: mapx.KindFeature, ID: "x.feature"}, t.TempDir(), nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("sem cenário visual, Skip; veio %v", v)
 	}
 }
@@ -50,7 +51,7 @@ func TestVR_MatchingBaselinePasses(t *testing.T) {
 	must(t, os.MkdirAll(filepath.Join(root, "tela"), 0o755))
 	must(t, os.WriteFile(filepath.Join(root, "tela", "T.TCDTX-VR.png"), []byte("png"), 0o644))
 
-	v, msg := checkVRBaseline(featVR, mapx.Node{Kind: mapx.KindFeature, ID: "tela/T.feature"}, root, nil, nil)
+	v, msg := checkVRBaseline(featVR, mapx.Node{Kind: mapx.KindFeature, ID: "tela/T.feature"}, root, nil, testkit.WithComments(nil))
 	if v != Pass {
 		t.Fatalf("expected Pass with baseline present, got %v (%s)", v, msg)
 	}
@@ -65,7 +66,7 @@ func TestCenarioVRSemBaselineEhAcusado(t *testing.T) {
 	root := t.TempDir()
 	must(t, os.MkdirAll(filepath.Join(root, "tela"), 0o755))
 
-	v, msg := checkVRBaseline(featVR, mapx.Node{Kind: mapx.KindFeature, ID: "tela/T.feature"}, root, nil, nil)
+	v, msg := checkVRBaseline(featVR, mapx.Node{Kind: mapx.KindFeature, ID: "tela/T.feature"}, root, nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("cenário VR sem baseline deve reprovar; veio %v (%s)", v, msg)
 	}
@@ -80,7 +81,7 @@ func TestVR_VariantSuffixAccepted(t *testing.T) {
 	must(t, os.MkdirAll(filepath.Join(root, "tela"), 0o755))
 	// A convenção aceita variante no nome: `TCDTX-VR-loaded.png` prova `TCDTX-VR`.
 	must(t, os.WriteFile(filepath.Join(root, "tela", "T.TCDTX-VR-loaded.png"), []byte("png"), 0o644))
-	if v, msg := checkVRBaseline(featVR, mapx.Node{Kind: mapx.KindFeature, ID: "tela/T.feature"}, root, nil, nil); v != Pass {
+	if v, msg := checkVRBaseline(featVR, mapx.Node{Kind: mapx.KindFeature, ID: "tela/T.feature"}, root, nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("com baseline (mesmo com variante no nome) deve passar; veio %v (%s)", v, msg)
 	}
 }
@@ -90,9 +91,9 @@ func TestVR_VariantSuffixAccepted(t *testing.T) {
 // invertido fazia o gate não encontrar cenário nenhum, silenciosamente.
 func TestTagDoRegimeVisualVemDoProjeto(t *testing.T) {
 	t.Run("VRBSV-B06: Reads visual regime tag from project configuration", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{Regimes: map[string]string{
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{Regimes: map[string]string{
 		"level-visual": "vr", "level-unit": "unit",
-	}}}
+	}}})
 	if got := visualRegimeTag(cfg); got != "level-visual" {
 		t.Errorf("a tag é a CHAVE do de-para (o que aparece na feature); veio %q", got)
 	}
@@ -113,7 +114,7 @@ func TestVR_MissingCodesSortedAlphabetically(t *testing.T) {
   @ALFTX-VR @vr-level
   Scenario: a
 `
-	v, msg := checkVRBaseline(featMulti, mapx.Node{Kind: mapx.KindFeature, ID: "m.feature"}, t.TempDir(), nil, nil)
+	v, msg := checkVRBaseline(featMulti, mapx.Node{Kind: mapx.KindFeature, ID: "m.feature"}, t.TempDir(), nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("expected Fail, got %v", v)
 	}
@@ -132,7 +133,7 @@ func TestVR_OnlyMatchesVisualSuffix(t *testing.T) {
 `
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "c.TCDTX-VR.png"), []byte("png"), 0o644))
-	v, msg := checkVRBaseline(featCoTagged, mapx.Node{Kind: mapx.KindFeature, ID: "c.feature"}, root, nil, nil)
+	v, msg := checkVRBaseline(featCoTagged, mapx.Node{Kind: mapx.KindFeature, ID: "c.feature"}, root, nil, testkit.WithComments(nil))
 	if v != Pass {
 		t.Fatalf("expected Pass because only -VR is checked for image, got %v (%s)", v, msg)
 	}
@@ -149,7 +150,7 @@ func TestVR_InvariantEveryVisualScenarioDemandsImage(t *testing.T) {
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "d.TCDTX-VR.png"), []byte("png"), 0o644))
 	// Only one of two has baseline image -> must Fail
-	v, msg := checkVRBaseline(featDual, mapx.Node{Kind: mapx.KindFeature, ID: "d.feature"}, root, nil, nil)
+	v, msg := checkVRBaseline(featDual, mapx.Node{Kind: mapx.KindFeature, ID: "d.feature"}, root, nil, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, "TCDTY-VR") {
 		t.Fatalf("expected Fail naming missing TCDTY-VR, got %v (%s)", v, msg)
 	}
@@ -157,9 +158,9 @@ func TestVR_InvariantEveryVisualScenarioDemandsImage(t *testing.T) {
 
 func TestVR_InvariantTagMappingResolution(t *testing.T) {
 	t.Run("VRBSV-I02: Visual regime tag mapping treats map key as tag in feature", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{Regimes: map[string]string{
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{Regimes: map[string]string{
 		"@custom-visual": "visual-regression",
-	}}}
+	}}})
 	tag := visualRegimeTag(cfg)
 	if tag != "custom-visual" {
 		t.Fatalf("expected custom-visual, got %q", tag)
@@ -179,7 +180,7 @@ func TestVR_ConstraintDoesNotCheckMtime(t *testing.T) {
   @TCDTX-VR @vr-level
   Scenario: t
 `
-	v, msg := checkVRBaseline(feat, mapx.Node{Kind: mapx.KindFeature, ID: "t.feature"}, root, nil, nil)
+	v, msg := checkVRBaseline(feat, mapx.Node{Kind: mapx.KindFeature, ID: "t.feature"}, root, nil, testkit.WithComments(nil))
 	if v != Pass {
 		t.Fatalf("expected Pass regardless of old mtime, got %v (%s)", v, msg)
 	}
@@ -193,7 +194,7 @@ func TestVR_ConstraintDoesNotCheckGitCommitDates(t *testing.T) {
   @TCDTX-VR @vr-level
   Scenario: g
 `
-	v, msg := checkVRBaseline(feat, mapx.Node{Kind: mapx.KindFeature, ID: "g.feature"}, root, nil, nil)
+	v, msg := checkVRBaseline(feat, mapx.Node{Kind: mapx.KindFeature, ID: "g.feature"}, root, nil, testkit.WithComments(nil))
 	if v != Pass {
 		t.Fatalf("expected Pass without consulting git history, got %v (%s)", v, msg)
 	}

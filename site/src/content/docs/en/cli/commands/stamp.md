@@ -11,8 +11,8 @@ Write the missing `@contract` stamps on test doubles (never rewrites an existing
 Writes, above every double of a governed module that has no stamp, the
 `@contract` stamp that the mock-stamped gate recomputes against the real module.
 
-Each key of the double's factory that names an export of the module gets its own stamp,
-covering that export's block. With no such key, one stamp covers the whole module.
+Each export of the module that the double's call names gets its own stamp, covering
+that export's block. With none named, one stamp covers the whole module.
 
 It only ADDS stamps. An existing stamp is never rewritten, even when it diverges — the
 divergence is the gate telling you the double may be stale, and that calls for a person

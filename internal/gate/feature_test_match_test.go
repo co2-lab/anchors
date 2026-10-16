@@ -5,9 +5,11 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"github.com/co2-lab/anchors/internal/testlist"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -19,14 +21,14 @@ import (
 // cfg de teste com o de-para de regime do app de referência: @nivel-unit→unit, @nivel-integration→
 // integration (superfície test); @nivel-e2e→e2e (outra superfície).
 func regimeCfg() *config.Config {
-	return &config.Config{
+	return testkit.WithComments(&config.Config{
 		Derived: &config.Derived{
 			Regimes:  map[string]string{"nivel-unit": "unit", "nivel-integration": "integration", "nivel-e2e": "e2e"},
 			Surfaces: map[string]string{"unit": "test", "integration": "test", "e2e": "e2e"},
 		},
 		// The fixtures are TypeScript tests; the family says how a test opens.
 		Dialect: &config.Dialect{Family: "ts"},
-	}
+	})
 }
 
 func writeFile(t *testing.T, root, rel, content string) {
@@ -383,7 +385,7 @@ func TestFeatureTestMatch_tRunSuportado(t *testing.T) {
 func TestStripLineCommentsSuportaHash(t *testing.T) {
 	t.Run("FTMFT-B16: Script comment markers are stripped when verifying code presence", func(t *testing.T) {})
 	src := "val = 1 # comentario\n# linha inteira de comentario\nval2 = 2\n"
-	res := stripLineComments(src)
+	res := stripComments(src, "x.py", *testkit.WithComments(nil).Dialect)
 	if strings.Contains(res, "comentario") {
 		t.Errorf("comentários # deveriam ser removidos: %q", res)
 	}
@@ -395,7 +397,7 @@ func TestStripLineCommentsSuportaHash(t *testing.T) {
 func TestFeatureTestMatch_nonFeatureSkips(t *testing.T) {
 	t.Run("FTMFT-B01: Non-feature artifacts skip confrontation", func(t *testing.T) {})
 	n := mapx.Node{ID: "foo.spec.md", Kind: mapx.KindSpec}
-	v, _ := checkFeatureTestMatch("", n, "", nil, nil)
+	v, _ := checkFeatureTestMatch("", n, "", nil, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("esperava Skip para kind != feature, veio %v", v)
 	}
@@ -404,7 +406,7 @@ func TestFeatureTestMatch_nonFeatureSkips(t *testing.T) {
 func TestFeatureTestMatch_nilGraphPending(t *testing.T) {
 	t.Run("FTMFT-B02: A nil graph returns pending without approving", func(t *testing.T) {})
 	n := mapx.Node{ID: "foo.feature", Kind: mapx.KindFeature}
-	v, _ := checkFeatureTestMatch(featureSrc, n, "", nil, nil)
+	v, _ := checkFeatureTestMatch(featureSrc, n, "", nil, testkit.WithComments(nil))
 	if v != Pending {
 		t.Fatalf("esperava Pending para grafo nil, veio %v", v)
 	}
@@ -414,7 +416,7 @@ func TestFeatureTestMatch_noScenariosSkips(t *testing.T) {
 	t.Run("FTMFT-B03: A feature declaring no scenarios skips confrontation", func(t *testing.T) {})
 	n := mapx.Node{ID: "empty.feature", Kind: mapx.KindFeature}
 	g := &mapx.Graph{}
-	v, _ := checkFeatureTestMatch("# Apenas comentários\n", n, "", g, nil)
+	v, _ := checkFeatureTestMatch("# Apenas comentários\n", n, "", g, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("esperava Skip para feature sem cenários, veio %v", v)
 	}
@@ -426,7 +428,7 @@ func TestFeatureTestMatch_noLinkedTestsPending(t *testing.T) {
 	g := &mapx.Graph{
 		Nodes: []mapx.Node{n},
 	}
-	v, _ := checkFeatureTestMatch(featureSrc, n, "", g, nil)
+	v, _ := checkFeatureTestMatch(featureSrc, n, "", g, testkit.WithComments(nil))
 	if v != Pending {
 		t.Fatalf("esperava Pending para feature sem teste ligado, veio %v", v)
 	}
@@ -500,14 +502,15 @@ func TestStripLineCommentsRespectsQuotes(t *testing.T) {
 	src := "run(\"gh\", \"--add-label\", initx.LabelManual)\n" +
 		"get(\"https://x\", client.Fetch)\n" +
 		"for i := n; i-- > 0; { step.Apply() }\n" +
-		"val := 1 -- a SQL-style comment\n" +
 		"x := Real() // a real comment\n"
-	res := stripLineComments(src)
-	for _, keep := range []string{"LabelManual", "client.Fetch", "step.Apply", "val := 1", "Real()"} {
+	res := stripComments(src, "x.go", *testkit.WithComments(nil).Dialect)
+	for _, keep := range []string{"LabelManual", "client.Fetch", "step.Apply", "Real()"} {
 		if !strings.Contains(res, keep) {
 			t.Errorf("%q was cut away: %q", keep, res)
 		}
 	}
+	// Each file by its own syntax: `--` is SQL's comment, and Go's decrement.
+	res += stripComments("select 1 -- a SQL-style comment\n", "q.sql", *testkit.WithComments(nil).Dialect)
 	for _, gone := range []string{"a SQL-style comment", "a real comment"} {
 		if strings.Contains(res, gone) {
 			t.Errorf("the trailing comment %q must be removed: %q", gone, res)
@@ -584,8 +587,8 @@ func listBody(body string) []testlist.Test {
 	if err := os.WriteFile(filepath.Join(dir, "x.test.ts"), []byte(body), 0o644); err != nil {
 		panic(err)
 	}
-	ts := (&config.Config{Dialect: &config.Dialect{Family: "ts"}}).DialectFor().Tests.Pattern
-	golang := (&config.Config{Dialect: &config.Dialect{Family: "go"}}).DialectFor().Tests.Pattern
+	ts := (testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})).DialectFor().Tests.Pattern
+	golang := (testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}})).DialectFor().Tests.Pattern
 	tests, err := testlist.List(dir, []string{"x.test.ts"}, testlist.Source{Pattern: ts + "|" + golang})
 	if err != nil {
 		panic(err)
@@ -779,11 +782,11 @@ func TestFeatureTestMatch_titleAndMore(t *testing.T) {
 		"Após três tentativas o login trava":           false,
 		"O login":                                      false,
 	} {
-		if got := titleCovers("O login trava após três tentativas", test); got != want {
+		if got := titleCovers("O login trava após três tentativas", test, nil); got != want {
 			t.Errorf("%q covers the scenario: got %v, want %v", test, got, want)
 		}
 	}
-	if !titleCovers("Cada <formato> é aceito", "Cada %s é aceito") {
+	if !titleCovers("Cada <formato> é aceito", "Cada %s é aceito", regexp.MustCompile(`%[#a-zA-Z%]`)) {
 		t.Error("an outline's parameter and a table placeholder are not words of either title")
 	}
 }
@@ -800,7 +803,7 @@ func TestFeatureCodes_aVRCodeCarriesItsState(t *testing.T) {
 	if strings.Join(codes, ",") != "BUTTN-VR-S01,BUTTN-VR-S02" {
 		t.Errorf("codes = %v", codes)
 	}
-	if v, d := checkScenarioIdentity(feature, mapx.Node{ID: "ui/Button.feature", Kind: mapx.KindFeature}, "", nil, nil); v == Fail {
+	if v, d := checkScenarioIdentity(feature, mapx.Node{ID: "ui/Button.feature", Kind: mapx.KindFeature}, "", nil, testkit.WithComments(nil)); v == Fail {
 		t.Errorf("two states' VR scenarios are two codes: %v %s", v, d)
 	}
 }

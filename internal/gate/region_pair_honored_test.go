@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -18,7 +19,7 @@ func TestRegionPairParBemFormadoPassa(t *testing.T) {
 	t.Run("RPHRG-X03: Internal code semantics inside regions are not evaluated", func(t *testing.T) {})
 	tagA := "MLETX" + "-A03"
 	src := "// #region [" + tagA + "]: persiste.\nput()\n// #endregion [" + tagA + "]"
-	v, msg := checkRegionPairHonored(src, regionNode(), "", nil, nil)
+	v, msg := checkRegionPairHonored(src, regionNode(), "", nil, testkit.WithComments(nil))
 	if v != Pass {
 		t.Fatalf("esperava Pass, veio %v — %s", v, msg)
 	}
@@ -32,7 +33,7 @@ func TestRegionPairSemRegiaoEhSkipNaoFalha(t *testing.T) {
 	// gate falhasse por ausência, promovê-lo a bloqueante reprovaria o repositório inteiro
 	// no dia em que entrasse — e a região deixaria de ser adotável de forma incremental.
 	tagA := "MLETX" + "-A03"
-	v, _ := checkRegionPairHonored("// "+tagA+": à moda antiga\nput()", regionNode(), "", nil, nil)
+	v, _ := checkRegionPairHonored("// "+tagA+": à moda antiga\nput()", regionNode(), "", nil, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("sem região tem de ser Skip, veio %v", v)
 	}
@@ -47,7 +48,7 @@ func TestRegionPairFechoTrocadoFalhaEDizOsDois(t *testing.T) {
 	tagA := "MLETX" + "-A03"
 	tagB := "MLETX" + "-B05"
 	src := "// #region [" + tagA + "]: x\nput()\n// #endregion [" + tagB + "]"
-	v, msg := checkRegionPairHonored(src, regionNode(), "", nil, nil)
+	v, msg := checkRegionPairHonored(src, regionNode(), "", nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("esperava Fail, veio %v", v)
 	}
@@ -62,7 +63,7 @@ func TestRegionPairFechoTrocadoFalhaEDizOsDois(t *testing.T) {
 func TestRegionPairSemFechoFalha(t *testing.T) {
 	t.Run("RPHRG-B04: An opened region that is never closed fails", func(t *testing.T) {})
 	tagA := "MLETX" + "-A03"
-	v, msg := checkRegionPairHonored("// #region ["+tagA+"]: x\nput()", regionNode(), "", nil, nil)
+	v, msg := checkRegionPairHonored("// #region ["+tagA+"]: x\nput()", regionNode(), "", nil, testkit.WithComments(nil))
 	if v != Fail || (!strings.Contains(msg, "nunca fechada") && !strings.Contains(msg, "never closed")) {
 		t.Fatalf("esperava Fail com 'nunca fechada' / 'never closed', veio %v — %s", v, msg)
 	}
@@ -72,7 +73,7 @@ func TestRegionPairFechoOrfaoFalha(t *testing.T) {
 	t.Run("RPHRG-B05: An end region marker without an opening marker fails as an orphan close", func(t *testing.T) {})
 	tagA := "MLETX" + "-A03"
 	src := "put()\n// #endregion [" + tagA + "]"
-	v, msg := checkRegionPairHonored(src, regionNode(), "", nil, nil)
+	v, msg := checkRegionPairHonored(src, regionNode(), "", nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("fecho órfão deveria reprovar, veio: %v", v)
 	}
@@ -90,7 +91,7 @@ func TestRegionPairErrosOrdenadosPorLinha(t *testing.T) {
 	tagB := "MLETX" + "-B05"
 	tagC := "MLETX" + "-C01"
 	src := "// #endregion [" + tagA + "]\n// #region [" + tagB + "]\n// #endregion [" + tagC + "]\n// #region [" + tagA + "]"
-	v, msg := checkRegionPairHonored(src, regionNode(), "", nil, nil)
+	v, msg := checkRegionPairHonored(src, regionNode(), "", nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("múltiplos erros deveriam reprovar, veio %v", v)
 	}
@@ -109,26 +110,8 @@ func TestRegionPairSoOlhaCodigoETeste(t *testing.T) {
 	// dela transformaria documentação em erro.
 	spec := mapx.Node{ID: "src/Tela.spec.md", Kind: mapx.KindSpec}
 	tagA := "MLETX" + "-A03"
-	v, _ := checkRegionPairHonored("// #region ["+tagA+"]: exemplo sem fecho", spec, "", nil, nil)
+	v, _ := checkRegionPairHonored("// #region ["+tagA+"]: exemplo sem fecho", spec, "", nil, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("spec tem de ser Skip, veio %v", v)
-	}
-}
-
-func TestHeaderConformeIsentaRoteiroExecutavel(t *testing.T) {
-	// O `.yaml` do runner e2e não carrega cabeçalho `@anchors`: a identidade dele está no
-	// NOME (`LOGIX-A01.yaml`) e nas `tags:`, e o formato é do runner, não nosso. Sem esta
-	// isenção, trazer os roteiros para o grafo (camada e2e-flow, para que a execução deixe
-	// carimbo) transformaria 717 arquivos preexistentes em defeitos retroativos.
-	flow := mapx.Node{ID: "apps/mobile/.maestro/screens/auth/LoginScreen/LOGIX-A01.yaml", Kind: mapx.KindTest}
-	v, msg := checkHeaderConforms("appId: com.acme.exemplo\ntags:\n  - LOGIX-A01\n", flow, nil)
-	if v != Skip {
-		t.Fatalf("roteiro .yaml tem de ser Skip, veio %v — %s", v, msg)
-	}
-	// Um teste em código NOSSO continua obrigado: a isenção é da forma do arquivo, não do
-	// papel de "ser teste".
-	tsx := mapx.Node{ID: "src/features/auth/screens/LoginScreen.test.tsx", Kind: mapx.KindTest}
-	if v, _ := checkHeaderConforms("describe('x', () => {})\n", tsx, nil); v != Fail {
-		t.Errorf(".test.tsx sem header tem de falhar, veio %v", v)
 	}
 }

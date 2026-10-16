@@ -8,6 +8,9 @@ import (
 	"bytes"
 	"regexp"
 	"strings"
+	"unicode"
+
+	"github.com/co2-lab/anchors/internal/config"
 )
 
 // UpstreamMarker identifies a file Anchors seeded and still owns — a pipeline that is
@@ -42,20 +45,17 @@ func IsUpstreamOwned(rel string, content []byte) bool {
 	return bytes.Contains(content, []byte(UpstreamMarker))
 }
 
-// anchorsOpenerRE finds the token that opens the header: `@anchors` as the FIRST word of the
-// comment, and not `@anchors-shared-code`, a mention in backticks, nor prose that names
-// the header — a package comment saying "the header @anchors (code:/ref:)" was read as the
-// header, and a header fix wrote the unit's `ref:` into the middle of that prose.
-var anchorsOpenerRE = regexp.MustCompile(`^(?://|#|/\*+|\*|--|<!--|\(\*+|;+)\s*@anchors(?:\s|-->|\*\)|$)`)
-
 // AnchorsHeader returns the text of the file's `@anchors` header block, or nil when the file
-// has none.
+// has none — or when nothing says how the file writes a comment (`cs` nil): the header lives
+// in a comment, and the core knows no language's (DESIGN-core-without-syntax.md).
 //
-// The block opens on the first comment line carrying `@anchors` and ends with the comment:
-// at `-->` for an HTML comment, at `*/` for a block comment, and at the first line that is
-// not a comment for line comments (`//`, `#`, `*`, `--`). Reading a header key over the
-// WHOLE file reads prose and code as declarations — a workflow's jq program with a line
-// `parent: (...)` became a node's parent in the map.
+// The block opens on the first line that is only a comment and whose comment STARTS with
+// `@anchors` — not `@anchors-shared-code`, a mention in backticks, nor prose that names the
+// header: a package comment saying "the header @anchors (code:/ref:)" was read as the
+// header, and a header fix wrote the unit's `ref:` into the middle of that prose. It ends
+// with the comment: at its block's closer, or at the first line that does not open with the
+// same line marker. Reading a header key over the WHOLE file reads prose and code as
+// declarations — a workflow's jq program with a line `parent: (...)` became a node's parent.
 //
 // The header is at the TOP: before it, only blank lines, comments and a shebang. A block
 // further down is text — an example of a header in a guide, a string in the code — and is
@@ -63,36 +63,51 @@ var anchorsOpenerRE = regexp.MustCompile(`^(?://|#|/\*+|\*|--|<!--|\(\*+|;+)\s*@
 // `layer: screen` as its unit's layer. A file whose header must stand lower (a directive
 // the language wants first) says so inside the block, with the reason:
 // `@fixed-header: <why>`.
-func AnchorsHeader(content []byte) []byte {
-	lines := bytes.Split(content, []byte("\n"))
-	codeBefore, inBlock := false, ""
+func AnchorsHeader(content []byte, cs *config.Comments) []byte {
+	// @no-guard: HeaderRange answers no header for a file with no comments
+	lines := strings.Split(string(content), "\n")
+	from, to, ok := HeaderRange(lines, cs)
+	if !ok {
+		return nil
+	}
+	return []byte(strings.Join(lines[from:to], "\n"))
+}
+
+// HeaderRange is where the header stands among the lines: [from, to), and whether there is
+// one.
+func HeaderRange(lines []string, cs *config.Comments) (int, int, bool) {
+	if cs == nil {
+		return 0, 0, false
+	}
+	only := cs.CommentOnly(lines)
+	codeBefore := false
 	for i, l := range lines {
-		t := strings.TrimSpace(string(l))
-		if isHeaderComment(t) && anchorsOpenerRE.MatchString(t) {
-			end := headerEnd(lines, i, t)
-			block := bytes.Join(lines[i:end], []byte("\n"))
-			if !codeBefore || fixedHeaderRE.Match(block) {
-				return block
+		t := strings.TrimSpace(l)
+		if only[i] && opensHeader(t) {
+			end := headerEnd(lines, only, i, cs)
+			if !codeBefore || fixedHeaderRE.MatchString(strings.Join(lines[i:end], "\n")) {
+				return i, end, true
 			}
 			continue
 		}
-		switch {
-		case inBlock != "":
-			if strings.Contains(t, inBlock) {
-				inBlock = ""
-			}
-		case strings.HasPrefix(t, "/*") && !strings.Contains(t, "*/"):
-			inBlock = "*/"
-		case strings.HasPrefix(t, "<!--") && !strings.Contains(t, "-->"):
-			inBlock = "-->"
-		case strings.HasPrefix(t, "(*") && !strings.Contains(t, "*)"):
-			inBlock = "*)"
-		case t == "" || isHeaderComment(t) || strings.HasPrefix(t, "#!"):
-		default:
+		if t != "" && !only[i] && !strings.HasPrefix(t, "#!") {
 			codeBefore = true
 		}
 	}
-	return nil
+	return 0, 0, false
+}
+
+// opensHeader says whether a comment line's text starts with `@anchors`, past the marker
+// and any punctuation before it (`//`, `<!--`, ` * `), and ends the word there.
+func opensHeader(t string) bool {
+	rest := strings.TrimLeftFunc(t, func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '@'
+	})
+	if !strings.HasPrefix(rest, "@anchors") {
+		return false
+	}
+	after := rest[len("@anchors"):]
+	return after == "" || after[0] == ' ' || after[0] == '\t' || !unicode.IsLetter(rune(after[0])) && after[0] != '-' && after[0] != '`' && after[0] != '_'
 }
 
 // fixedHeaderRE is the declaration of a header that stands below the top, with its reason.
@@ -100,59 +115,44 @@ var fixedHeaderRE = regexp.MustCompile(`@fixed-header[^\S\n]*:[^\S\n]*\S+`)
 
 // HeaderOffTop says whether the file carries an `@anchors` block below the top that does not
 // declare why (`@fixed-header: <why>`) — a header that is not read as one.
-func HeaderOffTop(content []byte) bool {
-	if AnchorsHeader(content) != nil {
+func HeaderOffTop(content []byte, cs *config.Comments) bool {
+	if cs == nil || AnchorsHeader(content, cs) != nil {
 		return false
 	}
-	for _, l := range bytes.Split(content, []byte("\n")) {
-		t := strings.TrimSpace(string(l))
-		if isHeaderComment(t) && anchorsOpenerRE.MatchString(t) {
+	lines := strings.Split(string(content), "\n")
+	only := cs.CommentOnly(lines)
+	for i, l := range lines {
+		if only[i] && opensHeader(strings.TrimSpace(l)) {
 			return true
 		}
 	}
 	return false
 }
 
-// headerEnd is the index just past the header block opened on line i.
-func headerEnd(lines [][]byte, i int, t string) int {
-	end := i + 1
-	switch {
-	case strings.HasPrefix(t, "<!--"):
-		if !strings.Contains(t[strings.Index(t, "@anchors"):], "-->") {
-			end = closingLine(lines, i+1, "-->")
-		}
-	case strings.HasPrefix(t, "/*"):
-		if !strings.Contains(t, "*/") {
-			end = closingLine(lines, i+1, "*/")
-		}
-	case strings.HasPrefix(t, "(*"):
-		if !strings.Contains(t[strings.Index(t, "@anchors"):], "*)") {
-			end = closingLine(lines, i+1, "*)")
-		}
-	default:
-		for end < len(lines) && isHeaderComment(strings.TrimSpace(string(lines[end]))) {
-			end++
+// headerEnd is the index just past the header block opened on line i: past the line that
+// closes its block comment, or past the run of lines opening with the same line marker.
+func headerEnd(lines []string, only []bool, i int, cs *config.Comments) int {
+	t := strings.TrimSpace(lines[i])
+	for _, m := range cs.Line {
+		if strings.HasPrefix(t, m) {
+			end := i + 1
+			for end < len(lines) && only[end] && strings.HasPrefix(strings.TrimSpace(lines[end]), m) {
+				end++
+			}
+			return end
 		}
 	}
-	return end
-}
-
-// closingLine returns the index just past the line that carries `close`, or the end of the
-// file when the comment never closes.
-func closingLine(lines [][]byte, from int, close string) int {
-	for j := from; j < len(lines); j++ {
-		if bytes.Contains(lines[j], []byte(close)) {
-			return j + 1
+	// A block: the header ends where the comment holding it closes — the first line from here
+	// whose comment's text ends before the line does.
+	for j := i; j < len(lines); j++ {
+		for _, b := range cs.Block {
+			if strings.Contains(lines[j], b.Close) && (j > i || strings.Index(lines[j], b.Close) > strings.Index(lines[j], "@anchors")) {
+				return j + 1
+			}
+		}
+		if j > i && !only[j] {
+			return j
 		}
 	}
 	return len(lines)
-}
-
-func isHeaderComment(t string) bool {
-	for _, p := range []string{"//", "#", "/*", "*", "--", "<!--", "(*", ";"} {
-		if strings.HasPrefix(t, p) {
-			return true
-		}
-	}
-	return false
 }

@@ -13,6 +13,7 @@ A test reaches the unit its `ref:` names — by import, a name it defines, or a 
 | Confronta | `test` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Pressupõe | `dialect.definition` `dialect.imports` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

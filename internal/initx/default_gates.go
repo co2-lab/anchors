@@ -173,11 +173,13 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// exige que o código IMPORTE aquele arquivo.
 			config.Gate{
 				Name: "proof-crosses-boundary", ID: "proof-crosses-boundary", On: []string{"spec"}, Check: "proof-crosses-boundary",
-				Blocking: config.Bool(false), Measures: "a rule asserting a relation with another unit has the code importing that unit",
+				Presupposes: []string{"dialect.imports"},
+				Blocking:    config.Bool(false), Measures: "a rule asserting a relation with another unit has the code importing that unit",
 			},
 			config.Gate{
 				Name: "contract-status-declared", ID: "contract-status-declared", On: []string{"spec"}, Check: "contract-status-declared",
-				Blocking: config.Bool(false), Measures: "the Output Contract statuses are the ones the handler returns — and only those",
+				Presupposes: []string{"dialect.http_status"},
+				Blocking:    config.Bool(false), Measures: "the Output Contract statuses are the ones the handler returns — and only those",
 			},
 			// O dever que um artefato contrai com um lugar que ele NÃO conhece (LGPD,
 			// i18n, a11y, auditoria). Só age se o projeto declarar `obligations:` — sem
@@ -193,7 +195,8 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	if chosen["test"] || chosen["spec"] {
 		gates = append(gates, config.Gate{
 			Name: "sibling-guard", ID: "sibling-guard", On: []string{"code"}, Check: "sibling-guard",
-			Blocking: config.Bool(false), Measures: "sibling functions handle the same parameter consistently",
+			Presupposes: []string{"dialect.exported_func", "dialect.param_name", "dialect.guard_patterns"},
+			Blocking:    config.Bool(false), Measures: "sibling functions handle the same parameter consistently",
 		})
 	}
 	// PLANO: um plano semeia specs, e semear numa camada que não tem spec faz quem
@@ -366,12 +369,12 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// sabe, e nenhuma ferramenta a jusante tem o que ler.
 		gates = append(gates, config.Gate{
 			Name: "failure-handled", ID: "failure-handled", On: []string{"spec"},
-			Check: "failure-handled", Blocking: config.Bool(false),
+			Check: "failure-handled", Blocking: config.Bool(false), Presupposes: []string{"dialect.handle_patterns"},
 			Measures: "the declared failure has a path that handles it in the code",
 		})
 		gates = append(gates, config.Gate{
 			Name: "failure-logged", ID: "failure-logged", On: []string{"spec"},
-			Check: "failure-logged", Blocking: config.Bool(false),
+			Check: "failure-logged", Blocking: config.Bool(false), Presupposes: []string{"dialect.handle_patterns", "dialect.log_patterns"},
 			Measures: "the failure handling RECORDS the occurrence",
 		})
 		gates = append(gates, config.Gate{
@@ -579,7 +582,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			},
 			config.Gate{
 				Name: "mock-typed", ID: "mock-typed", On: []string{"test"}, Check: "mock-typed",
-				Blocking: config.Bool(false), Presupposes: []string{"derived.mock_contract"},
+				Blocking: config.Bool(false), Presupposes: []string{"derived.mock_detect", "derived.mock_contract"},
 				Measures: "the test double derives from the real module (not a frozen copy of the contract)",
 			},
 			config.Gate{
@@ -614,7 +617,8 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// transações além do 1º MB — o usuário importa o arquivo e parte some sem erro.
 		gates = append(gates, config.Gate{
 			Name: "pagination-honored", ID: "pagination-honored", On: []string{"code"}, Check: "pagination-honored",
-			Blocking: config.Bool(false), Measures: "a function promising the whole set does not silently return the first page",
+			Presupposes: []string{"dialect.set_promise", "dialect.set_slice", "dialect.limits"},
+			Blocking:    config.Bool(false), Measures: "a function promising the whole set does not silently return the first page",
 		})
 	}
 	// layer-boundary confronta `boundaries:` — o que cada camada NÃO alcança. Nasce com
@@ -701,10 +705,18 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			{"test-exercises-unit", "a test reaches the unit it tests, and does not define a copy of it"},
 			{"test-ref-matches-unit", "a test reaches the unit its `ref:` names — by import, a name it defines, or a declared invocation"},
 		} {
-			gates = append(gates, config.Gate{
+			g := config.Gate{
 				Name: tg.name, ID: tg.name, On: []string{"test"}, Check: tg.name,
 				Blocking: config.Bool(false), Measures: tg.measures,
-			})
+			}
+			// What a test asserts, and what a unit defines, are the language's: the gate
+			// reads them only through the dialect.
+			if tg.name == "test-has-assertion" {
+				g.Presupposes = []string{"dialect.tests"}
+			} else {
+				g.Presupposes = []string{"dialect.definition", "dialect.imports"}
+			}
+			gates = append(gates, g)
 		}
 
 		gates = append(gates, config.Gate{
@@ -1044,7 +1056,7 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures: "a screen's Out leads to another exactly when that one's In comes from it"})
 	add("spec", config.Gate{Name: "nav-reachable", On: []string{"spec"},
 		Measures: "every screen is reachable from the app's entry routes (`navigation.entry`)"})
-	add("spec", config.Gate{Name: "env-declared", On: []string{"spec"},
+	add("spec", config.Gate{Name: "env-declared", On: []string{"spec"}, Presupposes: []string{"dialect.env_read"},
 		Measures: "the environment variables a unit's code reads are the ones its spec declares, and only those"})
 	add("spec", config.Gate{Name: "placeholder-filled", On: []string{"spec", "feature"},
 		Measures: "no generator placeholder remains in a value position: header field, table cell, rule or title line"})
@@ -1058,7 +1070,7 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures: "the spec's testID inventory, the IDs the code exposes, and the tests that query them agree"})
 	add("spec", config.Gate{Name: "route-declared", On: []string{"spec"}, Tags: []string{"screen"},
 		Measures: "a screen spec declares its route and names its neighbour screens"})
-	add("spec", config.Gate{Name: "route-exists", On: []string{"spec"}, Tags: []string{"screen"}, Presupposes: []string{"route_registry"},
+	add("spec", config.Gate{Name: "route-exists", On: []string{"spec"}, Tags: []string{"screen"}, Presupposes: []string{"route_registry", "derived.route_pattern"},
 		Measures: "the route the spec declares is registered where the app registers its routes"})
 	add("test", config.Gate{Name: "testid-queried-exists", On: []string{"test"}, Scope: config.ScopeProject,
 		Presupposes: []string{"dialect.test_handles.exposed", "dialect.test_handles.queried"},

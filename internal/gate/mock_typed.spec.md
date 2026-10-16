@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCTYM
-  updated_at: 2026-10-08
+  updated_at: 2026-10-16
   layer: gate
 -->
 # MockTyped — every test double must DERIVE from the module it replaces
@@ -53,7 +53,7 @@ there is no structural type to lean on.
 | `MCTYM-B01` | A double with NO tie fails, and the verdict names the loose module — this is the false proof the gate exists to catch. |
 | `MCTYM-B02` | A double whose factory carries the declared tie passes: the annotation is what makes the compiler check name, signature and return against the real module. |
 | `MCTYM-B03` | The charge is per MODULE, not per file: one loose double among several is enough to fail, and the verdict counts only the loose ones. |
-| `MCTYM-B04` | A double with no factory is not charged: the automock derives from the real module by construction, so it cannot drift, and charging it would be noise one learns to ignore. |
+| `MCTYM-B04` | A double with no factory — the factory pattern read from its own call, never a later double's — is not charged: the automock derives from the real module by construction, so it cannot drift, and charging it would be noise one learns to ignore. |
 | `MCTYM-B05` | Without `derived.mock_contract` declared the gate is Pending, naming the field and the opt-out; with `mock_contract` in `dialect.opt_out` it skips. |
 | `MCTYM-B06` | An artifact that is not a test leaves without a verdict. |
 | `MCTYM-B07` | A test that doubles nobody leaves without a verdict — Skip and not Pass, because nothing was checked and a Pass would inflate the count of greens with nothing. |

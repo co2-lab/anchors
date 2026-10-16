@@ -13,6 +13,7 @@ package health
 import (
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -65,7 +66,7 @@ func Diagnose(g *mapx.Graph, cfg *config.Config, root string) Report {
 	r := Report{Nodes: len(g.Nodes), Edges: len(g.Edges), Layers: cfg.DeclaredLayers()}
 	r.Findings = append(r.Findings, checkMapFidelity(g, root)...)
 	r.Findings = append(r.Findings, checkOrphans(g)...)
-	r.Findings = append(r.Findings, checkDuplicateCodes(g)...)
+	r.Findings = append(r.Findings, checkDuplicateCodes(g, cfg)...)
 	r.Findings = append(r.Findings, checkLooseLayers(g, cfg)...)
 	r.Findings = append(r.Findings, checkCommitMsgHook(root)...)
 	r.Findings = append(r.Findings, checkGateCoverage(g, cfg)...)
@@ -90,7 +91,7 @@ func Diagnose(g *mapx.Graph, cfg *config.Config, root string) Report {
 // a propagação gera arestas espúrias (uma spec "propaga" para o teste de outra
 // unidade só porque compartilham o código). Este check pega a colisão na raiz — é a
 // contrapartida de "identidade-ausente".
-func checkDuplicateCodes(g *mapx.Graph) []Finding {
+func checkDuplicateCodes(g *mapx.Graph, cfg *config.Config) []Finding {
 	// Só kinds que são DONOS de identidade contam. doc/guide/plan apenas REFERENCIAM
 	// códigos (documentam, planejam) — não são donos, então não colidem.
 	owns := func(k mapx.Kind) bool {
@@ -117,7 +118,7 @@ func checkDuplicateCodes(g *mapx.Graph) []Finding {
 		if unitsByCode[n.Code] == nil {
 			unitsByCode[n.Code] = map[string]bool{}
 		}
-		unitsByCode[n.Code][unitStem(n.ID)] = true
+		unitsByCode[n.Code][unitStem(n.ID, cfg)] = true
 	}
 	var out []Finding
 	for code, units := range unitsByCode {
@@ -166,30 +167,12 @@ func crossDomain(owners []string) bool {
 	return false
 }
 
-// unitStem devolve a identidade da UNIDADE de um arquivo: o caminho sem os sufixos de
-// artefato (.spec.md, .feature, .test.*) e sem a extensão de código. A unidade
-// Login.spec.md / Login.feature / Login.test.tsx / Login.tsx colapsa em ".../Login".
-func unitStem(id string) string {
-	// Junta sempre com barra normal: o retorno é identidade de unidade, comparada contra
-	// ids do mapa e fatiada por "/" adiante (crossDomain). No Windows o Join devolveria
-	// "features\b\lib\x", o domínio deixaria de ser reconhecido, e um
-	// compartilhamento legítimo intra-feature apareceria como colisão cross-domain.
-	junta := func(dir, base string) string { return filepath.ToSlash(filepath.Join(dir, base)) }
-
-	base := filepath.Base(id)
-	for _, suf := range []string{".spec.md", ".feature"} {
-		if b, ok := strings.CutSuffix(base, suf); ok {
-			return junta(filepath.Dir(id), b)
-		}
-	}
-	// .test.<ext> → tira .test e a extensão
-	if i := strings.Index(base, ".test."); i >= 0 {
-		base = base[:i]
-		return junta(filepath.Dir(id), base)
-	}
-	// código comum: tira só a extensão
-	base = strings.TrimSuffix(base, filepath.Ext(base))
-	return junta(filepath.Dir(id), base)
+// unitStem is the identity of a file's UNIT: its folder and its unit's name
+// (`config.UnitName`), so Login.spec.md, Login.feature, Login.test.tsx and Login.tsx collapse
+// into ".../Login" when the layers' templates say a test is `{{name}}.test.{{ext}}`. Joined with
+// a forward slash: it is compared with the map's ids and cut by "/" (crossDomain).
+func unitStem(id string, cfg *config.Config) string {
+	return path.Join(path.Dir(filepath.ToSlash(id)), cfg.UnitName(id))
 }
 
 // --- integridade do mapa: arestas mortas / nós fantasma (TRACEABILITY §6) ---

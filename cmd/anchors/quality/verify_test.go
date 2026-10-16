@@ -6,6 +6,7 @@ package quality
 
 import (
 	"errors"
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -92,7 +93,7 @@ func TestVerifyPreCommitDatingCanBeTurnedOffAndSkipsUnstaged(t *testing.T) {
 	}
 
 	off := touchRepo(t)
-	touchWrite(t, off, "anchors.yaml", "version: 2\nlayers: {}\ntouch:\n  pre_commit: false\n")
+	touchWrite(t, off, "anchors.yaml", "version: 2\nlayers: {}\ntouch:\n  pre_commit: false\ndialect:\n"+testkit.CommentsYAML)
 	touchWrite(t, off, "b.ts", touchHeader+"export const x = 2\n")
 	gitIn(t, off, "add", "b.ts")
 	out, err = runQ(t, newVerifyCmd(), "--root", off, "--phase", "pre-commit", "--staged")

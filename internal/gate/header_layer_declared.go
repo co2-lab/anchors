@@ -28,7 +28,7 @@ func checkHeaderLayerDeclared(content string, n mapx.Node, _ string, _ *mapx.Gra
 	if cfg.LayerHeadless(n.Layer) {
 		return Skip, i18n.T("gate.header.skip_headless", n.Layer)
 	}
-	layer := scan.HeaderLayerOf(content)
+	layer := scan.HeaderLayerOf(content, cfg.CommentsFor(n.ID))
 	if layer == "" {
 		return Skip, i18n.T("gate.header_layer.skip_no_layer")
 	}

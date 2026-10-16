@@ -61,7 +61,7 @@ func checkTestHasAssertion(content string, n mapx.Node, root string, g *mapx.Gra
 	lines := strings.Split(content, "\n")
 	var empty []string
 	for _, t := range mine {
-		body := testBody(lines, t, labels)
+		body := testBody(lines, t, labels, newLayout(lines, n.ID, cfg))
 		if t.Line >= 2 && t.Line-2 < len(lines) {
 			body = lines[t.Line-2] + "\n" + body
 		}
@@ -78,20 +78,37 @@ func checkTestHasAssertion(content string, n mapx.Node, root string, g *mapx.Gra
 	return Pass, ""
 }
 
+// layout is how a test file's blocks are read: the dialect's `tests.block_open`,
+// `block_close` and `empty_body`, and the lines that start inside a string spanning lines
+// (the file's comment syntax, `multiline`) — text, never a block's end.
+type layout struct {
+	open, close, empty *regexp.Regexp
+	inString           []bool
+}
+
+func newLayout(lines []string, rel string, cfg *config.Config) layout {
+	var l layout
+	if t := cfg.DialectFor().Tests; t != nil {
+		l.open, l.close, l.empty = compileOrNil(t.BlockOpen), compileOrNil(t.BlockClose), compileOrNil(t.EmptyBody)
+	}
+	l.inString = cfg.CommentsFor(rel).InString(lines)
+	return l
+}
+
 // testBody is the text of a test: its lines as the source bounds them, or as the layout
 // does. With `labels`, a test whose body is empty stands for the block around it.
-func testBody(lines []string, t testlist.Test, labels bool) string {
+func testBody(lines []string, t testlist.Test, labels bool, lay layout) string {
 	i := t.Line - 1
 	if i < 0 || i >= len(lines) {
 		return ""
 	}
-	first, last := i, blockEnd(lines, i)
+	first, last := i, blockEnd(lines, i, lay)
 	if t.End > 0 {
 		last = min(t.End-1, len(lines)-1)
 	}
-	if labels && last == first && emptyBodyRE.MatchString(lines[i]) {
+	if labels && last == first && lay.empty != nil && lay.empty.MatchString(lines[i]) {
 		if k := enclosingLine(lines, i); k >= 0 {
-			first, last = k, blockEnd(lines, k)
+			first, last = k, blockEnd(lines, k, lay)
 		}
 	}
 	return strings.Join(lines[first:last+1], "\n")
@@ -101,22 +118,16 @@ func testBody(lines []string, t testlist.Test, labels bool) string {
 // body or on the line above it: `@no-assert: <why>`.
 var noAssertRE = regexp.MustCompile(`@no-assert[^\S\n]*:[^\S\n]*\S+`)
 
-var (
-	// opensBlockRE: a line that leaves a block open at its end — a bracket, or a `do`.
-	opensBlockRE = regexp.MustCompile(`(?:[{(\[]|\bdo)\s*$`)
-	// closesBlockRE: a line that starts by closing one.
-	closesBlockRE = regexp.MustCompile(`^\s*(?:[}\])]|end\b)`)
-	// emptyBodyRE: a block opened and closed with nothing inside.
-	emptyBodyRE = regexp.MustCompile(`\{\s*\}`)
-)
-
 func indentOf(l string) int { return len(l) - len(strings.TrimLeft(l, " \t")) }
 
-// blockEnd is the last line of the block that line i opens, by its layout. A line that
-// starts inside a multi-line literal is text, not layout, and never ends the block.
-func blockEnd(lines []string, i int) int {
+// blockEnd is the last line of the block that line i opens, by its layout: a block the
+// dialect's `block_open` opens closes on the first line back at the opener's indentation
+// that `block_close` reads and that opens nothing again; any other block ends on the first
+// line back at that indentation. A line that starts inside a string spanning lines is text,
+// and never ends the block.
+func blockEnd(lines []string, i int, lay layout) int {
 	base := indentOf(lines[i])
-	bracket := opensBlockRE.MatchString(lines[i])
+	bracket := lay.open != nil && lay.open.MatchString(lines[i])
 	next := i + 1
 	for next < len(lines) && strings.TrimSpace(lines[next]) == "" {
 		next++
@@ -124,11 +135,8 @@ func blockEnd(lines []string, i int) int {
 	if !bracket && (next >= len(lines) || indentOf(lines[next]) <= base) {
 		return i // opened and closed on its own line
 	}
-	var lit literalState
-	lit.feed(lines[i])
 	for j := i + 1; j < len(lines); j++ {
-		inside := lit.open()
-		lit.feed(lines[j])
+		inside := j < len(lay.inString) && lay.inString[j]
 		if inside || strings.TrimSpace(lines[j]) == "" || indentOf(lines[j]) > base {
 			continue
 		}
@@ -138,34 +146,12 @@ func blockEnd(lines []string, i int) int {
 		// A line that closes and opens again goes on with the block: the table of an
 		// `it.each([` closes into the test's own body (`])('title', () => {`), and a
 		// `} else {` into the next branch. Only a closer that opens nothing ends it.
-		if closesBlockRE.MatchString(lines[j]) && !opensBlockRE.MatchString(lines[j]) {
+		if lay.close != nil && lay.close.MatchString(lines[j]) && !lay.open.MatchString(lines[j]) {
 			return j
 		}
 	}
 	return len(lines) - 1
 }
-
-// literalState follows the delimiters most languages give a multi-line literal — the
-// backtick (Go, JavaScript) and the triple quote (Python, Kotlin, Swift) — line by line.
-// A backtick quoted on its own (`"`"`) is a character, not a delimiter.
-type literalState struct{ backtick, triple2, triple1 bool }
-
-var loneBacktickRE = regexp.MustCompile("[\"']`[\"']")
-
-func (s *literalState) feed(line string) {
-	line = loneBacktickRE.ReplaceAllString(line, "")
-	if strings.Count(line, "`")%2 == 1 {
-		s.backtick = !s.backtick
-	}
-	if strings.Count(line, `"""`)%2 == 1 {
-		s.triple2 = !s.triple2
-	}
-	if strings.Count(line, "'''")%2 == 1 {
-		s.triple1 = !s.triple1
-	}
-}
-
-func (s literalState) open() bool { return s.backtick || s.triple2 || s.triple1 }
 
 // enclosingLine is the nearest line above i with less indentation: the opener of the block
 // that holds line i. -1 when i is at the top level.

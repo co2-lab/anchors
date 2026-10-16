@@ -347,7 +347,7 @@ func TestSelection_takesTheTestsOfAChangedField(t *testing.T) {
 	git("commit", "-q", "-m", "init")
 	write("pay.spec.md", strings.Replace(spec, "cents", "decimal", 1))
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "pay.spec.md", Kind: mapx.KindSpec}, testNode("pay_test.go", 1, 0, true)}}
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	cfg := &config.Config{Dialect: config.FamilyLexicon("go")}
 	var run []string
 	out := captureStdout(t, func() { run = withImpactedTests(nil, g, cfg, root, "k", config.Suite{Layer: "unit"}) })
 	if !reflect.DeepEqual(run, []string{"pay_test.go"}) || !strings.Contains(out, "a contract field their rules use changed") {
@@ -365,7 +365,7 @@ func TestSelection_readsTheFileAsItIsNow(t *testing.T) {
 	if out, err := runQ(t, newTestCmd(), "--root", dir); err != nil || !strings.Contains(out, "nothing to run") {
 		t.Fatalf("at the map's revisions both are fresh and passing, got %v\n%s", err, out)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "a_test.go"), []byte("package a // edited\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "a_test.go"), []byte("package b\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	// b only gains a flag of the chains: nothing its result proved changed.

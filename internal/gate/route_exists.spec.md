@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RTEXR
-  updated_at: 2026-10-08
+  updated_at: 2026-10-16
   layer: gate
 -->
 # RouteExists — declared route in specification must exist in application route registry
@@ -42,7 +42,7 @@ rather than falsely approving uninspected routes.
 | the declared route | specification content declaring a route via `route:` or `rota:` | specifications containing no route declaration | this unit: skips specifications with no declared route |
 | the route registry configuration | project configuration defining one or more `route_registry` glob patterns | unconfigured or empty `route_registry` globs | this unit: returns Pending when registry globs are missing |
 | the route registry files | existing source files matching configured globs | missing or unreadable route files, or invalid glob patterns | `doublestar.Glob` and filesystem: returns read error causing Pending |
-| the registered route definitions | routes matching standard navigation patterns or custom `derived.route_pattern` regex | files containing zero identifiable route definitions | this unit: returns Pending when zero routes are found |
+| the registered route definitions | routes the project's `derived.route_pattern` reads — the core knows no navigation library's shape | files containing zero identifiable route definitions | this unit: returns Pending when zero routes are found |
 
 ## Effects
 
@@ -50,12 +50,12 @@ rather than falsely approving uninspected routes.
 | --- | --- |
 | `RTEXR-B01` | When the confronted node is not of kind spec, the gate skips confrontation. |
 | `RTEXR-B02` | When the specification does not declare a route, the gate skips confrontation. |
-| `RTEXR-B03` | When project configuration defines no route registry glob patterns, confrontation returns Pending. |
+| `RTEXR-B03` | When project configuration defines no route registry glob patterns, or no `derived.route_pattern`, confrontation returns Pending. |
 | `RTEXR-B04` | When route registry glob pattern is invalid, the gate returns Pending reporting the glob error. |
 | `RTEXR-B05` | When route registry files are inspected but zero registered routes are discovered, the gate returns Pending. |
-| `RTEXR-B06` | When a declared screen name matches a component navigation prop in registered route files, the gate passes. |
-| `RTEXR-B07` | When a declared screen name matches a navigation stack parameter type entry in registered route files, the gate passes. |
-| `RTEXR-B08` | When a declared backend route matches an added HTTP resource registration, the gate passes. |
+| `RTEXR-B06` | Read with the TS family's example of `route_pattern`: when a declared screen name matches a component navigation prop in registered route files, the gate passes. |
+| `RTEXR-B07` | Read with the TS family's example: when a declared screen name matches a navigation stack parameter type entry in registered route files, the gate passes. |
+| `RTEXR-B08` | Read with the TS family's example: when a declared backend route matches an added HTTP resource registration, the gate passes. |
 | `RTEXR-B09` | When a declared route includes an HTTP method verb prefix, the gate strips the verb and passes if the route path exists. |
 | `RTEXR-B10` | When a declared route matches a registered route path regardless of leading slash differences, the gate passes. |
 | `RTEXR-B11` | When project configuration specifies a custom route pattern regex, routes matching that pattern pass. |

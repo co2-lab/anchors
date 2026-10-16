@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -13,9 +14,9 @@ import (
 )
 
 func TestSiblingGuard(t *testing.T) {
-	cfg := &config.Config{
+	cfg := testkit.WithComments(&config.Config{
 		Dialect: &config.Dialect{Family: "ts"},
-	}
+	})
 
 	t.Run("pula quando não é código", func(t *testing.T) {
 		t.Run("SBGRD-B01: An artifact that is not code leaves without a verdict", func(t *testing.T) {})
@@ -27,7 +28,7 @@ func TestSiblingGuard(t *testing.T) {
 
 	t.Run("pendente quando sem dialeto", func(t *testing.T) {
 		t.Run("SBGRD-B02: Without a declared dialect the verdict is undetermined", func(t *testing.T) {})
-		v, msg := checkSiblingGuard("export function f() {}", mapx.Node{Kind: mapx.KindCode}, "", nil, &config.Config{})
+		v, msg := checkSiblingGuard("export function f() {}", mapx.Node{Kind: mapx.KindCode}, "", nil, testkit.WithComments(&config.Config{}))
 		if v != Pending {
 			t.Errorf("esperava Pending, veio %v (%s)", v, msg)
 		}
@@ -96,7 +97,7 @@ export function get(key: string) {
 
 	t.Run("reconhece guarda em Go sem parenteses", func(t *testing.T) {
 		t.Run("SBGRD-X01: The gate does not invent what an exported function looks like", func(t *testing.T) {})
-		goCfg := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+		goCfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}})
 		src := `
 func Save(key string) error {
 	if key == "" { return errors.New("empty") }
@@ -120,14 +121,14 @@ func Get(key string) string {
 	})
 
 	t.Run("usa padrao de guarda customizado", func(t *testing.T) {
-		customCfg := &config.Config{
+		customCfg := testkit.WithComments(&config.Config{
 			Dialect: &config.Dialect{
 				Family: "go",
 				GuardPatterns: []string{
 					`validate\({{param}}\)`,
 				},
 			},
-		}
+		})
 		src := `
 func Save(key string) {
 	validate(key)
@@ -151,7 +152,7 @@ func Get(key string) {
 // Os casos que faltavam: as duas pontas da simetria, a citação do nome, a guarda cujo
 // CONTEÚDO difere, e a função sozinha.
 func TestSiblingGuard_CasosDaSimetria(t *testing.T) {
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
 	roda := func(src string) (Verdict, string) {
 		return checkSiblingGuard(src, mapx.Node{Kind: mapx.KindCode}, "", nil, cfg)
 	}

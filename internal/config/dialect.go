@@ -139,6 +139,23 @@ type Dialect struct {
 	// or not anybody wrote it down: the failure gates ask its spec for the failure, and
 	// each call for its handling.
 	FalliblePatterns []FalliblePattern `yaml:"fallible_patterns,omitempty"`
+	// SignatureEnd matches where a function's signature ends after its exported_func match —
+	// the `{` of the brace languages, Python's `:` —: the parameters are read up to it.
+	// Empty: the signature is what exported_func matched.
+	SignatureEnd string `yaml:"signature_end,omitempty"`
+	// Limits recognise a limit on a query in the code (pagination-honored): each pattern
+	// captures the limit's `name` and its `value` (a literal: hidden from the caller) or its
+	// `param` (an identifier: the caller's contract when it is a parameter of the function);
+	// a pattern with a `type` group reads a type annotation, which is no limit passed.
+	Limits Patterns `yaml:"limits,omitempty"`
+	// StatementEnd matches a line of code (comments blanked) that ends a statement: the
+	// failure gates climb from a call to its statement's first line until one (`;`, `}`, `)`
+	// in the ts example). Empty: a statement is the call's line.
+	StatementEnd string `yaml:"statement_end,omitempty"`
+	// Comments say how the project's files write a comment, by glob (see Comments): the
+	// header, the chain's flags and the evidence are read through them, and a file no entry
+	// covers has none — the gates that need its comments say so.
+	Comments []Comments `yaml:"comments,omitempty"`
 	// TestHandles say how this project's code exposes a test handle, and how its flows query
 	// one — the patterns the handle gates read (testid-consistent, testid-queried-exists,
 	// identity-consistent). The core knows no syntax of its own: with none declared, those
@@ -175,6 +192,17 @@ type TestsSource struct {
 	// the test library's own (`expect(`, `t.Errorf`) and the project's helpers that assert.
 	// A test with none passes whatever the code does.
 	Assertion string `yaml:"assertion,omitempty"`
+	// BlockOpen matches a line that leaves a block open at its end (`{`, `(`, `[`, Ruby's
+	// `do`), BlockClose a line that starts by closing one: a test's body is read by them and
+	// by its indentation. Empty: by its indentation alone.
+	BlockOpen  string `yaml:"block_open,omitempty"`
+	BlockClose string `yaml:"block_close,omitempty"`
+	// EmptyBody matches a test opened and closed with nothing inside (`{}`): with labels, the
+	// block around it stands for its body.
+	EmptyBody string `yaml:"empty_body,omitempty"`
+	// Placeholder matches a placeholder of a table-driven test's title (Jest's `%s`, `$name`,
+	// `${name}`): not a word of the title.
+	Placeholder string `yaml:"placeholder,omitempty"`
 }
 
 // GherkinKeywords são as palavras-chave da feature no idioma do projeto. Só os idiomas
@@ -346,8 +374,12 @@ var dialectFamilies = map[string]Dialect{
 		},
 		// Jest, Vitest and Mocha: `it`/`test`/`describe`, also modified by `.only`,
 		// `.skip`, or `.each(table)` with the table's parentheses nested one level.
-		Tests: &TestsSource{Pattern: `\b(?:it|test|describe)(?:\.each\s*\((?:[^()]|\([^()]*\))*\)|\.only|\.skip)?\s*\(`,
-			Assertion: `\bexpect(?:\.\w+)?\s*\(|\bassert(?:\.\w+)?\s*\(`},
+		// A test opens with `it`, `test` or `describe` — also `.only`, `.skip` or
+		// `.each(table)` —, its title quoted by `'`, `"` or a backtick.
+		Tests: &TestsSource{Pattern: `\b(?:it|test|describe)(?:\.each\s*\((?:[^()]|\([^()]*\))*\)|\.only|\.skip)?\s*\(\s*(?:'(?P<title>(?:[^'\\\n]|\\.)*)'|"(?P<title2>(?:[^"\\\n]|\\.)*)"|` + "`(?P<title3>[^`]*)`)",
+			BlockOpen: `[{(\[]\s*$`, BlockClose: `^\s*[}\])]`, EmptyBody: `\{\s*\}`,
+			Placeholder: `%[#a-zA-Z%]|\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_.]*`,
+			Assertion:   `\bexpect(?:\.\w+)?\s*\(|\bassert(?:\.\w+)?\s*\(`},
 		// Functions, classes, and constants bound to an arrow function, at any depth.
 		Definition: `(?m)^\s*(?:export\s+(?:default\s+)?)?(?:async\s+)?(?:function\*?\s+(\w+)|class\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|\w+)\s*=>)`,
 	},
@@ -397,7 +429,9 @@ var dialectFamilies = map[string]Dialect{
 			`\breturn\b[^\n]*\bErr[A-Z]\w*`,
 		},
 		// The standard library: a test names its cases with `t.Run("title", …)`.
-		Tests: &TestsSource{Pattern: `\bt\.Run\(`, Assertion: `\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b`},
+		Tests: &TestsSource{Pattern: `\bt\.Run\(\s*(?:"(?P<title>(?:[^"\\\n]|\\.)*)"|` + "`(?P<title2>[^`]*)`)",
+			Assertion: `\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b`,
+			BlockOpen: `[{(\[]\s*$`, BlockClose: `^\s*[}\])]`, EmptyBody: `\{\s*\}`},
 		// Functions, methods and types, at the top level.
 		// A method is named WITH its receiver's type (the `owner` group): a test's fake that
 		// implements an interface defines `fakePinger.Ping`, and the unit's `GormPinger.Ping`
@@ -500,67 +534,85 @@ func (c *Config) DialectFor() Dialect {
 	if c != nil && c.Dialect != nil {
 		d = *c.Dialect
 	}
-	if base, ok := dialectFamilies[strings.ToLower(d.Family)]; ok {
-		// o explícito do projeto sempre vence a família
-		if d.ExportedFunc == "" {
-			d.ExportedFunc = base.ExportedFunc
-		}
-		if d.ParamName == "" {
-			d.ParamName = base.ParamName
-		}
-		if d.Loop == "" {
-			d.Loop = base.Loop
-		}
-		if d.Cursor == "" {
-			d.Cursor = base.Cursor
-		}
-		if d.CollectionQuery == "" {
-			d.CollectionQuery = base.CollectionQuery
-		}
-		if d.HTTPStatus == "" {
-			d.HTTPStatus = base.HTTPStatus
-		}
-		if d.HTTPStatusDynamic == "" {
-			d.HTTPStatusDynamic = base.HTTPStatusDynamic
-		}
-		if d.EnvRead == "" {
-			d.EnvRead = base.EnvRead
-		}
-		if len(d.HandlePatterns) == 0 {
-			d.HandlePatterns = base.HandlePatterns
-		}
-		if len(d.LogPatterns) == 0 {
-			d.LogPatterns = base.LogPatterns
-		}
-		// The family's fallible patterns are NOT taken here. A project whose failure gates
-		// already block would wake up to every fetch charged the day it updates (reported
-		// from MIF: 65 screens, blocking). They are seeded by `anchors init` and suggested
-		// by the governance tips (FamilyFalliblePatterns): measured before they bar.
-		switch {
-		case d.Tests == nil:
-			d.Tests = base.Tests
-		case base.Tests != nil && d.Tests.Pattern == "" && d.Tests.Script == "":
-			// The project declared only its assertions: the family still says how a test
-			// opens. The family's assertion is not taken when the project reads its tests
-			// its own way — another library asserts another way.
-			t := *d.Tests
-			t.Pattern = base.Tests.Pattern
-			if t.Assertion == "" {
-				t.Assertion = base.Tests.Assertion
-			}
-			d.Tests = &t
-		}
-		if d.Definition == "" {
-			d.Definition = base.Definition
-		}
-	}
-	if d.SetPromise == "" {
-		d.SetPromise = defaultSetPromise
-	}
-	if d.SetSlice == "" {
-		d.SetSlice = defaultSetSlice
-	}
+	// Nothing comes from the family: what a language looks like is the project's to declare
+	// (DESIGN-core-without-syntax.md). The family's lexicon is an example — FamilyLexicon —,
+	// written by `anchors init` and `anchors migrate`, and offered by the doctor.
 	return d
+}
+
+// NamingExample is the example of the two naming conventions — set_promise and set_slice —,
+// a list of verbs in English and Portuguese: every family's example carries it.
+func NamingExample() (promise, slice string) { return defaultSetPromise, defaultSetSlice }
+
+// FamilyLexicon is the family's example of the lexicon the gates read — exported_func,
+// param_name, loop, cursor, http_status, env_read, handle_patterns, log_patterns, tests,
+// definition, statement_end — with the naming conventions set_promise and set_slice: what
+// `anchors init` and `anchors migrate` write and the doctor offers, never applied by itself.
+// An unknown family gives nil.
+func FamilyLexicon(family string) *Dialect {
+	base, ok := dialectFamilies[strings.ToLower(family)]
+	if !ok {
+		return nil
+	}
+	ex := Dialect{
+		ExportedFunc: base.ExportedFunc, ParamName: base.ParamName, Loop: base.Loop,
+		Cursor: base.Cursor, HTTPStatus: base.HTTPStatus, HTTPStatusDynamic: base.HTTPStatusDynamic,
+		EnvRead: base.EnvRead, Definition: base.Definition, Tests: base.Tests,
+		HandlePatterns: append([]string(nil), base.HandlePatterns...),
+		LogPatterns:    append([]string(nil), base.LogPatterns...),
+		SetPromise:     defaultSetPromise, SetSlice: defaultSetSlice,
+		StatementEnd:  familyStatementEnd(family),
+		Limits:        exampleLimits(),
+		SignatureEnd:  familySignatureEnd(family),
+		GuardPatterns: exampleGuards(family),
+	}
+	return &ex
+}
+
+// familySignatureEnd is where a function's signature ends in the family's code.
+func familySignatureEnd(family string) string {
+	switch strings.ToLower(family) {
+	case "python":
+		return `:\s*(?:#.*)?\n`
+	case "ruby":
+		return `\n`
+	}
+	return `\{`
+}
+
+// exampleGuards are the guards most languages write over a parameter, `{{param}}` its name:
+// a filter by it, an early exit or a throw because of it, a default for it.
+func exampleGuards(family string) []string {
+	return []string{
+		`\.filter\([^)]*{{param}}\b`,
+		`\b{{param}}\s*\.\s*filter\(`,
+		`if\s*\(?[^\n{:]*\b{{param}}\b[^\n{:]*\)?\s*[:{]?\s*(throw|return|raise|panic)`,
+		`\b{{param}}\b[^\n]*\?\?`,
+		`(throw|assert|raise|panic)[^\n]*\b{{param}}\b`,
+	}
+}
+
+// exampleLimits are the limits most data APIs write — `limit`, `max`, `pageSize`, `take`,
+// `top` —, as a default (`limit = 100`, past a type annotation), a literal (`Limit: 50`) or
+// an identifier passed (`Limit: limit`), with the type names a signature annotates them with.
+func exampleLimits() Patterns {
+	name := `(?i)\b(?P<name>limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b`
+	return Patterns{
+		{Re: name + `[^=\n]*?=\s*(?P<value>\d+)`},
+		{Re: name + `\s*[:=]\s*(?P<value>\d+)`},
+		{Re: name + `\s*[:=]\s*(?P<param>\w+)`},
+		{Re: name + `\s*:\s*(?P<type>(?i:number|int|integer|long|short|byte|float|double|decimal|uint\d*|int\d*|usize|i\d+|u\d+|bigint|size_t))\b`},
+	}
+}
+
+// familyStatementEnd is the line ending a statement in the family's code: the brace and
+// semicolon languages end one at `;`, `}` or `)`; the others have no example.
+func familyStatementEnd(family string) string {
+	switch strings.ToLower(family) {
+	case "ts", "go", "java", "kotlin", "csharp", "rust", "php":
+		return `[;})]$`
+	}
+	return ""
 }
 
 // KnownDialectFamilies lista as famílias com léxico embutido (para mensagens de erro e
@@ -603,23 +655,8 @@ func (d Dialect) WaivedField(campoYAML string) bool {
 }
 
 // EnvReadPattern is how this project's code reads an environment variable: its own
-// `env_read`, its family's, or — with no family declared — every family's together. The
-// idioms (`os.Getenv`, `process.env`, `System.getenv`) do not collide across languages, so
-// the union reads a project nobody configured without inventing reads.
-func (d Dialect) EnvReadPattern() string {
-	if d.EnvRead != "" {
-		return d.EnvRead
-	}
-	seen := map[string]bool{}
-	var parts []string
-	for _, k := range []string{"ts", "go", "python", "java", "rust", "ruby", "php", "csharp", "kotlin"} {
-		if p := dialectFamilies[k].EnvRead; p != "" && !seen[p] {
-			seen[p] = true
-			parts = append(parts, p)
-		}
-	}
-	return strings.Join(parts, "|")
-}
+// `env_read`, or "" — no family's is read by itself, nor every family's together.
+func (d Dialect) EnvReadPattern() string { return d.EnvRead }
 
 // FalliblePattern is a call that can fail, and what handles it (see FalliblePatterns). The
 // families know their own (React Query, SWR, fetch and axios for `ts`; HTTP and SQL for
@@ -837,6 +874,40 @@ func FamilyNavigationCall(family string) string {
 		// React Navigation and the routers that look like it: `navigation.navigate('Goal')`,
 		// `router.push({ pathname: '/goal' })`, the back and reset calls with no route.
 		return `\b(?:navigation|navigator|router|nav)\s*\.\s*(?:navigate|push|replace|reset|goBack|back|pop|popToTop|dispatch)\s*\(\s*(?:\{\s*(?:name|pathname)\s*:\s*)?(?:['"](?P<route>[A-Za-z0-9_/.:-]+)['"])?`
+	}
+	return ""
+}
+
+// FamilyMocks is the family's example of how its tests write a double, for the mock gates —
+// `derived.mock_detect` (the double and the module it replaces), `mock_contract` (what binds
+// it to the module), `mock_factory` (a double with a hand-written factory), `mock_typed` (a
+// type binding the factory): what `anchors init` and `anchors migrate` write and the doctor
+// offers, never applied by itself. A family with none gives nil.
+func FamilyMocks(family string) *Derived {
+	switch strings.ToLower(family) {
+	case "ts":
+		return &Derived{
+			MockDetect:   "(?:jest|vi)\\s*\\.\\s*mock\\s*\\(\\s*['\"`]([^'\"`]+)",
+			MockContract: "Partial<typeof import('{{module}}')>",
+			// A second argument that is no options object: the factory. An automock
+			// (`jest.mock('x')`) or Vitest's `{ spy: true }` mirrors the module.
+			MockFactory: "(?:jest|vi)\\s*\\.\\s*mock\\s*\\(\\s*(?:['\"`][^'\"`]*['\"`]|[^,()]*\\([^()]*\\))\\s*,\\s*[^\\s{)]",
+			// A return annotation between the factory's parameters and its arrow.
+			MockTyped: "\\)\\s*:\\s*\\S[^\\n]*=>",
+		}
+	case "python":
+		return &Derived{MockDetect: "(?:mock\\.)?patch\\(['\"]([^'\"]+)", MockContract: "autospec=True"}
+	}
+	return nil
+}
+
+// FamilyRoutePattern is the family's example of `derived.route_pattern` — how the app
+// registers a route, its name in a capture group —: React Navigation's and Expo Router's
+// `name="X"`, a stack's param list `X: undefined`, a CDK API's `addResource('x')`. Never
+// applied by itself; a family with none gives "".
+func FamilyRoutePattern(family string) string {
+	if strings.ToLower(family) == "ts" {
+		return `name="([A-Za-z][A-Za-z0-9_]*)"|(?m)^\s{2,}([A-Za-z][A-Za-z0-9_]*)\s*:\s*(?:undefined|\{)|addResource\('([a-z0-9][a-z0-9/_-]*)'`
 	}
 	return ""
 }

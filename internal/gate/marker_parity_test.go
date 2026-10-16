@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,7 +47,7 @@ func TestMarkerParityPassaComAsDuasPontas(t *testing.T) {
 		"web/scopes.ts":   "// @data-purge-rule-conta: o que a página promete apagar\n",
 		"server/purge.ts": "// @data-purge-rule-conta: o que o handler apaga\n",
 	})
-	v, d := checkMarkerParity(gateDePara(), root, nil, nil)
+	v, d := checkMarkerParity(gateDePara(), root, nil, testkit.WithComments(nil))
 	if v != Pass {
 		t.Fatalf("esperava Pass, veio %v: %s", v, d)
 	}
@@ -60,7 +61,7 @@ func TestMarkerParityPegaLadoQueFaltou(t *testing.T) {
 		// o servidor NÃO tem a marcação — a regra existe só de um lado
 		"server/purge.ts": "// nada aqui\n",
 	})
-	v, d := checkMarkerParity(gateDePara(), root, nil, nil)
+	v, d := checkMarkerParity(gateDePara(), root, nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("esperava Fail, veio %v: %s", v, d)
 	}
@@ -76,7 +77,7 @@ func TestMarkerParityNaoAceitaDuasNoMesmoLado(t *testing.T) {
 		"web/scopes.ts": "// @data-purge-rule-conta: promete\n",
 		"web/outro.ts":  "// @data-purge-rule-conta: promete de novo\n",
 	})
-	v, d := checkMarkerParity(gateDePara(), root, nil, nil)
+	v, d := checkMarkerParity(gateDePara(), root, nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("duas do MESMO lado somam 2 e nao podem passar; veio %v: %s", v, d)
 	}
@@ -89,7 +90,7 @@ func TestMarkerParityPegaRegraOrfa(t *testing.T) {
 		"web/scopes.ts":   "// @data-purge-rule-conta: ok\n// @data-purge-rule-antiga: sobrou\n",
 		"server/purge.ts": "// @data-purge-rule-conta: ok\n",
 	})
-	v, d := checkMarkerParity(gateDePara(), root, nil, nil)
+	v, d := checkMarkerParity(gateDePara(), root, nil, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(d, "antiga") {
 		t.Fatalf("esperava Fail nomeando `antiga`; veio %v: %s", v, d)
 	}
@@ -99,7 +100,7 @@ func TestMarkerParityPegaRegraOrfa(t *testing.T) {
 func TestMarkerParityAusenciaTotalNaoAprova(t *testing.T) {
 	t.Run("MRPRM-B05: Total absence of the prefix is not approval", func(t *testing.T) {})
 	root := arvore(t, map[string]string{"web/scopes.ts": "// nada\n"})
-	v, d := checkMarkerParity(gateDePara(), root, nil, nil)
+	v, d := checkMarkerParity(gateDePara(), root, nil, testkit.WithComments(nil))
 	if v != Pending {
 		t.Fatalf("esperava Pending, veio %v: %s", v, d)
 	}
@@ -112,7 +113,7 @@ func TestMarkerParitySemPrefixoNaoAprova(t *testing.T) {
 	t.Run("MRPRM-B06: A declaration with no prefix returns Pending", func(t *testing.T) {})
 	g := gateDePara()
 	g.MarkerPrefix = ""
-	v, d := checkMarkerParity(g, arvore(t, map[string]string{"a.ts": "x"}), nil, nil)
+	v, d := checkMarkerParity(g, arvore(t, map[string]string{"a.ts": "x"}), nil, testkit.WithComments(nil))
 	if v != Pending || !strings.Contains(d, "marker_prefix") {
 		t.Fatalf("esperava Pending pedindo o prefixo; veio %v: %s", v, d)
 	}
@@ -127,11 +128,11 @@ func TestMarkerParitySemEscoposUsaContagem(t *testing.T) {
 		"a.ts": "// @data-purge-rule-conta: um\n",
 		"b.ts": "// @data-purge-rule-conta: dois\n",
 	})
-	if v, d := checkMarkerParity(g, root, nil, nil); v != Pass {
+	if v, d := checkMarkerParity(g, root, nil, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("2 ocorrencias com count=2 devia passar; veio %v: %s", v, d)
 	}
 	root2 := arvore(t, map[string]string{"a.ts": "// @data-purge-rule-conta: so uma\n"})
-	if v, _ := checkMarkerParity(g, root2, nil, nil); v != Fail {
+	if v, _ := checkMarkerParity(g, root2, nil, testkit.WithComments(nil)); v != Fail {
 		t.Fatalf("1 ocorrencia com count=2 devia reprovar; veio %v", v)
 	}
 }
@@ -143,7 +144,7 @@ func TestMarkerParityCruzaLinguagens(t *testing.T) {
 		"web/scopes.ts":   "// @data-purge-rule-conta: promete\n",
 		"server/purge.go": "// @data-purge-rule-conta: apaga\n",
 	})
-	if v, d := checkMarkerParity(gateDePara(), root, nil, nil); v != Pass {
+	if v, d := checkMarkerParity(gateDePara(), root, nil, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("esperava Pass entre .ts e .go; veio %v: %s", v, d)
 	}
 }
@@ -155,7 +156,7 @@ func TestMarkerParityIgnoraNodeModules(t *testing.T) {
 		"server/purge.ts":            "// @data-purge-rule-conta: apaga\n",
 		"node_modules/lixo/index.ts": "// @data-purge-rule-conta: ruido\n",
 	})
-	if v, d := checkMarkerParity(gateDePara(), root, nil, nil); v != Pass {
+	if v, d := checkMarkerParity(gateDePara(), root, nil, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("node_modules nao pode contar; veio %v: %s", v, d)
 	}
 }
@@ -168,7 +169,7 @@ func TestMarkerParityLaudoNomeiaRegraEEscopo(t *testing.T) {
 		"web/scopes.ts":   "// @data-purge-rule-conta-completa: a pagina promete\n",
 		"server/purge.ts": "// nada aqui\n",
 	})
-	v, d := checkMarkerParity(gateDePara(), root, nil, nil)
+	v, d := checkMarkerParity(gateDePara(), root, nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("esperava Fail, veio %v: %s", v, d)
 	}
@@ -200,7 +201,7 @@ func TestMarkerParityNadaMedidoNuncaAprova(t *testing.T) {
 		"ausencia total": {gateDePara(), map[string]string{"web/a.ts": "// nada\n"}},
 	}
 	for nome, caso := range casos {
-		v, d := checkMarkerParity(caso.g, arvore(t, caso.files), nil, nil)
+		v, d := checkMarkerParity(caso.g, arvore(t, caso.files), nil, testkit.WithComments(nil))
 		if v == Pass {
 			t.Fatalf("%s: aprovar sem ter olhado carimba o que nao foi medido; veio %v: %s", nome, v, d)
 		}
@@ -218,7 +219,7 @@ func TestMarkerParityNaoLeOQueCadaPontaFaz(t *testing.T) {
 		"web/scopes.ts":   "// @data-purge-rule-conta: apaga perfil, historico e recibos\n",
 		"server/purge.ts": "// @data-purge-rule-conta: apaga so o perfil\n",
 	})
-	if v, d := checkMarkerParity(gateDePara(), root, nil, nil); v != Pass {
+	if v, d := checkMarkerParity(gateDePara(), root, nil, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("presenca e deterministica, sentido nao; esperava Pass, veio %v: %s", v, d)
 	}
 }
@@ -231,7 +232,7 @@ func TestMarkerParityNaoInventaParidade(t *testing.T) {
 		"web/scopes.ts":   "// @data-purge-rule-conta: promete\n// @outra-regra-qualquer: so de um lado\n",
 		"server/purge.ts": "// @data-purge-rule-conta: apaga\n",
 	})
-	if v, d := checkMarkerParity(gateDePara(), root, nil, nil); v != Pass {
+	if v, d := checkMarkerParity(gateDePara(), root, nil, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("cobrar prefixo nao declarado seria inventar paridade; veio %v: %s", v, d)
 	}
 }
@@ -239,7 +240,7 @@ func TestMarkerParityNaoInventaParidade(t *testing.T) {
 // Extensao fora da lista de texto nao e lida — errar para menos custa uma marcacao
 // em lugar exotico; errar para mais custa megabytes por varredura.
 func TestMarkerParityNaoLeForaDaListaDeTexto(t *testing.T) {
-	t.Run("MRPRM-X03: Files outside the text extension list are not read", func(t *testing.T) {})
+	t.Run("MRPRM-X03: A file whose comments the project does not declare is not read", func(t *testing.T) {})
 	marcado := "// @data-purge-rule-conta: ponta\n"
 	root := arvore(t, map[string]string{
 		"web/scopes.ts":   marcado,
@@ -247,7 +248,7 @@ func TestMarkerParityNaoLeForaDaListaDeTexto(t *testing.T) {
 		// mesma sequencia de bytes, extensao fora da lista: nao pode ser lida
 		"web/asset.png": "@data-purge-rule-fantasma: ruido binario\n",
 	})
-	v, d := checkMarkerParity(gateDePara(), root, nil, nil)
+	v, d := checkMarkerParity(gateDePara(), root, nil, &config.Config{Dialect: &config.Dialect{Comments: config.FamilyComments("ts")}})
 	if v != Pass {
 		t.Fatalf("o .png nao podia ser varrido; veio %v: %s", v, d)
 	}
@@ -270,7 +271,7 @@ func TestMarkerParity_Errors(t *testing.T) {
 		if _, err := os.ReadDir(locked); err == nil {
 			t.Skip("running with privileges that read a 0000 directory")
 		}
-		v, d := checkMarkerParity(gateDePara(), root, nil, nil)
+		v, d := checkMarkerParity(gateDePara(), root, nil, testkit.WithComments(nil))
 		if v != Fail || !strings.Contains(d, "conta") || !strings.Contains(d, "server/**") {
 			t.Fatalf("the unreadable end must be charged as missing, naming rule and scope; got %v: %s", v, d)
 		}

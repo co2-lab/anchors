@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -14,7 +15,7 @@ import (
 
 func rodaAsserts(t *testing.T, feature, lang string) (Verdict, string) {
 	t.Helper()
-	cfg := &config.Config{Dialect: &config.Dialect{GherkinLanguage: lang}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{GherkinLanguage: lang}})
 	return checkScenarioAsserts(feature, mapx.Node{Kind: mapx.KindFeature}, "", nil, cfg)
 }
 
@@ -24,7 +25,7 @@ func TestScenarioAssertsSoFeature(t *testing.T) {
 	code := "MTV" + "RX-B01"
 	f := "  Então o efeito " + code + " se verifica\n"
 	for _, k := range []mapx.Kind{mapx.KindSpec, mapx.KindCode, mapx.KindTest} {
-		cfg := &config.Config{Dialect: &config.Dialect{GherkinLanguage: "pt"}}
+		cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{GherkinLanguage: "pt"}})
 		if v, _ := checkScenarioAsserts(f, mapx.Node{Kind: k}, "", nil, cfg); v != Skip {
 			t.Errorf("kind %s deveria ser Skip, foi %s", k, v)
 		}

@@ -204,22 +204,22 @@ type NavCall struct {
 
 // navCallsOf are the navigation calls of a file, each with its flag (on its line, or alone
 // on the line above).
-func navCallsOf(content string, d config.Dialect) []NavCall {
+func navCallsOf(content, rel string, d config.Dialect) []NavCall {
 	re := navigationCallRE(d)
 	if re == nil {
 		return nil
 	}
 	route := re.SubexpIndex("route")
 	flags := map[int]scan.Navigation{}
-	for _, f := range scan.NavigatesIn([]byte(content)) {
+	for _, f := range scan.NavigatesIn([]byte(content), d.CommentsFor(rel)) {
 		flags[f.Line] = f
 	}
 	var out []NavCall
-	for i, ln := range strings.Split(content, "\n") {
-		if commentLine(ln) {
+	for i, code := range codeLines(content, rel, d) {
+		if strings.TrimSpace(code) == "" {
 			continue
 		}
-		m := re.FindStringSubmatch(cutInlineComment(ln))
+		m := re.FindStringSubmatch(code)
 		if m == nil {
 			continue
 		}
@@ -248,7 +248,7 @@ func checkNavAnnotated(content string, n mapx.Node, root string, g *mapx.Graph, 
 	}
 	idx := screensOf(root, g)
 	var gaps []string
-	for _, c := range navCallsOf(content, d) {
+	for _, c := range navCallsOf(content, n.ID, d) {
 		if c.Flag == nil {
 			gaps = append(gaps, i18n.T("gate.nav_chain.call_unflagged", c.Line, nonEmpty(c.Route)))
 			continue
@@ -288,7 +288,7 @@ func anyIn(xs, ys []string) bool {
 
 // flaggedTargets are the screens the `@navigates:` flags of a screen's code name — its own
 // files and the components they render (screenFiles).
-func flaggedTargets(s *Screen, root string, idx *screenIndex) map[string]bool {
+func flaggedTargets(s *Screen, root string, idx *screenIndex, cfg *config.Config) map[string]bool {
 	out := map[string]bool{}
 	if idx.g == nil {
 		return out
@@ -298,7 +298,7 @@ func flaggedTargets(s *Screen, root string, idx *screenIndex) map[string]bool {
 		if err != nil {
 			continue
 		}
-		for _, fl := range scan.NavigatesIn(b) {
+		for _, fl := range scan.NavigatesIn(b, cfg.CommentsFor(f)) {
 			if fl.Dormant != "" {
 				continue // a call kept for a feature not turned on: no edge yet
 			}
@@ -365,7 +365,7 @@ func checkNavMatchesSpec(content string, n mapx.Node, root string, g *mapx.Graph
 	if s == nil {
 		return Skip, i18n.T("gate.nav_chain.skip_not_screen")
 	}
-	flagged := flaggedTargets(s, root, idx)
+	flagged := flaggedTargets(s, root, idx, cfg)
 	declared := map[string]bool{}
 	var gaps []string
 	for _, r := range s.Out {
@@ -429,7 +429,7 @@ func checkNavSymmetric(content string, n mapx.Node, root string, g *mapx.Graph, 
 }
 
 // NavEdges are the app's navigation, screen to screen: the Out tables and the code's flags.
-func NavEdges(root string, g *mapx.Graph) map[string]map[string]bool {
+func NavEdges(root string, g *mapx.Graph, cfg *config.Config) map[string]map[string]bool {
 	idx := screensOf(root, g)
 	out := map[string]map[string]bool{}
 	add := func(from, to string) {
@@ -444,7 +444,7 @@ func NavEdges(root string, g *mapx.Graph) map[string]map[string]bool {
 				add(s.Spec, t.Spec)
 			}
 		}
-		for t := range flaggedTargets(s, root, idx) {
+		for t := range flaggedTargets(s, root, idx, cfg) {
 			add(s.Spec, t)
 		}
 	}
@@ -465,14 +465,14 @@ var (
 	reachableCache = map[string]*reachable{}
 )
 
-func reachableScreens(root string, g *mapx.Graph, idx *screenIndex, entries []string) map[string]bool {
+func reachableScreens(root string, g *mapx.Graph, idx *screenIndex, entries []string, cfg *config.Config) map[string]bool {
 	reachableMu.Lock()
 	defer reachableMu.Unlock()
 	key := strings.Join(entries, "\x00")
 	if r, ok := reachableCache[root]; ok && r.g == g && r.entry == key {
 		return r.seen
 	}
-	edges := NavEdges(root, g)
+	edges := NavEdges(root, g, cfg)
 	seen := map[string]bool{}
 	var queue []string
 	for _, e := range entries {
@@ -504,7 +504,7 @@ func checkNavReachable(content string, n mapx.Node, root string, g *mapx.Graph, 
 	if cfg == nil || cfg.Navigation == nil || len(cfg.Navigation.Entry) == 0 {
 		return Pending, i18n.T("gate.nav_chain.pending_no_entry")
 	}
-	if reachableScreens(root, g, idx, cfg.Navigation.Entry)[s.Spec] {
+	if reachableScreens(root, g, idx, cfg.Navigation.Entry, cfg)[s.Spec] {
 		return Pass, ""
 	}
 	return Fail, i18n.T("gate.nav_chain.unreachable", s.Name, strings.Join(cfg.Navigation.Entry, ", ")) + i18n.T("gate.nav_chain.guide")
@@ -519,9 +519,13 @@ func fixNavFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 	d := fixConfig.DialectFor()
 	idx := screensOf(root, g)
 	lines := strings.Split(content, "\n")
-	marker := config.LineCommentFor(n.ID)
+	cs := d.CommentsFor(n.ID)
+	marker := cs.LineMarker()
+	if marker == "" {
+		return content, false, "" // no comment to write the flag in
+	}
 	var done []string
-	for _, c := range navCallsOf(content, d) {
+	for _, c := range navCallsOf(content, n.ID, d) {
 		if c.Flag != nil || c.Route == "" {
 			continue
 		}
@@ -530,18 +534,20 @@ func fixNavFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 			continue
 		}
 		l := lines[c.Line-1]
-		if code := strings.TrimSpace(cutInlineComment(l)); strings.HasSuffix(code, ">") {
-			// A line ending in a JSX tag: what follows `>` is text the app renders, and a
-			// `// @navigates:` there shows on screen (reported from MIF). The flag goes as a
-			// block comment right after the call, inside its expression; a call whose end is
-			// not found is left to the author.
+		if !cs.TakesLineComment(cs.CutLine(l)) {
+			// A line whose end takes no line comment — the syntax's `no_line_after`: after
+			// a JSX tag the line is text the app renders, and a `// @navigates:` there shows on
+			// screen (reported from MIF). The flag goes in the syntax's first block comment
+			// right after the call, inside its expression; a call whose end is not found, or a
+			// syntax with no block comment, is left to the author.
 			at := navCallEnd(l, navigationCallRE(d))
-			if at < 0 {
+			if at < 0 || len(cs.Block) == 0 {
 				continue
 			}
-			lines[c.Line-1] = l[:at] + " /* @navigates: " + t.Code + " */" + l[at:]
+			b := plainBlock(cs)
+			lines[c.Line-1] = l[:at] + " " + b.Open + " @navigates: " + t.Code + " " + b.Close + l[at:]
 		} else {
-			lines[c.Line-1] = strings.TrimRight(l, " \t") + " " + marker + " @navigates: " + t.Code + config.CommentCloseFor(marker)
+			lines[c.Line-1] = strings.TrimRight(l, " \t") + " " + marker + " @navigates: " + t.Code + cs.CloseFor(marker)
 		}
 		done = append(done, fmt.Sprintf("%d %s", c.Line, t.Code))
 	}
@@ -549,6 +555,12 @@ func fixNavFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 		return content, false, ""
 	}
 	return strings.Join(lines, "\n"), true, i18n.T("gate.fix.nav_written", strings.Join(done, ", "))
+}
+
+// plainBlock is the block comment written inside an expression: the syntax's last block —
+// the ts example lists JSX's `{/* */}` first and the plain `/* */` after it.
+func plainBlock(cs *config.Comments) config.Delims {
+	return cs.Block[len(cs.Block)-1]
 }
 
 // navCallEnd is the index right after the closing parenthesis of the navigation call on a

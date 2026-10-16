@@ -13,6 +13,7 @@ Sibling functions handle the same parameter consistently.
 | Confronts | `code` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Presupposes | `dialect.exported_func` `dialect.param_name` `dialect.guard_patterns` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 

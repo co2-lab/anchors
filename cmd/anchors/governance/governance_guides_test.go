@@ -733,7 +733,7 @@ func TestPlanGuide_unplannedWork(t *testing.T) {
 func TestGatesGuide(t *testing.T) {
 	t.Run("GVGDG-B30: The gates guide explains the project's gates", func(t *testing.T) {})
 	root := t.TempDir()
-	yaml := "version: 7\nlayers: {}\ngates:\n  - name: unit-complete\n    blocking: true\n  - name: progress-intact\n    blocking: false\n"
+	yaml := "version: 8\nlayers: {}\ngates:\n  - name: unit-complete\n    blocking: true\n  - name: progress-intact\n    blocking: false\n"
 	if err := os.WriteFile(filepath.Join(root, "anchors.yaml"), []byte(yaml), 0o644); err != nil {
 		t.Fatal(err)
 	}

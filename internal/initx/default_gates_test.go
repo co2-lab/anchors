@@ -553,11 +553,11 @@ func TestDefaultGateTextsAreEnglish(t *testing.T) {
 
 func TestMockDialectJudgmentPresupposesThePattern(t *testing.T) {
 	t.Run("DFGTD-B18: The mock dialect judgment presupposes the pattern it asks about", func(t *testing.T) {})
-	want := map[string]string{"mock-detect-covers-dialect": "derived.mock_detect", "mock-stamped": "derived.mock_detect", "mock-typed": "derived.mock_contract"}
+	want := map[string]string{"mock-detect-covers-dialect": "derived.mock_detect", "mock-stamped": "derived.mock_detect", "mock-typed": "derived.mock_detect derived.mock_contract"}
 	for _, g := range DefaultGates(allArtifacts(), false) {
-		if field, ok := want[g.Name]; ok {
-			if len(g.Presupposes) != 1 || g.Presupposes[0] != field {
-				t.Errorf("%s presupposes %v, want [%s]", g.Name, g.Presupposes, field)
+		if fields, ok := want[g.Name]; ok {
+			if strings.Join(g.Presupposes, " ") != fields {
+				t.Errorf("%s presupposes %v, want [%s]", g.Name, g.Presupposes, fields)
 			}
 			delete(want, g.Name)
 		}

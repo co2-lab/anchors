@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRBLG
-  updated_at: 2026-10-15
+  updated_at: 2026-10-16
   layer: mapa
 -->
 # GraphBuild — projecting the declared structure onto the scanned files: one node per file, and the relations between them
@@ -59,7 +59,7 @@ of the nodes whose content did not change.
 | --- | --- |
 | `GRBLG-B01` | Every scanned file becomes one node carrying its path, kind, revision and layer, the date the caller gave for that path, and its layer's tags and regime. |
 | `GRBLG-B02` | The identity declared in a file's header wins over everything else, including an anchor's identity and codes cited earlier in the text. |
-| `GRBLG-B03` | A derived file with no header takes the declared identity of the anchor with the same stem in the same directory; another unit in that directory does not receive it. |
+| `GRBLG-B03` | A derived file with no header takes the declared identity of the anchor with the same unit name in the same directory — what the `derived.files` templates add to a name taken off (`config.UnitName`) —; another unit in that directory does not receive it. |
 | `GRBLG-B04` | With neither header nor anchor, the identity is the root (`RuleRoot`) of the first rule code in the text, and empty when there is none. |
 | `GRBLG-B05` | A vendored file that Anchors still owns has no local identity, whatever its text or header says. |
 | `GRBLG-B06` | A node is marked as having a declared identity only when its header declares one. |

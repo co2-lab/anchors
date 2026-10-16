@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -13,10 +14,10 @@ import (
 )
 
 func cfgLetras() *config.Config {
-	return &config.Config{RuleTypes: []config.RuleType{
+	return testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{
 		{Letter: "S", Term: "State"},
 		{Letter: "B", Term: "Behavior"},
-	}}
+	}})
 }
 
 func TestCenarioLetraDeclarada_acusaLetraInventada(t *testing.T) {

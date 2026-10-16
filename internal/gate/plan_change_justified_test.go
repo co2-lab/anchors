@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -117,7 +118,7 @@ func TestAlterado_formasDeEscreverAMarca(t *testing.T) {
 
 // cfgAlterado monta o config com a lista do que MUDOU nesta execução.
 func cfgAlterado(paths ...string) *config.Config {
-	return &config.Config{Alterados: paths}
+	return testkit.WithComments(&config.Config{Alterados: paths})
 }
 
 // O CASO QUE O GATE ACUSAVA ERRADO, e que os outros testes não pegavam por passarem só o
@@ -143,7 +144,7 @@ func TestAlterado_noRaioDeImpactoMasIntocadoPula(t *testing.T) {
 func TestAlterado_semListaDeAlteradosPula(t *testing.T) {
 	t.Run("PCJPL-X03: Without a changed files list the gate skips confrontation", func(t *testing.T) {})
 	v, _ := checkPlanChangeJustified("# Plano\n",
-		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, nil)
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("sem saber o que mudou, o gate deve se calar, veio %v", v)
 	}

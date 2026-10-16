@@ -13,6 +13,7 @@ Every test asserts something in its body — the project says what an assertion 
 | Confronts | `test` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Presupposes | `dialect.tests` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 

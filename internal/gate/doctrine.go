@@ -575,7 +575,7 @@ func layerRequiresDoctrine(n mapx.Node, root string, g *mapx.Graph, cfg *config.
 		}
 	}
 	if base := strings.TrimSuffix(n.ID, ".spec.md"); base != n.ID {
-		for _, ext := range []string{".ts", ".tsx", ".go", ".py", ".js"} {
+		for _, ext := range cfg.CodeExtensions() {
 			layer, _ := scan.Classify(base+ext, cfg)
 			if layer == "" {
 				continue

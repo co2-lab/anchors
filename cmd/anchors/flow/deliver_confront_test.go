@@ -5,6 +5,7 @@
 package flow
 
 import (
+	"github.com/co2-lab/anchors/internal/config"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -216,16 +217,17 @@ func TestMutationNotMeasured(t *testing.T) {
 	t.Run("DLCND-B05: A tested unit without a mutation signal is warned", func(t *testing.T) {})
 	root := t.TempDir()
 	writeFile(t, root, "src/pricing.ts", "x\n")
-	if got := mutationNotMeasured(root, "src/pricing.ts"); got != "" {
+	cfg := &config.Config{Derived: &config.Derived{Files: map[string]config.Padroes{"test": {"{{dir}}/{{name}}.test.{{ext}}"}}}}
+	if got := mutationNotMeasured(root, "src/pricing.ts", cfg); got != "" {
 		t.Errorf("without a test the subject is another: %q", got)
 	}
 	writeFile(t, root, "src/pricing.test.ts", "x\n")
-	writeFile(t, root, "anchors.graph.yaml", "version: 7\nnodes:\n"+
+	writeFile(t, root, "anchors.graph.yaml", "version: 8\nnodes:\n"+
 		"  - id: src/pricing.ts\n    kind: code\n    rev: a\n    signal:\n      mutants_killed: 3\nedges: []\n")
-	if got := mutationNotMeasured(root, "src/pricing.ts"); got != "" {
+	if got := mutationNotMeasured(root, "src/pricing.ts", cfg); got != "" {
 		t.Errorf("a measured unit must not be warned: %q", got)
 	}
-	if got := mutationNotMeasured(root, ""); got != "" {
+	if got := mutationNotMeasured(root, "", cfg); got != "" {
 		t.Errorf("no unit, no warning: %q", got)
 	}
 }

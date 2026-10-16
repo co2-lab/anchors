@@ -48,7 +48,11 @@ func TestDecideTouch(t *testing.T) {
 		{"HTML header of a spec", "<!-- @anchors\n  code: CODEX\n  updated_at: 2026-09-01\n-->\n# Spec\n", "", false, true, ""},
 		{"header below the top", strings.Repeat("x\n", 12) + touchHeader, "", false, false, skipNoHeader},
 	} {
-		d := decideTouch("a.ts", c.current, c.base, c.hasBase, "2026-09-25")
+		rel := "x.ts"
+		if strings.HasPrefix(c.current, "<!--") {
+			rel = "x.spec.md"
+		}
+		d := decideTouch("a.ts", c.current, c.base, c.hasBase, "2026-09-25", testkit.Comments(rel))
 		if d.Bump != c.bump || d.Skip != c.skip {
 			t.Errorf("%s: bump=%v skip=%q, want bump=%v skip=%q", c.name, d.Bump, d.Skip, c.bump, c.skip)
 		}
@@ -74,6 +78,8 @@ func touchRepo(t *testing.T) string {
 	for _, f := range []string{"a.ts", "b.ts", "gen/c.ts", "d.ts"} {
 		touchWrite(t, root, f, touchHeader+"export const x = 1\n")
 	}
+	// The comments the header is read in: the project declares them.
+	touchWrite(t, root, "anchors.yaml", "version: 2\nlayers: {}\ndialect:\n"+testkit.CommentsYAML)
 	git("add", ".")
 	git("commit", "-qm", "base")
 	return root
@@ -201,7 +207,7 @@ func TestTouch_stagedInAPartialCommit(t *testing.T) {
 func TestTouch_configExcludeAddsToTheFlag(t *testing.T) {
 	t.Run("HDTHD-B08: The exclude globs of the flag and of the configuration add up", func(t *testing.T) {})
 	root := touchRepo(t)
-	touchWrite(t, root, "anchors.yaml", "version: 2\nlayers: {}\ntouch:\n  exclude: [\"gen/**\"]\n")
+	touchWrite(t, root, "anchors.yaml", "version: 2\nlayers: {}\ntouch:\n  exclude: [\"gen/**\"]\ndialect:\n"+testkit.CommentsYAML)
 	touchWrite(t, root, "a.ts", touchHeader+"export const x = 2\n")
 	touchWrite(t, root, "gen/c.ts", touchHeader+"export const x = 2\n")
 	touchWrite(t, root, "d.ts", touchHeader+"export const x = 2\n")
@@ -320,6 +326,7 @@ func TestTouch_projectRootBelowTheRepositoryTop(t *testing.T) {
 	for _, f := range []string{"sub/x.ts", "sub/y.ts"} {
 		touchWrite(t, repo, f, touchHeader+"export const x = 1\n")
 	}
+	touchWrite(t, repo, "sub/anchors.yaml", "version: 2\nlayers: {}\ndialect:\n"+testkit.CommentsYAML)
 	if out, err := exec.Command("git", "-C", repo, "-c", "user.email=t@t", "-c", "user.name=t", "add", ".").CombinedOutput(); err != nil {
 		t.Fatalf("git add: %v %s", err, out)
 	}

@@ -28,7 +28,7 @@ func codeProject(t *testing.T, cfg, nodes string) string {
 	t.Helper()
 	root := t.TempDir()
 	writeFile(t, root, config.DefaultFile, cfg)
-	writeFile(t, root, mapx.DefaultPath, "version: 7\nnodes:\n"+nodes+"edges: []\n")
+	writeFile(t, root, mapx.DefaultPath, "version: 8\nnodes:\n"+nodes+"edges: []\n")
 	return root
 }
 
@@ -239,7 +239,8 @@ func TestCodeListEmptyAndBrokenInputs(t *testing.T) {
 }
 
 func TestUnitNameStripsTheArtifactSuffixes(t *testing.T) {
-	t.Run("CDCMC-B11: The unit name drops the artifact suffixes", func(t *testing.T) {})
+	t.Run("CDCMC-B11: The unit name drops what the layers add to it", func(t *testing.T) {})
+	cfg := &config.Config{Derived: &config.Derived{Files: map[string]config.Padroes{"test": {"{{dir}}/{{name}}.test.{{ext}}"}}}}
 	for in, want := range map[string]string{
 		"src/auth/Login.spec.md":    "Login",
 		"src/auth/Login.feature":    "Login",
@@ -247,8 +248,8 @@ func TestUnitNameStripsTheArtifactSuffixes(t *testing.T) {
 		"auth/screens/NewLogin.tsx": "NewLogin",
 		"Plain":                     "Plain",
 	} {
-		if got := unitName(in); got != want {
-			t.Errorf("unitName(%q) = %q, want %q", in, got, want)
+		if got := cfg.UnitName(in); got != want {
+			t.Errorf("UnitName(%q) = %q, want %q", in, got, want)
 		}
 	}
 }
@@ -269,7 +270,7 @@ func mapWithCodes(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
 	p := filepath.Join(dir, "anchors.graph.yaml")
-	const y = `version: 7
+	const y = `version: 8
 nodes:
     - id: apps/mobile/src/features/auth/LoginScreen.spec.md
       kind: spec
@@ -504,7 +505,7 @@ func TestCodeReservesItsSuggestion(t *testing.T) {
 	git("commit", "-q", "-m", "init")
 	wt := filepath.Join(t.TempDir(), "wt")
 	git("worktree", "add", "-q", "--detach", wt)
-	writeFile(t, wt, mapx.DefaultPath, "version: 7\nnodes:\nedges: []\n")
+	writeFile(t, wt, mapx.DefaultPath, "version: 8\nnodes:\nedges: []\n")
 	common, _ := gitmeta.CommonDir(main)
 	old := []reservation{{Code: "OLDCD", Name: "old", At: time.Now().Add(-8 * 24 * time.Hour)}}
 	if err := saveReservations(filepath.Join(common, "anchors-reserved-codes.json"), old); err != nil {

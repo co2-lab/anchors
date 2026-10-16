@@ -13,6 +13,7 @@ Every test asserts something in its body — the project says what an assertion 
 | Confronta | `test` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Pressupõe | `dialect.tests` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

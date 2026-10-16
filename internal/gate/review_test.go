@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -13,10 +14,10 @@ import (
 )
 
 func reviewCfg() *config.Config {
-	return &config.Config{Gates: []config.Gate{
+	return testkit.WithComments(&config.Config{Gates: []config.Gate{
 		{Name: "rule-fulfilled", On: []string{"spec"}, Measures: config.MeasuresJudgment, Ask: "q", Review: &config.Review{Ask: "look again"}},
 		{Name: "plain", On: []string{"spec"}, Check: "non-empty"},
-	}}
+	}})
 }
 
 func reviewGraph() *mapx.Graph {
@@ -67,10 +68,10 @@ func TestReviewsDue_changesNoVerdict(t *testing.T) {
 
 func TestReviewsDue_orderedByGateThenTarget(t *testing.T) {
 	t.Run("RVDUR-B01: The targets of a reviewed gate with no review at their revision are to review", func(t *testing.T) {})
-	cfg := &config.Config{Gates: []config.Gate{
+	cfg := testkit.WithComments(&config.Config{Gates: []config.Gate{
 		{Name: "zeta", On: []string{"spec"}, Review: &config.Review{Ask: "z"}},
 		{Name: "alpha", On: []string{"spec"}, Review: &config.Review{Ask: "a"}},
-	}}
+	}})
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "b.spec.md", Kind: mapx.KindSpec, Rev: "r"}, {ID: "a.spec.md", Kind: mapx.KindSpec, Rev: "r"}}}
 	var got []string
 	for _, d := range ReviewsDue(cfg, g, t.TempDir(), "") {

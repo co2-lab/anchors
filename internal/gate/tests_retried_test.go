@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 	"time"
@@ -36,7 +37,7 @@ func retriedProject(t *testing.T) string {
 func TestTestsRetried_none(t *testing.T) {
 	t.Run("RTSRT-B01: A test file with no retry passes", func(t *testing.T) {})
 	root := retriedProject(t)
-	if v, d := checkTestsRetried("tests-retried", mapx.Node{ID: "c.test.ts", Kind: mapx.KindTest}, root, nil, nil); v != Pass {
+	if v, d := checkTestsRetried("tests-retried", mapx.Node{ID: "c.test.ts", Kind: mapx.KindTest}, root, nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("no retry of this file: %v %s", v, d)
 	}
 }
@@ -44,7 +45,7 @@ func TestTestsRetried_none(t *testing.T) {
 func TestTestsRetried_listed(t *testing.T) {
 	t.Run("RTSRT-B02: A test file with tests passed on retry is listed", func(t *testing.T) {})
 	root := retriedProject(t)
-	v, d := checkTestsRetried("tests-retried", mapx.Node{ID: "a.test.ts", Kind: mapx.KindTest}, root, nil, nil)
+	v, d := checkTestsRetried("tests-retried", mapx.Node{ID: "a.test.ts", Kind: mapx.KindTest}, root, nil, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(d, "IPSBI-V06#01 — 1 time(s), last under load 31.0/10") ||
 		!strings.Contains(d, "UIRNU-B01#01 — 3 time(s), last under load 21.0/10 — unstable") ||
 		strings.Contains(d, "OLD-B01") || strings.Contains(d, "OTHER-B01") {

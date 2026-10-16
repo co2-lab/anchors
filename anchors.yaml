@@ -12,7 +12,7 @@ lang: en
 # interativo, ou inferir do escaneamento que ele mesmo acabou de fazer (ele JÁ detectou
 # "código em: [cli/internal cli/cmd]" — e não usou; os caminhos daquele dia tinham o
 # prefixo `cli/`, que saiu quando o `go.mod` foi para a raiz).
-version: 7
+version: 8
 # The version floor: `mode: manual` (below) exists from 0.1.190 on. An older binary would
 # refuse to load this file; with the floor it asks to be updated instead.
 min_version: 0.1.190
@@ -267,9 +267,14 @@ governs:
 dialect:
   family: go
   # What asserts in a test here: the testing package's failures, and the helpers that fail
-  # the test for it. The family says how a test opens; only the assertions are ours.
+  # the test for it. How a test opens and where its block ends came from the Go family's
+  # example, written by `anchors migrate` (format 8): nothing is read that is not declared.
   tests:
     assertion: '\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b|\b(?:wantAll|wantNone|partialEqualsFull|refused)\(t\b'
+    pattern: \bt\.Run\(\s*(?:"(?P<title>(?:[^"\\\n]|\\.)*)"|`(?P<title2>[^`]*)`)
+    block_open: '[{(\[]\s*$'
+    block_close: ^\s*[}\])]
+    empty_body: \{\s*\}
   # How a handled failure is RECORDED here, for `failure-logged`. A declared list replaces
   # the family's, so the Go defaults are repeated. The last one is this project's own: a
   # gate records a failure by returning `Fail` or `Pending` WITH its message, which the
@@ -295,6 +300,35 @@ dialect:
     - '\breturn\b[^\n]*\b(?:err|e)\b'
     # A command's last stop: the error printed on stderr before the exit code.
     - '\bfmt\.Fprint(?:ln|f)?\(\s*os\.Stderr\b'
+  exported_func: (?m)^func\s+(?:\([^)]*\)\s+)?([A-Z]\w*)\s*\(
+  param_name: (\w+)\s+\*?\w
+  loop: \bfor\b
+  cursor: (?i)(nextToken|continuationToken|nextPageToken|cursor|offset)
+  set_promise: (?:^|_|[a-z0-9])(?:[Ll]ist|[Gg]etAll|get_all|[Ff]indAll|find_all|[Ff]etchAll|fetch_all|[Qq]ueryAll|query_all|[Aa]ll|[Tt]odos|[Ll]istar)(?:$|_|[A-Z]|\b)
+  set_slice: (?i)^(list|get|find|fetch|query|listar|buscar)_?(First|Recent|Latest|Top|Page|Some|Sample|Next|Primeiros|Recentes)
+  http_status: WriteHeader\(\s*(\d{3})\s*\)|\bJSON\(\s*(\d{3})\s*,|http\.Status(\w+)
+  http_status_dynamic: WriteHeader\(\s*[a-z]
+  env_read: os\.(?:Getenv|LookupEnv)\(\s*"([A-Za-z_][A-Za-z0-9_]*)"\s*\)
+  guard_patterns:
+    - \.filter\([^)]*{{param}}\b
+    - \b{{param}}\s*\.\s*filter\(
+    - if\s*\(?[^\n{:]*\b{{param}}\b[^\n{:]*\)?\s*[:{]?\s*(throw|return|raise|panic)
+    - \b{{param}}\b[^\n]*\?\?
+    - (throw|assert|raise|panic)[^\n]*\b{{param}}\b
+  signature_end: \{
+  limits:
+    - (?i)\b(?P<name>limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b[^=\n]*?=\s*(?P<value>\d+)
+    - (?i)\b(?P<name>limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b\s*[:=]\s*(?P<value>\d+)
+    - (?i)\b(?P<name>limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b\s*[:=]\s*(?P<param>\w+)
+    - (?i)\b(?P<name>limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b\s*:\s*(?P<type>(?i:number|int|integer|long|short|byte|float|double|decimal|uint\d*|int\d*|usize|i\d+|u\d+|bigint|size_t))\b
+  statement_end: '[;})]$'
+  comments:
+    - files: '**/*.go'
+      line: [//]
+      block: [[/*, '*/']]
+      strings: ['"', '''', '`']
+      multiline: ['`']
+  definition: (?m)^(?:func\s+\(\s*(?:\w+\s+)?\*?(?P<owner>\w+)(?:\[[^\]]*\])?\s*\)\s+(\w+)|func\s+(\w+)|type\s+(\w+))
 
 derived:
   # A SPEC é a âncora: dela nascem o código e o teste (CONCEPT: "da spec nascem o

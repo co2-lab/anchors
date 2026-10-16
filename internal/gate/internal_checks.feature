@@ -2,7 +2,7 @@
 # @anchors
 #   code: ICFNT
 #   ref: INCHN
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @INCHN
@@ -104,10 +104,9 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
 
   @INCHN-B15 @unit-level
   Scenario: An executable test script steps aside by a different path
-    Given a test node whose file is a data document consumed by an external runner
-    When the header ruler confronts it
-    Then it returns Skip, because the format belongs to the runner and the identity is
-      in the file name
+    Given a runner's flow in a layer the project declares headless, the same flow in a layer that is not, and a Go test
+    When header-valid confronts each
+    Then the headless layer's flow steps aside, and the other flow and the Go test are charged for their missing header
 
   @INCHN-B16 @unit-level
   Scenario: A guide without compliance points fails

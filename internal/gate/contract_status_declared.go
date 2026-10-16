@@ -111,7 +111,7 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 		}
 		// Sem comentários: um `// devolve 404` num comentário não é um status emitido,
 		// e é exatamente o tipo de texto que descreve o comportamento ANTIGO.
-		corpo.WriteString(stripLineComments(string(b)))
+		corpo.WriteString(stripComments(string(b), cp, cfg.DialectFor()))
 		corpo.WriteString("\n")
 	}
 	code := corpo.String()

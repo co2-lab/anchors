@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -17,9 +18,9 @@ import (
 // `QueryCommand` e `LastEvaluatedKey` são nomes do SDK da AWS, não de TypeScript. Se
 // estivessem embutidos no Anchors, seria lock-in de vendor disfarçado de suporte.
 func cfgDialeto(family, collectionQuery, cursor string) *config.Config {
-	return &config.Config{Dialect: &config.Dialect{
+	return testkit.WithComments(&config.Config{Dialect: &config.Dialect{
 		Family: family, CollectionQuery: collectionQuery, Cursor: cursor,
-	}}
+	}})
 }
 
 // O projeto de referência dos testes: TypeScript sobre DynamoDB — o mesmo do app de referência.
@@ -387,16 +388,16 @@ func TestPaginationOptOutSaiDoRelatorio(t *testing.T) {
 	// os avisos que importam.
 	//
 	// Sem opt-out: Pending (o gate não verificou, e diz).
-	semOptOut := &config.Config{Dialect: &config.Dialect{ExportedFunc: `(?m)^export function (\w+)`}}
+	semOptOut := testkit.WithComments(&config.Config{Dialect: &config.Dialect{ExportedFunc: `(?m)^export function (\w+)`}})
 	n := mapx.Node{ID: "x.ts", Kind: mapx.KindCode}
 	if v, _ := checkPaginationHonored("export function listAll() {}", n, "", nil, semOptOut); v != Pending {
 		t.Fatalf("sem collection_query nem opt-out, esperava Pending, veio %v", v)
 	}
 	// Com opt-out: Skip — alguém decidiu, e a decisão está escrita no anchors.yaml.
-	comOptOut := &config.Config{Dialect: &config.Dialect{
+	comOptOut := testkit.WithComments(&config.Config{Dialect: &config.Dialect{
 		ExportedFunc: `(?m)^export function (\w+)`,
 		OptOut:       []string{"collection_query"},
-	}}
+	}})
 	v, msg := checkPaginationHonored("export function listAll() {}", n, "", nil, comOptOut)
 	if v != Skip {
 		t.Fatalf("com opt-out, esperava Skip, veio %v — %s", v, msg)
@@ -411,7 +412,7 @@ func TestPaginationMensagemOfereceOOptOut(t *testing.T) {
 	// A mensagem tem de mostrar a saída. Sem ela, a única opção visível é conviver com o
 	// aviso para sempre — e aviso permanente é aviso ignorado.
 	_, msg := checkPaginationHonored("x", mapx.Node{ID: "x.ts", Kind: mapx.KindCode}, "", nil,
-		&config.Config{})
+		testkit.WithComments(&config.Config{}))
 	if !strings.Contains(msg, "opt_out") {
 		t.Errorf("o Pending deve oferecer o opt-out, veio: %s", msg)
 	}
@@ -434,8 +435,8 @@ func TestPaginationPegaOCasoRealDoSDK(t *testing.T) {
   const res = await client.send(new ListDevicesCommand({ AccessToken: accessToken, Limit: 20 }))
   return res.Devices ?? []
 }`
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts",
-		CollectionQuery: `(?i)(ListDevicesCommand|QueryCommand|ScanCommand)`}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts",
+		CollectionQuery: `(?i)(ListDevicesCommand|QueryCommand|ScanCommand)`}})
 	v, msg := checkPaginationHonored(src, mapx.Node{ID: "infra/cognito.ts", Kind: mapx.KindCode},
 		"", nil, cfg)
 	if v != Fail {
@@ -451,7 +452,7 @@ func TestPaginationPrefixoDeProvedorNaoEscondeAPromessa(t *testing.T) {
 	// `cognitoListDevices` promete conjunto tanto quanto `listDevices`. O `setPromise` estava
 	// ancorado em `^`, então o prefixo do provedor ESCONDIA a promessa e o gate nem olhava a
 	// função — foi o que fez este caso passar despercebido.
-	cfgTS := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	cfgTS := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
 	d := cfgTS.DialectFor()
 	for _, nome := range []string{"cognitoListDevices", "s3ListObjects", "listDevices"} {
 		if !promisesSet(nome, d) {
@@ -474,8 +475,8 @@ func TestPaginationSemCursorNoProvedorNaoInventa(t *testing.T) {
   const res = await client.send(new QueryCommand({ TableName: 't' }))
   return res.Items ?? []
 }`
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts",
-		CollectionQuery: `(?i)QueryCommand`, Cursor: `(?i)PaginationToken`}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts",
+		CollectionQuery: `(?i)QueryCommand`, Cursor: `(?i)PaginationToken`}})
 	v, msg := checkPaginationHonored(src, mapx.Node{ID: "m.ts", Kind: mapx.KindCode}, "", nil, cfg)
 	// Pode reprovar por OUTRO motivo (consulta sem paginar), mas não pela regra do cursor.
 	if strings.Contains(msg, "não o devolve") {

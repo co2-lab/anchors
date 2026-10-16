@@ -122,9 +122,21 @@ running it again changes nothing.
 				fmt.Println("  ones nobody edited; a customized one needs its `-F[0-9]` patterns changed to `-W[0-9]` by hand")
 			}
 
+			// Format 8: what the core knew of a language, written into the dialect. Before the
+			// file codes, which write a header in each file's comments.
+			var declared *config.Config
+			if from < 8 && mapx.FormatoAtual >= 8 {
+				changed, cfg, err := migrateToDeclaredSyntax(absRoot, dryRun)
+				if err != nil {
+					return err
+				}
+				declared = cfg
+				mudou = mudou || changed
+			}
+
 			// Format 7: every file a code of its own, of five characters.
 			if from < 7 && mapx.FormatoAtual >= 7 {
-				changed, err := migrateToFileCodes(absRoot, dryRun)
+				changed, err := migrateToFileCodes(absRoot, declared, dryRun)
 				if err != nil {
 					// The files go back to the format they had, so the next run crosses the
 					// step again — and codes only what this one left.
@@ -206,7 +218,8 @@ func migrateCodeLetters(absRoot string, renames []migra.LetterRename, dryRun boo
 	}
 	kindOf := map[string]string{}
 	var plans map[string]bool
-	if cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile)); err == nil {
+	cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if cfg != nil {
 		if walked, err := scan.Walk(absRoot, cfg); err == nil {
 			plans = map[string]bool{}
 			for _, f := range walked {
@@ -232,7 +245,7 @@ func migrateCodeLetters(absRoot string, renames []migra.LetterRename, dryRun boo
 		case plans[rel]:
 			kind = "plan"
 		}
-		if code := scan.HeaderCodeOf(contents[rel]); kind != "" && code != "" {
+		if code := scan.HeaderCodeOf(contents[rel], cfg.CommentsFor(rel)); kind != "" && code != "" {
 			kindOf[code] = kind
 		}
 	}
@@ -307,17 +320,101 @@ func versionedFiles(absRoot string) ([]string, error) {
 	return files, err
 }
 
+// migrateToDeclaredSyntax brings a project to format 8: the examples of what the old binary
+// read by itself — comments, the family's lexicon, the gates' shapes — written into its
+// anchors.yaml where it declared nothing (`migra.DeclaredSyntax`), and what no example can
+// say named, to be declared by hand. It gives the configuration as it reads after the step.
+func migrateToDeclaredSyntax(absRoot string, dryRun bool) (bool, *config.Config, error) {
+	file := filepath.Join(absRoot, config.DefaultFile)
+	cfg, err := config.Load(file)
+	if err != nil {
+		fmt.Printf("· declared syntax: %v\n", firstLine(err.Error()))
+		return false, nil, nil
+	}
+	walked, err := scan.Walk(absRoot, cfg)
+	if err != nil {
+		return false, nil, err
+	}
+	// A binary file — a NUL in its first 8000 bytes, as git tells one — has no comments to
+	// declare.
+	var files []string
+	for _, f := range walked {
+		if !binaryFile(filepath.Join(absRoot, filepath.FromSlash(f.Path))) {
+			files = append(files, f.Path)
+		}
+	}
+	syn := migra.DeclaredSyntax(cfg, files)
+	for _, m := range syn.Manual {
+		fmt.Printf("  ! by hand — %s\n", m)
+	}
+	if syn.Empty() {
+		return false, cfg, nil
+	}
+	b, err := os.ReadFile(file)
+	if err != nil {
+		return false, nil, err
+	}
+	text, err := migra.WithSyntax(string(b), syn)
+	if err != nil {
+		return false, nil, fmt.Errorf("%s: %w", config.DefaultFile, err)
+	}
+	verb := "written"
+	if dryRun {
+		verb = "would be written"
+	}
+	fmt.Printf("✓ %s: the families' examples %s where the project declared nothing:\n", config.DefaultFile, verb)
+	for _, f := range syn.Fields() {
+		fmt.Printf("    %s\n", f)
+	}
+	// Read back as the project will read it: what does not load is not written.
+	tmp, err := os.CreateTemp("", "anchors-*.yaml")
+	if err != nil {
+		return false, nil, err
+	}
+	defer os.Remove(tmp.Name())
+	if _, err := tmp.WriteString(text); err != nil {
+		tmp.Close()
+		return false, nil, err
+	}
+	tmp.Close()
+	after, err := config.Load(tmp.Name())
+	if err != nil {
+		return false, nil, fmt.Errorf("%s with the examples does not load: %w", config.DefaultFile, err)
+	}
+	if !dryRun {
+		if err := writeKeepingMode(file, text); err != nil {
+			return false, nil, err
+		}
+	}
+	return true, after, nil
+}
+
+// binaryFile says whether the file holds a NUL in its first 8000 bytes.
+func binaryFile(p string) bool {
+	f, err := os.Open(p)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	buf := make([]byte, 8000)
+	n, _ := f.Read(buf)
+	return bytes.IndexByte(buf[:n], 0) >= 0
+}
+
 // migrateToFileCodes brings a project to format 7: its four-character codes widened to five,
 // and a code of its own on every governed file that can carry one. What every file was
 // measured at is carried to its new revision, so the migration proves nothing new and loses
 // nothing proven.
-func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
+func migrateToFileCodes(absRoot string, cfg *config.Config, dryRun bool) (bool, error) {
 	// Without a configuration there is no governed file to give a code to; a configuration
-	// this binary cannot read is said, and the rest of the migration still goes on.
-	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
-	if err != nil {
-		fmt.Printf("· file codes: %v\n", firstLine(err.Error()))
-		return false, nil
+	// this binary cannot read is said, and the rest of the migration still goes on. The one
+	// format 8 wrote is given, as it would be read: a dry run wrote nothing.
+	if cfg == nil {
+		var err error
+		if cfg, err = config.Load(filepath.Join(absRoot, config.DefaultFile)); err != nil {
+			fmt.Printf("· file codes: %v\n", firstLine(err.Error()))
+			return false, nil
+		}
 	}
 	// Both lengths are read while the project crosses from one to the other.
 	prevLengths := config.CodeLengths
@@ -350,7 +447,7 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 	for _, f := range before {
 		b, err := os.ReadFile(filepath.Join(absRoot, filepath.FromSlash(f.Path)))
 		if err == nil && strings.Contains(string(b), "@contract:") {
-			if h := gate.StampsHolding(absRoot, string(b)); len(h) > 0 {
+			if h := gate.StampsHolding(absRoot, string(b), cfg); len(h) > 0 {
 				held[f.Path] = h
 			}
 		}
@@ -367,7 +464,7 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 			continue
 		}
 		seen[c] = true
-		n := migra.WidenedCode(c, unitName(f.Path), taken)
+		n := migra.WidenedCode(c, cfg.UnitName(f.Path), taken)
 		taken[n] = true
 		pairs = append(pairs, pair{c, n})
 	}
@@ -532,7 +629,7 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 				continue
 			}
 			c := migra.FileCode(f, taken)
-			out := migra.AsRefWithOwnCode(string(b), f.HeaderCode, c)
+			out := migra.AsRefWithOwnCode(string(b), f.HeaderCode, c, cfg.CommentsFor(f.Path))
 			if out == string(b) {
 				continue
 			}
@@ -556,7 +653,7 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 		}
 		abs := filepath.Join(absRoot, filepath.FromSlash(f.Path))
 		b, err := os.ReadFile(abs)
-		if err != nil || !migra.CanCarryCode(f.Path, b) {
+		if err != nil || !migra.CanCarryCode(b, cfg.CommentsFor(f.Path)) {
 			continue
 		}
 		c := migra.FileCode(f, taken)
@@ -570,7 +667,7 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 		if err != nil {
 			return true, err
 		}
-		if err := os.WriteFile(abs, []byte(migra.WithHeaderCode(string(b), f.Path, c)), info.Mode()); err != nil {
+		if err := os.WriteFile(abs, []byte(migra.WithHeaderCode(string(b), c, cfg.CommentsFor(f.Path))), info.Mode()); err != nil {
 			return true, err
 		}
 	}
@@ -605,7 +702,7 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 		if err != nil {
 			continue
 		}
-		out, n := gate.RefreshHeldStamps(absRoot, string(b), moved)
+		out, n := gate.RefreshHeldStamps(absRoot, string(b), moved, cfg)
 		if n == 0 {
 			continue
 		}
@@ -629,7 +726,7 @@ func migrateToFileCodes(absRoot string, dryRun bool) (bool, error) {
 		if err != nil {
 			continue
 		}
-		if out := migra.WithHeaderDate(string(b), today); out != string(b) {
+		if out := migra.WithHeaderDate(string(b), today, cfg.CommentsFor(after7(p))); out != string(b) {
 			if err := writeKeepingMode(abs, out); err != nil {
 				return true, err
 			}

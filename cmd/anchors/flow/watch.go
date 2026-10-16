@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -512,17 +513,14 @@ func pieceTargetLayer(root, rel string, cfg *config.Config) string {
 	if cfg == nil {
 		return ""
 	}
-	base := rel
-	for _, suf := range []string{".spec.md", ".feature", ".test.ts", ".test.tsx"} {
-		base = strings.TrimSuffix(base, suf)
+	// A piece of a unit — a spec, a feature, a test, by its layer's kind — is resolved to the
+	// unit's code; anything else is classified as it is.
+	l, kind := scan.Classify(rel, cfg)
+	if kind != "spec" && kind != "feature" && kind != "test" {
+		return l
 	}
-	if base == rel {
-		if l, _ := scan.Classify(rel, cfg); l != "" {
-			return l
-		}
-		return ""
-	}
-	for _, ext := range []string{".ts", ".tsx", ".go", ".py", ".js"} {
+	base := path.Join(path.Dir(rel), cfg.UnitName(rel))
+	for _, ext := range cfg.CodeExtensions() {
 		if _, err := os.Stat(filepath.Join(root, base+ext)); err != nil {
 			continue
 		}
@@ -646,9 +644,12 @@ func missingPieceToReview(root, unidade string, cfg *config.Config) bool {
 		}
 	}
 	// o teste é a peça que nasce por último — é o sinal de que a unidade fechou.
-	base := strings.TrimSuffix(unidade, filepath.Ext(unidade))
-	for _, suf := range []string{".test.ts", ".test.tsx", ".spec.ts", "_test.go", "_test.py", "_spec.rb", ".test.js"} {
-		if _, err := os.Stat(filepath.Join(root, base+suf)); err == nil {
+	if cfg == nil {
+		return true
+	}
+	layer, _ := scan.Classify(unidade, cfg)
+	for _, test := range cfg.PiecePaths(unidade, layer, "test") {
+		if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(test))); err == nil {
 			return false
 		}
 	}

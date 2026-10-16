@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // --- writing the stamps `mock-stamped` checks ---
@@ -54,10 +56,10 @@ type StampSkipped struct {
 //   - the module is resolved to ONE file of the map; when the path suffix matches more
 //     than one, the file sharing the longest directory prefix with the test wins, and a
 //     tie is skipped — guessing would stamp a file the test never imports;
-//   - each key of the double's factory that names an EXPORT of the module (by the
-//     project's `export_detect`) gets its own stamp, anchored on that export's line and
+//   - each EXPORT of the module (by the project's `export_detect`) the double's call names
+//     gets its own stamp, anchored on that export's line and
 //     covering its block — so a change to that member is what makes the stamp diverge;
-//   - with no factory key naming an export, one stamp covers the whole module.
+//   - with no export named in the call, one stamp covers the whole module.
 func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Config) (string, []StampWritten, []StampSkipped, error) {
 	detector, err := doubleDetector(cfg)
 	if err != nil {
@@ -71,19 +73,24 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 	existing := declaredStamps(content)
 	lines := strings.Split(content, "\n")
 	lineOf := lineIndexer(content)
-	comment := commentPrefixFor(testID)
+	comment := cfg.CommentsFor(testID).LineMarker()
+	if comment == "" {
+		return content, nil, nil, fmt.Errorf("the project declares no comments for %s (`dialect.comments`): a stamp is written in one", testID)
+	}
 
 	var written []StampWritten
 	var skipped []StampSkipped
 	inserts := map[int][]string{} // line index → stamp lines to insert above it
 	done := map[string]bool{}
+	// The test as the call is read: its strings and comments blanked, as its syntax says.
+	blanked := cfg.CommentsFor(testID).Blank(content)
 
 	for _, m := range detector.FindAllStringSubmatchIndex(content, -1) {
 		if len(m) < 4 || m[2] < 0 {
 			continue
 		}
 		module := strings.TrimSpace(content[m[2]:m[3]])
-		if module == "" || done[module] || !isGovernedModule(module, g) {
+		if module == "" || done[module] || !isGovernedModule(module, testID, cfg.DialectFor(), g) {
 			continue
 		}
 		done[module] = true
@@ -91,7 +98,7 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 		// stamp: a key added to its factory later names an export no stamp covers.
 		stamped := moduleHasStamp(module, existing)
 
-		file, reason := resolveModuleFile(module, testID, g)
+		file, reason := moduleFile(module, testID, cfg.DialectFor(), g)
 		if file == "" {
 			skipped = append(skipped, StampSkipped{module, reason})
 			continue
@@ -102,12 +109,14 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 			continue
 		}
 		// The module as the stamp reads it: without the chain's flags (see stampLines).
-		modLines := stampLines(strings.Split(string(body), "\n"))
+		modCS := cfg.CommentsFor(file)
+		modLines := stampLines(strings.Split(string(body), "\n"), modCS)
+		starts := declarationStarts(strings.Join(modLines, "\n"), file, cfg.DialectFor())
 
 		var stamps []StampWritten
 		if exportRE != nil {
-			for _, key := range factoryKeys(content, m[0]) {
-				if s, ok := stampForExport(module, file, key, modLines, exportRE); ok {
+			for _, key := range factoryNames(blanked, m[0], exportNames(modLines, exportRE)) {
+				if s, ok := stampForExport(module, file, key, modLines, exportRE, starts); ok {
 					if stamped && coveredByExisting(s.Anchor, file, modLines, existing) {
 						continue
 					}
@@ -119,7 +128,7 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 			continue
 		}
 		if len(stamps) == 0 {
-			s, ok := stampForWholeModule(module, file, modLines)
+			s, ok := stampForWholeModule(module, file, modLines, modCS)
 			if !ok {
 				skipped = append(skipped, StampSkipped{module, "no line of the module can anchor a stamp unambiguously"})
 				continue
@@ -174,27 +183,13 @@ func coveredByExisting(anchor, file string, modLines []string, existing []declar
 	return false
 }
 
-// resolveModuleFile finds the ONE code file of the map a double's specifier names.
-func resolveModuleFile(spec, testID string, g *mapx.Graph) (string, string) {
-	target := strings.TrimPrefix(spec, "./")
-	for strings.HasPrefix(target, "../") {
-		target = strings.TrimPrefix(target, "../")
-	}
-	if strings.HasPrefix(target, "@") {
-		if i := strings.Index(target, "/"); i >= 0 {
-			target = target[i+1:]
-		}
-	}
-	var cands []string
-	for _, n := range g.Nodes {
-		if n.Kind != mapx.KindCode {
-			continue
-		}
-		id := withoutExtension(n.ID)
-		if id == target || strings.HasSuffix(id, "/"+target) {
-			cands = append(cands, n.ID)
-		}
-	}
+// moduleFile finds the ONE code file of the map a double's specifier names. The specifier
+// is an import path: resolved as the chain resolves one (`import_resolve` — relative paths,
+// the project's aliases, its extensions); a path that does not resolve is matched by its
+// tail against the map's code files, past its `./` and `../` — the test's folder deciding
+// between several. A specifier naming no file of the project is a third party's.
+func moduleFile(spec, testID string, d config.Dialect, g *mapx.Graph) (string, string) {
+	cands := moduleCandidates(spec, testID, d, g)
 	switch len(cands) {
 	case 0:
 		return "", "no code file of the map matches the specifier"
@@ -217,6 +212,50 @@ func resolveModuleFile(spec, testID string, g *mapx.Graph) (string, string) {
 	return best, ""
 }
 
+// moduleCandidates are the code files of the map a double's specifier may name: the one its
+// import resolution gives, or every one whose path ends as the specifier does.
+func moduleCandidates(spec, testID string, d config.Dialect, g *mapx.Graph) []string {
+	if g == nil {
+		return nil
+	}
+	if target, dir := resolveImport(testID, RealImport{Path: spec}, d, g); target != "" && !dir {
+		if n := g.Node(target); n != nil && n.Kind == mapx.KindCode {
+			return []string{target}
+		}
+	}
+	target := strings.TrimPrefix(spec, "./")
+	for strings.HasPrefix(target, "../") {
+		target = strings.TrimPrefix(target, "../")
+	}
+	// An alias the project declares maps the head: its tail is still matched against the
+	// map, for a workspace the alias does not say (`@/src/x` in `apps/mobile/`).
+	if d.ImportResolve != nil {
+		best := ""
+		for prefix := range d.ImportResolve.Aliases {
+			if strings.HasPrefix(target, prefix) && len(prefix) > len(best) {
+				best = prefix
+			}
+		}
+		if best != "" {
+			target = strings.TrimPrefix(d.ImportResolve.Aliases[best]+strings.TrimPrefix(target, best), "/")
+		}
+	}
+	if target == "" {
+		return nil
+	}
+	var cands []string
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindCode {
+			continue
+		}
+		id := withoutExtension(n.ID)
+		if id == target || strings.HasSuffix(id, "/"+target) {
+			cands = append(cands, n.ID)
+		}
+	}
+	return cands
+}
+
 // sharedDirs counts the leading directory segments two paths share.
 func sharedDirs(a, b string) int {
 	sa, sb := strings.Split(filepath.ToSlash(a), "/"), strings.Split(filepath.ToSlash(b), "/")
@@ -227,61 +266,70 @@ func sharedDirs(a, b string) int {
 	return n
 }
 
-// factoryKeyRE finds the keys of an object literal (`useX:`, `default:`).
-var factoryKeyRE = regexp.MustCompile(`([A-Za-z_$][\w$]*)\s*:`)
-
-// factoryKeys returns the keys written inside the double's call — from the `(` after the
-// match to the parenthesis that closes it. Keys of nested objects come too; they are
-// filtered later by having to name an EXPORT of the real module.
-func factoryKeys(content string, from int) []string {
-	open := strings.Index(content[from:], "(")
+// factoryNames are the module's exports the double's call names, in the order it names them
+// — from the `(` after the match to the parenthesis that closes it, in a test whose strings
+// and comments are blanked. A word is read as a member of the double only when it is the
+// name of an export of the real module: the core reads no object literal of a language.
+func factoryNames(blanked string, from int, exports []string) []string {
+	open := strings.Index(blanked[from:], "(")
 	if open < 0 {
 		return nil
 	}
 	start := from + open
 	depth, end := 0, -1
-	var quote byte
-	for i := start; i < len(content); i++ {
-		c := content[i]
-		if quote != 0 {
-			if c == '\\' {
-				i++
-			} else if c == quote {
-				quote = 0
-			}
-			continue
-		}
-		switch c {
-		case '\'', '"', '`':
-			quote = c
+	for i := start; i < len(blanked) && end < 0; i++ {
+		switch blanked[i] {
 		case '(':
 			depth++
 		case ')':
-			depth--
-			if depth == 0 {
+			if depth--; depth == 0 {
 				end = i
 			}
-		}
-		if end >= 0 {
-			break
 		}
 	}
 	if end < 0 {
 		return nil
 	}
-	seen := map[string]bool{}
-	var keys []string
-	for _, k := range factoryKeyRE.FindAllStringSubmatch(content[start:end], -1) {
-		if !seen[k[1]] {
-			seen[k[1]] = true
-			keys = append(keys, k[1])
+	call := blanked[start:end]
+	type at struct {
+		name string
+		pos  int
+	}
+	var found []at
+	for _, e := range exports {
+		if loc := regexp.MustCompile(`(^|[^\p{L}\p{N}_$])` + regexp.QuoteMeta(e) + `($|[^\p{L}\p{N}_$])`).FindStringIndex(call); loc != nil {
+			found = append(found, at{e, loc[0]})
 		}
 	}
-	return keys
+	sort.SliceStable(found, func(i, j int) bool { return found[i].pos < found[j].pos })
+	out := make([]string, len(found))
+	for i, f := range found {
+		out[i] = f.name
+	}
+	return out
+}
+
+// exportNames are the names the module exports, by the project's export pattern read line by
+// line — as stampForExport anchors them —, each once.
+func exportNames(lines []string, exportRE *regexp.Regexp) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, l := range lines {
+		for _, m := range exportRE.FindAllStringSubmatch(l, -1) {
+			for _, g := range m[1:] {
+				if g != "" && !seen[g] {
+					seen[g] = true
+					out = append(out, g)
+					break
+				}
+			}
+		}
+	}
+	return out
 }
 
 // stampForExport anchors a stamp on the line that exports `key`, covering its block.
-func stampForExport(module, file, key string, lines []string, exportRE *regexp.Regexp) (StampWritten, bool) {
+func stampForExport(module, file, key string, lines []string, exportRE *regexp.Regexp, starts map[int]bool) (StampWritten, bool) {
 	for i, l := range lines {
 		m := exportRE.FindStringSubmatch(l)
 		if len(m) < 2 || m[1] != key {
@@ -290,7 +338,7 @@ func stampForExport(module, file, key string, lines []string, exportRE *regexp.R
 		if !usableAnchor(lines, i) {
 			return StampWritten{}, false
 		}
-		n := blockLength(lines, i)
+		n := blockLength(lines, i, starts)
 		return StampWritten{Module: module, File: file, Anchor: lines[i], Count: n,
 			Hash: snippetHash(strings.Join(lines[i:i+n], "\n"))}, true
 	}
@@ -304,8 +352,8 @@ func stampForExport(module, file, key string, lines []string, exportRE *regexp.R
 // every edit: a stamp covering it diverged on ANY change to the module, including one that
 // never touched what the double replaces — measured in the project that adopted the
 // generator, where a 1037-line module flagged its doubles on every edit.
-func stampForWholeModule(module, file string, lines []string) (StampWritten, bool) {
-	for i := headerEnd(lines); i < len(lines); i++ {
+func stampForWholeModule(module, file string, lines []string, cs *config.Comments) (StampWritten, bool) {
+	for i := headerEnd(lines, cs); i < len(lines); i++ {
 		if !usableAnchor(lines, i) {
 			continue
 		}
@@ -320,19 +368,11 @@ func stampForWholeModule(module, file string, lines []string) (StampWritten, boo
 // at most a directive (`'use client'`) or a shebang. A mention further down is prose.
 const headerSearchLines = 10
 
-// headerEnd returns the index of the first line after the file's `@anchors` header — the
-// run of comment lines that opens with the marker — or 0 when the file has none.
-func headerEnd(lines []string) int {
-	for i := 0; i < len(lines) && i < headerSearchLines; i++ {
-		t := strings.TrimSpace(lines[i])
-		if !isCommentLine(t) || !strings.Contains(t, "@anchors") {
-			continue
-		}
-		j := i + 1
-		for j < len(lines) && isCommentLine(strings.TrimSpace(lines[j])) {
-			j++
-		}
-		return j
+// headerEnd returns the index of the first line after the file's `@anchors` header, as the
+// map reads it (scan.HeaderRange), or 0 when the file has none.
+func headerEnd(lines []string, cs *config.Comments) int {
+	if _, to, ok := scan.HeaderRange(lines, cs); ok {
+		return to
 	}
 	return 0
 }
@@ -356,35 +396,31 @@ func usableAnchor(lines []string, i int) bool {
 	return count == 1
 }
 
-// blockLength counts the lines of the top-level declaration opening at `i`: up to the
-// next line that starts a NEW top-level statement (column 0, not a closing bracket).
-// Closing lines and indented lines belong to the block; trailing blank lines do not.
-func blockLength(lines []string, i int) int {
+// declarationStarts are the lines where a declaration of the module starts, by the dialect's
+// `declarations` (where each statement starts): the next one ends the block before it.
+func declarationStarts(content, rel string, d config.Dialect) map[int]bool {
+	out := map[int]bool{}
+	for _, m := range d.Declarations.FindAll(content, rel) {
+		out[config.LineOf(content, m.Region)-1] = true
+	}
+	return out
+}
+
+// blockLength counts the lines of the declaration opening at `i`: up to the next line where
+// a declaration starts (`starts`, by the dialect), or the end of the module; trailing blank
+// lines do not count. With no declarations declared, the block runs to the end.
+func blockLength(lines []string, i int, starts map[int]bool) int {
 	end := len(lines)
 	for j := i + 1; j < len(lines); j++ {
-		l := lines[j]
-		if l == "" || l[0] == ' ' || l[0] == '\t' {
-			continue
+		if starts[j] {
+			end = j
+			break
 		}
-		if strings.ContainsRune("})]", rune(l[0])) {
-			continue
-		}
-		end = j
-		break
 	}
 	for end > i+1 && strings.TrimSpace(lines[end-1]) == "" {
 		end--
 	}
 	return end - i
-}
-
-// commentPrefixFor picks the line-comment marker by the test file's extension.
-func commentPrefixFor(testID string) string {
-	switch strings.ToLower(filepath.Ext(testID)) {
-	case ".py", ".rb", ".sh", ".yaml", ".yml", ".toml", ".r":
-		return "#"
-	}
-	return "//"
 }
 
 func leadingSpace(l string) string {

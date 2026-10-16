@@ -2,7 +2,7 @@
 # @anchors
 #   code: MPFMR
 #   ref: MRPRM
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @MRPRM
@@ -113,9 +113,8 @@ Feature: MarkerParity — the same rule has to appear at both ends that fulfil i
       project and a gate that invented parities would charge what nobody committed to
 
   @MRPRM-X03 @unit-level
-  Scenario: Files outside the text extension list are not read
-    Given both declared ends marked
+  Scenario: A file whose comments the project does not declare is not read
+    Given both declared ends marked, in a project declaring the comments of its TypeScript
     And a binary asset carrying the same byte sequence
     When the gate confronts it
-    Then the asset is not scanned, because erring low costs a marking in an exotic place
-      and erring high costs megabytes read on every walk
+    Then the asset is not scanned: a marking lives in a text the project comments

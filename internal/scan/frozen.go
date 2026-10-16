@@ -45,15 +45,15 @@ func markValue(v string) string {
 }
 
 // extractFrozen is the value of the header's `frozen:` line, or empty.
-func extractFrozen(content string) string {
-	if m := headerFrozenRE.FindStringSubmatch(string(AnchorsHeader([]byte(content)))); m != nil {
+func extractFrozen(content string, cs *config.Comments) string {
+	if m := headerFrozenRE.FindStringSubmatch(string(AnchorsHeader([]byte(content), cs))); m != nil {
 		return markValue(m[1])
 	}
 	return ""
 }
 
 // FrozenOf is the freeze a file's header declares (`frozen: <code or reason>`), or empty.
-func FrozenOf(content []byte) string { return extractFrozen(string(content)) }
+func FrozenOf(content []byte, cs *config.Comments) string { return extractFrozen(string(content), cs) }
 
 // extractFrozenRules reads the rules a spec or a doctrine document marks as frozen, each with
 // its mark's value. A mark on a rule's line — or on a line of the rule's own block, as

@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -50,7 +51,7 @@ func TestDoctrineNotDuplicated_copyFails(t *testing.T) {
 	t.Run("DCTRN-B21: A spec rule that copies the doctrine rule it realizes fails, naming both and the score", func(t *testing.T) {})
 	root, g, n := projectWithDoctrine(t, doctrineRule)
 	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
-	v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil)
+	v, msg := checkDoctrineNotDuplicated(spec, n, root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("expected Fail for a copy, got %v (%s)", v, msg)
 	}
@@ -65,7 +66,7 @@ func TestDoctrineNotDuplicated_specificTextPasses(t *testing.T) {
 	t.Run("DCTRN-B23: A spec rule with text specific to its unit passes", func(t *testing.T) {})
 	root, g, n := projectWithDoctrine(t, doctrineRule)
 	spec := "### CREDT-V01 — desabilita o botao enviar quando o campo valor esta vazio    @realizes LIMIT-R03\n"
-	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil); v != Pass {
+	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("unit-specific text must not be accused: %v (%s)", v, msg)
 	}
 }
@@ -77,7 +78,7 @@ func TestDoctrineNotDuplicated_tbdDefersTheCharge(t *testing.T) {
 	t.Run("DCTRN-B24: A copy on a line deferred with TBD is not charged", func(t *testing.T) {})
 	root, g, n := projectWithDoctrine(t, doctrineRule)
 	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03 @TBD: redacao em revisao\n"
-	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil); v != Pass {
+	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("@TBD on the line must defer the charge: %v (%s)", v, msg)
 	}
 }
@@ -87,7 +88,7 @@ func TestDoctrineNotDuplicated_onlySpec(t *testing.T) {
 	root, g, _ := projectWithDoctrine(t, doctrineRule)
 	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindFeature, mapx.KindTest, mapx.KindProduct} {
 		n := mapx.Node{ID: "s.spec.md", Kind: k}
-		if v, _ := checkDoctrineNotDuplicated("x", n, root, g, nil); v != Skip {
+		if v, _ := checkDoctrineNotDuplicated("x", n, root, g, testkit.WithComments(nil)); v != Skip {
 			t.Errorf("kind %v: expected Skip, got %v", k, v)
 		}
 	}
@@ -102,7 +103,7 @@ func TestDoctrineNotDuplicated_nearCopyWithAWordChangedFails(t *testing.T) {
 	root, g, n := projectWithDoctrine(t, doctrineRule)
 	// Same sentence as the doctrine, with "credito" -> "emprestimo" and one word dropped.
 	spec := "### CREDT-V01 — o limite de emprestimo nunca e excedido em operacao    @realizes LIMIT-R03\n"
-	v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil)
+	v, msg := checkDoctrineNotDuplicated(spec, n, root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("a near copy must be accused — exact comparison would let it through: %v (%s)", v, msg)
 	}
@@ -117,10 +118,10 @@ func TestDoctrineNotDuplicated_nearCopyWithAWordChangedFails(t *testing.T) {
 func TestSpecRealizesDoctrine_onlyWhereTheLayerDemands(t *testing.T) {
 	t.Run("DCTRN-B26: spec-realizes-doctrine skips a spec whose layer does not demand doctrine", func(t *testing.T) {})
 	t.Run("DCTRN-B27: A rule with no realizes tag fails where the layer demands doctrine, naming it", func(t *testing.T) {})
-	cfg := &config.Config{Layers: map[string]config.Layer{
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{
 		"screen": {RequiresDoctrine: true},
 		"gate":   {},
-	}}
+	}})
 	spec := "### CREDT-V01 — a rule with no declaration\n"
 
 	demanding := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
@@ -143,7 +144,7 @@ func TestSpecRealizesDoctrine_onlyWhereTheLayerDemands(t *testing.T) {
 func TestSpecRealizesDoctrine_declaredPassesAndTbdDefers(t *testing.T) {
 	t.Run("DCTRN-B28: A rule that declares what it realizes passes", func(t *testing.T) {})
 	t.Run("DCTRN-B29: A rule deferred with TBD is debt, not failure", func(t *testing.T) {})
-	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}}
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}})
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
 
 	if v, msg := checkSpecRealizesDoctrine("### CREDT-V01 — a rule    @realizes LIMIT-R03\n", n, "", nil, cfg); v != Pass {
@@ -171,7 +172,7 @@ func TestDoctrineRealized_openQuestionIsNotARule(t *testing.T) {
 	n := mapx.Node{ID: "product/l.doctrine.md", Kind: mapx.KindProduct, Code: "LIMIT"}
 	g := &mapx.Graph{Nodes: []mapx.Node{n}}
 
-	v, msg := checkDoctrineRealized(doctrine, n, root, g, nil)
+	v, msg := checkDoctrineRealized(doctrine, n, root, g, testkit.WithComments(nil))
 	if strings.Contains(msg, "LIMIT-Q01") {
 		t.Errorf("an open question must not be charged for a realizer: %s", msg)
 	}
@@ -202,7 +203,7 @@ func TestPlanDoctrineExists(t *testing.T) {
 	t.Run("only a plan is confronted", func(t *testing.T) {
 		t.Run("DCTRN-B03: plan-doctrine-exists skips an artifact that is not a plan", func(t *testing.T) {})
 		root := planWithDoctrines(t)
-		if v, _ := checkPlanDoctrineExists("seeds `product/a.doctrine.md`\n", mapx.Node{ID: "x", Kind: mapx.KindSpec}, root, nil, nil); v != Skip {
+		if v, _ := checkPlanDoctrineExists("seeds `product/a.doctrine.md`\n", mapx.Node{ID: "x", Kind: mapx.KindSpec}, root, nil, testkit.WithComments(nil)); v != Skip {
 			t.Errorf("a spec is not a plan: %v", v)
 		}
 	})
@@ -210,7 +211,7 @@ func TestPlanDoctrineExists(t *testing.T) {
 	t.Run("a cited doctrine that exists passes", func(t *testing.T) {
 		t.Run("DCTRN-B04: A plan whose cited doctrine exists passes", func(t *testing.T) {})
 		root := planWithDoctrines(t, "product/a.doctrine.md")
-		if v, msg := checkPlanDoctrineExists("seeds `product/a.doctrine.md`\n", plan, root, nil, nil); v != Pass {
+		if v, msg := checkPlanDoctrineExists("seeds `product/a.doctrine.md`\n", plan, root, nil, testkit.WithComments(nil)); v != Pass {
 			t.Errorf("got %v (%s)", v, msg)
 		}
 	})
@@ -220,7 +221,7 @@ func TestPlanDoctrineExists(t *testing.T) {
 		root := planWithDoctrines(t, "product/a.doctrine.md")
 		content := "seeds `product/z.doctrine.md` and `product/b.doctrine.md`\n" +
 			"again `product/z.doctrine.md`, and `product/a.doctrine.md`\n"
-		v, msg := checkPlanDoctrineExists(content, plan, root, nil, nil)
+		v, msg := checkPlanDoctrineExists(content, plan, root, nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("got %v (%s)", v, msg)
 		}
@@ -235,7 +236,7 @@ func TestPlanDoctrineExists(t *testing.T) {
 	t.Run("a missing doctrine on a @TBD line is debt", func(t *testing.T) {
 		t.Run("DCTRN-B06: A missing doctrine cited on a TBD line is a divergence, naming it", func(t *testing.T) {})
 		root := planWithDoctrines(t)
-		v, msg := checkPlanDoctrineExists("seeds `product/a.doctrine.md` @TBD: written next cycle\n", plan, root, nil, nil)
+		v, msg := checkPlanDoctrineExists("seeds `product/a.doctrine.md` @TBD: written next cycle\n", plan, root, nil, testkit.WithComments(nil))
 		if v != Diverge || !strings.Contains(msg, "product/a.doctrine.md") {
 			t.Errorf("got %v (%s)", v, msg)
 		}
@@ -245,7 +246,7 @@ func TestPlanDoctrineExists(t *testing.T) {
 		t.Run("DCTRN-B07: A citation with no directory, or of a template, seeds nothing", func(t *testing.T) {})
 		root := planWithDoctrines(t)
 		content := "the `x.doctrine.md` convention, see `product/_TEMPLATE.doctrine.md`\n"
-		if v, msg := checkPlanDoctrineExists(content, plan, root, nil, nil); v != Skip {
+		if v, msg := checkPlanDoctrineExists(content, plan, root, nil, testkit.WithComments(nil)); v != Skip {
 			t.Errorf("got %v (%s)", v, msg)
 		}
 	})
@@ -269,19 +270,19 @@ func TestDoctrineRealized(t *testing.T) {
 		return g
 	}
 
-	if v, _ := checkDoctrineRealized(doctrine, mapx.Node{ID: "s.spec.md", Kind: mapx.KindSpec}, "", graph(), nil); v != Skip {
+	if v, _ := checkDoctrineRealized(doctrine, mapx.Node{ID: "s.spec.md", Kind: mapx.KindSpec}, "", graph(), testkit.WithComments(nil)); v != Skip {
 		t.Errorf("only a doctrine is confronted: %v", v)
 	}
-	if v, msg := checkDoctrineRealized(doctrine, n, "", nil, nil); v != Pending || msg != i18n.T("gate.no_map_loaded") {
+	if v, msg := checkDoctrineRealized(doctrine, n, "", nil, testkit.WithComments(nil)); v != Pending || msg != i18n.T("gate.no_map_loaded") {
 		t.Errorf("without a map there is nothing to confront: %v (%s)", v, msg)
 	}
-	if v, _ := checkDoctrineRealized("prose, no rules\n", n, "", graph(), nil); v != Skip {
+	if v, _ := checkDoctrineRealized("prose, no rules\n", n, "", graph(), testkit.WithComments(nil)); v != Skip {
 		t.Errorf("a doctrine with no rules: %v", v)
 	}
-	if v, msg := checkDoctrineRealized(doctrine, n, "", graph("LIMIT-R01", "LIMIT-R02"), nil); v != Pass {
+	if v, msg := checkDoctrineRealized(doctrine, n, "", graph("LIMIT-R01", "LIMIT-R02"), testkit.WithComments(nil)); v != Pass {
 		t.Errorf("every rule realized: %v (%s)", v, msg)
 	}
-	v, msg := checkDoctrineRealized(doctrine, n, "", graph("LIMIT-R01"), nil)
+	v, msg := checkDoctrineRealized(doctrine, n, "", graph("LIMIT-R01"), testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, "LIMIT-R02") || strings.Contains(msg, "LIMIT-R01") {
 		t.Errorf("the unrealized rule, and only it, fails: %v (%s)", v, msg)
 	}
@@ -296,29 +297,29 @@ func TestSpecDoctrineExists(t *testing.T) {
 	// an edge of another type is never read as a doctrine
 	g.Edges = append(g.Edges, mapx.Edge{From: n.ID, To: "s.go", Type: mapx.EdgeSpecifies, Method: "LIMIT-R09"})
 
-	if v, _ := checkSpecDoctrineExists("@realizes LIMIT-R03\n", mapx.Node{ID: "x.go", Kind: mapx.KindCode}, root, g, nil); v != Skip {
+	if v, _ := checkSpecDoctrineExists("@realizes LIMIT-R03\n", mapx.Node{ID: "x.go", Kind: mapx.KindCode}, root, g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("only a spec is confronted: %v", v)
 	}
-	if v, _ := checkSpecDoctrineExists("@realizes LIMIT-R03\n", n, root, nil, nil); v != Pending {
+	if v, _ := checkSpecDoctrineExists("@realizes LIMIT-R03\n", n, root, nil, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("without a map there is nothing to confront: %v", v)
 	}
-	if v, _ := checkSpecDoctrineExists("### CREDT-V01 — no tag\n", n, root, g, nil); v != Skip {
+	if v, _ := checkSpecDoctrineExists("### CREDT-V01 — no tag\n", n, root, g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("a spec that declares nothing: %v", v)
 	}
-	if v, msg := checkSpecDoctrineExists("### CREDT-V01 — x @realizes LIMIT-R03\n", n, root, g, nil); v != Pass {
+	if v, msg := checkSpecDoctrineExists("### CREDT-V01 — x @realizes LIMIT-R03\n", n, root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the rule the edge resolved: %v (%s)", v, msg)
 	}
 	// Two rules of the same doctrine on ONE line: the map holds one edge per FILE, and the
 	// rule the edge does not name is confirmed by reading the doctrine (LIMIT-R06 is its
 	// last rule, so the whole file must be searched).
-	if v, msg := checkSpecDoctrineExists("x @realizes LIMIT-R03 @realizes LIMIT-R06\n", n, root, g, nil); v != Pass {
+	if v, msg := checkSpecDoctrineExists("x @realizes LIMIT-R03 @realizes LIMIT-R06\n", n, root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("a rule present in the resolved doctrine: %v (%s)", v, msg)
 	}
-	v, msg := checkSpecDoctrineExists("x @realizes LIMIT-R03 @realizes LIMIT-R09\n", n, root, g, nil)
+	v, msg := checkSpecDoctrineExists("x @realizes LIMIT-R03 @realizes LIMIT-R09\n", n, root, g, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, "LIMIT-R09") || strings.Contains(msg, "LIMIT-R03") {
 		t.Errorf("a renamed rule fails, named: %v (%s)", v, msg)
 	}
-	if v, msg := checkSpecDoctrineExists("x @realizes LIMIT-R09 @TBD: doctrine being written\n", n, root, g, nil); v != Skip {
+	if v, msg := checkSpecDoctrineExists("x @realizes LIMIT-R09 @TBD: doctrine being written\n", n, root, g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("a deferred declaration is not charged: %v (%s)", v, msg)
 	}
 }
@@ -332,7 +333,7 @@ func TestDoctrineNotDuplicated_theFloorItselfMeasures(t *testing.T) {
 		"### LIMIT-R05 — o relatorio mensal inclui apenas transacoes aprovadas\n"
 	root, g, n := projectWithDoctrine(t, three)
 	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
-	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil); v != Fail {
+	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, testkit.WithComments(nil)); v != Fail {
 		t.Errorf("a corpus of %d rules is measured: %v (%s)", minCorpusForIDF, v, msg)
 	}
 }
@@ -341,7 +342,7 @@ func TestDoctrineNotDuplicated_reportsTheScoreAsAPercentage(t *testing.T) {
 	t.Run("DCTRN-B21: A spec rule that copies the doctrine rule it realizes fails, naming both and the score", func(t *testing.T) {})
 	root, g, n := projectWithDoctrine(t, doctrineRule)
 	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
-	_, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil)
+	_, msg := checkDoctrineNotDuplicated(spec, n, root, g, testkit.WithComments(nil))
 	if !strings.Contains(msg, "(100%)") {
 		t.Errorf("an identical copy scores 100%%: %s", msg)
 	}
@@ -371,7 +372,7 @@ func TestParseRealizesWithLines(t *testing.T) {
 
 func TestSpecRealizesDoctrine_aTagOnTheNextLineDeclares(t *testing.T) {
 	t.Run("DCTRN-B28: A rule that declares what it realizes passes", func(t *testing.T) {})
-	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}}
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}})
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
 	if v, msg := checkSpecRealizesDoctrine("### CREDT-V01 — a rule\n  @realizes LIMIT-R03\n", n, "", nil, cfg); v != Pass {
 		t.Errorf("the tag below the rule declares for it: %v (%s)", v, msg)
@@ -380,10 +381,10 @@ func TestSpecRealizesDoctrine_aTagOnTheNextLineDeclares(t *testing.T) {
 
 func TestLayerRequiresDoctrine_resolvesTheLayerOfTheTarget(t *testing.T) {
 	t.Run("DCTRN-B31: The demanding layer is the one of the specified target, by edge or by path", func(t *testing.T) {})
-	cfg := &config.Config{Layers: map[string]config.Layer{
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{
 		"screen": {Pattern: "screens/**/*.tsx", Kind: "code", RequiresDoctrine: true},
 		"lib":    {Pattern: "lib/**/*.ts", Kind: "code"},
-	}}
+	}})
 
 	t.Run("by the specifies edge", func(t *testing.T) {
 		spec := mapx.Node{ID: "docs/home.spec.md", Kind: mapx.KindSpec}
@@ -429,7 +430,7 @@ func TestDoctrineTBD_needsAReasonOutsideBackticks(t *testing.T) {
 		"seeds `product/a.doctrine.md` @TBD\n":                              Fail,
 		"seeds `product/a.doctrine.md`, the `@TBD: later` waiver is gone\n": Fail,
 	} {
-		if v, msg := checkPlanDoctrineExists(content, plan, root, nil, nil); v != want {
+		if v, msg := checkPlanDoctrineExists(content, plan, root, nil, testkit.WithComments(nil)); v != want {
 			t.Errorf("%q: got %v, want %v (%s)", content, v, want, msg)
 		}
 	}
@@ -440,12 +441,14 @@ func TestDoctrineGates_pendingWithoutAMap(t *testing.T) {
 	spec := mapx.Node{ID: "s.spec.md", Kind: mapx.KindSpec}
 	doctrine := mapx.Node{ID: "product/l.doctrine.md", Kind: mapx.KindProduct}
 	for name, run := range map[string]func() (Verdict, string){
-		"doctrine-realized": func() (Verdict, string) { return checkDoctrineRealized(doctrineRule, doctrine, "", nil, nil) },
+		"doctrine-realized": func() (Verdict, string) {
+			return checkDoctrineRealized(doctrineRule, doctrine, "", nil, testkit.WithComments(nil))
+		},
 		"spec-doctrine-exists": func() (Verdict, string) {
-			return checkSpecDoctrineExists("x @realizes LIMIT-R03\n", spec, "", nil, nil)
+			return checkSpecDoctrineExists("x @realizes LIMIT-R03\n", spec, "", nil, testkit.WithComments(nil))
 		},
 		"doctrine-not-duplicated": func() (Verdict, string) {
-			return checkDoctrineNotDuplicated("x @realizes LIMIT-R03\n", spec, "", nil, nil)
+			return checkDoctrineNotDuplicated("x @realizes LIMIT-R03\n", spec, "", nil, testkit.WithComments(nil))
 		},
 	} {
 		if v, msg := run(); v != Pending || msg != i18n.T("gate.no_map_loaded") {
@@ -462,7 +465,7 @@ func TestSpecDoctrineExists_anUnreadableDoctrineConfirmsNothing(t *testing.T) {
 	if err := os.Remove(filepath.Join(root, "product/l.doctrine.md")); err != nil {
 		t.Fatal(err)
 	}
-	v, msg := checkSpecDoctrineExists("x @realizes LIMIT-R03 @realizes LIMIT-R06\n", n, root, g, nil)
+	v, msg := checkSpecDoctrineExists("x @realizes LIMIT-R03 @realizes LIMIT-R06\n", n, root, g, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, "LIMIT-R06") || strings.Contains(msg, "LIMIT-R03") {
 		t.Errorf("the edge's rule resolves, the other cannot be confirmed: %v (%s)", v, msg)
 	}
@@ -473,13 +476,13 @@ func TestDoctrineNotDuplicated_skipsWithoutRealizedDoctrineText(t *testing.T) {
 	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
 	root, g, n := projectWithDoctrine(t, doctrineRule)
 	other := &mapx.Graph{Edges: []mapx.Edge{{From: n.ID, To: "product/l.doctrine.md", Type: mapx.EdgeSpecifies}}}
-	if v, msg := checkDoctrineNotDuplicated(spec, n, root, other, nil); v != Skip {
+	if v, msg := checkDoctrineNotDuplicated(spec, n, root, other, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("no realizes edge: %v (%s)", v, msg)
 	}
 	if err := os.Remove(filepath.Join(root, "product/l.doctrine.md")); err != nil {
 		t.Fatal(err)
 	}
-	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil); v != Skip {
+	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("an unreadable doctrine: %v (%s)", v, msg)
 	}
 }
@@ -492,21 +495,21 @@ func TestDoctrineNotDuplicated_aSmallCorpusIsUndetermined(t *testing.T) {
 		"### LIMIT-R04 — a sessao expira apos trinta minutos sem interacao\n"
 	root, g, n := projectWithDoctrine(t, two)
 	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
-	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil); v != Pending {
+	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("a corpus of 3 rules cannot be measured: %v (%s)", v, msg)
 	}
 }
 
 func TestSpecRealizesDoctrine_skipsNonSpecAndMissingConfig(t *testing.T) {
 	t.Run("DCTRN-B25: spec-realizes-doctrine skips a non-spec and a project with no configuration", func(t *testing.T) {})
-	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}}
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}})
 	spec := "### CREDT-V01 — a rule with no declaration\n"
 	code := mapx.Node{ID: "x.go", Kind: mapx.KindCode, Tags: []string{"screen"}}
 	if v, _ := checkSpecRealizesDoctrine(spec, code, "", nil, cfg); v != Skip {
 		t.Errorf("a code node: %v", v)
 	}
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
-	if v, _ := checkSpecRealizesDoctrine(spec, n, "", nil, nil); v != Skip {
+	if v, _ := checkSpecRealizesDoctrine(spec, n, "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("no configuration: %v", v)
 	}
 }
@@ -515,7 +518,7 @@ func TestSpecRealizesDoctrine_skipsNonSpecAndMissingConfig(t *testing.T) {
 // nothing, so the rule above is still naked.
 func TestSpecRealizesDoctrine_aTagAfterABlankLineDeclaresNothing(t *testing.T) {
 	t.Run("DCTRN-B30: A realizes tag after a blank line declares nothing for the rule above", func(t *testing.T) {})
-	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}}
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}})
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
 	v, msg := checkSpecRealizesDoctrine("### CREDT-V01 — a rule\n\n@realizes LIMIT-R03\n", n, "", nil, cfg)
 	if v != Fail || !strings.Contains(msg, "CREDT-V01") {
@@ -535,7 +538,7 @@ func TestDoctrineNotDuplicated_aSharedRareWordIsNotACopy(t *testing.T) {
 		"### LIMIT-R10 — um cartao bloqueado nao aceita compras\n"
 	root, g, n := projectWithDoctrine(t, eight)
 	spec := "### CREDT-V01 — exibe a mensagem excedido no rodape    @realizes LIMIT-R03\n"
-	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil); v != Pass {
+	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("sharing the rule's rare word is realizing it, not copying it: %v (%s)", v, msg)
 	}
 }
@@ -566,7 +569,7 @@ func TestDoctrine_readsEveryDeclaredCodeLength(t *testing.T) {
 
 func TestSpecRealizesDoctrine_eachRuleOnceAndNoQuestion(t *testing.T) {
 	t.Run("DCTRN-B33: A rule is charged once, and an open question is no rule to realize", func(t *testing.T) {})
-	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}}
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}})
 	spec := "### CCHCN-B03 — a rule with no declaration\n\n| Rule | Uses |\n| --- | --- |\n| `CCHCN-B03` | `field` |\n\n### CCHCN-Q01 — still to decide\n"
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
 	v, msg := checkSpecRealizesDoctrine(spec, n, "", nil, cfg)

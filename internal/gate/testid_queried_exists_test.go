@@ -30,11 +30,11 @@ func fixtureConsultado(t *testing.T, codigo, flow string) (string, *config.Confi
 	if err := os.WriteFile(filepath.Join(root, "flows", "F-A01.yaml"), []byte(flow), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	cfg := &config.Config{Derived: &config.Derived{
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{
 		TestHandle: "testID",
 		Surfaces:   map[string]string{"e2e": "e2e"},
 		Files:      map[string]config.Padroes{"e2e": {"flows"}},
-	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}}
+	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}})
 	return root, cfg
 }
 

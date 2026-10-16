@@ -147,10 +147,14 @@ func exportedFuncs(content string, d config.Dialect) []exportedFunc {
 			fim = locs[i+1][0]
 		}
 		corpo := content[loc[1]:fim]
-		// a assinatura vai até o `)` que fecha os parâmetros
-		sig := corpo
-		if j := strings.Index(corpo, "{"); j > 0 {
-			sig = corpo[:j]
+		// A assinatura vai até onde o dialeto diz que ela termina (`signature_end`: o `{`
+		// das linguagens de chaves, o `:` do Python); sem ele, é o que o `exported_func`
+		// casou.
+		sig := content[loc[0]:loc[1]]
+		if end := d.Compile(d.SignatureEnd); end != nil {
+			if j := end.FindStringIndex(corpo); j != nil && j[0] > 0 {
+				sig = corpo[:j[0]]
+			}
 		}
 		var params []string
 		if paramRE != nil {
@@ -167,26 +171,12 @@ func exportedFuncs(content string, d config.Dialect) []exportedFunc {
 // filtrar, validar, lançar, ou retornar cedo por causa dele. Não entende semântica —
 // procura o parâmetro perto de uma construção de guarda.
 func guardOver(body, param string, d config.Dialect) bool {
+	// What a guard looks like is the language's (`dialect.guard_patterns`): with none
+	// declared there is nothing to recognize, and the gate is pending (presupposes).
 	p := regexp.QuoteMeta(param)
-	if len(d.GuardPatterns) > 0 {
-		for _, pat := range d.GuardPatterns {
-			reStr := strings.ReplaceAll(pat, "{{param}}", p)
-			re := d.Compile(reStr)
-			if re != nil && re.MatchString(body) {
-				return true
-			}
-		}
-		return false
-	}
-	padroes := []string{
-		`\.filter\([^)]*` + p + `\b`,
-		`\b` + p + `\s*\.\s*filter\(`,
-		`if\s*\(?[^\n{:]*\b` + p + `\b[^\n{:]*\)?\s*[:{]?\s*(throw|return|raise|panic)`,
-		`\b` + p + `\b[^\n]*\?\?`,
-		`(throw|assert|raise|panic)[^\n]*\b` + p + `\b`,
-	}
-	for _, pat := range padroes {
-		re := d.Compile(pat)
+	for _, pat := range d.GuardPatterns {
+		reStr := strings.ReplaceAll(pat, "{{param}}", p)
+		re := d.Compile(reStr)
 		if re != nil && re.MatchString(body) {
 			return true
 		}

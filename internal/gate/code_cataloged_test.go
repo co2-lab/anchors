@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -25,7 +26,7 @@ func rodaCatalogado(t *testing.T, spec, codigo string) (Verdict, string) {
 		Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "u.ts", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
 	}
-	cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}})
 	return checkCodeCataloged(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 }
 
@@ -106,7 +107,7 @@ func TestCodigoCatalogado_semCodigoLigadoPula(t *testing.T) {
 	t.Run("CDCTC-B07: With no code linked the gate leaves without a verdict", func(t *testing.T) {})
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}}}
 	v, _ := checkCodeCataloged("| `X-B01` | x |", mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec},
-		t.TempDir(), g, nil)
+		t.TempDir(), g, testkit.WithComments(nil))
 	if v != Skip {
 		t.Errorf("ausência de código é do unit-complete: %v", v)
 	}
@@ -131,7 +132,7 @@ func TestNoRuleValeNoComentarioAcima(t *testing.T) {
 		"doc comment":          "/**\n * @no-rule: forma de entrada\n */\nexport function x() {}\n",
 	}
 	for nome, codigo := range casos {
-		simbolos := symbolsWithLine(codigo, regexp.MustCompile(exportedREDefaultTS))
+		simbolos := symbolsWithLine(codigo, regexp.MustCompile(exportedREDefaultTS), testkit.Comments("x.ts"))
 		if len(simbolos) == 0 {
 			t.Fatalf("%s: nenhum símbolo reconhecido", nome)
 		}
@@ -148,7 +149,7 @@ func TestNoRuleValeNoComentarioAcima(t *testing.T) {
 func TestNoRuleNaoVazaEntreSimbolos(t *testing.T) {
 	t.Run("CDCTC-I02: The waiver does not leak between symbols", func(t *testing.T) {})
 	codigo := "// @no-rule: este sim\nexport function comDeclaracao() {}\n\nexport function semDeclaracao() {}\n"
-	simbolos := symbolsWithLine(codigo, regexp.MustCompile(exportedREDefaultTS))
+	simbolos := symbolsWithLine(codigo, regexp.MustCompile(exportedREDefaultTS), testkit.Comments("x.ts"))
 	if len(simbolos) != 2 {
 		t.Fatalf("esperava 2 símbolos, veio %d", len(simbolos))
 	}
@@ -203,7 +204,7 @@ func TestCodeCatalogedPulaQuandoNaoSabeLerALinguagem(t *testing.T) {
 // Com o padrao declarado, o gate confronta de verdade -- em qualquer linguagem.
 func TestCodeCatalogedUsaOPadraoDoProjeto(t *testing.T) {
 	t.Run("CDCTC-B09: With the pattern declared the gate confronts for real in any language", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{ExportDetect: `(?m)^func\s+([A-Z]\w*)`}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{ExportDetect: `(?m)^func\s+([A-Z]\w*)`}})
 
 	codigo := "package u\n\nfunc Publica() int { return 1 }\n"
 	v, msg := rodaCatalogadoCfg(t, "# U\n\n## UUUUU-B01 — algo\n", codigo, "u.go", cfg)
@@ -217,7 +218,7 @@ func TestCodeCatalogedUsaOPadraoDoProjeto(t *testing.T) {
 
 func TestCodeCatalogedUsaDialetoFamily(t *testing.T) {
 	t.Run("CDCTC-B10: The declared dialect family also supplies the pattern", func(t *testing.T) {})
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}})
 
 	codigo := "package u\n\nfunc Publica() int { return 1 }\n"
 	v, msg := rodaCatalogadoCfg(t, "# U\n\n## UUUUU-B01 — algo\n", codigo, "u.go", cfg)
@@ -233,7 +234,7 @@ func TestCodeCatalogedUsaDialetoFamily(t *testing.T) {
 // fala sobre símbolos em vez do catálogo que os rege.
 func TestCodeCatalogedSoConfrontaSpec(t *testing.T) {
 	t.Run("CDCTC-B01: An artifact that is not a spec leaves without a verdict", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}})
 	g := &mapx.Graph{
 		Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "u.ts", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
@@ -285,14 +286,14 @@ func TestCodeCatalogedNaoConheceLinguagem(t *testing.T) {
 	codigoGo := "package u\n\nfunc Publica() int { return 1 }\n"
 	spec := "# U\n\n## UUUUU-B01 — algo\n"
 
-	reconhece := &config.Config{Derived: &config.Derived{ExportDetect: `(?m)^func\s+([A-Z]\w*)`}}
+	reconhece := testkit.WithComments(&config.Config{Derived: &config.Derived{ExportDetect: `(?m)^func\s+([A-Z]\w*)`}})
 	vGo, msgGo := rodaCatalogadoCfg(t, spec, codigoGo, "u.go", reconhece)
 	if vGo != Fail {
 		t.Fatalf("sob o padrão de Go, `Publica` é pública e órfã: %v (%s)", vGo, msgGo)
 	}
 
 	// O MESMO arquivo, sob o padrão de TS/JS: nenhum símbolo é reconhecido como público.
-	naoReconhece := &config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}}
+	naoReconhece := testkit.WithComments(&config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}})
 	vTS, _ := rodaCatalogadoCfg(t, spec, codigoGo, "u.go", naoReconhece)
 	if vTS == vGo {
 		t.Fatalf("o mesmo arquivo deu o MESMO veredito sob padrões diferentes (%v) — o "+
@@ -304,7 +305,7 @@ func TestCodeCatalogedNaoConheceLinguagem(t *testing.T) {
 // quem consertasse um continuaria vendo o outro.
 func TestCodeCatalogedNaoCobraAusenciaDeCodigo(t *testing.T) {
 	t.Run("CDCTC-X04: The gate does not charge the absence of code", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}})
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}}}
 
 	v, d := checkCodeCataloged("| `INVAX-B01` | cataloga algo |",
@@ -346,7 +347,7 @@ func TestCodeCatalogedNuncaAprovaOQueNaoSabeLer(t *testing.T) {
 
 func TestCodeCataloged_Errors(t *testing.T) {
 	t.Run("CDCTC-E01: With no map the gate does not approve", func(t *testing.T) {
-		cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}}
+		cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}})
 		v, msg := checkCodeCataloged("# Spec", mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, t.TempDir(), nil, cfg)
 		if v != Pending || !strings.Contains(msg, "no map") {
 			t.Fatalf("with no map the verdict must be Pending, got %v (%s)", v, msg)
@@ -369,7 +370,7 @@ func TestCodeCataloged_Errors(t *testing.T) {
 				{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies},
 			},
 		}
-		cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}}
+		cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}})
 		v, msg := checkCodeCataloged("# Spec\n", mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 		if v != Fail || !strings.Contains(msg, "u.ts") || !strings.Contains(msg, "uncatalogued") {
 			t.Fatalf("the orphan of the file on disk must be charged, got %v (%s)", v, msg)
@@ -380,7 +381,7 @@ func TestCodeCataloged_Errors(t *testing.T) {
 // A declared export pattern that cannot name the symbol is reported as what it is.
 func TestCodeCataloged_exportDetectWithoutGroup(t *testing.T) {
 	t.Run("CDCTC-E03: A declared export pattern with no capture group is named, not called undeclared", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{ExportDetect: `^func\s+[A-Z]\w*`}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{ExportDetect: `^func\s+[A-Z]\w*`}})
 	v, msg := rodaCatalogadoCfg(t, "# U\n\n## UUUUU-B01 — algo\n", "package u\n\nfunc Publica() int { return 1 }\n", "u.go", cfg)
 	if v != Skip || !strings.Contains(msg, `^func\s+[A-Z]\w*`) || !strings.Contains(msg, "capture group") {
 		t.Fatalf("the declared pattern must be named with the missing group, got %v (%s)", v, msg)
@@ -408,7 +409,7 @@ func TestCodeCataloged_everyGovernedFileIsRead(t *testing.T) {
 			{From: "u.spec.md", To: "b.ts", Type: mapx.EdgeSpecifies},
 		},
 	}
-	cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}})
 	v, msg := checkCodeCataloged("# Spec\n\n## UUUUU-B01 — `named` does it\n", mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 	if v != Fail || !strings.Contains(msg, "forgotten") || !strings.Contains(msg, "b.ts") || strings.Contains(msg, "a.ts") {
 		t.Fatalf("the orphan of the second file must be charged, naming only that file: %v (%s)", v, msg)

@@ -20,6 +20,8 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // queriedID — o id aparece em alguma superfície consumidora? Para o template
@@ -128,7 +130,7 @@ func readE2ESurface(root string, cfg *config.Config) []string {
 //
 // Sobe UM nível só (o módulo da feature), não a árvore inteira: ler tudo tornaria
 // qualquer menção do repositório uma prova de consumo, e o gate deixaria de medir.
-func readNeighborTests(root, specID string) []string {
+func readNeighborTests(root, specID string, cfg *config.Config) []string {
 	dir := filepath.Join(root, filepath.Dir(specID))
 	dirs := []string{dir}
 	// As irmãs dentro do módulo (`features/trends/{components,screens,hooks}`).
@@ -148,7 +150,12 @@ func readNeighborTests(root, specID string) []string {
 			continue
 		}
 		for _, e := range entradas {
-			if e.IsDir() || !strings.Contains(e.Name(), ".test.") {
+			if e.IsDir() {
+				continue
+			}
+			// A test is what the project's layers say is one, whatever its name.
+			rel, _ := filepath.Rel(root, filepath.Join(d, e.Name()))
+			if _, kind := scan.Classify(filepath.ToSlash(rel), cfg); kind != string(mapx.KindTest) {
 				continue
 			}
 			if b, err := os.ReadFile(filepath.Join(d, e.Name())); err == nil {

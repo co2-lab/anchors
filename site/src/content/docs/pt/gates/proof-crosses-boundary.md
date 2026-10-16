@@ -13,6 +13,7 @@ A rule asserting a relation with another unit has the code importing that unit.
 | Confronta | `spec` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Pressupõe | `dialect.imports` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

@@ -2,7 +2,7 @@
 # @anchors
 #   code: PTFTP
 #   ref: CFPCD
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @CFPCD
@@ -22,8 +22,8 @@ Feature: CodeFromPath — the most meaningful unique code for a unit, given its 
     And the root file gets the code of "handler"
 
   @CFPCD-B03 @unit-level
-  Scenario: Artifact suffixes are dropped from the base name
-    Given the paths "a/Login.spec.md", "a/Login.feature", "a/Login.test.tsx" and "a/Login.tsx"
+  Scenario: The code comes from the unit's name the caller gives
+    Given the paths "a/Login.spec.md", "a/Login.feature", "a/Login.test.tsx" and "a/Login.tsx", each with the unit's name Login
     When their codes are generated with nothing taken
     Then all four get the same code
 

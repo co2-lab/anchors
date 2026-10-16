@@ -399,7 +399,7 @@ func cfgUnit() *config.Config {
 		"spec":    {Pattern: "**/*.spec.md", Kind: "spec"},
 		"feature": {Pattern: "**/*.feature", Kind: "feature"},
 		"test":    {Pattern: "**/*.test.ts", Kind: "test"},
-	}}
+	}, Derived: &config.Derived{Files: map[string]config.Padroes{"test": {"{{dir}}/{{name}}.test.{{ext}}"}}}}
 }
 
 // The target of `work` is the UNIT, not a derived piece. Pointing at the spec is the

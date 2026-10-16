@@ -13,7 +13,7 @@ The test double derives from the real module (not a frozen copy of the contract)
 | Confronta | `test` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
-| Pressupõe | `derived.mock_contract` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
+| Pressupõe | `derived.mock_detect` `derived.mock_contract` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

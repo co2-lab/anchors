@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -13,11 +14,11 @@ import (
 )
 
 func vocab() *config.Config {
-	return &config.Config{RuleTypes: []config.RuleType{
+	return testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{
 		{Letter: "S", Term: "State", Sections: []string{"Fluxo de Estados"}},
 		{Letter: "B", Term: "Behavior", Sections: []string{"Comportamentos"}},
 		{Letter: "E", Term: "Error", Sections: []string{"Erros / Falhas"}},
-	}}
+	}})
 }
 
 func TestRuleTypes_letraNaoDeclarada(t *testing.T) {
@@ -55,10 +56,10 @@ func TestRuleTypes_secaoSemLetraDeclarada(t *testing.T) {
 
 func TestRuleTypes_conflitoDeLetra(t *testing.T) {
 	t.Run("RLTYR-B04: The same letter claimed by two terms is a conflict in the vocabulary", func(t *testing.T) {})
-	cfg := &config.Config{RuleTypes: []config.RuleType{
+	cfg := testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{
 		{Letter: "E", Term: "Error", Sections: []string{"Erros"}},
 		{Letter: "E", Term: "Estado", Sections: []string{"Estados"}},
-	}}
+	}})
 	v, msg := checkRuleTypes("## Erros\n| `HOMEX-E01` | x |\n", mapx.Node{}, "", nil, cfg)
 	if v != Fail {
 		t.Fatalf("esperava Fail p/ conflito de letra, got %v", v)
@@ -73,7 +74,7 @@ func TestRuleTypes_conflitoDeLetra(t *testing.T) {
 // invisível para a rastreabilidade, com ou sem vocabulário declarado.
 func TestRuleTypes_semVocabularioUsaAsCanonicas(t *testing.T) {
 	t.Run("RLTYR-B05: With no vocabulary declared the gate confronts the canonical letters", func(t *testing.T) {})
-	v, msg := checkRuleTypes("## X\n| `HOMEX-Z01` | x |\n", mapx.Node{}, "", nil, &config.Config{})
+	v, msg := checkRuleTypes("## X\n| `HOMEX-Z01` | x |\n", mapx.Node{}, "", nil, testkit.WithComments(&config.Config{}))
 	if v != Fail {
 		t.Errorf("`Z` está fora das canônicas e deveria reprovar, got %v", v)
 	}
@@ -125,7 +126,7 @@ func TestRuleTypes_secaoQueDEFINEcodigoEmTabelaConta(t *testing.T) {
 // a existência de regra catalogada é o `spec-completa`. Acusar nos dois duplicaria a régua.
 func TestRuleTypesSpecSemCodigoNaoEhProblemaDaqui(t *testing.T) {
 	t.Run("RLTYR-I01: A spec with no rule code at all is not this gate's problem", func(t *testing.T) {})
-	semVocabulario := &config.Config{}
+	semVocabulario := testkit.WithComments(&config.Config{})
 
 	// Letra canônica presente: passa, e confirma que o gate ESTÁ medindo.
 	if v, msg := checkRuleTypes("## Regras\n\n### ABCDX-B01 — regra\n\nTexto.\n", mapx.Node{}, "", nil, semVocabulario); v != Pass {
@@ -145,7 +146,7 @@ func TestRuleTypesVereditoNomeiaLetraEOndeDeclarar(t *testing.T) {
 	// `Z` é um tipo que o framework não conhece — o exemplo foi `I` e depois `P`, e as duas
 	// viraram canônicas (Invariant; Presentation validation, no formato 5).
 	fora := "## Regras\n\n### ABCDX-Z01 — política\n\nTexto.\n"
-	v, msg := checkRuleTypes(fora, mapx.Node{}, "", nil, &config.Config{})
+	v, msg := checkRuleTypes(fora, mapx.Node{}, "", nil, testkit.WithComments(&config.Config{}))
 	if v != Fail {
 		t.Fatalf("`Z` não está em %s e deveria reprovar, veio %v", config.DefaultRuleLetters, v)
 	}
@@ -164,9 +165,9 @@ func TestRuleTypesVocabularioEExtensivel(t *testing.T) {
 	if strings.Contains(config.DefaultRuleLetters, "Z") {
 		t.Fatalf("o teste depende de `Z` estar FORA das canônicas (%s)", config.DefaultRuleLetters)
 	}
-	cfg := &config.Config{RuleTypes: []config.RuleType{
+	cfg := testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{
 		{Letter: "Z", Term: "Política", Sections: []string{"Políticas"}},
-	}}
+	}})
 	content := "## Políticas\n| `HOMEX-Z01` | limite |\n"
 
 	if v, msg := checkRuleTypes(content, mapx.Node{}, "", nil, cfg); v != Pass {
@@ -182,7 +183,7 @@ func TestRuleTypesSemVocabularioNaoCobraSecao(t *testing.T) {
 	// Letra canônica (`B`) sob um título que vocabulário NENHUM reivindica.
 	content := "## Um Título Que Ninguém Reivindica\n| `HOMEX-B01` | faz algo |\n"
 
-	if v, msg := checkRuleTypes(content, mapx.Node{}, "", nil, &config.Config{}); v != Pass {
+	if v, msg := checkRuleTypes(content, mapx.Node{}, "", nil, testkit.WithComments(&config.Config{})); v != Pass {
 		t.Errorf("sem vocabulário não há seção a reivindicar — cobrar inventaria regra "+
 			"que ninguém escreveu: %v (%s)", v, msg)
 	}
@@ -273,9 +274,9 @@ func TestSecaoDeclaradaSemRequiresCodeNaoEhCobrada(t *testing.T) {
 // opt-in, senão o gate acusaria toda base existente de uma vez.
 func TestSemRequiresCodeNadaMuda(t *testing.T) {
 	t.Run("RLTYR-B12: A project that does not use sections_require_code changes no behaviour", func(t *testing.T) {})
-	cfg := &config.Config{RuleTypes: []config.RuleType{
+	cfg := testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{
 		{Letter: "B", Term: "Behavior", Sections: []string{"Eventos / Callbacks"}},
-	}}
+	}})
 	v, msg := checkRuleTypes(`# Spec
 
 ## Eventos / Callbacks

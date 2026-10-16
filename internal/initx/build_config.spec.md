@@ -54,6 +54,7 @@ breaking a convention the project never promised.
 | `BLCNB-B10` | A new project whose family has an example of the test handle patterns, and whose inference found the attribute it marks its elements with, starts with that example in its dialect (`config.FamilyTestHandles`); a project with no attribute found starts with none. |
 | `BLCNB-B11` | A new project whose family has an example of the chain patterns starts with it in its dialect — imports, import names, declarations, the type pattern, and the resolution (`config.FamilyChain`) —; a family with none starts with none. |
 | `BLCNB-B12` | A new project whose family has an example of a navigation call starts with it as its `navigation_call` (`config.FamilyNavigationCall`); a family with none starts with none. |
+| `BLCNB-B13` | A new project of a family with an example starts with the family's lexicon in its dialect (`config.FamilyLexicon`), and every new project with code starts with the comments of the examples covering its extensions and its family's configuration and scripts (`config.CommentsCovering`, `config.FamilyComments`); with neither, it has no dialect. |
 
 ## Invariants
 

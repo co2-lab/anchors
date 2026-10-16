@@ -92,3 +92,16 @@ Feature: GovernanceOpportunities — the doctor suggests the canonical gates and
     Given a ts project declaring nav-annotated with no navigation call, one with its own, and one without the gate
     When the governance opportunities are read
     Then only the first is offered the ts example, as YAML that reads back
+
+  @GVOPG-B13 @unit-level
+  Scenario: Files whose comments are not declared are offered the families' examples
+    Given a map with Go, TS and Zig code and a spec, in a project declaring no comments, and one declaring them all
+    When the governance opportunities are read
+    Then the first names .go, .ts and .zig and offers the Go and TS entries as YAML that reads back
+    And the second is offered nothing
+
+  @GVOPG-B14 @unit-level
+  Scenario: A gate presupposing a lexicon field the project left empty is offered the family's example
+    Given a go project declaring env-declared with no env_read, one declaring it, and a cobol one
+    When the governance opportunities are read
+    Then only the first is offered the go env_read, named and as YAML that reads back

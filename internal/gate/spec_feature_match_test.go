@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +28,7 @@ func rodaSpecFeature(t *testing.T, spec, feature string) (Verdict, string) {
 	if feature != "" {
 		g.Edges = []mapx.Edge{{From: "x.spec.md", To: "x.feature", Type: "covered-by"}}
 	}
-	return checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, dir, g, nil)
+	return checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, dir, g, testkit.WithComments(nil))
 }
 
 // O caso real que motivou o gate: uma spec do app de referência declarava OCHIX-X02 e a feature irmã não
@@ -166,7 +167,7 @@ func TestSpecFeatureMatchUneVariasFeatures(t *testing.T) {
 		{From: "x.spec.md", To: "b.feature", Type: "covered-by"},
 	}}
 	spec := "# Spec\n\n### AAAAX-B01 — x\n### AAAAX-B02 — y\n"
-	v, d := checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, dir, g, nil)
+	v, d := checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, dir, g, testkit.WithComments(nil))
 	if v != Pass {
 		t.Fatalf("requisitos cobertos por features DIFERENTES deveriam passar, foi %s (%s)", v, d)
 	}
@@ -259,7 +260,7 @@ func TestSpecFeatureMatchSoValeParaSpec(t *testing.T) {
 	g := &mapx.Graph{Edges: []mapx.Edge{{From: "x.spec.md", To: "x.feature", Type: "covered-by"}}}
 
 	for _, kind := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
-		v, d := checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: kind}, dir, g, nil)
+		v, d := checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: kind}, dir, g, testkit.WithComments(nil))
 		if v != Skip {
 			t.Errorf("sobre %s o gate nao tem jurisdicao; veio %s (%s)", kind, v, d)
 		}
@@ -379,7 +380,7 @@ func TestDefinedRequirementsRespeitaCodeLengthsDoProjeto(t *testing.T) {
 
 func TestSpecFeatureMatch_Errors(t *testing.T) {
 	t.Run("SFMSP-E01: Without a built map the confrontation is pending", func(t *testing.T) {
-		v, msg := checkSpecFeatureMatch("# Spec\n\n### AAAAX-B01 — x\n", mapx.Node{Kind: mapx.KindSpec, ID: "x.spec.md"}, t.TempDir(), nil, nil)
+		v, msg := checkSpecFeatureMatch("# Spec\n\n### AAAAX-B01 — x\n", mapx.Node{Kind: mapx.KindSpec, ID: "x.spec.md"}, t.TempDir(), nil, testkit.WithComments(nil))
 		if v != Pending || !strings.Contains(msg, "map") {
 			t.Fatalf("expected Pending with the no-map message, got %v (%s)", v, msg)
 		}
@@ -395,7 +396,7 @@ func TestSpecFeatureMatch_Errors(t *testing.T) {
 			{From: "x.spec.md", To: "valid.feature", Type: "covered-by"},
 		}}
 		spec := "# Spec\n\n### AAAAX-B01 — x\n"
-		v, msg := checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, dir, g, nil)
+		v, msg := checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, dir, g, testkit.WithComments(nil))
 		if v != Pass {
 			t.Fatalf("the missing feature is left out and the present one still covers AAAAX-B01, got %v (%s)", v, msg)
 		}
@@ -558,7 +559,7 @@ func TestRetiredRuleIsATombstone(t *testing.T) {
 			t.Errorf("a retired rule uses nothing: %+v", u)
 		}
 	}
-	if v, msg := checkRevisionOrphans(spec, mapx.Node{ID: "h.spec.md", Kind: mapx.KindSpec, Code: "CRCHH"}, "", nil, nil); v == Fail && strings.Contains(msg, "V01") {
+	if v, msg := checkRevisionOrphans(spec, mapx.Node{ID: "h.spec.md", Kind: mapx.KindSpec, Code: "CRCHH"}, "", nil, testkit.WithComments(nil)); v == Fail && strings.Contains(msg, "V01") {
 		t.Errorf("an old revision naming the retired rule still resolves: %v %s", v, msg)
 	}
 }

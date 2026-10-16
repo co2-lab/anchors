@@ -13,6 +13,7 @@ The failure handling RECORDS the occurrence.
 | Confronts | `spec` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Presupposes | `dialect.handle_patterns` `dialect.log_patterns` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 

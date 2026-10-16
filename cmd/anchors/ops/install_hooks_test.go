@@ -502,7 +502,7 @@ func TestHooksRunOnARealCommit(t *testing.T) {
 func TestInstallHooks_agent(t *testing.T) {
 	t.Run("INHKN-B14: The agent's hook goes into the project's Claude Code settings", func(t *testing.T) {})
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, config.DefaultFile), []byte("version: 7\nlayers: {}\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, config.DefaultFile), []byte("version: 8\nlayers: {}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	settings := filepath.Join(dir, ".claude", "settings.json")
@@ -567,7 +567,7 @@ func TestInstallHooks_speakTheProjectsLanguage(t *testing.T) {
 	t.Run("INHKN-B16: The hooks speak the project's language", func(t *testing.T) {})
 	t.Cleanup(func() { _ = i18n.Set("") })
 	root := newGitRepo(t)
-	writeFile(t, root, config.DefaultFile, "version: 7\nlang: pt-BR\nlayers: {}\n")
+	writeFile(t, root, config.DefaultFile, "version: 8\nlang: pt-BR\nlayers: {}\n")
 	if err := runInstallHooks(root, true); err != nil {
 		t.Fatal(err)
 	}
@@ -592,7 +592,7 @@ func TestInstallHooks_speakTheProjectsLanguage(t *testing.T) {
 		t.Errorf("translated with its variables and indentation:\n%s", push)
 	}
 	plain := newGitRepo(t)
-	writeFile(t, plain, config.DefaultFile, "version: 7\nlayers: {}\n")
+	writeFile(t, plain, config.DefaultFile, "version: 8\nlayers: {}\n")
 	if err := runInstallHooks(plain, true); err != nil {
 		t.Fatal(err)
 	}

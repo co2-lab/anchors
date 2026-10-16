@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,11 +21,11 @@ import (
 
 func TestProjectTests_SourceResolution(t *testing.T) {
 	t.Run("PRJTS-B01: The project's own source wins over its family's, and neither declares nothing", func(t *testing.T) {})
-	ts := testsSource(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
+	ts := testsSource(testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}}))
 	if ts.Pattern == "" || ts.Script != "" {
 		t.Errorf("a ts project reads through its family's pattern, got %+v", ts)
 	}
-	own := testsSource(&config.Config{Dialect: &config.Dialect{Family: "ts", Tests: &config.TestsSource{Script: "list"}}})
+	own := testsSource(testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts", Tests: &config.TestsSource{Script: "list"}}}))
 	if own != (testlist.Source{Script: "list"}) {
 		t.Errorf("the project's own script wins, got %+v", own)
 	}
@@ -50,7 +51,7 @@ func TestProjectTests_OnlyTheMapsTestFiles(t *testing.T) {
 		}
 	}
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a_test.go", Kind: mapx.KindTest}, {ID: "c.go", Kind: mapx.KindCode}}}
-	tests, declared, err := projectTests(root, g, &config.Config{Dialect: &config.Dialect{Family: "go"}})
+	tests, declared, err := projectTests(root, g, testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}}))
 	if err != nil || !declared || len(tests) != 1 || tests[0].Title != "in a_test.go" {
 		t.Fatalf("only the map's test file is read, got %v (%v, %v)", tests, declared, err)
 	}
@@ -61,8 +62,8 @@ func TestProjectTests_OncePerScan(t *testing.T) {
 	resetProjectTestsCache()
 	t.Cleanup(resetProjectTestsCache)
 	root := t.TempDir()
-	cfg := &config.Config{Dialect: &config.Dialect{Tests: &config.TestsSource{
-		Script: `echo run >> runs.txt; echo '{"version":1,"tests":[]}'`}}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Tests: &config.TestsSource{
+		Script: `echo run >> runs.txt; echo '{"version":1,"tests":[]}'`}}})
 	g := &mapx.Graph{}
 	projectTests(root, g, cfg)
 	projectTests(root, g, cfg)
@@ -98,7 +99,7 @@ func TestProjectTests_ErrorIsReturned(t *testing.T) {
 	t.Run("PRJTS-B05: A source error is returned with the declaration", func(t *testing.T) {})
 	resetProjectTestsCache()
 	t.Cleanup(resetProjectTestsCache)
-	cfg := &config.Config{Dialect: &config.Dialect{Tests: &config.TestsSource{Script: "exit 4"}}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Tests: &config.TestsSource{Script: "exit 4"}}})
 	root, g := t.TempDir(), &mapx.Graph{}
 	_, declared, err := projectTests(root, g, cfg)
 	if err == nil || !declared {
@@ -121,7 +122,7 @@ func TestProjectTests_SupportIsNotATest(t *testing.T) {
 		}
 	}
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a_test.go", Kind: mapx.KindTest}, {ID: "helpers_test.go", Kind: mapx.KindTest, Support: true}}}
-	tests, _, err := projectTests(root, g, &config.Config{Dialect: &config.Dialect{Family: "go"}})
+	tests, _, err := projectTests(root, g, testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}}))
 	if err != nil || len(tests) != 1 || tests[0].File != "a_test.go" {
 		t.Fatalf("only the test file is read, got %v (%v)", tests, err)
 	}
@@ -149,7 +150,7 @@ func TestProjectTests_underIndexListsTheCommit(t *testing.T) {
 	defer SetFileSource(read)()
 	resetProjectTestsCache()
 	defer resetProjectTestsCache()
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "go", Tests: &config.TestsSource{Pattern: `t\.Run\(`}}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go", Tests: &config.TestsSource{Pattern: `t\.Run\("(?P<title>[^"]*)"`}}})
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a_test.go", Kind: mapx.KindTest}, {ID: "b_test.go", Kind: mapx.KindTest}}}
 	tests, _, err := projectTests(root, g, cfg)
 	if err != nil || len(tests) != 1 || tests[0].Title != "staged" || tests[0].Line != 1 {
@@ -168,7 +169,7 @@ func TestProjectTests_underIndexListsTheCommit(t *testing.T) {
 	defer SetFileSource(read)()
 	resetProjectTestsCache()
 	script := `printf '{"version":1,"tests":[{"file":"a_test.go","line":41,"title":"tree only"},{"file":"b_test.go","line":1,"title":"same"}]}'`
-	cfg = &config.Config{Dialect: &config.Dialect{Family: "go", Tests: &config.TestsSource{Script: script}}}
+	cfg = testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go", Tests: &config.TestsSource{Script: script}}})
 	tests, _, err = projectTests(root, g, cfg)
 	if err != nil || len(tests) != 1 || tests[0].Title != "same" {
 		t.Errorf("only the tests of a file the tree holds as staged, got %+v %v", tests, err)
@@ -210,7 +211,7 @@ func TestProjectTests_offered(t *testing.T) {
 		t.Fatal(err)
 	}
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a_test.go", Kind: mapx.KindTest}}}
-	tests, declared, err := ProjectTests(root, g, &config.Config{Dialect: &config.Dialect{Family: "go"}})
+	tests, declared, err := ProjectTests(root, g, testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}}))
 	if err != nil || !declared || len(tests) != 1 || tests[0].Title != "PAYUN-B01: pays" || tests[0].File != "a_test.go" {
 		t.Errorf("got %v %v %v", tests, declared, err)
 	}

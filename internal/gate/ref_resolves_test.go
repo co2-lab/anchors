@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +29,7 @@ func rodaRefResolves(t *testing.T, arquivo, conteudo, specNome, specConteudo str
 	} else if strings.Contains(arquivo, ".test.") {
 		kind = mapx.KindTest
 	}
-	return checkRefResolves(conteudo, mapx.Node{ID: arquivo, Kind: kind}, dir, nil, nil)
+	return checkRefResolves(conteudo, mapx.Node{ID: arquivo, Kind: kind}, dir, nil, testkit.WithComments(nil))
 }
 
 // Variant WITH a graph: the cases with no sibling spec need it to say whether the cited
@@ -42,7 +43,7 @@ func runRefResolvesWithGraph(t *testing.T, arquivo, conteudo string, g *mapx.Gra
 	} else if strings.Contains(arquivo, ".test.") {
 		kind = mapx.KindTest
 	}
-	return checkRefResolves(conteudo, mapx.Node{ID: arquivo, Kind: kind}, dir, g, nil)
+	return checkRefResolves(conteudo, mapx.Node{ID: arquivo, Kind: kind}, dir, g, testkit.WithComments(nil))
 }
 
 // graphWith builds a map holding the given DECLARED identities.
@@ -158,13 +159,13 @@ func TestRefResolvesNaoSeAplicaASpec(t *testing.T) {
 	t.Run("RFRSR-B04: A spec is not confronted", func(t *testing.T) {})
 	dir := t.TempDir()
 	v, _ := checkRefResolves("<!-- @anchors\n  code: AAAAX\n-->\n",
-		mapx.Node{ID: "X.spec.md", Kind: mapx.KindSpec}, dir, nil, nil)
+		mapx.Node{ID: "X.spec.md", Kind: mapx.KindSpec}, dir, nil, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("a spec é dona do código — deveria ser Skip, foi %s", v)
 	}
 	// Um guia ou qualquer outro kind também está fora: só quem REFERENCIA é confrontado.
 	if v, _ := checkRefResolves("// ref: AAAAX\n",
-		mapx.Node{ID: "X.md", Kind: mapx.KindGuide}, dir, nil, nil); v != Skip {
+		mapx.Node{ID: "X.md", Kind: mapx.KindGuide}, dir, nil, testkit.WithComments(nil)); v != Skip {
 		t.Fatalf("kind fora do conjunto deveria ser Skip, foi %s", v)
 	}
 }
@@ -211,12 +212,12 @@ func TestRefResolvesAchaAIrmaPelaConvencao(t *testing.T) {
 	os.WriteFile(filepath.Join(dir, "pkg/Outro.spec.md"), []byte("<!-- @anchors\n  code: OUTRX\n-->\n"), 0o644)
 
 	if v, d := checkRefResolves("// @anchors\n//   ref: ALVOX\n",
-		mapx.Node{ID: "pkg/Alvo.ts", Kind: mapx.KindCode}, dir, nil, nil); v != Pass {
+		mapx.Node{ID: "pkg/Alvo.ts", Kind: mapx.KindCode}, dir, nil, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("a irmã de mesmo tronco deveria ser a régua, foi %s (%s)", v, d)
 	}
 	// o arquivo sem irmã própria não herda a vizinha
 	if v, d := checkRefResolves("// @anchors\n//   ref: OUTRX\n",
-		mapx.Node{ID: "pkg/Terceiro.ts", Kind: mapx.KindCode}, dir, nil, nil); v != Skip {
+		mapx.Node{ID: "pkg/Terceiro.ts", Kind: mapx.KindCode}, dir, nil, testkit.WithComments(nil)); v != Skip {
 		t.Fatalf("sem irmã de mesmo tronco deveria ser Skip, foi %s (%s)", v, d)
 	}
 }
@@ -237,7 +238,7 @@ func TestRefResolvesTiraOSufixoDeTeste(t *testing.T) {
 				marcador = "#"
 			}
 			v, d := checkRefResolves(marcador+" @anchors\n"+marcador+"   ref: ALVOX\n",
-				mapx.Node{ID: arquivo, Kind: mapx.KindTest}, dir, nil, nil)
+				mapx.Node{ID: arquivo, Kind: mapx.KindTest}, dir, nil, testkit.WithComments(nil))
 			if v != Pass {
 				t.Fatalf("%s deveria achar Alvo.spec.md, foi %s (%s)", arquivo, v, d)
 			}
@@ -252,7 +253,7 @@ func TestRefResolvesTroncoParaNoPrimeiroPonto(t *testing.T) {
 	dir := t.TempDir()
 	os.WriteFile(filepath.Join(dir, "Alvo.spec.md"), []byte("<!-- @anchors\n  code: ALVOX\n-->\n"), 0o644)
 	if v, d := checkRefResolves("// @anchors\n//   ref: ALVOX\n",
-		mapx.Node{ID: "Alvo.model.ts", Kind: mapx.KindCode}, dir, nil, nil); v != Pass {
+		mapx.Node{ID: "Alvo.model.ts", Kind: mapx.KindCode}, dir, nil, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("extensão intermediária deveria cair em Alvo.spec.md, foi %s (%s)", v, d)
 	}
 }
@@ -270,7 +271,7 @@ func TestRefResolvesLeQualquerMarcadorDeComentario(t *testing.T) {
 	} {
 		dir := t.TempDir()
 		os.WriteFile(filepath.Join(dir, "Alvo.spec.md"), []byte("<!-- @anchors\n  code: ALVOX\n-->\n"), 0o644)
-		if v, d := checkRefResolves(cab, mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, nil, nil); v != Pass {
+		if v, d := checkRefResolves(cab, mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, nil, testkit.WithComments(nil)); v != Pass {
 			t.Errorf("marcador não lido em %q: %s (%s)", cab, v, d)
 		}
 	}
@@ -287,7 +288,7 @@ func TestRefResolvesComprimentoVemDaEstrutura(t *testing.T) {
 	dir := t.TempDir()
 	os.WriteFile(filepath.Join(dir, "Alvo.spec.md"), []byte("<!-- @anchors\n  code: ALVO\n-->\n"), 0o644)
 	if v, d := checkRefResolves("// @anchors\n//   ref: ALVO\n",
-		mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, nil, nil); v != Pass {
+		mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, nil, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("código de 4 letras declarado pelo projeto deveria ser lido, foi %s (%s)", v, d)
 	}
 }
@@ -300,8 +301,8 @@ func TestRefResolvesNaoDependeDoMapa(t *testing.T) {
 	os.WriteFile(filepath.Join(dir, "Alvo.spec.md"), []byte("<!-- @anchors\n  code: ALVOX\n-->\n"), 0o644)
 	// o grafo diz outra coisa; o disco manda
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "Alvo.spec.md", Kind: mapx.KindSpec, Code: "DTAXX"}}}
-	semGrafo, _ := checkRefResolves("// ref: DTAXX\n", mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, nil, nil)
-	comGrafo, _ := checkRefResolves("// ref: DTAXX\n", mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, g, nil)
+	semGrafo, _ := checkRefResolves("// ref: DTAXX\n", mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, nil, testkit.WithComments(nil))
+	comGrafo, _ := checkRefResolves("// ref: DTAXX\n", mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, g, testkit.WithComments(nil))
 	if semGrafo != Fail || comGrafo != Fail {
 		t.Fatalf("o disco é a régua: sem grafo %s, com grafo %s", semGrafo, comGrafo)
 	}
@@ -317,7 +318,7 @@ func TestRefResolvesNaoEscreveNoDisco(t *testing.T) {
 	os.WriteFile(alvo, []byte(conteudo), 0o644)
 	os.WriteFile(filepath.Join(dir, "Alvo.spec.md"), []byte("<!-- @anchors\n  code: ALVOX\n-->\n"), 0o644)
 
-	checkRefResolves(conteudo, mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, nil, nil)
+	checkRefResolves(conteudo, mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, nil, testkit.WithComments(nil))
 
 	depois, err := os.ReadFile(alvo)
 	if err != nil {
@@ -357,7 +358,7 @@ func TestRefResolvesNaoConsultaOMapa(t *testing.T) {
 	// este `ref:` reprovaria.
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "Alvo.spec.md", Kind: mapx.KindSpec, Code: "FALSO"}}}
 	if v, d := checkRefResolves("// ref: ALVOX\n",
-		mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, g, nil); v != Pass {
+		mapx.Node{ID: "Alvo.ts", Kind: mapx.KindCode}, dir, g, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("o veredito tem de seguir o disco, foi %s (%s)", v, d)
 	}
 }
@@ -388,7 +389,7 @@ func TestRefResolvesPontoInicialNaoSeparaTronco(t *testing.T) {
 	dir := t.TempDir()
 	os.WriteFile(filepath.Join(dir, ".spec.md"), []byte("<!-- @anchors\n  code: DOTFX\n-->\n"), 0o644)
 	v, d := checkRefResolves("// @anchors\n//   ref: OUTRX\n",
-		mapx.Node{ID: ".hidden.ts", Kind: mapx.KindCode}, dir, nil, nil)
+		mapx.Node{ID: ".hidden.ts", Kind: mapx.KindCode}, dir, nil, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("arquivo oculto não tem irmã de nome só-sufixo, foi %s (%s)", v, d)
 	}

@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -16,7 +17,7 @@ var levelFeatureNode = mapx.Node{Kind: mapx.KindFeature, ID: "screen/S.feature"}
 
 // levelsCfg declares the levels on the gate entry that runs the check.
 func levelsCfg(levels map[string]config.TestLevel) *config.Config {
-	return &config.Config{Gates: []config.Gate{{Name: "test-level-codes", Check: "test-level-codes", Levels: levels}}}
+	return testkit.WithComments(&config.Config{Gates: []config.Gate{{Name: "test-level-codes", Check: "test-level-codes", Levels: levels}}})
 }
 
 // levelCfg: the visual level accepts only VR codes; the unit level refuses them.
@@ -98,20 +99,20 @@ func TestTestLevelCodes_MessageSortedWithLevels(t *testing.T) {
 
 func TestTestLevelCodes_EntriesAddUp(t *testing.T) {
 	t.Run("TLVCD-B09: Levels come from the gate's own entries, and two entries add their lists", func(t *testing.T) {})
-	cfg := &config.Config{Gates: []config.Gate{
+	cfg := testkit.WithComments(&config.Config{Gates: []config.Gate{
 		{Name: "a", Check: "test-level-codes", Levels: map[string]config.TestLevel{"unit-level": {Exclude: []string{`-VR$`}}}},
 		{Name: "b", Check: "test-level-codes", Levels: map[string]config.TestLevel{"unit-level": {Exclude: []string{`-B99$`}}}},
-	}}
+	}})
 	for _, code := range []string{"SMCSX-VR", "SMCSX-B99"} {
 		f := "Feature: X\n\n  @" + code + " @unit-level\n  Scenario: a\n"
 		if v, msg := checkTestLevelCodes(f, levelFeatureNode, "", nil, cfg); v != Fail {
 			t.Errorf("%s: both entries' exclusions must hold, got %v (%s)", code, v, msg)
 		}
 	}
-	allows := &config.Config{Gates: []config.Gate{
+	allows := testkit.WithComments(&config.Config{Gates: []config.Gate{
 		{Name: "a", Check: "test-level-codes", Levels: map[string]config.TestLevel{"vr-level": {Allow: []string{`-VR$`}}}},
 		{Name: "b", Check: "test-level-codes", Levels: map[string]config.TestLevel{"vr-level": {Allow: []string{`-B04$`}}}},
-	}}
+	}})
 	for _, code := range []string{"SMCSX-VR", "SMCSX-B04"} {
 		f := "Feature: X\n\n  @" + code + " @vr-level\n  Scenario: a\n"
 		if v, msg := checkTestLevelCodes(f, levelFeatureNode, "", nil, allows); v != Pass {

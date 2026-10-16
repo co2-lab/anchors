@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestDocSelfContained_referenciaComTextoPassa(t *testing.T) {
 	c := "# X\n\n## Regras\n\nO documento `plans/0014-alertas.md` diz o que torna " +
 		"este canal diferente:\n\n> *\"O desenho evita expor rota de ingestão.\"*\n\n" +
 		"E é o que esta regra herda.\n"
-	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Pass {
+	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v (%s) — a referência traz o texto junto", v, msg)
 	}
 }
@@ -45,7 +46,7 @@ func TestDocSelfContained_referenciaVaziaFalha(t *testing.T) {
 	for _, caso := range casos {
 		t.Run(caso.nome, func(t *testing.T) {
 			c := "# X\n\n## Regras\n\n" + caso.linha + "\n"
-			v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil)
+			v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil))
 			if v != Fail {
 				t.Fatalf("verdict = %v — a referência não traz o texto", v)
 			}
@@ -70,7 +71,7 @@ func TestDocSelfContained_pegaEmQualquerIdioma(t *testing.T) {
 	for nome, linha := range casos {
 		t.Run(nome, func(t *testing.T) {
 			c := "# X\n\n## Regras\n\n" + linha + "\n"
-			if v, _ := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Fail {
+			if v, _ := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Fail {
 				t.Errorf("verdict = %v — o gate não pode depender do idioma", v)
 			}
 		})
@@ -91,7 +92,7 @@ func TestDocSelfContained_reconheceAspasDeQualquerIdioma(t *testing.T) {
 	for nome, linha := range casos {
 		t.Run(nome, func(t *testing.T) {
 			c := "# X\n\n## Regras\n\n`plans/0014-alertas.md`: " + linha + "\n"
-			if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Pass {
+			if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Pass {
 				t.Errorf("verdict = %v (%s) — há citação, e o gate não pode exigir aspas latinas",
 					v, msg)
 			}
@@ -104,7 +105,7 @@ func TestDocSelfContained_reconheceAspasDeQualquerIdioma(t *testing.T) {
 func TestDocSelfContained_ignoraBlocoDeCodigo(t *testing.T) {
 	t.Run("DSCDC-B04: A path inside a code fence is an example, not a reference", func(t *testing.T) {})
 	c := "# X\n\n## Regras\n\nRode:\n\n```\nanchors check --changed plans/0014-alertas.md\n```\n"
-	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Pass {
+	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v (%s) — dentro da cerca é exemplo", v, msg)
 	}
 }
@@ -114,7 +115,7 @@ func TestDocSelfContained_ignoraBlocoDeCodigo(t *testing.T) {
 func TestDocSelfContained_oProprioCaminhoNaoEhReferencia(t *testing.T) {
 	t.Run("DSCDC-B05: The spec citing its own path is identifying itself", func(t *testing.T) {})
 	c := "# X\n\n## Regras\n\nEsta unidade vive em `x/Y.spec.md` e governa o módulo.\n"
-	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Pass {
+	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v (%s) — é o caminho dela mesma", v, msg)
 	}
 }
@@ -124,7 +125,7 @@ func TestDocSelfContained_oProprioCaminhoNaoEhReferencia(t *testing.T) {
 func TestDocSelfContained_codigoDeRegraNaoEhRevisao(t *testing.T) {
 	t.Run("DSCDC-B06: A rule code is not a revision", func(t *testing.T) {})
 	c := "# X\n\n## Regras\n\nA GLCGL-B01 já provou o campo obrigatório, e esta regra o herda.\n"
-	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Pass {
+	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v (%s) — `GLCGL-B01` é regra, não revisão", v, msg)
 	}
 }
@@ -135,7 +136,7 @@ func TestDocSelfContained_soASpec(t *testing.T) {
 	t.Run("DSCDC-B07: Only the spec is charged", func(t *testing.T) {})
 	c := "A decisão está em `plans/0014-alertas.md`."
 	for _, k := range []mapx.Kind{mapx.KindPlan, mapx.KindFeature, mapx.KindTest, mapx.KindCode} {
-		if v, _ := checkDocSelfContained(c, mapx.Node{Kind: k}, "", grafoComPlano(), nil); v != Skip {
+		if v, _ := checkDocSelfContained(c, mapx.Node{Kind: k}, "", grafoComPlano(), testkit.WithComments(nil)); v != Skip {
 			t.Errorf("kind %s: verdict = %v, queria Skip", k, v)
 		}
 	}
@@ -148,13 +149,13 @@ func TestDocSelfContained_revisaoComExplicacaoNaLinhaPassa(t *testing.T) {
 	t.Run("DSCDC-B08: A revision cited with an explanation on the same line passes", func(t *testing.T) {})
 	c := "# X\n\n## Regras\n\nA `PLTFR-R0003` corrigiu o escopo desta spec: o contador de " +
 		"conexões saiu, porque a fonte não o expõe por réplica.\n"
-	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Pass {
+	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v (%s) — a linha diz O QUE a revisão mudou", v, msg)
 	}
 	// A contraparte que prova que a régua é a explicação, e não a mera presença da
 	// revisão: o rótulo curto, sem dizer o que mudou, continua acusado.
 	nu := "# X\n\n## Regras\n\nDecidido pelo usuário (`PLTFR-R0003`).\n"
-	if v, _ := checkDocSelfContained(nu, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Fail {
+	if v, _ := checkDocSelfContained(nu, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Fail {
 		t.Errorf("verdict = %v — o rótulo não diz O QUE foi decidido", v)
 	}
 }
@@ -165,7 +166,7 @@ func TestDocSelfContained_revisaoComExplicacaoNaLinhaPassa(t *testing.T) {
 func TestDocSelfContained_semMapaEhSkip(t *testing.T) {
 	t.Run("DSCDC-B09: With no map the confrontation is skipped", func(t *testing.T) {})
 	c := "# X\n\n## Regras\n\nO critério está em `plans/0014-alertas.md` e vale aqui.\n"
-	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", nil, nil); v != Skip {
+	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("verdict = %v (%s) — sem mapa não há lista de nós", v, msg)
 	}
 }
@@ -178,7 +179,7 @@ func TestDocSelfContained_prosaLongaNaoSalvaOCaminho(t *testing.T) {
 	t.Run("DSCDC-I02: The on-line explanation escape belongs to the revision, not to the path", func(t *testing.T) {})
 	c := "# X\n\n## Regras\n\nO critério de alarme está definido em `plans/0014-alertas.md` " +
 		"e vale para todo handler novo deste módulo, sem exceção documentada até aqui.\n"
-	v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil)
+	v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("verdict = %v (%s) — a prosa é longa e não diz QUAL é o critério", v, msg)
 	}
@@ -186,7 +187,7 @@ func TestDocSelfContained_prosaLongaNaoSalvaOCaminho(t *testing.T) {
 	// em volta de uma revisão passa.
 	comRevisao := "# X\n\n## Regras\n\nO critério de alarme foi fixado pela `PLTFR-R0003` " +
 		"e vale para todo handler novo deste módulo, sem exceção documentada até aqui.\n"
-	if v, _ := checkDocSelfContained(comRevisao, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Pass {
+	if v, _ := checkDocSelfContained(comRevisao, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v — a revisão é rótulo, e a frase em volta é o conteúdo", v)
 	}
 }
@@ -196,7 +197,7 @@ func TestDocSelfContained_prosaLongaNaoSalvaOCaminho(t *testing.T) {
 func TestDocSelfContained_oAchadoApontaALinha(t *testing.T) {
 	t.Run("DSCDC-I03: The verdict names the line and shows what it says", func(t *testing.T) {})
 	c := "# X\n\n## Regras\n\nVer `plans/0014-alertas.md`.\n"
-	v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil)
+	v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("verdict = %v (%s)", v, msg)
 	}
@@ -215,7 +216,7 @@ func TestDocSelfContained_naoJulgaFidelidadeDoTrecho(t *testing.T) {
 	t.Run("DSCDC-X01: The gate does not judge whether the accompanying content is faithful", func(t *testing.T) {})
 	c := "# X\n\n## Regras\n\nO documento `plans/0014-alertas.md` fixa o limiar de alarme:\n\n" +
 		"> *\"O relatório mensal sai no primeiro dia útil.\"*\n"
-	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Pass {
+	if v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v (%s) — a citação não bate com o anúncio, e isso é outra régua",
 			v, msg)
 	}
@@ -227,7 +228,7 @@ func TestDocSelfContained_naoJulgaFidelidadeDoTrecho(t *testing.T) {
 func TestDocSelfContained_marcaSemOferecerComando(t *testing.T) {
 	t.Run("DSCDC-X02: The gate marks and does not block", func(t *testing.T) {})
 	c := "# X\n\n## Regras\n\nO critério está em `plans/0014-alertas.md`.\n"
-	v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), nil)
+	v, msg := checkDocSelfContained(c, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("verdict = %v (%s)", v, msg)
 	}
@@ -246,12 +247,12 @@ func TestDocSelfContained_aReguaErraParaODeixarPassar(t *testing.T) {
 	t.Run("DSCDC-X03: Measuring explanation errs on the permissive side", func(t *testing.T) {})
 	// Prosa logo acima do limiar, e dizendo pouco: passa de propósito.
 	acima := "# X\n\n## Regras\n\nA `PLTFR-R0003` mudou o escopo desta seção aqui.\n"
-	if v, msg := checkDocSelfContained(acima, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Pass {
+	if v, msg := checkDocSelfContained(acima, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v (%s) — a régua erra para o lado permissivo", v, msg)
 	}
 	// E o rótulo curto continua acusado: a régua é grosseira, não inexistente.
 	abaixo := "# X\n\n## Regras\n\nDecidido (`PLTFR-R0003`).\n"
-	if v, _ := checkDocSelfContained(abaixo, noDeSpecAutocontida(), "", grafoComPlano(), nil); v != Fail {
+	if v, _ := checkDocSelfContained(abaixo, noDeSpecAutocontida(), "", grafoComPlano(), testkit.WithComments(nil)); v != Fail {
 		t.Errorf("verdict = %v — o rótulo curto não é explicação", v)
 	}
 }

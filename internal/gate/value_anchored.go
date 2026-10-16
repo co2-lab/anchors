@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"unicode"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
@@ -76,7 +77,7 @@ func checkValueAnchored(content string, n mapx.Node, root string, g *mapx.Graph,
 		return pendingNoMap()
 	}
 
-	decls := declarationsIn(content, n.ID, anchorRE)
+	decls := declarationsIn(content, n.ID, anchorRE, cfg.CommentsFor(n.ID))
 	if len(decls) == 0 {
 		return Skip, i18n.T("gate.value_anchored.skip_no_declaration")
 	}
@@ -103,7 +104,7 @@ func checkValueAnchored(content string, n mapx.Node, root string, g *mapx.Graph,
 		b.WriteString(i18n.T("gate.value_anchored.lying_footer"))
 	}
 
-	idx := anchorIndexFor(root, g, anchorRE)
+	idx := anchorIndexFor(root, g, anchorRE, cfg)
 
 	// SPEC: a key that is a rule declaring a value in its defining line.
 	var stale []valueDecl
@@ -184,26 +185,30 @@ func (d valueDecl) matches() bool {
 //
 // Comment lines between the declaration and the code are skipped — several declarations
 // may be stacked above the same line, and a longer explanation may sit between them.
-// Blank lines are skipped too. Which lines are comments is read from their start (`//`,
-// `#`, `/*`, `*`, `--`, `<!--`), the same reading the other gates use.
+// Blank lines are skipped too. Which lines are comments is read by the syntax the project
+// declares for the file (`dialect.comments`), the same reading the other gates use.
 //
 // A declaration is a comment OF ITS OWN: the anchor is the whole content of its comment
 // line. An anchor inside prose — a comment explaining the syntax, `see
 // @code-reference-[key]-[value]` — is a mention, not a declaration. Reading it as one
 // charged the explanation itself: measured in the project that adopted the gate, the
 // comment documenting the anchors failed with key "key".
-func declarationsIn(content, file string, anchorRE *regexp.Regexp) []valueDecl {
+func declarationsIn(content, file string, anchorRE *regexp.Regexp, cs *config.Comments) []valueDecl {
 	lines := strings.Split(content, "\n")
+	only := cs.CommentOnly(lines)
 	var out []valueDecl
 	for i, l := range lines {
-		m := standaloneAnchor(l, anchorRE)
+		if !only[i] {
+			continue
+		}
+		m := standaloneAnchor(l, anchorRE, cs)
 		if m == nil {
 			continue
 		}
 		d := valueDecl{file: file, key: m[1], value: m[2], line: i + 1}
 		for j := i + 1; j < len(lines); j++ {
 			t := strings.TrimSpace(lines[j])
-			if t == "" || isCommentLine(t) || anchorRE.MatchString(lines[j]) {
+			if t == "" || only[j] || anchorRE.MatchString(lines[j]) {
 				continue
 			}
 			d.code, d.codeLine = lines[j], j+1
@@ -216,24 +221,23 @@ func declarationsIn(content, file string, anchorRE *regexp.Regexp) []valueDecl {
 
 // standaloneAnchor returns the anchor's groups when it is the whole content of a comment
 // line — the comment marker, the anchor, and at most the marker that closes the comment.
-func standaloneAnchor(line string, anchorRE *regexp.Regexp) []string {
-	t := strings.TrimSpace(line)
-	if !isCommentLine(t) {
-		return nil
-	}
-	for _, p := range []string{"<!--", "/**", "/*", "//", "#", "--", "*"} {
-		if strings.HasPrefix(t, p) {
-			t = strings.TrimSpace(strings.TrimPrefix(t, p))
-			break
-		}
-	}
+func standaloneAnchor(line string, anchorRE *regexp.Regexp, cs *config.Comments) []string {
+	// The comment's text: past its opener and the punctuation that runs on from it (`/**`,
+	// ` * `), up to its closer.
+	t := strings.TrimLeftFunc(strings.TrimSpace(line), func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '@'
+	})
 	loc := anchorRE.FindStringSubmatchIndex(t)
 	if loc == nil || loc[0] != 0 {
 		return nil
 	}
-	switch strings.TrimSpace(t[loc[1]:]) {
-	case "", "*/", "-->":
-	default:
+	rest := strings.TrimSpace(t[loc[1]:])
+	if cs != nil {
+		for _, b := range cs.Block {
+			rest = strings.TrimSpace(strings.TrimSuffix(rest, b.Close))
+		}
+	}
+	if rest != "" {
 		return nil
 	}
 	m := make([]string, len(loc)/2)
@@ -243,16 +247,6 @@ func standaloneAnchor(line string, anchorRE *regexp.Regexp) []string {
 		}
 	}
 	return m
-}
-
-// isCommentLine reports whether a trimmed line is a whole-line comment.
-func isCommentLine(t string) bool {
-	for _, p := range []string{"//", "#", "/*", "*", "--", "<!--"} {
-		if strings.HasPrefix(t, p) {
-			return true
-		}
-	}
-	return false
 }
 
 // anchorIndexCache keeps one index per map for the duration of a run: the ACROSS check
@@ -299,7 +293,7 @@ func declaredValues(line, code string) []string {
 
 // anchorIndexFor returns every declaration of every code file, and the values every spec
 // rule declares, in a stable order.
-func anchorIndexFor(root string, g *mapx.Graph, anchorRE *regexp.Regexp) *anchorIndex {
+func anchorIndexFor(root string, g *mapx.Graph, anchorRE *regexp.Regexp, cfg *config.Config) *anchorIndex {
 	anchorIndexMu.Lock()
 	defer anchorIndexMu.Unlock()
 	if anchorIndexGraph == g && anchorIndexVal != nil {
@@ -338,7 +332,7 @@ func anchorIndexFor(root string, g *mapx.Graph, anchorRE *regexp.Regexp) *anchor
 		if err != nil {
 			continue
 		}
-		for _, d := range declarationsIn(string(b), node.ID, anchorRE) {
+		for _, d := range declarationsIn(string(b), node.ID, anchorRE, cfg.CommentsFor(node.ID)) {
 			index[d.key] = append(index[d.key], d)
 		}
 	}

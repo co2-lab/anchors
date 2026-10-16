@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NWARN
-  updated_at: 2026-10-12
+  updated_at: 2026-10-16
   layer: comando
 -->
 # NewArtifact — a new artifact is born beside its unit, with a resolved identity and the sections of the project's ruler
@@ -46,7 +46,7 @@ demand of `anchors.progress.md`, one stage per phase.
 | `NWARN-B01` | An unknown kind is refused. |
 | `NWARN-B02` | Without a name, or without `--out`, the command is refused and asks for it. |
 | `NWARN-B03` | A spec is born with a code no node of the map holds; a target path in a layer with a module prefix gets that prefix, a generic basename takes the parent directory's identity, and a bare name gets its canonical code. |
-| `NWARN-B04` | A feature or test takes its code from the header of the sibling spec with the same stem, and says where it read it; with no sibling spec it gets a generated code and a warning that it is born orphaned. |
+| `NWARN-B04` | A feature or test takes its code from the header of the sibling spec with the same unit name (`config.UnitName`), and says where it read it; with no sibling spec it gets a generated code and a warning that it is born orphaned. |
 | `NWARN-B05` | `--code` pins the identity written in the header. |
 | `NWARN-B06` | `--with` adds and `--without` removes sections from the kind's defaults; an unknown section key is refused. |
 | `NWARN-B07` | `--preset` applies only to specs and must name a known preset; it fixes the sections and their order, and a section added with `--with` comes after the preset's. |

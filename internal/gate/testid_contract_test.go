@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -18,8 +19,8 @@ import (
 // cfgHandle returns a config that DECLARES the anchoring attribute and the ts family's
 // example patterns for it — without the patterns the inventory gates measure nothing.
 func cfgHandle(attr string) *config.Config {
-	return &config.Config{Derived: &config.Derived{Anchor: "code", TestHandle: attr},
-		Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", attr)}}
+	return testkit.WithComments(&config.Config{Derived: &config.Derived{Anchor: "code", TestHandle: attr},
+		Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", attr)}})
 }
 
 // inventoryFixture: a spec linked (specifies) to a unit whose content the test
@@ -67,11 +68,11 @@ const sectionOK = "## Superfície de Teste\n\n| id | role |\n| -- | ----- |\n| `
 // e2eConfig declares the e2e surface in its two steps: `surfaces[e2e]` gives the KEY,
 // `files[key]` gives the path.
 func e2eConfig() *config.Config {
-	return &config.Config{Derived: &config.Derived{
+	return testkit.WithComments(&config.Config{Derived: &config.Derived{
 		Anchor: "code", TestHandle: "testID",
 		Surfaces: map[string]string{"e2e": "e2e"},
 		Files:    map[string]config.Padroes{"e2e": {"e2e/{{name}}.yaml"}},
-	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}}
+	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}})
 }
 
 // --- when the gate confronts at all ---
@@ -94,11 +95,11 @@ func TestTestIDDeclared_withoutPatternsIsPending(t *testing.T) {
 	// it never checked — in an Android project, in any backend —, and the attribute alone
 	// (`derived.test_handle`) says nothing of how a handle is written.
 	n, g, root := inventoryFixture(t, `<View testID=":abcd-screen" />`)
-	cfg := &config.Config{Derived: &config.Derived{Anchor: "code", TestHandle: "testID"}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{Anchor: "code", TestHandle: "testID"}})
 	if v, d := checkTestIDCoherent("", n, root, g, cfg); v != Pending || !strings.Contains(d, "dialect.test_handles.exposed") {
 		t.Errorf("without patterns the gate is pending, naming the field: %v %s", v, d)
 	}
-	if v, _ := checkTestIDCoherent(sectionOK, n, root, g, &config.Config{}); v != Pending {
+	if v, _ := checkTestIDCoherent(sectionOK, n, root, g, testkit.WithComments(&config.Config{})); v != Pending {
 		t.Errorf("without a dialect the gate is pending: %v", v)
 	}
 }
@@ -492,10 +493,10 @@ func TestTestIDHonored_surfaceWithoutFilesInventsNoPath(t *testing.T) {
 	// accuse every id only the E2E uses. Without `files[e2e]` there is nowhere to look,
 	// and the honest answer is to claim nothing about a surface it cannot read.
 	n, g, root := consumerFixture(t, `getByTestId(':abcd-screen')`)
-	cfg := &config.Config{Derived: &config.Derived{
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{
 		Anchor: "code", TestHandle: "testID",
 		Surfaces: map[string]string{"e2e": "e2e"}, // no files["e2e"]
-	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}}
+	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}})
 	if v, msg := checkTestIDCoherent(sectionOK, n, root, g, cfg); v != Pass {
 		t.Errorf("a surface with no declared path must not become an accusation: %v (%s)", v, msg)
 	}
@@ -512,11 +513,11 @@ func TestTestIDContract_e2eSurfaceFromAnOverride(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "flows", "f.yaml"), []byte("id: ':abcd-other'\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	cfg := &config.Config{Derived: &config.Derived{
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{
 		Anchor: "code", TestHandle: "testID",
 		Surfaces:  map[string]string{"e2e": "e2e"},
 		Overrides: []config.DerivedOverride{{Files: map[string]config.Padroes{"e2e": {"flows/{{name}}.yaml"}}}},
-	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}}
+	}, Dialect: &config.Dialect{TestHandles: config.FamilyTestHandles("ts", "testID")}})
 	v, msg := checkTestIDCoherent(sectionOK, n, root, g, cfg)
 	if v != Fail || !strings.Contains(msg, "queried ✗\n") {
 		t.Errorf("the override's flows are a consumer surface that does not query the id: %v (%s)", v, msg)
@@ -575,7 +576,9 @@ func TestTestIDHonored_neighbourCountsEvenWithFlows(t *testing.T) {
 		Nodes: []mapx.Node{spec, {ID: "x.tsx", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "x.spec.md", To: "x.tsx", Type: mapx.EdgeSpecifies}},
 	}
-	if v, msg := checkTestIDCoherent(sectionOK, spec, root, g, e2eConfig()); v != Pass {
+	cfg := e2eConfig()
+	cfg.Layers = map[string]config.Layer{"test": {Pattern: "**/*.test.tsx", Kind: "test"}}
+	if v, msg := checkTestIDCoherent(sectionOK, spec, root, g, cfg); v != Pass {
 		t.Errorf("the neighbour test must count even with flows: %v (%s)", v, msg)
 	}
 }

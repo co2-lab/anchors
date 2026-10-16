@@ -63,7 +63,7 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 	if len(regras) == 0 {
 		return Skip, i18n.T("gate.rule_implemented.skip_no_rules")
 	}
-	alvo, achou := specTargetOnDisk(root, n.ID)
+	alvo, achou := specTargetOnDisk(root, n.ID, cfg)
 	if !achou {
 		// Sem código, quem acusa é o `unit-complete` — este gate confronta o código que
 		// existe, e duplicar a cobrança produziria dois gates apontando o mesmo dedo.
@@ -243,13 +243,14 @@ func declaredRules(content, unidade string) []string {
 	return out
 }
 
-// specTargetOnDisk acha o arquivo de código que a spec descreve, pelo nome.
-func specTargetOnDisk(root, specID string) (string, bool) {
+// specTargetOnDisk finds the code file the spec describes by its name, in the extensions the
+// project's code layers declare.
+func specTargetOnDisk(root, specID string, cfg *config.Config) (string, bool) {
 	base := strings.TrimSuffix(specID, ".spec.md")
 	if base == specID {
 		return "", false
 	}
-	for _, ext := range []string{".ts", ".tsx", ".go", ".py", ".js"} {
+	for _, ext := range cfg.CodeExtensions() {
 		if _, err := os.Stat(filepath.Join(root, base+ext)); err == nil {
 			return base + ext, true
 		}

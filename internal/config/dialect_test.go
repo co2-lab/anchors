@@ -17,54 +17,56 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestDialectFor_withoutDeclarationOnlyTheNamingDefaults(t *testing.T) {
-	t.Run("DLCTI-B01: A project that declares no dialect gets only the naming defaults", func(t *testing.T) {})
-	for name, c := range map[string]*Config{"nil config": nil, "no dialect block": {}} {
+// example is the family's example lexicon, or nothing for a family with none.
+func example(family string) Dialect {
+	if d := FamilyLexicon(family); d != nil {
+		return *d
+	}
+	return Dialect{}
+}
+
+func TestDialectFor_onlyWhatIsDeclared(t *testing.T) {
+	t.Run("DLCTI-B01: A project's dialect is what it declares, and nothing fills it", func(t *testing.T) {})
+	for name, c := range map[string]*Config{"nil config": nil, "no dialect block": {}, "a family alone": {Dialect: &Dialect{Family: "go"}}} {
 		d := c.DialectFor()
-		if d.SetPromise != defaultSetPromise || d.SetSlice != defaultSetSlice {
-			t.Errorf("%s: the naming defaults must be the floor, got %q / %q", name, d.SetPromise, d.SetSlice)
+		if d.SetPromise != "" || d.SetSlice != "" || d.ExportedFunc != "" || d.Loop != "" || d.Cursor != "" ||
+			len(d.HandlePatterns) != 0 || d.Tests != nil || d.Definition != "" || d.EnvRead != "" {
+			t.Errorf("%s: nothing comes from a family or a default, got %+v", name, d)
 		}
-		if d.ExportedFunc != "" || d.Loop != "" || d.Cursor != "" || len(d.HandlePatterns) != 0 {
-			t.Errorf("%s: no family means no language lexicon, got %+v", name, d)
-		}
+	}
+	c := &Config{Dialect: &Dialect{Family: "go", Loop: `\bloop\b`}}
+	if d := c.DialectFor(); d.Loop != `\bloop\b` || d.ExportedFunc != "" {
+		t.Errorf("the declared fields are read as declared, got %+v", d)
 	}
 }
 
-func TestDialectFor_familyFillsWhatIsNotDeclared(t *testing.T) {
-	t.Run("DLCTI-B02: The family fills every field the project left empty, and a declared field wins", func(t *testing.T) {})
-	c := &Config{Dialect: &Dialect{
-		Family:         "go",
-		Loop:           `\bloop\b`,
-		HandlePatterns: []string{`\bmine\b`},
-	}}
-	d := c.DialectFor()
+func TestFamilyLexicon_isAnExample(t *testing.T) {
+	t.Run("DLCTI-B02: Each family has an example of the lexicon, never applied by itself", func(t *testing.T) {})
+	ex := FamilyLexicon("go")
 	base := dialectFamilies["go"]
-	if d.Loop != `\bloop\b` || !reflect.DeepEqual(d.HandlePatterns, []string{`\bmine\b`}) {
-		t.Errorf("the declared fields must win over the family, got Loop=%q Handle=%v", d.Loop, d.HandlePatterns)
+	if ex == nil || ex.ExportedFunc != base.ExportedFunc || ex.Cursor != base.Cursor || ex.ParamName != base.ParamName ||
+		ex.HTTPStatus != base.HTTPStatus || ex.HTTPStatusDynamic != base.HTTPStatusDynamic ||
+		!reflect.DeepEqual(ex.LogPatterns, base.LogPatterns) || ex.StatementEnd == "" || ex.SignatureEnd == "" ||
+		len(ex.Limits) == 0 || len(ex.GuardPatterns) == 0 {
+		t.Errorf("the example carries the family's lexicon, got %+v", ex)
 	}
-	if d.ExportedFunc != base.ExportedFunc || d.Cursor != base.Cursor || d.ParamName != base.ParamName ||
-		d.HTTPStatus != base.HTTPStatus || d.HTTPStatusDynamic != base.HTTPStatusDynamic ||
-		!reflect.DeepEqual(d.LogPatterns, base.LogPatterns) {
-		t.Errorf("the family must fill the empty fields, got %+v", d)
-	}
-	if c.Dialect.ExportedFunc != "" {
-		t.Errorf("the project's declaration must not be rewritten, got %q", c.Dialect.ExportedFunc)
+	ex.HandlePatterns[0] = "changed"
+	if FamilyLexicon("go").HandlePatterns[0] == "changed" {
+		t.Error("an example handed out is a copy: changing it changes no family")
 	}
 }
 
-func TestDialectFor_familyIgnoresCase(t *testing.T) {
+func TestFamilyLexicon_ignoresCase(t *testing.T) {
 	t.Run("DLCTI-B03: The family name is matched ignoring case", func(t *testing.T) {})
-	d := (&Config{Dialect: &Dialect{Family: "TS"}}).DialectFor()
-	if d.ExportedFunc != dialectFamilies["ts"].ExportedFunc {
-		t.Errorf("family TS must resolve to ts, got ExportedFunc=%q", d.ExportedFunc)
+	if ex := FamilyLexicon("TS"); ex == nil || ex.ExportedFunc != dialectFamilies["ts"].ExportedFunc {
+		t.Errorf("family TS must resolve to ts, got %+v", ex)
 	}
 }
 
-func TestDialectFor_unknownFamilyContributesNothing(t *testing.T) {
-	t.Run("DLCTI-B04: An unknown family contributes nothing, and the known ones are listed in order", func(t *testing.T) {})
-	d := (&Config{Dialect: &Dialect{Family: "cobol"}}).DialectFor()
-	if d.ExportedFunc != "" || d.Loop != "" || d.Cursor != "" || len(d.HandlePatterns) != 0 {
-		t.Errorf("an unknown family must leave the lexicon empty, got %+v", d)
+func TestFamilyLexicon_unknownFamilyHasNone(t *testing.T) {
+	t.Run("DLCTI-B04: An unknown family has no example, and the known ones are listed in order", func(t *testing.T) {})
+	if ex := FamilyLexicon("cobol"); ex != nil {
+		t.Errorf("an unknown family has no example, got %+v", ex)
 	}
 	known := KnownDialectFamilies()
 	if !sort.StringsAreSorted(known) || len(known) != len(dialectFamilies) {
@@ -77,18 +79,15 @@ func TestDialectFor_unknownFamilyContributesNothing(t *testing.T) {
 	}
 }
 
-func TestDialectFor_namingDefaultsAreOverridable(t *testing.T) {
-	t.Run("DLCTI-B05: The naming conventions apply to any family and a declared one replaces them", func(t *testing.T) {})
-	d := (&Config{Dialect: &Dialect{Family: "python", SetPromise: `^listar`}}).DialectFor()
-	if d.SetPromise != `^listar` {
-		t.Errorf("a declared set_promise must win, got %q", d.SetPromise)
+func TestFamilyLexicon_namingConventions(t *testing.T) {
+	t.Run("DLCTI-B05: Every family's example carries the two naming conventions", func(t *testing.T) {})
+	for _, fam := range KnownDialectFamilies() {
+		if ex := FamilyLexicon(fam); ex.SetPromise != defaultSetPromise || ex.SetSlice != defaultSetSlice {
+			t.Errorf("%s: the example names the set conventions, got %q / %q", fam, ex.SetPromise, ex.SetSlice)
+		}
 	}
-	if d.SetSlice != defaultSetSlice {
-		t.Errorf("an undeclared set_slice must fall back to the default, got %q", d.SetSlice)
-	}
-	d = (&Config{Dialect: &Dialect{SetSlice: `^buscarAlguns`}}).DialectFor()
-	if d.SetSlice != `^buscarAlguns` || d.SetPromise != defaultSetPromise {
-		t.Errorf("a declared set_slice must win and set_promise fall back, got %q / %q", d.SetSlice, d.SetPromise)
+	if d := (&Config{Dialect: &Dialect{SetSlice: `^buscarAlguns`}}).DialectFor(); d.SetSlice != `^buscarAlguns` || d.SetPromise != "" {
+		t.Errorf("a project declares its own conventions, or none, got %q / %q", d.SetSlice, d.SetPromise)
 	}
 }
 
@@ -198,7 +197,7 @@ func TestWaivedField(t *testing.T) {
 
 func TestDefaultSetPromise(t *testing.T) {
 	t.Run("DLCTI-B11: The set-promise verb is recognised after a provider prefix and never inside a word", func(t *testing.T) {})
-	re := (&Config{}).DialectFor().Compile(defaultSetPromise)
+	re := Dialect{}.Compile(defaultSetPromise)
 	if re == nil {
 		t.Fatal("the default set_promise must compile")
 	}
@@ -216,7 +215,7 @@ func TestDefaultSetPromise(t *testing.T) {
 
 func TestDefaultSetSlice(t *testing.T) {
 	t.Run("DLCTI-B12: The set-slice convention is a query verb opening the name, followed by a slice word", func(t *testing.T) {})
-	re := (&Config{}).DialectFor().Compile(defaultSetSlice)
+	re := Dialect{}.Compile(defaultSetSlice)
 	for _, name := range []string{"listRecent", "get_first", "fetchTopItems", "buscarPrimeiros"} {
 		if !re.MatchString(name) {
 			t.Errorf("%q declares a slice and was not recognised", name)
@@ -232,7 +231,7 @@ func TestDefaultSetSlice(t *testing.T) {
 func TestDialectFamilies_everyPatternCompiles(t *testing.T) {
 	t.Run("DLCTI-I01: Every pattern a family or a naming default brings compiles", func(t *testing.T) {})
 	for _, fam := range KnownDialectFamilies() {
-		d := (&Config{Dialect: &Dialect{Family: fam}}).DialectFor()
+		d := example(fam)
 		pats := []string{d.ExportedFunc, d.ParamName, d.Loop, d.Cursor, d.CollectionQuery, d.HTTPStatus, d.HTTPStatusDynamic, d.SetPromise, d.SetSlice}
 		pats = append(pats, d.HandlePatterns...)
 		pats = append(pats, d.LogPatterns...)
@@ -265,7 +264,7 @@ func TestGherkinFor_keywordsAreReadable(t *testing.T) {
 func TestDialectFamilies_noVendorQuery(t *testing.T) {
 	t.Run("DLCTI-X01: No family brings a collection query, which is the project's to declare", func(t *testing.T) {})
 	for _, fam := range KnownDialectFamilies() {
-		if q := (&Config{Dialect: &Dialect{Family: fam}}).DialectFor().CollectionQuery; q != "" {
+		if q := example(fam).CollectionQuery; q != "" {
 			t.Errorf("family %s brings collection_query %q", fam, q)
 		}
 	}
@@ -275,7 +274,7 @@ func TestDialectFamilies_noVendorQuery(t *testing.T) {
 // an init statement.
 func TestGoHandlePatternsSeeBothShapes(t *testing.T) {
 	t.Run("DLCTI-B13: The Go family recognises both shapes of error handling", func(t *testing.T) {})
-	d := (&Config{Dialect: &Dialect{Family: "go"}}).DialectFor()
+	d := example("go")
 	for _, line := range []string{"if err != nil {", "if err := os.Remove(p); err != nil {"} {
 		found := false
 		for _, p := range d.HandlePatterns {
@@ -293,7 +292,7 @@ func TestGoHandlePatternsSeeBothShapes(t *testing.T) {
 // word `err`, and a repository that handled and propagated both failed the failure gates.
 func TestGoPatternsSeeFieldAndSentinelErrors(t *testing.T) {
 	t.Run("DLCTI-B19: The Go family sees an error in a field and a sentinel error", func(t *testing.T) {})
-	d := (&Config{Dialect: &Dialect{Family: "go"}}).DialectFor()
+	d := example("go")
 	any := func(pats []string, line string) bool {
 		for _, p := range pats {
 			if regexp.MustCompile(p).MatchString(line) {
@@ -320,36 +319,45 @@ func TestGoPatternsSeeFieldAndSentinelErrors(t *testing.T) {
 func TestFamiliesSayHowATestIsWritten(t *testing.T) {
 	t.Run("DLCTI-B14: The Go and TS families say how a test is written", func(t *testing.T) {})
 	re := func(family string) *regexp.Regexp {
-		c := &Config{Dialect: &Dialect{Family: family}}
-		d := c.DialectFor()
+		d := example(family)
 		if d.Tests == nil || d.Tests.Pattern == "" {
 			t.Fatalf("family %s must say how a test is written", family)
 		}
 		return regexp.MustCompile(d.Tests.Pattern)
 	}
+	// title is what a `title` group of the pattern captured.
+	title := func(re *regexp.Regexp, s string) string {
+		m := re.FindStringSubmatch(s)
+		for i, n := range re.SubexpNames() {
+			if m != nil && strings.HasPrefix(n, "title") && m[i] != "" {
+				return m[i]
+			}
+		}
+		return ""
+	}
 	goRe := re("go")
-	if !goRe.MatchString(`t.Run("X", f)`) || goRe.MatchString(`it('X', f)`) {
+	if title(goRe, `t.Run("X", f)`) != "X" || goRe.MatchString(`it('X', f)`) {
 		t.Error("go reads t.Run and only it")
 	}
 	tsRe := re("ts")
 	for _, call := range []string{`it('x'`, `test("x"`, "describe(`x`", `it.only('x'`, `test.skip('x'`,
 		`it.each([[1, 2], [f(3), {a: [4]}]])('x'`, "it.each(\n  rows,\n)('x'"} {
-		if loc := tsRe.FindStringIndex(call); loc == nil || loc[0] != 0 || call[loc[1]] != '\'' && call[loc[1]] != '"' && call[loc[1]] != '`' {
-			t.Errorf("ts must read %q up to its title", call)
+		if title(tsRe, call+"x"+string(call[len(call)-1])+", f)") != "x" {
+			t.Errorf("ts must read %q and its title", call)
 		}
 	}
 	own := &Config{Dialect: &Dialect{Family: "ts", Tests: &TestsSource{Script: "node list.mjs"}}}
-	if d := own.DialectFor(); d.Tests == nil || d.Tests.Script != "node list.mjs" || d.Tests.Pattern != "" {
-		t.Errorf("the project's own tests must win over the family's, got %+v", d.Tests)
+	if d := own.DialectFor(); d.Tests == nil || d.Tests.Script != "node list.mjs" || d.Tests.Pattern != "" || d.Tests.Assertion != "" {
+		t.Errorf("the project's own tests are read as declared, got %+v", d.Tests)
 	}
-	if d := (&Config{Dialect: &Dialect{Family: "python"}}).DialectFor(); d.Tests != nil {
-		t.Errorf("a family that does not say how a test is written leaves it undeclared, got %+v", d.Tests)
+	if d := example("python"); d.Tests != nil {
+		t.Errorf("a family that does not say how a test is written has no example of it, got %+v", d.Tests)
 	}
 }
 
 func TestTSFamilyRecognisesCatchWithoutBinding(t *testing.T) {
 	t.Run("DLCTI-B15: The TS family recognises catch with or without its binding", func(t *testing.T) {})
-	d := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor()
+	d := example("ts")
 	handles := func(src string) bool {
 		for _, p := range d.HandlePatterns {
 			if regexp.MustCompile(p).MatchString(src) {
@@ -372,38 +380,30 @@ func TestTSFamilyRecognisesCatchWithoutBinding(t *testing.T) {
 
 func TestDialectAssertionByFamily(t *testing.T) {
 	t.Run("DLCTI-B16: The families say what an assertion is, and a project may declare only its own", func(t *testing.T) {})
-	goD := (&Config{Dialect: &Dialect{Family: "go"}}).DialectFor()
+	goD := example("go")
 	if goD.Tests == nil || !regexp.MustCompile(goD.Tests.Assertion).MatchString(`t.Errorf("x")`) ||
 		regexp.MustCompile(goD.Tests.Assertion).MatchString(`t.Run("x")`) {
 		t.Fatalf("go asserts with t.Errorf and not with t.Run, got %+v", goD.Tests)
 	}
-	tsD := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor()
+	tsD := example("ts")
 	for _, a := range []string{"expect(x).toBe(1)", "expect.assertions(1)", "assert(ok)", "assert.equal(a, b)"} {
 		if !regexp.MustCompile(tsD.Tests.Assertion).MatchString(a) {
 			t.Errorf("ts must read %q as an assertion", a)
 		}
 	}
 	onlyAssertion := (&Config{Dialect: &Dialect{Family: "go", Tests: &TestsSource{Assertion: `\bcheck\(`}}}).DialectFor()
-	if onlyAssertion.Tests.Pattern != goD.Tests.Pattern || onlyAssertion.Tests.Assertion != `\bcheck\(` {
-		t.Errorf("declaring only the assertion keeps the family's pattern and the project's assertion, got %+v", onlyAssertion.Tests)
+	if onlyAssertion.Tests.Pattern != "" || onlyAssertion.Tests.Assertion != `\bcheck\(` {
+		t.Errorf("a project declaring only its assertion has only its assertion, got %+v", onlyAssertion.Tests)
 	}
-	if goD.Tests.Assertion == "" || (&Config{Dialect: &Dialect{Family: "go"}}).DialectFor().Tests.Assertion != goD.Tests.Assertion {
-		t.Error("resolving must not change the family's own assertion")
-	}
-	ownPattern := (&Config{Dialect: &Dialect{Family: "go", Tests: &TestsSource{Pattern: `\bSpec\(`}}}).DialectFor()
-	if ownPattern.Tests.Assertion != "" || ownPattern.Tests.Pattern != `\bSpec\(` {
-		t.Errorf("a project reading its tests its own way takes no assertion from the family, got %+v", ownPattern.Tests)
-	}
-	ownScript := (&Config{Dialect: &Dialect{Family: "ts", Tests: &TestsSource{Script: "node l.mjs"}}}).DialectFor()
-	if ownScript.Tests.Assertion != "" || ownScript.Tests.Pattern != "" {
-		t.Errorf("a project with its own script takes nothing from the family, got %+v", ownScript.Tests)
+	if example("go").Tests.Assertion != goD.Tests.Assertion {
+		t.Error("handing out the example must not change the family's own assertion")
 	}
 }
 
 func TestDialectDefinitionByFamily(t *testing.T) {
 	t.Run("DLCTI-B17: The families say how code defines a name", func(t *testing.T) {})
 	names := func(family, code string) []string {
-		re := regexp.MustCompile((&Config{Dialect: &Dialect{Family: family}}).DialectFor().Definition)
+		re := regexp.MustCompile(example(family).Definition)
 		owner := re.SubexpIndex("owner")
 		var out []string
 		for _, m := range re.FindAllStringSubmatch(code, -1) {
@@ -429,16 +429,16 @@ func TestDialectDefinitionByFamily(t *testing.T) {
 		}
 	}
 	// A Go method names its receiver's type in the `owner` group.
-	goRe := regexp.MustCompile((&Config{Dialect: &Dialect{Family: "go"}}).DialectFor().Definition)
+	goRe := regexp.MustCompile(example("go").Definition)
 	if m := goRe.FindStringSubmatch("func (f *fakePinger) Ping(ctx context.Context) error {"); m == nil || m[goRe.SubexpIndex("owner")] != "fakePinger" {
 		t.Errorf("the go definition should capture the receiver as owner, got %q", m)
 	}
 	own := (&Config{Dialect: &Dialect{Family: "go", Definition: `(?m)^proc (\w+)`}}).DialectFor()
 	if own.Definition != `(?m)^proc (\w+)` {
-		t.Errorf("the project's definition wins, got %q", own.Definition)
+		t.Errorf("the project's definition is read as declared, got %q", own.Definition)
 	}
-	if d := (&Config{Dialect: &Dialect{Family: "rust"}}).DialectFor(); d.Definition != "" {
-		t.Errorf("a family with no definition leaves it undeclared, got %q", d.Definition)
+	if d := example("rust"); d.Definition != "" {
+		t.Errorf("a family with no definition has no example of it, got %q", d.Definition)
 	}
 }
 
@@ -478,18 +478,17 @@ func TestEnvReadPattern(t *testing.T) {
 		}
 		return ""
 	}
-	union := (Dialect{}).EnvReadPattern()
 	for fam, text := range reads {
-		pat := (&Config{Dialect: &Dialect{Family: fam}}).DialectFor().EnvReadPattern()
+		pat := example(fam).EnvReadPattern()
 		if got := name(pat, text); got != "A" {
 			t.Errorf("%s reads %q as %q", fam, text, got)
 		}
-		if got := name(union, text); got != "A" {
-			t.Errorf("with no family, %q is read as %q", text, got)
-		}
+	}
+	if p := (Dialect{}).EnvReadPattern(); p != "" {
+		t.Errorf("with no env_read nothing is read, got %s", p)
 	}
 	if p := (Dialect{EnvRead: `cfg\("(\w+)"\)`}).EnvReadPattern(); p != `cfg\("(\w+)"\)` {
-		t.Errorf("the project's own pattern wins: %s", p)
+		t.Errorf("the project's own pattern is read: %s", p)
 	}
 }
 
@@ -551,7 +550,7 @@ func TestFalliblePatterns_familyKnowsThemAndDoesNotImposeThem(t *testing.T) {
 	if FamilyFalliblePatterns("cobol") != nil {
 		t.Error("an unknown family knows none")
 	}
-	if got := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor().FalliblePatterns; len(got) != 0 {
+	if got := example("ts").FalliblePatterns; len(got) != 0 {
 		t.Errorf("a project that declared none is measured with none until it adopts them: %+v", got)
 	}
 }
@@ -588,7 +587,7 @@ func TestFalliblePatterns_familySaysWhatPropagates(t *testing.T) {
 
 func TestDialect_importResolveAndNavigationCall(t *testing.T) {
 	t.Run("DLCTI-B23: import_resolve and navigation_call are read from the dialect", func(t *testing.T) {})
-	c, err := load(t, "version: 7\nlayers: {}\ndialect:\n  import_resolve:\n    extensions: [.ts, /index.ts]\n    aliases:\n      \"@/\": \"src/\"\n  navigation_call: 'navigate\\(''(?P<route>\\w+)'''\n")
+	c, err := load(t, "version: 8\nlayers: {}\ndialect:\n  import_resolve:\n    extensions: [.ts, /index.ts]\n    aliases:\n      \"@/\": \"src/\"\n  navigation_call: 'navigate\\(''(?P<route>\\w+)'''\n")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -596,18 +595,18 @@ func TestDialect_importResolveAndNavigationCall(t *testing.T) {
 	if d.ImportResolve == nil || len(d.ImportResolve.Extensions) != 2 || d.ImportResolve.Aliases["@/"] != "src/" || !strings.Contains(d.NavigationCall, "route") {
 		t.Errorf("got %+v %q", d.ImportResolve, d.NavigationCall)
 	}
-	sep, err := load(t, "version: 7\nlayers: {}\ndialect:\n  import_resolve:\n    separator: '.'\n")
+	sep, err := load(t, "version: 8\nlayers: {}\ndialect:\n  import_resolve:\n    separator: '.'\n")
 	if err != nil || sep.DialectFor().ImportResolve.Separator != "." {
 		t.Errorf("the separator is read: %v", err)
 	}
-	if got := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor().NavigationCall; got != "" || !strings.Contains(FamilyNavigationCall("ts"), "(?P<route>") || FamilyNavigationCall("go") != "" {
+	if got := example("ts").NavigationCall; got != "" || !strings.Contains(FamilyNavigationCall("ts"), "(?P<route>") || FamilyNavigationCall("go") != "" {
 		t.Errorf("no family gives a navigation call by itself, and ts has an example: %q", got)
 	}
 }
 
 func TestDialectFor_ocaml(t *testing.T) {
 	t.Run("DLCTI-B24: The OCaml family reads OCaml", func(t *testing.T) {})
-	d := (&Config{Dialect: &Dialect{Family: "OCaml"}}).DialectFor()
+	d := example("OCaml")
 	src := "open Lexer\nopen! Base.Option\nlet parse x =\n  let local = x in local\nlet rec walk' t = t\nlet home = Sys.getenv_opt \"HOME\"\n"
 	var exported []string
 	for _, m := range regexp.MustCompile(d.ExportedFunc).FindAllStringSubmatch(src, -1) {
@@ -637,7 +636,7 @@ func TestDialectFor_ocaml(t *testing.T) {
 func TestImportResolve_byName(t *testing.T) {
 	t.Run("DLCTI-B25: The import resolution declares imports by name", func(t *testing.T) {})
 	path := filepath.Join(t.TempDir(), "anchors.yaml")
-	if err := os.WriteFile(path, []byte("version: 7\ndialect:\n  family: ocaml\n  import_resolve:\n    by_name: true\n    name_case: lower_first\n    extensions: [.ml]\n"), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte("version: 8\ndialect:\n  family: ocaml\n  import_resolve:\n    by_name: true\n    name_case: lower_first\n    extensions: [.ml]\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	c, err := Load(path)
@@ -651,7 +650,7 @@ func TestImportResolve_byName(t *testing.T) {
 
 func TestDialect_testHandles(t *testing.T) {
 	t.Run("DLCTI-B27: The test handle patterns are read and checked on load", func(t *testing.T) {})
-	c, err := load(t, "version: 7\nlayers: {}\ndialect:\n  test_handles:\n    exposed: ['testID=\"(?P<testid>[a-z-]+)\"']\n    mentioned: ['-(?P<suffix>row)']\n    queried: ['id: (?P<prefix>[a-z-]+)']\n")
+	c, err := load(t, "version: 8\nlayers: {}\ndialect:\n  test_handles:\n    exposed: ['testID=\"(?P<testid>[a-z-]+)\"']\n    mentioned: ['-(?P<suffix>row)']\n    queried: ['id: (?P<prefix>[a-z-]+)']\n")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -663,7 +662,7 @@ func TestDialect_testHandles(t *testing.T) {
 		{"queried: ['id: ([a-z]+)']", "test_handles.queried[0]` captures with none of the groups testid, prefix"},
 		{"exposed: ['-(?P<suffix>row)']", "test_handles.exposed[0]` captures with none"},
 	} {
-		if _, err := load(t, "version: 7\nlayers: {}\ndialect:\n  test_handles:\n    "+c.yaml+"\n"); err == nil || !strings.Contains(err.Error(), c.names) {
+		if _, err := load(t, "version: 8\nlayers: {}\ndialect:\n  test_handles:\n    "+c.yaml+"\n"); err == nil || !strings.Contains(err.Error(), c.names) {
 			t.Errorf("%s: the config is refused naming the pattern, got %v", c.yaml, err)
 		}
 	}
@@ -681,7 +680,7 @@ func TestFamilyTestHandles_anExampleNeverApplied(t *testing.T) {
 	if FamilyTestHandles("go", "testID") != nil || FamilyTestHandles("ts", " ") != nil {
 		t.Error("another family, or no attribute, gives no example")
 	}
-	if got := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor().TestHandles; got != nil {
+	if got := example("ts").TestHandles; got != nil {
 		t.Errorf("a project that declared none is measured with none: %+v", got)
 	}
 	// Reported from MIF: a conditional nested three deep, one branch a template. Every branch
@@ -751,17 +750,17 @@ func TestPattern_engine(t *testing.T) {
 
 func TestDialect_chainPatterns(t *testing.T) {
 	t.Run("DLCTI-B30: The chain patterns are the dialect's, and a family gives none by itself", func(t *testing.T) {})
-	c, err := load(t, "version: 7\nlayers: {}\ndialect:\n  imports: ['from (?P<path>\\S+)']\n  import_names: ['import (?P<name>\\w+)']\n  declarations: ['def (?P<name>\\w+)', 'export default(?P<default>)']\n")
+	c, err := load(t, "version: 8\nlayers: {}\ndialect:\n  imports: ['from (?P<path>\\S+)']\n  import_names: ['import (?P<name>\\w+)']\n  declarations: ['def (?P<name>\\w+)', 'export default(?P<default>)']\n")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if d := c.DialectFor(); len(d.Imports) != 1 || len(d.ImportNames) != 1 || len(d.Declarations) != 2 {
 		t.Errorf("the three lists are read: %+v", d)
 	}
-	if _, err := load(t, "version: 7\nlayers: {}\ndialect:\n  imports: ['from (\\S+)']\n"); err == nil || !strings.Contains(err.Error(), "dialect.imports[0]") {
+	if _, err := load(t, "version: 8\nlayers: {}\ndialect:\n  imports: ['from (\\S+)']\n"); err == nil || !strings.Contains(err.Error(), "dialect.imports[0]") {
 		t.Errorf("an import pattern with no path group refuses the config: %v", err)
 	}
-	if d := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor(); len(d.Imports) != 0 || d.ImportResolve != nil || d.TypeImportPattern != "" {
+	if d := example("ts"); len(d.Imports) != 0 || d.ImportResolve != nil || d.TypeImportPattern != "" {
 		t.Errorf("the family gives no import pattern nor resolution by itself: %+v", d)
 	}
 }
@@ -797,5 +796,27 @@ func TestFamilyChain_examples(t *testing.T) {
 	}
 	if FamilyChain("cobol") != nil {
 		t.Error("an unknown family has no example")
+	}
+}
+
+func TestFamilyMocksAndRoutePattern(t *testing.T) {
+	t.Run("DLCTI-B32: The families' examples of the mock shapes and the route pattern", func(t *testing.T) {})
+	ts := FamilyMocks("ts")
+	if ts == nil || !regexp.MustCompile(ts.MockDetect).MatchString(`jest.mock('./x'`) ||
+		!regexp.MustCompile(ts.MockFactory).MatchString(`jest.mock('./x', () => ({}))`) || regexp.MustCompile(ts.MockFactory).MatchString(`jest.mock('./x')`) ||
+		!regexp.MustCompile(ts.MockTyped).MatchString(`(): Partial<X> => ({})`) {
+		t.Errorf("the ts mocks: %+v", ts)
+	}
+	if py := FamilyMocks("python"); py == nil || !regexp.MustCompile(py.MockDetect).MatchString(`patch('app.x')`) || py.MockFactory != "" {
+		t.Errorf("the python mocks: %+v", py)
+	}
+	if FamilyMocks("go") != nil || FamilyRoutePattern("go") != "" {
+		t.Error("go has no example of either")
+	}
+	route := regexp.MustCompile(FamilyRoutePattern("ts"))
+	for _, src := range []string{`<Stack.Screen name="Perfil" />`, "type P = {\n  Ajustes: undefined\n}", `addResource('signup')`} {
+		if !route.MatchString(src) {
+			t.Errorf("the ts route pattern reads %q", src)
+		}
 	}
 }

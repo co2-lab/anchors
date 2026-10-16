@@ -146,14 +146,16 @@ func scanMarkings(root, prefixo string, escopos []string, cfg *config.Config) ma
 			}
 			return nil
 		}
-		if !likelyText(d.Name()) {
-			return nil
-		}
 		rel, relErr := filepath.Rel(root, caminho)
 		if relErr != nil {
 			return nil
 		}
 		rel = filepath.ToSlash(rel)
+		// A marking lives in a text the project comments — its code, its docs, its scripts:
+		// a file whose comments nobody declared is not read, nor is a binary read for it.
+		if cfg.CommentsFor(rel) == nil {
+			return nil
+		}
 
 		b, readErr := os.ReadFile(caminho)
 		if readErr != nil {
@@ -203,19 +205,6 @@ func containsFile(lista []string, alvo string) bool {
 func ignored(nome string) bool {
 	switch nome {
 	case ".git", "node_modules", "dist", "build", ".next", "coverage", "vendor", ".anchors":
-		return true
-	}
-	return false
-}
-
-// likelyText evita ler binário. A lista é por EXTENSÃO porque é onde a marcação vive:
-// código e documentação. Um arquivo sem extensão conhecida é pulado — o custo de errar
-// para menos aqui é o gate não ver uma marcação em lugar exótico, e o de errar para mais
-// é ler megabytes de imagem a cada varredura.
-func likelyText(nome string) bool {
-	switch strings.ToLower(filepath.Ext(nome)) {
-	case ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".go", ".py", ".rb", ".java",
-		".kt", ".swift", ".rs", ".php", ".cs", ".md", ".yaml", ".yml", ".sql", ".sh":
 		return true
 	}
 	return false

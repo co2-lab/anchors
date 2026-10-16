@@ -286,7 +286,7 @@ func TestNextCmd_githubResumesTheAgentsCard(t *testing.T) {
 	t.Run("WRQUW-B14: The claimed card is printed with its state and owner", func(t *testing.T) {})
 	t.Run("WRQUW-B19: Other cards end naming the pull request body command", func(t *testing.T) {})
 	root := githubProject(t)
-	writeFile(t, root, "anchors.graph.yaml", "version: 7\nnodes:\n  - id: src/pricing.ts\n    kind: code\n    rev: a\n    code: PRICX\nedges: []\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 8\nnodes:\n  - id: src/pricing.ts\n    kind: code\n    rev: a\n    code: PRICX\nedges: []\n")
 	host, _ := os.Hostname()
 	if host == "" {
 		host = "local"
@@ -367,7 +367,7 @@ func TestPrintBoardWork_theDeliverableFollowsTheCard(t *testing.T) {
 	t.Run("WRQUW-B15: The deliverable follows the card's title", func(t *testing.T) {})
 	t.Run("WRQUW-B17: Only an agent that does not decide the product is told to escalate", func(t *testing.T) {})
 	root := queueProject(t)
-	writeFile(t, root, "anchors.graph.yaml", "version: 7\nnodes:\n  - id: src/pricing.ts\n    kind: code\n    rev: a\n    code: PRICX\n    layer: logic\nedges: []\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 8\nnodes:\n  - id: src/pricing.ts\n    kind: code\n    rev: a\n    code: PRICX\n    layer: logic\nedges: []\n")
 	writeFile(t, root, "src/pricing.ts", "x\n")
 
 	plan := stdoutOf(t, func() {

@@ -7,7 +7,6 @@ package gate
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -54,7 +53,7 @@ func checkObligationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 		if reason := waiverFor(content, ob.Name); reason != "" {
 			continue // exceção declarada COM motivo
 		}
-		name := nodeIdentifier(n.ID)
+		name := cfg.UnitName(n.ID)
 		// O nó pode declarar COMO é referenciado no destino, quando a derivação não dá
 		// conta. É comum: o nome do artefato e o da referência seguem convenções
 		// diferentes, e às vezes INCONSISTENTES entre si (num projeto real,
@@ -183,18 +182,6 @@ func headerOf(content string) string {
 		return content[:1200]
 	}
 	return content
-}
-
-// nodeIdentifier é o nome pelo qual o nó é conhecido: o basename sem as extensões
-// compostas (`.spec.md`, `.test.ts`) nem a simples.
-func nodeIdentifier(id string) string {
-	base := filepath.Base(id)
-	for _, suf := range []string{".spec.md", ".feature", ".test.ts", ".test.tsx"} {
-		if strings.HasSuffix(base, suf) {
-			return strings.TrimSuffix(base, suf)
-		}
-	}
-	return strings.TrimSuffix(base, filepath.Ext(base))
 }
 
 // applyIdentifierForm converte o nome do nó para a forma como ele é REFERENCIADO no

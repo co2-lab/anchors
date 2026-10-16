@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -998,7 +999,7 @@ func impactOf(g *mapx.Graph, cfg *config.Config, changed, root string) ([]string
 	// não dispara `feature-test-match`, `feature-nao-vazia` nem `teste-nao-vazio`, e um
 	// worker que siga o comando prescrito pelo `anchors work` declara "todos os
 	// bloqueantes ✗0" sem jamais ter rodado o bloqueante mais importante da sua etapa.
-	for _, peca := range unitPieces(target) {
+	for _, peca := range unitPieces(target, cfg) {
 		if common.NodeExists(g, peca) {
 			ids[peca] = true
 		}
@@ -1973,20 +1974,21 @@ func pendingCount(p gate.Profile, gateName string) int {
 // in its code and test forms, besides the fixed Go and TypeScript names a spec target
 // (whose extension says nothing about the code) needs. A candidate only enters when the
 // map holds it, so a name that does not exist costs nothing.
-func unitPieces(target string) []string {
-	ext := filepath.Ext(target)
-	base := strings.TrimSuffix(target, ext)
-	for _, suf := range []string{".spec", ".test", "_test"} {
-		base = strings.TrimSuffix(base, suf)
+func unitPieces(target string, cfg *config.Config) []string {
+	layer, _ := scan.Classify(target, cfg)
+	var cands []string
+	for _, piece := range []string{"spec", "feature", "test"} {
+		cands = append(cands, cfg.PiecePaths(target, layer, piece)...)
 	}
-	sufs := []string{".spec.md", ".feature", ".test.ts", ".test.tsx", ".ts", ".tsx", ".go", "_test.go"}
-	if ext != ".md" && ext != ".feature" && ext != "" {
-		sufs = append(sufs, ext, "_test"+ext, ".test"+ext, ".spec"+ext)
+	stem := path.Join(path.Dir(target), cfg.UnitName(target))
+	for _, ext := range cfg.CodeExtensions() {
+		cands = append(cands, stem+ext)
 	}
+	cands = append(cands, stem+".spec.md", stem+".feature")
 	seen := map[string]bool{target: true}
 	var out []string
-	for _, suf := range sufs {
-		if cand := base + suf; !seen[cand] {
+	for _, cand := range cands {
+		if !seen[cand] {
 			seen[cand] = true
 			out = append(out, cand)
 		}

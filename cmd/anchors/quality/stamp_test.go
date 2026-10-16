@@ -5,6 +5,7 @@
 package quality
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,13 +16,16 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-const stampYAML = `version: 2
+var stampYAML = `version: 2
 layers: {}
 derived:
   anchor: spec
   mock_detect: "(?:jest|vi)\\.mock\\(['\"]([^'\"]+)"
   export_detect: "^export\\s+(?:async\\s+)?(?:function|const)\\s+(\\w+)"
-`
+dialect:
+  import_resolve:
+    aliases: {"@/": ""}
+` + testkit.CommentsYAML
 
 const stampHooks = `export function useBalance(id) {
   return fetchBalance(id)
@@ -168,7 +172,7 @@ func TestStampRefresh_listsTheDoublesAndTheChange(t *testing.T) {
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: mod, Kind: mapx.KindCode}, {ID: test, Kind: mapx.KindTest}}}
 	// Stamp it with the hash the gate would compute today.
 	write(test, "// @contract: "+mod+" | export function useBalance(id) { | 3 | 00000000\njest.mock('@/src/hooks/balance')\n")
-	if _, err := gate.RefreshStamps(g, root, mod, true); err != nil {
+	if _, err := gate.RefreshStamps(g, root, mod, true, testkit.WithComments(nil)); err != nil {
 		t.Fatal(err)
 	}
 	for _, args := range [][]string{{"init", "-q"}, {"add", "."}, {"-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "base"}} {
@@ -207,7 +211,7 @@ func refreshFixture(t *testing.T, newMod string) (root, mod, test string, g *map
 		test: "// @contract: " + mod + " | export function useBalance(id) { | 3 | 00000000\njest.mock('@/src/hooks/balance')\n",
 	}, nil)
 	g = &mapx.Graph{Nodes: []mapx.Node{{ID: mod, Kind: mapx.KindCode}, {ID: test, Kind: mapx.KindTest}}}
-	if _, err := gate.RefreshStamps(g, root, mod, true); err != nil {
+	if _, err := gate.RefreshStamps(g, root, mod, true, testkit.WithComments(nil)); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(root, mod), []byte(newMod), 0o644); err != nil {

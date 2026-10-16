@@ -13,6 +13,7 @@ The declared failure has a path that handles it in the code.
 | Confronts | `spec` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Presupposes | `dialect.handle_patterns` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 

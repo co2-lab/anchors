@@ -301,10 +301,10 @@ func TestAmbiguities_reportOnlyHeuristicDecisions(t *testing.T) {
 func TestLayerOfUnit(t *testing.T) {
 	t.Run("RPSCR-B11: The unit's layer comes from the header before the path", func(t *testing.T) {})
 	root := t.TempDir()
-	cfg := &config.Config{Layers: map[string]config.Layer{
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{
 		"spec":    {Pattern: "**/*.spec.md", Kind: "spec"},
 		"lambdas": {Pattern: "pkg/lambdas/**/*.ts", Kind: "code"},
-	}}
+	}})
 
 	write := func(rel, body string) {
 		must(t, writeDeep(filepath.Join(root, rel), body))
@@ -344,7 +344,7 @@ func TestExtractCodesIgnoresComments(t *testing.T) {
 	src := `// see the scenario FOOOX-VR of another screen
 const x = 1  // BARRX-S01 here too
 export const y = "BAZZX-B01"  // this one is in code (a string), it counts`
-	codes := extractCodes([]byte(src))
+	codes := extractCodes([]byte(src), testkit.Comments("x.ts"))
 	has := func(c string) bool {
 		for _, x := range codes {
 			if x == c {
@@ -359,7 +359,7 @@ export const y = "BAZZX-B01"  // this one is in code (a string), it counts`
 	if !has("BAZZX-B01") {
 		t.Errorf("a code in code (outside a comment) should count: %v", codes)
 	}
-	if got := extractCodes([]byte("ABCDX-B01 ABCDX-B01 ABCDX-B02 ABCDX-B01")); strings.Join(got, ",") != "ABCDX-B01,ABCDX-B02" {
+	if got := extractCodes([]byte("ABCDX-B01 ABCDX-B01 ABCDX-B02 ABCDX-B01"), testkit.Comments("x.ts")); strings.Join(got, ",") != "ABCDX-B01,ABCDX-B02" {
 		t.Errorf("each code once, in order of first appearance; got %v", got)
 	}
 }
@@ -367,7 +367,7 @@ export const y = "BAZZX-B01"  // this one is in code (a string), it counts`
 func TestStripBlockComment(t *testing.T) {
 	t.Run("RPSCR-B12: Codes cited in comments are not owned, and each code is listed once", func(t *testing.T) {})
 	src := "/* AAAAX-S01 in the block */ const z = \"BBBBX-V01\""
-	codes := extractCodes([]byte(src))
+	codes := extractCodes([]byte(src), testkit.Comments("x.ts"))
 	for _, c := range codes {
 		if c == "AAAAX-S01" {
 			t.Error("a code in a block comment should not count")
@@ -384,12 +384,12 @@ func TestProjectVocabularyIsSeenByTheScan(t *testing.T) {
 	defer SetRuleLetters(config.DefaultRuleLetters)
 
 	const text = "scenario KVALX-Z01: the key is immutable"
-	if got := extractCodes([]byte(text)); len(got) != 0 {
+	if got := extractCodes([]byte(text), testkit.Comments("x.ts")); len(got) != 0 {
 		t.Fatalf("with the canonical vocabulary, `Z` is not a valid letter — got %v", got)
 	}
 
 	SetRuleLetters("SRVAXBNMDEIZ") // the project declared `Z` for Policy
-	got := extractCodes([]byte(text))
+	got := extractCodes([]byte(text), testkit.Comments("x.ts"))
 	if len(got) != 1 || got[0] != "KVALX-Z01" {
 		t.Errorf("the scan must see the letter DECLARED by the project; got %v", got)
 	}
@@ -402,7 +402,7 @@ func TestWalk_recordsTheDeclaredIdentityAndFlags(t *testing.T) {
 		"@anchors-shared-code\n@noPropagation\n\n### OWNRX-B01 — a rule\n"
 	must(t, writeDeep(filepath.Join(root, "a.spec.md"), spec))
 	must(t, writeDeep(filepath.Join(root, "b.spec.md"), "# plain\n\n### PLANX-B01 — a rule\n"))
-	if HeaderCodeOf(spec) != "OWNRX" || HeaderCodeOf("# plain\n") != "" {
+	if HeaderCodeOf(spec, testkit.AnyComment()) != "OWNRX" || HeaderCodeOf("# plain\n", testkit.AnyComment()) != "" {
 		t.Errorf("HeaderCodeOf reads the declared identity, and nothing when none is declared")
 	}
 	cfg := &config.Config{Layers: map[string]config.Layer{"spec": {Pattern: "*.spec.md", Kind: "spec"}}}
@@ -433,27 +433,27 @@ func TestWalk_recordsTheDeclaredIdentityAndFlags(t *testing.T) {
 
 func TestParentDe_onlyInsideTheHeader(t *testing.T) {
 	t.Run("RPSCR-B15: The parent is read only inside the header", func(t *testing.T) {})
-	if p := parentDe([]byte(boardWorkflow)); p != "" {
+	if p := parentDe([]byte(boardWorkflow), testkit.AnyComment()); p != "" {
 		t.Errorf("a `parent:` in a workflow's body is not a header declaration, got %q", p)
 	}
 	spec := "<!-- @anchors\n  code: INMTN\n  parent: DTBSA-W01\n  layer: lambdas\n-->\n# InstanceMetrics\n\nparent: NOPE-W09\n"
-	if p := parentDe([]byte(spec)); p != "DTBSA-W01" {
+	if p := parentDe([]byte(spec), testkit.AnyComment()); p != "DTBSA-W01" {
 		t.Errorf("the header's parent should be read, got %q", p)
 	}
 	code := "// @anchors\n//   ref: PRICX\n//   parent: PRICX-W02\npackage p\n\n// parent: NOPE-W09\n"
-	if p := parentDe([]byte(code)); p != "PRICX-W02" {
+	if p := parentDe([]byte(code), testkit.AnyComment()); p != "PRICX-W02" {
 		t.Errorf("a line-comment header's parent should be read, got %q", p)
 	}
 	noParent := "<!-- @anchors\n  code: INMTN\n-->\n# InstanceMetrics\n\nparent: NOPE-W09\n"
-	if p := parentDe([]byte(noParent)); p != "" {
+	if p := parentDe([]byte(noParent), testkit.AnyComment()); p != "" {
 		t.Errorf("the HTML header ends at `-->`, got %q", p)
 	}
 	noParentCode := "// @anchors\n//   ref: PRICX\npackage p\n\n// parent: NOPE-W09\n"
-	if p := parentDe([]byte(noParentCode)); p != "" {
+	if p := parentDe([]byte(noParentCode), testkit.AnyComment()); p != "" {
 		t.Errorf("a line-comment header ends at the first non-comment line, got %q", p)
 	}
 	oneLine := "<!-- @anchors parent: X -->\nparent: NOPE-W09\n"
-	if p := parentDe([]byte(oneLine)); p != "" {
+	if p := parentDe([]byte(oneLine), testkit.AnyComment()); p != "" {
 		t.Errorf("a one-line header closes on its own line, got %q", p)
 	}
 }
@@ -463,14 +463,14 @@ func TestNeedsFor_pathsForPlansPhasesForSpecs(t *testing.T) {
 	root := t.TempDir()
 	must(t, writeDeep(filepath.Join(root, "plans", "a.md"), "x"))
 	plan := []byte("<!-- @anchors\n  code: PLANX\n  needs: `plans/a.md`, plans/b.md\n-->\n")
-	if got := needsFor("plan", plan, root, "plans/c.md"); strings.Join(got, ",") != "plans/a.md,plans/b.md" {
+	if got := needsFor("plan", plan, root, "plans/c.md", testkit.AnyComment()); strings.Join(got, ",") != "plans/a.md,plans/b.md" {
 		t.Errorf("a plan needs plan paths, got %v", got)
 	}
 	spec := []byte("<!-- @anchors\n  code: SPECX\n  needs: FNDTN-W02, plans/a.md, FNDTN-B01\n-->\n")
-	if got := needsFor("spec", spec, root, "s.spec.md"); strings.Join(got, ",") != "FNDTN-W02" {
+	if got := needsFor("spec", spec, root, "s.spec.md", testkit.AnyComment()); strings.Join(got, ",") != "FNDTN-W02" {
 		t.Errorf("a spec needs only phase codes, got %v", got)
 	}
-	if got := needsFor("code", spec, root, "x.go"); got != nil {
+	if got := needsFor("code", spec, root, "x.go", testkit.AnyComment()); got != nil {
 		t.Errorf("a code file needs nothing, got %v", got)
 	}
 }
@@ -480,10 +480,10 @@ func TestRevisesDe_onlyPlans(t *testing.T) {
 	root := t.TempDir()
 	must(t, writeDeep(filepath.Join(root, "plans", "a.md"), "x"))
 	hdr := []byte("<!-- @anchors\n  code: PLANX\n  revises: `plans/a.md` -->\n")
-	if got := revisesDe("plan", hdr, root, "plans/c.md"); strings.Join(got, ",") != "plans/a.md" {
+	if got := revisesDe("plan", hdr, root, "plans/c.md", testkit.AnyComment()); strings.Join(got, ",") != "plans/a.md" {
 		t.Errorf("a plan revises plans/a.md, got %v", got)
 	}
-	if got := revisesDe("spec", hdr, root, "s.spec.md"); got != nil {
+	if got := revisesDe("spec", hdr, root, "s.spec.md", testkit.AnyComment()); got != nil {
 		t.Errorf("a spec revises nothing, got %v", got)
 	}
 }
@@ -501,7 +501,7 @@ func TestExtractHeaderDeps(t *testing.T) {
 export const x = 1
 `)
 	rel := "apps/mobile/src/features/audit/presentation/auditFeed.ts"
-	deps := extractHeaderDeps(content, root, rel)
+	deps := extractHeaderDeps(content, root, rel, testkit.AnyComment())
 	if len(deps) != 2 {
 		t.Fatalf("want 2 header deps, got %d: %+v", len(deps), deps)
 	}
@@ -516,18 +516,18 @@ func TestDepsForHeaderVsTable(t *testing.T) {
 	must(t, writeDeep(root+"/apps/mobile/src/theme/tokens.ts", "x"))
 	hdr := []byte("// @anchors\n//   layer: presentation\n//   dep: theme/tokens.ts\n")
 	// code (not a spec) → reads the header dep
-	if d := depsFor("code", hdr, root, "apps/mobile/src/f/presentation/p.ts"); len(d) != 1 {
+	if d := depsFor("code", hdr, root, "apps/mobile/src/f/presentation/p.ts", testkit.AnyComment()); len(d) != 1 {
 		t.Errorf("code should read the dep from the header, got %+v", d)
 	}
 	// spec → does NOT read the header dep (it uses the table)
-	if d := depsFor("spec", hdr, root, "apps/mobile/src/f/x.spec.md"); d != nil {
+	if d := depsFor("spec", hdr, root, "apps/mobile/src/f/x.spec.md", testkit.AnyComment()); d != nil {
 		t.Errorf("a spec should not read the dep from the header (only the table), got %+v", d)
 	}
 }
 
 func TestDepsFor_yamlScriptDependsOnItsComposition(t *testing.T) {
 	t.Run("RPSCR-B19: A YAML test script depends on the scripts it composes", func(t *testing.T) {})
-	d := depsFor("test", []byte("- runFlow: ../u/l.yaml\n"), t.TempDir(), "t/f/x.yaml")
+	d := depsFor("test", []byte("- runFlow: ../u/l.yaml\n"), t.TempDir(), "t/f/x.yaml", testkit.AnyComment())
 	if len(d) != 1 || d[0].File != "t/u/l.yaml" || d[0].Method != "runFlow" {
 		t.Errorf("want one runFlow dependency on t/u/l.yaml, got %+v", d)
 	}
@@ -771,10 +771,10 @@ func TestDepsForOnlySpec(t *testing.T) {
 	root := t.TempDir()
 	must(t, writeDeep(root+"/src/x.ts", "x"))
 	tbl := "# T\n## Dependências\n| Cód | Arquivo | Método |\n|--|--|--|\n| DEP1 | `src/x.ts` | m |\n"
-	if d := depsFor("guide", []byte(tbl), root, "guides/G.md"); d != nil {
+	if d := depsFor("guide", []byte(tbl), root, "guides/G.md", testkit.AnyComment()); d != nil {
 		t.Errorf("kind guide should not extract deps: %+v", d)
 	}
-	if d := depsFor("spec", []byte(tbl), root, "a/src/s.spec.md"); d != nil {
+	if d := depsFor("spec", []byte(tbl), root, "a/src/s.spec.md", testkit.AnyComment()); d != nil {
 		t.Errorf("a spec declares no dependency of the map, got %+v", d)
 	}
 	if d := extractDeps([]byte(tbl), root, "a/src/s.spec.md"); len(d) != 1 {
@@ -799,26 +799,26 @@ func TestHeaderKeysOnlyInsideHeader(t *testing.T) {
 	must(t, writeDeep(filepath.Join(root, "plans", "a.md"), "x"))
 	must(t, writeDeep(filepath.Join(root, "a.ts"), "x"))
 	body := "<!-- @anchors\n  updated_at: 2026-09-26\n-->\n# T\n\ncode: BOGUS\nlayer: bogus\nneeds: FNDTN-W02, plans/a.md\nrevises: plans/a.md\n"
-	if got := extractHeaderCode(body); got != "" {
+	if got := extractHeaderCode(body, testkit.AnyComment()); got != "" {
 		t.Errorf("a body `code:` line is not the identity, got %q", got)
 	}
-	if got := extractHeaderLayer(body); got != "" {
+	if got := extractHeaderLayer(body, testkit.AnyComment()); got != "" {
 		t.Errorf("a body `layer:` line is not the unit layer, got %q", got)
 	}
-	if HeaderLayerOf(body) != "" || HeaderLayerOf("<!-- @anchors\n  layer: screen\n-->\n") != "screen" {
+	if HeaderLayerOf(body, testkit.AnyComment()) != "" || HeaderLayerOf("<!-- @anchors\n  layer: screen\n-->\n", testkit.AnyComment()) != "screen" {
 		t.Errorf("HeaderLayerOf reads the header's layer, and nothing from the body")
 	}
-	if got := needsFor("spec", []byte(body), root, "s.spec.md"); got != nil {
+	if got := needsFor("spec", []byte(body), root, "s.spec.md", testkit.AnyComment()); got != nil {
 		t.Errorf("a body `needs:` line is not a spec's needs, got %v", got)
 	}
-	if got := needsFor("plan", []byte(body), root, "plans/c.md"); got != nil {
+	if got := needsFor("plan", []byte(body), root, "plans/c.md", testkit.AnyComment()); got != nil {
 		t.Errorf("a body `needs:` line is not a plan's needs, got %v", got)
 	}
-	if got := revisesDe("plan", []byte(body), root, "plans/c.md"); got != nil {
+	if got := revisesDe("plan", []byte(body), root, "plans/c.md", testkit.AnyComment()); got != nil {
 		t.Errorf("a body `revises:` line is not a revision, got %v", got)
 	}
 	code := []byte("// @anchors\n//   updated_at: 2026-09-26\npackage p\n\n// dep: a.ts\n")
-	if got := extractHeaderDeps(code, root, "p.go"); got != nil {
+	if got := extractHeaderDeps(code, root, "p.go", testkit.AnyComment()); got != nil {
 		t.Errorf("a `dep:` comment in the body is not a dependency, got %+v", got)
 	}
 	must(t, writeDeep(filepath.Join(root, "x", "B.spec.md"), body))
@@ -1089,7 +1089,7 @@ func TestScan_partsUsedAndRefs(t *testing.T) {
 	if got := composesFor("code", spec, cfg); got != nil {
 		t.Errorf("a code file composes nothing: %v", got)
 	}
-	if got := extractHeaderRefs("// @anchors\n//   ref: ARENA, WALLT\n"); strings.Join(got, ",") != "ARENA,WALLT" {
+	if got := extractHeaderRefs("// @anchors\n//   ref: ARENA, WALLT\n", testkit.AnyComment()); strings.Join(got, ",") != "ARENA,WALLT" {
 		t.Errorf("refs = %v", got)
 	}
 }
@@ -1149,14 +1149,14 @@ func TestCodeFlags_depUsedByNavigates(t *testing.T) {
 	nav := "onPress={() => navigation.navigate('GoalDetail')} // @navigates: GLDTG [GLETG-A02]\n" +
 		"// @navigates: HOMEH, GOALG\nnavigation.goBack()\n" +
 		"close() // @no-nav: closes a modal of this same screen\n"
-	if got := extractNavigates([]byte(nav)); !reflect.DeepEqual(got, []Navigation{
+	if got := extractNavigates([]byte(nav), testkit.AnyComment()); !reflect.DeepEqual(got, []Navigation{
 		{Codes: []string{"GLDTG"}, Rule: "GLETG-A02", Line: 1},
 		{Codes: []string{"HOMEH", "GOALG"}, Line: 3},
 		{Line: 4, Waiver: "closes a modal of this same screen"},
 	}) {
 		t.Errorf("got %+v", got)
 	}
-	if got := extractNavigates([]byte("go() // @navigates: BUGEB [ADDTA-DS-action-metadata]\n")); len(got) != 1 || got[0].Rule != "ADDTA-DS-action-metadata" {
+	if got := extractNavigates([]byte("go() // @navigates: BUGEB [ADDTA-DS-action-metadata]\n"), testkit.AnyComment()); len(got) != 1 || got[0].Rule != "ADDTA-DS-action-metadata" {
 		t.Errorf("a data state triggers a navigation too: %+v", got)
 	}
 }
@@ -1189,12 +1189,12 @@ func TestKindedDep_readWithItsKindAndName(t *testing.T) {
 
 func TestNavigates_dormant(t *testing.T) {
 	t.Run("RPSCR-B47: A dormant navigation flag is read with its reason", func(t *testing.T) {})
-	got := extractNavigates([]byte("nav.navigate('Paywall') // @navigates: PAWAP [AGOCC-B03] @dormant: the plan mode is not on yet\n"))
+	got := extractNavigates([]byte("nav.navigate('Paywall') // @navigates: PAWAP [AGOCC-B03] @dormant: the plan mode is not on yet\n"), testkit.AnyComment())
 	if len(got) != 1 || got[0].Codes[0] != "PAWAP" || got[0].Rule != "AGOCC-B03" || got[0].Dormant != "the plan mode is not on yet" {
 		t.Errorf("got %+v", got)
 	}
 	// With no reason there is no dormancy: the flag stays, as a plain edge.
-	if bare := extractNavigates([]byte("go() // @navigates: PAWAP @dormant:\n")); len(bare) != 1 || bare[0].Dormant != "" || bare[0].Codes[0] != "PAWAP" {
+	if bare := extractNavigates([]byte("go() // @navigates: PAWAP @dormant:\n"), testkit.AnyComment()); len(bare) != 1 || bare[0].Dormant != "" || bare[0].Codes[0] != "PAWAP" {
 		t.Errorf("a bare marker keeps the flag, as an edge: %+v", bare)
 	}
 }
@@ -1235,19 +1235,19 @@ func TestEvidenceOf_codeLeavesOutTheChainsFlags(t *testing.T) {
 	plain := "import { a } from './a'\nexport function f() {\n  return db.query(a)\n}\n"
 	ended := "import { a } from './a' // @dep: AAAAA\nexport function f() {\n  return db.query(a) // @dep[db]: transactions\n}\n"
 	above := "import { a } from './a'\n// @used-by: BBBBB (f)\nexport function f() {\n  return db.query(a)\n}\n"
-	p, e, ab := EvidenceOf("code", "a.ts", []byte(plain), nil), EvidenceOf("code", "a.ts", []byte(ended), nil), EvidenceOf("code", "a.ts", []byte(above), nil)
+	p, e, ab := EvidenceOf("code", "a.ts", []byte(plain), testkit.AllComments()), EvidenceOf("code", "a.ts", []byte(ended), testkit.AllComments()), EvidenceOf("code", "a.ts", []byte(above), testkit.AllComments())
 	if p.Rev != e.Rev || p.Rev != ab.Rev {
 		t.Errorf("flags at a line's end and on lines of their own prove nothing: %+v %+v %+v", p, e, ab)
 	}
 	if p.LineRev != e.LineRev || p.LineRev == ab.LineRev {
 		t.Errorf("a flag at a line's end keeps the lines; a flag line moves them: %+v %+v %+v", p, e, ab)
 	}
-	if EvidenceOf("code", "a.ts", []byte(strings.Replace(plain, "query", "exec", 1)), nil).Rev == p.Rev {
+	if EvidenceOf("code", "a.ts", []byte(strings.Replace(plain, "query", "exec", 1)), testkit.AllComments()).Rev == p.Rev {
 		t.Error("a change to the code moves the evidence")
 	}
 	// The header's date is the hook's, and its lines stay in place.
 	dated := func(day string) Evidence {
-		return EvidenceOf("code", "a.ts", []byte("// @anchors\n//   code: AAAAA\n//   updated_at: 2026-10-0"+day+"\n"+plain), nil)
+		return EvidenceOf("code", "a.ts", []byte("// @anchors\n//   code: AAAAA\n//   updated_at: 2026-10-0"+day+"\n"+plain), testkit.AllComments())
 	}
 	if d1, d2 := dated("1"), dated("8"); d1.Rev != d2.Rev || d1.LineRev != d2.LineRev || d1.Rev != p.Rev || d1.LineRev == p.LineRev {
 		t.Errorf("the header proves nothing and keeps its lines: %+v %+v", d1, d2)
@@ -1283,7 +1283,7 @@ func TestEvidenceOf_projectSections(t *testing.T) {
 
 func TestEvidenceOf_commentsProveNothing(t *testing.T) {
 	t.Run("RPSCR-B52: A line that is only a comment is no evidence", func(t *testing.T) {})
-	ev := func(rel, body string) Evidence { return EvidenceOf("code", rel, []byte(body), nil) }
+	ev := func(rel, body string) Evidence { return EvidenceOf("code", rel, []byte(body), testkit.AllComments()) }
 	code := "export function close() {\n  if (!open) return\n}\n"
 	for _, commented := range []string{
 		"export function close() {\n  // FLDIE-E01: closing a closed sheet does nothing.\n  if (!open) return\n}\n",
@@ -1298,8 +1298,14 @@ func TestEvidenceOf_commentsProveNothing(t *testing.T) {
 	if ev("flow.yaml", flow).Rev != ev("flow.yaml", "appId: x\n---\n# FLDIE-A01\n- tapOn: Save\n").Rev {
 		t.Error("a flow's comment line moves no evidence")
 	}
+	// A comment at the end of a line of code proves nothing either (reported from MIF: a
+	// `// @no-handle` at a call's end cost 56 flows to run again); a marker inside a string
+	// is code.
+	if ev("a.ts", "const u = 'http://x' // one\n").Rev != ev("a.ts", "const u = 'http://x' // two\n").Rev {
+		t.Error("an end-of-line comment moves no evidence")
+	}
 	for _, other := range []struct{ rel, a, b string }{
-		{"a.ts", "const u = 'http://x' // one\n", "const u = 'http://x' // two\n"},
+		{"a.ts", "const u = 'http://x/one'\n", "const u = 'http://x/two'\n"},
 		{"a.ts", "/* note */ run()\n", "/* note */ stop()\n"},
 		{"a.c", "#include <a.h>\n", "#include <b.h>\n"},
 		{"a.foo", "// one\n", "// two\n"},
@@ -1312,13 +1318,13 @@ func TestEvidenceOf_commentsProveNothing(t *testing.T) {
 
 func TestFrozen_headerMark(t *testing.T) {
 	t.Run("RPSCR-B53: A frozen header is read with its value", func(t *testing.T) {})
-	if got := FrozenOf([]byte("// @anchors\n//   code: PAWAP\n//   frozen: QLDTQ-F01\n\npackage x\n")); got != "QLDTQ-F01" {
+	if got := FrozenOf([]byte("// @anchors\n//   code: PAWAP\n//   frozen: QLDTQ-F01\n\npackage x\n"), testkit.AnyComment()); got != "QLDTQ-F01" {
 		t.Errorf("module: %q", got)
 	}
-	if got := FrozenOf([]byte("<!-- @anchors\n  code: PAWAP\n  frozen: the plan mode ships next quarter\n-->\n# X\n")); got != "the plan mode ships next quarter" {
+	if got := FrozenOf([]byte("<!-- @anchors\n  code: PAWAP\n  frozen: the plan mode ships next quarter\n-->\n# X\n"), testkit.AnyComment()); got != "the plan mode ships next quarter" {
 		t.Errorf("spec with a reason: %q", got)
 	}
-	if got := FrozenOf([]byte("// @anchors\n//   code: PAWAP\n\n// frozen: not in the header\n")); got != "" {
+	if got := FrozenOf([]byte("// @anchors\n//   code: PAWAP\n\n// frozen: not in the header\n"), testkit.AnyComment()); got != "" {
 		t.Errorf("no header line, no freeze: %q", got)
 	}
 }
@@ -1357,16 +1363,16 @@ func TestFrozen_entries(t *testing.T) {
 
 func TestChainFlags_ocamlComment(t *testing.T) {
 	t.Run("RPSCR-B56: The chain's flags are read in an OCaml comment", func(t *testing.T) {})
-	if d := extractCodeDeps([]byte("open Lexer (* @dep: LEXRL *)\nopen Unix (* @no-dep: stdlib *)\n"), "x.ts", tsd()); len(d) != 2 || d[0].Code != "LEXRL" || d[1].Waiver != "stdlib" {
+	if d := extractCodeDeps([]byte("open Lexer (* @dep: LEXRL *)\nopen Unix (* @no-dep: stdlib *)\n"), "p.ml", *testkit.AllComments().Dialect); len(d) != 2 || d[0].Code != "LEXRL" || d[1].Waiver != "stdlib" {
 		t.Errorf("deps: %+v", d)
 	}
-	if n := extractNavigates([]byte("go () (* @navigates: HOMEH [HOMEH-B01] *)\n")); len(n) != 1 || n[0].Codes[0] != "HOMEH" || n[0].Rule != "HOMEH-B01" {
+	if n := extractNavigates([]byte("go () (* @navigates: HOMEH [HOMEH-B01] *)\n"), testkit.AnyComment()); len(n) != 1 || n[0].Codes[0] != "HOMEH" || n[0].Rule != "HOMEH-B01" {
 		t.Errorf("navigates: %+v", n)
 	}
-	if u := extractUsedBy([]byte("(* @used-by: AAAAA, BBBBB *)\nlet x = 1\n"), "p.ml", config.Dialect{}); len(u) != 1 || len(u[0].Codes) != 2 || u[0].Codes[1] != "BBBBB" {
+	if u := extractUsedBy([]byte("(* @used-by: AAAAA, BBBBB *)\nlet x = 1\n"), "p.ml", *testkit.AllComments().Dialect); len(u) != 1 || len(u[0].Codes) != 2 || u[0].Codes[1] != "BBBBB" {
 		t.Errorf("used-by: %+v", u)
 	}
-	ev := func(b string) Evidence { return EvidenceOf("code", "src/p.ml", []byte(b), nil) }
+	ev := func(b string) Evidence { return EvidenceOf("code", "src/p.ml", []byte(b), testkit.AllComments()) }
 	if ev("open Lexer\nlet x = 1\n").Rev != ev("open Lexer (* @dep: LEXRL *)\n(* @used-by: AAAAA *)\nlet x = 1\n").Rev {
 		t.Error("the flags are no evidence")
 	}
@@ -1390,7 +1396,11 @@ func TestUsedBy_unicodeIdentifiers(t *testing.T) {
 }
 
 // tsd is the ts family's example of the chain patterns: what a ts project declares.
-func tsd() config.Dialect { return *config.FamilyChain("ts") }
+func tsd() config.Dialect {
+	d := *config.FamilyChain("ts")
+	d.Comments = config.AllComments()
+	return d
+}
 
 func TestUsedBy_defaultFunction(t *testing.T) {
 	t.Run("RPSCR-B42: Each @used-by flag is read with the symbol declared below it", func(t *testing.T) {})

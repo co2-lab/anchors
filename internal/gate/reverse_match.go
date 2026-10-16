@@ -268,7 +268,7 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 
 	// COMMENTS OUT, by the same ruler as `feature-test-match`: a code cited in a comment is
 	// a REFERENCE, not proof.
-	body := stripLineComments(content)
+	body := stripComments(content, n.ID, cfg.DialectFor())
 
 	var orphans, strayVariants, bareRules []string
 	seen := map[string]bool{}

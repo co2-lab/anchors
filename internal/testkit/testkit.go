@@ -13,6 +13,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/shell"
 )
 
@@ -164,4 +165,156 @@ func SkipWithoutPOSIXPermissions(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Windows does not enforce POSIX file permissions")
 	}
+}
+
+// AllComments is a configuration that declares every family's comment syntax
+// (config.AllComments): what a test reads a file's comments with, as a project that
+// declared them all.
+func AllComments() *config.Config {
+	return &config.Config{Dialect: &config.Dialect{Comments: config.AllComments()}}
+}
+
+// Comments is the syntax a test reads a file at rel with (AllComments).
+func Comments(rel string) *config.Comments { return AllComments().CommentsFor(rel) }
+
+// WithComments gives a test's configuration every family's comment syntax, and AnyComment for
+// any other file, when it declares none, and returns it.
+func WithComments(cfg *config.Config) *config.Config {
+	if cfg == nil {
+		cfg = &config.Config{}
+	}
+	if cfg.Dialect == nil {
+		cfg.Dialect = &config.Dialect{}
+	}
+	if len(cfg.Dialect.Comments) == 0 {
+		// Every family's syntax, and last any file's (AnyComment): a test node is often
+		// given no path.
+		cfg.Dialect.Comments = append(config.AllComments(), *AnyComment())
+	}
+	FillFamily(cfg.Dialect)
+	return cfg
+}
+
+// FillFamily gives a test's dialect its family's example lexicon (config.FamilyLexicon) in
+// the fields it leaves empty — as a project that wrote the example into its anchors.yaml.
+// The core applies no family by itself; a test written for a family's reading declares it.
+func FillFamily(d *config.Dialect) {
+	if d == nil {
+		return
+	}
+	ex := config.FamilyLexicon(d.Family)
+	if ex == nil {
+		return
+	}
+	fill := func(dst *string, src string) {
+		if *dst == "" {
+			*dst = src
+		}
+	}
+	fill(&d.ExportedFunc, ex.ExportedFunc)
+	fill(&d.ParamName, ex.ParamName)
+	fill(&d.Loop, ex.Loop)
+	fill(&d.Cursor, ex.Cursor)
+	fill(&d.HTTPStatus, ex.HTTPStatus)
+	fill(&d.HTTPStatusDynamic, ex.HTTPStatusDynamic)
+	fill(&d.EnvRead, ex.EnvRead)
+	fill(&d.Definition, ex.Definition)
+	fill(&d.SetPromise, ex.SetPromise)
+	fill(&d.SetSlice, ex.SetSlice)
+	fill(&d.StatementEnd, ex.StatementEnd)
+	fill(&d.SignatureEnd, ex.SignatureEnd)
+	if len(d.HandlePatterns) == 0 {
+		d.HandlePatterns = ex.HandlePatterns
+	}
+	if len(d.LogPatterns) == 0 {
+		d.LogPatterns = ex.LogPatterns
+	}
+	if len(d.GuardPatterns) == 0 {
+		d.GuardPatterns = ex.GuardPatterns
+	}
+	if len(d.Limits) == 0 {
+		d.Limits = ex.Limits
+	}
+	switch {
+	case d.Tests == nil:
+		d.Tests = ex.Tests
+	case ex.Tests != nil && d.Tests.Pattern == "" && d.Tests.Script == "":
+		t := *ex.Tests
+		if d.Tests.Assertion != "" {
+			t.Assertion = d.Tests.Assertion
+		}
+		d.Tests = &t
+	}
+}
+
+// CommentsYAML is the `comments:` block of every family's syntax, to put under `dialect:`
+// in a test's anchors.yaml.
+const CommentsYAML = `  comments:
+    - files: '**/*.{ts,tsx,js,jsx,mjs,cjs,mts,cts}'
+      line: ['//']
+      block: [['{/*', '*/}'], ['/*', '*/']]
+      strings: ['"', "'", '` + "`" + `']
+      multiline: ['` + "`" + `']
+      no_line_after: '>\s*$'
+    - files: '**/*.go'
+      line: ['//']
+      block: [['/*', '*/']]
+      strings: ['"', "'", '` + "`" + `']
+      multiline: ['` + "`" + `']
+    - files: '**/*.py'
+      line: ['#']
+      strings: ['"""', "'''", '"', "'"]
+      multiline: ['"""', "'''"]
+    - files: '**/*.{yaml,yml,toml,sh,bash,zsh,rb,r,R}'
+      line: ['#']
+      strings: ['"', "'"]
+    - files: '**/*.{java,kt,kts,cs,scala,swift,rs,c,h,cpp,hpp,cc}'
+      line: ['//']
+      block: [['/*', '*/']]
+      strings: ['"', "'"]
+    - files: '**/*.php'
+      line: ['//', '#']
+      block: [['/*', '*/']]
+      strings: ['"', "'"]
+    - files: '**/*.{ml,mli,mll}'
+      block: [['(*', '*)']]
+      strings: ['"']
+    - files: '**/*.mly'
+      block: [['(*', '*)'], ['/*', '*/']]
+      strings: ['"']
+    - files: '**/{dune,dune-project,dune-file}'
+      line: [';']
+      strings: ['"']
+    - files: '**/*.{sql,lua,hs}'
+      line: ['--']
+      strings: ["'", '"']
+    - files: '**/*.{html,xml,svg,vue}'
+      block: [['<!--', '-->']]
+`
+
+// AnyComment is a syntax with every marker the families use — `//`, `#`, `--`, `;`, and the
+// blocks `/* */`, `<!-- -->`, `(* *)` — and no strings: for a test that reads a header or a
+// flag in any language at once.
+func AnyComment() *config.Comments {
+	return &config.Comments{
+		Line:  []string{"//", "#", "--", ";"},
+		Block: []config.Delims{{Open: "/*", Close: "*/"}, {Open: "<!--", Close: "-->"}, {Open: "(*", Close: "*)"}},
+	}
+}
+
+// AnyConfig is a configuration whose one comment syntax (AnyComment) covers every file: for
+// a test that checks a file whose path it does not name.
+func AnyConfig() *config.Config {
+	return &config.Config{Dialect: &config.Dialect{Comments: []config.Comments{*AnyComment()}}}
+}
+
+// Chain is a config whose dialect declares the family's chain patterns and the comments of
+// every family: what a test of a gate that reads imports runs on.
+func Chain(family string) *config.Config {
+	d := config.FamilyChain(family)
+	if d == nil {
+		d = &config.Dialect{}
+	}
+	d.Family = family
+	return WithComments(&config.Config{Dialect: d})
 }

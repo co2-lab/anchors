@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSTLS
-  updated_at: 2026-09-29
+  updated_at: 2026-10-16
   layer: infra
 -->
 # TestList — the project's tests, read the way the project says they are written
@@ -36,9 +36,9 @@ to the project root, `line` counted from one, `title` as written.
 
 | Effect | Description |
 | --- | --- |
-| `TSTLS-B01` | With a pattern, each call it opens that is followed by a string literal is a test: the literal is its title, and the line is the line where the call starts. |
-| `TSTLS-B02` | A title may be quoted with single quotes, double quotes or backticks; a backslash escapes the next character inside the first two, and only a backtick title may span lines. |
-| `TSTLS-B03` | A call whose next token is not a string literal is not a test this reading can name, and is left out. |
+| `TSTLS-B01` | With a pattern, each match is a test: its title is what the pattern's `title` group captured, and its line the line where the match starts. |
+| `TSTLS-B02` | A pattern may name several title groups — `title`, `title2`… —, one for each way its language quotes a title; the title is the first that took part, read as captured: the core resolves no escape and knows no quote. |
+| `TSTLS-B03` | A match whose title groups captured nothing is not a test this reading can name, and is left out. |
 | `TSTLS-B04` | The pattern's tests come in file order, then in the order they appear in each file. |
 | `TSTLS-B05` | With a script, the command runs at the project root and the tests are what it prints under the contract. |
 | `TSTLS-B06` | Output outside the contract is refused, naming what is wrong: not a single JSON object, an unknown field, a version other than 1, no `tests`, an empty or non-relative `file`, a `line` below 1, an `end` before its `line`, or an empty `title`. (`Parse`) |
@@ -55,6 +55,7 @@ to the project root, `line` counted from one, `title` as written.
 | `TSTLS-E02` | The pattern does not compile | an error naming the compile error | A pattern that matches nothing would read as a project with no tests |
 | `TSTLS-E03` | The script exits with an error | an error naming the command, the exit and the last line it wrote to stderr | A failed script listed nothing, which is not the same as no tests |
 | `TSTLS-E04` | REF[TSTLS-B06]: the script answers outside the contract | — | — |
+| `TSTLS-E05` | The pattern names no `title` group | an error saying where to name it | Without it the core would have to know how the language quotes a title |
 
 ## Dependencies
 

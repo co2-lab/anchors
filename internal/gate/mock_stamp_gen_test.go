@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,10 +16,10 @@ import (
 )
 
 func stampCfg() *config.Config {
-	return &config.Config{Derived: &config.Derived{
+	return withTSMocks(testkit.WithComments(&config.Config{Derived: &config.Derived{
 		MockDetect:   `(?:jest|vi)\.mock\(['"]([^'"]+)`,
 		ExportDetect: `^export\s+(?:async\s+)?(?:function|const)\s+(\w+)`,
-	}}
+	}, Dialect: &config.Dialect{Declarations: config.FamilyChain("ts").Declarations}}))
 }
 
 const realHooks = `import { useQuery } from 'react-query'
@@ -197,7 +198,7 @@ func TestGenerateStamps_ambiguousAnchorLineIsAvoided(t *testing.T) {
 func TestGenerateStamps_wholeModuleSkipsTheAnchorsHeader(t *testing.T) {
 	t.Run("MKSTP-B06: The header stays out of a whole-module stamp", func(t *testing.T) {})
 	header := func(date string) string {
-		return "'use client'\n// @anchors\n//   ref: BALNC\n//   updated_at: " + date + "\n//\n// notes about the unit\n"
+		return "'use client'\n// @anchors\n//   ref: BALNC\n//   updated_at: " + date + "\n//   @fixed-header: the directive goes first\n//\n// notes about the unit\n"
 	}
 	test := "jest.mock('@/src/hooks/balance')\n"
 	root, g := stampProject(t, map[string]string{"src/hooks/balance.ts": header("2026-09-01") + realHooks, "src/Home.test.tsx": test})
@@ -275,7 +276,7 @@ func TestGenerateStamps_newKeyOnAStampedDoubleGetsAStamp(t *testing.T) {
 func TestGenerateStamps_errors(t *testing.T) {
 	t.Run("MKSTP-E01: A double detector that does not compile stops the generator with an error", func(t *testing.T) {
 		for _, pattern := range []string{`[`, `jest\.mock`} {
-			cfg := &config.Config{Derived: &config.Derived{MockDetect: pattern}}
+			cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{MockDetect: pattern}})
 			out, written, _, err := GenerateStamps("jest.mock('x')\n", "test.ts", "", &mapx.Graph{}, cfg)
 			if err == nil || strings.Contains(err.Error(), "does not declare") || out != "jest.mock('x')\n" || len(written) != 0 {
 				t.Fatalf("pattern %q: expected the pattern's own error and the content unchanged, got err=%v written=%v", pattern, err, written)
@@ -284,7 +285,7 @@ func TestGenerateStamps_errors(t *testing.T) {
 	})
 
 	t.Run("MKSTP-E02: An undeclared double detector stops the generator with an error", func(t *testing.T) {
-		cfg := &config.Config{Derived: &config.Derived{}}
+		cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{}})
 		_, _, _, err := GenerateStamps("content", "test.ts", "", &mapx.Graph{}, cfg)
 		if err == nil || !strings.Contains(err.Error(), "mock_detect") {
 			t.Fatalf("expected an error naming mock_detect, got %v", err)

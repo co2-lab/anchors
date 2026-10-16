@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -13,7 +14,7 @@ import (
 )
 
 func layersCfg() *config.Config {
-	return &config.Config{Layers: map[string]config.Layer{"landing-feature": {Kind: "code"}, "api": {Kind: "code"}}}
+	return testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"landing-feature": {Kind: "code"}, "api": {Kind: "code"}}})
 }
 
 func header(layer string) string {
@@ -54,7 +55,7 @@ func TestHeaderLayerDeclared_skips(t *testing.T) {
 		{"// @anchors\n//   updated_at: 2026-09-28\n", layersCfg()},
 		{header("TODO"), layersCfg()},
 		{header("todo-later"), layersCfg()},
-		{header("api"), &config.Config{}},
+		{header("api"), testkit.WithComments(&config.Config{})},
 		{header("api"), nil},
 	} {
 		if v, _ := checkHeaderLayerDeclared(c.content, n, "", nil, c.cfg); v != Skip {

@@ -104,7 +104,8 @@ the identity by hand.`,
 			// provável é que o caminho esteja errado, não que a spec deva nascer depois.
 			id := strings.ToUpper(codeStr)
 			if id == "" && kind != "spec" {
-				if ref, origem := refDaSpecIrma(absRoot, out, name); ref != "" {
+				rcfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+				if ref, origem := refDaSpecIrma(absRoot, out, name, rcfg); ref != "" {
 					id = ref
 					fmt.Printf("identity: `%s` (read from %s)\n", id, filepath.ToSlash(origem))
 				}
@@ -278,7 +279,7 @@ type template struct {
 	kind     string
 	ext      string
 	idField  string // "code" (dono) ou "ref" (referencia a spec)
-	headerFn func(id, outPath string) string
+	headerFn func(id, outPath string, cs *config.Comments) string
 	sections []section
 }
 
@@ -295,7 +296,11 @@ func renderArtifact(t template, name, id, outPath, root string, chosen map[strin
 	if t.kind == "feature" {
 		headerArg = lang
 	}
-	b.WriteString(t.headerFn(id, headerArg))
+	rel := outPath
+	if r, err := filepath.Rel(root, outPath); err == nil && filepath.IsAbs(outPath) {
+		rel = r
+	}
+	b.WriteString(t.headerFn(id, headerArg, cfg.CommentsFor(filepath.ToSlash(rel))))
 	// A ordem das seções é o FIO DE LEITURA da spec, então ela é do preset quando há um:
 	// numa spec de store, "Shape do Estado" precisa vir antes de "Invariantes" (não se
 	// pode enunciar invariante sobre um estado que o leitor ainda não conhece). Sem
@@ -615,9 +620,9 @@ func resolveNewCode(root, nameOrPath string) (string, error) {
 			}
 		}
 		if prefix != "" {
-			return code.GenerateUniqueWithPrefix(unitName(nameOrPath), prefix, taken), nil
+			return code.GenerateUniqueWithPrefix(cfg.UnitName(nameOrPath), prefix, taken), nil
 		}
-		return code.GenerateFromPath(nameOrPath, taken), nil
+		return code.GenerateFromPath(nameOrPath, cfg.UnitName(nameOrPath), taken), nil
 	}
 	return code.GenerateUnique(nameOrPath, taken), nil
 }
@@ -684,7 +689,7 @@ func unitRegimeTag(cfg *config.Config) string {
 // (co-location) — tentando os sufixos usuais sobre o mesmo tronco de nome.
 //
 // Devolve (código, caminho-de-onde-veio) ou ("", "") se não achar.
-func refDaSpecIrma(root, outPath, name string) (string, string) {
+func refDaSpecIrma(root, outPath, name string, cfg *config.Config) (string, string) {
 	if outPath == "" {
 		return "", ""
 	}
@@ -693,14 +698,9 @@ func refDaSpecIrma(root, outPath, name string) (string, string) {
 		abs = filepath.Join(root, outPath)
 	}
 	dir := filepath.Dir(abs)
-	// tronco: o nome do arquivo sem a extensão composta (`x.feature`, `x.test.ts`).
-	base := filepath.Base(abs)
-	for _, suf := range []string{".feature", ".test.ts", ".test.tsx", ".spec.ts", "_test.go", "_test.py", "_spec.rb"} {
-		base = strings.TrimSuffix(base, suf)
-	}
-	if i := strings.Index(base, "."); i > 0 {
-		base = base[:i]
-	}
+	// The unit's name: the file's without what the layers add to it (`x.feature`,
+	// `x.test.ts` where a template names a test so).
+	base := cfg.UnitName(abs)
 	if base == "" {
 		base = name
 	}
@@ -896,7 +896,7 @@ func withOwnCode(content, absRoot, outPath, kind string, cfg *config.Config) str
 	if cfg != nil {
 		f.Layer = targetLayer(absRoot, outPath, cfg)
 	}
-	return migra.WithHeaderCode(content, rel, code.GenerateUnique(migra.FileCodeName(f), taken))
+	return migra.WithHeaderCode(content, code.GenerateUnique(migra.FileCodeName(f), taken), cfg.CommentsFor(rel))
 }
 
 // ownSectionTitle is the section title the project lists for a rule letter that is the

@@ -5,6 +5,7 @@
 package migra
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,11 +47,11 @@ func TestFileCodeNameAndCode(t *testing.T) {
 
 func TestCanCarryCode(t *testing.T) {
 	t.Run("MGFCD-B04: Only a text file with a comment syntax carries the line", func(t *testing.T) {})
-	if !CanCarryCode("a.ts", []byte("export const a = 1\n")) || CanCarryCode("a.json", []byte("{}")) ||
-		CanCarryCode("a.ts", []byte("x\x00y")) || !CanCarryCode("a.feature", []byte("Feature: a\n")) {
+	if !CanCarryCode([]byte("export const a = 1\n"), testkit.Comments("a.ts")) || CanCarryCode([]byte("{}"), testkit.Comments("a.json")) ||
+		CanCarryCode([]byte("x\x00y"), testkit.Comments("a.ts")) || !CanCarryCode([]byte("Feature: a\n"), testkit.Comments("a.feature")) {
 		t.Error("only text with a comment syntax")
 	}
-	feat := WithHeaderCode("# language: en\n# @anchors\n#   ref: ARNA\n\nFeature: a\n", "ui/a.feature", "ARFTR")
+	feat := WithHeaderCode("# language: en\n# @anchors\n#   ref: ARNA\n\nFeature: a\n", "ARFTR", testkit.Comments("ui/a.feature"))
 	if feat != "# language: en\n# @anchors\n#   code: ARFTR\n#   ref: ARNA\n\nFeature: a\n" {
 		t.Errorf("feature:\n%s", feat)
 	}
@@ -58,15 +59,15 @@ func TestCanCarryCode(t *testing.T) {
 
 func TestWithHeaderCode(t *testing.T) {
 	t.Run("MGFCD-B05: The line goes below the header's opener, or in a new header", func(t *testing.T) {})
-	ts := WithHeaderCode("// @anchors\n//   ref: ARNA\n\nexport const a = 1\n", "ui/a.ts", "ARSCR")
+	ts := WithHeaderCode("// @anchors\n//   ref: ARNA\n\nexport const a = 1\n", "ARSCR", testkit.Comments("ui/a.ts"))
 	if !strings.HasPrefix(ts, "// @anchors\n//   code: ARSCR\n//   ref: ARNA\n") {
 		t.Errorf("ts:\n%s", ts)
 	}
-	md := WithHeaderCode("<!-- @anchors\n  layer: guide\n-->\n# Guide\n", "g.md", "GUIDE")
+	md := WithHeaderCode("<!-- @anchors\n  layer: guide\n-->\n# Guide\n", "GUIDE", testkit.Comments("g.md"))
 	if !strings.HasPrefix(md, "<!-- @anchors\n  code: GUIDE\n  layer: guide\n") {
 		t.Errorf("md:\n%s", md)
 	}
-	sh := WithHeaderCode("#!/bin/sh\necho hi\n", "run.sh", "RUNSH")
+	sh := WithHeaderCode("#!/bin/sh\necho hi\n", "RUNSH", testkit.Comments("run.sh"))
 	if !strings.HasPrefix(sh, "#!/bin/sh\n# @anchors\n#   code: RUNSH\n") {
 		t.Errorf("sh:\n%s", sh)
 	}
@@ -76,14 +77,14 @@ func TestAsRefWithOwnCode(t *testing.T) {
 	t.Run("MGFCD-B06: A header carrying its unit's code turns it into a ref beside a code of its own", func(t *testing.T) {})
 	in := "# @anchors\n#   code: LOGIN\n#   updated_at: 2026-01-01\n\nFeature: Login\n"
 	want := "# @anchors\n#   code: LGFTR\n#   ref: LOGIN\n#   updated_at: 2026-01-01\n\nFeature: Login\n"
-	if got := AsRefWithOwnCode(in, "LOGIN", "LGFTR"); got != want {
+	if got := AsRefWithOwnCode(in, "LOGIN", "LGFTR", testkit.AnyComment()); got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
 	md := "<!-- @anchors\n  code: LOGIN\n-->\n# x\n"
-	if got := AsRefWithOwnCode(md, "LOGIN", "LGFTR"); got != "<!-- @anchors\n  code: LGFTR\n  ref: LOGIN\n-->\n# x\n" {
+	if got := AsRefWithOwnCode(md, "LOGIN", "LGFTR", testkit.AnyComment()); got != "<!-- @anchors\n  code: LGFTR\n  ref: LOGIN\n-->\n# x\n" {
 		t.Errorf("markdown header: %q", got)
 	}
-	if got := AsRefWithOwnCode("package x\n", "LOGIN", "LGFTR"); got != "package x\n" {
+	if got := AsRefWithOwnCode("package x\n", "LOGIN", "LGFTR", testkit.AnyComment()); got != "package x\n" {
 		t.Errorf("no header, nothing changes: %q", got)
 	}
 }
@@ -108,10 +109,10 @@ func TestWithHeaderDate(t *testing.T) {
 	t.Run("MGFCD-B08: The header's updated_at is set to the day given, and only in the header", func(t *testing.T) {})
 	in := "// @anchors\n//   code: ARSCR\n//   updated_at: 2026-09-01\n\n// updated_at: 2020-01-01 in the body\n"
 	want := "// @anchors\n//   code: ARSCR\n//   updated_at: 2026-10-04\n\n// updated_at: 2020-01-01 in the body\n"
-	if got := WithHeaderDate(in, "2026-10-04"); got != want {
+	if got := WithHeaderDate(in, "2026-10-04", testkit.AnyComment()); got != want {
 		t.Errorf("got %q", got)
 	}
-	if got := WithHeaderDate("// @anchors\n//   code: ARSCR\n", "2026-10-04"); got != "// @anchors\n//   code: ARSCR\n" {
+	if got := WithHeaderDate("// @anchors\n//   code: ARSCR\n", "2026-10-04", testkit.AnyComment()); got != "// @anchors\n//   code: ARSCR\n" {
 		t.Errorf("a header without the date is left as it was: %q", got)
 	}
 }

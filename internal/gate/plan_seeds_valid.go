@@ -100,7 +100,7 @@ func checkPlanSeedsValid(content string, n mapx.Node, root string, g *mapx.Graph
 		// o ALVO que a spec descreveria — a camada é dele, não do .spec.md.
 		base := strings.TrimSuffix(s, ".spec.md")
 		layer := ""
-		for _, ext := range []string{".ts", ".tsx", ".go", ".py", ".js"} {
+		for _, ext := range cfg.CodeExtensions() {
 			if lay, _ := scan.Classify(base+ext, cfg); lay != "" {
 				layer = lay
 				break

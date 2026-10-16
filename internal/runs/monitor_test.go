@@ -30,7 +30,7 @@ var root = filepath.Join(string(filepath.Separator), "work", "proj")
 func tick(st *State, now time.Time, procs []Proc, recs []Run, out map[string]OutputInfo) ([]Event, []Run) {
 	snap := Snapshot{Now: now, Root: root, Procs: procs, Self: pidSelf, Records: recs, CPUs: 4,
 		Output: func(p string) OutputInfo { return out[p] }}
-	return Tick(st, snap, DefaultRunners(), DefaultTiming())
+	return Tick(st, snap, examples, DefaultTiming())
 }
 
 func lines(evs []Event) string {
@@ -159,13 +159,13 @@ func TestTick_reports(t *testing.T) {
 		{Path: "new.xml", Modified: t0.Add(30 * time.Second), Tests: 4, Failures: 1, First: "AuthScreen-A01"},
 	}}
 	snap.Reports = append(snap.Reports, Report{Path: "vr.xml", Modified: t0.Add(40 * time.Second)})
-	evs, _ := Tick(st, snap, DefaultRunners(), Timing{})
+	evs, _ := Tick(st, snap, examples, Timing{})
 	if kinds(evs, "report") != 1 || !strings.Contains(lines(evs), "✗ report new.xml: 4 test(s), 1 failure(s) — AuthScreen-A01") {
 		t.Errorf("only the new report, not the emptied one:\n%s", lines(evs))
 	}
 	snap.Now = t0.Add(2 * time.Minute)
 	snap.Reports = []Report{{Path: "vr.xml", Modified: t0.Add(90 * time.Second), Tests: 3}}
-	if evs, _ := Tick(st, snap, DefaultRunners(), Timing{}); kinds(evs, "report") != 1 || !strings.Contains(lines(evs), "✓ report vr.xml: 3 test(s)") {
+	if evs, _ := Tick(st, snap, examples, Timing{}); kinds(evs, "report") != 1 || !strings.Contains(lines(evs), "✓ report vr.xml: 3 test(s)") {
 		t.Errorf("the emptied report, once it holds tests:\n%s", lines(evs))
 	}
 }
@@ -183,13 +183,13 @@ func TestTick_heartbeat(t *testing.T) {
 	}
 	procs := append(agentAndSelf(), Proc{PID: pidNpx, PPID: 1, Cmd: "npx jest"}, Proc{PID: pidNpx + 1, PPID: 1, Cmd: "maestro test"})
 	snap := Snapshot{Now: t0.Add(6 * time.Minute), Root: root, Self: pidSelf, Procs: procs, Records: recs, Load: 9, HasLoad: true, CPUs: 4, Busy: 95, HasBusy: true}
-	evs, _ := Tick(st, snap, DefaultRunners(), DefaultTiming())
+	evs, _ := Tick(st, snap, examples, DefaultTiming())
 	got := lines(evs)
 	if !strings.Contains(got, "running=[jest 1, maestro (stalled) 1]") || !strings.Contains(got, "1 run(s) ended since") || !strings.Contains(got, "load=9.0/4 cpu=95% (HIGH") {
 		t.Errorf("names, ended, load and cpu:\n%s", got)
 	}
 	st2 := &State{Runs: map[string]*Seen{}, Reports: map[string]time.Time{}}
-	evs, _ = Tick(st2, Snapshot{Now: t0, Root: root, Self: pidSelf}, DefaultRunners(), DefaultTiming())
+	evs, _ = Tick(st2, Snapshot{Now: t0, Root: root, Self: pidSelf}, examples, DefaultTiming())
 	if !strings.Contains(lines(evs), "running=[NOTHING]") {
 		t.Errorf("nothing running is said:\n%s", lines(evs))
 	}
@@ -239,7 +239,7 @@ func TestTick_progressIsSparse(t *testing.T) {
 func TestConfigure(t *testing.T) {
 	t.Run("MNTRS-B09: The settings are the defaults, then the project's block", func(t *testing.T) {})
 	s, err := Configure(nil)
-	if err != nil || s.Timing != DefaultTiming() || s.Keep != 50 || s.MaxAge != 7*24*time.Hour || len(s.Runners) != len(DefaultRunners()) {
+	if err != nil || s.Timing != DefaultTiming() || s.Keep != 50 || s.MaxAge != 7*24*time.Hour || len(s.Runners) != len(OwnRunners()) {
 		t.Fatalf("the defaults: %+v %v", s, err)
 	}
 	cfg := &config.Config{Tests: []config.Suite{{JUnit: "out/junit.xml"}}, Monitor: &config.Monitor{
@@ -253,8 +253,8 @@ func TestConfigure(t *testing.T) {
 	if s.Timing.Every != 10*time.Second || s.Timing.Heartbeat != 2*time.Minute || s.Timing.Stall != 5*time.Minute || !s.Summary || s.SummaryEvery != 30*time.Minute || s.Level != LevelAction || s.Idle != 0 || s.Keep != 5 || s.MaxAge != 24*time.Hour {
 		t.Errorf("the block's timing and bounds: %+v", s)
 	}
-	if s.Runners[0].Name != "jest" || s.Runners[0].Match.String() != "craco test" || s.Runners[1].Name != "seed" || s.Runners[1].Kind != "other" || len(s.Runners) != len(DefaultRunners())+1 {
-		t.Errorf("the project's runners first, jest replaced: %+v", s.Runners[:2])
+	if s.Runners[0].Name != "jest" || s.Runners[0].Match.String() != "craco test" || s.Runners[1].Name != "seed" || s.Runners[1].Kind != "other" || len(s.Runners) != len(OwnRunners())+2 {
+		t.Errorf("the project's runners, then Anchors' own: %+v", s.Runners)
 	}
 	if strings.Join(s.Reports, " ") != "out/junit.xml e2e/*.xml" {
 		t.Errorf("the suites' reports and the block's: %v", s.Reports)
@@ -276,7 +276,7 @@ func TestConfigure_badKeyNamed(t *testing.T) {
 
 func TestOutputs(t *testing.T) {
 	t.Run("MNTRS-B10: An output's end gives its verdict, its summary and its last lines", func(t *testing.T) {})
-	jest, _ := RunnerFor(DefaultRunners(), "npx jest")
+	jest, _ := RunnerFor(examples, "npx jest")
 	if failed, ok := Verdict(jest, "Tests:       2 failed, 8 passed, 10 total\n"); !failed || !ok {
 		t.Error("a failure beside a pass is failed")
 	}
@@ -318,21 +318,37 @@ func TestReadReports(t *testing.T) {
 	}
 }
 
-func TestDefaultRunners(t *testing.T) {
-	t.Run("MNTRS-B12: The built-in runners recognize the common runners", func(t *testing.T) {})
+func TestExampleRunners(t *testing.T) {
+	t.Run("MNTRS-B12: Anchors' own commands are known by themselves, and the examples recognize the common runners", func(t *testing.T) {})
+	if r, ok := RunnerFor(OwnRunners(), "anchors test --all"); !ok || r.Name != "anchors" {
+		t.Errorf("Anchors' own: %q %v", r.Name, ok)
+	}
+	if _, ok := RunnerFor(OwnRunners(), "npx jest"); ok {
+		t.Error("no tool is known by itself")
+	}
+	examples := examples
 	for cmd, want := range map[string]string{
 		"node node_modules/.bin/jest --ci": "jest", "npx vitest run": "vitest", "go test ./...": "go test",
 		"python -m pytest": "pytest", "maestro test flows/": "maestro", "npx playwright test": "playwright",
-		"npx stryker run": "stryker", "gremlins unleash": "gremlins", "anchors test --all": "anchors",
+		"npx stryker run": "stryker", "gremlins unleash": "gremlins",
 	} {
-		if r, ok := RunnerFor(DefaultRunners(), cmd); !ok || r.Name != want {
+		if r, ok := RunnerFor(examples, cmd); !ok || r.Name != want {
 			t.Errorf("%q: %q %v, want %q", cmd, r.Name, ok, want)
 		}
 	}
-	if _, ok := RunnerFor(DefaultRunners(), "vim notes.md"); ok {
+	if _, ok := RunnerFor(examples, "vim notes.md"); ok {
 		t.Error("an editor is no runner")
 	}
 }
+
+// examples are the example runners compiled, with Anchors' own: a project declaring them all.
+var examples = func() []Runner {
+	rs, err := CompileRunners(config.ExampleRunners())
+	if err != nil {
+		panic(err)
+	}
+	return append(rs, OwnRunners()...)
+}()
 
 func TestTick_everyEndSaidOnce(t *testing.T) {
 	t.Run("MNTRS-I01: Every run that ended is said once", func(t *testing.T) {})
@@ -378,7 +394,7 @@ func TestTick_everyEndSaidOnce(t *testing.T) {
 func TestBrief(t *testing.T) {
 	t.Run("MNTRS-B13: A command is recognized and shown by its first line", func(t *testing.T) {})
 	edit := "python3 - <<'EOF'\nsrc = open('jest.config.js').read()\nprint(src)\nEOF"
-	if _, ok := RunnerFor(DefaultRunners(), FirstLine(edit)); ok {
+	if _, ok := RunnerFor(examples, FirstLine(edit)); ok {
 		t.Error("a file edit that mentions jest is no jest run")
 	}
 	if got := Brief(edit); got != "python3 - <<'EOF' [+3 lines]" {

@@ -2078,6 +2078,16 @@ func TestQueuedJudgmentsCountsTheLegacyVerb(t *testing.T) {
 // The unit's pieces enter the impact by identity, whatever the language: a Go test is
 // `<stem>_test.go`, and the check of it must reach its spec, feature and code even when
 // the map holds no edge between them.
+// goTSPy is a project of Go, TypeScript and Python code, each naming its tests its own way.
+var goTSPy = &config.Config{
+	Layers: map[string]config.Layer{
+		"go": {Pattern: "pkg/*.go", Kind: "code"}, "web": {Pattern: "web/*.ts", Kind: "code"}, "py": {Pattern: "py/*.py", Kind: "code"},
+	},
+	Derived: &config.Derived{Files: map[string]config.Padroes{
+		"test": {"{{dir}}/{{name}}_test.go", "{{dir}}/{{name}}.test.{{ext}}", "{{dir}}/{{name}}_test.py"},
+	}},
+}
+
 func TestImpactOfBringsTheUnitsPiecesOfAGoUnit(t *testing.T) {
 	t.Run("CGPCH-B70: The pieces of the changed file's unit enter its impact path, for a Go unit as for a TypeScript one", func(t *testing.T) {})
 	g := &mapx.Graph{Nodes: []mapx.Node{
@@ -2103,7 +2113,7 @@ func TestImpactOfBringsTheUnitsPiecesOfAGoUnit(t *testing.T) {
 		"py/baz.py":      {"py/baz_test.py"},
 	}
 	for changed, want := range cases {
-		ids, err := impactOf(g, &config.Config{}, filepath.Join(root, changed), root)
+		ids, err := impactOf(g, goTSPy, filepath.Join(root, changed), root)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -2901,7 +2911,7 @@ func TestSelectNodes_ownFiles(t *testing.T) {
 	if err := progress.Update(dir, "", func(f *progress.File) error { _, err := f.AddDemand("A", ""); return err }); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, mapx.DefaultPath), []byte("version: 7\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, mapx.DefaultPath), []byte("version: 8\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	cfg := governanceConfig() // its doc layer takes every .md, the progress file's name included

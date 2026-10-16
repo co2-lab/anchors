@@ -13,6 +13,7 @@ The Output Contract statuses are the ones the handler returns — and only those
 | Confronts | `spec` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Presupposes | `dialect.http_status` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 

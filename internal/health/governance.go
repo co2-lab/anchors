@@ -10,6 +10,8 @@ import (
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"gopkg.in/yaml.v3"
+	"path"
+	"sort"
 	"strings"
 )
 
@@ -46,6 +48,48 @@ func checkGovernanceOpportunities(g *mapx.Graph, cfg *config.Config) []Finding {
 				Detail:   i18n.T("health.opportunity.fallible_patterns", cfg.Dialect.Family, len(fam), fallibleYAML(fam)),
 			})
 		}
+	}
+
+	// 0a. comments: the files of the map whose comments the project does not declare — their
+	// header and flags cannot be read, and each gate that needs them says so. The examples
+	// of every family cover the ones they know; an extension none knows is named alone.
+	if missing := filesWithoutComments(g, cfg); len(missing) > 0 {
+		var known []config.Comments
+		var unknown []string
+		for _, ext := range missing {
+			if ex := exampleCommentsFor("x" + ext); ex != nil {
+				known = appendComments(known, *ex)
+			} else {
+				unknown = append(unknown, ext)
+			}
+		}
+		block := ""
+		if len(known) > 0 {
+			block = dialectBlockYAML(map[string]any{"comments": known})
+		}
+		out = append(out, Finding{
+			Check:    "sugestao-comments",
+			Severity: Info,
+			Subject:  "comments",
+			Detail:   i18n.T("health.opportunity.comments", strings.Join(missing, ", "), strings.Join(unknown, ", "), block),
+		})
+	}
+
+	// 0a'. the lexicon: a declared gate presupposes a field of the language's lexicon the
+	// project left empty — the gate is pending, since the core reads no syntax of its own.
+	// The family's example shows each one, to adapt.
+	if lex := lexiconMissing(cfg); len(lex) > 0 {
+		names := make([]string, 0, len(lex))
+		for k := range lex {
+			names = append(names, "`dialect."+k+"`")
+		}
+		sort.Strings(names)
+		out = append(out, Finding{
+			Check:    "sugestao-lexicon",
+			Severity: Info,
+			Subject:  "lexicon",
+			Detail:   i18n.T("health.opportunity.lexicon", cfg.Dialect.Family, strings.Join(names, ", "), dialectBlockYAML(lex)),
+		})
 	}
 
 	// 0b. test handles: a handle gate is declared and the project says nothing of how its
@@ -283,4 +327,81 @@ func fallibleYAML(ps []config.FalliblePattern) string {
 		}
 	}
 	return b.String()
+}
+
+// lexiconMissing are the lexicon fields some declared gate presupposes, the project left
+// empty and its family's example has, by their name under `dialect`, with the example's value.
+func lexiconMissing(cfg *config.Config) map[string]any {
+	if cfg.Dialect == nil {
+		return nil
+	}
+	ex := config.FamilyLexicon(cfg.Dialect.Family)
+	if ex == nil {
+		return nil
+	}
+	example, declared := fieldsOf(ex), fieldsOf(cfg.Dialect)
+	out := map[string]any{}
+	for _, g := range cfg.Gates {
+		for _, p := range g.Presupposes {
+			name, ok := strings.CutPrefix(p, "dialect.")
+			if !ok {
+				continue
+			}
+			if v, has := example[name]; has {
+				if _, set := declared[name]; !set {
+					out[name] = v
+				}
+			}
+		}
+	}
+	return out
+}
+
+// fieldsOf are a dialect's fields that are set, by their name in the yaml.
+func fieldsOf(d *config.Dialect) map[string]any {
+	b, err := yaml.Marshal(d)
+	out := map[string]any{}
+	if err == nil {
+		_ = yaml.Unmarshal(b, &out)
+	}
+	return out
+}
+
+// filesWithoutComments are the extensions of the map's code, test and support files whose
+// comments the project declares in no entry, sorted.
+func filesWithoutComments(g *mapx.Graph, cfg *config.Config) []string {
+	seen := map[string]bool{}
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindCode && n.Kind != mapx.KindTest {
+			continue
+		}
+		if cfg.CommentsFor(n.ID) == nil {
+			ext := path.Ext(n.ID)
+			if ext == "" {
+				ext = path.Base(n.ID)
+			}
+			seen[ext] = true
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for e := range seen {
+		out = append(out, e)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// exampleCommentsFor is the entry of the families' examples that covers the file, or nil.
+func exampleCommentsFor(rel string) *config.Comments {
+	return (&config.Config{Dialect: &config.Dialect{Comments: config.AllComments()}}).CommentsFor(rel)
+}
+
+// appendComments adds the entry unless it is in the list already.
+func appendComments(list []config.Comments, c config.Comments) []config.Comments {
+	for _, x := range list {
+		if x.Files == c.Files {
+			return list
+		}
+	}
+	return append(list, c)
 }

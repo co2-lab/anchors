@@ -2,7 +2,7 @@
 # @anchors
 #   code: WTFTW
 #   ref: WTCHA
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @WTCHA
@@ -88,7 +88,7 @@ Feature: Watch — the background watcher that turns "a file changed" into "ther
 
   @WTCHA-B13 @unit-level
   Scenario: A waived test, a Go test, and a record with no unit do not hold the review
-    Given "models/user.ts" in a layer that waives the test, and "svc/handler.go" beside "svc/handler_test.go"
+    Given "models/user.ts" in a layer that waives the test, and "svc/handler.go" beside "svc/handler_test.go", where the project names a Go test
     When the missing pieces are checked
     Then neither holds the review, and neither does a record with no unit
 

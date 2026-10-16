@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,7 +24,7 @@ func grafoComCodigos(codes ...string) *mapx.Graph {
 
 func rodaRef(t *testing.T, spec string, g *mapx.Graph) (Verdict, string) {
 	t.Helper()
-	return checkCodeReferenceValid(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, "", g, nil)
+	return checkCodeReferenceValid(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, "", g, testkit.WithComments(nil))
 }
 
 func TestCodeReferenceSoSpec(t *testing.T) {
@@ -33,7 +34,7 @@ func TestCodeReferenceSoSpec(t *testing.T) {
 	codeZ := "ZZ" + "ZZX-B01"
 	spec := "code: " + codeD + "\nAplica `" + codeZ + "`.\n"
 	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
-		if v, _ := checkCodeReferenceValid(spec, mapx.Node{Kind: k}, "", grafoComCodigos(codeD), nil); v != Skip {
+		if v, _ := checkCodeReferenceValid(spec, mapx.Node{Kind: k}, "", grafoComCodigos(codeD), testkit.WithComments(nil)); v != Skip {
 			t.Errorf("kind %s deveria ser Skip, foi %s", k, v)
 		}
 	}
@@ -136,7 +137,7 @@ func TestCodeReferenceHeaderOnDisk(t *testing.T) {
 		},
 	}
 	mySpec := "<!-- @anchors\n  code: " + codeB + "\n-->\nCita `" + refA + "` que existe no disco.\n"
-	v, d := checkCodeReferenceValid(mySpec, mapx.Node{ID: "myspc.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	v, d := checkCodeReferenceValid(mySpec, mapx.Node{ID: "myspc.spec.md", Kind: mapx.KindSpec}, root, g, testkit.WithComments(nil))
 	if v != Pass {
 		t.Fatalf("deveria ler código do disco e passar, foi %s (%s)", v, d)
 	}
@@ -177,7 +178,7 @@ func TestCodeReferenceValid_Errors(t *testing.T) {
 			{ID: "myspc.spec.md", Kind: mapx.KindSpec, Code: codeB},
 		}}
 		mySpec := "<!-- @anchors\n  code: " + codeB + "\n-->\nCites `" + codeA + "-B01`.\n"
-		v, d := checkCodeReferenceValid(mySpec, mapx.Node{ID: "myspc.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+		v, d := checkCodeReferenceValid(mySpec, mapx.Node{ID: "myspc.spec.md", Kind: mapx.KindSpec}, root, g, testkit.WithComments(nil))
 		if v != Pass {
 			t.Fatalf("the missing spec must be left out and the one on disk still resolve the citation, got %v (%s)", v, d)
 		}

@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,11 +24,11 @@ func TestHeaderConforme_binarioNaoCarregaCabecalho(t *testing.T) {
 	// commit de baseline visual. A identidade dele está no NOME do arquivo, que é o
 	// que o `identity-consistent` confronta.
 	png := "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00"
-	if v, msg := checkHeaderConforms(png, mapx.Node{ID: "X.ABCDX-VR-loaded.png", Kind: mapx.KindTest}, nil); v != Skip {
+	if v, msg := checkHeaderConforms(png, mapx.Node{ID: "X.ABCDX-VR-loaded.png", Kind: mapx.KindTest}, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("binário não carrega cabeçalho: %v (%s)", v, msg)
 	}
 	// Texto sem header continua reprovando — a dispensa é só para binário.
-	if v, _ := checkHeaderConforms("const x = 1\n", mapx.Node{ID: "x.ts", Kind: mapx.KindCode}, nil); v != Fail {
+	if v, _ := checkHeaderConforms("const x = 1\n", mapx.Node{ID: "x.ts", Kind: mapx.KindCode}, testkit.WithComments(nil)); v != Fail {
 		t.Errorf("arquivo de texto sem header deve reprovar: %v", v)
 	}
 }
@@ -535,7 +536,7 @@ func TestHeaderSemBlocoReprova(t *testing.T) {
 	t.Run("INCHN-B11: A governed file with no identity block fails the header ruler", func(t *testing.T) {})
 
 	if v, _ := checkHeaderConforms("const x = 1 // nada aqui\n",
-		mapx.Node{ID: "x.ts", Kind: mapx.KindCode, Tags: []string{"business-logic"}}, nil); v != Fail {
+		mapx.Node{ID: "x.ts", Kind: mapx.KindCode, Tags: []string{"business-logic"}}, testkit.WithComments(nil)); v != Fail {
 		t.Error("sem bloco de cabeçalho, a camada regida reprova")
 	}
 }
@@ -546,13 +547,13 @@ func TestHeaderRegidoExigePosseOuReferencia(t *testing.T) {
 	t.Run("INCHN-B12: A governed file passes with ownership or with reference, never with layer alone", func(t *testing.T) {})
 
 	regida := mapx.Node{ID: "x.ts", Kind: mapx.KindCode, Tags: []string{"business-logic"}}
-	if v, _ := checkHeaderConforms("// @anchors\n//   code: LGNNX\nconst x = 1\n", regida, nil); v != Pass {
+	if v, _ := checkHeaderConforms("// @anchors\n//   code: LGNNX\nconst x = 1\n", regida, testkit.WithComments(nil)); v != Pass {
 		t.Error("posse (code) tem de passar")
 	}
-	if v, _ := checkHeaderConforms("// @anchors\n//   ref: LGNNX\nconst x = 1\n", regida, nil); v != Pass {
+	if v, _ := checkHeaderConforms("// @anchors\n//   ref: LGNNX\nconst x = 1\n", regida, testkit.WithComments(nil)); v != Pass {
 		t.Error("referência (ref) tem de passar")
 	}
-	if v, _ := checkHeaderConforms("// @anchors\n//   layer: business-logic\nconst x = 1\n", regida, nil); v != Fail {
+	if v, _ := checkHeaderConforms("// @anchors\n//   layer: business-logic\nconst x = 1\n", regida, testkit.WithComments(nil)); v != Fail {
 		t.Error("só layer NÃO basta numa camada regida")
 	}
 }
@@ -563,11 +564,11 @@ func TestHeaderReconhecidoPassaComLayer(t *testing.T) {
 	t.Run("INCHN-B13: A file of a recognised layer passes with the layer alone", func(t *testing.T) {})
 
 	reconhecida := mapx.Node{ID: "dao.ts", Kind: mapx.KindCode, Tags: []string{"frontend", "presentation"}, Regime: "declarativo"}
-	if v, _ := checkHeaderConforms("// @anchors\n//   layer: presentation\n", reconhecida, nil); v != Pass {
+	if v, _ := checkHeaderConforms("// @anchors\n//   layer: presentation\n", reconhecida, testkit.WithComments(nil)); v != Pass {
 		t.Error("camada reconhecida passa com a layer sozinha")
 	}
 	// Mas SEM identidade nenhuma ela também reprova — a dispensa é da forma, não do dever.
-	if v, _ := checkHeaderConforms("// @anchors\n//   updated_at: x\n", reconhecida, nil); v != Fail {
+	if v, _ := checkHeaderConforms("// @anchors\n//   updated_at: x\n", reconhecida, testkit.WithComments(nil)); v != Fail {
 		t.Error("reconhecida sem layer/code/ref ainda reprova")
 	}
 }
@@ -578,7 +579,7 @@ func TestHeaderDispensaBinario(t *testing.T) {
 	t.Run("INCHN-B14: A binary file steps aside from the header ruler", func(t *testing.T) {})
 
 	png := "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00"
-	if v, _ := checkHeaderConforms(png, mapx.Node{ID: "X.ABCDX-VR-loaded.png", Kind: mapx.KindTest}, nil); v != Skip {
+	if v, _ := checkHeaderConforms(png, mapx.Node{ID: "X.ABCDX-VR-loaded.png", Kind: mapx.KindTest}, testkit.WithComments(nil)); v != Skip {
 		t.Error("binário não carrega cabeçalho")
 	}
 }
@@ -588,13 +589,21 @@ func TestHeaderDispensaBinario(t *testing.T) {
 func TestHeaderDispensaRoteiroExecutavel(t *testing.T) {
 	t.Run("INCHN-B15: An executable test script steps aside by a different path", func(t *testing.T) {})
 
-	roteiro := mapx.Node{ID: "flows/ABCDX-A01.yaml", Kind: mapx.KindTest}
-	if v, _ := checkHeaderConforms("steps:\n  - open: /login\n", roteiro, nil); v != Skip {
-		t.Error("o roteiro do runner tem a identidade no NOME, e não carrega cabeçalho nosso")
+	hv := checkersWithGraph["header-valid"]
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"e2e-flow": {Headless: true}}})
+	roteiro := mapx.Node{ID: "flows/ABCDX-A01.yaml", Kind: mapx.KindTest, Layer: "e2e-flow"}
+	if v, _ := hv("steps:\n  - open: /login\n", roteiro, "", nil, cfg); v != Skip {
+		t.Error("o roteiro do runner, numa camada headless, tem a identidade no NOME e não carrega cabeçalho nosso")
+	}
+	// The core knows no runner's format: the same flow in a layer not declared headless is
+	// charged.
+	roteiro.Layer = "flows"
+	if v, _ := hv("steps:\n  - open: /login\n", roteiro, "", nil, cfg); v != Fail {
+		t.Error("um roteiro fora de camada headless é cobrado")
 	}
 	// Mas um teste em linguagem de programação continua cobrado.
 	emGo := mapx.Node{ID: "x_test.go", Kind: mapx.KindTest}
-	if v, _ := checkHeaderConforms("package x\n", emGo, nil); v != Fail {
+	if v, _ := checkHeaderConforms("package x\n", emGo, testkit.WithComments(nil)); v != Fail {
 		t.Error("teste em código nosso continua cobrado")
 	}
 }
@@ -721,7 +730,7 @@ func TestCheckerInternoNaoDependeDeFerramentaInstalada(t *testing.T) {
 		t.Error("o checker de texto tem de responder sem PATH algum")
 	}
 	if v, _ := checkHeaderConforms("// @anchors\n//   code: LGNNX\n",
-		mapx.Node{ID: "x.ts", Kind: mapx.KindCode}, nil); v != Pass {
+		mapx.Node{ID: "x.ts", Kind: mapx.KindCode}, testkit.WithComments(nil)); v != Pass {
 		t.Error("a régua de cabeçalho é textual e não pode depender do que está instalado")
 	}
 }
@@ -733,7 +742,7 @@ func TestRegistroNaoJulgaSeOTextoEstaCerto(t *testing.T) {
 
 	// Cabeçalho presente e conforme; o conteúdo, absurdo para qualquer revisor.
 	absurdo := "// @anchors\n//   code: LGNNX\n// esta unidade faz exatamente o oposto do que diz\n"
-	if v, msg := checkHeaderConforms(absurdo, mapx.Node{ID: "x.ts", Kind: mapx.KindCode}, nil); v != Pass {
+	if v, msg := checkHeaderConforms(absurdo, mapx.Node{ID: "x.ts", Kind: mapx.KindCode}, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("a régua é presença e forma, não qualidade: %v — %s", v, msg)
 	}
 }
@@ -791,7 +800,7 @@ func TestInternalChecks_Errors(t *testing.T) {
 	t.Run("INCHN-E01: A test missing from disk does not hide the codes the other tests name", func(t *testing.T) {
 		root, g := rootWithTest(t, "const c = \"CREDX-B01\"\nfunc TestX(t *testing.T) {}\n")
 		g.Nodes = append([]mapx.Node{{ID: "gone_test.go", Kind: mapx.KindTest}}, g.Nodes...)
-		v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil)
+		v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, testkit.WithComments(nil))
 		if v != Fail || !strings.Contains(msg, "ingest") || !strings.Contains(msg, "CREDX-B01") {
 			t.Fatalf("CREDX-B01 must still count as written despite the missing test, got %v: %s", v, msg)
 		}
@@ -802,7 +811,7 @@ func TestScenarioCoverage_TitlesWhenDeclared(t *testing.T) {
 	t.Run("INCHN-B17: With a tests source a scenario is written only when a title cites it", func(t *testing.T) {})
 	t.Cleanup(resetProjectTestsCache)
 	body := "const c = \"CREDX-B01\"\nfunc TestX(t *testing.T) { t.Run(\"unrelated\", nil) }\n"
-	goFamily := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	goFamily := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}})
 	resetProjectTestsCache()
 	root, g := rootWithTest(t, body)
 	v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, goFamily)
@@ -811,7 +820,7 @@ func TestScenarioCoverage_TitlesWhenDeclared(t *testing.T) {
 	}
 	resetProjectTestsCache()
 	root, g = rootWithTest(t, body)
-	if v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil); v != Fail || !strings.Contains(msg, "ingest") {
+	if v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, testkit.WithComments(nil)); v != Fail || !strings.Contains(msg, "ingest") {
 		t.Fatalf("without a declaration the code in the file counts as written, got %v: %s", v, msg)
 	}
 	resetProjectTestsCache()
@@ -826,7 +835,7 @@ func TestScenarioCoverage_FailingSource(t *testing.T) {
 	resetProjectTestsCache()
 	t.Cleanup(resetProjectTestsCache)
 	root, g := rootWithTest(t, "func TestX(t *testing.T) {}\n")
-	cfg := &config.Config{Dialect: &config.Dialect{Tests: &config.TestsSource{Script: "echo 'no go toolchain' >&2; exit 1"}}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Tests: &config.TestsSource{Script: "echo 'no go toolchain' >&2; exit 1"}}})
 	if v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, cfg); v != Fail || !strings.Contains(msg, "no go toolchain") {
 		t.Fatalf("a failing source must fail naming its error, got %v: %s", v, msg)
 	}
@@ -845,7 +854,7 @@ func TestSupportFilesAreNotTests(t *testing.T) {
 			g.Nodes[i].Support = true
 		}
 	}
-	if _, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil); strings.Contains(msg, "ingest") {
+	if _, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, testkit.WithComments(nil)); strings.Contains(msg, "ingest") {
 		t.Fatalf("a support file must not count as a test naming the code, got %s", msg)
 	}
 }
@@ -855,7 +864,7 @@ func TestScenarioCoverage_FileTheSourceDoesNotDescribe(t *testing.T) {
 	resetProjectTestsCache()
 	t.Cleanup(resetProjectTestsCache)
 	root, g := rootWithTest(t, "name: 'CREDX-B01 - validates the limit'\n- launchApp\n")
-	ts := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	ts := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
 	if _, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, ts); !strings.Contains(msg, "ingest") {
 		t.Fatalf("in a file the source lists no test in, the code in it counts as written, got %s", msg)
 	}
@@ -907,9 +916,9 @@ func TestRuleLetters_aLetterTheProjectDeclaresIsSeen(t *testing.T) {
 	}
 
 	// after declaring: it is seen.
-	cfg := &config.Config{RuleTypes: []config.RuleType{
+	cfg := testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{
 		{Letter: "B", Term: "Behavior"}, {Letter: "Z", Term: "Policy"},
-	}}
+	}})
 	SetRuleLetters(cfg.RuleLetters())
 	got := parseFeatureScenarios(feature)
 	if len(got) != 1 || got[0].Code != "ABCDX-Z01" {
@@ -988,7 +997,7 @@ O ` + "`MTTLM-B02`" + ` nasce desligado, e a ` + "`CRPNC-B06`" + ` o liga.
 		Rev: "abc",
 	}
 
-	v, msg := checkScenarioCoverage(content, n, "", nil, nil)
+	v, msg := checkScenarioCoverage(content, n, "", nil, testkit.WithComments(nil))
 
 	if v != Pass {
 		t.Errorf("verdict = %v — %s\n  both DEFINED requirements are proven; the "+
@@ -1012,7 +1021,7 @@ func TestScenarioCoverage_stillChargesTheDefinedRequirement(t *testing.T) {
 		Signal: &mapx.TestSignal{ProvenCodes: []string{"ABCDX-B01"}, AtRev: "r1"},
 	}
 
-	v, msg := checkScenarioCoverage(content, n, "", nil, nil)
+	v, msg := checkScenarioCoverage(content, n, "", nil, testkit.WithComments(nil))
 
 	if v != Fail {
 		t.Fatalf("verdict = %v — `ABCDX-B02` has no proven scenario", v)
@@ -1053,7 +1062,7 @@ func TestScenarioCoverage_noTestIsReportedEvenWithoutIngestion(t *testing.T) {
 	t.Run("INCHN-B21: Scenario coverage tells a missing test apart from a test never run", func(t *testing.T) {})
 	root, g := rootWithTest(t, "func TestNothing(t *testing.T) {}\n")
 
-	v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil)
+	v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("no test names the requirements — expected Fail, got %v", v)
 	}
@@ -1069,7 +1078,7 @@ func TestScenarioCoverage_writtenButNotRunSaysWhichOfTheTwo(t *testing.T) {
 	t.Run("INCHN-B21: Scenario coverage tells a missing test apart from a test never run", func(t *testing.T) {})
 	root, g := rootWithTest(t, "const c = \"CREDX-B01\"\nfunc TestX(t *testing.T) {}\n")
 
-	v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil)
+	v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("expected Fail, got %v", v)
 	}
@@ -1087,7 +1096,7 @@ func TestScenarioCoverage_commentDoesNotCountAsATest(t *testing.T) {
 	t.Run("INCHN-B17: With a tests source a scenario is written only when a title cites it", func(t *testing.T) {})
 	root, g := rootWithTest(t, "// CREDX-B01 is covered elsewhere\nfunc TestX(t *testing.T) {}\n")
 
-	_, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil)
+	_, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, testkit.WithComments(nil))
 	if strings.Contains(msg, "ingest") {
 		t.Errorf("a code only in a COMMENT passed as a written test: %q", msg)
 	}
@@ -1101,7 +1110,7 @@ func TestScenarioCoverage_provenPasses(t *testing.T) {
 	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CREDX-B01", "CREDX-B02"}}
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "credx_test.go", Kind: mapx.KindTest}}}
 
-	if v, msg := checkScenarioCoverage(specWithTwoRequirements, n, root, g, nil); v != Pass {
+	if v, msg := checkScenarioCoverage(specWithTwoRequirements, n, root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("both requirements proven and the verdict was %v: %s", v, msg)
 	}
 }
@@ -1113,10 +1122,10 @@ func TestScenarioCoverage_provenPasses(t *testing.T) {
 func TestScenarioCoverage_honoursTheLayersTestedByOptOut(t *testing.T) {
 	t.Run("INCHN-B22: Scenario coverage honours a layer that dispenses tested-by", func(t *testing.T) {})
 	root, g := rootWithTest(t, "package credx\n")
-	cfg := &config.Config{Layers: map[string]config.Layer{
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{
 		"schema-model": {Kind: "spec", OptionalUnitEdges: []string{"covered-by", "tested-by"}},
 		"service":      {Kind: "spec"},
-	}}
+	}})
 	optedOut := specNodeCoverage()
 	optedOut.Tags = []string{"schema-model"}
 	if v, msg := checkScenarioCoverage(specWithTwoRequirements, optedOut, root, g, cfg); v != Skip || !strings.Contains(msg, "tested-by") {
@@ -1546,10 +1555,10 @@ Comportamento.
 `
 
 func sectionsGateConfig(enforce *bool) *config.Config {
-	return &config.Config{
+	return testkit.WithComments(&config.Config{
 		Lang:  "pt-BR",
 		Gates: []config.Gate{{Name: "spec-complete", Check: "spec-sections", EnforceSectionLanguage: enforce}},
-	}
+	})
 }
 
 // The DEFAULT is to charge: omitting the key must not mean "do not check", or the mixed
@@ -1622,7 +1631,7 @@ func TestNewTemplate_specIsBornConforming(t *testing.T) {
 		"## Visão Geral\nTODO: o que a unidade faz e para quem.\n\n" +
 		"## Regras\n\n### LGNOX-B01 — TODO regra\nDescreva o comportamento (não a implementação).\n\n"
 
-	if v, msg := checkHeaderConforms(spec, mapx.Node{ID: "x/Login.spec.md", Kind: "spec"}, nil); v != Pass {
+	if v, msg := checkHeaderConforms(spec, mapx.Node{ID: "x/Login.spec.md", Kind: "spec"}, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("the spec from `new` fails header-valid: %s", msg)
 	}
 	if v, msg := checkSpecSections(spec, mapx.Node{ID: "x/Login.spec.md"}, "", nil, nil); v != Pass {
@@ -1636,7 +1645,7 @@ func TestNewTemplate_featureIsBornConforming(t *testing.T) {
 		"\n@LGNOX\nFuncionalidade: Login\n\n" +
 		"  @LGNOX-B01 @nivel-unit @P2\n  Cenário: TODO\n    Dado TODO\n    Quando TODO\n    Então o efeito LGNOX-B01 se verifica\n\n"
 
-	if v, msg := checkHeaderConforms(feat, newTemplateHeaderNode(mapx.KindFeature), nil); v != Pass {
+	if v, msg := checkHeaderConforms(feat, newTemplateHeaderNode(mapx.KindFeature), testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("the feature from `new` fails header-valid: %s", msg)
 	}
 	// non-empty: the feature has content beyond the header.
@@ -1650,7 +1659,7 @@ func TestNewTemplate_testIsBornConforming(t *testing.T) {
 	test := "// @anchors\n//   ref: LGNOX\n//   updated_at: TODO\n//   layer: test\n" +
 		"\ndescribe('Login', () => {\n  it('[LGNOX-B01] TODO', () => {\n    // TODO\n  })\n})\n"
 
-	if v, msg := checkHeaderConforms(test, newTemplateHeaderNode(mapx.KindTest), nil); v != Pass {
+	if v, msg := checkHeaderConforms(test, newTemplateHeaderNode(mapx.KindTest), testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("the test from `new` fails header-valid: %s", msg)
 	}
 }
@@ -1675,7 +1684,7 @@ func TestMutationScore_UnderLoad(t *testing.T) {
 		t.Fatalf("at the ceiling the score still decides, got %v", v)
 	}
 	// A declared ceiling of 0.9 lets the same measurement decide.
-	cfg := &config.Config{Gates: []config.Gate{{Name: "mutation-score", Check: "mutation-score", TimeoutCeiling: 0.9}}}
+	cfg := testkit.WithComments(&config.Config{Gates: []config.Gate{{Name: "mutation-score", Check: "mutation-score", TimeoutCeiling: 0.9}}})
 	if v, _ := checkMutationScoreUnderLoad("", node(74, 4, 65), "", nil, cfg); v != Pass {
 		t.Fatalf("under a declared ceiling of 0.9 the score decides, got %v", v)
 	}
@@ -1690,11 +1699,11 @@ func TestHeaderConforms_offTheTop(t *testing.T) {
 	t.Run("INCHN-B33: A header below the top fails the header ruler", func(t *testing.T) {})
 	n := mapx.Node{ID: "page.tsx", Kind: mapx.KindCode}
 	low := "'use client'\n// @anchors\n//   ref: PAGEX\n"
-	if v, msg := checkHeaderConforms(low, n, nil); v != Fail || !strings.Contains(msg, "@fixed-header") {
+	if v, msg := checkHeaderConforms(low, n, testkit.WithComments(nil)); v != Fail || !strings.Contains(msg, "@fixed-header") {
 		t.Errorf("a header below the top fails naming the way out, got %v: %s", v, msg)
 	}
 	fixed := "'use client'\n// @anchors\n//   ref: PAGEX\n//   @fixed-header: the directive must come first\n"
-	if v, msg := checkHeaderConforms(fixed, n, nil); v != Pass {
+	if v, msg := checkHeaderConforms(fixed, n, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("a declared header passes, got %v: %s", v, msg)
 	}
 }
@@ -1712,7 +1721,7 @@ func TestScenarioCoverage_eachVariantMustBeProven(t *testing.T) {
 	run := func(proven ...string) (Verdict, string) {
 		n := specNodeCoverage()
 		n.Signal = &mapx.TestSignal{ProvenCodes: proven}
-		return checkScenarioCoverage(specWithTwoRequirements, n, root, g, nil)
+		return checkScenarioCoverage(specWithTwoRequirements, n, root, g, testkit.WithComments(nil))
 	}
 	if v, msg := run("CREDX-B01#01", "CREDX-B02"); v != Fail || !strings.Contains(msg, "CREDX-B01#02") || strings.Contains(msg, "CREDX-B01#01") {
 		t.Errorf("the unproven variant fails, named, got %v: %s", v, msg)
@@ -1727,10 +1736,10 @@ func TestScenarioCoverage_eachVariantMustBeProven(t *testing.T) {
 
 func TestHeaderValid_readsTheDeclaredLayer(t *testing.T) {
 	t.Run("INCHN-B35: The header's layer is read as the project declares it", func(t *testing.T) {})
-	cfg := &config.Config{Layers: map[string]config.Layer{
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{
 		"shared-data": {Regime: "declarativo"},
 		"billing":     {Regime: "regra"},
-	}}
+	}})
 	test := mapx.Node{ID: "src/legal/terms.test.ts", Kind: mapx.KindTest}
 	if v, msg := checkHeaderConforms("// @anchors\n//   layer: shared-data\n", test, cfg); v != Pass {
 		t.Errorf("a declarative layer the project named gives the identity, got %v: %s", v, msg)
@@ -1738,7 +1747,7 @@ func TestHeaderValid_readsTheDeclaredLayer(t *testing.T) {
 	if v, _ := checkHeaderConforms("// @anchors\n//   layer: billing\n", test, cfg); v != Fail {
 		t.Errorf("a layer with another regime still asks for code or ref, got %v", v)
 	}
-	if v, _ := checkHeaderConforms("// @anchors\n//   layer: shared-data\n", test, nil); v != Fail {
+	if v, _ := checkHeaderConforms("// @anchors\n//   layer: shared-data\n", test, testkit.WithComments(nil)); v != Fail {
 		t.Errorf("control: without the Structure the name alone is not canonical, got %v", v)
 	}
 }
@@ -1748,7 +1757,9 @@ func TestLineCoverage_nothingToCover(t *testing.T) {
 	listed := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: &mapx.TestSignal{CoverageRev: "r1"}}
 	omitted := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: &mapx.TestSignal{CoverageOmitted: "r1"}}
 	oldOmission := mapx.Node{Kind: mapx.KindCode, Rev: "r2", Signal: &mapx.TestSignal{CoverageOmitted: "r1"}}
-	lineCoverage := func(c string, n mapx.Node) (Verdict, string) { return checkLineCoverage(c, n, "", nil, nil) }
+	lineCoverage := func(c string, n mapx.Node) (Verdict, string) {
+		return checkLineCoverage(c, n, "", nil, nil)
+	}
 	for _, check := range []func(string, mapx.Node) (Verdict, string){lineCoverage, checkCoverageDelta} {
 		if v, _ := check("", listed); v != Skip {
 			t.Errorf("listed with no line is skipped, got %v", v)
@@ -1787,7 +1798,7 @@ func TestLineCoverage_theGatesFloor(t *testing.T) {
 	}
 	with := func(g config.Gate) *config.Config {
 		g.Name, g.Check = "line-coverage", "line-coverage"
-		return &config.Config{Gates: []config.Gate{g}}
+		return testkit.WithComments(&config.Config{Gates: []config.Gate{g}})
 	}
 	if v, msg := checkLineCoverage("", node("src/a.go"), "", nil, nil); v != Fail || !strings.Contains(msg, "70") {
 		t.Errorf("no floor declared fails against 70%%, got %v: %s", v, msg)
@@ -1829,7 +1840,7 @@ func TestHeaderValid_asksForTheFilesOwnCodeAndOnlyOnce(t *testing.T) {
 	t.Run("INCHN-B41: A header without a code of its own fails, and a code another file owns fails naming it", func(t *testing.T) {})
 	hv := checkersWithGraph["header-valid"]
 	n := mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode}
-	if v, msg := hv("// @anchors\n//   ref: PAYMT\n\npackage src\n", n, "", nil, nil); v != Fail || !strings.Contains(msg, "code:") {
+	if v, msg := hv("// @anchors\n//   ref: PAYMT\n\npackage src\n", n, "", nil, testkit.WithComments(nil)); v != Fail || !strings.Contains(msg, "code:") {
 		t.Errorf("a ref alone names the unit, not the file: %v (%s)", v, msg)
 	}
 	g := &mapx.Graph{Nodes: []mapx.Node{
@@ -1837,11 +1848,11 @@ func TestHeaderValid_asksForTheFilesOwnCodeAndOnlyOnce(t *testing.T) {
 		{ID: "src/other.go", Kind: mapx.KindCode, FileCode: "PAYCD"},
 	}}
 	own := "// @anchors\n//   code: PAYCD\n//   ref: PAYMT\n\npackage src\n"
-	if v, msg := hv(own, n, "", g, nil); v != Fail || !strings.Contains(msg, "src/other.go") {
+	if v, msg := hv(own, n, "", g, testkit.WithComments(nil)); v != Fail || !strings.Contains(msg, "src/other.go") {
 		t.Errorf("a code another file owns fails naming it: %v (%s)", v, msg)
 	}
 	g.Nodes[1].FileCode = "OTHRC"
-	if v, msg := hv(own, n, "", g, nil); v != Pass {
+	if v, msg := hv(own, n, "", g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("a code of its own, carried by no other file, passes: %v (%s)", v, msg)
 	}
 }
@@ -1851,17 +1862,17 @@ func TestHeaderValid_readsTheTopBlockAndLayerForNoUnit(t *testing.T) {
 	hv := checkersWithGraph["header-valid"]
 	code := mapx.Node{ID: "pkg/guide.go", Kind: mapx.KindCode}
 	inString := "package pkg\n\nconst example = `\n// @anchors\n//   layer: x\n`\n"
-	if v, _ := hv(inString, code, "", nil, nil); v != Fail {
+	if v, _ := hv(inString, code, "", nil, testkit.WithComments(nil)); v != Fail {
 		t.Errorf("a header in a string is no header: %v", v)
 	}
 	layerOnly := "<!-- @anchors\n  code: GUIDA\n  layer: guide\n-->\n\n# Guide\n"
 	for _, n := range []mapx.Node{{ID: "g/A.md", Kind: mapx.KindGuide}, {ID: "D.md", Kind: mapx.KindDoc}} {
-		if v, msg := hv(layerOnly, n, "", nil, nil); v != Pass {
+		if v, msg := hv(layerOnly, n, "", nil, testkit.WithComments(nil)); v != Pass {
 			t.Errorf("%s with layer only: %v (%s)", n.Kind, v, msg)
 		}
 	}
 	support := mapx.Node{ID: "pkg/helpers_test.go", Kind: mapx.KindTest, Support: true}
-	if v, msg := hv("// @anchors\n//   code: HLPRT\n//   layer: test\n\npackage pkg\n", support, "", nil, nil); v != Pass {
+	if v, msg := hv("// @anchors\n//   code: HLPRT\n//   layer: test\n\npackage pkg\n", support, "", nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("a support file with layer only: %v (%s)", v, msg)
 	}
 }
@@ -1873,12 +1884,12 @@ func TestScenarioCoverage_aChangedRuleIsStaleAlone(t *testing.T) {
 	root, g := rootWithTest(t, "const c = \"CREDX-B01 CREDX-B02\"\nfunc TestX(t *testing.T) {}\n")
 	n := specNodeCoverage()
 	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CREDX-B01", "CREDX-B02"}, StaleCodes: []string{"CREDX-B02"}}
-	v, msg := checkScenarioCoverage(specWithTwoRequirements, n, root, g, nil)
+	v, msg := checkScenarioCoverage(specWithTwoRequirements, n, root, g, testkit.WithComments(nil))
 	if v != Pending || !strings.Contains(msg, "CREDX-B02") || strings.Contains(msg, "CREDX-B01") {
 		t.Errorf("only B02 is stale, and stale is pending: %v %q", v, msg)
 	}
 	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CREDX-B02"}, StaleCodes: []string{"CREDX-B02"}}
-	if v, msg := checkScenarioCoverage(specWithTwoRequirements, n, root, g, nil); v != Fail || !strings.Contains(msg, "CREDX-B02") || !strings.Contains(msg, "CREDX-B01") {
+	if v, msg := checkScenarioCoverage(specWithTwoRequirements, n, root, g, testkit.WithComments(nil)); v != Fail || !strings.Contains(msg, "CREDX-B02") || !strings.Contains(msg, "CREDX-B01") {
 		t.Errorf("a rule not proven still fails, with the stale one named beside it: %v %q", v, msg)
 	}
 }

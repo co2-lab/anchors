@@ -191,7 +191,7 @@ func TestNodeCode_noAnchorFallsBack(t *testing.T) {
 // anchorCodeByDerived links each derived file to its anchor's code by the STEM.
 func TestAnchorCodeByDerived_linksByTheStem(t *testing.T) {
 	t.Run("GRBLG-B03: A derived file takes its sibling anchor's identity", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{Anchor: "spec"}}
+	cfg := &config.Config{Derived: &config.Derived{Anchor: "spec", Files: map[string]config.Padroes{"test": {"{{dir}}/{{name}}.test.ts"}}}}
 	files := []scan.File{
 		{Path: "packages/infra/GoLive.spec.md", Kind: "spec", HeaderCode: "GLCGL"},
 		{Path: "packages/infra/GoLive.ts", Kind: "code"},

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:e39421b33cdb4c66 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:4b83593ffc9442a4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
@@ -999,7 +999,7 @@ read by a computed name is out of reach of the text.
 
 - **ENVDC-B04** — A read inside a comment is no read.
 
-- **ENVDC-B05** — With no language family declared, the reads of every family are recognised.
+- **ENVDC-B05** — With no `dialect.env_read` declared the gate is pending, naming the field: how code reads a variable is the language's, and the core knows none.
 
 - **ENVDC-E01** — A specified code file cannot be read.
 
@@ -1803,7 +1803,7 @@ looked at.
 
 - **INCHN-B42** — `scenario-coverage` reads the rules whose scenarios are stale — their rule changed since they were proven, and nothing else of the spec did — as stale, apart from the rest: Pending naming them when every other rule is proven, and named beside the failing ones otherwise. (`checkScenarioCoverage`)
 
-- **INCHN-B15** — An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name.
+- **INCHN-B15** — A file of a layer the project declares `headless` — the flows of an E2E runner, whose identity is in their file name and whose format is the runner's — steps aside from the header ruler; the core knows no runner's format, and a test of another layer is still charged.
 
 - **INCHN-B16** — A guide with no compliance-points section, or with the section and no item in it, fails — the AI judgment gate would otherwise fall back on vague heuristics.
 
@@ -1974,7 +1974,7 @@ gate exists to catch.
 
 - **MRPRM-X02** — Does not decide WHICH rules live at two ends.
 
-- **MRPRM-X03** — Does not read files whose extension is not in the text list.
+- **MRPRM-X03** — Does not read a file whose comments the project does not declare (`dialect.comments`) — a binary among them.
 
 
 ## MKSTP — MockStampGenerator — writes the missing `@contract` stamps, and never rewrites one
@@ -1999,9 +1999,9 @@ Exposed as `anchors stamp [tests...]`, with `--dry-run`.
 
 - **MKSTP-B02** — A specifier matching several files resolves to the one sharing the longest directory prefix with the test; a tie is skipped and reported, never guessed.
 
-- **MKSTP-B03** — Each factory key that names an export of the module gets its own stamp, anchored on that export and covering its block — a change to another member does not make it diverge.
+- **MKSTP-B03** — Each export of the module (by the project's export pattern) that the double's call names — inside its parentheses, the test's strings and comments blanked as its syntax says; no object literal of a language is read — gets its own stamp, anchored on that export and covering its block — a change to another member does not make it diverge.
 
-- **MKSTP-B04** — With no factory key naming an export (an automock, for instance), one stamp covers the whole module — which is what an automock replaces.
+- **MKSTP-B04** — With no export named by the call (an automock, for instance), one stamp covers the whole module — which is what an automock replaces.
 
 - **MKSTP-B05** — A double of a module outside the map (a third-party library) is not stamped.
 
@@ -2146,7 +2146,7 @@ there is no structural type to lean on.
 
 - **MCTYM-B03** — The charge is per MODULE, not per file: one loose double among several is enough to fail, and the verdict counts only the loose ones.
 
-- **MCTYM-B04** — A double with no factory is not charged: the automock derives from the real module by construction, so it cannot drift, and charging it would be noise one learns to ignore.
+- **MCTYM-B04** — A double with no factory — the factory pattern read from its own call, never a later double's — is not charged: the automock derives from the real module by construction, so it cannot drift, and charging it would be noise one learns to ignore.
 
 - **MCTYM-B05** — Without `derived.mock_contract` declared the gate is Pending, naming the field and the opt-out; with `mock_contract` in `dialect.opt_out` it skips.
 
@@ -3087,7 +3087,7 @@ it does not go hunting duplicated concepts across the project.
 
 - **PCBPR-B13** — A rule with no relation claim at all leaves without a verdict — there was nothing to charge.
 
-- **PCBPR-B14** — Imports in other language shapes (`require`, `from `, `use `, `using `, `#include`, or the project's configured pattern) satisfy the charge the same way.
+- **PCBPR-B14** — An import is what the project's `dialect.imports` declares, in whatever shape its language writes it (`use`, `using`, `#include`…); the gate knows none of them by itself.
 
 - **PCBPR-E01** — A spec is confronted with no map built.
 
@@ -3483,17 +3483,17 @@ rather than falsely approving uninspected routes.
 
 - **RTEXR-B02** — When the specification does not declare a route, the gate skips confrontation.
 
-- **RTEXR-B03** — When project configuration defines no route registry glob patterns, confrontation returns Pending.
+- **RTEXR-B03** — When project configuration defines no route registry glob patterns, or no `derived.route_pattern`, confrontation returns Pending.
 
 - **RTEXR-B04** — When route registry glob pattern is invalid, the gate returns Pending reporting the glob error.
 
 - **RTEXR-B05** — When route registry files are inspected but zero registered routes are discovered, the gate returns Pending.
 
-- **RTEXR-B06** — When a declared screen name matches a component navigation prop in registered route files, the gate passes.
+- **RTEXR-B06** — Read with the TS family's example of `route_pattern`: when a declared screen name matches a component navigation prop in registered route files, the gate passes.
 
-- **RTEXR-B07** — When a declared screen name matches a navigation stack parameter type entry in registered route files, the gate passes.
+- **RTEXR-B07** — Read with the TS family's example: when a declared screen name matches a navigation stack parameter type entry in registered route files, the gate passes.
 
-- **RTEXR-B08** — When a declared backend route matches an added HTTP resource registration, the gate passes.
+- **RTEXR-B08** — Read with the TS family's example: when a declared backend route matches an added HTTP resource registration, the gate passes.
 
 - **RTEXR-B09** — When a declared route includes an HTTP method verb prefix, the gate strips the verb and passes if the route path exists.
 

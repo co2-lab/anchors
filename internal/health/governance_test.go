@@ -99,7 +99,7 @@ func TestCheckGovernanceOpportunities_CodeGates(t *testing.T) {
 	t.Run("GVOPG-B02: Code without the secret gate gets the suggestion", func(t *testing.T) {})
 	t.Run("GVOPG-B04: Code without dependency audit or duplication gates gets both suggestions", func(t *testing.T) {})
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "main.go", Kind: mapx.KindCode}}}
-	fs := checkGovernanceOpportunities(g, &config.Config{})
+	fs := checkGovernanceOpportunities(g, goComments(&config.Config{}))
 	for _, gate := range []string{"no-secret-leaked", "dependency-vulnerable", "no-duplication"} {
 		if !hasOpportunity(fs, "sugestao-gate", gate) {
 			t.Errorf("expected a suggestion of %s for a project with code: %+v", gate, fs)
@@ -126,7 +126,16 @@ func everyOpportunity() (*mapx.Graph, *config.Config) {
 	return &mapx.Graph{Nodes: []mapx.Node{
 		{ID: "a.go", Kind: mapx.KindCode},
 		{ID: "a_test.go", Kind: mapx.KindTest},
-	}}, &config.Config{}
+	}}, goComments(&config.Config{})
+}
+
+// goComments declares the Go family's comments, so no comments tip joins the others.
+func goComments(cfg *config.Config) *config.Config {
+	if cfg.Dialect == nil {
+		cfg.Dialect = &config.Dialect{}
+	}
+	cfg.Dialect.Comments = config.FamilyComments("go")
+	return cfg
 }
 
 func TestQuickGovernanceHints_firstTwo(t *testing.T) {
@@ -142,9 +151,9 @@ func TestQuickGovernanceHints_firstTwo(t *testing.T) {
 	}
 	// Fewer than two: returned whole.
 	blocking := true
-	onlyOne := &config.Config{Gates: []config.Gate{
+	onlyOne := goComments(&config.Config{Gates: []config.Gate{
 		{Name: "no-secret-leaked", Blocking: &blocking}, {Name: "dependency-vulnerable"},
-	}}
+	}})
 	code := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.go", Kind: mapx.KindCode}}}
 	if hints := QuickGovernanceHints(code, onlyOne); len(hints) != 1 || hints[0].Subject != "no-duplication" {
 		t.Fatalf("a single opportunity is returned whole, got %+v", hints)
@@ -155,7 +164,7 @@ func TestCheckGovernanceOpportunities_allInfo(t *testing.T) {
 	t.Run("GVOPG-I01: Every opportunity is informational", func(t *testing.T) {})
 	g, _ := everyOpportunity()
 	notBlocking := false
-	cfg := &config.Config{Gates: []config.Gate{{Name: "no-secret-leaked", Blocking: &notBlocking}}}
+	cfg := goComments(&config.Config{Gates: []config.Gate{{Name: "no-secret-leaked", Blocking: &notBlocking}}})
 	fs := checkGovernanceOpportunities(g, cfg)
 	if len(fs) != 5 {
 		t.Fatalf("setup: five opportunities expected, got %+v", fs)
@@ -178,6 +187,7 @@ func TestCheckGovernanceOpportunities_adoptedIsNotSuggested(t *testing.T) {
 		},
 		Tests: []config.Suite{{Layer: "unit", Run: "go test", JUnit: "junit.xml"}},
 	}
+	goComments(cfg)
 	if fs := checkGovernanceOpportunities(g, cfg); len(fs) != 0 {
 		t.Fatalf("a project that adopted everything gets no suggestion: %+v", fs)
 	}
@@ -347,5 +357,68 @@ func TestCheckGovernanceOpportunities_NavigationCallOfTheFamily(t *testing.T) {
 	}
 	if ok, _ := has(&config.Config{Dialect: &config.Dialect{Family: "ts"}}); ok {
 		t.Error("a project without the gate is offered nothing")
+	}
+}
+
+func TestCheckGovernanceOpportunities_CommentsOfTheFamilies(t *testing.T) {
+	t.Run("GVOPG-B13: Files of the map whose comments are not declared are offered the families' examples", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "a.go", Kind: mapx.KindCode}, {ID: "b.ts", Kind: mapx.KindCode},
+		{ID: "c.zig", Kind: mapx.KindCode}, {ID: "a.spec.md", Kind: mapx.KindSpec},
+	}}
+	tip := func(cfg *config.Config) *Finding {
+		for _, f := range checkGovernanceOpportunities(g, cfg) {
+			if f.Check == "sugestao-comments" {
+				return &f
+			}
+		}
+		return nil
+	}
+	f := tip(&config.Config{})
+	if f == nil || !strings.Contains(f.Detail, ".go, .ts, .zig") || !strings.Contains(f.Detail, "comments:") {
+		t.Fatalf("every extension without comments is named and the known ones get the example: %+v", f)
+	}
+	var back config.Dialect
+	block := f.Detail[strings.Index(f.Detail, "\n    ")+len("\n    "):]
+	if err := yaml.Unmarshal([]byte(strings.ReplaceAll(block, "\n    ", "\n")), &back); err != nil || len(back.Comments) < 2 {
+		t.Errorf("the block reads back with an entry for go and one for ts: %v %+v", err, back.Comments)
+	}
+	for _, c := range back.Comments {
+		if strings.Contains(c.Files, "zig") {
+			t.Errorf("an extension no family knows gets no entry, only its name: %+v", c)
+		}
+	}
+	all := &config.Config{Dialect: &config.Dialect{Comments: append(config.AllComments(), config.Comments{Files: "**/*.zig", Line: []string{"//"}})}}
+	if f := tip(all); f != nil {
+		t.Errorf("a project declaring the comments of every file of its map is offered nothing: %+v", f)
+	}
+}
+
+func TestCheckGovernanceOpportunities_LexiconOfTheFamily(t *testing.T) {
+	t.Run("GVOPG-B14: A gate presupposing a lexicon field the project left empty is offered the family's example", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.go", Kind: mapx.KindCode}}}
+	gate := []config.Gate{{Name: "env-declared", Presupposes: []string{"dialect.env_read"}}, {Name: "x", Presupposes: []string{"derived.route_pattern"}}}
+	tip := func(cfg *config.Config) *Finding {
+		for _, f := range checkGovernanceOpportunities(g, goComments(cfg)) {
+			if f.Check == "sugestao-lexicon" {
+				return &f
+			}
+		}
+		return nil
+	}
+	f := tip(&config.Config{Dialect: &config.Dialect{Family: "go"}, Gates: gate})
+	if f == nil || !strings.Contains(f.Detail, "`dialect.env_read`") || strings.Contains(f.Detail, "route_pattern") {
+		t.Fatalf("the presupposed dialect field is named, and only it: %+v", f)
+	}
+	var back config.Dialect
+	block := f.Detail[strings.Index(f.Detail, "\n    ")+len("\n    "):]
+	if err := yaml.Unmarshal([]byte(strings.ReplaceAll(block, "\n    ", "\n")), &back); err != nil || back.EnvRead != config.FamilyLexicon("go").EnvRead {
+		t.Errorf("the block reads back with the example: %v %q", err, back.EnvRead)
+	}
+	if f := tip(&config.Config{Dialect: &config.Dialect{Family: "go", EnvRead: `x`}, Gates: gate}); f != nil {
+		t.Errorf("a declared field is offered nothing: %+v", f)
+	}
+	if f := tip(&config.Config{Dialect: &config.Dialect{Family: "cobol"}, Gates: gate}); f != nil {
+		t.Errorf("a family with no example is offered nothing: %+v", f)
 	}
 }

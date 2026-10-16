@@ -679,7 +679,7 @@ func anchorCodeByDerived(files []scan.File, cfg *config.Config) map[string]strin
 		if f.Kind == cfg.Derived.Anchor || f.HeaderCode != "" {
 			continue // a âncora tem a sua; quem declarou não precisa de fallback
 		}
-		chave := filepath.ToSlash(filepath.Dir(f.Path)) + "/" + stemOfDerived(f.Path)
+		chave := filepath.ToSlash(filepath.Dir(f.Path)) + "/" + cfg.UnitName(f.Path)
 		if c, ok := porStem[chave]; ok {
 			out[f.Path] = c
 		}
@@ -968,36 +968,6 @@ func globEscape(s string) string {
 // GlobEscape is globEscape for the other packages that turn a real path into a pattern.
 // `{` and `}` are escaped too: doublestar reads them as alternation.
 func GlobEscape(s string) string { return globEscape(s) }
-
-// stemOfDerived corta os sufixos de um artefato DERIVADO até o nome da unidade.
-//
-// O `StemOfAnchor` corta os sufixos da ÂNCORA (`.spec.md`, `.feature`); aqui o alvo é o
-// outro lado — `X.test.ts`, `X.ts`, `X.tsx`, `X.test.tsx`. Cortar só a última extensão
-// deixaria `X.test`, que não casa o stem da spec.
-//
-// Não vem do `derived.files` de propósito: os templates são caminhos com `{{name}}`, e
-// invertê-los para extrair o nome exigiria casá-los como regex — que falha no primeiro
-// projeto que use um template com mais de uma variável. Cortar sufixo é o que os dois
-// lados já fazem.
-func stemOfDerived(path string) string {
-	base := filepath.Base(path)
-	// Do mais específico para o menos: `.test.ts` antes de `.ts`, senão `X.test.ts`
-	// viraria `X.test`.
-	for _, suf := range []string{
-		".spec.md", ".feature",
-		".test.ts", ".test.tsx", ".test.js", ".test.jsx",
-		".spec.ts", ".spec.tsx",
-		".test.go", "_test.go",
-	} {
-		if b, ok := strings.CutSuffix(base, suf); ok {
-			return b
-		}
-	}
-	if i := strings.LastIndex(base, "."); i > 0 {
-		return base[:i]
-	}
-	return base
-}
 
 // RuleRoot devolve a UNIDADE dona de um código de regra ou cenário.
 //

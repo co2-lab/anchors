@@ -60,7 +60,7 @@ func TestNewSpecIsBornWithAFreeCode(t *testing.T) {
 	t.Run("NWARN-B12: The artifact is written where out says and never overwritten", func(t *testing.T) {})
 	root := t.TempDir()
 	taken := code.Generate("Login")
-	writeFile(t, root, "anchors.graph.yaml", "version: 7\nnodes:\n    - id: x/Login.spec.md\n      kind: spec\n      code: "+taken+"\nedges: []\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 8\nnodes:\n    - id: x/Login.spec.md\n      kind: spec\n      code: "+taken+"\nedges: []\n")
 	err, out := runNew(t, "spec", "Login", "--root", root, "--out", "src/auth/Login.spec.md", "--with", "errors", "--without", "overview")
 	if err != nil {
 		t.Fatalf("new spec: %v", err)
@@ -326,6 +326,11 @@ func TestSectionOrderWithAnExtraSection(t *testing.T) {
 // they do not own. Generating a new code produces an orphan BY CONSTRUCTION: the `ref:`
 // points at a spec that does not exist. It happened: `anchors new feature
 // metadataVersioning` minted `MTVA` next to a spec that declared `MTVRX`.
+// siblingCfg names the tests as TypeScript, Go and Python projects do.
+var siblingCfg = &config.Config{Derived: &config.Derived{Files: map[string]config.Padroes{
+	"test": {"{{dir}}/{{name}}.test.{{ext}}", "{{dir}}/{{name}}_test.go", "{{dir}}/{{name}}_test.py"},
+}}}
+
 func TestRefComesFromTheSiblingSpec(t *testing.T) {
 	t.Run("NWARN-B04: A feature or test takes its identity from the sibling spec, or warns it is orphaned", func(t *testing.T) {})
 	dir := t.TempDir()
@@ -340,7 +345,7 @@ func TestRefComesFromTheSiblingSpec(t *testing.T) {
 		"python test beside": "metadataVersioning_test.py",
 	} {
 		t.Run(name, func(t *testing.T) {
-			got, origin := refDaSpecIrma(dir, filepath.Join(dir, file), "metadataVersioning")
+			got, origin := refDaSpecIrma(dir, filepath.Join(dir, file), "metadataVersioning", siblingCfg)
 			if got != "MTVRX" {
 				t.Fatalf("ref = %q, want MTVRX (the sibling spec is beside it); origin=%q", got, origin)
 			}
@@ -353,12 +358,12 @@ func TestRefComesFromTheSiblingSpec(t *testing.T) {
 func TestRefWithoutASiblingSpecInventsNothing(t *testing.T) {
 	t.Run("NWARN-B04: A feature or test takes its identity from the sibling spec, or warns it is orphaned", func(t *testing.T) {})
 	dir := t.TempDir()
-	if got, _ := refDaSpecIrma(dir, filepath.Join(dir, "noSpec.feature"), "noSpec"); got != "" {
+	if got, _ := refDaSpecIrma(dir, filepath.Join(dir, "noSpec.feature"), "noSpec", siblingCfg); got != "" {
 		t.Fatalf("with no sibling spec it should return empty, got %q", got)
 	}
 	// ANOTHER unit's spec in the same directory is not a sibling.
 	os.WriteFile(filepath.Join(dir, "otherThing.spec.md"), []byte("<!-- @anchors\n  code: XXXXX\n-->\n"), 0o644)
-	if got, _ := refDaSpecIrma(dir, filepath.Join(dir, "noSpec.feature"), "noSpec"); got != "" {
+	if got, _ := refDaSpecIrma(dir, filepath.Join(dir, "noSpec.feature"), "noSpec", siblingCfg); got != "" {
 		t.Fatalf("another unit's spec is not a sibling, got %q", got)
 	}
 }
@@ -539,7 +544,7 @@ func TestNewArtifactEntersTheMap(t *testing.T) {
 	t.Run("NWARN-B17: The new artifact enters the map at once", func(t *testing.T) {})
 	root := t.TempDir()
 	writeFile(t, root, "anchors.yaml", "version: 6\nlayers:\n  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n")
-	writeFile(t, root, "anchors.graph.yaml", "version: 7\nnodes: []\nedges: []\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 8\nnodes: []\nedges: []\n")
 	err, out := runNew(t, "spec", "Pay", "--root", root, "--out", "src/Pay.spec.md")
 	if err != nil {
 		t.Fatalf("new spec: %v", err)
@@ -556,8 +561,8 @@ func TestNewArtifactEntersTheMap(t *testing.T) {
 func TestNewRefArtifactIsBornWithItsOwnCode(t *testing.T) {
 	t.Run("NWARN-B18: A new artifact that refs its unit is born with a code of its own", func(t *testing.T) {})
 	root := t.TempDir()
-	writeFile(t, root, "anchors.yaml", "version: 7\nlayers:\n  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n  feature:\n    pattern: \"**/*.feature\"\n    kind: feature\n")
-	writeFile(t, root, "anchors.graph.yaml", "version: 7\nnodes:\n  - id: src/Pay.spec.md\n    kind: spec\n    code: PAYMT\n    file_code: PAYMT\nedges: []\n")
+	writeFile(t, root, "anchors.yaml", "version: 8\nlayers:\n  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n  feature:\n    pattern: \"**/*.feature\"\n    kind: feature\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 8\nnodes:\n  - id: src/Pay.spec.md\n    kind: spec\n    code: PAYMT\n    file_code: PAYMT\nedges: []\n")
 	writeFile(t, root, "src/Pay.spec.md", "<!-- @anchors\n  code: PAYMT\n-->\n# Pay\n")
 	if err, out := runNew(t, "feature", "Pay", "--root", root, "--out", "src/Pay.feature"); err != nil {
 		t.Fatalf("new feature: %v\n%s", err, out)

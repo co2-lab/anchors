@@ -14,8 +14,8 @@ import (
 
 // Runner is a kind of long process the monitor recognizes: how its command line reads, how
 // long it may stay quiet before it counts as stalled, and how its output says it passed,
-// failed or advanced. Nothing here is tied to one tool: the defaults cover the common runners,
-// and a project declares its own in `anchors.yaml` (`monitor.runners`).
+// failed or advanced. Nothing here is tied to one tool: a project declares its runners in
+// `anchors.yaml` (`monitor.runners`).
 type Runner struct {
 	Name     string
 	Kind     string
@@ -33,24 +33,11 @@ func re(s string) *regexp.Regexp {
 	return regexp.MustCompile(s)
 }
 
-// DefaultRunners are the runners recognized with no configuration.
-func DefaultRunners() []Runner {
+// OwnRunners are the runners the monitor knows with no configuration: Anchors' own long
+// commands. Every other tool is the project's to declare (`monitor.runners`), the examples in
+// config.ExampleRunners.
+func OwnRunners() []Runner {
 	return []Runner{
-		{Name: "jest", Kind: "unit", Match: re(`(^|[\s/])jest(\s|$)`), Stall: 10 * time.Minute,
-			Pass: re(`(?m)^Tests:\s+(\d+ \w+, )*\d+ passed`), Fail: re(`(?m)^Tests:\s+(\d+ \w+, )*\d+ failed`), Progress: re(`(?m)^(PASS|FAIL) `)},
-		{Name: "vitest", Kind: "unit", Match: re(`(^|[\s/])vitest(\s|$)`), Stall: 10 * time.Minute,
-			Pass: re(`(?m)^\s*Tests\s+.*\d+ passed`), Fail: re(`(?m)^\s*Tests\s+.*\d+ failed`)},
-		{Name: "go test", Kind: "unit", Match: re(`(^|[\s/])go test(\s|$)|\.test(\s|$)`), Stall: 10 * time.Minute,
-			Pass: re(`(?m)^ok\s`), Fail: re(`(?m)^(FAIL|--- FAIL)`), Progress: re(`(?m)^(ok|FAIL)\s`)},
-		{Name: "pytest", Kind: "unit", Match: re(`(^|[\s/])pytest(\s|$)|-m pytest`), Stall: 10 * time.Minute,
-			Pass: re(`(?m)^=+ .*\d+ passed`), Fail: re(`(?m)^=+ .*\d+ failed`)},
-		{Name: "maestro", Kind: "e2e", Match: re(`(^|[\s/])maestro (test|--device)`), Stall: 6 * time.Minute,
-			Pass: re(`Flows? Passed`), Fail: re(`\[Failed\]|Flows? Failed`), Progress: re(`(?m)^\s*\[(Passed|Failed)\]`)},
-		{Name: "playwright", Kind: "e2e", Match: re(`playwright test`), Stall: 6 * time.Minute,
-			Pass: re(`(?m)^\s*\d+ passed`), Fail: re(`(?m)^\s*\d+ failed`)},
-		{Name: "stryker", Kind: "mutation", Match: re(`(^|[\s/])stryker(\s|$)`), Stall: 15 * time.Minute,
-			Pass: re(`Final mutation score`)},
-		{Name: "gremlins", Kind: "mutation", Match: re(`(^|[\s/])gremlins(\s|$)`), Stall: 15 * time.Minute},
 		{Name: "anchors", Kind: "anchors", Match: re(`(^|[\s/])anchors (test|mutation|map|check|verify|ingest|docs)(\s|$)`), Stall: 5 * time.Minute},
 	}
 }

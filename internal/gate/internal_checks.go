@@ -104,7 +104,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 		if v, msg := checkHeaderConforms(content, n, cfg); v != Pass {
 			return v, msg
 		}
-		return checkOwnCode(content, n, g)
+		return checkOwnCode(content, n, g, cfg.CommentsFor(n.ID))
 	},
 	"count-honored":            checkCountHonored,
 	"trigger-declared":         checkTriggerDeclared,
@@ -398,14 +398,11 @@ func isRecognizedLayerCfg(n mapx.Node, content string, cfg *config.Config) bool 
 	return isRecognizedLayer(n, content)
 }
 
-// isExecutableScript — o nó é um roteiro do runner e2e (não um arquivo de teste em
-// linguagem de programação). Reconhecido pela extensão de dado + kind test: um `.test.tsx`
-// é código nosso e carrega cabeçalho; um `.yaml` é entrada de um runner externo.
-func isExecutableScript(n mapx.Node) bool {
-	if n.Kind != mapx.KindTest {
-		return false
-	}
-	return strings.HasSuffix(n.ID, ".yaml") || strings.HasSuffix(n.ID, ".yml")
+// commentsUndeclared is the alert of a gate that needs a file's comments — its header, its
+// flags — when the project declares none for it (`dialect.comments`): the core knows no
+// language's comments, and a gate that cannot read the file says so instead of passing.
+func commentsUndeclared(rel string) (Verdict, string) {
+	return Pending, i18n.T("gate.comments_undeclared", rel)
 }
 
 // header-valid: o arquivo tem o BLOCO DE CABEÇALHO do Anchors (`@anchors`) no topo, com o
@@ -431,18 +428,19 @@ func checkHeaderConforms(content string, n mapx.Node, cfg *config.Config) (Verdi
 	// teve — e o gate só passou a vê-los porque a layer `e2e-flow` os trouxe para o
 	// grafo (para que a execução de E2E pudesse deixar carimbo). Cobrar deles um contrato
 	// escrito depois seria transformar a chegada ao mapa em 717 defeitos retroativos.
-	if isExecutableScript(n) {
-		return Skip, i18n.T("gate.header.executable_script")
+	cs := cfg.CommentsFor(n.ID)
+	if cs == nil {
+		return commentsUndeclared(n.ID)
 	}
 	// The header is the block AT THE TOP, read as the map reads it (`scan.AnchorsHeader`):
 	// an `@anchors` further down — a fixture in a test, a template, a message — is text.
 	// Read over the whole file, a code file with the word in a string had "a header
 	// without identity", and one with none at the top passed the block test.
-	block := scan.AnchorsHeader([]byte(content))
+	block := scan.AnchorsHeader([]byte(content), cs)
 	if block == nil {
 		// A block below the top, with no reason declared, is not read as the header: the
 		// map takes the file as having none.
-		if scan.HeaderOffTop([]byte(content)) {
+		if scan.HeaderOffTop([]byte(content), cs) {
 			return Fail, i18n.T("gate.header.off_top")
 		}
 		return Fail, i18n.T("gate.header.missing_block")
@@ -482,8 +480,8 @@ func checkHeaderConforms(content string, n mapx.Node, cfg *config.Config) (Verdi
 // own — the dependency chain (`dep:` on the importer, `@used-by` on what it exports) names
 // files by it —, and a `ref:` alone names the unit, not the file. Two files with one code
 // are one address for two places: whoever follows it lands on either.
-func checkOwnCode(content string, n mapx.Node, g *mapx.Graph) (Verdict, string) {
-	block := scan.AnchorsHeader([]byte(content))
+func checkOwnCode(content string, n mapx.Node, g *mapx.Graph, cs *config.Comments) (Verdict, string) {
+	block := scan.AnchorsHeader([]byte(content), cs)
 	if block == nil {
 		return Pass, ""
 	}
@@ -969,7 +967,7 @@ var (
 	strippedCache = map[string]*strippedTests{}
 )
 
-func strippedTest(root string, g *mapx.Graph, rel string) (string, bool) {
+func strippedTest(root string, g *mapx.Graph, rel string, d config.Dialect) (string, bool) {
 	strippedMu.Lock()
 	c, ok := strippedCache[root]
 	if !ok || c.g != g {
@@ -992,7 +990,7 @@ func strippedTest(root string, g *mapx.Graph, rel string) (string, bool) {
 		c.missed[rel] = true
 		return "", false
 	}
-	body := stripLineComments(string(raw))
+	body := stripComments(string(raw), rel, d)
 	c.bodies[rel] = body
 	return body, true
 }
@@ -1037,7 +1035,7 @@ func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string, cf
 		}
 	}
 	for _, tp := range unread {
-		body, ok := strippedTest(root, g, tp)
+		body, ok := strippedTest(root, g, tp, cfg.DialectFor())
 		if !ok {
 			continue
 		}

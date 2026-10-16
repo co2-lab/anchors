@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -37,7 +38,7 @@ TODO: o que a unidade faz e para quem.
 | --- | --- |
 | ` + "`CRUXX-B01`" + ` | TODO |
 `
-		v, msg := checkPlaceholderFilled(cru, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+		v, msg := checkPlaceholderFilled(cru, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("esqueleto cru deve reprovar; veio %v (%s)", v, msg)
 		}
@@ -73,7 +74,7 @@ func TestSecaoDeTodosLegitimaNaoEhAcusada(t *testing.T) {
 - migrar para o novo formato de data
 - TODO: avaliar cache
 `
-		if v, msg := checkPlaceholderFilled(spec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil); v != Pass {
+		if v, msg := checkPlaceholderFilled(spec, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil)); v != Pass {
 			t.Errorf("seção de pendências do autor é legítima; veio %v (%s)", v, msg)
 		}
 	})
@@ -96,7 +97,7 @@ func TestPlaceholderFilled(t *testing.T) {
 | --- | --- |
 | ` + "`PHVAL-B01`" + ` | legitimate effect |
 `
-		v, msg := checkPlaceholderFilled(headerMarkerSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+		v, msg := checkPlaceholderFilled(headerMarkerSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("spec with header placeholder must fail; got %v (%s)", v, msg)
 		}
@@ -119,7 +120,7 @@ func TestPlaceholderFilled(t *testing.T) {
 | --- | --- |
 | ` + "`PHVAL-B01`" + ` | TODO |
 `
-		v, msg := checkPlaceholderFilled(cellMarkerSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+		v, msg := checkPlaceholderFilled(cellMarkerSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("spec with placeholder table cell must fail; got %v (%s)", v, msg)
 		}
@@ -141,7 +142,7 @@ func TestPlaceholderFilled(t *testing.T) {
 | --- | --- |
 | ` + "`PHVAL-B01`" + ` | legitimate effect |
 `
-		vTitle, msgTitle := checkPlaceholderFilled(titleMarkerSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+		vTitle, msgTitle := checkPlaceholderFilled(titleMarkerSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 		if vTitle != Fail {
 			t.Fatalf("spec with placeholder in title must fail; got %v (%s)", vTitle, msgTitle)
 		}
@@ -159,7 +160,7 @@ func TestPlaceholderFilled(t *testing.T) {
 ## Overview
 TODO: what the unit does and for whom.
 `
-		vBody, msgBody := checkPlaceholderFilled(bodyMarkerSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+		vBody, msgBody := checkPlaceholderFilled(bodyMarkerSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 		if vBody != Fail {
 			t.Fatalf("spec with placeholder in body line must fail; got %v (%s)", vBody, msgBody)
 		}
@@ -183,7 +184,7 @@ TODO: what the unit does and for whom.
 
 TODO: this is a very long placeholder line designed to verify that truncation at sixty characters works properly when reporting leftovers
 `
-		v, msg := checkPlaceholderFilled(multiSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+		v, msg := checkPlaceholderFilled(multiSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("expected Fail; got %v (%s)", v, msg)
 		}
@@ -214,7 +215,7 @@ All sections and descriptions are genuinely written.
 | --- | --- |
 | ` + "`PHVAL-B01`" + ` | legitimate effect |
 `
-		vSpec, msgSpec := checkPlaceholderFilled(cleanSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+		vSpec, msgSpec := checkPlaceholderFilled(cleanSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 		if vSpec != Pass || msgSpec != "" {
 			t.Fatalf("clean spec must Pass; got %v (%s)", vSpec, msgSpec)
 		}
@@ -229,7 +230,7 @@ Feature: CleanFeature — every scenario is completed
     When processed
     Then it succeeds
 `
-		vFeat, msgFeat := checkPlaceholderFilled(cleanFeature, mapx.Node{Kind: mapx.KindFeature}, "", nil, nil)
+		vFeat, msgFeat := checkPlaceholderFilled(cleanFeature, mapx.Node{Kind: mapx.KindFeature}, "", nil, testkit.WithComments(nil))
 		if vFeat != Pass || msgFeat != "" {
 			t.Fatalf("clean feature must Pass; got %v (%s)", vFeat, msgFeat)
 		}
@@ -251,7 +252,7 @@ qwerty minimal meaningless text that replaced the template
 | --- | --- |
 | ` + "`JUNKX-B01`" + ` | whatever |
 `
-		v, msg := checkPlaceholderFilled(poorQualitySpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+		v, msg := checkPlaceholderFilled(poorQualitySpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 		if v != Pass {
 			t.Fatalf("gate must not judge prose quality; got %v (%s)", v, msg)
 		}
@@ -283,14 +284,14 @@ The author still has TODO items to weigh here, and says so on purpose.
 | --- | --- |
 | ` + "`CUSTX-B01`" + ` | a written effect |
 `
-		v, msg := checkPlaceholderFilled(proseSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+		v, msg := checkPlaceholderFilled(proseSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 		if v != Pass {
 			t.Fatalf("a marker outside a value position must not be accused; got %v (%s)", v, msg)
 		}
 	})
 
 	t.Run("skips non-applicable artifact kind", func(t *testing.T) {
-		v, _ := checkPlaceholderFilled("layer: TODO", mapx.Node{Kind: mapx.KindCode}, "", nil, nil)
+		v, _ := checkPlaceholderFilled("layer: TODO", mapx.Node{Kind: mapx.KindCode}, "", nil, testkit.WithComments(nil))
 		if v != Skip {
 			t.Fatalf("expected Skip for code artifact; got %v", v)
 		}
@@ -309,11 +310,11 @@ func TestPlaceholderVocabulary(t *testing.T) {
 `
 	t.Run("PLCFL-B07: The marker vocabulary is the project's, and TODO by default", func(t *testing.T) {})
 	// FIXME is no word the templates write: by default it is an ordinary value.
-	if v, msg := checkPlaceholderFilled(fixmeSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil); v != Pass {
+	if v, msg := checkPlaceholderFilled(fixmeSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("with the default vocabulary FIXME is a value, got %v (%s)", v, msg)
 	}
 	// Declared by the project, it is a marker in every position.
-	cfg := &config.Config{PlaceholderMarkers: []string{"FIXME"}}
+	cfg := testkit.WithComments(&config.Config{PlaceholderMarkers: []string{"FIXME"}})
 	vFixme, msgFixme := checkPlaceholderFilled(fixmeSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, cfg)
 	if vFixme != Fail || !strings.Contains(msgFixme, "updated_at: FIXME") {
 		t.Errorf("expected Fail naming 'updated_at: FIXME'; got %v (%s)", vFixme, msgFixme)

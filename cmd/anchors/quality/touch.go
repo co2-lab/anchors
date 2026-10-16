@@ -66,9 +66,9 @@ type touchDecision struct {
 // decideTouch decides one file: `current` is its content now (worktree, or index with
 // --staged), `base` its content at HEAD (`hasBase` false for a new file), `date` the day
 // to write.
-func decideTouch(file, current, base string, hasBase bool, date string) touchDecision {
+func decideTouch(file, current, base string, hasBase bool, date string, cs *config.Comments) touchDecision {
 	d := touchDecision{File: file}
-	start, end, ok := headerSpan(current)
+	start, end, ok := headerSpan(current, cs)
 	var m []int
 	if ok {
 		if mm := updatedAtLineRE.FindStringSubmatchIndex(current[start:end]); mm != nil {
@@ -288,7 +288,8 @@ func excludedBy(f string, globs []string) bool {
 // The project's `touch.exclude` adds to exclude. Shared by `anchors touch` and the
 // pre-commit phase of `anchors verify`.
 func touchRun(absRoot string, staged, dryRun bool, date string, exclude, only []string) ([]touchDecision, map[touchSkip][]string, error) {
-	if cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile)); err == nil && cfg.Touch != nil {
+	cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if cfg != nil && cfg.Touch != nil {
 		exclude = append(append([]string{}, exclude...), cfg.Touch.Exclude...)
 	}
 	files, err := touchCandidates(absRoot, staged)
@@ -317,7 +318,7 @@ func touchRun(absRoot string, staged, dryRun bool, date string, exclude, only []
 			continue
 		}
 		base, hasBase := gitShow(absRoot, "HEAD:"+f)
-		d := decideTouch(f, current, base, hasBase, date)
+		d := decideTouch(f, current, base, hasBase, date, cfg.CommentsFor(f))
 		d.Old = current
 		if !d.Bump {
 			if d.Skip != skipNoHeader || only != nil {
@@ -384,52 +385,30 @@ func touchOnPreCommit(cfg *config.Config) bool {
 // headerSearchLines bounds where the @anchors header may start: it sits at the top.
 const touchHeaderSearchLines = 10
 
-// headerSpan is the byte range of the @anchors header block, when the file has one at its
-// top: a run of line comments (`//`, `#`, `*`, `--`) that includes `@anchors`, or an HTML
-// block `<!-- @anchors … -->`. Only a date INSIDE it is the header's.
+// headerSpan is the byte range of the @anchors header block, as the map reads it
+// (scan.HeaderRange): only a date INSIDE it is the header's.
 //
 // Searching the whole file dated text that only looks like a header. Measured on the
 // Anchors repository itself: a test fixture — the string "// @anchors … updated_at:
 // 2026-09-01" in a Go constant — was rewritten by the pre-commit, and the commit went in
 // with the test broken.
-func headerSpan(content string) (start, end int, ok bool) {
+func headerSpan(content string, cs *config.Comments) (start, end int, ok bool) {
 	lines := strings.SplitAfter(content, "\n")
-	offset := 0
-	for i := 0; i < len(lines) && i < touchHeaderSearchLines; i++ {
-		t := strings.TrimSpace(lines[i])
-		if !strings.Contains(t, "@anchors") || !isHeaderComment(t) {
-			offset += len(lines[i])
-			continue
-		}
-		start = offset
-		end = offset + len(lines[i])
-		if strings.HasPrefix(t, "<!--") {
-			// HTML block: up to the line that closes it.
-			for j := i; j < len(lines); j++ {
-				if j > i {
-					end += len(lines[j])
-				}
-				if strings.Contains(lines[j], "-->") {
-					return start, end, true
-				}
-			}
-			return 0, 0, false // never closed: not a header
-		}
-		for j := i + 1; j < len(lines) && isHeaderComment(strings.TrimSpace(lines[j])); j++ {
-			end += len(lines[j])
-		}
-		return start, end, true
+	plain := make([]string, len(lines))
+	for i, l := range lines {
+		plain[i] = strings.TrimSuffix(l, "\n")
 	}
-	return 0, 0, false
-}
-
-func isHeaderComment(t string) bool {
-	for _, p := range []string{"//", "#", "/*", "*", "--", "<!--"} {
-		if strings.HasPrefix(t, p) {
-			return true
-		}
+	from, to, found := scan.HeaderRange(plain, cs)
+	if !found {
+		return 0, 0, false
 	}
-	return false
+	for i := 0; i < to; i++ {
+		if i < from {
+			start += len(lines[i])
+		}
+		end += len(lines[i])
+	}
+	return start, end, true
 }
 
 // touchPaths turns the paths named on the command line — relative to where the command

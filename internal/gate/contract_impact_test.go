@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"os/exec"
 	"reflect"
@@ -51,7 +52,7 @@ func impactRepo(t *testing.T) (string, *mapx.Graph, *config.Config) {
 		Edges: []mapx.Edge{{From: "src/pay.spec.md", To: "src/pay.go", Type: mapx.EdgeSpecifies},
 			{From: "src/checkout.spec.md", To: "src/pay.go", Type: mapx.EdgeDependsOn}},
 	}
-	return root, g, &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	return root, g, testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}})
 }
 
 func edited(root string, t *testing.T) string {

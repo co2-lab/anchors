@@ -290,31 +290,32 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 // other files of the tree: that is what lets a new file enter the map without the whole
 // tree being read (`ScanPaths`).
 func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) File {
+	cs := cfg.CommentsFor(rel)
 	f := File{
 		Path:          rel,
 		Layer:         layer,
 		Kind:          kind,
 		Rev:           shortHash(content),
-		Codes:         extractCodes(content),
-		HeaderCode:    extractHeaderCode(string(content)),
-		HeaderRefs:    extractHeaderRefs(string(content)),
-		HeaderLayer:   extractHeaderLayer(string(content)),
+		Codes:         extractCodes(content, codeComments(kind, rel, cs)),
+		HeaderCode:    extractHeaderCode(string(content), cs),
+		HeaderRefs:    extractHeaderRefs(string(content), cs),
+		HeaderLayer:   extractHeaderLayer(string(content), cs),
 		Seeds:         extractSeeds(kind, string(content)),
 		Realizes:      extractRealizes(kind, string(content)),
 		GatedBy:       extractGatedBy(kind, string(content)),
-		Needs:         needsFor(kind, content, root, rel),
-		Parent:        parentDe(content),
+		Needs:         needsFor(kind, content, root, rel, cs),
+		Parent:        parentDe(content, cs),
 		Upstream:      IsUpstreamOwned(rel, content),
 		Support:       excluded(rel, cfg.Layers[layer].Support),
-		Revises:       revisesDe(kind, content, root, rel),
+		Revises:       revisesDe(kind, content, root, rel, cs),
 		NoPropagation: noPropRE.Match(content),
 		SharedCode:    sharedCodeRE.Match(content),
-		Deps:          depsFor(kind, content, root, rel),
+		Deps:          depsFor(kind, content, root, rel, cs),
 		Composes:      composesFor(kind, content, cfg),
 		CodeDeps:      extractCodeDeps(content, rel, cfg.DialectFor()),
 		UsedBy:        extractUsedBy(content, rel, cfg.DialectFor()),
-		Navigates:     extractNavigates(content),
-		Frozen:        extractFrozen(string(content)),
+		Navigates:     extractNavigates(content, cs),
+		Frozen:        extractFrozen(string(content), cs),
 		FrozenRules:   extractFrozenRules(kind, string(content)),
 		Freezes:       extractFreezes(kind, string(content)),
 	}
@@ -322,7 +323,7 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 		f.OutRows = extractOutRows(content)
 	}
 	f.Evidence = EvidenceOf(kind, rel, content, cfg)
-	f.CaptureCodes = captureCodes(rel, content)
+	f.CaptureCodes = captureCodes(rel, content, cs)
 	// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
 	// project's vocabulary, not a claim on this project's units. Counting them would give
 	// the file an inferred identity it does not own.
@@ -330,6 +331,15 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 		f.Codes = nil
 	}
 	return f
+}
+
+// codeComments is the comment syntax whose comments extractCodes leaves out: none in Anchors'
+// own formats, where a code in a comment is still the artifact's.
+func codeComments(kind, rel string, cs *config.Comments) *config.Comments {
+	if kind == "spec" || kind == "feature" || strings.HasSuffix(rel, ".md") || strings.HasSuffix(rel, ".feature") {
+		return nil
+	}
+	return cs
 }
 
 // ScanPaths reads the given files, relative to the root, as `Walk` would read them in the
@@ -458,7 +468,7 @@ var headerLayerRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `layer
 // `ClassifyPath` — que para todo arquivo que não é spec já devolve a camada da unidade.
 func LayerOfUnit(root, rel string, cfg *config.Config) string {
 	if b, err := os.ReadFile(filepath.Join(root, rel)); err == nil {
-		if m := headerLayerRE.FindSubmatch(AnchorsHeader(b)); m != nil {
+		if m := headerLayerRE.FindSubmatch(AnchorsHeader(b, cfg.CommentsFor(rel))); m != nil {
 			return string(m[1])
 		}
 	}
@@ -598,12 +608,13 @@ func matchGlob(pattern, path string) bool {
 }
 
 // extractCodes devolve os códigos que o arquivo POSSUI — ignorando os que aparecem
-// apenas em COMENTÁRIOS. Um código citado num comentário (`// ...vê CODEX-VR`) é uma
-// REFERÊNCIA a outra unidade, não posse; contá-lo como posse gera colisão de
-// identidade falsa (TRACEABILITY §3). Specs (markdown) não têm comentário de código,
-// então seus códigos de header/seção contam normalmente.
-func extractCodes(content []byte) []string {
-	stripped := stripComments(string(content))
+// apenas em COMENTÁRIOS, na sintaxe que o projeto declara para o arquivo. Um código citado
+// num comentário (`// ...vê CODEX-VR`) é uma REFERÊNCIA a outra unidade, não posse; contá-lo
+// como posse gera colisão de identidade falsa (TRACEABILITY §3). `cs` nil (os formatos do
+// próprio Anchors — spec, feature —, ou um arquivo cujos comentários ninguém declarou) não
+// tira nada.
+func extractCodes(content []byte, cs *config.Comments) []string {
+	stripped := cs.Blank(string(content))
 	matches := scenarioCodeRE.FindAllString(stripped, -1)
 	if len(matches) == 0 {
 		return nil
@@ -617,51 +628,6 @@ func extractCodes(content []byte) []string {
 		}
 	}
 	return codes
-}
-
-// stripComments remove o conteúdo de comentários de linha (`//`, `#`) e de bloco
-// (`/* */`) para que códigos citados neles não contem como posse. Conservador: não
-// tenta entender strings/regex (raro conter um código de cenário); o custo de um
-// falso-negativo aqui é ínfimo perto do falso-positivo que resolve. Markdown (`#` de
-// heading) NÃO é tratado como comentário — só `#` seguido de espaço em início de
-// linha de código; para não quebrar specs, `#` só conta como comentário quando NÃO
-// é um cabeçalho markdown (heurística: linha que começa com `#` + espaço fica).
-func stripComments(s string) string {
-	var b strings.Builder
-	b.Grow(len(s))
-	inBlock := false
-	for _, line := range strings.Split(s, "\n") {
-		if inBlock {
-			if i := strings.Index(line, "*/"); i >= 0 {
-				inBlock = false
-				line = line[i+2:]
-			} else {
-				b.WriteByte('\n')
-				continue
-			}
-		}
-		// comentário de bloco iniciado nesta linha
-		for {
-			open := strings.Index(line, "/*")
-			if open < 0 {
-				break
-			}
-			close := strings.Index(line[open:], "*/")
-			if close < 0 {
-				line = line[:open]
-				inBlock = true
-				break
-			}
-			line = line[:open] + line[open+close+2:]
-		}
-		// comentário de linha `//` (JS/TS/Go) — corta a partir dele
-		if i := strings.Index(line, "//"); i >= 0 {
-			line = line[:i]
-		}
-		b.WriteString(line)
-		b.WriteByte('\n')
-	}
-	return b.String()
 }
 
 // depHeadingRE casa o cabeçalho da seção de dependências (markdown), tolerante a
@@ -794,12 +760,12 @@ var headerRevisesRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `rev
 //
 // Na spec o valor é um CÓDIGO (`FNDTN-W02`), não um caminho — a fase não é um arquivo, é
 // um item catalogado dentro do plano. Por isso a resolução de caminho não se aplica aqui.
-func needsFor(kind string, content []byte, root, rel string) []string {
+func needsFor(kind string, content []byte, root, rel string, cs *config.Comments) []string {
 	switch kind {
 	case "plan":
-		return extractNeeds(content, root, rel)
+		return extractNeeds(content, root, rel, cs)
 	case "spec":
-		return extractNeedsCode(content)
+		return extractNeedsCode(content, cs)
 	}
 	return nil
 }
@@ -807,11 +773,11 @@ func needsFor(kind string, content []byte, root, rel string) []string {
 // revisesDe lê o `revises:` — só de PLANO, porque revisar planejamento é o que
 // planos fazem. Uma spec que "revisa" outra é outra coisa: ou a unidade mudou (e a spec é
 // editada, porque descreve o presente), ou virou outra unidade (e tem código próprio).
-func revisesDe(kind string, content []byte, root, rel string) []string {
+func revisesDe(kind string, content []byte, root, rel string, cs *config.Comments) []string {
 	if kind != "plan" {
 		return nil
 	}
-	m := headerRevisesRE.FindSubmatch(AnchorsHeader(content))
+	m := headerRevisesRE.FindSubmatch(AnchorsHeader(content, cs))
 	if m == nil {
 		return nil
 	}
@@ -835,8 +801,8 @@ func revisesDe(kind string, content []byte, root, rel string) []string {
 // `parent:` — measured in the reference app: `anchors-board.yml` carries a jq program whose line
 // `parent: ([$cod[0][] | select(...) | .parent // "")] | first // "")` became the node's
 // parent in the map, and the tree hung the workflow under a jq expression.
-func parentDe(content []byte) string {
-	m := headerParentRE.FindSubmatch(AnchorsHeader(content))
+func parentDe(content []byte, cs *config.Comments) string {
+	m := headerParentRE.FindSubmatch(AnchorsHeader(content, cs))
 	if m == nil {
 		return ""
 	}
@@ -845,8 +811,8 @@ func parentDe(content []byte) string {
 }
 
 // extractNeedsCode lê o `needs:` de uma spec, onde o valor é o código da fase.
-func extractNeedsCode(content []byte) []string {
-	m := headerNeedsRE.FindSubmatch(AnchorsHeader(content))
+func extractNeedsCode(content []byte, cs *config.Comments) []string {
+	m := headerNeedsRE.FindSubmatch(AnchorsHeader(content, cs))
 	if m == nil {
 		return nil
 	}
@@ -877,8 +843,8 @@ func phaseCodeRE() *regexp.Regexp {
 // extractNeeds lê a linha `needs:` e resolve cada caminho relativo à raiz. Só faz
 // sentido em plano — um `needs:` numa spec seria a pergunta errada: spec não espera
 // trabalho terminar, ela É o trabalho.
-func extractNeeds(content []byte, root, rel string) []string {
-	m := headerNeedsRE.FindSubmatch(AnchorsHeader(content))
+func extractNeeds(content []byte, root, rel string, cs *config.Comments) []string {
+	m := headerNeedsRE.FindSubmatch(AnchorsHeader(content, cs))
 	if m == nil {
 		return nil
 	}
@@ -900,7 +866,7 @@ func extractNeeds(content []byte, root, rel string) []string {
 //
 // Um guide/doc pode ter uma seção "Dependências" documental (tabela Arquivo|Descrição)
 // que NÃO é dep de reúso; por isso a tabela é lida só p/ spec (o header `dep:` não colide).
-func depsFor(kind string, content []byte, root, rel string) []Dep {
+func depsFor(kind string, content []byte, root, rel string, cs *config.Comments) []Dep {
 	// A spec declares no dependency: it precedes the code, and the files a unit imports are
 	// born with it — declared where the import is, by `@dep:` (DOOSD). A Dependencies table
 	// not yet migrated is read by `anchors migrate`, never into the map.
@@ -918,13 +884,13 @@ func depsFor(kind string, content []byte, root, rel string) []Dep {
 		}
 		return deps
 	}
-	return extractHeaderDeps(content, root, rel)
+	return extractHeaderDeps(content, root, rel, cs)
 }
 
 // extractHeaderDeps lê a linha `dep:` do cabeçalho e resolve cada caminho para um alvo
 // relativo à raiz. Sem código local (DEPn) — a identidade da dep é o próprio arquivo.
-func extractHeaderDeps(content []byte, root, rel string) []Dep {
-	m := headerDepRE.FindSubmatch(AnchorsHeader(content))
+func extractHeaderDeps(content []byte, root, rel string, cs *config.Comments) []Dep {
+	m := headerDepRE.FindSubmatch(AnchorsHeader(content, cs))
 	if m == nil {
 		return nil
 	}
@@ -1144,8 +1110,8 @@ func headerCodeRE() *regexp.Regexp {
 var headerRefRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `ref:\s*([A-Z0-9][A-Z0-9 ,]*)`)
 
 // extractHeaderRefs are the units the header's `ref:` names, in order.
-func extractHeaderRefs(content string) []string {
-	m := headerRefRE.FindStringSubmatch(string(AnchorsHeader([]byte(content))))
+func extractHeaderRefs(content string, cs *config.Comments) []string {
+	m := headerRefRE.FindStringSubmatch(string(AnchorsHeader([]byte(content), cs)))
 	if m == nil {
 		return nil
 	}
@@ -1159,8 +1125,8 @@ func extractHeaderRefs(content string) []string {
 }
 
 // extractHeaderCode devolve a identidade DECLARADA, ou vazio se o header não a declara.
-func extractHeaderCode(content string) string {
-	if m := headerCodeRE().FindStringSubmatch(string(AnchorsHeader([]byte(content)))); m != nil {
+func extractHeaderCode(content string, cs *config.Comments) string {
+	if m := headerCodeRE().FindStringSubmatch(string(AnchorsHeader([]byte(content), cs))); m != nil {
 		return m[1]
 	}
 	return ""
@@ -1318,8 +1284,8 @@ func extractSeeds(kind, content string) []string {
 //
 // Vazio quando não há declaração — e aí quem consulta cai no `Layer` do arquivo, que para
 // tudo o que não é spec já é a camada da unidade.
-func extractHeaderLayer(content string) string {
-	if m := headerLayerRE.FindStringSubmatch(string(AnchorsHeader([]byte(content)))); m != nil {
+func extractHeaderLayer(content string, cs *config.Comments) string {
+	if m := headerLayerRE.FindStringSubmatch(string(AnchorsHeader([]byte(content), cs))); m != nil {
 		return m[1]
 	}
 	return ""
@@ -1327,11 +1293,13 @@ func extractHeaderLayer(content string) string {
 
 // HeaderLayerOf is the layer a file declares in its `@anchors` header (`layer: screen`), or
 // empty: the header block only, never an example further down the text.
-func HeaderLayerOf(content string) string { return extractHeaderLayer(content) }
+func HeaderLayerOf(content string, cs *config.Comments) string {
+	return extractHeaderLayer(content, cs)
+}
 
 // HeaderCodeOf is the identity a file declares in its `@anchors` header (`code: XXXX`), or
 // empty. It is what the migration reads to know which unit a plan, flow or action file is.
-func HeaderCodeOf(content string) string { return extractHeaderCode(content) }
+func HeaderCodeOf(content string, cs *config.Comments) string { return extractHeaderCode(content, cs) }
 
 // WalkStaged reads the governed files as the git INDEX has them — what the commit being
 // made will record. It is the walk of the tree, corrected where the tree and the index
@@ -1518,19 +1486,36 @@ var (
 	codeDepRE = regexp.MustCompile(`@dep:\s*([A-Z0-9]+)\b`)
 	// kindedDepRE is a dependency that is no import: `@dep[<kind>]: <name>`.
 	kindedDepRE = regexp.MustCompile(`@dep\[([a-z][a-z0-9-]*)\]:\s*([^\s*]+)`)
-	noDepRE     = regexp.MustCompile(`@no-dep:\s*(\S.*?)\s*(?:\*/|\*\)|-->)?\s*$`)
+	noDepRE     = regexp.MustCompile(`@no-dep:\s*(\S.*?)\s*$`)
 	// usedByRE: the codes, and the symbol in parentheses when the flag stands above an
 	// export list — `// @used-by: ARNAA (Budget)` — where the next line names several.
 	//
 	// The symbol is whatever stands in the parentheses: the flag is Anchors' syntax, the name
 	// is the language's, and the core says nothing of what a name is. `[A-Za-z_$][\w$]*`
 	// read `categoriasDoOrçamento` as `categoriasDoOr` (reported from MIF).
-	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([^()\s]+)\s*\))?\s*(?:\*/|\*\)|-->)?\s*$`)
+	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([^()\s]+)\s*\))?\s*$`)
 	// navigatesRE: the flag at the end of the line, or a block comment inside it — after the
 	// call on a JSX line, where text after the tag would render (`/* @navigates: X */}>`).
-	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-(?:[A-Z]\d{2}|DS-[A-Za-z0-9_-]+))\s*\])?\s*(?:@dormant:\s*(\S.*?)?)?\s*(?:\*/.*|\*\).*|-->.*)?$`)
-	noNavRE     = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*(?:\*/|\*\)|-->)?\s*$`)
+	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-(?:[A-Z]\d{2}|DS-[A-Za-z0-9_-]+))\s*\])?\s*(?:@dormant:\s*(\S.*?)?)?\s*$`)
+	noNavRE     = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*$`)
 )
+
+// flagText is a line up to where the comment holding its flag closes — at the first closer of
+// the syntax's block comments after the flag (`*/`, `*)`, `-->`) —: the flag reads to the
+// end of its comment, and what follows a block comment is code.
+func flagText(line string, cs *config.Comments) string {
+	at := strings.Index(line, "@")
+	if cs == nil || at < 0 {
+		return line
+	}
+	end := len(line)
+	for _, b := range cs.Block {
+		if i := strings.Index(line[at:], b.Close); i >= 0 && at+i < end {
+			end = at + i
+		}
+	}
+	return line[:end]
+}
 
 // splitCodes splits a list of codes written with commas or spaces.
 func splitCodes(s string) []string {
@@ -1562,8 +1547,10 @@ func extractCodeDeps(content []byte, rel string, d config.Dialect) []CodeDep {
 		}
 		return nil
 	}
+	cs := d.CommentsFor(rel)
 	var out []CodeDep
 	for i, line := range strings.Split(src, "\n") {
+		line = flagText(line, cs)
 		if m := kindedDepRE.FindStringSubmatch(line); m != nil {
 			// `@dep[type]: CODE` is an import, of types only: it names a file by its code,
 			// like `@dep:`, and the kind says nothing of it runs.
@@ -1598,7 +1585,7 @@ func extractUsedBy(content []byte, rel string, d config.Dialect) []UsedBy {
 	lines := strings.Split(src, "\n")
 	var out []UsedBy
 	for i, line := range lines {
-		m := usedByRE.FindStringSubmatch(line)
+		m := usedByRE.FindStringSubmatch(flagText(line, d.CommentsFor(rel)))
 		if m == nil {
 			continue
 		}
@@ -1653,22 +1640,21 @@ func declaredBelow(src string, decls []config.Match, line int) string {
 
 // extractNavigates reads each `@navigates:` and `@no-nav:` flag. A flag on a line of its
 // own speaks of the call on the next line; one beside a call, of that call.
-func extractNavigates(content []byte) []Navigation {
+func extractNavigates(content []byte, cs *config.Comments) []Navigation {
 	if !strings.Contains(string(content), "@navigates:") && !strings.Contains(string(content), "@no-nav:") {
 		return nil
 	}
 	lines := strings.Split(string(content), "\n")
+	only := cs.CommentOnly(lines)
 	callLine := func(i int) int {
-		t := strings.TrimSpace(lines[i])
-		for _, mk := range []string{"//", "#", "--", "/*", "*", "<!--"} {
-			if strings.HasPrefix(t, mk) && i+1 < len(lines) {
-				return i + 2 // the flag stands alone: the call is the next line
-			}
+		if only[i] && i+1 < len(lines) {
+			return i + 2 // the flag stands alone: the call is the next line
 		}
 		return i + 1
 	}
 	var out []Navigation
 	for i, line := range lines {
+		line = flagText(line, cs)
 		if m := navigatesRE.FindStringSubmatch(line); m != nil {
 			out = append(out, Navigation{Codes: splitCodes(m[1]), Rule: m[2], Line: callLine(i), Dormant: m[3]})
 			continue
@@ -1681,7 +1667,9 @@ func extractNavigates(content []byte) []Navigation {
 }
 
 // CodeDepsIn are the dependency flags of a file's content (see File.CodeDeps).
-func CodeDepsIn(content []byte) []CodeDep { return extractCodeDeps(content, "", config.Dialect{}) }
+func CodeDepsIn(content []byte, rel string, d config.Dialect) []CodeDep {
+	return extractCodeDeps(content, rel, d)
+}
 
 // UsedByIn are the used-by flags of a file's content (see File.UsedBy), the symbols read by
 // the dialect's declarations.
@@ -1690,7 +1678,9 @@ func UsedByIn(content []byte, rel string, d config.Dialect) []UsedBy {
 }
 
 // NavigatesIn are the navigation flags of a file's content (see File.Navigates).
-func NavigatesIn(content []byte) []Navigation { return extractNavigates(content) }
+func NavigatesIn(content []byte, cs *config.Comments) []Navigation {
+	return extractNavigates(content, cs)
+}
 
 var (
 	// outHeadingRE opens a spec's Out table, in the languages of the catalog.

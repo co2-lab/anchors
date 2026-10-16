@@ -13,6 +13,7 @@ A function promising the whole set does not silently return the first page.
 | Confronts | `code` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Presupposes | `dialect.set_promise` `dialect.set_slice` `dialect.limits` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 

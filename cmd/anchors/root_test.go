@@ -263,7 +263,7 @@ func TestEveryCommandTakesFilesTheSameWay(t *testing.T) {
 func TestHiddenCommandShowsNoNotice(t *testing.T) {
 	t.Run("CLRTC-B09: A hidden command shows no telemetry notice", func(t *testing.T) {})
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 7\nlayers: {}\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 8\nlayers: {}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("ANCHORS_TELEMETRY", "on")

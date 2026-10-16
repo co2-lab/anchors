@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CDCMC
-  updated_at: 2026-10-14
+  updated_at: 2026-10-16
   layer: comando
 -->
 # CodeCommand — a new unit gets an identity code that no other unit in the map already owns, and the codes in use are listed from the map
@@ -55,7 +55,7 @@ rename rewrites the whole project and deserves its own dry-run.
 | `CDCMC-B08` | `--json` prints each code with its folders, file, kind, title, needs, parent and revises; an empty list is `[]`. |
 | `CDCMC-B09` | A unit's title is its first `# ` heading in a markdown file, with the text up to the dash dropped; a file that is not markdown has no title. |
 | `CDCMC-B10` | `list --check` accuses only DECLARED codes whose length is outside the accepted lengths, proposing the canonical code of the unit's name, resolved against the conforming codes; a cited code is counted and not accused; the check fails when anything diverges and passes with a summary otherwise. |
-| `CDCMC-B11` | The unit name of a path drops the `.spec.md`, `.feature` and `.test.<ext>` suffixes, or the plain extension. |
+| `CDCMC-B11` | The unit name of a path is the one the project's layers say (`config.UnitName`): it drops Anchors' `.spec.md` and `.feature`, what a `derived.files` template adds after `{{name}}`, or the plain extension. |
 | `CDCMC-B12` | A map with no identity node makes `list` say so and point at `anchors map build`. |
 | `CDCMC-B13` | Every run reads its codes, owning files and declared identities from its own map: a second run in the same process never inherits what a previous map declared. |
 | `CDCMC-B14` | When the length check accuses codes, it ends with the exact `anchors recode <old> <new>` command for each one, to be reviewed in its dry-run and applied with `--apply`; the check itself changes nothing and has no `--fix`. |

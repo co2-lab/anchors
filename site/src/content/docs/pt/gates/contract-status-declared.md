@@ -13,6 +13,7 @@ The Output Contract statuses are the ones the handler returns — and only those
 | Confronta | `spec` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Pressupõe | `dialect.http_status` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

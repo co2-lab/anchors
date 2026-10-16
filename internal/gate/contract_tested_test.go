@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,13 +43,13 @@ func TestContractTested_noAPIUnit(t *testing.T) {
 	t.Run("CTTST-B01: What is no API unit leaves without a verdict", func(t *testing.T) {})
 	t.Run("CTTST-E01: A code file with no spec beside it leaves without a verdict", func(t *testing.T) {})
 	root, g := apiFixture(t, map[string]string{"api/model.spec.md": "<!-- @anchors\n  code: MODEL\n-->\n# Model\n"})
-	if v, _ := checkContractTested("", mapx.Node{ID: "api/generate.spec.md", Kind: mapx.KindSpec}, root, g, nil); v != Skip {
+	if v, _ := checkContractTested("", mapx.Node{ID: "api/generate.spec.md", Kind: mapx.KindSpec}, root, g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("a spec node: %v", v)
 	}
-	if v, d := checkContractTested("", mapx.Node{ID: "api/helpers.go", Kind: mapx.KindCode}, root, g, nil); v != Skip || !strings.Contains(d, "spec") {
+	if v, d := checkContractTested("", mapx.Node{ID: "api/helpers.go", Kind: mapx.KindCode}, root, g, testkit.WithComments(nil)); v != Skip || !strings.Contains(d, "spec") {
 		t.Errorf("no spec beside it: %v %s", v, d)
 	}
-	if v, d := checkContractTested("", mapx.Node{ID: "api/model.go", Kind: mapx.KindCode}, root, g, nil); v != Skip || !strings.Contains(d, "Endpoint") {
+	if v, d := checkContractTested("", mapx.Node{ID: "api/model.go", Kind: mapx.KindCode}, root, g, testkit.WithComments(nil)); v != Skip || !strings.Contains(d, "Endpoint") {
 		t.Errorf("a spec with no Endpoint: %v %s", v, d)
 	}
 }
@@ -59,18 +60,18 @@ func TestContractTested_theThreeParts(t *testing.T) {
 	t.Run("CTTST-B04: The contract test must load the OpenAPI document", func(t *testing.T) {})
 	t.Run("CTTST-B06: Scenario and a contract test that loads the document pass", func(t *testing.T) {})
 	root, g := apiFixture(t, map[string]string{})
-	if v, d := checkContractTested("", apiCode, root, g, nil); v != Fail || !strings.Contains(d, "`QRGEN-CT` (tagged `@contract-level`)") ||
+	if v, d := checkContractTested("", apiCode, root, g, testkit.WithComments(nil)); v != Fail || !strings.Contains(d, "`QRGEN-CT` (tagged `@contract-level`)") ||
 		!strings.Contains(d, "no test of the unit names `QRGEN-CT`") {
 		t.Errorf("no scenario, no test: %v %s", v, d)
 	}
 	root, g = apiFixture(t, map[string]string{"api/generate.feature": contractFeature,
 		"api/generate_contract_test.go": "// QRGEN-CT\nfunc TestContract(t *testing.T) {}"}, "api/generate_contract_test.go")
-	if v, d := checkContractTested("", apiCode, root, g, nil); v != Fail || !strings.Contains(d, "does not load the OpenAPI document") {
+	if v, d := checkContractTested("", apiCode, root, g, testkit.WithComments(nil)); v != Fail || !strings.Contains(d, "does not load the OpenAPI document") {
 		t.Errorf("a test that does not load the document: %v %s", v, d)
 	}
 	root, g = apiFixture(t, map[string]string{"api/generate.feature": contractFeature,
 		"api/generate_contract_test.go": "// QRGEN-CT\nvar doc = load(\"../docs/openapi.yaml\")"}, "api/generate_contract_test.go")
-	if v, d := checkContractTested("", apiCode, root, g, nil); v != Pass {
+	if v, d := checkContractTested("", apiCode, root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the three parts pass: %v %s", v, d)
 	}
 }
@@ -80,7 +81,7 @@ func TestContractTested_theRegimeTag(t *testing.T) {
 	if tag := contractRegimeTag(nil); tag != "contract-level" {
 		t.Errorf("default = %q", tag)
 	}
-	cfg := &config.Config{Derived: &config.Derived{Regimes: map[string]string{"nivel-unit": "unit", "nivel-contrato": "contract"}}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{Regimes: map[string]string{"nivel-unit": "unit", "nivel-contrato": "contract"}}})
 	if tag := contractRegimeTag(cfg); tag != "nivel-contrato" {
 		t.Errorf("from the project = %q", tag)
 	}
@@ -89,7 +90,7 @@ func TestContractTested_theRegimeTag(t *testing.T) {
 func TestContractTested_anUnreadTestIsReadByItsPath(t *testing.T) {
 	t.Run("CTTST-E02: A test that cannot be read is read by its path", func(t *testing.T) {})
 	root, g := apiFixture(t, map[string]string{"api/generate.feature": contractFeature}, "flows/QRGEN-CT-openapi.yaml")
-	if v, d := checkContractTested("", apiCode, root, g, nil); v != Pass {
+	if v, d := checkContractTested("", apiCode, root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("a flow named by the code and the document counts: %v %s", v, d)
 	}
 }

@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -39,14 +40,14 @@ func envRun(t *testing.T, spec string, cfg *config.Config, code map[string]strin
 	return checkEnvDeclared(spec, mapx.Node{ID: "pay/pay.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 }
 
-var goDialect = &config.Config{Dialect: &config.Dialect{Family: "go"}}
+var goDialect = testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}})
 
 func TestEnvDeclared_nothingToConfront(t *testing.T) {
 	t.Run("ENVDC-B01: Nothing declared and nothing read leaves without a verdict", func(t *testing.T) {})
 	if v, _ := envRun(t, "# Pay\n", goDialect, map[string]string{"pay/pay.go": "package pay\n"}); v != Skip {
 		t.Errorf("nothing declared, nothing read: %v", v)
 	}
-	if v, _ := checkEnvDeclared("", mapx.Node{ID: "pay/pay.go", Kind: mapx.KindCode}, t.TempDir(), &mapx.Graph{}, nil); v != Skip {
+	if v, _ := checkEnvDeclared("", mapx.Node{ID: "pay/pay.go", Kind: mapx.KindCode}, t.TempDir(), &mapx.Graph{}, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("not a spec: %v", v)
 	}
 }
@@ -66,11 +67,12 @@ func TestEnvDeclared_bothSides(t *testing.T) {
 	}
 }
 
-func TestEnvDeclared_everyFamilyWhenNoneIsDeclared(t *testing.T) {
-	t.Run("ENVDC-B05: Every family's reads are recognised when none is declared", func(t *testing.T) {})
+func TestEnvDeclared_pendingWithoutEnvRead(t *testing.T) {
+	t.Run("ENVDC-B05: With no env_read declared the gate is pending", func(t *testing.T) {})
 	spec := envSpec("| LOG_LEVEL | string | no | info | debug, info | no | how much is logged |")
-	if v, d := envRun(t, spec, nil, map[string]string{"pay/pay.ts": "const level = process.env.LOG_LEVEL ?? 'info'\n"}); v != Pass {
-		t.Errorf("TypeScript read with no dialect: %v %s", v, d)
+	cfg := &config.Config{Dialect: &config.Dialect{Comments: config.FamilyComments("ts")}}
+	if v, d := envRun(t, spec, cfg, map[string]string{"pay/pay.ts": "const level = process.env.LOG_LEVEL ?? 'info'\n"}); v != Pending || !strings.Contains(d, "dialect.env_read") {
+		t.Errorf("no env_read leaves the gate pending, naming the field: %v %s", v, d)
 	}
 }
 

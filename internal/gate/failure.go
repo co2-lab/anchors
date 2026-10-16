@@ -159,7 +159,7 @@ func declaredFailures(content string) (all, resilient []string) {
 }
 
 // governedCode reads the non-comment content of the code this spec specifies.
-func governedCode(n mapx.Node, root string, g *mapx.Graph) (string, bool) {
+func governedCode(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) (string, bool) {
 	if g == nil {
 		return "", false
 	}
@@ -174,7 +174,7 @@ func governedCode(n mapx.Node, root string, g *mapx.Graph) (string, bool) {
 			continue
 		}
 		found = true
-		body.WriteString(stripLineComments(string(b)))
+		body.WriteString(stripComments(string(b), e.To, d))
 		body.WriteString("\n")
 	}
 	return body.String(), found
@@ -216,7 +216,7 @@ func checkFailureHandled(content string, n mapx.Node, root string, g *mapx.Graph
 		// verified nothing — and a ✓ here would stamp what was never measured.
 		return Pending, i18n.T("gate.failure_handled.skip_no_dialect")
 	}
-	code, ok := governedCode(n, root, g)
+	code, ok := governedCode(n, root, g, cfg.DialectFor())
 	if !ok {
 		return Pending, i18n.T("gate.failure_handled.pending_no_code")
 	}
@@ -261,7 +261,7 @@ func checkFailureLogged(content string, n mapx.Node, root string, g *mapx.Graph,
 	if len(d.HandlePatterns) == 0 || len(d.LogPatterns) == 0 {
 		return Pending, i18n.T("gate.failure_handled.skip_no_dialect")
 	}
-	code, ok := governedCode(n, root, g)
+	code, ok := governedCode(n, root, g, cfg.DialectFor())
 	if !ok {
 		return Pending, i18n.T("gate.failure_handled.pending_no_code")
 	}
@@ -323,7 +323,7 @@ func checkFailureDeclared(content string, n mapx.Node, root string, g *mapx.Grap
 	if len(d.HandlePatterns) == 0 {
 		return Pending, i18n.T("gate.failure_handled.skip_no_dialect")
 	}
-	code, ok := governedCode(n, root, g)
+	code, ok := governedCode(n, root, g, cfg.DialectFor())
 	if !ok {
 		return Pending, i18n.T("gate.failure_handled.pending_no_code")
 	}
@@ -415,11 +415,10 @@ func fallibleCalls(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) []
 		if err != nil {
 			continue
 		}
-		for i, ln := range strings.Split(string(b), "\n") {
-			if commentLine(ln) {
+		for i, code := range codeLines(string(b), e.To, d) {
+			if strings.TrimSpace(code) == "" {
 				continue
 			}
-			code := cutInlineComment(ln)
 			for _, c := range pats {
 				if c.re.MatchString(code) {
 					out = append(out, FallibleCall{File: e.To, Line: i + 1, Text: strings.TrimSpace(code), Pattern: c.p})
@@ -431,10 +430,20 @@ func fallibleCalls(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) []
 	return out
 }
 
-// commentLine says whether a line is only a comment, by the same reading stripLineComments
-// makes.
-func commentLine(ln string) bool {
-	return strings.TrimSpace(stripLineComments(ln)) == "" && strings.TrimSpace(ln) != ""
+// codeLines are the lines of a file with its comments blanked, by the syntax the project
+// declares for it — a line that was only a comment reads blank. A file whose comments nobody
+// declared reads as it is.
+func codeLines(content, rel string, d config.Dialect) []string {
+	return strings.Split(d.CommentsFor(rel).Blank(content), "\n")
+}
+
+// stripComments is a file's content without its comments (config.Comments.Code), or as it is
+// when nobody declared them.
+func stripComments(content, rel string, d config.Dialect) string {
+	if cs := d.CommentsFor(rel); cs != nil {
+		return cs.Code(content)
+	}
+	return content
 }
 
 // FallibleSource is what makes a unit able to fail, and the names a failure cites it by.
@@ -495,7 +504,7 @@ func fallibleSources(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config
 				src.Names = append(src.Names, base)
 				// The names the code imports from it — `useBudgets` — name it too.
 				for _, sym := range strings.Split(e.Method, ",") {
-					if sym = strings.TrimSpace(sym); sym != "" && sym != "default" && identRE.MatchString(sym) {
+					if sym = strings.TrimSpace(sym); sym != "" && sym != "default" {
 						src.Names = append(src.Names, sym)
 					}
 				}
@@ -524,9 +533,6 @@ func calledName(re *regexp.Regexp, text string) string {
 	}
 	return ""
 }
-
-// identRE is a name the code can import.
-var identRE = regexp.MustCompile(`^[A-Za-z_$][\w$]*$`)
 
 // uncoveredSources are the sources no declared failure names: a source is answered when a
 // line that carries a failure code of the spec — its row, or its row of the rules' uses —
@@ -577,14 +583,20 @@ var noHandleRE = regexp.MustCompile(`@no-handle:\s*\S`)
 // destructuring that reads the error spans the lines before the call it receives.
 const handleBefore = 10
 
-// statementStart is the first line of the statement that ends at line i: it climbs while
-// the line above continues it, and stops at a blank line or one that ends a statement
-// (`;`, `}`, `)`) — the previous statement's handling is not this call's.
-func statementStart(lines []string, i int) int {
+// statementStart is the first line of the statement that ends at line i — its lines are the
+// code, comments blanked: it climbs while the line above continues it, and stops at a blank
+// line or one the dialect's `statement_end` says ends a statement (`;`, `}`, `)` in the ts
+// example) — the previous statement's handling is not this call's. With no `statement_end`
+// the statement is the call's line: the core knows no language's statements.
+func statementStart(code []string, i int, d config.Dialect) int {
+	end := d.Compile(d.StatementEnd)
+	if end == nil {
+		return i
+	}
 	j := i
 	for j > 0 && i-j < handleBefore {
-		t := strings.TrimSpace(cutInlineComment(lines[j-1]))
-		if t == "" || strings.HasSuffix(t, ";") || strings.HasSuffix(t, "}") || strings.HasSuffix(t, ")") {
+		t := strings.TrimSpace(code[j-1])
+		if t == "" || end.MatchString(t) {
 			break
 		}
 		j--
@@ -603,6 +615,7 @@ func unhandledCalls(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) [
 		return nil
 	}
 	files := map[string][]string{}
+	codes := map[string][]string{}
 	var out []string
 	for _, c := range calls {
 		lines, ok := files[c.File]
@@ -612,8 +625,9 @@ func unhandledCalls(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) [
 				continue
 			}
 			lines = strings.Split(string(b), "\n")
-			files[c.File] = lines
+			files[c.File], codes[c.File] = lines, codeLines(string(b), c.File, d)
 		}
+		code := codes[c.File]
 		i := c.Line - 1
 		if noHandleRE.MatchString(lines[i]) || (i > 0 && noHandleRE.MatchString(lines[i-1])) {
 			continue
@@ -640,18 +654,17 @@ func unhandledCalls(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) [
 		if window <= 0 {
 			window = config.DefaultFallibleWindow
 		}
-		from, to := statementStart(lines, i), i+window
+		from, to := statementStart(code, i, d), i+window
 		if to >= len(lines) {
 			to = len(lines) - 1
 		}
 		found := false
 		for j := from; j <= to && !found; j++ {
-			if commentLine(lines[j]) {
+			if strings.TrimSpace(code[j]) == "" {
 				continue
 			}
-			code := cutInlineComment(lines[j])
 			for _, re := range handled {
-				if re.MatchString(code) {
+				if re.MatchString(code[j]) {
 					found = true
 					break
 				}

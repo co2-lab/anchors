@@ -13,7 +13,7 @@ The route the spec declares is registered where the app registers its routes.
 | Confronts | `spec` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
-| Presupposes | `route_registry` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
+| Presupposes | `route_registry` `derived.route_pattern` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 

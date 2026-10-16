@@ -58,7 +58,7 @@ Feature: RunMonitor — reading the project's runs tick by tick: what started, s
 
   @MNTRS-B09 @unit-level
   Scenario: The settings are the defaults, then the project's block
-    Given no block, then a block with timing, a runner replacing jest, a report and bounds, then values that do not read
+    Given no block, then a block with timing, a jest and a seed runner, a report and bounds, then values that do not read
     When the settings are read
     Then the defaults, then the project's values first, then an error naming each bad key
 
@@ -75,10 +75,10 @@ Feature: RunMonitor — reading the project's runs tick by tick: what started, s
     Then it is parsed the first time and given with its time alone the second
 
   @MNTRS-B12 @unit-level
-  Scenario: The built-in runners recognize the common runners
-    Given command lines of the common runners and one of none
-    When their runner is asked
-    Then each is recognized with its kind, and the last has none
+  Scenario: Anchors' own commands are known by themselves, and the examples recognize the common runners
+    Given an anchors command and a jest one, and command lines of the common runners and one of none
+    When their runner is asked of Anchors' own, and of the examples
+    Then Anchors' own knows only the anchors command, and the examples recognize each with its kind, the last none
 
   @MNTRS-B13 @unit-level
   Scenario: A command is recognized and shown by its first line

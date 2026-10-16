@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:01167914ff60e207 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:638cc5d4f6c71c87 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1772,7 +1772,7 @@ teste prova.
 
 - [The length check accuses only declared codes and proposes the canonical code](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B10`
 
-- [The unit name drops the artifact suffixes](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B11`
+- [The unit name drops what the layers add to it](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B11`
 
 - [An empty map says no node has an identity](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B12`
 
@@ -2079,6 +2079,8 @@ teste prova.
 - [Taking the table out keeps what each spec proved](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B18`
 
 - [The per-plan progress files are moved into anchors.progress.md](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B19`
+
+- [Crossing format 8 writes the families' examples before the file codes](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B20`
 
 - [An unknown kind is refused](layers/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B01`
 
@@ -2942,23 +2944,23 @@ teste prova.
 
 ## config
 
-- [A known extension answers with its line-comment prefixes](layers/config.md#cmmrc-b01--a-known-extension-answers-with-its-line-comment-prefixes) `CMMRC-B01`
+- [A file's syntax is the first entry that covers it, or Anchors' own for its formats](layers/config.md#cmmrc-b01--a-files-syntax-is-the-first-entry-that-covers-it-or-anchors-own-for-its-formats) `CMMRC-B01`
 
-- [An unknown extension answers with no prefix](layers/config.md#cmmrc-b02--an-unknown-extension-answers-with-no-prefix) `CMMRC-B02`
+- [Blanking keeps strings and lines, and turns comments into spaces](layers/config.md#cmmrc-b02--blanking-keeps-strings-and-lines-and-turns-comments-into-spaces) `CMMRC-B02`
 
-- [The line comment of a path follows its last extension, ignoring case](layers/config.md#cmmrc-b03--the-line-comment-of-a-path-follows-its-last-extension-ignoring-case) `CMMRC-B03`
+- [Lines that are only a comment, the code of a content, a line cut](layers/config.md#cmmrc-b03--lines-that-are-only-a-comment-the-code-of-a-content-a-line-cut) `CMMRC-B03`
 
-- [A markup file gets the opening of a block comment](layers/config.md#cmmrc-b04--a-markup-file-gets-the-opening-of-a-block-comment) `CMMRC-B04`
+- [The writer's marker and where a comment cannot go](layers/config.md#cmmrc-b04--the-writers-marker-and-where-a-comment-cannot-go) `CMMRC-B04`
 
-- [A path with no extension or an unknown one gets the hash comment](layers/config.md#cmmrc-b05--a-path-with-no-extension-or-an-unknown-one-gets-the-hash-comment) `CMMRC-B05`
+- [A malformed entry refuses the config](layers/config.md#cmmrc-b05--a-malformed-entry-refuses-the-config) `CMMRC-B05`
 
-- [An extension with several prefixes gets the first one declared](layers/config.md#cmmrc-b06--an-extension-with-several-prefixes-gets-the-first-one-declared) `CMMRC-B06`
+- [The families have an example of their comments, never applied by itself](layers/config.md#cmmrc-b06--the-families-have-an-example-of-their-comments-never-applied-by-itself) `CMMRC-B06`
 
-- [For every extension of the table, the line comment is the table's first prefix](layers/config.md#cmmrc-i01--for-every-extension-of-the-table-the-line-comment-is-the-tables-first-prefix) `CMMRC-I01`
+- [Blanking never moves a line](layers/config.md#cmmrc-i01--blanking-never-moves-a-line) `CMMRC-I01`
 
-- [The prefix lookup takes the extension as given and does not normalise it](layers/config.md#cmmrc-x01--the-prefix-lookup-takes-the-extension-as-given-and-does-not-normalise-it) `CMMRC-X01`
+- [No language's comment is built in](layers/config.md#cmmrc-x01--no-languages-comment-is-built-in) `CMMRC-X01`
 
-- [OCaml, Menhir and dune comment their own way, and a block comment is closed](layers/config.md#cmmrc-b07--ocaml-menhir-and-dune-comment-their-own-way-and-a-block-comment-is-closed) `CMMRC-B07`
+- [The examples' entries covering a set of files](layers/config.md#cmmrc-b07--the-examples-entries-covering-a-set-of-files) `CMMRC-B07`
 
 - [An unknown key in the file is a load error naming the key](layers/config.md#cnfgo-b01--an-unknown-key-in-the-file-is-a-load-error-naming-the-key) `CNFGO-B01`
 
@@ -3118,6 +3120,12 @@ teste prova.
 
 - [A suite's retry on load reads its threshold and its retries](layers/config.md#cnfgo-b71--a-suites-retry-on-load-reads-its-threshold-and-its-retries) `CNFGO-B71`
 
+- [A file's unit name drops what the layers add to it](layers/config.md#cnfgo-b72--a-files-unit-name-drops-what-the-layers-add-to-it) `CNFGO-B72`
+
+- [The code extensions are the code layers'](layers/config.md#cnfgo-b73--the-code-extensions-are-the-code-layers) `CNFGO-B73`
+
+- [The example runners, a unit's piece paths and a layer's extensions](layers/config.md#cnfgo-b74--the-example-runners-a-units-piece-paths-and-a-layers-extensions) `CNFGO-B74`
+
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](layers/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -3136,15 +3144,15 @@ teste prova.
 
 - [A layer that runs no code is never an orphan](layers/config.md#cntnr-b07--a-layer-that-runs-no-code-is-never-an-orphan) `CNTNR-B07`
 
-- [A project that declares no dialect gets only the naming defaults](layers/config.md#dlcti-b01--a-project-that-declares-no-dialect-gets-only-the-naming-defaults) `DLCTI-B01`
+- [A project's dialect is what it declares, and nothing fills it](layers/config.md#dlcti-b01--a-projects-dialect-is-what-it-declares-and-nothing-fills-it) `DLCTI-B01`
 
-- [The family fills every field the project left empty, and a declared field wins](layers/config.md#dlcti-b02--the-family-fills-every-field-the-project-left-empty-and-a-declared-field-wins) `DLCTI-B02`
+- [Each family has an example of the lexicon, never applied by itself](layers/config.md#dlcti-b02--each-family-has-an-example-of-the-lexicon-never-applied-by-itself) `DLCTI-B02`
 
 - [The family name is matched ignoring case](layers/config.md#dlcti-b03--the-family-name-is-matched-ignoring-case) `DLCTI-B03`
 
-- [An unknown family contributes nothing, and the known ones are listed in order](layers/config.md#dlcti-b04--an-unknown-family-contributes-nothing-and-the-known-ones-are-listed-in-order) `DLCTI-B04`
+- [An unknown family has no example, and the known ones are listed in order](layers/config.md#dlcti-b04--an-unknown-family-has-no-example-and-the-known-ones-are-listed-in-order) `DLCTI-B04`
 
-- [The naming conventions apply to any family and a declared one replaces them](layers/config.md#dlcti-b05--the-naming-conventions-apply-to-any-family-and-a-declared-one-replaces-them) `DLCTI-B05`
+- [Every family's example carries the two naming conventions](layers/config.md#dlcti-b05--every-familys-example-carries-the-two-naming-conventions) `DLCTI-B05`
 
 - [The Gherkin language defaults to English, is found in any case, and one outside the table keeps its code with English keywords](layers/config.md#dlcti-b06--the-gherkin-language-defaults-to-english-is-found-in-any-case-and-one-outside-the-table-keeps-its-code-with-english-keywords) `DLCTI-B06`
 
@@ -3203,6 +3211,8 @@ teste prova.
 - [The chain patterns are the dialect's, and a family gives none by itself](layers/config.md#dlcti-b30--the-chain-patterns-are-the-dialects-and-a-family-gives-none-by-itself) `DLCTI-B30`
 
 - [The families have an example of the chain patterns](layers/config.md#dlcti-b31--the-families-have-an-example-of-the-chain-patterns) `DLCTI-B31`
+
+- [The families' examples of the mock shapes and the route pattern](layers/config.md#dlcti-b32--the-families-examples-of-the-mock-shapes-and-the-route-pattern) `DLCTI-B32`
 
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
@@ -3814,7 +3824,7 @@ teste prova.
 
 - [A read in a comment is no read](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B04`
 
-- [Every family's reads are recognised when none is declared](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B05`
+- [With no env_read declared the gate is pending](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B05`
 
 - [A specified file that cannot be read reads nothing](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-E01`
 
@@ -4412,7 +4422,7 @@ teste prova.
 
 - [The gate does not decide which rules live at two ends](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-X02`
 
-- [Files outside the text extension list are not read](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-X03`
+- [A file whose comments the project does not declare is not read](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-X03`
 
 - [A generated stamp passes the gate, and a change to its snippet fails it](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B01`
 
@@ -5030,7 +5040,7 @@ teste prova.
 
 - [A rule with no relation claim leaves without a verdict](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B13`
 
-- [Imports in other language shapes satisfy the charge](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B14`
+- [An import is what the project's dialect declares](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B14`
 
 - [Without a map the demand is left pending, not approved](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-E01`
 
@@ -6112,7 +6122,7 @@ teste prova.
 
 - [A generic file name takes its code from the parent folder](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path) `CFPCD-B02`
 
-- [Artifact suffixes are dropped from the base name](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path) `CFPCD-B03`
+- [The code comes from the unit's name the caller gives](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path) `CFPCD-B03`
 
 - [A normal file name gets the generated code when free](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path) `CFPCD-B04`
 
@@ -6257,6 +6267,10 @@ teste prova.
 - [A project with a chain gate and no import patterns is offered the family's example](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B11`
 
 - [A project with nav-annotated and no navigation call is offered the family's example](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B12`
+
+- [Files whose comments are not declared are offered the families' examples](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B13`
+
+- [A gate presupposing a lexicon field the project left empty is offered the family's example](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B14`
 
 - [The report is sorted by check then subject, and counts the map](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B01`
 
@@ -6405,6 +6419,8 @@ teste prova.
 - [A new project's dialect carries the family's example of the chain patterns](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B11`
 
 - [A new project's dialect carries the family's example of a navigation call](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B12`
+
+- [A new project's dialect carries the family's lexicon and the comments of its files](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B13`
 
 - [The whole guide is a title, a seeding note and the section](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B01`
 
@@ -7006,7 +7022,7 @@ teste prova.
 
 - [Reports are read by their globs](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B11`
 
-- [The built-in runners recognize the common runners](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B12`
+- [Anchors' own commands are known by themselves, and the examples recognize the common runners](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B12`
 
 - [A command is recognized and shown by its first line](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B13`
 
@@ -7110,11 +7126,11 @@ teste prova.
 
 - [Asking the patch of a suggestion without one is refused](layers/infra.md#sgsts--suggestionstore--a-proposed-fix-as-a-patch-plus-its-reason-waiting-for-someone-to-decide) `SGSTS-E05`
 
-- [A pattern reads each call followed by a literal as a test](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B01`
+- [A pattern reads each match as a test, titled by its title group](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B01`
 
-- [Titles may be quoted three ways, with escapes](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B02`
+- [A pattern names a title group for each way a title is quoted](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B02`
 
-- [A call without a literal title is left out](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B03`
+- [A match whose title groups captured nothing is left out](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B03`
 
 - [The pattern's tests come in file order then position](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B04`
 
@@ -7129,6 +7145,8 @@ teste prova.
 - [A source with both a pattern and a script is refused](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-E01`
 
 - [A pattern that does not compile is refused](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-E02`
+
+- [A pattern with no title group is refused](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-E05`
 
 - [A failing script is an error naming why](layers/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-E03`
 
@@ -7418,7 +7436,7 @@ teste prova.
 
 - [The newer-map refusal never names the migration command](layers/mapa.md#mpfrm-b05--the-newer-map-refusal-never-names-the-migration-command) `MPFRM-B05`
 
-- [Exactly format 7 is readable](layers/mapa.md#mpfrm-i01--exactly-format-7-is-readable) `MPFRM-I01`
+- [Exactly format 8 is readable](layers/mapa.md#mpfrm-i01--exactly-format-8-is-readable) `MPFRM-I01`
 
 - [Format 1 is migrated, not read](layers/mapa.md#mpfrm-x01--format-1-is-migrated-not-read) `MPFRM-X01`
 
@@ -7729,6 +7747,20 @@ teste prova.
 - [The renamed codes are read old to current, a code renamed twice to the last one](layers/migra.md#mgfcd-b07--the-renamed-codes-are-read-old-to-current-a-code-renamed-twice-to-the-last-one) `MGFCD-B07`
 
 - [The header's updated_at is set to the day given, and only in the header](layers/migra.md#mgfcd-b08--the-headers-updated-at-is-set-to-the-day-given-and-only-in-the-header) `MGFCD-B08`
+
+- [The comments of the examples covering the project's files are added](layers/migra.md#mgsyn-b01--the-comments-of-the-examples-covering-the-projects-files-are-added) `MGSYN-B01`
+
+- [The family's lexicon fills what the project left empty](layers/migra.md#mgsyn-b02--the-familys-lexicon-fills-what-the-project-left-empty) `MGSYN-B02`
+
+- [Inside the project's own tests only what the old binary filled is added](layers/migra.md#mgsyn-b03--inside-the-projects-own-tests-only-what-the-old-binary-filled-is-added) `MGSYN-B03`
+
+- [The gates' shapes are added for the gates that read them](layers/migra.md#mgsyn-b04--the-gates-shapes-are-added-for-the-gates-that-read-them) `MGSYN-B04`
+
+- [The additions are written at the end of each block, the rest kept](layers/migra.md#mgsyn-b05--the-additions-are-written-at-the-end-of-each-block-the-rest-kept) `MGSYN-B05`
+
+- [A missing section is written whole, a flow-style one refused](layers/migra.md#mgsyn-b06--a-missing-section-is-written-whole-a-flow-style-one-refused) `MGSYN-B06`
+
+- [The example runners the project's suites run with are added](layers/migra.md#mgsyn-b07--the-example-runners-the-projects-suites-run-with-are-added) `MGSYN-B07`
 
 ## scan
 

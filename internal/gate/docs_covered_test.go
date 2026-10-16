@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,7 +43,7 @@ func TestDocsCovered_flagsASpecOutsideTheTemplates(t *testing.T) {
 	resetDocsCoverageCache()
 	root, g := projectWithOrphan(t)
 	n := mapx.Node{ID: "pkg/B.spec.md", Kind: mapx.KindSpec, Code: "BBBBB"}
-	v, d := checkDocsCovered("", n, root, g, nil)
+	v, d := checkDocsCovered("", n, root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("the orphan spec should fail, got %v (%s)", v, d)
 	}
@@ -60,7 +61,7 @@ func TestDocsCovered_reachedSpecPasses(t *testing.T) {
 	resetDocsCoverageCache()
 	root, g := projectWithOrphan(t)
 	n := mapx.Node{ID: "pkg/A.spec.md", Kind: mapx.KindSpec, Code: "AAAAA"}
-	if v, d := checkDocsCovered("", n, root, g, nil); v != Pass {
+	if v, d := checkDocsCovered("", n, root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the spec the template reaches should pass, got %v (%s)", v, d)
 	}
 }
@@ -70,7 +71,7 @@ func TestDocsCovered_onlyConfrontsSpecs(t *testing.T) {
 	resetDocsCoverageCache()
 	root, g := projectWithOrphan(t)
 	n := mapx.Node{ID: "pkg/B.spec.md", Kind: mapx.KindCode, Code: "BBBBB"}
-	if v, _ := checkDocsCovered("", n, root, g, nil); v != Skip {
+	if v, _ := checkDocsCovered("", n, root, g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("expected Skip for a non-spec, got %v", v)
 	}
 }
@@ -83,7 +84,7 @@ func TestDocsCovered_skipsAProjectWithoutTemplates(t *testing.T) {
 	root, g := projectWithOrphan(t)
 	os.RemoveAll(filepath.Join(root, doct.Dir))
 	n := mapx.Node{ID: "pkg/B.spec.md", Kind: mapx.KindSpec, Code: "BBBBB"}
-	if v, _ := checkDocsCovered("", n, root, g, nil); v != Skip {
+	if v, _ := checkDocsCovered("", n, root, g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("expected Skip without templates, got %v", v)
 	}
 }
@@ -98,7 +99,7 @@ func TestDocsCovered_aTemplateThatDoesNotCompileIsLeftToTheSibling(t *testing.T)
 		t.Fatal(err)
 	}
 	n := mapx.Node{ID: "pkg/B.spec.md", Kind: mapx.KindSpec, Code: "BBBBB"}
-	if v, d := checkDocsCovered("", n, root, g, nil); v != Skip || d != "" {
+	if v, d := checkDocsCovered("", n, root, g, testkit.WithComments(nil)); v != Skip || d != "" {
 		t.Errorf("a broken template is not this gate's finding: %v (%q)", v, d)
 	}
 }
@@ -110,7 +111,7 @@ func TestDocsCovered_compilesOncePerRootAndMap(t *testing.T) {
 	resetDocsCoverageCache()
 	root, g := projectWithOrphan(t)
 	n := mapx.Node{ID: "pkg/B.spec.md", Kind: mapx.KindSpec, Code: "BBBBB"}
-	if v, _ := checkDocsCovered("", n, root, g, nil); v != Fail {
+	if v, _ := checkDocsCovered("", n, root, g, testkit.WithComments(nil)); v != Fail {
 		t.Fatalf("setup: B starts as an orphan, got %v", v)
 	}
 	// widen the template so it reaches every spec
@@ -118,11 +119,11 @@ func TestDocsCovered_compilesOncePerRootAndMap(t *testing.T) {
 		[]byte(`{{range specs ""}}{{section . "Visão Geral"}}{{end}}`), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := checkDocsCovered("", n, root, g, nil); v != Fail {
+	if v, _ := checkDocsCovered("", n, root, g, testkit.WithComments(nil)); v != Fail {
 		t.Errorf("the same root and map reuse the first answer, got %v", v)
 	}
 	fresh := &mapx.Graph{Nodes: append([]mapx.Node{}, g.Nodes...)}
-	if v, d := checkDocsCovered("", n, root, fresh, nil); v != Pass {
+	if v, d := checkDocsCovered("", n, root, fresh, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("a new map recomputes, and the widened template reaches B: %v (%s)", v, d)
 	}
 }

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGCMM
-  updated_at: 2026-10-12
+  updated_at: 2026-10-16
   layer: comando
 -->
 # MigrateCommand — the command the format error promises, bringing the map and the config up to this binary's format
@@ -55,6 +55,7 @@ machine makes the next agent migrate again and produce the same diff.
 | `MGCMM-B17` | The migration takes the dependencies out of the specs, whatever the format: it removes every section whose table rows open with a `DEPn`, under any title, and the `DEPn` from what each rule uses (Rule uses, Validations, Presentation validations); it names, per spec, the rows that named no file of the project — to flag in the code with a kind —, the rules whose uses held nothing else, and the lines that still cite a `DEPn`. A second run changes nothing. (`SpecDepsReport`) |
 | `MGCMM-B18` | Taking a spec's Dependencies table out proves nothing new: what held at the spec's revision before — its scenarios' proofs, its stamps — moves, in the map, to the content without the table. |
 | `MGCMM-B19` | Every run also moves the per-plan `-progress.md` files left into `anchors.progress.md` — each plan a demand, its phases stages, its items tasks weighing 1 as estimates — and deletes them, saying for each what it became; a dry run says it and writes nothing. No format step: it runs while one is left. |
+| `MGCMM-B20` | When the project crosses format 8, the examples of what the old binary read by itself are written into its anchors.yaml where it declared nothing (MGSYN), each field named, and what no example can say printed as `! by hand` — a binary file, a NUL in its first 8000 bytes, needing no comments —; this runs before the file codes, which write a header in each file's comments — read, under `--dry-run`, as the examples would make them. A configuration that does not load with the examples is not written. |
 | `MGCMM-B06` | After a real migration the command tells the user to commit it. |
 
 ## Invariants

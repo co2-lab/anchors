@@ -83,26 +83,19 @@ func declaredRoute(content string) string {
 	return ""
 }
 
-// routeNameRE reconhece as formas em que uma rota é registrada (default de fallback):
-//   - `name="Perfil"` — a prop do navegador (React Navigation, Expo Router e afins);
-//   - `Perfil: undefined` / `Perfil: {` — a entrada no tipo do stack;
-//   - `addResource('signup')` — a rota HTTP de um backend (API Gateway e afins).
-//
-// Projetos em outras stacks (Go, Python, Rails, etc.) declaram `derived.route_pattern`.
-var routeNameRE = regexp.MustCompile(`name="([A-Za-z][A-Za-z0-9_]*)"|(?m)^\s{2,}([A-Za-z][A-Za-z0-9_]*)\s*:\s*(?:undefined|\{)|addResource\('([a-z0-9][a-z0-9/_-]*)'`)
-
 // registeredRoutes lê os arquivos de registro de rota do projeto e devolve os nomes.
 func registeredRoutes(root string, globs []string, cfg *config.Config) (map[string]bool, error) {
 	out := map[string]bool{}
 	fsys := os.DirFS(root)
 
-	reRoute := routeNameRE
-	if cfg != nil && cfg.Derived != nil && strings.TrimSpace(cfg.Derived.RoutePattern) != "" {
-		re, err := regexp.Compile(cfg.Derived.RoutePattern)
-		if err != nil || re.NumSubexp() < 1 {
-			return nil, fmt.Errorf("invalid derived.route_pattern regex (must compile with at least 1 capture group)")
-		}
-		reRoute = re
+	// How a route is registered is the project's (`derived.route_pattern`): the core knows
+	// no router's syntax, and the gate presupposes the field.
+	if cfg == nil || cfg.Derived == nil || strings.TrimSpace(cfg.Derived.RoutePattern) == "" {
+		return nil, fmt.Errorf("%s", i18n.T("gate.field_undeclared", "derived.route_pattern"))
+	}
+	reRoute, err := regexp.Compile(cfg.Derived.RoutePattern)
+	if err != nil || reRoute.NumSubexp() < 1 {
+		return nil, fmt.Errorf("invalid derived.route_pattern regex (must compile with at least 1 capture group)")
 	}
 
 	for _, glob := range globs {

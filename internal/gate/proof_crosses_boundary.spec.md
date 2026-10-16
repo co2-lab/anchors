@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PCBPR
-  updated_at: 2026-10-08
+  updated_at: 2026-10-16
   layer: gate
 -->
 # ProofCrossesBoundary — when a rule claims a relation, the proof must reach the other side
@@ -68,7 +68,7 @@ it does not go hunting duplicated concepts across the project.
 | `PCBPR-B11` | A rule code that resolves to no unit is reported as unresolved, not silently dropped: a rule pointing at nothing warns nobody. |
 | `PCBPR-B12` | A rule code of the unit ITSELF is not a target: self-reference is not the other side of a boundary. |
 | `PCBPR-B13` | A rule with no relation claim at all leaves without a verdict — there was nothing to charge. |
-| `PCBPR-B14` | Imports in other language shapes (`require`, `from `, `use `, `using `, `#include`, or the project's configured pattern) satisfy the charge the same way. |
+| `PCBPR-B14` | An import is what the project's `dialect.imports` declares, in whatever shape its language writes it (`use`, `using`, `#include`…); the gate knows none of them by itself. |
 
 ## Errors
 

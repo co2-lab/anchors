@@ -5,6 +5,7 @@
 package flow
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -199,7 +200,8 @@ func TestMissingPieceToReview(t *testing.T) {
 	}
 	writeFile(t, root, "svc/handler.go", "x\n")
 	writeFile(t, root, "svc/handler_test.go", "x\n")
-	if missingPieceToReview(root, "svc/handler.go", nil) {
+	goTests := &config.Config{Derived: &config.Derived{Files: map[string]config.Padroes{"test": {"{{dir}}/{{name}}_test.go"}}}}
+	if missingPieceToReview(root, "svc/handler.go", goTests) {
 		t.Error("a Go test next to the code closes the unit")
 	}
 }
@@ -489,7 +491,7 @@ func TestWatchRun_needsConfigAndMap(t *testing.T) {
 		t.Errorf("without anchors.yaml, got %v", err)
 	}
 	writeFile(t, root, "anchors.yaml", "version: 1\nlayers:\n  logic:\n    pattern: \"src/**/*.ts\"\n    kind: code\n")
-	writeFile(t, root, "anchors.graph.yaml", "version: 7\nnodes: [\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 8\nnodes: [\n")
 	if _, err := runWatchSub(t, "run", "--root", root); err == nil || !strings.Contains(err.Error(), "load map") {
 		t.Errorf("with a broken map, got %v", err)
 	}
@@ -559,12 +561,12 @@ func TestUpdateNodeRev_carriesWhatProvesNothing(t *testing.T) {
 		}
 	}
 	write("// @used-by: BBBBB (a)\nexport const a = 1\n")
-	updateNodeRev(g, root, "a.ts", nil)
+	updateNodeRev(g, root, "a.ts", testkit.WithComments(nil))
 	if g.Node("a.ts").Rev == scan.ShortHash(before) || g.EvidenceStaleFor("a_test.ts") != nil {
 		t.Errorf("a flag moves the revision and keeps the test reaching it fresh, got %+v", g.Nodes)
 	}
 	write("export const a = 2\n")
-	updateNodeRev(g, root, "a.ts", nil)
+	updateNodeRev(g, root, "a.ts", testkit.WithComments(nil))
 	if g.EvidenceStaleFor("a_test.ts") == nil {
 		t.Error("a change to the code stales the test reaching it")
 	}

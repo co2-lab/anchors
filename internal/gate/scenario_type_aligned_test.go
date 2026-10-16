@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -13,10 +14,10 @@ import (
 )
 
 func cfgComTags() *config.Config {
-	return &config.Config{RuleTypes: []config.RuleType{
+	return testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{
 		{Letter: "S", Term: "State", Tags: []string{"estado"}},
 		{Letter: "B", Term: "Behavior", Tags: []string{"comportamento"}},
-	}}
+	}})
 }
 
 func TestScenarioTypeAligned_NaoFeaturePula(t *testing.T) {
@@ -37,10 +38,10 @@ func TestScenarioTypeAligned_ConfigSemRuleTypesPula(t *testing.T) {
 	t.Run("STASC-B02: Missing or empty rule types in configuration skip confrontation", func(t *testing.T) {})
 	feat := "Feature: X\nScenario: y\n"
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
-	if v, _ := checkScenarioTypeAligned(feat, n, "", nil, nil); v != Skip {
+	if v, _ := checkScenarioTypeAligned(feat, n, "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Fatalf("esperava Skip com cfg nil, veio %v", v)
 	}
-	if v, _ := checkScenarioTypeAligned(feat, n, "", nil, &config.Config{}); v != Skip {
+	if v, _ := checkScenarioTypeAligned(feat, n, "", nil, testkit.WithComments(&config.Config{})); v != Skip {
 		t.Fatalf("esperava Skip com RuleTypes vazias, veio %v", v)
 	}
 }
@@ -48,7 +49,7 @@ func TestScenarioTypeAligned_ConfigSemRuleTypesPula(t *testing.T) {
 func TestScenarioTypeAligned_SemMapaFicaEmSilencio(t *testing.T) {
 	t.Run("STASC-B03: Configuration without tag mappings skips confrontation", func(t *testing.T) {})
 	t.Run("STASC-I02: Absence of tag mappings prevents speculative enforcement", func(t *testing.T) {})
-	cfg := &config.Config{RuleTypes: []config.RuleType{{Letter: "S", Term: "State"}}}
+	cfg := testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{{Letter: "S", Term: "State"}}})
 	codeS01 := "LGSTX" + "-S01"
 	feat := "# language: pt\n\n  @comportamento @" + codeS01 + " @P2\n  Cenário: x\n    Então y\n"
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
@@ -126,10 +127,10 @@ Funcionalidade: Seção
 func TestScenarioTypeAligned_TagPodeCaberEmMaisDeUmaLetra(t *testing.T) {
 	t.Run("STASC-B08: A tag mapped to multiple rule letters passes if any matches", func(t *testing.T) {})
 	t.Run("STASC-X04: Tags are permitted to map across multiple rule letters", func(t *testing.T) {})
-	cfg := &config.Config{RuleTypes: []config.RuleType{
+	cfg := testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{
 		{Letter: "S", Term: "State", Tags: []string{"estado", "estado-dado"}},
 		{Letter: "V", Term: "Validation", Tags: []string{"validacao", "estado-dado"}},
-	}}
+	}})
 	codeV01 := "PRBDX" + "-V01"
 	codeS01 := "PRBDX" + "-S01"
 	feat := `# language: pt
@@ -152,10 +153,10 @@ Funcionalidade: Badge
 func TestScenarioTypeAligned_TagPodeDescreverCodigoSecundario(t *testing.T) {
 	t.Run("STASC-B09: A multi-coded scenario passes when a tag matches any code", func(t *testing.T) {})
 	t.Run("STASC-I04: Secondary requirement codes prevent false mismatch reporting", func(t *testing.T) {})
-	cfg := &config.Config{RuleTypes: []config.RuleType{
+	cfg := testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{
 		{Letter: "V", Term: "Validation", Tags: []string{"validacao"}},
 		{Letter: "M", Term: "Message", Tags: []string{"mensagem"}},
-	}}
+	}})
 	codeV02 := "IPSBX" + "-V02"
 	codeM01 := "IPSBX" + "-M01"
 	feat := `# language: pt

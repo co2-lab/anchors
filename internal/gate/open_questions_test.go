@@ -9,6 +9,7 @@ package gate
 // incentivo — o caminho mais curto para o verde vira apagar a seção.
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -18,7 +19,7 @@ import (
 
 func rodaAberto(t *testing.T, content string) (Verdict, string) {
 	t.Helper()
-	return checkOpenQuestions(content, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+	return checkOpenQuestions(content, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 }
 
 // A distinção que decide se o gate é útil ou ritual: quem NÃO abriu a seção não é
@@ -190,7 +191,7 @@ func TestOpenQuestionsSoSpec(t *testing.T) {
 	spec := "# X\n\n## Decisões em aberto\n\n- pergunta\n"
 	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
 		t.Run(string(k), func(t *testing.T) {
-			v, _ := checkOpenQuestions(spec, mapx.Node{Kind: k}, "", nil, nil)
+			v, _ := checkOpenQuestions(spec, mapx.Node{Kind: k}, "", nil, testkit.WithComments(nil))
 			if v != Skip {
 				t.Fatalf("kind %s deveria ser Skip, foi %s", k, v)
 			}
@@ -260,14 +261,14 @@ func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
 	}
 
 	// DECLARANDO `section_titles.open`, o gate encontra a seção e conta a pergunta.
-	cfg := &config.Config{SectionTitles: config.SectionTitles{"open": "Decisiones pendientes"}}
+	cfg := testkit.WithComments(&config.Config{SectionTitles: config.SectionTitles{"open": "Decisiones pendientes"}})
 	if n := OpenDecisions(espanhol, cfg, ""); n != 1 {
 		t.Errorf("com o título declarado, a pergunta deveria ser contada; veio %d", n)
 	}
 
 	// O GATE, e não só o contador, respeita o título: ele recebia o cfg na assinatura e
 	// passava nil adiante — a correção não alcançaria o caminho principal.
-	cfgEs := &config.Config{SectionTitles: config.SectionTitles{"open": "Decisiones pendientes"}}
+	cfgEs := testkit.WithComments(&config.Config{SectionTitles: config.SectionTitles{"open": "Decisiones pendientes"}})
 	if v, d := checkOpenQuestions(espanhol, mapx.Node{Kind: mapx.KindSpec}, "", nil, cfgEs); v != Diverge || !strings.Contains(d, "PARCX-Q01") {
 		t.Errorf("o gate deveria achar a seção declarada e nomear a pergunta: %s — %s", v, d)
 	}
@@ -276,7 +277,7 @@ func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
 	// não pode ser cobrado pelo nome que o framework usaria.
 	misto := "## Decisões em aberto\n\nnenhuma\n\n## Pendências de produto\n\n" +
 		"| Código | Pergunta |\n| --- | --- |\n| `PARCX-Q01` | Fuso? |\n"
-	cfgProduto := &config.Config{SectionTitles: config.SectionTitles{"open": "Pendências de produto"}}
+	cfgProduto := testkit.WithComments(&config.Config{SectionTitles: config.SectionTitles{"open": "Pendências de produto"}})
 	if n := OpenDecisions(misto, cfgProduto, ""); n != 1 {
 		t.Errorf("a seção declarada é a que vale, e ela tem 1 pergunta; veio %d", n)
 	}
@@ -369,7 +370,7 @@ func TestOpenDecisions_contaLendoOLexicoDoProjeto(t *testing.T) {
 		"| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n" +
 		"| `PARCX-Q01` | Fuso do vencimento? | Produto | |\n" +
 		"| `PARCX-Q02` | Arredondamento? | Produto | |\n"
-	cfg := &config.Config{SectionTitles: config.SectionTitles{"open": "Perguntas pendentes"}}
+	cfg := testkit.WithComments(&config.Config{SectionTitles: config.SectionTitles{"open": "Perguntas pendentes"}})
 	if n := OpenDecisions(spec, cfg, ""); n != 2 {
 		t.Errorf("contou %d decisões; a seção tem 2, e o título é o do PROJETO", n)
 	}

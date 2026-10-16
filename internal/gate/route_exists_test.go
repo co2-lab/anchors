@@ -35,7 +35,7 @@ addResource('manage-metadata')
 		t.Fatal(err)
 	}
 	t.Setenv("ANCHORS_TEST_ROOT", dir)
-	return &config.Config{RouteRegistryGlobs: []string{"nav/**/*.tsx"}}
+	return testkit.WithComments(&config.Config{RouteRegistryGlobs: []string{"nav/**/*.tsx"}, Derived: &config.Derived{RoutePattern: config.FamilyRoutePattern("ts")}})
 }
 
 func TestRouteExists_B01_NaoSpecPula(t *testing.T) {
@@ -66,7 +66,7 @@ func TestRouteExists_B03_SemRegistroFicaPendente(t *testing.T) {
 	t.Run("RTEXR-B03: Specifications with declared routes return Pending when route registry is unconfigured", func(t *testing.T) {})
 	t.Run("RTEXR-I02: The gate never approves route existence without inspecting registry files", func(t *testing.T) {})
 	v, msg := checkRouteExists("> **Rota**: `Qualquer`", mapx.Node{Kind: mapx.KindSpec},
-		t.TempDir(), nil, &config.Config{})
+		t.TempDir(), nil, testkit.WithComments(&config.Config{}))
 	if v != Pending {
 		t.Fatalf("sem route_registry o veredito é Pending; veio %v (%s)", v, msg)
 	}
@@ -74,7 +74,7 @@ func TestRouteExists_B03_SemRegistroFicaPendente(t *testing.T) {
 
 func TestRouteExists_B04_GlobInvalidoFicaPendente(t *testing.T) {
 	t.Run("RTEXR-B04: Invalid route registry glob patterns return Pending", func(t *testing.T) {})
-	cfg := &config.Config{RouteRegistryGlobs: []string{"[a-"}}
+	cfg := testkit.WithComments(&config.Config{RouteRegistryGlobs: []string{"[a-"}})
 	v, msg := checkRouteExists("> **Rota**: `Perfil`", mapx.Node{Kind: mapx.KindSpec},
 		t.TempDir(), nil, cfg)
 	if v != Pending {
@@ -92,7 +92,7 @@ func TestRouteExists_B05_ZeroRotasEncontradasFicaPendente(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(nav, "Empty.tsx"), []byte("// sem rotas aqui\nconst x = 1;"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	cfg := &config.Config{RouteRegistryGlobs: []string{"nav/**/*.tsx"}}
+	cfg := testkit.WithComments(&config.Config{RouteRegistryGlobs: []string{"nav/**/*.tsx"}, Derived: &config.Derived{RoutePattern: config.FamilyRoutePattern("ts")}})
 	v, msg := checkRouteExists("> **Rota**: `Perfil`", mapx.Node{Kind: mapx.KindSpec}, dir, nil, cfg)
 	if v != Pending {
 		t.Fatalf("sem rotas no arquivo de registro deve retornar Pending; veio %v (%s)", v, msg)
@@ -173,12 +173,12 @@ func registerRoutes(r chi.Router) {
 	if err := os.WriteFile(routesFile, []byte(src), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	cfg := &config.Config{
+	cfg := testkit.WithComments(&config.Config{
 		RouteRegistryGlobs: []string{"routes.go"},
 		Derived: &config.Derived{
 			RoutePattern: `r\.(?:Get|Post)\("([^"]+)"`,
 		},
-	}
+	})
 	v, msg := checkRouteExists("> **Rota**: `/usuarios`", mapx.Node{Kind: mapx.KindSpec}, dir, nil, cfg)
 	if v != Pass {
 		t.Fatalf("rota customizada deve passar; veio %v (%s)", v, msg)
@@ -193,24 +193,24 @@ func TestRouteExists_B12_PadraoCustomizadoInvalidoPendente(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Malformed regex
-	cfgInvalid := &config.Config{
+	cfgInvalid := testkit.WithComments(&config.Config{
 		RouteRegistryGlobs: []string{"routes.go"},
 		Derived: &config.Derived{
 			RoutePattern: `[a-`,
 		},
-	}
+	})
 	v1, _ := checkRouteExists("> **Rota**: `/usuarios`", mapx.Node{Kind: mapx.KindSpec}, dir, nil, cfgInvalid)
 	if v1 != Pending {
 		t.Fatalf("regex customizado malformado deve retornar Pending; veio %v", v1)
 	}
 
 	// Regex without capture groups
-	cfgNoGroup := &config.Config{
+	cfgNoGroup := testkit.WithComments(&config.Config{
 		RouteRegistryGlobs: []string{"routes.go"},
 		Derived: &config.Derived{
 			RoutePattern: `r\.Get`,
 		},
-	}
+	})
 	v2, msg2 := checkRouteExists("> **Rota**: `/usuarios`", mapx.Node{Kind: mapx.KindSpec}, dir, nil, cfgNoGroup)
 	if v2 != Pending {
 		t.Fatalf("regex customizado sem grupo de captura deve retornar Pending; veio %v", v2)

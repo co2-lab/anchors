@@ -5,6 +5,7 @@
 package ops
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"io"
 	"os"
 	"path/filepath"
@@ -354,7 +355,7 @@ func TestFreezeReplacesAnExistingEnabledLine(t *testing.T) {
 
 // --- the freeze with a scope ---
 
-const scopedYAML = "version: 7\nlayers:\n" +
+var scopedYAML = "version: 8\ndialect:\n" + testkit.CommentsYAML + "layers:\n" +
 	"  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n" +
 	"  code:\n    pattern: \"src/**/*.ts\"\n    kind: code\n" +
 	"  produto:\n    pattern: \"product/*.doctrine.md\"\n    kind: product\n" +

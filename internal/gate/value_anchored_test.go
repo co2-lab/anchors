@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -18,7 +19,7 @@ import (
 const anchorPattern = `@code-reference-\[([^\]]+)\]-\[([^\]]+)\]`
 
 func cfgAnchor() *config.Config {
-	return &config.Config{Derived: &config.Derived{ValueAnchor: anchorPattern}}
+	return testkit.WithComments(&config.Config{Derived: &config.Derived{ValueAnchor: anchorPattern}})
 }
 
 // project writes the files and returns the root and a map with them as nodes (`.spec.md`
@@ -192,7 +193,7 @@ func TestValueAnchored_undeclaredValuesAreNotCharged(t *testing.T) {
 func TestValueAnchored_skips(t *testing.T) {
 	t.Run("VLANV-B06: Without a declared pattern the gate skips and says how to enable it", func(t *testing.T) {})
 	root, g := project(t, map[string]string{"a.ts": "// @code-reference-[K]-[v]\nv\n"})
-	v, msg := checkValueAnchored("// @code-reference-[K]-[v]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, root, g, &config.Config{})
+	v, msg := checkValueAnchored("// @code-reference-[K]-[v]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, root, g, testkit.WithComments(&config.Config{}))
 	if v != Skip || !strings.Contains(msg, "derived.value_anchor") {
 		t.Errorf("no pattern: expected Skip naming the setting, got %v: %s", v, msg)
 	}
@@ -200,7 +201,7 @@ func TestValueAnchored_skips(t *testing.T) {
 		t.Errorf("not a code file and the verdict was %v", v)
 	}
 	t.Run("VLANV-I01: a pattern with fewer than two capture groups is treated as not declared", func(t *testing.T) {
-		oneGroup := &config.Config{Derived: &config.Derived{ValueAnchor: `@code-reference-\[([^\]]+)\]`}}
+		oneGroup := testkit.WithComments(&config.Config{Derived: &config.Derived{ValueAnchor: `@code-reference-\[([^\]]+)\]`}})
 		if v, _ := checkValueAnchored("// @code-reference-[K]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, root, g, oneGroup); v != Skip {
 			t.Errorf("a one-group pattern asserts no value and must not enable the gate: %v", v)
 		}
@@ -218,8 +219,8 @@ func TestValueAnchored_indexIsCachedPerGraph(t *testing.T) {
 	t.Run("VLANV-I02: Declarations are indexed once per graph instance", func(t *testing.T) {})
 	root, g := project(t, map[string]string{"theme.ts": "// @code-reference-[COLOR-OK]-[#1F8A5B]\nsuccess: '#1F8A5B',\n"})
 	re := regexp.MustCompile(anchorPattern)
-	first := anchorIndexFor(root, g, re)
-	second := anchorIndexFor(root, g, re)
+	first := anchorIndexFor(root, g, re, testkit.WithComments(nil))
+	second := anchorIndexFor(root, g, re, testkit.WithComments(nil))
 	if first != second {
 		t.Fatalf("expected identical index pointer for the same graph instance, got %p and %p", first, second)
 	}
@@ -286,7 +287,7 @@ func TestValueAnchored_Errors(t *testing.T) {
 // the message names it.
 func TestValueAnchored_declaredWithTooFewGroups(t *testing.T) {
 	t.Run("VLANV-E03: A declared value anchor with too few groups is named, not called undeclared", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{ValueAnchor: `@code-reference-\[([^\]]+)\]`}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{ValueAnchor: `@code-reference-\[([^\]]+)\]`}})
 	v, msg := checkValueAnchored("// @code-reference-[K]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, t.TempDir(), &mapx.Graph{}, cfg)
 	if v != Skip || !strings.Contains(msg, "two capture groups") {
 		t.Fatalf("the declared pattern must be named with the missing group, got %v (%s)", v, msg)
@@ -318,7 +319,7 @@ func TestValueAnchored_reportDetails(t *testing.T) {
 
 	t.Run("VLANV-B02: A pattern whose key group opens the comment still reads the key", func(t *testing.T) {
 		root, g := project(t, map[string]string{"theme.ts": "// COLOR-OK=#1F8A5B\nsuccess: '#000000',\n"})
-		cfg := &config.Config{Derived: &config.Derived{ValueAnchor: `([A-Z]+-[A-Z]+)=(\S+)`}}
+		cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{ValueAnchor: `([A-Z]+-[A-Z]+)=(\S+)`}})
 		content, _ := os.ReadFile(filepath.Join(root, "theme.ts"))
 		v, msg := checkValueAnchored(string(content), mapx.Node{ID: "theme.ts", Kind: mapx.KindCode}, root, g, cfg)
 		if v != Fail || !strings.Contains(msg, "`COLOR-OK` declares `#1F8A5B`") {

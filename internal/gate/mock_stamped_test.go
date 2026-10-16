@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,7 +33,7 @@ export function useMonthlySummary(
 const detectJS = `(?:jest|vi)\.mock\(['"]([^'"]+)`
 
 func cfgComCarimbo() *config.Config {
-	return &config.Config{Derived: &config.Derived{MockDetect: detectJS}}
+	return withTSMocks(testkit.WithComments(&config.Config{Derived: &config.Derived{MockDetect: detectJS}}))
 }
 
 // escreveModulo grava o módulo e devolve a raiz temporária.
@@ -178,14 +179,14 @@ func TestMockCarimbado_semDeclaracaoPula(t *testing.T) {
 	n := mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest}
 	teste := "// @contract: src/mod.ts | " + ancora + " | 5 | deadbeef"
 
-	v, msg := checkMockStamped(teste, n, root, &mapx.Graph{}, &config.Config{})
+	v, msg := checkMockStamped(teste, n, root, &mapx.Graph{}, testkit.WithComments(&config.Config{}))
 	if v != Pending {
 		t.Errorf("with nothing declared the gate did not check, and says so: %v", v)
 	}
 	if !strings.Contains(msg, "mock_detect") || !strings.Contains(msg, "opt_out") {
 		t.Errorf("the message names the field and the opt-out: %s", msg)
 	}
-	waived := &config.Config{Dialect: &config.Dialect{OptOut: []string{"mock_detect"}}}
+	waived := testkit.WithComments(&config.Config{Dialect: &config.Dialect{OptOut: []string{"mock_detect"}}})
 	if v, _ := checkMockStamped(teste, n, root, &mapx.Graph{}, waived); v != Skip {
 		t.Errorf("a waived field is the project's decision, and skips: %v", v)
 	}
@@ -272,7 +273,7 @@ func TestMockCarimbado_carimboPresenteSatisfazAmbas(t *testing.T) {
 // zero dublês e reportar verde — o pior desfecho possível num medidor.
 func TestMockCarimbado_detectorInvalidoReprova(t *testing.T) {
 	t.Run("MCSTM-B13: A dialect regex that does not compile fails loudly", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{MockDetect: `jest\.mock\(([`}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{MockDetect: `jest\.mock\(([`}})
 	v, msg := checkMockStamped("jest.mock('src/mod')",
 		mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest}, t.TempDir(), grafoComMod(), cfg)
 	if v != Fail {
@@ -287,7 +288,7 @@ func TestMockCarimbado_detectorInvalidoReprova(t *testing.T) {
 // não arquivo defeituoso.
 func TestMockCarimbado_detectorSemCapturaReprova(t *testing.T) {
 	t.Run("MCSTM-B14: A dialect regex with no capture group fails", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{MockDetect: `jest\.mock`}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{MockDetect: `jest\.mock`}})
 	v, msg := checkMockStamped("jest.mock('src/mod')",
 		mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest}, t.TempDir(), grafoComMod(), cfg)
 	if v != Fail {
@@ -302,9 +303,9 @@ func TestMockCarimbado_detectorSemCapturaReprova(t *testing.T) {
 // declarado. É o que torna o carimbo de fato agnóstico.
 func TestMockCarimbado_detectorDeOutroDialeto(t *testing.T) {
 	t.Run("MCSTM-B15: Another ecosystem's dialect is charged the same way", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{
 		MockDetect: `(?:mock\.)?patch\(['"]([^'"]+)`,
-	}}
+	}})
 	root := escreveModulo(t, moduloBase)
 	v, msg := checkMockStamped("@patch('src/mod')\ndef test_x(): pass",
 		mapx.Node{ID: "x_test.py", Kind: mapx.KindTest}, root, grafoComMod(), cfg)
@@ -381,10 +382,10 @@ func TestMockCarimbado_configDefeituosaReprovaEscolhaPula(t *testing.T) {
 		cfg  *config.Config
 		quer Verdict
 	}{
-		{"regex que não compila", &config.Config{Derived: &config.Derived{MockDetect: `jest\.mock\(([`}}, Fail},
-		{"regex sem captura", &config.Config{Derived: &config.Derived{MockDetect: `jest\.mock`}}, Fail},
-		{"dialeto não declarado", &config.Config{Derived: &config.Derived{}}, Pending},
-		{"dialeto dispensado", &config.Config{Derived: &config.Derived{}, Dialect: &config.Dialect{OptOut: []string{"mock_detect"}}}, Skip},
+		{"regex que não compila", testkit.WithComments(&config.Config{Derived: &config.Derived{MockDetect: `jest\.mock\(([`}}), Fail},
+		{"regex sem captura", testkit.WithComments(&config.Config{Derived: &config.Derived{MockDetect: `jest\.mock`}}), Fail},
+		{"dialeto não declarado", testkit.WithComments(&config.Config{Derived: &config.Derived{}}), Pending},
+		{"dialeto dispensado", testkit.WithComments(&config.Config{Derived: &config.Derived{}, Dialect: &config.Dialect{OptOut: []string{"mock_detect"}}}), Skip},
 	}
 	for _, c := range casos {
 		if v, msg := checkMockStamped(teste, n, root, grafoComMod(), c.cfg); v != c.quer {
@@ -422,7 +423,7 @@ func TestMockCarimbado_semDialetoPulaEmVezDePassar(t *testing.T) {
 	teste := "jest.mock('src/mod', () => ({ useMonthlySummary: jest.fn() }))"
 	n := mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest}
 
-	v, _ := checkMockStamped(teste, n, root, grafoComMod(), &config.Config{})
+	v, _ := checkMockStamped(teste, n, root, grafoComMod(), testkit.WithComments(&config.Config{}))
 	if v != Pending {
 		t.Fatalf("with no dialect declared the gate is pending; green would be a lie: %v", v)
 	}
@@ -558,7 +559,7 @@ func TestRefreshStamps(t *testing.T) {
 	}
 
 	// Dry run: reports, writes nothing.
-	got, err := RefreshStamps(g, root, "apps/mobile/src/hooks/balance.ts", false)
+	got, err := RefreshStamps(g, root, "apps/mobile/src/hooks/balance.ts", false, testkit.WithComments(nil))
 	if err != nil || len(got) != 1 || got[0].Anchor != "export function useBalance(id) {" || got[0].New == "" || got[0].New == got[0].Old {
 		t.Fatalf("only the useBalance stamp diverges, with a new hash: %+v %v", got, err)
 	}
@@ -567,7 +568,7 @@ func TestRefreshStamps(t *testing.T) {
 	}
 
 	// Write: the stamp is updated and the gate passes again.
-	if _, err := RefreshStamps(g, root, "apps/mobile/src/hooks/balance.ts", true); err != nil {
+	if _, err := RefreshStamps(g, root, "apps/mobile/src/hooks/balance.ts", true, testkit.WithComments(nil)); err != nil {
 		t.Fatal(err)
 	}
 	b, _ := os.ReadFile(filepath.Join(root, testID))
@@ -580,7 +581,7 @@ func TestRefreshStamps(t *testing.T) {
 	if err := os.WriteFile(mod, []byte(renamed), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	got, _ = RefreshStamps(g, root, "apps/mobile/src/hooks/balance.ts", true)
+	got, _ = RefreshStamps(g, root, "apps/mobile/src/hooks/balance.ts", true, testkit.WithComments(nil))
 	if len(got) != 1 || got[0].Err == "" || got[0].New != "" {
 		t.Errorf("a stamp whose anchor is gone must be reported, not refreshed: %+v", got)
 	}
@@ -631,7 +632,7 @@ func TestRefreshHeldStamps_onlyTheOnesThatHeld(t *testing.T) {
 	good := snippetHash("export const a = 1 // LOGI-B01")
 	test := "// @contract: m.ts | export const a = 1 // LOGI-B01 | 1 | " + good + "\n" +
 		"// @contract: m.ts | export const b = 2 | 1 | deadbeef\n"
-	held := StampsHolding(root, test)
+	held := StampsHolding(root, test, testkit.WithComments(nil))
 	if !held["m.ts|"+good] || held["m.ts|deadbeef"] || len(held) != 1 {
 		t.Fatalf("only the stamp that matches holds: %v", held)
 	}
@@ -640,7 +641,7 @@ func TestRefreshHeldStamps_onlyTheOnesThatHeld(t *testing.T) {
 		t.Fatal(err)
 	}
 	test = strings.ReplaceAll(test, "LOGI-", "LOGIN-")
-	out, n := RefreshHeldStamps(root, test, held)
+	out, n := RefreshHeldStamps(root, test, held, testkit.WithComments(nil))
 	want := snippetHash("export const a = 1 // LOGIN-B01")
 	if n != 1 || !strings.Contains(out, "| 1 | "+want+"\n") || !strings.Contains(out, "| 1 | deadbeef") {
 		t.Errorf("the held stamp follows, the stale one stays (%d):\n%s", n, out)

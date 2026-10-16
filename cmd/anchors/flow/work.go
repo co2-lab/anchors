@@ -884,14 +884,8 @@ func derivedPieceUnit(root, rel string, cfg *config.Config, g *mapx.Graph) (stri
 
 	// 2) pela convenção: mesmo tronco, extensões de código usuais no mesmo diretório.
 	dir := filepath.Dir(rel)
-	base := filepath.Base(rel)
-	for _, suf := range []string{".spec.md", ".feature", ".test.ts", ".test.tsx", ".spec.ts", "_test.go", "_test.py", "_spec.rb"} {
-		base = strings.TrimSuffix(base, suf)
-	}
-	if i := strings.Index(base, "."); i > 0 {
-		base = base[:i]
-	}
-	for _, ext := range []string{".ts", ".tsx", ".go", ".py", ".java", ".rs", ".rb", ".php", ".kt", ".cs"} {
+	base := cfg.UnitName(rel)
+	for _, ext := range cfg.CodeExtensions() {
 		// ToSlash porque o que se devolve é o id de um nó, não um caminho de disco: no
 		// Windows o Join daria "src\x.ts", e o id não casaria com o mapa (gravado com "/").
 		cand := filepath.ToSlash(filepath.Join(dir, base+ext))

@@ -748,7 +748,13 @@ func agentHook(raw []byte, now time.Time) {
 			return
 		}
 		name := ""
-		if rn, ok := runs.RunnerFor(runs.DefaultRunners(), runs.FirstLine(cmdLine)); ok {
+		runners := runs.OwnRunners()
+		if cfg, err := config.Load(filepath.Join(root, config.DefaultFile)); err == nil {
+			if s, err := runs.Configure(cfg); err == nil {
+				runners = s.Runners
+			}
+		}
+		if rn, ok := runs.RunnerFor(runners, runs.FirstLine(cmdLine)); ok {
 			name = rn.Name
 		}
 		_ = runs.Save(root, runs.Run{ID: id, Name: name, Command: cmdLine, Dir: in.Cwd, By: runs.ByAgent, Session: agentID(), Agent: in.AgentID, Started: now, State: runs.StateRunning})

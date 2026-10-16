@@ -13,7 +13,7 @@ The test double derives from the real module (not a frozen copy of the contract)
 | Confronts | `test` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
-| Presupposes | `derived.mock_contract` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
+| Presupposes | `derived.mock_detect` `derived.mock_contract` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 

@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -44,7 +45,7 @@ func specNodeRev() mapx.Node {
 func TestRevisionOrphans_notASpec(t *testing.T) {
 	t.Run("RVORP-B01: Non-spec artifacts skip confrontation", func(t *testing.T) {})
 	n := mapx.Node{ID: "p.md", Kind: mapx.KindPlan}
-	if v, _ := checkRevisionOrphans(specWithRevision, n, "", nil, nil); v != Skip {
+	if v, _ := checkRevisionOrphans(specWithRevision, n, "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("not a spec and the verdict was %v", v)
 	}
 }
@@ -52,7 +53,7 @@ func TestRevisionOrphans_notASpec(t *testing.T) {
 func TestRevisionOrphans_noRevision(t *testing.T) {
 	t.Run("RVORP-B02: A spec with no revision has nothing to confront", func(t *testing.T) {})
 	noRev := "### NTCNN-B01 — uma regra\n\n### NTCNN-B02 — outra\n"
-	if v, _ := checkRevisionOrphans(noRev, specNodeRev(), "", nil, nil); v != Skip {
+	if v, _ := checkRevisionOrphans(noRev, specNodeRev(), "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("with no revision Skip was expected, got %v", v)
 	}
 }
@@ -65,7 +66,7 @@ func TestRevisionOrphans_noRevisesField(t *testing.T) {
 	// PENDING, not Fail: the field is new, and 439 revisions written before it cannot all
 	// be born accused. Pending states the truth — there is no way to confront — without
 	// charging whoever wrote before the ruler existed.
-	v, msg := checkRevisionOrphans(noField, specNodeRev(), "", nil, nil)
+	v, msg := checkRevisionOrphans(noField, specNodeRev(), "", nil, testkit.WithComments(nil))
 	if v != Pending {
 		t.Fatalf("a revision without `Revises:` should be Pending, got %v", v)
 	}
@@ -77,7 +78,7 @@ func TestRevisionOrphans_noRevisesField(t *testing.T) {
 func TestRevisionOrphans_unknownCode(t *testing.T) {
 	t.Run("RVORP-B04: A revision naming a rule the spec does not define fails", func(t *testing.T) {})
 	withGhost := strings.Replace(specWithRevision, "`B03`, `B04`", "`B03`, `B99`", 1)
-	v, msg := checkRevisionOrphans(withGhost, specNodeRev(), "", nil, nil)
+	v, msg := checkRevisionOrphans(withGhost, specNodeRev(), "", nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("unknown code and the verdict was %v", v)
 	}
@@ -87,7 +88,7 @@ func TestRevisionOrphans_unknownCode(t *testing.T) {
 	// With NO rule recognised in the spec, every named code is unknown — the revision
 	// must not slip past as "no rules".
 	noRules := "# X\n\n> **XXXXX-R0001:** rewrote the badge.\n>\n> **Revises:** `B03`\n\nProse only, no rule table.\n"
-	if v, msg := checkRevisionOrphans(noRules, specNodeRev(), "", nil, nil); v != Fail || !strings.Contains(msg, "B03") {
+	if v, msg := checkRevisionOrphans(noRules, specNodeRev(), "", nil, testkit.WithComments(nil)); v != Fail || !strings.Contains(msg, "B03") {
 		t.Errorf("a revision naming a rule in a spec with no rules must fail naming it, got %v (%q)", v, msg)
 	}
 }
@@ -95,7 +96,7 @@ func TestRevisionOrphans_unknownCode(t *testing.T) {
 // THE CASE THAT PRODUCED THE GATE: I02 speaks of the same badge and was not mentioned.
 func TestRevisionOrphans_orphanedSiblingIsReported(t *testing.T) {
 	t.Run("RVORP-B05: A sibling sharing vocabulary and left unmentioned is reported", func(t *testing.T) {})
-	v, msg := checkRevisionOrphans(specWithRevision, specNodeRev(), "", nil, nil)
+	v, msg := checkRevisionOrphans(specWithRevision, specNodeRev(), "", nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("I02 speaks of the badge and was not mentioned — expected Fail, got %v", v)
 	}
@@ -115,7 +116,7 @@ func TestRevisionOrphans_everythingMentionedPasses(t *testing.T) {
 	t.Run("RVORP-B06: Every vocabulary-sharing sibling accounted for passes", func(t *testing.T) {})
 	complete := strings.Replace(specWithRevision,
 		"> **Revises:** `B03`, `B04`", "> **Revises:** `B03`, `B04`\n>\n> **Checked:** `I02`", 1)
-	if v, msg := checkRevisionOrphans(complete, specNodeRev(), "", nil, nil); v != Pass {
+	if v, msg := checkRevisionOrphans(complete, specNodeRev(), "", nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("every sibling accounted for and the verdict was %v: %s", v, msg)
 	}
 }
@@ -126,7 +127,7 @@ func TestRevisionOrphans_checkedClearsTheAccusation(t *testing.T) {
 	t.Run("RVORP-B07: Checked clears the accusation without asserting correctness", func(t *testing.T) {})
 	withChecked := strings.Replace(specWithRevision,
 		"> **Revises:** `B03`, `B04`", "> **Revises:** `B03`, `B04`\n>\n> **Checked:** `I02`", 1)
-	_, msg := checkRevisionOrphans(withChecked, specNodeRev(), "", nil, nil)
+	_, msg := checkRevisionOrphans(withChecked, specNodeRev(), "", nil, testkit.WithComments(nil))
 	if strings.Contains(msg, "I02") {
 		t.Errorf("I02 was checked and is still reported: %q", msg)
 	}
@@ -134,7 +135,7 @@ func TestRevisionOrphans_checkedClearsTheAccusation(t *testing.T) {
 
 func TestRevisionOrphans_ruleNeverAccusesItself(t *testing.T) {
 	t.Run("RVORP-I01: A revised rule is never its own orphan", func(t *testing.T) {})
-	_, msg := checkRevisionOrphans(specWithRevision, specNodeRev(), "", nil, nil)
+	_, msg := checkRevisionOrphans(specWithRevision, specNodeRev(), "", nil, testkit.WithComments(nil))
 	// B03 is the revised rule itself, and it speaks of the badge: if it accused itself, it
 	// would show up here.
 	for _, line := range strings.Split(msg, "\n") {
@@ -159,7 +160,7 @@ func TestRevisionOrphans_negationDoesNotLink(t *testing.T) {
 ### NTCNN-B02 — A ordem não muda por filtro
 ### NTCNN-I02 — O badge engana quando conta
 `
-	v, msg := checkRevisionOrphans(fixture, specNodeRev(), "", nil, nil)
+	v, msg := checkRevisionOrphans(fixture, specNodeRev(), "", nil, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, "I02") {
 		t.Fatalf("I02 shares `badge` with the revised rule: %v / %s", v, msg)
 	}
@@ -182,7 +183,7 @@ func TestRevisionOrphans_commentStaysOutOfTheVocabulary(t *testing.T) {
 ### NTCNN-B01 — O badge fica limpo
 ### NTCNN-B02 — A ordem segue a chegada <!-- @no-scenario: o badge decide, e esta unidade não desenha nada -->
 `
-	_, msg := checkRevisionOrphans(fixture, specNodeRev(), "", nil, nil)
+	_, msg := checkRevisionOrphans(fixture, specNodeRev(), "", nil, testkit.WithComments(nil))
 	if strings.Contains(msg, "B02 —") {
 		t.Errorf("the `badge` cited in the WAIVER became the rule's subject: %q", msg)
 	}
@@ -198,7 +199,7 @@ func TestRevisionOrphans_oneDomainWordIsEnough(t *testing.T) {
 ### NTCNN-B04 — Sem notificação nova, o sino fica limpo
 ### NTCNN-I02 — O badge nunca conta o que a lista não mostra
 `
-	v, msg := checkRevisionOrphans(fixture, specNodeRev(), "", nil, nil)
+	v, msg := checkRevisionOrphans(fixture, specNodeRev(), "", nil, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, "I02") {
 		t.Fatalf("`badge` alone links when the title is clean: %v / %s", v, msg)
 	}
@@ -211,7 +212,7 @@ func TestRevisionOrphans_readsEveryRevision(t *testing.T) {
 	t.Run("RVORP-B03: A revision naming no rule cannot be confronted", func(t *testing.T) {
 		spec := "> **NTCNN-R0001:** first change.\n\n> **NTCNN-R0002:** second change.\n\n" +
 			"### NTCNN-B01 — uma regra\n"
-		v, msg := checkRevisionOrphans(spec, specNodeRev(), "", nil, nil)
+		v, msg := checkRevisionOrphans(spec, specNodeRev(), "", nil, testkit.WithComments(nil))
 		if v != Pending || !strings.HasPrefix(msg, "2 revision(s)") {
 			t.Errorf("both revisions are counted: %v (%s)", v, msg)
 		}
@@ -226,7 +227,7 @@ func TestRevisionOrphans_readsEveryRevision(t *testing.T) {
 			"### NTCNN-B02 — O sino mostra um ponto\n\n" +
 			"### NTCNN-I02 — O badge acende com o sino\n\n" +
 			"### NTCNN-I01 — O badge apaga ao abrir\n"
-		v, msg := checkRevisionOrphans(spec, specNodeRev(), "", nil, nil)
+		v, msg := checkRevisionOrphans(spec, specNodeRev(), "", nil, testkit.WithComments(nil))
 		if v != Fail {
 			t.Fatalf("got %v (%s)", v, msg)
 		}
@@ -272,7 +273,7 @@ func TestRevisionOrphans_titleIsTheHeading(t *testing.T) {
 	if got := ruleTitles(spec)["B01"]; !strings.HasPrefix(got, "### NTCNN-B01") {
 		t.Errorf("the heading is the title, got %q", got)
 	}
-	if v, msg := checkRevisionOrphans(spec, specNodeRev(), "", nil, nil); v != Pass {
+	if v, msg := checkRevisionOrphans(spec, specNodeRev(), "", nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("a sibling sharing only the usage row is not an orphan, got %v: %s", v, msg)
 	}
 }
@@ -282,16 +283,16 @@ func TestRevisionOrphans_revisedNoRule(t *testing.T) {
 	spec := func(revises string) string {
 		return "> **NTCNN-R0001:** acrescenta a tabela de uso.\n>\n> **Revises:** " + revises + "\n\n### NTCNN-B01 — uma regra\n\n### NTCNN-B03 — outra\n"
 	}
-	if v, msg := checkRevisionOrphans(spec("none — only the usage table was added"), specNodeRev(), "", nil, nil); v != Pass {
+	if v, msg := checkRevisionOrphans(spec("none — only the usage table was added"), specNodeRev(), "", nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("a declared revision of no rule passes, got %v: %s", v, msg)
 	}
-	if v, _ := checkRevisionOrphans(spec("nenhuma — o texto exibido mudou, nenhuma regra o afirma"), specNodeRev(), "", nil, nil); v != Pass {
+	if v, _ := checkRevisionOrphans(spec("nenhuma — o texto exibido mudou, nenhuma regra o afirma"), specNodeRev(), "", nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the declaration reads in Portuguese too, got %v", v)
 	}
-	if v, _ := checkRevisionOrphans(spec("none"), specNodeRev(), "", nil, nil); v != Pending {
+	if v, _ := checkRevisionOrphans(spec("none"), specNodeRev(), "", nil, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("a declaration with no reason declares nothing, got %v", v)
 	}
-	if v, msg := checkRevisionOrphans(spec("none — the B03 text did not change"), specNodeRev(), "", nil, nil); v != Pass {
+	if v, msg := checkRevisionOrphans(spec("none — the B03 text did not change"), specNodeRev(), "", nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("the reason is not read for codes, got %v: %s", v, msg)
 	}
 }

@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,12 +16,12 @@ import (
 )
 
 func planCfg() *config.Config {
-	return &config.Config{Layers: map[string]config.Layer{
-		"dao":            {Pattern: "packages/backend/models/**/*.ts", Regime: "declarativo"},
-		"business-logic": {Pattern: "packages/backend/business-logic/**/*.ts"},
-		"service-go":     {Pattern: "services/**/*.go"},
-		"script-py":      {Pattern: "scripts/**/*.py"},
-	}}
+	return testkit.WithComments(&config.Config{Layers: map[string]config.Layer{
+		"dao":            {Pattern: "packages/backend/models/**/*.ts", Kind: "code", Regime: "declarativo"},
+		"business-logic": {Pattern: "packages/backend/business-logic/**/*.ts", Kind: "code"},
+		"service-go":     {Pattern: "services/**/*.go", Kind: "code"},
+		"script-py":      {Pattern: "scripts/**/*.py", Kind: "code"},
+	}})
 }
 
 func planNode() mapx.Node { return mapx.Node{ID: "plans/sample.md", Kind: mapx.KindPlan} }
@@ -178,7 +179,7 @@ func TestPlanSeedsValid_doctrineOutsideProductFails(t *testing.T) {
 	root := t.TempDir()
 	os.MkdirAll(filepath.Join(root, "src"), 0o755)
 	n := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}
-	v, msg := checkPlanSeedsValid("semeia `src/limite.doctrine.md`\n", n, root, nil, &config.Config{})
+	v, msg := checkPlanSeedsValid("semeia `src/limite.doctrine.md`\n", n, root, nil, testkit.WithComments(&config.Config{}))
 	if v != Fail {
 		t.Fatalf("esperava Fail, veio %v (%s)", v, msg)
 	}
@@ -191,7 +192,7 @@ func TestPlanSeedsValid_doctrineInProductPasses(t *testing.T) {
 	root := t.TempDir()
 	os.MkdirAll(filepath.Join(root, "product"), 0o755)
 	n := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}
-	if v, msg := checkPlanSeedsValid("semeia `product/limite.doctrine.md`\n", n, root, nil, &config.Config{}); v == Fail {
+	if v, msg := checkPlanSeedsValid("semeia `product/limite.doctrine.md`\n", n, root, nil, testkit.WithComments(&config.Config{})); v == Fail {
 		t.Errorf("doutrina em product/ nao devia reprovar: %s", msg)
 	}
 }
@@ -203,7 +204,7 @@ func TestPlanSeedsValid_doctrineOnlyPlanIsNotSwallowedByGuard(t *testing.T) {
 	root := t.TempDir()
 	os.MkdirAll(filepath.Join(root, "src"), 0o755)
 	n := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}
-	if v, _ := checkPlanSeedsValid("so doutrina: `src/x.doctrine.md`\n", n, root, nil, &config.Config{}); v != Fail {
+	if v, _ := checkPlanSeedsValid("so doutrina: `src/x.doctrine.md`\n", n, root, nil, testkit.WithComments(&config.Config{})); v != Fail {
 		t.Errorf("esperava Fail, veio %v — o guarda de seeds vazias engoliu o plano", v)
 	}
 }

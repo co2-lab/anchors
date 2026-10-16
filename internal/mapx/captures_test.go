@@ -5,6 +5,7 @@
 package mapx
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"slices"
 	"sort"
 	"strings"
@@ -231,7 +232,7 @@ func TestCaptureEdges_whatTheTestComparesAgainst(t *testing.T) {
 	}
 	// The comment is the scan's: a code on a comment line is no capture code.
 	flow := []byte("appId: x\n# the Button has its own flow (BUTTN-VR)\n- takeScreenshot: ALRTS-VR-S01\n")
-	if got := scan.CaptureCodesIn(".maestro/ALRTS-VR.yaml", flow); strings.Join(got, ",") != "ALRTS-VR-S01" {
+	if got := scan.CaptureCodesIn(".maestro/ALRTS-VR.yaml", flow, testkit.Comments(".maestro/ALRTS-VR.yaml")); strings.Join(got, ",") != "ALRTS-VR-S01" {
 		t.Errorf("only what the flow compares against: %v", got)
 	}
 }

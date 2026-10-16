@@ -2,63 +2,62 @@
 # @anchors
 #   code: CMFTA
 #   ref: CMMRC
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @CMMRC
-Feature: CommentMarkers — which text opens a line comment in each kind of file
+Feature: Comments — how the project's files write a comment, declared in the dialect
 
   @CMMRC-B01 @unit-level
-  Scenario: A known extension answers with its line-comment prefixes
-    Given the extension ".php"
-    When the reader asks for its line-comment prefixes
-    Then it gets the double slash and the hash, in that order
+  Scenario: A file's syntax is the first entry that covers it, or Anchors' own for its formats
+    Given a dialect declaring the ts and python examples
+    When the syntax of a TS file, a Python file at the root, a spec, a feature and a JSON file is asked
+    Then each gets its entry, the spec and the feature Anchors' own, and the JSON none
 
   @CMMRC-B02 @unit-level
-  Scenario: An unknown extension answers with no prefix
-    Given the extension ".unknown", which the table does not list
-    When the reader asks for its line-comment prefixes
-    Then it gets no prefix at all
+  Scenario: Blanking keeps strings and lines, and turns comments into spaces
+    Given TS code with a line comment, a block across lines, a marker inside a string, an escaped quote and a template across lines
+    When it is blanked
+    Then only the comments are spaces, every line and offset kept, and with no syntax nothing changes
 
   @CMMRC-B03 @unit-level
-  Scenario: The line comment of a path follows its last extension, ignoring case
-    Given the paths "web/a.test.ts" and "db/001.SQL"
-    When the writer asks which comment to use for each
-    Then "web/a.test.ts" gets the double slash and "db/001.SQL" gets the double dash
+  Scenario: Lines that are only a comment, the code of a content, a line cut
+    Given a content with a block comment's inner lines, a line of code with a comment at its end, and a blank line
+    When its comment-only lines, its code and a line cut are read
+    Then the block's lines are only a comment, the code drops them and the end comment, and the blank line stays
 
   @CMMRC-B04 @unit-level
-  Scenario: A markup file gets the opening of a block comment
-    Given the paths "docs/README.md" and "templates/index.html"
-    When the writer asks which comment to use for each
-    Then both get the opening of an HTML comment, with no closing
+  Scenario: The writer's marker and where a comment cannot go
+    Given the ts example, OCaml's entry and Markdown's
+    When the writer's marker, its closer and a line after a JSX tag are asked
+    Then ts writes `//` and takes no comment after `>`, OCaml writes `(*` closed by ` *)`, Markdown `<!--` by ` -->`
 
   @CMMRC-B05 @unit-level
-  Scenario: A path with no extension or an unknown one gets the hash comment
-    Given the paths "Makefile" and "assets/logo.svg"
-    When the writer asks which comment to use for each
-    Then both get the hash comment
+  Scenario: A malformed entry refuses the config
+    Given entries with no marker, an empty marker, an invalid glob, a broken no_line_after and a block of one delimiter
+    When the config is loaded
+    Then each refuses it, naming the entry
 
   @CMMRC-B06 @unit-level
-  Scenario: An extension with several prefixes gets the first one declared
-    Given the path "web/index.php", whose extension accepts the double slash and the hash
-    When the writer asks which comment to use
-    Then it gets the double slash
+  Scenario: The families have an example of their comments, never applied by itself
+    Given the ts, python and ocaml examples and every family's together
+    When they read their files and a project that declared none is asked
+    Then ts reads JSX's comment and its template literals, python its triple-quoted strings, ocaml its blocks and dune's files, and the project has no syntax for its code
 
   @CMMRC-I01 @unit-level
-  Scenario: For every extension of the table, the line comment is the table's first prefix
-    Given every extension the table lists
-    When the writer is asked about a file with each extension
-    Then its answer is always the first prefix the reader lists for that extension
+  Scenario: Blanking never moves a line
+    Given contents of every example's language
+    When each is blanked
+    Then its length and the positions of its line breaks are the original's
 
   @CMMRC-X01 @unit-level
-  Scenario: The prefix lookup takes the extension as given and does not normalise it
-    Given the inputs ".GO", "go" and "main.go"
-    When the reader asks for their line-comment prefixes
-    Then none of them gets a prefix
+  Scenario: No language's comment is built in
+    Given a project with no dialect
+    When the syntax of a Go, a Python and an OCaml file is asked
+    Then none has one
 
   @CMMRC-B07 @unit-level
-  Scenario: OCaml, Menhir and dune comment their own way, and a block comment is closed
-    Given an OCaml module, a Menhir grammar, a dune file and a Go file
-    When their markers and the closing of each marker are asked
-    Then OCaml answers (*, Menhir (* and /*, dune ; by its name, and each block opener has its closer while // has none
-
+  Scenario: The examples' entries covering a set of files
+    Given the files a.go, web/b.tsx, run.sh, c.zig, Makefile and a.spec.md
+    When the entries covering them are asked for
+    Then the TS, Go and shell entries come in the examples' order, and .zig and Makefile are named

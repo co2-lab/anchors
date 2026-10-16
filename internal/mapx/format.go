@@ -30,7 +30,7 @@ import "fmt"
 // Subir por isso tornaria toda adição uma barreira, e o número perderia o significado.
 const (
 	// FormatoAtual é o que este binário ESCREVE.
-	FormatoAtual = 7
+	FormatoAtual = 8
 
 	// FormatoMinimoLegivel é o mais antigo que ele lê sem migrar.
 	//
@@ -42,8 +42,9 @@ const (
 	// reconhecem mais — lido, passaria sem fase nenhuma. Recusado, manda migrar. O 6
 	// renomeou o gate `unit-complete` para `unit-complete`: um projeto não migrado
 	// declararia um gate que o binário não conhece, e as peças da unidade deixariam de ser
-	// cobradas em silêncio.
-	FormatoMinimoLegivel = 7
+	// cobradas em silêncio. The 8 moved what the core knew of a language into the dialect:
+	// a project not migrated would have its headers and flags read in no file.
+	FormatoMinimoLegivel = 8
 )
 
 // ErroDeFormato distingue "não sei ler isto" de "o arquivo está corrompido".

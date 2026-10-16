@@ -40,41 +40,61 @@ type Evidence struct {
 }
 
 var (
-	// ChainFlagOnlyRE is a line that is only a comment carrying a flag of the chains;
-	// chainFlagEndRE, such a comment at the end of a line of code; chainFlagBlockRE, one in a
-	// block comment, wherever it sits in the line — what follows it is code.
-	ChainFlagOnlyRE  = regexp.MustCompile(`^\s*(?://|#|--|/\*|\(\*|<!--)\s*@(?:dep(?:\[[^\]]*\])?|no-dep|used-by|navigates|no-nav):.*$`)
-	chainFlagEndRE   = regexp.MustCompile(`\s*(?://|#|--|<!--|\(\*)\s*@(?:dep(?:\[[^\]]*\])?|no-dep|used-by|navigates|no-nav):.*$`)
-	chainFlagBlockRE = regexp.MustCompile(`\s*/\*\s*@(?:dep(?:\[[^\]]*\])?|no-dep|used-by|navigates|no-nav):[^*]*\*/`)
-	evHeadingRE      = regexp.MustCompile(`^(#{1,6})\s+(.+?)\s*$`)
-	evNoteRE         = regexp.MustCompile(`\s*\([^)]*\)\s*$`)
+	// chainFlagRE is a flag of the chains — Anchors' syntax, inside a comment of the file's.
+	chainFlagRE = regexp.MustCompile(`@(?:dep(?:\[[^\]]*\])?|no-dep|used-by|navigates|no-nav):`)
+	evHeadingRE = regexp.MustCompile(`^(#{1,6})\s+(.+?)\s*$`)
+	evNoteRE    = regexp.MustCompile(`\s*\([^)]*\)\s*$`)
 )
 
-// StripChainFlag is a line without the chain's flags: a block comment carrying one, and a
-// line comment carrying one at its end.
-func StripChainFlag(l string) string {
-	l = chainFlagBlockRE.ReplaceAllString(strings.TrimRight(l, "\r"), "")
-	return chainFlagEndRE.ReplaceAllString(l, "")
+// ChainFlagOnly says whether a line is only a comment, in the file's syntax, carrying a flag
+// of the chains.
+func ChainFlagOnly(l string, cs *config.Comments) bool {
+	return cs.CommentOnly([]string{l})[0] && chainFlagRE.MatchString(l)
 }
 
-// EvidenceOf reads the evidence revisions of one file, at rel — its extension says how its
-// comments are written.
+// StripChainFlag is a line without the comments that carry a flag of the chains — each with
+// the blanks before it; the code around them, and a comment that carries none, stay.
+func StripChainFlag(l string, cs *config.Comments) string {
+	l = strings.TrimRight(l, "\r")
+	if !chainFlagRE.MatchString(l) {
+		return l
+	}
+	var b strings.Builder
+	at := 0
+	for _, sp := range cs.Spans(l) {
+		if !chainFlagRE.MatchString(l[sp[0]:sp[1]]) {
+			continue
+		}
+		b.WriteString(strings.TrimRight(l[at:sp[0]], " \t"))
+		at = sp[1]
+	}
+	b.WriteString(l[at:])
+	return b.String()
+}
+
+// EvidenceOf reads the evidence revisions of one file, at rel — the comments its syntax
+// declares (`dialect.comments`) are no evidence: a line that is only a comment, and a
+// comment at the end of a line of code, leave it. Nothing a comment says runs — a rule
+// cited above the code that answers it staled every proof of the file, and a `// @no-handle`
+// at the end of a call cost MIF 56 flows to run again. A file whose comments nobody declared
+// keeps them all.
 func EvidenceOf(kind, rel string, content []byte, cfg *config.Config) Evidence {
+	cs := cfg.CommentsFor(rel)
 	lines := strings.Split(string(content), "\n")
-	header := headerSpan(lines)
+	header := headerSpan(lines, cs)
 	if kind == "spec" {
 		return specEvidence(lines, header, cfg)
 	}
-	comment := commentLines(lines, rel)
+	blanked := strings.Split(cs.Blank(string(content)), "\n")
 	var kept, placed []string
 	for i, l := range lines {
+		code := strings.TrimRight(blanked[i], " \t\r")
 		switch {
-		case header[i] || comment[i] || ChainFlagOnlyRE.MatchString(l):
+		case header[i] || (strings.TrimSpace(code) == "" && strings.TrimSpace(l) != ""):
 			placed = append(placed, "")
 		default:
-			l = StripChainFlag(l)
-			kept = append(kept, l)
-			placed = append(placed, l)
+			kept = append(kept, code)
+			placed = append(placed, code)
 		}
 	}
 	return Evidence{
@@ -83,90 +103,13 @@ func EvidenceOf(kind, rel string, content []byte, cfg *config.Config) Evidence {
 	}
 }
 
-// commentLines marks the lines that are nothing but a comment, in the markers of the file's
-// language: a line comment alone on its line, and a block comment (`/* … */`, `{/* … */}`)
-// whose lines it fills, in the languages that write them. Nothing a comment says runs — a
-// rule cited above the code that answers it staled every proof of the file (reported from
-// MIF). A comment at the end of a line of code stays: a `//` inside a string reads the same.
-func commentLines(lines []string, rel string) map[int]bool {
-	ext := ""
-	if i := strings.LastIndex(rel, "."); i >= 0 {
-		ext = strings.ToLower(rel[i:])
-	}
-	markers := config.MarkersFor(ext)
-	if len(markers) == 0 || markers[0] == "<!--" {
-		return nil
-	}
-	blocks := markers[0] == "//"
+// headerSpan marks the lines of the `@anchors` header (AnchorsHeader): the date the hook
+// writes proves nothing.
+func headerSpan(lines []string, cs *config.Comments) map[int]bool {
 	out := map[int]bool{}
-	inBlock := false
-	for i, l := range lines {
-		t := strings.TrimSpace(l)
-		if inBlock {
-			if end := strings.Index(t, "*/"); end >= 0 {
-				inBlock = false
-				if rest := strings.TrimSpace(t[end+2:]); rest != "" && rest != "}" {
-					continue // code after the comment's end: the line runs
-				}
-			}
-			out[i] = true
-			continue
-		}
-		if blocks && (strings.HasPrefix(t, "/*") || strings.HasPrefix(t, "{/*")) {
-			if end := strings.Index(t, "*/"); end >= 0 {
-				if rest := strings.TrimSpace(t[end+2:]); rest == "" || rest == "}" {
-					out[i] = true
-				}
-				continue
-			}
-			inBlock = true
-			out[i] = true
-			continue
-		}
-		for _, m := range markers {
-			if strings.HasPrefix(t, m) {
-				out[i] = true
-				break
-			}
-		}
-	}
-	return out
-}
-
-// headerSpan marks the lines of the `@anchors` header: the comment that opens with it near
-// the top of the file, as far as the comment goes — to the `-->` of an HTML comment, or
-// while the lines keep the line comment's mark.
-func headerSpan(lines []string) map[int]bool {
-	out := map[int]bool{}
-	for i := 0; i < len(lines) && i < 10; i++ {
-		if !strings.Contains(lines[i], "@anchors") {
-			continue
-		}
-		t := strings.TrimSpace(lines[i])
-		switch {
-		case strings.HasPrefix(t, "<!--"):
-			for j := i; j < len(lines); j++ {
-				out[j] = true
-				if strings.Contains(lines[j], "-->") {
-					break
-				}
-			}
-		default:
-			mark := ""
-			for _, m := range []string{"//", "#", "--"} {
-				if strings.HasPrefix(t, m) {
-					mark = m
-					break
-				}
-			}
-			if mark == "" {
-				return out
-			}
-			for j := i; j < len(lines) && strings.HasPrefix(strings.TrimSpace(lines[j]), mark); j++ {
-				out[j] = true
-			}
-		}
-		return out
+	from, to, ok := HeaderRange(lines, cs)
+	for i := from; ok && i < to; i++ {
+		out[i] = true
 	}
 	return out
 }
@@ -279,9 +222,9 @@ func specEvidence(lines []string, header map[int]bool, cfg *config.Config) Evide
 var captureCodeRE = regexp.MustCompile(`\b[A-Z0-9]{3,}-(?:VR|CT)(?:-S\d{2})?\b`)
 
 // captureCodes are the capture codes a file names outside its comment lines, sorted.
-func captureCodes(rel string, content []byte) []string {
+func captureCodes(rel string, content []byte, cs *config.Comments) []string {
 	lines := strings.Split(string(content), "\n")
-	comment := commentLines(lines, rel)
+	comment := cs.CommentOnly(lines)
 	seen := map[string]bool{}
 	var out []string
 	for i, l := range lines {
@@ -300,4 +243,6 @@ func captureCodes(rel string, content []byte) []string {
 }
 
 // CaptureCodesIn exposes the capture codes a file names outside its comment lines.
-func CaptureCodesIn(rel string, content []byte) []string { return captureCodes(rel, content) }
+func CaptureCodesIn(rel string, content []byte, cs *config.Comments) []string {
+	return captureCodes(rel, content, cs)
+}

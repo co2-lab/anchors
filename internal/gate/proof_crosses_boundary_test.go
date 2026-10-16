@@ -5,11 +5,13 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
@@ -24,7 +26,7 @@ func rodaProvaCruzada(t *testing.T, spec, codigo string) (Verdict, string) {
 		Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "u.ts", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
 	}
-	return checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	return checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, testkit.Chain("ts"))
 }
 
 // O CASO QUE MOTIVOU O GATE, e ele está vivo no app de referência sem ter divergido ainda.
@@ -207,7 +209,7 @@ func TestImportaUnidade(t *testing.T) {
 		{"import multilinha", "import {\n  contaNoSaldo,\n} from '@backend/balanceReconciliation'\n", "balanceReconciliation.ts", true},
 	}
 	for _, c := range casos {
-		if got := importsUnit(c.code, c.alvo, nil); got != c.match {
+		if got := importsUnit(c.code, c.alvo, testkit.Chain("ts")); got != c.match {
 			t.Errorf("%s: importaUnidade = %v, quer %v", c.nome, got, c.match)
 		}
 	}
@@ -233,7 +235,7 @@ func rodaComMapa(t *testing.T, spec, codigo string) (Verdict, string) {
 		},
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
 	}
-	return checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	return checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, testkit.Chain("ts"))
 }
 
 // A FORMA PREFERIDA: o alvo é o CÓDIGO DA REGRA, não o caminho do arquivo. O código
@@ -289,6 +291,11 @@ func TestFronteira_autoReferenciaNaoEhAlvo(t *testing.T) {
 func TestFronteira_outrasLinguagensImportPassam(t *testing.T) {
 	t.Run("PCBPR-B14: Imports in other language shapes satisfy the charge", func(t *testing.T) {})
 	spec := "| `XPTOX-B01` | ***{fonte-unica}*** `orgBilling.rs` |\n"
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Imports: config.Patterns{
+		{Re: `(?m)^use\s+(?P<path>[\w:]+);`},
+		{Re: `(?m)^using\s+(?P<path>[\w.]+);`},
+		{Re: `(?m)^#include\s+"(?P<path>[^"]+)"`},
+	}}})
 
 	// Rust use
 	root := t.TempDir()
@@ -299,7 +306,7 @@ func TestFronteira_outrasLinguagensImportPassam(t *testing.T) {
 		Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "u.rs", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.rs", Type: mapx.EdgeSpecifies}},
 	}
-	v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 	if v != Pass {
 		t.Fatalf("use crate em Rust devia passar; obteve %v (%s)", v, msg)
 	}
@@ -308,7 +315,7 @@ func TestFronteira_outrasLinguagensImportPassam(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "u.rs"), []byte("using Backend.orgBilling;\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	v2, msg2 := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	v2, msg2 := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 	if v2 != Pass {
 		t.Fatalf("using em C# devia passar; obteve %v (%s)", v2, msg2)
 	}
@@ -317,7 +324,7 @@ func TestFronteira_outrasLinguagensImportPassam(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "u.rs"), []byte("#include \"orgBilling.h\"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	v3, msg3 := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	v3, msg3 := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 	if v3 != Pass {
 		t.Fatalf("#include devia passar; obteve %v (%s)", v3, msg3)
 	}
@@ -329,7 +336,7 @@ func TestFronteira_naoSpecNaoTemVeredito(t *testing.T) {
 	t.Run("PCBPR-B01: An artifact that is not a spec leaves without a verdict", func(t *testing.T) {})
 	spec := "| `SEATX-B01` | ***{fonte-unica}*** `orgBilling.ts` |\n"
 	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
-		v, _ := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.ts", Kind: k}, t.TempDir(), &mapx.Graph{}, nil)
+		v, _ := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.ts", Kind: k}, t.TempDir(), &mapx.Graph{}, testkit.WithComments(nil))
 		if v != Skip {
 			t.Errorf("kind %v: quer Skip, obteve %v", k, v)
 		}
@@ -360,7 +367,7 @@ func TestFronteira_cobrancaCaiNoCodigoNaoNoTeste(t *testing.T) {
 		},
 	}
 	spec := "| `SEATX-B01` | ***{fonte-unica}*** `orgBilling.ts` |\n"
-	v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, testkit.Chain("ts"))
 	if v != Fail {
 		t.Fatalf("o import no teste não satisfaz a exigência do código regido; obteve %v (%s)", v, msg)
 	}
@@ -409,7 +416,7 @@ func TestFronteira_naoCacaDuplicacaoNaoDeclarada(t *testing.T) {
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
 	}
 	spec := "| `XPTOX-B01` | devolve a rubrica do código RFB |\n"
-	v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, testkit.Chain("ts"))
 	if v != Skip {
 		t.Fatalf("duplicação que ninguém declarou não é alcançada; obteve %v (%s)", v, msg)
 	}
@@ -433,7 +440,7 @@ func TestFronteira_naoComparaOsValoresDosDoisLados(t *testing.T) {
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
 	}
 	spec := "| `SEATX-B01` | o preço é ***{fonte-unica}*** `orgBilling.ts` |\n"
-	v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, testkit.Chain("ts"))
 	if v != Pass {
 		t.Fatalf("o gate confere a travessia da prova, não a igualdade dos valores; obteve %v (%s)", v, msg)
 	}
@@ -461,7 +468,7 @@ func TestFronteira_prosaEmiteAchadoEDeixaOBloqueioParaAConfig(t *testing.T) {
 func TestProofCrossesBoundary_Errors(t *testing.T) {
 	spec := "| `SEATX-B01` | ***{fonte-unica}*** `orgBilling.ts` |\n"
 	t.Run("PCBPR-E01: Without a map the demand is left pending, not approved", func(t *testing.T) {
-		v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, "", nil, nil)
+		v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
 		if v != Pending || msg != i18n.T("gate.no_map_loaded") {
 			t.Fatalf("a marked rule without a map must stay Pending on the missing map; got %v: %s", v, msg)
 		}
@@ -471,7 +478,7 @@ func TestProofCrossesBoundary_Errors(t *testing.T) {
 			Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "u.ts", Kind: mapx.KindCode}},
 			Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
 		}
-		v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, t.TempDir(), g, nil)
+		v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, t.TempDir(), g, testkit.WithComments(nil))
 		if v != Pending || msg != i18n.T("gate.proof_crosses_boundary.pending_read_code") {
 			t.Fatalf("with no governed code readable the charge must stay Pending; got %v: %s", v, msg)
 		}

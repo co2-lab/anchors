@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -13,9 +14,9 @@ import (
 )
 
 func splitCfg() *config.Config {
-	return &config.Config{Derived: &config.Derived{Anchor: "code", Files: map[string]config.Padroes{
+	return testkit.WithComments(&config.Config{Derived: &config.Derived{Anchor: "code", Files: map[string]config.Padroes{
 		"test": {"{{dir}}/{{name}}.test.ts", "{{dir}}/{{name}}.test.tsx", "{{dir}}/{{name}}.it.ts"},
-	}}}
+	}}})
 }
 
 func splitGraph(tests map[string]string) *mapx.Graph {

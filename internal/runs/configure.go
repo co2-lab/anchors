@@ -36,11 +36,11 @@ type Settings struct {
 }
 
 // Configure reads the project's `monitor:` block over the defaults: its timing, its runners
-// — read before the built-in ones, a runner of a built-in's name replacing it —, the reports
+// — read before Anchors' own, a runner of the same name replacing it —, the reports
 // its suites declare and the ones it adds, and how many ended runs to keep. A duration or a
 // pattern that does not read is an error, naming it.
 func Configure(cfg *config.Config) (Settings, error) {
-	s := Settings{Timing: DefaultTiming(), Runners: DefaultRunners(), Keep: 50, MaxAge: 7 * 24 * time.Hour, Level: LevelAll,
+	s := Settings{Timing: DefaultTiming(), Runners: OwnRunners(), Keep: 50, MaxAge: 7 * 24 * time.Hour, Level: LevelAll,
 		Idle: DefaultIdle}
 	if cfg == nil {
 		return s, nil
@@ -83,34 +83,12 @@ func Configure(cfg *config.Config) (Settings, error) {
 		}
 		s.Level = m.Level
 	}
-	var own []Runner
+	own, err := CompileRunners(m.Runners)
+	if err != nil {
+		return s, err
+	}
 	replaced := map[string]bool{}
-	for _, r := range m.Runners {
-		rn := Runner{Name: r.Name, Kind: r.Kind}
-		if rn.Kind == "" {
-			rn.Kind = "other"
-		}
-		for _, p := range []struct {
-			name string
-			val  string
-			to   **regexp.Regexp
-		}{{"match", r.Match, &rn.Match}, {"pass", r.Pass, &rn.Pass}, {"fail", r.Fail, &rn.Fail}, {"progress", r.Progress, &rn.Progress}} {
-			if p.val == "" {
-				continue
-			}
-			x, err := regexp.Compile(p.val)
-			if err != nil {
-				return s, fmt.Errorf("monitor.runners[%s].%s: %w", r.Name, p.name, err)
-			}
-			*p.to = x
-		}
-		if rn.Match == nil {
-			return s, fmt.Errorf("monitor.runners[%s]: match is required", r.Name)
-		}
-		if err := setDuration(r.Stall, &rn.Stall); err != nil {
-			return s, fmt.Errorf("monitor.runners[%s].stall: %w", r.Name, err)
-		}
-		own = append(own, rn)
+	for _, r := range own {
 		replaced[r.Name] = true
 	}
 	for _, d := range s.Runners {
@@ -127,6 +105,41 @@ func Configure(cfg *config.Config) (Settings, error) {
 		s.MaxAge = time.Duration(m.KeepDays) * 24 * time.Hour
 	}
 	return s, nil
+}
+
+// CompileRunners reads declared runners: each one's patterns compiled, its kind `other` when
+// it names none. A pattern or a duration that does not read, or a runner with no match, is
+// an error naming it.
+func CompileRunners(declared []config.MonitorRunner) ([]Runner, error) {
+	var out []Runner
+	for _, r := range declared {
+		rn := Runner{Name: r.Name, Kind: r.Kind}
+		if rn.Kind == "" {
+			rn.Kind = "other"
+		}
+		for _, p := range []struct {
+			name string
+			val  string
+			to   **regexp.Regexp
+		}{{"match", r.Match, &rn.Match}, {"pass", r.Pass, &rn.Pass}, {"fail", r.Fail, &rn.Fail}, {"progress", r.Progress, &rn.Progress}} {
+			if p.val == "" {
+				continue
+			}
+			x, err := regexp.Compile(p.val)
+			if err != nil {
+				return nil, fmt.Errorf("monitor.runners[%s].%s: %w", r.Name, p.name, err)
+			}
+			*p.to = x
+		}
+		if rn.Match == nil {
+			return nil, fmt.Errorf("monitor.runners[%s]: match is required", r.Name)
+		}
+		if err := setDuration(r.Stall, &rn.Stall); err != nil {
+			return nil, fmt.Errorf("monitor.runners[%s].stall: %w", r.Name, err)
+		}
+		out = append(out, rn)
+	}
+	return out, nil
 }
 
 // DefaultIdle is how long a held task may go without activity from its holder before the

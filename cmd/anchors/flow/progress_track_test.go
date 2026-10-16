@@ -19,7 +19,7 @@ import (
 func progressProject(t *testing.T, unit string) string {
 	t.Helper()
 	root := t.TempDir()
-	yaml := "version: 7\nlayers: {}\n"
+	yaml := "version: 8\nlayers: {}\n"
 	if unit != "" {
 		yaml += "progress:\n  unit: " + unit + "\n"
 	}

@@ -37,11 +37,20 @@ jobs:
       # `--clean` limpa o `dist/` LOCAL; ele não sabe nada sobre o que já está no GitHub.
       # Quem resolve é o `release.mode: replace` no `.goreleaser.yaml`, que substitui o
       # asset de mesmo nome em vez de recusar por já existir.
+      # A release's own notes — what it changes in a project, what `anchors migrate` writes
+      # and what is left to do by hand — live in `release-notes/<tag>.md`, and open the
+      # release above the changelog of commits. A tag with no file has the changelog alone.
+      - id: notes
+        run: |
+          if [ -f "release-notes/${GITHUB_REF_NAME}.md" ]; then
+            echo "args=--release-header release-notes/${GITHUB_REF_NAME}.md" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: release --clean ${{ steps.notes.outputs.args }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}

@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -50,7 +51,7 @@ func navProject(t *testing.T) (string, *mapx.Graph, *config.Config) {
 			mapx.Node{ID: code, Kind: mapx.KindCode, Code: s.code, FileCode: s.file})
 		g.Edges = append(g.Edges, mapx.Edge{From: spec, To: code, Type: mapx.EdgeSpecifies})
 	}
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts", NavigationCall: config.FamilyNavigationCall("ts")}, Navigation: &config.Navigation{Entry: []string{"Home"}}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts", NavigationCall: config.FamilyNavigationCall("ts")}, Navigation: &config.Navigation{Entry: []string{"Home"}}})
 	screensMu.Lock()
 	delete(screensCache, root)
 	screensMu.Unlock()
@@ -108,7 +109,7 @@ func TestNavChain_reachableAndTheFix(t *testing.T) {
 	if v, msg := checkNavReachable("", navNode(g, "s/LonelyScreen.spec.md"), root, g, cfg); v != Fail || !strings.Contains(msg, "LonelyScreen") {
 		t.Errorf("Lonely is reached by nothing: %v %s", v, msg)
 	}
-	if v, _ := checkNavReachable("", navNode(g, "s/LonelyScreen.spec.md"), root, g, &config.Config{}); v != Pending {
+	if v, _ := checkNavReachable("", navNode(g, "s/LonelyScreen.spec.md"), root, g, testkit.WithComments(&config.Config{})); v != Pending {
 		t.Error("with no entry declared, there is nothing to reach from")
 	}
 	gates := []config.Gate{{Name: "nav-annotated", Check: "nav-annotated", On: []string{"code"}}}

@@ -67,7 +67,7 @@ func checkMockTyped(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 	// Só o que o PROJETO rege é cobrado. Ver `ehModuloRegido`.
 	var dubles []declaredDouble
 	for _, d := range todos {
-		if isGovernedModule(d.module, g) {
+		if isGovernedModule(d.module, n.ID, cfg.DialectFor(), g) {
 			dubles = append(dubles, d)
 		}
 	}
@@ -109,51 +109,10 @@ type declaredDouble struct {
 	bound  bool
 }
 
-// isGovernedModule diz se o especificador do dublê aponta para código DO PROJETO.
-//
-// A cobrança vale para o que o projeto rege, e não para biblioteca de terceiro. O drift
-// que este gate persegue é "o vizinho mudou e o dublê não soube" — e o vizinho que muda
-// toda semana é o módulo próprio. A dependência externa tem versão travada no lockfile,
-// e o dublê dela costuma trocar um componente por um stub, não reproduzir um contrato:
-// exigir amarra ali seria burocracia sem defeito correspondente.
-//
-// Há uma razão mais dura, medida: no app de referência o gate acusou 305 arquivos de uma vez, dos
-// quais 245 dublês eram de terceiros (`@react-navigation/native`, `@aws-sdk/*`,
-// `@gorhom/bottom-sheet`). Um gate que acusa tudo não é lido — é desligado, e leva
-// junto os achados legítimos.
-//
-// O critério é o GRAFO, não uma lista de prefixos na config: um módulo é do projeto se
-// resolve para um nó do mapa. Isso não pede configuração nova (o mapa já existe), não
-// assume convenção de alias (`@/`, `~/`, `src/` variam por ecossistema) e acompanha o
-// projeto sozinho — código que nasce entra no mapa e passa a ser cobrado.
-func isGovernedModule(spec string, g *mapx.Graph) bool {
-	if g == nil {
-		return false
-	}
-	// O especificador é um caminho de import (`@backend/repositories/lotes`,
-	// `../stores/auth.store`), sem extensão; o nó do mapa é um caminho de arquivo com
-	// ela. Casar pelo SUFIXO do caminho sem extensão cobre os dois formatos sem
-	// precisar resolver alias.
-	alvo := strings.TrimPrefix(spec, "./")
-	for strings.HasPrefix(alvo, "../") {
-		alvo = strings.TrimPrefix(alvo, "../")
-	}
-	if i := strings.Index(alvo, "/"); i >= 0 {
-		// Descarta o primeiro segmento quando ele é um alias (`@backend`, `@`): o que
-		// identifica o módulo é a cauda do caminho.
-		if strings.HasPrefix(alvo, "@") {
-			alvo = alvo[i+1:]
-		}
-	}
-	if alvo == "" {
-		return false
-	}
-	for _, n := range g.Nodes {
-		if withoutExtension(n.ID) == alvo || strings.HasSuffix(withoutExtension(n.ID), "/"+alvo) {
-			return true
-		}
-	}
-	return false
+// isGovernedModule says whether a double's specifier names one code file of the map — a
+// module of the project, not a third-party one (moduleFile).
+func isGovernedModule(spec, testID string, d config.Dialect, g *mapx.Graph) bool {
+	return len(moduleCandidates(spec, testID, d, g)) > 0
 }
 
 // withoutExtension tira a extensão final do caminho (`x/y.ts` → `x/y`), para o nó do mapa
@@ -165,147 +124,79 @@ func withoutExtension(id string) string {
 	return id
 }
 
-// mockComFabricaRE casa a declaração de dublê COM fábrica — a única forma que pode
-// mentir. `jest.mock('x')` sem fábrica usa o automock, que deriva do módulo real por
-// construção e portanto não drifta; cobrá-lo seria ruído.
+// declaredDoubles inventaria os dublês do arquivo e diz quais têm amarra, pelo que o projeto
+// declara (`derived.mock_detect`, `mock_factory`, `mock_typed`): o núcleo não lê sintaxe de
+// framework de teste nenhum — sem `mock_detect` não há dublê a achar, e o gate pressupõe o
+// campo.
 //
-// O grupo 2 captura o que vem entre a vírgula e a seta da fábrica: é onde a anotação de
-// tipo apareceria (`(): Partial<typeof Real> =>`). Casar a fábrica inteira exigiria
-// equilibrar chaves, que regex não faz — e não é preciso: a amarra, quando existe, está
-// sempre antes do corpo.
-//
-// The factory's head stays on ONE line. The earlier `[^=]*` crossed line breaks: from
-// the comma of `vi.mock('x', { spy: true })` it swept the whole file up to the `=>` of a
-// LATER mock, and gave `{ spy: true }` a factory that was not its own — unannotated, of
-// course, because the captured head was debris from three declarations. Vitest's spy
-// mode loads the REAL module and only wraps the functions: it is tied tighter to the
-// contract than any `Partial<typeof>`, and has no factory to annotate.
-//
-// Measured in the reference app: 3 of the 4 "loose doubles" were exactly this — false.
-// The `\s*` before the group accepts the factory on the next line (as prettier breaks
-// `vi.mock(\n  'x',\n  (): Partial<…> => ({`); the `[^=\n]*` keeps the group on it.
-var mockWithFactoryRE = regexp.MustCompile(
-	`(?:jest|vi)\s*\.\s*mock\s*\(\s*['"` + "`" + `]([^'"` + "`" + `]+)['"` + "`" + `]\s*,\s*([^=\n]*)=>`)
-
-// declaredDoubles inventaria os dublês do arquivo e diz quais têm amarra.
-//
-// Se o projeto declara `derived.mock_detect`, usa o detector configurado.
-// Senão, usa o padrão com fábrica (jest/vitest) para projetos JS/TS.
+// A double with no factory — an automock, Vitest's spy mode — mirrors the real module by
+// construction: there is no hand-written contract to go stale. `mock_factory` says what a
+// double WITH a factory looks like (measured in the project that declared `mock_detect` for
+// `mock-stamped`: 51 doubles charged, 42 automocks and 9 spy mocks, not one hand-written
+// factory); with none declared, every double is charged. `mock_typed` says what binds a
+// factory besides the contract's own form (a TS return annotation, `(): T =>`).
 func declaredDoubles(content string, cfg *config.Config, forma string) []declaredDouble {
-	if cfg != nil && cfg.Derived != nil && strings.TrimSpace(cfg.Derived.MockDetect) != "" {
-		re, err := doubleDetector(cfg)
-		if err == nil && re != nil {
-			var out []declaredDouble
-			// Procura cada chamada de mock no arquivo e inspeciona a linha/contexto
-			linhas := strings.Split(content, "\n")
-			for i, linha := range linhas {
-				m := re.FindStringSubmatch(linha)
-				if len(m) > 1 && strings.TrimSpace(m[1]) != "" {
-					modulo := strings.TrimSpace(m[1])
-					// When the tie is a TYPE on the factory (`{{module}}` in the form), only a
-					// double WITH a factory has a contract to freeze — see mockHasFactory.
-					// When the tie is an option on the call itself (`autospec=True`), the bare
-					// call is exactly what is charged: Python's `patch` without it is a
-					// MagicMock, not the module.
-					fimCall := i + 40
-					if fimCall > len(linhas) {
-						fimCall = len(linhas)
-					}
-					if strings.Contains(forma, "{{module}}") && !mockHasFactory(strings.Join(linhas[i:fimCall], "\n")) {
-						continue
-					}
-					// Contexto: a linha do mock mais as próximas 3 linhas (para chamadas multi-linha)
-					fim := i + 4
-					if fim > len(linhas) {
-						fim = len(linhas)
-					}
-					ctx := strings.Join(linhas[i:fim], " ")
-					bound := false
-					if strings.Contains(forma, "{{module}}") {
-						base := filepath.Base(modulo)
-						specFmt := strings.ReplaceAll(forma, "{{module}}", base)
-						bound = strings.Contains(ctx, specFmt) || (strings.Contains(ctx, "=>") && annotationRE.MatchString(ctx))
-					} else {
-						bound = strings.Contains(ctx, forma)
-					}
-					out = append(out, declaredDouble{module: modulo, bound: bound})
-				}
-			}
-			return out
-		}
+	re, err := doubleDetector(cfg)
+	if err != nil || re == nil {
+		return nil
 	}
-
+	var factory, typed *regexp.Regexp
+	if cfg.Derived != nil {
+		// Anchored at the double's own call: a later double's factory is not this one's.
+		if strings.TrimSpace(cfg.Derived.MockFactory) != "" {
+			factory = compileOrNil(`\A(?:` + cfg.Derived.MockFactory + `)`)
+		}
+		typed = compileOrNil(cfg.Derived.MockTyped)
+	}
 	var out []declaredDouble
-	for _, m := range mockWithFactoryRE.FindAllStringSubmatch(content, -1) {
-		modulo, cabeca := m[1], m[2]
-		out = append(out, declaredDouble{
-			module: modulo,
-			bound:  hasTypeAnnotation(cabeca),
-		})
+	linhas := strings.Split(content, "\n")
+	// Over the whole file: a call broken across lines (prettier's `vi.mock(\n  'x',`) is
+	// one double.
+	for _, loc := range re.FindAllStringSubmatchIndex(content, -1) {
+		if len(loc) < 4 || loc[2] < 0 || strings.TrimSpace(content[loc[2]:loc[3]]) == "" {
+			continue
+		}
+		modulo := strings.TrimSpace(content[loc[2]:loc[3]])
+		i := config.LineOf(content, loc[0]) - 1
+		// From the line the call opens on: the factory pattern reads the call whole, a
+		// prettier-broken one included.
+		lineStart := strings.LastIndex(content[:loc[0]], "\n") + 1
+		if strings.Contains(forma, "{{module}}") && factory != nil && !factoryAt(factory, content, lineStart, loc[0]) {
+			continue
+		}
+		// Contexto: a linha do mock mais as próximas 3 linhas (para chamadas multi-linha)
+		fim := i + 4
+		if fim > len(linhas) {
+			fim = len(linhas)
+		}
+		ctx := strings.Join(linhas[i:fim], " ")
+		bound := false
+		if strings.Contains(forma, "{{module}}") {
+			specFmt := strings.ReplaceAll(forma, "{{module}}", filepath.Base(modulo))
+			bound = strings.Contains(ctx, specFmt) || (typed != nil && typed.MatchString(ctx))
+		} else {
+			bound = strings.Contains(ctx, forma)
+		}
+		out = append(out, declaredDouble{module: modulo, bound: bound})
 	}
 	return out
 }
 
-// mockHasFactory reports whether the mock call opening `text` passes a FACTORY — a second
-// argument that is not an options object.
-//
-// An automock (`jest.mock('x')`, no second argument) mirrors the real module's exports, and
-// Vitest's `{ spy: true }` IS the real module with spies: both derive from the module by
-// construction, so there is no hand-written contract to go stale and nothing a
-// `Partial<typeof X>` could bind. Measured in the project that declared `mock_detect` for
-// `mock-stamped`: 51 doubles charged by this gate, 42 automocks and 9 spy mocks, not one
-// hand-written factory. The detector says what a DOUBLE is; whether it needs a type is
-// this gate's own question.
-func mockHasFactory(text string) bool {
-	open := strings.Index(text, "(")
-	if open < 0 {
-		return false
-	}
-	depth, comma := 0, -1
-	var quote byte
-	end := -1
-	for i := open; i < len(text) && end < 0; i++ {
-		c := text[i]
-		if quote != 0 {
-			if c == '\\' {
-				i++
-			} else if c == quote {
-				quote = 0
-			}
-			continue
-		}
-		switch c {
-		case '\'', '"', '`':
-			quote = c
-		case '(', '[', '{':
-			depth++
-		case ')', ']', '}':
-			depth--
-			if depth == 0 {
-				end = i
-			}
-		case ',':
-			if depth == 1 && comma < 0 {
-				comma = i
-			}
-		}
-	}
-	if comma < 0 {
-		return false
-	}
-	stop := end
-	if stop < 0 {
-		stop = len(text)
-	}
-	second := strings.TrimSpace(text[comma+1 : stop])
-	return second != "" && !strings.HasPrefix(second, "{")
+// factoryAt says whether the factory pattern, anchored, matches from the start of the
+// double's line or from the double itself — the pattern may read what precedes the call
+// on its line, or start at it.
+func factoryAt(factory *regexp.Regexp, content string, lineStart, at int) bool {
+	return factory.MatchString(content[at:]) || factory.MatchString(strings.TrimLeft(content[lineStart:], " \t"))
 }
 
-// annotationRE — a fábrica anotada tem `): <Tipo>` entre os parâmetros e a seta. Aceita
-// qualquer tipo: quem confere se ele bate com o módulo é o compilador da linguagem, não
-// este gate. Aqui só se verifica que a amarra FOI ESCRITA.
-var annotationRE = regexp.MustCompile(`\)\s*:\s*\S`)
-
-func hasTypeAnnotation(cabeca string) bool {
-	return annotationRE.MatchString(cabeca)
+// compileOrNil is the pattern compiled, or nil when empty or broken.
+func compileOrNil(p string) *regexp.Regexp {
+	if strings.TrimSpace(p) == "" {
+		return nil
+	}
+	re, err := regexp.Compile(p)
+	if err != nil {
+		return nil
+	}
+	return re
 }

@@ -9,34 +9,36 @@
 Feature: Dialect — the lexicon of the project's language, between an agnostic gate and concrete code
 
   @DLCTI-B01 @unit-level
-  Scenario: A project that declares no dialect gets only the naming defaults
-    Given a project with no configuration, and one with no dialect block
+  Scenario: A project's dialect is what it declares, and nothing fills it
+    Given a project with no configuration, one with no dialect block, and one naming only the family "go"
     When the effective dialect is resolved for each
-    Then both have the default set-promise and set-slice conventions and no exported-function, loop, cursor or handling pattern
+    Then none has a naming convention, an exported-function, loop, cursor, handling, tests, definition or env-read pattern
+    And a declared loop pattern is read as declared, with nothing beside it
 
   @DLCTI-B02 @unit-level
-  Scenario: The family fills every field the project left empty, and a declared field wins
-    Given a dialect with the family "go", a declared loop pattern and a declared handling pattern
-    When the effective dialect is resolved
-    Then the loop and handling patterns are the declared ones, the other fields are the Go family's, and the declaration itself is unchanged
+  Scenario: Each family has an example of the lexicon, never applied by itself
+    Given the family "go"
+    When its example is asked for
+    Then it carries the Go lexicon with its statement end, signature end, limits and guards
+    And changing the copy handed out changes no family
 
   @DLCTI-B03 @unit-level
   Scenario: The family name is matched ignoring case
-    Given a dialect with the family "TS"
-    When the effective dialect is resolved
+    Given the family "TS"
+    When its example is asked for
     Then its exported-function pattern is the ts family's
 
   @DLCTI-B04 @unit-level
-  Scenario: An unknown family contributes nothing, and the known ones are listed in order
-    Given a dialect with the family "cobol"
-    When the effective dialect is resolved and the known families are listed
-    Then the lexicon stays empty, and the list holds every built-in family in alphabetical order
+  Scenario: An unknown family has no example, and the known ones are listed in order
+    Given the family "cobol"
+    When its example is asked for and the known families are listed
+    Then there is no example, and the list holds every built-in family in alphabetical order
 
   @DLCTI-B05 @unit-level
-  Scenario: The naming conventions apply to any family and a declared one replaces them
-    Given a python dialect declaring only a set-promise pattern, and a dialect declaring only a set-slice pattern
-    When the effective dialects are resolved
-    Then each keeps its declared convention and gets the default for the other
+  Scenario: Every family's example carries the two naming conventions
+    Given every known family, and a dialect declaring only a set-slice pattern
+    When the examples are asked for and the dialect is resolved
+    Then each example has the set-promise and set-slice conventions, and the dialect only its own
 
   @DLCTI-B06 @unit-level
   Scenario: The Gherkin language defaults to English, is found in any case, and one outside the table keeps its code with English keywords
@@ -83,7 +85,7 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
   @DLCTI-I01 @unit-level
   Scenario: Every pattern a family or a naming default brings compiles
     Given every built-in family
-    When each family's effective dialect is resolved and its patterns compiled
+    When each family's example is asked for and its patterns compiled
     Then no non-empty pattern compiles to nothing
 
   @DLCTI-I02 @unit-level
@@ -95,7 +97,7 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
   @DLCTI-X01 @unit-level
   Scenario: No family brings a collection query, which is the project's to declare
     Given every built-in family
-    When each family's effective dialect is resolved
+    When each family's example is asked for
     Then its collection query pattern is empty
 
   @DLCTI-B13 @unit-level
@@ -106,9 +108,10 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
 
   @DLCTI-B14 @unit-level
   Scenario: The Go and TS families say how a test is written
-    Given the go and ts families, and a ts project that declares its own tests script
-    When the effective dialect is read
-    Then go reads t.Run, ts reads it, test and describe with their modifiers, and the project's script wins
+    Given the go and ts families' examples, and a ts project that declares its own tests script
+    When they read a test
+    Then go reads t.Run, ts reads it, test and describe with their modifiers, each with its title
+    And the project's script is read as declared
 
   @DLCTI-B15 @unit-level
   Scenario: The TS family recognises catch with or without its binding
@@ -118,15 +121,15 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
 
   @DLCTI-B16 @unit-level
   Scenario: The families say what an assertion is, and a project may declare only its own
-    Given the Go family, a Go project declaring only its assertion, and one declaring its own tests pattern
-    When each dialect is resolved
-    Then the family asserts with t.Errorf, the second keeps t.Run with its own assertion, and the third takes no assertion from the family
+    Given the Go family's example, and a Go project declaring only its assertion
+    When each is read
+    Then the example asserts with t.Errorf, and the project has its assertion and no way to open a test
 
   @DLCTI-B17 @unit-level
   Scenario: The families say how code defines a name
     Given Go, TS and Python code defining functions and types, and a project declaring its own definition
     When each family's definition reads the code
-    Then it captures the names defined, and the declared one wins
+    Then it captures the names defined, and the declared one is read as declared
 
   @DLCTI-B18 @unit-level
   Scenario: Every examples keyword, in every language, sorted
@@ -145,8 +148,8 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
   @DLCTI-B20 @unit-level
   Scenario: Each family reads environment variables its own way
     Given the reads os.Getenv("A"), process.env.A, os.environ["A"], System.getenv("A"), env::var("A"), ENV["A"], getenv('A') and Environment.GetEnvironmentVariable("A")
-    When each family's pattern, and the pattern of a project with no family, reads them
-    Then each family reads its own, and the project with no family reads them all
+    When each family's example, and the pattern of a project that declares none, reads them
+    Then each family reads its own, and the project that declares none reads nothing
 
 
   @DLCTI-B21 @unit-level
@@ -215,3 +218,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     When each reads a source of its language
     Then ts reads a list across lines, a side effect, a destructured dynamic import and a flow, go reads an import and a block, python reads from-imports, ocaml reads opened modules, and the unknown family has none
 
+  @DLCTI-B32 @unit-level
+  Scenario: The families' examples of the mock shapes and the route pattern
+    Given the ts, python and go families
+    When their examples of mocks and of a route pattern are asked for
+    Then ts reads jest.mock, a factory passed and a typed one, and name="X", a param list and addResource
+    And python reads patch, and go has none

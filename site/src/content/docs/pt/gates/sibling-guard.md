@@ -13,6 +13,7 @@ Sibling functions handle the same parameter consistently.
 | Confronta | `code` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Pressupõe | `dialect.exported_func` `dialect.param_name` `dialect.guard_patterns` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

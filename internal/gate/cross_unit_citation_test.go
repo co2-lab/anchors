@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestCrossUnitCitation(t *testing.T) {
 		"| `HOMEH-B04` | @retired: HOMEH-R0001 — moved to WLLTW-B07 |\n\n" +
 		"## Navigation\n\n### Out\n\n| Rule | Destination |\n| --- | --- |\n| `HOMEH-A01` | WalletScreen (`WLLTW-S01`) |\n\n" +
 		"## Revisions\n\nHOMEH-R0001: the balance follows WLLTW-B03\n"
-	v, msg := checkCrossUnitCitation(spec, mapx.Node{ID: "home.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	v, msg := checkCrossUnitCitation(spec, mapx.Node{ID: "home.spec.md", Kind: mapx.KindSpec}, root, g, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, "`WLLTW-B03` (8)") {
 		t.Errorf("the rule citing the wallet's rule is named with its line: %v %s", v, msg)
 	}
@@ -40,10 +41,10 @@ func TestCrossUnitCitation(t *testing.T) {
 	// The balance rule moves up to the product: the wallet realizes it, and the citation is
 	// of a shared rule that lives where it should.
 	writeFile(t, root, "wallet.spec.md", strings.Replace(wallet, "computes the balance |", "computes the balance @realizes BUDGT-B02 |", 1))
-	if v, msg := checkCrossUnitCitation(spec, mapx.Node{ID: "home.spec.md", Kind: mapx.KindSpec}, root, g, nil); v != Pass {
+	if v, msg := checkCrossUnitCitation(spec, mapx.Node{ID: "home.spec.md", Kind: mapx.KindSpec}, root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("a cited rule realizing the product passes: %v %s", v, msg)
 	}
-	if v, _ := checkCrossUnitCitation(spec, mapx.Node{ID: "home.ts", Kind: mapx.KindCode}, root, g, nil); v != Skip {
+	if v, _ := checkCrossUnitCitation(spec, mapx.Node{ID: "home.ts", Kind: mapx.KindCode}, root, g, testkit.WithComments(nil)); v != Skip {
 		t.Error("a code file leaves without a verdict")
 	}
 }

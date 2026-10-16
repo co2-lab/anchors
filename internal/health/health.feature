@@ -2,7 +2,7 @@
 # @anchors
 #   code: HLFTH
 #   ref: DCTRO
-#   updated_at: 2026-10-15
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @DCTRO
@@ -64,9 +64,10 @@ Feature: Doctor — the global health check that hunts the systemic loose ends o
 
   @DCTRO-B10 @unit-level
   Scenario: The files of one unit count as one owner
-    Given the spec, feature, test and code of Login at the project root, all with code LOGIN
+    Given the spec, feature, test and code of Login at the project root, all with code LOGIN, in a project naming a test {{name}}.test.{{ext}}
     When the duplicate identities are checked
     Then there is no finding
+    And with no template naming a test, Login.test is a unit of its own and collides
 
   @DCTRO-B11 @unit-level
   Scenario: A file that declares a shared code is not an owner

@@ -201,6 +201,6 @@ func consumingSurfaces(root, specID string, g *mapx.Graph, cfg *config.Config) (
 	cs = append(cs, readE2ESurface(root, cfg)...)
 	// O teste COMPARTILHADO ou do PAI: um arquivo prova várias unidades e a aresta
 	// `tested-by` não alcança todas. Sem isto, handle consultado aparece como órfão.
-	cs = append(cs, readNeighborTests(root, specID)...)
+	cs = append(cs, readNeighborTests(root, specID, cfg)...)
 	return strings.Join(cs, "\n"), strings.Join(fs, "\n"), len(cs) > 0
 }

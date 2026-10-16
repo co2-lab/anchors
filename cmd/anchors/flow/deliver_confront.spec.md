@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DLCND
-  updated_at: 2026-10-08
+  updated_at: 2026-10-16
   layer: comando
 -->
 # DeliveryConfront — confront what a delivery declares against the disk, at the moment it is declared
@@ -42,7 +42,7 @@ and the record's value is in declaring more.
 | `DLCND-B02` | Without a readable git repository, the output says the declared files could not be confronted and that nobody verified them, and no file is accused. |
 | `DLCND-B03` | A declared file that git reports neither modified nor new is listed under "declared files that do NOT appear in the diff", with the warning that the record asserts something the disk does not confirm. |
 | `DLCND-B04` | A declared file that git reports modified is not listed, and neither is a file inside a new directory that git reports as a whole. |
-| `DLCND-B05` | A unit that has a test file beside it and no mutation signal in the map is warned that no mutation signal was ingested; a unit without a test, a unit already measured, or no unit, gets no warning. |
+| `DLCND-B05` | A unit that has a test where the project's `derived.files` put it (`config.PiecePaths`) and no mutation signal in the map is warned that no mutation signal was ingested; a unit without a test, a unit already measured, or no unit, gets no warning. |
 | `DLCND-B06` | The project's gates run on the map's nodes of the declared files and the unit, and each failing gate is listed as gate, target and the first sentence of its detail — informative gates included. |
 | `DLCND-B07` | Without configured gates, without a map, or without a delivered file in the map, no gate is listed. |
 | `DLCND-B08` | A renamed file is touched (its new and its old path), and the comparison is made relative to the root: with the root a subdirectory of the repository, each path git reports is taken relative to that subdirectory, and a path outside it is not a declared file. |

@@ -93,7 +93,7 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 	var comOrfao []string
 	for _, a := range alvos {
 		antes := len(achados)
-		for _, s := range symbolsWithLine(a.texto, exportRE) {
+		for _, s := range symbolsWithLine(a.texto, exportRE, cfg.CommentsFor(a.arquivo)) {
 			if strings.Contains(content, s.nome) {
 				continue
 			}
@@ -176,8 +176,9 @@ type exportedSymbol struct {
 
 // symbolsWithLine devolve cada símbolo exportado junto do contexto onde a dispensa
 // poderia estar escrita — a própria linha ou a de cima, que é onde o comentário fica.
-func symbolsWithLine(codigo string, re *regexp.Regexp) []exportedSymbol {
+func symbolsWithLine(codigo string, re *regexp.Regexp, cs *config.Comments) []exportedSymbol {
 	linhas := strings.Split(codigo, "\n")
+	only := cs.CommentOnly(linhas)
 	var out []exportedSymbol
 	for i, l := range linhas {
 		m := re.FindStringSubmatch(l)
@@ -204,7 +205,7 @@ func symbolsWithLine(codigo string, re *regexp.Regexp) []exportedSymbol {
 		//
 		// Pior: o mesmo arquivo passava em OUTRO símbolo por acaso, porque o nome dele
 		// aparecia no texto da spec. A declaração nunca era lida, e ninguém notava.
-		ctx := symbolContext(linhas, i)
+		ctx := symbolContext(linhas, only, i)
 		out = append(out, exportedSymbol{nome: symName, linha: ctx, num: i + 1})
 	}
 	return out
@@ -229,24 +230,23 @@ func specTargets(n mapx.Node, root string, g *mapx.Graph) []specFile {
 	return out
 }
 
-// symbolContext devolve a linha do símbolo mais o bloco de comentário acima dela.
+// symbolContext devolve a linha do símbolo mais o bloco de comentário acima dela — os
+// comentários na sintaxe que o projeto declara para o arquivo.
 //
-// Sobe enquanto encontrar comentário (`//`, `*`, `/*`, `*/`) ou linha em branco DENTRO do
-// bloco — a branco separa parágrafos de um mesmo comentário, e parar nela cortaria a
-// explicação ao meio. A primeira linha de código encerra a subida.
-func symbolContext(linhas []string, i int) string {
+// Sobe enquanto encontrar linha de comentário ou linha em branco DENTRO do bloco — a branco
+// separa parágrafos de um mesmo comentário, e parar nela cortaria a explicação ao meio. A
+// primeira linha de código encerra a subida.
+func symbolContext(linhas []string, only []bool, i int) string {
 	inicio := i
 	for j := i - 1; j >= 0; j-- {
 		t := strings.TrimSpace(linhas[j])
-		ehComentario := strings.HasPrefix(t, "//") || strings.HasPrefix(t, "*") ||
-			strings.HasPrefix(t, "/*") || strings.HasSuffix(t, "*/") || strings.HasPrefix(t, "#")
-		if !ehComentario && t != "" {
+		if !only[j] && t != "" {
 			break
 		}
 		// Linha em branco só continua a subida se ainda houver comentário acima — senão
 		// o "bloco" engoliria o arquivo inteiro até o topo.
 		if t == "" {
-			if j == 0 || !isCommentAbove(linhas, j) {
+			if j == 0 || !isCommentAbove(linhas, only, j) {
 				break
 			}
 		}
@@ -255,14 +255,12 @@ func symbolContext(linhas []string, i int) string {
 	return strings.Join(linhas[inicio:i+1], "\n")
 }
 
-func isCommentAbove(linhas []string, j int) bool {
+func isCommentAbove(linhas []string, only []bool, j int) bool {
 	for k := j - 1; k >= 0; k-- {
-		t := strings.TrimSpace(linhas[k])
-		if t == "" {
+		if strings.TrimSpace(linhas[k]) == "" {
 			continue
 		}
-		return strings.HasPrefix(t, "//") || strings.HasPrefix(t, "*") ||
-			strings.HasPrefix(t, "/*") || strings.HasSuffix(t, "*/") || strings.HasPrefix(t, "#")
+		return only[k]
 	}
 	return false
 }

@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,7 +46,7 @@ func TestFrozen_gateAnswersFrozen(t *testing.T) {
 	root := frozenRun(t, map[string]string{"a.ts": "", "b.ts": "", "product/q.doctrine.md": "x"})
 	g := frozenGraph()
 	nonEmpty := config.Gate{Name: "non-empty", Check: "non-empty", On: []string{"code"}}
-	res := RunWithWaiver([]config.Gate{nonEmpty}, g.Nodes, root, g, &config.Config{}, false, Waiver{})
+	res := RunWithWaiver([]config.Gate{nonEmpty}, g.Nodes, root, g, testkit.WithComments(&config.Config{}), false, Waiver{})
 	got := map[string]Result{}
 	for _, r := range res {
 		got[r.Target] = r
@@ -57,12 +58,12 @@ func TestFrozen_gateAnswersFrozen(t *testing.T) {
 		t.Errorf("the other file fails as before: %+v", b)
 	}
 	batch := config.Gate{Name: "lint", On: []string{"code"}, Scope: config.ScopeBatch, Run: "echo {{files}}; exit 1"}
-	res = RunWithWaiver([]config.Gate{batch}, g.Nodes, root, g, &config.Config{}, false, Waiver{})
+	res = RunWithWaiver([]config.Gate{batch}, g.Nodes, root, g, testkit.WithComments(&config.Config{}), false, Waiver{})
 	if len(res) != 1 || strings.Contains(res[0].Detail, "a.ts") || !strings.Contains(res[0].Detail, "b.ts") {
 		t.Errorf("the batch gate is given the unfrozen file alone: %+v", res)
 	}
 	g.Nodes[1].Frozen = "a plain cause"
-	if res = RunWithWaiver([]config.Gate{batch}, g.Nodes, root, g, &config.Config{}, false, Waiver{}); len(res) != 0 {
+	if res = RunWithWaiver([]config.Gate{batch}, g.Nodes, root, g, testkit.WithComments(&config.Config{}), false, Waiver{}); len(res) != 0 {
 		t.Errorf("every target frozen, the batch gate does not run: %+v", res)
 	}
 }
@@ -81,7 +82,7 @@ func TestFrozen_ruleLeavesTheQuestions(t *testing.T) {
 	doctrine := "### FRZQD-R01 — one\n### FRZQD-R02 — two\n### FRZQD-F01 — the plan mode ships next quarter\n"
 	n := mapx.Node{ID: "product/q.doctrine.md", Kind: mapx.KindProduct}
 	g := &mapx.Graph{Nodes: []mapx.Node{n}, Edges: []mapx.Edge{{From: "s.spec.md", To: n.ID, Type: mapx.EdgeRealizes, Method: "FRZQD-R01"}}}
-	if v, msg := checkDoctrineRealized(doctrine, n, "", g, nil); v != Pass {
+	if v, msg := checkDoctrineRealized(doctrine, n, "", g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("no realizer is asked of a freeze entry or a frozen rule: %v %s", v, msg)
 	}
 	if texts := ruleTexts(doctrine); texts["FRZQD-F01"] != "" {
@@ -96,15 +97,15 @@ func TestFrozen_consistent(t *testing.T) {
 		{ID: "b.ts", Kind: mapx.KindCode, Frozen: "a plain cause"},
 		{ID: "product/q.doctrine.md", Kind: mapx.KindProduct, Freezes: map[string]string{"FRZQA-F01": "the plan mode"}},
 	}}
-	v, msg := checkFreezeConsistent("", mapx.Node{}, "", g, nil)
+	v, msg := checkFreezeConsistent("", mapx.Node{}, "", g, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, "a.ts → FRZQA-F02") || !strings.Contains(msg, "FRZQA-F01 (product/q.doctrine.md)") || strings.Contains(msg, "plain") {
 		t.Errorf("unknown mark and orphan record: %v %s", v, msg)
 	}
 	g.Nodes[0].Frozen = "FRZQA-F01"
-	if v, msg := checkFreezeConsistent("", mapx.Node{}, "", g, nil); v != Pass {
+	if v, msg := checkFreezeConsistent("", mapx.Node{}, "", g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("consistent: %v %s", v, msg)
 	}
-	if v, _ := checkFreezeConsistent("", mapx.Node{}, "", &mapx.Graph{}, nil); v != Skip {
+	if v, _ := checkFreezeConsistent("", mapx.Node{}, "", &mapx.Graph{}, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("no freeze: %v", v)
 	}
 }
@@ -123,7 +124,7 @@ func TestFrozen_touched(t *testing.T) {
 	}}
 	setFreezes(g)
 	for i, want := range []Verdict{Diverge, Diverge, Pass, Skip} {
-		v, msg := checkFrozenTouched("", g.Nodes[i], "", g, nil)
+		v, msg := checkFrozenTouched("", g.Nodes[i], "", g, testkit.WithComments(nil))
 		if v != want {
 			t.Errorf("%s: %v (%s), want %v", g.Nodes[i].ID, v, msg, want)
 		}
@@ -156,18 +157,18 @@ func TestFrozen_thawGivesBack(t *testing.T) {
 	g := frozenGraph()
 	nonEmpty := config.Gate{Name: "non-empty", Check: "non-empty", On: []string{"code"}}
 	nodes := g.Nodes[:1]
-	if res := RunWithWaiver([]config.Gate{nonEmpty}, nodes, root, g, &config.Config{}, false, Waiver{}); res[0].Verdict != Frozen {
+	if res := RunWithWaiver([]config.Gate{nonEmpty}, nodes, root, g, testkit.WithComments(&config.Config{}), false, Waiver{}); res[0].Verdict != Frozen {
 		t.Fatalf("frozen: %+v", res)
 	}
 	g.Nodes[0].Frozen = ""
-	if res := RunWithWaiver([]config.Gate{nonEmpty}, g.Nodes[:1], root, g, &config.Config{}, false, Waiver{}); res[0].Verdict != Fail {
+	if res := RunWithWaiver([]config.Gate{nonEmpty}, g.Nodes[:1], root, g, testkit.WithComments(&config.Config{}), false, Waiver{}); res[0].Verdict != Fail {
 		t.Errorf("thawed, it fails as before: %+v", res)
 	}
 }
 
 func TestFrozen_noMap(t *testing.T) {
 	t.Run("FRGTF-E01: With no map the freezes are not confronted", func(t *testing.T) {})
-	if v, msg := checkFreezeConsistent("", mapx.Node{}, "", nil, nil); v != Pending || msg == "" {
+	if v, msg := checkFreezeConsistent("", mapx.Node{}, "", nil, testkit.WithComments(nil)); v != Pending || msg == "" {
 		t.Errorf("no map: %v %q", v, msg)
 	}
 }

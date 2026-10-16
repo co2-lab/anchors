@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -41,10 +42,10 @@ func runExamples(t *testing.T, cfg *config.Config, feature string, tests map[str
 }
 
 func examplesCfg(labels bool, tests *config.TestsSource) *config.Config {
-	return &config.Config{
+	return testkit.WithComments(&config.Config{
 		Dialect: &config.Dialect{Family: "ts", Tests: tests},
 		Gates:   []config.Gate{{Name: "e", Check: "examples-match", On: []string{"feature"}, Labels: labels}},
-	}
+	})
 }
 
 func TestExamplesMatch_aRowTheTestsDoNotRun(t *testing.T) {
@@ -164,7 +165,7 @@ func TestExamplesMatch_skips(t *testing.T) {
 	if v, _ := runExamples(t, cfg, "@PLANX-B01\nScenario: x\n  Given y\n", nil); v != Skip {
 		t.Errorf("no examples is skipped, got %v", v)
 	}
-	if v, _ := runExamples(t, &config.Config{Dialect: &config.Dialect{Family: "rust"}}, planOutline, nil); v != Skip {
+	if v, _ := runExamples(t, testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "rust"}}), planOutline, nil); v != Skip {
 		t.Errorf("no tests source is skipped, got %v", v)
 	}
 	if v, _ := runExamples(t, cfg, planOutline, map[string]string{"a.test.ts": "it('other', () => {})\n"}); v != Skip {

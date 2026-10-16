@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -13,14 +14,14 @@ import (
 )
 
 func cfgComFronteiras(bs ...config.Boundary) *config.Config {
-	return &config.Config{
+	return testkit.WithComments(&config.Config{
 		Layers: map[string]config.Layer{
 			"screens":      {Pattern: "src/screens/**/*.ts"},
 			"hooks":        {Pattern: "src/hooks/**/*.ts"},
 			"repositories": {Pattern: "src/repositories/**/*.ts"},
 		},
 		Boundaries: bs,
-	}
+	})
 }
 
 func rodaFronteira(t *testing.T, arquivo, conteúdo string, cfg *config.Config) (Verdict, string) {
@@ -275,7 +276,7 @@ func TestLayerBoundaryNaoInventaFronteira(t *testing.T) {
 	t.Run("LYBNL-X01: The gate does not decide which boundaries exist", func(t *testing.T) {})
 	violacaoObvia := "import { getUser } from '@/repositories/user'\n"
 
-	if v, d := rodaFronteira(t, "src/screens/Home.ts", violacaoObvia, &config.Config{}); v == Fail {
+	if v, d := rodaFronteira(t, "src/screens/Home.ts", violacaoObvia, testkit.WithComments(&config.Config{})); v == Fail {
 		t.Errorf("sem declaração o gate não pode reprovar — inventaria dever: %s", d)
 	}
 }

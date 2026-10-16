@@ -197,7 +197,7 @@ func optionalPieces(n mapx.Node, cfg *config.Config, g *mapx.Graph) map[string]b
 		if base := strings.TrimSuffix(n.ID, ".spec.md"); base != n.ID {
 			// A extensão certa é a que resolve para uma camada COM dispensa declarada —
 			// tentar todas evita chutar `.ts` numa tela (`.tsx`) e cair no catch-all.
-			for _, ext := range []string{".ts", ".tsx", ".go", ".py", ".js"} {
+			for _, ext := range cfg.CodeExtensions() {
 				layer, _ := scan.Classify(base+ext, cfg)
 				if layer == "" {
 					continue

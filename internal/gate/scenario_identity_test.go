@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -25,7 +26,7 @@ func TestCenarioIdentidadeAcusaCodigoRepetido(t *testing.T) {
   @USBPX-B01 @nivel-unit
   Cenário: sem usuário logado nada é buscado
     Então o repository não é consultado
-`, featNode(), "", nil, nil)
+`, featNode(), "", nil, testkit.WithComments(nil))
 
 	if v == Pass {
 		t.Fatalf("código repetido passou (%s)", msg)
@@ -47,7 +48,7 @@ func TestCenarioIdentidadeNomeiaOCodigoRepetido(t *testing.T) {
 
   @USBPX-B01 @nivel-unit
   Cenário: sem usuário logado
-`, featNode(), "", nil, nil)
+`, featNode(), "", nil, testkit.WithComments(nil))
 
 	if !strings.Contains(msg, "USBPX-B01") {
 		t.Errorf("mensagem sem o código repetido: %s", msg)
@@ -73,7 +74,7 @@ func TestCenarioIdentidadeDizQuantosDividemOCodigo(t *testing.T) {
 
   @USBPX-B01 @nivel-unit
   Cenário: terceiro
-`, featNode(), "", nil, nil)
+`, featNode(), "", nil, testkit.WithComments(nil))
 
 	if !strings.Contains(msg, "3") {
 		t.Errorf("a mensagem não diz quantos cenários dividem o código: %s", msg)
@@ -95,7 +96,7 @@ func TestCenarioIdentidadeEnsinaComOCodigoDoProjeto(t *testing.T) {
 
   @USBPX-B01 @nivel-unit
   Cenário: sem usuário logado
-`, featNode(), "", nil, nil)
+`, featNode(), "", nil, testkit.WithComments(nil))
 
 	if !strings.Contains(msg, "USBPX-B01#01") {
 		t.Errorf("a mensagem não ensina o sufixo sobre o código real do projeto: %s", msg)
@@ -116,7 +117,7 @@ func TestCenarioIdentidadeAceitaSufixo(t *testing.T) {
   @USBPX-B01#02 @nivel-unit
   Cenário: sem usuário logado nada é buscado
     Então o repository não é consultado
-`, featNode(), "", nil, nil)
+`, featNode(), "", nil, testkit.WithComments(nil))
 
 	if v != Pass {
 		t.Errorf("veredito %v (%s), queria Pass — os sufixos distinguem os cenários", v, msg)
@@ -134,7 +135,7 @@ func TestCenarioIdentidadeNaoAcusaCodigoUnico(t *testing.T) {
   @SAUTX-B02 @nivel-unit
   Cenário: Login popula o usuário
     Então o usuário fica disponível
-`, featNode(), "", nil, nil)
+`, featNode(), "", nil, testkit.WithComments(nil))
 	if v != Pass {
 		t.Errorf("veredito %v, queria Pass", v)
 	}
@@ -150,7 +151,7 @@ func TestCenarioIdentidadeEhPendenteNaoReprovacao(t *testing.T) {
 
   @USBPX-B01 @nivel-unit
   Cenário: segundo
-`, featNode(), "", nil, nil)
+`, featNode(), "", nil, testkit.WithComments(nil))
 	if v == Fail {
 		t.Fatal("o gate reprovou — numerar cenários é migração, e isso travaria a base inteira")
 	}
@@ -164,7 +165,7 @@ func TestCenarioIdentidadeSoOlhaFeature(t *testing.T) {
 	t.Run("SCIDS-B08: An artifact that is not a feature leaves without a verdict", func(t *testing.T) {})
 	repetido := "\n  @USBPX-B01\n  Cenário: a\n\n  @USBPX-B01\n  Cenário: b\n"
 	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindSpec, mapx.KindTest, mapx.KindGuide} {
-		if v, _ := checkScenarioIdentity(repetido, mapx.Node{Kind: k}, "", nil, nil); v != Skip {
+		if v, _ := checkScenarioIdentity(repetido, mapx.Node{Kind: k}, "", nil, testkit.WithComments(nil)); v != Skip {
 			t.Errorf("veredito %v para kind %s, queria Skip", v, k)
 		}
 	}
@@ -180,7 +181,7 @@ func TestCenarioIdentidadeSemCenarioComCodigoNaoConfronta(t *testing.T) {
 
   Cenário: outro cenário sem código nenhum
     Então outra coisa acontece
-`, featNode(), "", nil, nil)
+`, featNode(), "", nil, testkit.WithComments(nil))
 	if v != Skip {
 		t.Errorf("veredito %v, queria Skip — não há código a confrontar", v)
 	}
@@ -212,7 +213,7 @@ const threeRepeatedCodes = `
 func TestCenarioIdentidadeAgrupaVariosEmOrdemEstavel(t *testing.T) {
 	t.Run("SCIDS-B10: Several repeated codes are reported together in a stable order", func(t *testing.T) {})
 	feature := threeRepeatedCodes
-	_, msg := checkScenarioIdentity(feature, featNode(), "", nil, nil)
+	_, msg := checkScenarioIdentity(feature, featNode(), "", nil, testkit.WithComments(nil))
 	for _, cod := range []string{"AAAAX-B01", "MMMMX-B01", "ZZZZX-B01"} {
 		if !strings.Contains(msg, cod) {
 			t.Fatalf("a mensagem não traz todos os repetidos (falta %s): %s", cod, msg)
@@ -232,7 +233,7 @@ func TestCenarioIdentidadeEncurtaTitulosLongos(t *testing.T) {
 	t.Run("SCIDS-B11: Long titles are shortened in the report", func(t *testing.T) {})
 	longo := strings.Repeat("a", 80)
 	_, msg := checkScenarioIdentity("\n  @USBPX-B01\n  Cenário: "+longo+
-		"\n\n  @USBPX-B01\n  Cenário: "+longo+"\n", featNode(), "", nil, nil)
+		"\n\n  @USBPX-B01\n  Cenário: "+longo+"\n", featNode(), "", nil, testkit.WithComments(nil))
 
 	if strings.Contains(msg, longo) {
 		t.Errorf("o título longo entrou inteiro na mensagem: %s", msg)
@@ -248,7 +249,7 @@ func TestCenarioIdentidadeEncurtaTitulosLongos(t *testing.T) {
 	// afirma um corte que não houve, e manda quem lê procurar um resto inexistente.
 	cabe := strings.Repeat("b", 40)
 	_, msgCabe := checkScenarioIdentity("\n  @USBPX-B01\n  Cenário: "+cabe+
-		"\n\n  @USBPX-B01\n  Cenário: "+cabe+"\n", featNode(), "", nil, nil)
+		"\n\n  @USBPX-B01\n  Cenário: "+cabe+"\n", featNode(), "", nil, testkit.WithComments(nil))
 	if !strings.Contains(msgCabe, cabe) {
 		t.Errorf("o título que cabe foi cortado: %s", msgCabe)
 	}
@@ -269,7 +270,7 @@ func TestCenarioIdentidadeAgrupaPeloCodigoCompleto(t *testing.T) {
 
   @USBPX-B01#03
   Cenário: terceiro
-`, featNode(), "", nil, nil)
+`, featNode(), "", nil, testkit.WithComments(nil))
 	if v != Pass {
 		t.Fatalf("veredito %v (%s) — quem já migrou não pode ser acusado", v, msg)
 	}
@@ -280,9 +281,9 @@ func TestCenarioIdentidadeAgrupaPeloCodigoCompleto(t *testing.T) {
 func TestCenarioIdentidadeMensagemDeterministica(t *testing.T) {
 	t.Run("SCIDS-I02: The message is deterministic", func(t *testing.T) {})
 	feature := threeRepeatedCodes
-	_, primeira := checkScenarioIdentity(feature, featNode(), "", nil, nil)
+	_, primeira := checkScenarioIdentity(feature, featNode(), "", nil, testkit.WithComments(nil))
 	for i := 0; i < 20; i++ {
-		if _, outra := checkScenarioIdentity(feature, featNode(), "", nil, nil); outra != primeira {
+		if _, outra := checkScenarioIdentity(feature, featNode(), "", nil, testkit.WithComments(nil)); outra != primeira {
 			t.Fatalf("a mensagem mudou entre execuções:\n%s\n%s", primeira, outra)
 		}
 	}
@@ -294,10 +295,10 @@ func TestCenarioIdentidadeNaoJulgaOsComportamentos(t *testing.T) {
 	t.Run("SCIDS-X01: The gate does not judge whether the two scenarios describe different behaviours", func(t *testing.T) {})
 	// dois cenários descrevendo a MESMA coisa: acusado do mesmo jeito
 	mesmo, msgMesmo := checkScenarioIdentity("\n  @USBPX-B01\n  Cenário: o mesmo caso\n\n  @USBPX-B01\n  Cenário: o mesmo caso\n",
-		featNode(), "", nil, nil)
+		featNode(), "", nil, testkit.WithComments(nil))
 	// dois descrevendo coisas claramente diferentes: acusado do mesmo jeito
 	difer, _ := checkScenarioIdentity("\n  @USBPX-B01\n  Cenário: salva no banco\n\n  @USBPX-B01\n  Cenário: envia um email\n",
-		featNode(), "", nil, nil)
+		featNode(), "", nil, testkit.WithComments(nil))
 
 	if mesmo != Diverge || difer != Diverge {
 		t.Fatalf("o gate distinguiu os casos: mesmo=%s difer=%s (%s)", mesmo, difer, msgMesmo)
@@ -311,13 +312,13 @@ func TestCenarioIdentidadeNaoOlhaEntreFeatures(t *testing.T) {
 	v, msg := checkScenarioIdentity(`
   @USBPX-B01
   Cenário: o único desta feature
-`, featNode(), "", nil, nil)
+`, featNode(), "", nil, testkit.WithComments(nil))
 	if v != Skip && v != Pass {
 		t.Fatalf("veredito %v (%s) — dentro desta feature não há repetição", v, msg)
 	}
 	// e o mesmo código noutra feature, confrontada em separado, também passa
 	if outra, _ := checkScenarioIdentity("\n  @USBPX-B01\n  Cenário: o único da outra\n",
-		mapx.Node{Kind: mapx.KindFeature, ID: "y.feature"}, "", nil, nil); outra == Pending {
+		mapx.Node{Kind: mapx.KindFeature, ID: "y.feature"}, "", nil, testkit.WithComments(nil)); outra == Pending {
 		t.Error("o gate enxergou entre features — ele não recebe grafo para isso")
 	}
 }
@@ -334,7 +335,7 @@ func TestCenarioIdentidadeNaoCobraAusenciaDeCodigo(t *testing.T) {
 
   @USBPX-B02
   Cenário: este tem outro código
-`, featNode(), "", nil, nil)
+`, featNode(), "", nil, testkit.WithComments(nil))
 	if v != Pass {
 		t.Errorf("veredito %v (%s) — todo código presente aparece uma vez só", v, msg)
 	}
@@ -347,13 +348,13 @@ func TestCenarioIdentidadeNaoRenumera(t *testing.T) {
 	feature := "\n  @USBPX-B01\n  Cenário: primeiro\n\n  @USBPX-B01\n  Cenário: segundo\n"
 	antes := feature
 
-	checkScenarioIdentity(feature, featNode(), "", nil, nil)
+	checkScenarioIdentity(feature, featNode(), "", nil, testkit.WithComments(nil))
 
 	if feature != antes {
 		t.Error("o gate alterou a feature — ele aponta, não renumera")
 	}
 	// e a mensagem não afirma ter consertado: ela ENSINA o sufixo
-	_, msg := checkScenarioIdentity(feature, featNode(), "", nil, nil)
+	_, msg := checkScenarioIdentity(feature, featNode(), "", nil, testkit.WithComments(nil))
 	if !strings.Contains(msg, "#01") {
 		t.Errorf("a mensagem deveria ensinar a numeração em vez de aplicá-la: %s", msg)
 	}
@@ -379,11 +380,11 @@ func TestScenarioIdentity_aCopiedBodyIsReported(t *testing.T) {
     Dado uma renda de "5000"
     Então deve sair um finding
 `
-	v, msg := checkScenarioIdentity(feature, featNode(), "", nil, nil)
+	v, msg := checkScenarioIdentity(feature, featNode(), "", nil, testkit.WithComments(nil))
 	if v != Diverge || !strings.Contains(msg, "AUDTX-B02") || !strings.Contains(msg, "AUDTX-B01") || strings.Contains(msg, "AUDTX-B03") {
 		t.Fatalf("the copy is reported, the variation is not; got %v: %s", v, msg)
 	}
-	if v, _ := checkScenarioIdentity(strings.Replace(feature, "Então deve   sair um finding", "Então nenhum finding sai", 1), featNode(), "", nil, nil); v != Pass {
+	if v, _ := checkScenarioIdentity(strings.Replace(feature, "Então deve   sair um finding", "Então nenhum finding sai", 1), featNode(), "", nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("rewritten steps pass, got %v", v)
 	}
 }

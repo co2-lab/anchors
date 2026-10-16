@@ -429,3 +429,49 @@ func TestMigrateMovesThePlanProgressFiles(t *testing.T) {
 		t.Errorf("the demand: %s", b)
 	}
 }
+
+func TestMigrateCrossingEightDeclaresTheSyntax(t *testing.T) {
+	t.Run("MGCMM-B20: Crossing format 8 writes the families' examples before the file codes", func(t *testing.T) {})
+	root := t.TempDir()
+	yaml := "version: 6\nlayers:\n" +
+		"  spec:\n    pattern: \"src/*.spec.md\"\n    kind: spec\n" +
+		"  logic:\n    pattern: \"src/*.ts\"\n    kind: code\n" +
+		"  baseline:\n    pattern: \"src/*.png\"\n    kind: test\n" +
+		"derived:\n  anchor: logic\n  files:\n    spec: [\"{{dir}}/{{name}}.spec.md\"]\n" +
+		"gates:\n  - name: route-exists\n"
+	writeFile(t, root, config.DefaultFile, yaml)
+	writeFile(t, root, "src/Pay.spec.md", "<!-- @anchors\n  code: PAYXX\n-->\n# Pay\n")
+	writeFile(t, root, "src/Pay.ts", "export const pay = 1\n")
+	writeFile(t, root, "src/Pay.png", "\x89PNG\x00\x00binary") // a binary baseline: no comments asked for it
+	writeFile(t, root, mapx.DefaultPath, "version: 6\nnodes: []\nedges: []\n")
+
+	err, out := runCmd(t, newMigrateCmd(), "--root", root, "--dry-run")
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	for _, want := range []string{"would be written", "dialect.comments (**/*.{ts,tsx,js,jsx,mjs,cjs,mts,cts})", "dialect.set_promise", "derived.route_pattern"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the dry run names %q:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "by hand") {
+		t.Errorf("a binary needs no comments:\n%s", out)
+	}
+	if b, _ := os.ReadFile(filepath.Join(root, config.DefaultFile)); string(b) != yaml {
+		t.Errorf("the dry run wrote anchors.yaml:\n%s", b)
+	}
+
+	if err, out = runCmd(t, newMigrateCmd(), "--root", root); err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.CommentsFor("src/Pay.ts") == nil || cfg.Derived.RoutePattern == "" {
+		t.Errorf("the examples are written:\n%s", out)
+	}
+	if b, _ := os.ReadFile(filepath.Join(root, "src/Pay.ts")); !strings.HasPrefix(string(b), "// @anchors\n") {
+		t.Errorf("the code file gets its header in its own comments:\n%s", b)
+	}
+}

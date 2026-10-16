@@ -8,9 +8,8 @@
 // How a test is written belongs to the project's language and test library, not to
 // Anchors. The project says it in one of two ways, and chooses which:
 //
-//   - a PATTERN: the regular expression of the call that opens a test, up to its opening
-//     parenthesis (`\bt\.Run\(` in Go, `\b(?:it|test)\(` in Jest). The title is the string
-//     literal right after it.
+//   - a PATTERN: the regular expression of the call that opens a test, with its title in a
+//     `title` group (`\bt\.Run\("(?P<title>[^"]*)"` in Go).
 //   - a SCRIPT: a command the project provides, which Anchors runs at the project root and
 //     which prints the tests on stdout under the contract below. The script can ask the
 //     test library itself, so when the library changes, the answer changes with it.
@@ -138,10 +137,12 @@ func Parse(b []byte) ([]Test, error) {
 	return *out.Tests, nil
 }
 
-// scanFiles finds, in each file, every call the pattern opens followed by a string literal,
-// and takes the literal as the test's title. A call whose title is not a literal (a
-// variable, a template with placeholders built elsewhere) is not a test this reading can
-// name, and is left out.
+// scanFiles finds, in each file, every match of the pattern, and takes as the test's title
+// what its `title` group captured — the first group whose name starts with `title` and took
+// part (`title`, `title2`… for the quotes a language writes a title in). How a title is
+// quoted is the language's, so the pattern says it: the core reads no string literal. A match
+// whose title group captured nothing — a variable, a template built elsewhere — is not a
+// test this reading can name, and is left out; a pattern with no title group is an error.
 func scanFiles(root string, files []string, pattern string, read func(rel string) ([]byte, error)) ([]Test, error) {
 	if read == nil {
 		read = func(rel string) ([]byte, error) { return os.ReadFile(filepath.Join(root, rel)) }
@@ -149,6 +150,15 @@ func scanFiles(root string, files []string, pattern string, read func(rel string
 	re, err := regexp.Compile(pattern)
 	if err != nil {
 		return nil, fmt.Errorf("the tests pattern does not compile: %w", err)
+	}
+	var groups []int
+	for i, name := range re.SubexpNames() {
+		if strings.HasPrefix(name, "title") {
+			groups = append(groups, i)
+		}
+	}
+	if len(groups) == 0 {
+		return nil, fmt.Errorf("the tests pattern has no `title` group: name where the title stands, e.g. `'(?P<title>[^']*)'`")
 	}
 	var out []Test
 	sorted := append([]string(nil), files...)
@@ -159,46 +169,21 @@ func scanFiles(root string, files []string, pattern string, read func(rel string
 			continue // @resilient: a test file that cannot be read has no test this reading can name; the map notices a missing file
 		}
 		src := string(b)
-		for _, loc := range re.FindAllStringIndex(src, -1) {
-			title, ok := literalAt(src, loc[1])
-			if !ok {
+		for _, m := range re.FindAllStringSubmatchIndex(src, -1) {
+			title := ""
+			for _, gi := range groups {
+				if m[2*gi] >= 0 {
+					title = src[m[2*gi]:m[2*gi+1]]
+					break
+				}
+			}
+			if title == "" {
 				continue
 			}
-			out = append(out, Test{File: filepath.ToSlash(f), Line: strings.Count(src[:loc[0]], "\n") + 1, Title: title})
+			out = append(out, Test{File: filepath.ToSlash(f), Line: strings.Count(src[:m[0]], "\n") + 1, Title: title})
 		}
 	}
 	return out, nil
-}
-
-// literalAt reads the string literal that starts at s[i], after blanks: quoted by ', " or
-// `, with backslash escapes inside the first two.
-func literalAt(s string, i int) (string, bool) {
-	for i < len(s) && (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
-		i++
-	}
-	if i >= len(s) {
-		return "", false
-	}
-	q := s[i]
-	if q != '\'' && q != '"' && q != '`' {
-		return "", false
-	}
-	var b strings.Builder
-	for j := i + 1; j < len(s); j++ {
-		c := s[j]
-		switch {
-		case c == q:
-			return b.String(), true
-		case c == '\\' && q != '`' && j+1 < len(s):
-			j++
-			b.WriteByte(s[j])
-		case c == '\n' && q != '`':
-			return "", false
-		default:
-			b.WriteByte(c)
-		}
-	}
-	return "", false
 }
 
 // lastLine is the last non-empty line of a command's output: where it says why it stopped.

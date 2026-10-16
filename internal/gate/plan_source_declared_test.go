@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -35,7 +36,7 @@ func TestPlanSourceDeclared_acusaAFonteQueSoExisteNaProsa(t *testing.T) {
 		Needs: []string{"plans/0005-home-e-indice.md"},
 	}
 
-	v, msg := checkPlanSourceDeclared("Fonte: **GA4**, e ela é a exceção arquitetural.", n, "", g, nil)
+	v, msg := checkPlanSourceDeclared("Fonte: **GA4**, e ela é a exceção arquitetural.", n, "", g, testkit.WithComments(nil))
 
 	if v != Fail {
 		t.Fatalf("o gate não acusou a dependência que só existe na prosa: %v — %s", v, msg)
@@ -56,7 +57,7 @@ func TestPlanSourceDeclared_passaComONeedsDeclarado(t *testing.T) {
 		Needs: []string{"plans/0005-home-e-indice.md", "plans/0002-plataforma.md"},
 	}
 
-	if v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", g, nil); v != Pass {
+	if v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("com o `needs:` declarado o gate devia passar: %v — %s", v, msg)
 	}
 }
@@ -74,7 +75,7 @@ func TestPlanSourceDeclared_confrontaCadaFonteDaLinha(t *testing.T) {
 	}
 	n := mapx.Node{ID: "plans/0007-infraestrutura.md", Kind: mapx.KindPlan}
 
-	v, msg := checkPlanSourceDeclared("Fontes: **Prometheus** (nó e pod), **ELK** (o lado cliente).", n, "", g, nil)
+	v, msg := checkPlanSourceDeclared("Fontes: **Prometheus** (nó e pod), **ELK** (o lado cliente).", n, "", g, testkit.WithComments(nil))
 
 	if v != Fail {
 		t.Fatalf("esperava Fail com duas fontes não declaradas: %v — %s", v, msg)
@@ -93,7 +94,7 @@ func TestPlanSourceDeclared_casaNomeIndependenteDeCaixa(t *testing.T) {
 	g := mapaComAdaptador("plans/0002-plataforma.md", "packages/lambdas/fontes/CloudWatchAdapter.spec.md")
 	n := mapx.Node{ID: "plans/0009-database.md", Kind: mapx.KindPlan}
 
-	if v, _ := checkPlanSourceDeclared("Fonte: **cloudwatch**.", n, "", g, nil); v != Fail {
+	if v, _ := checkPlanSourceDeclared("Fonte: **cloudwatch**.", n, "", g, testkit.WithComments(nil)); v != Fail {
 		t.Errorf("`cloudwatch` devia casar com `CloudWatchAdapter.spec.md`: %v", v)
 	}
 }
@@ -105,7 +106,7 @@ func TestPlanSourceDeclared_ignoraFonteSemAdaptadorSemeado(t *testing.T) {
 	g := mapaComAdaptador("plans/0002-plataforma.md", "packages/lambdas/fontes/ElkAdapter.spec.md")
 	n := mapx.Node{ID: "plans/0013-status-page.md", Kind: mapx.KindPlan}
 
-	if v, msg := checkPlanSourceDeclared("Fonte: **Datadog**.", n, "", g, nil); v == Fail {
+	if v, msg := checkPlanSourceDeclared("Fonte: **Datadog**.", n, "", g, testkit.WithComments(nil)); v == Fail {
 		t.Errorf("fonte sem adaptador semeado não devia reprovar: %s", msg)
 	}
 }
@@ -116,7 +117,7 @@ func TestPlanSourceDeclared_naoCobraOPlanoDeSiMesmo(t *testing.T) {
 	g := mapaComAdaptador("plans/0002-plataforma.md", "packages/lambdas/fontes/ElkAdapter.spec.md")
 	n := mapx.Node{ID: "plans/0002-plataforma.md", Kind: mapx.KindPlan}
 
-	if v, msg := checkPlanSourceDeclared("Fonte: **ELK**.", n, "", g, nil); v == Fail {
+	if v, msg := checkPlanSourceDeclared("Fonte: **ELK**.", n, "", g, testkit.WithComments(nil)); v == Fail {
 		t.Errorf("o plano que SEMEIA o adaptador não depende de si mesmo: %s", msg)
 	}
 }
@@ -127,7 +128,7 @@ func TestPlanSourceDeclared_semLinhaDeFonteEhSkip(t *testing.T) {
 	g := mapaComAdaptador("plans/0002-plataforma.md", "packages/lambdas/fontes/ElkAdapter.spec.md")
 	n := mapx.Node{ID: "plans/0016-endurecimento.md", Kind: mapx.KindPlan}
 
-	if v, _ := checkPlanSourceDeclared("Este plano não nomeia fonte nenhuma.", n, "", g, nil); v != Skip {
+	if v, _ := checkPlanSourceDeclared("Este plano não nomeia fonte nenhuma.", n, "", g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("plano sem linha de fonte devia ser Skip, veio %v", v)
 	}
 }
@@ -138,7 +139,7 @@ func TestPlanSourceDeclared_soValeParaPlano(t *testing.T) {
 	g := mapaComAdaptador("plans/0002-plataforma.md", "packages/lambdas/fontes/Ga4Adapter.spec.md")
 	n := mapx.Node{ID: "packages/lambdas/frontend/WebVitals.spec.md", Kind: mapx.KindSpec}
 
-	if v, _ := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", g, nil); v != Skip {
+	if v, _ := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("o gate confronta PLANO; numa spec devia ser Skip, veio %v", v)
 	}
 }
@@ -150,7 +151,7 @@ func TestPlanSourceDeclared_laudoNomeiaFonteEDono(t *testing.T) {
 	g := mapaComAdaptador("plans/0002-plataforma.md", "packages/lambdas/fontes/Ga4Adapter.spec.md")
 	n := mapx.Node{ID: "plans/0008-frontend-web.md", Kind: mapx.KindPlan}
 
-	v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", g, nil)
+	v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("esperava Fail, veio %v: %s", v, msg)
 	}
@@ -168,7 +169,7 @@ func TestPlanSourceDeclared_naoAprovaOQueNaoMediu(t *testing.T) {
 	t.Run("PSDPL-I01: What was not measured is never approved", func(t *testing.T) {})
 	n := mapx.Node{ID: "plans/0008-frontend-web.md", Kind: mapx.KindPlan}
 
-	if v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", nil, nil); v != Pending {
+	if v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", nil, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("sem grafo esperava Pending, veio %v: %s", v, msg)
 	}
 
@@ -180,7 +181,7 @@ func TestPlanSourceDeclared_naoAprovaOQueNaoMediu(t *testing.T) {
 			Type: mapx.EdgeSeeds,
 		}},
 	}
-	if v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", semAdaptador, nil); v != Pending {
+	if v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", semAdaptador, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("sem adaptador nenhum semeado esperava Pending, veio %v: %s", v, msg)
 	}
 }
@@ -200,7 +201,7 @@ func TestPlanSourceDeclared_nomeForaDoPadraoNaoEhDono(t *testing.T) {
 	}
 	n := mapx.Node{ID: "plans/0008-frontend-web.md", Kind: mapx.KindPlan}
 
-	if v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", g, nil); v == Fail {
+	if v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", g, testkit.WithComments(nil)); v == Fail {
 		t.Errorf("acusacao errada custa mais que a perdida — ensina a ignorar o gate: %s", msg)
 	}
 }
@@ -216,7 +217,7 @@ func TestPlanSourceDeclared_naoConfrontaOrdemDeFase(t *testing.T) {
 		Needs: []string{"plans/0019-plataforma-tardia.md"},
 	}
 
-	if v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", g, nil); v != Pass {
+	if v, msg := checkPlanSourceDeclared("Fonte: **GA4**.", n, "", g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("ordem de fase e de outro gate; esperava Pass, veio %v: %s", v, msg)
 	}
 }
@@ -228,7 +229,7 @@ func TestPlanSourceDeclared_naoPedeNeedsParaONada(t *testing.T) {
 	g := mapaComAdaptador("plans/0002-plataforma.md", "packages/lambdas/fontes/ElkAdapter.spec.md")
 	n := mapx.Node{ID: "plans/0013-status-page.md", Kind: mapx.KindPlan}
 
-	v, msg := checkPlanSourceDeclared("Fonte: **Datadog**.", n, "", g, nil)
+	v, msg := checkPlanSourceDeclared("Fonte: **Datadog**.", n, "", g, testkit.WithComments(nil))
 	if v == Fail {
 		t.Fatalf("cobrar isso pediria uma declaracao apontando para o nada: %s", msg)
 	}
@@ -244,7 +245,7 @@ func TestPlanSourceDeclared_naoInterpretaAProsa(t *testing.T) {
 	g := mapaComAdaptador("plans/0002-plataforma.md", "packages/lambdas/fontes/Ga4Adapter.spec.md")
 	n := mapx.Node{ID: "plans/0008-frontend-web.md", Kind: mapx.KindPlan}
 
-	v, msg := checkPlanSourceDeclared("Fonte: **GA4**, que foi descartada nesta revisao.", n, "", g, nil)
+	v, msg := checkPlanSourceDeclared("Fonte: **GA4**, que foi descartada nesta revisao.", n, "", g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("interpretar a prosa nao e regua de gate bloqueante; veio %v: %s", v, msg)
 	}
@@ -260,7 +261,7 @@ func TestPlanSourceDeclared_confrontaCadaLinhaDeFonte(t *testing.T) {
 	g := mapaComAdaptador("plans/0002-plataforma.md", "packages/lambdas/fontes/ElkAdapter.spec.md")
 	n := mapx.Node{ID: "plans/0007-infraestrutura.md", Kind: mapx.KindPlan}
 
-	v, msg := checkPlanSourceDeclared("Fonte: **Datadog**.\n\nmais prosa\n\nFonte: **ELK**.\n", n, "", g, nil)
+	v, msg := checkPlanSourceDeclared("Fonte: **Datadog**.\n\nmais prosa\n\nFonte: **ELK**.\n", n, "", g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("a fonte da SEGUNDA linha nao foi confrontada: %v — %s", v, msg)
 	}
@@ -278,12 +279,12 @@ func TestPlanSourceDeclared_letraEDigitoContam(t *testing.T) {
 	n := mapx.Node{ID: "plans/0008-frontend-web.md", Kind: mapx.KindPlan}
 
 	for _, fonte := range []string{"Ab", "Zb", "B0", "B9"} {
-		if v, msg := checkPlanSourceDeclared("Fonte: **"+fonte+"**.", n, "", g, nil); v == Fail {
+		if v, msg := checkPlanSourceDeclared("Fonte: **"+fonte+"**.", n, "", g, testkit.WithComments(nil)); v == Fail {
 			t.Errorf("`%s` nao e a fonte de `BAdapter.spec.md` — acusou: %s", fonte, msg)
 		}
 	}
 	// A contraprova: a pontuacao e a caixa, estas sim, nao contam.
-	if v, msg := checkPlanSourceDeclared("Fonte: **b.**", n, "", g, nil); v != Fail {
+	if v, msg := checkPlanSourceDeclared("Fonte: **b.**", n, "", g, testkit.WithComments(nil)); v != Fail {
 		t.Errorf("`b.` devia casar com `BAdapter.spec.md`: %v — %s", v, msg)
 	}
 }

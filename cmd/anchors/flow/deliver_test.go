@@ -15,12 +15,13 @@ const deliverLocalYAML = "version: 1\n" +
 	"layers:\n" +
 	"  logic:\n    pattern: \"src/**/*.ts\"\n    kind: code\n" +
 	"  spec:\n    pattern: \"src/**/*.spec.md\"\n    kind: spec\n" +
+	"derived:\n  anchor: spec\n  files:\n    test: [\"{{dir}}/{{name}}.test.{{ext}}\"]\n" +
 	"gates:\n" +
 	"  - name: always-red\n    id: ALWRD\n    on: [code]\n    blocking: false\n" +
 	"    run: \"echo 'the loop drops the last page. Details follow here'; exit 1\"\n"
 
 // deliverMap is a map where src/pricing.ts is the unit PRICX, with no mutation signal.
-const deliverMap = "version: 7\nnodes:\n" +
+const deliverMap = "version: 8\nnodes:\n" +
 	"  - id: src/pricing.ts\n    kind: code\n    rev: a\n    code: PRICX\n    layer: logic\n" +
 	"  - id: src/pricing.spec.md\n    kind: spec\n    rev: b\n    code: PRICX\n    layer: spec\n" +
 	"edges: []\n"

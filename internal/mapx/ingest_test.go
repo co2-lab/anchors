@@ -5,6 +5,7 @@
 package mapx
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"reflect"
 	"slices"
 	"strings"
@@ -738,9 +739,9 @@ func TestRefreshRevs(t *testing.T) {
 	before := []byte("// @used-by: AAAAA, BBBBB\nexport const a = 1\n")
 	after := []byte("// @used-by: AAAAA\nexport const a = 1\n")
 	h := &Graph{Nodes: []Node{{ID: "a.ts", Kind: KindCode}, {ID: "a_test.ts", Kind: KindTest, Rev: "t1"}}}
-	h.Nodes[0].setEvidence(scan.ShortHash(before), scan.EvidenceOf("code", "a.ts", before, nil))
+	h.Nodes[0].setEvidence(scan.ShortHash(before), scan.EvidenceOf("code", "a.ts", before, testkit.AllComments()))
 	h.Nodes[1].Signal = &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.ts": scan.ShortHash(before)}}
-	h.RefreshRevs([]scan.File{{Path: "a.ts", Rev: scan.ShortHash(after), Evidence: scan.EvidenceOf("code", "a.ts", after, nil)}})
+	h.RefreshRevs([]scan.File{{Path: "a.ts", Rev: scan.ShortHash(after), Evidence: scan.EvidenceOf("code", "a.ts", after, testkit.AllComments())}})
 	if h.Nodes[0].Rev != scan.ShortHash(after) || h.EvidenceStaleFor("a_test.ts") != nil {
 		t.Errorf("a flag-only edit refreshed before the build keeps the closure, got %+v", h.Nodes)
 	}

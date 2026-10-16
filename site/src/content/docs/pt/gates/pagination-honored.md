@@ -13,6 +13,7 @@ A function promising the whole set does not silently return the first page.
 | Confronta | `code` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Pressupõe | `dialect.set_promise` `dialect.set_slice` `dialect.limits` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

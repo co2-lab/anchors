@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -67,7 +68,7 @@ func TestDocsFresh_acusaCompiladoDefasado(t *testing.T) {
 	root, g := projetoComDoc(t)
 	novo := defasa(t, root, g)
 
-	v, msg := checkDocsFresh(novo, noSpec(), root, g, nil)
+	v, msg := checkDocsFresh(novo, noSpec(), root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("verdict = %v (%s) — a doc afirma a versão antiga e o gate passou", v, msg)
 	}
@@ -79,7 +80,7 @@ func TestDocsFresh_dizQualDocumento(t *testing.T) {
 	root, g := projetoComDoc(t)
 	novo := defasa(t, root, g)
 
-	_, msg := checkDocsFresh(novo, noSpec(), root, g, nil)
+	_, msg := checkDocsFresh(novo, noSpec(), root, g, testkit.WithComments(nil))
 	if !strings.Contains(msg, "infra.md") {
 		t.Errorf("a mensagem não diz QUAL documento: %s", msg)
 	}
@@ -94,7 +95,7 @@ func TestDocsFresh_passaComDocEmDia(t *testing.T) {
 	c, _ := doct.New(root, g)
 	c.Build(false)
 
-	if v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, nil); v != Pass {
+	if v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v (%s) — a doc acabou de ser compilada", v, msg)
 	}
 }
@@ -105,7 +106,7 @@ func TestDocsFresh_soConfrontaSpec(t *testing.T) {
 	root, g := projetoComDoc(t)
 	defasa(t, root, g)
 	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature, mapx.KindGuide} {
-		if v, _ := checkDocsFresh("", mapx.Node{ID: "pkg/GoLive.go", Kind: k}, root, g, nil); v != Skip {
+		if v, _ := checkDocsFresh("", mapx.Node{ID: "pkg/GoLive.go", Kind: k}, root, g, testkit.WithComments(nil)); v != Skip {
 			t.Errorf("kind %s deveria ser Skip, foi %s", k, v)
 		}
 	}
@@ -120,7 +121,7 @@ func TestDocsFresh_pulaProjetoSemTemplates(t *testing.T) {
 	os.WriteFile(filepath.Join(root, "pkg/GoLive.spec.md"), []byte(specParaDoc), 0o644)
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "pkg/GoLive.spec.md", Kind: mapx.KindSpec}}}
 
-	if v, _ := checkDocsFresh(specParaDoc, noSpec(), root, g, nil); v != Skip {
+	if v, _ := checkDocsFresh(specParaDoc, noSpec(), root, g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("verdict = %v, queria Skip", v)
 	}
 }
@@ -131,7 +132,7 @@ func TestDocsFresh_ausenciaEhDefasagem(t *testing.T) {
 	t.Run("DCFRD-B06: A template whose document was never produced counts as stale", func(t *testing.T) {})
 	root, g := projetoComDoc(t) // template existe, nada foi compilado
 
-	v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, nil)
+	v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("verdict = %v (%s) — não há nada afirmando o que a spec diz hoje", v, msg)
 	}
@@ -149,7 +150,7 @@ func TestDocsFresh_ignoraDocEscritaAMao(t *testing.T) {
 	os.WriteFile(filepath.Join(root, doct.OutDir, "infra.md"),
 		[]byte("# Escrito à mão\n"), 0o644)
 
-	if v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, nil); v != Pass {
+	if v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v (%s) — o Build não sobrescreve este arquivo", v, msg)
 	}
 }
@@ -162,7 +163,7 @@ func TestDocsFresh_templateQuebradoReprova(t *testing.T) {
 	os.WriteFile(filepath.Join(root, doct.Dir, "infra.md.tmpl"),
 		[]byte(`{{range specs "camada=naoexiste"}}{{end}}`), 0o644)
 
-	v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, nil)
+	v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("verdict = %v (%s) — template quebrado é defeito, não silêncio", v, msg)
 	}
@@ -181,7 +182,7 @@ func TestDocsFresh_semConseguirLerAsSpecsNaoAprova(t *testing.T) {
 		{ID: "pkg/Fantasma.spec.md", Kind: mapx.KindSpec, Code: "FANTX"},
 	}}
 
-	v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, nil)
+	v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, testkit.WithComments(nil))
 	if v == Pass {
 		t.Fatalf("aprovou sem conseguir ler as specs (%s)", msg)
 	}
@@ -200,7 +201,7 @@ func TestDocsFresh_naoEscreveNoDisco(t *testing.T) {
 	root, g := projetoComDoc(t)
 	destino := filepath.Join(root, doct.OutDir, "infra.md")
 
-	checkDocsFresh(specParaDoc, noSpec(), root, g, nil)
+	checkDocsFresh(specParaDoc, noSpec(), root, g, testkit.WithComments(nil))
 
 	if _, err := os.Stat(destino); err == nil {
 		t.Error("o gate compilou a doc — ele aponta, não conserta")
@@ -214,8 +215,8 @@ func TestDocsFresh_segundaExecucaoDaOMesmoVeredito(t *testing.T) {
 	root, g := projetoComDoc(t)
 	novo := defasa(t, root, g)
 
-	primeira, _ := checkDocsFresh(novo, noSpec(), root, g, nil)
-	segunda, msg := checkDocsFresh(novo, noSpec(), root, g, nil)
+	primeira, _ := checkDocsFresh(novo, noSpec(), root, g, testkit.WithComments(nil))
+	segunda, msg := checkDocsFresh(novo, noSpec(), root, g, testkit.WithComments(nil))
 	if primeira != Fail || segunda != Fail {
 		t.Fatalf("primeira %s, segunda %s (%s) — a segunda passou porque o gate consertou",
 			primeira, segunda, msg)
@@ -228,9 +229,9 @@ func TestDocsFresh_aCobrancaPousaNaSpec(t *testing.T) {
 	root, g := projetoComDoc(t)
 	novo := defasa(t, root, g)
 
-	naSpec, _ := checkDocsFresh(novo, noSpec(), root, g, nil)
+	naSpec, _ := checkDocsFresh(novo, noSpec(), root, g, testkit.WithComments(nil))
 	noCompilado, _ := checkDocsFresh(novo,
-		mapx.Node{ID: filepath.Join(doct.OutDir, "infra.md"), Kind: mapx.KindGuide}, root, g, nil)
+		mapx.Node{ID: filepath.Join(doct.OutDir, "infra.md"), Kind: mapx.KindGuide}, root, g, testkit.WithComments(nil))
 	if naSpec != Fail {
 		t.Errorf("a spec deveria receber a cobrança, foi %s", naSpec)
 	}
@@ -251,7 +252,7 @@ func TestDocsFresh_naoJulgaAQualidadeDoCompilado(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, nil); v != Pass {
+	if v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v (%s) — a régua é igualdade, não qualidade", v, msg)
 	}
 }
@@ -268,7 +269,7 @@ func TestDocsFresh_naoRodaOBuild(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	checkDocsFresh(novo, noSpec(), root, g, nil)
+	checkDocsFresh(novo, noSpec(), root, g, testkit.WithComments(nil))
 
 	depois, err := os.ReadFile(destino)
 	if err != nil {
@@ -288,7 +289,7 @@ func TestDocsFresh_naoCobraDocEscritaAMaoNemContraTemplateDivergente(t *testing.
 	os.WriteFile(filepath.Join(root, doct.OutDir, "infra.md"),
 		[]byte("# Uma página completamente diferente do que o template produziria\n"), 0o644)
 
-	if v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, nil); v != Pass {
+	if v, msg := checkDocsFresh(specParaDoc, noSpec(), root, g, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("verdict = %v (%s) — o compilador não escreve este arquivo", v, msg)
 	}
 }
@@ -302,7 +303,7 @@ func TestDocsFresh_oCompiladoNaoEhArtefatoProprio(t *testing.T) {
 	c.Build(false)
 
 	no := mapx.Node{ID: filepath.Join(doct.OutDir, "infra.md"), Kind: mapx.KindGuide}
-	if v, _ := checkDocsFresh("", no, root, g, nil); v != Skip {
+	if v, _ := checkDocsFresh("", no, root, g, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("o compilado recebeu veredito (%s) — ele é saída de build", v)
 	}
 }
@@ -318,7 +319,7 @@ func TestDocsFresh_naoRecompilaPorAlvo(t *testing.T) {
 	root, g := projetoComDoc(t)
 	defasa(t, root, g)
 
-	if v, _ := checkDocsFresh("", noSpec(), root, g, nil); v != Fail {
+	if v, _ := checkDocsFresh("", noSpec(), root, g, testkit.WithComments(nil)); v != Fail {
 		t.Fatalf("primeira chamada: esperava Fail, veio %v", v)
 	}
 	// Apaga o TEMPLATE e mantem o diretorio: o guarda de `doct/` roda ANTES do cache
@@ -328,7 +329,7 @@ func TestDocsFresh_naoRecompilaPorAlvo(t *testing.T) {
 	if err := os.Remove(filepath.Join(root, doct.Dir, "infra.md.tmpl")); err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := checkDocsFresh("", noSpec(), root, g, nil); v != Fail {
+	if v, _ := checkDocsFresh("", noSpec(), root, g, testkit.WithComments(nil)); v != Fail {
 		t.Errorf("segunda chamada recompilou em vez de usar o cache: veio %v", v)
 	}
 }
@@ -340,7 +341,7 @@ func TestDocsFresh_cacheNaoVazaEntreProjetos(t *testing.T) {
 	resetDocsCache()
 	rootA, gA := projetoComDoc(t)
 	defasa(t, rootA, gA)
-	if v, _ := checkDocsFresh("", noSpec(), rootA, gA, nil); v != Fail {
+	if v, _ := checkDocsFresh("", noSpec(), rootA, gA, testkit.WithComments(nil)); v != Fail {
 		t.Fatalf("projeto A: esperava Fail, veio %v", v)
 	}
 
@@ -353,7 +354,7 @@ func TestDocsFresh_cacheNaoVazaEntreProjetos(t *testing.T) {
 	if _, err := c.Build(false); err != nil {
 		t.Fatal(err)
 	}
-	if v, d := checkDocsFresh("", noSpec(), rootB, gB, nil); v != Pass {
+	if v, d := checkDocsFresh("", noSpec(), rootB, gB, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("projeto B esta em dia: esperava Pass, veio %v (%s)", v, d)
 	}
 }

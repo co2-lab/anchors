@@ -6,6 +6,7 @@ package gate
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,13 +17,13 @@ import (
 )
 
 func obligCfg() *config.Config {
-	return &config.Config{Obligations: []config.Obligation{{
+	return testkit.WithComments(&config.Config{Obligations: []config.Obligation{{
 		Name:         "pii-purgavel",
 		When:         "carries: pii",
 		MustAppearIn: []string{"purge.ts"},
 		IdentifiedBy: "screaming-snake",
 		Because:      "LGPD — dado pessoal precisa ser apagável",
-	}}}
+	}}})
 }
 
 // tmpRoot cria uma raiz com o arquivo-destino no conteúdo dado.
@@ -85,7 +86,7 @@ func TestObligation_waiverComMotivoEximeMasSemMotivoNao(t *testing.T) {
 func TestObligation_semObrigacaoDeclaradaPula(t *testing.T) {
 	t.Run("OBHNB-B05: A project with no declared obligation is skipped", func(t *testing.T) {})
 	root := tmpRoot(t, "")
-	if v, _ := checkObligationHonored("carries: pii", obligNode(), root, nil, &config.Config{}); v != Skip {
+	if v, _ := checkObligationHonored("carries: pii", obligNode(), root, nil, testkit.WithComments(&config.Config{})); v != Skip {
 		t.Errorf("projeto sem obrigações declaradas deveria dar Skip")
 	}
 }
@@ -185,12 +186,12 @@ func TestObligation_dispensaEDividaSaoDistintas(t *testing.T) {
 func TestObligation_globSemArquivoNaoInventaViolacao(t *testing.T) {
 	t.Run("OBHNB-I02: A glob that matches no file produces no violation", func(t *testing.T) {})
 	root := t.TempDir() // nenhum arquivo: o glob `purge.ts` não casa nada
-	cfg := &config.Config{Obligations: []config.Obligation{{
+	cfg := testkit.WithComments(&config.Config{Obligations: []config.Obligation{{
 		Name:         "pii-purgavel",
 		When:         "carries: pii",
 		MustAppearIn: []string{"purge.ts"},
 		IdentifiedBy: "screaming-snake",
-	}}}
+	}}})
 	content := "<!-- @anchors\n  code: MTENX\n  carries: pii\n-->\n"
 	if v, d := checkObligationHonored(content, obligNode(), root, nil, cfg); v != Pass {
 		t.Fatalf("sem arquivo para checar não há violação a declarar, foi %s (%s)", v, d)
@@ -206,12 +207,12 @@ func TestObligation_identifiedAsDoNoGanhaDaFormaAutomatica(t *testing.T) {
 	// O destino nomeia só o PLURAL. A forma automática derivaria METADATA_ENTRY_TABLE_NAME
 	// (singular), que ali não existe — se o gate a usasse, acusaria um nó correto.
 	root := tmpRoot(t, "const tables = [METADATA_ENTRIES_TABLE_NAME]\n")
-	cfg := &config.Config{Obligations: []config.Obligation{{
+	cfg := testkit.WithComments(&config.Config{Obligations: []config.Obligation{{
 		Name:         "pii-purgavel",
 		When:         "carries: pii",
 		MustAppearIn: []string{"purge.ts"},
 		IdentifiedBy: "{{SCREAMING}}_TABLE_NAME",
-	}}}
+	}}})
 	comDeclaracao := "<!-- @anchors\n  code: MTENX\n  carries: pii\n" +
 		"  identified_as: METADATA_ENTRIES_TABLE_NAME\n-->\n"
 	if v, d := checkObligationHonored(comDeclaracao, obligNode(), root, nil, cfg); v != Pass {
@@ -232,7 +233,7 @@ func TestObligation_naoInventaDever(t *testing.T) {
 	t.Run("OBHNB-X01: The gate does not decide which obligations exist", func(t *testing.T) {})
 	root := tmpRoot(t, "const tables = []\n")
 	content := "<!-- @anchors\n  code: MTENX\n  carries: pii\n-->\n"
-	if v, d := checkObligationHonored(content, obligNode(), root, nil, &config.Config{}); v != Skip {
+	if v, d := checkObligationHonored(content, obligNode(), root, nil, testkit.WithComments(&config.Config{})); v != Skip {
 		t.Fatalf("sem obrigação declarada nada é cobrado, foi %s (%s)", v, d)
 	}
 }
@@ -264,12 +265,12 @@ func TestObligation_declaracaoNoCorpoNaoVale(t *testing.T) {
 
 func TestObligationHonored_Errors(t *testing.T) {
 	t.Run("OBHNB-E01: An unreadable destination file is not proof, and the others are still searched", func(t *testing.T) {
-		cfg := &config.Config{Obligations: []config.Obligation{{
+		cfg := testkit.WithComments(&config.Config{Obligations: []config.Obligation{{
 			Name:         "pii-purgavel",
 			When:         "carries: pii",
 			MustAppearIn: []string{"purge/*.sql"},
 			IdentifiedBy: "screaming-snake",
-		}}}
+		}}})
 		content := "<!-- @anchors\n  carries: pii\n-->\n"
 		root := t.TempDir()
 		if err := os.MkdirAll(filepath.Join(root, "purge"), 0o755); err != nil {
@@ -298,12 +299,12 @@ func TestObligationHonored_Errors(t *testing.T) {
 	})
 
 	t.Run("OBHNB-E02: A must_appear_in glob that does not parse fails naming it", func(t *testing.T) {
-		cfg := &config.Config{Obligations: []config.Obligation{{
+		cfg := testkit.WithComments(&config.Config{Obligations: []config.Obligation{{
 			Name:         "pii-purgavel",
 			When:         "carries: pii",
 			MustAppearIn: []string{"purge[.sql"},
 			IdentifiedBy: "screaming-snake",
-		}}}
+		}}})
 		content := "<!-- @anchors\n  carries: pii\n-->\n"
 		v, d := checkObligationHonored(content, obligNode(), t.TempDir(), nil, cfg)
 		if v != Fail || !strings.Contains(d, "purge[.sql") || !strings.Contains(d, "pii-purgavel") {

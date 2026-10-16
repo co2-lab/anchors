@@ -69,30 +69,23 @@ func FileCode(f scan.File, taken map[string]bool) string {
 	return code.GenerateUnique(FileCodeName(f), taken)
 }
 
-// CanCarryCode says whether a file can be given a `code:` line: a text file whose type has
-// a comment syntax the header is written in. A JSON, an image or a file of an unknown type
-// would be broken by a comment.
-func CanCarryCode(rel string, content []byte) bool {
-	if strings.IndexByte(string(content), 0) >= 0 {
-		return false
-	}
-	ext := strings.ToLower(path.Ext(rel))
-	// Gherkin comments with `#`, and the scanner reads a feature's header as text: it is not
-	// in the comment table, and a feature is a governed file like any other.
-	if ext == ".feature" {
-		return true
-	}
-	_, ok := config.CommentMarkers[ext]
-	return ok
+// CanCarryCode says whether a file can be given a `code:` line: a text file whose comments
+// the project declares (`dialect.comments`), or one of Anchors' own formats. A JSON, an image
+// or a file of a type nobody declared would be broken by a comment.
+func CanCarryCode(content []byte, cs *config.Comments) bool {
+	return strings.IndexByte(string(content), 0) < 0 && cs != nil
 }
 
 // WithHeaderCode is the content with `code: <c>` written in its `@anchors` header — right
 // below the opener, so nothing someone wrote moves —, or with a header carrying it at the
 // top when the file has none (after a shebang, which stays first).
-func WithHeaderCode(content, rel, c string) string {
-	marker := config.LineCommentFor(rel)
+func WithHeaderCode(content, c string, cs *config.Comments) string {
+	marker := cs.LineMarker()
+	if marker == "" {
+		return content
+	}
 	field := "code: " + c
-	if block := scan.AnchorsHeader([]byte(content)); block != nil {
+	if block := scan.AnchorsHeader([]byte(content), cs); block != nil {
 		at := strings.Index(content, string(block))
 		nl := strings.Index(string(block), "\n")
 		if at < 0 || nl < 0 {
@@ -100,13 +93,13 @@ func WithHeaderCode(content, rel, c string) string {
 		}
 		opener := at + nl
 		line := marker + "   " + field
-		if config.CommentCloseFor(marker) != "" {
+		if cs.CloseFor(marker) != "" {
 			line = "  " + field // a block comment: its fields are indented, with no marker
 		}
 		return content[:opener] + "\n" + line + content[opener:]
 	}
 	header := marker + " @anchors\n" + marker + "   " + field + "\n\n"
-	if closer := config.CommentCloseFor(marker); closer != "" {
+	if closer := cs.CloseFor(marker); closer != "" {
 		header = marker + " @anchors\n  " + field + "\n" + strings.TrimSpace(closer) + "\n\n"
 	}
 	if strings.HasPrefix(content, "#!") {
@@ -120,8 +113,8 @@ func WithHeaderCode(content, rel, c string) string {
 // AsRefWithOwnCode is the content with the header's `code: <unit>` turned into `ref: <unit>`
 // and a code of its own above it: the file that carried its spec's code — a feature, a code
 // file written before the code was the file's — keeps naming its unit, and gets an address.
-func AsRefWithOwnCode(content, unit, own string) string {
-	block := scan.AnchorsHeader([]byte(content))
+func AsRefWithOwnCode(content, unit, own string, cs *config.Comments) string {
+	block := scan.AnchorsHeader([]byte(content), cs)
 	if block == nil {
 		return content
 	}
@@ -179,8 +172,8 @@ var headerDateRE = regexp.MustCompile(`(updated_at:[ \t]*)\d{4}-\d{2}-\d{2}`)
 // WithHeaderDate is the content with the `updated_at` of its `@anchors` header set to the
 // day given — the date `anchors touch` writes on a file that changed —; a header without
 // one, or no header, is left as it was.
-func WithHeaderDate(content, day string) string {
-	block := scan.AnchorsHeader([]byte(content))
+func WithHeaderDate(content, day string, cs *config.Comments) string {
+	block := scan.AnchorsHeader([]byte(content), cs)
 	if block == nil {
 		return content
 	}

@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +26,7 @@ import (
 // há com que comparar quando só um trabalho existe.
 
 func cfgComDocs() *config.Config {
-	return &config.Config{
+	return testkit.WithComments(&config.Config{
 		// O `path` é o que faz `scan.LayerOfUnit` classificar o arquivo quando ele não tem
 		// header — e sem ele a layer sai vazia, o `trigger` não casa, e o gate pula
 		// justamente a unidade que deveria cobrar.
@@ -34,7 +35,7 @@ func cfgComDocs() *config.Config {
 			{Kind: "openapi", Path: "docs/contratos/openapi.yaml", Trigger: []string{"lambdas"}},
 			{Kind: "schema", Path: "docs/contratos/dados.md", Trigger: []string{"lambdas"}},
 		}},
-	}
+	})
 }
 
 func noDeLambda() mapx.Node {
@@ -142,7 +143,7 @@ func TestDocRequired_umDosDoisNaoBasta(t *testing.T) {
 // ruído, e ruído ensina a ignorar o gate.
 func TestDocRequired_semDeclaracaoNaoCobra(t *testing.T) {
 	t.Run("DCRQD-B06: Without a declaration nothing is charged", func(t *testing.T) {})
-	if v, _ := checkDocRequired("", noDeLambda(), t.TempDir(), nil, &config.Config{}); v != Skip {
+	if v, _ := checkDocRequired("", noDeLambda(), t.TempDir(), nil, testkit.WithComments(&config.Config{})); v != Skip {
 		t.Errorf("sem `docs.required` o gate deveria PULAR; veio %v", v)
 	}
 }
@@ -328,14 +329,14 @@ func TestDocRequired_mentionInTheBodyDoesNotCountAsDocumentation(t *testing.T) {
 		"## Nota — este catálogo cresce por card\n\n" +
 		"Faltam entrada para `MTCRM` e `CHRTS`; cada um recebe a sua quando o gate sinalizar.\n"
 
-	if !mentionsUnit(doc, "docs/components.md", "STBDS", "StatusBadge.spec.md") {
+	if !mentionsUnit(doc, "docs/components.md", "STBDS", "StatusBadge.spec.md", nil) {
 		t.Error("the unit WITH its own section stopped counting — false negative")
 	}
-	if mentionsUnit(doc, "docs/components.md", "MTCRM", "MetricCard.spec.md") {
+	if mentionsUnit(doc, "docs/components.md", "MTCRM", "MetricCard.spec.md", nil) {
 		t.Error("a citation in the body and a mention in a note counted as documentation — " +
 			"it is the defect that left MetricCard without an entry for weeks")
 	}
-	if mentionsUnit(doc, "docs/components.md", "CHRTS", "Charts.spec.md") {
+	if mentionsUnit(doc, "docs/components.md", "CHRTS", "Charts.spec.md", nil) {
 		t.Error("a mention only in the note counted as documentation")
 	}
 }
@@ -346,7 +347,7 @@ func TestDocRequired_titleNamingTheFileCounts(t *testing.T) {
 	t.Run("DCRQD-B04: A mention by the file name also counts", func(t *testing.T) {})
 	t.Run("DCRQD-B09: In a document with sections only a title of its own documents the unit", func(t *testing.T) {})
 	doc := "## `apps/mobile/src/components/MetricCard.spec.md`\n\nO cartão de número.\n"
-	if !mentionsUnit(doc, "docs/components.md", "MTCRM", "apps/mobile/src/components/MetricCard.spec.md") {
+	if !mentionsUnit(doc, "docs/components.md", "MTCRM", "apps/mobile/src/components/MetricCard.spec.md", nil) {
 		t.Error("a title naming the FILE did not count — the real catalogue writes it that way")
 	}
 }
@@ -360,7 +361,7 @@ func TestDocRequired_documentWithoutSectionsStillCountsByMention(t *testing.T) {
 	t.Run("DCRQD-B04: A mention by the file name also counts", func(t *testing.T) {})
 	t.Run("DCRQD-B09: In a document with sections only a title of its own documents the unit", func(t *testing.T) {})
 	yaml := "openapi: 3.1.0\npaths:\n  /services:\n    get:\n      operationId: ServiceList\n"
-	if !mentionsUnit(yaml, "openapi.yaml", "SRLSS", "ServiceList.spec.md") {
+	if !mentionsUnit(yaml, "openapi.yaml", "SRLSS", "ServiceList.spec.md", nil) {
 		t.Error("in a document without sections the mention stopped counting — OpenAPI has no " +
 			"Markdown titles, and charging a section there demands a structure the format lacks")
 	}
@@ -370,7 +371,7 @@ func TestDocRequired_documentWithoutSectionsStillCountsByMention(t *testing.T) {
 func TestDocRequired_titleOfAnotherUnitDoesNotCount(t *testing.T) {
 	t.Run("DCRQD-B09: In a document with sections only a title of its own documents the unit", func(t *testing.T) {})
 	doc := "## `MetricCardList.spec.md` (`MTCLS`)\n\nA lista de cartões.\n"
-	if mentionsUnit(doc, "docs/components.md", "MTCRM", "MetricCard.spec.md") {
+	if mentionsUnit(doc, "docs/components.md", "MTCRM", "MetricCard.spec.md", nil) {
 		t.Error("the title of `MetricCardList` counted as documentation of `MetricCard`")
 	}
 }
@@ -380,10 +381,10 @@ func TestDocRequired_titleOfAnotherUnitDoesNotCount(t *testing.T) {
 func TestDocRequired_aYAMLCommentIsNoHeading(t *testing.T) {
 	t.Run("DCRQD-B10: A YAML comment is not a Markdown heading", func(t *testing.T) {})
 	yaml := "# generated from the handlers\nopenapi: 3.1.0\npaths:\n  /wallets:\n    get:\n      x-anchors-unit: GQCHG\n"
-	if !mentionsUnit(yaml, "docs/openapi.yaml", "GQCHG", "src/handlers/wallets.go") {
+	if !mentionsUnit(yaml, "docs/openapi.yaml", "GQCHG", "src/handlers/wallets.go", nil) {
 		t.Error("the mention in a YAML body counts, its comment is no heading")
 	}
-	if mentionsUnit("# Overview\n\nGQCHG appears in the prose\n", "docs/api.md", "GQCHG", "src/handlers/wallets.go") {
+	if mentionsUnit("# Overview\n\nGQCHG appears in the prose\n", "docs/api.md", "GQCHG", "src/handlers/wallets.go", nil) {
 		t.Error("a Markdown document with sections still needs a section of the unit's own")
 	}
 }

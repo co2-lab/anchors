@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,7 +25,7 @@ func rodaRastreavel(t *testing.T, teste, feature string) (Verdict, string) {
 		Nodes: []mapx.Node{{ID: "u.feature", Kind: mapx.KindFeature}, {ID: "u.test.ts", Kind: mapx.KindTest}},
 		Edges: []mapx.Edge{{From: "u.feature", To: "u.test.ts", Type: mapx.EdgeTestedBy}},
 	}
-	return checkTestTraceable(teste, mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest}, root, g, nil)
+	return checkTestTraceable(teste, mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest}, root, g, testkit.WithComments(nil))
 }
 
 func TestTestTraceable_NaoTestePula(t *testing.T) {
@@ -32,7 +33,7 @@ func TestTestTraceable_NaoTestePula(t *testing.T) {
 	t.Run("TSTRT-I01: Traceability is strictly charged on test artifacts", func(t *testing.T) {})
 	for _, k := range []mapx.Kind{mapx.KindSpec, mapx.KindFeature, mapx.KindCode} {
 		n := mapx.Node{ID: "arquivo", Kind: k}
-		v, msg := checkTestTraceable("qualquer conteudo", n, "", &mapx.Graph{}, nil)
+		v, msg := checkTestTraceable("qualquer conteudo", n, "", &mapx.Graph{}, testkit.WithComments(nil))
 		if v != Skip {
 			t.Fatalf("esperava Skip para kind %v, veio %v (%s)", k, v, msg)
 		}
@@ -43,7 +44,7 @@ func TestTestTraceable_GrafoNilPendente(t *testing.T) {
 	t.Run("TSTRT-B02: Confrontation without a dependency graph returns Pending", func(t *testing.T) {})
 	t.Run("TSTRT-I04: Missing graph structure produces Pending rather than approving", func(t *testing.T) {})
 	n := mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest}
-	v, _ := checkTestTraceable("conteudo", n, "", nil, nil)
+	v, _ := checkTestTraceable("conteudo", n, "", nil, testkit.WithComments(nil))
 	if v != Pending {
 		t.Fatalf("sem grafo deve retornar Pending, veio %v", v)
 	}
@@ -55,7 +56,7 @@ func TestTestTraceable_SemFeatureLigadaPula(t *testing.T) {
 	t.Run("TSTRT-X03: Scenario codes are not required in standalone test files", func(t *testing.T) {})
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "u.test.ts", Kind: mapx.KindTest}}}
 	v, _ := checkTestTraceable("it('helper sem feature', () => {})",
-		mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest}, t.TempDir(), g, nil)
+		mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest}, t.TempDir(), g, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("teste sem feature ligada deve pular: %v", v)
 	}
@@ -68,7 +69,7 @@ func TestTestTraceable_FeatureInexistentePula(t *testing.T) {
 		Nodes: []mapx.Node{{ID: "sumiu.feature", Kind: mapx.KindFeature}, {ID: "u.test.ts", Kind: mapx.KindTest}},
 		Edges: []mapx.Edge{{From: "sumiu.feature", To: "u.test.ts", Type: mapx.EdgeTestedBy}},
 	}
-	v, _ := checkTestTraceable("conteudo", mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest}, root, g, nil)
+	v, _ := checkTestTraceable("conteudo", mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest}, root, g, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("feature que nao existe no disco deve retornar Skip, veio %v", v)
 	}
@@ -210,7 +211,7 @@ const featureComCodigos = "@TRACX-B01 @unit-level\nScenario: one\n"
 func TestTestTraceable_TitlesWhenDeclared(t *testing.T) {
 	t.Run("TSTRT-B12: With a tests source a test traces only through its titles", func(t *testing.T) {})
 	test := "const fixture = 'TRACX-B01'\nit('does something else', () => {})\n"
-	ts := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	ts := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
 	if v, msg := traceableWithSource(t, test, ts); v != Fail {
 		t.Fatalf("a code only in a fixture must not trace the test when titles are declared, got %v (%s)", v, msg)
 	}
@@ -225,7 +226,7 @@ func TestTestTraceable_TitlesWhenDeclared(t *testing.T) {
 
 func TestTestTraceable_FailingSource(t *testing.T) {
 	t.Run("TSTRT-E03: A failing tests source fails the gate naming the error", func(t *testing.T) {})
-	cfg := &config.Config{Dialect: &config.Dialect{Tests: &config.TestsSource{Script: "echo 'runner missing' >&2; exit 2"}}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Tests: &config.TestsSource{Script: "echo 'runner missing' >&2; exit 2"}}})
 	v, msg := traceableWithSource(t, "it('TRACX-B01: one', () => {})\n", cfg)
 	if v != Fail || !strings.Contains(msg, "runner missing") {
 		t.Fatalf("a failing source must fail the gate naming its error, got %v (%s)", v, msg)
@@ -238,7 +239,7 @@ func TestTestTraceable_SkipsSupport(t *testing.T) {
 		Nodes: []mapx.Node{{ID: "u.feature", Kind: mapx.KindFeature}, {ID: "u.test.ts", Kind: mapx.KindTest, Support: true}},
 		Edges: []mapx.Edge{{From: "u.feature", To: "u.test.ts", Type: mapx.EdgeTestedBy}},
 	}
-	v, msg := checkTestTraceable("helper()", mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest, Support: true}, t.TempDir(), g, nil)
+	v, msg := checkTestTraceable("helper()", mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest, Support: true}, t.TempDir(), g, testkit.WithComments(nil))
 	if v != Skip || !strings.Contains(msg, "support") {
 		t.Fatalf("a support file must be skipped saying why, got %v (%s)", v, msg)
 	}
@@ -249,7 +250,7 @@ func TestTestTraceable_FileTheSourceDoesNotDescribe(t *testing.T) {
 	// A Maestro flow under a ts project: the family's `it(` lists no test in it, so it is
 	// read as without a source, and the code in `name:` traces it.
 	flow := "appId: app\nname: 'TRACX-B01 - one'\ntags:\n  - TRACX-B01\n---\n- launchApp\n"
-	ts := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	ts := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
 	if v, msg := traceableWithSource(t, flow, ts); v != Pass {
 		t.Fatalf("a file the source does not describe must be read as without a source, got %v (%s)", v, msg)
 	}

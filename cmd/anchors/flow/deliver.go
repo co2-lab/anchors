@@ -7,6 +7,7 @@ package flow
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -102,7 +103,8 @@ After this, the watcher queues the review task.`,
 			// que não se aceita é registrar entrega de unidade que não existe em peça
 			// nenhuma — aí não há trabalho, e o `deliver` ainda mandaria revisá-lo.
 			relUnit := common.RelTo(absRoot, unit)
-			if peca, ok := existingPiece(absRoot, relUnit); ok {
+			pcfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			if peca, ok := existingPiece(absRoot, relUnit, pcfg); ok {
 				// The unit recorded is still `relUnit` — the old wording ("recording the
 				// unit by <piece>") said the opposite of what the record then held.
 				if peca != relUnit {
@@ -247,17 +249,30 @@ func watcherActive(root string) bool {
 // existingPiece devolve a peça da unidade que está no disco: o próprio alvo, se existir,
 // ou a primeira peça derivada dele que exista. É o que permite `deliver --stage spec`
 // funcionar na primeira entrega, quando só o `.spec.md` nasceu.
-func existingPiece(root, rel string) (string, bool) {
+func existingPiece(root, rel string, cfg *config.Config) (string, bool) {
 	if _, err := os.Stat(filepath.Join(root, rel)); err == nil {
 		return rel, true
 	}
-	base := strings.TrimSuffix(rel, filepath.Ext(rel))
-	for _, suf := range []string{".spec.md", ".feature", ".test.ts", ".test.tsx", ".ts", ".tsx"} {
-		cand := base + suf
+	// The unit's pieces where the project's `derived.files` put them, then its code in the
+	// extensions its code layers declare.
+	if cfg == nil {
+		return "", false
+	}
+	layer, _ := scan.Classify(rel, cfg)
+	var cands []string
+	for _, piece := range []string{"spec", "feature", "test"} {
+		cands = append(cands, cfg.PiecePaths(rel, layer, piece)...)
+	}
+	stem := path.Join(path.Dir(rel), cfg.UnitName(rel))
+	cands = append(cands, stem+".spec.md", stem+".feature") // Anchors' own, beside the code
+	for _, ext := range cfg.CodeExtensions() {
+		cands = append(cands, stem+ext)
+	}
+	for _, cand := range cands {
 		if cand == rel {
 			continue
 		}
-		if _, err := os.Stat(filepath.Join(root, cand)); err == nil {
+		if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(cand))); err == nil {
 			return cand, true
 		}
 	}

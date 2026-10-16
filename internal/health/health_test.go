@@ -214,8 +214,12 @@ func TestCheckDuplicateCodes_unitAndOptOut(t *testing.T) {
 			{ID: "Login.test.tsx", Kind: mapx.KindTest, Code: "LOGIN"},
 			{ID: "Login.tsx", Kind: mapx.KindCode, Code: "LOGIN"},
 		}}
-		if fs := checkDuplicateCodes(g); len(fs) != 0 {
+		cfg := &config.Config{Derived: &config.Derived{Files: map[string]config.Padroes{"test": {"{{dir}}/{{name}}.test.{{ext}}"}}}}
+		if fs := checkDuplicateCodes(g, cfg); len(fs) != 0 {
 			t.Fatalf("one unit's pieces are one owner: %+v", fs)
+		}
+		if fs := checkDuplicateCodes(g, &config.Config{}); len(fs) != 1 {
+			t.Fatalf("with no template naming a test, its name is its own unit: %+v", fs)
 		}
 	})
 	t.Run("DCTRO-B11: A file that declares a shared code is not an owner", func(t *testing.T) {
@@ -223,11 +227,11 @@ func TestCheckDuplicateCodes_unitAndOptOut(t *testing.T) {
 			{ID: "apps/Login.tsx", Kind: mapx.KindCode, Code: "LOGIN"},
 			{ID: "packages/e2e/flow.test.ts", Kind: mapx.KindTest, Code: "LOGIN", SharedCode: true},
 		}}
-		if fs := checkDuplicateCodes(g); len(fs) != 0 {
+		if fs := checkDuplicateCodes(g, nil); len(fs) != 0 {
 			t.Fatalf("a shared-code file does not collide: %+v", fs)
 		}
 		g.Nodes[1].SharedCode = false
-		if fs := checkDuplicateCodes(g); len(fs) != 1 {
+		if fs := checkDuplicateCodes(g, nil); len(fs) != 1 {
 			t.Fatalf("without the opt-out the two domains collide: %+v", fs)
 		}
 	})

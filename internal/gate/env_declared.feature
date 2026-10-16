@@ -2,7 +2,7 @@
 # @anchors
 #   code: EDFNV
 #   ref: ENVDC
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @ENVDC
@@ -33,10 +33,10 @@ Feature: EnvDeclared — the environment variables a unit reads are the ones its
     Then DEBUG is not read
 
   @ENVDC-B05 @unit-level
-  Scenario: Every family's reads are recognised when none is declared
-    Given TypeScript code reading process.env.LOG_LEVEL in a project with no dialect
+  Scenario: With no env_read declared the gate is pending
+    Given TypeScript code reading process.env.LOG_LEVEL in a project whose dialect has no env_read
     When env-declared confronts the spec declaring LOG_LEVEL
-    Then it passes
+    Then it is pending, naming dialect.env_read
 
   @ENVDC-E01 @unit-level
   Scenario: A specified file that cannot be read reads nothing

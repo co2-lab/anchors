@@ -6,6 +6,7 @@ package mapx
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/testkit"
 	"reflect"
 	"strings"
 	"testing"
@@ -702,20 +703,20 @@ func TestStaleCodes_freshAgainByARunOrTheAuthor(t *testing.T) {
 func TestAdvanceTo(t *testing.T) {
 	t.Run("EDSTD-B22: Advancing a node to its content carries the evidence its revisions show unchanged", func(t *testing.T) {})
 	before := []byte("export const a = 1\n")
-	ev := scan.EvidenceOf("code", "a.ts", before, nil)
+	ev := scan.EvidenceOf("code", "a.ts", before, testkit.AllComments())
 	g := &Graph{Nodes: []Node{{ID: "a.ts", Kind: KindCode, Code: "A"}, {ID: "a_test.ts", Kind: KindTest, Code: "A", Rev: "t1"}}}
 	g.Nodes[0].setEvidence(scan.ShortHash(before), ev)
 	g.Nodes[1].Signal = &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.ts": scan.ShortHash(before)}}
-	if moved, carried := g.AdvanceTo("a.ts", []byte("export const a = 1 // @used-by: BBBBB\n"), nil); !moved || !carried {
+	if moved, carried := g.AdvanceTo("a.ts", []byte("export const a = 1 // @used-by: BBBBB\n"), testkit.AllComments()); !moved || !carried {
 		t.Errorf("a flag moves the revision and carries the evidence, got %v %v", moved, carried)
 	}
 	if g.EvidenceStaleFor("a_test.ts") != nil {
 		t.Error("the test reaching it stays fresh")
 	}
-	if moved, carried := g.AdvanceTo("a.ts", []byte("export const a = 2\n"), nil); !moved || carried || g.EvidenceStaleFor("a_test.ts") == nil {
+	if moved, carried := g.AdvanceTo("a.ts", []byte("export const a = 2\n"), testkit.AllComments()); !moved || carried || g.EvidenceStaleFor("a_test.ts") == nil {
 		t.Errorf("a change to the code carries nothing, got %v %v", moved, carried)
 	}
-	if moved, _ := g.AdvanceTo("gone.ts", before, nil); moved {
+	if moved, _ := g.AdvanceTo("gone.ts", before, testkit.AllComments()); moved {
 		t.Error("an unknown file is left alone")
 	}
 }

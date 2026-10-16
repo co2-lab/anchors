@@ -71,29 +71,14 @@ func fileName(name, nameCase string) string {
 	return name
 }
 
-// blockCommentRE is a block comment that opens and closes on one line, in the languages
-// whose only comment is a block: OCaml's.
-var blockCommentRE = regexp.MustCompile(`\(\*.*?\*\)`)
-
 // importsByName are the modules a file names, one import per module, at its first mention,
-// each resolved to the code file named after it. The file's comments name nothing.
+// each resolved to the code file named after it. The file's comments — in the syntax the
+// project declares for it — name nothing.
 func importsByName(content, rel string, d config.Dialect, g *mapx.Graph) []RealImport {
 	r := importResolve(d)
 	seen := map[string]bool{}
 	var out []RealImport
-	depth := 0
-	for i, ln := range strings.Split(content, "\n") {
-		ln = blockCommentRE.ReplaceAllString(ln, " ")
-		if depth > 0 {
-			if j := strings.Index(ln, "*)"); j >= 0 {
-				depth, ln = 0, ln[j+2:]
-			} else {
-				continue
-			}
-		}
-		if j := strings.Index(ln, "(*"); j >= 0 {
-			depth, ln = 1, ln[:j]
-		}
+	for i, ln := range strings.Split(d.CommentsFor(rel).Blank(content), "\n") {
 		for _, m := range d.Imports.FindAll(ln, rel) {
 			name := m.Groups["path"].Value
 			if name == "" || seen[name] {
@@ -146,22 +131,10 @@ func resolveByName(rel, name string, r *config.ImportResolve, g *mapx.Graph) str
 // the chain gates have nothing to read the code with (DESIGN-chain-patterns.md).
 func hasImports(d config.Dialect) bool { return len(d.Imports) > 0 }
 
-// blankComments is the content with each comment — a line of comment, or what follows the
-// code on a line — turned into spaces, its offsets and lines kept: an import commented out
-// is no import.
-func blankComments(content string) string {
-	lines := strings.Split(content, "\n")
-	for i, ln := range lines {
-		switch {
-		case commentLine(ln):
-			lines[i] = strings.Repeat(" ", len(ln))
-		default:
-			if code := cutInlineComment(ln); len(code) < len(ln) {
-				lines[i] = code + strings.Repeat(" ", len(ln)-len(code))
-			}
-		}
-	}
-	return strings.Join(lines, "\n")
+// blankComments is the content with each comment the file's syntax declares turned into
+// spaces, its offsets and lines kept: an import commented out is no import.
+func blankComments(content, rel string, d config.Dialect) string {
+	return d.CommentsFor(rel).Blank(content)
 }
 
 // ImportsOf are the import statements of a file's content, resolved against the map's files.
@@ -179,7 +152,7 @@ func ImportsOf(content, rel string, d config.Dialect, g *mapx.Graph) []RealImpor
 	if p := strings.TrimSpace(d.TypeImportPattern); p != "" {
 		typeRE = d.Compile(p)
 	}
-	code := blankComments(content)
+	code := blankComments(content, rel, d)
 	seen := map[int]bool{} // a path captured by two patterns is one import
 	var out []RealImport
 	for _, m := range d.Imports.FindAll(code, rel) {
@@ -298,9 +271,9 @@ func codesOfTarget(imp RealImport, g *mapx.Graph) []string {
 }
 
 // flagsByStatement maps each import statement to the dependency flag on one of its lines.
-func flagsByStatement(content string, imps []RealImport) map[int]*scan.CodeDep {
+func flagsByStatement(content, rel string, d config.Dialect, imps []RealImport) map[int]*scan.CodeDep {
 	byLine := map[int]scan.CodeDep{}
-	for _, f := range scan.CodeDepsIn([]byte(content)) {
+	for _, f := range scan.CodeDepsIn([]byte(content), rel, d) {
 		byLine[f.Line] = f
 	}
 	out := map[int]*scan.CodeDep{}
@@ -335,11 +308,11 @@ func checkDepDeclared(content string, n mapx.Node, root string, g *mapx.Graph, c
 		return Pending, i18n.T("gate.dep_chain.pending_no_pattern")
 	}
 	imps := ImportsOf(content, n.ID, d, g)
-	flags := flagsByStatement(content, imps)
+	flags := flagsByStatement(content, n.ID, d, imps)
 	// By name, the flags are the file's: each module it uses is flagged once, anywhere.
 	fileFlags := map[string]bool{}
 	if byName(d) {
-		for _, f := range scan.CodeDepsIn([]byte(content)) {
+		for _, f := range scan.CodeDepsIn([]byte(content), n.ID, d) {
 			fileFlags[f.Code] = true
 		}
 	}
@@ -362,7 +335,7 @@ func checkDepHonored(content string, n mapx.Node, root string, g *mapx.Graph, cf
 	if !chainUnit(n) {
 		return Skip, i18n.T("gate.dep_chain.skip_not_code")
 	}
-	all := scan.CodeDepsIn([]byte(content))
+	all := scan.CodeDepsIn([]byte(content), n.ID, cfg.DialectFor())
 	if len(all) == 0 {
 		return Skip, i18n.T("gate.dep_chain.skip_no_flags")
 	}
@@ -556,9 +529,13 @@ func fixDepFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 	if len(imps) == 0 {
 		return content, false, ""
 	}
-	flags := flagsByStatement(content, imps)
+	flags := flagsByStatement(content, n.ID, d, imps)
 	lines := strings.Split(content, "\n")
-	marker := config.LineCommentFor(n.ID)
+	cs := d.CommentsFor(n.ID)
+	marker := cs.LineMarker()
+	if marker == "" {
+		return content, false, ""
+	}
 	var done []string
 	for i, imp := range imps {
 		codes := codesOfTarget(imp, g)
@@ -578,7 +555,7 @@ func fixDepFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 		}
 		switch {
 		case f == nil:
-			lines[imp.Line-1] = strings.TrimRight(lines[imp.Line-1], " \t") + " " + marker + " " + flag + want + config.CommentCloseFor(marker)
+			lines[imp.Line-1] = strings.TrimRight(lines[imp.Line-1], " \t") + " " + marker + " " + flag + want + cs.CloseFor(marker)
 			done = append(done, fmt.Sprintf("%d %s", imp.Line, want))
 		case f.Code != "" && (f.Code != want || (imp.TypeOnly && f.Kind != scan.TypeDepKind) ||
 			(!imp.TypeOnly && f.Kind == scan.TypeDepKind && imp.Runs)):
@@ -616,7 +593,11 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 			flagLine[u.Symbol] = u.Line - 1
 		}
 	}
-	marker := config.LineCommentFor(n.ID)
+	cs := d.CommentsFor(n.ID)
+	marker := cs.LineMarker()
+	if marker == "" {
+		return content, false, ""
+	}
 	type edit struct {
 		at     int
 		insert bool
@@ -633,7 +614,7 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 	for _, sym := range syms {
 		codes := want[sym]
 		at, listed := declarationLine(content, n.ID, d, sym)
-		text := usedByFlag(marker, codes, sym, listed)
+		text := usedByFlag(cs, codes, sym, listed)
 		if at, ok := flagLine[sym]; ok {
 			indent := lines[at][:len(lines[at])-len(strings.TrimLeft(lines[at], " \t"))]
 			if strings.TrimSpace(lines[at]) != text {
@@ -682,19 +663,20 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 // usedByFlag is the used-by flag the fixer writes, in the file's comment: the symbol, when a
 // list declares it, goes inside the comment — after a block comment's closer (`*)`, `-->`)
 // it would be code.
-func usedByFlag(marker string, codes []string, sym string, listed bool) string {
+func usedByFlag(cs *config.Comments, codes []string, sym string, listed bool) string {
+	marker := cs.LineMarker()
 	text := marker + " @used-by: " + strings.Join(codes, ", ")
 	if listed {
 		text += " (" + sym + ")"
 	}
-	return text + config.CommentCloseFor(marker)
+	return text + cs.CloseFor(marker)
 }
 
 // declarationLine is the 0-based line that declares a symbol, by the dialect's
 // `declarations` — where the statement of the declaration starts —, or -1; listed when the
 // declaration is one of a list, where a flag must name its symbol.
 func declarationLine(content, rel string, d config.Dialect, sym string) (int, bool) {
-	code := blankComments(content)
+	code := blankComments(content, rel, d)
 	for _, m := range d.Declarations.FindAll(code, rel) {
 		if (sym == "default" && m.Has("default")) || (sym != "default" && m.Groups["name"].Value == sym) {
 			return config.LineOf(code, m.Region) - 1, m.Listed
@@ -735,11 +717,12 @@ func fixDepFlagsByName(content string, n mapx.Node, imps []RealImport, g *mapx.G
 	}
 	have := map[string]bool{}
 	lines := strings.Split(content, "\n")
+	cs := fixConfig.DialectFor().CommentsFor(n.ID)
 	var kept []string
 	var done []string
 	for i, l := range lines {
-		if scan.ChainFlagOnlyRE.MatchString(l) {
-			if fs := scan.CodeDepsIn([]byte(l)); len(fs) == 1 && fs[0].Code != "" && fs[0].Kind == "" {
+		if scan.ChainFlagOnly(l, cs) {
+			if fs := scan.CodeDepsIn([]byte(l), n.ID, fixConfig.DialectFor()); len(fs) == 1 && fs[0].Code != "" && fs[0].Kind == "" {
 				if !want[fs[0].Code] {
 					done = append(done, fmt.Sprintf("%d -%s", i+1, fs[0].Code))
 					continue
@@ -749,7 +732,7 @@ func fixDepFlagsByName(content string, n mapx.Node, imps []RealImport, g *mapx.G
 		}
 		kept = append(kept, l)
 	}
-	for _, f := range scan.CodeDepsIn([]byte(content)) {
+	for _, f := range scan.CodeDepsIn([]byte(content), n.ID, fixConfig.DialectFor()) {
 		have[f.Code] = true
 	}
 	var add []string
@@ -762,14 +745,17 @@ func fixDepFlagsByName(content string, n mapx.Node, imps []RealImport, g *mapx.G
 	if len(add) == 0 && len(done) == 0 {
 		return content, false, ""
 	}
-	marker := config.LineCommentFor(n.ID)
+	marker := cs.LineMarker()
+	if marker == "" {
+		return content, false, ""
+	}
 	var flagLines []string
 	for _, c := range add {
-		flagLines = append(flagLines, marker+" @dep: "+c+config.CommentCloseFor(marker))
+		flagLines = append(flagLines, marker+" @dep: "+c+cs.CloseFor(marker))
 		done = append(done, c)
 	}
 	at := 0
-	if block := scan.AnchorsHeader([]byte(strings.Join(kept, "\n"))); block != nil {
+	if block := scan.AnchorsHeader([]byte(strings.Join(kept, "\n")), cs); block != nil {
 		at = strings.Count(strings.SplitN(strings.Join(kept, "\n"), string(block), 2)[0], "\n") + strings.Count(string(block), "\n") + 1
 	}
 	out := append(append(append([]string{}, kept[:at]...), flagLines...), kept[at:]...)

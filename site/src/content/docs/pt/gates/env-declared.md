@@ -13,6 +13,7 @@ The environment variables a unit's code reads are the ones its spec declares, an
 | Confronta | `spec` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Pressupõe | `dialect.env_read` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 | Duplicidade | uma declaração que ele controla repetida no mesmo arquivo o reprova; `duplicates: false` desliga |
 
 ## Como declarar

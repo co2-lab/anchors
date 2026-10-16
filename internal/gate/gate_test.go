@@ -6,6 +6,7 @@ package gate
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -175,7 +176,7 @@ func TestInternalCheckers(t *testing.T) {
 		if fn == nil {
 			if withGraph := checkersWithGraph[c.checker]; withGraph != nil {
 				fn = func(content string, n mapx.Node) (Verdict, string) {
-					return withGraph(content, n, "", nil, nil)
+					return withGraph(content, n, "", nil, testkit.AnyConfig())
 				}
 			}
 		}
@@ -192,7 +193,9 @@ func TestInternalCheckers(t *testing.T) {
 func TestHeaderConformeRecognizedLayer(t *testing.T) {
 	presentation := mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "presentation"}, Regime: "declarativo"}
 	regida := mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "business-logic"}}
-	fn := func(content string, n mapx.Node) (Verdict, string) { return checkHeaderConforms(content, n, nil) }
+	fn := func(content string, n mapx.Node) (Verdict, string) {
+		return checkHeaderConforms(content, n, testkit.WithComments(nil))
+	}
 
 	// reconhecida com só `layer:` → PASSA
 	if v, _ := fn("// @anchors\n//   layer: presentation\n", presentation); v != Pass {
@@ -216,7 +219,7 @@ func TestHeaderConformeTestOfRecognizedLayer(t *testing.T) {
 	// um TESTE de arquivo de camada reconhecida é classificado kind:test (perde a tag
 	// da camada), mas declara layer:presentation no header → deve passar com layer.
 	testNode := mapx.Node{Kind: mapx.KindTest, Tags: []string{"test"}}
-	cfg := &config.Config{Layers: map[string]config.Layer{"presentation": {Regime: "declarativo"}}}
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"presentation": {Regime: "declarativo"}}})
 	fn := func(content string, n mapx.Node) (Verdict, string) { return checkHeaderConforms(content, n, cfg) }
 	if v, _ := fn("// @anchors\n//   layer: presentation\nimport x", testNode); v != Pass {
 		t.Error("teste de presentation (kind:test) com layer no header deveria passar")
@@ -615,9 +618,9 @@ func TestOMotorReconfiguraAGramaticaAntesDeRodar(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, alvo), []byte(conteudo), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	cfg := &config.Config{RuleTypes: []config.RuleType{
+	cfg := testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{
 		{Letter: letra, Term: "algo que o projeto nomeia"},
-	}}
+	}})
 	g := config.Gate{Name: "tem-código", ID: "has-code", On: []string{"spec"}, Check: "has-code"}
 
 	res := RunWithConfig([]config.Gate{g}, []mapx.Node{{ID: alvo, Kind: mapx.KindSpec}}, root, nil, cfg)
@@ -668,7 +671,7 @@ func TestPortaComEstruturaEntregaAEstrutura(t *testing.T) {
 	g := config.Gate{Name: nome, ID: nome, On: []string{"spec"}, Check: nome}
 	nos := []mapx.Node{{ID: alvo, Kind: mapx.KindSpec}}
 
-	RunWithConfig([]config.Gate{g}, nos, root, nil, &config.Config{Lang: "en"})
+	RunWithConfig([]config.Gate{g}, nos, root, nil, testkit.WithComments(&config.Config{Lang: "en"}))
 	if !recebeu {
 		t.Error("a porta com Estrutura tem de entregá-la ao checker relacional")
 	}
@@ -981,7 +984,7 @@ func TestNeedsTool_missingToolIsSkipNotFail(t *testing.T) {
 	}
 	nodes := []mapx.Node{{ID: "a.ts", Kind: mapx.Kind("code")}}
 
-	res := RunFull([]config.Gate{g}, nodes, t.TempDir(), nil, &config.Config{}, false)
+	res := RunFull([]config.Gate{g}, nodes, t.TempDir(), nil, testkit.WithComments(&config.Config{}), false)
 	if len(res) != 1 {
 		t.Fatalf("expected 1 verdict, got %d", len(res))
 	}
@@ -1010,7 +1013,7 @@ func TestNeedsTool_presentToolKeepsRunning(t *testing.T) {
 	}
 	nodes := []mapx.Node{{ID: "a.ts", Kind: mapx.Kind("code")}}
 
-	res := RunFull([]config.Gate{g}, nodes, t.TempDir(), nil, &config.Config{}, false)
+	res := RunFull([]config.Gate{g}, nodes, t.TempDir(), nil, testkit.WithComments(&config.Config{}), false)
 	if len(res) != 1 {
 		t.Fatalf("expected 1 verdict, got %d", len(res))
 	}
@@ -1066,7 +1069,7 @@ func TestScopeFull_runsOnceWithNoTargets(t *testing.T) {
 		Run:       recordArgCount(out),
 	}
 
-	RunFull([]config.Gate{g}, codeNodes(300), root, nil, &config.Config{}, true)
+	RunFull([]config.Gate{g}, codeNodes(300), root, nil, testkit.WithComments(&config.Config{}), true)
 
 	got := readLines(t, out)
 	if len(got) != 1 {
@@ -1093,7 +1096,7 @@ func TestScopeFull_withoutItBatchesContinue(t *testing.T) {
 		Run:   recordArgCount(out),
 	}
 
-	RunFull([]config.Gate{g}, codeNodes(300), root, nil, &config.Config{}, true)
+	RunFull([]config.Gate{g}, codeNodes(300), root, nil, testkit.WithComments(&config.Config{}), true)
 
 	got := readLines(t, out)
 	if len(got) == 0 {
@@ -1131,7 +1134,7 @@ func TestScopeFull_doesNotApplyIncrementally(t *testing.T) {
 		Run:       recordArgCount(out),
 	}
 
-	RunFull([]config.Gate{g}, codeNodes(3), root, nil, &config.Config{}, false)
+	RunFull([]config.Gate{g}, codeNodes(3), root, nil, testkit.WithComments(&config.Config{}), false)
 
 	got := readLines(t, out)
 	if len(got) != 1 || got[0] != "3" {
@@ -1258,7 +1261,7 @@ func TestRunWithWaiver_aBrokenGateFailsItsTarget(t *testing.T) {
 	}
 	checkersWithGraph["test-breaks-not"] = func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string) { return Pass, "" }
 	defer delete(checkersWithGraph, "test-breaks-not")
-	results := RunWithWaiver(gates, nodes, root, &mapx.Graph{Nodes: nodes}, &config.Config{}, false, Waiver{})
+	results := RunWithWaiver(gates, nodes, root, &mapx.Graph{Nodes: nodes}, testkit.WithComments(&config.Config{}), false, Waiver{})
 	got := map[string]Result{}
 	for _, r := range results {
 		got[r.Gate] = r
@@ -1296,7 +1299,7 @@ func TestIndexInvariant_noGateReadsTheTree(t *testing.T) {
 		{From: "src/pay.feature", To: "src/pay.test.ts", Type: mapx.EdgeTestedBy},
 		{From: "src/pay.spec.md", To: "src/pay.ts", Type: mapx.EdgeSpecifies},
 	}}
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
 	root := t.TempDir()
 	write := func(tree func(rel, content string) string) {
 		for rel, c := range index {
@@ -1364,15 +1367,15 @@ func TestRunOne_presupposedFieldMissingAsksNothing(t *testing.T) {
 	t.Run("GTENG-B29: A gate presupposing an undeclared field asks nothing", func(t *testing.T) {})
 	g := config.Gate{Name: "mock-detect-covers-dialect", Measures: config.MeasuresJudgment, Presupposes: []string{"derived.mock_detect"}}
 	n := mapx.Node{ID: "a_test.go", Kind: mapx.KindTest}
-	r := runOne(g, n, t.TempDir(), &mapx.Graph{}, &config.Config{})
+	r := runOne(g, n, t.TempDir(), &mapx.Graph{}, testkit.WithComments(&config.Config{}))
 	if r.Verdict != Pending || !strings.Contains(r.Detail, "derived.mock_detect") || !strings.Contains(r.Detail, "opt_out") {
 		t.Errorf("undeclared: %v (%s), want Pending naming the field and the opt-out", r.Verdict, r.Detail)
 	}
-	waived := &config.Config{Dialect: &config.Dialect{OptOut: []string{"mock_detect"}}}
+	waived := testkit.WithComments(&config.Config{Dialect: &config.Dialect{OptOut: []string{"mock_detect"}}})
 	if r := runOne(g, n, t.TempDir(), &mapx.Graph{}, waived); r.Verdict != Skip {
 		t.Errorf("waived: %v, want Skip", r.Verdict)
 	}
-	declared := &config.Config{Derived: &config.Derived{MockDetect: `jest\.mock\('([^']+)'`}}
+	declared := testkit.WithComments(&config.Config{Derived: &config.Derived{MockDetect: `jest\.mock\('([^']+)'`}})
 	if r := runOne(g, n, t.TempDir(), &mapx.Graph{}, declared); r.Verdict != Judge {
 		t.Errorf("declared: %v, want the judgment asked", r.Verdict)
 	}

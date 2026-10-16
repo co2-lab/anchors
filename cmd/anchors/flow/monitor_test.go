@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 func monitorProject(t *testing.T, yaml string) string {
 	t.Helper()
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 7\nlayers: {}\n"+yaml), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 8\nlayers: {}\n"+yaml), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	return dir
@@ -124,7 +124,7 @@ func hookCall(event, id, cwd, command string, background bool, answer string) []
 
 func TestAgentHook_before(t *testing.T) {
 	t.Run("MNCMD-B04: Before a command, the hook records the agent's long ones", func(t *testing.T) {})
-	dir := monitorProject(t, "")
+	dir := monitorProject(t, "monitor:\n  runners:\n    - name: jest\n      match: '(^|[\\s/])jest(\\s|$)'\n")
 	sub := filepath.Join(dir, "apps")
 	_ = os.MkdirAll(sub, 0o755)
 	now := time.Now()
@@ -264,7 +264,7 @@ func TestMonitor_saysTheProgressSummary(t *testing.T) {
 		t.Errorf("the warning is said once:\n%s", out)
 	}
 
-	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 7\nlayers: {}\nmonitor:\n  summary: true\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 8\nlayers: {}\nmonitor:\n  summary: true\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Remove(progress.Path(dir)); err != nil {

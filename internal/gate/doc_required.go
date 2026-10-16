@@ -108,7 +108,7 @@ func checkDocRequiredAggregate(_ config.Gate, root string, graph *mapx.Graph, cf
 				byDoc[d.Path] = pend
 				order = append(order, d.Path)
 			}
-			if !pend.missing && !mentionsUnit(pend.content, d.Path, n.Code, n.ID) {
+			if !pend.missing && !mentionsUnit(pend.content, d.Path, n.Code, n.ID, cfg) {
 				pend.unmentioned = append(pend.unmentioned, n.Code)
 			}
 		}
@@ -180,7 +180,7 @@ func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *co
 			missing = append(missing, fmt.Sprintf("%s (%s)", d.Path, d.Kind))
 			continue
 		}
-		if n.Code != "" && !mentionsUnit(string(b), d.Path, n.Code, n.ID) {
+		if n.Code != "" && !mentionsUnit(string(b), d.Path, n.Code, n.ID, cfg) {
 			silent = append(silent, fmt.Sprintf("%s (%s)", d.Path, d.Kind))
 		}
 	}
@@ -215,7 +215,7 @@ func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *co
 // Deliberadamente grosseiro: não entende YAML, não entende Markdown, não valida conteúdo.
 // Ele separa "não documentado" de "documentado" — e a qualidade do que está escrito é
 // trabalho de revisão, não de gate.
-func mentionsUnit(doc, docPath, code, id string) bool {
+func mentionsUnit(doc, docPath, code, id string, cfg *config.Config) bool {
 	// A MENÇÃO NUMA NOTA NÃO CONTA — e o caso que obrigou isto é quase cômico.
 	//
 	// No projeto de referência o `componentes.md` tinha uma nota listando os componentes
@@ -236,7 +236,7 @@ func mentionsUnit(doc, docPath, code, id string) bool {
 	// read as a heading it turned the whole file into "sections", so the unit's mention in
 	// the body (`x-anchors-unit: CODE`) stopped counting (reported from baas-proxy).
 	markdown := isMarkdown(docPath)
-	if markdown && hasOwnSection(doc, code, id) {
+	if markdown && hasOwnSection(doc, code, cfg.UnitName(id)) {
 		return true
 	}
 	// SEM SEÇÃO, só conta o documento que não TEM seções — um OpenAPI, um YAML, um
@@ -248,12 +248,9 @@ func mentionsUnit(doc, docPath, code, id string) bool {
 	if code != "" && strings.Contains(doc, code) {
 		return true
 	}
-	// O nome do arquivo SEM extensão: `ServiceList.spec.md` vira `ServiceList`, que é o que
-	// aparece num `operationId` ou num título de seção.
-	base := filepath.Base(id)
-	for _, sufixo := range []string{".spec.md", ".md", ".ts", ".tsx", ".go"} {
-		base = strings.TrimSuffix(base, sufixo)
-	}
+	// The unit's name: `ServiceList.spec.md` is `ServiceList`, which is what appears in an
+	// `operationId` or a section's title.
+	base := cfg.UnitName(id)
 	return base != "" && strings.Contains(doc, base)
 }
 
@@ -278,8 +275,7 @@ func mentionsUnit(doc, docPath, code, id string) bool {
 // AGNÓSTICO. Não procura a palavra "Nota", nem qualquer outra — o Anchors roda em projetos
 // que documentam em qualquer idioma. Procura a IDENTIDADE (o código, o nome do arquivo) na
 // linha de título, que é estrutura de Markdown, não vocabulário.
-func hasOwnSection(doc, code, id string) bool {
-	base := baseName(id)
+func hasOwnSection(doc, code, base string) bool {
 	for _, l := range strings.Split(doc, "\n") {
 		if headingLevel(l) == 0 {
 			continue
@@ -295,15 +291,6 @@ func hasOwnSection(doc, code, id string) bool {
 		}
 	}
 	return false
-}
-
-// baseName é o nome do arquivo sem extensão: `ServiceList.spec.md` vira `ServiceList`.
-func baseName(id string) string {
-	base := filepath.Base(id)
-	for _, sufixo := range []string{".spec.md", ".md", ".ts", ".tsx", ".go"} {
-		base = strings.TrimSuffix(base, sufixo)
-	}
-	return base
 }
 
 // headingLevel conta os `#` iniciais de uma linha de título Markdown (0 se não for uma).

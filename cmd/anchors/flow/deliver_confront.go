@@ -16,6 +16,7 @@ import (
 	"github.com/co2-lab/anchors/internal/gate"
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // confrontDelivery confronta o que o autor DECLARA contra o que está no disco, na hora
@@ -54,7 +55,8 @@ func confrontDelivery(root string, files []string, unit string) {
 		fmt.Println("  Either you did not do what you declared, or you already committed — in any case, the")
 		fmt.Println("  record is asserting something the disk does not confirm.")
 	}
-	if aviso := mutationNotMeasured(root, unit); aviso != "" {
+	cfg, _ := config.Load(filepath.Join(root, config.DefaultFile))
+	if aviso := mutationNotMeasured(root, unit, cfg); aviso != "" {
 		fmt.Println("\n⚠ " + aviso)
 	}
 	if linhas := redGates(root, files, unit); len(linhas) > 0 {
@@ -190,14 +192,14 @@ func redGates(root string, files []string, unit string) []string {
 // A ferramenta muta o que ninguém pensou. Este aviso não exige que exista uma (nem todo
 // stack tem), mas impede que a ausência passe como se o teste estivesse provado — que é o
 // que acontece hoje, com `mutation-score` em `~` no meio de outros indeterminados.
-func mutationNotMeasured(root, unit string) string {
-	if unit == "" {
+func mutationNotMeasured(root, unit string, cfg *config.Config) string {
+	if unit == "" || cfg == nil {
 		return ""
 	}
-	base := strings.TrimSuffix(unit, filepath.Ext(unit))
 	temTeste := false
-	for _, suf := range []string{".test.ts", ".test.tsx", ".spec.ts", "_test.go", "_test.py", "_spec.rb"} {
-		if _, err := os.Stat(filepath.Join(root, base+suf)); err == nil {
+	layer, _ := scan.Classify(unit, cfg)
+	for _, test := range cfg.PiecePaths(unit, layer, "test") {
+		if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(test))); err == nil {
 			temTeste = true
 			break
 		}

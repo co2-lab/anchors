@@ -24,8 +24,9 @@ func IsGenericBasename(name string) bool {
 	return genericBasenames[strings.ToLower(name)]
 }
 
-// GenerateFromPath é a porta de alto nível: dado o CAMINHO de uma unidade e os códigos
-// já tomados, devolve um código único e o MAIS SEMÂNTICO possível, sem prefixo de
+// GenerateFromPath é a porta de alto nível: dado o CAMINHO de uma unidade, o NOME dela — o
+// basename sem o que as layers acrescentam, que o projeto diz (`config.UnitName`) — e os
+// códigos já tomados, devolve um código único e o MAIS SEMÂNTICO possível, sem prefixo de
 // módulo declarado. A régua:
 //
 //   - basename GENÉRICO (handler/index/…) → o dir-pai É a identidade: comprime o
@@ -41,8 +42,7 @@ func IsGenericBasename(name string) bool {
 //
 // Quando a layer TEM code_prefix declarado, o chamador passa o prefixo e NÃO usa esta
 // função (Camada 1 tem precedência — é dialeto curado do projeto).
-func GenerateFromPath(path string, taken map[string]bool) string {
-	base := unitBase(path)
+func GenerateFromPath(path, base string, taken map[string]bool) string {
 	parent := parentDir(path)
 
 	// basename genérico: a pasta é o nome (determinístico).
@@ -52,21 +52,6 @@ func GenerateFromPath(path string, taken map[string]bool) string {
 
 	// basename normal: canônico + desempate cego de colisão.
 	return GenerateUnique(base, taken)
-}
-
-// unitBase extrai o nome distintivo do caminho: basename sem extensão nem sufixos de
-// artefato (Login.spec.md → Login; metadata.ts → metadata).
-func unitBase(path string) string {
-	b := filepath.Base(path)
-	for _, suf := range []string{".spec.md", ".feature"} {
-		if s, ok := strings.CutSuffix(b, suf); ok {
-			return s
-		}
-	}
-	if s, _, ok := strings.Cut(b, ".test."); ok {
-		return s
-	}
-	return strings.TrimSuffix(b, filepath.Ext(b))
 }
 
 // parentDir devolve o nome da pasta imediatamente acima do arquivo ("" se na raiz).

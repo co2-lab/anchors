@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -29,7 +30,7 @@ func TestPhaseOrdered_B02_NaoPlanoPula(t *testing.T) {
 	t.Run("PHORP-B02: Non-plan artifacts skip phase ordering confrontation", func(t *testing.T) {})
 	plan := "### FNDTN-W01 — a árvore\n"
 	for _, k := range []mapx.Kind{mapx.KindSpec, mapx.KindCode, mapx.KindFeature, mapx.KindTest} {
-		v, _ := checkPhaseOrdered(plan, mapx.Node{Kind: k}, "", nil, nil)
+		v, _ := checkPhaseOrdered(plan, mapx.Node{Kind: k}, "", nil, testkit.WithComments(nil))
 		if v != Skip {
 			t.Fatalf("esperava Skip para kind %v, veio %v", k, v)
 		}
@@ -41,7 +42,7 @@ func TestPhaseOrdered_B03_PlanoSemFasesPula(t *testing.T) {
 	t.Run("PHORP-X01: Small plans are not required to catalog phases", func(t *testing.T) {})
 	plano := mapx.Node{Kind: mapx.KindPlan, Code: "FNDTN"}
 	content := "## Objetivo\n\nPlano pequeno sem divisão em fases.\n"
-	v, _ := checkPhaseOrdered(content, plano, "", nil, nil)
+	v, _ := checkPhaseOrdered(content, plano, "", nil, testkit.WithComments(nil))
 	if v != Skip {
 		t.Fatalf("plano sem fases deve pular; veio %v", v)
 	}
@@ -52,7 +53,7 @@ func TestPhaseOrdered_B04_FaseEmProsaFicaPendente(t *testing.T) {
 	t.Run("PHORP-I04: Phase detection identifies level-three sections regardless of language", func(t *testing.T) {})
 	plano := mapx.Node{Kind: mapx.KindPlan, Code: "FNDTN"}
 	prosa := "## Fases\n\n### Fase 1 — a árvore\n\n### Fase 2 — depende da Fase 1\n"
-	v, msg := checkPhaseOrdered(prosa, plano, "", nil, nil)
+	v, msg := checkPhaseOrdered(prosa, plano, "", nil, testkit.WithComments(nil))
 	if v != Diverge {
 		t.Fatalf("fase em prosa deve retornar Pending; veio %v (%s)", v, msg)
 	}
@@ -66,7 +67,7 @@ func TestPhaseOrdered_B05_OrdemValidaPassa(t *testing.T) {
 	t.Run("PHORP-X02: Phase duration and calendar timing are not verified", func(t *testing.T) {})
 	plano := mapx.Node{Kind: mapx.KindPlan, Code: "FNDTN"}
 	ok := "### FNDTN-W01 — a árvore\n\n### FNDTN-W02 — a régua (depende de FNDTN-W01)\n"
-	v, msg := checkPhaseOrdered(ok, plano, "", nil, nil)
+	v, msg := checkPhaseOrdered(ok, plano, "", nil, testkit.WithComments(nil))
 	if v != Pass {
 		t.Fatalf("ordem válida deve passar; veio %v (%s)", v, msg)
 	}
@@ -80,7 +81,7 @@ func TestPhaseOrdered_B06_CodigoDuplicadoFalha(t *testing.T) {
 	root := t.TempDir()
 	writeFile(t, root, "plan.md", repetida)
 	plano.ID = "plan.md"
-	v, msg := checkPhaseOrdered(repetida, plano, root, nil, nil)
+	v, msg := checkPhaseOrdered(repetida, plano, root, nil, testkit.WithComments(nil))
 	v, msg = confrontDuplicates(config.Gate{Name: "phase-ordered", Check: "phase-ordered"}, plano, root, nil, nil, v, msg)
 	if v != Fail {
 		t.Fatalf("código repetido deve falhar; veio %v", v)
@@ -94,7 +95,7 @@ func TestPhaseOrdered_B07_FaseInexistenteNoPlanoFalha(t *testing.T) {
 	t.Run("PHORP-B07: Phases depending on uncatalogued phase codes fail", func(t *testing.T) {})
 	plano := mapx.Node{Kind: mapx.KindPlan, Code: "FNDTN"}
 	fantasma := "### FNDTN-W01 — a árvore (depende de FNDTN-W09)\n"
-	v, msg := checkPhaseOrdered(fantasma, plano, "", nil, nil)
+	v, msg := checkPhaseOrdered(fantasma, plano, "", nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("dependência de fase fantasma deve reprovar; veio %v (%s)", v, msg)
 	}
@@ -107,7 +108,7 @@ func TestPhaseOrdered_B08_DependeDeSiMesmoFalha(t *testing.T) {
 	t.Run("PHORP-B08: Phases depending on themselves fail", func(t *testing.T) {})
 	plano := mapx.Node{Kind: mapx.KindPlan, Code: "FNDTN"}
 	auto := "### FNDTN-W01 — a árvore (depende de FNDTN-W01)\n"
-	v, msg := checkPhaseOrdered(auto, plano, "", nil, nil)
+	v, msg := checkPhaseOrdered(auto, plano, "", nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("auto-dependência deve reprovar; veio %v", v)
 	}
@@ -121,7 +122,7 @@ func TestPhaseOrdered_B09_DependeDoFuturoFalha(t *testing.T) {
 	t.Run("PHORP-I01: Phase dependencies are strictly acyclic and backward-directed", func(t *testing.T) {})
 	plano := mapx.Node{Kind: mapx.KindPlan, Code: "FNDTN"}
 	invertida := "### FNDTN-W01 — a árvore (depende de FNDTN-W02)\n\n### FNDTN-W02 — a régua\n"
-	v, msg := checkPhaseOrdered(invertida, plano, "", nil, nil)
+	v, msg := checkPhaseOrdered(invertida, plano, "", nil, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("dependência de fase futura deve reprovar; veio %v (%s)", v, msg)
 	}
@@ -143,7 +144,7 @@ func TestPhaseOrdered_B10_PhaseExistsPassa(t *testing.T) {
 		t.Fatal(err)
 	}
 	spec := mapx.Node{Kind: mapx.KindSpec, Needs: []string{"FNDTN-W01", "FNDTN-W02"}}
-	if v, msg := checkPhaseExists("", spec, dir, g, nil); v != Pass {
+	if v, msg := checkPhaseExists("", spec, dir, g, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("fases existentes devem passar; veio %v (%s)", v, msg)
 	}
 }
@@ -162,7 +163,7 @@ func TestPhaseOrdered_B11_PhaseExistsAusenteFalha(t *testing.T) {
 		t.Fatal(err)
 	}
 	spec := mapx.Node{Kind: mapx.KindSpec, Needs: []string{"FNDTN-W01", "FNDTN-W09"}}
-	v, msg := checkPhaseExists("", spec, dir, g, nil)
+	v, msg := checkPhaseExists("", spec, dir, g, testkit.WithComments(nil))
 	if v != Fail {
 		t.Fatalf("fase inexistente deve reprovar; veio %v (%s)", v, msg)
 	}
@@ -191,11 +192,11 @@ func TestPhaseOrdered_B12_ParentValidoPassa(t *testing.T) {
 		{ID: "b.spec.md", Kind: mapx.KindSpec, Code: "OTHER", Parent: "FNDTN"},
 	}}
 	// Pai fase catalogada
-	if v, msg := checkParentValid("", g.Nodes[1], dir, g, nil); v != Pass {
+	if v, msg := checkParentValid("", g.Nodes[1], dir, g, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("pai fase catalogada deve passar; veio %v (%s)", v, msg)
 	}
 	// Pai código de artefato
-	if v, msg := checkParentValid("", g.Nodes[2], dir, g, nil); v != Pass {
+	if v, msg := checkParentValid("", g.Nodes[2], dir, g, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("pai código de artefato deve passar; veio %v (%s)", v, msg)
 	}
 }
@@ -209,17 +210,17 @@ func TestPhaseOrdered_B13_ParentInvalidoFalha(t *testing.T) {
 		{ID: "b.md", Code: "BBBBB", Parent: "AAAAA"},
 	}}
 	// Inexistente
-	v1, msg1 := checkParentValid("", mapx.Node{Code: "X", Parent: "FNDTN-W09"}, dir, g, nil)
+	v1, msg1 := checkParentValid("", mapx.Node{Code: "X", Parent: "FNDTN-W09"}, dir, g, testkit.WithComments(nil))
 	if v1 != Fail {
 		t.Fatalf("pai inexistente deve reprovar; veio %v (%s)", v1, msg1)
 	}
 	// Auto-pai
-	v2, msg2 := checkParentValid("", mapx.Node{Code: "AAAAA", Parent: "AAAAA"}, dir, g, nil)
+	v2, msg2 := checkParentValid("", mapx.Node{Code: "AAAAA", Parent: "AAAAA"}, dir, g, testkit.WithComments(nil))
 	if v2 != Fail {
 		t.Fatalf("auto-pai deve reprovar; veio %v (%s)", v2, msg2)
 	}
 	// Ciclo
-	v3, msg3 := checkParentValid("", g.Nodes[0], dir, g, nil)
+	v3, msg3 := checkParentValid("", g.Nodes[0], dir, g, testkit.WithComments(nil))
 	if v3 != Fail {
 		t.Fatalf("ciclo de parent deve reprovar; veio %v (%s)", v3, msg3)
 	}
@@ -237,11 +238,11 @@ func TestLetraDaFaseEhCanonica(t *testing.T) {
 func TestPhaseOrdered_Errors(t *testing.T) {
 	t.Run("PHORP-E01: With no map a phase or parent reference is not judged", func(t *testing.T) {
 		spec := mapx.Node{Kind: mapx.KindSpec, Needs: []string{"FNDTN-W01"}}
-		if v, msg := checkPhaseExists("", spec, t.TempDir(), nil, nil); v != Pending {
+		if v, msg := checkPhaseExists("", spec, t.TempDir(), nil, testkit.WithComments(nil)); v != Pending {
 			t.Fatalf("needs with no map must be Pending, got %v (%s)", v, msg)
 		}
 		child := mapx.Node{Code: "X", Parent: "FNDTN-W01"}
-		if v, msg := checkParentValid("", child, t.TempDir(), nil, nil); v != Pending {
+		if v, msg := checkParentValid("", child, t.TempDir(), nil, testkit.WithComments(nil)); v != Pending {
 			t.Fatalf("parent with no map must be Pending, got %v (%s)", v, msg)
 		}
 	})
@@ -259,11 +260,11 @@ func TestPhaseOrdered_Errors(t *testing.T) {
 			{ID: "plans/0002.md", Kind: mapx.KindPlan},
 		}}
 		spec := mapx.Node{Kind: mapx.KindSpec, Needs: []string{"FNDTN-W01"}}
-		if v, msg := checkPhaseExists("", spec, dir, g, nil); v != Pass {
+		if v, msg := checkPhaseExists("", spec, dir, g, testkit.WithComments(nil)); v != Pass {
 			t.Fatalf("the phase of the plan on disk must resolve needs, got %v (%s)", v, msg)
 		}
 		child := mapx.Node{Code: "X", Parent: "FNDTN-W01"}
-		if v, msg := checkParentValid("", child, dir, g, nil); v != Pass {
+		if v, msg := checkParentValid("", child, dir, g, testkit.WithComments(nil)); v != Pass {
 			t.Fatalf("the phase of the plan on disk must resolve parent, got %v (%s)", v, msg)
 		}
 	})
@@ -276,12 +277,12 @@ func TestPhaseOrdered_dependencyInAnyLanguage(t *testing.T) {
 	plano := mapx.Node{Kind: mapx.KindPlan, Code: "FNDTN"}
 	for _, phrase := range []string{"depends on", "Depends  On", "depende da", "depende del"} {
 		backwards := "### FNDTN-W01 — the tree (" + phrase + " FNDTN-W02)\n\n### FNDTN-W02 — the ruler\n"
-		if v, msg := checkPhaseOrdered(backwards, plano, "", nil, nil); v != Fail {
+		if v, msg := checkPhaseOrdered(backwards, plano, "", nil, testkit.WithComments(nil)); v != Fail {
 			t.Errorf("%q: a dependency on a later phase fails, got %v (%s)", phrase, v, msg)
 		}
 	}
 	right := "### FNDTN-W01 — the tree\n\n### FNDTN-W02 — the ruler (depends on FNDTN-W01)\n"
-	if v, msg := checkPhaseOrdered(right, plano, "", nil, nil); v != Pass {
+	if v, msg := checkPhaseOrdered(right, plano, "", nil, testkit.WithComments(nil)); v != Pass {
 		t.Errorf("an English plan in the right order passes, got %v (%s)", v, msg)
 	}
 }

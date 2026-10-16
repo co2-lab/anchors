@@ -108,7 +108,7 @@ func TestAffected_formats(t *testing.T) {
 	if err := printAffected(&out, &errw, a, tests, true, "json"); err != nil || !strings.Contains(out.String(), `"title": "TestA0"`) || strings.Index(out.String(), "TestA0") > strings.Index(out.String(), "TestB") {
 		t.Errorf("json: %s", out.String())
 	}
-	dir := qProject(t, "version: 7\nlayers: {}\n", map[string]string{"t/x_test.go": "x\n"}, &mapx.Graph{Nodes: []mapx.Node{{ID: "t/x_test.go", Kind: mapx.KindTest}}})
+	dir := qProject(t, "version: 8\nlayers: {}\n", map[string]string{"t/x_test.go": "x\n"}, &mapx.Graph{Nodes: []mapx.Node{{ID: "t/x_test.go", Kind: mapx.KindTest}}})
 	got, err := runQ(t, newAffectedTestsCmd(), "--root", dir, "t/x_test.go", "--format", "files")
 	if err != nil || !strings.Contains(got, "t/x_test.go") {
 		t.Errorf("the command: %v %q", err, got)

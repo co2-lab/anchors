@@ -86,7 +86,6 @@ uses them, choose the code by hand and validate it with --check.`,
 			//  2. senão, caminho → GenerateFromPath: usa o dir-pai quando o basename é
 			//     genérico (handler/index) ou quando há colisão (desempate semântico).
 			//  3. nome puro (sem '/') → algoritmo canônico (Camada 2).
-			name := unitName(args[0])
 			prefix := ""
 			// A config é lida SEMPRE, não só quando o argumento é um caminho.
 			//
@@ -96,6 +95,9 @@ uses them, choose the code by hand and validate it with --check.`,
 			// slots num projeto de 4, sugerindo identidade que o próprio engine do projeto
 			// não reconhece.
 			cfg, cerr := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			// The unit's name is what the layers say it is: `Login.test.ts` is Login's when a
+			// template names a test `{{name}}.test.{{ext}}`.
+			name := cfg.UnitName(args[0])
 			if cerr == nil && strings.ContainsRune(args[0], '/') {
 				rel := common.RelTo(absRoot, args[0])
 				if layer, _ := scan.Classify(rel, cfg); layer != "" {
@@ -126,7 +128,7 @@ uses them, choose the code by hand and validate it with --check.`,
 				unique = code.GenerateUniqueWithPrefix(name, prefix, taken)
 			case strings.ContainsRune(args[0], '/'):
 				canonical = code.Generate(name)
-				unique = code.GenerateFromPath(args[0], taken)
+				unique = code.GenerateFromPath(args[0], cfg.UnitName(args[0]), taken)
 			default:
 				canonical = code.Generate(name)
 				unique = code.GenerateUnique(name, taken)
@@ -168,21 +170,6 @@ uses them, choose the code by hand and validate it with --check.`,
 	cmd.Flags().StringVar(&check, "check", "", "validate whether a proposed code is free")
 	cmd.AddCommand(newCodeListCmd())
 	return cmd
-}
-
-// unitName extrai o nome da unidade de um caminho: o basename sem extensão nem
-// sufixos de artefato (Login.spec.md → Login; auth/screens/NewLogin.tsx → NewLogin).
-func unitName(path string) string {
-	base := filepath.Base(path)
-	for _, suf := range []string{".spec.md", ".feature"} {
-		if b, ok := strings.CutSuffix(base, suf); ok {
-			return b
-		}
-	}
-	if b, _, ok := strings.Cut(base, ".test."); ok {
-		return b
-	}
-	return strings.TrimSuffix(base, filepath.Ext(base))
 }
 
 // errCollision faz o --check sair com código ≠ 0 quando o código proposto colide —
@@ -230,7 +217,8 @@ reports it, and here it becomes visible for free.`,
 			// comprimento declarado (5)" num projeto que declara 4, marcando os 601 códigos
 			// dele como errados. É o mesmo erro que o comando pai já tinha e que consertei
 			// uma hora antes: ler a config condicionalmente é ler no default.
-			if _, cerr := config.Load(filepath.Join(absRoot, config.DefaultFile)); cerr != nil {
+			cfg, cerr := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			if cerr != nil {
 				return fmt.Errorf("load %s: %w", config.DefaultFile, cerr)
 			}
 			idx, err := readCodes(mapPath)
@@ -311,7 +299,7 @@ reports it, and here it becomes visible for free.`,
 					// o algoritmo extrai mais uma LETRA DO NOME, e o X é só último recurso
 					// para nome curto. `AuditDetailScreen` canônico é `ADDTD`, não `ADDTX`.
 					// Deixar o X seria plantar divergência para o próximo check acusar.
-					forem := unitName(idx.file[c])
+					forem := cfg.UnitName(idx.file[c])
 					canonico := code.GenerateUnique(forem, semOsErrados)
 					divs = append(divs, divergencia{atual: c, correto: canonico, onde: donos})
 				}

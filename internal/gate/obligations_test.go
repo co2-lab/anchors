@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"io"
 	"os"
 	"path/filepath"
@@ -49,7 +50,7 @@ func TestAllObligations_packFirstThenInline(t *testing.T) {
 	root := t.TempDir()
 	writePackFile(t, root, "packs/lgpd.yaml", erasurePack)
 	inline := config.Obligation{Name: "local", When: "carries: pii", MustAppearIn: []string{"x.ts"}}
-	cfg := &config.Config{Packs: []string{"packs/lgpd.yaml"}, Obligations: []config.Obligation{inline}}
+	cfg := testkit.WithComments(&config.Config{Packs: []string{"packs/lgpd.yaml"}, Obligations: []config.Obligation{inline}})
 
 	for _, round := range []string{"loaded", "cached"} {
 		got := allObligations(root, cfg)
@@ -77,7 +78,7 @@ func TestAllObligations_withoutPacksIsTheInlineList(t *testing.T) {
 		t.Error("no config, no obligations")
 	}
 	inline := []config.Obligation{{Name: "local"}}
-	got := allObligations(t.TempDir(), &config.Config{Obligations: inline})
+	got := allObligations(t.TempDir(), testkit.WithComments(&config.Config{Obligations: inline}))
 	if len(got) != 1 || got[0].Name != "local" {
 		t.Errorf("got %+v", got)
 	}
@@ -86,10 +87,10 @@ func TestAllObligations_withoutPacksIsTheInlineList(t *testing.T) {
 func TestAllObligations_aBrokenPackKeepsTheInlineDuties(t *testing.T) {
 	t.Run("BLGTN-B05: A pack that fails to load keeps the inline duties", func(t *testing.T) {})
 	root := t.TempDir()
-	cfg := &config.Config{
+	cfg := testkit.WithComments(&config.Config{
 		Packs:       []string{"packs/missing.yaml"},
 		Obligations: []config.Obligation{{Name: "local"}},
-	}
+	})
 	got := allObligations(root, cfg)
 	if len(got) != 1 || got[0].Name != "local" {
 		t.Errorf("a pack that fails to load drops only its own duties: %+v", got)
@@ -143,7 +144,7 @@ func TestEvaluateObligations_oneStatusPerDuty(t *testing.T) {
 	g.Nodes = append(g.Nodes, mapx.Node{ID: "models/Gone.spec.md", Kind: mapx.KindSpec}) // not on disk
 
 	obs := append(obligCfg().Obligations, config.Obligation{Name: "untriggered", MustAppearIn: []string{"purge.ts"}})
-	got := EvaluateObligations(root, &config.Config{}, g, obs)
+	got := EvaluateObligations(root, testkit.WithComments(&config.Config{}), g, obs)
 
 	want := []ObligationStatus{
 		{
@@ -177,7 +178,7 @@ func TestObligationsInForce_includesThePackDuties(t *testing.T) {
 	t.Run("BLGTN-B01: The duties in force are the resolved list", func(t *testing.T) {})
 	root := t.TempDir()
 	writePackFile(t, root, "packs/lgpd.yaml", erasurePack)
-	cfg := &config.Config{Packs: []string{"packs/lgpd.yaml"}, Obligations: []config.Obligation{{Name: "local"}}}
+	cfg := testkit.WithComments(&config.Config{Packs: []string{"packs/lgpd.yaml"}, Obligations: []config.Obligation{{Name: "local"}}})
 	got := ObligationsInForce(root, cfg)
 	if !reflect.DeepEqual(got, allObligations(root, cfg)) || len(got) != 3 {
 		t.Errorf("ObligationsInForce should be the resolved list (pack + inline): %+v", got)
@@ -190,7 +191,7 @@ func TestAllObligations_cachedPerRoot(t *testing.T) {
 	t.Run("BLGTN-B06: The pack duties are read once per root", func(t *testing.T) {})
 	root := t.TempDir()
 	writePackFile(t, root, "packs/lgpd.yaml", erasurePack)
-	cfg := &config.Config{Packs: []string{"packs/lgpd.yaml"}}
+	cfg := testkit.WithComments(&config.Config{Packs: []string{"packs/lgpd.yaml"}})
 	if got := allObligations(root, cfg); len(got) != 2 {
 		t.Fatalf("first read: %+v", got)
 	}
@@ -210,10 +211,10 @@ func TestAllObligations_cacheFollowsThePackSet(t *testing.T) {
 	root := t.TempDir()
 	writePackFile(t, root, "packs/lgpd.yaml", erasurePack)
 	writePackFile(t, root, "packs/one.yaml", "name: one\ndomain: privacy\nobligations:\n  - name: only-one\n    when: \"carries: pii\"\n    must_appear_in: [\"x.ts\"]\n")
-	if got := allObligations(root, &config.Config{Packs: []string{"packs/lgpd.yaml"}}); len(got) != 2 {
+	if got := allObligations(root, testkit.WithComments(&config.Config{Packs: []string{"packs/lgpd.yaml"}})); len(got) != 2 {
 		t.Fatalf("first set: %+v", got)
 	}
-	got := allObligations(root, &config.Config{Packs: []string{"packs/one.yaml"}})
+	got := allObligations(root, testkit.WithComments(&config.Config{Packs: []string{"packs/one.yaml"}}))
 	if len(got) != 1 || got[0].Name != "only-one" {
 		t.Errorf("the second set of packs must be read, got %+v", got)
 	}
@@ -228,7 +229,7 @@ func TestAllObligations_aBrokenPackIsReportedOnStderr(t *testing.T) {
 	}
 	old := os.Stderr
 	os.Stderr = w
-	allObligations(t.TempDir(), &config.Config{Packs: []string{"packs/missing.yaml"}})
+	allObligations(t.TempDir(), testkit.WithComments(&config.Config{Packs: []string{"packs/missing.yaml"}}))
 	os.Stderr = old
 	w.Close()
 	out, _ := io.ReadAll(r)
@@ -247,7 +248,7 @@ func TestEvaluateObligations_evaluatesOnlyTheHandedDuties(t *testing.T) {
 	t.Run("BLGTN-X01: The report evaluates only the duties it is handed", func(t *testing.T) {})
 	root := t.TempDir()
 	writePackFile(t, root, "packs/lgpd.yaml", erasurePack)
-	cfg := &config.Config{Packs: []string{"packs/lgpd.yaml"}}
+	cfg := testkit.WithComments(&config.Config{Packs: []string{"packs/lgpd.yaml"}})
 	g := &mapx.Graph{}
 	got := EvaluateObligations(root, cfg, g, []config.Obligation{{Name: "only"}})
 	if len(got) != 1 || got[0].Name != "only" {

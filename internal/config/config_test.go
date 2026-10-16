@@ -1738,11 +1738,11 @@ func TestPremisesAndAWaivedPremise(t *testing.T) {
 
 func TestDataStatesRequired(t *testing.T) {
 	t.Run("CNFGO-B62: data_states.required makes the data states requirements, and is off by default", func(t *testing.T) {})
-	on, err := load(t, "version: 7\nlayers: {}\ndata_states:\n  required: true\n")
+	on, err := load(t, "version: 8\nlayers: {}\ndata_states:\n  required: true\n")
 	if err != nil || !on.DataStatesRequired() {
 		t.Errorf("declared: %v %v", on.DataStatesRequired(), err)
 	}
-	off, err := load(t, "version: 7\nlayers: {}\n")
+	off, err := load(t, "version: 8\nlayers: {}\n")
 	if err != nil || off.DataStatesRequired() {
 		t.Errorf("not declared is off: %v %v", off.DataStatesRequired(), err)
 	}
@@ -1754,7 +1754,7 @@ func TestDataStatesRequired(t *testing.T) {
 
 func TestLayerFallible(t *testing.T) {
 	t.Run("CNFGO-B63: A layer may be marked fallible", func(t *testing.T) {})
-	c, err := load(t, "version: 7\nlayers:\n  hook:\n    pattern: \"hooks/*.ts\"\n    kind: code\n    fallible: true\n  util:\n    pattern: \"utils/*.ts\"\n    kind: code\n")
+	c, err := load(t, "version: 8\nlayers:\n  hook:\n    pattern: \"hooks/*.ts\"\n    kind: code\n    fallible: true\n  util:\n    pattern: \"utils/*.ts\"\n    kind: code\n")
 	if err != nil || !c.Layers["hook"].Fallible || c.Layers["util"].Fallible {
 		t.Errorf("hook fallible, util not: %+v %v", c.Layers, err)
 	}
@@ -1762,7 +1762,7 @@ func TestLayerFallible(t *testing.T) {
 
 func TestNavigationEntry(t *testing.T) {
 	t.Run("CNFGO-B64: navigation.entry declares the routes the app opens on", func(t *testing.T) {})
-	c, err := load(t, "version: 7\nlayers: {}\nnavigation:\n  entry: [Splash, Login]\n")
+	c, err := load(t, "version: 8\nlayers: {}\nnavigation:\n  entry: [Splash, Login]\n")
 	if err != nil || c.Navigation == nil || len(c.Navigation.Entry) != 2 || c.Navigation.Entry[0] != "Splash" {
 		t.Errorf("got %+v %v", c.Navigation, err)
 	}
@@ -1770,7 +1770,7 @@ func TestNavigationEntry(t *testing.T) {
 
 func TestDependencyKinds(t *testing.T) {
 	t.Run("CNFGO-B66: dependency_kinds declares the kinds of the dependencies that are no import", func(t *testing.T) {})
-	c, err := load(t, "version: 7\nlayers: {}\ndependency_kinds: [db, api]\n")
+	c, err := load(t, "version: 8\nlayers: {}\ndependency_kinds: [db, api]\n")
 	if err != nil || strings.Join(c.DependencyKinds, ",") != "db,api" {
 		t.Errorf("got %+v %v", c.DependencyKinds, err)
 	}
@@ -1778,11 +1778,11 @@ func TestDependencyKinds(t *testing.T) {
 
 func TestNoSideEffect(t *testing.T) {
 	t.Run("CNFGO-B67: evidence.no_side_effect names the flags and sections with no side effect", func(t *testing.T) {})
-	c, err := load(t, "version: 7\nlayers: {}\n")
+	c, err := load(t, "version: 8\nlayers: {}\n")
 	if err != nil || strings.Join(c.NoSideEffectFlags(), ",") != "@navigates,@dep[type]" || c.NoSideEffectSections() != nil {
 		t.Errorf("defaults: %v %v %v", c.NoSideEffectFlags(), c.NoSideEffectSections(), err)
 	}
-	c, err = load(t, "version: 7\nlayers: {}\nevidence:\n  no_side_effect:\n    flags: [\"@navigates\"]\n    sections: [Implementation Notes]\n")
+	c, err = load(t, "version: 8\nlayers: {}\nevidence:\n  no_side_effect:\n    flags: [\"@navigates\"]\n    sections: [Implementation Notes]\n")
 	if err != nil || strings.Join(c.NoSideEffectFlags(), ",") != "@navigates" || strings.Join(c.NoSideEffectSections(), ",") != "Implementation Notes" {
 		t.Errorf("the project's: %v %v %v", c.NoSideEffectFlags(), c.NoSideEffectSections(), err)
 	}
@@ -1792,7 +1792,7 @@ func TestLoad_invalidYAMLIsFixedNotRecreated(t *testing.T) {
 	t.Run("CNFGO-E11: A configuration that is not valid YAML is fixed, not recreated", func(t *testing.T) {})
 	dir := t.TempDir()
 	path := filepath.Join(dir, "anchors.yaml")
-	if err := os.WriteFile(path, []byte("version: 7\ndialect:\n  exported_func: '^let ([a-z_']*)'\n"), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte("version: 8\ndialect:\n  exported_func: '^let ([a-z_']*)'\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	_, err := Load(path)
@@ -1813,7 +1813,7 @@ func TestLoad_invalidYAMLIsFixedNotRecreated(t *testing.T) {
 		t.Error("a missing file is advised to run anchors init")
 	}
 	typoPath := filepath.Join(dir, "typo.yaml")
-	if err := os.WriteFile(typoPath, []byte("version: 7\nlayerz: {}\n"), 0o644); err != nil {
+	if err := os.WriteFile(typoPath, []byte("version: 8\nlayerz: {}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if _, typo := Load(typoPath); typo == nil || strings.Contains(typo.Error(), "not valid YAML") {
@@ -1836,7 +1836,7 @@ func TestLoad_canonicalGuidanceLayer(t *testing.T) {
 		}
 		return c
 	}
-	c := load("a.yaml", "version: 7\nlayers:\n  code:\n    pattern: \"**/*.go\"\n    kind: code\n")
+	c := load("a.yaml", "version: 8\nlayers:\n  code:\n    pattern: \"**/*.go\"\n    kind: code\n")
 	g, ok := c.Layers[GuidanceLayer]
 	if !ok || g.Pattern != GuidancePattern || !g.Headless || g.Regime != "declarativo" || !c.IsCanonicalLayer(GuidanceLayer) || c.DeclaredLayers() != 1 || !c.LayerHeadless(GuidanceLayer) {
 		t.Errorf("canonical layer: %+v declared=%d", g, c.DeclaredLayers())
@@ -1853,11 +1853,11 @@ func TestLoad_canonicalGuidanceLayer(t *testing.T) {
 	if c.Relates(untagged) || !c.Relates(tagged) {
 		t.Error("only a gate with the layer's tag relates to the canonical layer")
 	}
-	own := load("b.yaml", "version: 7\nlayers:\n  guidance:\n    pattern: \"docs/*.md\"\n    kind: doc\n")
+	own := load("b.yaml", "version: 8\nlayers:\n  guidance:\n    pattern: \"docs/*.md\"\n    kind: doc\n")
 	if own.Layers[GuidanceLayer].Pattern != "docs/*.md" || own.IsCanonicalLayer(GuidanceLayer) {
 		t.Error("a declared guidance layer replaces the canonical one")
 	}
-	off := load("c.yaml", "version: 7\nguidance: false\nlayers: {}\n")
+	off := load("c.yaml", "version: 8\nguidance: false\nlayers: {}\n")
 	if _, ok := off.Layers[GuidanceLayer]; ok {
 		t.Error("guidance: false leaves the layer out")
 	}
@@ -1877,7 +1877,7 @@ func TestLoad_revision(t *testing.T) {
 		}
 		return c.Rev()
 	}
-	lf, crlf, other := rev("a.yaml", "version: 7\nlayers: {}\n"), rev("b.yaml", "version: 7\r\nlayers: {}\r\n"), rev("c.yaml", "version: 7\nlayers: {}\nlang: en\n")
+	lf, crlf, other := rev("a.yaml", "version: 8\nlayers: {}\n"), rev("b.yaml", "version: 8\r\nlayers: {}\r\n"), rev("c.yaml", "version: 8\nlayers: {}\nlang: en\n")
 	if lf == "" || lf != crlf || lf == other {
 		t.Errorf("revisions: %q %q %q", lf, crlf, other)
 	}
@@ -1901,5 +1901,68 @@ func TestRetryOnLoad(t *testing.T) {
 	}
 	if _, err := (RetryOnLoad{Load: "lots"}).Factor(); err == nil || !strings.Contains(err.Error(), `"lots"`) {
 		t.Errorf("refused, named: %v", err)
+	}
+}
+
+func TestUnitName(t *testing.T) {
+	t.Run("CNFGO-B72: A file's unit name drops what the layers add to it", func(t *testing.T) {})
+	c := &Config{Derived: &Derived{Files: map[string]Padroes{"test": {"{{dir}}/{{name}}.test.{{ext}}", "{{dir}}/{{name}}_test.go"}, "doc": {"docs/{{name}}/README.md"}}}}
+	for in, want := range map[string]string{
+		"src/Login.test.tsx": "Login", "pay_test.go": "pay", "a/Login.spec.md": "Login",
+		"app.config.ts": "app.config", "Makefile": "Makefile", `web\b.feature`: "b",
+	} {
+		if got := c.UnitName(in); got != want {
+			t.Errorf("UnitName(%q) = %q, want %q", in, got, want)
+		}
+	}
+	if got := (*Config)(nil).UnitName("Login.test.tsx"); got != "Login.test" {
+		t.Errorf("with no template the test's name is its own, got %q", got)
+	}
+}
+
+func TestCodeExtensions(t *testing.T) {
+	t.Run("CNFGO-B73: The code extensions are the code layers'", func(t *testing.T) {})
+	c := &Config{Layers: map[string]Layer{
+		"web": {Pattern: "web/**/*.{ts,tsx}", Kind: "code"}, "api": {Pattern: "api/**/*.go", Kind: "code"},
+		"tests": {Pattern: "**/*.py", Kind: "test"}, "any": {Pattern: "lib/**", Kind: "code"},
+	}}
+	if got := strings.Join(c.CodeExtensions(), " "); got != ".go .ts .tsx" {
+		t.Errorf("got %q", got)
+	}
+}
+
+func TestExampleRunnersAndPiecePaths(t *testing.T) {
+	t.Run("CNFGO-B74: The example runners, a unit's piece paths and a layer's extensions", func(t *testing.T) {})
+	for _, r := range ExampleRunners() {
+		for _, p := range []string{r.Match, r.Pass, r.Fail, r.Progress} {
+			if _, err := regexp.Compile(p); err != nil {
+				t.Errorf("%s: %v", r.Name, err)
+			}
+		}
+		if r.Kind == "" || r.Stall == "" || r.Match == "" {
+			t.Errorf("%s needs a kind, a quiet time and a match: %+v", r.Name, r)
+		}
+	}
+	c := &Config{
+		Layers: map[string]Layer{"web": {Pattern: "web/**/*.{tsx,ts}", Kind: "code"}, "api": {Pattern: "api/*.go", Kind: "code"}},
+		Derived: &Derived{
+			Files:     map[string]Padroes{"test": {"{{dir}}/{{name}}.test.{{ext}}"}},
+			Overrides: []DerivedOverride{{When: "api", Files: map[string]Padroes{"test": {"tests/{{module}}/{{name}}_test.go"}}}},
+		},
+	}
+	if got := strings.Join(c.PiecePaths("web/Login.tsx", "web", "test"), " "); got != "web/Login.test.tsx" {
+		t.Errorf("co-located: %q", got)
+	}
+	if got := c.PiecePaths("api/pay.go", "api", "test"); len(got) != 2 || got[0] != "tests/api/pay_test.go" {
+		t.Errorf("the override first: %v", got)
+	}
+	if got := strings.Join(c.PiecePaths("web/Login.spec.md", "web", "test"), " "); got != "web/Login.test.tsx" {
+		t.Errorf("a spec takes its layer's extension: %q", got)
+	}
+	if got := strings.Join(c.LayerExtensions("web"), " "); got != ".tsx .ts" {
+		t.Errorf("extensions: %q", got)
+	}
+	if (*Config)(nil).PiecePaths("a.ts", "", "test") != nil {
+		t.Error("no config, no paths")
 	}
 }

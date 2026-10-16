@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -13,10 +14,10 @@ import (
 )
 
 func cfgComObrigacoes() *config.Config {
-	return &config.Config{Obligations: []config.Obligation{
+	return testkit.WithComments(&config.Config{Obligations: []config.Obligation{
 		{Name: "lgpd-eliminacao", When: "carries: personal-data"},
 		{Name: "lgpd-portabilidade", When: "carries: personal-data"},
-	}}
+	}})
 }
 
 func TestTriggerDeclared_NaoSpecPula(t *testing.T) {
@@ -46,10 +47,10 @@ func TestTriggerDeclared_SemVocabularioFicaPendente(t *testing.T) {
 	t.Run("TRDCT-B03: Cited triggers return Pending when no vocabulary is declared", func(t *testing.T) {})
 	t.Run("TRDCT-I02: Missing compliance packs produce Pending rather than Pass", func(t *testing.T) {})
 	spec := "declare `carries: personal-data`"
-	if v, _ := checkTriggerDeclared(spec, mapx.Node{Kind: mapx.KindSpec}, t.TempDir(), nil, &config.Config{}); v != Pending {
+	if v, _ := checkTriggerDeclared(spec, mapx.Node{Kind: mapx.KindSpec}, t.TempDir(), nil, testkit.WithComments(&config.Config{})); v != Pending {
 		t.Errorf("sem vocabulário declarado o veredito é Pending; veio %v", v)
 	}
-	if v, _ := checkTriggerDeclared(spec, mapx.Node{Kind: mapx.KindSpec}, t.TempDir(), nil, nil); v != Pending {
+	if v, _ := checkTriggerDeclared(spec, mapx.Node{Kind: mapx.KindSpec}, t.TempDir(), nil, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("com cfg nil o veredito é Pending; veio %v", v)
 	}
 }
@@ -174,11 +175,11 @@ func contem(s, sub string) bool {
 // deixava a suíte inteira verde. O comportamento existia, estava certo, e nada o pinava.
 func TestTriggerDeclared_ListaDeclaradosTemTetoDeQuatro(t *testing.T) {
 	t.Run("TRDCT-B13: The list of declared triggers is capped at four", func(t *testing.T) {})
-	cfg := &config.Config{Obligations: []config.Obligation{
+	cfg := testkit.WithComments(&config.Config{Obligations: []config.Obligation{
 		{Name: "ob-a", When: "carries: aaa"}, {Name: "ob-b", When: "carries: bbb"},
 		{Name: "ob-c", When: "carries: ccc"}, {Name: "ob-d", When: "carries: ddd"},
 		{Name: "ob-e", When: "carries: eee"}, {Name: "ob-f", When: "carries: fff"},
-	}}
+	}})
 	// Um gatilho escrito que não se parece com nenhum dos declarados: força o ramo que
 	// lista os declarados em vez de sugerir o mais próximo.
 	spec := "Declare `carries: zzzzzzzz` nesta unidade."
@@ -214,10 +215,10 @@ func TestTriggerDeclared_PackThatDoesNotLoad(t *testing.T) {
 }
 
 func TestTriggerDeclared_reportDetails(t *testing.T) {
-	cfg := &config.Config{Obligations: []config.Obligation{
+	cfg := testkit.WithComments(&config.Config{Obligations: []config.Obligation{
 		{Name: "lgpd-eliminacao", When: "carries: personal-data"},
 		{Name: "lgpd-sensivel", When: "carries: sensitive-personal-data"},
-	}}
+	}})
 	spec := mapx.Node{Kind: mapx.KindSpec}
 
 	t.Run("TRDCT-B08: An undeclared trigger fails, naming the nearest declared one", func(t *testing.T) {

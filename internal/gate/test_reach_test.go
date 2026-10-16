@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -16,11 +17,13 @@ const payUnit = "export function charge(amount) { return amount }\nexport const 
 
 // reachCfg derives `src/pay.test.ts` from `src/pay.ts`, in the TS family.
 func reachCfg(invocations ...string) *config.Config {
-	return &config.Config{
-		Dialect: &config.Dialect{Family: "ts"},
+	d := config.FamilyChain("ts")
+	d.Family = "ts"
+	return testkit.WithComments(&config.Config{
+		Dialect: d,
 		Derived: &config.Derived{Anchor: "code", Files: map[string]config.Padroes{"test": {"{{dir}}/{{name}}.test.ts"}}},
 		Gates:   []config.Gate{{Name: "r", Check: "test-ref-matches-unit", On: []string{"test"}, Invocations: invocations}},
-	}
+	})
 }
 
 // exercise writes the unit and the test and confronts the test with test-exercises-unit.
@@ -48,20 +51,20 @@ func TestTestReach_namingWhatTheUnitDefines(t *testing.T) {
 func TestTestReach_importsReachTheModule(t *testing.T) {
 	t.Run("TSRCH-B02: An import of the unit's module reaches it", func(t *testing.T) {})
 	for _, test := range []string{"import * as p from './pay'\n", "import x from '../lib/src'\n"} {
-		if !importsModule(test, "src/pay.ts", nil) {
+		if !importsModule(test, "src/pay.ts", testkit.Chain("ts")) {
 			t.Errorf("%q imports the unit", test)
 		}
 	}
 	for _, test := range []string{"const s = 'pay'\n", "log('src')\n"} {
-		if importsModule(test, "src/pay.ts", nil) {
+		if importsModule(test, "src/pay.ts", testkit.Chain("ts")) {
 			t.Errorf("%q names the unit outside an import", test)
 		}
 	}
-	declared := &config.Config{Dialect: &config.Dialect{Imports: config.Patterns{{Re: `(?m)^load\s+"(?P<path>[^"]+)"`}}}}
+	declared := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Imports: config.Patterns{{Re: `(?m)^load\s+"(?P<path>[^"]+)"`}}}})
 	if !importsModule("load \"pay\"\n", "src/pay.ts", declared) || importsModule("load \"pay\"\n", "src/pay.ts", nil) {
 		t.Error("the dialect's imports name what an import statement is")
 	}
-	if importsModule("import x from 'lib'\n", "pay.ts", nil) {
+	if importsModule("import x from 'lib'\n", "pay.ts", testkit.Chain("ts")) {
 		t.Error("a unit at the root has no directory to import")
 	}
 	if v, msg := exercise(t, reachCfg(), "import { thing } from './pay'\n"); v != Pass {
@@ -127,7 +130,7 @@ func TestTestReach_theRefsUnit(t *testing.T) {
 	if v != Fail || !strings.Contains(msg, "`ref: REFXX` names fn/create/handler.ts, fn/create/rules.ts") {
 		t.Errorf("reaching none fails naming the ref and the files sorted, got %v: %s", v, msg)
 	}
-	noDef := &config.Config{Dialect: &config.Dialect{Family: "rust"}}
+	noDef := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "rust", Imports: config.FamilyChain("ts").Imports}})
 	if v, _ := refMatch(t, noDef, "// ref: REFXX\nimport { h } from '../fn/create/handler'\n"); v != Pass {
 		t.Errorf("with no definition an import still reaches, got %v", v)
 	}
@@ -170,7 +173,7 @@ func TestTestReach_skips(t *testing.T) {
 	if v, _ := checkTestExercisesUnit("", mapx.Node{ID: "e2e/flow.test.ts", Kind: mapx.KindTest}, "", refGraph(), cfg); v != Skip {
 		t.Errorf("a test no unit pairs with is skipped, got %v", v)
 	}
-	if v, _ := exercise(t, &config.Config{Dialect: &config.Dialect{Family: "rust"}, Derived: cfg.Derived}, "x"); v != Skip {
+	if v, _ := exercise(t, testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "rust"}, Derived: cfg.Derived}), "x"); v != Skip {
 		t.Errorf("no definition is skipped, got %v", v)
 	}
 	if v, _ := refMatch(t, cfg, "test('a')\n"); v != Skip {
@@ -198,7 +201,7 @@ func TestTestReach_declared(t *testing.T) {
 func TestTestReach_aFakeImplementingTheInterfaceIsNotACopy(t *testing.T) {
 	t.Run("TSRCH-B09: A member of the test's own type is not a copy of the unit's", func(t *testing.T) {})
 	root := t.TempDir()
-	goCfg := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	goCfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}})
 	writeFile(t, root, "src/handlers/probes.go", "package handlers\n\ntype Pinger interface{ Ping(ctx context.Context) error }\n\ntype GormPinger struct{ db *gorm.DB }\n\nfunc (g GormPinger) Ping(ctx context.Context) error { return nil }\n\nfunc ReadyHandler(p Pinger) http.HandlerFunc { return nil }\n")
 	fake := "package handlers\n\ntype fakePinger struct{ err error }\n\nfunc (f fakePinger) Ping(ctx context.Context) error { return f.err }\n\nfunc TestReady(t *testing.T) { ReadyHandler(fakePinger{}) }\n"
 	if r := reachOf(fake, "src/handlers/probes.go", root, goCfg, definitionOf(goCfg), nil); len(r.Copied) != 0 || !r.Reached {
@@ -210,7 +213,7 @@ func TestTestReach_aFakeImplementingTheInterfaceIsNotACopy(t *testing.T) {
 		t.Errorf("the unit's own method defined again is a copy, got %+v", r)
 	}
 	// Python: a method indented under the test's fake class is a member, not a copy.
-	pyCfg := &config.Config{Dialect: &config.Dialect{Family: "python"}}
+	pyCfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "python"}})
 	writeFile(t, root, "app/probes.py", "class DbPinger:\n    def ping(self):\n        return True\n\ndef ready(pinger):\n    return pinger.ping()\n")
 	pyFake := "class FakePinger:\n    def ping(self):\n        return False\n\ndef test_ready():\n    assert not ready(FakePinger())\n"
 	if r := reachOf(pyFake, "app/probes.py", root, pyCfg, definitionOf(pyCfg), nil); len(r.Copied) != 0 || !r.Reached {

@@ -7,6 +7,7 @@ package gate
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -67,7 +68,7 @@ func TestDuplication_FileInNoClonePasses(t *testing.T) {
 	t.Run("DUPLC-B01: A file in no clone passes", func(t *testing.T) {})
 	root := t.TempDir()
 	fakeJscpd(t, root, clonesReport("pkg/a.go", "3.5"), 0)
-	if v, msg := checkDuplication("", dupNode("pkg/d.go"), root, &mapx.Graph{}, nil); v != Pass {
+	if v, msg := checkDuplication("", dupNode("pkg/d.go"), root, &mapx.Graph{}, testkit.WithComments(nil)); v != Pass {
 		t.Fatalf("a file in no clone must pass, got %v (%s)", v, msg)
 	}
 }
@@ -77,11 +78,11 @@ func TestDuplication_BothSidesFailNamingTheOther(t *testing.T) {
 	root := t.TempDir()
 	fakeJscpd(t, root, clonesReport("pkg/a.go", "3.5"), 0)
 	g := &mapx.Graph{}
-	v, msg := checkDuplication("", dupNode("pkg/a.go"), root, g, nil)
+	v, msg := checkDuplication("", dupNode("pkg/a.go"), root, g, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, ":1-30 ≡ pkg/b.go:5-34 (30 lines)") {
 		t.Fatalf("the first side must fail naming the second, got %v (%s)", v, msg)
 	}
-	v, msg = checkDuplication("", dupNode("pkg/b.go"), root, g, nil)
+	v, msg = checkDuplication("", dupNode("pkg/b.go"), root, g, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, ":5-34 ≡ pkg/a.go:1-30 (30 lines)") {
 		t.Fatalf("the second side must fail naming the first, got %v (%s)", v, msg)
 	}
@@ -91,7 +92,7 @@ func TestDuplication_SameFileNamesOnlyRanges(t *testing.T) {
 	t.Run("DUPLC-B03: A clone inside one file names only the line ranges", func(t *testing.T) {})
 	root := t.TempDir()
 	fakeJscpd(t, root, clonesReport("pkg/a.go", "3.5"), 0)
-	v, msg := checkDuplication("", dupNode("pkg/c.go"), root, &mapx.Graph{}, nil)
+	v, msg := checkDuplication("", dupNode("pkg/c.go"), root, &mapx.Graph{}, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, ":10-30 ≡ :50-70 (21 lines)") || strings.Contains(msg, "≡ pkg/c.go") {
 		t.Fatalf("a same-file clone must name only its ranges, got %v (%s)", v, msg)
 	}
@@ -104,12 +105,12 @@ func TestDuplication_ThresholdTolerates(t *testing.T) {
 		t.Fatal(err)
 	}
 	fakeJscpd(t, root, clonesReport("pkg/a.go", "3.5"), 0)
-	v, msg := checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, nil)
+	v, msg := checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, testkit.WithComments(nil))
 	if v != Diverge || !strings.Contains(msg, "pkg/b.go:5-34") {
 		t.Fatalf("at the threshold the clones are reported, not failed, got %v (%s)", v, msg)
 	}
 	fakeJscpd(t, root, clonesReport("pkg/a.go", "3.6"), 1)
-	if v, msg := checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, nil); v != Fail {
+	if v, msg := checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, testkit.WithComments(nil)); v != Fail {
 		t.Fatalf("over the threshold the clones fail, got %v (%s)", v, msg)
 	}
 }
@@ -124,7 +125,7 @@ func TestDuplication_NoThresholdAnyCloneFails(t *testing.T) {
 			}
 		}
 		fakeJscpd(t, root, clonesReport("pkg/a.go", "0.1"), 0)
-		if v, msg := checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, nil); v != Fail {
+		if v, msg := checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, testkit.WithComments(nil)); v != Fail {
 			t.Fatalf("config %q: exit 0 with a clone and no threshold must fail, got %v (%s)", cfg, v, msg)
 		}
 	}
@@ -135,12 +136,12 @@ func TestDuplication_OneRunPerScan(t *testing.T) {
 	root := t.TempDir()
 	fakeJscpd(t, root, clonesReport("pkg/a.go", "3.5"), 0)
 	g := &mapx.Graph{}
-	checkDuplication("", dupNode("pkg/a.go"), root, g, nil)
-	checkDuplication("", dupNode("pkg/b.go"), root, g, nil)
+	checkDuplication("", dupNode("pkg/a.go"), root, g, testkit.WithComments(nil))
+	checkDuplication("", dupNode("pkg/b.go"), root, g, testkit.WithComments(nil))
 	if n := runsOf(t, root); n != 1 {
 		t.Fatalf("the same root and map must reuse the report, jscpd ran %d times", n)
 	}
-	checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, nil)
+	checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, testkit.WithComments(nil))
 	if n := runsOf(t, root); n != 2 {
 		t.Fatalf("a new map must run jscpd again, it ran %d times", n)
 	}
@@ -150,11 +151,11 @@ func TestDuplication_AbsolutePathsAreRelativeToRoot(t *testing.T) {
 	t.Run("DUPLC-B07: An absolute path in the report is read relative to the root", func(t *testing.T) {})
 	root := t.TempDir()
 	fakeJscpd(t, root, clonesReport(filepath.Join(root, "pkg", "a.go"), "3.5"), 0)
-	v, msg := checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, nil)
+	v, msg := checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, "pkg/b.go:5-34") {
 		t.Fatalf("the absolute path must match the node, got %v (%s)", v, msg)
 	}
-	v, msg = checkDuplication("", dupNode("pkg/b.go"), root, &mapx.Graph{}, nil)
+	v, msg = checkDuplication("", dupNode("pkg/b.go"), root, &mapx.Graph{}, testkit.WithComments(nil))
 	if v != Fail || !strings.Contains(msg, "≡ pkg/a.go:1-30") {
 		t.Fatalf("the other side must be named relative to the root, got %v (%s)", v, msg)
 	}
@@ -164,12 +165,12 @@ func TestDuplication_NoReportIsPending(t *testing.T) {
 	t.Run("DUPLC-E01: No report leaves the check Pending naming why", func(t *testing.T) {})
 	root := t.TempDir()
 	fakeJscpd(t, root, "", 1)
-	v, msg := checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, nil)
+	v, msg := checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, testkit.WithComments(nil))
 	if v != Pending || !strings.Contains(msg, "fake jscpd done") {
 		t.Fatalf("no report must be Pending naming jscpd's last line, got %v (%s)", v, msg)
 	}
 	fakeJscpd(t, root, "{not json", 0)
-	v, msg = checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, nil)
+	v, msg = checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, testkit.WithComments(nil))
 	if v != Pending || !strings.Contains(msg, "unreadable") {
 		t.Fatalf("an unreadable report must be Pending, got %v (%s)", v, msg)
 	}

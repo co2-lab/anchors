@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"sort"
 	"strconv"
 	"strings"
@@ -68,7 +69,7 @@ const dupSpec = `# Pay
 func TestDuplicates_ruleTypesCountsDefinitions(t *testing.T) {
 	t.Run("GTDPG-B02: rule-types counts the rule codes a file defines, not those it cites", func(t *testing.T) {})
 	// The project names its events section "Eventos / Callbacks", in the component layer.
-	cfg := &config.Config{Layers: map[string]config.Layer{"component": {SectionTitles: config.SectionTitles{"callbacks": "Eventos / Callbacks"}}}}
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"component": {SectionTitles: config.SectionTitles{"callbacks": "Eventos / Callbacks"}}}})
 	occ := definedRuleOccurrences(dupSpec, mapx.Node{}, "", nil, cfg)
 	var got []string
 	for _, o := range occ {
@@ -166,10 +167,10 @@ func TestDuplicates_flagsCodeAndFeatures(t *testing.T) {
 	n := mapx.Node{ID: "x"}
 	keys := func(occ []Occurrence) string { return strings.Join(keysOf(occ), ",") }
 	usedBy := "// @used-by: AAAAA\n// @used-by: BBBBB\nexport const PALETTE = {}\n\n// @used-by: AAAAA\nexport const OTHER = 1\n"
-	if got := keys(usedByOccurrences(usedBy, n, "", nil, &config.Config{Dialect: withChain("ts")})); got != "PALETTE" {
+	if got := keys(usedByOccurrences(usedBy, n, "", nil, testkit.WithComments(&config.Config{Dialect: withChain("ts")}))); got != "PALETTE" {
 		t.Errorf("two used-by flags on one symbol: %q", got)
 	}
-	cfg := &config.Config{Derived: &config.Derived{TestHandle: "testID"}}
+	cfg := testkit.WithComments(&config.Config{Derived: &config.Derived{TestHandle: "testID"}})
 	ids := "# S\n\n## Test IDs\n\n| testID | Element |\n| --- | --- |\n| `pay-button` | the button |\n| `pay-total` | `pay-button` shown above |\n| `pay-button` | again |\n"
 	if got := keys(testIDOccurrences(ids, n, "", nil, cfg)); got != "pay-button" {
 		t.Errorf("a testID in two rows, not one cited in another cell: %q", got)

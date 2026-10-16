@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,15 +36,15 @@ func TestGuidanceLinked(t *testing.T) {
 		{"AGENTS.md", "Read `CONTRIBUTING.md` first.\n", Pass, ""},
 		{"README.md", "# The project\n", Fail, "`README.md` does not point to `CONTRIBUTING.md`"},
 	} {
-		v, msg := checkGuidanceLinked(c.content, guidanceNode(c.id), root, g, nil)
+		v, msg := checkGuidanceLinked(c.content, guidanceNode(c.id), root, g, testkit.WithComments(nil))
 		if v != c.want || !strings.Contains(msg, c.says) {
 			t.Errorf("%s: %v %s", c.id, v, msg)
 		}
 	}
-	if v, msg := checkGuidanceLinked("see CONTRIBUTING.md", guidanceNode("CLAUDE.md"), t.TempDir(), &mapx.Graph{}, nil); v != Fail || !strings.Contains(msg, "`CONTRIBUTING.md` does not exist") {
+	if v, msg := checkGuidanceLinked("see CONTRIBUTING.md", guidanceNode("CLAUDE.md"), t.TempDir(), &mapx.Graph{}, testkit.WithComments(nil)); v != Fail || !strings.Contains(msg, "`CONTRIBUTING.md` does not exist") {
 		t.Errorf("no agreement: %v %s", v, msg)
 	}
-	if v, _ := checkGuidanceLinked("x", mapx.Node{ID: "a.go", Kind: mapx.KindCode}, root, g, nil); v != Skip {
+	if v, _ := checkGuidanceLinked("x", mapx.Node{ID: "a.go", Kind: mapx.KindCode}, root, g, testkit.WithComments(nil)); v != Skip {
 		t.Error("outside the layer: skipped")
 	}
 }
@@ -67,7 +68,7 @@ func TestGuidanceGatesInTheCatalog(t *testing.T) {
 
 func TestHeaderGatesLeaveHeadlessLayers(t *testing.T) {
 	t.Run("GDGTG-B03: A headless layer is asked no header", func(t *testing.T) {})
-	cfg := &config.Config{Layers: map[string]config.Layer{config.GuidanceLayer: config.CanonicalGuidance(), "screen": {Kind: "code"}}}
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{config.GuidanceLayer: config.CanonicalGuidance(), "screen": {Kind: "code"}}})
 	n := guidanceNode("README.md")
 	if v, _ := checkersWithGraph["header-valid"]("# The project\n", n, "", nil, cfg); v != Skip {
 		t.Errorf("header-valid: %v", v)

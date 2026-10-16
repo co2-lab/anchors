@@ -28,10 +28,10 @@ func write(t *testing.T, files map[string]string) string {
 	return root
 }
 
-const goRun = `\bt\.Run\(`
+const goRun = `\bt\.Run\(\s*"(?P<title>[^"]*)"`
 
 func TestPatternReadsCallsFollowedByALiteral(t *testing.T) {
-	t.Run("TSTLS-B01: A pattern reads each call followed by a literal as a test", func(t *testing.T) {})
+	t.Run("TSTLS-B01: A pattern reads each match as a test, titled by its title group", func(t *testing.T) {})
 	root := write(t, map[string]string{"a_test.go": "package a\n\nfunc TestA(t *testing.T) {\n\tt.Run(\"ABCDX-B01: first\", func(t *testing.T) {})\n\tt.Run( \"ABCDX-B02: second\", nil)\n}\n"})
 	got, err := List(root, []string{"a_test.go"}, Source{Pattern: goRun})
 	want := []Test{{File: "a_test.go", Line: 4, Title: "ABCDX-B01: first"}, {File: "a_test.go", Line: 5, Title: "ABCDX-B02: second"}}
@@ -41,10 +41,10 @@ func TestPatternReadsCallsFollowedByALiteral(t *testing.T) {
 }
 
 func TestTitlesQuotedThreeWays(t *testing.T) {
-	t.Run("TSTLS-B02: Titles may be quoted three ways, with escapes", func(t *testing.T) {})
-	src := "it('single \\'quoted\\'', f)\nit(\"double \\\"x\\\"\", f)\nit(`back\ntick`, f)\nit('broken\nline', f)\n"
+	t.Run("TSTLS-B02: A pattern names a title group for each way a title is quoted", func(t *testing.T) {})
+	src := "it('single \\'quoted\\'', f)\nit(\"double\", f)\nit(`back\ntick`, f)\n"
 	root := write(t, map[string]string{"a.test.ts": src})
-	got, err := List(root, []string{"a.test.ts"}, Source{Pattern: `\bit\(`})
+	got, err := List(root, []string{"a.test.ts"}, Source{Pattern: "\\bit\\((?:'(?P<title>(?:[^'\\\\]|\\\\.)*)'|\"(?P<title2>[^\"]*)\"|`(?P<title3>[^`]*)`)"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,18 +52,18 @@ func TestTitlesQuotedThreeWays(t *testing.T) {
 	for _, x := range got {
 		titles = append(titles, x.Title)
 	}
-	want := []string{"single 'quoted'", `double "x"`, "back\ntick"}
+	want := []string{`single \'quoted\'`, "double", "back\ntick"}
 	if !reflect.DeepEqual(titles, want) {
 		t.Fatalf("want %q, got %q", want, titles)
 	}
 }
 
 func TestCallWithoutLiteralIsLeftOut(t *testing.T) {
-	t.Run("TSTLS-B03: A call without a literal title is left out", func(t *testing.T) {})
+	t.Run("TSTLS-B03: A match whose title groups captured nothing is left out", func(t *testing.T) {})
 	root := write(t, map[string]string{"a.test.ts": "it(name, f)\nit(\n  'real', f)\nit("})
 	// The pattern swallows the blanks after the parenthesis, across the line break: the
 	// line is still the one where the call starts.
-	got, err := List(root, []string{"a.test.ts"}, Source{Pattern: `\bit\(\s*`})
+	got, err := List(root, []string{"a.test.ts"}, Source{Pattern: `\bit\(\s*(?:'(?P<title>[^']*)')?`})
 	if err != nil || len(got) != 1 || got[0].Title != "real" || got[0].Line != 2 {
 		t.Fatalf("only the literal title counts, at the line its call starts; got %v (%v)", got, err)
 	}
@@ -75,7 +75,7 @@ func TestPatternOrder(t *testing.T) {
 		"b.test.ts": "it('b1', f)\nit('b2', f)\n",
 		"a.test.ts": "it('a1', f)\nit('a2', f)\n",
 	})
-	got, err := List(root, []string{"b.test.ts", "a.test.ts"}, Source{Pattern: `\bit\(`})
+	got, err := List(root, []string{"b.test.ts", "a.test.ts"}, Source{Pattern: `\bit\('(?P<title>[^']*)'`})
 	var titles []string
 	for _, x := range got {
 		titles = append(titles, x.File+":"+x.Title)
@@ -166,6 +166,13 @@ func TestPatternThatDoesNotCompile(t *testing.T) {
 	}
 }
 
+func TestPatternWithoutTitle(t *testing.T) {
+	t.Run("TSTLS-E05: A pattern with no title group is refused", func(t *testing.T) {})
+	if _, err := List(t.TempDir(), []string{"a_test.go"}, Source{Pattern: `\bt\.Run\(`}); err == nil || !strings.Contains(err.Error(), "`title` group") {
+		t.Fatalf("want the missing group named, got %v", err)
+	}
+}
+
 func TestFailingScript(t *testing.T) {
 	t.Run("TSTLS-E03: A failing script is an error naming why", func(t *testing.T) {})
 	_, err := List(t.TempDir(), nil, Source{Script: `echo noise >&2; echo "jest not installed" >&2; exit 3`})
@@ -182,7 +189,7 @@ func TestScriptSaysWhereATestEnds(t *testing.T) {
 		t.Fatalf("want %v, got %v (%v)", want, got, err)
 	}
 	root := write(t, map[string]string{"a_test.go": "t.Run(\"x\", func(t *testing.T) {\n})\n"})
-	listed, err := List(root, []string{"a_test.go"}, Source{Pattern: `\bt\.Run\(`})
+	listed, err := List(root, []string{"a_test.go"}, Source{Pattern: goRun})
 	if err != nil || len(listed) != 1 || listed[0].End != 0 {
 		t.Errorf("a pattern does not know where a test ends, got %v (%v)", listed, err)
 	}
@@ -194,7 +201,7 @@ func TestListFrom_readsThroughTheReader(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "a_test.go"), []byte("\n\nt.Run(\"tree\", f)\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	src := Source{Pattern: `t\.Run\(`}
+	src := Source{Pattern: goRun}
 	read := func(rel string) ([]byte, error) { return []byte("t.Run(\"index\", f)\n"), nil }
 	got, err := ListFrom(root, []string{"a_test.go"}, src, read)
 	if err != nil || len(got) != 1 || got[0].Title != "index" || got[0].Line != 1 {

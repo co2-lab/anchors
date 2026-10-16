@@ -24,14 +24,14 @@ func rodaContagem(t *testing.T, spec string, arquivos map[string]string) (Verdic
 		os.MkdirAll(filepath.Dir(p), 0o755)
 		os.WriteFile(p, []byte(conteudo), 0o644)
 	}
-	return checkCountHonored(spec, mapx.Node{Kind: mapx.KindSpec}, dir, nil, nil)
+	return checkCountHonored(spec, mapx.Node{Kind: mapx.KindSpec}, dir, nil, testkit.WithComments(nil))
 }
 
 func TestCountSoSpec(t *testing.T) {
 	t.Run("CNHNC-B01: Confronting an artifact that is not a spec skips", func(t *testing.T) {})
 	spec := "<!-- @anchors-count: 9 = models/*.ts -->"
 	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
-		if v, _ := checkCountHonored(spec, mapx.Node{Kind: k}, t.TempDir(), nil, nil); v != Skip {
+		if v, _ := checkCountHonored(spec, mapx.Node{Kind: k}, t.TempDir(), nil, testkit.WithComments(nil)); v != Skip {
 			t.Errorf("kind %s deveria ser Skip, foi %s", k, v)
 		}
 	}
@@ -207,7 +207,7 @@ func TestCountFilesOnlyAndUnreadable(t *testing.T) {
 		os.WriteFile(locked, []byte("allow\n"), 0o000)
 		defer os.Chmod(locked, 0o644)
 		spec := "# Spec\n<!-- @anchors-count: 3 regras = rules/*.go /allow/ -->\n"
-		v, d := checkCountHonored(spec, mapx.Node{Kind: mapx.KindSpec}, dir, nil, nil)
+		v, d := checkCountHonored(spec, mapx.Node{Kind: mapx.KindSpec}, dir, nil, testkit.WithComments(nil))
 		if v != Fail || !strings.Contains(d, "rules/b.go") {
 			t.Fatalf("an unread file must fail naming it, not undercount, got %s (%s)", v, d)
 		}

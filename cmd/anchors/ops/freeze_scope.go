@@ -217,35 +217,19 @@ func dropEmptyFreezeSection(lines []string) []string {
 }
 
 // headerFieldRE is a field line of the `@anchors` header, capturing its comment prefix.
-var headerFieldRE = regexp.MustCompile(`^(\s*(?://|#|--|<!--|\*)?\s*)(code|ref):`)
+var headerFieldRE = regexp.MustCompile(`^(\s*[^\p{L}\p{N}\s]*\s*)(code|ref):`)
 
 // headerFrozenLineRE is the header's `frozen:` line, capturing its value.
-var headerFrozenLineRE = regexp.MustCompile(`^\s*(?://|#|--|<!--|\*)?\s*frozen:\s*(.*?)\s*(?:-->)?\s*$`)
+var headerFrozenLineRE = regexp.MustCompile(`^\s*[^\p{L}\p{N}\s]*\s*frozen:\s*(.*?)\s*[^\p{L}\p{N}\s]*\s*$`)
 
-// headerSpan is the index range of the file's `@anchors` header lines.
-func headerSpan(lines []string) (int, int) {
-	for i, l := range lines {
-		if i > 40 {
-			break
-		}
-		if strings.Contains(l, "@anchors") {
-			end := i + 1
-			for end < len(lines) && end < i+40 && strings.TrimSpace(lines[end]) != "" &&
-				!strings.HasPrefix(strings.TrimSpace(lines[end]), "-->") && headerish(lines[end]) {
-				end++
-			}
-			return i, end
-		}
+// headerSpan is the index range of the file's `@anchors` header lines, as the map reads it
+// (scan.HeaderRange), or -1, -1.
+func headerSpan(root, rel string, lines []string) (int, int) {
+	cfg, _ := config.Load(filepath.Join(root, config.DefaultFile))
+	if from, to, ok := scan.HeaderRange(lines, cfg.CommentsFor(rel)); ok {
+		return from, to
 	}
 	return -1, -1
-}
-
-// headerish says whether a line can belong to a header block: a comment line, or an
-// indented field of a markdown header.
-func headerish(l string) bool {
-	t := strings.TrimSpace(l)
-	return strings.HasPrefix(t, "//") || strings.HasPrefix(t, "#") || strings.HasPrefix(t, "--") ||
-		strings.HasPrefix(t, "*") || strings.HasPrefix(l, " ") || strings.HasPrefix(l, "\t")
 }
 
 // markHeader writes `frozen: <value>` into the file's header, under its code or ref line.
@@ -254,7 +238,7 @@ func markHeader(root, rel, value string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	start, end := headerSpan(lines)
+	start, end := headerSpan(root, rel, lines)
 	if start < 0 {
 		return "", fmt.Errorf("%s has no @anchors header to carry the freeze", rel)
 	}
@@ -319,7 +303,7 @@ func unmark(root, rel, value, rule string, header, body bool) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	start, end := headerSpan(lines)
+	start, end := headerSpan(root, rel, lines)
 	re := scan.RuleDefinitionRE()
 	removed := 0
 	var out []string
@@ -635,7 +619,8 @@ func freezeHook(raw []byte) string {
 	}
 	whole := ""
 	if b, err := os.ReadFile(path); err == nil {
-		whole = scan.FrozenOf(b)
+		cfg, _ := config.Load(filepath.Join(root, config.DefaultFile))
+		whole = scan.FrozenOf(b, cfg.CommentsFor(rel))
 	}
 	if whole == "" && node != nil {
 		whole = node.Frozen

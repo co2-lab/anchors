@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -20,7 +21,7 @@ func branchNode() mapx.Node {
 }
 
 func branchCfg(floor *float64) *config.Config {
-	return &config.Config{Gates: []config.Gate{{Name: "b", Check: "branch-coverage", On: []string{"code"}, MinPercent: floor}}}
+	return testkit.WithComments(&config.Config{Gates: []config.Gate{{Name: "b", Check: "branch-coverage", On: []string{"code"}, MinPercent: floor}}})
 }
 
 func pct(v float64) *float64 { return &v }
@@ -83,23 +84,23 @@ func TestBranchCoverage_likelyDead(t *testing.T) {
 
 func TestBranchCoverage_nothingToMeasure(t *testing.T) {
 	t.Run("BRCOV-B04: Nothing to measure is skipped or pending", func(t *testing.T) {})
-	if v, _ := checkBranchCoverage("", mapx.Node{Kind: mapx.KindSpec}, "", nil, nil); v != Skip {
+	if v, _ := checkBranchCoverage("", mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("a spec is skipped, got %v", v)
 	}
-	if v, _ := checkBranchCoverage("", mapx.Node{Kind: mapx.KindCode}, "", nil, nil); v != Pending {
+	if v, _ := checkBranchCoverage("", mapx.Node{Kind: mapx.KindCode}, "", nil, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("no coverage is pending, got %v", v)
 	}
-	if v, _ := checkBranchCoverage("", mapx.Node{Kind: mapx.KindCode, Signal: &mapx.TestSignal{}}, "", nil, nil); v != Pending {
+	if v, _ := checkBranchCoverage("", mapx.Node{Kind: mapx.KindCode, Signal: &mapx.TestSignal{}}, "", nil, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("a signal with no line is pending, got %v", v)
 	}
 	stale := branchNode()
 	stale.Rev = "r2"
-	if v, _ := checkBranchCoverage("", stale, "", nil, nil); v != Pending {
+	if v, _ := checkBranchCoverage("", stale, "", nil, testkit.WithComments(nil)); v != Pending {
 		t.Errorf("stale coverage is pending, got %v", v)
 	}
 	flat := branchNode()
 	flat.Signal.BranchTotal, flat.Signal.BranchMissed = 0, ""
-	if v, _ := checkBranchCoverage("", flat, "", nil, nil); v != Skip {
+	if v, _ := checkBranchCoverage("", flat, "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("coverage with no branch is skipped, got %v", v)
 	}
 }
@@ -108,10 +109,10 @@ func TestBranchCoverage_nothingToCover(t *testing.T) {
 	t.Run("BRCOV-B05: Branch coverage reads a file with nothing to cover as line coverage does", func(t *testing.T) {})
 	listed := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: &mapx.TestSignal{CoverageRev: "r1"}}
 	omitted := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: &mapx.TestSignal{CoverageOmitted: "r1"}}
-	if v, _ := checkBranchCoverage("", listed, "", nil, nil); v != Skip {
+	if v, _ := checkBranchCoverage("", listed, "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("listed with no line is skipped, got %v", v)
 	}
-	if v, _ := checkBranchCoverage("", omitted, "", nil, nil); v != Diverge {
+	if v, _ := checkBranchCoverage("", omitted, "", nil, testkit.WithComments(nil)); v != Diverge {
 		t.Errorf("omitted is a divergence, got %v", v)
 	}
 }

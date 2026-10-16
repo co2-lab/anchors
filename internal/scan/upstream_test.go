@@ -5,6 +5,7 @@
 package scan
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 )
@@ -25,10 +26,10 @@ jobs:
 
 func TestAnchorsHeader_ignoresTheSharedCodeFlagAndProse(t *testing.T) {
 	t.Run("UPOWP-B03: The shared-code flag and prose do not open a header", func(t *testing.T) {})
-	if h := AnchorsHeader([]byte("// @anchors-shared-code\n// parent: X\n")); h != nil {
+	if h := AnchorsHeader([]byte("// @anchors-shared-code\n// parent: X\n"), testkit.AnyComment()); h != nil {
 		t.Errorf("`@anchors-shared-code` does not open a header, got %q", h)
 	}
-	if h := AnchorsHeader([]byte("the `@anchors` header\nparent: X\n")); h != nil {
+	if h := AnchorsHeader([]byte("the `@anchors` header\nparent: X\n"), testkit.AnyComment()); h != nil {
 		t.Errorf("prose does not open a header, got %q", h)
 	}
 }
@@ -41,7 +42,7 @@ func TestAnchorsHeader_endsWithItsComment(t *testing.T) {
 		"/* @anchors\n code: X\n*/\ncode: Y":    "/* @anchors\n code: X\n*/",
 		"<!-- @anchors code: X -->\ncode: Y":    "<!-- @anchors code: X -->",
 	} {
-		got := string(AnchorsHeader([]byte(src)))
+		got := string(AnchorsHeader([]byte(src), testkit.AnyComment()))
 		if got != want {
 			t.Errorf("header of %q = %q, want %q", src, got, want)
 		}
@@ -53,7 +54,7 @@ func TestAnchorsHeader_endsWithItsComment(t *testing.T) {
 
 func TestAnchorsHeader_lineCommentsEndAtTheFirstNonComment(t *testing.T) {
 	t.Run("UPOWP-B05: A line-comment header ends at the first line that is not a comment", func(t *testing.T) {})
-	if got := string(AnchorsHeader([]byte("# @anchors\n#  code: X\n\n# after"))); got != "# @anchors\n#  code: X" {
+	if got := string(AnchorsHeader([]byte("# @anchors\n#  code: X\n\n# after"), testkit.AnyComment())); got != "# @anchors\n#  code: X" {
 		t.Errorf("the line-comment header should stop at the blank line, got %q", got)
 	}
 }
@@ -61,7 +62,7 @@ func TestAnchorsHeader_lineCommentsEndAtTheFirstNonComment(t *testing.T) {
 func TestAnchorsHeader_unclosedRunsToTheEnd(t *testing.T) {
 	t.Run("UPOWP-B06: A header comment that never closes runs to the end of the file", func(t *testing.T) {})
 	src := "<!-- @anchors\n code: X\nnever closes"
-	if got := string(AnchorsHeader([]byte(src))); got != src {
+	if got := string(AnchorsHeader([]byte(src), testkit.AnyComment())); got != src {
 		t.Errorf("an unclosed header runs to the end of the file, got %q", got)
 	}
 }
@@ -102,27 +103,27 @@ func TestAnchorsHeader_onlyAtTheTop(t *testing.T) {
 		"<!-- a note\nspanning lines\n-->\n<!-- @anchors\n  code: X\n-->\n",
 		"# language: en\n# @anchors\n#   ref: X\n",
 	} {
-		if AnchorsHeader([]byte(src)) == nil || HeaderOffTop([]byte(src)) {
+		if AnchorsHeader([]byte(src), testkit.AnyComment()) == nil || HeaderOffTop([]byte(src), testkit.AnyComment()) {
 			t.Errorf("a header after comments only is the header: %q", src)
 		}
 	}
 	low := "'use client'\n// @anchors\n//   ref: X\n"
-	if AnchorsHeader([]byte(low)) != nil || !HeaderOffTop([]byte(low)) {
+	if AnchorsHeader([]byte(low), testkit.AnyComment()) != nil || !HeaderOffTop([]byte(low), testkit.AnyComment()) {
 		t.Errorf("a header after a directive is not the header, and is reported off the top")
 	}
 	fixed := "'use client'\n// @anchors\n//   ref: X\n//   @fixed-header: the directive must be the first statement\n"
-	if h := AnchorsHeader([]byte(fixed)); !strings.Contains(string(h), "ref: X") || HeaderOffTop([]byte(fixed)) {
+	if h := AnchorsHeader([]byte(fixed), testkit.AnyComment()); !strings.Contains(string(h), "ref: X") || HeaderOffTop([]byte(fixed), testkit.AnyComment()) {
 		t.Errorf("a declared header below the top is the header, got %q", h)
 	}
 	bare := "package x\n// @anchors\n//   ref: X\n//   @fixed-header:\n"
-	if AnchorsHeader([]byte(bare)) != nil {
+	if AnchorsHeader([]byte(bare), testkit.AnyComment()) != nil {
 		t.Error("a bare @fixed-header declares nothing")
 	}
 	example := "// @anchors\n//   layer: real\n\npackage x\nconst g = `\n  // @anchors\n  //   layer: screen\n`\n"
-	if h := string(AnchorsHeader([]byte(example))); !strings.Contains(h, "layer: real") || HeaderOffTop([]byte(example)) {
+	if h := string(AnchorsHeader([]byte(example), testkit.AnyComment())); !strings.Contains(h, "layer: real") || HeaderOffTop([]byte(example), testkit.AnyComment()) {
 		t.Errorf("the top header wins over an example below, got %q", h)
 	}
-	if HeaderOffTop([]byte("package x\n")) {
+	if HeaderOffTop([]byte("package x\n"), testkit.AnyComment()) {
 		t.Error("a file with no block is not off the top")
 	}
 }
@@ -130,10 +131,10 @@ func TestAnchorsHeader_onlyAtTheTop(t *testing.T) {
 func TestAnchorsHeader_firstWordOpensIt(t *testing.T) {
 	t.Run("UPOWP-B08: Only a comment whose first word is @anchors opens the header", func(t *testing.T) {})
 	prose := "// Package recode renames a code across the header @anchors (code:/ref:), the\n// derived codes and the mentions.\npackage recode\n"
-	if AnchorsHeader([]byte(prose)) != nil {
+	if AnchorsHeader([]byte(prose), testkit.AnyComment()) != nil {
 		t.Error("prose naming the header is no header")
 	}
-	if AnchorsHeader([]byte("// @anchors\n//   ref: RCRWR\n\npackage recode\n")) == nil {
+	if AnchorsHeader([]byte("// @anchors\n//   ref: RCRWR\n\npackage recode\n"), testkit.AnyComment()) == nil {
 		t.Error("a comment opening with @anchors opens the header")
 	}
 }
@@ -141,13 +142,13 @@ func TestAnchorsHeader_firstWordOpensIt(t *testing.T) {
 func TestAnchorsHeader_ocamlAndDune(t *testing.T) {
 	t.Run("UPOWP-B09: An OCaml or dune header is read", func(t *testing.T) {})
 	ml := "(* @anchors\n  code: PARSR\n  ref: PARSU\n*)\nopen Lexer\nlet code = 1\n"
-	if HeaderCodeOf(ml) != "PARSR" || !strings.HasSuffix(string(AnchorsHeader([]byte(ml))), "*)") {
-		t.Errorf("OCaml header: %q", AnchorsHeader([]byte(ml)))
+	if HeaderCodeOf(ml, testkit.AnyComment()) != "PARSR" || !strings.HasSuffix(string(AnchorsHeader([]byte(ml), testkit.AnyComment())), "*)") {
+		t.Errorf("OCaml header: %q", AnchorsHeader([]byte(ml), testkit.AnyComment()))
 	}
-	if refs := extractHeaderRefs(ml); len(refs) != 1 || refs[0] != "PARSU" {
+	if refs := extractHeaderRefs(ml, testkit.AnyComment()); len(refs) != 1 || refs[0] != "PARSU" {
 		t.Errorf("OCaml refs: %v", refs)
 	}
-	if got := HeaderCodeOf("; @anchors\n;   code: DUNEB\n\n(library (name core))\n"); got != "DUNEB" {
+	if got := HeaderCodeOf("; @anchors\n;   code: DUNEB\n\n(library (name core))\n", testkit.AnyComment()); got != "DUNEB" {
 		t.Errorf("dune header: %q", got)
 	}
 }
