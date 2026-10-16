@@ -596,6 +596,13 @@ func TestDialect_importResolveAndNavigationCall(t *testing.T) {
 	if d.ImportResolve == nil || len(d.ImportResolve.Extensions) != 2 || d.ImportResolve.Aliases["@/"] != "src/" || !strings.Contains(d.NavigationCall, "route") {
 		t.Errorf("got %+v %q", d.ImportResolve, d.NavigationCall)
 	}
+	sep, err := load(t, "version: 7\nlayers: {}\ndialect:\n  import_resolve:\n    separator: '.'\n")
+	if err != nil || sep.DialectFor().ImportResolve.Separator != "." {
+		t.Errorf("the separator is read: %v", err)
+	}
+	if got := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor().NavigationCall; got != "" || !strings.Contains(FamilyNavigationCall("ts"), "(?P<route>") || FamilyNavigationCall("go") != "" {
+		t.Errorf("no family gives a navigation call by itself, and ts has an example: %q", got)
+	}
 }
 
 func TestDialectFor_ocaml(t *testing.T) {

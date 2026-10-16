@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:0761afdeacac166b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:62edb9286330a60d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3467,9 +3467,9 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B22 — A family knows what can fail in its stack and what handles it (`FamilyFalliblePatterns`: React Query, SWR, fetch and axios for `ts`, a type argument taken; HTTP and SQL for `go`; `requests` for `python`; each with the `name` group that says the function a failure cites), and does not impose them: a project that declared no `fallible_patterns` is measured with none until it adopts them.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B23 — The dialect declares how an import's path becomes a file (`import_resolve`: `extensions` tried in order and `aliases` of path prefixes — `ImportResolve`) and what a navigation call looks like (`navigation_call`, its destination in the group `route` — `NavigationCall`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B23 — The dialect declares how an import's path becomes a file (`import_resolve`: `extensions` tried in order, `aliases` of path prefixes, and the `separator` of a path whose directories are not divided by `/` — `ImportResolve`) and what a navigation call looks like (`navigation_call`, its destination in the group `route` — `NavigationCall`); no family gives a navigation call by itself, and the `ts` family has an example of one (`FamilyNavigationCall`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B24 — The OCaml family reads an exported function as a top-level `let` or `let rec`, an environment read as `Sys.getenv` or `Sys.getenv_opt` with a literal name, a loop as `for` or `while`, and an import line as `open` (or `open!`) with its module; a family's import pattern fills the project's when it declares none.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B24 — The OCaml family reads an exported function as a top-level `let` or `let rec`, an environment read as `Sys.getenv` or `Sys.getenv_opt` with a literal name, and a loop as `for` or `while`; its example of the chain reads a module opened (`open`, `open!`) or qualifying a name, and is never the project's import pattern by itself.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B25 — The import resolution may declare that imports are module names (`by_name`) and how a name becomes a file name (`name_case`: `lower_first`, `lower`, or as written); both are read from `import_resolve`. (`ImportResolve`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -3922,6 +3922,8 @@ abra a página dela em `camadas/`.
 - [DCGDP-B12 — Without `dialect.imports` the chain gates are Pending, naming the field — no family reads a project's imports by itself —; and an import commented out, on its own line or after code, is no import. (`hasImports`, `blankComments`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B13 — A region of `imports` reads a list of imports as one each: with the `go` example, every path of an import block is an import on its own line, flagged there, and a slice of strings outside the block is none.](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+
+- [DCGDP-B14 — An import path whose directories `import_resolve.separator` divides (Python's `.`) resolves as if divided by `/`: `app.core.money` through an alias, `.helpers` beside the importer, `..core` one directory up, a package by its extensions (`/__init__.py`). (`withSlashes`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 ### [DEPHN — DependencyHonored — a spec declares no dependency: the code does](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
@@ -6903,6 +6905,8 @@ abra a página dela em `camadas/`.
 
 - [GVOPG-B11 — A project that declares a chain gate (`dep-declared`, `dep-honored`, `used-by-declared`) and no `dialect.imports`, of a family with an example, is offered the example — imports, the names they bring, declarations, the type pattern, and the resolution when it declares none — as the block to copy under `dialect:`, naming the gates; one that declares its imports, or no chain gate, is offered nothing.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
+- [GVOPG-B12 — A project that declares `nav-annotated` and no `dialect.navigation_call`, of a family with an example, is offered it as the block to copy under `dialect:`; one that declares its own, or not the gate, is offered nothing.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
+
 - [GVOPG-I01 — Every opportunity is informational: this unit never raises a warning.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
 - [GVOPG-X01 — A gate the project already declares (blocking, for the secret gate) is never suggested again, and a project with JUnit output is not told to add it.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
@@ -7064,6 +7068,8 @@ abra a página dela em `camadas/`.
 - [BLCNB-B10 — A new project whose family has an example of the test handle patterns, and whose inference found the attribute it marks its elements with, starts with that example in its dialect (`config.FamilyTestHandles`); a project with no attribute found starts with none.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
 - [BLCNB-B11 — A new project whose family has an example of the chain patterns starts with it in its dialect — imports, import names, declarations, the type pattern, and the resolution (`config.FamilyChain`) —; a family with none starts with none.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
+
+- [BLCNB-B12 — A new project whose family has an example of a navigation call starts with it as its `navigation_call` (`config.FamilyNavigationCall`); a family with none starts with none.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
 - [BLCNB-I01 — REF[BLCNB-B05]: a proposal never carries a test handle the project does not use](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 

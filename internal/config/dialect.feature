@@ -163,15 +163,15 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
 
   @DLCTI-B23 @unit-level
   Scenario: import_resolve and navigation_call are read from the dialect
-    Given a dialect declaring import extensions, an alias, and a navigation call with its route group
-    When the config is loaded
-    Then the dialect has the extensions, the alias and the navigation pattern
+    Given a dialect declaring import extensions, an alias, a separator and a navigation call with its route group, and a ts project that declared no navigation call
+    When the config is loaded and the dialect read
+    Then the dialect has the extensions, the alias, the separator and the navigation pattern, and the ts project has no navigation call while its family has an example
 
   @DLCTI-B24 @unit-level
   Scenario: The OCaml family reads OCaml
     Given a project declaring the ocaml family and nothing else
     When its dialect is read against an OCaml module
-    Then the top-level let and let rec are exported, a local let is not, Sys.getenv_opt names the variable, and open names the module it imports
+    Then the top-level let and let rec are exported, a local let is not, Sys.getenv_opt names the variable, the family's example reads the modules opened and qualified, and the project has no import pattern
 
   @DLCTI-B25 @unit-level
   Scenario: The import resolution declares imports by name

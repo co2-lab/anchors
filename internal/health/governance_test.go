@@ -320,3 +320,32 @@ func TestCheckGovernanceOpportunities_ChainPatternsOfTheFamily(t *testing.T) {
 		t.Error("a project with no chain gate is offered nothing")
 	}
 }
+
+func TestCheckGovernanceOpportunities_NavigationCallOfTheFamily(t *testing.T) {
+	t.Run("GVOPG-B12: A project with nav-annotated and no navigation call is offered the family's example", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "Screen.tsx", Kind: mapx.KindCode}}}
+	has := func(cfg *config.Config) (bool, string) {
+		for _, f := range checkGovernanceOpportunities(g, cfg) {
+			if f.Check == "sugestao-navigation-call" {
+				return true, f.Detail
+			}
+		}
+		return false, ""
+	}
+	gate := []config.Gate{{Name: "nav-annotated"}}
+	ok, detail := has(&config.Config{Dialect: &config.Dialect{Family: "ts"}, Gates: gate})
+	if !ok {
+		t.Fatal("the ts project with nav-annotated is offered the example")
+	}
+	var back config.Dialect
+	block := detail[strings.Index(detail, "\n    ")+len("\n    "):]
+	if err := yaml.Unmarshal([]byte(strings.ReplaceAll(block, "\n    ", "\n")), &back); err != nil || back.NavigationCall != config.FamilyNavigationCall("ts") {
+		t.Errorf("the block reads back: %v %q", err, back.NavigationCall)
+	}
+	if ok, _ := has(&config.Config{Dialect: &config.Dialect{Family: "ts", NavigationCall: `go\((?P<route>\w+)`}, Gates: gate}); ok {
+		t.Error("a project with its own navigation call is offered nothing")
+	}
+	if ok, _ := has(&config.Config{Dialect: &config.Dialect{Family: "ts"}}); ok {
+		t.Error("a project without the gate is offered nothing")
+	}
+}

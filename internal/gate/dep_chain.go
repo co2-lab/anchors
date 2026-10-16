@@ -213,6 +213,9 @@ func resolveImport(rel string, imp RealImport, d config.Dialect, g *mapx.Graph) 
 		return "", false
 	}
 	p := imp.Path
+	if r := d.ImportResolve; r != nil && r.Separator != "" && r.Separator != "/" {
+		p = withSlashes(p, r.Separator)
+	}
 	var base string
 	switch {
 	// A pattern may say its paths are relative to the importer without `./` — a flow names
@@ -253,6 +256,23 @@ func resolveImport(rel string, imp RealImport, d config.Dialect, g *mapx.Graph) 
 		}
 	}
 	return "", false
+}
+
+// withSlashes writes an import path whose directories another separator divides with `/`:
+// leading separators climb from the importer (`.x` → `./x`, `..x` → `../x`).
+func withSlashes(p, sep string) string {
+	n := 0
+	for strings.HasPrefix(p, sep) {
+		p, n = strings.TrimPrefix(p, sep), n+1
+	}
+	p = strings.ReplaceAll(p, sep, "/")
+	switch {
+	case n == 1:
+		p = "./" + p
+	case n > 1:
+		p = strings.Repeat("../", n-1) + p
+	}
+	return strings.TrimSuffix(p, "/")
 }
 
 // codesOfTarget are the codes a flag may name for an import: the target file's own code,

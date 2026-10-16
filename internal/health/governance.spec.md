@@ -44,6 +44,7 @@ items, is the short hint other commands can show without getting in the way.
 | `GVOPG-B09` | A project with code, a family that knows fallible patterns and no `dialect.fallible_patterns` declared is offered them, as the block to copy under `dialect:`; one that declined (`fallible_patterns: []`) or declared its own is not. (`fallibleYAML`) |
 | `GVOPG-B10` | A project that declares a handle gate (`testid-consistent`, `testid-queried-exists`, `identity-consistent`) and no `dialect.test_handles` is offered the family's example, for the attribute it declares, as the block to copy under `dialect:`, its quotes escaped for YAML; one that declares the patterns, or no handle gate, is offered nothing. |
 | `GVOPG-B11` | A project that declares a chain gate (`dep-declared`, `dep-honored`, `used-by-declared`) and no `dialect.imports`, of a family with an example, is offered the example — imports, the names they bring, declarations, the type pattern, and the resolution when it declares none — as the block to copy under `dialect:`, naming the gates; one that declares its imports, or no chain gate, is offered nothing. |
+| `GVOPG-B12` | A project that declares `nav-annotated` and no `dialect.navigation_call`, of a family with an example, is offered it as the block to copy under `dialect:`; one that declares its own, or not the gate, is offered nothing. |
 
 ## Invariants
 

@@ -86,3 +86,9 @@ Feature: GovernanceOpportunities — the doctor suggests the canonical gates and
     Given a ts project declaring used-by-declared with no import patterns, one with its own, and one with no chain gate
     When the governance opportunities are read
     Then only the first is offered the ts example, naming the gate, as YAML that reads back
+
+  @GVOPG-B12 @unit-level
+  Scenario: A project with nav-annotated and no navigation call is offered the family's example
+    Given a ts project declaring nav-annotated with no navigation call, one with its own, and one without the gate
+    When the governance opportunities are read
+    Then only the first is offered the ts example, as YAML that reads back

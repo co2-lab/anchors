@@ -114,6 +114,23 @@ func checkGovernanceOpportunities(g *mapx.Graph, cfg *config.Config) []Finding {
 		}
 	}
 
+	// 0d. navigation call: nav-annotated is declared and the project says nothing of how a
+	// navigation call is written — the gate is pending. The family's example shows how.
+	if _, ok := gateMap["nav-annotated"]; ok && (cfg.Dialect == nil || strings.TrimSpace(cfg.Dialect.NavigationCall) == "") {
+		family := ""
+		if cfg.Dialect != nil {
+			family = cfg.Dialect.Family
+		}
+		if ex := config.FamilyNavigationCall(family); ex != "" {
+			out = append(out, Finding{
+				Check:    "sugestao-navigation-call",
+				Severity: Info,
+				Subject:  "navigation_call",
+				Detail:   i18n.T("health.opportunity.navigation_call", dialectBlockYAML(map[string]any{"navigation_call": ex})),
+			})
+		}
+	}
+
 	// 1. evidence-fresh: projeto tem testes e código, mas não monitora frescor (teste stale)
 	if hasKind[mapx.KindTest] && hasKind[mapx.KindCode] {
 		if _, ok := gateMap["evidence-fresh"]; !ok {

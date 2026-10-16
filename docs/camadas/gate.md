@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:40ce8798a8cf9fd0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:c0fd2c2ea7d5ad1a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 88 unidades e 1404 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 88 unidades e 1405 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -502,6 +502,8 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 - **DCGDP-B12** — Without `dialect.imports` the chain gates are Pending, naming the field — no family reads a project's imports by itself —; and an import commented out, on its own line or after code, is no import. (`hasImports`, `blankComments`)
 
 - **DCGDP-B13** — A region of `imports` reads a list of imports as one each: with the `go` example, every path of an import block is an import on its own line, flagged there, and a slice of strings outside the block is none.
+
+- **DCGDP-B14** — An import path whose directories `import_resolve.separator` divides (Python's `.`) resolves as if divided by `/`: `app.core.money` through an alias, `.helpers` beside the importer, `..core` one directory up, a package by its extensions (`/__init__.py`). (`withSlashes`)
 
 
 ## DEPHN — DependencyHonored — a spec declares no dependency: the code does
@@ -2197,8 +2199,9 @@ with the specs (DESIGN-dependencies-and-navigation.md):
 - `nav-symmetric` — a screen's Out leads to another exactly when that one's In comes from it;
 - `nav-reachable` — every screen is reachable from the app's entry routes.
 
-A call is read by a pattern — the dialect's `navigation_call`, its destination in the group
-`route`, or the family's —, a screen by its spec's stem and its declared route.
+A call is read by the project's pattern — the dialect's `navigation_call`, its destination in
+the group `route`; no family gives it by itself —, a screen by its spec's stem and its declared
+route.
 
 
 - **NCGNV-B01** — `nav-annotated` fails naming each navigation call with no flag on its line or alone on the line above, by line and destination, and each flag whose screens do not include the one its route leads to; a waived call, a back navigation and a route no screen declares are not charged for the screen. Each failure of the chain points at `anchors guide navigation`. (`checkNavAnnotated`, `NavCall`, `navCallsOf`)

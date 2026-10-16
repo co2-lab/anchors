@@ -50,7 +50,7 @@ func navProject(t *testing.T) (string, *mapx.Graph, *config.Config) {
 			mapx.Node{ID: code, Kind: mapx.KindCode, Code: s.code, FileCode: s.file})
 		g.Edges = append(g.Edges, mapx.Edge{From: spec, To: code, Type: mapx.EdgeSpecifies})
 	}
-	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts"}, Navigation: &config.Navigation{Entry: []string{"Home"}}}
+	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts", NavigationCall: config.FamilyNavigationCall("ts")}, Navigation: &config.Navigation{Entry: []string{"Home"}}}
 	screensMu.Lock()
 	delete(screensCache, root)
 	screensMu.Unlock()

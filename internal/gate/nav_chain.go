@@ -48,24 +48,12 @@ type NavRow struct {
 	Rule string
 }
 
-// familyNavigationCall is the navigation call a family knows, its destination in `route`.
-func familyNavigationCall(family string) string {
-	switch strings.ToLower(family) {
-	case "ts", "js", "typescript", "javascript":
-		return `\b(?:navigation|navigator|router|nav)\s*\.\s*(?:navigate|push|replace|reset|goBack|back|pop|popToTop|dispatch)\s*\(\s*(?:\{\s*(?:name|pathname)\s*:\s*)?(?:['"](?P<route>[A-Za-z0-9_/.:-]+)['"])?`
-	}
-	return ""
-}
-
-// navigationCallRE is the pattern of a navigation call: the project's, or the family's.
+// navigationCallRE is the pattern of a navigation call: the project's `navigation_call`, or
+// nil. No family gives it by itself — the core knows no syntax of a navigation; the
+// family's example (config.FamilyNavigationCall) is offered by `init` and the doctor.
 func navigationCallRE(d config.Dialect) *regexp.Regexp {
 	if p := strings.TrimSpace(d.NavigationCall); p != "" {
-		if re := d.Compile(p); re != nil {
-			return re
-		}
-	}
-	if p := familyNavigationCall(d.Family); p != "" {
-		return regexp.MustCompile(p)
+		return d.Compile(p)
 	}
 	return nil
 }

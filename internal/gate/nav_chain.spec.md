@@ -21,15 +21,16 @@ with the specs (DESIGN-dependencies-and-navigation.md):
 - `nav-symmetric` — a screen's Out leads to another exactly when that one's In comes from it;
 - `nav-reachable` — every screen is reachable from the app's entry routes.
 
-A call is read by a pattern — the dialect's `navigation_call`, its destination in the group
-`route`, or the family's —, a screen by its spec's stem and its declared route.
+A call is read by the project's pattern — the dialect's `navigation_call`, its destination in
+the group `route`; no family gives it by itself —, a screen by its spec's stem and its declared
+route.
 
 ## Domain
 
 | Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
 | the confronted node | a code file (nav-annotated), a screen spec (the others) | any other node | this unit, which skips it |
-| the navigation pattern | the dialect's `navigation_call`, or a family that knows one | a dialect with neither | this unit: pending |
+| the navigation pattern | the dialect's `navigation_call` | a dialect with none, whatever its family | this unit: pending, naming the field |
 | the entry routes | `navigation.entry` | none declared | this unit: nav-reachable pending |
 
 ## Effects

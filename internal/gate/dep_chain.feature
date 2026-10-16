@@ -85,3 +85,9 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     When its imports are read
     Then there are three imports, each on its own line, and the slice is none
 
+  @DCGDP-B14 @unit-level
+  Scenario: An import path divided by another separator resolves by it
+    Given a Python module importing app.core.money through an alias, .helpers beside it, ..core one level up, and requests
+    When its imports are read with the python example and the separator
+    Then each resolves to its file, the package to its __init__.py, and requests to nothing
+

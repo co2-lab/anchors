@@ -377,3 +377,24 @@ func TestDepChain_goBlocks(t *testing.T) {
 		t.Errorf("each import on its line, the slice none: %v", got)
 	}
 }
+
+func TestDepChain_separator(t *testing.T) {
+	t.Run("DCGDP-B14: An import path divided by another separator resolves by it", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "src/app/core/money.py", Kind: mapx.KindCode},
+		{ID: "src/app/core/__init__.py", Kind: mapx.KindCode},
+		{ID: "src/app/api/views.py", Kind: mapx.KindCode},
+		{ID: "src/app/api/helpers.py", Kind: mapx.KindCode},
+	}}
+	d := withChain("python")
+	d.ImportResolve.Aliases = map[string]string{"app/": "src/app/"}
+	src := "from app.core.money import charge\nfrom .helpers import h\nfrom ..core import money\nimport requests\n"
+	var got []string
+	for _, imp := range ImportsOf(src, "src/app/api/views.py", *d, g) {
+		got = append(got, imp.Path+"→"+imp.Target)
+	}
+	want := "app.core.money→src/app/core/money.py,.helpers→src/app/api/helpers.py,..core→src/app/core/__init__.py,requests→"
+	if strings.Join(got, ",") != want {
+		t.Errorf("got  %v\nwant %s", got, want)
+	}
+}

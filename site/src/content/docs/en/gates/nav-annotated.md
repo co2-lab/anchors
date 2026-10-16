@@ -13,6 +13,7 @@ Every navigation call — back and reset included — carries `@navigates:` nami
 | Confronts | `code` |
 | Blocking by default — new project | yes |
 | Blocking by default — existing project | no — informs |
+| Presupposes | `dialect.navigation_call` — until these are declared in `anchors.yaml`, the gate is pending and asks nothing |
 
 ## How it measures
 
@@ -28,8 +29,9 @@ with the specs (DESIGN-dependencies-and-navigation.md):
 - `nav-symmetric` — a screen's Out leads to another exactly when that one's In comes from it;
 - `nav-reachable` — every screen is reachable from the app's entry routes.
 
-A call is read by a pattern — the dialect's `navigation_call`, its destination in the group
-`route`, or the family's —, a screen by its spec's stem and its declared route.
+A call is read by the project's pattern — the dialect's `navigation_call`, its destination in
+the group `route`; no family gives it by itself —, a screen by its spec's stem and its declared
+route.
 
 ## Declaring it
 

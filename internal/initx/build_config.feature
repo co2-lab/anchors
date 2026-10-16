@@ -96,3 +96,9 @@ Feature: BuildConfig — builds the configuration that inference proposes as the
     Given a proposal for a ts project and one for a family with no example
     When the config is built
     Then the first's dialect has the ts example's imports, names, declarations and resolution, and the second has no import patterns
+
+  @BLCNB-B12 @unit-level
+  Scenario: A new project's dialect carries the family's example of a navigation call
+    Given a proposal for a ts project and one for a go project
+    When the config is built
+    Then the first's navigation call is the ts example, and the second has none

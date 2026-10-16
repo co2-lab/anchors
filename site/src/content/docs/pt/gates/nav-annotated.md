@@ -13,6 +13,7 @@ Every navigation call — back and reset included — carries `@navigates:` nami
 | Confronta | `code` |
 | Bloqueante por padrão — projeto novo | sim |
 | Bloqueante por padrão — projeto existente | não — informa |
+| Pressupõe | `dialect.navigation_call` — enquanto não forem declarados no `anchors.yaml`, o gate fica pendente e não cobra nada |
 
 ## Como declarar
 

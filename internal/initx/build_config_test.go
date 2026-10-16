@@ -227,3 +227,13 @@ func TestBuildConfigSeedsTheFamilysChain(t *testing.T) {
 		t.Errorf("a family with no example starts with no import patterns: %+v", c.Dialect)
 	}
 }
+
+func TestBuildConfigSeedsTheFamilysNavigationCall(t *testing.T) {
+	t.Run("BLCNB-B12: A new project's dialect carries the family's example of a navigation call", func(t *testing.T) {})
+	if c := (&Proposal{Family: "ts"}).buildConfig(); c.Dialect == nil || c.Dialect.NavigationCall != config.FamilyNavigationCall("ts") {
+		t.Errorf("the ts project starts with the example: %+v", c.Dialect)
+	}
+	if c := (&Proposal{Family: "go"}).buildConfig(); c.Dialect == nil || c.Dialect.NavigationCall != "" {
+		t.Errorf("a family with none starts with none: %+v", c.Dialect)
+	}
+}

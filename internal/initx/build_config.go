@@ -82,6 +82,9 @@ func (p *Proposal) buildConfig() *config.Config {
 		// example: the handle gates read only these patterns, and a new project starts
 		// with them written down, to adapt to its own helpers.
 		c.Dialect.TestHandles = config.FamilyTestHandles(p.Family, p.TestHandle)
+		// How a navigation call is written, from the family's example: nav-annotated reads
+		// only this pattern.
+		c.Dialect.NavigationCall = config.FamilyNavigationCall(p.Family)
 		// How its imports and declarations are written, from the family's example: the chain
 		// gates read only these patterns.
 		if ex := config.FamilyChain(p.Family); ex != nil {

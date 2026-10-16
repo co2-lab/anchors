@@ -804,6 +804,9 @@ func FamilyChain(family string) *Dialect {
 			ImportNames: Patterns{
 				{Within: `\bimport\s+\(?(?P<within>[^)]*)\)?`, Each: `(?:^|,)\s*(?P<name>` + pyIdent + `)`},
 			},
+			// `app.core` is `app/core.py` or the package `app/core/`; a project maps its
+			// top-level packages with aliases (`"app/": "src/app/"`).
+			ImportResolve: &ImportResolve{Separator: ".", Extensions: []string{".py", "/__init__.py"}},
 			Declarations: Patterns{
 				re(`(?m)^(?:async\s+)?def\s+(?P<name>` + pyIdent + `)`),
 				re(`(?m)^class\s+(?P<name>` + pyIdent + `)`),
@@ -825,6 +828,19 @@ func FamilyChain(family string) *Dialect {
 	return nil
 }
 
+// FamilyNavigationCall is the family's example of `navigation_call`, its destination in the
+// group `route`: what `anchors init` writes and the governance tips suggest, never applied by
+// itself. A family with none gives "".
+func FamilyNavigationCall(family string) string {
+	switch strings.ToLower(family) {
+	case "ts":
+		// React Navigation and the routers that look like it: `navigation.navigate('Goal')`,
+		// `router.push({ pathname: '/goal' })`, the back and reset calls with no route.
+		return `\b(?:navigation|navigator|router|nav)\s*\.\s*(?:navigate|push|replace|reset|goBack|back|pop|popToTop|dispatch)\s*\(\s*(?:\{\s*(?:name|pathname)\s*:\s*)?(?:['"](?P<route>[A-Za-z0-9_/.:-]+)['"])?`
+	}
+	return ""
+}
+
 // ImportResolve is how an import's path becomes a file (see Dialect.ImportResolve).
 type ImportResolve struct {
 	// Extensions are tried in order after the path: `.ts`, `.tsx`, `/index.ts`.
@@ -840,4 +856,8 @@ type ImportResolve struct {
 	// NameCase is how a module name becomes a file name: `lower_first` (`Js_pilha` →
 	// `js_pilha`), `lower`, or empty for the name as written.
 	NameCase string `yaml:"name_case,omitempty"`
+	// Separator is what separates the directories of an import path when it is not `/`:
+	// Python's `.` (`app.core.money`). Leading separators climb from the importer — `.x` is
+	// beside it, `..x` one directory up.
+	Separator string `yaml:"separator,omitempty"`
 }

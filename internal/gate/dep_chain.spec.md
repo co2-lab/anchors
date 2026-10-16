@@ -53,6 +53,7 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 | `DCGDP-B11` | The fixer finds the declaration of a symbol whose name ends in a letter outside ASCII (`café`), and does not take a longer name that begins with it (`caféForte`) for it. (`declarationLine`) |
 | `DCGDP-B12` | Without `dialect.imports` the chain gates are Pending, naming the field — no family reads a project's imports by itself —; and an import commented out, on its own line or after code, is no import. (`hasImports`, `blankComments`) |
 | `DCGDP-B13` | A region of `imports` reads a list of imports as one each: with the `go` example, every path of an import block is an import on its own line, flagged there, and a slice of strings outside the block is none. |
+| `DCGDP-B14` | An import path whose directories `import_resolve.separator` divides (Python's `.`) resolves as if divided by `/`: `app.core.money` through an alias, `.helpers` beside the importer, `..core` one directory up, a package by its extensions (`/__init__.py`). (`withSlashes`) |
 
 ## Errors
 

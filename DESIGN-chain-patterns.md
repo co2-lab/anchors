@@ -127,12 +127,15 @@ the release.
 
 - A flow is read by a pattern narrowed with `files` to the flows and marked `relative`. The ts
   example narrows it to `**/*.{yaml,yml}`; a project narrows it to its own e2e surface.
-- Python's dotted paths (`app.core`) resolve to no file: `import_resolve` maps prefixes, not
-  dots to directories. The example reads the statements; resolving them is future work.
-- Still syntax in the core, out of this design's scope:
-  - comment stripping (the comment markers, OCaml's `(* *)` in `by_name`);
-  - `navigation_call`'s family fallback;
-  - `code-cataloged`'s default TS export regex when `exported_func` is empty.
+- Python's dotted paths (`app.core`) resolve through `import_resolve.separator` (`.`): leading
+  separators climb from the importer, and a project maps its top-level packages with aliases
+  (2026-10-16, after this design: DCGDP-B14).
+- `navigation_call` no longer falls back to the family's: the `ts` example is offered by `init`
+  and the doctor, and `nav-annotated` presupposes the field (2026-10-16).
+- Still syntax in the core, the subject of the next design:
+  - comment stripping, and the built-in table of comment markers by extension;
+  - the family lexicon `DialectFor` still fills by itself (`exported_func`, `loop`, `env_read`,
+    `handle_patterns`, `log_patterns`, `tests`, `definition`…).
 
 ## What NOT to do
 

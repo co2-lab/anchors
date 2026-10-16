@@ -1036,7 +1036,7 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures: "every symbol another file imports carries `@used-by:` with exactly the codes of who imports it"})
 	// The navigation chain: every navigation call flagged with the screen it leads to, and
 	// the screens' In and Out tables confronted with the flags and with one another.
-	add("code", config.Gate{Name: "nav-annotated", On: []string{"code"},
+	add("code", config.Gate{Name: "nav-annotated", On: []string{"code"}, Presupposes: []string{"dialect.navigation_call"},
 		Measures: "every navigation call — back and reset included — carries `@navigates:` naming the screen it leads to, or `@no-nav: <reason>`"})
 	add("spec", config.Gate{Name: "nav-matches-spec", On: []string{"spec"},
 		Measures: "a screen's Out table and its code's `@navigates:` flags name the same screens"})

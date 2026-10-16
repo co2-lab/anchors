@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:04d0966229bc8d2a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:207820d69e46a129 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3570,6 +3570,8 @@ teste prova.
 
 - [A Go import block is read import by import](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B13`
 
+- [An import path divided by another separator resolves by it](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B14`
+
 - [A spec still carrying a Dependencies table diverges, pointing at the migration](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 
 - [A mandatory document that does not exist fails](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B01`
@@ -6250,6 +6252,8 @@ teste prova.
 
 - [A project with a chain gate and no import patterns is offered the family's example](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B11`
 
+- [A project with nav-annotated and no navigation call is offered the family's example](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B12`
+
 - [The report is sorted by check then subject, and counts the map](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B01`
 
 - [Warnings keeps only the warnings](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B02`
@@ -6395,6 +6399,8 @@ teste prova.
 - [A new project's dialect carries the family's example of its test handle patterns](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B10`
 
 - [A new project's dialect carries the family's example of the chain patterns](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B11`
+
+- [A new project's dialect carries the family's example of a navigation call](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B12`
 
 - [The whole guide is a title, a seeding note and the section](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B01`
 
