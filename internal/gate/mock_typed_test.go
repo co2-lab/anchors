@@ -513,3 +513,22 @@ func TestWithoutExtension(t *testing.T) {
 		}
 	}
 }
+
+func TestMockTipado_aliasTailOfAnotherWorkspace(t *testing.T) {
+	t.Run("MCTYM-B14: A double of a module another workspace names with the same alias is the project's", func(t *testing.T) {})
+	cfg := cfgComContrato()
+	cfg.Dialect.ImportResolve.Aliases = map[string]string{"@/": "apps/mobile/"}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "apps/landing/src/lib/orgService.ts", Kind: mapx.KindCode}}}
+	test := mapx.Node{ID: "apps/landing/src/app/page.test.tsx", Kind: mapx.KindTest}
+	if v, msg := checkMockTyped("jest.mock('@/lib/orgService', () => ({ load: jest.fn() }))\n", test, "", g, cfg); v != Fail {
+		t.Errorf("the landing's module is the project's: %v (%s)", v, msg)
+	}
+	if v, _ := checkMockTyped("jest.mock('next/navigation', () => ({ useRouter: jest.fn() }))\n", test, "", g, cfg); v != Skip {
+		t.Errorf("a package no file of the map ends in is not: %v", v)
+	}
+	// Declared for the landing's importers, the alias resolves the file itself.
+	cfg.Dialect.ImportResolve.Scoped = []config.ScopedAliases{{Files: "apps/landing/**", Aliases: map[string]string{"@/": "apps/landing/src/"}}}
+	if got := moduleCandidates("@/lib/orgService", test.ID, cfg.DialectFor(), g); len(got) != 1 || got[0] != "apps/landing/src/lib/orgService.ts" {
+		t.Errorf("a scoped alias resolves the landing's module: %v", got)
+	}
+}

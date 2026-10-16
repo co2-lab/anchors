@@ -224,3 +224,10 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     When their examples of mocks and of a route pattern are asked for
     Then ts reads jest.mock, a factory passed and a typed one, and name="X", a param list and addResource
     And python reads patch, and go has none
+
+  @DLCTI-B33 @unit-level
+  Scenario: Aliases scoped to the importers a glob matches
+    Given `@/` declared for apps/mobile/, and scoped to apps/landing-page/src/ for apps/landing-page/**
+    When the aliases of an importer in each app are asked for
+    Then the mobile importer reads apps/mobile/ and the landing importer apps/landing-page/src/, the other aliases kept
+    And a scoped entry with no glob or no aliases refuses the config

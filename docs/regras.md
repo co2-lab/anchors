@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:358c48291223a41b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:35814cb2b4ab689e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3497,6 +3497,8 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B32 — The `ts` family has an example of the mock shapes — `mock_detect` for `jest.mock`/`vi.mock`, the contract, a factory passed and a factory typed — and of `route_pattern` — `name="X"`, a stack's param list, `addResource('x')` —; `python` one of `mock_detect` (`patch`); another family none; never applied by themselves. (`FamilyMocks`, `FamilyRoutePattern`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
+- [DLCTI-B33 — `import_resolve.scoped` declares aliases for the importers a glob matches — each workspace's own `paths` —: an importer's aliases are the global ones with those of every entry whose glob matches it over them, the first entry winning a prefix two declare; an entry with no glob, a glob that is no glob, or no aliases refuses the config, naming it. (`AliasesFor`, `ScopedAliases`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B14 — The Go and TS families' examples say how a test is written, its title in a `title` group — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` —, and a project's own `tests` is read as declared.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
@@ -5014,6 +5016,8 @@ abra a página dela em `camadas/`.
 - [MCTYM-B12 — Another ecosystem's dialect is charged the same way once declared, with its own detection pattern and its own tie shape.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
 - [MCTYM-B13 — A double whose call is broken over several lines — the module and the factory on the lines after the opening, as a formatter writes it — is read as one written on a single line: an annotated factory passes, and one with no annotation is charged.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
+
+- [MCTYM-B14 — A double's module is the project's when its specifier resolves to a code file of the map: through the declared aliases (`dialect.import_resolve.aliases`), else by the tail after the alias's prefix — the same alias naming another workspace's files —, else by the path's own suffix; no head of a specifier is dropped by itself.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 
 - [MCTYM-I01 — What is governed is decided by the GRAPH, never by a prefix list in the config. That asks for no new configuration, assumes no alias convention — which varies per ecosystem — and follows the project on its own: code that is born enters the map and starts being charged.](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces)
 

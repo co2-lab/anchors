@@ -196,10 +196,7 @@ func resolveImport(rel string, imp RealImport, d config.Dialect, g *mapx.Graph) 
 	case strings.HasPrefix(p, "./") || strings.HasPrefix(p, "../") || p == "." || p == ".." || imp.Relative:
 		base = path.Clean(path.Join(path.Dir(rel), p))
 	default:
-		var aliases map[string]string
-		if d.ImportResolve != nil {
-			aliases = d.ImportResolve.Aliases
-		}
+		aliases := d.ImportResolve.AliasesFor(rel)
 		best := ""
 		for prefix := range aliases {
 			if strings.HasPrefix(p, prefix) && len(prefix) > len(best) {

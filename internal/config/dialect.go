@@ -5,6 +5,7 @@
 package config
 
 import (
+	"path"
 	"regexp"
 	"sort"
 	"strings"
@@ -931,4 +932,39 @@ type ImportResolve struct {
 	// Python's `.` (`app.core.money`). Leading separators climb from the importer — `.x` is
 	// beside it, `..x` one directory up.
 	Separator string `yaml:"separator,omitempty"`
+	// Scoped are aliases that hold only for the importers a glob matches — each workspace's
+	// own `paths`, `@/` meaning `apps/mobile/` in one app and `apps/landing-page/src/` in
+	// another. An importer's scoped aliases win over Aliases for the same prefix.
+	Scoped []ScopedAliases `yaml:"scoped,omitempty"`
+}
+
+// ScopedAliases are aliases for the importers its glob matches (see ImportResolve.Scoped).
+type ScopedAliases struct {
+	Files   string            `yaml:"files"`
+	Aliases map[string]string `yaml:"aliases"`
+}
+
+// AliasesFor are the aliases an import of the file at rel resolves through: Aliases, with
+// those of every scoped entry whose glob matches rel over them — the first entry wins a
+// prefix two entries declare.
+func (r *ImportResolve) AliasesFor(rel string) map[string]string {
+	if r == nil {
+		return nil
+	}
+	if len(r.Scoped) == 0 {
+		return r.Aliases
+	}
+	out := map[string]string{}
+	for k, v := range r.Aliases {
+		out[k] = v
+	}
+	rel = strings.TrimPrefix(path.Clean(strings.ReplaceAll(rel, "\\", "/")), "./")
+	for i := len(r.Scoped) - 1; i >= 0; i-- {
+		if (&Comments{Files: r.Scoped[i].Files}).matches(rel) {
+			for k, v := range r.Scoped[i].Aliases {
+				out[k] = v
+			}
+		}
+	}
+	return out
 }

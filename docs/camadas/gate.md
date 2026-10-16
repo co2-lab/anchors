@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:4b83593ffc9442a4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:c9697f1e43c11f23 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 88 unidades e 1406 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 88 unidades e 1407 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2165,6 +2165,8 @@ there is no structural type to lean on.
 - **MCTYM-B12** — Another ecosystem's dialect is charged the same way once declared, with its own detection pattern and its own tie shape.
 
 - **MCTYM-B13** — A double whose call is broken over several lines — the module and the factory on the lines after the opening, as a formatter writes it — is read as one written on a single line: an annotated factory passes, and one with no annotation is charged.
+
+- **MCTYM-B14** — A double's module is the project's when its specifier resolves to a code file of the map: through the declared aliases (`dialect.import_resolve.aliases`), else by the tail after the alias's prefix — the same alias naming another workspace's files —, else by the path's own suffix; no head of a specifier is dropped by itself.
 
 - **MCTYM-I01** — What is governed is decided by the GRAPH, never by a prefix list in the config. That asks for no new configuration, assumes no alias convention — which varies per ecosystem — and follows the project on its own: code that is born enters the map and starts being charged.
 

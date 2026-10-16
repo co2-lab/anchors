@@ -2,7 +2,7 @@
 # @anchors
 #   code: MTFMC
 #   ref: MCTYM
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-16
 #   layer: feature
 
 @MCTYM
@@ -165,3 +165,10 @@ Feature: MockTyped — every test double must derive from the module it replaces
     Given a double whose module and factory sit on the lines after the call opens, once annotated and once not
     When the gate confronts each
     Then the annotated one passes and the one with no annotation is charged
+
+  @MCTYM-B14 @unit-level
+  Scenario: A double of a module another workspace names with the same alias is the project's
+    Given the alias "@/" declared for apps/mobile/, and a module apps/landing/src/lib/orgService.ts
+    When a test doubles "@/lib/orgService" with an untyped factory
+    Then the double is charged as the project's
+    And "next/navigation", which no file of the map ends in, is not

@@ -63,6 +63,7 @@ there is no structural type to lean on.
 | `MCTYM-B11` | A relative import that resolves to a node of the map is an own module like any other — the criterion is the graph, not the shape of the specifier. |
 | `MCTYM-B12` | Another ecosystem's dialect is charged the same way once declared, with its own detection pattern and its own tie shape. |
 | `MCTYM-B13` | A double whose call is broken over several lines — the module and the factory on the lines after the opening, as a formatter writes it — is read as one written on a single line: an annotated factory passes, and one with no annotation is charged. |
+| `MCTYM-B14` | A double's module is the project's when its specifier resolves to a code file of the map: through the declared aliases (`dialect.import_resolve.aliases`), else by the tail after the alias's prefix — the same alias naming another workspace's files —, else by the path's own suffix; no head of a specifier is dropped by itself. |
 
 ## Invariants
 

@@ -2293,6 +2293,13 @@ func (c *Config) validarPadroes() error {
 				return err
 			}
 		}
+		if r := d.ImportResolve; r != nil {
+			for i, sc := range r.Scoped {
+				if !doublestar.ValidatePattern(sc.Files) || strings.TrimSpace(sc.Files) == "" || len(sc.Aliases) == 0 {
+					return fmt.Errorf("dialect.import_resolve.scoped[%d]: an entry names the importers it holds for in `files` (a glob) and declares its `aliases`", i)
+				}
+			}
+		}
 		if th := d.TestHandles; th != nil {
 			if err := th.validate(); err != nil {
 				return err

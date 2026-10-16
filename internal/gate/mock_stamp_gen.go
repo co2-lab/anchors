@@ -227,19 +227,31 @@ func moduleCandidates(spec, testID string, d config.Dialect, g *mapx.Graph) []st
 	for strings.HasPrefix(target, "../") {
 		target = strings.TrimPrefix(target, "../")
 	}
-	// An alias the project declares maps the head: its tail is still matched against the
-	// map, for a workspace the alias does not say (`@/src/x` in `apps/mobile/`).
-	if d.ImportResolve != nil {
-		best := ""
-		for prefix := range d.ImportResolve.Aliases {
-			if strings.HasPrefix(target, prefix) && len(prefix) > len(best) {
-				best = prefix
-			}
-		}
-		if best != "" {
-			target = strings.TrimPrefix(d.ImportResolve.Aliases[best]+strings.TrimPrefix(target, best), "/")
+	// An alias the project declares maps the head (`@/` → `apps/mobile/`). When the file it
+	// gives is not in the map, the tail is matched alone: the same alias names another
+	// workspace's files too (`@/lib/x` in `apps/landing-page/src/`), and those are still the
+	// project's modules.
+	var tail string
+	aliases := d.ImportResolve.AliasesFor(testID)
+	best := ""
+	for prefix := range aliases {
+		if strings.HasPrefix(target, prefix) && len(prefix) > len(best) {
+			best = prefix
 		}
 	}
+	if best != "" {
+		tail = strings.TrimPrefix(target, best)
+		target = strings.TrimPrefix(aliases[best]+tail, "/")
+	}
+	if cands := codeEndingIn(target, g); len(cands) > 0 || tail == "" {
+		return cands
+	}
+	return codeEndingIn(tail, g)
+}
+
+// codeEndingIn are the code files of the map whose path, without its extension, is the
+// target or ends in it after a `/`.
+func codeEndingIn(target string, g *mapx.Graph) []string {
 	if target == "" {
 		return nil
 	}

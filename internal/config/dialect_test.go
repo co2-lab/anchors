@@ -820,3 +820,39 @@ func TestFamilyMocksAndRoutePattern(t *testing.T) {
 		}
 	}
 }
+
+func TestImportResolve_scopedAliases(t *testing.T) {
+	t.Run("DLCTI-B33: Aliases scoped to the importers a glob matches", func(t *testing.T) {})
+	r := &ImportResolve{
+		Aliases: map[string]string{"@/": "apps/mobile/", "@backend/": "packages/backend/"},
+		Scoped: []ScopedAliases{
+			{Files: "apps/landing-page/**", Aliases: map[string]string{"@/": "apps/landing-page/src/"}},
+			{Files: "apps/**", Aliases: map[string]string{"@/": "never/"}},
+		},
+	}
+	if got := r.AliasesFor("apps/mobile/src/x.ts"); got["@/"] != "never/" {
+		t.Errorf("a scoped entry matching the importer wins over the global: %v", got)
+	}
+	got := r.AliasesFor("apps/landing-page/src/a/b.test.tsx")
+	if got["@/"] != "apps/landing-page/src/" || got["@backend/"] != "packages/backend/" {
+		t.Errorf("the first matching entry wins, the global ones kept: %v", got)
+	}
+	if got := r.AliasesFor("packages/backend/x.ts"); got["@/"] != "apps/mobile/" {
+		t.Errorf("no entry matches: the global aliases: %v", got)
+	}
+	if (*ImportResolve)(nil).AliasesFor("x") != nil {
+		t.Error("no resolution, no aliases")
+	}
+	for _, bad := range []string{
+		"  import_resolve:\n    scoped:\n      - aliases: {\"@/\": x/}\n",
+		"  import_resolve:\n    scoped:\n      - files: 'apps/**'\n",
+	} {
+		p := filepath.Join(t.TempDir(), "anchors.yaml")
+		if err := os.WriteFile(p, []byte("version: 8\ndialect:\n"+bad), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Load(p); err == nil || !strings.Contains(err.Error(), "import_resolve.scoped[0]") {
+			t.Errorf("refused naming the entry: %v", err)
+		}
+	}
+}

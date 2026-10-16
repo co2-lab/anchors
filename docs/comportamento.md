@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:638cc5d4f6c71c87 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:effbea29ca077fee — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3214,6 +3214,8 @@ teste prova.
 
 - [The families' examples of the mock shapes and the route pattern](layers/config.md#dlcti-b32--the-families-examples-of-the-mock-shapes-and-the-route-pattern) `DLCTI-B32`
 
+- [Aliases scoped to the importers a glob matches](layers/config.md#dlcti-b33--aliases-scoped-to-the-importers-a-glob-matches) `DLCTI-B33`
+
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
 - [A trigger naming a unit code charges that unit and not its neighbours in the same layer](layers/config.md#dcrqa-b02--a-trigger-naming-a-unit-code-charges-that-unit-and-not-its-neighbours-in-the-same-layer) `DCRQA-B02`
@@ -4555,6 +4557,8 @@ teste prova.
 - [With no map the verdict is pending, not an external-only skip](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-E02`
 
 - [A factory on the next line is still read, tie and all](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B13`
+
+- [A double of a module another workspace names with the same alias is the project's](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B14`
 
 - [nav-annotated names each navigation call with no flag, and each flag naming another screen than its route](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B01`
 
