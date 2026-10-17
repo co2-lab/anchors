@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:35814cb2b4ab689e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:290b5470ac5cf37d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7770,6 +7770,8 @@ abra a página dela em `camadas/`.
 - [MNTRS-B16 — A subagent's run has no process: it lives until its record ends, moves while its transcript grows, and is stalled only when its transcript stayed quiet for the agent stall time (10m, or `monitor.idle`) with no command of its own alive — while one is, it waits, and the command is the one watched; it ends as `⏹ <name> ended (<time>) — <its last message>`. (`KindAgent`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-B17 — The CPUs' use since the last tick is measured from the CPU seconds of every process (`cpu=65%`), never above 100, nothing on the first reading; the machine is overloaded — the heartbeat's `HIGH`, the action level's high load — when the load passes the CPUs and the CPUs are at least 90% busy, or, before the CPUs are measured, on the load alone; a load past twice the CPUs is overload whatever their use, which errs low. (`Overloaded`, `MeasureBusy`, `BusyThreshold`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
+
+- [MNTRS-B18 — Each watcher keeps a memory of its own — `monitor.<watcher>.json`, the watcher its `ANCHORS_SESSION`, `monitor.json` with none —, written through a temporary file of its own: two monitors of one tree neither take each other's file nor silence each other's events, and no watcher's state is read as a run. (`LoadState`, `SaveState`)](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 
 - [MNTRS-I01 — Every run that ended is said, and said once: across ticks and re-armed monitors, no ended run is silent and none is repeated.](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs)
 

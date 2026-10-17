@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:effbea29ca077fee — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:fd231effe8a5849a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -7041,6 +7041,8 @@ teste prova.
 - [A subagent lives by its transcript and waits on its own commands](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B16`
 
 - [The machine is overloaded when the load passes the CPUs and the CPUs are busy](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B17`
+
+- [Each watcher keeps a memory of its own](layers/infra.md#mntrs--runmonitor--reading-the-projects-runs-tick-by-tick-what-started-stalled-died-ended-and-what-runs) `MNTRS-B18`
 
 - [A record is written whole and read back as written](layers/infra.md#prcrn--processruns--the-record-of-the-projects-long-processes-and-the-operating-systems-view-of-them) `PRCRN-B01`
 

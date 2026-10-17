@@ -110,7 +110,7 @@ func List(root string) []Run {
 	var out []Run
 	for _, e := range entries {
 		name := e.Name()
-		if e.IsDir() || !strings.HasSuffix(name, ".json") || name == stateFile {
+		if e.IsDir() || !strings.HasSuffix(name, ".json") || isStateFile(name) {
 			continue
 		}
 		r, err := Load(root, strings.TrimSuffix(name, ".json"))

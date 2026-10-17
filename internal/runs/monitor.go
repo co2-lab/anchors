@@ -24,8 +24,22 @@ const (
 	StateEnded    = "ended"    // gone, seen only in the process table: how is unknown
 )
 
-// stateFile is the monitor's own state, beside the records.
-const stateFile = "monitor.json"
+// stateFile is the monitor's own state, beside the records: one per watcher, so two
+// monitors of the same tree — each agent its own — neither overwrite nor silence each
+// other's memory. An unnamed watcher keeps `monitor.json`.
+func stateFile(watcher string) string {
+	if w := watcherChars.ReplaceAllString(watcher, "-"); w != "" {
+		return "monitor." + w + ".json"
+	}
+	return "monitor.json"
+}
+
+var watcherChars = regexp.MustCompile(`[^A-Za-z0-9._-]+`)
+
+// isStateFile says whether a file of the records' folder is a watcher's state, not a run.
+func isStateFile(name string) bool {
+	return name == "monitor.json" || strings.HasPrefix(name, "monitor.") && strings.HasSuffix(name, ".json")
+}
 
 // Timing is when the monitor looks, and when it speaks without an event.
 type Timing struct {
@@ -59,8 +73,9 @@ type Seen struct {
 	Done         bool      `json:"done,omitempty"`
 }
 
-// State is the monitor's memory, kept in `.anchors/runs/monitor.json`: a re-armed monitor
-// resumes from it, saying what happened while nobody watched, and nothing twice.
+// State is a watcher's memory, kept in `.anchors/runs/monitor[.<watcher>].json`: a re-armed
+// monitor resumes from it, saying what happened while its watcher was away, and nothing
+// twice — what another watcher was told is not this one's.
 type State struct {
 	Cursor        time.Time            `json:"cursor"`
 	LastHeartbeat time.Time            `json:"last_heartbeat"`
@@ -88,10 +103,10 @@ type State struct {
 	Watching time.Time `json:"watching,omitempty"`
 }
 
-// LoadState reads the monitor's state; a missing or unreadable one is a fresh start.
-func LoadState(root string) *State {
+// LoadState reads the watcher's state; a missing or unreadable one is a fresh start.
+func LoadState(root, watcher string) *State {
 	st := &State{}
-	if b, err := os.ReadFile(filepath.Join(dirOf(root), stateFile)); err == nil {
+	if b, err := os.ReadFile(filepath.Join(dirOf(root), stateFile(watcher))); err == nil {
 		_ = json.Unmarshal(b, st)
 	}
 	if st.Runs == nil {
@@ -103,8 +118,9 @@ func LoadState(root string) *State {
 	return st
 }
 
-// SaveState writes the monitor's state.
-func SaveState(root string, st *State) error {
+// SaveState writes the watcher's state, through a temporary file of its own: another
+// monitor's rename cannot take it.
+func SaveState(root, watcher string, st *State) error {
 	if err := os.MkdirAll(dirOf(root), 0o755); err != nil {
 		return err
 	}
@@ -112,11 +128,20 @@ func SaveState(root string, st *State) error {
 	if err != nil {
 		return err
 	}
-	tmp := filepath.Join(dirOf(root), stateFile+".tmp")
-	if err := os.WriteFile(tmp, b, 0o644); err != nil {
+	f, err := os.CreateTemp(dirOf(root), stateFile(watcher)+".*.tmp")
+	if err != nil {
 		return err
 	}
-	return os.Rename(tmp, filepath.Join(dirOf(root), stateFile))
+	tmp := f.Name()
+	_, werr := f.Write(b)
+	if cerr := f.Close(); werr == nil {
+		werr = cerr
+	}
+	if werr != nil {
+		os.Remove(tmp)
+		return werr
+	}
+	return os.Rename(tmp, filepath.Join(dirOf(root), stateFile(watcher)))
 }
 
 // Report is a test report file as the monitor last read it.

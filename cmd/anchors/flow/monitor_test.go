@@ -35,6 +35,7 @@ func TestMain(m *testing.M) {
 
 func monitorProject(t *testing.T, yaml string) string {
 	t.Helper()
+	t.Setenv("ANCHORS_SESSION", "") // the unnamed watcher: its state is monitor.json
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 8\nlayers: {}\n"+yaml), 0o644); err != nil {
 		t.Fatal(err)
@@ -340,9 +341,9 @@ func TestMonitor_idleTask(t *testing.T) {
 	if out := run(dir); strings.Contains(out, "D01.T1") {
 		t.Errorf("the first tick never says a task quiet:\n%s", out)
 	}
-	watched := runs.LoadState(dir)
+	watched := runs.LoadState(dir, "")
 	watched.Watching = time.Now().Add(-30 * time.Minute)
-	if err := runs.SaveState(dir, watched); err != nil {
+	if err := runs.SaveState(dir, "", watched); err != nil {
 		t.Fatal(err)
 	}
 	if out := run(dir); !strings.Contains(out, "⏸ D01.T1 in progress — no activity from a for 2") {
@@ -397,9 +398,9 @@ func TestMonitor_idleTaskAcrossWorktrees(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	st := runs.LoadState(main)
+	st := runs.LoadState(main, "")
 	st.Watching = time.Now().Add(-time.Hour)
-	if err := runs.SaveState(main, st); err != nil {
+	if err := runs.SaveState(main, "", st); err != nil {
 		t.Fatal(err)
 	}
 	end, ok := time.Now(), 0
@@ -498,9 +499,9 @@ func TestMonitor_idleTasksGroupedAndEdits(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	st := runs.LoadState(main)
+	st := runs.LoadState(main, "")
 	st.Watching = old
-	if err := runs.SaveState(main, st); err != nil {
+	if err := runs.SaveState(main, "", st); err != nil {
 		t.Fatal(err)
 	}
 	ended, ok := old, 0

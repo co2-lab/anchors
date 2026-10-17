@@ -28,7 +28,7 @@ func TestRecords_writtenWholeAndListed(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, ".anchors", "runs", "broken.json"), []byte("{half"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if err := SaveState(root, &State{}); err != nil {
+	if err := SaveState(root, "", &State{}); err != nil {
 		t.Fatal(err)
 	}
 	if id := NewID(t0, 42); id != "20261009T120000-42" {

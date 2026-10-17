@@ -144,7 +144,10 @@ Timing comes from the defaults, then the "monitor:" block of anchors.yaml, then 
 // records and the state. A tick that cannot read the processes says so — silence would read
 // as "nothing changed".
 func runMonitor(w io.Writer, root string, set runs.Settings, untilDone, once bool) error {
-	st := runs.LoadState(root)
+	// Each agent watches with a memory of its own (ANCHORS_SESSION): what another agent's
+	// monitor said is not what this one's watcher heard.
+	watcher := strings.TrimSpace(os.Getenv("ANCHORS_SESSION"))
+	st := runs.LoadState(root, watcher)
 	sawRun := false
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
@@ -200,7 +203,7 @@ func runMonitor(w io.Writer, root string, set runs.Settings, untilDone, once boo
 			}
 		}
 		runs.Prune(root, set.Keep, set.MaxAge, now)
-		if err := runs.SaveState(root, st); err != nil {
+		if err := runs.SaveState(root, watcher, st); err != nil {
 			fmt.Fprintf(w, "⚠ monitor: cannot write its state (%v) — a re-armed monitor may repeat events\n", err)
 		}
 		if live > 0 {

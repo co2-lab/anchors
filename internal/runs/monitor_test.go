@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -199,12 +200,12 @@ func TestTick_rearmed(t *testing.T) {
 	t.Run("MNTRS-B07: A re-armed monitor says what happened meanwhile, once", func(t *testing.T) {})
 	dir := t.TempDir()
 	rec := Run{ID: "r", Name: "jest", Command: "npx jest", PID: pidNpx, By: ByRun, Started: t0}
-	st := LoadState(dir)
+	st := LoadState(dir, "")
 	tick(st, t0, append(agentAndSelf(), Proc{PID: pidNpx, PPID: 1, Cmd: "npx jest"}), []Run{rec}, nil)
-	if err := SaveState(dir, st); err != nil {
+	if err := SaveState(dir, "", st); err != nil {
 		t.Fatal(err)
 	}
-	again := LoadState(dir)
+	again := LoadState(dir, "")
 	evs, _ := tick(again, t0.Add(10*time.Minute), agentAndSelf(), []Run{rec}, nil)
 	if kinds(evs, "died") != 1 || kinds(evs, "started") != 0 {
 		t.Fatalf("the death meanwhile is said, the start not again:\n%s", lines(evs))
@@ -371,15 +372,15 @@ func TestTick_everyEndSaidOnce(t *testing.T) {
 			}
 		}
 	}
-	st := LoadState(dir)
+	st := LoadState(dir, "")
 	evs, _ := tick(st, t0, procs, recs, out)
 	count(evs)
 	end := t0.Add(time.Minute)
 	recs[0].Ended, recs[0].Exit = &end, &exit0
 	evs, _ = tick(st, t0.Add(time.Minute), procs[:4], recs, out)
 	count(evs)
-	_ = SaveState(dir, st)
-	st = LoadState(dir)
+	_ = SaveState(dir, "", st)
+	st = LoadState(dir, "")
 	for i := 0; i < 3; i++ {
 		evs, _ = tick(st, t0.Add(time.Duration(2+i)*time.Minute), agentAndSelf(), recs, out)
 		count(evs)
@@ -541,5 +542,40 @@ func TestOverloaded(t *testing.T) {
 	}
 	if busy, _ := st.MeasureBusy([]Proc{{PID: 1, CPU: 500}}, t0.Add(21*time.Second), 4); busy != 100 {
 		t.Errorf("never past 100: %v", busy)
+	}
+}
+
+func TestState_perWatcher(t *testing.T) {
+	t.Run("MNTRS-B18: Each watcher keeps a memory of its own", func(t *testing.T) {})
+	dir := t.TempDir()
+	var wg sync.WaitGroup
+	errs := make(chan error, 200)
+	for _, w := range []string{"agent-a", "agent b/x"} {
+		for i := 0; i < 50; i++ {
+			wg.Add(1)
+			go func(w string) {
+				defer wg.Done()
+				errs <- SaveState(dir, w, &State{ProgressSum: w})
+			}(w)
+		}
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		if err != nil {
+			t.Fatalf("a watcher's write never fails on another's: %v", err)
+		}
+	}
+	if LoadState(dir, "agent-a").ProgressSum != "agent-a" || LoadState(dir, "agent b/x").ProgressSum != "agent b/x" {
+		t.Error("each watcher reads its own state")
+	}
+	if err := SaveState(dir, "", &State{ProgressSum: "unnamed"}); err != nil || LoadState(dir, "").ProgressSum != "unnamed" {
+		t.Errorf("the unnamed watcher keeps monitor.json: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dirOf(dir), "monitor.json")); err != nil {
+		t.Errorf("monitor.json: %v", err)
+	}
+	if got := List(dir); len(got) != 0 {
+		t.Errorf("no state is a run: %+v", got)
 	}
 }
