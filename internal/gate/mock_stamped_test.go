@@ -694,3 +694,25 @@ func TestMockCarimbado_inlineBlockFlagChangesNoContract(t *testing.T) {
 		t.Errorf("a change after the comment is a change: %v", v)
 	}
 }
+
+func TestMockStamped_writerAndGateResolveAlike(t *testing.T) {
+	t.Run("MCSTM-B23: The stamp the writer wrote covers an aliased module and a directory's index", func(t *testing.T) {})
+	test := "jest.mock('@mif/shared/seal/seal', () => ({ renderSealSvg: jest.fn() }))\n" +
+		"jest.mock('@backend/functions/run-audits/evaluators')\n"
+	testID := "apps/landing/src/Seal.test.tsx"
+	root, g := stampProject(t, map[string]string{
+		"packages/shared/src/seal/seal.ts":                          "export function renderSealSvg(o) {\n  return ''\n}\n",
+		"packages/backend/functions/run-audits/evaluators/index.ts": "export function evaluate() {\n  return 1\n}\n",
+		testID: test,
+	})
+	cfg := stampCfg()
+	cfg.Dialect.ImportResolve.Extensions = []string{".ts", "/index.ts"}
+	cfg.Dialect.ImportResolve.Aliases["@mif/shared/"] = "packages/shared/src/"
+	out, written, skipped, err := GenerateStamps(test, testID, root, g, cfg)
+	if err != nil || len(written) != 2 || len(skipped) != 0 {
+		t.Fatalf("both doubles are stamped: %+v %+v %v", written, skipped, err)
+	}
+	if v, msg := checkMockStamped(out, mapx.Node{ID: testID, Kind: mapx.KindTest}, root, g, cfg); v != Pass {
+		t.Errorf("what the writer stamped is what the gate finds: %v / %s", v, msg)
+	}
+}

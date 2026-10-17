@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:290b5470ac5cf37d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:9b6eb0f2cc10392b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4971,9 +4971,11 @@ abra a página dela em `camadas/`.
 
 - [MCSTM-B22 — A chain flag in a block comment inside a line — the form the navigation fixer writes after a call on a JSX line — is read out of the stamped snippet too, and only the comment: the code after it stays, so a change there still fails.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
+- [MCSTM-B23 — A double whose specifier an alias maps into another folder (`@mif/shared/x` → `packages/shared/src/x.ts`), or that names a directory resolved to its index by an extension (`…/evaluators` → `…/evaluators/index.ts`), is covered by the stamp `anchors stamp` wrote for it.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
+
 - [MCSTM-I01 — The gate RECOMPUTES the hash against the real module; it never validates the stamp's format alone. A stamp nobody confronts would certify itself, because whoever edits the test regenerates it to match their own mock.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
-- [MCSTM-I02 — The double and the stamp are tied by the module's PATH, matched by suffix without extension. The specifier and the stamped path describe the same file through alias and disk path, and a per-ecosystem alias resolver would be needed otherwise.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
+- [MCSTM-I02 — The double and the stamp are tied by the FILE the stamp names: the double's specifier is resolved as `anchors stamp` resolves it — the project's aliases and extensions, then the tail —, so what the writer stamped is what the gate finds.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
 - [MCSTM-I03 — A configuration fault fails; a project decision skips; nothing decided is pending. Compiling error and missing capture group are Fail, an undeclared pattern is Pending, a waived one is Skip — the difference is whether somebody CHOSE the silence.](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 

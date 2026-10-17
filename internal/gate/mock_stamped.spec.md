@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCSTM
-  updated_at: 2026-10-08
+  updated_at: 2026-10-17
   layer: gate
 -->
 # MockStamped — the double carries the mark of the snippet it replaces, and the gate RECOMPUTES it
@@ -70,13 +70,14 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-B20` | `StampsHolding` lists the stamps of a test that match their module today, keyed `<module>|<hash>`; `RefreshHeldStamps` rewrites the hash of each stamp in that list that no longer matches — the ones a mechanical rewrite broke — and leaves a stamp already stale as it was. |
 | `MCSTM-B21` | A stamp reads its module without the chain's flags — a dependency (kinded or not), used-by or navigation flag (or its waiver) at the end of a line, and a line that only carries one —, the reading the map's evidence revisions share: a flag `check --fix` writes changes no contract, and the stamp's anchor and snippet hold through it. A stamp taken while the flags were in the module, as written, holds too; a change to the stamped code itself still fails, and a refresh writes the hash read without the flags. (`StampSnippet`) |
 | `MCSTM-B22` | A chain flag in a block comment inside a line — the form the navigation fixer writes after a call on a JSX line — is read out of the stamped snippet too, and only the comment: the code after it stays, so a change there still fails. |
+| `MCSTM-B23` | A double whose specifier an alias maps into another folder (`@mif/shared/x` → `packages/shared/src/x.ts`), or that names a directory resolved to its index by an extension (`…/evaluators` → `…/evaluators/index.ts`), is covered by the stamp `anchors stamp` wrote for it. |
 
 ## Invariants
 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `MCSTM-I01` | The gate RECOMPUTES the hash against the real module; it never validates the stamp's format alone. A stamp nobody confronts would certify itself, because whoever edits the test regenerates it to match their own mock. | changes the real module without touching the stamp and verifies the verdict turns |
-| `MCSTM-I02` | The double and the stamp are tied by the module's PATH, matched by suffix without extension. The specifier and the stamped path describe the same file through alias and disk path, and a per-ecosystem alias resolver would be needed otherwise. | declares the double through an alias and the stamp through the disk path, and verifies the charge is satisfied |
+| `MCSTM-I02` | The double and the stamp are tied by the FILE the stamp names: the double's specifier is resolved as `anchors stamp` resolves it — the project's aliases and extensions, then the tail —, so what the writer stamped is what the gate finds. | declares the double through an alias and the stamp through the disk path, and verifies the charge is satisfied |
 | `MCSTM-I03` | A configuration fault fails; a project decision skips; nothing decided is pending. Compiling error and missing capture group are Fail, an undeclared pattern is Pending, a waived one is Skip — the difference is whether somebody CHOSE the silence. | confronts the four configurations and verifies Fail, Fail, Pending and Skip |
 
 ## Constraints

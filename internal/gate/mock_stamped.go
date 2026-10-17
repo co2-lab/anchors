@@ -82,7 +82,7 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 		if !isGovernedModule(modulo, n.ID, cfg.DialectFor(), g) {
 			continue // biblioteca de terceiro não é cobrada (ver `ehModuloRegido`)
 		}
-		if !moduleHasStamp(modulo, carimbos) {
+		if !moduleHasStamp(modulo, n.ID, cfg.DialectFor(), g, carimbos) {
 			semCarimbo = append(semCarimbo, modulo)
 		}
 	}
@@ -113,37 +113,23 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 		len(divergentes), strings.Join(divergentes, "\n  - "))
 }
 
-// moduleHasStamp liga o dublê ao carimbo pelo CAMINHO do arquivo carimbado.
-//
-// O especificador do dublê (`@/src/hooks/useX`) e o caminho do carimbo
-// (`apps/mobile/src/hooks/useX.ts`) descrevem o mesmo arquivo por vias diferentes —
-// alias e caminho de disco. Casar pelo sufixo sem extensão resolve os dois sem
-// precisar de um resolvedor de alias, que seria específico do ecossistema.
-//
-// The specifier is compared AS WRITTEN and without a final extension, and both forms
-// count. An import specifier usually has no extension, and cutting one anyway cut part of
-// the NAME: `@/src/stores/auth.store` became `src/stores/auth`, which no stamp file
-// (`auth.store.ts` → `auth.store`) matches. Measured in a real project after stamping all
-// its doubles: 93 tests still failed as "double without stamp", all on modules with a dot
-// in the name (`auth.store`, `ui.store`). ESM specifiers that DO carry an extension
-// (`./x.js`) are why the stripped form is kept too.
-func moduleHasStamp(modulo string, carimbos []declaredStamp) bool {
-	alvo := strings.TrimPrefix(modulo, "./")
-	for strings.HasPrefix(alvo, "../") {
-		alvo = strings.TrimPrefix(alvo, "../")
+// moduleHasStamp ties the double to a stamp by the FILE the stamp names. The double's
+// specifier (`@mif/shared/seal/seal`, a directory `…/evaluators`) and the stamp's path
+// (`packages/shared/src/seal/seal.ts`, `…/evaluators/index.ts`) name the same file by two
+// roads. The gate resolves the specifier as `anchors stamp` does, so what the writer
+// stamped is what the gate finds: a comparison of suffixes, with the head of a specifier
+// dropped by itself, missed a path an alias maps into `src/` and a directory's index.
+func moduleHasStamp(modulo, testID string, d config.Dialect, g *mapx.Graph, carimbos []declaredStamp) bool {
+	// The module is resolved as the stamp writer resolves it (moduleCandidates): the
+	// project's aliases, its extensions — a directory's `/index.ts` —, then the tail. A
+	// stamp covers the double when it names one of those files.
+	cands := map[string]bool{}
+	for _, c := range moduleCandidates(modulo, testID, d, g) {
+		cands[c] = true
 	}
-	if strings.HasPrefix(alvo, "@") {
-		if i := strings.Index(alvo, "/"); i >= 0 {
-			alvo = alvo[i+1:]
-		}
-	}
-	forms := []string{alvo, withoutExtension(alvo)}
 	for _, c := range carimbos {
-		arq := withoutExtension(c.file)
-		for _, f := range forms {
-			if arq == f || strings.HasSuffix(arq, "/"+f) {
-				return true
-			}
+		if cands[filepath.ToSlash(c.file)] {
+			return true
 		}
 	}
 	return false

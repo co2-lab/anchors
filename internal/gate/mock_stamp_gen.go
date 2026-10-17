@@ -96,7 +96,7 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 		done[module] = true
 		// A stamped double is never rewritten — see the file comment. It can still GAIN a
 		// stamp: a key added to its factory later names an export no stamp covers.
-		stamped := moduleHasStamp(module, existing)
+		stamped := moduleHasStamp(module, testID, cfg.DialectFor(), g, existing)
 
 		file, reason := moduleFile(module, testID, cfg.DialectFor(), g)
 		if file == "" {

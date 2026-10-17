@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:507518293bf41b77 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:662644d0761b6c7f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 88 unidades e 1407 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 88 unidades e 1408 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2092,9 +2092,11 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 
 - **MCSTM-B22** — A chain flag in a block comment inside a line — the form the navigation fixer writes after a call on a JSX line — is read out of the stamped snippet too, and only the comment: the code after it stays, so a change there still fails.
 
+- **MCSTM-B23** — A double whose specifier an alias maps into another folder (`@mif/shared/x` → `packages/shared/src/x.ts`), or that names a directory resolved to its index by an extension (`…/evaluators` → `…/evaluators/index.ts`), is covered by the stamp `anchors stamp` wrote for it.
+
 - **MCSTM-I01** — The gate RECOMPUTES the hash against the real module; it never validates the stamp's format alone. A stamp nobody confronts would certify itself, because whoever edits the test regenerates it to match their own mock.
 
-- **MCSTM-I02** — The double and the stamp are tied by the module's PATH, matched by suffix without extension. The specifier and the stamped path describe the same file through alias and disk path, and a per-ecosystem alias resolver would be needed otherwise.
+- **MCSTM-I02** — The double and the stamp are tied by the FILE the stamp names: the double's specifier is resolved as `anchors stamp` resolves it — the project's aliases and extensions, then the tail —, so what the writer stamped is what the gate finds.
 
 - **MCSTM-I03** — A configuration fault fails; a project decision skips; nothing decided is pending. Compiling error and missing capture group are Fail, an undeclared pattern is Pending, a waived one is Skip — the difference is whether somebody CHOSE the silence.
 

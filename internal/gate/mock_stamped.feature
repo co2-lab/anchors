@@ -2,7 +2,7 @@
 # @anchors
 #   code: MSFMC
 #   ref: MCSTM
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-17
 #   layer: feature
 
 @MCSTM
@@ -226,3 +226,9 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
     Given a stamped component whose JSX line gained a navigation flag in a block comment after the call
     When the stamp is confronted, and then the code after the comment changes
     Then the stamp holds, and the change after the comment fails
+
+  @MCSTM-B23 @unit-level
+  Scenario: The stamp the writer wrote covers an aliased module and a directory's index
+    Given a double of "@mif/shared/seal/seal", an alias of packages/shared/src/, and one of a directory "@backend/evaluators" with an index.ts
+    When anchors stamp writes their stamps and the gate confronts the test
+    Then no double is reported without a stamp
