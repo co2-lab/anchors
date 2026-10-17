@@ -30018,24 +30018,15 @@ nodes:
       rest_rev: 2281e1f55f99
     - id: internal/runs/monitor_test.go
       kind: test
-      rev: 2041ad69fd35
+      rev: 23346ea2f417
       updated_at: "2026-10-17"
       code: MNTRS
       file_code: MNTRT
       layer: teste
       tags:
         - test
-      signal:
-        passed: 43
-        by_layer:
-            unit:
-                passed: 43
-        seconds_by_suite:
-            .anchors/junit.xml: 0.12000000000000001
-        at_rev: 2041ad69fd35
-        ingested_at: "2026-10-17T09:42:37-03:00"
-      evidence_rev: 34aaa929214e
-      line_rev: 092b3a634e59
+      evidence_rev: cfbd6523858b
+      line_rev: e91860f6d6f2
     - id: internal/runs/output.go
       kind: code
       rev: d6defcc3f62f

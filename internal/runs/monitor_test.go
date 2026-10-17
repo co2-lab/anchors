@@ -5,6 +5,7 @@
 package runs
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -548,16 +549,22 @@ func TestOverloaded(t *testing.T) {
 func TestState_perWatcher(t *testing.T) {
 	t.Run("MNTRS-B18: Each watcher keeps a memory of its own", func(t *testing.T) {})
 	dir := t.TempDir()
+	// Watchers at once, each saving tick after tick as its monitor does: one monitor is one
+	// writer of its own state.
 	var wg sync.WaitGroup
-	errs := make(chan error, 200)
-	for _, w := range []string{"agent-a", "agent b/x"} {
-		for i := 0; i < 50; i++ {
-			wg.Add(1)
-			go func(w string) {
-				defer wg.Done()
+	errs := make(chan error, 400)
+	watchers := []string{"agent-a", "agent b/x"}
+	for i := 0; i < 18; i++ {
+		watchers = append(watchers, fmt.Sprintf("agent-%d", i))
+	}
+	for _, w := range watchers {
+		wg.Add(1)
+		go func(w string) {
+			defer wg.Done()
+			for i := 0; i < 10; i++ {
 				errs <- SaveState(dir, w, &State{ProgressSum: w})
-			}(w)
-		}
+			}
+		}(w)
 	}
 	wg.Wait()
 	close(errs)
