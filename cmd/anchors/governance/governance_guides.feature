@@ -2,7 +2,7 @@
 # @anchors
 #   code: GGFGV
 #   ref: GVGDG
-#   updated_at: 2026-10-15
+#   updated_at: 2026-10-18
 #   layer: feature
 
 @GVGDG
@@ -218,3 +218,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Given a project declaring a blocking gate and an informative one
     When the gates guide lists them, with --all, explains the blocking one, one of the catalog it does not declare, a judgment gate, and a name nowhere
     Then each is listed with bars or informs, the catalog's others appear with --all, each explanation says what it measures, whether it bars here, the ways out with the waiver in its name and its page, the judgment's question, and the unknown name is refused pointing to --all
+
+  @GVGDG-B31 @unit-level
+  Scenario: The spec guide explains the sections a layer calls for
+    Given the spec guide
+    When it is read
+    Then it names requires_sections and section-required, and says a unit with none of the section writes it saying so

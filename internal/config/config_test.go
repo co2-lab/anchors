@@ -1966,3 +1966,32 @@ func TestExampleRunnersAndPiecePaths(t *testing.T) {
 		t.Error("no config, no paths")
 	}
 }
+
+func TestRequiresSections_validated(t *testing.T) {
+	t.Run("CNFGO-B75: A layer's required sections are checked on load", func(t *testing.T) {})
+	load := func(entry string) error {
+		p := filepath.Join(t.TempDir(), "anchors.yaml")
+		yaml := "version: 8\nlayers:\n  store: {pattern: 's/*.ts', kind: code}\n  ui:\n    pattern: 'u/*.tsx'\n    kind: code\n    requires_sections:\n      - " + entry + "\n"
+		if err := os.WriteFile(p, []byte(yaml), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		_, err := Load(p)
+		return err
+	}
+	for entry, why := range map[string]string{
+		"{when: {flag: '@x'}}": "name the `section`",
+		"{section: A, when: {flag: '@x', exposes: test_handles}}": "exactly one trigger",
+		"{section: A, when: {}}":                                  "exactly one trigger",
+		"{section: A, when: {exposes: buttons}}":                  "test_handles",
+		"{section: A, when: {depends_on_layer: [nope]}}":          "no layer of the project",
+		"{section: A, when: {flag: navigates}}":                   "starts with `@`",
+		"{section: A, when: {code_matches: '('}}":                 "does not compile",
+	} {
+		if err := load(entry); err == nil || !strings.Contains(err.Error(), "layers.ui.requires_sections[0]") || !strings.Contains(err.Error(), why) {
+			t.Errorf("%s: want refused naming the entry and %q, got %v", entry, why, err)
+		}
+	}
+	if err := load("{section: 'Test IDs', when: {depends_on_layer: [store]}}"); err != nil {
+		t.Errorf("a well-formed entry loads: %v", err)
+	}
+}

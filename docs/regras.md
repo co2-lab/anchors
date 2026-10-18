@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:9b6eb0f2cc10392b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:be333df52e047471 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1423,6 +1423,8 @@ abra a página dela em `camadas/`.
 
 - [GVGDG-B30 — `anchors guide gates` lists the gates the project declares, each with what it measures and whether it bars or informs, and with `--all` the catalog's others; `anchors guide gates <gate>` explains one — what it measures, whether it bars here or is not declared, what measures it, what it confronts, its question when it is a judgment, the ways out of a failure with the waiver in the gate's name, and its page on the site; a name in neither the project nor the catalog is refused, pointing to `--all`. (`newGuideGatesCmd`)](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
+- [GVGDG-B31 — The spec guide says a layer may declare the sections its code calls for (`requires_sections`), that `section-required` fails a spec missing one its code triggers, and that a unit with none of it writes the section saying so.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B20 — The test guide strongly recommends a contract test for every API unit, validating the API against the OpenAPI compiled from the specs with the language's own tool, named by `{CODE}-CT`, loading the document instead of copying it, and asserting each error response's status, code and message.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
@@ -2533,6 +2535,8 @@ abra a página dela em `camadas/`.
 
 - [CGPCH-B96 — After the findings, one line points to `anchors guide gates <gate>`, named after the first finding, for what a gate measures and the ways out of its failure; with no finding there is no such line.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
+- [CGPCH-B97 — With `--show-skips`, every indeterminate (`~`) of the scan is listed, whatever its size: by gate, then by reason — the first line of the gate's message, the commonest first, with its count —, then the address of each target; a Skip with no message is listed under a reason of its own. Without the flag, the reasons are shown only for a small scan, as before. (`printSkips`)](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
 - [CGPCH-B92 — A gate the project declares counts as declared in the catalog line and the governance tips even when this run leaves it out — `when: [manual]`, `skip_on`, another phase.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B08 — A gate that declares no perspective to skip runs both on the full sweep and on changed files.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
@@ -3330,6 +3334,8 @@ abra a página dela em `camadas/`.
 - [CNFGO-B73 — The code extensions are those the code layers' patterns end with — `*.go`, `*.{ts,tsx}` —, layer by layer in name order, each once. (`CodeExtensions`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B74 — The example runners — jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins — each say how their command line and output read, with a kind and a quiet time, and none is applied by itself; a unit's piece paths are the `derived.files` patterns of the piece, the overrides of its layer first, rendered for it — its folder, unit name, module and extension, a spec taking its layer's —, and a layer's extensions are those its pattern ends with. (`ExampleRunners`, `PiecePaths`, `LayerExtensions`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-B75 — A layer's `requires_sections` names, per entry, a `section` and exactly one trigger in `when` — `exposes: test_handles`, `depends_on_layer` (layers of the project), `flag` (starting with `@`) or `code_matches` (a pattern that compiles); anything else refuses the config, naming the entry. (`SectionRequirement`, `SectionTrigger`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -6118,6 +6124,20 @@ abra a página dela em `camadas/`.
 - [STASC-X03 — Does not validate or alter specifications or test code files.](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter)
 
 - [STASC-X04 — Does not restrict tags from being mapped to more than one rule type letter.](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter)
+
+### [SCRQR — SectionRequired — the spec sections a unit's code calls for exist in its spec](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
+
+- [SCRQR-B01 — A node that is not a spec leaves without a verdict; a spec with no code leaves without one too, the missing code being `unit-complete`'s; so does a spec whose code's layers declare no requirement.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
+
+- [SCRQR-B02 — A section a requirement names, triggered by the code and absent from the spec, fails the gate, naming the section, the file and what triggered it; each section is named once, whatever triggered it.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
+
+- [SCRQR-B03 — A section present — its heading at any level, in any case — satisfies every requirement that names it, triggered or not.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
+
+- [SCRQR-B04 — The triggers read: `exposes: test_handles`, a handle the code exposes by the dialect's `exposed` patterns; `depends_on_layer`, a `depends-on` edge of the code to a node of a named layer; `flag`, the flag inside a comment of the code; `code_matches`, the project's pattern over the code with its comments blanked. A requirement whose trigger finds nothing calls for nothing.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
+
+- [SCRQR-B05 — A trigger that cannot be measured — `exposes` with no `dialect.test_handles.exposed`, a `flag` in a file whose comments are not declared — leaves the gate pending, naming what is missing, when no section is missing.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
+
+- [SCRQR-E01 — A specified code file cannot be read.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
 
 ### [SBGRD — SiblingGuard — sibling functions treat the same parameter consistently](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently)
 

@@ -37,7 +37,7 @@ import (
 func newCheckCmd() *cobra.Command {
 	var root, mapPath, phase, category string
 	var changed []string
-	var all, noRecord, recordIssues, fix, deterministic, skipSlow, onlyIssues, showDrift, showTiming, fromIndex bool
+	var all, noRecord, recordIssues, fix, deterministic, skipSlow, onlyIssues, showDrift, showSkips, showTiming, fromIndex bool
 	var skipRegras string
 	var msgPath string
 	cmd := &cobra.Command{
@@ -250,7 +250,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// inteiro em lotes.
 			results := gate.RunWithWaiver(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
 			profile := gate.Aggregate(results)
-			printProfile(profile, onlyIssues, showDrift)
+			printProfile(profile, onlyIssues, showDrift, showSkips)
 			reportTiming(showTiming, profile)
 			warnGatesWithoutTarget(cfg.Gates, profile)
 			printReviewsDue(cfg, g, absRoot, nodes)
@@ -396,6 +396,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 		"path to the commit message file, from which to read the `[skip-<gate>@<CODE>: reason]` markers")
 	cmd.Flags().BoolVar(&onlyIssues, "only-issues", false, "omits from the table the gates that passed everything and left no pending item (the total remains in the footer)")
 	cmd.Flags().BoolVar(&showDrift, "show-drift", false, "lists ALL the pending items (⚠) with the address of each one; without the flag, only the table counter")
+	cmd.Flags().BoolVar(&showSkips, "show-skips", false, "lists ALL the indeterminate (~) by gate and reason, with the address of each one: what does not apply, told from what could not be confronted")
 	cmd.Flags().BoolVar(&showTiming, "timing", false, "measures how long each gate took, and names the slowest targets — to find what makes a scan expensive")
 	return cmd
 }
@@ -1512,7 +1513,7 @@ func arredonda(d time.Duration) string {
 	return d.Round(time.Microsecond).String()
 }
 
-func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
+func printProfile(p gate.Profile, onlyIssues, showDrift, showSkips bool) {
 	nomes := p.GateNames()
 	wn := nameWidth(nomes)
 	w := computeWidths(p)
@@ -1578,7 +1579,9 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 	// Motivo dos `~` (skip/pending). O contador sozinho não diz nada — quem lê fica em
 	// dúvida se `~1` é problema dele. No modo incremental (poucos nós) o motivo cabe na
 	// tela e é acionável ("o código ainda não existe"), então mostramos.
-	if reasons := skipReasons(p); len(reasons) > 0 && len(p.Results) <= maxResultsForSkipDetail {
+	if showSkips {
+		printSkips(p)
+	} else if reasons := skipReasons(p); len(reasons) > 0 && len(p.Results) <= maxResultsForSkipDetail {
 		fmt.Println()
 		fmt.Println(i18n.T("check.undetermined_summary", len(reasons)))
 		for _, r := range reasons {
@@ -1807,6 +1810,59 @@ func isTokenList(linha string) bool {
 		}
 	}
 	return tokens*2 > len(partes)
+}
+
+// printSkips lists every indeterminate (`~`) of the scan, by gate and then by reason — the
+// first line of the gate's own message —, each reason with its count and the addresses it
+// covers. A reason is what the gate said when it had nothing to confront: "the code does
+// not exist yet", "the unit exposes no handle". Without it, telling "does not apply" from
+// "should have been measured" meant reading the gate's source. A Skip with no message is
+// listed under its own heading, so no indeterminate goes unlisted.
+func printSkips(p gate.Profile) {
+	byGate := map[string]map[string][]string{}
+	total := 0
+	for _, r := range p.Results {
+		if r.Verdict != gate.Skip {
+			continue
+		}
+		reason := strings.TrimSpace(strings.SplitN(r.Detail, "\n", 2)[0])
+		if reason == "" {
+			reason = i18n.T("check.skips_no_reason")
+		}
+		if byGate[r.Gate] == nil {
+			byGate[r.Gate] = map[string][]string{}
+		}
+		byGate[r.Gate][reason] = append(byGate[r.Gate][reason], r.Target)
+		total++
+	}
+	fmt.Println()
+	fmt.Println(i18n.T("check.skips_summary", total))
+	gates := make([]string, 0, len(byGate))
+	for g := range byGate {
+		gates = append(gates, g)
+	}
+	sort.Strings(gates)
+	for _, g := range gates {
+		reasons := make([]string, 0, len(byGate[g]))
+		for r := range byGate[g] {
+			reasons = append(reasons, r)
+		}
+		sort.Slice(reasons, func(i, j int) bool {
+			if a, b := len(byGate[g][reasons[i]]), len(byGate[g][reasons[j]]); a != b {
+				return a > b
+			}
+			return reasons[i] < reasons[j]
+		})
+		fmt.Printf("  ~ %s\n", g)
+		for _, r := range reasons {
+			targets := byGate[g][r]
+			sort.Strings(targets)
+			fmt.Printf("      %d × %s\n", len(targets), r)
+			for _, t := range targets {
+				fmt.Printf("          %s\n", t)
+			}
+		}
+	}
 }
 
 // maxResultsForSkipDetail — acima disso (varredura --all) a lista de motivos vira

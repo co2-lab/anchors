@@ -1538,6 +1538,9 @@ type Layer struct {
 	// pattern, and a header would be noise for every reader (a README). The header gates and
 	// the header fixer leave them.
 	Headless bool `yaml:"headless,omitempty"`
+	// RequiresSections are the spec sections the layer's code calls for, each with what
+	// triggers it — `section-required` (DESIGN-section-required.md).
+	RequiresSections []SectionRequirement `yaml:"requires_sections,omitempty"`
 	// canonical marks a layer Anchors added on its own (applyCanonicalLayers): it is never
 	// written back into a project's anchors.yaml.
 	canonical bool
@@ -2350,6 +2353,11 @@ func (c *Config) validarPadroes() error {
 				return fmt.Errorf("`layers.%s.support[%d]` is not a valid glob: %q", name, i, p)
 			}
 		}
+		for i, r := range l.RequiresSections {
+			if err := r.validate(fmt.Sprintf("layers.%s.requires_sections[%d]", name, i), c.Layers); err != nil {
+				return err
+			}
+		}
 	}
 	for _, g := range c.Gates {
 		if g.TimeoutCeiling < 0 || g.TimeoutCeiling > 1 {
@@ -3130,6 +3138,59 @@ func (c *Config) applyCanonicalLayers() {
 		c.Layers = map[string]Layer{}
 	}
 	c.Layers[GuidanceLayer] = CanonicalGuidance()
+}
+
+// SectionRequirement is a spec section a layer's code calls for: its title, as the project
+// writes it, and the one trigger that calls for it.
+type SectionRequirement struct {
+	Section string         `yaml:"section"`
+	When    SectionTrigger `yaml:"when"`
+}
+
+// SectionTrigger is what in the unit's code calls for a section — one of them, each read
+// from what the core already measures:
+//   - Exposes: `test_handles`, the code exposes a handle (`dialect.test_handles.exposed`);
+//   - DependsOnLayer: the code depends on a node of one of these layers;
+//   - Flag: the code carries this flag (`@navigates`);
+//   - CodeMatches: the code, its comments left out, matches this pattern of the project's.
+type SectionTrigger struct {
+	Exposes        string   `yaml:"exposes,omitempty"`
+	DependsOnLayer []string `yaml:"depends_on_layer,omitempty"`
+	Flag           string   `yaml:"flag,omitempty"`
+	CodeMatches    string   `yaml:"code_matches,omitempty"`
+}
+
+// validate refuses an entry with no section, with no trigger or two, or with a trigger
+// that cannot be read, naming it.
+func (r SectionRequirement) validate(field string, layers map[string]Layer) error {
+	if strings.TrimSpace(r.Section) == "" {
+		return fmt.Errorf("`%s`: name the `section` the code calls for", field)
+	}
+	n := 0
+	for _, set := range []bool{r.When.Exposes != "", len(r.When.DependsOnLayer) > 0, r.When.Flag != "", r.When.CodeMatches != ""} {
+		if set {
+			n++
+		}
+	}
+	if n != 1 {
+		return fmt.Errorf("`%s.when`: declare exactly one trigger — exposes, depends_on_layer, flag or code_matches", field)
+	}
+	switch {
+	case r.When.Exposes != "" && r.When.Exposes != "test_handles":
+		return fmt.Errorf("`%s.when.exposes`: the only thing measured as exposed is `test_handles`, got %q", field, r.When.Exposes)
+	case r.When.Flag != "" && !strings.HasPrefix(r.When.Flag, "@"):
+		return fmt.Errorf("`%s.when.flag`: a flag starts with `@`, got %q", field, r.When.Flag)
+	case r.When.CodeMatches != "":
+		if _, err := regexp.Compile(r.When.CodeMatches); err != nil {
+			return fmt.Errorf("`%s.when.code_matches` does not compile: %w", field, err)
+		}
+	}
+	for _, l := range r.When.DependsOnLayer {
+		if _, ok := layers[l]; !ok {
+			return fmt.Errorf("`%s.when.depends_on_layer` names %q, which is no layer of the project", field, l)
+		}
+	}
+	return nil
 }
 
 // LayerHeadless says whether the files of the layer carry no `@anchors` header.

@@ -1068,6 +1068,8 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		Measures: "the spec's code is the only identity across its surfaces: testID prefixes and visual baselines"})
 	add("spec", config.Gate{Name: "testid-consistent", On: []string{"spec"}, Presupposes: []string{"dialect.test_handles.exposed"},
 		Measures: "the spec's testID inventory, the IDs the code exposes, and the tests that query them agree"})
+	add("spec", config.Gate{Name: "section-required", On: []string{"spec"},
+		Measures: "every spec section its unit's layer calls for, when the code triggers it, exists in the spec"})
 	add("spec", config.Gate{Name: "route-declared", On: []string{"spec"}, Tags: []string{"screen"},
 		Measures: "a screen spec declares its route and names its neighbour screens"})
 	add("spec", config.Gate{Name: "route-exists", On: []string{"spec"}, Tags: []string{"screen"}, Presupposes: []string{"route_registry", "derived.route_pattern"},

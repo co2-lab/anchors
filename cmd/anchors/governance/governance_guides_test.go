@@ -765,3 +765,13 @@ func TestGatesGuide(t *testing.T) {
 		t.Errorf("an unknown gate is refused, pointing to --all: %v", err)
 	}
 }
+
+func TestSpecGuide_sectionsALayerCallsFor(t *testing.T) {
+	t.Run("GVGDG-B31: The spec guide explains the sections a layer calls for", func(t *testing.T) {})
+	spec := guideOut(t, "spec")
+	for _, want := range []string{"requires_sections", "section-required", "the section says so and why"} {
+		if !strings.Contains(spec, want) {
+			t.Errorf("the spec guide lacks %q", want)
+		}
+	}
+}

@@ -14,6 +14,7 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | [`unit-complete`](/pt/docs/gates/unit-complete/) | `spec` | The spec has code, feature and test that realise it |
 | [`spec-has-code`](/pt/docs/gates/spec-has-code/) | `spec` | The spec carries a scenario code (identity) |
 | [`spec-complete`](/pt/docs/gates/spec-complete/) | `spec` | The spec has at least one state/rule, with no placeholder |
+| [`section-required`](/pt/docs/gates/section-required/) | `spec` | Every spec section its unit's layer calls for, when the code triggers it, exists in the spec |
 | [`feature-not-empty`](/pt/docs/gates/feature-not-empty/) | `feature` | The feature is not an empty skeleton |
 | [`spec-feature-match`](/pt/docs/gates/spec-feature-match/) | `spec` | Every requirement declared in the spec has a scenario in the feature |
 | [`feature-spec-match`](/pt/docs/gates/feature-spec-match/) | `feature` | Every scenario of the feature matches a rule the spec declares |

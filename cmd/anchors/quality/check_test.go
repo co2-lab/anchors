@@ -405,7 +405,7 @@ func TestCheckWarnsAboutRevStaleMapNodesOnChangedOnly(t *testing.T) {
 func TestPrintProfileFooterSaysWhatIsStillOpen(t *testing.T) {
 	t.Run("CGPCH-B58: The verdict line says what is still open", func(t *testing.T) {})
 	englishOutput(t)
-	footer := func(p gate.Profile) string { return captureStdout(t, func() { printProfile(p, false, false) }) }
+	footer := func(p gate.Profile) string { return captureStdout(t, func() { printProfile(p, false, false, false) }) }
 	info := gate.Result{Gate: "g", Target: "a", Verdict: gate.Fail}
 	cases := []struct {
 		name string
@@ -445,7 +445,7 @@ func TestSkipReasonsShownOnASmallScan(t *testing.T) {
 	englishOutput(t)
 	p := profileOf(gate.GateSummary{Gate: "g", Pass: 1, Skip: 1})
 	p.Results = []gate.Result{{Gate: "g", Verdict: gate.Skip, Detail: "not a screen", Target: "n.ts"}}
-	out := captureStdout(t, func() { printProfile(p, false, false) })
+	out := captureStdout(t, func() { printProfile(p, false, false, false) })
 	if !strings.Contains(out, "~ 1 indeterminate — not a failure") || !strings.Contains(out, "  ~ g @ n.ts\n      not a screen\n") {
 		t.Errorf("a small scan lists the reason of each ~:\n%s", out)
 	}
@@ -454,7 +454,7 @@ func TestSkipReasonsShownOnASmallScan(t *testing.T) {
 	for len(p.Results) < maxResultsForSkipDetail {
 		p.Results = append(p.Results, gate.Result{Gate: "g", Verdict: gate.Pass, Target: "p.ts"})
 	}
-	out = captureStdout(t, func() { printProfile(p, false, false) })
+	out = captureStdout(t, func() { printProfile(p, false, false, false) })
 	if !strings.Contains(out, "  ~ g @ n.ts\n      not a screen\n") {
 		t.Errorf("a scan of exactly forty results lists the reasons:\n%s", out)
 	}
@@ -462,7 +462,7 @@ func TestSkipReasonsShownOnASmallScan(t *testing.T) {
 	// no skip with a reason, nothing to list
 	clean := profileOf(gate.GateSummary{Gate: "g", Pass: 1})
 	clean.Results = []gate.Result{{Gate: "g", Verdict: gate.Pass, Target: "n.ts"}}
-	if out := captureStdout(t, func() { printProfile(clean, false, false) }); strings.Contains(out, "indeterminate — not a failure") {
+	if out := captureStdout(t, func() { printProfile(clean, false, false, false) }); strings.Contains(out, "indeterminate — not a failure") {
 		t.Errorf("with no reason to list, no indeterminate block:\n%s", out)
 	}
 }
@@ -1447,7 +1447,7 @@ func TestFindingsSummaryCountsEveryKind(t *testing.T) {
 	drift := gate.Result{Gate: "g3", Target: "c", Verdict: gate.Diverge, Detail: "diverged"}
 	p := gate.Profile{Results: []gate.Result{block, info, info, drift}, Failures: []gate.Result{block, info, info}}
 
-	out := captureStdout(t, func() { printProfile(p, false, false) })
+	out := captureStdout(t, func() { printProfile(p, false, false, false) })
 	for _, want := range []string{"3 failure(s) — 1 blocking, 2 informative — plus 1 divergence(s)", "--show-drift"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the summary should say %q:\n%s", want, out)
@@ -1456,7 +1456,7 @@ func TestFindingsSummaryCountsEveryKind(t *testing.T) {
 
 	// Only failures: the heading is printed all the same.
 	out = captureStdout(t, func() {
-		printProfile(gate.Profile{Results: []gate.Result{info}, Failures: []gate.Result{info}}, false, false)
+		printProfile(gate.Profile{Results: []gate.Result{info}, Failures: []gate.Result{info}}, false, false, false)
 	})
 	if !strings.Contains(out, "1 failure(s) — 0 blocking, 1 informative — plus 0 divergence(s)") {
 		t.Errorf("failures alone must still be counted:\n%s", out)
@@ -1466,7 +1466,7 @@ func TestFindingsSummaryCountsEveryKind(t *testing.T) {
 	}
 
 	// Only divergences: still counted, with no failure list.
-	out = captureStdout(t, func() { printProfile(gate.Profile{Results: []gate.Result{drift}}, false, false) })
+	out = captureStdout(t, func() { printProfile(gate.Profile{Results: []gate.Result{drift}}, false, false, false) })
 	if !strings.Contains(out, "0 failure(s)") || !strings.Contains(out, "1 divergence(s)") {
 		t.Errorf("pending items alone must still be counted:\n%s", out)
 	}
@@ -1567,7 +1567,7 @@ func TestWithNoDriftTheColumnDoesNotExist(t *testing.T) {
 		gate.GateSummary{Gate: "one", Pass: 1},
 		gate.GateSummary{Gate: "two", Pass: 583, Skip: 12},
 	)
-	out := captureProfile(t, func() { printProfile(p, false, false) })
+	out := captureProfile(t, func() { printProfile(p, false, false, false) })
 
 	for _, line := range gateLines(out) {
 		// Between the `✗` counter and the `~` there can only be the 2-space separator.
@@ -1616,7 +1616,7 @@ func TestDefaultShowsACleanGate(t *testing.T) {
 		gate.GateSummary{Gate: "clean", Pass: 5},
 		gate.GateSummary{Gate: "dirty", Pass: 1, Fail: 1},
 	)
-	out := captureProfile(t, func() { printProfile(p, false, false) })
+	out := captureProfile(t, func() { printProfile(p, false, false, false) })
 
 	if !strings.Contains(out, "clean") {
 		t.Errorf("the clean gate vanished from the default:\n%s", out)
@@ -1633,7 +1633,7 @@ func TestOnlyIssuesOmitsCleanButCountsInTheFooter(t *testing.T) {
 		gate.GateSummary{Gate: "clean-two", Pass: 7},
 		gate.GateSummary{Gate: "dirty", Pass: 1, Fail: 1},
 	)
-	out := captureProfile(t, func() { printProfile(p, true, false) })
+	out := captureProfile(t, func() { printProfile(p, true, false, false) })
 
 	if strings.Contains(out, "clean-one") || strings.Contains(out, "clean-two") {
 		t.Errorf("--only-issues did not omit the clean gate:\n%s", out)
@@ -1666,7 +1666,7 @@ func TestSkipColumnDoesNotMoveWithOrWithoutDrift(t *testing.T) {
 			len([]rune(without)), len([]rune(with)), without, with)
 	}
 
-	out := captureProfile(t, func() { printProfile(p, false, false) })
+	out := captureProfile(t, func() { printProfile(p, false, false, false) })
 	var positions []int
 	// `TrimSpace` over the whole block would eat the indentation of the FIRST line only —
 	// exactly the column being measured. The cut is per line.
@@ -1737,7 +1737,7 @@ func TestShowDriftDoesNotInheritTheSkipCut(t *testing.T) {
 		Detail: "boundary being migrated", Target: "AlertSheet.tsx",
 	})
 
-	out := captureProfile(t, func() { printProfile(p, false, true) })
+	out := captureProfile(t, func() { printProfile(p, false, true, false) })
 
 	if !strings.Contains(out, "pending item(s)") {
 		t.Errorf("the drift block is missing on a large scan:\n%s", out)
@@ -1757,7 +1757,7 @@ func TestSkipStaysSuppressedOnALargeScan(t *testing.T) {
 			Gate: "g", Verdict: gate.Skip, Detail: "not a screen", Target: "n",
 		})
 	}
-	out := captureProfile(t, func() { printProfile(p, false, false) })
+	out := captureProfile(t, func() { printProfile(p, false, false, false) })
 
 	if strings.Contains(out, "indeterminate — not a failure") {
 		t.Errorf("the ~ detail should be suppressed on a large volume:\n%s", out)
@@ -1777,7 +1777,7 @@ func TestShowDriftListsAllWithNoCap(t *testing.T) {
 			Target: fmt.Sprintf("target-%03d", i),
 		})
 	}
-	out := captureProfile(t, func() { printProfile(p, false, true) })
+	out := captureProfile(t, func() { printProfile(p, false, true, false) })
 
 	for _, i := range []int{0, n / 2, n - 1} {
 		target := fmt.Sprintf("target-%03d", i)
@@ -1798,7 +1798,7 @@ func TestWithoutShowDriftNoDetailIsListed(t *testing.T) {
 	p.Results = append(p.Results, gate.Result{
 		Gate: "g", Verdict: gate.Diverge, Detail: "diverged", Target: "single-target",
 	})
-	out := captureProfile(t, func() { printProfile(p, false, false) })
+	out := captureProfile(t, func() { printProfile(p, false, false, false) })
 
 	if strings.Contains(out, "single-target") {
 		t.Errorf("detail listed without the flag:\n%s", out)
@@ -1814,7 +1814,7 @@ func TestWithoutShowDriftNoDetailIsListed(t *testing.T) {
 func TestLegendShowsOnlyTheSymbolsUsed(t *testing.T) {
 	t.Run("CGPCH-B53: The legend explains only the symbols used", func(t *testing.T) {})
 	noDrift := captureProfile(t, func() {
-		printProfile(profileOf(gate.GateSummary{Gate: "g", Pass: 1}), false, false)
+		printProfile(profileOf(gate.GateSummary{Gate: "g", Pass: 1}), false, false, false)
 	})
 	if strings.Contains(noDrift, "⚠  diverged") {
 		t.Errorf("the legend explained ⚠ on a table with no drift:\n%s", noDrift)
@@ -1827,7 +1827,7 @@ func TestLegendShowsOnlyTheSymbolsUsed(t *testing.T) {
 	}
 
 	withJudge := captureProfile(t, func() {
-		printProfile(profileOf(gate.GateSummary{Gate: "g", Judge: 2}), false, false)
+		printProfile(profileOf(gate.GateSummary{Gate: "g", Judge: 2}), false, false, false)
 	})
 	if !strings.Contains(withJudge, "⏳ awaiting AI judgment") {
 		t.Errorf("a legend without ⏳ on a table that uses it:\n%s", withJudge)
@@ -2312,7 +2312,7 @@ func TestTableIndeterminateCounterLeavesTheDriftOut(t *testing.T) {
 	t.Run("CGPCH-B78: The indeterminate counter is the skipped and pending less the drift", func(t *testing.T) {})
 	p := profileOf(gate.GateSummary{Gate: "g", Pass: 1, Skip: 1, Pending: 1, Diverge: 1})
 	p.Results = []gate.Result{{Gate: "g", Verdict: gate.Diverge, Detail: "diverged", Target: "x"}}
-	out := captureProfile(t, func() { printProfile(p, false, false) })
+	out := captureProfile(t, func() { printProfile(p, false, false, false) })
 	if !strings.Contains(out, "⚠1  ~2\n") {
 		t.Errorf("one skip, one pending with no reason and one divergence: ⚠1 and ~2:\n%s", out)
 	}
@@ -2323,14 +2323,14 @@ func TestFindingsListEachFailureWithItsDetail(t *testing.T) {
 	block := gate.Result{Gate: "g1", Target: "a.go", Verdict: gate.Fail, Blocking: true, Detail: "broken on line 3"}
 	info := gate.Result{Gate: "g2", Target: "b.go", Verdict: gate.Fail}
 	p := gate.Profile{Results: []gate.Result{block, info}, Failures: []gate.Result{block, info}}
-	out := captureProfile(t, func() { printProfile(p, false, false) })
+	out := captureProfile(t, func() { printProfile(p, false, false, false) })
 	if !strings.Contains(out, "  ✗ [BLOCKS] g1 @ a.go\n      broken on line 3\n  ✗ [informative] g2 @ b.go\n") {
 		t.Errorf("each failure with its mark, and the detail under the one that has it:\n%s", out)
 	}
 
 	pass := gate.Result{Gate: "g", Target: "a.go", Verdict: gate.Pass}
 	out = captureProfile(t, func() {
-		printProfile(gate.Profile{Passed: true, Results: []gate.Result{pass}}, false, false)
+		printProfile(gate.Profile{Passed: true, Results: []gate.Result{pass}}, false, false, false)
 	})
 	if strings.Contains(out, "failure(s)") {
 		t.Errorf("with no failure and no divergence there is no findings heading:\n%s", out)
@@ -2942,14 +2942,36 @@ func TestFindingsPointToTheGateGuide(t *testing.T) {
 	t.Run("CGPCH-B96: The findings point to the gate's guide", func(t *testing.T) {})
 	block := gate.Result{Gate: "g1", Target: "a.go", Verdict: gate.Fail, Blocking: true, Detail: "broken"}
 	out := captureProfile(t, func() {
-		printProfile(gate.Profile{Results: []gate.Result{block}, Failures: []gate.Result{block}}, false, false)
+		printProfile(gate.Profile{Results: []gate.Result{block}, Failures: []gate.Result{block}}, false, false, false)
 	})
 	if !strings.Contains(out, "→ `anchors guide gates g1` explains a gate") {
 		t.Errorf("the findings point to the gate's guide:\n%s", out)
 	}
 	pass := gate.Result{Gate: "g", Target: "a.go", Verdict: gate.Pass}
-	out = captureProfile(t, func() { printProfile(gate.Profile{Passed: true, Results: []gate.Result{pass}}, false, false) })
+	out = captureProfile(t, func() { printProfile(gate.Profile{Passed: true, Results: []gate.Result{pass}}, false, false, false) })
 	if strings.Contains(out, "anchors guide gates") {
 		t.Errorf("no finding, no line:\n%s", out)
+	}
+}
+
+func TestPrintSkips_byGateAndReason(t *testing.T) {
+	t.Run("CGPCH-B97: --show-skips lists every indeterminate by gate and reason", func(t *testing.T) {})
+	var results []gate.Result
+	for i := 0; i < 50; i++ {
+		results = append(results, gate.Result{Gate: "g", Target: fmt.Sprintf("ok%02d.spec.md", i), Verdict: gate.Pass})
+	}
+	results = append(results,
+		gate.Result{Gate: "testid-consistent", Target: "b.spec.md", Verdict: gate.Skip, Detail: "the unit exposes no handle\nmore"},
+		gate.Result{Gate: "testid-consistent", Target: "a.spec.md", Verdict: gate.Skip, Detail: "the unit exposes no handle"},
+		gate.Result{Gate: "testid-consistent", Target: "c.spec.md", Verdict: gate.Skip},
+	)
+	p := gate.Profile{Results: results, ByGate: map[string]gate.GateSummary{"testid-consistent": {Gate: "testid-consistent", Skip: 3}}, Passed: true}
+	out := captureProfile(t, func() { printProfile(p, false, false, true) })
+	want := "  ~ testid-consistent\n      2 × the unit exposes no handle\n          a.spec.md\n          b.spec.md\n      1 × (no reason given by the gate)\n          c.spec.md\n"
+	if !strings.Contains(out, want) || !strings.Contains(out, "3 indeterminate (~), by gate and reason") {
+		t.Errorf("by gate, by reason, commonest first, every address:\n%s", out)
+	}
+	if out := captureProfile(t, func() { printProfile(p, false, false, false) }); strings.Contains(out, "a.spec.md") {
+		t.Errorf("without the flag a large scan lists no indeterminate:\n%s", out)
 	}
 }

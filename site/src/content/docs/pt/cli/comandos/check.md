@@ -47,6 +47,7 @@ anchors check [flags]
 | `--record-issues` |  | github mode: open/close board issues from a local run too (by default only CI does); manual mode: write the issues to issues/ (by default none is written) |
 | `--root` | `.` | project root |
 | `--show-drift` |  | lists ALL the pending items (⚠) with the address of each one; without the flag, only the table counter |
+| `--show-skips` |  | lists ALL the indeterminate (~) by gate and reason, with the address of each one: what does not apply, told from what could not be confronted |
 | `--skip-rule` |  | waives rules in this run: `id=reason[,id=reason]`. The reason is mandatory |
 | `--skip-slow` |  | skip gates declared `cost: slow` |
 | `--timing` |  | measures how long each gate took, and names the slowest targets — to find what makes a scan expensive |

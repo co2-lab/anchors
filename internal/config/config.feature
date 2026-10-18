@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTC
 #   ref: CNFGO
-#   updated_at: 2026-10-16
+#   updated_at: 2026-10-18
 #   layer: feature
 
 @CNFGO
@@ -509,3 +509,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     When they are read, and the test paths of web/Login.tsx, api/pay.go and web/Login.spec.md are asked for
     Then every example runner compiles with a kind and a quiet time
     And Login's test is web/Login.test.tsx, pay's the override's first, and the spec's takes its layer's extension
+
+  @CNFGO-B75 @unit-level
+  Scenario: A layer's required sections are checked on load
+    Given requires_sections entries with no section, two triggers, an unknown exposes, a layer that does not exist, a flag without @ and a pattern that does not compile
+    When each configuration loads
+    Then each is refused naming its entry, and a well-formed one loads

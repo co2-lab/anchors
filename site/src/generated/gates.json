@@ -20,6 +20,10 @@
         "slug": "docs/gates/spec-complete"
       },
       {
+        "label": "section-required",
+        "slug": "docs/gates/section-required"
+      },
+      {
         "label": "feature-not-empty",
         "slug": "docs/gates/feature-not-empty"
       },

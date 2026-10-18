@@ -66,6 +66,11 @@ A spec is not all alike — it specializes according to what makes the unit vary
   whether it is deprecated (` + "`yes: use NEW_NAME`" + `). It is the contract with whoever deploys:
   ` + "`env-declared`" + ` confronts it with the code both ways — a variable read and not declared, or
   declared and no longer read —, and the project's variables page is compiled from it.
+- A layer may declare the SECTIONS its code calls for (` + "`layers.<layer>.requires_sections`" + `):
+  ` + "`Test IDs`" + ` when the code exposes a handle, the data contract when it depends on a store,
+  whatever the project names. ` + "`section-required`" + ` fails a spec missing a section its code
+  triggers, naming what triggered it. Write the section — when the unit has none of it,
+  the section says so and why.
 
 ## Sections (adopt the ones that apply to the unit)
 

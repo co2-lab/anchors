@@ -154,6 +154,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"region-pair-honored":      checkRegionPairHonored,
 	"evidence-fresh":           checkEvidenceFresh,
 	"testid-consistent":        checkTestIDCoherent,
+	"section-required":         checkSectionRequired,
 	"testid-queried-exists":    checkQueriedTestIDExists,
 	"mock-typed":               checkMockTyped,
 	"mock-stamped":             checkMockStamped,

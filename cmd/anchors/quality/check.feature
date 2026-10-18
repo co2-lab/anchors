@@ -2,7 +2,7 @@
 # @anchors
 #   code: CHFTA
 #   ref: CGPCH
-#   updated_at: 2026-10-15
+#   updated_at: 2026-10-18
 #   layer: feature
 
 @CGPCH
@@ -652,3 +652,10 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a check with a blocking failure of g1, and one with no finding
     When their profiles are printed
     Then the first ends its findings with the line to anchors guide gates g1, and the second has none
+
+  @CGPCH-B97 @unit-level
+  Scenario: --show-skips lists every indeterminate by gate and reason
+    Given a scan of many results, three of them indeterminate: two with the same reason and one with no message
+    When the profile is printed with --show-skips
+    Then the gate is listed with "2 × <reason>" before "1 × (no reason given by the gate)", each with its addresses
+    And without the flag no indeterminate is listed for a scan that large

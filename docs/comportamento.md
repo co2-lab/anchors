@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:659fe062117e008d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a2480ccf5ed8299d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1312,6 +1312,8 @@ teste prova.
 
 - [The gates guide explains the project's gates](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B30`
 
+- [The spec guide explains the sections a layer calls for](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B31`
+
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
 - [A map without governance has an empty board](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B02`
@@ -2470,6 +2472,8 @@ teste prova.
 
 - [The findings point to the gate's guide](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B96`
 
+- [--show-skips lists every indeterminate by gate and reason](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B97`
+
 - [The scenarios of one spec are listed as proven or not](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 
 - [A code another unit owns, cited in prose, is not a declared scenario](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B02`
@@ -3125,6 +3129,8 @@ teste prova.
 - [The code extensions are the code layers'](layers/config.md#cnfgo-b73--the-code-extensions-are-the-code-layers) `CNFGO-B73`
 
 - [The example runners, a unit's piece paths and a layer's extensions](layers/config.md#cnfgo-b74--the-example-runners-a-units-piece-paths-and-a-layers-extensions) `CNFGO-B74`
+
+- [A layer's required sections are checked on load](layers/config.md#cnfgo-b75--a-layers-required-sections-are-checked-on-load) `CNFGO-B75`
 
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
@@ -5543,6 +5549,18 @@ teste prova.
 - [Specifications and test files are not inspected or modified](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X03`
 
 - [Tags are permitted to map across multiple rule letters](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X04`
+
+- [Nothing to confront leaves without a verdict](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B01`
+
+- [A triggered section the spec lacks fails, named once](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B02`
+
+- [A section present satisfies the requirement](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B03`
+
+- [Each trigger reads what the core measures](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B04`
+
+- [A trigger that cannot be measured is pending, not silent](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B05`
+
+- [A code file that cannot be read calls for nothing](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-E01`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B01`
 
