@@ -225,7 +225,7 @@ func renderTests(ctx reportCtx) string {
 		if n.Kind != mapx.KindSpec {
 			continue
 		}
-		declared, _ := codesInFileOfUnit(filepath.Join(root, n.ID), n.Code)
+		declared, _ := specRequirements(filepath.Join(root, n.ID), ctx.cfg)
 		declared = n.WithoutFrozenRules(declared)
 		if len(declared) == 0 {
 			continue

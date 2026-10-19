@@ -563,3 +563,16 @@ func TestRetiredRuleIsATombstone(t *testing.T) {
 		t.Errorf("an old revision naming the retired rule still resolves: %v %s", v, msg)
 	}
 }
+
+func TestSpecRequirements_underTheProjectsChoice(t *testing.T) {
+	t.Run("SFMSP-B19: The requirements are given to a report under the project's data-states choice", func(t *testing.T) {})
+	content := "<!-- @anchors\n  code: ABCDX\n-->\n## ABCDX-B01 — saves\n\n## Data States\n\n| State | When |\n| --- | --- |\n| `DS-saving` | in flight |\n"
+	with := SpecRequirements(content, &config.Config{DataStates: &config.DataStates{Required: true}})
+	without := SpecRequirements(content, &config.Config{})
+	if len(with) <= len(without) || len(without) != 1 || without[0] != "ABCDX-B01" {
+		t.Errorf("the data state counts only when required: with %v, without %v", with, without)
+	}
+	if dataStatesRequired {
+		t.Error("the choice in force is restored")
+	}
+}

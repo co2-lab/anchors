@@ -2,7 +2,7 @@
 # @anchors
 #   code: SFMFS
 #   ref: SFMSP
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @SFMSP
@@ -183,3 +183,9 @@ Feature: SpecFeatureMatch — every requirement the spec defines has at least on
     Given a spec whose revision names a rule now retired with a tombstone line, beside a live rule
     When its requirements, its rules for the code, its rule uses and its revisions are read
     Then only the live rule is a requirement and a rule of the code, the retired one uses nothing, and the revision still resolves
+
+  @SFMSP-B19 @unit-level
+  Scenario: The requirements are given to a report under the project's data-states choice
+    Given a spec defining a rule and a data state, and a project that requires its data states
+    When its requirements are asked for that project, and then for one that does not
+    Then the first gets the rule and the data state, the second only the rule, and the choice in force is restored

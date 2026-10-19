@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CVCMC
-  updated_at: 2026-10-11
+  updated_at: 2026-10-19
   layer: comando
 -->
 # CoverageCommand — answers the confidence questions from the ingested signals: by scenario, by line, of the diff and the delta
@@ -43,8 +43,8 @@ Against the previous ingestion: did any file lose line coverage? A drop fails th
 | Effect | Description |
 | --- | --- |
 | `CVCMC-B01` | For one spec, lists each scenario code it declares, in order, as proven by a green test or not, then how many are proven out of how many and which are missing. |
-| `CVCMC-B02` | A code another unit owns, cited in prose, is not a declared scenario of the spec. |
-| `CVCMC-B03` | A spec with no unit code keeps every code it declares. |
+| `CVCMC-B02` | A code another unit owns, cited in prose, is not a declared scenario of the spec: the requirements are the ones the spec DEFINES — a rule's heading, item or first table cell (`gate.SpecRequirements`). |
+| `CVCMC-B03` | The requirements counted, per spec and in the panorama and the report, are the ones `scenario-coverage` reads: a code only cited — in prose, or in a Test IDs table — is none, and a rule marked `@no-scenario` asks no scenario. (`specRequirements`) |
 | `CVCMC-B04` | When the spec changed since its signal was ingested, the proven count is flagged as a stale signal. |
 | `CVCMC-B05` | A spec that declares no scenario code is reported as having nothing to cover. |
 | `CVCMC-B06` | The panorama prints three sections — specs with an unproven scenario, code files below the line threshold, code files below the threshold by mutation score with their survivors — marking stale signals, and closes with a summary of the counts. |

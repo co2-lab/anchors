@@ -14,6 +14,7 @@ import (
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gate"
 	"github.com/co2-lab/anchors/internal/gitmeta"
 
 	"github.com/co2-lab/anchors/internal/mapx"
@@ -75,10 +76,15 @@ Three complementary questions:
 			if delta {
 				return coverageDelta(g)
 			}
-			if len(args) == 1 {
-				return coverageForSpec(g, absRoot, common.RelTo(absRoot, args[0]))
+			// The requirements are read as the gates read them, under the project's choices.
+			cfg, cerr := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			if cerr != nil {
+				return fmt.Errorf("load %s: %w", config.DefaultFile, cerr)
 			}
-			return coveragePanorama(g, absRoot, threshold)
+			if len(args) == 1 {
+				return coverageForSpec(g, absRoot, common.RelTo(absRoot, args[0]), cfg)
+			}
+			return coveragePanorama(g, absRoot, threshold, cfg)
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
@@ -93,7 +99,7 @@ Three complementary questions:
 
 // coverageForSpec: lê os códigos de cenário declarados na spec (do arquivo) e cruza
 // com os provados (o Signal do próprio nó da spec, gravado na ingestão).
-func coverageForSpec(g *mapx.Graph, root, specID string) error {
+func coverageForSpec(g *mapx.Graph, root, specID string, cfg *config.Config) error {
 	var node *mapx.Node
 	for i := range g.Nodes {
 		if g.Nodes[i].ID == specID {
@@ -104,7 +110,7 @@ func coverageForSpec(g *mapx.Graph, root, specID string) error {
 	if node == nil {
 		return fmt.Errorf("spec %q is not in the map", specID)
 	}
-	declared, err := codesInFileOfUnit(filepath.Join(root, specID), node.Code)
+	declared, err := specRequirements(filepath.Join(root, specID), cfg)
 	if err != nil {
 		return fmt.Errorf("read the spec: %w", err)
 	}
@@ -141,7 +147,7 @@ func coverageForSpec(g *mapx.Graph, root, specID string) error {
 	return nil
 }
 
-func coveragePanorama(g *mapx.Graph, root string, threshold float64) error {
+func coveragePanorama(g *mapx.Graph, root string, threshold float64, cfg *config.Config) error {
 	// cenários sem prova: specs cujos códigos declarados não estão todos provados
 	var specGaps, lineGaps, stale int
 	fmt.Println("== coverage by scenario (specs with a requirement lacking a green test) ==")
@@ -151,7 +157,7 @@ func coveragePanorama(g *mapx.Graph, root string, threshold float64) error {
 		if n.Kind != mapx.KindSpec {
 			continue
 		}
-		declared, _ := codesInFileOfUnit(filepath.Join(root, n.ID), n.Code)
+		declared, _ := specRequirements(filepath.Join(root, n.ID), cfg)
 		declared = n.WithoutFrozenRules(declared)
 		if len(declared) == 0 {
 			continue
@@ -442,47 +448,17 @@ func matchCoverage(diffFile string, covByFile map[string]testsig.FileCoverage) (
 	return testsig.FileCoverage{}, false
 }
 
-// codesInFile lê um arquivo e extrai os códigos de cenário que ele declara.
-//
-// Sem o código da unidade não há o que filtrar — prefira `codesInFileOfUnit`.
-func codesInFile(path string) ([]string, error) {
-	return codesInFileOfUnit(path, "")
-}
-
-// codesInFileOfUnit extrai os códigos que o arquivo DECLARA, descartando os que
-// ele apenas CITA.
-//
-// Uma spec cita regras vizinhas em prosa — é o estilo do projeto, e ler "o efetivo
-// (`QSCOP-B02`), não o pedido" é o que explica a decisão. O erro era tratar essa
-// citação como declaração.
-//
-// A causa é de endereço: `CodesInCase` foi escrita para o NOME de um caso de teste
-// (`"SPCRX-V01: ..."`), onde todo código presente É o código do caso. Aplicada ao
-// arquivo INTEIRO, ela colhe também o que a prosa menciona.
-//
-// MEDIDO no app de referência: 37 dos 55 nós com `proven_codes` carregavam código de outra
-// unidade. O `InfraList.spec.md` cita `QSCOP-B02` uma vez, em prosa; nenhum teste
-// do InfraList o menciona; e o mapa afirmava que o InfraList o provou. Isso é pior
-// que uma lacuna — a lacuna aparece no relatório, e uma prova falsa não.
-//
-// `unit` vazia passa reto: cortar tudo custaria ao nó os próprios cenários.
-func codesInFileOfUnit(path, unit string) ([]string, error) {
+// specRequirements are the requirements the spec defines, as scenario-coverage reads them
+// (gate.SpecRequirements): a code a Test IDs table or a paragraph only cites is no
+// requirement, and a line marked `@no-scenario` asks no scenario. Read as every code of the
+// unit in the text, the report counted citations as scenarios and ignored the waivers, and
+// showed gaps the gate did not (reported from MIF: 11/16 on a spec the gate passed).
+func specRequirements(path string, cfg *config.Config) ([]string, error) {
 	data, err := readFileString(path)
 	if err != nil {
 		return nil, err
 	}
-	seen := map[string]bool{}
-	var out []string
-	for _, c := range testsig.CodesInCase(data) {
-		if unit != "" && !strings.HasPrefix(c, unit+"-") {
-			continue
-		}
-		if !seen[c] {
-			seen[c] = true
-			out = append(out, c)
-		}
-	}
-	return out, nil
+	return gate.SpecRequirements(data, cfg), nil
 }
 
 // provenRules are the rules of the spec its signal proves: a rule is proven when each

@@ -44,7 +44,7 @@ The screen uses the effective one (` + "`QSCOP-B02`" + `), not the requested one
 		t.Fatal(err)
 	}
 
-	codes, err := codesInFileOfUnit(spec, "INLSN")
+	codes, err := specRequirements(spec, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,21 +70,26 @@ The screen uses the effective one (` + "`QSCOP-B02`" + `), not the requested one
 	}
 }
 
-// Without the unit's code there is nothing to filter by, and cutting everything would be
-// worse than not filtering: the node would lose its own scenarios. It passes through.
-func TestWithoutUnitCodeNothingIsFiltered(t *testing.T) {
-	t.Run("CVCMC-B03: A spec with no unit code keeps every code it declares", func(t *testing.T) {})
+// THE REPORT COUNTS WHAT THE GATE COUNTS. A code a Test IDs table cites is a handle of the
+// unit, not a requirement, and a rule marked `@no-scenario` asks no scenario. Read as
+// every code of the unit in the text, `anchors coverage` showed 11/16 on a spec
+// scenario-coverage passed (reported from MIF).
+func TestCoverageCountsWhatTheGateCounts(t *testing.T) {
+	t.Run("CVCMC-B03: The requirements counted are the ones scenario-coverage reads", func(t *testing.T) {})
 	dir := t.TempDir()
-	spec := filepath.Join(dir, "x.spec.md")
-	if err := os.WriteFile(spec, []byte("## ABCDE-B01\n## FGHIJ-B02\n"), 0o644); err != nil {
+	spec := filepath.Join(dir, "NewPattern.spec.md")
+	content := "# NewPattern\n\n## NPATN-B01 — saves the pattern\n\n" +
+		"## NPATN-M01 — shows the toast @no-scenario: a message of the platform\n\n" +
+		"## Test IDs\n\n| Handle | Covers |\n| --- | --- |\n| `:npatn-save` | `NPATN-DS-saving` |\n"
+	if err := os.WriteFile(spec, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	codes, err := codesInFileOfUnit(spec, "")
+	codes, err := specRequirements(spec, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(codes) != 2 {
-		t.Errorf("without the unit code the filter should pass through, got %v", codes)
+	if strings.Join(codes, ",") != "NPATN-B01" {
+		t.Errorf("only the defined requirement, not the waived one nor the cited one: %v", codes)
 	}
 }
 

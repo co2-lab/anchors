@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:be333df52e047471 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:7c72504633f76095 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2723,9 +2723,9 @@ abra a página dela em `camadas/`.
 
 - [CVCMC-B01 — For one spec, lists each scenario code it declares, in order, as proven by a green test or not, then how many are proven out of how many and which are missing.](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
 
-- [CVCMC-B02 — A code another unit owns, cited in prose, is not a declared scenario of the spec.](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
+- [CVCMC-B02 — A code another unit owns, cited in prose, is not a declared scenario of the spec: the requirements are the ones the spec DEFINES — a rule's heading, item or first table cell (`gate.SpecRequirements`).](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
 
-- [CVCMC-B03 — A spec with no unit code keeps every code it declares.](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
+- [CVCMC-B03 — The requirements counted, per spec and in the panorama and the report, are the ones `scenario-coverage` reads: a code only cited — in prose, or in a Test IDs table — is none, and a rule marked `@no-scenario` asks no scenario. (`specRequirements`)](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
 
 - [CVCMC-B04 — When the spec changed since its signal was ingested, the proven count is flagged as a stale signal.](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
 
@@ -6212,6 +6212,8 @@ abra a página dela em `camadas/`.
 - [SFMSP-B17 — With `data_states.required`, a data state the spec defines — `DS-<field>-<variant>`, bare or with the unit's code, opening a table row, a list item or a heading — is a requirement of the unit, for every gate that reads the spec's requirements (`spec-feature-match`, `scenario-coverage`), with the same no-scenario waiver as a rule; another unit's data state is a citation. Off, the data-state tables only document.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 
 - [SFMSP-B18 — A rule whose line carries the retired marker (`@retired` with a colon, the revision and the reason) is a tombstone: it stays defined, so the old revisions that name it still resolve, and no gate asks anything of it — it is no requirement (`spec-feature-match`, `scenario-coverage`), no rule of the code (`rule-implemented`), uses nothing (`rule-uses-*`) and is no failure to handle. A rule's code is read whole: `CODE-R0001`, a revision, is not the rule `CODE-R00`. (`retiredLine`)](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
+
+- [SFMSP-B19 — The requirements a spec defines are given to whoever reports its coverage under the project's data-states choice, and the choice in force before is restored — the same reading this gate and `scenario-coverage` make. (`SpecRequirements`)](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 
 - [SFMSP-I01 — Every waiver requires a written REASON — both the per-requirement marker and the whole-spec one. A bare marker is a switch with no accounting, and silence without a why is what the gate exists to end.](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SFMSP
-  updated_at: 2026-10-08
+  updated_at: 2026-10-19
   layer: gate
 -->
 # SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario
@@ -65,6 +65,7 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 | `SFMSP-B16` | A code defined in the open-decisions section (`## Open Decisions`, `## Decisões em Aberto`…) is no requirement — for this gate and for every one that reads the spec's requirements (`scenario-coverage`, `reverse-match`, `rule-uses`): an open question gets its scenario once it becomes a rule. |
 | `SFMSP-B17` | With `data_states.required`, a data state the spec defines — `DS-<field>-<variant>`, bare or with the unit's code, opening a table row, a list item or a heading — is a requirement of the unit, for every gate that reads the spec's requirements (`spec-feature-match`, `scenario-coverage`), with the same no-scenario waiver as a rule; another unit's data state is a citation. Off, the data-state tables only document. |
 | `SFMSP-B18` | A rule whose line carries the retired marker (`@retired` with a colon, the revision and the reason) is a tombstone: it stays defined, so the old revisions that name it still resolve, and no gate asks anything of it — it is no requirement (`spec-feature-match`, `scenario-coverage`), no rule of the code (`rule-implemented`), uses nothing (`rule-uses-*`) and is no failure to handle. A rule's code is read whole: `CODE-R0001`, a revision, is not the rule `CODE-R00`. (`retiredLine`) |
+| `SFMSP-B19` | The requirements a spec defines are given to whoever reports its coverage under the project's data-states choice, and the choice in force before is restored — the same reading this gate and `scenario-coverage` make. (`SpecRequirements`) |
 
 ## Invariants
 

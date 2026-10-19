@@ -2,7 +2,7 @@
 # @anchors
 #   code: CVFTC
 #   ref: CVCMC
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @CVCMC
@@ -18,14 +18,14 @@ Feature: CoverageCommand — answers the confidence questions from the ingested 
   @CVCMC-B02 @unit-level
   Scenario: A code another unit owns, cited in prose, is not a declared scenario
     Given the InfraList spec declaring INLSN-B01 and INLSN-B02 and citing QSCOP-B02 in prose
-    When its declared codes are read for the unit INLSN
+    When its requirements are read
     Then they are INLSN-B01 and INLSN-B02 only
 
   @CVCMC-B03 @unit-level
-  Scenario: A spec with no unit code keeps every code it declares
-    Given a spec file holding ABCDE-B01 and FGHIJ-B02
-    When its declared codes are read with no unit code
-    Then both codes are kept
+  Scenario: The requirements counted are the ones scenario-coverage reads
+    Given a spec defining NPATN-B01, defining NPATN-M01 marked @no-scenario, and citing NPATN-DS-saving in its Test IDs table
+    When its requirements are read for the coverage
+    Then only the defined rule is counted, not the waived one nor the cited one
 
   @CVCMC-B04 @unit-level
   Scenario: A spec changed since ingestion flags its signal as stale

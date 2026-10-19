@@ -133,6 +133,18 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 // isso. Define quem coloca o código no INÍCIO de uma linha, de um item de lista, de um
 // título de seção, ou na PRIMEIRA célula de uma tabela — as formas em que uma régua
 // enuncia um requisito.
+// SpecRequirements are the requirements a spec defines, read as scenario-coverage and
+// spec-feature-match read them, under the project's data-states choice: the codes a rule
+// line, heading or first table cell defines, an open decision, an alias, a frozen rule,
+// a retired one and a line marked `@no-scenario` left out. Whoever reports a spec's
+// coverage asks this, so the report and the gate count the same requirements.
+func SpecRequirements(content string, cfg *config.Config) []string {
+	prev := dataStatesRequired
+	dataStatesRequired = cfg.DataStatesRequired()
+	defer func() { dataStatesRequired = prev }()
+	return definedRequirements(content)
+}
+
 func definedRequirements(content string) []string {
 	vistos := map[string]bool{}
 	var out []string

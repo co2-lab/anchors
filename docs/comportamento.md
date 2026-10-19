@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a2480ccf5ed8299d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e1cfd46391973c61 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2478,7 +2478,7 @@ teste prova.
 
 - [A code another unit owns, cited in prose, is not a declared scenario](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B02`
 
-- [A spec with no unit code keeps every code it declares](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B03`
+- [The requirements counted are the ones scenario-coverage reads](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B03`
 
 - [A spec changed since ingestion flags its signal as stale](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B04`
 
@@ -5641,6 +5641,8 @@ teste prova.
 - [With data_states.required, a data state the spec defines is a requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B17`
 
 - [A rule marked @retired is no requirement, no rule of the code, and uses nothing](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B18`
+
+- [The requirements are given to a report under the project's data-states choice](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B19`
 
 - [What has nothing to confront leaves both gates without a verdict](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B01`
 
