@@ -415,3 +415,18 @@ func TestUsedByFlag_insideTheComment(t *testing.T) {
 		t.Errorf("an unlisted symbol is not named: %q", got)
 	}
 }
+
+func TestDepChain_flagKindMatchesTheImport(t *testing.T) {
+	t.Run("DCGDP-B16: A flag whose kind contradicts its import is named", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	n := mapx.Node{ID: "src/ui/Card.tsx", Kind: mapx.KindCode, FileCode: "CARDS"}
+	g.Nodes = append(g.Nodes, n)
+	content := "import { type Goal } from './types' // @dep: TYPSU\n" +
+		"import { PALETTE } from '../theme/tokens' // @dep[type]: TOKNS\n" +
+		"import { type Goal as G, type Goal as H } from './types' // @dep[type]: TYPSU\n"
+	v, msg := checkDepHonored(content, n, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "line 1: `@dep: TYPSU` flags an import of types only") ||
+		!strings.Contains(msg, "line 2: `@dep[type]: TOKNS` flags an import that runs") || strings.Contains(msg, "line 3") {
+		t.Errorf("each contradiction named, the right one left alone: %v %s", v, msg)
+	}
+}

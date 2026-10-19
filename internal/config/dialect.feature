@@ -243,3 +243,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given a dialect declaring "handler" and "index" as generic, and one declaring none
     When "Handler", "INDEX" and "metadata" are checked
     Then the first two are generic for the first dialect and none for the second, and the go example carries the usual names
+
+  @DLCTI-B36 @unit-level
+  Scenario: The ts example reads a types-only import written either way
+    Given "import type { A } from 'x'", "import { type A, type B as C } from 'x'" and "import { type A, B } from 'x'"
+    When the ts example's type_import_pattern reads each
+    Then the first two are types only and the third is not

@@ -311,6 +311,8 @@
   "gate.dep_chain.undeclared": "%d import(s) of a governed file with no `@dep:` flag: %s. Every import is a dependency, and the map knows only the flagged ones: write `@dep: <code>` on the import line (`anchors check --fix` writes it), or `@no-dep: <reason>`.",
   "gate.dep_chain.flag_without_import": "line %d flags `@dep: %s` and imports nothing — move the flag to its import line, or remove it",
   "gate.dep_chain.flag_unused_module": "line %d flags `@dep: %s` and the file uses no module of that code — remove the flag, or name the module that is",
+  "gate.dep_chain.flag_should_be_type": "line %d: `@dep: %s` flags an import of types only — write `@dep[type]: %s`: nothing of it runs, and the map counts it as a value dependency",
+  "gate.dep_chain.flag_should_be_value": "line %d: `@dep[type]: %s` flags an import that runs — write `@dep: %s`: the map counts it as types only",
   "gate.dep_chain.flag_wrong_code": "line %d flags `@dep: %s`, and `%s` resolves to %s — the import changed and the flag stayed (`anchors check --fix` corrects it)",
   "gate.dep_chain.used_by_missing": "`%s` is imported by %s and carries no `@used-by:` (`anchors check --fix` writes it)",
   "gate.dep_chain.used_by_wrong": "`%s` says `@used-by: %s`, and who imports it is %s",

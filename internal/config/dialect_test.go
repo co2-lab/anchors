@@ -897,3 +897,18 @@ func TestDialect_genericBasenames(t *testing.T) {
 		t.Errorf("the example carries the usual names: %v", ex.GenericBasenames)
 	}
 }
+
+func TestFamilyChain_typeImportEitherWay(t *testing.T) {
+	t.Run("DLCTI-B36: The ts example reads a types-only import written either way", func(t *testing.T) {})
+	re := regexp.MustCompile(FamilyChain("ts").TypeImportPattern)
+	for src, want := range map[string]bool{
+		"import type { A } from 'x'":              true,
+		"import { type A, type B as C } from 'x'": true,
+		"import { type A, B } from 'x'":           false,
+		"import { A } from 'x'":                   false,
+	} {
+		if got := re.MatchString(src); got != want {
+			t.Errorf("%q: want %v, got %v", src, want, got)
+		}
+	}
+}

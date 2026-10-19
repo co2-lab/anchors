@@ -841,7 +841,8 @@ func FamilyChain(family string) *Dialect {
 				// declares A and C.
 				{Within: `(?m)^export\s+(?:type\s+)?\{(?P<within>[^}]*)\}`, Each: `(?P<name>` + ident + `)\s*(?:,|$)`},
 			},
-			TypeImportPattern: `^\s*(?:import|export)\s+type\b`,
+			// `import type {…}`, or braces whose every name is a type: `import { type A, type B }`.
+			TypeImportPattern: `^\s*(?:import|export)\s+type\b|^\s*(?:import|export)\s*\{(?:\s*type\s+[\p{L}_$][\p{L}\p{N}_$]*(?:\s+as\s+[\p{L}_$][\p{L}\p{N}_$]*)?\s*,?)+\s*\}`,
 			ImportResolve:     &ImportResolve{Extensions: []string{".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx", "/index.js"}},
 		}
 	case "go":

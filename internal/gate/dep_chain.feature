@@ -97,3 +97,8 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     When the used-by flag is written
     Then the symbol stands before each closer, and an unlisted symbol is not named
 
+  @DCGDP-B16 @unit-level
+  Scenario: A flag whose kind contradicts its import is named
+    Given an import whose braces hold only types flagged `@dep:`, and a plain import flagged `@dep[type]:`
+    When dep-honored confronts the file
+    Then the first is named to be `@dep[type]:` and the second to be `@dep:`

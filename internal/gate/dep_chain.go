@@ -375,6 +375,17 @@ func checkDepHonored(content string, n mapx.Node, root string, g *mapx.Graph, cf
 				want = "—"
 			}
 			wrong = append(wrong, i18n.T("gate.dep_chain.flag_wrong_code", f.Line, f.Code, imp.Path, want))
+			continue
+		}
+		// The flag's kind says what the import brings, and what reads the map trusts it
+		// (`depends_on_layer` counts value edges): an import of types only flagged as a value
+		// one, or a statement that plainly runs flagged as types, says the opposite of the
+		// code — the same mismatch the fixer rewrites, named instead of left silent.
+		switch {
+		case imp.TypeOnly && f.Kind != scan.TypeDepKind:
+			wrong = append(wrong, i18n.T("gate.dep_chain.flag_should_be_type", f.Line, f.Code, f.Code))
+		case !imp.TypeOnly && f.Kind == scan.TypeDepKind && imp.Runs:
+			wrong = append(wrong, i18n.T("gate.dep_chain.flag_should_be_value", f.Line, f.Code, f.Code))
 		}
 	}
 	if len(wrong) == 0 {

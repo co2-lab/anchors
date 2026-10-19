@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:03da732ff3443214 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:73925d3f389ecfaa — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3226,6 +3226,8 @@ teste prova.
 
 - [The generic file names are the project's](layers/config.md#dlcti-b35--the-generic-file-names-are-the-projects) `DLCTI-B35`
 
+- [The ts example reads a types-only import written either way](layers/config.md#dlcti-b36--the-ts-example-reads-a-types-only-import-written-either-way) `DLCTI-B36`
+
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
 - [A trigger naming a unit code charges that unit and not its neighbours in the same layer](layers/config.md#dcrqa-b02--a-trigger-naming-a-unit-code-charges-that-unit-and-not-its-neighbours-in-the-same-layer) `DCRQA-B02`
@@ -3597,6 +3599,8 @@ teste prova.
 - [An import path divided by another separator resolves by it](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B14`
 
 - [The symbol of a listed used-by flag is written inside the comment](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B15`
+
+- [A flag whose kind contradicts its import is named](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B16`
 
 - [A spec still carrying a Dependencies table diverges, pointing at the migration](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 
