@@ -61,7 +61,10 @@ Each change takes the file's lock, so agents working at once lose nothing.`,
 		if err != nil {
 			return "", "", err
 		}
-		cfg, _ := config.Load(filepath.Join(abs, config.DefaultFile))
+		cfg, err := common.LoadConfig(abs)
+		if err != nil {
+			return "", "", err
+		}
 		return abs, cfg.ProgressUnit(), nil
 	}
 	change := func(c *cobra.Command, fn func(*progress.File) (string, error)) error {

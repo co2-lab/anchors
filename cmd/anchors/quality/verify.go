@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
@@ -66,7 +65,10 @@ README-only commit does not trigger the monorepo's typecheck.`,
 			// --staged`) and the gate sees the right date. On unless `touch.pre_commit:
 			// false`. A failure here warns and does not block: the gate still does.
 			if absRoot, err := config.AbsRoot(root); err == nil {
-				cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+				cfg, cerr := common.LoadConfig(absRoot)
+				if cerr != nil {
+					return cerr
+				}
 				var bumped []touchDecision
 				if preCommitTouches(staged, phase, cfg) {
 					var skipped map[touchSkip][]string

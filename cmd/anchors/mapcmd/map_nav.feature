@@ -18,3 +18,9 @@ Feature: MapNav — the app's navigation, screen by screen
     Given the same navigation
     When the detail is named, then a name nobody owns
     Then the detail shows the home as origin and the edit and home as destinations, and the other name is refused
+
+  @MNCMP-E02 @unit-level
+  Scenario: An anchors.yaml that does not load fails the command
+    Given a map, and an anchors.yaml with a field this binary does not know
+    When map nav runs
+    Then it fails naming the load error

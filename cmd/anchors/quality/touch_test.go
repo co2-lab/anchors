@@ -466,3 +466,20 @@ func TestTouch_carriesTheEvidenceInTheMap(t *testing.T) {
 		t.Errorf("the test's closure follows the date, so its evidence stays fresh: %s, want %s", c, after)
 	}
 }
+
+func TestTouch_unloadableConfigFails(t *testing.T) {
+	t.Run("HDTHD-E03: An anchors.yaml that does not load fails touch", func(t *testing.T) {})
+	root := touchRepo(t)
+	touchWrite(t, root, "a.ts", touchHeader+"export const x = 2\n")
+	touchWrite(t, root, "anchors.yaml", "version: 2\nlayers: {}\ndialect:\n  not_a_field: x\n"+testkit.CommentsYAML)
+	cmd := newTouchCmd()
+	cmd.SetArgs([]string{"--root", root, "--date", "2026-09-25"})
+	var err error
+	captureStdout(t, func() { err = cmd.Execute() })
+	if err == nil || !strings.Contains(err.Error(), "not_a_field") {
+		t.Errorf("the load error, not a silent run: %v", err)
+	}
+	if b, _ := os.ReadFile(filepath.Join(root, "a.ts")); !strings.Contains(string(b), "updated_at: 2026-09-01") {
+		t.Errorf("nothing is dated:\n%s", b)
+	}
+}

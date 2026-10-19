@@ -5,10 +5,13 @@
 package common
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/spf13/cobra"
 )
@@ -81,4 +84,17 @@ func TakesFiles(cmd *cobra.Command) *cobra.Command {
 	}
 	cmd.Annotations[FilesAnnotation] = "true"
 	return cmd
+}
+
+// LoadConfig reads the project's anchors.yaml at root. A project with none answers nil and no
+// error — some commands run before one exists. One that exists and does not load answers its
+// error: read as absent, a configuration this binary cannot read had `anchors touch` say a
+// file carried no header and bump nothing, with exit 0 (reported from MIF: 16 headers left
+// with their old date in a chain).
+func LoadConfig(root string) (*config.Config, error) {
+	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, nil
+	}
+	return cfg, err
 }

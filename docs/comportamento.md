@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:73925d3f389ecfaa — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f3c0ccf5dbdd55d1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -565,6 +565,8 @@ teste prova.
 - [A list of files is read the same way by every command](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is) `CMCLC-B08`
 
 - [An exit code is an error carrying the code](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is) `CMCLC-B09`
+
+- [A configuration that does not load is an error, an absent one is not](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is) `CMCLC-B10`
 
 - [A value passed under the old name reaches the current flag](layers/comando.md#flalf--flagaliases--a-renamed-command-flag-keeps-answering-to-its-old-name) `FLALF-B01`
 
@@ -1613,6 +1615,8 @@ teste prova.
 - [The navigation is printed screen by screen, each with where it leads, sorted](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen) `MNCMP-B01`
 
 - [One screen shows where it comes from and where it leads; a name that is no screen is refused](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen) `MNCMP-B02`
+
+- [An anchors.yaml that does not load fails the command](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen) `MNCMP-E02`
 
 - [A spec edited after the map build is named as stale](layers/comando.md#mpstm--mapstaleness--names-the-files-of-the-map-whose-content-changed-after-the-map-was-built) `MPSTM-B01`
 
@@ -2885,6 +2889,8 @@ teste prova.
 - [Every named file gets a verdict](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B15`
 
 - [A touch run on its own carries the evidence in the map](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B16`
+
+- [An anchors.yaml that does not load fails touch](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-E03`
 
 - [The staged scope is the added, copied, modified and renamed files of the index](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B01`
 

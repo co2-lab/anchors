@@ -150,10 +150,14 @@ hand. With --dry-run it only lists.`,
 // stamped against its previous version — with how the stamped block changed — and their
 // stamps updated. The list is the point: it is the work the change created.
 func refreshStamps(root string, g *mapx.Graph, files []string, dryRun bool) error {
+	cfg, err := common.LoadConfig(root)
+	if err != nil {
+		return err
+	}
 	total := 0
 	for _, f := range files {
 		rel := common.RelTo(root, f)
-		found, err := gate.RefreshStamps(g, root, rel, !dryRun, stampCfg(root))
+		found, err := gate.RefreshStamps(g, root, rel, !dryRun, cfg)
 		if err != nil {
 			return err
 		}
@@ -181,8 +185,8 @@ func refreshStamps(root string, g *mapx.Graph, files []string, dryRun bool) erro
 				continue
 			}
 			fmt.Printf("  %s:%d  `%s`  (%s → %s)\n", r.Test, r.Line, r.Anchor, r.Old, r.New)
-			velho, okV := gate.StampSnippet(string(antigo), r.Anchor, r.Count, stampCfg(root).CommentsFor(rel))
-			atual, okA := gate.StampSnippet(string(novo), r.Anchor, r.Count, stampCfg(root).CommentsFor(rel))
+			velho, okV := gate.StampSnippet(string(antigo), r.Anchor, r.Count, cfg.CommentsFor(rel))
+			atual, okA := gate.StampSnippet(string(novo), r.Anchor, r.Count, cfg.CommentsFor(rel))
 			if okV && okA {
 				for _, l := range blockDiff(velho, atual) {
 					fmt.Printf("      %s\n", l)
@@ -233,10 +237,4 @@ func blockDiff(velho, atual string) []string {
 		out = append(out, "+ "+l)
 	}
 	return out
-}
-
-// stampCfg is the project's configuration, for the comments the stamps are read without.
-func stampCfg(root string) *config.Config {
-	cfg, _ := config.Load(filepath.Join(root, config.DefaultFile))
-	return cfg
 }

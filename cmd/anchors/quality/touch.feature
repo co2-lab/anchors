@@ -2,7 +2,7 @@
 # @anchors
 #   code: TCFTT
 #   ref: HDTHD
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @HDTHD
@@ -130,3 +130,9 @@ Feature: HeaderDateTouch — bumps the header date of the files that changed, an
     Given a changed file whose test's closure holds the file's current revision in the map
     When anchors touch dates it
     Then the file's revision and the test's closure in the map follow the new content
+
+  @HDTHD-E03 @unit-level
+  Scenario: An anchors.yaml that does not load fails touch
+    Given a changed file with a header, and an anchors.yaml holding a field this binary does not know
+    When touch runs
+    Then it fails naming the load error, and the file keeps its date

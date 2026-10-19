@@ -157,3 +157,24 @@ func TestExitCode(t *testing.T) {
 		t.Errorf("got %v %+v", err, ec)
 	}
 }
+
+func TestLoadConfig_absentOrBroken(t *testing.T) {
+	t.Run("CMCLC-B10: A configuration that does not load is an error, an absent one is not", func(t *testing.T) {})
+	if cfg, err := LoadConfig(t.TempDir()); cfg != nil || err != nil {
+		t.Errorf("absent: nil, nil — got %v %v", cfg, err)
+	}
+	ok := t.TempDir()
+	if err := os.WriteFile(filepath.Join(ok, "anchors.yaml"), []byte("version: 8\nlayers: {}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if cfg, err := LoadConfig(ok); cfg == nil || err != nil {
+		t.Errorf("valid: loads — got %v %v", cfg, err)
+	}
+	bad := t.TempDir()
+	if err := os.WriteFile(filepath.Join(bad, "anchors.yaml"), []byte("version: 8\nnot_a_field: x\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := LoadConfig(bad); err == nil || !strings.Contains(err.Error(), "not_a_field") {
+		t.Errorf("broken: its error — got %v", err)
+	}
+}

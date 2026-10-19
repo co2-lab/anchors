@@ -103,7 +103,10 @@ After this, the watcher queues the review task.`,
 			// que não se aceita é registrar entrega de unidade que não existe em peça
 			// nenhuma — aí não há trabalho, e o `deliver` ainda mandaria revisá-lo.
 			relUnit := common.RelTo(absRoot, unit)
-			pcfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			pcfg, cerr := common.LoadConfig(absRoot)
+			if cerr != nil {
+				return cerr
+			}
 			if peca, ok := existingPiece(absRoot, relUnit, pcfg); ok {
 				// The unit recorded is still `relUnit` — the old wording ("recording the
 				// unit by <piece>") said the opposite of what the record then held.
@@ -144,7 +147,10 @@ After this, the watcher queues the review task.`,
 			// revisado, e as issues sem a informação. O revisor não sabia que o arquivo
 			// existia; o watcher, que o veria, não estava rodando — porque naquele modo
 			// ele não é o mecanismo. É a mesma regra que o `next` aprendeu na v0.1.55.
-			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			cfg, cerr := common.LoadConfig(absRoot)
+			if cerr != nil {
+				return cerr
+			}
 			// A VENDORED pipeline has no card here: its code, its spec and its board live
 			// upstream, in the Anchors project that seeded it. Demanding the unit's code
 			// refused every delivery touching one — measured in the reference app, where the map

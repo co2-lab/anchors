@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/spf13/cobra"
@@ -147,7 +148,10 @@ func loadReportCtx(root, mapPath string) (reportCtx, error) {
 	if err != nil {
 		return reportCtx{}, fmt.Errorf("load map: %w (run `anchors map build`)", err)
 	}
-	cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile)) // pode faltar
+	cfg, err := common.LoadConfig(absRoot) // may be absent, never unreadable
+	if err != nil {
+		return reportCtx{}, err
+	}
 	// A frozen part is kept as it is by decision: its stale proofs, survived mutants and
 	// uncovered lines are no news (DESIGN-frozen-units.md).
 	g = g.Unfrozen()

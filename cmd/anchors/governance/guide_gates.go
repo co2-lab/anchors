@@ -7,10 +7,10 @@ package governance
 import (
 	"fmt"
 	"io"
-	"path/filepath"
 	"sort"
 	"strings"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/initx"
 	"github.com/spf13/cobra"
@@ -41,7 +41,10 @@ the question an AI answers for a judgment gate, and the ways out of a failure.`,
 			if err != nil {
 				return err
 			}
-			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			cfg, cerr := common.LoadConfig(absRoot)
+			if cerr != nil {
+				return cerr
+			}
 			if len(args) == 1 {
 				return explainGate(cmd.OutOrStdout(), cfg, args[0])
 			}

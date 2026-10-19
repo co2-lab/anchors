@@ -104,7 +104,10 @@ the identity by hand.`,
 			// provável é que o caminho esteja errado, não que a spec deva nascer depois.
 			id := strings.ToUpper(codeStr)
 			if id == "" && kind != "spec" {
-				rcfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+				rcfg, cerr := common.LoadConfig(absRoot)
+				if cerr != nil {
+					return cerr
+				}
 				if ref, origem := refDaSpecIrma(absRoot, out, name, rcfg); ref != "" {
 					id = ref
 					fmt.Printf("identity: `%s` (read from %s)\n", id, filepath.ToSlash(origem))
@@ -155,7 +158,10 @@ the identity by hand.`,
 			// A config traz o DIALETO (para o esqueleto de teste nascer na linguagem certa)
 			// e as camadas (para recusar o artefato em camada declarativa). Sem config, o
 			// `new` continua funcionando com os defaults — é comando de bootstrap.
-			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			cfg, cerr := common.LoadConfig(absRoot)
+			if cerr != nil {
+				return cerr
+			}
 			content := renderArtifact(tpl, name, id, outPath, absRoot, sections, ordem, cfg)
 			// A file that refs its unit is born with a code of its own too: since format 7
 			// every governed file is addressable by one.

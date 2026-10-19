@@ -31,3 +31,4 @@ with where it leads, or one screen with where it comes from and where it leads.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `MNCMP-E01` | REF[MNCMP-B02]: a name that is no screen is refused, naming it | — | — |
+| `MNCMP-E02` | The project's anchors.yaml does not load | the command fails with the load error | read as absent, it would list the edges with no navigation pattern, and say the app has none |

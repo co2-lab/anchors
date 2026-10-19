@@ -2,7 +2,7 @@
 # @anchors
 #   code: CCFCM
 #   ref: CMCLC
-#   updated_at: 2026-10-09
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @CMCLC
@@ -73,3 +73,9 @@ Feature: CommonCLI — the contract every command shares: how a path becomes a n
     Given the exit code 4
     When it is read as an error
     Then it says exit status 4 and keeps its code
+
+  @CMCLC-B10 @unit-level
+  Scenario: A configuration that does not load is an error, an absent one is not
+    Given a root with no anchors.yaml, one with a valid one, and one with a field the binary does not know
+    When the configuration is loaded for each
+    Then the first is nil without error, the second loads, and the third answers its error

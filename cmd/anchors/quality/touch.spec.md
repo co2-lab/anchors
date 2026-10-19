@@ -1,6 +1,6 @@
 <!-- @anchors
   code: HDTHD
-  updated_at: 2026-10-08
+  updated_at: 2026-10-19
   layer: comando
 -->
 # HeaderDateTouch — bumps the header date of the files that changed, and only of those
@@ -75,6 +75,7 @@ would bump. The installed pre-commit runs this bump by default; the project can 
 | --- | --- | --- | --- |
 | `HDTHD-E01` | Outside a git repository touch fails. | Error naming the git command that could not list the changes. | "Changed" is measured against the last commit; without one there is no change to date. |
 | `HDTHD-E02` | A changed file cannot be read. | It is skipped and named as unreadable, and the other files are dated. | One unreadable file must not stop the dates of the rest. |
+| `HDTHD-E03` | The project's anchors.yaml exists and does not load (a field this binary does not know). | touch fails with the load error and dates nothing. | Read as absent, the configuration gave no comment syntax: every file seemed to carry no header, nothing was bumped, and the run exited 0 (reported from MIF: 16 headers left with their old date). |
 
 ## Open Decisions
 

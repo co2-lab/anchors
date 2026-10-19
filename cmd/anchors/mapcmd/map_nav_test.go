@@ -28,3 +28,13 @@ func TestNavLines(t *testing.T) {
 		t.Error("a name that is no screen is refused")
 	}
 }
+
+func TestMapNav_unloadableConfigFails(t *testing.T) {
+	t.Run("MNCMP-E02: An anchors.yaml that does not load fails the command", func(t *testing.T) {})
+	root := t.TempDir()
+	writeProjectFile(t, root, "anchors.graph.yaml", "version: 8\nnodes: []\nedges: []\n")
+	writeProjectFile(t, root, "anchors.yaml", "version: 8\nnot_a_field: x\n")
+	if _, err := runCmdErr(newMapNavCmd(), t, "--root", root); err == nil || !strings.Contains(err.Error(), "not_a_field") {
+		t.Errorf("the load error: %v", err)
+	}
+}

@@ -77,7 +77,10 @@ Timing comes from the defaults, then the "monitor:" block of anchors.yaml, then 
 			if err != nil {
 				return err
 			}
-			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			cfg, err := common.LoadConfig(absRoot)
+			if err != nil {
+				return err
+			}
 			set, err := runs.Configure(cfg)
 			if err != nil {
 				return err

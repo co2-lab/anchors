@@ -16,6 +16,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/flowx"
 	"github.com/co2-lab/anchors/internal/gate"
@@ -153,7 +154,13 @@ running it again changes nothing.
 			}
 
 			// The specs' Dependencies tables: no format step — they run while one is left.
-			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			// What is left may still not load — a key no step renames is the project's to fix —:
+			// the files are already rewritten, so the run says so and goes on without it, rather
+			// than stopping half way or reading the failure as an absent configuration.
+			cfg, cerr := common.LoadConfig(absRoot)
+			if cerr != nil {
+				fmt.Printf("· %s does not load after the migration — the steps that read it are skipped; fix it and run `anchors migrate` again:\n  %s\n", config.DefaultFile, firstLine(cerr.Error()))
+			}
 
 			// The per-plan progress files: no format step either — each run moves the ones
 			// left into anchors.progress.md (DESIGN-progress-tracking.md).
@@ -218,7 +225,10 @@ func migrateCodeLetters(absRoot string, renames []migra.LetterRename, dryRun boo
 	}
 	kindOf := map[string]string{}
 	var plans map[string]bool
-	cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	cfg, cerr := common.LoadConfig(absRoot)
+	if cerr != nil {
+		fmt.Printf("· plan codes: %s does not load — only the files named as plans are read: %s\n", config.DefaultFile, firstLine(cerr.Error()))
+	}
 	if cfg != nil {
 		if walked, err := scan.Walk(absRoot, cfg); err == nil {
 			plans = map[string]bool{}

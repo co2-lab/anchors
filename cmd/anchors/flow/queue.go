@@ -138,7 +138,10 @@ act on it before the card.`,
 			// nada mudara desde o último `check`) e FALSA sobre o projeto — e quem a leu
 			// concluiu que o trabalho tinha acabado. O ciclo parou com 117 specs e zero
 			// features.
-			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			cfg, cerr := common.LoadConfig(absRoot)
+			if cerr != nil {
+				return cerr
+			}
 			if cfg.GitHubMode() {
 				// A identidade do BOARD, não a da fila local: ali o PID é a resposta
 				// certa (um processo, um worker); aqui a sessão atravessa invocações.

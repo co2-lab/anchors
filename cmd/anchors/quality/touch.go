@@ -288,7 +288,10 @@ func excludedBy(f string, globs []string) bool {
 // The project's `touch.exclude` adds to exclude. Shared by `anchors touch` and the
 // pre-commit phase of `anchors verify`.
 func touchRun(absRoot string, staged, dryRun bool, date string, exclude, only []string) ([]touchDecision, map[touchSkip][]string, error) {
-	cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	cfg, err := common.LoadConfig(absRoot)
+	if err != nil {
+		return nil, nil, err
+	}
 	if cfg != nil && cfg.Touch != nil {
 		exclude = append(append([]string{}, exclude...), cfg.Touch.Exclude...)
 	}

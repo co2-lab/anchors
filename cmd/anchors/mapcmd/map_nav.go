@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gate"
 	"github.com/co2-lab/anchors/internal/mapx"
@@ -40,7 +41,10 @@ code's ` + "`@navigates:`" + ` flags:
 			if len(args) == 1 {
 				only = args[0]
 			}
-			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			cfg, cerr := common.LoadConfig(absRoot)
+			if cerr != nil {
+				return cerr
+			}
 			lines, ok := NavLines(gate.NavEdges(absRoot, g, cfg), only)
 			if !ok {
 				return fmt.Errorf("%s is no screen of the app", only)

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:d0badfc74ac39983 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:479cdb70d02c8b05 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -624,6 +624,8 @@ abra a página dela em `camadas/`.
 - [CMCLC-B08 — A command that takes files reads each argument as a file or as several separated by commas — the list a `--changed` flag takes —, drops blanks, keeps a file named twice once, and keeps the order; `TakesFiles` gives a command that reading and marks it. (`FileArgs`, `TakesFiles`)](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is)
 
 - [CMCLC-B09 — An exit code a command ends with is an error carrying the code, which says it: `exit status <code>`. (`ExitCode`)](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is)
+
+- [CMCLC-B10 — The project's configuration is loaded once for the commands that read it: none answers nil and no error, one that exists and does not load answers its error — no command goes on as if a broken configuration were absent. (`LoadConfig`)](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is)
 
 - [CMCLC-I01 — The same file named root-relative or absolute resolves to the same node identifier.](layers/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is)
 
@@ -1782,6 +1784,8 @@ abra a página dela em `camadas/`.
 - [MNCMP-B02 — With a screen named, its origins (`←`) and its destinations (`→`) are printed; a name that is no screen of the navigation is refused.](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen)
 
 - [MNCMP-E01 — REF[MNCMP-B02]: a name that is no screen is refused, naming it](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen)
+
+- [MNCMP-E02 — The project's anchors.yaml does not load](layers/comando.md#mncmp--mapnav--the-apps-navigation-screen-by-screen)
 
 ### [MPSTM — MapStaleness — names the files of the map whose content changed after the map was built](layers/comando.md#mpstm--mapstaleness--names-the-files-of-the-map-whose-content-changed-after-the-map-was-built)
 
@@ -3156,6 +3160,8 @@ abra a página dela em `camadas/`.
 - [HDTHD-E01 — Outside a git repository touch fails.](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those)
 
 - [HDTHD-E02 — A changed file cannot be read.](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those)
+
+- [HDTHD-E03 — The project's anchors.yaml exists and does not load (a field this binary does not know).](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those)
 
 ### [VPFVR — VerifyPhaseFacade — one invocation per phase, delegated to the check pipeline](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline)
 
