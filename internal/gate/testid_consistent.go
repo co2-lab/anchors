@@ -62,7 +62,7 @@ func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph
 	attr := testHandleAttr(cfg)
 
 	// PONTA 1 — o código: o que a unidade realmente expõe.
-	var expostos []string
+	var expostos, unmeasured []string
 	var arquivo string
 	for _, e := range g.Neighbors(n.ID).Out {
 		if e.Type != mapx.EdgeSpecifies {
@@ -70,6 +70,7 @@ func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph
 		}
 		if b, err := readFile(root, e.To); err == nil {
 			expostos = append(expostos, handlesIn(string(b), e.To, exposed)...)
+			unmeasured = append(unmeasured, unmeasurableHandles(string(b), e.To, exposed)...)
 			arquivo = filepath.Base(e.To)
 		}
 	}
@@ -80,7 +81,7 @@ func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph
 	// PONTA 2 — a spec: o inventário declarado.
 	declarados := declaredTestIDs(content, attr)
 
-	if len(expostos) == 0 && len(declarados) == 0 {
+	if len(expostos) == 0 && len(declarados) == 0 && len(unmeasured) == 0 {
 		// Nem toda unidade tem superfície de teste. Cobrar inventário de quem não marca
 		// elemento algum transformaria o gate em ruído sobre toda unidade de
 		// apresentação pura.
@@ -126,7 +127,8 @@ func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph
 	var linhas []string
 	for _, id := range universo {
 		noCodigo, naSpec := coveredBy(expostos, id), coveredBy(declarados, id)
-		consultado := temConsumidor && queriedID(blobConsulta, id)
+		consultado := temConsumidor && (queriedID(blobConsulta, id) ||
+			queriedThroughDerived(blobConsulta, id, projectDerivedSegments(root, g, exposed)))
 		// A feature é OPCIONAL: nem todo handle precisa aparecer num cenário escrito
 		// (um contêiner de tela raramente aparece). Ausência aqui não é ofensa — por
 		// isso entra no laudo como informação, nunca como o motivo da reprovação.
@@ -140,6 +142,10 @@ func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph
 	}
 
 	if len(linhas) == 0 {
+		// A handle the code builds from values alone was not measured: never a pass.
+		if len(unmeasured) > 0 {
+			return Pending, i18n.T("gate.testid.unmeasurable", strings.Join(unmeasured, ", "))
+		}
 		return Pass, ""
 	}
 	sort.Strings(linhas)

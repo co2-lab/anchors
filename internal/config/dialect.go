@@ -720,7 +720,7 @@ func (th *TestHandles) validate() error {
 		patterns Patterns
 		groups   []string
 	}{
-		{"exposed", th.Exposed, []string{"testid", "prefix"}},
+		{"exposed", th.Exposed, []string{"testid", "prefix", "suffix"}},
 		{"mentioned", th.Mentioned, []string{"testid", "prefix", "suffix"}},
 		{"queried", th.Queried, []string{"testid", "prefix"}},
 	} {
@@ -751,6 +751,9 @@ func FamilyTestHandles(family, attr string) *TestHandles {
 			re(a + `prefix\s*[=:]\s*\{?["'](?P<prefix>` + id + `)["']`),
 			re(a + "\\s*[=:]\\s*\\{?`(?P<testid>" + id + ")`"),
 			re(a + "\\s*[=:]\\s*\\{?`(?P<prefix>" + id + ")\\$\\{"),
+			// A handle whose head is the caller's — `${testID}-option-${v}` —: what the unit
+			// adds to it is its own segment, the head an id it was given.
+			re(a + "\\s*[=:]\\s*\\{?`\\$\\{[^}]*\\}(?P<suffix>[^`$]*)"),
 			// A conditional handle: every literal right after a `?` or a `:` of it — its
 			// branches, nested or not —, never a condition's (`kind === 'email'`). The region
 			// starts at the first `?`, and may hold templates (`${i}`).

@@ -2,7 +2,7 @@
 # @anchors
 #   code: TCFTS
 #   ref: TICTS
-#   updated_at: 2026-10-15
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @TICTS
@@ -177,3 +177,11 @@ Feature: TestIDContract — a test handle is one contract with four ends: the co
     Given a spec whose only specifies edge points to a missing file
     When testid-consistent confronts the spec
     Then it returns Skip as a spec without linked code
+
+  @TICTS-B26 @unit-level
+  Scenario: A handle derived from the caller's head is declared, queried and counted
+    Given a component exposing `${testID}-option-${v}` and a test querying ":pay-option-a"
+    When testid-consistent confronts a spec declaring "*-option-*", and then one declaring nothing
+    Then the first passes and the second names the derived handle
+    And a caller exposing ":pay" counts as queried through the derived segment
+    And a component exposing only `${prefix}${key}` is pending, naming its file and line

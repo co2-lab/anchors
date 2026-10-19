@@ -587,6 +587,7 @@
   "gate.mock_typed.skip_no_doubles": "el test no simula ningún módulo — nada que amarrar",
   "gate.mock_typed.fail_unbound": "%d doble(s) sin amarre al módulo real: %s.\n\nUn doble suelto sigue pasando después de que el módulo cambia — el test se convierte en una copia congelada del contrato antiguo, y el verde certifica la versión que ya no existe. Ámárrelo a la forma que este proyecto declara (`derived.mock_contract`: %s), para que el compilador verifique nombre, firma y retorno en lugar de que nadie lo verifique",
   "gate.testid_consistent.skip_not_spec": "el inventario de testID se declara en la spec — es de ella de donde parte la confrontación",
+  "gate.testid.unmeasurable": "un handle se arma solo con valores que el texto no trae — la cabeza es del llamador y no hay segmento propio (%s): no se puede medir; dele un segmento literal, o declare un patrón que lo lea",
   "gate.testid.no_patterns": "el proyecto no declara `%s` — el núcleo no lee sintaxis de handle de prueba, así que no hay con qué leer el código (`anchors doctor` muestra el ejemplo de la familia)",
   "gate.testid_consistent.skip_no_code": "spec sin código vinculado — nada que confrontar",
   "gate.testid_consistent.skip_no_handles_exposed": "la unidad no expone handle que los patrones encuentren — no hay contrato que declarar",

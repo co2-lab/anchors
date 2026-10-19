@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:31f57d6386f1b3ef — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:751ef139327c7cad — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3222,6 +3222,8 @@ teste prova.
 
 - [Aliases scoped to the importers a glob matches](layers/config.md#dlcti-b33--aliases-scoped-to-the-importers-a-glob-matches) `DLCTI-B33`
 
+- [The exposed patterns read a handle whose head is the caller's](layers/config.md#dlcti-b34--the-exposed-patterns-read-a-handle-whose-head-is-the-callers) `DLCTI-B34`
+
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
 - [A trigger naming a unit code charges that unit and not its neighbours in the same layer](layers/config.md#dcrqa-b02--a-trigger-naming-a-unit-code-charges-that-unit-and-not-its-neighbours-in-the-same-layer) `DCRQA-B02`
@@ -5815,6 +5817,8 @@ teste prova.
 - [The report shows whether the feature describes each handle](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B24`
 
 - [Linked code that cannot be read is not an end](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-E01`
+
+- [A handle derived from the caller's head is declared, queried and counted](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B26`
 
 - [Without the exposed and queried patterns declared the gate is pending, naming the field](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B01`
 

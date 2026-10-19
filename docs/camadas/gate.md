@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:129b4e652135ca11 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:322830733a2c8a3d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 89 unidades e 1416 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 89 unidades e 1417 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -4011,7 +4011,7 @@ No framework is known here.
 
 - **SCRQR-B04** — The triggers read: `exposes: test_handles`, a handle the code exposes by the dialect's `exposed` patterns; `depends_on_layer`, a `depends-on` edge of the code to a node of a named layer; `flag`, the flag inside a comment of the code; `code_matches`, the project's pattern over the code with its comments blanked. A requirement whose trigger finds nothing calls for nothing.
 
-- **SCRQR-B05** — A trigger that cannot be measured — `exposes` with no `dialect.test_handles.exposed`, a `flag` in a file whose comments are not declared — leaves the gate pending, naming what is missing, when no section is missing.
+- **SCRQR-B05** — A trigger that cannot be measured — `exposes` with no `dialect.test_handles.exposed`, or with a handle built from values alone (TICTS-B26), a `flag` in a file whose comments are not declared — leaves the gate pending, naming what is missing, when no section is missing.
 
 - **SCRQR-B06** — `depends_on_layer` counts a dependency on the layer's values; one on its types only — an edge of kind `type`, from `@dep[type]` — counts when the entry's `kinds` names `type`, and the message then says it depends on the types.
 
@@ -4444,6 +4444,8 @@ belongs to a project-scope gate.
 - **TICTS-B13** — With the `ts` family's example patterns, in a conditional handle only the literals of the branches are handles; the literals of the condition are not.
 
 - **TICTS-B25** — A pattern says what it captures in a group: `testid` is a handle, `prefix` the head of a family read as `head-*`, `suffix` a segment composed onto a head read as `*-seg-*`. A value one pattern captures as a prefix is not also a whole handle by another, and the handles are listed in the order they stand in the source. (`handlesIn`)
+
+- **TICTS-B26** — A handle the code builds on its caller's head — a `suffix` the project's `exposed` patterns capture, `${testID}-option-${v}` — is the derived handle `*-option-*`: the spec declares it as written, a consumer queries it by naming its segment after a head (`:pay-option-a`), and the caller's own handle counts as queried through a segment some unit of the project derives. A handle whose segment names nothing — `${prefix}${key}`, `${prefix}-${i}` — cannot be measured: the gate is pending, naming the file and line, never passing. (`unmeasurableHandles`, `queriedThroughDerived`, `projectDerivedSegments`)
 
 - **TICTS-B14** — The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading.
 

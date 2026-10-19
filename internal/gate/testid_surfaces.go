@@ -34,11 +34,40 @@ import (
 // consumido. A marca `:` não é caractere de id, então `:btn` casa pela mesma régua
 // (a superfície pode ter sido escrita antes da convenção de marcação).
 func queriedID(blob, id string) bool {
+	// A derived handle is queried when a consumer names its segment after a head:
+	// `:pay-option-a` queries `*-option-*`.
+	if seg, ok := derivedSegment(id); ok {
+		for from := 0; ; {
+			j := strings.Index(blob[from:], seg)
+			if j < 0 {
+				return false
+			}
+			j += from
+			if j > 0 && isIDByte(blob[j-1]) {
+				return true
+			}
+			from = j + 1
+		}
+	}
 	nu := strings.TrimPrefix(id, ":")
 	if strings.HasSuffix(nu, "-*") {
 		return mentionsAtBoundary(blob, strings.TrimSuffix(nu, "*"), false)
 	}
 	return mentionsAtBoundary(blob, nu, true)
+}
+
+// queriedThroughDerived says whether a consumer queries the id as the head of a handle some
+// unit of the project derives from it: `:pay` given to a component that exposes
+// `*-option-*` is queried as `:pay-option-a`. Only a segment a unit derives counts, so
+// `:pay-other` does not query `:pay` by accident.
+func queriedThroughDerived(blob, id string, segments []string) bool {
+	head := strings.TrimPrefix(id, ":")
+	for _, seg := range segments {
+		if mentionsAtBoundary(blob, head+seg, false) {
+			return true
+		}
+	}
+	return false
 }
 
 // mentionsAtBoundary procura `needle` em `blob` sem caractere de id colado antes e,

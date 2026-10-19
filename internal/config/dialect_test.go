@@ -660,7 +660,7 @@ func TestDialect_testHandles(t *testing.T) {
 	for _, c := range []struct{ yaml, names string }{
 		{"exposed: ['(?P<testid>[a-z']", "test_handles.exposed[0]` does not compile"},
 		{"queried: ['id: ([a-z]+)']", "test_handles.queried[0]` captures with none of the groups testid, prefix"},
-		{"exposed: ['-(?P<suffix>row)']", "test_handles.exposed[0]` captures with none"},
+		{"queried: ['-(?P<suffix>row)']", "test_handles.queried[0]` captures with none"},
 	} {
 		if _, err := load(t, "version: 8\nlayers: {}\ndialect:\n  test_handles:\n    "+c.yaml+"\n"); err == nil || !strings.Contains(err.Error(), c.names) {
 			t.Errorf("%s: the config is refused naming the pattern, got %v", c.yaml, err)
@@ -854,5 +854,32 @@ func TestImportResolve_scopedAliases(t *testing.T) {
 		if _, err := Load(p); err == nil || !strings.Contains(err.Error(), "import_resolve.scoped[0]") {
 			t.Errorf("refused naming the entry: %v", err)
 		}
+	}
+}
+
+func TestFamilyTestHandles_derivedHead(t *testing.T) {
+	t.Run("DLCTI-B34: The exposed patterns read a handle whose head is the caller's", func(t *testing.T) {})
+	ex := FamilyTestHandles("ts", "testID").Exposed
+	seg := func(src string) (string, bool) {
+		for _, m := range ex.FindAll(src, "x.tsx") {
+			if c, ok := m.Groups["suffix"]; ok {
+				return c.Value, true
+			}
+		}
+		return "", false
+	}
+	if s, ok := seg("<P testID={`${testID}-option-${opt.value}`} />"); !ok || s != "-option-" {
+		t.Errorf("the segment after the caller's head: %q %v", s, ok)
+	}
+	if s, ok := seg("<P testID={`${prefix}${r.k}`} />"); !ok || s != "" {
+		t.Errorf("values alone give an empty segment: %q %v", s, ok)
+	}
+	p := filepath.Join(t.TempDir(), "anchors.yaml")
+	yaml := "version: 8\ndialect:\n  test_handles:\n    exposed: ['testID=\\{`\\$\\{[^}]*\\}(?P<suffix>[^`$]*)']\n"
+	if err := os.WriteFile(p, []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(p); err != nil {
+		t.Errorf("an exposed pattern may capture a suffix: %v", err)
 	}
 }

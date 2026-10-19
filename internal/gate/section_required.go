@@ -150,6 +150,9 @@ func sectionTrigger(w config.SectionTrigger, c mapx.Node, root string, g *mapx.G
 			sort.Strings(hs)
 			return i18n.T("gate.section_required.why_exposes", hs[0]), true
 		}
+		if u := unmeasurableHandles(src, c.ID, exposed); len(u) > 0 {
+			return i18n.T("gate.testid.unmeasurable", strings.Join(u, ", ")), false
+		}
 	case w.Flag != "":
 		cs := cfg.CommentsFor(c.ID)
 		if cs == nil {

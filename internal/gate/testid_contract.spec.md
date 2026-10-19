@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TICTS
-  updated_at: 2026-10-15
+  updated_at: 2026-10-19
   layer: gate
 -->
 # TestIDContract — a test handle is one contract with four ends: the code exposes it, the spec declares it, a consumer queries it
@@ -72,6 +72,7 @@ belongs to a project-scope gate.
 | `TICTS-B12` | With the `ts` family's example patterns, a template handle, whose suffix is runtime data, and a prop that gives a child the head of its handles, both expose the static prefix as a wildcard. |
 | `TICTS-B13` | With the `ts` family's example patterns, in a conditional handle only the literals of the branches are handles; the literals of the condition are not. |
 | `TICTS-B25` | A pattern says what it captures in a group: `testid` is a handle, `prefix` the head of a family read as `head-*`, `suffix` a segment composed onto a head read as `*-seg-*`. A value one pattern captures as a prefix is not also a whole handle by another, and the handles are listed in the order they stand in the source. (`handlesIn`) |
+| `TICTS-B26` | A handle the code builds on its caller's head — a `suffix` the project's `exposed` patterns capture, `${testID}-option-${v}` — is the derived handle `*-option-*`: the spec declares it as written, a consumer queries it by naming its segment after a head (`:pay-option-a`), and the caller's own handle counts as queried through a segment some unit of the project derives. A handle whose segment names nothing — `${prefix}${key}`, `${prefix}-${i}` — cannot be measured: the gate is pending, naming the file and line, never passing. (`unmeasurableHandles`, `queriedThroughDerived`, `projectDerivedSegments`) |
 | `TICTS-B14` | The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading. |
 | `TICTS-B15` | In a table row of the inventory only the first cell is the id; on any other line every quoted id counts. |
 | `TICTS-B16` | The attribute's own name, quoted in the inventory, is not a declared id. |

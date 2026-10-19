@@ -2,7 +2,7 @@
 # @anchors
 #   code: DLFTA
 #   ref: DLCTI
-#   updated_at: 2026-10-16
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @DLCTI
@@ -231,3 +231,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     When the aliases of an importer in each app are asked for
     Then the mobile importer reads apps/mobile/ and the landing importer apps/landing-page/src/, the other aliases kept
     And a scoped entry with no glob or no aliases refuses the config
+
+  @DLCTI-B34 @unit-level
+  Scenario: The exposed patterns read a handle whose head is the caller's
+    Given the ts example for testID, and a project declaring an exposed pattern with a suffix group
+    When `${testID}-option-${v}` and `${prefix}${key}` are read, and the project's config loads
+    Then the first gives the segment "-option-", the second an empty one, and the config loads

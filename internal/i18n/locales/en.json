@@ -587,6 +587,7 @@
   "gate.mock_typed.skip_no_doubles": "test does not mock any module — nothing to bind",
   "gate.mock_typed.fail_unbound": "%d double(s) without binding to real module: %s.\n\nAn unbound double keeps passing after module changes — test becomes a frozen copy of old contract, and green certifies version that no longer exists. Bind it to shape declared by this project (`derived.mock_contract`: %s), so compiler checks name, signature and return instead of no one checking",
   "gate.testid_consistent.skip_not_spec": "testID inventory is declared in spec — confrontation starts from it",
+  "gate.testid.unmeasurable": "a handle is built only from values the text does not hold — its head the caller's and no segment of its own (%s): it cannot be measured; give it a literal segment, or declare a pattern that reads it",
   "gate.testid.no_patterns": "the project declares no `%s` — the core reads no syntax of a test handle, so there is nothing to read the code with (`anchors doctor` shows the family's example)",
   "gate.testid_consistent.skip_no_code": "spec without linked code — nothing to confront",
   "gate.testid_consistent.skip_no_handles_exposed": "the unit exposes no handle its patterns find — no contract to declare",

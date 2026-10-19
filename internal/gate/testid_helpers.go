@@ -11,11 +11,15 @@
 package gate
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
+	"unicode"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
 )
 
 // handlesIn returns the handles the patterns find in a source: a `testid` group as the
@@ -42,7 +46,7 @@ func handlesIn(src, rel string, patterns config.Patterns) []string {
 			all = append(all, found{span{c.Start, c.End}, strings.TrimSuffix(c.Value, "-") + "-*", false})
 		}
 		if c, ok := m.Groups["suffix"]; ok {
-			if seg := strings.TrimRight(c.Value, "-"); seg != "" {
+			if seg := strings.TrimRight(c.Value, "-"); measurableSegment(seg) {
 				all = append(all, found{span{c.Start, c.End}, "*" + seg + "-*", false})
 			}
 		}
@@ -63,6 +67,63 @@ func handlesIn(src, rel string, patterns config.Patterns) []string {
 	}
 	return out
 }
+
+// measurableSegment says whether a derived handle's own segment names anything: a segment
+// with no letter — none at all (`${prefix}${key}`), or a separator (`${prefix}-${i}`) — leaves
+// the whole handle to values the text does not hold.
+func measurableSegment(seg string) bool {
+	return strings.IndexFunc(seg, unicode.IsLetter) >= 0
+}
+
+// unmeasurableHandles are the places — `file:line` — where the patterns find a handle made of
+// the caller's head and a segment that names nothing: there is a handle, and no text says
+// which. A gate answers it pending, never as measured.
+func unmeasurableHandles(src, rel string, patterns config.Patterns) []string {
+	var out []string
+	for _, m := range patterns.FindAll(src, rel) {
+		if c, ok := m.Groups["suffix"]; ok && !measurableSegment(strings.TrimRight(c.Value, "-")) {
+			out = append(out, fmt.Sprintf("%s:%d", rel, config.LineOf(src, m.Start)))
+		}
+	}
+	return out
+}
+
+// projectDerivedSegments are the segments the units of the project derive from a head their
+// caller gives — `-option-` of `*-option-*` —, read once per map: a caller's handle is
+// queried through them.
+func projectDerivedSegments(root string, g *mapx.Graph, exposed config.Patterns) []string {
+	derivedMu.Lock()
+	defer derivedMu.Unlock()
+	if derivedFor == g && derivedSegs != nil {
+		return derivedSegs
+	}
+	seen := map[string]bool{}
+	segs := []string{}
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindCode {
+			continue
+		}
+		b, err := readFile(root, n.ID)
+		if err != nil {
+			continue // @resilient: a file that cannot be read derives no segment; the map notices it
+		}
+		for _, h := range handlesIn(string(b), n.ID, exposed) {
+			if seg, ok := derivedSegment(h); ok && !seen[seg] {
+				seen[seg] = true
+				segs = append(segs, seg)
+			}
+		}
+	}
+	sort.Strings(segs)
+	derivedFor, derivedSegs = g, segs
+	return segs
+}
+
+var (
+	derivedMu   sync.Mutex
+	derivedFor  *mapx.Graph
+	derivedSegs []string
+)
 
 // testHandles are the patterns the project declares for its test handles, or nil.
 func testHandles(cfg *config.Config) *config.TestHandles {
@@ -94,7 +155,7 @@ func testHandleAttr(cfg *config.Config) string {
 // declaredTestIDRE captura o id citado em crase na spec. Aceita as três formas
 // catalogadas que o projeto já usa (SPEC_TYPES §5): linha de tabela, bullet e
 // cabeçalho — o que importa é o id estar em crase, não a moldura em volta.
-var declaredTestIDRE = regexp.MustCompile("`(:?[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?)`")
+var declaredTestIDRE = regexp.MustCompile("`(:?[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?|\\*-[a-zA-Z][a-zA-Z0-9._-]*-\\*)`")
 
 // surfaceSectionRE delimita a seção de inventário. Sem ela, qualquer crase na prosa
 // da spec (nome de classe CSS, de campo, de arquivo) contaria como declaração — e o
@@ -176,8 +237,24 @@ func covers(padrao, id string) bool {
 	if p == i {
 		return true
 	}
+	// A DERIVED handle — `*-option-*`, its head the caller's — covers an id that carries
+	// its segment after a head.
+	if seg, ok := derivedSegment(p); ok {
+		j := strings.Index(i, seg)
+		return j > 0 || (strings.HasPrefix(i, "*") && j >= 0)
+	}
 	if strings.HasSuffix(p, "-*") {
 		return strings.HasPrefix(i, strings.TrimSuffix(p, "*"))
 	}
 	return false
+}
+
+// derivedSegment is the segment a derived handle adds to its caller's head — `-option-` of
+// `*-option-*` —, and whether the handle is one.
+func derivedSegment(handle string) (string, bool) {
+	h := strings.TrimPrefix(handle, ":")
+	if !strings.HasPrefix(h, "*") {
+		return "", false
+	}
+	return strings.TrimSuffix(strings.TrimPrefix(h, "*"), "*"), true
 }

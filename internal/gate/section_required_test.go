@@ -113,6 +113,10 @@ func TestSectionRequired_unmeasurableIsPending(t *testing.T) {
 	if v, _ := checkSectionRequired("# Login\n", spec, root, nil, sectionCfg()); v != Pending {
 		t.Errorf("no map: pending, %v", v)
 	}
+	spec, g, root = sectionUnit(t, "<Pressable testID={`${prefix}${r.k}`} />\n", false)
+	if v, msg := checkSectionRequired("# Login\n", spec, root, g, sectionCfg()); v != Pending || !strings.Contains(msg, "Login.tsx:1") {
+		t.Errorf("a handle of values alone: pending, %v %s", v, msg)
+	}
 }
 
 func TestSectionRequired_typeOnlyDependency(t *testing.T) {

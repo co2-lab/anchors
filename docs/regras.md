@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:cbfb1d15a138c0c0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:cb7d525a0124f405 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3491,7 +3491,7 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B26 — A family's fallible patterns say, in their `propagates` group, when a call hands its failure to the caller: for `ts` a call `return`ed or an arrow's body, with or without `await`; for `go`'s HTTP and `python`'s `requests`, a call `return`ed. A call kept in a variable propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B27 — `dialect.test_handles` declares the patterns the handle gates read — `exposed`, `mentioned`, `queried`; a pattern that does not compile, or captures with none of its list's groups (`testid`, `prefix`, and `suffix` for `mentioned`), refuses the config, naming it. (`TestHandles`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B27 — `dialect.test_handles` declares the patterns the handle gates read — `exposed`, `mentioned`, `queried`; a pattern that does not compile, or captures with none of its list's groups (`testid`, `prefix`, and `suffix` for `exposed` and `mentioned`), refuses the config, naming it. (`TestHandles`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B28 — The `ts` family has an example of the test handle patterns for the attribute a project marks its elements with — a conditional handle read as a region, every literal of its branches, nested or not, and none of its condition —; another family, or no attribute, has none; and the example is never applied by itself — a project that declared none is measured with none. (`FamilyTestHandles`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -3504,6 +3504,8 @@ abra a página dela em `camadas/`.
 - [DLCTI-B32 — The `ts` family has an example of the mock shapes — `mock_detect` for `jest.mock`/`vi.mock`, the contract, a factory passed and a factory typed — and of `route_pattern` — `name="X"`, a stack's param list, `addResource('x')` —; `python` one of `mock_detect` (`patch`); another family none; never applied by themselves. (`FamilyMocks`, `FamilyRoutePattern`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B33 — `import_resolve.scoped` declares aliases for the importers a glob matches — each workspace's own `paths` —: an importer's aliases are the global ones with those of every entry whose glob matches it over them, the first entry winning a prefix two declare; an entry with no glob, a glob that is no glob, or no aliases refuses the config, naming it. (`AliasesFor`, `ScopedAliases`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
+- [DLCTI-B34 — `dialect.test_handles.exposed` may capture a `suffix`: the segment a unit adds to a head its caller gives. The `ts` example reads it in a template opening on a value — `${testID}-option-${v}` gives `-option-`, `${prefix}${key}` an empty one. (`FamilyTestHandles`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -6135,7 +6137,7 @@ abra a página dela em `camadas/`.
 
 - [SCRQR-B04 — The triggers read: `exposes: test_handles`, a handle the code exposes by the dialect's `exposed` patterns; `depends_on_layer`, a `depends-on` edge of the code to a node of a named layer; `flag`, the flag inside a comment of the code; `code_matches`, the project's pattern over the code with its comments blanked. A requirement whose trigger finds nothing calls for nothing.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
 
-- [SCRQR-B05 — A trigger that cannot be measured — `exposes` with no `dialect.test_handles.exposed`, a `flag` in a file whose comments are not declared — leaves the gate pending, naming what is missing, when no section is missing.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
+- [SCRQR-B05 — A trigger that cannot be measured — `exposes` with no `dialect.test_handles.exposed`, or with a handle built from values alone (TICTS-B26), a `flag` in a file whose comments are not declared — leaves the gate pending, naming what is missing, when no section is missing.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
 
 - [SCRQR-B06 — `depends_on_layer` counts a dependency on the layer's values; one on its types only — an edge of kind `type`, from `@dep[type]` — counts when the entry's `kinds` names `type`, and the message then says it depends on the types.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
 
@@ -6388,6 +6390,8 @@ abra a página dela em `camadas/`.
 - [TICTS-B13 — With the `ts` family's example patterns, in a conditional handle only the literals of the branches are handles; the literals of the condition are not.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
 - [TICTS-B25 — A pattern says what it captures in a group: `testid` is a handle, `prefix` the head of a family read as `head-*`, `suffix` a segment composed onto a head read as `*-seg-*`. A value one pattern captures as a prefix is not also a whole handle by another, and the handles are listed in the order they stand in the source. (`handlesIn`)](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
+
+- [TICTS-B26 — A handle the code builds on its caller's head — a `suffix` the project's `exposed` patterns capture, `${testID}-option-${v}` — is the derived handle `*-option-*`: the spec declares it as written, a consumer queries it by naming its segment after a head (`:pay-option-a`), and the caller's own handle counts as queried through a segment some unit of the project derives. A handle whose segment names nothing — `${prefix}${key}`, `${prefix}-${i}` — cannot be measured: the gate is pending, naming the file and line, never passing. (`unmeasurableHandles`, `queriedThroughDerived`, `projectDerivedSegments`)](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
 - [TICTS-B14 — The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 

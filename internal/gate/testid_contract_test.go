@@ -778,3 +778,33 @@ func TestHandlesIn_groups(t *testing.T) {
 		t.Errorf("got %s, want %s", got, want)
 	}
 }
+
+func TestTestIDContract_derivedHandles(t *testing.T) {
+	t.Run("TICTS-B26: A handle derived from the caller's head is declared, queried and counted", func(t *testing.T) {})
+	component := "export const Seg = ({ testID }) => <Pressable testID={`${testID}-option-${opt.value}`} />\n"
+	spec, g, root := consumerFixture(t, "fireEvent.press(getByTestId(':pay-option-a'))\n")
+	writeFile(t, root, "x.tsx", component)
+	declared := "## Test IDs\n\n| id | role |\n| -- | ----- |\n| `*-option-*` | each option |\n"
+	if v, msg := checkTestIDCoherent(declared, spec, root, g, cfgHandle("testID")); v != Pass {
+		t.Errorf("the derived handle declared and queried: %v %s", v, msg)
+	}
+	if v, msg := checkTestIDCoherent("## Test IDs\n\nnone\n", spec, root, g, cfgHandle("testID")); v != Fail || !strings.Contains(msg, "*-option-*") {
+		t.Errorf("the derived handle undeclared is named: %v %s", v, msg)
+	}
+
+	// The caller: its `:pay` is queried as the head of the component's segment.
+	writeFile(t, root, "screen.tsx", "<Seg testID=\":pay\" />\n")
+	g.Nodes = append(g.Nodes, mapx.Node{ID: "screen.tsx", Kind: mapx.KindCode})
+	if !queriedThroughDerived("getByTestId(':pay-option-a')", ":pay", projectDerivedSegments(root, g, exposedPatterns(cfgHandle("testID")))) {
+		t.Error("the caller's head is queried through the derived segment")
+	}
+	if queriedThroughDerived("getByTestId(':pay-other')", ":pay", []string{"-option-"}) {
+		t.Error("a segment no unit derives queries nothing")
+	}
+
+	// A handle made of values alone cannot be measured.
+	writeFile(t, root, "x.tsx", "<Pressable testID={`${prefix}${r.k}`} />\n")
+	if v, msg := checkTestIDCoherent("# X\n", spec, root, g, cfgHandle("testID")); v != Pending || !strings.Contains(msg, "x.tsx:1") {
+		t.Errorf("unmeasurable: pending, naming file and line: %v %s", v, msg)
+	}
+}
