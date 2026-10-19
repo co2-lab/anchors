@@ -37,13 +37,14 @@ func queriedID(blob, id string) bool {
 	// A derived handle is queried when a consumer names its segment after a head:
 	// `:pay-option-a` queries `*-option-*`.
 	if seg, ok := derivedSegment(id); ok {
+		closed := closedSegment(id)
 		for from := 0; ; {
 			j := strings.Index(blob[from:], seg)
 			if j < 0 {
 				return false
 			}
 			j += from
-			if j > 0 && isIDByte(blob[j-1]) {
+			if j > 0 && headBefore(blob[j-1]) && (!closed || segmentEnds(blob, j+len(seg))) {
 				return true
 			}
 			from = j + 1
@@ -57,14 +58,25 @@ func queriedID(blob, id string) bool {
 }
 
 // queriedThroughDerived says whether a consumer queries the id as the head of a handle some
-// unit of the project derives from it: `:pay` given to a component that exposes
-// `*-option-*` is queried as `:pay-option-a`. Only a segment a unit derives counts, so
-// `:pay-other` does not query `:pay` by accident.
-func queriedThroughDerived(blob, id string, segments []string) bool {
+// unit of the project derives: `:pay` given to a component that exposes `*-option-*` is
+// queried as `:pay-option-a`, and given to one that exposes `*-spin`, as `:pay-spin`. Only a
+// segment a unit derives counts, so `:pay-other` does not query `:pay` by accident.
+func queriedThroughDerived(blob, id string, derived []string) bool {
 	head := strings.TrimPrefix(id, ":")
-	for _, seg := range segments {
-		if mentionsAtBoundary(blob, head+seg, false) {
-			return true
+	for _, h := range derived {
+		seg, _ := derivedSegment(h)
+		needle := head + seg
+		closed := closedSegment(h)
+		for from := 0; ; {
+			j := strings.Index(blob[from:], needle)
+			if j < 0 {
+				break
+			}
+			j += from
+			if (j == 0 || !isIDByte(blob[j-1])) && (!closed || segmentEnds(blob, j+len(needle))) {
+				return true
+			}
+			from = j + 1
 		}
 	}
 	return false

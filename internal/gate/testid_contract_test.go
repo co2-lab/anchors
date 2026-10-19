@@ -774,7 +774,7 @@ func TestHandlesIn_groups(t *testing.T) {
 <C testID={getOptionTestID(':abcd-period', option)} />
 <D testID={` + "`${testID}-row`" + `} />`
 	got := strings.Join(handlesIn(src, "x.tsx", patterns), ",")
-	if want := ":abcd-root,:abcd-otp-*,:abcd-period-*,*-row-*"; got != want {
+	if want := ":abcd-root,:abcd-otp-*,:abcd-period-*,*-row"; got != want {
 		t.Errorf("got %s, want %s", got, want)
 	}
 }
@@ -798,7 +798,7 @@ func TestTestIDContract_derivedHandles(t *testing.T) {
 	if !queriedThroughDerived("getByTestId(':pay-option-a')", ":pay", projectDerivedSegments(root, g, exposedPatterns(cfgHandle("testID")))) {
 		t.Error("the caller's head is queried through the derived segment")
 	}
-	if queriedThroughDerived("getByTestId(':pay-other')", ":pay", []string{"-option-"}) {
+	if queriedThroughDerived("getByTestId(':pay-other')", ":pay", []string{"*-option-*"}) {
 		t.Error("a segment no unit derives queries nothing")
 	}
 
@@ -823,5 +823,34 @@ func TestTestIDContract_unreadableConsumerIsPending(t *testing.T) {
 	}
 	if v, msg := checkTestIDCoherent(sectionOK, spec, root, g, cfgHandle("testID")); v != Pending || !strings.Contains(msg, "x.test.tsx") {
 		t.Errorf("an unread consumer: pending, naming it — got %v (%s)", v, msg)
+	}
+}
+
+func TestTestIDContract_closedDerivedSegment(t *testing.T) {
+	t.Run("TICTS-B28: A derived handle whose segment ends it is queried with the id's end or a hyphen after", func(t *testing.T) {})
+	component := "export const Spinner = ({ testId }) => <View testID={`${testId}-spin`} />\n"
+	if hs := handlesIn(component, "x.tsx", exposedPatterns(cfgHandle("testID"))); len(hs) != 1 || hs[0] != "*-spin" {
+		t.Fatalf("a segment that ends the handle is closed: %v", hs)
+	}
+	for blob, want := range map[string]bool{
+		"getByTestId('b-spin')":         true,
+		"getByTestId(`${id}-spin`)":     true,
+		"getByTestId('b-spin-overlay')": true,
+		"getByTestId('b-spinner')":      false,
+		"getByTestId('-spin')":          false,
+	} {
+		if got := queriedID(blob, "*-spin"); got != want {
+			t.Errorf("%s: want %v, got %v", blob, want, got)
+		}
+	}
+	if !queriedThroughDerived("getByTestId(':row-transfer-badge')", ":row", []string{"*-transfer-badge"}) ||
+		queriedThroughDerived("getByTestId(':row-transfer-badges')", ":row", []string{"*-transfer-badge"}) {
+		t.Error("the caller's head is queried through a closed segment, at the id's end")
+	}
+	spec, g, root := consumerFixture(t, "fireEvent.press(getByTestId('b-spin'))\n")
+	writeFile(t, root, "x.tsx", component)
+	declared := "## Test IDs\n\n| id | role |\n| -- | ----- |\n| `*-spin` | the spinner |\n"
+	if v, msg := checkTestIDCoherent(declared, spec, root, g, cfgHandle("testID")); v != Pass {
+		t.Errorf("declared and queried: %v %s", v, msg)
 	}
 }

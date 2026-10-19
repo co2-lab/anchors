@@ -47,7 +47,13 @@ func handlesIn(src, rel string, patterns config.Patterns) []string {
 		}
 		if c, ok := m.Groups["suffix"]; ok {
 			if seg := strings.TrimRight(c.Value, "-"); measurableSegment(seg) {
-				all = append(all, found{span{c.Start, c.End}, "*" + seg + "-*", false})
+				// A segment that ends the handle — `${id}-spin` — is closed: `*-spin`. One a
+				// value follows — `${id}-row-${i}` — stays open: `*-row-*`.
+				h := "*" + seg + "-*"
+				if !strings.HasSuffix(c.Value, "-") {
+					h = "*" + seg
+				}
+				all = append(all, found{span{c.Start, c.End}, h, false})
 			}
 		}
 		if c, ok := m.Groups["testid"]; ok && c.Value != "" {
@@ -88,9 +94,8 @@ func unmeasurableHandles(src, rel string, patterns config.Patterns) []string {
 	return out
 }
 
-// projectDerivedSegments are the segments the units of the project derive from a head their
-// caller gives — `-option-` of `*-option-*` —, read once per map: a caller's handle is
-// queried through them.
+// projectDerivedSegments are the derived handles of the project's units — `*-option-*`,
+// `*-spin` —, read once per map: a caller's handle is queried through their segments.
 func projectDerivedSegments(root string, g *mapx.Graph, exposed config.Patterns) []string {
 	derivedMu.Lock()
 	defer derivedMu.Unlock()
@@ -108,9 +113,9 @@ func projectDerivedSegments(root string, g *mapx.Graph, exposed config.Patterns)
 			continue // @resilient: a file that cannot be read derives no segment; the map notices it
 		}
 		for _, h := range handlesIn(string(b), n.ID, exposed) {
-			if seg, ok := derivedSegment(h); ok && !seen[seg] {
-				seen[seg] = true
-				segs = append(segs, seg)
+			if _, ok := derivedSegment(h); ok && !seen[h] {
+				seen[h] = true
+				segs = append(segs, h)
 			}
 		}
 	}
@@ -155,7 +160,7 @@ func testHandleAttr(cfg *config.Config) string {
 // declaredTestIDRE captura o id citado em crase na spec. Aceita as três formas
 // catalogadas que o projeto já usa (SPEC_TYPES §5): linha de tabela, bullet e
 // cabeçalho — o que importa é o id estar em crase, não a moldura em volta.
-var declaredTestIDRE = regexp.MustCompile("`(:?[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?|\\*-[a-zA-Z][a-zA-Z0-9._-]*-\\*)`")
+var declaredTestIDRE = regexp.MustCompile("`(:?[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?|\\*-[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?)`")
 
 // surfaceSectionRE delimita a seção de inventário. Sem ela, qualquer crase na prosa
 // da spec (nome de classe CSS, de campo, de arquivo) contaria como declaração — e o
@@ -250,11 +255,34 @@ func covers(padrao, id string) bool {
 }
 
 // derivedSegment is the segment a derived handle adds to its caller's head — `-option-` of
-// `*-option-*` —, and whether the handle is one.
+// `*-option-*`, `-spin` of `*-spin` —, and whether the handle is one.
 func derivedSegment(handle string) (string, bool) {
 	h := strings.TrimPrefix(handle, ":")
 	if !strings.HasPrefix(h, "*") {
 		return "", false
 	}
 	return strings.TrimSuffix(strings.TrimPrefix(h, "*"), "*"), true
+}
+
+// closedSegment says whether a derived handle's segment ends it — `*-spin` —, so what
+// queries it carries nothing glued after the segment but the id's end or a hyphen.
+func closedSegment(handle string) bool {
+	return !strings.HasSuffix(strings.TrimPrefix(handle, ":"), "*")
+}
+
+// headBefore says whether the character before a derived segment ends a head: a character
+// of an id (`b-spin`), or the end of an expression that computes one (`${id}-spin`,
+// `prefix()-spin`).
+func headBefore(c byte) bool {
+	return isIDByte(c) || c == '}' || c == ')' || c == ']'
+}
+
+// segmentEnds says whether the text after a closed segment ends the id it is part of: its
+// end, a hyphen, or a character no id holds.
+func segmentEnds(blob string, end int) bool {
+	if end >= len(blob) {
+		return true
+	}
+	c := blob[end]
+	return c == '-' || !isIDByte(c)
 }

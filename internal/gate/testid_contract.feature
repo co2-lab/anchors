@@ -191,3 +191,9 @@ Feature: TestIDContract — a test handle is one contract with four ends: the co
     Given a spec declaring a handle the code exposes, and its linked test unreadable
     When testid-consistent confronts the spec
     Then it is pending, naming the test file
+
+  @TICTS-B28 @unit-level
+  Scenario: A derived handle whose segment ends it is queried with the id's end or a hyphen after
+    Given a component exposing `${testId}-spin`, declared as "*-spin"
+    When a test queries "b-spin", "b-spin-overlay" or "b-spinner"
+    Then the first two query it and the third does not, and testid-consistent passes on the first

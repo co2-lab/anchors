@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:479cdb70d02c8b05 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:dfb26011e2eccb19 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -6408,6 +6408,8 @@ abra a página dela em `camadas/`.
 - [TICTS-B26 — A handle the code builds on its caller's head — a `suffix` the project's `exposed` patterns capture, `${testID}-option-${v}` — is the derived handle `*-option-*`: the spec declares it as written, a consumer queries it by naming its segment after a head (`:pay-option-a`), and the caller's own handle counts as queried through a segment some unit of the project derives. A handle whose segment names nothing — `${prefix}${key}`, `${prefix}-${i}` — cannot be measured: the gate is pending, naming the file and line, never passing. (`unmeasurableHandles`, `queriedThroughDerived`, `projectDerivedSegments`)](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
 - [TICTS-B27 — A consumer surface the gate could not read — a linked test, a flow, a neighbour test — holds queries nobody saw: the gate is pending, naming the files — neither failing a handle as unqueried nor passing it as having no consumer. The surfaces are read through the run's reader, the git index under `--index`.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
+
+- [TICTS-B28 — A derived handle whose segment ends it — `${testId}-spin` — is `*-spin`: a consumer queries it with the segment after a head and, after it, the id's end or a hyphen (`b-spin`, `b-spin-overlay`, never `b-spinner`); a caller's own handle is queried through it the same way (`:row-transfer-badge`). One a value follows — `${id}-row-${i}` — stays open, `*-row-*`.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
 - [TICTS-B14 — The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
