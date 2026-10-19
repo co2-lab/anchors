@@ -115,14 +115,8 @@ func isGovernedModule(spec, testID string, d config.Dialect, g *mapx.Graph) bool
 	return len(moduleCandidates(spec, testID, d, g)) > 0
 }
 
-// withoutExtension tira a extensão final do caminho (`x/y.ts` → `x/y`), para o nó do mapa
-// poder ser comparado com um especificador de import, que nunca a carrega.
-func withoutExtension(id string) string {
-	if i := strings.LastIndex(id, "."); i > strings.LastIndex(id, "/") {
-		return id[:i]
-	}
-	return id
-}
+// withoutExtension drops the path's last extension (see mapx.WithoutExtension).
+func withoutExtension(id string) string { return mapx.WithoutExtension(id) }
 
 // declaredDoubles inventaria os dublês do arquivo e diz quais têm amarra, pelo que o projeto
 // declara (`derived.mock_detect`, `mock_factory`, `mock_typed`): o núcleo não lê sintaxe de

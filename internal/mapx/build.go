@@ -65,6 +65,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 		g.Nodes[len(g.Nodes)-1].setEvidence(f.Rev, f.Evidence)
 	}
 	assertedRows(g, files)
+	doubledFiles(g, files, cfg)
 
 	colo := colocationEdges(files, cfg)
 	g.Edges = append(g.Edges, colo...)
@@ -80,6 +81,36 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 
 	sortGraph(g)
 	return g
+}
+
+// doubledFiles writes, on each test, the code files its doubles replace: each specifier
+// resolved as the dependency chain resolves an import (Modules.File). A specifier that names no
+// file of the project — a third party's — or several the test's folder does not decide between
+// stops nothing: the proof keeps every file it reaches, which stales it more, never less.
+func doubledFiles(g *Graph, files []scan.File, cfg *config.Config) {
+	m := g.Modules()
+	d := cfg.DialectFor()
+	at := map[string]int{}
+	for i, n := range g.Nodes {
+		at[n.ID] = i
+	}
+	for _, f := range files {
+		if len(f.Doubles) == 0 {
+			continue
+		}
+		seen := map[string]bool{}
+		var out []string
+		for _, spec := range f.Doubles {
+			if file, _ := m.File(spec, f.Path, d); file != "" && file != f.Path && !seen[file] {
+				seen[file] = true
+				out = append(out, file)
+			}
+		}
+		sort.Strings(out)
+		if i, ok := at[f.Path]; ok {
+			g.Nodes[i].Doubles = out
+		}
+	}
 }
 
 // resourcesOf are the resources a file's kinded dependency flags name, `kind:name`, sorted.

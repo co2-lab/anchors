@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPSCR
-  updated_at: 2026-10-16
+  updated_at: 2026-10-19
   layer: scan
 -->
 # RepoScan — the repository read as text: which files exist, of which layer, and what each declares
@@ -129,6 +129,7 @@ heuristic decided.
 | `RPSCR-B55` | A doctrine document's rules of the freeze letter are its freeze entries, read with the text after the code as the reason, in any of the three forms a rule is written in; a value is a freeze's code when it is a code of that letter. (`Freezes`, `IsFreezeCode`) |
 | `RPSCR-B56` | The chain's flags — dependency, waiver, used-by and navigation — may stand in a block comment of the file's syntax (OCaml's `(* … *)`): each reads to the comment's closer, and the evidence leaves them out like any other comment. (`flagText`) |
 | `RPSCR-B57` | The symbol a used-by flag names in parentheses is whatever stands there, in any script — the flag is Anchors' syntax, the name the language's —, and the names the dialect's patterns capture are kept whole: `categoriasDoOrçamento` is read as written. |
+| `RPSCR-B58` | A test file's doubles are the first group of each match of the project's `derived.mock_detect`, read with the file's comments blanked and each specifier once; a file that is no test, a project with no pattern, or a pattern that does not compile or captures nothing, gives none. (`doublesOf`) |
 | `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants

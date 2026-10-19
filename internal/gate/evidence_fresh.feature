@@ -2,7 +2,7 @@
 # @anchors
 #   code: EFFVD
 #   ref: EVFRV
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @EVFRV
@@ -106,9 +106,14 @@ Feature: EvidenceFresh — the score of this test holds against TODAY's code
       covers the current code — the cheap fix settles it for real instead of by opinion
 
   @EVFRV-X03 @unit-level
-  Scenario: The gate does not read the project's configuration
+  Scenario: The gate's pass and failure read no configuration
     Given a test with an intact closure and no configuration supplied at all
     When the gate confronts it
     Then it returns Pass, because the confronted truth lives in the map — a ruler depending
       on settings could be turned off by a default nobody chose
 
+  @EVFRV-B11 @unit-level
+  Scenario: A score bound to no code is pending where the chain confronts tests
+    Given a test with a score that imports a module, a client it doubles and types, and whose closure reaches no code
+    When the gate confronts it in a project whose dep-declared confronts tests, and in one where it confronts code alone
+    Then the first is pending naming the module alone, and the second passes; a closure that reaches the code passes, and a flow importing no code is not asked

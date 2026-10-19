@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:009eaf6f9559ea2f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2d3130d6730b06fd — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3880,7 +3880,9 @@ teste prova.
 
 - [The gate does not run the test nor judge whether the change broke it](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X02`
 
-- [The gate does not read the project's configuration](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X03`
+- [The gate's pass and failure read no configuration](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X03`
+
+- [A score bound to no code is pending where the chain confronts tests](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B11`
 
 - [A row the tests do not run fails](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B01`
 
@@ -7450,6 +7452,8 @@ teste prova.
 
 - [A dependency on types only is an edge of kind type](layers/mapa.md#grblg-b31--a-dependency-on-types-only-is-an-edge-of-kind-type) `GRBLG-B31`
 
+- [A test's doubles are resolved to one file each](layers/mapa.md#grblg-b32--a-tests-doubles-are-resolved-to-one-file-each) `GRBLG-B32`
+
 - [A test that was never ingested has no verdict](layers/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 
 - [The test's own change expires its evidence](layers/mapa.md#evfra-b02--the-tests-own-change-expires-its-evidence) `EVFRA-B02`
@@ -7479,6 +7483,8 @@ teste prova.
 - [A test's closure is what it asserts, not the wiring](layers/mapa.md#evfra-b12--a-tests-closure-is-what-it-asserts-not-the-wiring) `EVFRA-B12`
 
 - [A stored closure is read through today's rule](layers/mapa.md#evfra-b13--a-stored-closure-is-read-through-todays-rule) `EVFRA-B13`
+
+- [A test's closure stops at the files it replaces with a double](layers/mapa.md#evfra-b14--a-tests-closure-stops-at-the-files-it-replaces-with-a-double) `EVFRA-B14`
 
 - [The written format and the oldest readable format are both accepted](layers/mapa.md#mpfrm-b01--the-written-format-and-the-oldest-readable-format-are-both-accepted) `MPFRM-B01`
 
@@ -8013,6 +8019,8 @@ teste prova.
 - [The chain's flags are read in an OCaml comment](layers/scan.md#rpscr-b56--the-chains-flags-are-read-in-an-ocaml-comment) `RPSCR-B56`
 
 - [An identifier the chain reads may hold letters of any script](layers/scan.md#rpscr-b57--an-identifier-the-chain-reads-may-hold-letters-of-any-script) `RPSCR-B57`
+
+- [A test file's doubles are what mock_detect captures, outside the comments](layers/scan.md#rpscr-b58--a-test-files-doubles-are-what-mock-detect-captures-outside-the-comments) `RPSCR-B58`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

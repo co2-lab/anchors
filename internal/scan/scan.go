@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/co2-lab/anchors/internal/config"
@@ -129,6 +130,10 @@ type File struct {
 	// comment lines — `HOMEH-VR`, `HOMEH-VR-S02`, `PAYMX-CT` —, each whole with its state: what a
 	// capture test compares against. A code a comment mentions captures nothing.
 	CaptureCodes []string
+	// Doubles are the modules a test replaces with a double — what `derived.mock_detect`
+	// captures, outside the comments —, as written: the map resolves them to the files the
+	// test's proof stops at (see mapx's evidence closure).
+	Doubles []string
 	// Composes are the units a spec's Parts Used section names — the components a screen is
 	// made of, by name (`BottomSheet`). The map ties the spec to each one's code, so a
 	// component whose capture diverged can ask the captures of who uses it again.
@@ -324,6 +329,7 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 	}
 	f.Evidence = EvidenceOf(kind, rel, content, cfg)
 	f.CaptureCodes = captureCodes(rel, content, cs)
+	f.Doubles = doublesOf(kind, rel, content, cfg)
 	// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
 	// project's vocabulary, not a claim on this project's units. Counting them would give
 	// the file an inferred identity it does not own.
@@ -1722,4 +1728,49 @@ func extractOutRows(content []byte) map[string]string {
 		out[m[1]] = shortHash([]byte(strings.Join(strings.Fields(t), " ")))
 	}
 	return out
+}
+
+// doublesOf are the modules a test file replaces with a double: the first group of each match
+// of the project's `derived.mock_detect`, in the file with its comments blanked — a double
+// commented out replaces nothing. No pattern, or one that does not compile (the mock gates
+// report it), finds none.
+func doublesOf(kind, rel string, content []byte, cfg *config.Config) []string {
+	if kind != "test" || cfg == nil || cfg.Derived == nil {
+		return nil
+	}
+	re := mockDetect(strings.TrimSpace(cfg.Derived.MockDetect))
+	if re == nil {
+		return nil
+	}
+	code := cfg.DialectFor().CommentsFor(rel).Blank(string(content))
+	seen := map[string]bool{}
+	var out []string
+	for _, m := range re.FindAllStringSubmatch(code, -1) {
+		if len(m) < 2 {
+			continue
+		}
+		if spec := strings.TrimSpace(m[1]); spec != "" && !seen[spec] {
+			seen[spec] = true
+			out = append(out, spec)
+		}
+	}
+	return out
+}
+
+var mockDetectRE sync.Map // pattern → *regexp.Regexp, or nil when it does not compile
+
+func mockDetect(pattern string) *regexp.Regexp {
+	if pattern == "" {
+		return nil
+	}
+	if v, ok := mockDetectRE.Load(pattern); ok {
+		re, _ := v.(*regexp.Regexp)
+		return re
+	}
+	re, err := regexp.Compile(pattern)
+	if err != nil || re.NumSubexp() < 1 {
+		re = nil
+	}
+	mockDetectRE.Store(pattern, re)
+	return re
 }

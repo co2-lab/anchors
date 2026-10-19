@@ -1107,3 +1107,20 @@ func TestFlagEdges_typeOnlyDependency(t *testing.T) {
 		t.Errorf("types and values: a value edge, got %q (%v)", k, ok)
 	}
 }
+
+func TestBuild_doublesResolveToOneFile(t *testing.T) {
+	t.Run("GRBLG-B32: A test's doubles are the files its double specifiers name, each resolved to one", func(t *testing.T) {})
+	cfg := &config.Config{Dialect: &config.Dialect{ImportResolve: &config.ImportResolve{
+		Extensions: []string{".ts"}, Aliases: map[string]string{"@/": "app/"},
+	}}}
+	g := Build([]scan.File{
+		{Path: "app/pay/pay.test.ts", Kind: "test", Doubles: []string{"./client", "@/store", "react-native", "util", "../pay/pay.test"}},
+		{Path: "app/pay/client.ts", Kind: "code"},
+		{Path: "app/store.ts", Kind: "code"},
+		{Path: "a/util.ts", Kind: "code"},
+		{Path: "b/util.ts", Kind: "code"},
+	}, cfg, nil)
+	if got := strings.Join(g.node("app/pay/pay.test.ts").Doubles, ","); got != "app/pay/client.ts,app/store.ts" {
+		t.Errorf("a relative path and an alias resolve; a third party, an undecided tail and the test itself are none: %s", got)
+	}
+}

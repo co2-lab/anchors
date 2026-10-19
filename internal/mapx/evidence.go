@@ -131,6 +131,16 @@ func (g *Graph) evidenceClosure(id string, asserts bool, adj adjacency) map[stri
 		kind[x.ID] = x.Kind
 	}
 	visto := map[string]bool{id: true}
+	// What the test replaces with a double is not what it proves: the walk neither holds
+	// those files nor descends from them, and a change to one is the double's stamp's to
+	// catch (`mock-stamped`). Found anywhere on the walk — the test imports the handler, the
+	// handler imports the client the test doubles —, not only among the test's own imports.
+	cut := map[string]bool{}
+	if t := g.node(id); asserts && t != nil {
+		for _, d := range t.Doubles {
+			cut[d] = true
+		}
+	}
 	fila := []string{id}
 	out := map[string]string{}
 	for len(fila) > 0 {
@@ -139,7 +149,7 @@ func (g *Graph) evidenceClosure(id string, asserts bool, adj adjacency) map[stri
 		wiring := asserts && atual != id && kind[atual] == KindTest
 		for _, e := range adj.out[atual] {
 			filho := e.To
-			if visto[filho] || (asserts && e.NoSideEffect) || (wiring && kind[filho] != KindTest) {
+			if visto[filho] || cut[filho] || (asserts && e.NoSideEffect) || (wiring && kind[filho] != KindTest) {
 				continue
 			}
 			visto[filho] = true
@@ -151,7 +161,7 @@ func (g *Graph) evidenceClosure(id string, asserts bool, adj adjacency) map[stri
 			// to the next unit that is captured. A component the screen uses has its own
 			// capture, and its change stales that one, not this.
 			if e.Type == EdgeCaptures {
-				for d, r := range g.uncapturedDeps(filho, adj, revs, asserts) {
+				for d, r := range g.uncapturedDeps(filho, adj, revs, asserts, cut) {
 					if !visto[d] && d != id {
 						visto[d] = true
 						out[d] = r
@@ -221,8 +231,9 @@ func (g *Graph) divergedParts(n *Node) []string {
 // uncapturedDeps are what a captured unit's code depends on that no test captures: the
 // declared dependencies of the spec that specifies it (`depends-on`), transitively through
 // the specs of those, stopping at any file a test captures — that one is proven by its own
-// capture —, and, by today's rule, past no dependency with no side effect on the tests.
-func (g *Graph) uncapturedDeps(code string, adj adjacency, revs map[string]string, asserts bool) map[string]string {
+// capture —, and, by today's rule, past no dependency with no side effect on the tests, nor
+// into a file the test replaces with a double (cut).
+func (g *Graph) uncapturedDeps(code string, adj adjacency, revs map[string]string, asserts bool, cut map[string]bool) map[string]string {
 	captured := func(id string) bool {
 		for _, e := range adj.in[id] {
 			if e.Type == EdgeCaptures {
@@ -247,7 +258,7 @@ func (g *Graph) uncapturedDeps(code string, adj adjacency, revs map[string]strin
 		}
 		for _, owner := range owners {
 			for _, d := range adj.out[owner] {
-				if d.Type != EdgeDependsOn || seen[d.To] || (asserts && d.NoSideEffect) {
+				if d.Type != EdgeDependsOn || seen[d.To] || cut[d.To] || (asserts && d.NoSideEffect) {
 					continue
 				}
 				seen[d.To] = true

@@ -281,6 +281,11 @@ type Node struct {
 	// Resources: what the file reaches that is no file of the project — `db:transactions`,
 	// `api:stripe.charges` —, from its `@dep[<kind>]:` flags.
 	Resources []string `yaml:"resources,omitempty"`
+	// Doubles: the code files a test replaces with a double (`derived.mock_detect`, each
+	// specifier resolved to the one file it names). The test proves its code against the
+	// double, never against these: its evidence stops at them, and the real module's drift is
+	// the double's stamp's to catch (`mock-stamped`).
+	Doubles []string `yaml:"doubles,omitempty"`
 }
 
 // FailureSignal é a ocorrência observada de UMA falha declarada.

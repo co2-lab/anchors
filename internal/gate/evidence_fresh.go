@@ -37,7 +37,7 @@ import (
 // Bloqueante porque o conserto é conhecido, local e barato: rode o teste. Não há
 // julgamento de domínio a fazer — diferente de uma letra não declarada, onde as duas
 // saídas (adotar ou remapear) são legítimas e a escolha é de quem conhece o produto.
-func checkEvidenceFresh(_ string, n mapx.Node, _ string, g *mapx.Graph, _ *config.Config) (Verdict, string) {
+func checkEvidenceFresh(content string, n mapx.Node, _ string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindTest || g == nil {
 		return Skip, ""
 	}
@@ -48,6 +48,9 @@ func checkEvidenceFresh(_ string, n mapx.Node, _ string, g *mapx.Graph, _ *confi
 	}
 	ev := g.EvidenceStaleFor(n.ID)
 	if ev == nil {
+		if imps := unboundImports(content, n, g, cfg); len(imps) > 0 {
+			return Pending, i18n.T("gate.evidence_fresh.pending_unbound", strings.Join(imps, ", "))
+		}
 		return Pass, fmt.Sprintf(i18n.T("gate.evidence_fresh.pass_fresh"),
 			n.Signal.AtRev, len(n.Signal.ClosureRev))
 	}
@@ -70,4 +73,37 @@ func checkEvidenceFresh(_ string, n mapx.Node, _ string, g *mapx.Graph, _ *confi
 		}
 	}
 	return Fail, strings.TrimRight(b.String(), "\n")
+}
+
+// unboundImports are the project's code files a test imports when its proof reaches none: the
+// score was measured against code no change can stale, and "fresh" would say nothing. Asked
+// only of a project that put its tests in the dependency chain (`dep-declared` on `test`) —
+// without it a test carries no `@dep`, by the project's decision, and its closure holds no
+// code by construction. An import of types alone, or of a file the test replaces with a
+// double, binds the proof to nothing it runs, and is no such import.
+func unboundImports(content string, n mapx.Node, g *mapx.Graph, cfg *config.Config) []string {
+	if !gateOnTests(cfg, "dep-declared") {
+		return nil
+	}
+	for id := range g.EvidenceClosure(n.ID) {
+		if c := g.Node(id); c != nil && c.Kind == mapx.KindCode {
+			return nil
+		}
+	}
+	doubled := map[string]bool{}
+	for _, d := range n.Doubles {
+		doubled[d] = true
+	}
+	seen := map[string]bool{}
+	var out []string
+	for _, imp := range ImportsOf(content, n.ID, cfg.DialectFor(), g) {
+		if imp.Target == "" || imp.TypeOnly || doubled[imp.Target] || seen[imp.Target] {
+			continue
+		}
+		if t := g.Node(imp.Target); (t != nil && t.Kind == mapx.KindCode) || imp.Dir {
+			seen[imp.Target] = true
+			out = append(out, imp.Target)
+		}
+	}
+	return out
 }

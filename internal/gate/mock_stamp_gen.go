@@ -6,7 +6,6 @@ package gate
 
 import (
 	"fmt"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -189,27 +188,17 @@ func coveredByExisting(anchor, file string, modLines []string, existing []declar
 // tail against the map's code files, past its `./` and `../` — the test's folder deciding
 // between several. A specifier naming no file of the project is a third party's.
 func moduleFile(spec, testID string, d config.Dialect, g *mapx.Graph) (string, string) {
-	cands := moduleCandidates(spec, testID, d, g)
-	switch len(cands) {
-	case 0:
+	if g == nil {
 		return "", "no code file of the map matches the specifier"
-	case 1:
-		return cands[0], ""
 	}
-	best, bestLen, tie := "", -1, false
-	for _, c := range cands {
-		l := sharedDirs(c, testID)
-		switch {
-		case l > bestLen:
-			best, bestLen, tie = c, l, false
-		case l == bestLen:
-			tie = true
-		}
+	file, cands := g.Modules().File(spec, testID, d)
+	switch {
+	case file != "":
+		return file, ""
+	case len(cands) == 0:
+		return "", "no code file of the map matches the specifier"
 	}
-	if tie {
-		return "", fmt.Sprintf("the specifier matches %d files and the test's folder does not decide: %s", len(cands), strings.Join(cands, ", "))
-	}
-	return best, ""
+	return "", fmt.Sprintf("the specifier matches %d files and the test's folder does not decide: %s", len(cands), strings.Join(cands, ", "))
 }
 
 // moduleCandidates are the code files of the map a double's specifier may name: the one its
@@ -218,64 +207,7 @@ func moduleCandidates(spec, testID string, d config.Dialect, g *mapx.Graph) []st
 	if g == nil {
 		return nil
 	}
-	if target, dir := resolveImport(testID, RealImport{Path: spec}, d, g); target != "" && !dir {
-		if n := g.Node(target); n != nil && n.Kind == mapx.KindCode {
-			return []string{target}
-		}
-	}
-	target := strings.TrimPrefix(spec, "./")
-	for strings.HasPrefix(target, "../") {
-		target = strings.TrimPrefix(target, "../")
-	}
-	// An alias the project declares maps the head (`@/` → `apps/mobile/`). When the file it
-	// gives is not in the map, the tail is matched alone: the same alias names another
-	// workspace's files too (`@/lib/x` in `apps/landing-page/src/`), and those are still the
-	// project's modules.
-	var tail string
-	aliases := d.ImportResolve.AliasesFor(testID)
-	best := ""
-	for prefix := range aliases {
-		if strings.HasPrefix(target, prefix) && len(prefix) > len(best) {
-			best = prefix
-		}
-	}
-	if best != "" {
-		tail = strings.TrimPrefix(target, best)
-		target = strings.TrimPrefix(aliases[best]+tail, "/")
-	}
-	if cands := codeEndingIn(target, g); len(cands) > 0 || tail == "" {
-		return cands
-	}
-	return codeEndingIn(tail, g)
-}
-
-// codeEndingIn are the code files of the map whose path, without its extension, is the
-// target or ends in it after a `/`.
-func codeEndingIn(target string, g *mapx.Graph) []string {
-	if target == "" {
-		return nil
-	}
-	var cands []string
-	for _, n := range g.Nodes {
-		if n.Kind != mapx.KindCode {
-			continue
-		}
-		id := withoutExtension(n.ID)
-		if id == target || strings.HasSuffix(id, "/"+target) {
-			cands = append(cands, n.ID)
-		}
-	}
-	return cands
-}
-
-// sharedDirs counts the leading directory segments two paths share.
-func sharedDirs(a, b string) int {
-	sa, sb := strings.Split(filepath.ToSlash(a), "/"), strings.Split(filepath.ToSlash(b), "/")
-	n := 0
-	for n < len(sa)-1 && n < len(sb)-1 && sa[n] == sb[n] {
-		n++
-	}
-	return n
+	return g.Modules().Candidates(spec, testID, d)
 }
 
 // factoryNames are the module's exports the double's call names, in the order it names them

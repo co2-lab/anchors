@@ -552,6 +552,7 @@
   "gate.evidence_fresh.own_file_changed": "  test file itself changed (measured at %s)\n",
   "gate.evidence_fresh.closure_advanced": "  %d closure dependency(ies) advanced revision:\n",
   "gate.evidence_fresh.and_others": "    … and %d other(s)\n",
+  "gate.evidence_fresh.pending_unbound": "the score was measured, but against no code: the test imports %s and its proof reaches none of it — the imports carry no `@dep`, and no change to the code would stale it (`anchors check --fix` writes the flags)",
   "gate.marker_parity.pending_no_prefix": "gate `marker-parity` without `marker_prefix:` — without prefix nothing to search for. Declare it in gate, along with `marker_scopes:`",
   "gate.marker_parity.pending_no_count_or_scopes": "gate `marker-parity` without `marker_count:` or `marker_scopes:` — cannot know how many occurrences each rule needs to have",
   "gate.marker_parity.pending_no_markers_found": "no `@%s-*` markings found in project — check declared prefix (`marker_prefix: %s`)",

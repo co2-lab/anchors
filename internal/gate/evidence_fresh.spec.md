@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EVFRV
-  updated_at: 2026-10-08
+  updated_at: 2026-10-19
   layer: gate
 -->
 # EvidenceFresh — the score of this test holds against TODAY's code
@@ -56,6 +56,7 @@ choice belongs to whoever knows the product.
 | `EVFRV-B08` | The failing verdict states the FIX — run the test again — because a verdict that accuses without saying what to do transfers the work to the reader. |
 | `EVFRV-B09` | A test whose OWN file changed since the run is reported as such, separately from the closure. |
 | `EVFRV-B10` | The culprit list is TRUNCATED at five, and the remainder is counted. |
+| `EVFRV-B11` | In a project whose `dep-declared` confronts tests, a test with a score whose closure reaches no code file, while it imports code of the project, is PENDING, naming those imports: the score was measured against code no change can stale, and "fresh" would say nothing. An import of types only, or of a file the test replaces with a double, binds the proof to nothing it runs and does not count. |
 
 ## Invariants
 
@@ -71,7 +72,7 @@ choice belongs to whoever knows the product.
 | --- | --- | --- |
 | `EVFRV-X01` | Does not charge the ABSENCE of a green test. | That is another gate's ruler — coverage. Charging it here would merge "never ran" with "ran and aged", which are different debts with different fixes. |
 | `EVFRV-X02` | Does not RUN the test, nor judge whether the change actually broke it. | The gate measures whether the evidence still covers the current code, not whether the behaviour changed. Deciding that the diff was harmless is judgement, and the cheap fix — run it again — settles it for real instead of by opinion. |
-| `EVFRV-X03` | Does not read the project's configuration. | The confronted truth — the revision moved — lives in the map, not in a convention. A ruler that depended on settings could be turned off by a default nobody chose. |
+| `EVFRV-X03` | Its pass and its failure read no configuration; the one setting it reads — whether `dep-declared` confronts tests — only decides whether a score bound to no code is asked as pending (B11). | The confronted truth — the revision moved — lives in the map, not in a convention. A ruler that depended on settings could be turned off by a default nobody chose. Without the chain on its tests a test carries no `@dep` by the project's decision, and its closure holds no code by construction: asking it would be noise. |
 
 ## Errors
 

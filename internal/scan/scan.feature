@@ -2,7 +2,7 @@
 # @anchors
 #   code: SCFTC
 #   ref: RPSCR
-#   updated_at: 2026-10-15
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @RPSCR
@@ -385,3 +385,8 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     When the chain's flags and imports are read
     Then the symbols are categoriasDoOrçamento and orçamentoTotal, and the inline import brings café
 
+  @RPSCR-B58 @unit-level
+  Scenario: A test file's doubles are what mock_detect captures, outside the comments
+    Given a test that doubles a client twice, a store once, and a module in a comment
+    When its doubles are read
+    Then they are the client and the store, each once; a code file, no pattern, one that does not compile and one with no group give none

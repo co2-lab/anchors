@@ -185,64 +185,7 @@ func resolveImport(rel string, imp RealImport, d config.Dialect, g *mapx.Graph) 
 	if g == nil {
 		return "", false
 	}
-	p := imp.Path
-	if r := d.ImportResolve; r != nil && r.Separator != "" && r.Separator != "/" {
-		p = withSlashes(p, r.Separator)
-	}
-	var base string
-	switch {
-	// A pattern may say its paths are relative to the importer without `./` — a flow names
-	// the flow it runs that way.
-	case strings.HasPrefix(p, "./") || strings.HasPrefix(p, "../") || p == "." || p == ".." || imp.Relative:
-		base = path.Clean(path.Join(path.Dir(rel), p))
-	default:
-		aliases := d.ImportResolve.AliasesFor(rel)
-		best := ""
-		for prefix := range aliases {
-			if strings.HasPrefix(p, prefix) && len(prefix) > len(best) {
-				best = prefix
-			}
-		}
-		if best == "" {
-			return "", false
-		}
-		base = path.Clean(aliases[best] + strings.TrimPrefix(p, best))
-	}
-	var exts []string
-	if d.ImportResolve != nil {
-		exts = d.ImportResolve.Extensions
-	}
-	if n := g.Node(base); n != nil {
-		return base, false
-	}
-	for _, e := range exts {
-		if n := g.Node(base + e); n != nil {
-			return base + e, false
-		}
-	}
-	for _, n := range g.Nodes {
-		if path.Dir(n.ID) == base && n.Kind == mapx.KindCode {
-			return base, true
-		}
-	}
-	return "", false
-}
-
-// withSlashes writes an import path whose directories another separator divides with `/`:
-// leading separators climb from the importer (`.x` → `./x`, `..x` → `../x`).
-func withSlashes(p, sep string) string {
-	n := 0
-	for strings.HasPrefix(p, sep) {
-		p, n = strings.TrimPrefix(p, sep), n+1
-	}
-	p = strings.ReplaceAll(p, sep, "/")
-	switch {
-	case n == 1:
-		p = "./" + p
-	case n > 1:
-		p = strings.Repeat("../", n-1) + p
-	}
-	return strings.TrimSuffix(p, "/")
+	return g.Modules().Resolve(rel, imp.Path, imp.Relative, d)
 }
 
 // codesOfTarget are the codes a flag may name for an import: the target file's own code,
@@ -446,12 +389,16 @@ func importersOf(root string, g *mapx.Graph, d config.Dialect, withTests bool) *
 // gate on code alone, @used-by lists the code that imports it, as before the tests could take
 // part — adopting the chain on the tests is the project's decision, not a version's (reported
 // from MIF: 768 symbols asked for their tests after an upgrade).
-func testsInChain(cfg *config.Config) bool {
+func testsInChain(cfg *config.Config) bool { return gateOnTests(cfg, "used-by-declared") }
+
+// gateOnTests says whether the project's gate of that name confronts tests (`on:` holds
+// `test`).
+func gateOnTests(cfg *config.Config, name string) bool {
 	if cfg == nil {
 		return false
 	}
 	for _, g := range cfg.Gates {
-		if g.Check == "used-by-declared" || g.Name == "used-by-declared" {
+		if g.Check == name || g.Name == name {
 			for _, k := range g.On {
 				if k == "test" {
 					return true

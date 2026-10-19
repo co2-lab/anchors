@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -55,7 +56,7 @@ func TestEvidenceFreshSemCarimboTampoucoAprova(t *testing.T) {
 func TestEvidenceFreshCarimboFrescoPassa(t *testing.T) {
 	t.Run("EVFRV-B04: A test whose closure is intact passes", func(t *testing.T) {})
 	t.Run("EVFRV-B05: The passing verdict says what it checked against", func(t *testing.T) {})
-	t.Run("EVFRV-X03: The gate does not read the project's configuration", func(t *testing.T) {})
+	t.Run("EVFRV-X03: The gate's pass and failure read no configuration", func(t *testing.T) {})
 	g := grafoEv()
 	g.Nodes[0].Signal = &mapx.TestSignal{
 		Passed: 1, AtRev: "t1",
@@ -162,5 +163,42 @@ func TestEvidenceFreshSemMapaNaoJulga(t *testing.T) {
 		Signal: &mapx.TestSignal{Passed: 1, AtRev: "t1"}}
 	if v, msg := checkEvidenceFresh("", n, "", nil, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("sem grafo o gate não pode julgar, veio %v — %s", v, msg)
+	}
+}
+
+func TestEvidenceFresh_aScoreBoundToNoCodeIsPending(t *testing.T) {
+	t.Run("EVFRV-B11: A score whose closure reaches no code, while the test imports code, is pending where the chain confronts tests", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "src/pay.test.ts", Kind: mapx.KindTest, Rev: "t1",
+			Signal: &mapx.TestSignal{Passed: 1, AtRev: "t1"}, Doubles: []string{"src/client.ts"}},
+		{ID: "src/pay.ts", Kind: mapx.KindCode, FileCode: "PAYMP", Rev: "p1"},
+		{ID: "src/client.ts", Kind: mapx.KindCode, FileCode: "CLNTC", Rev: "c1"},
+		{ID: "src/types.ts", Kind: mapx.KindCode, FileCode: "TYPST", Rev: "y1"},
+	}}
+	content := "import { pay } from './pay'\nimport { client } from './client'\nimport type { Money } from './types'\n"
+	chain := func(on ...string) *config.Config {
+		return testkit.WithComments(&config.Config{Dialect: withChain("ts"),
+			Gates: []config.Gate{{Name: "dep-declared", On: on}}})
+	}
+	v, msg := checkEvidenceFresh(content, g.Nodes[0], "", g, chain("code", "test"))
+	if v != Pending || !strings.Contains(msg, "src/pay.ts") {
+		t.Fatalf("a score bound to no code is pending, naming the import: %v %s", v, msg)
+	}
+	if strings.Contains(msg, "src/client.ts") || strings.Contains(msg, "src/types.ts") {
+		t.Errorf("a doubled module and an import of types bind nothing the test runs: %s", msg)
+	}
+	if v, msg := checkEvidenceFresh(content, g.Nodes[0], "", g, chain("code")); v != Pass {
+		t.Errorf("without the chain on its tests, a test carries no @dep by decision: %v %s", v, msg)
+	}
+	bound := *g
+	bound.Edges = []mapx.Edge{{From: "src/pay.test.ts", To: "src/pay.ts", Type: mapx.EdgeDependsOn}}
+	bound.Nodes[0].Signal = &mapx.TestSignal{Passed: 1, AtRev: "t1", ClosureRev: map[string]string{"src/pay.ts": "p1"}}
+	if v, msg := checkEvidenceFresh(content, bound.Nodes[0], "", &bound, chain("code", "test")); v != Pass {
+		t.Errorf("a closure that reaches the code passes: %v %s", v, msg)
+	}
+	flow := mapx.Node{ID: "flows/pay.yaml", Kind: mapx.KindTest, Rev: "f1", Signal: &mapx.TestSignal{Passed: 1, AtRev: "f1"}}
+	g.Nodes = append(g.Nodes, flow)
+	if v, msg := checkEvidenceFresh("- launchApp\n", flow, "", g, chain("code", "test")); v != Pass {
+		t.Errorf("a test that imports no code of the project is not asked: %v %s", v, msg)
 	}
 }

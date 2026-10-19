@@ -552,6 +552,7 @@
   "gate.evidence_fresh.own_file_changed": "  el propio archivo de test cambió (medido en %s)\n",
   "gate.evidence_fresh.closure_advanced": "  %d dependencia(s) del cierre avanzaron de rev:\n",
   "gate.evidence_fresh.and_others": "    … y %d otra(s)\n",
+  "gate.evidence_fresh.pending_unbound": "el marcador fue medido, pero contra ningún código: la prueba importa %s y su prueba no alcanza ninguno — los imports no llevan `@dep`, y ningún cambio en el código la vencería (`anchors check --fix` escribe los flags)",
   "gate.marker_parity.pending_no_prefix": "gate `marker-parity` sin `marker_prefix:` — sin el prefijo no hay qué buscar. Declárelo en el gate, junto con `marker_scopes:`",
   "gate.marker_parity.pending_no_count_or_scopes": "gate `marker-parity` sin `marker_count:` ni `marker_scopes:` — no hay cómo saber cuántas ocurrencias necesita tener cada regla",
   "gate.marker_parity.pending_no_markers_found": "ninguna marca `@%s-*` encontrada en el proyecto — verifique el prefijo declarado (`marker_prefix: %s`)",

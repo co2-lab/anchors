@@ -1409,3 +1409,22 @@ func TestUsedBy_defaultFunction(t *testing.T) {
 		t.Errorf("a default function is the module's default, not a list of two: %+v", got)
 	}
 }
+
+func TestDoublesOf(t *testing.T) {
+	t.Run("RPSCR-B58: A test file's doubles are what mock_detect captures, outside the comments", func(t *testing.T) {})
+	d := tsd()
+	cfg := &config.Config{Dialect: &d, Derived: &config.Derived{MockDetect: config.FamilyMocks("ts").MockDetect}}
+	src := "jest.mock('../client')\n// jest.mock('./old')\nvi.mock(\"@/store\", () => ({}))\njest.mock('../client')\n"
+	if got := doublesOf("test", "src/a.test.ts", []byte(src), cfg); strings.Join(got, ",") != "../client,@/store" {
+		t.Errorf("each double once, a commented one none: %v", got)
+	}
+	if got := doublesOf("code", "src/a.ts", []byte(src), cfg); got != nil {
+		t.Errorf("a file that is no test has no doubles: %v", got)
+	}
+	for _, p := range []string{"", "jest\\.mock", "(unclosed"} {
+		cfg.Derived.MockDetect = p
+		if got := doublesOf("test", "src/a.test.ts", []byte(src), cfg); got != nil {
+			t.Errorf("pattern %q finds no double: %v", p, got)
+		}
+	}
+}

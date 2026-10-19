@@ -297,3 +297,42 @@ func TestEvidenceStaleFor_readsTheStoredClosureThroughTheRule(t *testing.T) {
 		t.Errorf("a file no rule reaches is judged as before: %+v", ev)
 	}
 }
+
+func TestEvidenceClosure_stopsAtTheDoubles(t *testing.T) {
+	t.Run("EVFRA-B14: A test's closure stops at the files it replaces with a double", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{
+			{ID: "src/pay.test.ts", Kind: KindTest, Rev: "t1", Doubles: []string{"src/client.ts"}},
+			{ID: "src/pay.ts", Kind: KindCode, Rev: "p1"},
+			{ID: "src/client.ts", Kind: KindCode, Rev: "c1"},
+			{ID: "src/http.ts", Kind: KindCode, Rev: "h1"},
+			{ID: "src/money.ts", Kind: KindCode, Rev: "m1"},
+		},
+		Edges: []Edge{
+			{From: "src/pay.test.ts", To: "src/pay.ts", Type: EdgeDependsOn},
+			{From: "src/pay.ts", To: "src/client.ts", Type: EdgeDependsOn},
+			{From: "src/pay.ts", To: "src/money.ts", Type: EdgeDependsOn},
+			{From: "src/client.ts", To: "src/http.ts", Type: EdgeDependsOn},
+		},
+	}
+	got := g.EvidenceClosure("src/pay.test.ts")
+	for _, want := range []string{"src/pay.ts", "src/money.ts"} {
+		if _, ok := got[want]; !ok {
+			t.Errorf("%s is what the test runs: %v", want, got)
+		}
+	}
+	for _, not := range []string{"src/client.ts", "src/http.ts"} {
+		if _, ok := got[not]; ok {
+			t.Errorf("%s is behind the double: %v", not, got)
+		}
+	}
+	// A proof stamped before the rule held the client: its change stales nothing now.
+	g.Nodes[0].Signal = &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"src/pay.ts": "p1", "src/client.ts": "c0", "src/http.ts": "h0"}}
+	if ev := g.EvidenceStaleFor("src/pay.test.ts"); ev != nil {
+		t.Errorf("the doubled client changed, and the test never ran it: %+v", ev)
+	}
+	g.Nodes[1].Rev = "p2"
+	if ev := g.EvidenceStaleFor("src/pay.test.ts"); ev == nil || strings.Join(ev.Culprit, ",") != "src/pay.ts" {
+		t.Errorf("the module it runs stales it: %+v", ev)
+	}
+}

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:dfb26011e2eccb19 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:49f3008b16d4fee1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4295,6 +4295,8 @@ abra a página dela em `camadas/`.
 
 - [EVFRV-B10 — The culprit list is TRUNCATED at five, and the remainder is counted.](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
 
+- [EVFRV-B11 — In a project whose `dep-declared` confronts tests, a test with a score whose closure reaches no code file, while it imports code of the project, is PENDING, naming those imports: the score was measured against code no change can stale, and "fresh" would say nothing. An import of types only, or of a file the test replaces with a double, binds the proof to nothing it runs and does not count.](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
+
 - [EVFRV-I01 — Absence of proof and expired proof are NEVER reported as the same finding. They are different debts with different fixes, and merging them is what drowns the list until it stops being read.](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
 
 - [EVFRV-I02 — A test that never ran is never approved either. The skip is silence, not a stamp: approving would state a freshness nobody measured.](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
@@ -4305,7 +4307,7 @@ abra a página dela em `camadas/`.
 
 - [EVFRV-X02 — Does not RUN the test, nor judge whether the change actually broke it.](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
 
-- [EVFRV-X03 — Does not read the project's configuration.](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
+- [EVFRV-X03 — Its pass and its failure read no configuration; the one setting it reads — whether `dep-declared` confronts tests — only decides whether a score bound to no code is asked as pending (B11).](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
 
 - [EVFRV-E01 — REF[EVFRV-B02]: with no map there is no closure to walk, and B02 answers that the gate stays quiet](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
 
@@ -8203,6 +8205,8 @@ abra a página dela em `camadas/`.
 
 - [GRBLG-B31 — A `depends-on` edge whose every flag is `@dep[type]` — an import of the target's types only — is of kind `type`; when a value import (`@dep:`) also ties the same files, the edge is a value one. (`flagEdges`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
+- [GRBLG-B32 — A test's doubles are the code files its double specifiers name, each resolved as the dependency chain resolves an import — relative to the test or through a declared alias, with the declared extensions, else by the path's tail — to ONE file of the map; a specifier that names no file of the project, or several the test's folder does not decide between, is no double of the map. (`doubledFiles`, `Modules.File`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
+
 - [GRBLG-B23 — Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-I01 — The same files and configuration always build the same graph, whatever order the files arrive in.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
@@ -8238,6 +8242,8 @@ abra a página dela em `camadas/`.
 - [EVFRA-B11 — A test that cites the rule of a row of a screen's Out table asserts that navigation: its evidence is stamped with the revision of that row alone, and goes stale when the row changes or is removed — naming the row —, not when another row or the rest of the spec changes. A test that cites no Out rule of a screen, passing through it on its way, is not tied to its navigation. (`OutRowKey`, `EvidenceClosure`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-B12 — A test's closure is what it asserts, not the wiring that gets it there: it never follows an edge whose flag has no side effect on the tests — a navigation, an import of types —; and a test file the test depends on — a util — enters with the test files it composes, and the walk does not descend from it into code. (`EvidenceClosure`, DESIGN-evidence-follows-the-asserts.md)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
+
+- [EVFRA-B14 — A test's closure stops at the files it replaces with a double — wherever the walk meets one, not only among the test's own imports —: it neither holds them nor descends from them, so a change to a doubled module, or to what only it reaches, stales nothing; the double's stamp answers for that drift (`mock-stamped`). A stored closure that held a doubled file is read through this rule (B13). (`EvidenceClosure`, `Node.Doubles`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-B13 — A proof's stored closure is read through today's rule: a file it holds that the rule leaves out — a screen on the path, what a util reaches — stales nothing; a file no rule reaches is judged as before. (`EvidenceStaleFor`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
@@ -8810,6 +8816,8 @@ abra a página dela em `camadas/`.
 - [RPSCR-B56 — The chain's flags — dependency, waiver, used-by and navigation — may stand in a block comment of the file's syntax (OCaml's `(* … *)`): each reads to the comment's closer, and the evidence leaves them out like any other comment. (`flagText`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B57 — The symbol a used-by flag names in parentheses is whatever stands there, in any script — the flag is Anchors' syntax, the name the language's —, and the names the dialect's patterns capture are kept whole: `categoriasDoOrçamento` is read as written.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B58 — A test file's doubles are the first group of each match of the project's `derived.mock_detect`, read with the file's comments blanked and each specifier once; a file that is no test, a project with no pattern, or a pattern that does not compile or captures nothing, gives none. (`doublesOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

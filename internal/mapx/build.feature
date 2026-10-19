@@ -219,3 +219,9 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Given a component importing only the types of one store, and both the types and the values of another
     When the map is built
     Then the first edge is of kind type and the second a value edge
+
+  @GRBLG-B32 @unit-level
+  Scenario: A test's doubles are resolved to one file each
+    Given a test doubling a sibling client, a store through an alias, a third-party package, a tail two folders share, and itself
+    When the map is built
+    Then its doubles are the client and the store

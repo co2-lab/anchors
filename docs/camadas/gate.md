@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:a8855311c5df7fc5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:233559cd79b8d914 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 89 unidades e 1421 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 89 unidades e 1422 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1050,6 +1050,8 @@ choice belongs to whoever knows the product.
 
 - **EVFRV-B10** — The culprit list is TRUNCATED at five, and the remainder is counted.
 
+- **EVFRV-B11** — In a project whose `dep-declared` confronts tests, a test with a score whose closure reaches no code file, while it imports code of the project, is PENDING, naming those imports: the score was measured against code no change can stale, and "fresh" would say nothing. An import of types only, or of a file the test replaces with a double, binds the proof to nothing it runs and does not count.
+
 - **EVFRV-I01** — Absence of proof and expired proof are NEVER reported as the same finding. They are different debts with different fixes, and merging them is what drowns the list until it stops being read.
 
 - **EVFRV-I02** — A test that never ran is never approved either. The skip is silence, not a stamp: approving would state a freshness nobody measured.
@@ -1060,7 +1062,7 @@ choice belongs to whoever knows the product.
 
 - **EVFRV-X02** — Does not RUN the test, nor judge whether the change actually broke it.
 
-- **EVFRV-X03** — Does not read the project's configuration.
+- **EVFRV-X03** — Its pass and its failure read no configuration; the one setting it reads — whether `dep-declared` confronts tests — only decides whether a score bound to no code is asked as pending (B11).
 
 - **EVFRV-E01** — REF[EVFRV-B02]: with no map there is no closure to walk, and B02 answers that the gate stays quiet
 

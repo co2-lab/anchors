@@ -2,7 +2,7 @@
 # @anchors
 #   code: EVFTV
 #   ref: EVFRA
-#   updated_at: 2026-10-09
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @EVFRA
@@ -99,3 +99,9 @@ Feature: EvidenceFreshness — a test's evidence expires when anything it exerci
     Given a proof stamped when its closure held the navigator, and a file no rule reaches
     When the navigator changes, and then that file
     Then the navigator stales nothing, and the file stales the proof as before
+
+  @EVFRA-B14 @unit-level
+  Scenario: A test's closure stops at the files it replaces with a double
+    Given a test of a payment module that doubles the client the module imports, and a proof stamped when its closure held the client
+    When its closure is walked, the client changes, and then the module
+    Then the closure holds the module and what it runs but neither the client nor what the client reaches; the client stales nothing, and the module stales the proof
