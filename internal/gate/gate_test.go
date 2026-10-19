@@ -1379,6 +1379,16 @@ func TestRunOne_presupposedFieldMissingAsksNothing(t *testing.T) {
 	if r := runOne(g, n, t.TempDir(), &mapx.Graph{}, declared); r.Verdict != Judge {
 		t.Errorf("declared: %v, want the judgment asked", r.Verdict)
 	}
+	// A gate of the whole project presupposes the same way, once.
+	project := config.Gate{Name: "testid-queried-exists", Check: "testid-queried-exists", Scope: config.ScopeProject,
+		Presupposes: []string{"dialect.test_handles.exposed"}}
+	if r := runAggregate(project, nil, t.TempDir(), true, &mapx.Graph{}, testkit.WithComments(&config.Config{})); r.Verdict != Pending || !strings.Contains(r.Detail, "dialect.test_handles.exposed") {
+		t.Errorf("a project gate with its field undeclared: %v (%s), want Pending naming it", r.Verdict, r.Detail)
+	}
+	optOut := testkit.WithComments(&config.Config{Dialect: &config.Dialect{OptOut: []string{"exposed"}}})
+	if r := runAggregate(project, nil, t.TempDir(), true, &mapx.Graph{}, optOut); r.Verdict != Skip {
+		t.Errorf("a project gate waived: %v (%s), want Skip", r.Verdict, r.Detail)
+	}
 }
 
 func TestGitReadOncePerRun(t *testing.T) {

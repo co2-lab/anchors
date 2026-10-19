@@ -2,17 +2,17 @@
 # @anchors
 #   code: PTFTP
 #   ref: CFPCD
-#   updated_at: 2026-10-16
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @CFPCD
 Feature: CodeFromPath — the most meaningful unique code for a unit, given its file path
 
   @CFPCD-B01 @unit-level
-  Scenario: Generic file names are recognised in any case
-    Given the names "handler", "index", "resource", "Handler" and "INDEX", and "metadata", "Login" and "useTransactions"
-    When each is checked for being generic
-    Then the first five are generic and the last three are not
+  Scenario: Whether a name is generic is the caller's to say
+    Given the path "functions/manage-metadata/handler.ts" with the name "handler"
+    When its code is generated saying the name is not generic
+    Then the code is made from "handler", not from the folder
 
   @CFPCD-B02 @unit-level
   Scenario: A generic file name takes its code from the parent folder

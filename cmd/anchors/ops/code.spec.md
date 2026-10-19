@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CDCMC
-  updated_at: 2026-10-16
+  updated_at: 2026-10-19
   layer: comando
 -->
 # CodeCommand — a new unit gets an identity code that no other unit in the map already owns, and the codes in use are listed from the map
@@ -48,7 +48,7 @@ rename rewrites the whole project and deserves its own dry-run.
 | `CDCMC-B01` | With nothing taken, the suggestion for a name is its canonical code. |
 | `CDCMC-B02` | When the canonical code is taken, the suggestion is another free code, and the output names who owns the canonical one. |
 | `CDCMC-B03` | A path inside a layer that declares a module prefix gets a code starting with that prefix, and the output says so. |
-| `CDCMC-B04` | A path whose basename is generic takes its identity from the parent directory, and the output says so. |
+| `CDCMC-B04` | A path whose basename the project calls generic (`dialect.generic_basenames`) takes its identity from the parent directory, and the output says so. |
 | `CDCMC-B05` | `--check` compares the code in uppercase; a taken code names the folders that own it and fails with the collision error, a free one is reported free. |
 | `CDCMC-B06` | `code list` prints one line per code, `code<TAB>folders`, sorted by code, with a code used by several files of the same folder on one line; the summary goes to standard error. |
 | `CDCMC-B07` | `--in` keeps only the folders under the given prefix; when nothing matches, the output names the filter instead of claiming the project has no code. |

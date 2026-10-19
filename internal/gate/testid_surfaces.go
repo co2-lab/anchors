@@ -107,13 +107,13 @@ func isIDByte(c byte) bool {
 // Quando o projeto declara o regime mas não o arquivo (o app de referência hoje: `e2e: e2e` sem
 // `files.e2e`), não há onde procurar. Devolver vazio aqui é honesto; o gate trata a
 // falta de consumidor conhecido como Skip, não como reprovação.
-func readE2ESurface(root string, cfg *config.Config) []string {
+func readE2ESurface(root string, cfg *config.Config) ([]string, []string) {
 	if cfg == nil || cfg.Derived == nil {
-		return nil
+		return nil, nil
 	}
 	chave := cfg.Derived.Surfaces["e2e"]
 	if chave == "" {
-		return nil
+		return nil, nil
 	}
 	// O PRIMEIRO padrão da camada: este gate resolve UM caminho de superfície, e uma
 	// camada com vários padrões não muda o que ele pergunta.
@@ -132,22 +132,26 @@ func readE2ESurface(root string, cfg *config.Config) []string {
 		}
 	}
 	if padrao == "" {
-		return nil
+		return nil, nil
 	}
 	// A superfície é declarada como template de região (ex.: `apps/mobile/.maestro`);
 	// aqui interessa a RAIZ dela, varrida por inteiro.
 	dir := filepath.Join(root, firstStaticSegment(padrao))
-	var out []string
+	var out, unread []string
 	_ = filepath.Walk(dir, func(p string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
 		}
-		if b, e := os.ReadFile(p); e == nil {
+		rel, _ := filepath.Rel(root, p)
+		rel = filepath.ToSlash(rel)
+		if b, e := readFile(root, rel); e == nil {
 			out = append(out, string(b))
+		} else {
+			unread = append(unread, rel)
 		}
 		return nil
 	})
-	return out
+	return out, unread
 }
 
 // readNeighborTests lê os testes da MESMA pasta e os da pasta-IRMÃ dentro do módulo.
@@ -159,7 +163,7 @@ func readE2ESurface(root string, cfg *config.Config) []string {
 //
 // Sobe UM nível só (o módulo da feature), não a árvore inteira: ler tudo tornaria
 // qualquer menção do repositório uma prova de consumo, e o gate deixaria de medir.
-func readNeighborTests(root, specID string, cfg *config.Config) []string {
+func readNeighborTests(root, specID string, cfg *config.Config) ([]string, []string) {
 	dir := filepath.Join(root, filepath.Dir(specID))
 	dirs := []string{dir}
 	// As irmãs dentro do módulo (`features/trends/{components,screens,hooks}`).
@@ -172,7 +176,7 @@ func readNeighborTests(root, specID string, cfg *config.Config) []string {
 			}
 		}
 	}
-	var out []string
+	var out, unread []string
 	for _, d := range dirs {
 		entradas, err := os.ReadDir(d)
 		if err != nil {
@@ -187,12 +191,14 @@ func readNeighborTests(root, specID string, cfg *config.Config) []string {
 			if _, kind := scan.Classify(filepath.ToSlash(rel), cfg); kind != string(mapx.KindTest) {
 				continue
 			}
-			if b, err := os.ReadFile(filepath.Join(d, e.Name())); err == nil {
+			if b, err := readFile(root, filepath.ToSlash(rel)); err == nil {
 				out = append(out, string(b))
+			} else {
+				unread = append(unread, filepath.ToSlash(rel))
 			}
 		}
 	}
-	return out
+	return out, unread
 }
 
 // firstStaticSegment corta o template no primeiro placeholder (`{{module}}`, `{unit}`)

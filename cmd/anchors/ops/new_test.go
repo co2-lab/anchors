@@ -186,7 +186,7 @@ func TestResolveSectionsAppliesWithAndWithout(t *testing.T) {
 func TestResolveNewCode(t *testing.T) {
 	t.Run("NWARN-B03: A spec is born with a code no unit uses", func(t *testing.T) {})
 	root := t.TempDir()
-	writeFile(t, root, "anchors.yaml", "layers:\n  auth:\n    pattern: \"src/auth/**/*.ts\"\n    kind: code\n    code_prefix: AU\n")
+	writeFile(t, root, "anchors.yaml", "dialect:\n  generic_basenames: [index]\nlayers:\n  auth:\n    pattern: \"src/auth/**/*.ts\"\n    kind: code\n    code_prefix: AU\n")
 	writeFile(t, root, "src/auth/Session.ts", "")
 	got, err := resolveNewCode(root, "src/auth/Session.ts")
 	if err != nil || !strings.HasPrefix(got, "AU") {

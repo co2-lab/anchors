@@ -128,7 +128,7 @@ uses them, choose the code by hand and validate it with --check.`,
 				unique = code.GenerateUniqueWithPrefix(name, prefix, taken)
 			case strings.ContainsRune(args[0], '/'):
 				canonical = code.Generate(name)
-				unique = code.GenerateFromPath(args[0], cfg.UnitName(args[0]), taken)
+				unique = code.GenerateFromPath(args[0], cfg.UnitName(args[0]), cfg.DialectFor().IsGenericBasename(cfg.UnitName(args[0])), taken)
 			default:
 				canonical = code.Generate(name)
 				unique = code.GenerateUnique(name, taken)

@@ -185,3 +185,9 @@ Feature: TestIDContract — a test handle is one contract with four ends: the co
     Then the first passes and the second names the derived handle
     And a caller exposing ":pay" counts as queried through the derived segment
     And a component exposing only `${prefix}${key}` is pending, naming its file and line
+
+  @TICTS-B27 @unit-level
+  Scenario: A consumer that cannot be read leaves the gate pending, not failing
+    Given a spec declaring a handle the code exposes, and its linked test unreadable
+    When testid-consistent confronts the spec
+    Then it is pending, naming the test file

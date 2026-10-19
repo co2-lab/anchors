@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:751ef139327c7cad — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:03da732ff3443214 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3224,6 +3224,8 @@ teste prova.
 
 - [The exposed patterns read a handle whose head is the caller's](layers/config.md#dlcti-b34--the-exposed-patterns-read-a-handle-whose-head-is-the-callers) `DLCTI-B34`
 
+- [The generic file names are the project's](layers/config.md#dlcti-b35--the-generic-file-names-are-the-projects) `DLCTI-B35`
+
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
 - [A trigger naming a unit code charges that unit and not its neighbours in the same layer](layers/config.md#dcrqa-b02--a-trigger-naming-a-unit-code-charges-that-unit-and-not-its-neighbours-in-the-same-layer) `DCRQA-B02`
@@ -4620,6 +4622,8 @@ teste prova.
 
 - [A must_appear_in glob that does not parse fails naming it](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-E02`
 
+- [The token is found at an identifier's edge, in any script](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B10`
+
 - [The duties in force are the resolved list](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B01`
 
 - [Without packs the duties in force are the inline list](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B02`
@@ -5820,6 +5824,8 @@ teste prova.
 
 - [A handle derived from the caller's head is declared, queried and counted](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B26`
 
+- [A consumer that cannot be read leaves the gate pending, not failing](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B27`
+
 - [Without the exposed and queried patterns declared the gate is pending, naming the field](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B01`
 
 - [The gate skips when no E2E surface is configured](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B02`
@@ -6150,7 +6156,7 @@ teste prova.
 
 - [A saturated namespace returns the generated code](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name) `CDGNC-X01`
 
-- [Generic file names are recognised in any case](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path) `CFPCD-B01`
+- [Whether a name is generic is the caller's to say](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path) `CFPCD-B01`
 
 - [A generic file name takes its code from the parent folder](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path) `CFPCD-B02`
 

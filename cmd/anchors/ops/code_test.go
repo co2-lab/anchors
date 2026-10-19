@@ -92,7 +92,7 @@ func TestCodeGenerateAvoidsATakenCanonical(t *testing.T) {
 func TestCodeGenerateFromAPath(t *testing.T) {
 	t.Run("CDCMC-B03: A path in a layer with a code prefix gets the module prefix", func(t *testing.T) {})
 	t.Run("CDCMC-B04: A generic basename takes its identity from the parent directory", func(t *testing.T) {})
-	cfg := "layers:\n  auth:\n    pattern: \"src/auth/**/*.ts\"\n    kind: code\n    code_prefix: AU\n"
+	cfg := "dialect:\n  generic_basenames: [index]\nlayers:\n  auth:\n    pattern: \"src/auth/**/*.ts\"\n    kind: code\n    code_prefix: AU\n"
 	root := codeProject(t, cfg, "")
 	writeFile(t, root, "src/auth/Session.ts", "export {}\n")
 	err, out := runCode(t, "--root", root, "src/auth/Session.ts")

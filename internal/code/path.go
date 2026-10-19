@@ -6,23 +6,7 @@ package code
 
 import (
 	"path/filepath"
-	"strings"
 )
-
-// genericBasenames são nomes de ARQUIVO que não distinguem a unidade: o que a
-// identifica é a PASTA-PAI (functions/manage-metadata/handler.ts → a unidade é
-// "manage-metadata", não "handler"). Nesses, o dir-pai vira o nome.
-var genericBasenames = map[string]bool{
-	"handler": true, "index": true, "resource": true, "mod": true,
-	"main": true, "types": true, "route": true, "routes": true,
-	"schema": true, "config": true,
-}
-
-// IsGenericBasename diz se um basename (sem extensão) não carrega identidade própria —
-// é um papel dentro da pasta, e a pasta é o nome real.
-func IsGenericBasename(name string) bool {
-	return genericBasenames[strings.ToLower(name)]
-}
 
 // GenerateFromPath é a porta de alto nível: dado o CAMINHO de uma unidade, o NOME dela — o
 // basename sem o que as layers acrescentam, que o projeto diz (`config.UnitName`) — e os
@@ -42,11 +26,13 @@ func IsGenericBasename(name string) bool {
 //
 // Quando a layer TEM code_prefix declarado, o chamador passa o prefixo e NÃO usa esta
 // função (Camada 1 tem precedência — é dialeto curado do projeto).
-func GenerateFromPath(path, base string, taken map[string]bool) string {
+// Whether the name is GENERIC — a role in its folder, not the unit (`handler`, `index`) — is
+// the project's to say (`dialect.generic_basenames`); the caller asks it and passes it.
+func GenerateFromPath(path, base string, generic bool, taken map[string]bool) string {
 	parent := parentDir(path)
 
 	// basename genérico: a pasta é o nome (determinístico).
-	if IsGenericBasename(base) && parent != "" {
+	if generic && parent != "" {
 		return GenerateUnique(parent, taken)
 	}
 

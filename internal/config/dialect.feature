@@ -237,3 +237,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given the ts example for testID, and a project declaring an exposed pattern with a suffix group
     When `${testID}-option-${v}` and `${prefix}${key}` are read, and the project's config loads
     Then the first gives the segment "-option-", the second an empty one, and the config loads
+
+  @DLCTI-B35 @unit-level
+  Scenario: The generic file names are the project's
+    Given a dialect declaring "handler" and "index" as generic, and one declaring none
+    When "Handler", "INDEX" and "metadata" are checked
+    Then the first two are generic for the first dialect and none for the second, and the go example carries the usual names

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:cb7d525a0124f405 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:b5cc926d5e1e9b56 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1945,7 +1945,7 @@ abra a página dela em `camadas/`.
 
 - [CDCMC-B03 — A path inside a layer that declares a module prefix gets a code starting with that prefix, and the output says so.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
-- [CDCMC-B04 — A path whose basename is generic takes its identity from the parent directory, and the output says so.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
+- [CDCMC-B04 — A path whose basename the project calls generic (`dialect.generic_basenames`) takes its identity from the parent directory, and the output says so.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
 - [CDCMC-B05 — `--check` compares the code in uppercase; a taken code names the folders that own it and fails with the collision error, a free one is reported free.](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
@@ -3507,6 +3507,8 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B34 — `dialect.test_handles.exposed` may capture a `suffix`: the segment a unit adds to a head its caller gives. The `ts` example reads it in a template opening on a value — `${testID}-option-${v}` gives `-option-`, `${prefix}${key}` an empty one. (`FamilyTestHandles`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
+- [DLCTI-B35 — `dialect.generic_basenames` lists the file names that are a role in their folder (`handler`, `index`), compared ignoring case; every family's example carries the usual ones, and none is applied by itself. (`IsGenericBasename`, `ExampleGenericBasenames`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B14 — The Go and TS families' examples say how a test is written, its title in a `title` group — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` —, and a project's own `tests` is read as declared.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
@@ -4609,7 +4611,7 @@ abra a página dela em `camadas/`.
 
 - [GTENG-B28 — A gate that breaks while measuring fails on that target, saying it broke and that the defect is Anchors'; the other gates and targets are still measured. (`runOne`, `runAggregate`, `recoverGate`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
-- [GTENG-B29 — A gate whose `presupposes` names a configuration field the project does not declare is Pending on every target, naming the field and the opt-out, and a judgment gate queues no question; when every missing field is in `dialect.opt_out` it is Skip; with all declared it runs as usual. (`presupposedMissing`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+- [GTENG-B29 — A gate whose `presupposes` names a configuration field the project does not declare is Pending on every target — and once, for a gate of the whole project or batch —, naming the field and the opt-out, and a judgment gate queues no question; when every missing field is in `dialect.opt_out` it is Skip; with all declared it runs as usual. (`presupposedMissing`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B30 — What the gates ask git — the files with uncommitted changes, each file's last commit day — is read once for the whole project and kept for a run, at most two minutes; a run that writes files (`check --fix`) forgets it, and the next question reads git again. (`ForgetRunState`, `lastCommitDate`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
@@ -5086,6 +5088,8 @@ abra a página dela em `camadas/`.
 - [OBHNB-B08 — Waiver and debt stay distinct: only the waiver resolves the duty, because the debt is still owed.](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit)
 
 - [OBHNB-B09 — The failing verdict OFFERS the three ways out — fulfil, waive with a reason, or acknowledge the debt with a when.](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit)
+
+- [OBHNB-B10 — The token is found at an identifier's edge: not glued, on its left, to a letter, digit or `_` of any script, nor on its right to a letter or digit — `_` continuing it (`METADATA_ENTRY_TABLE_NAME`). No language's extra identifier character is known.](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit)
 
 - [OBHNB-I01 — The token searched for is derived through the declared form — `screaming-snake`, `snake`, `kebab`, a free template, or the raw name. Guessing the shape in the engine would put one project's mess inside the framework.](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit)
 
@@ -6393,6 +6397,8 @@ abra a página dela em `camadas/`.
 
 - [TICTS-B26 — A handle the code builds on its caller's head — a `suffix` the project's `exposed` patterns capture, `${testID}-option-${v}` — is the derived handle `*-option-*`: the spec declares it as written, a consumer queries it by naming its segment after a head (`:pay-option-a`), and the caller's own handle counts as queried through a segment some unit of the project derives. A handle whose segment names nothing — `${prefix}${key}`, `${prefix}-${i}` — cannot be measured: the gate is pending, naming the file and line, never passing. (`unmeasurableHandles`, `queriedThroughDerived`, `projectDerivedSegments`)](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
+- [TICTS-B27 — A consumer surface the gate could not read — a linked test, a flow, a neighbour test — holds queries nobody saw: the gate is pending, naming the files — neither failing a handle as unqueried nor passing it as having no consumer. The surfaces are read through the run's reader, the git index under `--index`.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
+
 - [TICTS-B14 — The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
 - [TICTS-B15 — In a table row of the inventory only the first cell is the id; on any other line every quoted id counts.](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
@@ -6781,9 +6787,9 @@ abra a página dela em `camadas/`.
 
 ### [CFPCD — CodeFromPath — the most meaningful unique code for a unit, given its file path](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path)
 
-- [CFPCD-B01 — The generic file names are handler, index, resource, mod, main, types, route, routes, schema and config, recognised in any letter case. (`IsGenericBasename`)](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path)
+- [CFPCD-B01 — Whether a file's name is generic is the caller's to say, from the project (`dialect.generic_basenames`): no list of names is built in.](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path)
 
-- [CFPCD-B02 — A unit whose file name is generic takes its code from its parent folder's name; one with no parent folder keeps its own name. (`GenerateFromPath`)](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path)
+- [CFPCD-B02 — A unit whose file name the caller says is generic takes its code from its parent folder's name; one with no parent folder keeps its own name. (`GenerateFromPath`)](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path)
 
 - [CFPCD-B03 — The code comes from the unit's name the caller gives — the basename without what the project's layers add to it (`config.UnitName`) —, so every artifact of a unit compresses the same name. (`GenerateFromPath`)](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path)
 

@@ -215,7 +215,8 @@ func splitCamel(s, sep string) string {
 }
 
 // tokenAppearsIn procura o token nos arquivos que casam o glob. Devolve (achou,
-// houve-arquivo-para-checar) — sem arquivo, não há violação a declarar.
+// houve-arquivo-para-checar) — sem arquivo, não há violação a declarar. A file that cannot
+// be read carries no token (OBHNB-E01): the duty fails naming the glob, never passes.
 func tokenAppearsIn(root, glob, token string) (bool, bool) {
 	matches, err := doublestar.Glob(os.DirFS(root), glob)
 	if err != nil || len(matches) == 0 {
@@ -224,8 +225,9 @@ func tokenAppearsIn(root, glob, token string) (bool, bool) {
 	// Fronteira própria: `\b` falha aqui porque `_` é word-char — `\bMETADATA_ENTRY\b`
 	// NÃO casa dentro de `METADATA_ENTRY_TABLE_NAME`, que é justamente a forma como o
 	// destino referencia o nó. Exigimos que o token não esteja colado a outro
-	// identificador à esquerda; à direita, `_` é continuação legítima.
-	re := regexp.MustCompile(`(^|[^A-Za-z0-9_$])` + regexp.QuoteMeta(token) + `([^A-Za-z0-9$]|$)`)
+	// identificador à esquerda; à direita, `_` é continuação legítima. A identifier is
+	// letters, digits and `_` of any script: no language's extra characters are known.
+	re := regexp.MustCompile(`(^|[^\p{L}\p{N}_])` + regexp.QuoteMeta(token) + `([^\p{L}\p{N}]|$)`)
 	for _, m := range matches {
 		b, err := readFile(root, m)
 		if err != nil {

@@ -808,3 +808,20 @@ func TestTestIDContract_derivedHandles(t *testing.T) {
 		t.Errorf("unmeasurable: pending, naming file and line: %v %s", v, msg)
 	}
 }
+
+func TestTestIDContract_unreadableConsumerIsPending(t *testing.T) {
+	t.Run("TICTS-B27: A consumer that cannot be read leaves the gate pending, not failing", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
+	spec, g, root := consumerFixture(t, "getByTestId(':abcd-screen')\n")
+	locked := filepath.Join(root, "x.test.tsx")
+	if err := os.Chmod(locked, 0o000); err != nil {
+		t.Skip("cannot chmod 0000 here")
+	}
+	defer os.Chmod(locked, 0o644)
+	if _, err := os.ReadFile(locked); err == nil {
+		t.Skip("running with privileges that read a 0000 file")
+	}
+	if v, msg := checkTestIDCoherent(sectionOK, spec, root, g, cfgHandle("testID")); v != Pending || !strings.Contains(msg, "x.test.tsx") {
+		t.Errorf("an unread consumer: pending, naming it — got %v (%s)", v, msg)
+	}
+}

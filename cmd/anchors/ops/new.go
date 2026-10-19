@@ -622,7 +622,7 @@ func resolveNewCode(root, nameOrPath string) (string, error) {
 		if prefix != "" {
 			return code.GenerateUniqueWithPrefix(cfg.UnitName(nameOrPath), prefix, taken), nil
 		}
-		return code.GenerateFromPath(nameOrPath, cfg.UnitName(nameOrPath), taken), nil
+		return code.GenerateFromPath(nameOrPath, cfg.UnitName(nameOrPath), cfg.DialectFor().IsGenericBasename(cfg.UnitName(nameOrPath)), taken), nil
 	}
 	return code.GenerateUnique(nameOrPath, taken), nil
 }

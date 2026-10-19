@@ -92,7 +92,14 @@ func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph
 	// perguntas diferentes: a feature DESCREVE o handle (documentação executável), o
 	// teste/flow o CONSULTA (verificação). Um id descrito e nunca consultado é cenário
 	// que ninguém automatizou; consultado e nunca descrito é verificação sem contrato.
-	blobConsulta, blobFeature, temConsumidor := consumingSurfaces(root, n.ID, g, cfg)
+	blobConsulta, blobFeature, temConsumidor, unread := consumingSurfaces(root, n.ID, g, cfg)
+	if len(unread) > 0 {
+		// A consumer it could not read holds queries nobody saw: read as absent, its handles
+		// looked unqueried — or, with no other consumer, as needing no query at all.
+		// Nothing is concluded from what was not read.
+		sort.Strings(unread)
+		return Pending, i18n.T("gate.unreadable_files", strings.Join(unread, ", "))
+	}
 
 	// O confronto é por ID — a união de tudo que qualquer ponta menciona.
 	// A chave é NORMALIZADA (sem a marca): o código escreve `:idep-x` e a spec grava
@@ -185,7 +192,7 @@ func coveredBy(xs []string, id string) bool {
 // de quem DESCREVE (a feature). Devolve também se havia onde procurar — sem isso o gate
 // não distingue "ninguém consulta" de "o projeto não declarou superfície", e acusaria o
 // autor por uma configuração ausente.
-func consumingSurfaces(root, specID string, g *mapx.Graph, cfg *config.Config) (consulta, feature string, temConsumidor bool) {
+func consumingSurfaces(root, specID string, g *mapx.Graph, cfg *config.Config) (consulta, feature string, temConsumidor bool, unread []string) {
 	var cs, fs []string
 	for _, e := range g.Neighbors(specID).Out {
 		if e.Type != mapx.EdgeCoveredBy {
@@ -200,13 +207,18 @@ func consumingSurfaces(root, specID string, g *mapx.Graph, cfg *config.Config) (
 			if fe.Type == mapx.EdgeTestedBy {
 				if b, err := readFile(root, fe.To); err == nil {
 					cs = append(cs, string(b))
+				} else {
+					unread = append(unread, fe.To)
 				}
 			}
 		}
 	}
-	cs = append(cs, readE2ESurface(root, cfg)...)
+	e2e, e2eUnread := readE2ESurface(root, cfg)
+	cs = append(cs, e2e...)
 	// O teste COMPARTILHADO ou do PAI: um arquivo prova várias unidades e a aresta
 	// `tested-by` não alcança todas. Sem isto, handle consultado aparece como órfão.
-	cs = append(cs, readNeighborTests(root, specID, cfg)...)
-	return strings.Join(cs, "\n"), strings.Join(fs, "\n"), len(cs) > 0
+	neighbors, nUnread := readNeighborTests(root, specID, cfg)
+	cs = append(cs, neighbors...)
+	unread = append(append(unread, e2eUnread...), nUnread...)
+	return strings.Join(cs, "\n"), strings.Join(fs, "\n"), len(cs) > 0, unread
 }

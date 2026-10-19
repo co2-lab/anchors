@@ -114,6 +114,9 @@ func DeclaredSyntax(cfg *config.Config, files []string) Syntax {
 		if len(d.Limits) == 0 {
 			add.Limits = ex.Limits
 		}
+		if len(d.GenericBasenames) == 0 {
+			add.GenericBasenames = ex.GenericBasenames
+		}
 		s.Tests, add.Tests = testsFor(d.Tests, ex.Tests)
 	}
 	if d.Tests != nil && d.Tests.Pattern != "" && !regexp.MustCompile(`\(\?P<title`).MatchString(d.Tests.Pattern) {

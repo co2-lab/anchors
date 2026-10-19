@@ -1,6 +1,6 @@
 <!-- @anchors
   code: OBHNB
-  updated_at: 2026-10-08
+  updated_at: 2026-10-19
   layer: gate
 -->
 # ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit
@@ -56,6 +56,7 @@ points at, triggered by an attribute the node itself declares.
 | `OBHNB-B07` | A bare debt marker, with no when, keeps failing: it assumes no debt, it only hides better. |
 | `OBHNB-B08` | Waiver and debt stay distinct: only the waiver resolves the duty, because the debt is still owed. |
 | `OBHNB-B09` | The failing verdict OFFERS the three ways out — fulfil, waive with a reason, or acknowledge the debt with a when. |
+| `OBHNB-B10` | The token is found at an identifier's edge: not glued, on its left, to a letter, digit or `_` of any script, nor on its right to a letter or digit — `_` continuing it (`METADATA_ENTRY_TABLE_NAME`). No language's extra identifier character is known. |
 
 ## Invariants
 

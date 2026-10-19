@@ -183,6 +183,10 @@ type Dialect struct {
 	// name defined again in the test is the unit copied instead of exercised. Which lines
 	// define a name is the language's, so it comes from the family or from the project.
 	Definition string `yaml:"definition,omitempty"`
+	// GenericBasenames are the file names that are a role in their folder and not the unit —
+	// `handler`, `index` —: a code generated for such a file is made from its folder's name
+	// (functions/manage-metadata/handler.ts → manage-metadata). Compared ignoring case.
+	GenericBasenames []string `yaml:"generic_basenames,omitempty"`
 }
 
 // TestsSource is how the project's tests are read: a fixed pattern or a script.
@@ -541,6 +545,23 @@ func (c *Config) DialectFor() Dialect {
 	return d
 }
 
+// IsGenericBasename says whether a file's name is one the project calls generic — a role in
+// its folder, the folder being the unit (`dialect.generic_basenames`, compared ignoring case).
+func (d Dialect) IsGenericBasename(name string) bool {
+	for _, g := range d.GenericBasenames {
+		if strings.EqualFold(g, name) {
+			return true
+		}
+	}
+	return false
+}
+
+// ExampleGenericBasenames are the example of `generic_basenames`: the roles a file plays in
+// the folder of a serverless function, a package or a route, never applied by itself.
+func ExampleGenericBasenames() []string {
+	return []string{"handler", "index", "resource", "mod", "main", "types", "route", "routes", "schema", "config"}
+}
+
 // NamingExample is the example of the two naming conventions — set_promise and set_slice —,
 // a list of verbs in English and Portuguese: every family's example carries it.
 func NamingExample() (promise, slice string) { return defaultSetPromise, defaultSetSlice }
@@ -562,10 +583,11 @@ func FamilyLexicon(family string) *Dialect {
 		HandlePatterns: append([]string(nil), base.HandlePatterns...),
 		LogPatterns:    append([]string(nil), base.LogPatterns...),
 		SetPromise:     defaultSetPromise, SetSlice: defaultSetSlice,
-		StatementEnd:  familyStatementEnd(family),
-		Limits:        exampleLimits(),
-		SignatureEnd:  familySignatureEnd(family),
-		GuardPatterns: exampleGuards(family),
+		StatementEnd:     familyStatementEnd(family),
+		Limits:           exampleLimits(),
+		SignatureEnd:     familySignatureEnd(family),
+		GuardPatterns:    exampleGuards(family),
+		GenericBasenames: ExampleGenericBasenames(),
 	}
 	return &ex
 }

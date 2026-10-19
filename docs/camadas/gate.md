@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:322830733a2c8a3d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:7970ecde74e4c703 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 89 unidades e 1417 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 89 unidades e 1419 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1535,7 +1535,7 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 
 - **GTENG-B28** — A gate that breaks while measuring fails on that target, saying it broke and that the defect is Anchors'; the other gates and targets are still measured. (`runOne`, `runAggregate`, `recoverGate`)
 
-- **GTENG-B29** — A gate whose `presupposes` names a configuration field the project does not declare is Pending on every target, naming the field and the opt-out, and a judgment gate queues no question; when every missing field is in `dialect.opt_out` it is Skip; with all declared it runs as usual. (`presupposedMissing`)
+- **GTENG-B29** — A gate whose `presupposes` names a configuration field the project does not declare is Pending on every target — and once, for a gate of the whole project or batch —, naming the field and the opt-out, and a judgment gate queues no question; when every missing field is in `dialect.opt_out` it is Skip; with all declared it runs as usual. (`presupposedMissing`)
 
 - **GTENG-B30** — What the gates ask git — the files with uncommitted changes, each file's last commit day — is read once for the whole project and kept for a run, at most two minutes; a run that writes files (`check --fix`) forgets it, and the next question reads git again. (`ForgetRunState`, `lastCommitDate`)
 
@@ -2271,6 +2271,8 @@ points at, triggered by an attribute the node itself declares.
 - **OBHNB-B08** — Waiver and debt stay distinct: only the waiver resolves the duty, because the debt is still owed.
 
 - **OBHNB-B09** — The failing verdict OFFERS the three ways out — fulfil, waive with a reason, or acknowledge the debt with a when.
+
+- **OBHNB-B10** — The token is found at an identifier's edge: not glued, on its left, to a letter, digit or `_` of any script, nor on its right to a letter or digit — `_` continuing it (`METADATA_ENTRY_TABLE_NAME`). No language's extra identifier character is known.
 
 - **OBHNB-I01** — The token searched for is derived through the declared form — `screaming-snake`, `snake`, `kebab`, a free template, or the raw name. Guessing the shape in the engine would put one project's mess inside the framework.
 
@@ -4446,6 +4448,8 @@ belongs to a project-scope gate.
 - **TICTS-B25** — A pattern says what it captures in a group: `testid` is a handle, `prefix` the head of a family read as `head-*`, `suffix` a segment composed onto a head read as `*-seg-*`. A value one pattern captures as a prefix is not also a whole handle by another, and the handles are listed in the order they stand in the source. (`handlesIn`)
 
 - **TICTS-B26** — A handle the code builds on its caller's head — a `suffix` the project's `exposed` patterns capture, `${testID}-option-${v}` — is the derived handle `*-option-*`: the spec declares it as written, a consumer queries it by naming its segment after a head (`:pay-option-a`), and the caller's own handle counts as queried through a segment some unit of the project derives. A handle whose segment names nothing — `${prefix}${key}`, `${prefix}-${i}` — cannot be measured: the gate is pending, naming the file and line, never passing. (`unmeasurableHandles`, `queriedThroughDerived`, `projectDerivedSegments`)
+
+- **TICTS-B27** — A consumer surface the gate could not read — a linked test, a flow, a neighbour test — holds queries nobody saw: the gate is pending, naming the files — neither failing a handle as unqueried nor passing it as having no consumer. The surfaces are read through the run's reader, the git index under `--index`.
 
 - **TICTS-B14** — The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading.
 

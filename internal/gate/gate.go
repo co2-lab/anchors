@@ -264,6 +264,12 @@ func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, 
 	r = Result{Gate: g.Name, Regra: idDoGate(g), Target: "(" + escopo + ")", Blocking: g.IsBlocking()}
 	defer markSeverity(g, &r)
 	defer recoverGate(&r)
+	// A gate of the whole project presupposes its fields as one of each target does: with
+	// one undeclared it measures nothing, and says so; waived, it has nothing to measure.
+	if v, msg, ok := presupposedMissing(g, cfg); ok {
+		r.Verdict, r.Detail = v, msg
+		return r
+	}
 	// Um gate agregado pode ser INTERNO: a pergunta é sobre o conjunto, mas quem
 	// responde é o próprio CLI, não uma ferramenta de fora. É o caso de
 	// `testid-consultado-existe`, que confronta as duas pontas do projeto de uma vez —

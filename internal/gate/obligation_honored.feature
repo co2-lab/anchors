@@ -2,7 +2,7 @@
 # @anchors
 #   code: OHFBL
 #   ref: OBHNB
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @OBHNB
@@ -136,3 +136,9 @@ Feature: ObligationHonored — the cross-cutting duty that lives OUTSIDE the uni
     And a node that carries the trigger
     When the gate confronts the node
     Then it returns Fail naming the obligation and the glob
+
+  @OBHNB-B10 @unit-level
+  Scenario: The token is found at an identifier's edge, in any script
+    Given the token METADATA_ENTRY and files holding "ÁMETADATA_ENTRY", "xMETADATA_ENTRY" and "$METADATA_ENTRY_TABLE"
+    When the obligation is confronted with each
+    Then the first two do not carry the token, and the third does

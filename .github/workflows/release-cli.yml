@@ -7,9 +7,34 @@ on:
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
+  # A RELEASE ONLY OF A COMMIT THE CI PASSED. A tag was the only gate before: the process
+  # (tag only on a green main) kept releases sound, and nothing enforced it. This job waits
+  # for the CI run of the tagged commit and refuses the release unless it concluded green —
+  # a commit with no CI run, or a red one, publishes nothing.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for i in $(seq 1 60); do
+            c=$(gh run list -R "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --workflow CI \
+                --json status,conclusion --jq '.[0] | "\(.status) \(.conclusion)"')
+            echo "CI of $GITHUB_SHA: ${c:-none}"
+            case "$c" in
+              "completed success") exit 0 ;;
+              completed*) echo "the CI of the tagged commit did not pass"; exit 1 ;;
+              "") [ "$i" -ge 3 ] && { echo "no CI run for the tagged commit"; exit 1; } ;;
+            esac
+            sleep 30
+          done
+          echo "the CI of the tagged commit did not finish in 30 minutes"; exit 1
+
   goreleaser:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

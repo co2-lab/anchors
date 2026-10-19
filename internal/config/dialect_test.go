@@ -883,3 +883,17 @@ func TestFamilyTestHandles_derivedHead(t *testing.T) {
 		t.Errorf("an exposed pattern may capture a suffix: %v", err)
 	}
 }
+
+func TestDialect_genericBasenames(t *testing.T) {
+	t.Run("DLCTI-B35: The generic file names are the project's", func(t *testing.T) {})
+	d := Dialect{GenericBasenames: []string{"handler", "index"}}
+	if !d.IsGenericBasename("Handler") || !d.IsGenericBasename("INDEX") || d.IsGenericBasename("metadata") {
+		t.Error("the declared names, ignoring case")
+	}
+	if (Dialect{}).IsGenericBasename("handler") {
+		t.Error("none declared, none is generic")
+	}
+	if ex := FamilyLexicon("go"); len(ex.GenericBasenames) == 0 || ex.GenericBasenames[0] != "handler" {
+		t.Errorf("the example carries the usual names: %v", ex.GenericBasenames)
+	}
+}

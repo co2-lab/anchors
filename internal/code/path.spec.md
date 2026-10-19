@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CFPCD
-  updated_at: 2026-10-16
+  updated_at: 2026-10-19
   layer: infra
 -->
 # CodeFromPath — the most meaningful unique code for a unit, given its file path
@@ -32,8 +32,8 @@ first.
 
 | Effect | Description |
 | --- | --- |
-| `CFPCD-B01` | The generic file names are handler, index, resource, mod, main, types, route, routes, schema and config, recognised in any letter case. (`IsGenericBasename`) |
-| `CFPCD-B02` | A unit whose file name is generic takes its code from its parent folder's name; one with no parent folder keeps its own name. (`GenerateFromPath`) |
+| `CFPCD-B01` | Whether a file's name is generic is the caller's to say, from the project (`dialect.generic_basenames`): no list of names is built in. |
+| `CFPCD-B02` | A unit whose file name the caller says is generic takes its code from its parent folder's name; one with no parent folder keeps its own name. (`GenerateFromPath`) |
 | `CFPCD-B03` | The code comes from the unit's name the caller gives — the basename without what the project's layers add to it (`config.UnitName`) —, so every artifact of a unit compresses the same name. (`GenerateFromPath`) |
 | `CFPCD-B04` | A file name that is not generic gives the generator's code for that name when it is free. |
 

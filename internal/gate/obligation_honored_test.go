@@ -312,3 +312,17 @@ func TestObligationHonored_Errors(t *testing.T) {
 		}
 	})
 }
+
+func TestObligation_identifierEdgeInAnyScript(t *testing.T) {
+	t.Run("OBHNB-B10: The token is found at an identifier's edge, in any script", func(t *testing.T) {})
+	content := "<!-- @anchors\n  carries: pii\n-->\n"
+	for src, want := range map[string]Verdict{
+		"const t = ÁMETADATA_ENTRY\n":       Fail,
+		"const t = xMETADATA_ENTRY\n":       Fail,
+		"const t = $METADATA_ENTRY_TABLE\n": Pass,
+	} {
+		if v, msg := checkObligationHonored(content, obligNode(), tmpRoot(t, src), nil, obligCfg()); v != want {
+			t.Errorf("%q: want %v, got %v (%s)", src, want, v, msg)
+		}
+	}
+}
