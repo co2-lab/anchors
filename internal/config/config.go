@@ -3156,8 +3156,12 @@ type SectionRequirement struct {
 type SectionTrigger struct {
 	Exposes        string   `yaml:"exposes,omitempty"`
 	DependsOnLayer []string `yaml:"depends_on_layer,omitempty"`
-	Flag           string   `yaml:"flag,omitempty"`
-	CodeMatches    string   `yaml:"code_matches,omitempty"`
+	// Kinds narrows DependsOnLayer to the kinds of dependency that count: `value` — the
+	// default, the code reads what the layer gives — and `type`, an import of its types
+	// only (`@dep[type]`). It is no trigger of its own.
+	Kinds       []string `yaml:"kinds,omitempty"`
+	Flag        string   `yaml:"flag,omitempty"`
+	CodeMatches string   `yaml:"code_matches,omitempty"`
 }
 
 // validate refuses an entry with no section, with no trigger or two, or with a trigger
@@ -3183,6 +3187,14 @@ func (r SectionRequirement) validate(field string, layers map[string]Layer) erro
 	case r.When.CodeMatches != "":
 		if _, err := regexp.Compile(r.When.CodeMatches); err != nil {
 			return fmt.Errorf("`%s.when.code_matches` does not compile: %w", field, err)
+		}
+	}
+	if len(r.When.Kinds) > 0 && len(r.When.DependsOnLayer) == 0 {
+		return fmt.Errorf("`%s.when.kinds` narrows `depends_on_layer`, which the entry does not declare", field)
+	}
+	for _, k := range r.When.Kinds {
+		if k != "value" && k != "type" {
+			return fmt.Errorf("`%s.when.kinds`: a dependency is `value` or `type`, got %q", field, k)
 		}
 	}
 	for _, l := range r.When.DependsOnLayer {

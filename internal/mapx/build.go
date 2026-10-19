@@ -1033,7 +1033,8 @@ func layerOfUnit(f scan.File) string {
 // the dangling flag. An edge whose flag the project says has no side effect on the tests
 // (`evidence.no_side_effect.flags` — `@navigates` and `@dep[type]` by default) is marked so: a
 // test's evidence does not follow it. When two flags tie one file to another, one with a side
-// effect wins.
+// effect wins. A `depends-on` from `@dep[type]` alone is of kind `type`; a value import of the
+// same target makes it a value edge.
 func flagEdges(files []scan.File, cfg *config.Config) []Edge {
 	quiet := map[string]bool{}
 	for _, f := range cfg.NoSideEffectFlags() {
@@ -1058,6 +1059,9 @@ func flagEdges(files []scan.File, cfg *config.Config) []Edge {
 			if !e.NoSideEffect {
 				edges[i].NoSideEffect = false
 			}
+			if e.Kind == "" {
+				edges[i].Kind = "" // a value import of the same target: the edge is a value one
+			}
 			return
 		}
 		at[k] = len(edges)
@@ -1070,7 +1074,11 @@ func flagEdges(files []scan.File, cfg *config.Config) []Edge {
 				if d.Kind != "" {
 					flag = "@dep[" + d.Kind + "]"
 				}
-				add(Edge{From: f.Path, To: to, Type: EdgeDependsOn, Origin: OriginDeclared, Method: strings.Join(d.Symbols, ", "), NoSideEffect: quiet[flag]})
+				kind := ""
+				if d.Kind == scan.TypeDepKind {
+					kind = scan.TypeDepKind
+				}
+				add(Edge{From: f.Path, To: to, Type: EdgeDependsOn, Origin: OriginDeclared, Method: strings.Join(d.Symbols, ", "), NoSideEffect: quiet[flag], Kind: kind})
 			}
 		}
 		for _, nv := range f.Navigates {

@@ -301,6 +301,7 @@
   "gate.section_required.line": "  - `## %s` — `%s` %s",
   "gate.section_required.fail_missing": "`%s` lacks %d section(s) its code calls for:\n%s\nWrite each section in the spec — a section that says the unit has none of it (and why) is written too.",
   "gate.section_required.why_depends": "depends on `%s` (layer %s)",
+  "gate.section_required.why_depends_type": "depends on the types of `%s` (layer %s)",
   "gate.section_required.why_exposes": "exposes the handle `%s`",
   "gate.section_required.why_flag": "carries `%s`",
   "gate.section_required.why_matches": "matches the project's pattern at `%s`",

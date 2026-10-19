@@ -1083,3 +1083,27 @@ func TestUnitLayerTags(t *testing.T) {
 		t.Errorf("the screen unit's spec and feature tagged screen, the other untouched: %v %v %v", g.Nodes[0].Tags, g.Nodes[1].Tags, g.Nodes[2].Tags)
 	}
 }
+
+func TestFlagEdges_typeOnlyDependency(t *testing.T) {
+	t.Run("GRBLG-B31: A dependency on types only is an edge of kind type", func(t *testing.T) {})
+	files := []scan.File{
+		{Path: "ui/Card.tsx", Kind: "code", HeaderCode: "CARDX", CodeDeps: []scan.CodeDep{
+			{Code: "STORA", Kind: scan.TypeDepKind},
+			{Code: "STORB", Kind: scan.TypeDepKind}, {Code: "STORB"},
+		}},
+		{Path: "stores/a.ts", Kind: "code", HeaderCode: "STORA"},
+		{Path: "stores/b.ts", Kind: "code", HeaderCode: "STORB"},
+	}
+	kinds := map[string]string{}
+	for _, e := range flagEdges(files, &config.Config{}) {
+		if e.Type == EdgeDependsOn {
+			kinds[e.To] = e.Kind
+		}
+	}
+	if k, ok := kinds["stores/a.ts"]; !ok || k != "type" {
+		t.Errorf("types only: kind type, got %q (%v)", k, ok)
+	}
+	if k, ok := kinds["stores/b.ts"]; !ok || k != "" {
+		t.Errorf("types and values: a value edge, got %q (%v)", k, ok)
+	}
+}

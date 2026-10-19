@@ -2,7 +2,7 @@
 # @anchors
 #   code: SCRQF
 #   ref: SCRQR
-#   updated_at: 2026-10-18
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @SCRQR
@@ -45,3 +45,10 @@ Feature: SectionRequired — the spec sections a unit's code calls for exist in 
     Given a spec whose specified code file is gone from disk
     When section-required confronts the spec
     Then it names no section from the file it could not read
+
+  @SCRQR-B06 @unit-level
+  Scenario: A dependency on types only calls for nothing unless asked
+    Given a component whose only dependency on the store layer is an import of its types
+    When section-required confronts its spec with no data contract section
+    Then nothing is called for
+    And with kinds [value, type] the data contract is named, saying it depends on the store's types

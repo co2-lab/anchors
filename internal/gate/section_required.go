@@ -106,11 +106,30 @@ func sectionTrigger(w config.SectionTrigger, c mapx.Node, root string, g *mapx.G
 		for _, l := range w.DependsOnLayer {
 			layers[l] = true
 		}
+		// A dependency on the layer's values counts; one on its types only — `@dep[type]`,
+		// the shape of the data and not the data — counts when the entry asks for it.
+		kinds := map[string]bool{"value": true}
+		if len(w.Kinds) > 0 {
+			kinds = map[string]bool{}
+			for _, k := range w.Kinds {
+				kinds[k] = true
+			}
+		}
 		for _, e := range g.Neighbors(c.ID).Out {
 			if e.Type != mapx.EdgeDependsOn {
 				continue
 			}
+			kind := "value"
+			if e.Kind == "type" {
+				kind = "type"
+			}
+			if !kinds[kind] {
+				continue
+			}
 			if t := g.Node(e.To); t != nil && layers[t.Layer] {
+				if kind == "type" {
+					return i18n.T("gate.section_required.why_depends_type", t.ID, t.Layer), true
+				}
 				return i18n.T("gate.section_required.why_depends", t.ID, t.Layer), true
 			}
 		}

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e1cfd46391973c61 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:31f57d6386f1b3ef — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -5562,6 +5562,8 @@ teste prova.
 
 - [A code file that cannot be read calls for nothing](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-E01`
 
+- [A dependency on types only calls for nothing unless asked](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B06`
+
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B01`
 
 - [Without a declared dialect the verdict is undetermined](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B02`
@@ -7423,6 +7425,8 @@ teste prova.
 - [A proof set aside comes back with its revision](layers/mapa.md#grblg-b29--a-proof-set-aside-comes-back-with-its-revision) `GRBLG-B29`
 
 - [A unit's declared layer is a tag of its spec and its feature](layers/mapa.md#grblg-b30--a-units-declared-layer-is-a-tag-of-its-spec-and-its-feature) `GRBLG-B30`
+
+- [A dependency on types only is an edge of kind type](layers/mapa.md#grblg-b31--a-dependency-on-types-only-is-an-edge-of-kind-type) `GRBLG-B31`
 
 - [A test that was never ingested has no verdict](layers/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 

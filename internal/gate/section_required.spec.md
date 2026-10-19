@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCRQR
-  updated_at: 2026-10-18
+  updated_at: 2026-10-19
   layer: gate
 -->
 # SectionRequired — the spec sections a unit's code calls for exist in its spec
@@ -42,6 +42,7 @@ No framework is known here.
 | `SCRQR-B03` | A section present — its heading at any level, in any case — satisfies every requirement that names it, triggered or not. |
 | `SCRQR-B04` | The triggers read: `exposes: test_handles`, a handle the code exposes by the dialect's `exposed` patterns; `depends_on_layer`, a `depends-on` edge of the code to a node of a named layer; `flag`, the flag inside a comment of the code; `code_matches`, the project's pattern over the code with its comments blanked. A requirement whose trigger finds nothing calls for nothing. |
 | `SCRQR-B05` | A trigger that cannot be measured — `exposes` with no `dialect.test_handles.exposed`, a `flag` in a file whose comments are not declared — leaves the gate pending, naming what is missing, when no section is missing. |
+| `SCRQR-B06` | `depends_on_layer` counts a dependency on the layer's values; one on its types only — an edge of kind `type`, from `@dep[type]` — counts when the entry's `kinds` names `type`, and the message then says it depends on the types. |
 
 ## Errors
 

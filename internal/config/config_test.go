@@ -1980,12 +1980,14 @@ func TestRequiresSections_validated(t *testing.T) {
 	}
 	for entry, why := range map[string]string{
 		"{when: {flag: '@x'}}": "name the `section`",
-		"{section: A, when: {flag: '@x', exposes: test_handles}}": "exactly one trigger",
-		"{section: A, when: {}}":                                  "exactly one trigger",
-		"{section: A, when: {exposes: buttons}}":                  "test_handles",
-		"{section: A, when: {depends_on_layer: [nope]}}":          "no layer of the project",
-		"{section: A, when: {flag: navigates}}":                   "starts with `@`",
-		"{section: A, when: {code_matches: '('}}":                 "does not compile",
+		"{section: A, when: {flag: '@x', exposes: test_handles}}":        "exactly one trigger",
+		"{section: A, when: {}}":                                         "exactly one trigger",
+		"{section: A, when: {exposes: buttons}}":                         "test_handles",
+		"{section: A, when: {depends_on_layer: [nope]}}":                 "no layer of the project",
+		"{section: A, when: {flag: navigates}}":                          "starts with `@`",
+		"{section: A, when: {code_matches: '('}}":                        "does not compile",
+		"{section: A, when: {flag: '@x', kinds: [type]}}":                "narrows `depends_on_layer`",
+		"{section: A, when: {depends_on_layer: [store], kinds: [read]}}": "`value` or `type`",
 	} {
 		if err := load(entry); err == nil || !strings.Contains(err.Error(), "layers.ui.requires_sections[0]") || !strings.Contains(err.Error(), why) {
 			t.Errorf("%s: want refused naming the entry and %q, got %v", entry, why, err)

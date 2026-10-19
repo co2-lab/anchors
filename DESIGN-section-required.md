@@ -56,7 +56,7 @@ Triggers, one per entry, from what the core measures:
 | `when` | Holds when |
 | --- | --- |
 | `exposes: test_handles` | some file the spec specifies exposes a handle (`dialect.test_handles.exposed`) |
-| `depends_on_layer: [..]` | the unit's code depends on (`depends-on`) a node of a named layer |
+| `depends_on_layer: [..]` | the unit's code depends on (`depends-on`) a node of a named layer — on its values by default; `kinds: [value, type]` counts an import of its types only (`@dep[type]`) too (v0.1.357, asked by MIF: 22 of 36 charges were components importing only a store's types) |
 | `flag: "@x"` | some file the spec specifies carries the flag |
 | `code_matches: <regex>` | some file the spec specifies matches the project's pattern |
 

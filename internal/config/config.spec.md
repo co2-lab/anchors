@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNFGO
-  updated_at: 2026-10-18
+  updated_at: 2026-10-19
   layer: config
 -->
 # Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default
@@ -93,7 +93,7 @@ patterns a spec governs.
 | `CNFGO-B72` | A file's unit name is its basename without the longest suffix a layer adds to a unit's name — the part after `{{name}}` in a `derived.files` template, `{{ext}}` standing for any extension, or Anchors' `.spec.md` and `.feature` —, else without its last extension; the core knows no language's way to name a test. (`UnitName`) |
 | `CNFGO-B73` | The code extensions are those the code layers' patterns end with — `*.go`, `*.{ts,tsx}` —, layer by layer in name order, each once. (`CodeExtensions`) |
 | `CNFGO-B74` | The example runners — jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins — each say how their command line and output read, with a kind and a quiet time, and none is applied by itself; a unit's piece paths are the `derived.files` patterns of the piece, the overrides of its layer first, rendered for it — its folder, unit name, module and extension, a spec taking its layer's —, and a layer's extensions are those its pattern ends with. (`ExampleRunners`, `PiecePaths`, `LayerExtensions`) |
-| `CNFGO-B75` | A layer's `requires_sections` names, per entry, a `section` and exactly one trigger in `when` — `exposes: test_handles`, `depends_on_layer` (layers of the project), `flag` (starting with `@`) or `code_matches` (a pattern that compiles); anything else refuses the config, naming the entry. (`SectionRequirement`, `SectionTrigger`) |
+| `CNFGO-B75` | A layer's `requires_sections` names, per entry, a `section` and exactly one trigger in `when` — `exposes: test_handles`, `depends_on_layer` (layers of the project), `flag` (starting with `@`) or `code_matches` (a pattern that compiles) —, and `kinds` (`value`, `type`) only beside `depends_on_layer`; anything else refuses the config, naming the entry. (`SectionRequirement`, `SectionTrigger`) |
 | `CNFGO-B60` | A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 

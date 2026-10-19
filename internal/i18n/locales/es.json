@@ -301,6 +301,7 @@
   "gate.section_required.line": "  - `## %s` — `%s` %s",
   "gate.section_required.fail_missing": "`%s` no tiene %d sección(es) que su código pide:\n%s\nEscriba cada sección en la spec — una sección que dice que la unidad no tiene nada de eso (y por qué) también se escribe.",
   "gate.section_required.why_depends": "depende de `%s` (capa %s)",
+  "gate.section_required.why_depends_type": "depende de los tipos de `%s` (capa %s)",
   "gate.section_required.why_exposes": "expone el handle `%s`",
   "gate.section_required.why_flag": "lleva `%s`",
   "gate.section_required.why_matches": "coincide con el patrón del proyecto en `%s`",

@@ -2,7 +2,7 @@
 # @anchors
 #   code: BLFTA
 #   ref: GRBLG
-#   updated_at: 2026-10-15
+#   updated_at: 2026-10-19
 #   layer: feature
 
 @GRBLG
@@ -213,3 +213,9 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Given a spec whose header declares the layer screen, covered by a feature, and a spec whose header names its own file's layer
     When the unit's layer is given as tags
     Then the screen spec and its feature carry screen, and the other spec gains nothing
+
+  @GRBLG-B31 @unit-level
+  Scenario: A dependency on types only is an edge of kind type
+    Given a component importing only the types of one store, and both the types and the values of another
+    When the map is built
+    Then the first edge is of kind type and the second a value edge

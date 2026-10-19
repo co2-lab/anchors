@@ -549,6 +549,11 @@ type Edge struct {
 	// navigation, an import of types —, and a test's evidence does not follow it
 	// (`evidence.no_side_effect.flags`, DESIGN-evidence-follows-the-asserts.md).
 	NoSideEffect bool `yaml:"no_side_effect,omitempty"`
+	// Kind — of a `depends-on` edge: `type` when every flag behind it is `@dep[type]`, an
+	// import of the target's types only, nothing of which runs with the importer; empty for
+	// a dependency on the target's values. A value import and a type import of the same
+	// target make a value edge.
+	Kind string `yaml:"kind,omitempty"`
 	// Dep — o código local (DEPn) da linha da Tabela de Dependências que originou esta
 	// aresta. Vazio nas demais arestas. Liga a aresta de volta à célula do data contract.
 	Dep   string `yaml:"dep,omitempty"`

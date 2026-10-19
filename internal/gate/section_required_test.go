@@ -114,3 +114,19 @@ func TestSectionRequired_unmeasurableIsPending(t *testing.T) {
 		t.Errorf("no map: pending, %v", v)
 	}
 }
+
+func TestSectionRequired_typeOnlyDependency(t *testing.T) {
+	t.Run("SCRQR-B06: A dependency on types only calls for nothing unless asked", func(t *testing.T) {})
+	spec, g, root := sectionUnit(t, "export const Login = () => null\n", true)
+	g.Edges[1].Kind = "type"
+	if v, msg := checkSectionRequired("# Login\n", spec, root, g, sectionCfg()); v != Pass {
+		t.Errorf("the shape of the data is not the data: %v %s", v, msg)
+	}
+	cfg := sectionCfg()
+	l := cfg.Layers["component"]
+	l.RequiresSections[1].When.Kinds = []string{"value", "type"}
+	cfg.Layers["component"] = l
+	if v, msg := checkSectionRequired("# Login\n", spec, root, g, cfg); v != Fail || !strings.Contains(msg, "depends on the types of `src/stores/auth.ts` (layer store)") {
+		t.Errorf("asked for, a type dependency calls for the section: %v %s", v, msg)
+	}
+}

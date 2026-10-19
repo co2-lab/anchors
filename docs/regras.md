@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:7c72504633f76095 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:cbfb1d15a138c0c0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3335,7 +3335,7 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B74 — The example runners — jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins — each say how their command line and output read, with a kind and a quiet time, and none is applied by itself; a unit's piece paths are the `derived.files` patterns of the piece, the overrides of its layer first, rendered for it — its folder, unit name, module and extension, a spec taking its layer's —, and a layer's extensions are those its pattern ends with. (`ExampleRunners`, `PiecePaths`, `LayerExtensions`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
-- [CNFGO-B75 — A layer's `requires_sections` names, per entry, a `section` and exactly one trigger in `when` — `exposes: test_handles`, `depends_on_layer` (layers of the project), `flag` (starting with `@`) or `code_matches` (a pattern that compiles); anything else refuses the config, naming the entry. (`SectionRequirement`, `SectionTrigger`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+- [CNFGO-B75 — A layer's `requires_sections` names, per entry, a `section` and exactly one trigger in `when` — `exposes: test_handles`, `depends_on_layer` (layers of the project), `flag` (starting with `@`) or `code_matches` (a pattern that compiles) —, and `kinds` (`value`, `type`) only beside `depends_on_layer`; anything else refuses the config, naming the entry. (`SectionRequirement`, `SectionTrigger`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -6137,6 +6137,8 @@ abra a página dela em `camadas/`.
 
 - [SCRQR-B05 — A trigger that cannot be measured — `exposes` with no `dialect.test_handles.exposed`, a `flag` in a file whose comments are not declared — leaves the gate pending, naming what is missing, when no section is missing.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
 
+- [SCRQR-B06 — `depends_on_layer` counts a dependency on the layer's values; one on its types only — an edge of kind `type`, from `@dep[type]` — counts when the entry's `kinds` names `type`, and the message then says it depends on the types.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
+
 - [SCRQR-E01 — A specified code file cannot be read.](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec)
 
 ### [SBGRD — SiblingGuard — sibling functions treat the same parameter consistently](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently)
@@ -8176,6 +8178,8 @@ abra a página dela em `camadas/`.
 - [GRBLG-B29 — A rebuild that leaves a node's signal behind, its revision changed, sets each suite's proof aside with the revision it proved; when the node's content returns to that revision, the proofs set aside for it come back, for the suites its signal does not hold; a proof with no recorded revision is not set aside, and a node keeps the latest 20. (`ParkedProof`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-B30 — A spec whose header declares its unit's layer (`layer: screen`), another than its file's, is tagged with it, and so is the feature that covers it: a gate scoped by tag confronts a unit by what it is.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
+
+- [GRBLG-B31 — A `depends-on` edge whose every flag is `@dep[type]` — an import of the target's types only — is of kind `type`; when a value import (`@dep:`) also ties the same files, the edge is a value one. (`flagEdges`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-B23 — Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
