@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2d3130d6730b06fd — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:c87fdcdc4337df36 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1499,6 +1499,10 @@ teste prova.
 - [A full run keeps the external proof of the scenarios it does not name](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B21`
 
 - [With no layer named, a report a suite declares takes the suite's layer](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B22`
+
+- [Each of several JUnit reports is ingested as a suite of its own](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B23`
+
+- [One suite name for several reports is refused](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-E06`
 
 - [The legacy spelling of the waiver is a waiver all the way to the stamp](layers/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B01`
 
@@ -3232,7 +3236,7 @@ teste prova.
 
 - [The generic file names are the project's](layers/config.md#dlcti-b35--the-generic-file-names-are-the-projects) `DLCTI-B35`
 
-- [The ts example reads a types-only import written either way](layers/config.md#dlcti-b36--the-ts-example-reads-a-types-only-import-written-either-way) `DLCTI-B36`
+- [The ts example reads a types-only import written any of three ways](layers/config.md#dlcti-b36--the-ts-example-reads-a-types-only-import-written-any-of-three-ways) `DLCTI-B36`
 
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
@@ -3607,6 +3611,8 @@ teste prova.
 - [The symbol of a listed used-by flag is written inside the comment](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B15`
 
 - [A flag whose kind contradicts its import is named](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B16`
+
+- [A line holding two statements of one module takes one flag](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B17`
 
 - [A spec still carrying a Dependencies table diverges, pointing at the migration](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 

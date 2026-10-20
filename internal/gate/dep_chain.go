@@ -9,6 +9,7 @@ import (
 	"path"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -210,23 +211,63 @@ func codesOfTarget(imp RealImport, g *mapx.Graph) []string {
 	return out
 }
 
-// flagsByStatement maps each import statement to the dependency flag on one of its lines.
-func flagsByStatement(content, rel string, d config.Dialect, imps []RealImport) map[int]*scan.CodeDep {
-	byLine := map[int]scan.CodeDep{}
+// flagsInLines are the file's dependency flags by the line they stand on — several where a line
+// holds a flag per module.
+func flagsInLines(content, rel string, d config.Dialect) map[int][]scan.CodeDep {
+	out := map[int][]scan.CodeDep{}
 	for _, f := range scan.CodeDepsIn([]byte(content), rel, d) {
-		byLine[f.Line] = f
+		out[f.Line] = append(out[f.Line], f)
 	}
-	out := map[int]*scan.CodeDep{}
-	for i, imp := range imps {
-		for l := imp.First; l <= imp.Line; l++ {
-			if f, ok := byLine[l]; ok {
-				f := f
-				out[i] = &f
-				break
+	return out
+}
+
+// statementFlag is the flag a statement's lines hold for the module it imports: the one naming
+// that module's code; else a flag naming no module any import of those lines brings — a wrong
+// code, the fixer's to rewrite —; else a waiver (`@no-dep:`); else none.
+func statementFlag(inLines map[int][]scan.CodeDep, imp RealImport, want string, imps []RealImport, g *mapx.Graph) *scan.CodeDep {
+	brought := map[string]bool{}
+	for _, other := range imps {
+		if other.First <= imp.Line && other.Line >= imp.First {
+			for _, c := range codesOfTarget(other, g) {
+				brought[c] = true
 			}
 		}
 	}
-	return out
+	var stray, waiver *scan.CodeDep
+	for l := imp.First; l <= imp.Line; l++ {
+		for i := range inLines[l] {
+			f := inLines[l][i]
+			switch {
+			case f.Code == want:
+				return &f
+			case f.Code == "" && f.Kind == "":
+				if waiver == nil {
+					waiver = &f
+				}
+			case f.Code != "" && !brought[f.Code] && stray == nil:
+				stray = &f
+			}
+		}
+	}
+	if stray != nil {
+		return stray
+	}
+	return waiver
+}
+
+// lineKind is what the statements of a module standing on the same lines bring, together: types
+// only when every one of them does, run when any one plainly runs. Their one flag answers for
+// them all.
+func lineKind(imps []RealImport, first, last int, code string, g *mapx.Graph) (typeOnly, runs bool) {
+	typeOnly = true
+	for _, imp := range imps {
+		if imp.Line < first || imp.First > last || !contains(codesOfTarget(imp, g), code) {
+			continue
+		}
+		typeOnly = typeOnly && imp.TypeOnly
+		runs = runs || imp.Runs
+	}
+	return typeOnly, runs
 }
 
 // chainUnit says whether a node takes part in the chain: every artifact of the project that
@@ -248,7 +289,7 @@ func checkDepDeclared(content string, n mapx.Node, root string, g *mapx.Graph, c
 		return Pending, i18n.T("gate.dep_chain.pending_no_pattern")
 	}
 	imps := ImportsOf(content, n.ID, d, g)
-	flags := flagsByStatement(content, n.ID, d, imps)
+	inLines := flagsInLines(content, n.ID, d)
 	// By name, the flags are the file's: each module it uses is flagged once, anywhere.
 	fileFlags := map[string]bool{}
 	if byName(d) {
@@ -257,11 +298,20 @@ func checkDepDeclared(content string, n mapx.Node, root string, g *mapx.Graph, c
 		}
 	}
 	var missing []string
-	for i, imp := range imps {
+	seen := map[string]bool{}
+	for _, imp := range imps {
 		codes := codesOfTarget(imp, g)
-		if len(codes) == 0 || flags[i] != nil || anyFlagged(codes, fileFlags) {
+		if len(codes) == 0 || anyFlagged(codes, fileFlags) || seen[strconv.Itoa(imp.Line)+imp.Path] {
 			continue
 		}
+		flagged := false
+		for _, c := range codes {
+			flagged = flagged || statementFlag(inLines, imp, c, imps, g) != nil
+		}
+		if flagged {
+			continue
+		}
+		seen[strconv.Itoa(imp.Line)+imp.Path] = true
 		missing = append(missing, fmt.Sprintf("%d `%s` → %s", imp.Line, imp.Path, strings.Join(codes, "|")))
 	}
 	if len(missing) == 0 {
@@ -300,34 +350,42 @@ func checkDepHonored(content string, n mapx.Node, root string, g *mapx.Graph, cf
 			}
 			continue
 		}
+		// Every statement whose lines hold the flag: a line may hold two of one module
+		// (`require('x') as typeof import('x')`), and its one flag answers for both.
+		var covering []RealImport
+		for _, imp := range imps {
+			if f.Line >= imp.First && f.Line <= imp.Line {
+				covering = append(covering, imp)
+			}
+		}
+		if len(covering) == 0 {
+			wrong = append(wrong, i18n.T("gate.dep_chain.flag_without_import", f.Line, f.Code))
+			continue
+		}
 		var imp *RealImport
-		for i := range imps {
-			if f.Line >= imps[i].First && f.Line <= imps[i].Line {
-				imp = &imps[i]
+		for i := range covering {
+			if contains(codesOfTarget(covering[i], g), f.Code) {
+				imp = &covering[i]
 				break
 			}
 		}
 		if imp == nil {
-			wrong = append(wrong, i18n.T("gate.dep_chain.flag_without_import", f.Line, f.Code))
-			continue
-		}
-		codes := codesOfTarget(*imp, g)
-		if !contains(codes, f.Code) {
-			want := strings.Join(codes, "|")
+			want := strings.Join(codesOfTarget(covering[0], g), "|")
 			if want == "" {
 				want = "—"
 			}
-			wrong = append(wrong, i18n.T("gate.dep_chain.flag_wrong_code", f.Line, f.Code, imp.Path, want))
+			wrong = append(wrong, i18n.T("gate.dep_chain.flag_wrong_code", f.Line, f.Code, covering[0].Path, want))
 			continue
 		}
 		// The flag's kind says what the import brings, and what reads the map trusts it
 		// (`depends_on_layer` counts value edges): an import of types only flagged as a value
 		// one, or a statement that plainly runs flagged as types, says the opposite of the
 		// code — the same mismatch the fixer rewrites, named instead of left silent.
+		typeOnly, runs := lineKind(covering, imp.First, imp.Line, f.Code, g)
 		switch {
-		case imp.TypeOnly && f.Kind != scan.TypeDepKind:
+		case typeOnly && f.Kind != scan.TypeDepKind:
 			wrong = append(wrong, i18n.T("gate.dep_chain.flag_should_be_type", f.Line, f.Code, f.Code))
-		case !imp.TypeOnly && f.Kind == scan.TypeDepKind && imp.Runs:
+		case !typeOnly && f.Kind == scan.TypeDepKind && runs:
 			wrong = append(wrong, i18n.T("gate.dep_chain.flag_should_be_value", f.Line, f.Code, f.Code))
 		}
 	}
@@ -484,7 +542,7 @@ func fixDepFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 	if len(imps) == 0 {
 		return content, false, ""
 	}
-	flags := flagsByStatement(content, n.ID, d, imps)
+	inLines := flagsInLines(content, n.ID, d)
 	lines := strings.Split(content, "\n")
 	cs := d.CommentsFor(n.ID)
 	marker := cs.LineMarker()
@@ -492,28 +550,37 @@ func fixDepFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 		return content, false, ""
 	}
 	var done []string
-	for i, imp := range imps {
+	handled := map[string]bool{}
+	for _, imp := range imps {
 		codes := codesOfTarget(imp, g)
 		if len(codes) != 1 {
 			continue
 		}
 		want := codes[0]
+		// One flag per module on a line: `require('x') as typeof import('x')` is two
+		// statements of one module, and the line's flag answers for both.
+		key := strconv.Itoa(imp.Line) + "\x00" + want
+		if handled[key] {
+			continue
+		}
+		handled[key] = true
+		typeOnly, runs := lineKind(imps, imp.First, imp.Line, want, g)
 		// An import of types only is flagged `@dep[type]:` — nothing of it runs, and the
 		// project's evidence may say so (`evidence.no_side_effect.flags`).
 		flag := "@dep: "
-		f := flags[i]
+		f := statementFlag(inLines, imp, want, imps, g)
 		// A type flag the author wrote stays unless the statement plainly runs (its pattern
 		// says `runs`): an inline `import('…').T` in a type position reads like any other
 		// import, and only the author knows which it is.
-		if imp.TypeOnly || (f != nil && f.Kind == scan.TypeDepKind && !imp.Runs) {
+		if typeOnly || (f != nil && f.Kind == scan.TypeDepKind && !runs) {
 			flag = "@dep[" + scan.TypeDepKind + "]: "
 		}
 		switch {
 		case f == nil:
 			lines[imp.Line-1] = strings.TrimRight(lines[imp.Line-1], " \t") + " " + marker + " " + flag + want + cs.CloseFor(marker)
 			done = append(done, fmt.Sprintf("%d %s", imp.Line, want))
-		case f.Code != "" && (f.Code != want || (imp.TypeOnly && f.Kind != scan.TypeDepKind) ||
-			(!imp.TypeOnly && f.Kind == scan.TypeDepKind && imp.Runs)):
+		case f.Code != "" && (f.Code != want || (typeOnly && f.Kind != scan.TypeDepKind) ||
+			(!typeOnly && f.Kind == scan.TypeDepKind && runs)):
 			l := lines[f.Line-1]
 			had := "@dep: " + f.Code
 			if f.Kind != "" {

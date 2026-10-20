@@ -899,16 +899,26 @@ func TestDialect_genericBasenames(t *testing.T) {
 }
 
 func TestFamilyChain_typeImportEitherWay(t *testing.T) {
-	t.Run("DLCTI-B36: The ts example reads a types-only import written either way", func(t *testing.T) {})
+	t.Run("DLCTI-B36: The ts example reads a types-only import written any of three ways", func(t *testing.T) {})
 	re := regexp.MustCompile(FamilyChain("ts").TypeImportPattern)
 	for src, want := range map[string]bool{
 		"import type { A } from 'x'":              true,
 		"import { type A, type B as C } from 'x'": true,
 		"import { type A, B } from 'x'":           false,
 		"import { A } from 'x'":                   false,
+		"typeof import('x')":                      true,
+		"require('x')":                            false,
 	} {
 		if got := re.MatchString(src); got != want {
 			t.Errorf("%q: want %v, got %v", src, want, got)
 		}
+	}
+	d := FamilyChain("ts")
+	var typeofAt []string
+	for _, m := range d.Imports.FindAll("const s = require('x') as typeof import('x')", "a.ts") {
+		typeofAt = append(typeofAt, m.Groups["path"].Value+"@"+strconv.Itoa(m.Groups["path"].Start))
+	}
+	if len(typeofAt) < 2 {
+		t.Errorf("typeof import is a statement of its own, beside the require: %v", typeofAt)
 	}
 }

@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:233559cd79b8d914 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:502ee71973d38af6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 89 unidades e 1422 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 89 unidades e 1423 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -508,6 +508,8 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 - **DCGDP-B15** — The used-by flag the fixer writes names a listed symbol inside the file's comment: in a block-comment language the closer (`*)`, `-->`) follows the symbol, never precedes it. (`usedByFlag`)
 
 - **DCGDP-B16** — dep-honored names a flag whose kind contradicts its import: `@dep:` on a statement the dialect's `type_import_pattern` reads as types only — to be `@dep[type]:` —, and `@dep[type]:` on one whose import pattern says it plainly runs — to be `@dep:`. What reads the map trusts the kind (`depends_on_layer` counts value edges); the fixer rewrites it, and the gate no longer lets it pass silent.
+
+- **DCGDP-B17** — Statements of one module on the same line — `require('x') as typeof import('x')` — take ONE flag, which answers for them all: the fixer writes one and dep-declared asks for one; it is a type flag when every one of them is types only, and a value flag when any one is not — dep-honored confronts the flag with them together. A line importing two modules takes a flag for each. (`lineKind`, `statementFlag`)
 
 
 ## DEPHN — DependencyHonored — a spec declares no dependency: the code does

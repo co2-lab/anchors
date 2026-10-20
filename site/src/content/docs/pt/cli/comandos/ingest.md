@@ -16,6 +16,7 @@ Consumes the test runner's artifacts and writes the signals into the map:
   anchors ingest --mutation m.json --scope isolated   the unit's test only
   anchors ingest --mutation m.json --scope full       with the dependents' tests
   anchors ingest --junit r.xml --lcov c.info   several in one pass
+  anchors ingest --junit a.xml --junit b.xml   several suites, each its own
 
 Anchors does NOT run the test — you run it (jest --coverage, go test -coverprofile,
 pytest-cov…) and hand over the report. From the execution, Anchors also derives coverage per
@@ -33,7 +34,7 @@ anchors ingest [flags]
 
 | Flag | Padrão | O que faz |
 | --- | --- | --- |
-| `--junit` |  | JUnit XML file (execution result) |
+| `--junit` |  | JUnit XML file (execution result); repeat it for several suites, each ingested as its own |
 | `--layer` |  | test layer of this suite (unit\|integration\|e2e…); default the layer of the suite in anchors.yaml whose junit/lcov is this report, or unit |
 | `--lcov` |  | lcov .info file (line coverage) |
 | `--logs` |  | scan the logs declared in `logs.paths` and bind the failure occurrences to the specs that declare them |

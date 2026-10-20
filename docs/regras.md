@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:49f3008b16d4fee1 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:035c861dae915fc6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1635,6 +1635,8 @@ abra a página dela em `camadas/`.
 
 - [NGSTI-B22 — With no layer named, a report a suite of `tests:` declares (its `junit` or `lcov`) is ingested under that suite's layer; a report no suite declares is read as `unit`. (`layerOfReports`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
+- [NGSTI-B23 — `--junit` may be repeated: each report is ingested in turn as a suite of its own, the coverage and mutation reports with the first. (`newIngestCmd`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+
 - [NGSTI-B19 — A JUnit case with no `file` finds its test file from its class and name: the class names a test folder of the map by path suffix (segments split by `/`, or by `.` when it has none, dropped from the front until one exists; the root's folder when none does), and the case's file is the one test file there whose dialect `definition` defines the case's top-level test, the name before `/`; no folder, no file, or two files give the case no file. (`caseFileResolver`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B15 — A report's signals are kept under its path relative to the root; a report outside the repository is kept under `external/` and its file name. (`SuiteKey`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
@@ -1652,6 +1654,8 @@ abra a página dela em `camadas/`.
 - [NGSTI-E04 — A report that is missing or cannot be parsed.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-E05 — The map cannot be loaded while ingesting reports.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+
+- [NGSTI-E06 — One `--suite` given with several `--junit` reports.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 ### [JDGUE — Judge — records an AI's verdict on a judgment gate with the same bookkeeping as a deterministic gate](layers/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate)
 
@@ -3515,7 +3519,7 @@ abra a página dela em `camadas/`.
 
 - [DLCTI-B35 — `dialect.generic_basenames` lists the file names that are a role in their folder (`handler`, `index`), compared ignoring case; every family's example carries the usual ones, and none is applied by itself. (`IsGenericBasename`, `ExampleGenericBasenames`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B36 — The `ts` example's `type_import_pattern` reads an import of types only written either way: `import type {…}`, and braces whose every name is a type — `import { type A, type B as C }`; braces holding one value name are no types-only import. (`FamilyChain`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B36 — The `ts` example's `type_import_pattern` reads an import of types only written any of three ways: `import type {…}`, braces whose every name is a type — `import { type A, type B as C }` —, and `typeof import('…')`, which its imports read as a statement of its own; braces holding one value name, and a `require('…')`, are no types-only import. (`FamilyChain`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -3960,6 +3964,8 @@ abra a página dela em `camadas/`.
 - [DCGDP-B15 — The used-by flag the fixer writes names a listed symbol inside the file's comment: in a block-comment language the closer (`*)`, `-->`) follows the symbol, never precedes it. (`usedByFlag`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B16 — dep-honored names a flag whose kind contradicts its import: `@dep:` on a statement the dialect's `type_import_pattern` reads as types only — to be `@dep[type]:` —, and `@dep[type]:` on one whose import pattern says it plainly runs — to be `@dep:`. What reads the map trusts the kind (`depends_on_layer` counts value edges); the fixer rewrites it, and the gate no longer lets it pass silent.](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+
+- [DCGDP-B17 — Statements of one module on the same line — `require('x') as typeof import('x')` — take ONE flag, which answers for them all: the fixer writes one and dep-declared asks for one; it is a type flag when every one of them is types only, and a value flag when any one is not — dep-honored confronts the flag with them together. A line importing two modules takes a flag for each. (`lineKind`, `statementFlag`)](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 ### [DEPHN — DependencyHonored — a spec declares no dependency: the code does](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 

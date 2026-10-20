@@ -2,7 +2,7 @@
 # @anchors
 #   code: DLFTA
 #   ref: DLCTI
-#   updated_at: 2026-10-19
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @DLCTI
@@ -245,7 +245,7 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Then the first two are generic for the first dialect and none for the second, and the go example carries the usual names
 
   @DLCTI-B36 @unit-level
-  Scenario: The ts example reads a types-only import written either way
-    Given "import type { A } from 'x'", "import { type A, type B as C } from 'x'" and "import { type A, B } from 'x'"
+  Scenario: The ts example reads a types-only import written any of three ways
+    Given "import type { A } from 'x'", "import { type A, type B as C } from 'x'", "typeof import('x')", "import { type A, B } from 'x'" and "require('x')"
     When the ts example's type_import_pattern reads each
-    Then the first two are types only and the third is not
+    Then the first three are types only and the last two are not

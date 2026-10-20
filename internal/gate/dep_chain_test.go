@@ -430,3 +430,33 @@ func TestDepChain_flagKindMatchesTheImport(t *testing.T) {
 		t.Errorf("each contradiction named, the right one left alone: %v %s", v, msg)
 	}
 }
+
+func TestDepChain_oneFlagPerModuleOnALine(t *testing.T) {
+	t.Run("DCGDP-B17: A line holding two statements of one module takes one flag, typeof import is types only", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	content := "const svc = () => require('@/theme/tokens') as typeof import('@/theme/tokens')\n" +
+		"const toast: Partial<typeof import('@/hooks/useToast')> = {}\n"
+	if err := os.WriteFile(filepath.Join(root, "src/ui/Arena.tsx"), []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n := g.Nodes[0]
+	if v, msg := checkDepDeclared(content, n, root, g, cfg); v != Fail || strings.Count(msg, "TOKNS") != 1 {
+		t.Errorf("one missing flag per module on a line: %v %s", v, msg)
+	}
+	FixWithConfig([]config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code"}}}, g.Nodes[:1], root, g, cfg)
+	got := read(t, root, "src/ui/Arena.tsx")
+	want := "const svc = () => require('@/theme/tokens') as typeof import('@/theme/tokens') // @dep: TOKNS\n" +
+		"const toast: Partial<typeof import('@/hooks/useToast')> = {} // @dep[type]: USTST\n"
+	if got != want {
+		t.Errorf("one flag per module, a value where one statement runs, a type where only typeof reads it:\n%s", got)
+	}
+	for _, check := range []func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string){checkDepDeclared, checkDepHonored} {
+		if v, msg := check(got, n, root, g, cfg); v != Pass {
+			t.Errorf("after the fix: %v %s", v, msg)
+		}
+	}
+	wrongKind := strings.Replace(got, "@dep[type]: USTST", "@dep: USTST", 1)
+	if v, msg := checkDepHonored(wrongKind, n, root, g, cfg); v != Fail || !strings.Contains(msg, "USTST") {
+		t.Errorf("a value flag on typeof import alone is named: %v %s", v, msg)
+	}
+}

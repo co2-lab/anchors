@@ -45,7 +45,8 @@ var ViaAnchorsTest bool
 var MutationTargets []string
 
 func newIngestCmd() *cobra.Command {
-	var root, mapPath, junit, lcov, mutation, layer, scope, suite string
+	var root, mapPath, lcov, mutation, layer, scope, suite string
+	var junits []string
 	var partial bool
 	var logs bool
 	cmd := &cobra.Command{
@@ -59,21 +60,35 @@ func newIngestCmd() *cobra.Command {
   anchors ingest --mutation m.json --scope isolated   the unit's test only
   anchors ingest --mutation m.json --scope full       with the dependents' tests
   anchors ingest --junit r.xml --lcov c.info   several in one pass
+  anchors ingest --junit a.xml --junit b.xml   several suites, each its own
 
 Anchors does NOT run the test — you run it (jest --coverage, go test -coverprofile,
 pytest-cov…) and hand over the report. From the execution, Anchors also derives coverage per
 SCENARIO: a scenario code (SPCRX-V01) is PROVEN if it appears in a case that passed.
 Run 'anchors coverage' afterwards to see the spec requirements with no green test.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if junit == "" && lcov == "" && mutation == "" && !logs {
+			if len(junits) == 0 && lcov == "" && mutation == "" && !logs {
 				return fmt.Errorf("provide --junit <file>, --lcov <file>, --mutation <file> and/or --logs")
 			}
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
-			if junit != "" || lcov != "" || mutation != "" {
-				if err := IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite, partial); err != nil {
+			// Each JUnit report is a suite of its own, ingested in turn — the reports the
+			// flag names, every one of them; the coverage and mutation go with the first.
+			// One `--suite` cannot name several suites.
+			if len(junits) > 1 && suite != "" {
+				return fmt.Errorf("--suite names one suite, and %d --junit reports were given: ingest each with its own --suite", len(junits))
+			}
+			if len(junits) == 0 && (lcov != "" || mutation != "") {
+				junits = []string{""}
+			}
+			for i, junit := range junits {
+				l, m := lcov, mutation
+				if i > 0 {
+					l, m = "", ""
+				}
+				if err := IngestArtifacts(absRoot, mapPath, junit, l, m, layer, scope, suite, partial); err != nil {
 					return err
 				}
 			}
@@ -87,7 +102,7 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 		"scan the logs declared in `logs.paths` and bind the failure occurrences to the specs that declare them")
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().StringVar(&mapPath, "map", "", "path to the map")
-	cmd.Flags().StringVar(&junit, "junit", "", "JUnit XML file (execution result)")
+	cmd.Flags().StringArrayVar(&junits, "junit", nil, "JUnit XML file (execution result); repeat it for several suites, each ingested as its own")
 	cmd.Flags().StringVar(&lcov, "lcov", "", "lcov .info file (line coverage)")
 	cmd.Flags().StringVar(&mutation, "mutation", "", "mutation JSON report. The FORMAT belongs to the project: declare it in the mutation-score gate of anchors.yaml, key 'format' (default 'mutation-testing-elements' — Stryker/PIT/Infection/mutmut; 'gremlins' for Go)")
 	cmd.Flags().StringVar(&layer, "layer", "", "test layer of this suite (unit|integration|e2e…); default the layer of the suite in anchors.yaml whose junit/lcov is this report, or unit")

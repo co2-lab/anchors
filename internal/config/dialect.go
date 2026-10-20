@@ -815,6 +815,9 @@ func FamilyChain(family string) *Dialect {
 				{Re: `(?m)^[ \t]*(?:import|export)\b(?:[^'";{}\n]|\{[^}]*\})*?\bfrom\s*['"](?P<path>[^'"]+)['"]`, Files: code, Runs: true},
 				// An import for its effect alone: `import './polyfills'`.
 				{Re: `(?m)^[ \t]*import\s*['"](?P<path>[^'"]+)['"]`, Files: code, Runs: true},
+				// `typeof import('…')`: a type of the module, nothing of it runs — read before
+				// the dynamic import below, which would take the same path.
+				{Re: `\btypeof\s+import\(\s*['"](?P<path>[^'"]+)['"]\s*\)(?:\.` + ident + `)?`, Files: code},
 				// `require('…')` and `import('…')`, with what is destructured from them or the
 				// member read from them.
 				{Re: `(?:\{[^{}]*\}\s*=\s*(?:await\s+)?)?\b(?:require|import)\(\s*['"](?P<path>[^'"]+)['"]\s*\)(?:\.` + ident + `)?`, Files: code},
@@ -841,8 +844,9 @@ func FamilyChain(family string) *Dialect {
 				// declares A and C.
 				{Within: `(?m)^export\s+(?:type\s+)?\{(?P<within>[^}]*)\}`, Each: `(?P<name>` + ident + `)\s*(?:,|$)`},
 			},
-			// `import type {…}`, or braces whose every name is a type: `import { type A, type B }`.
-			TypeImportPattern: `^\s*(?:import|export)\s+type\b|^\s*(?:import|export)\s*\{(?:\s*type\s+[\p{L}_$][\p{L}\p{N}_$]*(?:\s+as\s+[\p{L}_$][\p{L}\p{N}_$]*)?\s*,?)+\s*\}`,
+			// `import type {…}`, braces whose every name is a type — `import { type A, type B }` —,
+			// or `typeof import('…')`.
+			TypeImportPattern: `^\s*typeof\b|^\s*(?:import|export)\s+type\b|^\s*(?:import|export)\s*\{(?:\s*type\s+[\p{L}_$][\p{L}\p{N}_$]*(?:\s+as\s+[\p{L}_$][\p{L}\p{N}_$]*)?\s*,?)+\s*\}`,
 			ImportResolve:     &ImportResolve{Extensions: []string{".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx", "/index.js"}},
 		}
 	case "go":

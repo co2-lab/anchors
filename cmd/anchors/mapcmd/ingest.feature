@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTN
 #   ref: NGSTI
-#   updated_at: 2026-10-16
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @NGSTI
@@ -184,3 +184,14 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     When each is ingested with no layer
     Then the first is recorded under e2e and the second under unit
 
+  @NGSTI-B23 @unit-level
+  Scenario: Each of several JUnit reports is ingested as a suite of its own
+    Given two JUnit reports that prove the same scenario
+    When both are given to one ingestion, each with --junit
+    Then both are ingested, and the scenario is proven by two suites
+
+  @NGSTI-E06 @unit-level
+  Scenario: One suite name for several reports is refused
+    Given two JUnit reports
+    When they are ingested together with one --suite
+    Then the command refuses, saying to ingest each with its own suite

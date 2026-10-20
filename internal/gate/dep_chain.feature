@@ -102,3 +102,9 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     Given an import whose braces hold only types flagged `@dep:`, and a plain import flagged `@dep[type]:`
     When dep-honored confronts the file
     Then the first is named to be `@dep[type]:` and the second to be `@dep:`
+
+  @DCGDP-B17 @unit-level
+  Scenario: A line holding two statements of one module takes one flag
+    Given a line that requires a module as the typeof import of the same module, and a line that reads another only through typeof import
+    When the fixer writes the flags and the chain gates confront the file
+    Then the first line takes one value flag, the second one type flag, both gates pass, and a value flag on the second is named

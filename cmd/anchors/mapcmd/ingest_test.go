@@ -648,3 +648,27 @@ func TestIngest_layerOfTheDeclaringSuite(t *testing.T) {
 		t.Errorf("a report no suite declares is read as unit: %+v", sig)
 	}
 }
+
+func TestIngest_severalJUnitReports(t *testing.T) {
+	t.Run("NGSTI-B23: Each of several JUnit reports is ingested as a suite of its own", func(t *testing.T) {})
+	t.Run("NGSTI-E06: One suite name for several reports is refused", func(t *testing.T) {})
+	root := fixtureProject(t)
+	writeProjectFile(t, root, "reports/a.xml", junitReport)
+	writeProjectFile(t, root, "reports/b.xml", junitReport)
+	out := runCmd(t, newIngestCmd(), "--root", root, "--partial",
+		"--junit", filepath.Join(root, "reports/a.xml"), "--junit", filepath.Join(root, "reports/b.xml"))
+	if strings.Count(out, "execution: 3 case(s)") != 2 {
+		t.Errorf("both reports are ingested:\n%s", out)
+	}
+	spec := node(t, root, "src/login.spec.md").Signal
+	if spec == nil || len(spec.ProvenBySuite) != 2 {
+		t.Errorf("each report is its own suite: %+v", spec)
+	}
+	cmd := newIngestCmd()
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	cmd.SetArgs([]string{"--root", root, "--suite", "x", "--junit", filepath.Join(root, "reports/a.xml"), "--junit", filepath.Join(root, "reports/b.xml")})
+	if err := cmd.Execute(); err == nil || !strings.Contains(err.Error(), "--suite names one suite") {
+		t.Errorf("one --suite for several reports is refused: %v", err)
+	}
+}
