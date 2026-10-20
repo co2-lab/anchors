@@ -171,6 +171,41 @@ func AtHead(root, rel string) (content string, ok bool) {
 	return string(out), true
 }
 
+// CommitAt is the commit a run at that moment measured: the last commit of HEAD made at or
+// before it. ok=false outside git, or when no commit is that old.
+func CommitAt(root string, at time.Time) (sha string, ok bool) {
+	out, err := exec.Command("git", "-C", root, "rev-list", "-1", "--before="+at.Format(time.RFC3339), "HEAD").Output()
+	sha = strings.TrimSpace(string(out))
+	return sha, err == nil && sha != ""
+}
+
+// Commit is the commit a reference names (a hash, a tag, a branch), in full; ok=false when it
+// names none.
+func Commit(root, ref string) (sha string, ok bool) {
+	out, err := exec.Command("git", "-C", root, "rev-parse", "--verify", "--quiet", ref+"^{commit}").Output()
+	sha = strings.TrimSpace(string(out))
+	return sha, err == nil && sha != ""
+}
+
+// CommitTime is when a commit was made; ok=false when git cannot say.
+func CommitTime(root, sha string) (time.Time, bool) {
+	out, err := exec.Command("git", "-C", root, "show", "-s", "--format=%cI", sha).Output()
+	if err != nil {
+		return time.Time{}, false
+	}
+	t, err := time.Parse(time.RFC3339, strings.TrimSpace(string(out)))
+	return t, err == nil
+}
+
+// AtCommit returns a file's content as a commit has it; ok=false when the file is not in it.
+func AtCommit(root, sha, rel string) (content []byte, ok bool) {
+	out, err := exec.Command("git", "-C", root, "show", sha+":./"+rel).Output()
+	if err != nil {
+		return nil, false
+	}
+	return out, true
+}
+
 // DirtyFiles are, in one `git status`, the files with uncommitted changes — modified,
 // staged, added or untracked —, by their path relative to the root; known=false outside
 // git. It answers for a whole run what UncommittedChanges answers for one file, without a

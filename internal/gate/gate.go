@@ -13,8 +13,11 @@ import (
 	"fmt"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"slices"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -192,72 +195,174 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 	// What a run asks again and again — a gate's premises, a project file — is answered
 	// once for the run.
 	defer startRun(cfg)()
-	// índice kind por nó já vem em node.Kind
-	var results []Result
-	afterTool := false
-	for _, g := range gates {
-		// A tool the project runs may write files: what the run read before it is read
-		// again after.
-		if afterTool {
-			forgetReads()
-		}
-		afterTool = g.Check == "" && g.Run != ""
-		// Os alvos deste gate — o mesmo filtro `on`/`tags` para qualquer escopo.
-		var alvos []mapx.Node
-		for _, n := range nodes {
-			if applies(g, n, root) {
-				alvos = append(alvos, n)
+	// Each gate is a job of its own, its results in the order of its targets; the run puts
+	// them back in the order of the gates, whatever order they finished in.
+	out := make([][]Result, len(gates))
+	job := func(i int) {
+		g := gates[i]
+		defer func() {
+			// A gate that breaks fails alone: the run and the other gates go on.
+			if p := recover(); p != nil {
+				out[i] = append(out[i], Result{Gate: g.Name, Regra: idDoGate(g), Target: "(" + string(g.ScopeForScan(completa)) + ")",
+					Verdict: Fail, Blocking: g.IsBlocking(), Detail: i18n.T("gate.panicked", fmt.Sprint(p))})
+			}
+		}()
+		out[i] = runGate(g, nodes, root, graph, cfg, completa, disp)
+	}
+	tool := func(g config.Gate) bool { return g.Check == "" && g.Run != "" }
+	if Sequential() {
+		for i, g := range gates {
+			job(i)
+			// A tool the project runs may write files: what the run read before it is
+			// read again after.
+			if tool(g) {
+				forgetReads()
 			}
 		}
-		if len(alvos) == 0 {
-			// Nenhum alvo relevante: o gate não roda. Vale inclusive para `scope: project`
-			// — um commit só de README não dispara o typecheck do monorepo inteiro.
+	} else {
+		// The project's tools run side by side, a few at a time — each is a process that may
+		// use several cores of its own —, and a tool declared `exclusive` runs alone, after
+		// the others; beside them, the gates Anchors answers itself, which only read, run on
+		// every core.
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			runTools(gates, tool, job)
+		}()
+		work := make(chan int)
+		workers := runtime.GOMAXPROCS(0)
+		for w := 0; w < workers; w++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for i := range work {
+					job(i)
+				}
+			}()
+		}
+		for i, g := range gates {
+			if !tool(g) {
+				work <- i
+			}
+		}
+		close(work)
+		wg.Wait()
+	}
+	var results []Result
+	for _, r := range out {
+		results = append(results, r...)
+	}
+	return results
+}
+
+// runTools runs the run's tools: those that may run beside another, a few at a time, then each
+// exclusive one alone. What the run read is read again after each tool, which may have
+// written it.
+func runTools(gates []config.Gate, tool func(config.Gate) bool, job func(int)) {
+	slots := make(chan struct{}, toolSlots())
+	var wg sync.WaitGroup
+	var exclusive []int
+	for i, g := range gates {
+		if !tool(g) {
 			continue
 		}
-		// Ferramenta exigida e ausente: Skip, nunca Fail. O gate não mediu — e "não medi"
-		// não é "está limpo" nem "está sujo". Um Fail aqui diria que o projeto violou algo,
-		// quando quem falta é o binário. O aviso não se perde: o `doctor` levanta a ausência
-		// (health.checkFerramentasAusentes), que é onde ela pode ser lida uma vez e resolvida,
-		// em vez de repetida a cada alvo de cada varredura.
-		if faltando, ok := missingTool(g); ok {
-			results = append(results, Result{
-				Gate: g.Name, Target: "(" + string(g.ScopeForScan(completa)) + ")",
-				Verdict: Skip, Blocking: g.IsBlocking(),
-				Detail: i18n.T("gate.missing_tool", faltando),
-			})
+		if g.Exclusive {
+			exclusive = append(exclusive, i)
 			continue
 		}
-		switch g.ScopeForScan(completa) {
-		case config.ScopeBatch, config.ScopeProject:
-			if alvos = withoutFrozen(g, alvos); len(alvos) == 0 {
+		wg.Add(1)
+		slots <- struct{}{}
+		go func(i int) {
+			defer wg.Done()
+			defer func() { <-slots }()
+			job(i)
+			forgetReads()
+		}(i)
+	}
+	wg.Wait()
+	for _, i := range exclusive {
+		job(i)
+		forgetReads()
+	}
+}
+
+// toolSlots is how many of the project's tools run at once: half the cores, at least two —
+// a tool is a process of its own, and often uses more than one.
+func toolSlots() int {
+	if n := runtime.GOMAXPROCS(0) / 2; n > 2 {
+		return n
+	}
+	return 2
+}
+
+// sequential forces a run to confront one gate after another (`check --sequential`).
+var sequential atomic.Bool
+
+// SetSequential makes the runs confront one gate after another — the way to rule the
+// parallel run out when something looks wrong.
+func SetSequential(on bool) { sequential.Store(on) }
+
+// Sequential says whether the runs confront one gate after another.
+func Sequential() bool { return sequential.Load() }
+
+// runGate confronts one gate with the targets it applies to, in their order.
+func runGate(g config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Waiver) []Result {
+	var results []Result
+	// Os alvos deste gate — o mesmo filtro `on`/`tags` para qualquer escopo.
+	var alvos []mapx.Node
+	for _, n := range nodes {
+		if applies(g, n, root) {
+			alvos = append(alvos, n)
+		}
+	}
+	if len(alvos) == 0 {
+		// Nenhum alvo relevante: o gate não roda. Vale inclusive para `scope: project`
+		// — um commit só de README não dispara o typecheck do monorepo inteiro.
+		return nil
+	}
+	// Ferramenta exigida e ausente: Skip, nunca Fail. O gate não mediu — e "não medi"
+	// não é "está limpo" nem "está sujo". Um Fail aqui diria que o projeto violou algo,
+	// quando quem falta é o binário. O aviso não se perde: o `doctor` levanta a ausência
+	// (health.checkFerramentasAusentes), que é onde ela pode ser lida uma vez e resolvida,
+	// em vez de repetida a cada alvo de cada varredura.
+	if faltando, ok := missingTool(g); ok {
+		return []Result{{
+			Gate: g.Name, Target: "(" + string(g.ScopeForScan(completa)) + ")",
+			Verdict: Skip, Blocking: g.IsBlocking(),
+			Detail: i18n.T("gate.missing_tool", faltando),
+		}}
+	}
+	switch g.ScopeForScan(completa) {
+	case config.ScopeBatch, config.ScopeProject:
+		if alvos = withoutFrozen(g, alvos); len(alvos) == 0 {
+			return nil
+		}
+		inicio := time.Now()
+		agregado := runAggregate(g, alvos, root, completa, graph, cfg)
+		agregado.Duracao = time.Since(inicio)
+		results = append(results, agregado)
+	default:
+		for _, n := range alvos {
+			if r, ok := frozenResult(g, n); ok {
+				results = append(results, r)
+				continue
+			}
+			// DISPENSA POR ALVO: o gate roda, e só este nó é poupado. O veredito é
+			// `Skip` com o motivo escrito — some do placar de reprovações sem sumir
+			// do relatório, que é a diferença entre dispensar e esconder.
+			if motivo, ok := disp.WaivedTarget(RuleID(idDoGate(g)), n.Code); ok {
+				results = append(results, Result{
+					Gate: g.Name, Regra: idDoGate(g), Target: n.ID,
+					Verdict: Skip, Blocking: g.IsBlocking(),
+					Detail: i18n.T("gate.waived", motivo),
+				})
 				continue
 			}
 			inicio := time.Now()
-			agregado := runAggregate(g, alvos, root, completa, graph, cfg)
-			agregado.Duracao = time.Since(inicio)
-			results = append(results, agregado)
-		default:
-			for _, n := range alvos {
-				if r, ok := frozenResult(g, n); ok {
-					results = append(results, r)
-					continue
-				}
-				// DISPENSA POR ALVO: o gate roda, e só este nó é poupado. O veredito é
-				// `Skip` com o motivo escrito — some do placar de reprovações sem sumir
-				// do relatório, que é a diferença entre dispensar e esconder.
-				if motivo, ok := disp.WaivedTarget(RuleID(idDoGate(g)), n.Code); ok {
-					results = append(results, Result{
-						Gate: g.Name, Regra: idDoGate(g), Target: n.ID,
-						Verdict: Skip, Blocking: g.IsBlocking(),
-						Detail: i18n.T("gate.waived", motivo),
-					})
-					continue
-				}
-				inicio := time.Now()
-				um := runOne(g, n, root, graph, cfg)
-				um.Duracao = time.Since(inicio)
-				results = append(results, um)
-			}
+			um := runOne(g, n, root, graph, cfg)
+			um.Duracao = time.Since(inicio)
+			results = append(results, um)
 		}
 	}
 	return results

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SGINA
-  updated_at: 2026-10-15
+  updated_at: 2026-10-20
   layer: mapa
 -->
 # SignalIngestion — hanging the runner's results on the map's nodes: executions, proven rules, coverage and mutation
@@ -101,6 +101,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B29` | A code file a coverage report lists — with lines or with none — records the revision it was listed at; a code file a whole run of its suite left out of the report records the revision it was omitted at, unless a report listed it at that revision. (`IngestCoverageSuite`, `MarkCoverageOmitted`) |
 | `SGINA-B30` | A suite that ran none of a file's lines at the current revision leaves the file's line and branch coverage when another suite ran it: its instrumented lines and branches say nothing about which run; with no suite having run the file, the coverage is none of its lines. (`unionCoverage`, `unionBranches`) |
 | `SGINA-B31` | Dropping the external coverage for a full run removes the coverage of the reports from outside the repository only on the files that run covered and only of the run's own test layer — an entry with no layer recorded is `unit`, the default —, recomputes their coverage from what remains, and names each suite touched; a file the run did not cover, and another layer's coverage, keep it. (`DropExternalCoverage`) |
+| `SGINA-B32` | A late ingestion's run placed (`SetRunAsOf`) stamps each file its proofs stand on — the test, each file and navigation row of its closure, each spec whose scenarios it proves — with its revision now when the run measured the same file, and `changed-after-run` otherwise, which no revision equals: the proof reads as stale, naming the file. The signals it stamps record when the run happened and the aliases it was read with. With no run placed, everything is stamped as the map holds it. (`RunAsOf`, `revAsOf`, `ChangedAfterRun`) |
 | `SGINA-B24` | The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. A node whose evidence revisions held carries its evidence, as a rebuild does — the tests reaching it stay fresh. (`RefreshRevs`) |
 | `SGINA-B23` | A run time Anchors measured itself is recorded on the node under the suite; a node the map does not have is ignored. (`RecordRunSeconds`) |
 | `SGINA-B24` | `AdoptMissingSuites` gives a signal the proofs of each suite another measurement holds and it does not, at that suite's own revision, and recomputes the union and its revision; a suite the signal already has stays as it is. |

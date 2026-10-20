@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTA
 #   ref: GTMTG
-#   updated_at: 2026-10-15
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @GTMTG
@@ -103,3 +103,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a repository with a second worktree, and a folder outside any repository
     When the hooks folder is asked from each
     Then both give the repository's hooks folder, absolute, and the folder outside gives none
+
+  @GTMTG-B15 @unit-level
+  Scenario: A run's moment names the commit it measured, and a file as that commit has it
+    Given two commits a day apart, the file changed in the second
+    When the commit of a moment between them, of a moment before both, and the file at the first are asked
+    Then the first commit, none, and the file's first content come back, and its time is the first commit's

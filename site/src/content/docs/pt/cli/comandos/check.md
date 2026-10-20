@@ -46,6 +46,7 @@ anchors check [flags]
 | `--phase` |  | enforces only the gates of this phase (pre-commit\|pre-push\|ci\|manual) |
 | `--record-issues` |  | github mode: open/close board issues from a local run too (by default only CI does); manual mode: write the issues to issues/ (by default none is written) |
 | `--root` | `.` | project root |
+| `--sequential` |  | confronts one gate after another instead of side by side — slower; to rule the parallel run out when a result looks wrong |
 | `--show-drift` |  | lists ALL the pending items (⚠) with the address of each one; without the flag, only the table counter |
 | `--show-skips` |  | lists ALL the indeterminate (~) by gate and reason, with the address of each one: what does not apply, told from what could not be confronted |
 | `--skip-rule` |  | waives rules in this run: `id=reason[,id=reason]`. The reason is mandatory |

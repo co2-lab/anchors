@@ -37,7 +37,7 @@ import (
 func newCheckCmd() *cobra.Command {
 	var root, mapPath, phase, category string
 	var changed []string
-	var all, noRecord, recordIssues, fix, deterministic, skipSlow, onlyIssues, showDrift, showSkips, showTiming, fromIndex bool
+	var all, noRecord, recordIssues, fix, deterministic, skipSlow, onlyIssues, showDrift, showSkips, showTiming, fromIndex, sequential bool
 	var skipRegras string
 	var msgPath string
 	cmd := &cobra.Command{
@@ -248,6 +248,8 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// `all` chega até os gates: é o que permite ao gate que sabe varrer sozinho
 			// (`scope_full`) rodar UMA vez sem receber a lista, em vez de receber o projeto
 			// inteiro em lotes.
+			// The gates run side by side; `--sequential` confronts one after another.
+			gate.SetSequential(sequential)
 			results := gate.RunWithWaiver(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
 			profile := gate.Aggregate(results)
 			printProfile(profile, onlyIssues, showDrift, showSkips)
@@ -343,7 +345,9 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// impediria alguém de salvar trabalho em andamento, que é justamente quando
 			// o mapa fica velho. O que faltava era DIZER, na máquina, o que o CI só diz
 			// seis minutos depois.
-			if stale := mapcmd.StaleMapNodes(absRoot, g, cfg); len(stale) > 0 && !all {
+			// Asked only where it is said: a full scan says nothing of it, and the walk of the
+			// whole tree it costs was spent for nothing (15 s at MIF).
+			if stale := staleUnlessAll(all, absRoot, g, cfg); len(stale) > 0 {
 				fmt.Fprintln(os.Stderr)
 				fmt.Fprintln(os.Stderr, i18n.T("check.map_stale", len(stale)))
 				for i, v := range stale {
@@ -397,6 +401,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 	cmd.Flags().BoolVar(&onlyIssues, "only-issues", false, "omits from the table the gates that passed everything and left no pending item (the total remains in the footer)")
 	cmd.Flags().BoolVar(&showDrift, "show-drift", false, "lists ALL the pending items (⚠) with the address of each one; without the flag, only the table counter")
 	cmd.Flags().BoolVar(&showSkips, "show-skips", false, "lists ALL the indeterminate (~) by gate and reason, with the address of each one: what does not apply, told from what could not be confronted")
+	cmd.Flags().BoolVar(&sequential, "sequential", false, "confronts one gate after another instead of side by side — slower; to rule the parallel run out when a result looks wrong")
 	cmd.Flags().BoolVar(&showTiming, "timing", false, "measures how long each gate took, and names the slowest targets — to find what makes a scan expensive")
 	return cmd
 }
@@ -1949,6 +1954,15 @@ func skipReasons(p gate.Profile) []gate.Result {
 //
 // Arquivo governado que não está no mapa é INVISÍVEL ao check, e é isso que o aviso
 // existe para dizer — a diferença entre "passou" e "não foi olhado".
+// staleUnlessAll are the map's nodes whose file changed since it was built, asked only of a
+// scan that is not the full one.
+func staleUnlessAll(all bool, root string, g *mapx.Graph, cfg *config.Config) []string {
+	if all {
+		return nil
+	}
+	return mapcmd.StaleMapNodes(root, g, cfg)
+}
+
 func warnIfMapStale(root, mapPath string, cfg *config.Config, g *mapx.Graph) {
 	if g == nil {
 		return

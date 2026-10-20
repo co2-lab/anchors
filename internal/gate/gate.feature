@@ -265,3 +265,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a run that has read a project file, changed since on disk
     When it is read again, again after a tool ran, and after the run ended
     Then the first read answers twice with a copy each time, and the later reads see the change
+
+  @GTENG-B32 @unit-level
+  Scenario: The gates run side by side, and one after another when asked
+    Given two tools that pass only while the other runs, an exclusive tool that passes only after both ended, and a gate Anchors answers itself
+    When the run confronts them, and again with the run made sequential
+    Then all pass in parallel with the results in the order of the gates, and sequentially the two tools fail

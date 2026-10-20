@@ -55,6 +55,8 @@ spec declares is reported, never bound to an invented owner.
 | `NGSTI-B21` | A scenario a full in-repository run does not name keeps the proof a report from outside the repository gave it — another layer's run, such as a visual suite, is not replaced by it. |
 | `NGSTI-B22` | With no layer named, a report a suite of `tests:` declares (its `junit` or `lcov`) is ingested under that suite's layer; a report no suite declares is read as `unit`. (`layerOfReports`) |
 | `NGSTI-B23` | `--junit` may be repeated: each report is ingested in turn as a suite of its own, the coverage and mutation reports with the first. (`newIngestCmd`) |
+| `NGSTI-B24` | A manual ingestion places its run — `--ran-at` (a time, or the commit it measured), else the report's timestamp, else the report file's modification time — and stamps each file its proofs stand on as that run found it: a file not modified since is the same; another is confronted, by the map's evidence, with its content at the last commit at or before the run. The same evidence keeps the proof fresh; another, or a file that commit lacks, stales it. A run `anchors test` just made is ingested as it ended. (`IngestArtifactsLate`, `unchangedSince`, DESIGN-late-ingestion.md) |
+| `NGSTI-B25` | `--alias OLD=NEW` (repeatable) and `--alias-file` read the report and each file's content at the run's commit with a code renamed since — a unit's, and each of its scenarios, or one scenario's —, in one pass, a whole code at a time: a file whose only change is the rename keeps its proof fresh, and the signal records the aliases. (`remap`, `readReport`) |
 | `NGSTI-B19` | A JUnit case with no `file` finds its test file from its class and name: the class names a test folder of the map by path suffix (segments split by `/`, or by `.` when it has none, dropped from the front until one exists; the root's folder when none does), and the case's file is the one test file there whose dialect `definition` defines the case's top-level test, the name before `/`; no folder, no file, or two files give the case no file. (`caseFileResolver`) |
 | `NGSTI-B15` | A report's signals are kept under its path relative to the root; a report outside the repository is kept under `external/` and its file name. (`SuiteKey`) |
 
@@ -90,6 +92,7 @@ spec declares is reported, never bound to an invented owner.
 | `NGSTI-E04` | A report that is missing or cannot be parsed. | The command fails naming which report format could not be read. | A signal read from a broken report would be invented. |
 | `NGSTI-E05` | The map cannot be loaded while ingesting reports. | The command fails with a hint to build the map. | The signals are written onto the map's nodes. |
 | `NGSTI-E06` | One `--suite` given with several `--junit` reports. | The command refuses before ingesting anything, saying to ingest each report with its own suite. | One name cannot speak for several suites, and a report that silently overwrote another is the defect this refuses. |
+| `NGSTI-E07` | An alias that is not OLD=NEW with two different codes, a code renamed twice, a `--ran-at` that is neither a time nor a commit, or `--alias`/`--ran-at` on the run `anchors test` just made. | The command refuses, naming what it could not read. | A late run read with a wrong alias or placed at a wrong time would stamp a proof nobody measured. |
 
 ## Open Decisions
 

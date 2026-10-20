@@ -22,6 +22,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -58,8 +59,17 @@ func scenarioCodeREFor(letters string) *regexp.Regexp {
 // projeto. Espelha as funções de mesmo nome em `gate` e `testsig` — os três leem os mesmos
 // códigos e precisam concordar sobre o que é um código.
 func SetRuleLetters(letters string) {
-	scenarioCodeRE = scenarioCodeREFor(letters)
+	// Built again only when what it reads changed: a walk inside a gate of a parallel run
+	// would otherwise write what the other gates read.
+	key := letters + "\x00" + config.CodeLengthPattern()
+	if key == scenarioCodeKey {
+		return
+	}
+	scenarioCodeRE, scenarioCodeKey = scenarioCodeREFor(letters), key
 }
+
+// scenarioCodeKey is what scenarioCodeRE was built from.
+var scenarioCodeKey string
 
 // ScenarioCodeRE expõe a gramática VIGENTE de código de cenário — já com as
 // `rule_types` do projeto aplicadas por SetRuleLetters.
@@ -240,6 +250,11 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 	// neste engine — regra ausente produz pergunta; regra contraditória produz
 	// desobediência sem consciência.
 	ig := LoadIgnoreFor(root, cfg)
+	// The walk only lists the files of the layers; reading and parsing each — what costs —
+	// runs on every core, each file on its own (fileOf reads nothing of the others), and the
+	// files come back in the walk's order.
+	type job struct{ path, rel, layer, kind string }
+	var jobs []job
 	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -274,20 +289,52 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 		if layer == "" {
 			return nil // não pertence a nenhuma camada declarada
 		}
-		content, readErr := os.ReadFile(path)
-		if readErr != nil {
-			// A file that vanished between the listing and the read has nothing to map.
-			// Any other failure (a permission) used to drop the file here with no word:
-			// the map lost a unit of a declared layer and no gate ever confronted it.
-			if errors.Is(readErr, fs.ErrNotExist) {
-				return nil
-			}
-			return fmt.Errorf(i18n.T("scan.err_unreadable"), rel, readErr)
-		}
-		out = append(out, fileOf(root, rel, layer, kind, content, cfg))
+		jobs = append(jobs, job{path, rel, layer, kind})
 		return nil
 	})
-	return out, err
+	if err != nil {
+		return nil, err
+	}
+	files := make([]File, len(jobs))
+	read := make([]bool, len(jobs))
+	errs := make([]error, len(jobs))
+	next := make(chan int)
+	var wg sync.WaitGroup
+	for w := 0; w < runtime.GOMAXPROCS(0); w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range next {
+				j := jobs[i]
+				content, readErr := os.ReadFile(j.path)
+				if readErr != nil {
+					// A file that vanished between the listing and the read has nothing to
+					// map. Any other failure (a permission) used to drop the file here with
+					// no word: the map lost a unit of a declared layer and no gate ever
+					// confronted it.
+					if !errors.Is(readErr, fs.ErrNotExist) {
+						errs[i] = fmt.Errorf(i18n.T("scan.err_unreadable"), j.rel, readErr)
+					}
+					continue
+				}
+				files[i], read[i] = fileOf(root, j.rel, j.layer, j.kind, content, cfg), true
+			}
+		}()
+	}
+	for i := range jobs {
+		next <- i
+	}
+	close(next)
+	wg.Wait()
+	for i := range jobs {
+		if errs[i] != nil {
+			return out, errs[i]
+		}
+		if read[i] {
+			out = append(out, files[i])
+		}
+	}
+	return out, nil
 }
 
 // fileOf reads what the map needs from ONE file's content. Every field depends only on the
@@ -1739,7 +1786,9 @@ func doublesOf(kind, rel string, content []byte, cfg *config.Config) []string {
 		return nil
 	}
 	re := mockDetect(strings.TrimSpace(cfg.Derived.MockDetect))
-	if re == nil {
+	// A file the pattern finds nothing in has no double, commented or not: blanking its
+	// comments — the costly part — is spared.
+	if re == nil || !re.Match(content) {
 		return nil
 	}
 	code := cfg.DialectFor().CommentsFor(rel).Blank(string(content))

@@ -335,6 +335,9 @@ type TestSignal struct {
 	// PrevLineCoverage: a cobertura de linha da ingestão ANTERIOR — o baseline para o
 	// delta ("a cobertura caiu?"). Preservado ao ingerir por cima. -1 = sem baseline.
 	PrevLineCoverage float64 `yaml:"prev_line_coverage,omitempty"`
+	// PrevMeasured: there is a baseline — an earlier ingestion measured the file —, even at
+	// 0%, which PrevLineCoverage alone cannot tell from no baseline.
+	PrevMeasured bool `yaml:"prev_measured,omitempty"`
 	// CoverageBySuite: line coverage PER SUITE (key = the lcov report), and the fields
 	// above are the union — a line counts as covered if ANY suite covered it.
 	//
@@ -450,6 +453,12 @@ type TestSignal struct {
 	// the author keeps the evidence.
 	StaleCodes []string `yaml:"stale_codes,omitempty"`
 	IngestedAt string   `yaml:"ingested_at,omitempty"`
+	// RanAt is when the run a late ingestion measured happened, apart from when it was
+	// ingested (DESIGN-late-ingestion.md); empty for a run ingested as it ended.
+	RanAt string `yaml:"ran_at,omitempty"`
+	// Remapped are the code aliases (`OLD=NEW`) that renamed the report's codes before it was
+	// read.
+	Remapped []string `yaml:"remapped,omitempty"`
 }
 
 // LayerExec é o resultado de execução de UMA camada de teste sobre um nó.
@@ -577,6 +586,8 @@ type Graph struct {
 	ConfigRev string `yaml:"config_rev,omitempty"`
 	Nodes     []Node `yaml:"nodes"`
 	Edges     []Edge `yaml:"edges"`
+	// runAsOf places a late ingestion's run (SetRunAsOf); never written.
+	runAsOf *RunAsOf
 	// Flow é o grafo dos FLUXOS DE TRABALHO, no mesmo arquivo e em chave SEPARADA.
 	//
 	// Mesmo arquivo porque é um grafo só de conteúdos distintos, e dois arquivos

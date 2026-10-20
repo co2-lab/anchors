@@ -1893,3 +1893,21 @@ func TestScenarioCoverage_aChangedRuleIsStaleAlone(t *testing.T) {
 		t.Errorf("a rule not proven still fails, with the stale one named beside it: %v %q", v, msg)
 	}
 }
+
+func TestCoverageDelta_baseline(t *testing.T) {
+	t.Run("INCHN-B43: A first measure skips, an earlier 0% is a baseline", func(t *testing.T) {})
+	first := mapx.Node{ID: "a.ts", Kind: mapx.KindCode, Rev: "r", Signal: &mapx.TestSignal{AtRev: "r", CoverageRev: "r", TotalLines: 10, CoveredLines: 4, LineCoverage: 40}}
+	if v, _ := checkCoverageDelta("", mapx.Node{ID: "b.ts", Kind: mapx.KindCode}); v != Pending {
+		t.Errorf("never measured is pending, got %v", v)
+	}
+	if v, msg := checkCoverageDelta("", first); v != Skip {
+		t.Errorf("a first measure has nothing to compare: %v %s", v, msg)
+	}
+	fromZero := first
+	sig := *first.Signal
+	sig.PrevMeasured = true
+	fromZero.Signal = &sig
+	if v, msg := checkCoverageDelta("", fromZero); v != Pass {
+		t.Errorf("a rise from 0%% is measured: %v %s", v, msg)
+	}
+}

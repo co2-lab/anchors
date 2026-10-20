@@ -5,8 +5,10 @@
 package mapcmd
 
 import (
+	"github.com/co2-lab/anchors/internal/shell"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -670,5 +672,95 @@ func TestIngest_severalJUnitReports(t *testing.T) {
 	cmd.SetArgs([]string{"--root", root, "--suite", "x", "--junit", filepath.Join(root, "reports/a.xml"), "--junit", filepath.Join(root, "reports/b.xml")})
 	if err := cmd.Execute(); err == nil || !strings.Contains(err.Error(), "--suite names one suite") {
 		t.Errorf("one --suite for several reports is refused: %v", err)
+	}
+}
+
+// gitProject is the ingest fixture committed at a past time, its map built: the run of a late
+// report measured that commit.
+func gitProject(t *testing.T) (root, sha string) {
+	t.Helper()
+	root = fixtureProject(t)
+	git := func(args ...string) string {
+		t.Helper()
+		cmd := exec.Command("git", append([]string{"-C", root}, args...)...)
+		cmd.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_DATE=2026-10-01T10:00:00Z", "GIT_COMMITTER_DATE=2026-10-01T10:00:00Z",
+			"GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+		return strings.TrimSpace(string(out))
+	}
+	git("init", "-q")
+	git("add", "-A")
+	git("commit", "-q", "-m", "run")
+	return root, git("rev-parse", "HEAD")
+}
+
+func TestIngest_lateReportStampedAsItsRunFound(t *testing.T) {
+	t.Run("NGSTI-B24: A report of an earlier run is stamped as that run found the files", func(t *testing.T) {})
+	root, sha := gitProject(t)
+	writeProjectFile(t, root, "src/login.spec.md", strings.Replace(fixtureSpec, "the password is checked", "the password and the device are checked", 1))
+	runCmd(t, newMapCmd(), "build", "--root", root)
+	writeProjectFile(t, root, "reports/old.xml", junitReport)
+	ingest := func() {
+		t.Helper()
+		runCmd(t, newIngestCmd(), "--root", root, "--junit", filepath.Join(root, "reports/old.xml"), "--ran-at", sha)
+	}
+	ingest()
+	spec := node(t, root, "src/login.spec.md")
+	if spec.Signal == nil || spec.Signal.AtRev == spec.Rev {
+		t.Errorf("the rule rewritten after the run stales the spec's proof: %+v", spec.Signal)
+	}
+	// The test file is newer than the run on disk, and the same as the run's commit has it.
+	test := node(t, root, "src/login.test.ts")
+	if test.Signal == nil || test.Signal.AtRev != test.Rev || test.Signal.RanAt == "" {
+		t.Errorf("the test unchanged since the run keeps its proof: %+v", test.Signal)
+	}
+	writeProjectFile(t, root, "src/login.test.ts", "test('LOGIN-B01: checks the password twice', () => {})\n")
+	runCmd(t, newMapCmd(), "build", "--root", root)
+	ingest()
+	if test := node(t, root, "src/login.test.ts"); test.Signal.AtRev == test.Rev {
+		t.Errorf("the test changed after the run stales its proof: %+v", test.Signal)
+	}
+}
+
+func TestIngest_lateReportThroughAnAlias(t *testing.T) {
+	t.Run("NGSTI-B25: A code renamed since the run is read through an alias", func(t *testing.T) {})
+	root, sha := gitProject(t)
+	writeProjectFile(t, root, "src/login.spec.md", strings.ReplaceAll(fixtureSpec, "LOGIN", "LOGNA"))
+	writeProjectFile(t, root, "src/login.test.ts", "test('LOGNA-B01: checks the password', () => {})\n")
+	runCmd(t, newMapCmd(), "build", "--root", root)
+	writeProjectFile(t, root, "reports/old.xml", junitReport)
+	runCmd(t, newIngestCmd(), "--root", root, "--junit", filepath.Join(root, "reports/old.xml"), "--ran-at", sha, "--alias", "LOGIN=LOGNA")
+	spec := node(t, root, "src/login.spec.md")
+	if spec.Signal == nil || strings.Join(spec.Signal.ProvenCodes, ",") != "LOGNA-B01" || spec.Signal.AtRev != spec.Rev {
+		t.Errorf("proven under the new code, and fresh: %+v", spec.Signal)
+	}
+	test := node(t, root, "src/login.test.ts")
+	if test.Signal == nil || test.Signal.AtRev != test.Rev || strings.Join(test.Signal.Remapped, ",") != "LOGIN=LOGNA" || !strings.HasPrefix(test.Signal.RanAt, "2026-10-01") {
+		t.Errorf("the test's proof is fresh, and records the alias and the run: %+v", test.Signal)
+	}
+}
+
+func TestIngest_lateRefusals(t *testing.T) {
+	t.Run("NGSTI-E07: A late run that cannot be placed or read is refused", func(t *testing.T) {})
+	root := fixtureProject(t)
+	writeProjectFile(t, root, "reports/r.xml", junitReport)
+	report := filepath.Join(root, "reports/r.xml")
+	for want, args := range map[string][]string{
+		"is not OLD=NEW":              {"--alias", "LOGIN"},
+		"renames LOGIN twice":         {"--alias", "LOGIN=LOGNA", "--alias", "LOGIN=LOGNB"},
+		"neither a time nor a commit": {"--ran-at", "not-a-thing"},
+	} {
+		_, err := runCmdErr(newIngestCmd(), t, append([]string{"--root", root, "--junit", report}, args...)...)
+		if err == nil || !strings.Contains(err.Error(), want) {
+			t.Errorf("%v: want %q, got %v", args, want, err)
+		}
+	}
+	ViaAnchorsTest = true
+	t.Cleanup(func() { ViaAnchorsTest = false })
+	if err := IngestArtifactsLate(root, "", report, "", "", "", "", "", false, LateRun{Aliases: []string{"LOGIN=LOGNA"}}); err == nil || !strings.Contains(err.Error(), "anchors test") {
+		t.Errorf("an alias on the run just made is refused: %v", err)
 	}
 }

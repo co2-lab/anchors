@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:717745c3b35ef001 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:ebdad297ce54d378 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 89 unidades e 1425 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 89 unidades e 1427 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1549,6 +1549,8 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 
 - **GTENG-B31** — Within a run, a gate's premises are asked of the configuration once, and each project file is read once — from the source the run reads, the tree or the index —, each reader getting its own copy; what was read is read again after a tool the project runs, which may have written it, and nothing is kept once the run ends. (`startRun`, `runPremises`, `readOnce`, `forgetReads`)
 
+- **GTENG-B32** — The gates of a run are confronted side by side: those Anchors answers itself on every core, the project's tools a few at a time beside them, and a tool declared `exclusive` alone, after the other tools; the results come back in the order of the gates, each gate's in the order of its targets, and a gate that breaks fails alone. `check --sequential` confronts one gate after another, in their order. (`RunWithWaiver`, `runTools`, `SetSequential`)
+
 - **GTENG-B06** — An UNREADABLE target does not apply: better to stop charging than to charge blind.
 
 - **GTENG-B07** — A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check.
@@ -1812,6 +1814,8 @@ looked at.
 - **INCHN-B41** — `header-valid` requires, in a header that has its identity, the file's OWN `code:` — a `ref:` alone names the unit, not the file — and fails a code another node of the map carries as its own, naming that file. (`checkOwnCode`)
 
 - **INCHN-B42** — `scenario-coverage` reads the rules whose scenarios are stale — their rule changed since they were proven, and nothing else of the spec did — as stale, apart from the rest: Pending naming them when every other rule is proven, and named beside the failing ones otherwise. (`checkScenarioCoverage`)
+
+- **INCHN-B43** — `coverage-delta` on a file never measured is pending, as `line-coverage` is; on a file measured once — its first ingestion, no earlier measure — it skips, nothing to compare; an earlier measure of 0% is a baseline like any other: a rise or a hold passes, a fall cannot happen. (`checkCoverageDelta`, `PrevMeasured`)
 
 - **INCHN-B15** — A file of a layer the project declares `headless` — the flows of an E2E runner, whose identity is in their file name and whose format is the runner's — steps aside from the header ruler; the core knows no runner's format, and a test of another layer is still charged.
 

@@ -50,7 +50,9 @@ func SetSlots(lengths []int) {
 			menor = l
 		}
 	}
-	if menor > 0 {
+	// Written only when it changes, as config.SetCodeLengths: a load inside a gate of a
+	// parallel run sets what another gate reads.
+	if menor > 0 && Slots != menor {
 		Slots = menor
 	}
 }

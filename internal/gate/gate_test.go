@@ -1447,3 +1447,37 @@ func TestRunMemo_readsOnceAndAgainAfterATool(t *testing.T) {
 		t.Errorf("outside a run, nothing is kept: %q", out)
 	}
 }
+
+func TestRun_sideBySideAndSequential(t *testing.T) {
+	t.Run("GTENG-B32: The gates run side by side, and one after another when asked", func(t *testing.T) {})
+	run := func(t *testing.T) []Result {
+		t.Helper()
+		root := t.TempDir()
+		tool := func(name, mine, other string) config.Gate {
+			return config.Gate{Name: name, On: []string{"code"}, Scope: config.ScopeProject,
+				Run: "touch " + mine + ".start; i=0; while [ $i -lt 40 ] && [ ! -e " + other + ".start ]; do sleep 0.05; i=$((i+1)); done; [ -e " + other + ".start ] && [ ! -e " + other + ".end ]; r=$?; sleep 0.2; touch " + mine + ".end; exit $r"}
+		}
+		gates := []config.Gate{
+			tool("tool-a", "a", "b"),
+			{Name: "alone", On: []string{"code"}, Scope: config.ScopeProject, Exclusive: true, Run: "[ -e a.end ] && [ -e b.end ]"},
+			{Name: "header-valid", ID: "header-valid", On: []string{"code"}},
+			tool("tool-b", "b", "a"),
+		}
+		return RunWithConfig(gates, []mapx.Node{{ID: "x.ts", Kind: mapx.KindCode}}, root, nil, nil)
+	}
+	res := run(t)
+	var order []string
+	for _, r := range res {
+		order = append(order, r.Gate+"="+string(r.Verdict))
+	}
+	if got := strings.Join(order, " "); !strings.HasPrefix(got, "tool-a=pass alone=pass header-valid=") || !strings.HasSuffix(got, " tool-b=pass") {
+		t.Errorf("side by side, in the order of the gates: %s", got)
+	}
+	SetSequential(true)
+	t.Cleanup(func() { SetSequential(false) })
+	for _, r := range run(t) {
+		if (r.Gate == "tool-a" || r.Gate == "tool-b") && r.Verdict == Pass {
+			t.Errorf("one after another, a tool never sees the other running: %+v", r)
+		}
+	}
+}

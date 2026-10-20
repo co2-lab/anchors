@@ -18,6 +18,48 @@ import (
 // relatórios costumam ter caminhos absolutos ou relativos a subdirs, então casamos
 // pelo fim do caminho, o mais específico possível.
 
+// ChangedAfterRun stamps a file of a proof that changed after the run a late ingestion
+// measured: no revision ever equals it, so the proof reads as stale, naming the file
+// (DESIGN-late-ingestion.md).
+const ChangedAfterRun = "changed-after-run"
+
+// RunAsOf places a late ingestion's run: whether a file is the same as when the run measured
+// it, when the run happened, and the aliases that renamed the report's codes. Nil is a run
+// ingested as it ended — everything as the map holds it now.
+type RunAsOf struct {
+	Unchanged func(id string) bool
+	RanAt     string
+	Remapped  []string
+}
+
+// SetRunAsOf places the next ingestions' run (nil: as it ended).
+func (g *Graph) SetRunAsOf(r *RunAsOf) { g.runAsOf = r }
+
+// revAsOf is the revision a proof stamps for a file: its revision now, or ChangedAfterRun when
+// a late ingestion's run measured another content.
+func (g *Graph) revAsOf(id, now string) string {
+	if g.runAsOf == nil || g.runAsOf.Unchanged == nil {
+		return now
+	}
+	file := id
+	if spec, _, isRow := strings.Cut(id, "#out:"); isRow {
+		file = spec
+	}
+	if g.runAsOf.Unchanged(file) {
+		return now
+	}
+	return ChangedAfterRun
+}
+
+// markRun writes, on a signal a late ingestion stamped, when the run happened and the aliases
+// it was read with.
+func (g *Graph) markRun(s *TestSignal) {
+	if g.runAsOf == nil {
+		return
+	}
+	s.RanAt, s.Remapped = g.runAsOf.RanAt, g.runAsOf.Remapped
+}
+
 // IngestExecution grava, nos nós de TESTE, quantos casos passaram/falharam/pularam,
 // e nos nós de CÓDIGO/SPEC os códigos de cenário PROVADOS (que aparecem num caso que
 // passou). `byFile` mapeia arquivo-de-teste → (passed, failed, skipped). `proven` é o
@@ -73,12 +115,16 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 				if ex.Seconds > 0 {
 					n.Signal.recordSeconds(suiteOrLayer(suite, layer), ex.Seconds)
 				}
-				n.Signal.AtRev = n.Rev
+				n.Signal.AtRev = g.revAsOf(n.ID, n.Rev)
 				// Carimba também as revs do FECHO — o que este teste alcança descendo.
 				// É o que permite dizer depois "a evidência venceu porque o util que ele
 				// compõe mudou", e não só "o próprio arquivo de teste mudou".
 				n.Signal.ClosureRev = g.EvidenceClosure(n.ID)
+				for k, r := range n.Signal.ClosureRev {
+					n.Signal.ClosureRev[k] = g.revAsOf(k, r)
+				}
 				n.Signal.IngestedAt = now
+				g.markRun(n.Signal)
 				matchedFiles++
 			}
 		}
@@ -143,8 +189,9 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 					ensureSignal(n)
 					n.Signal.ProvenCodes = pc
 					n.Signal.refreshStale(pc)
-					n.Signal.AtRev = n.Rev
+					n.Signal.AtRev = g.revAsOf(n.ID, n.Rev)
 					n.Signal.IngestedAt = now
+					g.markRun(n.Signal)
 					matchedCodes += len(pc)
 				}
 				continue
@@ -163,7 +210,7 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 				}
 				if len(pc) > 0 {
 					n.Signal.ProvenBySuite[suite] = pc
-					n.Signal.ProvenRevBySuite[suite] = n.Rev
+					n.Signal.ProvenRevBySuite[suite] = g.revAsOf(n.ID, n.Rev)
 				} else {
 					// The suite stopped proving anything here: it leaves the union, and
 					// leaves no empty entry behind in the versioned map.
@@ -174,6 +221,7 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 				n.Signal.refreshStale(pc)
 				n.Signal.AtRev = unionRev(n.Signal, n.Rev)
 				n.Signal.IngestedAt = now
+				g.markRun(n.Signal)
 				matchedCodes += len(pc)
 			}
 		}
@@ -314,7 +362,7 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, layer, n
 		if cov, ok := matchReport(n.ID, byFile); ok {
 			ensureSignal(n)
 			if n.Signal.TotalLines > 0 {
-				n.Signal.PrevLineCoverage = n.Signal.LineCoverage
+				n.Signal.PrevLineCoverage, n.Signal.PrevMeasured = n.Signal.LineCoverage, true
 			}
 			if n.Signal.CoverageBySuite == nil {
 				n.Signal.CoverageBySuite = map[string]SuiteCoverage{}
@@ -669,7 +717,7 @@ func (g *Graph) IngestCoverageLayer(byFile map[string]FileCov, suite, layer, now
 			// preserva a cobertura anterior como baseline do delta (só quando já
 			// havia uma medição real, para não criar um baseline falso de 0).
 			if n.Signal.TotalLines > 0 {
-				n.Signal.PrevLineCoverage = n.Signal.LineCoverage
+				n.Signal.PrevLineCoverage, n.Signal.PrevMeasured = n.Signal.LineCoverage, true
 			}
 			n.Signal.CoveredLines = cov.Covered
 			n.Signal.TotalLines = cov.Total

@@ -265,3 +265,15 @@ func TestParseJUnit_failureText(t *testing.T) {
 		t.Errorf("the failure's message and stack, and nothing for a pass: %q / %q", f, rep.Cases[1].Failure)
 	}
 }
+
+func TestParseJUnitBytes_ranAt(t *testing.T) {
+	t.Run("JUIJN-B14: A report's content is read, with when its run began", func(t *testing.T) {})
+	rep, err := ParseJUnitBytes([]byte(`<testsuites><testsuite name="b" timestamp="2026-10-10T14:31:00"><testcase name="x" file="a.test.ts"/></testsuite><testsuite name="a" timestamp="2026-10-10T14:30:00"/></testsuites>`))
+	if err != nil || rep.RanAt != "2026-10-10T14:30:00" || len(rep.Cases) != 1 {
+		t.Errorf("the earlier timestamp, and the case: %+v %v", rep, err)
+	}
+	rep, _ = ParseJUnitBytes([]byte(`<testsuite name="m"><testcase name="y" file="f.yaml"/></testsuite>`))
+	if rep.RanAt != "" || len(rep.Cases) != 1 {
+		t.Errorf("no timestamp: %+v", rep)
+	}
+}

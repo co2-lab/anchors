@@ -413,3 +413,48 @@ func TestHooksDir(t *testing.T) {
 		t.Error("outside a repository, none")
 	}
 }
+
+func TestCommitAt(t *testing.T) {
+	t.Run("GTMTG-B15: A run's moment names the commit it measured, and a file as that commit has it", func(t *testing.T) {})
+	dir := t.TempDir()
+	run := func(date string, args ...string) string {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null",
+			"GIT_AUTHOR_DATE="+date, "GIT_COMMITTER_DATE="+date)
+		out, err := c.CombinedOutput()
+		if err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+		return strings.TrimSpace(string(out))
+	}
+	run("2026-10-01T10:00:00Z", "init", "-q")
+	if err := os.WriteFile(filepath.Join(dir, "a.md"), []byte("v1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run("2026-10-01T10:00:00Z", "add", ".")
+	run("2026-10-01T10:00:00Z", "commit", "-q", "-m", "one")
+	first := run("2026-10-01T10:00:00Z", "rev-parse", "HEAD")
+	if err := os.WriteFile(filepath.Join(dir, "a.md"), []byte("v2\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run("2026-10-02T10:00:00Z", "commit", "-q", "-am", "two")
+	if sha, ok := CommitAt(dir, time.Date(2026, 10, 1, 18, 0, 0, 0, time.UTC)); !ok || sha != first {
+		t.Errorf("the commit a moment between them measured: %q %v", sha, ok)
+	}
+	if _, ok := CommitAt(dir, time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)); ok {
+		t.Error("no commit is that old")
+	}
+	if sha, ok := Commit(dir, first[:8]); !ok || sha != first {
+		t.Errorf("a short hash names its commit in full: %q", sha)
+	}
+	if when, ok := CommitTime(dir, first); !ok || !when.Equal(time.Date(2026, 10, 1, 10, 0, 0, 0, time.UTC)) {
+		t.Errorf("the commit's time: %v", when)
+	}
+	if b, ok := AtCommit(dir, first, "a.md"); !ok || string(b) != "v1\n" {
+		t.Errorf("the file as the first commit has it: %q", b)
+	}
+	if _, ok := AtCommit(dir, first, "b.md"); ok {
+		t.Error("a file the commit lacks has none")
+	}
+}

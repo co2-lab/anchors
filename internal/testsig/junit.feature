@@ -2,7 +2,7 @@
 # @anchors
 #   code: JNFTJ
 #   ref: JUIJN
-#   updated_at: 2026-10-13
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @JUIJN
@@ -109,3 +109,9 @@ Feature: JUnitIngest — the run's outcome per test case, and the scenario codes
     Given a report with a case failed with a message and a stack, and a case that passed
     When it is read
     Then the failed case carries the message and the stack, and the passed one nothing
+
+  @JUIJN-B14 @unit-level
+  Scenario: A report's content is read, with when its run began
+    Given a report whose two suites carry timestamps, and one whose suite carries none
+    When each content is read
+    Then the first records the earlier timestamp, the second none, and both read their cases

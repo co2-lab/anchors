@@ -195,3 +195,21 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     Given two JUnit reports
     When they are ingested together with one --suite
     Then the command refuses, saying to ingest each with its own suite
+
+  @NGSTI-B24 @unit-level
+  Scenario: A report of an earlier run is stamped as that run found the files
+    Given a project committed at a past time, a report of a run at that commit, and since then a rule of the spec rewritten
+    When the report is ingested by hand, placed at that commit, and again after the test changed too
+    Then the spec's proof is stale and the test's fresh, and then the test's is stale too
+
+  @NGSTI-B25 @unit-level
+  Scenario: A code renamed since the run is read through an alias
+    Given a report of a run at a past commit, and since then the unit's code renamed in the spec and the test
+    When the report is ingested with the alias of the old code to the new
+    Then the scenario is proven under the new code, the proofs are fresh, and the signal records the alias and the time of the run
+
+  @NGSTI-E07 @unit-level
+  Scenario: A late run that cannot be placed or read is refused
+    Given a malformed alias, a code renamed twice, and a ran-at that names nothing
+    When each is given to an ingestion
+    Then each is refused naming the cause

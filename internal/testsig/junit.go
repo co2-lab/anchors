@@ -33,6 +33,9 @@ type CaseResult struct {
 // SuiteResult agrupa casos por arquivo/suite.
 type ExecReport struct {
 	Cases []CaseResult
+	// RanAt is the earliest `timestamp` a testsuite of the report carries — when the run
+	// began —, or empty when none does (Maestro writes none).
+	RanAt string
 }
 
 // --- estruturas do JUnit XML (o subconjunto universal) ---
@@ -44,11 +47,12 @@ type junitTestsuites struct {
 }
 
 type junitTestsuite struct {
-	XMLName xml.Name         `xml:"testsuite"`
-	Name    string           `xml:"name,attr"`
-	File    string           `xml:"file,attr"`
-	Cases   []junitTestcase  `xml:"testcase"`
-	Suites  []junitTestsuite `xml:"testsuite"` // aninhamento
+	XMLName   xml.Name         `xml:"testsuite"`
+	Name      string           `xml:"name,attr"`
+	File      string           `xml:"file,attr"`
+	Timestamp string           `xml:"timestamp,attr"`
+	Cases     []junitTestcase  `xml:"testcase"`
+	Suites    []junitTestsuite `xml:"testsuite"` // aninhamento
 }
 
 type junitTestcase struct {
@@ -73,6 +77,11 @@ func ParseJUnit(path string) (*ExecReport, error) {
 	if err != nil {
 		return nil, err
 	}
+	return ParseJUnitBytes(data)
+}
+
+// ParseJUnitBytes is ParseJUnit over a report's content.
+func ParseJUnitBytes(data []byte) (*ExecReport, error) {
 	rep := &ExecReport{}
 
 	// tenta <testsuites> na raiz
@@ -93,6 +102,9 @@ func ParseJUnit(path string) (*ExecReport, error) {
 }
 
 func collectSuite(s junitTestsuite, rep *ExecReport) {
+	if t := strings.TrimSpace(s.Timestamp); t != "" && (rep.RanAt == "" || t < rep.RanAt) {
+		rep.RanAt = t
+	}
 	for _, c := range s.Cases {
 		file := c.File
 		if file == "" {

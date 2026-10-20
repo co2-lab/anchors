@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INCHN
-  updated_at: 2026-10-16
+  updated_at: 2026-10-20
   layer: gate
 -->
 # InternalChecks — the registry that routes a declared check name to a function
@@ -91,6 +91,7 @@ looked at.
 | `INCHN-B40` | `header-valid` reads the header as the map does — the `@anchors` block at the top (`scan.AnchorsHeader`) —, so an `@anchors` further down, in a string or an example, is neither the header nor its identity; and a guide, a document or a test support file, which belong to no unit, have their identity in `layer:` alone. |
 | `INCHN-B41` | `header-valid` requires, in a header that has its identity, the file's OWN `code:` — a `ref:` alone names the unit, not the file — and fails a code another node of the map carries as its own, naming that file. (`checkOwnCode`) |
 | `INCHN-B42` | `scenario-coverage` reads the rules whose scenarios are stale — their rule changed since they were proven, and nothing else of the spec did — as stale, apart from the rest: Pending naming them when every other rule is proven, and named beside the failing ones otherwise. (`checkScenarioCoverage`) |
+| `INCHN-B43` | `coverage-delta` on a file never measured is pending, as `line-coverage` is; on a file measured once — its first ingestion, no earlier measure — it skips, nothing to compare; an earlier measure of 0% is a baseline like any other: a rise or a hold passes, a fall cannot happen. (`checkCoverageDelta`, `PrevMeasured`) |
 | `INCHN-B15` | A file of a layer the project declares `headless` — the flows of an E2E runner, whose identity is in their file name and whose format is the runner's — steps aside from the header ruler; the core knows no runner's format, and a test of another layer is still charged. |
 | `INCHN-B16` | A guide with no compliance-points section, or with the section and no item in it, fails — the AI judgment gate would otherwise fall back on vague heuristics. |
 | `INCHN-B17` | When the project says how its tests are written, `scenario-coverage` counts a scenario as written in a file the source lists tests in only when a test TITLE cites its code; without a source, or in a file the source lists no test in, a code anywhere in the file outside comments counts. |

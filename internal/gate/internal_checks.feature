@@ -2,7 +2,7 @@
 # @anchors
 #   code: ICFNT
 #   ref: INCHN
-#   updated_at: 2026-10-16
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @INCHN
@@ -344,3 +344,9 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given a spec with two rules, both proven, the second's scenario stale
     When scenario coverage confronts it, and then with the first unproven
     Then it is pending naming the second alone, and then fails naming both
+
+  @INCHN-B43 @unit-level
+  Scenario: A first measure skips, an earlier 0% is a baseline
+    Given a file never measured, a file measured once, and a file measured at 0% and then at 40%
+    When coverage-delta confronts them
+    Then the first is pending, the second skips and the third passes

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:9fcfab7eef7baf22 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:55d50f154b36598c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1643,6 +1643,10 @@ abra a página dela em `camadas/`.
 
 - [NGSTI-B23 — `--junit` may be repeated: each report is ingested in turn as a suite of its own, the coverage and mutation reports with the first. (`newIngestCmd`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
+- [NGSTI-B24 — A manual ingestion places its run — `--ran-at` (a time, or the commit it measured), else the report's timestamp, else the report file's modification time — and stamps each file its proofs stand on as that run found it: a file not modified since is the same; another is confronted, by the map's evidence, with its content at the last commit at or before the run. The same evidence keeps the proof fresh; another, or a file that commit lacks, stales it. A run `anchors test` just made is ingested as it ended. (`IngestArtifactsLate`, `unchangedSince`, DESIGN-late-ingestion.md)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+
+- [NGSTI-B25 — `--alias OLD=NEW` (repeatable) and `--alias-file` read the report and each file's content at the run's commit with a code renamed since — a unit's, and each of its scenarios, or one scenario's —, in one pass, a whole code at a time: a file whose only change is the rename keeps its proof fresh, and the signal records the aliases. (`remap`, `readReport`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+
 - [NGSTI-B19 — A JUnit case with no `file` finds its test file from its class and name: the class names a test folder of the map by path suffix (segments split by `/`, or by `.` when it has none, dropped from the front until one exists; the root's folder when none does), and the case's file is the one test file there whose dialect `definition` defines the case's top-level test, the name before `/`; no folder, no file, or two files give the case no file. (`caseFileResolver`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B15 — A report's signals are kept under its path relative to the root; a report outside the repository is kept under `external/` and its file name. (`SuiteKey`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
@@ -1662,6 +1666,8 @@ abra a página dela em `camadas/`.
 - [NGSTI-E05 — The map cannot be loaded while ingesting reports.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-E06 — One `--suite` given with several `--junit` reports.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+
+- [NGSTI-E07 — An alias that is not OLD=NEW with two different codes, a code renamed twice, a `--ran-at` that is neither a time nor a commit, or `--alias`/`--ran-at` on the run `anchors test` just made.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 ### [JDGUE — Judge — records an AI's verdict on a judgment gate with the same bookkeeping as a deterministic gate](layers/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate)
 
@@ -4653,6 +4659,8 @@ abra a página dela em `camadas/`.
 
 - [GTENG-B31 — Within a run, a gate's premises are asked of the configuration once, and each project file is read once — from the source the run reads, the tree or the index —, each reader getting its own copy; what was read is read again after a tool the project runs, which may have written it, and nothing is kept once the run ends. (`startRun`, `runPremises`, `readOnce`, `forgetReads`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
+- [GTENG-B32 — The gates of a run are confronted side by side: those Anchors answers itself on every core, the project's tools a few at a time beside them, and a tool declared `exclusive` alone, after the other tools; the results come back in the order of the gates, each gate's in the order of its targets, and a gate that breaks fails alone. `check --sequential` confronts one gate after another, in their order. (`RunWithWaiver`, `runTools`, `SetSequential`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
 - [GTENG-B06 — An UNREADABLE target does not apply: better to stop charging than to charge blind.](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B07 — A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check.](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
@@ -4820,6 +4828,8 @@ abra a página dela em `camadas/`.
 - [INCHN-B41 — `header-valid` requires, in a header that has its identity, the file's OWN `code:` — a `ref:` alone names the unit, not the file — and fails a code another node of the map carries as its own, naming that file. (`checkOwnCode`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B42 — `scenario-coverage` reads the rules whose scenarios are stale — their rule changed since they were proven, and nothing else of the spec did — as stale, apart from the rest: Pending naming them when every other rule is proven, and named beside the failing ones otherwise. (`checkScenarioCoverage`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
+
+- [INCHN-B43 — `coverage-delta` on a file never measured is pending, as `line-coverage` is; on a file measured once — its first ingestion, no earlier measure — it skips, nothing to compare; an earlier measure of 0% is a baseline like any other: a rise or a hold passes, a fall cannot happen. (`checkCoverageDelta`, `PrevMeasured`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B15 — A file of a layer the project declares `headless` — the flows of an E2E runner, whose identity is in their file name and whose format is the runner's — steps aside from the header ruler; the core knows no runner's format, and a test of another layer is still charged.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
@@ -6919,6 +6929,8 @@ abra a página dela em `camadas/`.
 
 - [GTMTG-B14 — The folder git runs a repository's hooks from is given absolute — the shared `.git/hooks`, from a worktree too; outside a repository there is none. (`HooksDir`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
+- [GTMTG-B15 — The commit a run at a moment measured is the last commit of HEAD made at or before it, and none when every commit is younger; a reference names its commit in full, and its time; a file's content at a commit is returned as that commit has it, and none when the commit lacks it. (`CommitAt`, `Commit`, `CommitTime`, `AtCommit`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+
 - [GTMTG-X01 — The dirty count never answers 0 when it could not count: outside a repository or without git it answers a negative number.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-X02 — The pending-change question never answers "known" when it could not ask: outside a repository it answers not known and no change.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
@@ -8061,6 +8073,8 @@ abra a página dela em `camadas/`.
 
 - [JUIJN-B13 — A failed case carries what its failure says — the message and the body, its stack included — so a timeout can be told from a failed assertion; a case that passed carries nothing.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
 
+- [JUIJN-B14 — A report is read from its content as from its file, and records the earliest `timestamp` its suites carry — when the run began —, or none when no suite carries one. (`ParseJUnitBytes`, `ExecReport.RanAt`)](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
+
 - [JUIJN-I01 — Every proven code is also a seen code: a run cannot prove what it did not measure.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
 
 - [JUIJN-I02 — A scenario is proven only by a case that ran, passed, and names exactly that scenario: a skipped or failed case proves nothing, and a variant is never proven by its sibling or by its rule.](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report)
@@ -8398,6 +8412,8 @@ abra a página dela em `camadas/`.
 - [SGINA-B30 — A suite that ran none of a file's lines at the current revision leaves the file's line and branch coverage when another suite ran it: its instrumented lines and branches say nothing about which run; with no suite having run the file, the coverage is none of its lines. (`unionCoverage`, `unionBranches`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B31 — Dropping the external coverage for a full run removes the coverage of the reports from outside the repository only on the files that run covered and only of the run's own test layer — an entry with no layer recorded is `unit`, the default —, recomputes their coverage from what remains, and names each suite touched; a file the run did not cover, and another layer's coverage, keep it. (`DropExternalCoverage`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
+
+- [SGINA-B32 — A late ingestion's run placed (`SetRunAsOf`) stamps each file its proofs stand on — the test, each file and navigation row of its closure, each spec whose scenarios it proves — with its revision now when the run measured the same file, and `changed-after-run` otherwise, which no revision equals: the proof reads as stale, naming the file. The signals it stamps record when the run happened and the aliases it was read with. With no run placed, everything is stamped as the map holds it. (`RunAsOf`, `revAsOf`, `ChangedAfterRun`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B24 — The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. A node whose evidence revisions held carries its evidence, as a rebuild does — the tests reaching it stay fresh. (`RefreshRevs`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 

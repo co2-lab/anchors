@@ -17,6 +17,13 @@ Consumes the test runner's artifacts and writes the signals into the map:
   anchors ingest --mutation m.json --scope full       with the dependents' tests
   anchors ingest --junit r.xml --lcov c.info   several in one pass
   anchors ingest --junit a.xml --junit b.xml   several suites, each its own
+  anchors ingest --junit old.xml --ran-at 2026-10-10T14:30:00 --alias PHA1=PHA1P
+                                          a report of an earlier run, read with today's codes
+
+A manual ingestion stamps each proof as its run found the files: the run is placed in time
+(--ran-at, the report's timestamp, or its file's modification time), and each file a proof
+stands on is confronted with its content at the commit of that time. A file changed since
+stales the proof; a code only renamed (--alias) does not.
 
 Anchors does NOT run the test — you run it (jest --coverage, go test -coverprofile,
 pytest-cov…) and hand over the report. From the execution, Anchors also derives coverage per
@@ -34,6 +41,8 @@ anchors ingest [flags]
 
 | Flag | Default | What it does |
 | --- | --- | --- |
+| `--alias` |  | a code renamed since the run, OLD=NEW (a unit's — PHA1=PHA1P — or a scenario's), repeatable: the report and the files are read with the new code |
+| `--alias-file` |  | a file of aliases, one OLD=NEW per line |
 | `--junit` |  | JUnit XML file (execution result); repeat it for several suites, each ingested as its own |
 | `--layer` |  | test layer of this suite (unit\|integration\|e2e…); default the layer of the suite in anchors.yaml whose junit/lcov is this report, or unit |
 | `--lcov` |  | lcov .info file (line coverage) |
@@ -41,6 +50,7 @@ anchors ingest [flags]
 | `--map` |  | path to the map |
 | `--mutation` |  | mutation JSON report. The FORMAT belongs to the project: declare it in the mutation-score gate of anchors.yaml, key 'format' (default 'mutation-testing-elements' — Stryker/PIT/Infection/mutmut; 'gremlins' for Go) |
 | `--partial` |  | the report is a PARTIAL run (only some tests): scenarios it did not run keep their earlier proof. `anchors test --changed` sets it |
+| `--ran-at` |  | when the run happened — a time (2026-10-10T14:30:00) or the commit it measured; default: the report's timestamp, else its file's modification time. Each file a proof stands on is stamped as that run found it |
 | `--root` | `.` | project root |
 | `--scope` |  | scope of the suite that ran the mutants: `isolated` (only the unit's test) or `full` (with the dependents). Ingesting both allows reading the DIFFERENCE — how much the unit depends on third parties to prove itself |
 | `--suite` |  | name of this suite in the map (default: the JUnit path relative to the root). Proofs are kept per suite, so each workspace's report only speaks for itself |

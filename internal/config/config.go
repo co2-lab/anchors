@@ -763,6 +763,12 @@ func SetCodeLengths(ls []int) {
 	if len(ls) == 0 {
 		ls = []int{DefaultCodeLength}
 	}
+	// Written only when it changes: a gate that loads the configuration while others run
+	// beside it (a doctrine read inside a gate) sets the value they read, and setting the
+	// same value would still be a write under their reads.
+	if slices.Equal(CodeLengths, ls) {
+		return
+	}
 	CodeLengths = ls
 }
 
@@ -992,6 +998,11 @@ type Gate struct {
 	// responde "posso rodar isto num loop apertado?", enquanto `when` responde "isto é
 	// cobrado nesta fase?". Vazio = fast (é o que todo gate interno é).
 	Cost string `yaml:"cost,omitempty"`
+
+	// Exclusive: the project's tool runs alone — never beside another tool of the run. The
+	// tools run side by side; one that writes what another reads, or that takes the whole
+	// machine, says so here.
+	Exclusive bool `yaml:"exclusive,omitempty"`
 
 	// SkipOn desliga o gate numa PERSPECTIVA (`change`, `all`) — ver SkipsOn.
 	//

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2d9876408d1454d8 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:44aec54507ccb3a3 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1509,6 +1509,12 @@ teste prova.
 - [Each of several JUnit reports is ingested as a suite of its own](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B23`
 
 - [One suite name for several reports is refused](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-E06`
+
+- [A report of an earlier run is stamped as that run found the files](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B24`
+
+- [A code renamed since the run is read through an alias](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B25`
+
+- [A late run that cannot be placed or read is refused](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-E07`
 
 - [The legacy spelling of the waiver is a waiver all the way to the stamp](layers/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B01`
 
@@ -4254,6 +4260,8 @@ teste prova.
 
 - [A run reads each file once, and again after a tool](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B31`
 
+- [The gates run side by side, and one after another when asked](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B32`
+
 - [The guidance points to the agreement](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B01`
 
 - [The catalog offers the guidance gates](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B02`
@@ -4407,6 +4415,8 @@ teste prova.
 - [The header is the block at the top, and a file of no unit is identified by its layer](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B40`
 
 - [Scenario coverage reads the scenarios of a changed rule as stale, and the rest as proven](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B42`
+
+- [A first measure skips, an earlier 0% is a baseline](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B43`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -6278,6 +6288,8 @@ teste prova.
 
 - [The hooks folder is found](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B14`
 
+- [A run's moment names the commit it measured, and a file as that commit has it](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B15`
+
 - [Only an administrator whose protection spares administrators can bypass it](layers/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B01`
 
 - [Each refusal of the bypass names its reason](layers/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B02`
@@ -7316,6 +7328,8 @@ teste prova.
 
 - [A failed case carries what its failure says](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report) `JUIJN-B13`
 
+- [A report's content is read, with when its run began](layers/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report) `JUIJN-B14`
+
 - [Each record becomes one file's coverage in report order](layers/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B01`
 
 - [A line with hits is covered and a line without is not](layers/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B02`
@@ -7631,6 +7645,8 @@ teste prova.
 - [The external coverage goes only from the files the run covered](layers/mapa.md#sgina-b31--the-external-coverage-goes-only-from-the-files-the-run-covered) `SGINA-B31`
 
 - [The suites another measurement holds and this signal does not are adopted, and the ones it has stay](layers/mapa.md#sgina-b24--the-suites-another-measurement-holds-and-this-signal-does-not-are-adopted-and-the-ones-it-has-stay) `SGINA-B24`
+
+- [A late run stamps what changed after it as changed](layers/mapa.md#sgina-b32--a-late-run-stamps-what-changed-after-it-as-changed) `SGINA-B32`
 
 - [The lock is a file beside the map with its owner](layers/mapa.md#mplck-b01--the-lock-is-a-file-beside-the-map-with-its-owner) `MPLCK-B01`
 

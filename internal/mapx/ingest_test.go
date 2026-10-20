@@ -900,3 +900,37 @@ func TestAdoptMissingSuites(t *testing.T) {
 		t.Error("a second adoption has nothing to add")
 	}
 }
+
+func TestIngest_lateRunStampsWhatChanged(t *testing.T) {
+	t.Run("SGINA-B32: A late run stamps what changed after it as changed", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{
+			{ID: "a.test.ts", Kind: KindTest, Rev: "t1"},
+			{ID: "a.ts", Kind: KindCode, Rev: "a1"},
+			{ID: "b.ts", Kind: KindCode, Rev: "b1"},
+			{ID: "a.spec.md", Kind: KindSpec, Code: "AAAAU", Rev: "s1"},
+		},
+		Edges: []Edge{
+			{From: "a.test.ts", To: "a.ts", Type: EdgeDependsOn},
+			{From: "a.test.ts", To: "b.ts", Type: EdgeDependsOn},
+		},
+	}
+	changed := map[string]bool{"b.ts": true, "a.spec.md": true}
+	g.SetRunAsOf(&RunAsOf{Unchanged: func(id string) bool { return !changed[id] }, RanAt: "2026-10-10T14:30:00-03:00", Remapped: []string{"OLDCU=AAAAU"}})
+	g.IngestExecutionSuite(map[string]ExecByFile{"a.test.ts": {Passed: 1}}, map[string]bool{"AAAAU-B01": true}, nil,
+		map[string][]string{"a.spec.md": {"AAAAU-B01"}}, "unit", "s", "now")
+	g.SetRunAsOf(nil)
+	test := g.node("a.test.ts").Signal
+	if test.AtRev != "t1" || test.ClosureRev["a.ts"] != "a1" || test.ClosureRev["b.ts"] != ChangedAfterRun {
+		t.Errorf("the changed file alone is stamped changed: %+v", test)
+	}
+	if test.RanAt != "2026-10-10T14:30:00-03:00" || strings.Join(test.Remapped, ",") != "OLDCU=AAAAU" {
+		t.Errorf("the run is recorded: %+v", test)
+	}
+	if ev := g.EvidenceStaleFor("a.test.ts"); ev == nil || strings.Join(ev.Culprit, ",") != "b.ts" {
+		t.Errorf("the proof is stale, naming the file: %+v", ev)
+	}
+	if spec := g.node("a.spec.md").Signal; spec.ProvenRevBySuite["s"] != ChangedAfterRun || spec.AtRev == "s1" {
+		t.Errorf("the spec that changed stales its suite's proof: %+v", spec)
+	}
+}

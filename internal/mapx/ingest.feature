@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTD
 #   ref: SGINA
-#   updated_at: 2026-10-15
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @SGINA
@@ -212,3 +212,9 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a signal with the unit suite at the new revision, and HEAD's with the unit and e2e suites at the old one
     When the missing suites are adopted from HEAD's
     Then the e2e suite joins at its own revision, the unit run stays, and a second adoption adds nothing
+
+  @SGINA-B32 @unit-level
+  Scenario: A late run stamps what changed after it as changed
+    Given a test reaching two code files, one of them changed after the run, and a spec it proves that changed after the run
+    When the run is ingested placed in time
+    Then the changed file and the spec's suite are stamped changed-after-run, the other file and the test as they are, the proof is stale naming the file, and the signals record when the run happened and its aliases

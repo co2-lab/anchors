@@ -778,9 +778,19 @@ func anyCodeREFor(letters string) *regexp.Regexp {
 // às letras canônicas — e um cenário de letra declarada pelo projeto vira invisível para
 // aquele gate, que então reporta verde sobre o que não conferiu.
 func SetRuleLetters(letters string) {
+	// Built again only when what they read changed: set at each run, and read by the gates
+	// of the run running side by side.
+	key := letters + "\x00" + config.CodeLengthPattern()
+	if key == ruleLettersKey {
+		return
+	}
 	anyCodeRE = anyCodeREFor(letters)
 	featScenarioCodeRE = featCodeREFor(letters)
+	ruleLettersKey = key
 }
+
+// ruleLettersKey is what anyCodeRE and featScenarioCodeRE were built from.
+var ruleLettersKey string
 
 func checkHasScenarioCode(content string, _ mapx.Node) (Verdict, string) {
 	if anyCodeRE.MatchString(content) {
@@ -1100,8 +1110,14 @@ func checkCoverageDelta(_ string, n mapx.Node) (Verdict, string) {
 	if v, msg, ok := coverageAbsence(n); ok {
 		return v, msg
 	}
-	if n.Signal == nil || n.Signal.PrevLineCoverage == 0 {
-		return Pending, i18n.T("gate.no_coverage_baseline")
+	// Never measured is not known: pending, as line-coverage says.
+	if n.Signal == nil || n.Signal.TotalLines == 0 {
+		return Pending, i18n.T("gate.no_line_coverage")
+	}
+	// Measured once has no earlier measure to compare with — the first ingestion —, apart
+	// from an earlier measure of 0%, which is one: a rise or a hold from 0% is real.
+	if !n.Signal.PrevMeasured && n.Signal.PrevLineCoverage == 0 {
+		return Skip, i18n.T("gate.no_coverage_baseline")
 	}
 	if n.SignalStale() {
 		return Pending, i18n.T("gate.stale_coverage")

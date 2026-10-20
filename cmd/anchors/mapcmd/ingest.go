@@ -47,6 +47,7 @@ var MutationTargets []string
 func newIngestCmd() *cobra.Command {
 	var root, mapPath, lcov, mutation, layer, scope, suite string
 	var junits []string
+	var late LateRun
 	var partial bool
 	var logs bool
 	cmd := &cobra.Command{
@@ -61,6 +62,13 @@ func newIngestCmd() *cobra.Command {
   anchors ingest --mutation m.json --scope full       with the dependents' tests
   anchors ingest --junit r.xml --lcov c.info   several in one pass
   anchors ingest --junit a.xml --junit b.xml   several suites, each its own
+  anchors ingest --junit old.xml --ran-at 2026-10-10T14:30:00 --alias PHA1=PHA1P
+                                          a report of an earlier run, read with today's codes
+
+A manual ingestion stamps each proof as its run found the files: the run is placed in time
+(--ran-at, the report's timestamp, or its file's modification time), and each file a proof
+stands on is confronted with its content at the commit of that time. A file changed since
+stales the proof; a code only renamed (--alias) does not.
 
 Anchors does NOT run the test — you run it (jest --coverage, go test -coverprofile,
 pytest-cov…) and hand over the report. From the execution, Anchors also derives coverage per
@@ -88,7 +96,7 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 				if i > 0 {
 					l, m = "", ""
 				}
-				if err := IngestArtifacts(absRoot, mapPath, junit, l, m, layer, scope, suite, partial); err != nil {
+				if err := IngestArtifactsLate(absRoot, mapPath, junit, l, m, layer, scope, suite, partial, late); err != nil {
 					return err
 				}
 			}
@@ -102,6 +110,9 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 		"scan the logs declared in `logs.paths` and bind the failure occurrences to the specs that declare them")
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().StringVar(&mapPath, "map", "", "path to the map")
+	cmd.Flags().StringVar(&late.RanAt, "ran-at", "", "when the run happened — a time (2026-10-10T14:30:00) or the commit it measured; default: the report's timestamp, else its file's modification time. Each file a proof stands on is stamped as that run found it")
+	cmd.Flags().StringArrayVar(&late.Aliases, "alias", nil, "a code renamed since the run, OLD=NEW (a unit's — PHA1=PHA1P — or a scenario's), repeatable: the report and the files are read with the new code")
+	cmd.Flags().StringVar(&late.AliasFile, "alias-file", "", "a file of aliases, one OLD=NEW per line")
 	cmd.Flags().StringArrayVar(&junits, "junit", nil, "JUnit XML file (execution result); repeat it for several suites, each ingested as its own")
 	cmd.Flags().StringVar(&lcov, "lcov", "", "lcov .info file (line coverage)")
 	cmd.Flags().StringVar(&mutation, "mutation", "", "mutation JSON report. The FORMAT belongs to the project: declare it in the mutation-score gate of anchors.yaml, key 'format' (default 'mutation-testing-elements' — Stryker/PIT/Infection/mutmut; 'gremlins' for Go)")
@@ -117,6 +128,20 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 // nem invocar o próprio binário de novo. É o que fecha o par "rodar" / "ingerir" que
 // antes exigia um humano no meio.
 func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite string, partial bool) error {
+	return IngestArtifactsLate(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite, partial, LateRun{})
+}
+
+// IngestArtifactsLate is IngestArtifacts placing a manual ingestion's run (DESIGN-late-ingestion.md):
+// the report is read through the aliases, and each file its proofs stand on is stamped as the
+// run measured it. A run `anchors test` just made is ingested as it ended.
+func IngestArtifactsLate(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite string, partial bool, late LateRun) error {
+	aliases, err := late.aliases()
+	if err != nil {
+		return err
+	}
+	if ViaAnchorsTest && (len(aliases) > 0 || late.RanAt != "") {
+		return fmt.Errorf("--alias and --ran-at place a late run; `anchors test` ingests the run it just made")
+	}
 	if err := warnIfManualIngest(absRoot); err != nil {
 		return err
 	}
@@ -185,9 +210,27 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 			now := time.Now().Format(time.RFC3339)
 
 			if junit != "" {
-				rep, err := testsig.ParseJUnit(junit)
+				rep, err := readReport(junit, aliases)
 				if err != nil {
 					return fmt.Errorf("parse JUnit: %w", err)
+				}
+				// A manual ingestion is stamped with what its run measured, not with the
+				// tree it finds (DESIGN-late-ingestion.md).
+				if !ViaAnchorsTest {
+					at, sha, err := late.runTime(absRoot, junit, rep)
+					if err != nil {
+						return err
+					}
+					lateCfg := projectCfg
+					if lateCfg == nil {
+						lateCfg = &config.Config{}
+					}
+					g.SetRunAsOf(&mapx.RunAsOf{
+						Unchanged: unchangedSince(absRoot, g, lateCfg, at, sha, aliases),
+						RanAt:     at.Format(time.RFC3339),
+						Remapped:  aliasNames(aliases),
+					})
+					defer g.SetRunAsOf(nil)
 				}
 				byFile := map[string]mapx.ExecByFile{}
 				fileOf := caseFileResolver(g, projectCfg, absRoot)
