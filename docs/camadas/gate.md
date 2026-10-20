@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:502ee71973d38af6 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:bd3bf0ca93bdfb23 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 89 unidades e 1423 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 89 unidades e 1424 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1468,6 +1468,8 @@ still speak about frozen parts: `freeze-consistent` confronts the marks with the
 - **FRGTF-B04** — `frozen-touched` tells a frozen file with an uncommitted change — or a file with frozen rules, naming each rule and its freeze — as a declared divergence, which informs and never bars; an unchanged frozen part passes, and a part with no freeze is skipped. (`checkFrozenTouched`)
 
 - **FRGTF-B05** — The run's profile counts the `frozen` verdicts of each gate apart, and a frozen verdict neither fails nor bars. (`GateSummary`)
+
+- **FRGTF-B06** — `freeze-consistent` also names each glob of anchors.yaml's `frozen_paths` that matches no file of the map, with its freeze: a folder that freezes nothing is a glob mistyped, or a folder that moved; a project with frozen folders and no other freeze is confronted, not skipped.
 
 - **FRGTF-I01** — Thawing a part gives back the verdicts it had: the freeze only changes what is asked while it holds.
 

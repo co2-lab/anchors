@@ -2,7 +2,7 @@
 # @anchors
 #   code: FGFFR
 #   ref: FRGTF
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @FRGTF
@@ -49,3 +49,9 @@ Feature: Frozen gates — a frozen part is quiet, and told when touched
     Given no map
     When freeze-consistent runs
     Then it is pending, naming the missing map
+
+  @FRGTF-B06 @unit-level
+  Scenario: A frozen folder that holds no file is named
+    Given a project whose anchors.yaml freezes a folder holding files and one holding none
+    When freeze-consistent confronts it
+    Then it fails naming the empty glob and its freeze, and passes once that glob is gone

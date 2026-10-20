@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:c87fdcdc4337df36 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d01c1167d7a1e37b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -946,6 +946,8 @@ teste prova.
 
 - [A refused change writes nothing](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-E01`
 
+- [The summary leaves a frozen plan out of the total](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-B09`
+
 - [queue lists the live tasks with the hygiene hints](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board) `WRQUW-B01`
 
 - [next claims the next task in local mode](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board) `WRQUW-B02`
@@ -994,7 +996,9 @@ teste prova.
 
 - [A failed claim run is an error](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board) `WRQUW-E01`
 
-- [A task on a frozen target carries the warning](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board) `WRQUW-B21`
+- [A card on a frozen target carries the warning](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board) `WRQUW-B21`
+
+- [The task of a frozen part waits in the queue](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board) `WRQUW-B22`
 
 - [The root holds exactly the nineteen flow commands after registration](layers/comando.md#flrgf--flowregister--attach-the-flow-domains-commands-to-the-root-command-once-each) `FLRGF-B01`
 
@@ -1441,6 +1445,8 @@ teste prova.
 - [A file that is not a node of the map is refused](layers/comando.md#mpcti--impact--what-a-change-to-one-file-reaches-in-both-directions-of-the-map) `MPCTI-E01`
 
 - [Without a map the impact query fails and asks for the map build](layers/comando.md#mpcti--impact--what-a-change-to-one-file-reaches-in-both-directions-of-the-map) `MPCTI-E02`
+
+- [A frozen part the change reaches is listed apart](layers/comando.md#mpcti--impact--what-a-change-to-one-file-reaches-in-both-directions-of-the-map) `MPCTI-B06`
 
 - [The three reports in one pass reach the test, spec and code nodes](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B01`
 
@@ -1905,6 +1911,12 @@ teste prova.
 - [The freezes are listed, each with its reason and places](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B18`
 
 - [Before an edit, the agent is told a file is frozen, and the edit goes on](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B19`
+
+- [A folder is frozen by a glob written to anchors.yaml](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B20`
+
+- [A new file in a frozen folder is told before the edit](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B21`
+
+- [The freezes section follows the project's language](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B22`
 
 - [The patterns match the map, the compiled docs and plan progress files only](layers/comando.md#gnptg--generatedpaths--the-product-names-the-files-it-derives-so-a-conflict-in-them-is-rebuilt-not-merged) `GNPTG-B01`
 
@@ -3142,6 +3154,10 @@ teste prova.
 
 - [A layer's required sections are checked on load](layers/config.md#cnfgo-b75--a-layers-required-sections-are-checked-on-load) `CNFGO-B75`
 
+- [A frozen folder names its freeze](layers/config.md#cnfgo-b76--a-frozen-folder-names-its-freeze) `CNFGO-B76`
+
+- [A frozen_paths entry that freezes nothing is refused](layers/config.md#cnfgo-e12--a-frozen-paths-entry-that-freezes-nothing-is-refused) `CNFGO-E12`
+
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](layers/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -4157,6 +4173,8 @@ teste prova.
 - [Thawing gives back the verdicts](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-I01`
 
 - [With no map the freezes are not confronted](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-E01`
+
+- [A frozen folder that holds no file is named](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B06`
 
 - [A gate reaches only the kinds it declares](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B01`
 
@@ -6942,6 +6960,8 @@ teste prova.
 
 - [What the format cannot read back is refused](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-E02`
 
+- [A frozen plan's demand is out of the count](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B14`
+
 - [An enqueued task is born pending](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B01`
 
 - [The same target and step are not enqueued twice](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B02`
@@ -6983,6 +7003,8 @@ teste prova.
 - [A corrupted task file is listed as triage, and can be claimed and dropped](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-E03`
 
 - [Enqueuing an ID a live task already holds for another target is refused](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-E04`
+
+- [A claim passes over the tasks a filter names](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B16`
 
 - [The lower convention derives the lower-case prefix](layers/infra.md#rcdlr--recodedialect--the-projects-own-surfaces-of-a-code-testid-prefixes-and-file-names) `RCDLR-B01`
 
@@ -7795,6 +7817,8 @@ teste prova.
 - [The frozen parts of the project, and of one freeze](layers/mapx.md#frscf-b04--the-frozen-parts-of-the-project-and-of-one-freeze) `FRSCF-B04`
 
 - [No mark, no freeze](layers/mapx.md#frscf-i01--no-mark-no-freeze) `FRSCF-I01`
+
+- [A frozen folder freezes its files and the units it owns](layers/mapx.md#frscf-b05--a-frozen-folder-freezes-its-files-and-the-units-it-owns) `FRSCF-B05`
 
 ## migra
 

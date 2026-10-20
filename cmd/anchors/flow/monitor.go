@@ -272,7 +272,7 @@ func progressLines(st *runs.State, root string, now time.Time, every time.Durati
 	if !changed && !due {
 		return nil
 	}
-	done, total := progress.Totals(f.AllTasks())
+	done, total := progress.Totals(f.CountedTasks())
 	was := fmt.Sprintf("%s (%s/%s)", progress.Percent(done, total), num(done), num(total))
 	lines := strings.Split(text, "\n")
 	lines[0] = "▸ " + lines[0]

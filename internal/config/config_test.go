@@ -1997,3 +1997,34 @@ func TestRequiresSections_validated(t *testing.T) {
 		t.Errorf("a well-formed entry loads: %v", err)
 	}
 }
+
+func TestFrozenPaths(t *testing.T) {
+	t.Run("CNFGO-B76: A frozen folder names its freeze", func(t *testing.T) {})
+	t.Run("CNFGO-E12: A frozen_paths entry that freezes nothing is refused", func(t *testing.T) {})
+	c := &Config{FrozenPaths: []FrozenPath{
+		{Freeze: "IRDOC-F01", Paths: []string{"apps/ir/**"}},
+		{Freeze: "later", Paths: []string{"apps/**"}},
+	}}
+	if got := c.FrozenPathOf("apps/ir/tax.ts"); got != "IRDOC-F01" {
+		t.Errorf("the first entry answers: %q", got)
+	}
+	if got := c.FrozenPathOf("lib/x.ts"); got != "" {
+		t.Errorf("no glob, no freeze: %q", got)
+	}
+	if (*Config)(nil).FrozenPathOf("x") != "" {
+		t.Error("a nil config freezes nothing")
+	}
+	for name, body := range map[string]string{
+		"no freeze":    "frozen_paths:\n  - paths: [\"a/**\"]\n",
+		"no paths":     "frozen_paths:\n  - freeze: X\n",
+		"invalid glob": "frozen_paths:\n  - freeze: X\n    paths: [\"a/[\"]\n",
+	} {
+		p := filepath.Join(t.TempDir(), DefaultFile)
+		if err := os.WriteFile(p, []byte("version: 1\nlayers: {}\n"+body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Load(p); err == nil || !strings.Contains(err.Error(), "frozen_paths") {
+			t.Errorf("%s is refused naming frozen_paths: %v", name, err)
+		}
+	}
+}

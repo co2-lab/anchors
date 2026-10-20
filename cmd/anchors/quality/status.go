@@ -395,12 +395,16 @@ func printProgress(w io.Writer, root string) {
 	if len(f.Demands) == 0 {
 		return
 	}
-	done, total := progress.Totals(f.AllTasks())
+	done, total := progress.Totals(f.CountedTasks())
 	fmt.Fprintf(w, "▸ progress %s (%s/%s %s) — `anchors progress summary` for the stages\n",
 		progress.Percent(done, total), strconv.FormatFloat(done, 'f', -1, 64), strconv.FormatFloat(total, 'f', -1, 64), f.Unit)
 	for _, r := range progress.Summary(f) {
 		if !r.Stage {
-			fmt.Fprintf(w, "    %s %s — %s · %d open\n", r.ID, r.Title, r.Percent, r.Open)
+			frozen := ""
+			if r.Frozen != "" {
+				frozen = " · ❄ frozen, out of the total"
+			}
+			fmt.Fprintf(w, "    %s %s — %s · %d open%s\n", r.ID, r.Title, r.Percent, r.Open, frozen)
 		}
 	}
 }

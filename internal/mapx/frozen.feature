@@ -2,7 +2,7 @@
 # @anchors
 #   code: FSFFR
 #   ref: FRSCF
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @FRSCF
@@ -37,3 +37,9 @@ Feature: Frozen scope — the map carries each freeze to everything it covers
     Given the files of a project with no freeze mark
     When the map is built
     Then no node is frozen and no rule is frozen
+
+  @FRSCF-B05 @unit-level
+  Scenario: A frozen folder freezes its files and the units it owns
+    Given a folder frozen in anchors.yaml holding a unit's spec and code, the unit's test in another folder, and a file of the folder with a mark of its own
+    When the map is built
+    Then the spec, the code and the test carry the folder's freeze, and the marked file keeps its own

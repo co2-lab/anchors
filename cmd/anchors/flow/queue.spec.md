@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WRQUW
-  updated_at: 2026-10-11
+  updated_at: 2026-10-20
   layer: comando
 -->
 # WorkQueue — list, pull, close and discard the work, from the local queue or from the board
@@ -83,7 +83,8 @@ decide the product is told to escalate instead of asking whoever runs it.
 | Effect | Description |
 | --- | --- |
 | `WRQUW-B20` | A role already declared is kept without asking; without a terminal (a pipe or the null device) nothing is asked and nothing recorded, and the output says how to declare the role. |
-| `WRQUW-B21` | A task or a card whose target a freeze covers — whole, or some rules of its unit — is handed out with the warning that names the freeze and its reason and says not to change it without an order from a person; the work is still handed out. |
+| `WRQUW-B21` | A card whose target a freeze covers — whole, or some rules of its unit — is handed out with the warning that names the freeze and its reason and says not to change it without an order from a person: in github mode the claim runs in the pipeline, which reads no map. A task holding only some frozen rules of its unit is handed out with the same warning. |
+| `WRQUW-B22` | `next` does not claim a queued task whose changed file a freeze covers whole — in the map, or by a frozen folder of anchors.yaml —: it stays pending, waiting for the thaw, and the next task is claimed instead; with no other, the queue is said empty, counting the tasks of frozen parts that wait. The cold start does not seed a frozen plan, and a spec a plan seeds inside a frozen folder is not missing. (`frozenTasks`, `queue.ClaimSkipping`, FRUNF-D08) |
 
 ## Invariants
 

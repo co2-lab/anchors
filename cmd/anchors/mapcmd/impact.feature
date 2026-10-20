@@ -2,7 +2,7 @@
 # @anchors
 #   code: IMFTM
 #   ref: MPCTI
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @MPCTI
@@ -61,3 +61,9 @@ Feature: Impact — what a change to one file reaches, in both directions of the
     Given a directory with no map
     When the impact of a file is asked there
     Then it fails with a hint to run the map build
+
+  @MPCTI-B06 @unit-level
+  Scenario: A frozen part the change reaches is listed apart
+    Given a project whose anchors.yaml freezes the folder of the spec's test
+    When the impact of the spec is asked
+    Then the code is among the parts to redo, and the test is under the frozen heading with its freeze

@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 )
@@ -76,6 +77,10 @@ type Demand struct {
 	Plan   string   `json:"plan,omitempty"`
 	Tasks  []*Task  `json:"tasks"` // the tasks of no stage
 	Stages []*Stage `json:"stages"`
+	// Frozen is the freeze that covers the demand's plan — its header's mark, or a frozen
+	// folder of anchors.yaml —, read when the file is loaded and never written into it: a
+	// frozen plan's work leaves the counted totals (FRUNF-D10).
+	Frozen string `json:"frozen,omitempty"`
 }
 
 // File is the whole progress file.
@@ -334,7 +339,47 @@ func Load(root string) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
-	return Parse(string(b))
+	f, err := Parse(string(b))
+	if err != nil {
+		return nil, err
+	}
+	markFrozen(root, f)
+	return f, nil
+}
+
+// markFrozen reads, for each demand with a plan, the freeze that covers the plan: a folder of
+// anchors.yaml, or the plan's own header. A plan that cannot be read is not frozen.
+func markFrozen(root string, f *File) {
+	var cfg *config.Config
+	loaded := false
+	for _, d := range f.Demands {
+		if d.Plan == "" {
+			continue
+		}
+		if !loaded {
+			cfg, _ = config.Load(filepath.Join(root, config.DefaultFile))
+			loaded = true
+		}
+		if v := cfg.FrozenPathOf(d.Plan); v != "" {
+			d.Frozen = v
+			continue
+		}
+		if b, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(d.Plan))); err == nil {
+			d.Frozen = scan.FrozenOf(b, cfg.CommentsFor(d.Plan))
+		}
+	}
+}
+
+// CountedTasks are the tasks that count toward the progress: those of every demand whose plan
+// no freeze covers.
+func (f *File) CountedTasks() []*Task {
+	var out []*Task
+	for _, d := range f.Demands {
+		if d.Frozen == "" {
+			out = append(out, d.AllTasks()...)
+		}
+	}
+	return out
 }
 
 // Update changes the progress file under its lock: it reads the file as it is on disk now,
@@ -693,15 +738,17 @@ type Row struct {
 	Estimate int     `json:"estimate,omitempty"` // tasks whose weight is still an estimate
 	// Unplanned is the weight of the work the plan did not list, cancelled tasks left out.
 	Unplanned float64 `json:"unplanned,omitempty"`
+	// Frozen is the freeze that covers the demand's plan: the row is out of the counted total.
+	Frozen string `json:"frozen,omitempty"`
 }
 
 // Summary is the short view of what is in progress: one row per demand, and one per stage
 // when the demand has stages — never the tasks.
 func Summary(f *File) []Row {
 	var out []Row
-	row := func(id, title, plan string, stage bool, tasks []*Task) Row {
+	row := func(id, title, plan, frozen string, stage bool, tasks []*Task) Row {
 		done, total := Totals(tasks)
-		r := Row{ID: id, Title: title, Plan: plan, Stage: stage, Done: done, Total: total, Percent: Percent(done, total)}
+		r := Row{ID: id, Title: title, Plan: plan, Stage: stage, Done: done, Total: total, Percent: Percent(done, total), Frozen: frozen}
 		for _, t := range tasks {
 			switch t.State {
 			case Todo:
@@ -720,9 +767,9 @@ func Summary(f *File) []Row {
 		return r
 	}
 	for _, d := range f.Demands {
-		out = append(out, row(d.ID, d.Title, d.Plan, false, d.AllTasks()))
+		out = append(out, row(d.ID, d.Title, d.Plan, d.Frozen, false, d.AllTasks()))
 		for _, s := range d.Stages {
-			out = append(out, row(s.ID, s.Title, "", true, s.Tasks))
+			out = append(out, row(s.ID, s.Title, "", d.Frozen, true, s.Tasks))
 		}
 	}
 	return out

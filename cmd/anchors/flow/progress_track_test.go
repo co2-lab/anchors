@@ -226,3 +226,21 @@ func TestProgressCmd_moveAndDrop(t *testing.T) {
 		t.Errorf("the found work inside its stage, the separate one gone:\n%s", out)
 	}
 }
+
+func TestProgressCmd_frozenPlanOutOfTheTotal(t *testing.T) {
+	t.Run("LDCML-B09: The summary leaves a frozen plan out of the total", func(t *testing.T) {})
+	root := progressProject(t, "hours")
+	frozen := "<!-- @anchors\n  code: LATRP\n  frozen: the provider is not chosen\n-->\n# Later\n"
+	if err := os.WriteFile(filepath.Join(root, "plans", "later.md"), []byte(frozen), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	mustProg(t, root, "add", "demand", "--plan", "plans/0012.md")
+	mustProg(t, root, "add", "task", "D01.S1", "cart", "--weight", "3")
+	mustProg(t, root, "done", "D01.T1", "--by", "a")
+	mustProg(t, root, "add", "demand", "Later", "--plan", "plans/later.md")
+	mustProg(t, root, "add", "task", "D02", "provider", "--weight", "5")
+	out := mustProg(t, root, "summary")
+	if !strings.Contains(out, "Progress — 100% (3/3 hours)") || !strings.Contains(out, "❄ frozen (the provider is not chosen), out of the total") {
+		t.Errorf("the frozen plan is out of the total:\n%s", out)
+	}
+}

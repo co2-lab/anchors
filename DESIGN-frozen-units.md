@@ -104,6 +104,53 @@ same mandatory reason, a smaller scope.
 | `FRUNF-W01` | **The freeze and its scope.** The freeze letter `F` and the doctrine entries; the scan reads `frozen:` in headers and `@frozen:` on rule and heading lines, by code or by reason; the map carries which freeze covers what, down a unit's derived files and from a doctrine section to the spec rules that realize it; `freeze-consistent` confronts marks and records. | One freeze over a unit, a rule of another unit, a file, a doctrine document and a doctrine section: the map names every part it covers, and nothing else; a mark with an unknown code and a record with no mark are each a finding. |
 | `FRUNF-W02` | **Quiet.** Gates give *frozen* on a frozen part, counted apart; the stale, evidence, mutation and coverage reports and the run selections leave it out; `status` lists it. | On a clone of MIF, one feature frozen: its failures, stale proofs and mutation entries leave the reports, and `check` counts them as frozen. |
 | `FRUNF-W03` | **Speaking.** `freeze` with scopes, `freeze show`, `thaw` by code; `work`, `next` and the guides warn; a commit touching a frozen part is told; the agent hook warns before an edit. | An agent session on a clone: editing a file of a frozen unit shows the freeze's code and reason, and the edit is not blocked; `thaw` removes every mark of the code. |
+| `FRUNF-W04` | **Folders and work.** `frozen_paths` in anchors.yaml, applied by the map and confronted by `freeze-consistent`; `freeze --path`, `thaw`, `show`; `next` and the cold start leave frozen work out; `impact` lists frozen parts apart; the progress leaves a frozen plan out; the freezes section in the project's language. | On a clone of MIF, the income-tax folders frozen by path: their gates answer frozen, `next` hands out none of their tasks, `impact` of a shared file lists them apart. |
+
+## Freezing a folder, and leaving the work of a frozen part out (2026-10-20)
+
+> IMPLEMENTED on 2026-10-20 (`FRSCF-B05`, `FRGTF-B06`, `FRZEX-B20`..`B22`, `WRQUW-B22`,
+> `TSQUT-B16`, `MPCTI-B06`, `DMLDD-B14`, `LDCML-B09`, `CNFGO-B76`). Measured on a clone of MIF:
+> `freeze --in product/planos.doctrine.md --path` over the income-tax features folder and its
+> flows recorded `PLNAP-F01` under `## Congelamentos` and wrote the block; after `map build`,
+> 141 tests and 29 specs answered frozen in evidence-fresh, tests-pass and scenario-coverage;
+> `impact` of a shared file listed 57 frozen parts apart; `thaw PLNAP-F01` gave both files
+> back.
+
+Asked from MIF: the income-tax module is off for the year, out of the plan's scope, spread
+over 29 units, a features folder and a folder of flows. Frozen unit by unit, its gates went
+quiet, but `anchors next` still handed out its cards, the progress counted it, and `impact`
+listed its files as work to redo.
+
+- **A folder is frozen in anchors.yaml**, as a scope of a freeze:
+
+  ```yaml
+  frozen_paths:
+    - freeze: PLNAP-F01          # the freeze's code, or the reason itself with no doctrine
+      paths:
+        - "apps/mobile/src/features/ir/**"
+        - "apps/mobile/.maestro/screens/ir/**"
+  ```
+
+  The record stays the doctrine's entry (D05, D06); the yaml adds where it applies. The map
+  marks every file a glob matches as frozen, as its own header's mark would — a unit's owner
+  matched by a glob freezes the unit, wherever its files are —; a file's own mark wins. The
+  gates still read the map, never the globs. A glob that matches no file is a finding of
+  `freeze-consistent`, as a mark with an unknown code is. `anchors freeze [CODE] --path
+  <glob>` writes the scope, `anchors thaw CODE` removes it with the marks, `freeze show` lists
+  it.
+- **The work of a frozen part is not handed out.** `anchors next` leaves in the queue, and does
+  not claim, a task whose file is frozen: it waits there for the thaw, quiet, not gone. The
+  cold start does not count a spec a plan seeds inside a frozen folder as missing, and does
+  not seed a frozen plan. `anchors work`, asked by a person for a frozen part, still warns
+  and goes on (D02). In github mode the claim runs in the pipeline, which reads no map: the
+  card of a frozen unit is still handed out there, with the warning.
+- **`anchors impact` lists frozen parts apart**: what a change reaches that is frozen is named
+  under its own heading, not among the parts to redo.
+- **The progress leaves a frozen plan out.** A demand whose plan is frozen — its header, or a
+  frozen folder — is marked frozen and leaves the totals. A task names no unit, so a task of a
+  live plan is cancelled with its reason (`progress cancel`), as before.
+- **The freezes section follows the project's language** — `## Freezes`, `## Congelamentos`
+  —, and a document already holding it under another language's title keeps it.
 
 ## What NOT to do
 
@@ -124,6 +171,10 @@ same mandatory reason, a smaller scope.
 | `FRUNF-D04` | Can the doctrine be frozen? | Yes — a whole document or a section, and what realizes it follows (the user, 2026-10-11). |
 | `FRUNF-D05` | Is a freeze an entity with a code? | Yes — recorded once with its reason and traceable everywhere it applies (the user, 2026-10-11). |
 | `FRUNF-D06` | Where does a freeze's record live? | In the doctrine: an entry of a doctrine document, coded with the letter `F`; with no doctrine, the marks carry the reason and are not traceable (the user, 2026-10-11). |
+| `FRUNF-D07` | Can a folder be frozen? | Yes — by globs in anchors.yaml under a freeze's code; the map applies them (the user, 2026-10-20). |
+| `FRUNF-D08` | Does `next` hand out the work of a frozen part? | No — the task waits in the queue for the thaw (the user, 2026-10-20). |
+| `FRUNF-D09` | Does `impact` list frozen parts? | Apart, under their own heading (the user, 2026-10-20). |
+| `FRUNF-D10` | Does the progress count a frozen plan? | No — marked frozen, out of the totals (the user, 2026-10-20). |
 
 ## Open Decisions
 

@@ -315,13 +315,19 @@ func List(root string) ([]Task, error) {
 // resíduo se o processo morrer no meio, nunca uma task reivindicada duas vezes. Esse
 // resíduo se limpa sozinho: quem o encontrar vai achar o claimed já criado e o apaga.
 func Claim(root, worker, now string) (*Task, error) {
+	return ClaimSkipping(root, worker, now, nil)
+}
+
+// ClaimSkipping is Claim passing over the pending tasks skip says to leave: they stay pending,
+// for whoever may take them later — the work of a frozen part waits there for the thaw.
+func ClaimSkipping(root, worker, now string, skip func(Task) bool) (*Task, error) {
 	d := dirFor(root)
 	tasks, err := List(root)
 	if err != nil {
 		return nil, err
 	}
 	for _, t := range tasks {
-		if t.State != Pending {
+		if t.State != Pending || (skip != nil && skip(t)) {
 			continue
 		}
 		from := filepath.Join(d, fileName(Pending, t.ID))

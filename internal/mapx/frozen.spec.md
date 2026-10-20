@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FRSCF
-  updated_at: 2026-10-11
+  updated_at: 2026-10-20
   layer: mapx
 -->
 # Frozen scope — the map carries each freeze to everything it covers
@@ -32,6 +32,7 @@ rules that realize it. The gates, the reports and the guides ask the node, and n
 | `FRSCF-B02` | A rule's mark is carried on its node; a frozen doctrine document, or a frozen doctrine rule, freezes each spec rule that realizes it, with its value, unless that rule carries a mark of its own. (`FrozenRules`) |
 | `FRSCF-B03` | A freeze's code reads with its recorded reason (`QLDTQ-F01 — the reason`), a reason reads as itself, and a code no doctrine records reads as the code. (`DescribeFreeze`, `FreezeRecords`, `FreezeRecord`) |
 | `FRSCF-B04` | The frozen parts are every frozen file and every frozen rule of a file not frozen whole, by path and rule; with a value, only that freeze's; the project's frozen rules are every node's, and a path's freeze is its node's. (`FrozenParts`, `FrozenPart`, `FrozenAt`) |
+| `FRSCF-B05` | A file a glob of anchors.yaml's `frozen_paths` matches is frozen by that entry's freeze, as its own header's mark would freeze it: a unit's owner matched freezes the unit's files wherever they are, and a file's own mark wins over the folder's. (`applyFreezes`, `Config.FrozenPathOf`) |
 
 ## Invariants
 

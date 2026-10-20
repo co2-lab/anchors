@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 )
@@ -32,14 +33,29 @@ import (
 
 // freezeScope are the places a freeze covers, as the flags name them.
 type freezeScope struct {
-	units, rules, files []string
-	in                  string
+	units, rules, files, paths []string
+	in                         string
 }
 
-func (s freezeScope) empty() bool { return len(s.units)+len(s.rules)+len(s.files) == 0 }
+func (s freezeScope) empty() bool {
+	return len(s.units)+len(s.rules)+len(s.files)+len(s.paths) == 0
+}
 
-// freezeSection is the heading the freeze entries live under in a doctrine document.
-const freezeSection = "## Freezes"
+// freezeSection is the heading the freeze entries are written under in a doctrine document, in
+// the project's language.
+func freezeSection() string { return i18n.T("freeze.section_title") }
+
+// isFreezeSection says whether a line is the freezes heading, in any language Anchors speaks: a
+// document keeps the section it already has, whatever language wrote it.
+func isFreezeSection(line string) bool {
+	t := strings.TrimSpace(line)
+	for _, title := range i18n.AllTranslations("freeze.section_title") {
+		if strings.EqualFold(t, title) {
+			return true
+		}
+	}
+	return false
+}
 
 // freezeGraph is the project's map as the files are now: a freeze is written and thawed
 // against the text, never against a map an edit since has made old.
@@ -128,7 +144,7 @@ func addFreezeEntry(root, rel, code, reason string) error {
 	entry := fmt.Sprintf("- **%s** — %s", code, strings.Join(strings.Fields(reason), " "))
 	start := -1
 	for i, l := range lines {
-		if strings.EqualFold(strings.TrimSpace(l), freezeSection) {
+		if isFreezeSection(l) {
 			start = i
 			break
 		}
@@ -137,7 +153,7 @@ func addFreezeEntry(root, rel, code, reason string) error {
 		for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
 			lines = lines[:len(lines)-1]
 		}
-		lines = append(lines, "", freezeSection, "", entry, "")
+		lines = append(lines, "", freezeSection(), "", entry, "")
 		return writeLines(root, rel, lines)
 	}
 	end := len(lines)
@@ -187,7 +203,7 @@ func removeFreezeEntry(root, rel, code string) (bool, error) {
 func dropEmptyFreezeSection(lines []string) []string {
 	start := -1
 	for i, l := range lines {
-		if strings.EqualFold(strings.TrimSpace(l), freezeSection) {
+		if isFreezeSection(l) {
 			start = i
 			break
 		}
@@ -398,7 +414,7 @@ func placesOf(root string, g *mapx.Graph, s freezeScope) ([]place, error) {
 // place of the scope.
 func scopedFreeze(w io.Writer, root, code, reason string, s freezeScope) error {
 	if s.empty() {
-		return errors.New("name what the freeze covers: --unit, --rule or --file")
+		return errors.New("name what the freeze covers: --unit, --rule, --file or --path")
 	}
 	g, err := freezeGraph(root)
 	if err != nil {
@@ -406,6 +422,9 @@ func scopedFreeze(w io.Writer, root, code, reason string, s freezeScope) error {
 	}
 	places, err := placesOf(root, g, s)
 	if err != nil {
+		return err
+	}
+	if err := checkFrozenGlobs(g, s.paths); err != nil {
 		return err
 	}
 	value := code
@@ -444,6 +463,12 @@ func scopedFreeze(w io.Writer, root, code, reason string, s freezeScope) error {
 		}
 		fmt.Fprintf(w, "✓ %s %s%s\n", what, p.path, ruleSuffix(p.rule))
 	}
+	if len(s.paths) > 0 {
+		if err := addFrozenPaths(filepath.Join(root, config.DefaultFile), value, s.paths); err != nil {
+			return err
+		}
+		fmt.Fprintf(w, "✓ %s: %s freezes %s\n", config.DefaultFile, frozenPathsKey, strings.Join(s.paths, ", "))
+	}
 	fmt.Fprintln(w, "the map takes the freeze at the next `anchors map build` (the commit hook runs it)")
 	return nil
 }
@@ -462,6 +487,7 @@ func thawScoped(w io.Writer, root, code string, s freezeScope) error {
 	if err != nil {
 		return err
 	}
+	cfgPath := filepath.Join(root, config.DefaultFile)
 	if code == "" {
 		places, err := placesOf(root, g, s)
 		if err != nil {
@@ -473,6 +499,13 @@ func thawScoped(w io.Writer, root, code string, s freezeScope) error {
 				return err
 			}
 			fmt.Fprintf(w, "✓ %d mark(s) removed from %s%s\n", n, p.path, ruleSuffix(p.rule))
+		}
+		if len(s.paths) > 0 {
+			n, err := removeFrozenPaths(cfgPath, "", s.paths)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(w, "✓ %d frozen path(s) removed from %s\n", n, config.DefaultFile)
 		}
 		return nil
 	}
@@ -491,13 +524,20 @@ func thawScoped(w io.Writer, root, code string, s freezeScope) error {
 			fmt.Fprintf(w, "✓ %d mark(s) removed from %s\n", k, n.ID)
 		}
 	}
+	paths, err := removeFrozenPaths(cfgPath, code, nil)
+	if err != nil {
+		return err
+	}
+	if paths > 0 {
+		fmt.Fprintf(w, "✓ %d frozen path(s) removed from %s\n", paths, config.DefaultFile)
+	}
 	if recorded {
 		if _, err := removeFreezeEntry(root, rec.Doc, code); err != nil {
 			return err
 		}
 		fmt.Fprintf(w, "✓ %s removed from %s\n", code, rec.Doc)
 	}
-	if total == 0 && !recorded {
+	if total == 0 && paths == 0 && !recorded {
 		return fmt.Errorf("%s is neither recorded nor marked anywhere", code)
 	}
 	fmt.Fprintf(w, "%s thawed: %d mark(s) removed\n", code, total)
@@ -522,17 +562,22 @@ func showFreezes(w io.Writer, root, code string) error {
 	}
 	parts := g.FrozenParts(code)
 	records := g.FreezeRecords()
+	cfg, _ := config.Load(filepath.Join(root, config.DefaultFile))
+	globs := frozenGlobsByValue(cfg)
 	if code != "" {
-		if _, ok := records[code]; !ok && len(parts) == 0 {
+		if _, ok := records[code]; !ok && len(parts) == 0 && len(globs[code]) == 0 {
 			return fmt.Errorf("%s is neither recorded nor marked anywhere", code)
 		}
 		fmt.Fprintln(w, g.DescribeFreeze(code))
+		if len(globs[code]) > 0 {
+			fmt.Fprintf(w, "  paths (%s): %s\n", config.DefaultFile, strings.Join(globs[code], ", "))
+		}
 		for _, p := range parts {
 			fmt.Fprintf(w, "  %s%s\n", p.Path, ruleSuffix(p.Rule))
 		}
 		return nil
 	}
-	if len(parts) == 0 && len(records) == 0 {
+	if len(parts) == 0 && len(records) == 0 && len(globs) == 0 {
 		fmt.Fprintln(w, "nothing is frozen")
 		return nil
 	}
@@ -545,6 +590,11 @@ func showFreezes(w io.Writer, root, code string) error {
 			byValue[c] = nil
 		}
 	}
+	for c := range globs {
+		if _, ok := byValue[c]; !ok {
+			byValue[c] = nil
+		}
+	}
 	values := make([]string, 0, len(byValue))
 	for v := range byValue {
 		values = append(values, v)
@@ -552,6 +602,9 @@ func showFreezes(w io.Writer, root, code string) error {
 	sort.Strings(values)
 	for _, v := range values {
 		fmt.Fprintf(w, "❄ %s\n", g.DescribeFreeze(v))
+		if len(globs[v]) > 0 {
+			fmt.Fprintf(w, "  paths (%s): %s\n", config.DefaultFile, strings.Join(globs[v], ", "))
+		}
 		if len(byValue[v]) == 0 {
 			fmt.Fprintln(w, "  (marks nothing)")
 		}
@@ -624,6 +677,11 @@ func freezeHook(raw []byte) string {
 	}
 	if whole == "" && node != nil {
 		whole = node.Frozen
+	}
+	if whole == "" {
+		// A new file in a frozen folder: no map knows it yet.
+		cfg, _ := config.Load(filepath.Join(root, config.DefaultFile))
+		whole = cfg.FrozenPathOf(rel)
 	}
 	switch {
 	case whole != "":

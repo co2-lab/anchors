@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTC
 #   ref: CNFGO
-#   updated_at: 2026-10-18
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @CNFGO
@@ -515,3 +515,15 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given requires_sections entries with no section, two triggers, an unknown exposes, a layer that does not exist, a flag without @ and a pattern that does not compile
     When each configuration loads
     Then each is refused naming its entry, and a well-formed one loads
+
+  @CNFGO-B76 @unit-level
+  Scenario: A frozen folder names its freeze
+    Given two frozen_paths entries whose globs both match a file
+    When the freeze of the file, and of a file no glob matches, is asked
+    Then the first entry's freeze answers, and the other file has none
+
+  @CNFGO-E12 @unit-level
+  Scenario: A frozen_paths entry that freezes nothing is refused
+    Given entries with no freeze, with no paths, and with a glob that does not compile
+    When the configuration is loaded
+    Then each is refused naming the entry

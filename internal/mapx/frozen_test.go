@@ -117,3 +117,27 @@ func TestFrozen_noMarkNoFreeze(t *testing.T) {
 		t.Errorf("no mark, no freeze: %+v", g.FrozenParts(""))
 	}
 }
+
+func TestFrozen_folderOfTheConfig(t *testing.T) {
+	t.Run("FRSCF-B05: A frozen folder freezes its files and the units it owns", func(t *testing.T) {})
+	cfg := frozenCfg()
+	cfg.FrozenPaths = []config.FrozenPath{{Freeze: "IRDOC-F01", Paths: []string{"ir/**"}}}
+	g := Build([]scan.File{
+		{Path: "ir/Tax.spec.md", Kind: "spec", HeaderCode: "TAXIR", Rev: "1"},
+		{Path: "ir/Tax.ts", Kind: "code", Rev: "2"},
+		{Path: "ir/Old.ts", Kind: "code", Frozen: "kept for the audit", Rev: "3"},
+		{Path: "flows/tax.yaml", Kind: "test", HeaderCode: "TAXFL", HeaderRefs: []string{"TAXIR"}, Rev: "4"},
+		{Path: "pay/Pay.ts", Kind: "code", Rev: "5"},
+	}, cfg, nil)
+	for id, want := range map[string]string{
+		"ir/Tax.spec.md": "IRDOC-F01",
+		"ir/Tax.ts":      "IRDOC-F01",
+		"ir/Old.ts":      "kept for the audit",
+		"flows/tax.yaml": "IRDOC-F01",
+		"pay/Pay.ts":     "",
+	} {
+		if got := frozenOf(g, id).Frozen; got != want {
+			t.Errorf("%s frozen %q, want %q", id, got, want)
+		}
+	}
+}

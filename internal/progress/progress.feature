@@ -2,7 +2,7 @@
 # @anchors
 #   code: PFFPR
 #   ref: DMLDD
-#   updated_at: 2026-10-13
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @DMLDD
@@ -97,3 +97,9 @@ Feature: DemandLedger — the project's progress file
     Given a title holding the separator, an empty reason and an unknown task
     When they are added or used
     Then each change is refused naming its cause
+
+  @DMLDD-B14 @unit-level
+  Scenario: A frozen plan's demand is out of the count
+    Given three demands, one whose plan a frozen folder covers, one whose plan's header is frozen, and one live
+    When the file is loaded
+    Then the first two carry their freezes, their tasks leave the counted ones, their rows say so, and the file written back is unchanged

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPCTI
-  updated_at: 2026-10-08
+  updated_at: 2026-10-20
   layer: comando
 -->
 # Impact — what a change to one file reaches, in both directions of the map
@@ -31,6 +31,7 @@ The command is a query: it opens no issue and changes nothing.
 | `MPCTI-B03` | An empty direction is stated explicitly (nothing depends on it, or nobody governs it) instead of being printed as an empty list. |
 | `MPCTI-B04` | A root-relative argument, the same path with the machine's native separator, and the absolute path all resolve to the same node id. |
 | `MPCTI-B05` | A relative argument that does not exist under the project root is resolved from the directory the command was run in. |
+| `MPCTI-B06` | What the change reaches that a freeze covers whole is listed apart, under its own heading with each freeze, and left out of the parts to redo and to confront. (`printImpact`, `splitFrozen`, FRUNF-D09) |
 
 ## Domain
 

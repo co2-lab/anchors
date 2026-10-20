@@ -12,12 +12,15 @@ With a scope, keeps a PART of the project as it is, by decision, until someone t
 
   anchors freeze --reason "the plan mode ships next quarter" --unit PAWAP --rule CARTU-B02 --file src/flags.ts
   anchors freeze QLDTQ-F01 --unit HOMEH     add a scope to a recorded freeze
+  anchors freeze QLDTQ-F01 --path 'src/ir/**'   freeze a folder (anchors.yaml frozen_paths)
   anchors freeze show [QLDTQ-F01]           the freezes, or every place one covers
 
 The freeze is recorded once, with its reason, in the project's doctrine document (--in when
 it has several), coded with the letter F; each place carries a mark with the code. With no
-doctrine, the marks carry the reason. A frozen part answers "frozen" in every gate, leaves the
-reports and the runs, and warns whoever reaches it — it never blocks.
+doctrine, the marks carry the reason. A folder is frozen by globs under anchors.yaml's
+frozen_paths, which --path writes. A frozen part answers "frozen" in every gate, leaves the
+reports and the runs, its tasks wait in the queue for the thaw, and it warns whoever reaches
+it — it never blocks.
 
 With no scope and no code, stops the work on the entire project, in three layers.
 
@@ -50,6 +53,7 @@ anchors freeze [freeze code] [flags]
 | `--in` |  | the doctrine document that records the freeze, when the project has several |
 | `--no-push` |  | do not commit or push anchors.yaml |
 | `--no-ruleset` |  | do not create the ruleset on the remote (only the local brake) |
+| `--path` |  | freeze a folder, by a glob written to anchors.yaml's frozen_paths (repeatable) |
 | `--reason` |  | why the project is being frozen (required) |
 | `--root` | `.` | project root |
 | `--rule` |  | freeze one rule, by its code (repeatable) |

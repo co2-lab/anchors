@@ -48,7 +48,7 @@ Query only — it opens no issue and changes nothing.`,
 			}
 
 			imp := g.AnalyzeImpact(target)
-			printImpact(imp)
+			printImpact(imp, g)
 			return nil
 		},
 	}
@@ -103,22 +103,47 @@ func nodeExists(g *mapx.Graph, id string) bool {
 	return false
 }
 
-func printImpact(imp mapx.Impact) {
+func printImpact(imp mapx.Impact, g *mapx.Graph) {
 	fmt.Printf("impact of: %s\n\n", imp.Origin)
 
-	fmt.Printf("↓ Propagates to (%d) — they depend on this change, redo them:\n", len(imp.Propagate))
-	if len(imp.Propagate) == 0 {
+	// What a freeze covers is kept as it is by decision: it is named apart, never among the
+	// parts to redo (FRUNF-D09).
+	propagate, frozen := splitFrozen(imp.Propagate, g)
+	validate, frozenUp := splitFrozen(imp.Validate, g)
+	frozen = append(frozen, frozenUp...)
+
+	fmt.Printf("↓ Propagates to (%d) — they depend on this change, redo them:\n", len(propagate))
+	if len(propagate) == 0 {
 		fmt.Println("   (nothing — no child depends on it)")
 	}
-	for _, n := range imp.Propagate {
+	for _, n := range propagate {
 		fmt.Printf("   %s\n", n)
 	}
 
-	fmt.Printf("\n↑ Validates against (%d) — confront; a divergence becomes an issue:\n", len(imp.Validate))
-	if len(imp.Validate) == 0 {
+	fmt.Printf("\n↑ Validates against (%d) — confront; a divergence becomes an issue:\n", len(validate))
+	if len(validate) == 0 {
 		fmt.Println("   (nothing — it is not governed by anyone)")
 	}
-	for _, n := range imp.Validate {
+	for _, n := range validate {
 		fmt.Printf("   %s\n", n)
 	}
+
+	if len(frozen) > 0 {
+		fmt.Printf("\n❄ Frozen (%d) — reached, and kept as they are by decision; not redone without an order:\n", len(frozen))
+		for _, n := range frozen {
+			fmt.Printf("   %s (%s)\n", n, g.DescribeFreeze(g.FrozenAt(n)))
+		}
+	}
+}
+
+// splitFrozen separates the parts a freeze covers whole from the rest, each in its order.
+func splitFrozen(ids []string, g *mapx.Graph) (live, frozen []string) {
+	for _, id := range ids {
+		if g.FrozenAt(id) != "" {
+			frozen = append(frozen, id)
+			continue
+		}
+		live = append(live, id)
+	}
+	return live, frozen
 }

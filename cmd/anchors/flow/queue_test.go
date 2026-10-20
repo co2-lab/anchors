@@ -5,6 +5,7 @@
 package flow
 
 import (
+	"github.com/co2-lab/anchors/internal/config"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -639,21 +640,9 @@ func TestRequireSession(t *testing.T) {
 }
 
 func TestNextCmd_frozenTargetWarns(t *testing.T) {
-	t.Run("WRQUW-B21: A task on a frozen target carries the warning", func(t *testing.T) {})
+	t.Run("WRQUW-B21: A card on a frozen target carries the warning", func(t *testing.T) {})
 	root := queueProject(t)
-	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "src/a.ts", Kind: mapx.KindCode, Frozen: "the flag stays off"}}}
-	if err := mapx.Save(g, filepath.Join(root, mapx.DefaultPath)); err != nil {
-		t.Fatal(err)
-	}
-	enqueue(t, root, queue.Task{ID: "a-code", Changed: "src/a.ts", Kind: "code", Origin: "watch", SuggestedNext: "feature", Reason: "the code changed"})
-	out, err := runFlowCmd(t, newNextCmd(), "--root", root, "--worker", "w9")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(out, "task claimed: a-code") || !strings.Contains(out, "❄ FROZEN: `src/a.ts` is frozen (the flag stays off)") {
-		t.Errorf("claimed, with the warning:\n%s", out)
-	}
-	g.Nodes[0].Code = "AAAAU"
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "src/a.ts", Kind: mapx.KindCode, Frozen: "the flag stays off", Code: "AAAAU"}}}
 	if err := mapx.Save(g, filepath.Join(root, mapx.DefaultPath)); err != nil {
 		t.Fatal(err)
 	}
@@ -662,5 +651,80 @@ func TestNextCmd_frozenTargetWarns(t *testing.T) {
 	})
 	if !strings.Contains(card, "❄ FROZEN: `src/a.ts` is frozen (the flag stays off)") || !strings.Contains(card, "DELIVERABLE") {
 		t.Errorf("the card is handed out with the warning:\n%s", card)
+	}
+}
+
+func TestNextCmd_frozenTaskWaits(t *testing.T) {
+	t.Run("WRQUW-B22: The task of a frozen part waits in the queue", func(t *testing.T) {})
+	root := queueProject(t)
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "src/a.ts", Kind: mapx.KindCode, Frozen: "the flag stays off"}}}
+	if err := mapx.Save(g, filepath.Join(root, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	cfgPath := filepath.Join(root, config.DefaultFile)
+	b, err := os.ReadFile(cfgPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(cfgPath, append(b, []byte("\nfrozen_paths:\n  - freeze: \"out of the plan\"\n    paths: [\"src/ir/**\"]\n")...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	enqueue(t, root, queue.Task{ID: "a-code", Changed: "src/a.ts", Kind: "code", Origin: "watch", SuggestedNext: "feature", Reason: "the code changed"})
+	enqueue(t, root, queue.Task{ID: "ir-code", Changed: "src/ir/tax.ts", Kind: "code", Origin: "watch", SuggestedNext: "feature", Reason: "the code changed"})
+	out, err := runFlowCmd(t, newNextCmd(), "--root", root, "--worker", "w9")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "task claimed") || !strings.Contains(out, "2 task(s) of frozen parts wait in the queue") {
+		t.Errorf("no frozen task is claimed, and the two waiting are counted:\n%s", out)
+	}
+	enqueue(t, root, queue.Task{ID: "b-code", Changed: "src/b.ts", Kind: "code", Origin: "watch", SuggestedNext: "feature", Reason: "the code changed"})
+	out, err = runFlowCmd(t, newNextCmd(), "--root", root, "--worker", "w9")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "task claimed: b-code") {
+		t.Errorf("the live task is claimed:\n%s", out)
+	}
+	tasks, _ := queue.List(root)
+	pending := 0
+	for _, task := range tasks {
+		if task.State == queue.Pending {
+			pending++
+		}
+	}
+	if pending != 2 {
+		t.Errorf("the frozen tasks stay pending: %+v", tasks)
+	}
+}
+
+func TestSeedFromPlans_leavesFrozenOut(t *testing.T) {
+	t.Run("WRQUW-B22: The task of a frozen part waits in the queue", func(t *testing.T) {})
+	build := func(t *testing.T, yamlExtra, planHeader string) string {
+		t.Helper()
+		root := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(root, "plans"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		yaml := "version: 1\nlayers:\n" +
+			"  plan:\n    pattern: \"plans/*.md\"\n    kind: plan\n" +
+			"  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n" + yamlExtra
+		if err := os.WriteFile(filepath.Join(root, "anchors.yaml"), []byte(yaml), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		plan := planHeader + "- [ ] `src/ir/A.spec.md` — a\n"
+		if err := os.WriteFile(filepath.Join(root, "plans", "0001-x.md"), []byte(plan), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return root
+	}
+	if n, err := seedFromPlans(build(t, "", "")); err != nil || n != 1 {
+		t.Fatalf("a live plan with a missing spec is seeded: %d %v", n, err)
+	}
+	if n, _ := seedFromPlans(build(t, "frozen_paths:\n  - freeze: out\n    paths: [\"src/ir/**\"]\n", "")); n != 0 {
+		t.Errorf("a spec in a frozen folder is not missing: %d", n)
+	}
+	if n, _ := seedFromPlans(build(t, "", "<!-- @anchors\n  code: XPLAN\n  frozen: later\n-->\n")); n != 0 {
+		t.Errorf("a frozen plan seeds nothing: %d", n)
 	}
 }

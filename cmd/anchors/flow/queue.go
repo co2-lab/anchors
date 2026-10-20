@@ -157,7 +157,10 @@ act on it before the card.`,
 			}
 
 			printNotifications(notificationsLocal(absRoot), "project root", nil)
-			t, err := queue.Claim(absRoot, worker, nowStamp())
+			// The work of a frozen part is not handed out: it waits in the queue for the
+			// thaw (FRUNF-D08).
+			frozen, waiting := frozenTasks(absRoot, cfg)
+			t, err := queue.ClaimSkipping(absRoot, worker, nowStamp(), frozen)
 			if err != nil {
 				return err
 			}
@@ -174,13 +177,16 @@ act on it before the card.`,
 				// que ninguém lembra de rodar não existe.
 				if n, err := seedFromPlans(absRoot); err == nil && n > 0 {
 					fmt.Printf("empty queue — seeded with %d plan(s) that still have work\n\n", n)
-					if t, err = queue.Claim(absRoot, worker, nowStamp()); err != nil {
+					if t, err = queue.ClaimSkipping(absRoot, worker, nowStamp(), frozen); err != nil {
 						return err
 					}
 				}
 			}
 			if t == nil {
 				fmt.Println("empty queue — nothing to do")
+				if n := len(waiting); n > 0 {
+					fmt.Printf("  %d task(s) of frozen parts wait in the queue for the thaw — `anchors freeze show` lists the freezes\n", n)
+				}
 				return nil
 			}
 			fmt.Printf("task claimed: %s\n\n", t.ID)
@@ -440,12 +446,14 @@ func seedFromPlans(root string) (int, error) {
 	}
 	n := 0
 	for _, f := range files {
-		if f.Kind != "plan" || len(f.Seeds) == 0 {
+		// A frozen plan seeds nothing, and a spec it seeds in a frozen folder is not missing
+		// (FRUNF-D08).
+		if f.Kind != "plan" || len(f.Seeds) == 0 || f.Frozen != "" || cfg.FrozenPathOf(f.Path) != "" {
 			continue
 		}
 		faltam := 0
 		for _, s := range f.Seeds {
-			if seedExists(root, s, files) {
+			if seedExists(root, s, files) || cfg.FrozenPathOf(s) != "" {
 				continue
 			}
 			faltam++
@@ -572,9 +580,12 @@ func seedTally(root string, t queue.Task) string {
 		if f.Path != t.Changed || len(f.Seeds) == 0 {
 			continue
 		}
-		faltam := 0
+		faltam, frozen := 0, 0
 		for _, sd := range f.Seeds {
-			if !seedExists(root, sd, files) {
+			switch {
+			case cfg.FrozenPathOf(sd) != "":
+				frozen++
+			case !seedExists(root, sd, files):
 				faltam++
 			}
 		}
@@ -587,8 +598,12 @@ func seedTally(root string, t queue.Task) string {
 			strings.Contains(t.Reason, "spec(s) deste plano") {
 			return ""
 		}
-		return fmt.Sprintf(" — %d of %d spec(s) of this plan do not exist yet",
-			faltam, len(f.Seeds))
+		tally := fmt.Sprintf(" — %d of %d spec(s) of this plan do not exist yet",
+			faltam, len(f.Seeds)-frozen)
+		if frozen > 0 {
+			tally += fmt.Sprintf(" (%d more in a frozen folder)", frozen)
+		}
+		return tally
 	}
 	return ""
 }
@@ -1053,4 +1068,22 @@ func decidesProduct(root string) bool {
 		return false
 	}
 	return s.HandlesUserIssues()
+}
+
+// frozenTasks is the claim's filter for the tasks of frozen parts — a file a freeze covers
+// whole, in the map or by a folder of anchors.yaml —, and the count of those it passed over.
+// With no map, the folders alone decide.
+func frozenTasks(root string, cfg *config.Config) (func(queue.Task) bool, map[string]bool) {
+	waiting := map[string]bool{}
+	g, _ := mapx.Load(filepath.Join(root, mapx.DefaultPath))
+	return func(t queue.Task) bool {
+		frozen := cfg.FrozenPathOf(t.Changed) != ""
+		if !frozen && g != nil {
+			frozen = g.FrozenAt(t.Changed) != ""
+		}
+		if frozen {
+			waiting[t.ID] = true
+		}
+		return frozen
+	}, waiting
 }

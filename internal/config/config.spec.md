@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNFGO
-  updated_at: 2026-10-19
+  updated_at: 2026-10-20
   layer: config
 -->
 # Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default
@@ -94,6 +94,7 @@ patterns a spec governs.
 | `CNFGO-B73` | The code extensions are those the code layers' patterns end with — `*.go`, `*.{ts,tsx}` —, layer by layer in name order, each once. (`CodeExtensions`) |
 | `CNFGO-B74` | The example runners — jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins — each say how their command line and output read, with a kind and a quiet time, and none is applied by itself; a unit's piece paths are the `derived.files` patterns of the piece, the overrides of its layer first, rendered for it — its folder, unit name, module and extension, a spec taking its layer's —, and a layer's extensions are those its pattern ends with. (`ExampleRunners`, `PiecePaths`, `LayerExtensions`) |
 | `CNFGO-B75` | A layer's `requires_sections` names, per entry, a `section` and exactly one trigger in `when` — `exposes: test_handles`, `depends_on_layer` (layers of the project), `flag` (starting with `@`) or `code_matches` (a pattern that compiles) —, and `kinds` (`value`, `type`) only beside `depends_on_layer`; anything else refuses the config, naming the entry. (`SectionRequirement`, `SectionTrigger`) |
+| `CNFGO-B76` | `frozen_paths` lists freezes by folder — each a freeze (its code, or the reason itself) and the globs it covers —; `FrozenPathOf` is the freeze of the first entry whose glob matches a file, in the order declared, or empty. (`FrozenPath`, `FrozenPathOf`) |
 | `CNFGO-B60` | A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 
@@ -192,6 +193,7 @@ Most failures of the load are the refusals stated as behaviours; the rows below 
 | `CNFGO-E09` | REF[CNFGO-B12]: an unsupported language is the refusal B12 states | — | — |
 | `CNFGO-E10` | REF[CNFGO-B13]: a code length out of range is the refusal B13 states | — | — |
 | `CNFGO-E11` | The configuration file exists and is not valid YAML. | The load fails naming the line, says the file exists and is fixed at that line — never recreated with `anchors init` —, and, when that line or the one before holds a single quote, that a quote inside a single-quoted string is written twice; only a missing file is advised to run `anchors init`. (`InitHint`) | Recreating a file that only needed a fix replaces the configuration written by hand. |
+| `CNFGO-E12` | A `frozen_paths` entry with no freeze, no paths, or a glob that is empty or does not compile. | The configuration is refused, naming the entry and what is missing. | A folder frozen by nothing, or by a glob that matches nothing, keeps quiet a part no decision covers. |
 
 ## Open Decisions
 

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:035c861dae915fc6 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:79665a9a08c20d92 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1043,6 +1043,8 @@ abra a página dela em `camadas/`.
 
 - [LDCML-B08 — `move <task> <demand](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
 
+- [LDCML-B09 — The summary's total, the monitor's and the status's leave a frozen plan's demand out, and its row says it is frozen and out of the total. (`printSummary`, FRUNF-D10)](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
+
 - [LDCML-E01 — A change the file refuses — an unknown id, a held task, a title the format cannot read, a hand-edited file — or `add demand` with neither title nor plan.](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file)
 
 ### [WRQUW — WorkQueue — list, pull, close and discard the work, from the local queue or from the board](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
@@ -1087,7 +1089,9 @@ abra a página dela em `camadas/`.
 
 - [WRQUW-B20 — A role already declared is kept without asking; without a terminal (a pipe or the null device) nothing is asked and nothing recorded, and the output says how to declare the role.](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
 
-- [WRQUW-B21 — A task or a card whose target a freeze covers — whole, or some rules of its unit — is handed out with the warning that names the freeze and its reason and says not to change it without an order from a person; the work is still handed out.](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
+- [WRQUW-B21 — A card whose target a freeze covers — whole, or some rules of its unit — is handed out with the warning that names the freeze and its reason and says not to change it without an order from a person: in github mode the claim runs in the pipeline, which reads no map. A task holding only some frozen rules of its unit is handed out with the same warning.](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
+
+- [WRQUW-B22 — `next` does not claim a queued task whose changed file a freeze covers whole — in the map, or by a frozen folder of anchors.yaml —: it stays pending, waiting for the thaw, and the next task is claimed instead; with no other, the queue is said empty, counting the tasks of frozen parts that wait. The cold start does not seed a frozen plan, and a spec a plan seeds inside a frozen folder is not missing. (`frozenTasks`, `queue.ClaimSkipping`, FRUNF-D08)](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
 
 - [WRQUW-I01 — A cold start seeds at most one plan, however many still have work.](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board)
 
@@ -1584,6 +1588,8 @@ abra a página dela em `camadas/`.
 - [MPCTI-B04 — A root-relative argument, the same path with the machine's native separator, and the absolute path all resolve to the same node id.](layers/comando.md#mpcti--impact--what-a-change-to-one-file-reaches-in-both-directions-of-the-map)
 
 - [MPCTI-B05 — A relative argument that does not exist under the project root is resolved from the directory the command was run in.](layers/comando.md#mpcti--impact--what-a-change-to-one-file-reaches-in-both-directions-of-the-map)
+
+- [MPCTI-B06 — What the change reaches that a freeze covers whole is listed apart, under its own heading with each freeze, and left out of the parts to redo and to confront. (`printImpact`, `splitFrozen`, FRUNF-D09)](layers/comando.md#mpcti--impact--what-a-change-to-one-file-reaches-in-both-directions-of-the-map)
 
 - [MPCTI-I01 — The resolved node id always uses forward slashes, even when the argument names nothing on disk.](layers/comando.md#mpcti--impact--what-a-change-to-one-file-reaches-in-both-directions-of-the-map)
 
@@ -2096,6 +2102,12 @@ abra a página dela em `camadas/`.
 - [FRZEX-B18 — `freeze show` lists each freeze with its reason and the places it covers — a recorded freeze that marks nothing says so —, or that nothing is frozen; `freeze show <code>` lists every place that freeze covers, the ones it reaches through a unit included. (`showFreezes`)](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
 
 - [FRZEX-B19 — The agent's hook before an edit (`freeze hook`) answers, for a file a freeze covers whole, a context that tells the agent the file is frozen, with the freeze's code and reason, that the edit is not blocked and goes through, and to undo it and ask when no person ordered it, and, for a file holding frozen rules, each rule with its freeze; it never denies the edit, and says nothing for any other file, outside a project, or for input it cannot read. (`freezeHook`)](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
+
+- [FRZEX-B20 — `--path <glob>` (repeatable) freezes a folder: with the freeze's code or a new freeze's reason, the globs are written as an entry of `frozen_paths` at the end of that block of anchors.yaml — the block created at the file's end when missing —, and the rest of the file is left as it is; a glob that is not one, or that matches no file of the project, is refused. `thaw <code>` removes the entries of that freeze, and the block once empty; `thaw --path <glob>` removes the glob from the entry that holds it, and the entry left with none; `freeze show` lists each freeze's globs. (`addFrozenPaths`, `removeFrozenPaths`, `checkFrozenGlobs`)](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
+
+- [FRZEX-B21 — The agent's hook tells a file inside a frozen folder is frozen even when no map knows it yet — a file the agent is creating there. (`freezeHook`)](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
+
+- [FRZEX-B22 — The freezes section is written in the project's language — `## Freezes`, `## Congelamentos` —, and a document already holding it under another language's title gets the new entry there; the thaw of its last entry removes it under either title. (`freezeSection`, `isFreezeSection`)](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
 
 - [FRZEX-I01 — A freeze followed by a thaw gives back the configuration byte for byte, when it declared no top-level `enabled:` or `freeze_reason:` of its own (otherwise see `FRZEX-B13`).](layers/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers)
 
@@ -3347,6 +3359,8 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B75 — A layer's `requires_sections` names, per entry, a `section` and exactly one trigger in `when` — `exposes: test_handles`, `depends_on_layer` (layers of the project), `flag` (starting with `@`) or `code_matches` (a pattern that compiles) —, and `kinds` (`value`, `type`) only beside `depends_on_layer`; anything else refuses the config, naming the entry. (`SectionRequirement`, `SectionTrigger`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
+- [CNFGO-B76 — `frozen_paths` lists freezes by folder — each a freeze (its code, or the reason itself) and the globs it covers —; `FrozenPathOf` is the freeze of the first entry whose glob matches a file, in the order declared, or empty. (`FrozenPath`, `FrozenPathOf`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
@@ -3438,6 +3452,8 @@ abra a página dela em `camadas/`.
 - [CNFGO-E10 — REF[CNFGO-B13]: a code length out of range is the refusal B13 states](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-E11 — The configuration file exists and is not valid YAML.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-E12 — A `frozen_paths` entry with no freeze, no paths, or a glob that is empty or does not compile.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 ### [CNTNR — Containers — what runs separately, and which layers run inside each](layers/config.md#cntnr--containers--what-runs-separately-and-which-layers-run-inside-each)
 
@@ -4604,6 +4620,8 @@ abra a página dela em `camadas/`.
 - [FRGTF-B04 — `frozen-touched` tells a frozen file with an uncommitted change — or a file with frozen rules, naming each rule and its freeze — as a declared divergence, which informs and never bars; an unchanged frozen part passes, and a part with no freeze is skipped. (`checkFrozenTouched`)](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
 
 - [FRGTF-B05 — The run's profile counts the `frozen` verdicts of each gate apart, and a frozen verdict neither fails nor bars. (`GateSummary`)](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
+
+- [FRGTF-B06 — `freeze-consistent` also names each glob of anchors.yaml's `frozen_paths` that matches no file of the map, with its freeze: a folder that freezes nothing is a glob mistyped, or a folder that moved; a project with frozen folders and no other freeze is confronted, not skipped.](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
 
 - [FRGTF-I01 — Thawing a part gives back the verdicts it had: the freeze only changes what is asked while it holds.](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched)
 
@@ -7653,6 +7671,8 @@ abra a página dela em `camadas/`.
 
 - [DMLDD-B13 — A task moves to another stage of its demand, or to the demand itself, keeping its id, state, marks and history; a stage or demand that is not its demand's is refused. A stage left with no task can be removed; one that still holds a task is refused. (`Relocate`, `DropStage`)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
+- [DMLDD-B14 — Loading the file reads, for each demand with a plan, the freeze that covers the plan — a frozen folder of anchors.yaml, or the plan's own header mark —, never writing it into the file; the counted tasks leave a frozen demand's out, and its summary rows, its stages' included, carry the freeze. (`markFrozen`, `CountedTasks`, FRUNF-D10)](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
 - [DMLDD-E01 — The file's content does not match its sum, or holds a line this unit does not write.](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
 - [DMLDD-E02 — A title or reason that is empty, spans lines or holds ` · `; a weight that is not positive; an id that does not exist.](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
@@ -7688,6 +7708,8 @@ abra a página dela em `camadas/`.
 - [TSQUT-B14 — The pending count is the number of live tasks, pending and claimed. (`PendingCount`)](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it)
 
 - [TSQUT-B15 — A task whose target is an absolute path is checked at that path, so it is kept while the file exists.](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it)
+
+- [TSQUT-B16 — A claim may pass over the pending tasks a filter names: they stay pending, and the first other pending task is claimed. (`ClaimSkipping`)](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it)
 
 - [TSQUT-I01 — A task is never claimed twice, however many workers claim at once.](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it)
 
@@ -8588,6 +8610,8 @@ abra a página dela em `camadas/`.
 - [FRSCF-B03 — A freeze's code reads with its recorded reason (`QLDTQ-F01 — the reason`), a reason reads as itself, and a code no doctrine records reads as the code. (`DescribeFreeze`, `FreezeRecords`, `FreezeRecord`)](layers/mapx.md#frscf--frozen-scope--the-map-carries-each-freeze-to-everything-it-covers)
 
 - [FRSCF-B04 — The frozen parts are every frozen file and every frozen rule of a file not frozen whole, by path and rule; with a value, only that freeze's; the project's frozen rules are every node's, and a path's freeze is its node's. (`FrozenParts`, `FrozenPart`, `FrozenAt`)](layers/mapx.md#frscf--frozen-scope--the-map-carries-each-freeze-to-everything-it-covers)
+
+- [FRSCF-B05 — A file a glob of anchors.yaml's `frozen_paths` matches is frozen by that entry's freeze, as its own header's mark would freeze it: a unit's owner matched freezes the unit's files wherever they are, and a file's own mark wins over the folder's. (`applyFreezes`, `Config.FrozenPathOf`)](layers/mapx.md#frscf--frozen-scope--the-map-carries-each-freeze-to-everything-it-covers)
 
 - [FRSCF-I01 — A map with no freeze mark has no frozen node and no frozen rule.](layers/mapx.md#frscf--frozen-scope--the-map-carries-each-freeze-to-everything-it-covers)
 

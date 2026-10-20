@@ -450,3 +450,47 @@ func TestMoveAndDropStage(t *testing.T) {
 		t.Errorf("the file still reads: %v", err)
 	}
 }
+
+func TestLoad_frozenPlans(t *testing.T) {
+	t.Run("DMLDD-B14: A frozen plan's demand is out of the count", func(t *testing.T) {})
+	root := t.TempDir()
+	write := func(rel, body string) {
+		t.Helper()
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("anchors.yaml", "version: 8\nlayers: {}\nfrozen_paths:\n  - freeze: \"out of the plan\"\n    paths: [\"plans/ir/**\"]\n")
+	write("plans/ir/tax.md", "# tax\n")
+	write("plans/later.md", "<!-- @anchors\n  code: LATRP\n  frozen: the provider is not chosen\n-->\n# later\n")
+	write("plans/now.md", "<!-- @anchors\n  code: NOWPL\n-->\n# now\n")
+	f := &File{Unit: "hours"}
+	for _, plan := range []string{"plans/ir/tax.md", "plans/later.md", "plans/now.md"} {
+		d, _ := f.AddDemand(plan, plan)
+		if _, err := f.AddTask(d, "work", 2, false); err != nil {
+			t.Fatal(err)
+		}
+	}
+	text := Render(f)
+	write(FileName, text)
+	got, err := Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Demands[0].Frozen != "out of the plan" || got.Demands[1].Frozen != "the provider is not chosen" || got.Demands[2].Frozen != "" {
+		t.Errorf("the freezes: %q %q %q", got.Demands[0].Frozen, got.Demands[1].Frozen, got.Demands[2].Frozen)
+	}
+	if _, total := Totals(got.CountedTasks()); total != 2 {
+		t.Errorf("only the live demand counts: %v", total)
+	}
+	if rows := Summary(got); rows[0].Frozen == "" || rows[2].Frozen != "" {
+		t.Errorf("the rows carry the freeze: %+v", rows)
+	}
+	if Render(got) != text {
+		t.Error("the freeze is never written into the file")
+	}
+}

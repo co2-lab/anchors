@@ -592,3 +592,22 @@ func TestEnqueue_refusesAnIDHeldByAnotherTarget(t *testing.T) {
 		t.Fatalf("Enqueue over a claimed ID = %v, %v; want a refusal", created, err)
 	}
 }
+
+func TestClaimSkipping(t *testing.T) {
+	t.Run("TSQUT-B16: A claim passes over the tasks a filter names", func(t *testing.T) {})
+	root := t.TempDir()
+	withTarget(t, root, "A.spec.md")
+	withTarget(t, root, "B.spec.md")
+	_, _ = Enqueue(root, task("1-spec-a", "A.spec.md", "spec", "implement"))
+	_, _ = Enqueue(root, task("2-spec-b", "B.spec.md", "spec", "implement"))
+	got, err := ClaimSkipping(root, "w", "2026-10-20T00:00:00-03:00", func(t Task) bool { return t.Changed == "A.spec.md" })
+	if err != nil || got == nil || got.ID != "2-spec-b" {
+		t.Fatalf("the other task is claimed: %+v %v", got, err)
+	}
+	tasks, _ := List(root)
+	for _, tk := range tasks {
+		if tk.ID == "1-spec-a" && tk.State != Pending {
+			t.Errorf("the passed-over task stays pending: %+v", tk)
+		}
+	}
+}

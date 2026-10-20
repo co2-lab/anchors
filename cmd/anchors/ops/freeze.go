@@ -53,12 +53,15 @@ func newFreezeCmd() *cobra.Command {
 
   anchors freeze --reason "the plan mode ships next quarter" --unit PAWAP --rule CARTU-B02 --file src/flags.ts
   anchors freeze QLDTQ-F01 --unit HOMEH     add a scope to a recorded freeze
+  anchors freeze QLDTQ-F01 --path 'src/ir/**'   freeze a folder (anchors.yaml frozen_paths)
   anchors freeze show [QLDTQ-F01]           the freezes, or every place one covers
 
 The freeze is recorded once, with its reason, in the project's doctrine document (--in when
 it has several), coded with the letter F; each place carries a mark with the code. With no
-doctrine, the marks carry the reason. A frozen part answers "frozen" in every gate, leaves the
-reports and the runs, and warns whoever reaches it — it never blocks.
+doctrine, the marks carry the reason. A folder is frozen by globs under anchors.yaml's
+frozen_paths, which --path writes. A frozen part answers "frozen" in every gate, leaves the
+reports and the runs, its tasks wait in the queue for the thaw, and it warns whoever reaches
+it — it never blocks.
 
 With no scope and no code, stops the work on the entire project, in three layers.
 
@@ -164,6 +167,7 @@ releases it.`,
 	cmd.Flags().StringArrayVar(&scope.units, "unit", nil, "freeze a whole unit, by its code (repeatable)")
 	cmd.Flags().StringArrayVar(&scope.rules, "rule", nil, "freeze one rule, by its code (repeatable)")
 	cmd.Flags().StringArrayVar(&scope.files, "file", nil, "freeze one file, by its path (repeatable)")
+	cmd.Flags().StringArrayVar(&scope.paths, "path", nil, "freeze a folder, by a glob written to anchors.yaml's frozen_paths (repeatable)")
 	cmd.Flags().StringVar(&scope.in, "in", "", "the doctrine document that records the freeze, when the project has several")
 	cmd.AddCommand(newFreezeShowCmd(), newFreezeHookCmd())
 	common.AliasDeFlag(cmd, "reason", "motivo")
@@ -263,6 +267,7 @@ remote still says 'frozen', the hooks would refuse the thaw itself.`,
 	cmd.Flags().StringArrayVar(&scope.units, "unit", nil, "remove the freeze marks of a unit's header (repeatable)")
 	cmd.Flags().StringArrayVar(&scope.rules, "rule", nil, "remove the freeze mark of one rule (repeatable)")
 	cmd.Flags().StringArrayVar(&scope.files, "file", nil, "remove the freeze mark of a file's header (repeatable)")
+	cmd.Flags().StringArrayVar(&scope.paths, "path", nil, "remove a glob from anchors.yaml's frozen_paths (repeatable)")
 	common.AliasDeFlag(cmd, "no-push", "sem-push")
 	cmd.PreRunE = func(c *cobra.Command, _ []string) error {
 		return common.ResolveAliases(c, map[string]string{"no-push": "sem-push"})

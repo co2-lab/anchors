@@ -10,6 +10,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bmatcuk/doublestar/v4"
+
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
@@ -113,7 +115,7 @@ func withoutFrozen(g config.Gate, nodes []mapx.Node) []mapx.Node {
 // A mark naming a code no doctrine records points at a reason nobody can read; a record no
 // mark carries is a freeze that covers nothing — thawed by hand, its entry forgotten.
 // Without a doctrine, the marks carry the reason, and there is nothing to confront.
-func checkFreezeConsistent(_ string, _ mapx.Node, _ string, g *mapx.Graph, _ *config.Config) (Verdict, string) {
+func checkFreezeConsistent(_ string, _ mapx.Node, _ string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if g == nil {
 		return pendingNoMap()
 	}
@@ -139,9 +141,24 @@ func checkFreezeConsistent(_ string, _ mapx.Node, _ string, g *mapx.Graph, _ *co
 			orphan = append(orphan, c+" ("+r.Doc+")")
 		}
 	}
+	// A folder frozen in anchors.yaml that holds no file of the map freezes nothing: a glob
+	// mistyped, or a folder that moved.
+	var empty []string
+	if cfg != nil {
+		for _, f := range cfg.FrozenPaths {
+			for _, glob := range f.Paths {
+				if !globMatchesAny(glob, g) {
+					empty = append(empty, glob+" ("+f.Freeze+")")
+				}
+			}
+		}
+	}
 	sort.Strings(unknown)
 	sort.Strings(orphan)
 	var parts []string
+	if len(empty) > 0 {
+		parts = append(parts, i18n.T("gate.freeze_consistent.empty_path", len(empty), strings.Join(empty, ", ")))
+	}
 	if len(unknown) > 0 {
 		parts = append(parts, fmt.Sprintf(i18n.T("gate.freeze_consistent.unknown"), len(unknown), strings.Join(unknown, "; ")))
 	}
@@ -151,7 +168,7 @@ func checkFreezeConsistent(_ string, _ mapx.Node, _ string, g *mapx.Graph, _ *co
 	if len(parts) > 0 {
 		return Fail, strings.Join(parts, " ")
 	}
-	if len(records) == 0 && len(used) == 0 {
+	if len(records) == 0 && len(used) == 0 && (cfg == nil || len(cfg.FrozenPaths) == 0) {
 		return Skip, i18n.T("gate.freeze_consistent.none")
 	}
 	return Pass, ""
@@ -186,4 +203,14 @@ func checkFrozenTouched(_ string, n mapx.Node, root string, g *mapx.Graph, _ *co
 	}
 	sort.Strings(rules)
 	return Diverge, i18n.T("gate.frozen_touched.rules", strings.Join(rules, "; ")) + " " + DeclaredMarker
+}
+
+// globMatchesAny says whether a glob of a frozen folder matches a file of the map.
+func globMatchesAny(glob string, g *mapx.Graph) bool {
+	for _, n := range g.Nodes {
+		if ok, _ := doublestar.Match(glob, n.ID); ok {
+			return true
+		}
+	}
+	return false
 }

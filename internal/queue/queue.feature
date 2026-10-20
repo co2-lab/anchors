@@ -2,7 +2,7 @@
 # @anchors
 #   code: QUFTA
 #   ref: TSQUT
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @TSQUT
@@ -134,3 +134,9 @@ Feature: TaskQueue — the file-backed queue between "something changed" and "so
     Given a live task "1-x" on "a.go"
     When a task "1-x" on "b.go" is enqueued, before and after the first is claimed
     Then both times it is refused naming "1-x", and the first task is untouched
+
+  @TSQUT-B16 @unit-level
+  Scenario: A claim passes over the tasks a filter names
+    Given two pending tasks, the first named by the filter
+    When a task is claimed with the filter
+    Then the second is claimed and the first stays pending

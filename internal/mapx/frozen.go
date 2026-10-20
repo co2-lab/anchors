@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/scan"
 )
 
@@ -40,7 +41,7 @@ func unitOfFile(f scan.File, anchors map[string]string) string {
 
 // applyFreezes writes, on each node, the freeze that covers it and the rules of it a freeze
 // covers. Its own mark wins over the one it inherits.
-func applyFreezes(g *Graph, files []scan.File, anchors map[string]string) {
+func applyFreezes(g *Graph, files []scan.File, anchors map[string]string, cfg *config.Config) {
 	byPath := map[string]int{}
 	for i, n := range g.Nodes {
 		byPath[n.ID] = i
@@ -53,11 +54,16 @@ func applyFreezes(g *Graph, files []scan.File, anchors map[string]string) {
 		}
 		n := &g.Nodes[i]
 		n.Frozen = f.Frozen
+		// A folder frozen in anchors.yaml marks the file as its own header would; the
+		// file's own mark wins.
+		if n.Frozen == "" && !f.Upstream {
+			n.Frozen = cfg.FrozenPathOf(f.Path)
+		}
 		n.FrozenRules = copyMap(f.FrozenRules)
 		n.Freezes = copyMap(f.Freezes)
 		// A unit is frozen by its owner's header: the spec, or the file that owns its code.
-		if f.Frozen != "" && f.HeaderCode != "" && len(f.HeaderRefs) == 0 {
-			unitFrozen[f.HeaderCode] = f.Frozen
+		if n.Frozen != "" && f.HeaderCode != "" && len(f.HeaderRefs) == 0 {
+			unitFrozen[f.HeaderCode] = n.Frozen
 		}
 	}
 	for _, f := range files {

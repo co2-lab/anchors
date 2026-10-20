@@ -150,3 +150,16 @@ func TestRelTo_neverReturnsABackslash(t *testing.T) {
 		t.Errorf("not even on the error path can the id carry a backslash: %q", got)
 	}
 }
+
+func TestImpact_frozenApart(t *testing.T) {
+	t.Run("MPCTI-B06: A frozen part the change reaches is listed apart", func(t *testing.T) {})
+	root := fixtureProjectWith(t, "frozen_paths:\n  - freeze: \"out of the plan\"\n    paths: [\"src/login.test.ts\"]\n", fixtureSpec)
+	out := runCmd(t, newImpactCmd(), "src/login.spec.md", "--root", root)
+	down := out[strings.Index(out, "↓"):strings.Index(out, "↑")]
+	if !strings.Contains(down, "src/login.ts") || strings.Contains(down, "src/login.test.ts") {
+		t.Errorf("the frozen test is not among the parts to redo:\n%s", out)
+	}
+	if !strings.Contains(out, "❄ Frozen (1)") || !strings.Contains(out, "src/login.test.ts (out of the plan)") {
+		t.Errorf("the frozen test is listed apart with its freeze:\n%s", out)
+	}
+}

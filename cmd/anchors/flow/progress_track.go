@@ -325,7 +325,7 @@ func printSummary(w io.Writer, f *progress.File, asJSON bool) error {
 		return writeJSON(w, rows)
 	}
 	unit := f.Unit
-	done, total := progress.Totals(f.AllTasks())
+	done, total := progress.Totals(f.CountedTasks())
 	if len(rows) == 0 {
 		fmt.Fprintln(w, "nothing in progress — `anchors progress add demand \"<title>\"` starts one")
 		return nil
@@ -348,6 +348,9 @@ func printSummary(w io.Writer, f *progress.File, asJSON bool) error {
 		}
 		if r.Unplanned > 0 {
 			extra += fmt.Sprintf(" · %s of %s %s unplanned", num(r.Unplanned), num(r.Total), unit)
+		}
+		if r.Frozen != "" && !r.Stage {
+			extra += " · ❄ frozen (" + r.Frozen + "), out of the total"
 		}
 		fmt.Fprintf(w, "%s%s %s%s — %s (%s/%s) · %s\n", indent, r.ID, r.Title, plan, r.Percent, num(r.Done), num(r.Total), extra)
 	}

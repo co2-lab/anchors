@@ -172,3 +172,19 @@ func TestFrozen_noMap(t *testing.T) {
 		t.Errorf("no map: %v %q", v, msg)
 	}
 }
+
+func TestFrozen_emptyFolder(t *testing.T) {
+	t.Run("FRGTF-B06: A frozen folder that holds no file is named", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "ir/tax.ts", Kind: mapx.KindCode, Frozen: "out of the plan"}}}
+	cfg := testkit.WithComments(&config.Config{FrozenPaths: []config.FrozenPath{
+		{Freeze: "out of the plan", Paths: []string{"ir/**", "irr/**"}},
+	}})
+	v, msg := checkFreezeConsistent("", mapx.Node{}, "", g, cfg)
+	if v != Fail || !strings.Contains(msg, "irr/** (out of the plan)") || strings.Contains(msg, "ir/** ") {
+		t.Errorf("the empty glob is named: %v %s", v, msg)
+	}
+	cfg.FrozenPaths[0].Paths = []string{"ir/**"}
+	if v, msg := checkFreezeConsistent("", mapx.Node{}, "", g, cfg); v != Pass {
+		t.Errorf("a folder with files is consistent: %v %s", v, msg)
+	}
+}

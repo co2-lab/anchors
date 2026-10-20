@@ -2,7 +2,7 @@
 # @anchors
 #   code: FRFTF
 #   ref: FRZEX
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @FRZEX
@@ -152,3 +152,20 @@ Feature: Freeze — the project is stopped in three layers with a written reason
     When the hook is called for each, for a file not frozen, for a file outside the project and for broken input
     Then the frozen file is told with its freeze and reason and never denied, the spec names its frozen rule, and the others say nothing
 
+  @FRZEX-B20 @unit-level
+  Scenario: A folder is frozen by a glob written to anchors.yaml
+    Given a project with a doctrine document, and a recorded freeze
+    When a folder is frozen with --path, another glob is added to the same freeze, one glob is thawed with --path, and the freeze is thawed by its code
+    Then the block is created with the first entry, grows by an entry, loses the thawed glob, and is gone after the thaw; show lists the globs; a glob matching no file is refused
+
+  @FRZEX-B21 @unit-level
+  Scenario: A new file in a frozen folder is told before the edit
+    Given a folder frozen in anchors.yaml and no map that knows a file the agent creates there
+    When the agent's hook is asked about that file
+    Then it says the file is frozen, and the edit goes through
+
+  @FRZEX-B22 @unit-level
+  Scenario: The freezes section follows the project's language
+    Given a project in Portuguese whose doctrine document has no freezes section, and one in English that has it already
+    When a freeze is recorded in each
+    Then the first gets the section as Congelamentos, the second keeps its own, and a thaw removes either

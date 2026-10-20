@@ -36,6 +36,7 @@ anchors thaw [freeze code] [flags]
 | --- | --- | --- |
 | `--file` |  | remove the freeze mark of a file's header (repeatable) |
 | `--no-push` |  | do not commit or push anchors.yaml |
+| `--path` |  | remove a glob from anchors.yaml's frozen_paths (repeatable) |
 | `--root` | `.` | project root |
 | `--rule` |  | remove the freeze mark of one rule (repeatable) |
 | `--unit` |  | remove the freeze marks of a unit's header (repeatable) |

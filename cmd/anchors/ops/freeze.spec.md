@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FRZEX
-  updated_at: 2026-10-11
+  updated_at: 2026-10-20
   layer: comando
 -->
 # Freeze — the project is stopped in three layers with a written reason, and thawed by undoing exactly those layers
@@ -68,6 +68,9 @@ edit goes on: the order to change a frozen part comes from a person.
 | `FRZEX-B17` | `thaw` with a freeze's code removes every mark of it — in headers and on rule lines, leaving the marks of other freezes — and its entry in the doctrine — the Freezes section too, once its last entry is gone, so the document comes back as it was —, saying how many marks left; with a scope it removes the marks at those places, whatever they carry; a code neither recorded nor marked is refused. With neither, `thaw` is the project's brake, as before. |
 | `FRZEX-B18` | `freeze show` lists each freeze with its reason and the places it covers — a recorded freeze that marks nothing says so —, or that nothing is frozen; `freeze show <code>` lists every place that freeze covers, the ones it reaches through a unit included. (`showFreezes`) |
 | `FRZEX-B19` | The agent's hook before an edit (`freeze hook`) answers, for a file a freeze covers whole, a context that tells the agent the file is frozen, with the freeze's code and reason, that the edit is not blocked and goes through, and to undo it and ask when no person ordered it, and, for a file holding frozen rules, each rule with its freeze; it never denies the edit, and says nothing for any other file, outside a project, or for input it cannot read. (`freezeHook`) |
+| `FRZEX-B20` | `--path <glob>` (repeatable) freezes a folder: with the freeze's code or a new freeze's reason, the globs are written as an entry of `frozen_paths` at the end of that block of anchors.yaml — the block created at the file's end when missing —, and the rest of the file is left as it is; a glob that is not one, or that matches no file of the project, is refused. `thaw <code>` removes the entries of that freeze, and the block once empty; `thaw --path <glob>` removes the glob from the entry that holds it, and the entry left with none; `freeze show` lists each freeze's globs. (`addFrozenPaths`, `removeFrozenPaths`, `checkFrozenGlobs`) |
+| `FRZEX-B21` | The agent's hook tells a file inside a frozen folder is frozen even when no map knows it yet — a file the agent is creating there. (`freezeHook`) |
+| `FRZEX-B22` | The freezes section is written in the project's language — `## Freezes`, `## Congelamentos` —, and a document already holding it under another language's title gets the new entry there; the thaw of its last entry removes it under either title. (`freezeSection`, `isFreezeSection`) |
 
 ## Invariants
 

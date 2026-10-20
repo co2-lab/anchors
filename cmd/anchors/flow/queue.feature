@@ -2,7 +2,7 @@
 # @anchors
 #   code: QUFTQ
 #   ref: WRQUW
-#   updated_at: 2026-10-11
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @WRQUW
@@ -169,7 +169,13 @@ Feature: WorkQueue — list, pull, close and discard the work, from the local qu
     Then it fails with "#78 ended as \"failure\""
 
   @WRQUW-B21 @unit-level
-  Scenario: A task on a frozen target carries the warning
-    Given a queued task whose changed file the map says is frozen
-    When the next task is claimed
-    Then it is claimed and handed out with the freeze and its reason
+  Scenario: A card on a frozen target carries the warning
+    Given a board card whose unit the map says is frozen
+    When the card's work is printed
+    Then it is handed out with the freeze and its reason
+
+  @WRQUW-B22 @unit-level
+  Scenario: The task of a frozen part waits in the queue
+    Given a queued task on a file the map says is frozen, and one on a file inside a frozen folder of anchors.yaml
+    When the next task is claimed, and then again with a live task queued
+    Then the queue is said empty with two tasks waiting for the thaw, both stay pending, and the live task is the one claimed

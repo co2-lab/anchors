@@ -2,7 +2,7 @@
 # @anchors
 #   code: PCFPR
 #   ref: LDCML
-#   updated_at: 2026-10-13
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @LDCML
@@ -61,3 +61,9 @@ Feature: LedgerCommand — anchors progress
     Given a progress file
     When a task that does not exist is done, and a demand is added with neither title nor plan
     Then each command fails with the cause, and the file is unchanged
+
+  @LDCML-B09 @unit-level
+  Scenario: The summary leaves a frozen plan out of the total
+    Given two demands, one whose plan's header is frozen
+    When the summary is printed
+    Then the total counts the other alone, and the frozen demand's row says it is out of the total

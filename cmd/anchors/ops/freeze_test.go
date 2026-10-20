@@ -5,6 +5,7 @@
 package ops
 
 import (
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/testkit"
 	"io"
 	"os"
@@ -595,5 +596,99 @@ func TestFreezeScoped_hook(t *testing.T) {
 		if none != "" {
 			t.Errorf("nothing to tell: %s", none)
 		}
+	}
+}
+
+func TestFreezeScoped_folder(t *testing.T) {
+	t.Run("FRZEX-B20: A folder is frozen by a glob written to anchors.yaml", func(t *testing.T) {})
+	root := scopedProject(t, true)
+	cfgBefore := readScoped(t, root, config.DefaultFile)
+	if _, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "out of the plan", "--path", "src/pay/**"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runScoped(t, newFreezeCmd(), "QLDTQ-F01", "--root", root, "--path", "src/cart/**"); err != nil {
+		t.Fatal(err)
+	}
+	got := readScoped(t, root, config.DefaultFile)
+	want := cfgBefore + "\nfrozen_paths:\n  - freeze: \"QLDTQ-F01\"\n    paths:\n      - \"src/pay/**\"\n  - freeze: \"QLDTQ-F01\"\n    paths:\n      - \"src/cart/**\"\n"
+	if got != want {
+		t.Errorf("the block grows at the file's end, the rest kept:\n%s", got)
+	}
+	g, err := freezeGraph(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g.FrozenAt("src/pay/Pay.ts") != "QLDTQ-F01" || g.FrozenAt("src/cart/Cart.spec.md") != "QLDTQ-F01" {
+		t.Errorf("the map freezes the folders' files")
+	}
+	if out, _ := runScoped(t, newFreezeCmd(), "show", "QLDTQ-F01", "--root", root); !strings.Contains(out, "paths (anchors.yaml): src/cart/**, src/pay/**") {
+		t.Errorf("show lists the globs:\n%s", out)
+	}
+	if _, err := runScoped(t, newFreezeCmd(), "QLDTQ-F01", "--root", root, "--path", "src/nowhere/**"); err == nil || !strings.Contains(err.Error(), "matches no file") {
+		t.Errorf("a glob matching no file is refused: %v", err)
+	}
+	if _, err := runScoped(t, newThawCmd(), "--root", root, "--path", "src/cart/**"); err != nil {
+		t.Fatal(err)
+	}
+	if got := readScoped(t, root, config.DefaultFile); got != cfgBefore+"\nfrozen_paths:\n  - freeze: \"QLDTQ-F01\"\n    paths:\n      - \"src/pay/**\"\n" {
+		t.Errorf("thaw --path removes the glob and its entry:\n%s", got)
+	}
+	if _, err := runScoped(t, newThawCmd(), "QLDTQ-F01", "--root", root); err != nil {
+		t.Fatal(err)
+	}
+	if got := readScoped(t, root, config.DefaultFile); strings.TrimRight(got, "\n") != strings.TrimRight(cfgBefore, "\n") {
+		t.Errorf("thaw by code removes the block:\n%s", got)
+	}
+}
+
+func TestFreezeScoped_hookOnANewFileOfAFrozenFolder(t *testing.T) {
+	t.Run("FRZEX-B21: A new file in a frozen folder is told before the edit", func(t *testing.T) {})
+	root := scopedProject(t, false)
+	if _, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "out of the plan", "--path", "src/pay/**"); err != nil {
+		t.Fatal(err)
+	}
+	out := freezeHook([]byte(`{"cwd":` + strconvQuote(root) + `,"tool_input":{"file_path":` + strconvQuote(filepath.Join(root, "src", "pay", "New.ts")) + `}}`))
+	if !strings.Contains(out, "FROZEN: src/pay/New.ts is frozen (out of the plan)") || !strings.Contains(out, "NOT blocked") {
+		t.Errorf("a new file of a frozen folder is told: %s", out)
+	}
+}
+
+func TestFreezeScoped_sectionInTheProjectsLanguage(t *testing.T) {
+	t.Run("FRZEX-B22: The freezes section follows the project's language", func(t *testing.T) {})
+	prev := i18n.Current()
+	t.Cleanup(func() { _ = i18n.Set(prev) })
+	root := scopedProject(t, true)
+	// The project's language is its anchors.yaml's, set when the configuration loads.
+	if err := os.WriteFile(filepath.Join(root, config.DefaultFile), []byte("lang: pt-BR\n"+scopedYAML), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runScoped(t, newFreezeCmd(), "--root", root, "--reason", "fora do plano", "--unit", "PAYUN"); err != nil {
+		t.Fatal(err)
+	}
+	if got := readScoped(t, root, "product/q.doctrine.md"); !strings.Contains(got, "## Congelamentos\n\n- **QLDTQ-F01** — fora do plano\n") {
+		t.Errorf("the section in Portuguese:\n%s", got)
+	}
+	if err := addFreezeEntry(root, "product/q.doctrine.md", "QLDTQ-F09", "x"); err != nil {
+		t.Fatal(err)
+	}
+	other := scopedProject(t, true)
+	doc := readScoped(t, other, "product/q.doctrine.md") + "\n## Freezes\n\n- **QLDTQ-F01** — old\n"
+	if err := os.WriteFile(filepath.Join(other, "product", "q.doctrine.md"), []byte(doc), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := addFreezeEntry(other, "product/q.doctrine.md", "QLDTQ-F02", "nova"); err != nil {
+		t.Fatal(err)
+	}
+	got := readScoped(t, other, "product/q.doctrine.md")
+	if strings.Contains(got, "Congelamentos") || !strings.Contains(got, "## Freezes\n\n- **QLDTQ-F01** — old\n- **QLDTQ-F02** — nova\n") {
+		t.Errorf("the section it has keeps the entries:\n%s", got)
+	}
+	for _, c := range []string{"QLDTQ-F01", "QLDTQ-F02"} {
+		if _, err := removeFreezeEntry(other, "product/q.doctrine.md", c); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := readScoped(t, other, "product/q.doctrine.md"); strings.Contains(got, "Freezes") {
+		t.Errorf("the thaw removes the English section:\n%s", got)
 	}
 }

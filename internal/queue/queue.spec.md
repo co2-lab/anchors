@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSQUT
-  updated_at: 2026-09-26
+  updated_at: 2026-10-20
   layer: infra
 -->
 # TaskQueue — the file-backed queue between "something changed" and "someone works on it"
@@ -59,6 +59,7 @@ returning it later only costs waiting, and forcing is explicit.
 | `TSQUT-B13` | The suggestion for every mapped kind (a draft plan, a plan, a spec, a feature, code, a test, a guide) is a verb `anchors work` can compose; only an unmapped kind gets `triage`, the queue's marker for a step decided by hand. (`ValidWorkArtifact`) |
 | `TSQUT-B14` | The pending count is the number of live tasks, pending and claimed. (`PendingCount`) |
 | `TSQUT-B15` | A task whose target is an absolute path is checked at that path, so it is kept while the file exists. |
+| `TSQUT-B16` | A claim may pass over the pending tasks a filter names: they stay pending, and the first other pending task is claimed. (`ClaimSkipping`) |
 
 ## Invariants
 

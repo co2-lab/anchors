@@ -167,6 +167,10 @@ type Config struct {
 	// (`contract: "Modelo de Dado"`). Sem isto, o `anchors new` emite os títulos do
 	// framework e as specs nascem em dialeto diferente do dos vizinhos.
 	SectionTitles SectionTitles `yaml:"section_titles,omitempty"`
+	// FrozenPaths freeze whole folders: each a freeze — its code, or the reason itself in a
+	// project with no doctrine — and the globs it covers. The map marks every file a glob
+	// matches as frozen, as its own header's mark would (DESIGN-frozen-units.md, FRUNF-W04).
+	FrozenPaths []FrozenPath `yaml:"frozen_paths,omitempty"`
 	// PlaceholderMarkers: the words that mark a value nobody filled in yet (`layer: TODO`),
 	// for the `placeholder-filled` gate. Empty → DefaultPlaceholderMarkers, the word the
 	// `anchors new` templates write. A project whose own generator leaves another word
@@ -1302,6 +1306,28 @@ func (g Gate) TimeoutCeilingOrDefault() float64 {
 	return DefaultTimeoutCeiling
 }
 
+// FrozenPath is a freeze's scope by path: the freeze, and the globs of the files it covers.
+type FrozenPath struct {
+	Freeze string   `yaml:"freeze"`
+	Paths  []string `yaml:"paths"`
+}
+
+// FrozenPathOf is the freeze whose globs match the file, or empty: the first declared that
+// matches, so the answer is the same on every run.
+func (c *Config) FrozenPathOf(rel string) string {
+	if c == nil {
+		return ""
+	}
+	for _, f := range c.FrozenPaths {
+		for _, glob := range f.Paths {
+			if ok, _ := doublestar.Match(glob, rel); ok {
+				return strings.TrimSpace(f.Freeze)
+			}
+		}
+	}
+	return ""
+}
+
 // NoSignalFor says whether the target is declared as having nothing to measure for this
 // gate, and why. The globs are tried in sorted order, so the reason is the same on every
 // run when two of them match.
@@ -2356,6 +2382,19 @@ func (c *Config) validarPadroes() error {
 		for i, r := range l.RequiresSections {
 			if err := r.validate(fmt.Sprintf("layers.%s.requires_sections[%d]", name, i), c.Layers); err != nil {
 				return err
+			}
+		}
+	}
+	for i, f := range c.FrozenPaths {
+		if strings.TrimSpace(f.Freeze) == "" {
+			return fmt.Errorf("`frozen_paths[%d].freeze` is empty: name the freeze's code, or its reason", i)
+		}
+		if len(f.Paths) == 0 {
+			return fmt.Errorf("`frozen_paths[%d]` (%s) has no paths: list the globs it freezes", i, f.Freeze)
+		}
+		for _, glob := range f.Paths {
+			if strings.TrimSpace(glob) == "" || !doublestar.ValidatePattern(glob) {
+				return fmt.Errorf("`frozen_paths[%d].paths` has an invalid glob: %q", i, glob)
 			}
 		}
 	}
