@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EVFRA
-  updated_at: 2026-10-19
+  updated_at: 2026-10-20
   layer: mapa
 -->
 # EvidenceFreshness — a test's evidence expires when anything it exercises changes, not only its own file
@@ -53,6 +53,7 @@ turn a precision improvement into a flood of false expirations on the day it shi
 | `EVFRA-B11` | A test that cites the rule of a row of a screen's Out table asserts that navigation: its evidence is stamped with the revision of that row alone, and goes stale when the row changes or is removed — naming the row —, not when another row or the rest of the spec changes. A test that cites no Out rule of a screen, passing through it on its way, is not tied to its navigation. (`OutRowKey`, `EvidenceClosure`) |
 | `EVFRA-B12` | A test's closure is what it asserts, not the wiring that gets it there: it never follows an edge whose flag has no side effect on the tests — a navigation, an import of types —; and a test file the test depends on — a util — enters with the test files it composes, and the walk does not descend from it into code. (`EvidenceClosure`, DESIGN-evidence-follows-the-asserts.md) |
 | `EVFRA-B14` | A test's closure stops at the files it replaces with a double — wherever the walk meets one, not only among the test's own imports —: it neither holds them nor descends from them, so a change to a doubled module, or to what only it reaches, stales nothing; the double's stamp answers for that drift (`mock-stamped`). A stored closure that held a doubled file is read through this rule (B13). (`EvidenceClosure`, `Node.Doubles`) |
+| `EVFRA-B15` | Judging many tests reads the graph's shape once — its edges by node, where each node stands —, never a revision: a revision changed in place on a node after the first judgment is the one the next judgment reads. (`evidenceIndex`) |
 | `EVFRA-B13` | A proof's stored closure is read through today's rule: a file it holds that the rule leaves out — a screen on the path, what a util reaches — stales nothing; a file no rule reaches is judged as before. (`EvidenceStaleFor`) |
 
 ## Invariants

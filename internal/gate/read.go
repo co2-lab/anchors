@@ -134,12 +134,14 @@ func readFile(root, rel string) ([]byte, error) {
 	fileSourceMu.RLock()
 	src := fileSource
 	fileSourceMu.RUnlock()
+	// Within a run, each file is read once (run_memo.go); the source decides what is read.
+	key := root + "\x00" + rel
 	if src != nil {
 		if r, err := filepath.Rel(root, filepath.Join(root, rel)); err == nil {
-			return src(r)
+			return readOnce("index\x00"+key, func() ([]byte, error) { return src(r) })
 		}
 	}
-	return os.ReadFile(filepath.Join(root, rel))
+	return readOnce(key, func() ([]byte, error) { return os.ReadFile(filepath.Join(root, rel)) })
 }
 
 // indexedTargets hands an external tool the content the current source holds — the index,

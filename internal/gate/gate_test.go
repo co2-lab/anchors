@@ -1412,3 +1412,38 @@ func TestGitReadOncePerRun(t *testing.T) {
 		t.Errorf("forgotten, git is asked again and sees the edit: %v %s", v, msg)
 	}
 }
+
+func TestRunMemo_readsOnceAndAgainAfterATool(t *testing.T) {
+	t.Run("GTENG-B31: A run reads each file once, and again after a tool", func(t *testing.T) {})
+	root := t.TempDir()
+	write := func(body string) {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(root, "a.ts"), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("one")
+	cfg := &config.Config{}
+	end := startRun(cfg)
+	first, _ := readFile(root, "a.ts")
+	first[0] = 'X'
+	write("two")
+	if again, _ := readFile(root, "a.ts"); string(again) != "one" {
+		t.Errorf("the run reads the file once, and hands a copy: %q", again)
+	}
+	forgetReads()
+	if after, _ := readFile(root, "a.ts"); string(after) != "two" {
+		t.Errorf("after a tool, the file is read again: %q", after)
+	}
+	g := config.Gate{Name: "x", Presupposes: []string{"dialect.imports"}}
+	m1, _ := runPremises(g, cfg)
+	m2, _ := runPremises(g, cfg)
+	if len(m1) != 1 || len(m2) != 1 {
+		t.Errorf("the premises answer the same: %v %v", m1, m2)
+	}
+	end()
+	write("three")
+	if out, _ := readFile(root, "a.ts"); string(out) != "three" {
+		t.Errorf("outside a run, nothing is kept: %q", out)
+	}
+}

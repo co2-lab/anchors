@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTG
 #   ref: GTENG
-#   updated_at: 2026-10-10
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @GTENG
@@ -259,3 +259,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a committed spec whose header date is its commit day
     When updated-at confronts it, the spec is then edited with today's date, and the run forgets what it read
     Then it passes, keeps the first answer until the run forgets, and then passes on today's date
+
+  @GTENG-B31 @unit-level
+  Scenario: A run reads each file once, and again after a tool
+    Given a run that has read a project file, changed since on disk
+    When it is read again, again after a tool ran, and after the run ended
+    Then the first read answers twice with a copy each time, and the later reads see the change

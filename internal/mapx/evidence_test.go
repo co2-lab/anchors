@@ -336,3 +336,19 @@ func TestEvidenceClosure_stopsAtTheDoubles(t *testing.T) {
 		t.Errorf("the module it runs stales it: %+v", ev)
 	}
 }
+
+func TestEvidenceIndex_readsRevisionsLive(t *testing.T) {
+	t.Run("EVFRA-B15: A revision changed in place is the one the next judgment reads", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{{ID: "a.test.ts", Kind: KindTest, Rev: "t1"}, {ID: "a.ts", Kind: KindCode, Rev: "a1"}},
+		Edges: []Edge{{From: "a.test.ts", To: "a.ts", Type: EdgeDependsOn}},
+	}
+	g.Nodes[0].Signal = &TestSignal{AtRev: "t1", ClosureRev: g.EvidenceClosure("a.test.ts")}
+	if ev := g.EvidenceStaleFor("a.test.ts"); ev != nil {
+		t.Fatalf("fresh: %+v", ev)
+	}
+	g.Nodes[1].Rev = "a2"
+	if ev := g.EvidenceStaleFor("a.test.ts"); ev == nil || strings.Join(ev.Culprit, ",") != "a.ts" {
+		t.Errorf("the revision changed in place stales the proof: %+v", ev)
+	}
+}

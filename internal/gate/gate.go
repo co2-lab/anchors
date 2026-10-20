@@ -189,9 +189,19 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 	// What a freeze covers answers `frozen`, and its rules leave every question asked of a
 	// rule (frozen.go).
 	setFreezes(graph)
+	// What a run asks again and again — a gate's premises, a project file — is answered
+	// once for the run.
+	defer startRun(cfg)()
 	// índice kind por nó já vem em node.Kind
 	var results []Result
+	afterTool := false
 	for _, g := range gates {
+		// A tool the project runs may write files: what the run read before it is read
+		// again after.
+		if afterTool {
+			forgetReads()
+		}
+		afterTool = g.Check == "" && g.Run != ""
 		// Os alvos deste gate — o mesmo filtro `on`/`tags` para qualquer escopo.
 		var alvos []mapx.Node
 		for _, n := range nodes {
@@ -305,7 +315,7 @@ func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, 
 // `dialect.opt_out`. A judgment gate answered here queues no question — its question would
 // state a premise the project does not hold.
 func presupposedMissing(g config.Gate, cfg *config.Config) (Verdict, string, bool) {
-	missing, waived := cfg.Premises(g)
+	missing, waived := runPremises(g, cfg)
 	switch {
 	case len(missing) > 0:
 		return Pending, i18n.T("gate.presupposed_missing", strings.Join(missing, ", ")), true

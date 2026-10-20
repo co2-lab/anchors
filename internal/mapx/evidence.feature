@@ -2,7 +2,7 @@
 # @anchors
 #   code: EVFTV
 #   ref: EVFRA
-#   updated_at: 2026-10-19
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @EVFRA
@@ -105,3 +105,9 @@ Feature: EvidenceFreshness — a test's evidence expires when anything it exerci
     Given a test of a payment module that doubles the client the module imports, and a proof stamped when its closure held the client
     When its closure is walked, the client changes, and then the module
     Then the closure holds the module and what it runs but neither the client nor what the client reaches; the client stales nothing, and the module stales the proof
+
+  @EVFRA-B15 @unit-level
+  Scenario: A revision changed in place is the one the next judgment reads
+    Given a proof judged fresh
+    When the code it reaches changes its revision in place on the same graph
+    Then the next judgment names the code as the culprit

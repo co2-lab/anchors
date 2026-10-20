@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:79665a9a08c20d92 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:9fcfab7eef7baf22 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4651,6 +4651,8 @@ abra a página dela em `camadas/`.
 
 - [GTENG-B30 — What the gates ask git — the files with uncommitted changes, each file's last commit day — is read once for the whole project and kept for a run, at most two minutes; a run that writes files (`check --fix`) forgets it, and the next question reads git again. (`ForgetRunState`, `lastCommitDate`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
+- [GTENG-B31 — Within a run, a gate's premises are asked of the configuration once, and each project file is read once — from the source the run reads, the tree or the index —, each reader getting its own copy; what was read is read again after a tool the project runs, which may have written it, and nothing is kept once the run ends. (`startRun`, `runPremises`, `readOnce`, `forgetReads`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
 - [GTENG-B06 — An UNREADABLE target does not apply: better to stop charging than to charge blind.](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B07 — A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check.](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
@@ -8272,6 +8274,8 @@ abra a página dela em `camadas/`.
 - [EVFRA-B12 — A test's closure is what it asserts, not the wiring that gets it there: it never follows an edge whose flag has no side effect on the tests — a navigation, an import of types —; and a test file the test depends on — a util — enters with the test files it composes, and the walk does not descend from it into code. (`EvidenceClosure`, DESIGN-evidence-follows-the-asserts.md)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-B14 — A test's closure stops at the files it replaces with a double — wherever the walk meets one, not only among the test's own imports —: it neither holds them nor descends from them, so a change to a doubled module, or to what only it reaches, stales nothing; the double's stamp answers for that drift (`mock-stamped`). A stored closure that held a doubled file is read through this rule (B13). (`EvidenceClosure`, `Node.Doubles`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
+
+- [EVFRA-B15 — Judging many tests reads the graph's shape once — its edges by node, where each node stands —, never a revision: a revision changed in place on a node after the first judgment is the one the next judgment reads. (`evidenceIndex`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-B13 — A proof's stored closure is read through today's rule: a file it holds that the rule leaves out — a screen on the path, what a util reaches — stales nothing; a file no rule reaches is judged as before. (`EvidenceStaleFor`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 

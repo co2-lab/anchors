@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d01c1167d7a1e37b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2d9876408d1454d8 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -4252,6 +4252,8 @@ teste prova.
 
 - [Git is read once per run, and forgotten when the run writes files](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B30`
 
+- [A run reads each file once, and again after a tool](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B31`
+
 - [The guidance points to the agreement](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B01`
 
 - [The catalog offers the guidance gates](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B02`
@@ -7513,6 +7515,8 @@ teste prova.
 - [A stored closure is read through today's rule](layers/mapa.md#evfra-b13--a-stored-closure-is-read-through-todays-rule) `EVFRA-B13`
 
 - [A test's closure stops at the files it replaces with a double](layers/mapa.md#evfra-b14--a-tests-closure-stops-at-the-files-it-replaces-with-a-double) `EVFRA-B14`
+
+- [A revision changed in place is the one the next judgment reads](layers/mapa.md#evfra-b15--a-revision-changed-in-place-is-the-one-the-next-judgment-reads) `EVFRA-B15`
 
 - [The written format and the oldest readable format are both accepted](layers/mapa.md#mpfrm-b01--the-written-format-and-the-oldest-readable-format-are-both-accepted) `MPFRM-B01`
 

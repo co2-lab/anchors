@@ -7,6 +7,7 @@ package mapx
 import (
 	"sort"
 	"strings"
+	"sync"
 )
 
 // Frescor de EVIDÊNCIA — distinto do frescor de CONFRONTO.
@@ -50,17 +51,11 @@ func (g *Graph) EvidenceStaleFor(id string) *EvidenceStale {
 	}
 	out := &EvidenceStale{Test: id, AtRev: n.Signal.AtRev, Own: n.Signal.AtRev != n.Rev}
 
-	revAtual := map[string]string{}
-	for _, x := range g.Nodes {
-		revAtual[x.ID] = x.Rev
-		for rule, r := range x.OutRows {
-			revAtual[OutRowKey(x.ID, rule)] = r
-		}
-	}
+	ix := g.evidenceIndex()
 	// A stored closure is read through today's rule: what the rule leaves out — a screen on the
 	// path, what a util reaches — stales nothing, even in a proof stamped before the rule.
 	leftOut := map[string]bool{}
-	adj := g.adjacency()
+	adj := ix.adj
 	now := g.evidenceClosure(id, true, adj)
 	for f := range g.evidenceClosure(id, false, adj) {
 		if _, ok := now[f]; !ok {
@@ -80,7 +75,7 @@ func (g *Graph) EvidenceStaleFor(id string) *EvidenceStale {
 		if leftOut[alvo] {
 			continue
 		}
-		atual, ok := revAtual[alvo]
+		atual, ok := ix.rev(g, alvo)
 		if ok && atual != revNaIngestao {
 			out.Culprit = append(out.Culprit, alvo)
 		}
@@ -109,16 +104,19 @@ func (g *Graph) EvidenceStaleFor(id string) *EvidenceStale {
 // afirma que mudanças nele não descem, e respeitar isso aqui evita que um arquivo
 // deliberadamente volátil vença a evidência de metade da suíte.
 func (g *Graph) EvidenceClosure(id string) map[string]string {
-	return g.evidenceClosure(id, true, g.adjacency())
+	return g.evidenceClosure(id, true, g.evidenceIndex().adj)
 }
 
 // evidenceClosure is the closure by today's rule — the asserts — or, with asserts false, by the
 // rule before it, which followed every edge: the difference is what the rule leaves out.
 func (g *Graph) evidenceClosure(id string, asserts bool, adj adjacency) map[string]string {
 	noProp := g.noPropSet()
-	revs := map[string]string{}
-	for _, x := range g.Nodes {
-		revs[x.ID] = x.Rev
+	ix := g.evidenceIndex()
+	rev := func(id string) (string, bool) {
+		if n := ix.node(g, id); n != nil {
+			return n.Rev, true
+		}
+		return "", false
 	}
 
 	// What a test asserts, not the wiring that gets it there (DESIGN-evidence-follows-the-
@@ -126,9 +124,11 @@ func (g *Graph) evidenceClosure(id string, asserts bool, adj adjacency) map[stri
 	// types, as the project's flags say — is never followed (an asserted navigation is in the
 	// closure by its Out row); and a test file the test depends on (a util) counts as a file,
 	// with the test files it composes, and the walk does not descend from it into code.
-	kind := map[string]Kind{}
-	for _, x := range g.Nodes {
-		kind[x.ID] = x.Kind
+	kind := func(id string) Kind {
+		if n := ix.node(g, id); n != nil {
+			return n.Kind
+		}
+		return ""
 	}
 	visto := map[string]bool{id: true}
 	// What the test replaces with a double is not what it proves: the walk neither holds
@@ -136,7 +136,7 @@ func (g *Graph) evidenceClosure(id string, asserts bool, adj adjacency) map[stri
 	// catch (`mock-stamped`). Found anywhere on the walk — the test imports the handler, the
 	// handler imports the client the test doubles —, not only among the test's own imports.
 	cut := map[string]bool{}
-	if t := g.node(id); asserts && t != nil {
+	if t := ix.node(g, id); asserts && t != nil {
 		for _, d := range t.Doubles {
 			cut[d] = true
 		}
@@ -146,14 +146,14 @@ func (g *Graph) evidenceClosure(id string, asserts bool, adj adjacency) map[stri
 	for len(fila) > 0 {
 		atual := fila[0]
 		fila = fila[1:]
-		wiring := asserts && atual != id && kind[atual] == KindTest
+		wiring := asserts && atual != id && kind(atual) == KindTest
 		for _, e := range adj.out[atual] {
 			filho := e.To
-			if visto[filho] || cut[filho] || (asserts && e.NoSideEffect) || (wiring && kind[filho] != KindTest) {
+			if visto[filho] || cut[filho] || (asserts && e.NoSideEffect) || (wiring && kind(filho) != KindTest) {
 				continue
 			}
 			visto[filho] = true
-			if r, ok := revs[filho]; ok {
+			if r, ok := rev(filho); ok {
 				out[filho] = r
 			}
 			// A capture reaches the unit's own file and images, and what the unit depends on
@@ -161,7 +161,7 @@ func (g *Graph) evidenceClosure(id string, asserts bool, adj adjacency) map[stri
 			// to the next unit that is captured. A component the screen uses has its own
 			// capture, and its change stales that one, not this.
 			if e.Type == EdgeCaptures {
-				for d, r := range g.uncapturedDeps(filho, adj, revs, asserts, cut) {
+				for d, r := range g.uncapturedDeps(filho, adj, rev, asserts, cut) {
 					if !visto[d] && d != id {
 						visto[d] = true
 						out[d] = r
@@ -175,10 +175,10 @@ func (g *Graph) evidenceClosure(id string, asserts bool, adj adjacency) map[stri
 		}
 	}
 	// The navigation rows the test asserts, each with the revision of the row alone.
-	if t := g.node(id); t != nil {
+	if t := ix.node(g, id); t != nil {
 		for _, key := range t.Asserts {
 			spec, rule, _ := strings.Cut(key, "#out:")
-			if sp := g.node(spec); sp != nil {
+			if sp := ix.node(g, spec); sp != nil {
 				if r, ok := sp.OutRows[rule]; ok {
 					out[key] = r
 				}
@@ -197,7 +197,7 @@ func (g *Graph) divergedParts(n *Node) []string {
 	if n.Signal == nil {
 		return nil
 	}
-	adj := g.adjacency()
+	adj := g.evidenceIndex().adj
 	var out []string
 	for _, c := range adj.out[n.ID] {
 		if c.Type != EdgeCaptures {
@@ -233,7 +233,7 @@ func (g *Graph) divergedParts(n *Node) []string {
 // the specs of those, stopping at any file a test captures — that one is proven by its own
 // capture —, and, by today's rule, past no dependency with no side effect on the tests, nor
 // into a file the test replaces with a double (cut).
-func (g *Graph) uncapturedDeps(code string, adj adjacency, revs map[string]string, asserts bool, cut map[string]bool) map[string]string {
+func (g *Graph) uncapturedDeps(code string, adj adjacency, rev func(string) (string, bool), asserts bool, cut map[string]bool) map[string]string {
 	captured := func(id string) bool {
 		for _, e := range adj.in[id] {
 			if e.Type == EdgeCaptures {
@@ -265,7 +265,7 @@ func (g *Graph) uncapturedDeps(code string, adj adjacency, revs map[string]strin
 				if captured(d.To) {
 					continue
 				}
-				if r, ok := revs[d.To]; ok {
+				if r, ok := rev(d.To); ok {
 					out[d.To] = r
 				}
 				queue = append(queue, d.To)
@@ -323,3 +323,74 @@ func (g *Graph) CapturesReaching(files []string) []string {
 
 // OutRowKey names one navigation row of a spec in an evidence closure.
 func OutRowKey(spec, rule string) string { return spec + "#out:" + rule }
+
+// evidenceIdx is what judging a test's evidence reads of the whole graph's SHAPE — its edges
+// by node, and where each node stands —, built once per graph instead of once per test: at
+// MIF, three times for each of 2788 tests. A revision is never kept: it is read from the node
+// each time, since one is updated in place (the watcher, after an edit).
+type evidenceIdx struct {
+	adj adjacency
+	at  map[string]int
+}
+
+var (
+	evidenceMu   sync.Mutex
+	evidenceFor  *Graph
+	evidenceSize [2]int
+	evidenceLast *evidenceIdx
+)
+
+// evidenceIndex is the graph's evidence index, kept while the graph keeps the same nodes and
+// edges in the same places.
+func (g *Graph) evidenceIndex() *evidenceIdx {
+	evidenceMu.Lock()
+	defer evidenceMu.Unlock()
+	size := [2]int{len(g.Nodes), len(g.Edges)}
+	if evidenceFor == g && evidenceSize == size && evidenceLast != nil && evidenceLast.holds(g) {
+		return evidenceLast
+	}
+	ix := &evidenceIdx{adj: g.adjacency(), at: make(map[string]int, len(g.Nodes))}
+	for i, x := range g.Nodes {
+		ix.at[x.ID] = i
+	}
+	evidenceFor, evidenceSize, evidenceLast = g, size, ix
+	return ix
+}
+
+// holds says whether the index still places the graph's nodes and edges where they are: the
+// first and last of each, a cheap check against a graph rebuilt in place.
+func (ix *evidenceIdx) holds(g *Graph) bool {
+	for _, i := range []int{0, len(g.Nodes) - 1} {
+		if i >= 0 && ix.at[g.Nodes[i].ID] != i {
+			return false
+		}
+	}
+	return true
+}
+
+// node is the graph's node with the id, through the index, or nil.
+func (ix *evidenceIdx) node(g *Graph, id string) *Node {
+	i, ok := ix.at[id]
+	if !ok {
+		return nil
+	}
+	if i < len(g.Nodes) && g.Nodes[i].ID == id {
+		return &g.Nodes[i]
+	}
+	return g.node(id) // the graph moved its nodes since: found the slow way
+}
+
+// rev is the current revision of a node, or of a navigation row (`OutRowKey`), read from the
+// node now; false when there is none.
+func (ix *evidenceIdx) rev(g *Graph, key string) (string, bool) {
+	if n := ix.node(g, key); n != nil {
+		return n.Rev, true
+	}
+	if spec, rule, ok := strings.Cut(key, "#out:"); ok {
+		if n := ix.node(g, spec); n != nil {
+			r, ok := n.OutRows[rule]
+			return r, ok
+		}
+	}
+	return "", false
+}
