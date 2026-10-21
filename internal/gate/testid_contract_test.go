@@ -854,3 +854,17 @@ func TestTestIDContract_closedDerivedSegment(t *testing.T) {
 		t.Errorf("declared and queried: %v %s", v, msg)
 	}
 }
+
+func TestTestIDContract_valuesOnlyHandleOfItsOwnHead(t *testing.T) {
+	t.Run("TICTS-B29: A handle of values alone is its file's own head's", func(t *testing.T) {})
+	component := "export function RolePicker({ testIDPrefix = ':rlpc-role' }) {\n  return roles.map((r) => <Pressable testID={`${testIDPrefix}-${r.key}`} />)\n}\n"
+	if got := unmeasurableHandles(component, "x.tsx", exposedPatterns(cfgHandle("testID"))); len(got) != 0 {
+		t.Errorf("measured through the file's own head: %v", got)
+	}
+	spec, g, root := consumerFixture(t, "fireEvent.press(getByTestId(':rlpc-role-admin'))\n")
+	writeFile(t, root, "x.tsx", component)
+	declared := "## Test IDs\n\n| id | role |\n| -- | ----- |\n| `rlpc-role-*` | each role |\n"
+	if v, msg := checkTestIDCoherent(declared, spec, root, g, cfgHandle("testID")); v != Pass {
+		t.Errorf("declared, exposed through its head, and queried: %v %s", v, msg)
+	}
+}

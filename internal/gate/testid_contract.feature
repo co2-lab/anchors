@@ -2,7 +2,7 @@
 # @anchors
 #   code: TCFTS
 #   ref: TICTS
-#   updated_at: 2026-10-19
+#   updated_at: 2026-10-20
 #   layer: feature
 
 @TICTS
@@ -197,3 +197,9 @@ Feature: TestIDContract — a test handle is one contract with four ends: the co
     Given a component exposing `${testId}-spin`, declared as "*-spin"
     When a test queries "b-spin", "b-spin-overlay" or "b-spinner"
     Then the first two query it and the third does not, and testid-consistent passes on the first
+
+  @TICTS-B29 @unit-level
+  Scenario: A handle of values alone is its file's own head's
+    Given a component whose prop gives its handles the default head ":rlpc-role" and exposes `${testIDPrefix}-${r.key}`, and a test querying ":rlpc-role-admin"
+    When testid-consistent confronts a spec declaring "rlpc-role-*"
+    Then it passes, and is not pending

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:44aec54507ccb3a3 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a912e3a5d6b6fc12 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -5875,6 +5875,8 @@ teste prova.
 - [A consumer that cannot be read leaves the gate pending, not failing](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B27`
 
 - [A derived handle whose segment ends it is queried with the id's end or a hyphen after](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B28`
+
+- [A handle of values alone is its file's own head's](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B29`
 
 - [Without the exposed and queried patterns declared the gate is pending, naming the field](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B01`
 

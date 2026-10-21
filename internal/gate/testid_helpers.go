@@ -84,9 +84,19 @@ func measurableSegment(seg string) bool {
 // unmeasurableHandles are the places — `file:line` — where the patterns find a handle made of
 // the caller's head and a segment that names nothing: there is a handle, and no text says
 // which. A gate answers it pending, never as measured.
+//
+// A file where the patterns also find a head of its own — a prefix the unit gives its handles,
+// as the default of the prop that carries it (`testIDPrefix = ':rlpc-role'`) — says which:
+// `${testIDPrefix}-${r.key}` is that head's (`rlpc-role-*`), and is measured through it.
 func unmeasurableHandles(src, rel string, patterns config.Patterns) []string {
+	matches := patterns.FindAll(src, rel)
+	for _, m := range matches {
+		if c, ok := m.Groups["prefix"]; ok && strings.TrimSuffix(c.Value, "-") != "" {
+			return nil
+		}
+	}
 	var out []string
-	for _, m := range patterns.FindAll(src, rel) {
+	for _, m := range matches {
 		if c, ok := m.Groups["suffix"]; ok && !measurableSegment(strings.TrimRight(c.Value, "-")) {
 			out = append(out, fmt.Sprintf("%s:%d", rel, config.LineOf(src, m.Start)))
 		}
