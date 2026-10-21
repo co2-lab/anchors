@@ -934,3 +934,23 @@ func TestIngest_lateRunStampsWhatChanged(t *testing.T) {
 		t.Errorf("the spec that changed stales its suite's proof: %+v", spec)
 	}
 }
+
+func TestIngest_dropsScenariosTheSpecNoLongerDeclares(t *testing.T) {
+	t.Run("SGINA-B33: A suite proving only a scenario the spec no longer declares leaves", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{
+		{ID: "chart.spec.md", Kind: KindSpec, Code: "IVCHI", Rev: "now", Signal: &TestSignal{
+			ProvenBySuite:    map[string][]string{"unit.xml": {"IVCHI-B02"}, "old-vr.xml": {"IVCHI-VR"}},
+			ProvenRevBySuite: map[string]string{"unit.xml": "now", "old-vr.xml": "before"},
+			ProvenCodes:      []string{"IVCHI-B02", "IVCHI-VR"}, AtRev: "before",
+		}},
+	}}
+	g.IngestExecutionSuite(map[string]ExecByFile{}, map[string]bool{"IVCHI-VR-S03": true}, nil,
+		map[string][]string{"chart.spec.md": {"IVCHI-B02", "IVCHI-VR-S03"}}, "e2e", "vr-s03.xml", "now")
+	s := g.node("chart.spec.md").Signal
+	if _, ok := s.ProvenBySuite["old-vr.xml"]; ok || s.ProvenRevBySuite["old-vr.xml"] != "" {
+		t.Errorf("the old suite leaves with its revision: %+v", s)
+	}
+	if strings.Join(s.ProvenCodes, ",") != "IVCHI-B02,IVCHI-VR-S03" || s.AtRev != "now" {
+		t.Errorf("proven now, at the spec's revision: %v %s", s.ProvenCodes, s.AtRev)
+	}
+}

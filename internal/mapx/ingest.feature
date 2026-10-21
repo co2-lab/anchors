@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTD
 #   ref: SGINA
-#   updated_at: 2026-10-20
+#   updated_at: 2026-10-21
 #   layer: feature
 
 @SGINA
@@ -218,3 +218,9 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a test reaching two code files, one of them changed after the run, and a spec it proves that changed after the run
     When the run is ingested placed in time
     Then the changed file and the spec's suite are stamped changed-after-run, the other file and the test as they are, the proof is stale naming the file, and the signals record when the run happened and its aliases
+
+  @SGINA-B33 @unit-level
+  Scenario: A suite proving only a scenario the spec no longer declares leaves
+    Given a spec proven by a fresh suite, and by an old suite whose only scenario the spec renamed since
+    When another report is ingested
+    Then the old suite leaves the proof with its revision, and the spec is proven at its revision now

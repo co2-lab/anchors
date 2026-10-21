@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:421107fc054b04c2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a422208dcda40d8d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -7663,6 +7663,8 @@ teste prova.
 - [The suites another measurement holds and this signal does not are adopted, and the ones it has stay](layers/mapa.md#sgina-b24--the-suites-another-measurement-holds-and-this-signal-does-not-are-adopted-and-the-ones-it-has-stay) `SGINA-B24`
 
 - [A late run stamps what changed after it as changed](layers/mapa.md#sgina-b32--a-late-run-stamps-what-changed-after-it-as-changed) `SGINA-B32`
+
+- [A suite proving only a scenario the spec no longer declares leaves](layers/mapa.md#sgina-b33--a-suite-proving-only-a-scenario-the-spec-no-longer-declares-leaves) `SGINA-B33`
 
 - [The lock is a file beside the map with its owner](layers/mapa.md#mplck-b01--the-lock-is-a-file-beside-the-map-with-its-owner) `MPLCK-B01`
 

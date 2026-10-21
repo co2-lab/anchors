@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:ba937f57b1641b37 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:824aa63c0ea972af — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -8430,6 +8430,8 @@ abra a página dela em `camadas/`.
 - [SGINA-B31 — Dropping the external coverage for a full run removes the coverage of the reports from outside the repository only on the files that run covered and only of the run's own test layer — an entry with no layer recorded is `unit`, the default —, recomputes their coverage from what remains, and names each suite touched; a file the run did not cover, and another layer's coverage, keep it. (`DropExternalCoverage`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B32 — A late ingestion's run placed (`SetRunAsOf`) stamps each file its proofs stand on — the test, each file and navigation row of its closure, each spec whose scenarios it proves — with its revision now when the run measured the same file, and `changed-after-run` otherwise, which no revision equals: the proof reads as stale, naming the file. The signals it stamps record when the run happened and the aliases it was read with. With no run placed, everything is stamped as the map holds it. (`RunAsOf`, `revAsOf`, `ChangedAfterRun`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
+
+- [SGINA-B33 — Each ingestion drops, from a spec's proof, the scenarios whose rule the spec no longer declares — from every suite, the ones this ingestion did not run included —, a suite left with none leaves with its revision, and what the spec proves and the revision it was proven at are recomputed: a suite nobody runs again keeps no spec stale through a scenario the spec renamed or removed. (`dropUndeclared`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B24 — The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. A node whose evidence revisions held carries its evidence, as a rebuild does — the tests reaching it stay fresh. (`RefreshRevs`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 

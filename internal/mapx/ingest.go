@@ -138,6 +138,11 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 			for _, code := range declared {
 				rules[scenarioRoot(code)] = true
 			}
+			// What the node no longer declares is proven by no suite: a scenario renamed or
+			// removed since a suite ran stays in that suite's proof, and a suite nobody runs
+			// again kept the node stale for good (reported from MIF: an aggregate VR report
+			// proving `IVCHI-VR`, whose flow became `IVCHI-VR-S0N`).
+			dropUndeclared(n, rules)
 			var pc []string
 			for code := range proven {
 				if rules[scenarioRoot(code)] {
@@ -604,6 +609,46 @@ func decodeRanges(s string) []int {
 		}
 	}
 	return out
+}
+
+// dropUndeclared removes, from a node's proof, the scenarios whose rule it no longer
+// declares — from each suite, and a suite left with none —, and recomputes what it proves and
+// the revision it was proven at.
+func dropUndeclared(n *Node, rules map[string]bool) {
+	s := n.Signal
+	if s == nil {
+		return
+	}
+	keep := func(codes []string) []string {
+		var out []string
+		for _, c := range codes {
+			if rules[scenarioRoot(c)] {
+				out = append(out, c)
+			}
+		}
+		return out
+	}
+	if len(s.ProvenBySuite) == 0 {
+		s.ProvenCodes = keep(s.ProvenCodes)
+		return
+	}
+	changed := false
+	for suite, codes := range s.ProvenBySuite {
+		kept := keep(codes)
+		switch {
+		case len(kept) == 0:
+			delete(s.ProvenBySuite, suite)
+			delete(s.ProvenRevBySuite, suite)
+			changed = true
+		case len(kept) != len(codes):
+			s.ProvenBySuite[suite] = kept
+			changed = true
+		}
+	}
+	if changed {
+		s.ProvenCodes = unionProven(s.ProvenBySuite)
+		s.AtRev = unionRev(s, n.Rev)
+	}
 }
 
 // unionProven: the codes proven by ANY suite, without repetition and in a stable order
