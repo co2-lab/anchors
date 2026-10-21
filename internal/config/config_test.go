@@ -2028,3 +2028,28 @@ func TestFrozenPaths(t *testing.T) {
 		}
 	}
 }
+
+func TestGateLegacyAndCache(t *testing.T) {
+	t.Run("CNFGO-B77: A gate declares a legacy severity and a tool cache", func(t *testing.T) {})
+	t.Run("CNFGO-E13: A legacy or a cache that cannot hold is refused", func(t *testing.T) {})
+	g := Gate{Name: "m", Blocking: Bool(true), Severity: &Severity{Pending: ActionBlock},
+		Legacy: &LegacySeverity{Before: "2026-10-21", Severity: &Severity{Pending: ActionInform}}}
+	if g.LegacyActionFor(LevelPending) != ActionInform || g.LegacyActionFor(LevelFail) != ActionBlock {
+		t.Errorf("legacy pending informs, the failure as the gate's: %s %s", g.LegacyActionFor(LevelPending), g.LegacyActionFor(LevelFail))
+	}
+	base := "version: 1\nlayers: {}\ngates:\n  - name: m\n    run: \"true\"\n    blocking: true\n"
+	for want, extra := range map[string]string{
+		"must be a date":    "    legacy: {before: soon, severity: {pending: inform}}\n",
+		"names no severity": "    legacy: {before: 2026-10-21}\n",
+		"stronger than":     "    legacy: {before: 2026-10-21, severity: {pending: block}}\n",
+		"names no inputs":   "    cache: {failures: true}\n",
+	} {
+		p := filepath.Join(t.TempDir(), DefaultFile)
+		if err := os.WriteFile(p, []byte(base+extra), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := Load(p); err == nil || !strings.Contains(err.Error(), want) {
+			t.Errorf("%q: want %q, got %v", extra, want, err)
+		}
+	}
+}

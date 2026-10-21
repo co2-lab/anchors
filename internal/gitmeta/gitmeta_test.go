@@ -458,3 +458,36 @@ func TestCommitAt(t *testing.T) {
 		t.Error("a file the commit lacks has none")
 	}
 }
+
+func TestProjectFiles(t *testing.T) {
+	t.Run("GTMTG-B16: The project's files are tracked and new, never ignored", func(t *testing.T) {})
+	dir := t.TempDir()
+	run := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+	}
+	run("init", "-q")
+	for name, body := range map[string]string{"a.md": "a\n", ".gitignore": "out.log\n"} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	run("add", ".")
+	run("commit", "-q", "-m", "one")
+	for _, name := range []string{"b.md", "out.log"} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte("x\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	files, ok := ProjectFiles(dir)
+	if got := strings.Join(files, ","); !ok || !strings.Contains(got, "a.md") || !strings.Contains(got, "b.md") || strings.Contains(got, "out.log") {
+		t.Errorf("tracked and new, never ignored: %v %v", files, ok)
+	}
+	if _, ok := ProjectFiles(t.TempDir()); ok {
+		t.Error("a folder that is no repository has none")
+	}
+}

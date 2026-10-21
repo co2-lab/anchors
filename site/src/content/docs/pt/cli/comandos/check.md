@@ -41,6 +41,7 @@ anchors check [flags]
 | `--fix` |  | self-healer: applies the automatic repairs (e.g. fixes updated_at) before confronting |
 | `--index` |  | the gates read the files as the git index has them — what the commit records (the pre-commit mode) |
 | `--map` |  | path to the map |
+| `--no-cache` |  | runs every project tool, even one whose gate keeps its verdict over the same inputs (`cache:`) |
 | `--no-record` |  | report only: neither stamps the map nor opens issues |
 | `--only-issues` |  | omits from the table the gates that passed everything and left no pending item (the total remains in the footer) |
 | `--phase` |  | enforces only the gates of this phase (pre-commit\|pre-push\|ci\|manual) |

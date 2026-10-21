@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTA
 #   ref: GTMTG
-#   updated_at: 2026-10-20
+#   updated_at: 2026-10-21
 #   layer: feature
 
 @GTMTG
@@ -109,3 +109,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given two commits a day apart, the file changed in the second
     When the commit of a moment between them, of a moment before both, and the file at the first are asked
     Then the first commit, none, and the file's first content come back, and its time is the first commit's
+
+  @GTMTG-B16 @unit-level
+  Scenario: The project's files are tracked and new, never ignored
+    Given a repository with a committed file, a new file, and an ignored one
+    When its files are listed, and those of a folder that is no repository
+    Then the committed and the new are listed and the ignored is not, and the folder has none

@@ -1481,3 +1481,123 @@ func TestRun_sideBySideAndSequential(t *testing.T) {
 		}
 	}
 }
+
+func TestMatchesShape(t *testing.T) {
+	t.Run("GTENG-B33: A gate's shape is answered without reading the node", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "a.spec.md"), []byte("# A\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := config.Gate{Name: "x", On: []string{"spec"}, Requires: "@no-test"}
+	spec := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
+	feature := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
+	if !MatchesShape(g, spec) || applies(g, spec, root) {
+		t.Error("the spec has the shape, and lacks the mark")
+	}
+	if MatchesShape(g, feature) || applies(g, feature, root) {
+		t.Error("a feature is not of the gate's kinds")
+	}
+}
+
+// legacyRepo is a repository with old.ts committed before the cutoff and new.ts after it.
+func legacyRepo(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	git := func(date string, args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t",
+			"GIT_CONFIG_GLOBAL=/dev/null", "GIT_AUTHOR_DATE="+date, "GIT_COMMITTER_DATE="+date)
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+	}
+	git("2026-10-01T10:00:00Z", "init", "-q")
+	for _, f := range []struct{ name, date string }{{"old.ts", "2026-10-01T10:00:00Z"}, {"new.ts", "2026-10-25T10:00:00Z"}} {
+		if err := os.WriteFile(filepath.Join(dir, f.name), []byte("x\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		git(f.date, "add", f.name)
+		git(f.date, "commit", "-q", "-m", f.name)
+	}
+	ForgetRunState()
+	t.Cleanup(ForgetRunState)
+	return dir
+}
+
+func TestLegacyCutoff(t *testing.T) {
+	t.Run("GTENG-B34: A target older than the legacy cutoff answers with the legacy severity", func(t *testing.T) {})
+	root := legacyRepo(t)
+	g := config.Gate{Name: "x", On: []string{"code"}, Blocking: config.Bool(true), Run: "echo bad; exit 1",
+		Legacy: &config.LegacySeverity{Before: "2026-10-21", Severity: &config.Severity{Fail: config.ActionInform}}}
+	nodes := []mapx.Node{{ID: "old.ts", Kind: mapx.KindCode}, {ID: "new.ts", Kind: mapx.KindCode}}
+	action := map[string]string{}
+	for _, r := range RunWithConfig([]config.Gate{g}, nodes, root, nil, nil) {
+		action[r.Target] = r.Action
+	}
+	if action["old.ts"] != config.ActionInform || action["new.ts"] != config.ActionBlock {
+		t.Errorf("the old file's failure informs, the new one's blocks: %v", action)
+	}
+	if err := os.WriteFile(filepath.Join(root, "old.ts"), []byte("y\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ForgetRunState()
+	for _, r := range RunWithConfig([]config.Gate{g}, nodes[:1], root, nil, nil) {
+		if r.Action != config.ActionBlock {
+			t.Errorf("an old file edited since is no legacy: %+v", r)
+		}
+	}
+}
+
+func TestToolCache(t *testing.T) {
+	t.Run("GTENG-B35: A tool is not run again over the same inputs", func(t *testing.T) {})
+	root := legacyRepo(t)
+	t.Setenv("CI", "")
+	if err := os.WriteFile(filepath.Join(root, "cfg.json"), []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	count := filepath.Join(t.TempDir(), "count")
+	g := config.Gate{Name: "tool", On: []string{"code"}, Scope: config.ScopeProject,
+		Run: "echo run >> " + count, Cache: &config.ToolCache{Inputs: []string{"cfg.json"}}}
+	nodes := []mapx.Node{{ID: "new.ts", Kind: mapx.KindCode}}
+	runs := func() int {
+		b, _ := os.ReadFile(count)
+		return strings.Count(string(b), "run")
+	}
+	run := func(g config.Gate) Result {
+		ForgetRunState()
+		return RunWithConfig([]config.Gate{g}, nodes, root, nil, nil)[0]
+	}
+	run(g)
+	if r := run(g); runs() != 1 || r.Verdict != Pass || !strings.Contains(r.Detail, "cached") && !strings.Contains(r.Detail, "cache") {
+		t.Errorf("the same inputs replay the pass: %d %+v", runs(), r)
+	}
+	if err := os.WriteFile(filepath.Join(root, "cfg.json"), []byte("{\"a\":1}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if run(g); runs() != 2 {
+		t.Errorf("a changed input runs the tool: %d", runs())
+	}
+	failing := g
+	failing.Name, failing.Run = "failing", "echo run >> "+count+"; echo bad; exit 1"
+	run(failing)
+	if run(failing); runs() != 4 {
+		t.Errorf("a failure runs every time: %d", runs())
+	}
+	failing.Cache = &config.ToolCache{Inputs: []string{"cfg.json"}, Failures: true}
+	failing.Name = "failing-kept"
+	run(failing)
+	if r := run(failing); runs() != 5 || r.Verdict != Fail {
+		t.Errorf("a failure is kept where the gate opts in: %d %+v", runs(), r)
+	}
+	t.Setenv("CI", "true")
+	if run(g); runs() != 6 {
+		t.Errorf("a CI runs the tool: %d", runs())
+	}
+	t.Setenv("CI", "")
+	SetNoToolCache(true)
+	t.Cleanup(func() { SetNoToolCache(false) })
+	if run(g); runs() != 7 {
+		t.Errorf("--no-cache runs the tool: %d", runs())
+	}
+}

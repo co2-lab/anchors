@@ -206,6 +206,23 @@ func AtCommit(root, sha, rel string) (content []byte, ok bool) {
 	return out, true
 }
 
+// ProjectFiles are the project's files as git sees them — tracked, and new ones it does not
+// ignore —, by their path relative to the root; known=false outside git.
+func ProjectFiles(root string) (files []string, known bool) {
+	out, err := exec.Command("git", "-C", root, "ls-files", "-z", "--cached", "--others", "--exclude-standard").Output()
+	if err != nil {
+		return nil, false
+	}
+	seen := map[string]bool{}
+	for _, f := range strings.Split(string(out), "\x00") {
+		if f != "" && !seen[f] {
+			seen[f] = true
+			files = append(files, f)
+		}
+	}
+	return files, true
+}
+
 // DirtyFiles are, in one `git status`, the files with uncommitted changes — modified,
 // staged, added or untracked —, by their path relative to the root; known=false outside
 // git. It answers for a whole run what UncommittedChanges answers for one file, without a

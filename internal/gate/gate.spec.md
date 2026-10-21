@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTENG
-  updated_at: 2026-10-20
+  updated_at: 2026-10-21
   layer: gate
 -->
 # GateEngine — which gates reach which node, and what the run concludes
@@ -13,7 +13,7 @@
 > `anchors doctor --fix` replaces whole. Decided by the user: those files are upstream-owned.
 >
 > **Revises:** `B22`
-> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B13`, `B14`, `B15`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `B24`, `B25`, `B26`, `B27`, `B28`, `B29`, `B30`, `B31`, `B32`, `I01`, `I02`, `I03`, `I05`, `X01`, `X02`, `X03`, `E01`
+> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B13`, `B14`, `B15`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `B24`, `B25`, `B26`, `B27`, `B28`, `B29`, `B30`, `B31`, `B32`, `B33`, `B34`, `B35`, `I01`, `I02`, `I03`, `I05`, `X01`, `X02`, `X03`, `E01`
 
 ## Overview
 
@@ -92,6 +92,9 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-B30` | What the gates ask git — the files with uncommitted changes, each file's last commit day — is read once for the whole project and kept for a run, at most two minutes; a run that writes files (`check --fix`) forgets it, and the next question reads git again. (`ForgetRunState`, `lastCommitDate`) |
 | `GTENG-B31` | Within a run, a gate's premises are asked of the configuration once, and each project file is read once — from the source the run reads, the tree or the index —, each reader getting its own copy; what was read is read again after a tool the project runs, which may have written it, and nothing is kept once the run ends. (`startRun`, `runPremises`, `readOnce`, `forgetReads`) |
 | `GTENG-B32` | The gates of a run are confronted side by side: those Anchors answers itself on every core, the project's tools a few at a time beside them, and a tool declared `exclusive` alone, after the other tools; the results come back in the order of the gates, each gate's in the order of its targets, and a gate that breaks fails alone. `check --sequential` confronts one gate after another, in their order. (`RunWithWaiver`, `runTools`, `SetSequential`) |
+| `GTENG-B33` | A gate's shape — the kinds it is `on:`, the tags it asks and excludes, a vendored file kept from an internal ruler — is answered apart from its `requires`, which reads the node's content: what a gate could reach in the map is known without reading a file. (`MatchesShape`) |
+| `GTENG-B34` | A target whose last commit is older than its gate's `legacy.before`, with no uncommitted change, answers with the legacy severity: the verdict is the same, its action the legacy's; a target changed since — committed after, uncommitted, never committed — or a scope answers with the gate's own. (`markSeverityAt`, `legacyTarget`) |
+| `GTENG-B35` | A gate declaring `cache.inputs` keeps its tool's verdict under a key of the gate as declared, each target's content, each input's content among the project's files, and the version of Anchors, and replays it — marked as kept, with when it was measured — while the key comes again: a pass always, a failure only with `cache.failures`, and in a CI only with `cache.ci`. A tool that did not run (a batch failing with no output) is kept nowhere, and `check --no-cache` runs every tool. (`cachedTool`, `toolKey`, `SetNoToolCache`) |
 | `GTENG-B06` | An UNREADABLE target does not apply: better to stop charging than to charge blind. |
 | `GTENG-B07` | A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check. |
 | `GTENG-B08` | A gate whose required binary is absent steps aside and never fails — the gate did not measure, and the missing piece is the tool. |

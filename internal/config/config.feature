@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTC
 #   ref: CNFGO
-#   updated_at: 2026-10-20
+#   updated_at: 2026-10-21
 #   layer: feature
 
 @CNFGO
@@ -527,3 +527,15 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given entries with no freeze, with no paths, and with a glob that does not compile
     When the configuration is loaded
     Then each is refused naming the entry
+
+  @CNFGO-B77 @unit-level
+  Scenario: A gate declares a legacy severity and a tool cache
+    Given a blocking gate whose legacy informs its pending items before a date
+    When the action of each level is asked for a legacy target
+    Then the pending informs and the failure blocks, as the gate's own
+
+  @CNFGO-E13 @unit-level
+  Scenario: A legacy or a cache that cannot hold is refused
+    Given a legacy with no date, with no severity, and stronger than the gate, and a cache with no inputs
+    When each configuration is loaded
+    Then each is refused naming the field

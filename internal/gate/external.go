@@ -72,6 +72,14 @@ func argvLimit() int {
 // Um gate que precise ver todos os alvos DE UMA VEZ (achar duplicata entre arquivos,
 // por exemplo) deve declarar `scope: project` e varrer sozinho, não depender do lote.
 func RunExternalArgs(command string, targets []string, root string) (Verdict, string) {
+	v, detail, _ := runExternal(command, targets, root)
+	return v, detail
+}
+
+// runExternal is RunExternalArgs saying also whether the tool ran: a batch that failed with
+// no output is the environment's failure — no `sh`, a command line too long —, no verdict of
+// the files, and kept nowhere.
+func runExternal(command string, targets []string, root string) (Verdict, string, bool) {
 	script := strings.ReplaceAll(command, "{{file}}", `"$1"`)
 	script = strings.ReplaceAll(script, "{{files}}", `"$@"`)
 
@@ -81,6 +89,7 @@ func RunExternalArgs(command string, targets []string, root string) (Verdict, st
 	defer done()
 
 	var falhas []string
+	ran := true
 	for _, lote := range sliceTargets(targets, argvLimit()-len(script)) {
 		out, err := execShell(script, lote, root)
 		out = clean(out)
@@ -95,9 +104,10 @@ func RunExternalArgs(command string, targets []string, root string) (Verdict, st
 		// no PATH, a linha de comando estourou) — sem esta linha o laudo fica vazio e
 		// o operador lê "violação de código" onde há problema de ambiente.
 		falhas = append(falhas, "gate não produziu saída: "+err.Error())
+		ran = false
 	}
 	if len(falhas) == 0 {
-		return Pass, ""
+		return Pass, "", true
 	}
 
 	detail := strings.Join(falhas, "\n")
@@ -111,7 +121,7 @@ func RunExternalArgs(command string, targets []string, root string) (Verdict, st
 	if len(detail) > limite {
 		detail = detail[:limite] + "\n… (saída truncada)"
 	}
-	return Fail, detail
+	return Fail, detail, ran
 }
 
 // execShell roda UM lote. `sh -c '<script>' sh <alvo...>` → os alvos viram $1..$N

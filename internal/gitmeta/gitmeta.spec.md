@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTMTG
-  updated_at: 2026-10-20
+  updated_at: 2026-10-21
   layer: infra
 -->
 # GitMeta — what git knows about the files: last commit dates, pending changes, HEAD, dirty count
@@ -50,6 +50,7 @@ snapshot that never existed.
 | `GTMTG-B13` | The folder git shares between a repository's worktrees is the same, absolute, from the main tree and from a worktree; outside a repository there is none. (`CommonDir`) |
 | `GTMTG-B14` | The folder git runs a repository's hooks from is given absolute — the shared `.git/hooks`, from a worktree too; outside a repository there is none. (`HooksDir`) |
 | `GTMTG-B15` | The commit a run at a moment measured is the last commit of HEAD made at or before it, and none when every commit is younger; a reference names its commit in full, and its time; a file's content at a commit is returned as that commit has it, and none when the commit lacks it. (`CommitAt`, `Commit`, `CommitTime`, `AtCommit`) |
+| `GTMTG-B16` | The project's files are the ones git tracks and the new ones it does not ignore, each once; outside a repository there are none, and it says so. (`ProjectFiles`) |
 
 ## Constraints
 

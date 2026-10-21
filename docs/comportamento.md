@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a912e3a5d6b6fc12 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:421107fc054b04c2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2500,6 +2500,8 @@ teste prova.
 
 - [--show-skips lists every indeterminate by gate and reason](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B97`
 
+- [A partial scan does not say a gate with targets in the map has nothing to measure](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B98`
+
 - [The scenarios of one spec are listed as proven or not](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 
 - [A code another unit owns, cited in prose, is not a declared scenario](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B02`
@@ -3163,6 +3165,10 @@ teste prova.
 - [A frozen folder names its freeze](layers/config.md#cnfgo-b76--a-frozen-folder-names-its-freeze) `CNFGO-B76`
 
 - [A frozen_paths entry that freezes nothing is refused](layers/config.md#cnfgo-e12--a-frozen-paths-entry-that-freezes-nothing-is-refused) `CNFGO-E12`
+
+- [A gate declares a legacy severity and a tool cache](layers/config.md#cnfgo-b77--a-gate-declares-a-legacy-severity-and-a-tool-cache) `CNFGO-B77`
+
+- [A legacy or a cache that cannot hold is refused](layers/config.md#cnfgo-e13--a-legacy-or-a-cache-that-cannot-hold-is-refused) `CNFGO-E13`
 
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
@@ -4261,6 +4267,12 @@ teste prova.
 - [A run reads each file once, and again after a tool](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B31`
 
 - [The gates run side by side, and one after another when asked](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B32`
+
+- [A gate's shape is answered without reading the node](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B33`
+
+- [A target older than the legacy cutoff answers with the legacy severity](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B34`
+
+- [A tool is not run again over the same inputs](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B35`
 
 - [The guidance points to the agreement](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B01`
 
@@ -6291,6 +6303,8 @@ teste prova.
 - [The hooks folder is found](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B14`
 
 - [A run's moment names the commit it measured, and a file as that commit has it](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B15`
+
+- [The project's files are tracked and new, never ignored](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B16`
 
 - [Only an administrator whose protection spares administrators can bypass it](layers/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B01`
 

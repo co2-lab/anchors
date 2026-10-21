@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTG
 #   ref: GTENG
-#   updated_at: 2026-10-20
+#   updated_at: 2026-10-21
 #   layer: feature
 
 @GTENG
@@ -271,3 +271,21 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given two tools that pass only while the other runs, an exclusive tool that passes only after both ended, and a gate Anchors answers itself
     When the run confronts them, and again with the run made sequential
     Then all pass in parallel with the results in the order of the gates, and sequentially the two tools fail
+
+  @GTENG-B33 @unit-level
+  Scenario: A gate's shape is answered without reading the node
+    Given a gate on specs that requires a mark, a spec without the mark, and a feature
+    When its shape and its application are asked of each
+    Then the spec matches the shape and the gate does not apply to it, and the feature matches neither
+
+  @GTENG-B34 @unit-level
+  Scenario: A target older than the legacy cutoff answers with the legacy severity
+    Given a blocking gate whose legacy informs failures before a date, a file last committed before it, and one committed after
+    When the gate fails on both, and again with the old file edited and uncommitted
+    Then the old file's failure informs and the new one's blocks, and the edited old file's blocks
+
+  @GTENG-B35 @unit-level
+  Scenario: A tool is not run again over the same inputs
+    Given a gate keeping its tool's verdict over a config file, in a repository
+    When the run is made twice, after the config changes, with a failure, in a CI, and with the cache off
+    Then the tool runs once for the first two, again after the change, every time for a failure, in a CI and with the cache off, and the kept verdict says so

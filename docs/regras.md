@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:64399a1959ae403e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:ba937f57b1641b37 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -2563,6 +2563,8 @@ abra a página dela em `camadas/`.
 
 - [CGPCH-B97 — With `--show-skips`, every indeterminate (`~`) of the scan is listed, whatever its size: by gate, then by reason — the first line of the gate's message, the commonest first, with its count —, then the address of each target; a Skip with no message is listed under a reason of its own. Without the flag, the reasons are shown only for a small scan, as before. (`printSkips`)](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
+- [CGPCH-B98 — In a scan that is not the full one, the warning names only a gate no node of the MAP reaches by its kinds and tags: a gate with no target in the cut — one whose `requires` asks a mark no changed file carries — reaches nodes of the map, and is not said to have nothing to measure. (`warnGatesWithoutTarget`, `gate.MatchesShape`)](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
 - [CGPCH-B92 — A gate the project declares counts as declared in the catalog line and the governance tips even when this run leaves it out — `when: [manual]`, `skip_on`, another phase.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B08 — A gate that declares no perspective to skip runs both on the full sweep and on changed files.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
@@ -3367,6 +3369,8 @@ abra a página dela em `camadas/`.
 
 - [CNFGO-B76 — `frozen_paths` lists freezes by folder — each a freeze (its code, or the reason itself) and the globs it covers —; `FrozenPathOf` is the freeze of the first entry whose glob matches a file, in the order declared, or empty. (`FrozenPath`, `FrozenPathOf`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
+- [CNFGO-B77 — A gate may declare `legacy` — a `before` date and a `severity` for the targets last changed before it, each level falling back to the gate's own — and `cache` — the `inputs` its tool reads besides its targets, and whether a failure (`failures`) and a CI (`ci`) keep its verdict. (`LegacySeverity`, `LegacyActionFor`, `ToolCache`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
@@ -3460,6 +3464,8 @@ abra a página dela em `camadas/`.
 - [CNFGO-E11 — The configuration file exists and is not valid YAML.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-E12 — A `frozen_paths` entry with no freeze, no paths, or a glob that is empty or does not compile.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-E13 — A `legacy` whose `before` is no date, that names no severity, or whose severity is stronger than the gate's at any level; a `cache` with no inputs or a glob that is none.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 ### [CNTNR — Containers — what runs separately, and which layers run inside each](layers/config.md#cntnr--containers--what-runs-separately-and-which-layers-run-inside-each)
 
@@ -4660,6 +4666,12 @@ abra a página dela em `camadas/`.
 - [GTENG-B31 — Within a run, a gate's premises are asked of the configuration once, and each project file is read once — from the source the run reads, the tree or the index —, each reader getting its own copy; what was read is read again after a tool the project runs, which may have written it, and nothing is kept once the run ends. (`startRun`, `runPremises`, `readOnce`, `forgetReads`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B32 — The gates of a run are confronted side by side: those Anchors answers itself on every core, the project's tools a few at a time beside them, and a tool declared `exclusive` alone, after the other tools; the results come back in the order of the gates, each gate's in the order of its targets, and a gate that breaks fails alone. `check --sequential` confronts one gate after another, in their order. (`RunWithWaiver`, `runTools`, `SetSequential`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
+- [GTENG-B33 — A gate's shape — the kinds it is `on:`, the tags it asks and excludes, a vendored file kept from an internal ruler — is answered apart from its `requires`, which reads the node's content: what a gate could reach in the map is known without reading a file. (`MatchesShape`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
+- [GTENG-B34 — A target whose last commit is older than its gate's `legacy.before`, with no uncommitted change, answers with the legacy severity: the verdict is the same, its action the legacy's; a target changed since — committed after, uncommitted, never committed — or a scope answers with the gate's own. (`markSeverityAt`, `legacyTarget`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
+- [GTENG-B35 — A gate declaring `cache.inputs` keeps its tool's verdict under a key of the gate as declared, each target's content, each input's content among the project's files, and the version of Anchors, and replays it — marked as kept, with when it was measured — while the key comes again: a pass always, a failure only with `cache.failures`, and in a CI only with `cache.ci`. A tool that did not run (a batch failing with no output) is kept nowhere, and `check --no-cache` runs every tool. (`cachedTool`, `toolKey`, `SetNoToolCache`)](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B06 — An UNREADABLE target does not apply: better to stop charging than to charge blind.](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
@@ -6932,6 +6944,8 @@ abra a página dela em `camadas/`.
 - [GTMTG-B14 — The folder git runs a repository's hooks from is given absolute — the shared `.git/hooks`, from a worktree too; outside a repository there is none. (`HooksDir`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-B15 — The commit a run at a moment measured is the last commit of HEAD made at or before it, and none when every commit is younger; a reference names its commit in full, and its time; a file's content at a commit is returned as that commit has it, and none when the commit lacks it. (`CommitAt`, `Commit`, `CommitTime`, `AtCommit`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+
+- [GTMTG-B16 — The project's files are the ones git tracks and the new ones it does not ignore, each once; outside a repository there are none, and it says so. (`ProjectFiles`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-X01 — The dirty count never answers 0 when it could not count: outside a repository or without git it answers a negative number.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 

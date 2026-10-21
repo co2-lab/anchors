@@ -37,7 +37,7 @@ import (
 func newCheckCmd() *cobra.Command {
 	var root, mapPath, phase, category string
 	var changed []string
-	var all, noRecord, recordIssues, fix, deterministic, skipSlow, onlyIssues, showDrift, showSkips, showTiming, fromIndex, sequential bool
+	var all, noRecord, recordIssues, fix, deterministic, skipSlow, onlyIssues, showDrift, showSkips, showTiming, fromIndex, sequential, noCache bool
 	var skipRegras string
 	var msgPath string
 	cmd := &cobra.Command{
@@ -250,11 +250,12 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// inteiro em lotes.
 			// The gates run side by side; `--sequential` confronts one after another.
 			gate.SetSequential(sequential)
+			gate.SetNoToolCache(noCache)
 			results := gate.RunWithWaiver(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
 			profile := gate.Aggregate(results)
 			printProfile(profile, onlyIssues, showDrift, showSkips)
 			reportTiming(showTiming, profile)
-			warnGatesWithoutTarget(cfg.Gates, profile)
+			warnGatesWithoutTarget(cfg.Gates, profile, g, all)
 			printReviewsDue(cfg, g, absRoot, nodes)
 
 			// THE JUDGMENT BRIEF IS A REPORT, NOT A RECORD — which is why it comes BEFORE
@@ -401,6 +402,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 	cmd.Flags().BoolVar(&onlyIssues, "only-issues", false, "omits from the table the gates that passed everything and left no pending item (the total remains in the footer)")
 	cmd.Flags().BoolVar(&showDrift, "show-drift", false, "lists ALL the pending items (⚠) with the address of each one; without the flag, only the table counter")
 	cmd.Flags().BoolVar(&showSkips, "show-skips", false, "lists ALL the indeterminate (~) by gate and reason, with the address of each one: what does not apply, told from what could not be confronted")
+	cmd.Flags().BoolVar(&noCache, "no-cache", false, "runs every project tool, even one whose gate keeps its verdict over the same inputs (`cache:`)")
 	cmd.Flags().BoolVar(&sequential, "sequential", false, "confronts one gate after another instead of side by side — slower; to rule the parallel run out when a result looks wrong")
 	cmd.Flags().BoolVar(&showTiming, "timing", false, "measures how long each gate took, and names the slowest targets — to find what makes a scan expensive")
 	return cmd
@@ -1258,10 +1260,25 @@ func printLegenda(p gate.Profile, w counterWidths) {
 //
 // Não é falha: é declaração sem alvo, e o conserto é do projeto (criar o artefato ou
 // remover o gate). Por isso avisa, não barra.
-func warnGatesWithoutTarget(declarados []config.Gate, p gate.Profile) {
+func warnGatesWithoutTarget(declarados []config.Gate, p gate.Profile, g *mapx.Graph, all bool) {
 	avaliados := map[string]bool{}
 	for _, n := range p.GateNames() {
 		avaliados[n] = true
+	}
+	// A partial scan confronts its cut, not the map: a gate with no target in it may have
+	// many in the map — a gate whose `requires` asks a mark no changed spec carries (reported
+	// from MIF: no-test-proof-real, "nothing to measure" in a commit that touched no
+	// `@no-test` spec). There, a gate is said only when no node of the map has its kinds and
+	// tags.
+	if !all && g != nil {
+		for _, gt := range declarados {
+			for _, n := range g.Nodes {
+				if gate.MatchesShape(gt, n) {
+					avaliados[gt.Name] = true
+					break
+				}
+			}
+		}
 	}
 	// Each gate says what a node must match: its kinds and, when it has them, its tags — a
 	// gate of the catalog inherits them when the declaration names none, and the tags were

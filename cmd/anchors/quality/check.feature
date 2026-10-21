@@ -2,7 +2,7 @@
 # @anchors
 #   code: CHFTA
 #   ref: CGPCH
-#   updated_at: 2026-10-18
+#   updated_at: 2026-10-21
 #   layer: feature
 
 @CGPCH
@@ -659,3 +659,9 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     When the profile is printed with --show-skips
     Then the gate is listed with "2 × <reason>" before "1 × (no reason given by the gate)", each with its addresses
     And without the flag no indeterminate is listed for a scan that large
+
+  @CGPCH-B98 @unit-level
+  Scenario: A partial scan does not say a gate with targets in the map has nothing to measure
+    Given a map with a spec, a gate on specs that requires a mark, and a gate on features
+    When neither gate was evaluated, in a partial scan and in the full one
+    Then the partial scan names the feature gate alone, and the full scan names both

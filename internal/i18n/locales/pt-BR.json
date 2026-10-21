@@ -1085,6 +1085,7 @@
   "gate.line_coverage_floor": " (o piso de `%s`: %s)",
   "config.gate.unknown_severity": "gate %q: `severity.%s: %q` desconhecido — use %q, %q ou %q",
   "config.gate.severity_order": "gate %q: um nível de veredito está mais forte que um mais grave (fail: %s, divergence: %s, pending: %s) — pending ≤ divergence ≤ fail, com block > inform > ignore",
+  "gate.tool_cached": "(do cache: as mesmas entradas deram este veredito em %s — `anchors check --no-cache` roda a ferramenta)",
   "gate.panicked": "o gate quebrou ao medir (%s) — defeito do Anchors, não do projeto: reporte",
   "config.workflow.github_fields_outside_github": "workflow: `repo`/`labels` só valem com `mode: github` — no modo local eles não são lidos, e deixá-los declarados faz o arquivo afirmar uma integração que não existe",
   "config.workflow.github_needs_repo": "workflow: `mode: github` exige `repo: owner/nome` — o Anchors não infere do remote do git de propósito: num fork, inferir faria a escrita cair no repositório errado",

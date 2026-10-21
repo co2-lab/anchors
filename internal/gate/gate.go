@@ -103,6 +103,29 @@ type Result struct {
 func Applies(g config.Gate, n mapx.Node, root string) bool { return applies(g, n, root) }
 
 func applies(g config.Gate, n mapx.Node, root string) bool {
+	if !MatchesShape(g, n) {
+		return false
+	}
+	if g.Requires == "" {
+		return true
+	}
+	// `requires` filtra por CONTEÚDO: o gate que pergunta sobre uma marcação só se
+	// aplica a quem a usou. Sem isto, um gate de julgamento declarado `on: [spec]`
+	// enfileira uma pergunta de IA para toda spec do projeto — e o contador de
+	// pendências passa a medir o tamanho do projeto, não o do trabalho.
+	//
+	// Arquivo ilegível NÃO aplica: melhor deixar de cobrar do que cobrar às cegas de
+	// um alvo cujo conteúdo não se conhece.
+	b, err := readFile(root, n.ID)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(b), g.Requires)
+}
+
+// MatchesShape says whether a node is of the gate's kinds and tags — what it applies to before
+// its `requires` reads the node's content.
+func MatchesShape(g config.Gate, n mapx.Node) bool {
 	if !slices.Contains(g.On, string(n.Kind)) {
 		return false
 	}
@@ -135,21 +158,7 @@ func applies(g config.Gate, n mapx.Node, root string) bool {
 			return false
 		}
 	}
-	if g.Requires == "" {
-		return true
-	}
-	// `requires` filtra por CONTEÚDO: o gate que pergunta sobre uma marcação só se
-	// aplica a quem a usou. Sem isto, um gate de julgamento declarado `on: [spec]`
-	// enfileira uma pergunta de IA para toda spec do projeto — e o contador de
-	// pendências passa a medir o tamanho do projeto, não o do trabalho.
-	//
-	// Arquivo ilegível NÃO aplica: melhor deixar de cobrar do que cobrar às cegas de
-	// um alvo cujo conteúdo não se conhece.
-	b, err := readFile(root, n.ID)
-	if err != nil {
-		return false
-	}
-	return strings.Contains(string(b), g.Requires)
+	return true
 }
 
 // Run roda todos os gates aplicáveis contra os nós dados. root é a raiz do projeto
@@ -411,7 +420,13 @@ func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, 
 		}
 	}
 	// project: sem argumentos — a ferramenta já sabe o que olhar.
-	r.Verdict, r.Detail = RunExternalArgs(g.Run, args, root)
+	targets := make([]string, 0, len(alvos))
+	for _, n := range alvos {
+		targets = append(targets, n.ID)
+	}
+	r.Verdict, r.Detail = cachedTool(g, escopo, targets, root, func() (Verdict, string, bool) {
+		return runExternal(g.Run, args, root)
+	})
 	return r
 }
 
@@ -433,7 +448,7 @@ func presupposedMissing(g config.Gate, cfg *config.Config) (Verdict, string, boo
 // runOne executa um gate contra um alvo — despacha para interno ou externo.
 func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) (r Result) {
 	r = Result{Gate: g.Name, Regra: idDoGate(g), Target: n.ID, Blocking: g.IsBlocking()}
-	defer markSeverity(g, &r)
+	defer markSeverityAt(g, root, &r)
 	defer recoverGate(&r)
 	// The project declared that this gate has nothing to measure on this target, and why.
 	if reason, ok := g.NoSignalFor(n.ID); ok {
@@ -519,7 +534,9 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 			r.Decisão = true
 		}
 	case g.Run != "":
-		r.Verdict, r.Detail = RunExternalArgs(g.Run, []string{n.ID}, root)
+		r.Verdict, r.Detail = cachedTool(g, "file", []string{n.ID}, root, func() (Verdict, string, bool) {
+			return runExternal(g.Run, []string{n.ID}, root)
+		})
 	default:
 		r.Verdict, r.Detail = Pending, i18n.T("gate.no_run_or_check")
 	}
@@ -597,7 +614,11 @@ const AdvisoryMarker = "[advisory]"
 // blocking gate that had something to confront and could not measure it — a test never
 // run, a signal of another version — does not certify the promotion unless the project
 // says so.
-func markSeverity(g config.Gate, r *Result) {
+func markSeverity(g config.Gate, r *Result) { markSeverityAt(g, "", r) }
+
+// markSeverityAt is markSeverity knowing the project's root: a gate's legacy cutoff reads when
+// the target last changed, in git.
+func markSeverityAt(g config.Gate, root string, r *Result) {
 	level := ""
 	switch r.Verdict {
 	case Fail:
@@ -610,6 +631,11 @@ func markSeverity(g config.Gate, r *Result) {
 		return
 	}
 	r.Action = g.ActionFor(level)
+	// A target last changed before the gate's legacy cutoff answers with the legacy
+	// severity — never stronger —; one changed since answers with the gate's own.
+	if root != "" && legacyTarget(g, root, r.Target) {
+		r.Action = g.LegacyActionFor(level)
+	}
 	// A finding the project DECLARED — a debt with its deadline, a rule marked `@TBD` —, or
 	// one its own threshold accepts, is known: it informs, and never bars the promotion.
 	if r.Action == config.ActionBlock && (strings.Contains(r.Detail, DeclaredMarker) || strings.Contains(r.Detail, AdvisoryMarker)) {
@@ -635,3 +661,17 @@ func (r Result) Blocks() bool {
 
 // Ignored says whether the result is counted and not reported: its level's state is `ignore`.
 func (r Result) Ignored() bool { return r.Action == config.ActionIgnore }
+
+// legacyTarget says whether a target is legacy for the gate: a file whose last commit is older
+// than the gate's `legacy.before`, with no uncommitted change. A file never committed, changed
+// since, or no file at all (a scope) is not; outside git nothing is.
+func legacyTarget(g config.Gate, root, target string) bool {
+	if g.Legacy == nil || target == "" || strings.HasPrefix(target, "(") {
+		return false
+	}
+	if dirty, known := gitState(root).dirtyFiles(); !known || dirty[target] {
+		return false
+	}
+	date, ok := lastCommitDate(root, target)
+	return ok && date < strings.TrimSpace(g.Legacy.Before)
+}

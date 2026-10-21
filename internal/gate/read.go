@@ -68,13 +68,16 @@ func uncommitted(root, rel string) (changed, known bool) {
 const gitStateTTL = 2 * time.Minute
 
 type runGit struct {
-	root      string
-	at        time.Time
-	dirtyOnce sync.Once
-	dirty     map[string]bool
-	known     bool
-	datesOnce sync.Once
-	dates     map[string]string
+	root       string
+	at         time.Time
+	dirtyOnce  sync.Once
+	filesOnce  sync.Once
+	files      []string
+	filesKnown bool
+	dirty      map[string]bool
+	known      bool
+	datesOnce  sync.Once
+	dates      map[string]string
 }
 
 var (

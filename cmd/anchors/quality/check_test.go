@@ -2975,3 +2975,21 @@ func TestPrintSkips_byGateAndReason(t *testing.T) {
 		t.Errorf("without the flag a large scan lists no indeterminate:\n%s", out)
 	}
 }
+
+func TestWarnGatesWithoutTarget_partialScan(t *testing.T) {
+	t.Run("CGPCH-B98: A partial scan does not say a gate with targets in the map has nothing to measure", func(t *testing.T) {})
+	englishOutput(t)
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec}}}
+	gates := []config.Gate{
+		{Name: "needs-mark", On: []string{"spec"}, Requires: "@no-test"},
+		{Name: "on-features", On: []string{"feature"}},
+	}
+	partial := captureStdout(t, func() { warnGatesWithoutTarget(gates, gate.Profile{}, g, false) })
+	if strings.Contains(partial, "needs-mark") || !strings.Contains(partial, "on-features") {
+		t.Errorf("a partial scan names only the gate no node of the map reaches:\n%s", partial)
+	}
+	full := captureStdout(t, func() { warnGatesWithoutTarget(gates, gate.Profile{}, g, true) })
+	if !strings.Contains(full, "needs-mark") || !strings.Contains(full, "on-features") {
+		t.Errorf("the full scan names both:\n%s", full)
+	}
+}

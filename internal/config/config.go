@@ -20,6 +20,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/co2-lab/anchors/internal/i18n"
 
@@ -1122,6 +1123,77 @@ type Gate struct {
 	// informs its divergences and pending items; an informative gate informs all three. A
 	// level is never stronger than a more serious one: pending ≤ divergence ≤ fail.
 	Severity *Severity `yaml:"severity,omitempty"`
+
+	// Legacy — the severity of the targets last changed before a cutoff: a file whose last
+	// commit is older than `before` answers with `legacy.severity`, never stronger than the
+	// gate's; a file changed since — committed after, uncommitted, new — answers with the
+	// gate's own. The verdict is the same; what it does is not (GTENG-B34).
+	Legacy *LegacySeverity `yaml:"legacy,omitempty"`
+
+	// Cache — the project's tool is not run again over the same inputs: the files it reads
+	// besides its targets (`inputs`, globs over the project's files), and whether a failure
+	// is replayed too and the CI uses it. Opt-in: with no inputs, the tool runs every time
+	// (DESIGN-tool-result-cache.md).
+	Cache *ToolCache `yaml:"cache,omitempty"`
+}
+
+// LegacySeverity is a gate's severity for the targets last changed before a date.
+type LegacySeverity struct {
+	Before   string    `yaml:"before"`
+	Severity *Severity `yaml:"severity"`
+}
+
+// ToolCache is how a gate's tool result is kept (see Gate.Cache).
+type ToolCache struct {
+	Inputs   []string `yaml:"inputs"`
+	Failures bool     `yaml:"failures,omitempty"`
+	CI       bool     `yaml:"ci,omitempty"`
+}
+
+// LegacyActionFor is what a verdict of this level does on a target last changed before the
+// gate's legacy cutoff: the legacy severity's state for it, else the gate's own.
+func (g Gate) LegacyActionFor(level string) string {
+	if g.Legacy == nil || g.Legacy.Severity == nil {
+		return g.ActionFor(level)
+	}
+	v := map[string]string{LevelFail: g.Legacy.Severity.Fail, LevelDivergence: g.Legacy.Severity.Divergence, LevelPending: g.Legacy.Severity.Pending}[level]
+	if v == "" {
+		return g.ActionFor(level)
+	}
+	return v
+}
+
+// checkLegacyAndCache refuses a legacy cutoff that is no date, a legacy severity stronger
+// than the gate's at any level, and a cache with no inputs or a glob that is none.
+func (g Gate) checkLegacyAndCache() error {
+	if l := g.Legacy; l != nil {
+		if _, err := time.Parse("2006-01-02", strings.TrimSpace(l.Before)); err != nil {
+			return fmt.Errorf("`gates[%s].legacy.before` must be a date (2026-10-21), got %q", g.Name, l.Before)
+		}
+		if l.Severity == nil {
+			return fmt.Errorf("`gates[%s].legacy` names no severity: say what a legacy target's verdict does", g.Name)
+		}
+		for _, lv := range []string{LevelFail, LevelDivergence, LevelPending} {
+			a := g.LegacyActionFor(lv)
+			if actionRank(a) < 0 {
+				return fmt.Errorf("%s", i18n.T("config.gate.unknown_severity", g.Name, lv, a, ActionBlock, ActionInform, ActionIgnore))
+			}
+			if actionRank(a) > actionRank(g.ActionFor(lv)) {
+				return fmt.Errorf("`gates[%s].legacy.severity.%s` is %s, stronger than the gate's %s: the legacy only ever answers softer", g.Name, lv, a, g.ActionFor(lv))
+			}
+		}
+	}
+	if c := g.Cache; c != nil {
+		if len(c.Inputs) == 0 {
+			return fmt.Errorf("`gates[%s].cache` names no inputs: list what the tool reads besides its targets, or remove the cache", g.Name)
+		}
+		for _, glob := range c.Inputs {
+			if strings.TrimSpace(glob) == "" || !doublestar.ValidatePattern(glob) {
+				return fmt.Errorf("`gates[%s].cache.inputs` has an invalid glob: %q", g.Name, glob)
+			}
+		}
+	}
+	return nil
 }
 
 // Severity is the state of each verdict level of a gate (see Gate.Severity).
@@ -2217,6 +2289,9 @@ func (c *Config) validarEnumsDeGate() error {
 			}
 		}
 		if err := g.checkSeverity(); err != nil {
+			return err
+		}
+		if err := g.checkLegacyAndCache(); err != nil {
 			return err
 		}
 		if err := g.checkCoverageFloors(); err != nil {
