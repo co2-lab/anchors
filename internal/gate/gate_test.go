@@ -1556,9 +1556,10 @@ func TestToolCache(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "cfg.json"), []byte("{}\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	count := filepath.Join(t.TempDir(), "count")
+	// The tool runs in the project's root: a relative path is the same under every shell.
+	count := filepath.Join(root, "count.log")
 	g := config.Gate{Name: "tool", On: []string{"code"}, Scope: config.ScopeProject,
-		Run: "echo run >> " + count, Cache: &config.ToolCache{Inputs: []string{"cfg.json"}}}
+		Run: "echo run >> count.log", Cache: &config.ToolCache{Inputs: []string{"cfg.json"}}}
 	nodes := []mapx.Node{{ID: "new.ts", Kind: mapx.KindCode}}
 	runs := func() int {
 		b, _ := os.ReadFile(count)
@@ -1579,7 +1580,7 @@ func TestToolCache(t *testing.T) {
 		t.Errorf("a changed input runs the tool: %d", runs())
 	}
 	failing := g
-	failing.Name, failing.Run = "failing", "echo run >> "+count+"; echo bad; exit 1"
+	failing.Name, failing.Run = "failing", "echo run >> count.log; echo bad; exit 1"
 	run(failing)
 	if run(failing); runs() != 4 {
 		t.Errorf("a failure runs every time: %d", runs())

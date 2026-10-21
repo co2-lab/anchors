@@ -17736,24 +17736,15 @@ nodes:
       rest_rev: 680285555a33
     - id: internal/gate/gate_test.go
       kind: test
-      rev: f8b821c3f61b
+      rev: 65455dba7b6e
       updated_at: "2026-10-21"
       code: GTENG
       file_code: GTTSG
       layer: teste
       tags:
         - test
-      signal:
-        passed: 104
-        by_layer:
-            unit:
-                passed: 104
-        seconds_by_suite:
-            .anchors/junit.xml: 5.35
-        at_rev: f8b821c3f61b
-        ingested_at: "2026-10-21T10:37:00-03:00"
-      evidence_rev: 9c1a2dc35f34
-      line_rev: 6efe77393340
+      evidence_rev: 8635cdeb2f48
+      line_rev: 11f378ea02c9
     - id: internal/gate/guidance.feature
       kind: feature
       rev: 862b20a50cca
