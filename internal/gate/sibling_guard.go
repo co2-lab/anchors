@@ -115,6 +115,7 @@ type exportedFunc struct {
 	name   string
 	params []string
 	body   string
+	decl   int // where the declaration starts in the content
 }
 
 // exportedFuncs extrai as funções exportadas usando o DIALETO do projeto — nenhuma
@@ -162,7 +163,7 @@ func exportedFuncs(content string, d config.Dialect) []exportedFunc {
 				params = append(params, m[1])
 			}
 		}
-		out = append(out, exportedFunc{name: name, params: params, body: corpo})
+		out = append(out, exportedFunc{name: name, params: params, body: corpo, decl: loc[0]})
 	}
 	return out
 }

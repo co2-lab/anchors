@@ -2,7 +2,7 @@
 # @anchors
 #   code: PHFPG
 #   ref: PGNHN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-24
 #   layer: feature
 
 @PGNHN
@@ -72,6 +72,26 @@ Feature: PaginationHonored — what promises a SET does not return the first pag
     When the gate confronts it
     Then it accuses nothing, because a false positive here teaches the team to ignore
       the gate
+
+  @PGNHN-B08 @unit-level
+  Scenario: The waiver above a signature is that function's, wherever it stands in the module
+    Given two exported functions that query without paginating, the second marked above its
+      signature
+    When the gate confronts the module
+    Then it accuses the first only, because the comments above a declaration belong to it
+
+  @PGNHN-B09 @unit-level
+  Scenario: A function that reads through a helper of the module that drains the cursor paginates
+    Given a helper of the module that walks every page, and an exported function that reads
+      through it
+    When the gate confronts the module
+    Then it returns Pass, because the helper is the pagination, written once
+
+  @PGNHN-I05 @unit-level
+  Scenario: A comment is no code: a loop or a cursor a comment mentions drains nothing
+    Given an exported function that queries without a loop, next to a comment with a loop word
+    When the gate confronts the module
+    Then it returns Fail, because a comment drains nothing
 
   @PGNHN-I03 @unit-level
   Scenario: A cursor with no loop does not count as pagination

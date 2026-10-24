@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:45d4d5b89516e144 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:c28d12e7ff6ac200 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 89 units and 1431 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 89 units and 1434 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2453,11 +2453,17 @@ weaker, and it only accuses when the name promises a set unambiguously.
 
 - **PGNHN-B07** — Without a declared dialect the verdict is INDETERMINATE, and says so — approving without being able to read the code would be stamping what was not checked.
 
+- **PGNHN-B08** — The waiver above a signature is THAT function's, wherever it stands in the module: the comments right above a declaration belong to it, not to the body before.
+
+- **PGNHN-B09** — A function that reads through a helper of the module that drains the cursor paginates, with no mark: the helper is the pagination, written once.
+
 - **PGNHN-I01** — The ruler is AGNOSTIC: the confronted truth — the name promises a set, the return is partial — belongs to no language. What comes from the project is only how function, loop and cursor are recognized.
 
 - **PGNHN-I02** — Where the unit does not recognize the construct, it stays silent. Silence is better than an invented accusation — a false positive here trains the team to ignore the gate.
 
 - **PGNHN-I03** — A cursor without a loop does not count as pagination: returning the cursor and not walking it leaves the consumer with the same slice, only with the appearance of completeness.
+
+- **PGNHN-I05** — A comment is no code: a loop or a cursor a comment mentions drains nothing, and a query it mentions queries nothing.
 
 - **PGNHN-I04** — A provider prefix in the name does not hide the promise: what the name says counts, wherever it comes from.
 

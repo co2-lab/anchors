@@ -41,7 +41,8 @@ import (
 // Como dispensar honestamente: dê ao parâmetro de limite um nome que apareça na
 // assinatura do chamador (`pageSize`), devolva o cursor, ou renomeie a função para o que
 // ela faz (`firstNCommissions`). Um comentário `// @no-paginate: <razão>` na função
-// também dispensa — opt-out explícito, como manda o CONCEPT §5.1.
+// também dispensa — opt-out explícito, como manda o CONCEPT §5.1 —, acima da assinatura ou
+// dentro do corpo.
 //
 // AGNOSTICISMO — o que é do framework e o que é do projeto:
 //   - do FRAMEWORK: a verdade confrontada ("nome promete conjunto, retorno é parcial"),
@@ -83,31 +84,40 @@ func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 		return Skip, i18n.T("gate.pagination_honored.skip_opt_out")
 	}
 
+	// Comments are no code: a `do` in a Portuguese comment ("o uso do mês") is no loop, and a
+	// query a comment mentions queries nothing. The code is read with them blanked, offsets
+	// kept; the waiver, which is a comment, is read on the content.
+	code := blankComments(content, n.ID, d)
 	consulta := d.Compile(d.CollectionQuery)
-	if consulta == nil || !consulta.MatchString(content) {
+	if consulta == nil || !consulta.MatchString(code) {
 		return Skip, i18n.T("gate.pagination_honored.skip_no_collection_queries")
 	}
 
-	fns := exportedFuncs(content, d)
+	fns := exportedFuncs(code, d)
 	if len(fns) == 0 {
 		return Skip, i18n.T("gate.pagination_honored.skip_no_exported_funcs")
 	}
+
+	// A function drains the cursor itself, or calls one of the module's own that does — the
+	// `readAll` that walks every page for the functions that read through it.
+	helpers := drainingHelpers(code, d)
+	drains := func(f exportedFunc) bool { return paginatesAll(f.body, d) || callsAny(f.body, f.name, helpers) }
 
 	// O módulo conhece o padrão de paginação? Se alguma irmã pagina, a que não pagina é
 	// assimetria — o mesmo raciocínio do gate sibling-guard.
 	sistersPaginate := 0
 	for _, f := range fns {
-		if paginatesAll(f.body, d) {
+		if drains(f) {
 			sistersPaginate++
 		}
 	}
 
 	var achados []string
-	for _, f := range fns {
+	for i, f := range fns {
 		if !promisesSet(f.name, d) || !consulta.MatchString(f.body) {
 			continue
 		}
-		if paginatesAll(f.body, d) || explicitWaiver(f.body) {
+		if drains(f) || explicitWaiver(ownText(content, code, fns, i)) {
 			continue
 		}
 		// NÃO existe regra de "cursor descartado" aqui, e a ausência é uma decisão medida.
@@ -253,3 +263,79 @@ func hiddenLimit(body, rel string, params []string, d config.Dialect) (string, b
 var noPaginateRE = regexp.MustCompile(`@no-paginate[^\S\n]*:[^\S\n]*\S+`)
 
 func explicitWaiver(body string) bool { return noPaginateRE.MatchString(body) }
+
+// ownText is the text that is the i-th function's own: the comments right above its
+// declaration, and its body up to the comments of the next one. A function's body runs to
+// the next declaration, so the mark above that one's signature was read as the previous
+// function's, which passed by it, while the function it was written for stayed accused.
+func ownText(content, code string, fns []exportedFunc, i int) string {
+	end := len(content)
+	if i+1 < len(fns) {
+		end = leadStart(content, code, fns[i+1].decl)
+	}
+	return content[leadStart(content, code, fns[i].decl):end]
+}
+
+// leadStart is where the comment lines right above the declaration at `at` begin: lines with
+// text in the content that are blank in the code. A line of code or an empty line ends them.
+func leadStart(content, code string, at int) int {
+	start := strings.LastIndexByte(content[:at], '\n') + 1
+	for start > 0 {
+		prev := strings.LastIndexByte(content[:start-1], '\n') + 1
+		if strings.TrimSpace(content[prev:start-1]) == "" || strings.TrimSpace(code[prev:start-1]) != "" {
+			break
+		}
+		start = prev
+	}
+	return start
+}
+
+// drainingHelpers are the names the module defines (`dialect.definition`) whose code drains a
+// cursor: a function that walks every page and returns them all. A definition's code runs to
+// the next one indented no deeper, so what it defines inside stays its own.
+func drainingHelpers(code string, d config.Dialect) []string {
+	defRE := d.Compile(d.Definition)
+	if defRE == nil {
+		return nil
+	}
+	type def struct {
+		name          string
+		start, indent int
+	}
+	var defs []def
+	for _, loc := range defRE.FindAllStringSubmatchIndex(code, -1) {
+		for g := 1; g*2+1 < len(loc); g++ {
+			if loc[g*2] < 0 || defRE.SubexpNames()[g] == "owner" {
+				continue
+			}
+			line := strings.LastIndexByte(code[:loc[g*2]], '\n') + 1
+			indent := len(code[line:]) - len(strings.TrimLeft(code[line:], " \t"))
+			defs = append(defs, def{code[loc[g*2]:loc[g*2+1]], line, indent})
+			break
+		}
+	}
+	var out []string
+	for i, df := range defs {
+		end := len(code)
+		for _, nx := range defs[i+1:] {
+			if nx.start > df.start && nx.indent <= df.indent {
+				end = nx.start
+				break
+			}
+		}
+		if paginatesAll(code[df.start:end], d) {
+			out = append(out, df.name)
+		}
+	}
+	return out
+}
+
+// callsAny says whether the body calls one of the names, other than the function's own.
+func callsAny(body, self string, names []string) bool {
+	for _, name := range names {
+		if name != self && regexp.MustCompile(`\b`+regexp.QuoteMeta(name)+`\s*(?:<[^()]*>)?\(`).MatchString(body) {
+			return true
+		}
+	}
+	return false
+}

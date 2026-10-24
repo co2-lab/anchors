@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:91eb1c0d2adec95a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:a7b1cf462c0990c1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -4763,6 +4763,12 @@ is what the test proves.
 - [The ruler is agnostic across languages](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I01`
 
 - [Where the construct is not recognised, the gate stays silent](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I02`
+
+- [The waiver above a signature is that function's, wherever it stands in the module](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B08`
+
+- [A function that reads through a helper of the module that drains the cursor paginates](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B09`
+
+- [A comment is no code: a loop or a cursor a comment mentions drains nothing](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I05`
 
 - [A cursor with no loop does not count as pagination](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I03`
 

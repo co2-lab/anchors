@@ -483,3 +483,55 @@ func TestPaginationSemCursorNoProvedorNaoInventa(t *testing.T) {
 		t.Errorf("sem cursor no provedor, a regra do cursor não se aplica; veredito %v — %s", v, msg)
 	}
 }
+
+// The mark above a signature is that function's. A body runs to the next declaration, and the
+// mark above the second of two sisters was read as the first one's (MIF, adminSources.ts): the
+// first passed by it, the second stayed accused.
+func TestPaginationDispensaAcimaDaAssinatura(t *testing.T) {
+	t.Run("PGNHN-B08: The waiver above a signature is that function's, wherever it stands in the module", func(t *testing.T) {})
+	fn := func(name, mark string) string {
+		return mark + "export async function " + name + "(): Promise<F[]> {\n" +
+			"  const res = await docClient.send(new ScanCommand({ TableName: T }))\n  return res.Items\n}\n"
+	}
+	mark := "// @used-by: HNADH\n// @no-paginate: a tabela tem no máximo 12 linhas\n"
+	if v, d := rodaPaginacao(t, fn("listStores", mark)+"\n"+fn("listCompanies", mark)); v != Pass {
+		t.Errorf("each mark above its own function should waive both, got %s (%s)", v, d)
+	}
+	v, d := rodaPaginacao(t, fn("listStores", "")+"\n"+fn("listCompanies", mark))
+	if v != Fail || !strings.Contains(d, "listStores") || strings.Contains(d, "listCompanies") {
+		t.Errorf("the mark above the second waives the second only, got %s (%s)", v, d)
+	}
+}
+
+// A module that drains the cursor once, in a helper of its own, paginates every function that
+// reads through it — without a mark.
+func TestPaginationHelperLocalQueDrena(t *testing.T) {
+	t.Run("PGNHN-B09: A function that reads through a helper of the module that drains the cursor paginates", func(t *testing.T) {})
+	helper := func(loop bool) string {
+		body := "  const page = await docClient.send(command(startKey))\n  return page.Items\n"
+		if loop {
+			body = "  const items = []\n  let startKey\n  do {\n    const page = await docClient.send(command(startKey))\n" +
+				"    items.push(...page.Items)\n    startKey = page.LastEvaluatedKey\n  } while (startKey)\n  return items\n"
+		}
+		return "async function readAll(command) {\n" + body + "}\n\n"
+	}
+	user := "export async function listStores(): Promise<F[]> {\n" +
+		"  return readAll((startKey) => new ScanCommand({ TableName: T, ExclusiveStartKey: startKey }))\n}\n"
+	if v, d := rodaPaginacao(t, helper(true)+user); v != Pass {
+		t.Errorf("a helper that drains should honor its caller, got %s (%s)", v, d)
+	}
+	if v, d := rodaPaginacao(t, helper(false)+user); v != Fail {
+		t.Errorf("a helper that reads one page honors nothing, got %s (%s)", v, d)
+	}
+}
+
+// A comment is no code: the Portuguese "do" of a comment is no loop.
+func TestPaginationComentarioNaoEhLaco(t *testing.T) {
+	t.Run("PGNHN-I05: A comment is no code: a loop or a cursor a comment mentions drains nothing", func(t *testing.T) {})
+	src := "export async function listStores(): Promise<F[]> {\n" +
+		"  const res = await docClient.send(new ScanCommand({ TableName: T, ExclusiveStartKey: undefined }))\n" +
+		"  return res.Items\n}\n\n/** O uso do mês. */\nexport async function getOne(): Promise<F> { return x }\n"
+	if v, d := rodaPaginacao(t, src); v != Fail {
+		t.Errorf("a comment's `do` is no loop, got %s (%s)", v, d)
+	}
+}

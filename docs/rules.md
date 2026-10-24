@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:002820b80a554ca2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:dbdf290bfe113782 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -5252,11 +5252,17 @@ in `layers/`.
 
 - [PGNHN-B07 — Without a declared dialect the verdict is INDETERMINATE, and says so — approving without being able to read the code would be stamping what was not checked.](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence)
 
+- [PGNHN-B08 — The waiver above a signature is THAT function's, wherever it stands in the module: the comments right above a declaration belong to it, not to the body before.](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence)
+
+- [PGNHN-B09 — A function that reads through a helper of the module that drains the cursor paginates, with no mark: the helper is the pagination, written once.](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence)
+
 - [PGNHN-I01 — The ruler is AGNOSTIC: the confronted truth — the name promises a set, the return is partial — belongs to no language. What comes from the project is only how function, loop and cursor are recognized.](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence)
 
 - [PGNHN-I02 — Where the unit does not recognize the construct, it stays silent. Silence is better than an invented accusation — a false positive here trains the team to ignore the gate.](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence)
 
 - [PGNHN-I03 — A cursor without a loop does not count as pagination: returning the cursor and not walking it leaves the consumer with the same slice, only with the appearance of completeness.](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence)
+
+- [PGNHN-I05 — A comment is no code: a loop or a cursor a comment mentions drains nothing, and a query it mentions queries nothing.](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence)
 
 - [PGNHN-I04 — A provider prefix in the name does not hide the promise: what the name says counts, wherever it comes from.](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence)
 
