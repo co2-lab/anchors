@@ -2,7 +2,7 @@
 # @anchors
 #   code: PCFPR
 #   ref: LDCML
-#   updated_at: 2026-10-20
+#   updated_at: 2026-10-24
 #   layer: feature
 
 @LDCML
@@ -67,3 +67,9 @@ Feature: LedgerCommand — anchors progress
     Given two demands, one whose plan's header is frozen
     When the summary is printed
     Then the total counts the other alone, and the frozen demand's row says it is out of the total
+
+  @LDCML-B10 @unit-level
+  Scenario: A settled demand is one line
+    Given a demand all done with a stage, one none started with a stage, and one with a task in progress
+    When the summary and show are printed, and show of the settled one
+    Then the settled demands are their own lines alone and the one in motion shows its stage and tasks, and show of the settled one details it

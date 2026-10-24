@@ -137,8 +137,10 @@ func TestProgressCmd_show(t *testing.T) {
 	mustProg(t, root, "add", "task", "D01", "alpha", "--weight", "1")
 	mustProg(t, root, "add", "demand", "B")
 	mustProg(t, root, "add", "task", "D02", "beta", "--weight", "1")
+	mustProg(t, root, "start", "D01.T1", "--by", "a")
 	all := mustProg(t, root, "show")
-	if !strings.Contains(all, "- [ ] D01.T1 — alpha · 1") || !strings.Contains(all, "- [ ] D02.T1 — beta · 1") || strings.Contains(all, "anchors:progress") {
+	// D01 is in motion, and shows its tasks; D02 is settled (none started), its line alone.
+	if !strings.Contains(all, "D01.T1 — alpha · 1") || !strings.Contains(all, "## D02 — B") || strings.Contains(all, "beta") || strings.Contains(all, "anchors:progress") {
 		t.Errorf("all:\n%s", all)
 	}
 	if one := mustProg(t, root, "show", "D02"); strings.Contains(one, "alpha") || !strings.Contains(one, "beta") {
@@ -180,6 +182,7 @@ func TestProgressCmd_rename(t *testing.T) {
 	if out := mustProg(t, root, "rename", "D01.S1", "Não planejadas"); !strings.Contains(out, "✎ D01.S1 — Não planejadas") {
 		t.Errorf("said: %s", out)
 	}
+	mustProg(t, root, "start", "D01.T1", "--by", "a") // in motion: its stages show
 	if out := mustProg(t, root, "summary"); !strings.Contains(out, "D01.S1 Não planejadas — 0% (0/2)") {
 		t.Errorf("the new title, the same id and task: %s", out)
 	}
@@ -198,8 +201,9 @@ func TestProgressCmd_unplanned(t *testing.T) {
 	if out := mustProg(t, root, "unplanned", "D01.T1", "--undo"); !strings.Contains(out, "◇ D01.T1 planned") {
 		t.Errorf("said: %s", out)
 	}
+	mustProg(t, root, "start", "D01.T1", "--by", "a") // in motion: its stages show
 	out := mustProg(t, root, "summary")
-	if !strings.Contains(out, "D01 Checkout — 0% (0/10) · 2 open · 2 of 10 points unplanned") || !strings.Contains(out, "D01.S1 Payment — 0% (0/10) · 2 open · 2 of 10 points unplanned") {
+	if !strings.Contains(out, "D01 Checkout — 0% (0/10) · 2 open, 1 in progress · 2 of 10 points unplanned") || !strings.Contains(out, "D01.S1 Payment — 0% (0/10) · 2 open, 1 in progress · 2 of 10 points unplanned") {
 		t.Errorf("the unplanned weight of the demand and the stage:\n%s", out)
 	}
 	if show := mustProg(t, root, "show"); !strings.Contains(show, "fix the date parser · 2 (unplanned)") || strings.Contains(show, "refunds · 8 (unplanned)") {
@@ -221,8 +225,9 @@ func TestProgressCmd_moveAndDrop(t *testing.T) {
 	if out := mustProg(t, root, "drop", "D01.S2"); !strings.Contains(out, "✗ stage D01.S2 removed") {
 		t.Errorf("said: %s", out)
 	}
+	mustProg(t, root, "start", "D01.T1", "--by", "a") // in motion: its stages show
 	out := mustProg(t, root, "summary")
-	if !strings.Contains(out, "D01.S1 Payment — 0% (0/10) · 2 open · 2 of 10 points unplanned") || strings.Contains(out, "Não planejadas") {
+	if !strings.Contains(out, "D01.S1 Payment — 0% (0/10) · 2 open, 1 in progress · 2 of 10 points unplanned") || strings.Contains(out, "Não planejadas") {
 		t.Errorf("the found work inside its stage, the separate one gone:\n%s", out)
 	}
 }
@@ -242,5 +247,32 @@ func TestProgressCmd_frozenPlanOutOfTheTotal(t *testing.T) {
 	out := mustProg(t, root, "summary")
 	if !strings.Contains(out, "Progress — 100% (3/3 hours)") || !strings.Contains(out, "❄ frozen (the provider is not chosen), out of the total") {
 		t.Errorf("the frozen plan is out of the total:\n%s", out)
+	}
+}
+
+func TestProgressCmd_settledDemandIsOneLine(t *testing.T) {
+	t.Run("LDCML-B10: A settled demand is one line", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "Shipped")
+	mustProg(t, root, "add", "stage", "D01", "Done stage")
+	mustProg(t, root, "add", "task", "D01.S1", "built", "--weight", "1")
+	mustProg(t, root, "done", "D01.T1", "--by", "a")
+	mustProg(t, root, "add", "demand", "Later")
+	mustProg(t, root, "add", "stage", "D02", "Idle stage")
+	mustProg(t, root, "add", "task", "D02.S1", "waiting", "--weight", "1")
+	mustProg(t, root, "add", "demand", "Now")
+	mustProg(t, root, "add", "stage", "D03", "Busy stage")
+	mustProg(t, root, "add", "task", "D03.S1", "working", "--weight", "1")
+	mustProg(t, root, "start", "D03.T1", "--by", "a")
+	sum := mustProg(t, root, "summary")
+	if !strings.Contains(sum, "D01 Shipped") || !strings.Contains(sum, "D02 Later") || strings.Contains(sum, "Done stage") || strings.Contains(sum, "Idle stage") || !strings.Contains(sum, "Busy stage") {
+		t.Errorf("the summary:\n%s", sum)
+	}
+	show := mustProg(t, root, "show")
+	if strings.Contains(show, "built") || strings.Contains(show, "waiting") || !strings.Contains(show, "working") || !strings.Contains(show, "## D02 — Later") {
+		t.Errorf("show of the file:\n%s", show)
+	}
+	if one := mustProg(t, root, "show", "D02"); !strings.Contains(one, "waiting") {
+		t.Errorf("show of a settled demand details it:\n%s", one)
 	}
 }

@@ -2,7 +2,7 @@
 # @anchors
 #   code: DCFTC
 #   ref: DCRQA
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-24
 #   layer: feature
 
 @DCRQA
@@ -55,3 +55,9 @@ Feature: DocsRequired — which aggregate documentation a change of a unit oblig
     Given a document triggered by "lambdas" and "DTSTD"
     When the layers "lambda" and "lambdas-edge" and the codes "DTST" and "DTSTDX" are asked about
     Then none of them triggers it
+
+  @DCRQA-B07 @unit-level
+  Scenario: The project keeps pages from the build's removal
+    Given docs.keep naming a folder of pages
+    When a page in it, and one outside it, are asked
+    Then the first is kept and the second is not

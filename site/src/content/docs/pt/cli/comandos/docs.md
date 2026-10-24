@@ -68,7 +68,7 @@ anchors docs duties [flags]
 
 ### `anchors docs init`
 
-Write the skeleton of `doct/` (arquitetura, comportamento, regras, camadas).
+Write the skeleton of `doct/` in the project's language (architecture, behavior, rules, a page per layer).
 
 #### Uso
 

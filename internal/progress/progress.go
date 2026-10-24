@@ -742,6 +742,23 @@ type Row struct {
 	Frozen string `json:"frozen,omitempty"`
 }
 
+// Settled says whether a row has nothing in motion to detail: all of it done, or none of it
+// started — no task in progress either way. A view shows a settled demand as one line.
+func (r Row) Settled() bool {
+	return r.Doing == 0 && (r.Done == 0 || (r.Total > 0 && r.Done >= r.Total))
+}
+
+// Settled says whether a demand has nothing in motion to detail (see Row.Settled).
+func (d *Demand) Settled() bool {
+	done, total := Totals(d.AllTasks())
+	for _, t := range d.AllTasks() {
+		if t.State == Doing {
+			return false
+		}
+	}
+	return done == 0 || (total > 0 && done >= total)
+}
+
 // Summary is the short view of what is in progress: one row per demand, and one per stage
 // when the demand has stages — never the tasks.
 func Summary(f *File) []Row {

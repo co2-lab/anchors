@@ -751,3 +751,49 @@ func TestCompiler_compiledPages(t *testing.T) {
 		t.Error("nothing is written")
 	}
 }
+
+func TestBuild_removesPagesOfGoneTemplates(t *testing.T) {
+	t.Run("DTCDC-B24: A page whose template is gone goes with it", func(t *testing.T) {})
+	root, g := projetoDeTeste(t, map[string]string{"pkg/GoLive.spec.md": specDeExemplo})
+	escreveTemplate(t, root, "layers/gate.md.tmpl", "now")
+	docs := filepath.Join(root, OutDir)
+	if err := os.MkdirAll(filepath.Join(docs, "camadas"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	orphan := filepath.Join(docs, "camadas", "gate.md")
+	if err := os.WriteFile(orphan, []byte("<!-- anchors:generated from doct/camadas/gate.md.tmpl — DO NOT EDIT: run `anchors docs build` -->\nold\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	byHand := filepath.Join(docs, "notes.md")
+	if err := os.WriteFile(byHand, []byte("# Notes\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	kept := filepath.Join(docs, "guides", "setup.md")
+	if err := os.MkdirAll(filepath.Dir(kept), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(kept, []byte("<!-- anchors:generated from doct/guides/setup.md.tmpl — DO NOT EDIT: run `anchors docs build` -->\nkept by hand\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c, _ := New(root, g)
+	c.Config = &config.Config{Docs: &config.Docs{Keep: []string{"guides/**"}}}
+	res, err := c.Build(true)
+	if err != nil || len(res.Removed) != 1 || res.Removed[0] != "camadas/gate.md" {
+		t.Fatalf("the dry run names the orphan: %+v %v", res.Removed, err)
+	}
+	if _, err := os.Stat(orphan); err != nil {
+		t.Error("a dry run removes nothing")
+	}
+	if _, err := c.Build(false); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(docs, "camadas")); !os.IsNotExist(err) {
+		t.Error("the orphan and its empty folder are removed")
+	}
+	if _, err := os.Stat(byHand); err != nil {
+		t.Error("a handwritten page stays")
+	}
+	if _, err := os.Stat(kept); err != nil {
+		t.Error("a page the project keeps stays")
+	}
+}

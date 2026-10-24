@@ -135,3 +135,14 @@ func TestTriggeredBy_neverBySubstring(t *testing.T) {
 		}
 	}
 }
+
+func TestKeepsDoc(t *testing.T) {
+	t.Run("DCRQA-B07: The project keeps pages from the build's removal", func(t *testing.T) {})
+	c := &Config{Docs: &Docs{Keep: []string{"guides/**"}}}
+	if !c.KeepsDoc("guides/setup.md") || c.KeepsDoc("rules.md") {
+		t.Error("a page under a kept glob is kept, another is not")
+	}
+	if (*Config)(nil).KeepsDoc("x.md") {
+		t.Error("no configuration keeps nothing")
+	}
+}

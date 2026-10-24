@@ -4,7 +4,7 @@
 
 package doct
 
-import "fmt"
+import "github.com/co2-lab/anchors/internal/i18n"
 
 // --- o FORMATO é UM, e é decidido em um lugar ---
 //
@@ -57,7 +57,6 @@ func (l Layout) Describe(s Size) string {
 	if !l.Big(s) {
 		return ""
 	}
-	return fmt.Sprintf("Esta camada tem %d unidades e %d regras — acima do corte de %d "+
-		"unidades / %d linhas, então esta página traz o RESUMO de cada unidade. "+
-		"O texto completo está na spec.", s.Units, s.Rules, l.MaxUnits, l.MaxLines)
+	// In the project's language, as the page it opens.
+	return i18n.T("doct.layout.summary", s.Units, s.Rules, l.MaxUnits, l.MaxLines)
 }

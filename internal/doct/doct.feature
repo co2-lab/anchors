@@ -2,7 +2,7 @@
 # @anchors
 #   code: DCFTE
 #   ref: DTCDC
-#   updated_at: 2026-10-07
+#   updated_at: 2026-10-24
 #   layer: feature
 
 @DTCDC
@@ -202,3 +202,9 @@ Feature: DocTemplateCompiler — compiles documentation pages from templates tha
     When its rules are listed
     Then there are B01, B02 and B03, once each, with their titles
     And only B03 has a heading of its own, with its body
+
+  @DTCDC-B24 @unit-level
+  Scenario: A page whose template is gone goes with it
+    Given a page generated from a template renamed since, in a folder of its own, a handwritten page, and a generated page the project keeps
+    When the docs are built, once as a dry run and once for real
+    Then the dry run names the orphan and removes nothing, and the build removes it and its empty folder, keeping the handwritten and the kept one

@@ -268,7 +268,7 @@ Each change takes the file's lock, so agents working at once lose nothing.`,
 		return progress.Load(abs)
 	}
 	summary := &cobra.Command{
-		Use: "summary", Short: "What is in progress: each demand and its stages, with their progress — never the tasks",
+		Use: "summary", Short: "What is in progress: each demand and its stages, with their progress — never the tasks; a settled demand (all done, or none started) is one line",
 		RunE: func(c *cobra.Command, args []string) error {
 			c.SilenceUsage = true
 			f, err := read()
@@ -296,7 +296,13 @@ Each change takes the file's lock, so agents working at once lose nothing.`,
 			if asJSON {
 				return writeJSON(c.OutOrStdout(), f)
 			}
-			fmt.Fprint(c.OutOrStdout(), strings.TrimSuffix(progressBody(f), "\n")+"\n")
+			// Every demand in detail when one is asked for; of the whole file, a settled one
+			// is its own line alone.
+			body := progressBody(f)
+			if len(args) == 0 {
+				body = withoutSettledDetail(body, f)
+			}
+			fmt.Fprint(c.OutOrStdout(), strings.TrimSuffix(body, "\n")+"\n")
 			return nil
 		},
 	}
@@ -314,8 +320,34 @@ func progressBody(f *progress.File) string {
 	return strings.Join(lines[1:len(lines)-1], "\n") + "\n"
 }
 
+// withoutSettledDetail drops, from the rendered body, the stages and tasks of each settled
+// demand: its heading line stays, with its progress.
+func withoutSettledDetail(body string, f *progress.File) string {
+	settled := map[string]bool{}
+	for _, d := range f.Demands {
+		if d.Settled() {
+			settled[d.ID] = true
+		}
+	}
+	var out []string
+	skipping := false
+	for _, l := range strings.Split(body, "\n") {
+		if strings.HasPrefix(l, "## ") {
+			id, _, _ := strings.Cut(strings.TrimPrefix(l, "## "), " ")
+			skipping = settled[id]
+			out = append(out, l)
+			continue
+		}
+		if skipping && strings.TrimSpace(l) != "" {
+			continue
+		}
+		out = append(out, l)
+	}
+	return strings.Join(out, "\n")
+}
+
 // printSummary prints one line per demand and per stage, with the progress and what is
-// open; the tasks are left out.
+// open; the tasks are left out, and so are the stages of a settled demand.
 func printSummary(w io.Writer, f *progress.File, asJSON bool) error {
 	rows := progress.Summary(f)
 	if asJSON {
@@ -331,7 +363,15 @@ func printSummary(w io.Writer, f *progress.File, asJSON bool) error {
 		return nil
 	}
 	fmt.Fprintf(w, "Progress — %s (%s/%s %s)\n", progress.Percent(done, total), num(done), num(total), unit)
+	// A demand settled — all done, or none started, nothing in progress — is one line: its
+	// stages have nothing to say that its own line does not.
+	settled := false
 	for _, r := range rows {
+		if !r.Stage {
+			settled = r.Settled()
+		} else if settled {
+			continue
+		}
 		indent, plan := "  ", ""
 		if r.Stage {
 			indent = "      "

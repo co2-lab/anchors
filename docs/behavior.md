@@ -1,12 +1,12 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a422208dcda40d8d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:91eb1c0d2adec95a — DO NOT EDIT: run `anchors docs build` -->
 
 
-# Comportamento
+# Behavior
 
-Todos os cenários do sistema. Cada um leva à unidade que o define.
+Every scenario of the system. Each one leads to the unit that defines it.
 
-Um cenário descreve o que o sistema faz numa situação — vem da feature, e é o mesmo que o
-teste prova.
+A scenario describes what the system does in a situation — it comes from the feature, and it
+is what the test proves.
 
 ## apoio
 
@@ -159,6 +159,8 @@ teste prova.
 - [A section asked by its title in one language is found under another](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B22`
 
 - [The rules are read in the three catalogued forms, the spec's own codes at their first definition](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B23`
+
+- [A page whose template is gone goes with it](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B24`
 
 - [Every known kind has a title, items to cover and a trap](layers/apoio.md#dcknd--dockinds--what-each-kind-of-project-documentation-must-answer-told-to-the-agent-that-writes-it) `DCKND-B01`
 
@@ -947,6 +949,8 @@ teste prova.
 - [A refused change writes nothing](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-E01`
 
 - [The summary leaves a frozen plan out of the total](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-B09`
+
+- [A settled demand is one line](layers/comando.md#ldcml--ledgercommand--anchors-progress-the-only-writer-of-the-projects-progress-file) `LDCML-B10`
 
 - [queue lists the live tasks with the hygiene hints](layers/comando.md#wrquw--workqueue--list-pull-close-and-discard-the-work-from-the-local-queue-or-from-the-board) `WRQUW-B01`
 
@@ -3282,6 +3286,8 @@ teste prova.
 
 - [A trigger is matched whole, never as part of a longer name](layers/config.md#dcrqa-x01--a-trigger-is-matched-whole-never-as-part-of-a-longer-name) `DCRQA-X01`
 
+- [The project keeps pages from the build's removal](layers/config.md#dcrqa-b07--the-project-keeps-pages-from-the-builds-removal) `DCRQA-B07`
+
 - [Versions are ordered part by part as numbers](layers/config.md#mnvrm-b01--versions-are-ordered-part-by-part-as-numbers) `MNVRM-B01`
 
 - [The tag prefix v is accepted on either side](layers/config.md#mnvrm-b02--the-tag-prefix-v-is-accepted-on-either-side) `MNVRM-B02`
@@ -3368,2753 +3374,2753 @@ teste prova.
 
 ## gate
 
-- [What is no API unit leaves every gate without a verdict](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B01`
+- [What is no API unit leaves every gate without a verdict](layers/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B01`
 
-- [Every contract cited resolves to a spec with a Domain](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B02`
+- [Every contract cited resolves to a spec with a Domain](layers/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B02`
 
-- [Every error response is complete and under a declared status](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B03`
+- [Every error response is complete and under a declared status](layers/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B03`
 
-- [Every declared error code is emitted by the unit's code](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B04`
+- [Every declared error code is emitted by the unit's code](layers/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B04`
 
-- [Sections and columns are read in any language](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B05`
+- [Sections and columns are read in any language](layers/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B05`
 
-- [A code file with no spec beside it leaves without a verdict](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-E01`
+- [A code file with no spec beside it leaves without a verdict](layers/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-E01`
 
-- [A code file the spec specifies that cannot be read emits nothing](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-E02`
+- [A code file the spec specifies that cannot be read emits nothing](layers/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-E02`
 
-- [A section renamed by the project is found](camadas/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B06`
+- [A section renamed by the project is found](layers/gate.md#apisp--apispec--the-coherence-of-an-api-spec-and-its-error-codes-in-the-code) `APISP-B06`
 
-- [Below the floor fails naming the lines](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B01`
+- [Below the floor fails naming the lines](layers/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B01`
 
-- [A waived branch is left out](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B02`
+- [A waived branch is left out](layers/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B02`
 
-- [A branch no test reaches is likely dead](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B03`
+- [A branch no test reaches is likely dead](layers/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B03`
 
-- [Nothing to measure is skipped or pending](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B04`
+- [Nothing to measure is skipped or pending](layers/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B04`
 
-- [Branch coverage reads a file with nothing to cover as line coverage does](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B05`
+- [Branch coverage reads a file with nothing to cover as line coverage does](layers/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B05`
 
-- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B01`
+- [An artifact that is not a spec leaves without a verdict](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B01`
 
-- [An exported symbol the spec never names fails, and the verdict names it](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B02`
+- [An exported symbol the spec never names fails, and the verdict names it](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B02`
 
-- [What the spec already catalogues is never accused](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B03`
+- [What the spec already catalogues is never accused](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B03`
 
-- [A no-rule marker with a written reason waives the symbol](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B04`
+- [A no-rule marker with a written reason waives the symbol](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B04`
 
-- [A bare no-rule marker does not waive](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B05`
+- [A bare no-rule marker does not waive](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B05`
 
-- [A spec cataloguing every exported symbol passes](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B06`
+- [A spec cataloguing every exported symbol passes](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B06`
 
-- [With no code linked the gate leaves without a verdict](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B07`
+- [With no code linked the gate leaves without a verdict](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B07`
 
-- [Without a declared export pattern the gate skips and says so](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B08`
+- [Without a declared export pattern the gate skips and says so](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B08`
 
-- [With the pattern declared the gate confronts for real in any language](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B09`
+- [With the pattern declared the gate confronts for real in any language](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B09`
 
-- [The declared dialect family also supplies the pattern](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B10`
+- [The declared dialect family also supplies the pattern](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B10`
 
-- [The waiver holds in the comment block above the symbol](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-I01`
+- [The waiver holds in the comment block above the symbol](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-I01`
 
-- [The waiver does not leak between symbols](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-I02`
+- [The waiver does not leak between symbols](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-I02`
 
-- [The gate never approves a language it cannot read](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-I03`
+- [The gate never approves a language it cannot read](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-I03`
 
-- [The gate does not judge whether the rule describes the symbol well](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-X01`
+- [The gate does not judge whether the rule describes the symbol well](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-X01`
 
-- [The gate does not decide which symbols deserve a rule](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-X02`
+- [The gate does not decide which symbols deserve a rule](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-X02`
 
-- [The gate knows no language, the project declares what is public](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-X03`
+- [The gate knows no language, the project declares what is public](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-X03`
 
-- [The gate does not charge the absence of code](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-X04`
+- [The gate does not charge the absence of code](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-X04`
 
-- [With no map the gate does not approve](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E01`
+- [With no map the gate does not approve](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E01`
 
-- [A code file missing from disk does not hide the orphans of the other target](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E02`
+- [A code file missing from disk does not hide the orphans of the other target](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E02`
 
-- [A declared export pattern with no capture group is named, not called undeclared](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E03`
+- [A declared export pattern with no capture group is named, not called undeclared](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E03`
 
-- [Every file the spec governs is confronted, not only the first](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B11`
+- [Every file the spec governs is confronted, not only the first](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B11`
 
-- [An identifier in the wrong language is accused, and an English one passes](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B01`
+- [An identifier in the wrong language is accused, and an English one passes](layers/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B01`
 
-- [The verdict returns the word that accused](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B02`
+- [The verdict returns the word that accused](layers/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B02`
 
-- [Only a DECLARATION is the subject](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B03`
+- [Only a DECLARATION is the subject](layers/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B03`
 
-- [The declarations are found in every form the language offers](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B04`
+- [The declarations are found in every form the language offers](layers/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B04`
 
-- [Deciding one word is separate from deciding a whole identifier](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B05`
+- [Deciding one word is separate from deciding a whole identifier](layers/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B05`
 
-- [The project's own production code declares no identifier in the wrong language](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B06`
+- [The project's own production code declares no identifier in the wrong language](layers/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B06`
 
-- [No gate decides by matching prose in the team's language](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B07`
+- [No gate decides by matching prose in the team's language](layers/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B07`
 
-- [A short word does not count](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-I01`
+- [A short word does not count](layers/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-I01`
 
-- [The gate does not read comments](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-X01`
+- [The gate does not read comments](layers/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-X01`
 
-- [The gate does not read user-facing text](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-X02`
+- [The gate does not read user-facing text](layers/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-X02`
 
-- [The gate does not use a dictionary to decide the language](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-X03`
+- [The gate does not use a dictionary to decide the language](layers/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-X03`
 
-- [Non-specification artifacts skip confrontation](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B01`
+- [Non-specification artifacts skip confrontation](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B01`
 
-- [Confronting without a map graph returns pending](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B02`
+- [Confronting without a map graph returns pending](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B02`
 
-- [Confronting with an empty identity universe returns pending](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B03`
+- [Confronting with an empty identity universe returns pending](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B03`
 
-- [Citations resolving to existing units in the map pass](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B04`
+- [Citations resolving to existing units in the map pass](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B04`
 
-- [Citations pointing to non-existent units fail](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B05`
+- [Citations pointing to non-existent units fail](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B05`
 
-- [Citations matching the specification's own identity code pass](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B06`
+- [Citations matching the specification's own identity code pass](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B06`
 
-- [Multiple orphaned requirement citations are reported sorted](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B07`
+- [Multiple orphaned requirement citations are reported sorted](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B07`
 
-- [Identity ownership is resolved from graph nodes and header metadata](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B08`
+- [Identity ownership is resolved from graph nodes and header metadata](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B08`
 
-- [Non-requirement tokens are ignored](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B09`
+- [Non-requirement tokens are ignored](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B09`
 
-- [Self-references to a specification's own requirements never fail](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-I01`
+- [Self-references to a specification's own requirements never fail](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-I01`
 
-- [Missing map or empty identity universe returns pending rather than pass](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-I02`
+- [Missing map or empty identity universe returns pending rather than pass](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-I02`
 
-- [Unresolvable external citations always produce a blocking fail verdict](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-I03`
+- [Unresolvable external citations always produce a blocking fail verdict](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-I03`
 
-- [Implementation correctness of referenced requirements is not evaluated](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-X01`
+- [Implementation correctness of referenced requirements is not evaluated](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-X01`
 
-- [Non-specification artifacts are not inspected by this gate](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-X02`
+- [Non-specification artifacts are not inspected by this gate](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-X02`
 
-- [External requirement citations are not mandatory](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-X03`
+- [External requirement citations are not mandatory](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-X03`
 
-- [A spec missing from disk is left out of the declared codes](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-E01`
+- [A spec missing from disk is left out of the declared codes](layers/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-E01`
 
-- [Changed and removed fields change, added ones do not](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B01`
+- [Changed and removed fields change, added ones do not](layers/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B01`
 
-- [A changed field names its rules, here and in the dependents, and their tests](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B02`
+- [A changed field names its rules, here and in the dependents, and their tests](layers/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B02`
 
-- [The gate is divergence with the impact, and passes without](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B03`
+- [The gate is divergence with the impact, and passes without](layers/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B03`
 
-- [The impacted tests are listed for the selection](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B04`
+- [The impacted tests are listed for the selection](layers/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B04`
 
-- [The rules the change's own revision revises or checks answer the impact](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B05`
+- [The rules the change's own revision revises or checks answer the impact](layers/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B05`
 
-- [A rule is answered by a revision added to its own spec, even one not yet in git, or by the changed spec's naming its full code; a short code answers only its own spec's rule](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B06`
+- [A rule is answered by a revision added to its own spec, even one not yet in git, or by the changed spec's naming its full code; a short code answers only its own spec's rule](layers/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B06`
 
-- [The dependent units are found through the code](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B07`
+- [The dependent units are found through the code](layers/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B07`
 
-- [A status emitted and not declared is accused by number](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B01`
+- [A status emitted and not declared is accused by number](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B01`
 
-- [A status declared and emitted by no path is accused as a phantom](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B02`
+- [A status declared and emitted by no path is accused as a phantom](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B02`
 
-- [A faithful table passes](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B03`
+- [A faithful table passes](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B03`
 
-- [The 500 of the top-level try/catch is not charged](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B04`
+- [The 500 of the top-level try/catch is not charged](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B04`
 
-- [The 5xx range covers, the 4xx range does not](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B05`
+- [The 5xx range covers, the 4xx range does not](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B05`
 
-- [A status that lives only in a comment is not emitted](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B06`
+- [A status that lives only in a comment is not emitted](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B06`
 
-- [Without the contract section there is nothing to confront](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B07`
+- [Without the contract section there is nothing to confront](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B07`
 
-- [Code that returns no status is skipped](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B08`
+- [Code that returns no status is skipped](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B08`
 
-- [A literal status passed to a local helper counts as emitted](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B09`
+- [A literal status passed to a local helper counts as emitted](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B09`
 
-- [With a dynamic status the phantom side goes quiet and the literals still count](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B10`
+- [With a dynamic status the phantom side goes quiet and the literals still count](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B10`
 
-- [Without a declared dialect the verdict is Pending](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B11`
+- [Without a declared dialect the verdict is Pending](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B11`
 
-- [An explicit opt-out of the http_status field is honoured](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B12`
+- [An explicit opt-out of the http_status field is honoured](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B12`
 
-- [The lexicon comes from the project's dialect, not from the gate](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-I01`
+- [The lexicon comes from the project's dialect, not from the gate](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-I01`
 
-- [A dialect declared by hand teaches the gate its own lexicon](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-I02`
+- [A dialect declared by hand teaches the gate its own lexicon](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-I02`
 
-- [A named constant is worth the number it means](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-I03`
+- [A named constant is worth the number it means](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-I03`
 
-- [The gate does not demand the generic ranges](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-X01`
+- [The gate does not demand the generic ranges](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-X01`
 
-- [The gate does not judge when each status is right](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-X02`
+- [The gate does not judge when each status is right](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-X02`
 
-- [The gate does not charge the phantom side under a dynamic status](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-X03`
+- [The gate does not charge the phantom side under a dynamic status](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-X03`
 
-- [Without a built map the confrontation is pending](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E01`
+- [Without a built map the confrontation is pending](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E01`
 
-- [Linked code gone from disk is pending, not a code without status](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E02`
+- [Linked code gone from disk is pending, not a code without status](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E02`
 
-- [A dialect status pattern that does not compile is pending](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E03`
+- [A dialect status pattern that does not compile is pending](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E03`
 
-- [The API catalog's Responses section is the output contract](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B13`
+- [The API catalog's Responses section is the output contract](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B13`
 
-- [What is no API unit leaves without a verdict](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B01`
+- [What is no API unit leaves without a verdict](layers/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B01`
 
-- [The feature must carry the contract scenario](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B02`
+- [The feature must carry the contract scenario](layers/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B02`
 
-- [A test of the unit must name the contract code](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B03`
+- [A test of the unit must name the contract code](layers/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B03`
 
-- [The contract test must load the OpenAPI document](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B04`
+- [The contract test must load the OpenAPI document](layers/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B04`
 
-- [The contract regime tag comes from the project](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B05`
+- [The contract regime tag comes from the project](layers/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B05`
 
-- [Scenario and a contract test that loads the document pass](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B06`
+- [Scenario and a contract test that loads the document pass](layers/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B06`
 
-- [A code file with no spec beside it leaves without a verdict](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-E01`
+- [A code file with no spec beside it leaves without a verdict](layers/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-E01`
 
-- [A test that cannot be read is read by its path](camadas/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-E02`
+- [A test that cannot be read is read by its path](layers/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-E02`
 
-- [Confronting an artifact that is not a spec skips](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B01`
+- [Confronting an artifact that is not a spec skips](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B01`
 
-- [A spec containing no count declarations skips](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B02`
+- [A spec containing no count declarations skips](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B02`
 
-- [A declared file count matching the number of files on disk passes](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B03`
+- [A declared file count matching the number of files on disk passes](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B03`
 
-- [A declared file count that differs from disk fails](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B04`
+- [A declared file count that differs from disk fails](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B04`
 
-- [A declared regex pattern counts occurrences across files instead of file count](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B05`
+- [A declared regex pattern counts occurrences across files instead of file count](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B05`
 
-- [A declared regex occurrence count that differs from reality fails](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B06`
+- [A declared regex occurrence count that differs from reality fails](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B06`
 
-- [A glob pattern matching zero files fails with a path warning](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B07`
+- [A glob pattern matching zero files fails with a path warning](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B07`
 
-- [An invalid glob expression fails reporting the glob syntax error](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B08`
+- [An invalid glob expression fails reporting the glob syntax error](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B08`
 
-- [An invalid regex pattern fails reporting the regex syntax error](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B09`
+- [An invalid regex pattern fails reporting the regex syntax error](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B09`
 
-- [Divergent count stated in adjacent prose fails even if marker matches](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B10`
+- [Divergent count stated in adjacent prose fails even if marker matches](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B10`
 
-- [Non-restrictive complements attached to prose labels are confronted as total count](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B11`
+- [Non-restrictive complements attached to prose labels are confronted as total count](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B11`
 
-- [Qualifying words attached to prose labels indicate subsets and are not accused](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B12`
+- [Qualifying words attached to prose labels indicate subsets and are not accused](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B12`
 
-- [Arbitrary numbers in prose without declaration markers are ignored](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B13`
+- [Arbitrary numbers in prose without declaration markers are ignored](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B13`
 
-- [Numerical claims without declaration markers never trigger confrontation](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-I01`
+- [Numerical claims without declaration markers never trigger confrontation](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-I01`
 
-- [Matching markers cannot conceal lying prose](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-I02`
+- [Matching markers cannot conceal lying prose](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-I02`
 
-- [Zero matched files indicates path error rather than legitimate zero count](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-I03`
+- [Zero matched files indicates path error rather than legitimate zero count](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-I03`
 
-- [The gate does not guess what to count from arbitrary text](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X01`
+- [The gate does not guess what to count from arbitrary text](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X01`
 
-- [Specs without count markers are not penalized](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X02`
+- [Specs without count markers are not penalized](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X02`
 
-- [Prose phrases qualifying subsets are not accused as total count divergences](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X03`
+- [Prose phrases qualifying subsets are not accused as total count divergences](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X03`
 
-- [Only files are counted, never directories](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B14`
+- [Only files are counted, never directories](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B14`
 
-- [An unreadable file fails the pattern count naming it](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-E03`
+- [An unreadable file fails the pattern count naming it](layers/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-E03`
 
-- [A cited rule of another unit must realize the product; references are no citation](camadas/gate.md#cruct--crossunitcitation--a-rule-of-another-unit-a-spec-cites-lives-in-the-product) `CRUCT-B01`
+- [A cited rule of another unit must realize the product; references are no citation](layers/gate.md#cruct--crossunitcitation--a-rule-of-another-unit-a-spec-cites-lives-in-the-product) `CRUCT-B01`
 
-- [The imports are read by the dialect's pattern and resolved to files of the map](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B01`
+- [The imports are read by the dialect's pattern and resolved to files of the map](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B01`
 
-- [dep-declared names each import of a governed file with no flag, and the code it would carry](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B02`
+- [dep-declared names each import of a governed file with no flag, and the code it would carry](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B02`
 
-- [dep-honored names each flag whose code is not the one its import resolves to](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B03`
+- [dep-honored names each flag whose code is not the one its import resolves to](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B03`
 
-- [used-by-declared names each imported symbol whose flag is missing or wrong, and each flag nobody imports](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B04`
+- [used-by-declared names each imported symbol whose flag is missing or wrong, and each flag nobody imports](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B04`
 
-- [The fixers write the dependency and used-by flags, correct a wrong code, and remove a stale flag](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B05`
+- [The fixers write the dependency and used-by flags, correct a wrong code, and remove a stale flag](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B05`
 
-- [A re-export declares the names it lists, and an inline import brings the member it reads](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B06`
+- [A re-export declares the names it lists, and an inline import brings the member it reads](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B06`
 
-- [Tests, test support and flows take part in the chain](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B07`
+- [Tests, test support and flows take part in the chain](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B07`
 
-- [A kinded dependency needs a declared kind, and no import](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B08`
+- [A kinded dependency needs a declared kind, and no import](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B08`
 
-- [An import of types only is flagged as such](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B09`
+- [An import of types only is flagged as such](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B09`
 
-- [Imports by name are flagged per file](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B10`
+- [Imports by name are flagged per file](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B10`
 
-- [The fixer finds a declaration whose name ends in a letter outside ASCII](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B11`
+- [The fixer finds a declaration whose name ends in a letter outside ASCII](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B11`
 
-- [Without import patterns the chain is pending, and a commented import is none](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B12`
+- [Without import patterns the chain is pending, and a commented import is none](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B12`
 
-- [A Go import block is read import by import](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B13`
+- [A Go import block is read import by import](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B13`
 
-- [An import path divided by another separator resolves by it](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B14`
+- [An import path divided by another separator resolves by it](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B14`
 
-- [The symbol of a listed used-by flag is written inside the comment](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B15`
+- [The symbol of a listed used-by flag is written inside the comment](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B15`
 
-- [A flag whose kind contradicts its import is named](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B16`
+- [A flag whose kind contradicts its import is named](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B16`
 
-- [A line holding two statements of one module takes one flag](camadas/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B17`
+- [A line holding two statements of one module takes one flag](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B17`
 
-- [A spec still carrying a Dependencies table diverges, pointing at the migration](camadas/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
+- [A spec still carrying a Dependencies table diverges, pointing at the migration](layers/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 
-- [A mandatory document that does not exist fails](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B01`
+- [A mandatory document that does not exist fails](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B01`
 
-- [A document that exists and does not mention the unit fails](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B02`
+- [A document that exists and does not mention the unit fails](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B02`
 
-- [A mention by the identity code counts as documented](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B03`
+- [A mention by the identity code counts as documented](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B03`
 
-- [A mention by the file name also counts](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B04`
+- [A mention by the file name also counts](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B04`
 
-- [Satisfying one of two duties is not enough](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B05`
+- [Satisfying one of two duties is not enough](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B05`
 
-- [Without a declaration nothing is charged](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B06`
+- [Without a declaration nothing is charged](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B06`
 
-- [A layer with no trigger is not charged](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B07`
+- [A layer with no trigger is not charged](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B07`
 
-- [Aggregated, the verdict is one per document](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B08`
+- [Aggregated, the verdict is one per document](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B08`
 
-- [In a document with sections only a title of its own documents the unit](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B09`
+- [In a document with sections only a title of its own documents the unit](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B09`
 
-- [The duty starts from the spec, not from the code](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-I01`
+- [The duty starts from the spec, not from the code](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-I01`
 
-- [The layer used is the UNIT's, not the node's](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-I02`
+- [The layer used is the UNIT's, not the node's](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-I02`
 
-- [Without a map the aggregated verdict is skipped](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-I03`
+- [Without a map the aggregated verdict is skipped](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-I03`
 
-- [The gate does not understand the document's content](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-X01`
+- [The gate does not understand the document's content](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-X01`
 
-- [The gate does not decide which documents are mandatory](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-X02`
+- [The gate does not decide which documents are mandatory](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-X02`
 
-- [A YAML comment is not a Markdown heading](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B10`
+- [A YAML comment is not a Markdown heading](layers/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B10`
 
-- [A reference that brings the passage it announces passes](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B01`
+- [A reference that brings the passage it announces passes](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B01`
 
-- [A reference that only points is accused](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B02`
+- [A reference that only points is accused](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B02`
 
-- [A quotation counts in any written tradition](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B03`
+- [A quotation counts in any written tradition](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B03`
 
-- [A path inside a code fence is an example, not a reference](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B04`
+- [A path inside a code fence is an example, not a reference](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B04`
 
-- [The spec citing its own path is identifying itself](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B05`
+- [The spec citing its own path is identifying itself](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B05`
 
-- [A rule code is not a revision](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B06`
+- [A rule code is not a revision](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B06`
 
-- [Only the spec is charged](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B07`
+- [Only the spec is charged](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B07`
 
-- [A revision cited with an explanation on the same line passes](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B08`
+- [A revision cited with an explanation on the same line passes](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B08`
 
-- [With no map the confrontation is skipped](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B09`
+- [With no map the confrontation is skipped](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B09`
 
-- [The ruler matches structure, never vocabulary](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-I01`
+- [The ruler matches structure, never vocabulary](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-I01`
 
-- [The on-line explanation escape belongs to the revision, not to the path](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-I02`
+- [The on-line explanation escape belongs to the revision, not to the path](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-I02`
 
-- [The verdict names the line and shows what it says](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-I03`
+- [The verdict names the line and shows what it says](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-I03`
 
-- [The gate does not judge whether the accompanying content is faithful](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-X01`
+- [The gate does not judge whether the accompanying content is faithful](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-X01`
 
-- [The gate marks and does not block](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-X02`
+- [The gate marks and does not block](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-X02`
 
-- [Measuring explanation errs on the permissive side](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-X03`
+- [Measuring explanation errs on the permissive side](layers/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-X03`
 
-- [An artifact that is not a spec is skipped](camadas/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B01`
+- [An artifact that is not a spec is skipped](layers/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B01`
 
-- [A project with no templates directory is skipped](camadas/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B02`
+- [A project with no templates directory is skipped](layers/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B02`
 
-- [A spec no template reaches fails, naming the spec](camadas/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B03`
+- [A spec no template reaches fails, naming the spec](layers/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B03`
 
-- [A spec a template reaches passes](camadas/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B04`
+- [A spec a template reaches passes](layers/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B04`
 
-- [A template that does not compile skips with no message](camadas/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B05`
+- [A template that does not compile skips with no message](layers/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B05`
 
-- [The coverage is computed once per project root and map](camadas/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B06`
+- [The coverage is computed once per project root and map](layers/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-B06`
 
-- [Another spec's orphan status never fails the confronted spec](camadas/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-I01`
+- [Another spec's orphan status never fails the confronted spec](layers/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-I01`
 
-- [A reached spec passes without any page having been built](camadas/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-X01`
+- [A reached spec passes without any page having been built](layers/gate.md#dccvd--docscovered--every-spec-must-reach-some-page-of-the-compiled-documentation) `DCCVD-X01`
 
-- [A compiled document that no longer matches the spec fails](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B01`
+- [A compiled document that no longer matches the spec fails](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B01`
 
-- [The verdict names the stale documents](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B02`
+- [The verdict names the stale documents](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B02`
 
-- [A compiled document that matches the templates passes](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B03`
+- [A compiled document that matches the templates passes](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B03`
 
-- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B04`
+- [An artifact that is not a spec leaves without a verdict](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B04`
 
-- [A project with no template directory is not charged](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B05`
+- [A project with no template directory is not charged](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B05`
 
-- [A template whose document was never produced counts as stale](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B06`
+- [A template whose document was never produced counts as stale](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B06`
 
-- [A document written by hand is not charged](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B07`
+- [A document written by hand is not charged](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B07`
 
-- [A template that cannot be compiled fails](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B08`
+- [A template that cannot be compiled fails](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B08`
 
-- [A project whose specs cannot be read leaves without a verdict](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B09`
+- [A project whose specs cannot be read leaves without a verdict](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B09`
 
-- [The comparison happens in memory](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B10`
+- [The comparison happens in memory](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B10`
 
-- [The gate never repairs what it points at](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-I01`
+- [The gate never repairs what it points at](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-I01`
 
-- [The charge starts from the spec and never from the compiled document](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-I02`
+- [The charge starts from the spec and never from the compiled document](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-I02`
 
-- [The gate does not judge whether the compiled document is good](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X01`
+- [The gate does not judge whether the compiled document is good](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X01`
 
-- [The gate does not run the build even knowing the fix](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X02`
+- [The gate does not run the build even knowing the fix](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X02`
 
-- [The gate does not charge documents written by hand](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X03`
+- [The gate does not charge documents written by hand](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X03`
 
-- [The compiled document is not confronted as an artifact of its own](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X04`
+- [The compiled document is not confronted as an artifact of its own](layers/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X04`
 
-- [A TBD marker defers only with a reason and outside backticks](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B01`
+- [A TBD marker defers only with a reason and outside backticks](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B01`
 
-- [Without a map the gates that read edges are Pending](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B02`
+- [Without a map the gates that read edges are Pending](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B02`
 
-- [plan-doctrine-exists skips an artifact that is not a plan](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B03`
+- [plan-doctrine-exists skips an artifact that is not a plan](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B03`
 
-- [A plan whose cited doctrine exists passes](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B04`
+- [A plan whose cited doctrine exists passes](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B04`
 
-- [A plan citing missing doctrines fails, naming each once, in order](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B05`
+- [A plan citing missing doctrines fails, naming each once, in order](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B05`
 
-- [A missing doctrine cited on a TBD line is a divergence, naming it](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B06`
+- [A missing doctrine cited on a TBD line is a divergence, naming it](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B06`
 
-- [A citation with no directory, or of a template, seeds nothing](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B07`
+- [A citation with no directory, or of a template, seeds nothing](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B07`
 
-- [doctrine-realized skips an artifact that is not a doctrine](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B08`
+- [doctrine-realized skips an artifact that is not a doctrine](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B08`
 
-- [A doctrine with no rules is skipped](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B09`
+- [A doctrine with no rules is skipped](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B09`
 
-- [A doctrine whose every rule is realized passes](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B10`
+- [A doctrine whose every rule is realized passes](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B10`
 
-- [The unrealized rules of a doctrine fail, and only they are named](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B11`
+- [The unrealized rules of a doctrine fail, and only they are named](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B11`
 
-- [Unrealized rules that are all deferred with TBD are Diverge](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B12`
+- [Unrealized rules that are all deferred with TBD are Diverge](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B12`
 
-- [An open question is not a rule to realize](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B13`
+- [An open question is not a rule to realize](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B13`
 
-- [spec-doctrine-exists skips an artifact that is not a spec](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B14`
+- [spec-doctrine-exists skips an artifact that is not a spec](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B14`
 
-- [A spec that declares no realization outside TBD lines is skipped](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B15`
+- [A spec that declares no realization outside TBD lines is skipped](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B15`
 
-- [A declared rule the map resolved, or present in a resolved doctrine, passes](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B16`
+- [A declared rule the map resolved, or present in a resolved doctrine, passes](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B16`
 
-- [A declared rule no resolved doctrine holds fails, naming it](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B17`
+- [A declared rule no resolved doctrine holds fails, naming it](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B17`
 
-- [doctrine-not-duplicated skips an artifact that is not a spec](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B18`
+- [doctrine-not-duplicated skips an artifact that is not a spec](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B18`
 
-- [A spec with no readable realized doctrine is skipped](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B19`
+- [A spec with no readable realized doctrine is skipped](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B19`
 
-- [A corpus under four rules is Pending, and four rules are measured](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B20`
+- [A corpus under four rules is Pending, and four rules are measured](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B20`
 
-- [A spec rule that copies the doctrine rule it realizes fails, naming both and the score](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B21`
+- [A spec rule that copies the doctrine rule it realizes fails, naming both and the score](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B21`
 
-- [A near copy with a word changed still fails](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B22`
+- [A near copy with a word changed still fails](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B22`
 
-- [A spec rule with text specific to its unit passes](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B23`
+- [A spec rule with text specific to its unit passes](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B23`
 
-- [A copy on a line deferred with TBD is not charged](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B24`
+- [A copy on a line deferred with TBD is not charged](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B24`
 
-- [spec-realizes-doctrine skips a non-spec and a project with no configuration](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B25`
+- [spec-realizes-doctrine skips a non-spec and a project with no configuration](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B25`
 
-- [spec-realizes-doctrine skips a spec whose layer does not demand doctrine](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B26`
+- [spec-realizes-doctrine skips a spec whose layer does not demand doctrine](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B26`
 
-- [A rule with no realizes tag fails where the layer demands doctrine, naming it](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B27`
+- [A rule with no realizes tag fails where the layer demands doctrine, naming it](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B27`
 
-- [A rule that declares what it realizes passes](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B28`
+- [A rule that declares what it realizes passes](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B28`
 
-- [A rule deferred with TBD is debt, not failure](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B29`
+- [A rule deferred with TBD is debt, not failure](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B29`
 
-- [A realizes tag after a blank line declares nothing for the rule above](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B30`
+- [A realizes tag after a blank line declares nothing for the rule above](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B30`
 
-- [The demanding layer is the one of the specified target, by edge or by path](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B31`
+- [The demanding layer is the one of the specified target, by edge or by path](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B31`
 
-- [Only a realizes edge realizes a rule](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-I01`
+- [Only a realizes edge realizes a rule](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-I01`
 
-- [A pair that only shares a rare word is not a copy](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-X01`
+- [A pair that only shares a rare word is not a copy](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-X01`
 
-- [A resolved doctrine that cannot be read confirms none of its rules](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-E01`
+- [A resolved doctrine that cannot be read confirms none of its rules](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-E01`
 
-- [Doctrine rules and realizes tags are read at the code length the project declares](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B32`
+- [Doctrine rules and realizes tags are read at the code length the project declares](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B32`
 
-- [A rule is charged once, and an open question is no rule to realize](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B33`
+- [A rule is charged once, and an open question is no rule to realize](layers/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B33`
 
-- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B01`
+- [An artifact that is not a spec leaves without a verdict](layers/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B01`
 
-- [A spec without the domain section is failed](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B02`
+- [A spec without the domain section is failed](layers/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B02`
 
-- [A section opened and left empty is failed](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B03`
+- [A section opened and left empty is failed](layers/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B03`
 
-- [A row filled only with placeholders is not a declaration](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B06`
+- [A row filled only with placeholders is not a declaration](layers/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B06`
 
-- [An entry with no owner is failed, and the verdict names it](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B04`
+- [An entry with no owner is failed, and the verdict names it](layers/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B04`
 
-- [An entry whose owner is named passes](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B07`
+- [An entry whose owner is named passes](layers/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B07`
 
-- [A waiver with a written reason silences the gate](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B05`
+- [A waiver with a written reason silences the gate](layers/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B05`
 
-- [A bare waiver, with no reason, does not waive](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-I01`
+- [A bare waiver, with no reason, does not waive](layers/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-I01`
 
-- [A non-answer in the owner column is not an owner](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-I02`
+- [A non-answer in the owner column is not an owner](layers/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-I02`
 
-- [The gate does not judge whether the declared domain is correct](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-X01`
+- [The gate does not judge whether the declared domain is correct](layers/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-X01`
 
-- [The gate does not read the code to check the validation exists](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-X02`
+- [The gate does not read the code to check the validation exists](layers/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-X02`
 
-- [A key declared twice turns the gate's verdict into a failure naming the lines, unless switched off or skipped](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B01`
+- [A key declared twice turns the gate's verdict into a failure naming the lines, unless switched off or skipped](layers/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B01`
 
-- [rule-types counts the rule codes a file defines, not those it cites](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B02`
+- [rule-types counts the rule codes a file defines, not those it cites](layers/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B02`
 
-- [The spec catalogue's gates count their declarations](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B03`
+- [The spec catalogue's gates count their declarations](layers/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B03`
 
-- [The gates of flags, code and features count their declarations](camadas/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B04`
+- [The gates of flags, code and features count their declarations](layers/gate.md#gtdpg--duplicates--each-gate-confronts-the-repeats-of-what-it-declares) `GTDPG-B04`
 
-- [A file in no clone passes](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B01`
+- [A file in no clone passes](layers/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B01`
 
-- [A file in a clone fails naming the other side, from either side](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B02`
+- [A file in a clone fails naming the other side, from either side](layers/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B02`
 
-- [A clone inside one file names only the line ranges](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B03`
+- [A clone inside one file names only the line ranges](layers/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B03`
 
-- [Clones within the declared threshold are reported, over it they fail](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B04`
+- [Clones within the declared threshold are reported, over it they fail](layers/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B04`
 
-- [Without a declared threshold any clone fails whatever the exit code](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B05`
+- [Without a declared threshold any clone fails whatever the exit code](layers/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B05`
 
-- [jscpd runs once per scan](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B06`
+- [jscpd runs once per scan](layers/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B06`
 
-- [An absolute path in the report is read relative to the root](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B07`
+- [An absolute path in the report is read relative to the root](layers/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B07`
 
-- [No report leaves the check Pending naming why](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-E01`
+- [No report leaves the check Pending naming why](layers/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-E01`
 
-- [The gate runs a pinned jscpd release](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B08`
+- [The gate runs a pinned jscpd release](layers/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B08`
 
-- [Nothing declared and nothing read leaves without a verdict](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B01`
+- [Nothing declared and nothing read leaves without a verdict](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B01`
 
-- [A variable read and not declared is named](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B02`
+- [A variable read and not declared is named](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B02`
 
-- [A variable declared and not read is named, unless deprecated](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B03`
+- [A variable declared and not read is named, unless deprecated](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B03`
 
-- [A read in a comment is no read](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B04`
+- [A read in a comment is no read](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B04`
 
-- [With no env_read declared the gate is pending](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B05`
+- [With no env_read declared the gate is pending](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B05`
 
-- [A specified file that cannot be read reads nothing](camadas/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-E01`
+- [A specified file that cannot be read reads nothing](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-E01`
 
-- [An artifact that is not a test leaves without a verdict](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B01`
+- [An artifact that is not a test leaves without a verdict](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B01`
 
-- [Without a built map the gate stays quiet](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B02`
+- [Without a built map the gate stays quiet](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B02`
 
-- [A test with no execution stamp is skipped, not failed](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B03`
+- [A test with no execution stamp is skipped, not failed](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B03`
 
-- [A test whose closure is intact passes](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B04`
+- [A test whose closure is intact passes](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B04`
 
-- [The passing verdict says what it checked against](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B05`
+- [The passing verdict says what it checked against](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B05`
 
-- [A test whose dependency advanced a revision fails](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B06`
+- [A test whose dependency advanced a revision fails](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B06`
 
-- [The failing verdict names the culprit](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B07`
+- [The failing verdict names the culprit](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B07`
 
-- [The failing verdict states the fix](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B08`
+- [The failing verdict states the fix](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B08`
 
-- [A test whose own file changed is reported separately from its closure](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B09`
+- [A test whose own file changed is reported separately from its closure](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B09`
 
-- [The culprit list is truncated at five and the remainder counted](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B10`
+- [The culprit list is truncated at five and the remainder counted](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B10`
 
-- [Absence of proof and expired proof are never the same finding](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-I01`
+- [Absence of proof and expired proof are never the same finding](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-I01`
 
-- [A test that never ran is never approved either](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-I02`
+- [A test that never ran is never approved either](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-I02`
 
-- [Truncation never hides the size of the problem](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-I03`
+- [Truncation never hides the size of the problem](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-I03`
 
-- [The gate does not charge the absence of a green test](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X01`
+- [The gate does not charge the absence of a green test](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X01`
 
-- [The gate does not run the test nor judge whether the change broke it](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X02`
+- [The gate does not run the test nor judge whether the change broke it](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X02`
 
-- [The gate's pass and failure read no configuration](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X03`
+- [The gate's pass and failure read no configuration](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X03`
 
-- [A score bound to no code is pending where the chain confronts tests](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B11`
+- [A score bound to no code is pending where the chain confronts tests](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B11`
 
-- [A row the tests do not run fails](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B01`
+- [A row the tests do not run fails](layers/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B01`
 
-- [A value is a whole token with its case](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B02`
+- [A value is a whole token with its case](layers/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B02`
 
-- [A label column is display text](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B03`
+- [A label column is display text](layers/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B03`
 
-- [The rows are the coded outline's tables](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B04`
+- [The rows are the coded outline's tables](layers/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B04`
 
-- [The test's body is read as the assertion gate reads it](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B05`
+- [The test's body is read as the assertion gate reads it](layers/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B05`
 
-- [Nothing to confront is skipped](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B06`
+- [Nothing to confront is skipped](layers/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B06`
 
-- [Tests that cannot be listed fail the gate with the reason](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-E01`
+- [Tests that cannot be listed fail the gate with the reason](layers/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-E01`
 
-- [An external command exiting with status zero returns Pass](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B01`
+- [An external command exiting with status zero returns Pass](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B01`
 
-- [An external command exiting with non-zero status returns Fail with output](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B02`
+- [An external command exiting with non-zero status returns Fail with output](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B02`
 
-- [An external command failing with empty output reports execution error](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B03`
+- [An external command failing with empty output reports execution error](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B03`
 
-- [Single node execution delegates to RunExternalArgs](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B04`
+- [Single node execution delegates to RunExternalArgs](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B04`
 
-- [Placeholder file is rewritten to positional parameter](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B05`
+- [Placeholder file is rewritten to positional parameter](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B05`
 
-- [Placeholder files is rewritten to all positional parameters](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B06`
+- [Placeholder files is rewritten to all positional parameters](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B06`
 
-- [Execution without targets runs once for project scope](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B07`
+- [Execution without targets runs once for project scope](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B07`
 
-- [Targets within budget run in a single batch](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B08`
+- [Targets within budget run in a single batch](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B08`
 
-- [Targets exceeding budget are partitioned across batches](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B09`
+- [Targets exceeding budget are partitioned across batches](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B09`
 
-- [Failure in any batch causes entire execution to fail](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B10`
+- [Failure in any batch causes entire execution to fail](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B10`
 
-- [Single target failure detail is truncated at five hundred characters](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B11`
+- [Single target failure detail is truncated at five hundred characters](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B11`
 
-- [Batch failure detail is truncated at four thousand characters](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B12`
+- [Batch failure detail is truncated at four thousand characters](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B12`
 
-- [Environment variable overrides argv limit](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B13`
+- [Environment variable overrides argv limit](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B13`
 
-- [Target paths are passed strictly in argv preventing injection](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-I01`
+- [Target paths are passed strictly in argv preventing injection](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-I01`
 
-- [Oversized single target is isolated in its own batch](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-I02`
+- [Oversized single target is isolated in its own batch](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-I02`
 
-- [Platform default argv limits are enforced](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-I03`
+- [Platform default argv limits are enforced](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-I03`
 
-- [The gate does not parse or interpret linter diagnostics](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-X01`
+- [The gate does not parse or interpret linter diagnostics](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-X01`
 
-- [The gate does not aggregate cross-file state across partitioned batches](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-X02`
+- [The gate does not aggregate cross-file state across partitioned batches](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-X02`
 
-- [Under --index a command reads the commit's content](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B14`
+- [Under --index a command reads the commit's content](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B14`
 
-- [Every failure gate skips an artifact that is not a spec](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B01`
+- [Every failure gate skips an artifact that is not a spec](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B01`
 
-- [A failure rule is read in the heading, table row and bullet forms, not in prose](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B02`
+- [A failure rule is read in the heading, table row and bullet forms, not in prose](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B02`
 
-- [A spec that declares no failure is skipped by failure-handled and failure-logged](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B03`
+- [A spec that declares no failure is skipped by failure-handled and failure-logged](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B03`
 
-- [Without the dialect patterns the failure gates are Pending](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B04`
+- [Without the dialect patterns the failure gates are Pending](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B04`
 
-- [Without governed code that can be read the failure gates are Pending](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B05`
+- [Without governed code that can be read the failure gates are Pending](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B05`
 
-- [A handling written only in a comment line does not count](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B06`
+- [A handling written only in a comment line does not count](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B06`
 
-- [A declared failure with no handling in the governed code fails, naming it](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B07`
+- [A declared failure with no handling in the governed code fails, naming it](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B07`
 
-- [Any handling path in the governed code passes failure-handled](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B08`
+- [Any handling path in the governed code passes failure-handled](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B08`
 
-- [A failure marked resilient with a reason is not charged](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B09`
+- [A failure marked resilient with a reason is not charged](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B09`
 
-- [A bare resilient marker exempts nothing](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B10`
+- [A bare resilient marker exempts nothing](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B10`
 
-- [A handling that records nothing fails failure-logged, naming the failure](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B11`
+- [A handling that records nothing fails failure-logged, naming the failure](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B11`
 
-- [A handling that records the occurrence passes failure-logged](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B12`
+- [A handling that records the occurrence passes failure-logged](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B12`
 
-- [Handling in the code with no failure declared in the spec fails](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B13`
+- [Handling in the code with no failure declared in the spec fails](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B13`
 
-- [Code with no handling is skipped by failure-declared](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B14`
+- [Code with no handling is skipped by failure-declared](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B14`
 
-- [Handling in the code and a failure declared in the spec passes](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B15`
+- [Handling in the code and a failure declared in the spec passes](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B15`
 
-- [An Errors section closed with none and a reason passes failure-declared](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B16`
+- [An Errors section closed with none and a reason passes failure-declared](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B16`
 
-- [The conclusions read the resilient and observing reasons of each failure whole](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B17`
+- [The conclusions read the resilient and observing reasons of each failure whole](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B17`
 
-- [A conclusion reason ends at its table cell](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B18`
+- [A conclusion reason ends at its table cell](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B18`
 
-- [failure-handled and failure-logged never both fail the same spec](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-I01`
+- [failure-handled and failure-logged never both fail the same spec](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-I01`
 
-- [One handling path answers for every declared failure](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-X01`
+- [One handling path answers for every declared failure](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-X01`
 
-- [A failure rule is read at the code length the project declares](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B19`
+- [A failure rule is read at the code length the project declares](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B19`
 
-- [A unit with a fallible source and no declared failure fails, naming the source](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B20`
+- [A unit with a fallible source and no declared failure fails, naming the source](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B20`
 
-- [A dependency on a file of a fallible layer is a fallible source](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B21`
+- [A dependency on a file of a fallible layer is a fallible source](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B21`
 
-- [A fallible call with no handling in its window fails, named by its line](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B22`
+- [A fallible call with no handling in its window fails, named by its line](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B22`
 
-- [A fallible call whose result is returned hands its failure to the caller](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B23`
+- [A fallible call whose result is returned hands its failure to the caller](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B23`
 
-- [A pattern with no propagates group propagates nothing](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B26`
+- [A pattern with no propagates group propagates nothing](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B26`
 
-- [A fallible call is cited by the name its pattern's name group says](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B24`
+- [A fallible call is cited by the name its pattern's name group says](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B24`
 
-- [A pattern with no name group names no function](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B25`
+- [A pattern with no name group names no function](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B25`
 
-- [Non-feature artifacts skip confrontation](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B01`
+- [Non-feature artifacts skip confrontation](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B01`
 
-- [A nil graph returns pending without approving](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B02`
+- [A nil graph returns pending without approving](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B02`
 
-- [A feature declaring no scenarios skips confrontation](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B03`
+- [A feature declaring no scenarios skips confrontation](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B03`
 
-- [A feature with no linked tests returns pending](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B04`
+- [A feature with no linked tests returns pending](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B04`
 
-- [Scenarios belonging to non-test surfaces are skipped](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B05`
+- [Scenarios belonging to non-test surfaces are skipped](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B05`
 
-- [A scenario code completely absent from tests fails](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B06`
+- [A scenario code completely absent from tests fails](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B06`
 
-- [A scenario code appearing only in comments fails](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B07`
+- [A scenario code appearing only in comments fails](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B07`
 
-- [Tests implementing scenario codes with exact titles pass](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B08`
+- [Tests implementing scenario codes with exact titles pass](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B08`
 
-- [Tests with matching codes but drifting descriptions issue a warning](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B09`
+- [Tests with matching codes but drifting descriptions issue a warning](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B09`
 
-- [Test titles containing quotes are parsed without truncation](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B10`
+- [Test titles containing quotes are parsed without truncation](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B10`
 
-- [Sibling scenario codes in composite test titles are extracted](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B11`
+- [Sibling scenario codes in composite test titles are extracted](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B11`
 
-- [Shared test titles verify scenario presence through test body](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B12`
+- [Shared test titles verify scenario presence through test body](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B12`
 
-- [Test comments contribute to descriptive match but not code presence](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B13`
+- [Test comments contribute to descriptive match but not code presence](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B13`
 
-- [Scenario codes match with exact word boundaries](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B14`
+- [Scenario codes match with exact word boundaries](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B14`
 
-- [Go t.Run declarations are recognized as valid test titles](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B15`
+- [Go t.Run declarations are recognized as valid test titles](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B15`
 
-- [Script comment markers are stripped when verifying code presence](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B16`
+- [Script comment markers are stripped when verifying code presence](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B16`
 
-- [RootCode returns the root requirement code without scenario sub-index](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B17`
+- [RootCode returns the root requirement code without scenario sub-index](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B17`
 
-- [Missing scenario code is always a failure](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-I01`
+- [Missing scenario code is always a failure](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-I01`
 
-- [Descriptive divergence is always an informative warning](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-I02`
+- [Descriptive divergence is always an informative warning](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-I02`
 
-- [Code presence ignores comments while description matching reads them](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-I03`
+- [Code presence ignores comments while description matching reads them](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-I03`
 
-- [Static analysis does not run tests or inspect execution results](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X01`
+- [Static analysis does not run tests or inspect execution results](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X01`
 
-- [Non-unit surfaces are left to their respective gates](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X02`
+- [Non-unit surfaces are left to their respective gates](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X02`
 
-- [Minor description drift is a divergence, not a failure](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X03`
+- [Minor description drift is a divergence, not a failure](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X03`
 
-- [An unmapped regime tag does not exempt a scenario](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B18`
+- [An unmapped regime tag does not exempt a scenario](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B18`
 
-- [A linked test gone from disk implements nothing while the others still count](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-E01`
+- [A linked test gone from disk implements nothing while the others still count](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-E01`
 
-- [Comment markers inside strings or glued to a name keep the line](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B19`
+- [Comment markers inside strings or glued to a name keep the line](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B19`
 
-- [The drift verdict is written in the project's language](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B20`
+- [The drift verdict is written in the project's language](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B20`
 
-- [A parametrised, focused or skipped test is read by its own title](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B21`
+- [A parametrised, focused or skipped test is read by its own title](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B21`
 
-- [A failing tests source fails the gate naming the error](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-E02`
+- [A failing tests source fails the gate naming the error](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-E02`
 
-- [A support file linked to a feature is not confronted as its test](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B22`
+- [A support file linked to a feature is not confronted as its test](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B22`
 
-- [A scenario suffix gives each case of a rule its own identity](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B23`
+- [A scenario suffix gives each case of a rule its own identity](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B23`
 
-- [Every test that cites the code is compared, not only the first](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B24`
+- [Every test that cites the code is compared, not only the first](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B24`
 
-- [A test title that says the scenario's title and more matches it](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B25`
+- [A test title that says the scenario's title and more matches it](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B25`
 
-- [A VR code carries its state, and each state's scenario is its own code](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B26`
+- [A VR code carries its state, and each state's scenario is its own code](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B26`
 
-- [Only a check with a registered fixer is fixable](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B01`
+- [Only a check with a registered fixer is fixable](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B01`
 
-- [A stale date on a committed file is rewritten to its last commit date](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B02`
+- [A stale date on a committed file is rewritten to its last commit date](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B02`
 
-- [A file with an uncommitted edit takes today's date](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B03`
+- [A file with an uncommitted edit takes today's date](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B03`
 
-- [A date that already matches is left alone and reported as nothing](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B04`
+- [A date that already matches is left alone and reported as nothing](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B04`
 
-- [Only fixable gates, the nodes they apply to and files on disk are touched](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B05`
+- [Only fixable gates, the nodes they apply to and files on disk are touched](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B05`
 
-- [Outside a git repository the file is left untouched](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B06`
+- [Outside a git repository the file is left untouched](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B06`
 
-- [A file never committed and not edited is left untouched](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B07`
+- [A file never committed and not edited is left untouched](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B07`
 
-- [Only the date changes, the rest of the file is kept byte for byte](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-I01`
+- [Only the date changes, the rest of the file is kept byte for byte](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-I01`
 
-- [A header without the date field is never given one](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-X01`
+- [A header without the date field is never given one](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-X01`
 
-- [A write that fails is reported as not fixed, with the cause](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-E01`
+- [A write that fails is reported as not fixed, with the cause](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-E01`
 
-- [The repair detail is written in the project's language](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B08`
+- [The repair detail is written in the project's language](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B08`
 
-- [The fix writes the missing header from the map](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B09`
+- [The fix writes the missing header from the map](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B09`
 
-- [The fix gives a file with an identity and no code of its own a code unique in the map](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B10`
+- [The fix gives a file with an identity and no code of its own a code unique in the map](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B10`
 
-- [FixWithConfig gives the fixers the project's config for that run](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B11`
+- [FixWithConfig gives the fixers the project's config for that run](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B11`
 
-- [Each repair says whether it moved lines](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B12`
+- [Each repair says whether it moved lines](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B12`
 
-- [The date repair answers each file from one snapshot of the repository](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B13`
+- [The date repair answers each file from one snapshot of the repository](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B13`
 
-- [The flag gates skip what is not a flag, and a flag with no scenario](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B01`
+- [The flag gates skip what is not a flag, and a flag with no scenario](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B01`
 
-- [A flag whose every condition is in the grammar passes](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B02`
+- [A flag whose every condition is in the grammar passes](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B02`
 
-- [A condition in prose fails the grammar, naming the scenario](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B03`
+- [A condition in prose fails the grammar, naming the scenario](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B03`
 
-- [A flag that declares the absent case passes completeness](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B04`
+- [A flag that declares the absent case passes completeness](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B04`
 
-- [A flag without the absent case fails, naming the waiver](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B05`
+- [A flag without the absent case fails, naming the waiver](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B05`
 
-- [The absent waiver needs a written reason, outside backticks](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B06`
+- [The absent waiver needs a written reason, outside backticks](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B06`
 
-- [Only a citation of a G code is confronted](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B07`
+- [Only a citation of a G code is confronted](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B07`
 
-- [A citation of a declared scenario passes](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B08`
+- [A citation of a declared scenario passes](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B08`
 
-- [Citations of scenarios that do not exist fail, each named once and sorted](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B09`
+- [Citations of scenarios that do not exist fail, each named once and sorted](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B09`
 
-- [Without a map the governance gate is Pending](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B10`
+- [Without a map the governance gate is Pending](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B10`
 
-- [A scenario no rule cites fails governance](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B11`
+- [A scenario no rule cites fails governance](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B11`
 
-- [A scenario with a reasoned governance waiver is not charged](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B12`
+- [A scenario with a reasoned governance waiver is not charged](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B12`
 
-- [Without a map the coverage gate is Pending](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B13`
+- [Without a map the coverage gate is Pending](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B13`
 
-- [Coverage is judged per scenario](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B14`
+- [Coverage is judged per scenario](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B14`
 
-- [A scenario no test names fails as having no test](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B15`
+- [A scenario no test names fails as having no test](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B15`
 
-- [A written test not yet proven is told apart: not ingested, or ingested and not green](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B16`
+- [A written test not yet proven is told apart: not ingested, or ingested and not green](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B16`
 
-- [A gate that could not measure never answers Pass](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-I01`
+- [A gate that could not measure never answers Pass](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-I01`
 
-- [No waiver is accepted without a written reason](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-X01`
+- [No waiver is accepted without a written reason](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-X01`
 
-- [A gated-by citation is read at the code length the project declares](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B17`
+- [A gated-by citation is read at the code length the project declares](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B17`
 
-- [Flags that cannot be read leave the citation Pending, naming the flags folder](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-E02`
+- [Flags that cannot be read leave the citation Pending, naming the flags folder](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-E02`
 
-- [With a tests source a flag scenario is written only when a title cites it](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B18`
+- [With a tests source a flag scenario is written only when a title cites it](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B18`
 
-- [A failing tests source fails flag-covered naming the error](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-E03`
+- [A failing tests source fails flag-covered naming the error](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-E03`
 
-- [A flag scenario is green only by its own proof](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B19`
+- [A flag scenario is green only by its own proof](layers/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B19`
 
-- [A gate on a frozen part answers frozen, with the reason](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B01`
+- [A gate on a frozen part answers frozen, with the reason](layers/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B01`
 
-- [A frozen rule leaves the questions asked of a rule](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B02`
+- [A frozen rule leaves the questions asked of a rule](layers/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B02`
 
-- [The freeze marks and records are confronted](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B03`
+- [The freeze marks and records are confronted](layers/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B03`
 
-- [A change to a frozen part is told and goes on](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B04`
+- [A change to a frozen part is told and goes on](layers/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B04`
 
-- [Frozen verdicts are counted apart](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B05`
+- [Frozen verdicts are counted apart](layers/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B05`
 
-- [Thawing gives back the verdicts](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-I01`
+- [Thawing gives back the verdicts](layers/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-I01`
 
-- [With no map the freezes are not confronted](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-E01`
+- [With no map the freezes are not confronted](layers/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-E01`
 
-- [A frozen folder that holds no file is named](camadas/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B06`
+- [A frozen folder that holds no file is named](layers/gate.md#frgtf--frozen-gates--a-frozen-part-is-quiet-and-told-when-touched) `FRGTF-B06`
 
-- [A gate reaches only the kinds it declares](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B01`
+- [A gate reaches only the kinds it declares](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B01`
 
-- [A gate that names labels reaches only the nodes carrying one](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B02`
+- [A gate that names labels reaches only the nodes carrying one](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B02`
 
-- [One excluded label is enough to keep a node out](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B03`
+- [One excluded label is enough to keep a node out](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B03`
 
-- [Exclusion wins over the positive label filter](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B04`
+- [Exclusion wins over the positive label filter](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B04`
 
-- [A gate demanding a mark reaches only the targets that carry it](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B05`
+- [A gate demanding a mark reaches only the targets that carry it](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B05`
 
-- [An unreadable target does not apply](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B06`
+- [An unreadable target does not apply](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B06`
 
-- [A gate with no applicable target does not run at all](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B07`
+- [A gate with no applicable target does not run at all](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B07`
 
-- [A gate whose required binary is absent steps aside](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B08`
+- [A gate whose required binary is absent steps aside](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B08`
 
-- [A waiver by target spares one node and confronts the rest](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B09`
+- [A waiver by target spares one node and confronts the rest](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B09`
 
-- [An aggregate gate runs once and reports against the scope](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B10`
+- [An aggregate gate runs once and reports against the scope](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B10`
 
-- [A judgment gate asks for judgment when nothing has answered it](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B11`
+- [A judgment gate asks for judgment when nothing has answered it](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B11`
 
-- [A judgment gate reads the stamp an earlier judgement left](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B12`
+- [A judgment gate reads the stamp an earlier judgement left](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B12`
 
-- [A judgement recorded as waived becomes Skip and never Pass](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B13`
+- [A judgement recorded as waived becomes Skip and never Pass](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B13`
 
-- [A gate declaring neither a command nor a check is undetermined](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B14`
+- [A gate declaring neither a command nor a check is undetermined](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B14`
 
-- [Each verdict level does what the gate's severity says](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B15`
+- [Each verdict level does what the gate's severity says](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B15`
 
-- [Only the obligations gate produces assumed debt](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B16`
+- [Only the obligations gate produces assumed debt](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B16`
 
-- [The engine reconfigures the code grammar before running anything](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B17`
+- [The engine reconfigures the code grammar before running anything](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B17`
 
-- [The plain entry point runs with the map and no Structure](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B18`
+- [The plain entry point runs with the map and no Structure](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B18`
 
-- [The entry point that carries the Structure hands it to the checkers](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B19`
+- [The entry point that carries the Structure hands it to the checkers](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B19`
 
-- [The entry point that knows the sweep kind honours the full-sweep scope](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B20`
+- [The entry point that knows the sweep kind honours the full-sweep scope](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B20`
 
-- [The entry point that honours a waiver by target keeps the gate running](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B21`
+- [The entry point that honours a waiver by target keeps the gate running](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B21`
 
-- [A vendored file is out of every internal ruler and still reached by an external command](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B22`
+- [A vendored file is out of every internal ruler and still reached by an external command](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B22`
 
-- [A gate declared with run executes the custom runner even when canonical specifies check](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B23`
+- [A gate declared with run executes the custom runner even when canonical specifies check](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B23`
 
-- [A waiver by target never removes the gate from the list](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I01`
+- [A waiver by target never removes the gate from the list](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I01`
 
-- [Stepping aside, not measuring and failing are three different answers](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I02`
+- [Stepping aside, not measuring and failing are three different answers](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I02`
 
-- [A waived target leaves the failure tally without leaving the report](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I03`
+- [A waived target leaves the failure tally without leaving the report](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I03`
 
-- [The reported target of an aggregate gate is the scope](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I04`
+- [The reported target of an aggregate gate is the scope](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I04`
 
-- [The engine does not decide whether a target is correct](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-X01`
+- [The engine does not decide whether a target is correct](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-X01`
 
-- [The engine does not compute the verdict of a judgment gate](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-X02`
+- [The engine does not compute the verdict of a judgment gate](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-X02`
 
-- [The engine invents neither a map nor a Structure nor a waiver](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-X03`
+- [The engine invents neither a map nor a Structure nor a waiver](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-X03`
 
-- [A target declared with nothing to measure is skipped with its reason](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B24`
+- [A target declared with nothing to measure is skipped with its reason](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B24`
 
-- [The gate's reach is offered to the runs that choose what to measure](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B25`
+- [The gate's reach is offered to the runs that choose what to measure](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B25`
 
-- [The gates read files from the source set](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B26`
+- [The gates read files from the source set](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B26`
 
-- [The gates ask whether a file changed through the source set](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B27`
+- [The gates ask whether a file changed through the source set](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B27`
 
-- [A gate that breaks fails its target and the check goes on](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B28`
+- [A gate that breaks fails its target and the check goes on](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B28`
 
-- [Under an index source no gate reads the tree](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I05`
+- [Under an index source no gate reads the tree](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I05`
 
-- [A gate presupposing an undeclared field asks nothing](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B29`
+- [A gate presupposing an undeclared field asks nothing](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B29`
 
-- [Git is read once per run, and forgotten when the run writes files](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B30`
+- [Git is read once per run, and forgotten when the run writes files](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B30`
 
-- [A run reads each file once, and again after a tool](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B31`
+- [A run reads each file once, and again after a tool](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B31`
 
-- [The gates run side by side, and one after another when asked](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B32`
+- [The gates run side by side, and one after another when asked](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B32`
 
-- [A gate's shape is answered without reading the node](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B33`
+- [A gate's shape is answered without reading the node](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B33`
 
-- [A target older than the legacy cutoff answers with the legacy severity](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B34`
+- [A target older than the legacy cutoff answers with the legacy severity](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B34`
 
-- [A tool is not run again over the same inputs](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B35`
+- [A tool is not run again over the same inputs](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B35`
 
-- [The guidance points to the agreement](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B01`
+- [The guidance points to the agreement](layers/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B01`
 
-- [The catalog offers the guidance gates](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B02`
+- [The catalog offers the guidance gates](layers/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B02`
 
-- [A headless layer is asked no header](camadas/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B03`
+- [A headless layer is asked no header](layers/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B03`
 
-- [A layer the Estrutura does not have fails](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B01`
+- [A layer the Estrutura does not have fails](layers/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B01`
 
-- [A layer that differs only in case fails naming both](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B02`
+- [A layer that differs only in case fails naming both](layers/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B02`
 
-- [Nothing to confront is skipped](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B03`
+- [Nothing to confront is skipped](layers/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B03`
 
-- [Confronting an artifact that is not a spec skips](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B01`
+- [Confronting an artifact that is not a spec skips](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B01`
 
-- [Confronting without a graph returns Pending](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B02`
+- [Confronting without a graph returns Pending](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B02`
 
-- [Confronting a spec without a declared code skips](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B03`
+- [Confronting a spec without a declared code skips](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B03`
 
-- [A testID prefix matching the spec identity code passes](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B04`
+- [A testID prefix matching the spec identity code passes](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B04`
 
-- [An orphan testID prefix with code shape fails](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B05`
+- [An orphan testID prefix with code shape fails](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B05`
 
-- [A testID prefix matching another declared unit is accepted as legitimate reuse](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B06`
+- [A testID prefix matching another declared unit is accepted as legitimate reuse](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B06`
 
-- [A visual regression baseline with a divergent code fails](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B07`
+- [A visual regression baseline with a divergent code fails](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B07`
 
-- [A baseline of one of the unit's rules is read by its unit code](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B11`
+- [A baseline of one of the unit's rules is read by its unit code](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B11`
 
-- [Short testID prefixes of three letters or fewer pass](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B08`
+- [Short testID prefixes of three letters or fewer pass](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B08`
 
-- [Inconsistency failures cite conflicting acronyms and origin files](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B09`
+- [Inconsistency failures cite conflicting acronyms and origin files](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B09`
 
-- [When no orphan testID prefixes or baseline discrepancies exist the gate passes](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B10`
+- [When no orphan testID prefixes or baseline discrepancies exist the gate passes](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B10`
 
-- [Without a map graph the relational gate never approves](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-I01`
+- [Without a map graph the relational gate never approves](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-I01`
 
-- [Cross-unit reuse is never permitted for visual regression baselines](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-I02`
+- [Cross-unit reuse is never permitted for visual regression baselines](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-I02`
 
-- [Absence of a spec code is never double-charged](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-I03`
+- [Absence of a spec code is never double-charged](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-I03`
 
-- [Common shorthand prefixes of three letters or fewer are not scrutinized](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-X01`
+- [Common shorthand prefixes of three letters or fewer are not scrutinized](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-X01`
 
-- [The gate does not enforce code presence on specs](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-X02`
+- [The gate does not enforce code presence on specs](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-X02`
 
-- [Components referencing parent screen codes in testIDs are not forbidden](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-X03`
+- [Components referencing parent screen codes in testIDs are not forbidden](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-X03`
 
-- [A governed file gone from disk is left out and the others are still confronted](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-E01`
+- [A governed file gone from disk is left out and the others are still confronted](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-E01`
 
-- [A spec under a bracketed directory still has its baselines confronted](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-E02`
+- [A spec under a bracketed directory still has its baselines confronted](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-E02`
 
-- [A testID prefix with a code the project renamed to this unit's, or to another unit's, passes](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B12`
+- [A testID prefix with a code the project renamed to this unit's, or to another unit's, passes](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B12`
 
-- [The testIDs are read by the project's patterns, and without them the gate is pending](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B13`
+- [The testIDs are read by the project's patterns, and without them the gate is pending](layers/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B13`
 
-- [A declared name routes to the function registered under it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B01`
+- [A declared name routes to the function registered under it](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B01`
 
-- [A name that does not resolve answers undetermined](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B02`
+- [A name that does not resolve answers undetermined](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B02`
 
-- [The routing tries the relational registry before the simpler ones](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B03`
+- [The routing tries the relational registry before the simpler ones](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B03`
 
-- [The per-node path reads the target file, and a failed read is a failure](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B04`
+- [The per-node path reads the target file, and a failed read is a failure](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B04`
 
-- [The aggregate path reads no file at all](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B05`
+- [The aggregate path reads no file at all](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B05`
 
-- [An unresolved name in the aggregate path is undetermined too](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B06`
+- [An unresolved name in the aggregate path is undetermined too](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B06`
 
-- [An aggregate checker that needs the declaring gate receives it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B07`
+- [An aggregate checker that needs the declaring gate receives it](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B07`
 
-- [Setting the rule letters reconfigures every dependent pattern together](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B08`
+- [Setting the rule letters reconfigures every dependent pattern together](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B08`
 
-- [A file that is empty or only whitespace fails the emptiness ruler](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B09`
+- [A file that is empty or only whitespace fails the emptiness ruler](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B09`
 
-- [The identity ruler charges the presence of a scenario code](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B10`
+- [The identity ruler charges the presence of a scenario code](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B10`
 
-- [A governed file with no identity block fails the header ruler](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B11`
+- [A governed file with no identity block fails the header ruler](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B11`
 
-- [A governed file passes with ownership or with reference, never with layer alone](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B12`
+- [A governed file passes with ownership or with reference, never with layer alone](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B12`
 
-- [A file of a recognised layer passes with the layer alone](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B13`
+- [A file of a recognised layer passes with the layer alone](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B13`
 
-- [A binary file steps aside from the header ruler](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B14`
+- [A binary file steps aside from the header ruler](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B14`
 
-- [An executable test script steps aside by a different path](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B15`
+- [An executable test script steps aside by a different path](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B15`
 
-- [A guide without compliance points fails](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B16`
+- [A guide without compliance points fails](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B16`
 
-- [An unresolved name never approves, on either path](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-I01`
+- [An unresolved name never approves, on either path](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-I01`
 
-- [Every registered name is reachable through exactly one routing path](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-I02`
+- [Every registered name is reachable through exactly one routing path](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-I02`
 
-- [The compliance ruler is recognised in every language of the catalogue](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-I03`
+- [The compliance ruler is recognised in every language of the catalogue](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-I03`
 
-- [The registry does not decide which checks a project runs](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-X01`
+- [The registry does not decide which checks a project runs](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-X01`
 
-- [The registry does not invoke external tooling](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-X02`
+- [The registry does not invoke external tooling](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-X02`
 
-- [The registry does not judge whether the text is good](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-X03`
+- [The registry does not judge whether the text is good](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-X03`
 
-- [A test missing from disk does not hide the codes the other tests name](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-E01`
+- [A test missing from disk does not hide the codes the other tests name](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-E01`
 
-- [With a tests source a scenario is written only when a title cites it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B17`
+- [With a tests source a scenario is written only when a title cites it](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B17`
 
-- [A failing tests source fails scenario-coverage naming the error](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-E02`
+- [A failing tests source fails scenario-coverage naming the error](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-E02`
 
-- [A support file is neither run nor counted as naming a scenario](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B18`
+- [A support file is neither run nor counted as naming a scenario](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B18`
 
-- [A feature scenario is recognised in any Gherkin language](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B19`
+- [A feature scenario is recognised in any Gherkin language](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B19`
 
-- [Scenario coverage charges what the spec defines, not what it cites](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B20`
+- [Scenario coverage charges what the spec defines, not what it cites](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B20`
 
-- [Scenario coverage tells a missing test apart from a test never run](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B21`
+- [Scenario coverage tells a missing test apart from a test never run](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B21`
 
-- [Scenario coverage honours a layer that dispenses tested-by](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B22`
+- [Scenario coverage honours a layer that dispenses tested-by](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B22`
 
-- [Mutation score passes at the threshold and fails below it naming the survivors](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B23`
+- [Mutation score passes at the threshold and fails below it naming the survivors](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B23`
 
-- [A missing or stale mutation signal is pending, unless it met the floor](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B24`
+- [A missing or stale mutation signal is pending, unless it met the floor](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B24`
 
-- [A score between acceptable and desirable is divergence, not failed](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B25`
+- [A score between acceptable and desirable is divergence, not failed](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B25`
 
-- [The mutation thresholds come from the report](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B26`
+- [The mutation thresholds come from the report](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B26`
 
-- [The verdict follows the isolated scope and the report reads the delta](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B27`
+- [The verdict follows the isolated scope and the report reads the delta](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B27`
 
-- [A scope measured at an older revision decides nothing](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B28`
+- [A scope measured at an older revision decides nothing](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B28`
 
-- [Without a repository updated-at skips instead of blaming the file](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B29`
+- [Without a repository updated-at skips instead of blaming the file](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B29`
 
-- [A section title in another language fails unless the gate waives it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B30`
+- [A section title in another language fails unless the gate waives it](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B30`
 
-- [The skeletons anchors new emits are born conforming](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B31`
+- [The skeletons anchors new emits are born conforming](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B31`
 
-- [A mutation score measured under load is not trusted](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B32`
+- [A mutation score measured under load is not trusted](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B32`
 
-- [A header below the top fails the header ruler](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B33`
+- [A header below the top fails the header ruler](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B33`
 
-- [Each variant of a rule must be proven](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B34`
+- [Each variant of a rule must be proven](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B34`
 
-- [The header's layer is read as the project declares it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B35`
+- [The header's layer is read as the project declares it](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B35`
 
-- [A file with nothing to cover is not pending](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B36`
+- [A file with nothing to cover is not pending](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B36`
 
-- [A file the mutation tool measured with no mutant has nothing to mutate](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B37`
+- [A file the mutation tool measured with no mutant has nothing to mutate](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B37`
 
-- [Line coverage is held to the gate's floor, or a glob's floor with its reason](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B38`
+- [Line coverage is held to the gate's floor, or a glob's floor with its reason](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B38`
 
-- [A header in a double-dash comment has its identity](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B39`
+- [A header in a double-dash comment has its identity](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B39`
 
-- [A header without a code of its own fails, and a code another file owns fails naming it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B41`
+- [A header without a code of its own fails, and a code another file owns fails naming it](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B41`
 
-- [The header is the block at the top, and a file of no unit is identified by its layer](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B40`
+- [The header is the block at the top, and a file of no unit is identified by its layer](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B40`
 
-- [Scenario coverage reads the scenarios of a changed rule as stale, and the rest as proven](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B42`
+- [Scenario coverage reads the scenarios of a changed rule as stale, and the rest as proven](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B42`
 
-- [A first measure skips, an earlier 0% is a baseline](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B43`
+- [A first measure skips, an earlier 0% is a baseline](layers/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B43`
 
-- [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
+- [An artifact that is not code leaves without a verdict](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
-- [Content matching a forbidden pattern fails, naming line and reason](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B02`
+- [Content matching a forbidden pattern fails, naming line and reason](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B02`
 
-- [A rule scoped to a layer charges only that layer](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B03`
+- [A rule scoped to a layer charges only that layer](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B03`
 
-- [A rule with no layer holds for all code](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B04`
+- [A rule with no layer holds for all code](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B04`
 
-- [Severity warn records without failing, and the default is error](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B05`
+- [Severity warn records without failing, and the default is error](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B05`
 
-- [A waiver with a written reason on the line waives that line](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B06`
+- [A waiver with a written reason on the line waives that line](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B06`
 
-- [The waiver also holds in the comment on the line above](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B07`
+- [The waiver also holds in the comment on the line above](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B07`
 
-- [A bare marker with no reason does not waive](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B08`
+- [A bare marker with no reason does not waive](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B08`
 
-- [With no boundary declared the verdict is Pending, never Pass](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B09`
+- [With no boundary declared the verdict is Pending, never Pass](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B09`
 
-- [An invalid forbid pattern fails visibly](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B10`
+- [An invalid forbid pattern fails visibly](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B10`
 
-- [The pattern is matched against the whole file, catching a multi-line import](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B11`
+- [The pattern is matched against the whole file, catching a multi-line import](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B11`
 
-- [The same rule is expressible in six language dialects](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-I01`
+- [The same rule is expressible in six language dialects](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-I01`
 
-- [A single-line import of the same shape is still caught](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-I02`
+- [A single-line import of the same shape is still caught](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-I02`
 
-- [The waiver holds on any line of the matched stretch](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-I03`
+- [The waiver holds on any line of the matched stretch](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-I03`
 
-- [A line anchor keeps holding per line](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-I04`
+- [A line anchor keeps holding per line](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-I04`
 
-- [The gate does not decide which boundaries exist](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-X01`
+- [The gate does not decide which boundaries exist](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-X01`
 
-- [The gate does not parse the language, it matches text](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-X02`
+- [The gate does not parse the language, it matches text](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-X02`
 
-- [The gate does not judge whether the boundary is the right one to draw](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-X03`
+- [The gate does not judge whether the boundary is the right one to draw](layers/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-X03`
 
-- [A rule marked at both declared scopes passes](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B01`
+- [A rule marked at both declared scopes passes](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B01`
 
-- [A rule missing from one end fails, and the verdict names the empty scope](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B02`
+- [A rule missing from one end fails, and the verdict names the empty scope](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B02`
 
-- [Two markings on the same side do not satisfy the gate](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B03`
+- [Two markings on the same side do not satisfy the gate](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B03`
 
-- [A rule left over at one end fails and is named](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B04`
+- [A rule left over at one end fails and is named](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B04`
 
-- [Total absence of the prefix is not approval](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B05`
+- [Total absence of the prefix is not approval](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B05`
 
-- [A declaration with no prefix returns Pending](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B06`
+- [A declaration with no prefix returns Pending](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B06`
 
-- [With no scopes declared the ruler is the count](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B07`
+- [With no scopes declared the ruler is the count](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B07`
 
-- [The marking crosses language](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B08`
+- [The marking crosses language](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B08`
 
-- [Ignored directories never count towards parity](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B09`
+- [Ignored directories never count towards parity](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B09`
 
-- [A marking inside an unreadable directory counts as absent from its end](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-E01`
+- [A marking inside an unreadable directory counts as absent from its end](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-E01`
 
-- [The failing verdict names the rule and the empty scope](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-I01`
+- [The failing verdict names the rule and the empty scope](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-I01`
 
-- [What was not measured is never approved](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-I02`
+- [What was not measured is never approved](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-I02`
 
-- [The gate does not read what each end actually does](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-X01`
+- [The gate does not read what each end actually does](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-X01`
 
-- [The gate does not decide which rules live at two ends](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-X02`
+- [The gate does not decide which rules live at two ends](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-X02`
 
-- [A file whose comments the project does not declare is not read](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-X03`
+- [A file whose comments the project does not declare is not read](layers/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-X03`
 
-- [A generated stamp passes the gate, and a change to its snippet fails it](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B01`
+- [A generated stamp passes the gate, and a change to its snippet fails it](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B01`
 
-- [An ambiguous specifier resolves to the test's workspace, or is skipped](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B02`
+- [An ambiguous specifier resolves to the test's workspace, or is skipped](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B02`
 
-- [A stamp per factory key covers only that export](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B03`
+- [A stamp per factory key covers only that export](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B03`
 
-- [An automock gets one stamp over the whole module](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B04`
+- [An automock gets one stamp over the whole module](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B04`
 
-- [A third-party double is not stamped](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B05`
+- [A third-party double is not stamped](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B05`
 
-- [The header stays out of a whole-module stamp](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B06`
+- [The header stays out of a whole-module stamp](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B06`
 
-- [A key added to a stamped double gets a stamp](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B07`
+- [A key added to a stamped double gets a stamp](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B07`
 
-- [An existing stamp is never rewritten](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-I01`
+- [An existing stamp is never rewritten](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-I01`
 
-- [A repeated line never anchors a stamp](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-I02`
+- [A repeated line never anchors a stamp](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-I02`
 
-- [Generator does not refresh a divergent stamp](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-X01`
+- [Generator does not refresh a divergent stamp](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-X01`
 
-- [A double detector that does not compile stops the generator with an error](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-E01`
+- [A double detector that does not compile stops the generator with an error](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-E01`
 
-- [An undeclared double detector stops the generator with an error](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-E02`
+- [An undeclared double detector stops the generator with an error](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-E02`
 
-- [A module missing from disk is skipped and the other doubles are still stamped](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-E03`
+- [A module missing from disk is skipped and the other doubles are still stamped](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-E03`
 
-- [An artifact that is not a test leaves without a verdict](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B01`
+- [An artifact that is not a test leaves without a verdict](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B01`
 
-- [A stamp that matches the module today passes](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B02`
+- [A stamp that matches the module today passes](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B02`
 
-- [A snippet that changed since the stamp was written fails](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B03`
+- [A snippet that changed since the stamp was written fails](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B03`
 
-- [The stamp is immune to displacement](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B04`
+- [The stamp is immune to displacement](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B04`
 
-- [An anchor that vanished fails with its own message](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B05`
+- [An anchor that vanished fails with its own message](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B05`
 
-- [An anchor occurring more than once is ambiguous and fails](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B06`
+- [An anchor occurring more than once is ambiguous and fails](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B06`
 
-- [The declared line count delimits the window](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B07`
+- [The declared line count delimits the window](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B07`
 
-- [Without the dialect declared the gate goes quiet](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B08`
+- [Without the dialect declared the gate goes quiet](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B08`
 
-- [A double of a module the project does not govern is not charged](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B09`
+- [A double of a module the project does not govern is not charged](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B09`
 
-- [A stamp whose module no longer exists is a finding, not a crash](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B10`
+- [A stamp whose module no longer exists is a finding, not a crash](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B10`
 
-- [The absence of a stamp on a governed double is accused](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B11`
+- [The absence of a stamp on a governed double is accused](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B11`
 
-- [A stamp present and correct satisfies both charges](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B12`
+- [A stamp present and correct satisfies both charges](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B12`
 
-- [A dialect regex that does not compile fails loudly](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B13`
+- [A dialect regex that does not compile fails loudly](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B13`
 
-- [A dialect regex with no capture group fails](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B14`
+- [A dialect regex with no capture group fails](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B14`
 
-- [Another ecosystem's dialect is charged the same way](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B15`
+- [Another ecosystem's dialect is charged the same way](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B15`
 
-- [The gate recomputes the hash instead of validating the stamp's format](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-I01`
+- [The gate recomputes the hash instead of validating the stamp's format](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-I01`
 
-- [The double and the stamp are tied by the module's path](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-I02`
+- [The double and the stamp are tied by the module's path](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-I02`
 
-- [A configuration fault fails and a project decision skips](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-I03`
+- [A configuration fault fails and a project decision skips](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-I03`
 
-- [The gate does not interpret the code of the stamped module](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-X01`
+- [The gate does not interpret the code of the stamped module](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-X01`
 
-- [The gate carries no built-in dialect for detecting doubles](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-X02`
+- [The gate carries no built-in dialect for detecting doubles](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-X02`
 
-- [The gate does not skip the absence of a stamp to accommodate legacy code](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-X03`
+- [The gate does not skip the absence of a stamp to accommodate legacy code](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-X03`
 
-- [The gate does not guarantee cryptographic strength](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-X04`
+- [The gate does not guarantee cryptographic strength](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-X04`
 
-- [A module with a dot in its name is matched to its stamp](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B16`
+- [A module with a dot in its name is matched to its stamp](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B16`
 
-- [Changing a module checks the doubles stamped against it](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B17`
+- [Changing a module checks the doubles stamped against it](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B17`
 
-- [The author of a change refreshes the stamps and gets the doubles to adjust](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B18`
+- [The author of a change refreshes the stamps and gets the doubles to adjust](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B18`
 
-- [A stamp with a non-positive line count is not a stamp](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-E01`
+- [A stamp with a non-positive line count is not a stamp](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-E01`
 
-- [A test missing from disk is left out of the doubles of a changed module](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-E02`
+- [A test missing from disk is left out of the doubles of a changed module](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-E02`
 
-- [The modules a test's stamps point at](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B19`
+- [The modules a test's stamps point at](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B19`
 
-- [The stamps that held before a mechanical rewrite are refreshed after it, and a stamp already stale stays stale](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B20`
+- [The stamps that held before a mechanical rewrite are refreshed after it, and a stamp already stale stays stale](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B20`
 
-- [The chain's flags change no contract](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B21`
+- [The chain's flags change no contract](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B21`
 
-- [A flag in a block comment inside a line changes no contract](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B22`
+- [A flag in a block comment inside a line changes no contract](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B22`
 
-- [The stamp the writer wrote covers an aliased module and a directory's index](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B23`
+- [The stamp the writer wrote covers an aliased module and a directory's index](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B23`
 
-- [A double with no tie fails and the verdict names the loose module](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B01`
+- [A double with no tie fails and the verdict names the loose module](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B01`
 
-- [A double whose factory carries the declared tie passes](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B02`
+- [A double whose factory carries the declared tie passes](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B02`
 
-- [The charge is per module, not per file](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B03`
+- [The charge is per module, not per file](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B03`
 
-- [A double with no factory is not charged](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B04`
+- [A double with no factory is not charged](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B04`
 
-- [Without the tie shape declared the gate goes quiet](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B05`
+- [Without the tie shape declared the gate goes quiet](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B05`
 
-- [An artifact that is not a test leaves without a verdict](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B06`
+- [An artifact that is not a test leaves without a verdict](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B06`
 
-- [A test that doubles nobody leaves without a verdict](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B07`
+- [A test that doubles nobody leaves without a verdict](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B07`
 
-- [Another runner of the same ecosystem is recognised the same way](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B08`
+- [Another runner of the same ecosystem is recognised the same way](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B08`
 
-- [A third-party library double is not charged](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B09`
+- [A third-party library double is not charged](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B09`
 
-- [The third-party exemption is not an escape hatch](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B10`
+- [The third-party exemption is not an escape hatch](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B10`
 
-- [A relative import that resolves in the map is an own module](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B11`
+- [A relative import that resolves in the map is an own module](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B11`
 
-- [Another ecosystem's dialect is charged the same way](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B12`
+- [Another ecosystem's dialect is charged the same way](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B12`
 
-- [What is governed is decided by the graph, never by a prefix list](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-I01`
+- [What is governed is decided by the graph, never by a prefix list](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-I01`
 
-- [An undeclared tie shape is pending instead of guessing one](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-I02`
+- [An undeclared tie shape is pending instead of guessing one](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-I02`
 
-- [The verdict counts the loose doubles, not just names them](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-I03`
+- [The verdict counts the loose doubles, not just names them](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-I03`
 
-- [The gate does not check whether the annotated type matches the real module](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X01`
+- [The gate does not check whether the annotated type matches the real module](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X01`
 
-- [The gate does not cover drift of behaviour](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X02`
+- [The gate does not cover drift of behaviour](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X02`
 
-- [The gate carries no built-in tie shape and no built-in ecosystem](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X03`
+- [The gate carries no built-in tie shape and no built-in ecosystem](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X03`
 
-- [The gate does not charge third-party library doubles](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X04`
+- [The gate does not charge third-party library doubles](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X04`
 
-- [A double with no factory is not charged](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X05`
+- [A double with no factory is not charged](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X05`
 
-- [With no map the verdict is pending, not an external-only skip](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-E02`
+- [With no map the verdict is pending, not an external-only skip](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-E02`
 
-- [A factory on the next line is still read, tie and all](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B13`
+- [A factory on the next line is still read, tie and all](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B13`
 
-- [A double of a module another workspace names with the same alias is the project's](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B14`
+- [A double of a module another workspace names with the same alias is the project's](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B14`
 
-- [nav-annotated names each navigation call with no flag, and each flag naming another screen than its route](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B01`
+- [nav-annotated names each navigation call with no flag, and each flag naming another screen than its route](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B01`
 
-- [nav-matches-spec names each Out row no flag answers, and each flag the Out table does not declare](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B02`
+- [nav-matches-spec names each Out row no flag answers, and each flag the Out table does not declare](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B02`
 
-- [nav-symmetric names each Out with no matching In, and each In with no matching Out](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B03`
+- [nav-symmetric names each Out with no matching In, and each In with no matching Out](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B03`
 
-- [nav-reachable fails a screen no entry route reaches, and is pending with no entry declared](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B04`
+- [nav-reachable fails a screen no entry route reaches, and is pending with no entry declared](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B04`
 
-- [The fixer flags a navigation call whose route names one screen, and leaves a back navigation to the author](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B05`
+- [The fixer flags a navigation call whose route names one screen, and leaves a back navigation to the author](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B05`
 
-- [On a line ending in a JSX tag the fixer writes the flag where it renders nothing](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B06`
+- [On a line ending in a JSX tag the fixer writes the flag where it renders nothing](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B06`
 
-- [A component's navigation counts for every screen that renders it](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B07`
+- [A component's navigation counts for every screen that renders it](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B07`
 
-- [A dormant navigation is no edge](camadas/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B08`
+- [A dormant navigation is no edge](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B08`
 
-- [A node that carries the trigger and is absent from the demanded file fails](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B01`
+- [A node that carries the trigger and is absent from the demanded file fails](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B01`
 
-- [A node that carries the trigger and does appear passes](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B02`
+- [A node that carries the trigger and does appear passes](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B02`
 
-- [A node without the trigger contracts no obligation](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B03`
+- [A node without the trigger contracts no obligation](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B03`
 
-- [A waiver exempts only when it carries a written reason](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B04`
+- [A waiver exempts only when it carries a written reason](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B04`
 
-- [A project with no declared obligation is skipped](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B05`
+- [A project with no declared obligation is skipped](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B05`
 
-- [An acknowledged debt with a written when yields a divergence](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B06`
+- [An acknowledged debt with a written when yields a divergence](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B06`
 
-- [A bare debt marker keeps failing](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B07`
+- [A bare debt marker keeps failing](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B07`
 
-- [Waiver and debt stay distinct](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B08`
+- [Waiver and debt stay distinct](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B08`
 
-- [The failing verdict offers the three ways out](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B09`
+- [The failing verdict offers the three ways out](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B09`
 
-- [The token is derived through the declared form](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-I01`
+- [The token is derived through the declared form](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-I01`
 
-- [A glob that matches no file produces no violation](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-I02`
+- [A glob that matches no file produces no violation](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-I02`
 
-- [The node's own identified_as wins over the automatic form](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-I03`
+- [The node's own identified_as wins over the automatic form](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-I03`
 
-- [The gate does not decide which obligations exist](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-X01`
+- [The gate does not decide which obligations exist](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-X01`
 
-- [The gate does not understand what the destination does with the token](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-X02`
+- [The gate does not understand what the destination does with the token](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-X02`
 
-- [A declaration written in the body is not read](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-X03`
+- [A declaration written in the body is not read](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-X03`
 
-- [An unreadable destination file is not proof, and the others are still searched](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-E01`
+- [An unreadable destination file is not proof, and the others are still searched](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-E01`
 
-- [A must_appear_in glob that does not parse fails naming it](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-E02`
+- [A must_appear_in glob that does not parse fails naming it](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-E02`
 
-- [The token is found at an identifier's edge, in any script](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B10`
+- [The token is found at an identifier's edge, in any script](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B10`
 
-- [The duties in force are the resolved list](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B01`
+- [The duties in force are the resolved list](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B01`
 
-- [Without packs the duties in force are the inline list](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B02`
+- [Without packs the duties in force are the inline list](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B02`
 
-- [The pack's duties come first, the inline ones last, with the pack's fields carried over](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B03`
+- [The pack's duties come first, the inline ones last, with the pack's fields carried over](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B03`
 
-- [A pack duty's reason cites the norm it comes from](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B04`
+- [A pack duty's reason cites the norm it comes from](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B04`
 
-- [A pack that fails to load keeps the inline duties](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B05`
+- [A pack that fails to load keeps the inline duties](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B05`
 
-- [The pack duties are read once per root](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B06`
+- [The pack duties are read once per root](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B06`
 
-- [Another set of packs for the same root is read, not served from the cache](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B12`
+- [Another set of packs for the same root is read, not served from the cache](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B12`
 
-- [The report gives one status per duty, in the order handed](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B07`
+- [The report gives one status per duty, in the order handed](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B07`
 
-- [A node is a subject only when its header carries the duty's trigger](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B08`
+- [A node is a subject only when its header carries the duty's trigger](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B08`
 
-- [A waiver with a reason counts as fulfilled and as waived](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B09`
+- [A waiver with a reason counts as fulfilled and as waived](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B09`
 
-- [A duty declared pending counts as debt](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B10`
+- [A duty declared pending counts as debt](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B10`
 
-- [Every other subject is missing, and the missing list is sorted](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B11`
+- [Every other subject is missing, and the missing list is sorted](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B11`
 
-- [Every subject is counted exactly once](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-I01`
+- [Every subject is counted exactly once](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-I01`
 
-- [The report evaluates only the duties it is handed](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-X01`
+- [The report evaluates only the duties it is handed](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-X01`
 
-- [A node whose file cannot be read is not a subject](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-E02`
+- [A node whose file cannot be read is not a subject](layers/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-E02`
 
-- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B01`
+- [An artifact that is not a spec leaves without a verdict](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B01`
 
-- [Whoever OPENED the section is confronted by its content](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B02`
+- [Whoever OPENED the section is confronted by its content](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B02`
 
-- [An open item bars the spec](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B03`
+- [An open item bars the spec](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B03`
 
-- [A section closed honestly releases the spec](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B04`
+- [A section closed honestly releases the spec](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B04`
 
-- [An item marked as resolved does not block](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B05`
+- [An item marked as resolved does not block](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B05`
 
-- [A question with no code is charged](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B06`
+- [A question with no code is charged](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B06`
 
-- [The count of pending decisions reads the project's own lexicon](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B07`
+- [The count of pending decisions reads the project's own lexicon](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B07`
 
-- [Prose is not an item](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-I01`
+- [Prose is not an item](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-I01`
 
-- [The section boundary is respected](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-I02`
+- [The section boundary is respected](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-I02`
 
-- [Filling in what the question BECOMES does not close the question](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-I03`
+- [Filling in what the question BECOMES does not close the question](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-I03`
 
-- [The gate does not judge whether the question is good](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-X01`
+- [The gate does not judge whether the question is good](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-X01`
 
-- [A spec with no section is a divergence item, and the verdict teaches the way out](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-X02`
+- [A spec with no section is a divergence item, and the verdict teaches the way out](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-X02`
 
-- [A code the question cites as context does not close it](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B08`
+- [A code the question cites as context does not close it](layers/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B08`
 
-- [A limit received from the caller passes](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B01`
+- [A limit received from the caller passes](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B01`
 
-- [A limit hidden in a default value is accused](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B02`
+- [A limit hidden in a default value is accused](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B02`
 
-- [The NAME bounds the promise](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B03`
+- [The NAME bounds the promise](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B03`
 
-- [Sibling functions that paginate are the proof by asymmetry](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B04`
+- [Sibling functions that paginate are the proof by asymmetry](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B04`
 
-- [A waiver with a written reason leaves the report](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B05`
+- [A waiver with a written reason leaves the report](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B05`
 
-- [The verdict offers the way out](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B06`
+- [The verdict offers the way out](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B06`
 
-- [Without a declared dialect the verdict is undetermined](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B07`
+- [Without a declared dialect the verdict is undetermined](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B07`
 
-- [The ruler is agnostic across languages](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I01`
+- [The ruler is agnostic across languages](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I01`
 
-- [Where the construct is not recognised, the gate stays silent](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I02`
+- [Where the construct is not recognised, the gate stays silent](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I02`
 
-- [A cursor with no loop does not count as pagination](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I03`
+- [A cursor with no loop does not count as pagination](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I03`
 
-- [A provider prefix in the name does not hide the promise](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I04`
+- [A provider prefix in the name does not hide the promise](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-I04`
 
-- [The gate does not invent a cursor the provider does not offer](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-X01`
+- [The gate does not invent a cursor the provider does not offer](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-X01`
 
-- [The gate does not measure performance or page size](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-X02`
+- [The gate does not measure performance or page size](layers/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-X02`
 
-- [The PlanPhases function extracts catalogued phase codes](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B01`
+- [The PlanPhases function extracts catalogued phase codes](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B01`
 
-- [Non-plan artifacts skip phase ordering confrontation](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B02`
+- [Non-plan artifacts skip phase ordering confrontation](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B02`
 
-- [Plans without phase headings skip confrontation](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B03`
+- [Plans without phase headings skip confrontation](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B03`
 
-- [Plans with phase-like sections lacking codes return Diverge](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B04`
+- [Plans with phase-like sections lacking codes return Diverge](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B04`
 
-- [Plans declaring valid backward phase dependencies pass](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B05`
+- [Plans declaring valid backward phase dependencies pass](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B05`
 
-- [Plans with duplicate phase codes fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B06`
+- [Plans with duplicate phase codes fail](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B06`
 
-- [Phases depending on uncatalogued phase codes fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B07`
+- [Phases depending on uncatalogued phase codes fail](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B07`
 
-- [Phases depending on themselves fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B08`
+- [Phases depending on themselves fail](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B08`
 
-- [Phases depending on future phases fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B09`
+- [Phases depending on future phases fail](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B09`
 
-- [Specifications declaring existing phase dependencies pass](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B10`
+- [Specifications declaring existing phase dependencies pass](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B10`
 
-- [Specifications declaring missing phase dependencies fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B11`
+- [Specifications declaring missing phase dependencies fail](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B11`
 
-- [Artifacts declaring valid parents pass](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B12`
+- [Artifacts declaring valid parents pass](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B12`
 
-- [Artifacts declaring invalid parents, self-parenting, or parent cycles fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B13`
+- [Artifacts declaring invalid parents, self-parenting, or parent cycles fail](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B13`
 
-- [Phase dependencies are strictly acyclic and backward-directed](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I01`
+- [Phase dependencies are strictly acyclic and backward-directed](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I01`
 
-- [Phase and parent targets must exist in the map](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I02`
+- [Phase and parent targets must exist in the map](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I02`
 
-- [Parent chains are cycle-free and bounded](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I03`
+- [Parent chains are cycle-free and bounded](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I03`
 
-- [Phase detection identifies level-three sections regardless of language](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I04`
+- [Phase detection identifies level-three sections regardless of language](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I04`
 
-- [Small plans are not required to catalog phases](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X01`
+- [Small plans are not required to catalog phases](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X01`
 
-- [Phase duration and calendar timing are not verified](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X02`
+- [Phase duration and calendar timing are not verified](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X02`
 
-- [Both artifact codes and phase codes are accepted as parents](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X03`
+- [Both artifact codes and phase codes are accepted as parents](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X03`
 
-- [With no map a phase or parent reference is not judged](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-E01`
+- [With no map a phase or parent reference is not judged](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-E01`
 
-- [A plan missing from disk does not unresolve the phases of the other plans](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-E02`
+- [A plan missing from disk does not unresolve the phases of the other plans](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-E02`
 
-- [The dependency is read in any supported language](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B14`
+- [The dependency is read in any supported language](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B14`
 
-- [A raw skeleton fails confrontation](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B01`
+- [A raw skeleton fails confrontation](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B01`
 
-- [A header field whose value is the marker fails](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B02`
+- [A header field whose value is the marker fails](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B02`
 
-- [A table cell holding only the marker fails](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B03`
+- [A table cell holding only the marker fails](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B03`
 
-- [A title or body line opening with the marker fails](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B04`
+- [A title or body line opening with the marker fails](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B04`
 
-- [The verdict names what was left behind](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B05`
+- [The verdict names what was left behind](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B05`
 
-- [An artifact with every marker replaced passes](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B06`
+- [An artifact with every marker replaced passes](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B06`
 
-- [The marker vocabulary is the project's, and TODO by default](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B07`
+- [The marker vocabulary is the project's, and TODO by default](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B07`
 
-- [A section written on purpose to list pending work is not accused](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-I01`
+- [A section written on purpose to list pending work is not accused](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-I01`
 
-- [The gate does not judge the quality of replacement text](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-X01`
+- [The gate does not judge the quality of replacement text](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-X01`
 
-- [A marker in running prose is not accused](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-X02`
+- [A marker in running prose is not accused](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-X02`
 
-- [An artifact reached only by the impact radius is skipped](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B01`
+- [An artifact reached only by the impact radius is skipped](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B01`
 
-- [An artifact with no identity code is skipped](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B02`
+- [An artifact with no identity code is skipped](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B02`
 
-- [A changed plan or spec with no declared revision fails](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B03`
+- [A changed plan or spec with no declared revision fails](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B03`
 
-- [A changed plan or spec with a valid revision passes](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B04`
+- [A changed plan or spec with a valid revision passes](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B04`
 
-- [Citing the revision of another document does not count](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B05`
+- [Citing the revision of another document does not count](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B05`
 
-- [Revisions with non-sequential numbering fail](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B06`
+- [Revisions with non-sequential numbering fail](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B06`
 
-- [Multiple sequential revisions pass and cite the latest](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B07`
+- [Multiple sequential revisions pass and cite the latest](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B07`
 
-- [Revisions written in various markdown formats pass](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B08`
+- [Revisions written in various markdown formats pass](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B08`
 
-- [A change already explained by the plan revision mechanism passes](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B09`
+- [A change already explained by the plan revision mechanism passes](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B09`
 
-- [A newly created untracked file is skipped](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B10`
+- [A newly created untracked file is skipped](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B10`
 
-- [A newly created staged file is skipped](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B11`
+- [A newly created staged file is skipped](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B11`
 
-- [An existing committed file modified without a revision fails](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B12`
+- [An existing committed file modified without a revision fails](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B12`
 
-- [Outside a git repository the gate trusts the changed list](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B13`
+- [Outside a git repository the gate trusts the changed list](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B13`
 
-- [RevisionsOf parses declared revisions in order](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B14`
+- [RevisionsOf parses declared revisions in order](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B14`
 
-- [A revision written as a section title is read with the others](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B15`
+- [A revision written as a section title is read with the others](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B15`
 
-- [Untouched nodes in the impact radius are never charged](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-I01`
+- [Untouched nodes in the impact radius are never charged](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-I01`
 
-- [Revisions must be sequential from one without gaps](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-I02`
+- [Revisions must be sequential from one without gaps](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-I02`
 
-- [Files not existing in HEAD are never charged](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-I03`
+- [Files not existing in HEAD are never charged](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-I03`
 
-- [The gate does not judge whether a correction is directional](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-X01`
+- [The gate does not judge whether a correction is directional](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-X01`
 
-- [The gate does not enforce identity code presence](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-X02`
+- [The gate does not enforce identity code presence](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-X02`
 
-- [Without a changed files list the gate skips confrontation](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-X03`
+- [Without a changed files list the gate skips confrontation](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-X03`
 
-- [A change only in the header and in renamed codes is mechanical and skips](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B16`
+- [A change only in the header and in renamed codes is mechanical and skips](layers/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B16`
 
-- [Non-plan artifacts skip confrontation](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B01`
+- [Non-plan artifacts skip confrontation](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B01`
 
-- [Confronting without a map graph returns pending](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B02`
+- [Confronting without a map graph returns pending](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B02`
 
-- [A plan with neither revisions nor revisers skips confrontation](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B03`
+- [A plan with neither revisions nor revisers skips confrontation](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B03`
 
-- [Declaring a revision target that does not exist in the map fails](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B04`
+- [Declaring a revision target that does not exist in the map fails](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B04`
 
-- [A revising plan receives a divergence reminder when the target lacks a top notice](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B05`
+- [A revising plan receives a divergence reminder when the target lacks a top notice](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B05`
 
-- [The divergence reminder on a revising plan clears once the target carries the notice](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B06`
+- [The divergence reminder on a revising plan clears once the target carries the notice](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B06`
 
-- [A revised plan lacking a top revision notice fails](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B07`
+- [A revised plan lacking a top revision notice fails](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B07`
 
-- [A revised plan placing the revision notice after line 40 fails](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B08`
+- [A revised plan placing the revision notice after line 40 fails](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B08`
 
-- [A revised plan with top notice but no section amendment markers returns divergence](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B09`
+- [A revised plan with top notice but no section amendment markers returns divergence](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B09`
 
-- [A revised plan with top notice and marked section amendments passes](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B10`
+- [A revised plan with top notice and marked section amendments passes](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B10`
 
-- [Markdown alerts and metadata directives are both accepted as valid markers](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B11`
+- [Markdown alerts and metadata directives are both accepted as valid markers](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B11`
 
-- [Revision notices must be placed within the first 40 lines](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I01`
+- [Revision notices must be placed within the first 40 lines](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I01`
 
-- [Missing section amendment markers yield divergence rather than failure](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I02`
+- [Missing section amendment markers yield divergence rather than failure](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I02`
 
-- [The divergence reminder clears once the revised plan is notified](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I03`
+- [The divergence reminder clears once the revised plan is notified](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I03`
 
-- [Language neutrality allows markdown alerts and metadata directives](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-X01`
+- [Language neutrality allows markdown alerts and metadata directives](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-X01`
 
-- [Prose description quality accompanying revision markers is not evaluated](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-X02`
+- [Prose description quality accompanying revision markers is not evaluated](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-X02`
 
-- [Section amendment markers are not demanded on unrevised plans](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-X03`
+- [Section amendment markers are not demanded on unrevised plans](layers/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-X03`
 
-- [Non-plan artifacts skip confrontation](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B01`
+- [Non-plan artifacts skip confrontation](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B01`
 
-- [Missing project configuration returns Pending](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B02`
+- [Missing project configuration returns Pending](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B02`
 
-- [Plans without seeded specifications skip confrontation](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B03`
+- [Plans without seeded specifications skip confrontation](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B03`
 
-- [Template specification references are ignored as templates](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B04`
+- [Template specification references are ignored as templates](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B04`
 
-- [Bare specification file names without directory paths are ignored](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B05`
+- [Bare specification file names without directory paths are ignored](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B05`
 
-- [Informal path abbreviations without real top-level directories are ignored](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B06`
+- [Informal path abbreviations without real top-level directories are ignored](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B06`
 
-- [Seeded specifications targeting valid governed layers pass](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B07`
+- [Seeded specifications targeting valid governed layers pass](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B07`
 
-- [Multiple target source file extensions resolve the governed layer](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B08`
+- [Multiple target source file extensions resolve the governed layer](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B08`
 
-- [Seeded specifications targeting declarative layers fail](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B09`
+- [Seeded specifications targeting declarative layers fail](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B09`
 
-- [Seeded specifications matching no declared layer in a real directory fail](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B10`
+- [Seeded specifications matching no declared layer in a real directory fail](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B10`
 
-- [Multiple seed defects across declarative and undeclared layers are aggregated](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B11`
+- [Multiple seed defects across declarative and undeclared layers are aggregated](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B11`
 
-- [Plan seed validation applies exclusively to plan artifacts](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I01`
+- [Plan seed validation applies exclusively to plan artifacts](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I01`
 
-- [Declarative layers reject specification seeding](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I02`
+- [Declarative layers reject specification seeding](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I02`
 
-- [Seed validation evaluates structural layer validity without requiring file existence](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I03`
+- [Seed validation evaluates structural layer validity without requiring file existence](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I03`
 
-- [Casual prose citations and templates are not treated as seeded paths](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I04`
+- [Casual prose citations and templates are not treated as seeded paths](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I04`
 
-- [Existing file presence is not required for seeded specifications](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-X01`
+- [Existing file presence is not required for seeded specifications](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-X01`
 
-- [Plan progress synchronization is not evaluated by this gate](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-X02`
+- [Plan progress synchronization is not evaluated by this gate](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-X02`
 
-- [Specification content and scenarios within seeded files are not verified](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-X03`
+- [Specification content and scenarios within seeded files are not verified](layers/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-X03`
 
-- [A source that lives only in the prose is failed](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B01`
+- [A source that lives only in the prose is failed](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B01`
 
-- [The verdict names which source and where its adapter lives](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B02`
+- [The verdict names which source and where its adapter lives](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B02`
 
-- [With the owning plan declared in needs the gate passes](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B03`
+- [With the owning plan declared in needs the gate passes](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B03`
 
-- [Every source of the line is confronted on its own](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B04`
+- [Every source of the line is confronted on its own](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B04`
 
-- [The source name matches the adapter regardless of case](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B05`
+- [The source name matches the adapter regardless of case](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B05`
 
-- [A source whose adapter nobody seeds is not charged](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B06`
+- [A source whose adapter nobody seeds is not charged](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B06`
 
-- [The plan that seeds the adapter is not charged for itself](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B07`
+- [The plan that seeds the adapter is not charged for itself](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B07`
 
-- [A plan with no source line returns Skip](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B08`
+- [A plan with no source line returns Skip](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B08`
 
-- [An artifact that is not a plan returns Skip](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B09`
+- [An artifact that is not a plan returns Skip](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B09`
 
-- [Every source line of the plan is read](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B10`
+- [Every source line of the plan is read](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B10`
 
-- [Every letter and digit of the name counts in the match](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B11`
+- [Every letter and digit of the name counts in the match](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B11`
 
-- [What was not measured is never approved](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-I01`
+- [What was not measured is never approved](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-I01`
 
-- [A seeded file off the naming pattern owns nothing](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-I02`
+- [A seeded file off the naming pattern owns nothing](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-I02`
 
-- [The gate does not confront the order of the phases](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-X01`
+- [The gate does not confront the order of the phases](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-X01`
 
-- [The gate does not demand a needs pointing at nothing](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-X02`
+- [The gate does not demand a needs pointing at nothing](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-X02`
 
-- [The gate does not interpret what the source is for](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-X03`
+- [The gate does not interpret what the source is for](layers/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-X03`
 
-- [The rows are read by position, and a spec with none is skipped](camadas/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B01`
+- [The rows are read by position, and a spec with none is skipped](layers/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B01`
 
-- [Every declared value has an appearance](camadas/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B02`
+- [Every declared value has an appearance](layers/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B02`
 
-- [One prop and one condition lead to one appearance](camadas/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B03`
+- [One prop and one condition lead to one appearance](layers/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B03`
 
-- [The text shown is a message code, not copy](camadas/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B04`
+- [The text shown is a message code, not copy](layers/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B04`
 
-- [What changes is something a test can point at](camadas/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B05`
+- [What changes is something a test can point at](layers/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B05`
 
-- [Each gate gets a summary counting its verdicts](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B01`
+- [Each gate gets a summary counting its verdicts](layers/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B01`
 
-- [The summary carries the total time and the most expensive run](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B02`
+- [The summary carries the total time and the most expensive run](layers/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B02`
 
-- [Every failed result is listed as a failure](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B03`
+- [Every failed result is listed as a failure](layers/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B03`
 
-- [Only a failure of a blocking gate blocks promotion](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B04`
+- [Only a failure of a blocking gate blocks promotion](layers/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B04`
 
-- [A pending verdict blocks only when its gate blocks and it impedes](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B05`
+- [A pending verdict blocks only when its gate blocks and it impedes](layers/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B05`
 
-- [Results awaiting judgement are listed as awaiting judgement](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B06`
+- [Results awaiting judgement are listed as awaiting judgement](layers/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B06`
 
-- [Per-node verdicts include only confronted nodes, sorted](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B07`
+- [Per-node verdicts include only confronted nodes, sorted](layers/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B07`
 
-- [A node is failed when a blocking gate failed on it or left it an impeding pending](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B08`
+- [A node is failed when a blocking gate failed on it or left it an impeding pending](layers/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B08`
 
-- [Promotion is refused exactly when something blocks](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-I01`
+- [Promotion is refused exactly when something blocks](layers/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-I01`
 
-- [The profile does not decide whether a pending impedes](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-X01`
+- [The profile does not decide whether a pending impedes](layers/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-X01`
 
-- [An artifact that is not a plan leaves without a verdict](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B01`
+- [An artifact that is not a plan leaves without a verdict](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B01`
 
-- [An untracked plan is skipped, not failed](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B02`
+- [An untracked plan is skipped, not failed](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B02`
 
-- [The skip for an untracked plan says how to track it](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B03`
+- [The skip for an untracked plan says how to track it](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B03`
 
-- [A ticked item whose file does not exist is failed](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B04`
+- [A ticked item whose file does not exist is failed](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B04`
 
-- [An open item whose file already exists is failed](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B05`
+- [An open item whose file already exists is failed](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B05`
 
-- [A spec the plan seeds and the progress does not list is failed](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B06`
+- [A spec the plan seeds and the progress does not list is failed](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B06`
 
-- [A checkbox item promising no file at all is failed](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B07`
+- [A checkbox item promising no file at all is failed](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B07`
 
-- [The ticked-but-absent finding is reported first](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B08`
+- [The ticked-but-absent finding is reported first](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B08`
 
-- [An item in prose citing no path is not charged](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B09`
+- [An item in prose citing no path is not charged](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B09`
 
-- [A progress that agrees with the disk on every item passes](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B10`
+- [A progress that agrees with the disk on every item passes](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B10`
 
-- [The verdict names each offending path](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B11`
+- [The verdict names each offending path](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B11`
 
-- [The verdict carries only the directions that found something](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B12`
+- [The verdict carries only the directions that found something](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B12`
 
-- [The progress file's name has one definition, derived from the scanner](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-I01`
+- [The progress file's name has one definition, derived from the scanner](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-I01`
 
-- [A seed is matched by path, never by the item's text](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-I02`
+- [A seed is matched by path, never by the item's text](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-I02`
 
-- [A spec mentioned in the plan's prose is not a seed](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-I03`
+- [A spec mentioned in the plan's prose is not a seed](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-I03`
 
-- [A template file is never a seeded spec](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-I04`
+- [A template file is never a seeded spec](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-I04`
 
-- [The gate does not charge that the plan is tracked](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-X01`
+- [The gate does not charge that the plan is tracked](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-X01`
 
-- [The gate does not judge the content of an item beyond the path](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-X02`
+- [The gate does not judge the content of an item beyond the path](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-X02`
 
-- [The gate does not put the progress file into the map](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-X03`
+- [The gate does not put the progress file into the map](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-X03`
 
-- [An unreadable progress file is pending](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-E01`
+- [An unreadable progress file is pending](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-E01`
 
-- [The progress file is the one Anchors wrote](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B13`
+- [The progress file is the one Anchors wrote](layers/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B13`
 
-- [The project's own source wins over its family's, and neither declares nothing](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B01`
+- [The project's own source wins over its family's, and neither declares nothing](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B01`
 
-- [A pattern reads only the map's test files](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B02`
+- [A pattern reads only the map's test files](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B02`
 
-- [The tests are read once per scan](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B03`
+- [The tests are read once per scan](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B03`
 
-- [The tests of a set of files come in file order then line](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B04`
+- [The tests of a set of files come in file order then line](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B04`
 
-- [A source error is returned with the declaration](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B05`
+- [A source error is returned with the declaration](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B05`
 
-- [Support files are not read as tests](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B06`
+- [Support files are not read as tests](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B06`
 
-- [Under --index the tests are listed from the commit](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B07`
+- [Under --index the tests are listed from the commit](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B07`
 
-- [The project's tests are offered to the commands](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B08`
+- [The project's tests are offered to the commands](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B08`
 
-- [Returns an empty list of Promotable gates when profile contains no gates](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B01`
+- [Returns an empty list of Promotable gates when profile contains no gates](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B01`
 
-- [An informative gate with passes and zero failures is included](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B02`
+- [An informative gate with passes and zero failures is included](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B02`
 
-- [An informative gate with failures is excluded from promotion](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B03`
+- [An informative gate with failures is excluded from promotion](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B03`
 
-- [An informative gate with zero passes is excluded as having no data](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B04`
+- [An informative gate with zero passes is excluded as having no data](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B04`
 
-- [A blocking gate is excluded from promotion suggestions](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B05`
+- [A blocking gate is excluded from promotion suggestions](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B05`
 
-- [Returned Promotable populates Gate with the declared gate name](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B06`
+- [Returned Promotable populates Gate with the declared gate name](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B06`
 
-- [Returned Promotable records Passou equal to passed node count](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B07`
+- [Returned Promotable records Passou equal to passed node count](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B07`
 
-- [PromotableGates returns candidates sorted deterministically by name](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B08`
+- [PromotableGates returns candidates sorted deterministically by name](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B08`
 
-- [Multiple clean informative gates are all collected](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B09`
+- [Multiple clean informative gates are all collected](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B09`
 
-- [An informative gate is candidate if and only if non-blocking zero failures and positive passes](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-I01`
+- [An informative gate is candidate if and only if non-blocking zero failures and positive passes](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-I01`
 
-- [A gate with zero passes is never classified as clean](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-I02`
+- [A gate with zero passes is never classified as clean](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-I02`
 
-- [Does not automatically promote gates or modify anchors yaml](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-X01`
+- [Does not automatically promote gates or modify anchors yaml](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-X01`
 
-- [Does not evaluate gate execution results directly from disk](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-X02`
+- [Does not evaluate gate execution results directly from disk](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-X02`
 
-- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B01`
+- [An artifact that is not a spec leaves without a verdict](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B01`
 
-- [A marked rule whose governed code does not import the cited unit fails](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B02`
+- [A marked rule whose governed code does not import the cited unit fails](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B02`
 
-- [A citation living only in a comment does not satisfy the charge](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B03`
+- [A citation living only in a comment does not satisfy the charge](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B03`
 
-- [Governed code that imports the cited unit passes](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B04`
+- [Governed code that imports the cited unit passes](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B04`
 
-- [An import through a different alias still matches](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B05`
+- [An import through a different alias still matches](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B05`
 
-- [A declared waiver with a written reason is not charged](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B06`
+- [A declared waiver with a written reason is not charged](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B06`
 
-- [The owner stamp does not demand an import](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B07`
+- [The owner stamp does not demand an import](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B07`
 
-- [A relation claimed in prose, with no mark, is reported as a suspicion](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B08`
+- [A relation claimed in prose, with no mark, is reported as a suspicion](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B08`
 
-- [The mark with no target on the line is reported](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B09`
+- [The mark with no target on the line is reported](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B09`
 
-- [A target declared by rule code is resolved through the map](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B10`
+- [A target declared by rule code is resolved through the map](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B10`
 
-- [A rule code that resolves to nothing is reported as unresolved](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B11`
+- [A rule code that resolves to nothing is reported as unresolved](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B11`
 
-- [A rule code of the unit itself is not a target](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B12`
+- [A rule code of the unit itself is not a target](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B12`
 
-- [A rule with no relation claim leaves without a verdict](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B13`
+- [A rule with no relation claim leaves without a verdict](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B13`
 
-- [An import is what the project's dialect declares](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B14`
+- [An import is what the project's dialect declares](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B14`
 
-- [Without a map the demand is left pending, not approved](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-E01`
+- [Without a map the demand is left pending, not approved](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-E01`
 
-- [Governed code gone from disk leaves the demand pending](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-E02`
+- [Governed code gone from disk leaves the demand pending](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-E02`
 
-- [The claim and the target must be on the same rule line](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-I01`
+- [The claim and the target must be on the same rule line](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-I01`
 
-- [The import is charged on the governed code, never on the test](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-I02`
+- [The import is charged on the governed code, never on the test](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-I02`
 
-- [A satisfied charge does not swallow a pending suspicion](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-I03`
+- [A satisfied charge does not swallow a pending suspicion](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-I03`
 
-- [The gate does not hunt duplicated concepts across the project](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-X01`
+- [The gate does not hunt duplicated concepts across the project](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-X01`
 
-- [The gate does not compare the values on the two sides](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-X02`
+- [The gate does not compare the values on the two sides](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-X02`
 
-- [The gate does not decide whether an unmarked prose claim blocks](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-X03`
+- [The gate does not decide whether an unmarked prose claim blocks](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-X03`
 
-- [A reference that does not match the sibling spec fails](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B01`
+- [A reference that does not match the sibling spec fails](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B01`
 
-- [The failing verdict names both sides of the divergence](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B02`
+- [The failing verdict names both sides of the divergence](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B02`
 
-- [A reference equal to the sibling spec passes](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B03`
+- [A reference equal to the sibling spec passes](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B03`
 
-- [A spec is not confronted](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B04`
+- [A spec is not confronted](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B04`
 
-- [An artifact with no reference declared leaves without a verdict](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B05`
+- [An artifact with no reference declared leaves without a verdict](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B05`
 
-- [With no sibling spec the gate goes quiet](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B06`
+- [With no sibling spec the gate goes quiet](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B06`
 
-- [A sibling spec that declares no identity counts as no sibling](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B07`
+- [A sibling spec that declares no identity counts as no sibling](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B07`
 
-- [The sibling is found by the name convention](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B08`
+- [The sibling is found by the name convention](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B08`
 
-- [A test file lands on the same sibling its code does](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B09`
+- [A test file lands on the same sibling its code does](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B09`
 
-- [An intermediate extension is dropped from the stem](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B10`
+- [An intermediate extension is dropped from the stem](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B10`
 
-- [The reference is read whatever the comment syntax of the language](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B11`
+- [The reference is read whatever the comment syntax of the language](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B11`
 
-- [The accepted identity length comes from the project's Structure](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B12`
+- [The accepted identity length comes from the project's Structure](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B12`
 
-- [A leading dot is not a stem separator](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B13`
+- [A leading dot is not a stem separator](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B13`
 
-- [A reference to a code that exists nowhere fails](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B14`
+- [A reference to a code that exists nowhere fails](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B14`
 
-- [Without sibling spec, an existing code still skips](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B15`
+- [Without sibling spec, an existing code still skips](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B15`
 
-- [An inferred identity does not satisfy the reference](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B16`
+- [An inferred identity does not satisfy the reference](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B16`
 
-- [Without a graph, absence is not asserted](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B17`
+- [Without a graph, absence is not asserted](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B17`
 
-- [The ruler is the sibling on disk, never the map](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-I01`
+- [The ruler is the sibling on disk, never the map](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-I01`
 
-- [The gate never repairs what it points at](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-I02`
+- [The gate never repairs what it points at](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-I02`
 
-- [The gate does not charge the absence of the reference field](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X01`
+- [The gate does not charge the absence of the reference field](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X01`
 
-- [The gate does not charge the absence of the sibling spec](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X02`
+- [The gate does not charge the absence of the sibling spec](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X02`
 
-- [The gate does not consult the map to resolve the reference](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X03`
+- [The gate does not consult the map to resolve the reference](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X03`
 
-- [The gate does not judge whether the spec describes the unit well](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X04`
+- [The gate does not judge whether the spec describes the unit well](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X04`
 
-- [Confronting an artifact that is neither code nor test skips](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B01`
+- [Confronting an artifact that is neither code nor test skips](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B01`
 
-- [Code or test artifacts without region markers skip](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B02`
+- [Code or test artifacts without region markers skip](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B02`
 
-- [Balanced regions closing with matching identity codes pass](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B03`
+- [Balanced regions closing with matching identity codes pass](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B03`
 
-- [An opened region that is never closed fails](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B04`
+- [An opened region that is never closed fails](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B04`
 
-- [An end region marker without an opening marker fails as an orphan close](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B05`
+- [An end region marker without an opening marker fails as an orphan close](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B05`
 
-- [An end region marker closing with a different code fails](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B06`
+- [An end region marker closing with a different code fails](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B06`
 
-- [Multiple pairing errors are ordered sequentially by line number](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B07`
+- [Multiple pairing errors are ordered sequentially by line number](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B07`
 
-- [Region absence is never charged as a failure](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-I01`
+- [Region absence is never charged as a failure](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-I01`
 
-- [Pairing defects produce a blocking Fail verdict](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-I02`
+- [Pairing defects produce a blocking Fail verdict](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-I02`
 
-- [End markers must explicitly match opening codes](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-I03`
+- [End markers must explicitly match opening codes](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-I03`
 
-- [The gate does not mandate region markers across all source files](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X01`
+- [The gate does not mandate region markers across all source files](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X01`
 
-- [Region markers inside specifications or documentation are ignored](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X02`
+- [Region markers inside specifications or documentation are ignored](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X02`
 
-- [Internal code semantics inside regions are not evaluated](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X03`
+- [Internal code semantics inside regions are not evaluated](layers/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X03`
 
-- [feature-spec-match skips a node that is not a feature, and a feature with no coded scenario](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B01`
+- [feature-spec-match skips a node that is not a feature, and a feature with no coded scenario](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B01`
 
-- [Without a map both gates are Pending](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B02`
+- [Without a map both gates are Pending](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B02`
 
-- [A feature no spec covers is Pending](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B03`
+- [A feature no spec covers is Pending](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B03`
 
-- [A covering spec that defines no requirement leaves feature-spec-match Pending](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B04`
+- [A covering spec that defines no requirement leaves feature-spec-match Pending](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B04`
 
-- [A scenario whose rule the spec no longer declares fails, named as written](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B05`
+- [A scenario whose rule the spec no longer declares fails, named as written](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B05`
 
-- [A numbered variant is the same rule](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B06`
+- [A numbered variant is the same rule](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B06`
 
-- [A data state is defined by its name](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B07`
+- [A data state is defined by its name](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B07`
 
-- [The visual baseline is never charged](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B08`
+- [The visual baseline is never charged](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B08`
 
-- [The rules of every covering spec count together](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B09`
+- [The rules of every covering spec count together](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B09`
 
-- [test-feature-match skips what is not a test, and a test no feature exercises](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B10`
+- [test-feature-match skips what is not a test, and a test no feature exercises](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B10`
 
-- [A linked feature with no coded scenario leaves test-feature-match Pending](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B11`
+- [A linked feature with no coded scenario leaves test-feature-match Pending](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B11`
 
-- [A code the test names that no scenario declares fails](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B12`
+- [A code the test names that no scenario declares fails](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B12`
 
-- [A test naming the bare rule where the feature declares its variants](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B13`
+- [A test naming the bare rule where the feature declares its variants](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B13`
 
-- [A revision code is not charged as a rule](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B14`
+- [A revision code is not charged as a rule](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B14`
 
-- [A linked spec or feature that cannot be read contributes nothing](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-E01`
+- [A linked spec or feature that cannot be read contributes nothing](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-E01`
 
-- [Neither gate answers Pass when it had nothing to match against](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-I01`
+- [Neither gate answers Pass when it had nothing to match against](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-I01`
 
-- [Codes of another unit are never charged](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-X01`
+- [Codes of another unit are never charged](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-X01`
 
-- [A code named only in a comment is not a claim of proof](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-X02`
+- [A code named only in a comment is not a claim of proof](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-X02`
 
-- [A data state defined with the unit prefix is read at the code length the project declares](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B15`
+- [A data state defined with the unit prefix is read at the code length the project declares](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B15`
 
-- [A support file is not confronted as a test](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B16`
+- [A support file is not confronted as a test](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B16`
 
-- [A test of a declarative unit is not charged a feature](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B17`
+- [A test of a declarative unit is not charged a feature](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B17`
 
-- [A test naming a variant its feature does not declare](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B18`
+- [A test naming a variant its feature does not declare](layers/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B18`
 
-- [The targets of a reviewed gate with no review at their revision are to review](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-B01`
+- [The targets of a reviewed gate with no review at their revision are to review](layers/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-B01`
 
-- [A gate with no review has nothing to review, and a named gate lists its own](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-B02`
+- [A gate with no review has nothing to review, and a named gate lists its own](layers/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-B02`
 
-- [A change to a reviewed target makes it to review again](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-B03`
+- [A change to a reviewed target makes it to review again](layers/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-B03`
 
-- [Listing what is to review changes no verdict](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-I01`
+- [Listing what is to review changes no verdict](layers/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-I01`
 
-- [The list never blocks](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-X01`
+- [The list never blocks](layers/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-X01`
 
-- [Non-spec artifacts skip confrontation](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B01`
+- [Non-spec artifacts skip confrontation](layers/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B01`
 
-- [A spec with no revision has nothing to confront](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B02`
+- [A spec with no revision has nothing to confront](layers/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B02`
 
-- [A revision naming no rule cannot be confronted](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B03`
+- [A revision naming no rule cannot be confronted](layers/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B03`
 
-- [A revision naming a rule the spec does not define fails](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B04`
+- [A revision naming a rule the spec does not define fails](layers/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B04`
 
-- [A sibling sharing vocabulary and left unmentioned is reported](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B05`
+- [A sibling sharing vocabulary and left unmentioned is reported](layers/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B05`
 
-- [Every vocabulary-sharing sibling accounted for passes](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B06`
+- [Every vocabulary-sharing sibling accounted for passes](layers/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B06`
 
-- [Checked clears the accusation without asserting correctness](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B07`
+- [Checked clears the accusation without asserting correctness](layers/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B07`
 
-- [A revised rule is never its own orphan](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-I01`
+- [A revised rule is never its own orphan](layers/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-I01`
 
-- [Terms shared by the whole unit do not discriminate](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-X01`
+- [Terms shared by the whole unit do not discriminate](layers/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-X01`
 
-- [A rule's title is its heading, not its usage row](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B08`
+- [A rule's title is its heading, not its usage row](layers/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B08`
 
-- [A revision that revised no rule says so](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B09`
+- [A revision that revised no rule says so](layers/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B09`
 
-- [A revision the branch added whose number the base already uses moves to the next free number](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B01`
+- [A revision the branch added whose number the base already uses moves to the next free number](layers/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B01`
 
-- [After a rebase, only the branch's revision moves, not the base's with the same number](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B02`
+- [After a rebase, only the branch's revision moves, not the base's with the same number](layers/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B02`
 
-- [When one added revision collides, every added revision of that code moves in order](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B03`
+- [When one added revision collides, every added revision of that code moves in order](layers/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B03`
 
-- [A revision the branch added whose number the base does not use stays](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B04`
+- [A revision the branch added whose number the base does not use stays](layers/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B04`
 
-- [A citation is rewritten only on a line the branch added](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B05`
+- [A citation is rewritten only on a line the branch added](layers/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B05`
 
-- [The branch adding the same number twice is refused, naming the code](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B06`
+- [The branch adding the same number twice is refused, naming the code](layers/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B06`
 
-- [A revision the base has is never renumbered, even with its explanation edited](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-I01`
+- [A revision the base has is never renumbered, even with its explanation edited](layers/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-I01`
 
-- [Rewriting is one pass, and a chain of renames never cascades](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-I02`
+- [Rewriting is one pass, and a chain of renames never cascades](layers/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-I02`
 
-- [Does not rewrite a revision cited without its unit code](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-X01`
+- [Does not rewrite a revision cited without its unit code](layers/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-X01`
 
-- [An artifact that is not a screen leaves without a verdict, and says why](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B01`
+- [An artifact that is not a screen leaves without a verdict, and says why](layers/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B01`
 
-- [A screen with no named route fails](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B02`
+- [A screen with no named route fails](layers/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B02`
 
-- [A navigation row carrying a generic term fails](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B03`
+- [A navigation row carrying a generic term fails](layers/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B03`
 
-- [A screen with a named route and concrete neighbours passes](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B04`
+- [A screen with a named route and concrete neighbours passes](layers/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B04`
 
-- [Route and navigation are recognised in either declared language](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B05`
+- [Route and navigation are recognised in either declared language](layers/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B05`
 
-- [The header's declared layer wins over the node's tags](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-I01`
+- [The header's declared layer wins over the node's tags](layers/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-I01`
 
-- [A generic term in prose is not accused](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-I02`
+- [A generic term in prose is not accused](layers/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-I02`
 
-- [No layer other than screen is charged for a route](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-X01`
+- [No layer other than screen is charged for a route](layers/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-X01`
 
-- [The declared route is not confronted against the real router](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-X02`
+- [The declared route is not confronted against the real router](layers/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-X02`
 
-- [A navigation section ends at any heading](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B06`
+- [A navigation section ends at any heading](layers/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B06`
 
-- [Non-spec artifacts skip confrontation](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B01`
+- [Non-spec artifacts skip confrontation](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B01`
 
-- [Specifications without declared routes skip confrontation](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B02`
+- [Specifications without declared routes skip confrontation](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B02`
 
-- [Specifications with declared routes return Pending when route registry is unconfigured](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B03`
+- [Specifications with declared routes return Pending when route registry is unconfigured](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B03`
 
-- [Invalid route registry glob patterns return Pending](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B04`
+- [Invalid route registry glob patterns return Pending](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B04`
 
-- [Route registry files containing zero registered routes return Pending](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B05`
+- [Route registry files containing zero registered routes return Pending](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B05`
 
-- [Declared screen route matching a component navigation prop passes](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B06`
+- [Declared screen route matching a component navigation prop passes](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B06`
 
-- [Declared screen route matching a navigation stack parameter type entry passes](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B07`
+- [Declared screen route matching a navigation stack parameter type entry passes](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B07`
 
-- [Declared backend route matching an HTTP resource registration passes](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B08`
+- [Declared backend route matching an HTTP resource registration passes](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B08`
 
-- [HTTP method verb prefixes are stripped when evaluating declared routes](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B09`
+- [HTTP method verb prefixes are stripped when evaluating declared routes](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B09`
 
-- [Route paths match regardless of leading slash differences between specification and code](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B10`
+- [Route paths match regardless of leading slash differences between specification and code](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B10`
 
-- [Custom route pattern regex matches custom route registration patterns](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B11`
+- [Custom route pattern regex matches custom route registration patterns](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B11`
 
-- [Custom route pattern regex that is malformed or lacks capture groups returns Pending](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B12`
+- [Custom route pattern regex that is malformed or lacks capture groups returns Pending](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B12`
 
-- [Declared routes missing from all registered route definitions fail](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B13`
+- [Declared routes missing from all registered route definitions fail](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B13`
 
-- [Route presence is validated only for specifications](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I01`
+- [Route presence is validated only for specifications](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I01`
 
-- [The gate never approves route existence without inspecting registry files](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I02`
+- [The gate never approves route existence without inspecting registry files](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I02`
 
-- [Route matching is slash-normalized between specification and code](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I03`
+- [Route matching is slash-normalized between specification and code](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I03`
 
-- [Missing routes produce a blocking Fail verdict](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I04`
+- [Missing routes produce a blocking Fail verdict](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I04`
 
-- [The gate does not require every specification to declare a route](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-X01`
+- [The gate does not require every specification to declare a route](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-X01`
 
-- [Route parameter schemas and payload contracts are not evaluated by this gate](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-X02`
+- [Route parameter schemas and payload contracts are not evaluated by this gate](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-X02`
 
-- [Route access permissions and authentication middlewares are outside evaluation scope](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-X03`
+- [Route access permissions and authentication middlewares are outside evaluation scope](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-X03`
 
-- [An unreadable registry file leaves the route pending](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-E03`
+- [An unreadable registry file leaves the route pending](layers/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-E03`
 
-- [Building an identifier joins the gate and the rule](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B01`
+- [Building an identifier joins the gate and the rule](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B01`
 
-- [A gate with a single verification gains no separator](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B02`
+- [A gate with a single verification gains no separator](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B02`
 
-- [The identifier decomposes into gate and rule](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B03`
+- [The identifier decomposes into gate and rule](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B03`
 
-- [The rule half is empty when the identifier carries only a gate](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B04`
+- [The rule half is empty when the identifier carries only a gate](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B04`
 
-- [A waiver with no reason is refused](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B05`
+- [A waiver with no reason is refused](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B05`
 
-- [A waiver with no rule name is refused](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B06`
+- [A waiver with no rule name is refused](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B06`
 
-- [A path is refused as the waiver target](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B07`
+- [A path is refused as the waiver target](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B07`
 
-- [A target marker with nothing after it is refused](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B08`
+- [A target marker with nothing after it is refused](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B08`
 
-- [The waiver accepts both granularities](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B09`
+- [The waiver accepts both granularities](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B09`
 
-- [A waiver that declares targets does not hold for the whole gate](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B10`
+- [A waiver that declares targets does not hold for the whole gate](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B10`
 
-- [A waiver by target spares the named codes and confronts the rest](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B11`
+- [A waiver by target spares the named codes and confronts the rest](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B11`
 
-- [A waiver with no declared target holds for every code](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B12`
+- [A waiver with no declared target holds for every code](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B12`
 
-- [An artifact with no code is not reached by a waiver restricted to targets](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B13`
+- [An artifact with no code is not reached by a waiver restricted to targets](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B13`
 
-- [Each target carries its own reason](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B14`
+- [Each target carries its own reason](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B14`
 
-- [The commit message declares waivers that survive in the history](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B15`
+- [The commit message declares waivers that survive in the history](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B15`
 
-- [A commit marker whose reason is blank is refused](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B16`
+- [A commit marker whose reason is blank is refused](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B16`
 
-- [Two waivers merge instead of forcing a choice](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B17`
+- [Two waivers merge instead of forcing a choice](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B17`
 
-- [A waiver never reaches what nobody waived](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-I01`
+- [A waiver never reaches what nobody waived](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-I01`
 
-- [Every accepted waiver carries a written reason](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-I02`
+- [Every accepted waiver carries a written reason](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-I02`
 
-- [A refusal always reaches the caller as an error](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-I03`
+- [A refusal always reaches the caller as an error](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-I03`
 
-- [The unit does not accept a path as the waiver target](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-X01`
+- [The unit does not accept a path as the waiver target](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-X01`
 
-- [The unit does not decide whether a rule passes](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-X02`
+- [The unit does not decide whether a rule passes](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-X02`
 
-- [The unit reads neither files nor the map](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-X03`
+- [The unit reads neither files nor the map](layers/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-X03`
 
-- [A spec whose rules the code ignores is accused, and the verdict names them](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B01`
+- [A spec whose rules the code ignores is accused, and the verdict names them](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B01`
 
-- [A rule waived with a written reason closes the account](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B02`
+- [A rule waived with a written reason closes the account](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B02`
 
-- [A unit that predates the practice is a divergence item, not a failure](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B03`
+- [A unit that predates the practice is a divergence item, not a failure](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B03`
 
-- [Declaring the requirement turns the divergence item into a failure](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B04`
+- [Declaring the requirement turns the divergence item into a failure](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B04`
 
-- [A spec with no linked code is not this gate's subject](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B05`
+- [A spec with no linked code is not this gate's subject](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B05`
 
-- [A waiver with no named rule covers every rule of the spec](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B06`
+- [A waiver with no named rule covers every rule of the spec](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B06`
 
-- [Requiring the marking never punishes whoever already marks](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-I01`
+- [Requiring the marking never punishes whoever already marks](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-I01`
 
-- [The identity survives a rename](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-I02`
+- [The identity survives a rename](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-I02`
 
-- [The gate does not judge whether the implementation is correct](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-X01`
+- [The gate does not judge whether the implementation is correct](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-X01`
 
-- [The gate does not demand a mark on EVERY rule](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-X02`
+- [The gate does not demand a mark on EVERY rule](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-X02`
 
-- [A code file that cannot be read is pending, naming the file](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-E01`
+- [A code file that cannot be read is pending, naming the file](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-E01`
 
-- [With data_states.required, the code cites each data state the spec defines](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B07`
+- [With data_states.required, the code cites each data state the spec defines](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B07`
 
-- [A letter that is not declared in the vocabulary fails](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B01`
+- [A letter that is not declared in the vocabulary fails](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B01`
 
-- [A declared letter under a claimed section passes](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B02`
+- [A declared letter under a claimed section passes](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B02`
 
-- [A section cataloguing rules under a title no letter claims fails](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B03`
+- [A section cataloguing rules under a title no letter claims fails](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B03`
 
-- [The same letter claimed by two terms is a conflict in the vocabulary](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B04`
+- [The same letter claimed by two terms is a conflict in the vocabulary](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B04`
 
-- [With no vocabulary declared the gate confronts the canonical letters](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B05`
+- [With no vocabulary declared the gate confronts the canonical letters](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B05`
 
-- [A heading that is the rule code itself is not a category section](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B06`
+- [A heading that is the rule code itself is not a category section](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B06`
 
-- [A section that only cites other sections' codes claims no letter](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B07`
+- [A section that only cites other sections' codes claims no letter](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B07`
 
-- [A section that defines a code in the first table cell is charged](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B08`
+- [A section that defines a code in the first table cell is charged](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B08`
 
-- [A section declared as rule-cataloguing and filled without a code is a divergence](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B09`
+- [A section declared as rule-cataloguing and filled without a code is a divergence](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B09`
 
-- [A section whose table already carries the code is not charged](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B10`
+- [A section whose table already carries the code is not charged](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B10`
 
-- [A declared section outside sections_require_code is not charged](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B11`
+- [A declared section outside sections_require_code is not charged](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B11`
 
-- [A project that does not use sections_require_code changes no behaviour](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B12`
+- [A project that does not use sections_require_code changes no behaviour](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B12`
 
-- [A spec with no rule code at all is not this gate's problem](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-I01`
+- [A spec with no rule code at all is not this gate's problem](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-I01`
 
-- [The verdict names the letter and where to declare it](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-I02`
+- [The verdict names the letter and where to declare it](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-I02`
 
-- [A filled section with no code is the gap where the scenario loses its anchor](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-I03`
+- [A filled section with no code is the gap where the scenario loses its anchor](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-I03`
 
-- [The gate does not decide which letters exist](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X01`
+- [The gate does not decide which letters exist](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X01`
 
-- [Without a declared vocabulary only the letter is charged](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X02`
+- [Without a declared vocabulary only the letter is charged](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X02`
 
-- [The gate does not judge whether the letter suits the rule](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X03`
+- [The gate does not judge whether the letter suits the rule](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X03`
 
-- [The gate charges traceability, not format](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X04`
+- [The gate charges traceability, not format](layers/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X04`
 
-- [The sections are read in any language and by position](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B01`
+- [The sections are read in any language and by position](layers/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B01`
 
-- [A uses cell lists backticked or comma-separated items](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B02`
+- [A uses cell lists backticked or comma-separated items](layers/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B02`
 
-- [A rule that does not say what it uses fails](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B03`
+- [A rule that does not say what it uses fails](layers/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B03`
 
-- [Nothing to ask about is a skip](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B04`
+- [Nothing to ask about is a skip](layers/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B04`
 
-- [What a rule uses must exist in the spec](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B05`
+- [What a rule uses must exist in the spec](layers/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B05`
 
-- [A spec whose rules say nothing yet is a skip](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B06`
+- [A spec whose rules say nothing yet is a skip](layers/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B06`
 
-- [The fields a rule uses appear in the code the spec governs](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B07`
+- [The fields a rule uses appear in the code the spec governs](layers/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B07`
 
-- [Non-feature artifacts skip confrontation](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B01`
+- [Non-feature artifacts skip confrontation](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B01`
 
-- [Genuinely assertive outcome steps pass](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B02`
+- [Genuinely assertive outcome steps pass](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B02`
 
-- [Tautological outcome steps citing only the code fail](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B03`
+- [Tautological outcome steps citing only the code fail](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B03`
 
-- [Tautological variations wrapped in linking words fail](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B04`
+- [Tautological variations wrapped in linking words fail](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B04`
 
-- [Outcome steps citing a code with substantive assertion pass](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B05`
+- [Outcome steps citing a code with substantive assertion pass](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B05`
 
-- [Multiple tautological outcome steps are reported sorted and deduplicated](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B06`
+- [Multiple tautological outcome steps are reported sorted and deduplicated](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B06`
 
-- [Outcome steps across recognized dialect keywords are enforced](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B07`
+- [Outcome steps across recognized dialect keywords are enforced](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B07`
 
-- [Empty and comment lines are ignored](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B08`
+- [Empty and comment lines are ignored](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B08`
 
-- [Non-outcome steps citing codes are ignored](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B09`
+- [Non-outcome steps citing codes are ignored](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B09`
 
-- [Up to two residual content words is classified as a tautology](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-I01`
+- [Up to two residual content words is classified as a tautology](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-I01`
 
-- [Truly assertive outcome steps are never flagged as tautologies](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-I02`
+- [Truly assertive outcome steps are never flagged as tautologies](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-I02`
 
-- [Language recognition covers all supported dialect alternatives](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-I03`
+- [Language recognition covers all supported dialect alternatives](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-I03`
 
-- [Prose style and semantic elegance are not graded](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-X01`
+- [Prose style and semantic elegance are not graded](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-X01`
 
-- [Setup and trigger steps are not inspected for code citations](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-X02`
+- [Setup and trigger steps are not inspected for code citations](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-X02`
 
-- [Scenario or test presence is not enforced by this gate](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-X03`
+- [Scenario or test presence is not enforced by this gate](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-X03`
 
-- [Two scenarios sharing one code are reported](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B01`
+- [Two scenarios sharing one code are reported](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B01`
 
-- [The report names the repeated code](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B02`
+- [The report names the repeated code](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B02`
 
-- [The report says how many scenarios share the code](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B03`
+- [The report says how many scenarios share the code](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B03`
 
-- [The report teaches the way out with the project's own code](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B04`
+- [The report teaches the way out with the project's own code](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B04`
 
-- [The suffix gives each scenario its own identity](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B05`
+- [The suffix gives each scenario its own identity](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B05`
 
-- [Distinct codes pass](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B06`
+- [Distinct codes pass](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B06`
 
-- [The verdict is a divergence and never a failure](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B07`
+- [The verdict is a divergence and never a failure](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B07`
 
-- [An artifact that is not a feature leaves without a verdict](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B08`
+- [An artifact that is not a feature leaves without a verdict](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B08`
 
-- [A feature with no coded scenario leaves without a verdict](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B09`
+- [A feature with no coded scenario leaves without a verdict](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B09`
 
-- [Several repeated codes are reported together in a stable order](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B10`
+- [Several repeated codes are reported together in a stable order](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B10`
 
-- [Long titles are shortened in the report](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B11`
+- [Long titles are shortened in the report](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B11`
 
-- [Grouping is by the complete code, suffix included](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-I01`
+- [Grouping is by the complete code, suffix included](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-I01`
 
-- [The message is deterministic](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-I02`
+- [The message is deterministic](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-I02`
 
-- [The gate does not judge whether the two scenarios describe different behaviours](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X01`
+- [The gate does not judge whether the two scenarios describe different behaviours](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X01`
 
-- [The gate does not look across features](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X02`
+- [The gate does not look across features](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X02`
 
-- [The gate does not charge the absence of a code on a scenario](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X03`
+- [The gate does not charge the absence of a code on a scenario](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X03`
 
-- [The gate does not renumber the scenarios](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X04`
+- [The gate does not renumber the scenarios](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X04`
 
-- [A scenario whose steps copy another's is reported](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B12`
+- [A scenario whose steps copy another's is reported](layers/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B12`
 
-- [An artifact that is not a feature leaves without a verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B01`
+- [An artifact that is not a feature leaves without a verdict](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B01`
 
-- [With no declared vocabulary the canonical letters apply](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B02`
+- [With no declared vocabulary the canonical letters apply](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B02`
 
-- [A feature carrying no scenario code leaves without a verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B03`
+- [A feature carrying no scenario code leaves without a verdict](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B03`
 
-- [Every letter inside the vocabulary passes](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B04`
+- [Every letter inside the vocabulary passes](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B04`
 
-- [A letter outside the vocabulary is undetermined, not a failure](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B05`
+- [A letter outside the vocabulary is undetermined, not a failure](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B05`
 
-- [The verdict names the letters that are outside and the codes carrying them](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B06`
+- [The verdict names the letters that are outside and the codes carrying them](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B06`
 
-- [Codes sharing one unknown letter are grouped into a single line](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B07`
+- [Codes sharing one unknown letter are grouped into a single line](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B07`
 
-- [The scan is over the shape of a code, never over the vocabulary](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-I01`
+- [The scan is over the shape of a code, never over the vocabulary](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-I01`
 
-- [The code-length pattern is read at every call](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-I02`
+- [The code-length pattern is read at every call](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-I02`
 
-- [A valid letter is never named in the verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-I03`
+- [A valid letter is never named in the verdict](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-I03`
 
-- [The gate does not choose between declaring and remapping](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-X01`
+- [The gate does not choose between declaring and remapping](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-X01`
 
-- [The tags accompanying a code are not judged](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-X02`
+- [The tags accompanying a code are not judged](layers/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-X02`
 
-- [Non-feature artifacts skip confrontation](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B01`
+- [Non-feature artifacts skip confrontation](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B01`
 
-- [Missing or empty rule types in configuration skip confrontation](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B02`
+- [Missing or empty rule types in configuration skip confrontation](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B02`
 
-- [Configuration without tag mappings skips confrontation](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B03`
+- [Configuration without tag mappings skips confrontation](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B03`
 
-- [Features without coded scenarios skip confrontation](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B04`
+- [Features without coded scenarios skip confrontation](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B04`
 
-- [Codes lacking a recognized rule letter are ignored](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B05`
+- [Codes lacking a recognized rule letter are ignored](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B05`
 
-- [Unregistered scenario tags are ignored](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B06`
+- [Unregistered scenario tags are ignored](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B06`
 
-- [Scenarios whose classification tags align with code letters pass](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B07`
+- [Scenarios whose classification tags align with code letters pass](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B07`
 
-- [A tag mapped to multiple rule letters passes if any matches](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B08`
+- [A tag mapped to multiple rule letters passes if any matches](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B08`
 
-- [A multi-coded scenario passes when a tag matches any code](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B09`
+- [A multi-coded scenario passes when a tag matches any code](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B09`
 
-- [A scenario tag disagreeing with the code rule letter returns a divergence](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B10`
+- [A scenario tag disagreeing with the code rule letter returns a divergence](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B10`
 
-- [The Diverge verdict cites details of the type divergence](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B11`
+- [The Diverge verdict cites details of the type divergence](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B11`
 
-- [Multiple mismatch findings are sorted deterministically](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B12`
+- [Multiple mismatch findings are sorted deterministically](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B12`
 
-- [Classification alignment is evaluated only on feature artifacts](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I01`
+- [Classification alignment is evaluated only on feature artifacts](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I01`
 
-- [Absence of tag mappings prevents speculative enforcement](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I02`
+- [Absence of tag mappings prevents speculative enforcement](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I02`
 
-- [Mismatched scenario types return Diverge rather than Fail](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I03`
+- [Mismatched scenario types return Diverge rather than Fail](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I03`
 
-- [Secondary requirement codes prevent false mismatch reporting](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I04`
+- [Secondary requirement codes prevent false mismatch reporting](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I04`
 
-- [The gate does not mandate classification tags on every scenario](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X01`
+- [The gate does not mandate classification tags on every scenario](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X01`
 
-- [The gate does not decide whether tag or code is erroneous](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X02`
+- [The gate does not decide whether tag or code is erroneous](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X02`
 
-- [Specifications and test files are not inspected or modified](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X03`
+- [Specifications and test files are not inspected or modified](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X03`
 
-- [Tags are permitted to map across multiple rule letters](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X04`
+- [Tags are permitted to map across multiple rule letters](layers/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X04`
 
-- [Nothing to confront leaves without a verdict](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B01`
+- [Nothing to confront leaves without a verdict](layers/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B01`
 
-- [A triggered section the spec lacks fails, named once](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B02`
+- [A triggered section the spec lacks fails, named once](layers/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B02`
 
-- [A section present satisfies the requirement](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B03`
+- [A section present satisfies the requirement](layers/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B03`
 
-- [Each trigger reads what the core measures](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B04`
+- [Each trigger reads what the core measures](layers/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B04`
 
-- [A trigger that cannot be measured is pending, not silent](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B05`
+- [A trigger that cannot be measured is pending, not silent](layers/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B05`
 
-- [A code file that cannot be read calls for nothing](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-E01`
+- [A code file that cannot be read calls for nothing](layers/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-E01`
 
-- [A dependency on types only calls for nothing unless asked](camadas/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B06`
+- [A dependency on types only calls for nothing unless asked](layers/gate.md#scrqr--sectionrequired--the-spec-sections-a-units-code-calls-for-exist-in-its-spec) `SCRQR-B06`
 
-- [An artifact that is not code leaves without a verdict](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B01`
+- [An artifact that is not code leaves without a verdict](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B01`
 
-- [Without a declared dialect the verdict is undetermined](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B02`
+- [Without a declared dialect the verdict is undetermined](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B02`
 
-- [Fewer than three siblings on the same parameter is left alone](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B03`
+- [Fewer than three siblings on the same parameter is left alone](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B03`
 
-- [The sibling that does not guard is accused](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B04`
+- [The sibling that does not guard is accused](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B04`
 
-- [When every sibling guards, nothing is accused](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B05`
+- [When every sibling guards, nothing is accused](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B05`
 
-- [When no sibling guards, nothing is accused either](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B06`
+- [When no sibling guards, nothing is accused either](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B06`
 
-- [The verdict names the function and the parameter](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B07`
+- [The verdict names the function and the parameter](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B07`
 
-- [A waiver with a written reason silences the accusation](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B08`
+- [A waiver with a written reason silences the accusation](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B08`
 
-- [The gate never judges what the guard does](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-I01`
+- [The gate never judges what the guard does](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-I01`
 
-- [The three conservatism conditions hold together](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-I02`
+- [The three conservatism conditions hold together](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-I02`
 
-- [The gate does not invent what an exported function looks like](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-X01`
+- [The gate does not invent what an exported function looks like](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-X01`
 
-- [A single function in isolation is not accused](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-X02`
+- [A single function in isolation is not accused](layers/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-X02`
 
-- [Two test files of one unit in one layer fail](camadas/gate.md#sngtu--singletestperunit--a-unit-has-one-test-file-per-test-layer) `SNGTU-B01`
+- [Two test files of one unit in one layer fail](layers/gate.md#sngtu--singletestperunit--a-unit-has-one-test-file-per-test-layer) `SNGTU-B01`
 
-- [A declared split passes](camadas/gate.md#sngtu--singletestperunit--a-unit-has-one-test-file-per-test-layer) `SNGTU-B02`
+- [A declared split passes](layers/gate.md#sngtu--singletestperunit--a-unit-has-one-test-file-per-test-layer) `SNGTU-B02`
 
-- [Not code, no test, no map](camadas/gate.md#sngtu--singletestperunit--a-unit-has-one-test-file-per-test-layer) `SNGTU-B03`
+- [Not code, no test, no map](layers/gate.md#sngtu--singletestperunit--a-unit-has-one-test-file-per-test-layer) `SNGTU-B03`
 
-- [A requirement no scenario tags is failed and named](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B01`
+- [A requirement no scenario tags is failed and named](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B01`
 
-- [A requirement that has a scenario is not accused](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B02`
+- [A requirement that has a scenario is not accused](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B02`
 
-- [With every requirement tagged the gate passes](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B03`
+- [With every requirement tagged the gate passes](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B03`
 
-- [A code merely cited contracts no obligation](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B04`
+- [A code merely cited contracts no obligation](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B04`
 
-- [A per-requirement waiver with a written reason waives](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B05`
+- [A per-requirement waiver with a written reason waives](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B05`
 
-- [A bare per-requirement waiver does not waive](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B06`
+- [A bare per-requirement waiver does not waive](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B06`
 
-- [A whole-spec waiver drags the waiver to every requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B07`
+- [A whole-spec waiver drags the waiver to every requirement](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B07`
 
-- [Without the whole-spec waiver the same requirements keep failing](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B08`
+- [Without the whole-spec waiver the same requirements keep failing](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B08`
 
-- [A bare whole-spec waiver drags nothing](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B09`
+- [A bare whole-spec waiver drags nothing](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B09`
 
-- [A spec with no feature returns Skip](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B10`
+- [A spec with no feature returns Skip](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B10`
 
-- [Requirements are looked for across every linked feature](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B11`
+- [Requirements are looked for across every linked feature](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B11`
 
-- [An artifact that is not a spec returns Skip](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B12`
+- [An artifact that is not a spec returns Skip](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B12`
 
-- [A rule alias needs no scenario of its own](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B13`
+- [A rule alias needs no scenario of its own](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B13`
 
-- [An alias that stands for no rule fails](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B14`
+- [An alias that stands for no rule fails](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B14`
 
-- [Every waiver requires a written reason](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-I01`
+- [Every waiver requires a written reason](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-I01`
 
-- [Each gate accuses one thing](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-I02`
+- [Each gate accuses one thing](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-I02`
 
-- [The gate does not judge whether the scenario proves the requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-X01`
+- [The gate does not judge whether the scenario proves the requirement](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-X01`
 
-- [A cited code produces no accusation](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-X02`
+- [A cited code produces no accusation](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-X02`
 
-- [The gate does not confront feature against test](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-X03`
+- [The gate does not confront feature against test](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-X03`
 
-- [Without a built map the confrontation is pending](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-E01`
+- [Without a built map the confrontation is pending](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-E01`
 
-- [A feature missing from disk does not hide the scenarios of the other features](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-E02`
+- [A feature missing from disk does not hide the scenarios of the other features](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-E02`
 
-- [Scenarios tagged with a suffix cover the requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B15`
+- [Scenarios tagged with a suffix cover the requirement](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B15`
 
-- [A code in the open-decisions section is no requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B16`
+- [A code in the open-decisions section is no requirement](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B16`
 
-- [With data_states.required, a data state the spec defines is a requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B17`
+- [With data_states.required, a data state the spec defines is a requirement](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B17`
 
-- [A rule marked @retired is no requirement, no rule of the code, and uses nothing](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B18`
+- [A rule marked @retired is no requirement, no rule of the code, and uses nothing](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B18`
 
-- [The requirements are given to a report under the project's data-states choice](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B19`
+- [The requirements are given to a report under the project's data-states choice](layers/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B19`
 
-- [What has nothing to confront leaves both gates without a verdict](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B01`
+- [What has nothing to confront leaves both gates without a verdict](layers/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B01`
 
-- [Every validation is the trigger of a transition](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B02`
+- [Every validation is the trigger of a transition](layers/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B02`
 
-- [A transition from or to an unknown state does not count](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B03`
+- [A transition from or to an unknown state does not count](layers/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B03`
 
-- [A validation exempted with a reason is not asked](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B04`
+- [A validation exempted with a reason is not asked](layers/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B04`
 
-- [Every error names the message it shows](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B05`
+- [Every error names the message it shows](layers/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B05`
 
-- [A code file with no spec beside it leaves without a verdict](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-E01`
+- [A code file with no spec beside it leaves without a verdict](layers/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-E01`
 
-- [Sections nested under another are found](camadas/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B06`
+- [Sections nested under another are found](layers/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B06`
 
-- [A test with no assertion fails, named by its line and title](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B01`
+- [A test with no assertion fails, named by its line and title](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B01`
 
-- [The body is the block the test's line opens](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B02`
+- [The body is the block the test's line opens](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B02`
 
-- [A multi-line literal is text, not layout](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B03`
+- [A multi-line literal is text, not layout](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B03`
 
-- [An empty test is a label only when the gate says so](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B04`
+- [An empty test is a label only when the gate says so](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B04`
 
-- [The source's end bounds the body](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B05`
+- [The source's end bounds the body](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B05`
 
-- [Nothing to measure is skipped](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B06`
+- [Nothing to measure is skipped](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B06`
 
-- [Tests that cannot be listed fail the gate with the reason](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-E01`
+- [Tests that cannot be listed fail the gate with the reason](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-E01`
 
-- [A test that declares it asserts nothing is left out](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B07`
+- [A test that declares it asserts nothing is left out](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B07`
 
-- [A test at a line the content does not have](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B08`
+- [A test at a line the content does not have](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B08`
 
-- [A closer that opens again goes on with the block](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B09`
+- [A closer that opens again goes on with the block](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B09`
 
-- [A node that is not a feature is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B01`
+- [A node that is not a feature is skipped](layers/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B01`
 
-- [A project with no filter per level is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B02`
+- [A project with no filter per level is skipped](layers/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B02`
 
-- [A feature with no filtered level is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B03`
+- [A feature with no filtered level is skipped](layers/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B03`
 
-- [A level with allow accepts only matching codes](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B04`
+- [A level with allow accepts only matching codes](layers/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B04`
 
-- [A level with exclude refuses matching codes even when allowed](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B05`
+- [A level with exclude refuses matching codes even when allowed](layers/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B05`
 
-- [Every code of the scenario is confronted without its suffix](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B06`
+- [Every code of the scenario is confronted without its suffix](layers/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B06`
 
-- [The failure names each refused code with its level, sorted](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B07`
+- [The failure names each refused code with its level, sorted](layers/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B07`
 
-- [Accepted codes pass](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B08`
+- [Accepted codes pass](layers/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B08`
 
-- [Levels come from the gate's own entries, and two entries add their lists](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B09`
+- [Levels come from the gate's own entries, and two entries add their lists](layers/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B09`
 
-- [A test that names what its unit defines exercises it](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B01`
+- [A test that names what its unit defines exercises it](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B01`
 
-- [An import of the unit's module reaches it](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B02`
+- [An import of the unit's module reaches it](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B02`
 
-- [A test that defines the unit's names exercises a copy](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B03`
+- [A test that defines the unit's names exercises a copy](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B03`
 
-- [Short names are anyone's](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B04`
+- [Short names are anyone's](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B04`
 
-- [The ref's unit must be reached](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B05`
+- [The ref's unit must be reached](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B05`
 
-- [A declared invocation reaches the unit it names](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B06`
+- [A declared invocation reaches the unit it names](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B06`
 
-- [Nothing to confront is skipped](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B07`
+- [Nothing to confront is skipped](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B07`
 
-- [A declared way to reach the unit passes](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B08`
+- [A declared way to reach the unit passes](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B08`
 
-- [A member of the test's own type is not a copy of the unit's](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B09`
+- [A member of the test's own type is not a copy of the unit's](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B09`
 
-- [Non-test artifacts skip confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B01`
+- [Non-test artifacts skip confrontation](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B01`
 
-- [Confrontation without a dependency graph returns Pending](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B02`
+- [Confrontation without a dependency graph returns Pending](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B02`
 
-- [A test with no linked feature skips confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B03`
+- [A test with no linked feature skips confrontation](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B03`
 
-- [A test whose linked feature cannot be read skips confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B04`
+- [A test whose linked feature cannot be read skips confrontation](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B04`
 
-- [A test whose linked feature declares no scenario codes skips confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B05`
+- [A test whose linked feature declares no scenario codes skips confrontation](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B05`
 
-- [A test containing a declared scenario code passes](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B06`
+- [A test containing a declared scenario code passes](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B06`
 
-- [A single declared scenario code is sufficient to pass](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B07`
+- [A single declared scenario code is sufficient to pass](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B07`
 
-- [A test containing none of the linked feature scenario codes fails](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B08`
+- [A test containing none of the linked feature scenario codes fails](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B08`
 
-- [A test with transposed or misspelled codes fails exact substring confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B09`
+- [A test with transposed or misspelled codes fails exact substring confrontation](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B09`
 
-- [A failing verdict names the linked feature and lists expected codes](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B10`
+- [A failing verdict names the linked feature and lists expected codes](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B10`
 
-- [Scenario codes appearing anywhere in test content satisfy traceability](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B11`
+- [Scenario codes appearing anywhere in test content satisfy traceability](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B11`
 
-- [Traceability is strictly charged on test artifacts](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I01`
+- [Traceability is strictly charged on test artifacts](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I01`
 
-- [Tests without a linked feature are never charged](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I02`
+- [Tests without a linked feature are never charged](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I02`
 
-- [The acceptance threshold requires only one scenario code present](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I03`
+- [The acceptance threshold requires only one scenario code present](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I03`
 
-- [Missing graph structure produces Pending rather than approving](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I04`
+- [Missing graph structure produces Pending rather than approving](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I04`
 
-- [The gate does not enforce one-to-one scenario coverage](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X01`
+- [The gate does not enforce one-to-one scenario coverage](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X01`
 
-- [Test execution results are not inspected by this gate](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X02`
+- [Test execution results are not inspected by this gate](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X02`
 
-- [Scenario codes are not required in standalone test files](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X03`
+- [Scenario codes are not required in standalone test files](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X03`
 
-- [Test assertion semantics and quality are not evaluated](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X04`
+- [Test assertion semantics and quality are not evaluated](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X04`
 
-- [With a tests source a test traces only through its titles](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B12`
+- [With a tests source a test traces only through its titles](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B12`
 
-- [A failing tests source fails the gate naming the error](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-E03`
+- [A failing tests source fails the gate naming the error](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-E03`
 
-- [A support file is not charged with tracing](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B13`
+- [A support file is not charged with tracing](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B13`
 
-- [The gate skips what is not a spec, and is Pending without a map](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B01`
+- [The gate skips what is not a spec, and is Pending without a map](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B01`
 
-- [Without the exposed patterns declared the gate is pending, naming the field](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B02`
+- [Without the exposed patterns declared the gate is pending, naming the field](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B02`
 
-- [A spec with no readable linked code skips](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B03`
+- [A spec with no readable linked code skips](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B03`
 
-- [A unit that exposes no handle and declares none skips](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B04`
+- [A unit that exposes no handle and declares none skips](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B04`
 
-- [A handle exposed, declared and queried passes](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B05`
+- [A handle exposed, declared and queried passes](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B05`
 
-- [A handle the code exposes and the spec does not declare fails](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B06`
+- [A handle the code exposes and the spec does not declare fails](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B06`
 
-- [A handle the spec declares and the code does not expose fails](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B07`
+- [A handle the spec declares and the code does not expose fails](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B07`
 
-- [A handle no consumer queries fails when a consumer surface exists](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B08`
+- [A handle no consumer queries fails when a consumer surface exists](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B08`
 
-- [With no consumer surface the queried end is not charged](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B09`
+- [With no consumer surface the queried end is not charged](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B09`
 
-- [The handle attribute is the one the project declares](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B10`
+- [The handle attribute is the one the project declares](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B10`
 
-- [A literal handle counts, also through a derived prop or an object key](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B11`
+- [A literal handle counts, also through a derived prop or an object key](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B11`
 
-- [A template handle, or a prefix prop, exposes the prefix as a wildcard](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B12`
+- [A template handle, or a prefix prop, exposes the prefix as a wildcard](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B12`
 
-- [Only the branches of a conditional handle are handles, never its condition](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B13`
+- [Only the branches of a conditional handle are handles, never its condition](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B13`
 
-- [A pattern says what it captures, and a project helper is read like any other](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B25`
+- [A pattern says what it captures, and a project helper is read like any other](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B25`
 
-- [The inventory is read only inside the test surface section](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B14`
+- [The inventory is read only inside the test surface section](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B14`
 
-- [In a table only the first cell is the id; on any other line every quoted id counts](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B15`
+- [In a table only the first cell is the id; on any other line every quoted id counts](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B15`
 
-- [The attribute's own name is not a declared id](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B16`
+- [The attribute's own name is not a declared id](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B16`
 
-- [A wildcard at either end covers the concrete ids it opens](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B17`
+- [A wildcard at either end covers the concrete ids it opens](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B17`
 
-- [A handle is queried when a consumer mentions it; a wildcard, when it mentions the prefix](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B18`
+- [A handle is queried when a consumer mentions it; a wildcard, when it mentions the prefix](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B18`
 
-- [The e2e flows the project declares are consumers](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B19`
+- [The e2e flows the project declares are consumers](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B19`
 
-- [The test files beside the spec, and in its sibling folders, are consumers](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B20`
+- [The test files beside the spec, and in its sibling folders, are consumers](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B20`
 
-- [One handle is one line of the report, whatever the spelling at each end](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-I01`
+- [One handle is one line of the report, whatever the spelling at each end](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-I01`
 
-- [A handle only a consumer mentions is not charged to the spec](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-X01`
+- [A handle only a consumer mentions is not charged to the spec](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-X01`
 
-- [A surface declared with a glob is read from the directory before the first wildcard](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B21`
+- [A surface declared with a glob is read from the directory before the first wildcard](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B21`
 
-- [A consumer that names only a longer id does not query the shorter one](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B22`
+- [A consumer that names only a longer id does not query the shorter one](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B22`
 
-- [The test linked to the spec's feature is a consumer wherever it lives](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B23`
+- [The test linked to the spec's feature is a consumer wherever it lives](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B23`
 
-- [The report shows whether the feature describes each handle](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B24`
+- [The report shows whether the feature describes each handle](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B24`
 
-- [Linked code that cannot be read is not an end](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-E01`
+- [Linked code that cannot be read is not an end](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-E01`
 
-- [A handle derived from the caller's head is declared, queried and counted](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B26`
+- [A handle derived from the caller's head is declared, queried and counted](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B26`
 
-- [A consumer that cannot be read leaves the gate pending, not failing](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B27`
+- [A consumer that cannot be read leaves the gate pending, not failing](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B27`
 
-- [A derived handle whose segment ends it is queried with the id's end or a hyphen after](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B28`
+- [A derived handle whose segment ends it is queried with the id's end or a hyphen after](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B28`
 
-- [A handle of values alone is its file's own head's](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B29`
+- [A handle of values alone is its file's own head's](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B29`
 
-- [Without the exposed and queried patterns declared the gate is pending, naming the field](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B01`
+- [Without the exposed and queried patterns declared the gate is pending, naming the field](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B01`
 
-- [The gate skips when no E2E surface is configured](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B02`
+- [The gate skips when no E2E surface is configured](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B02`
 
-- [The gate skips when no exposed handles exist in code](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B03`
+- [The gate skips when no exposed handles exist in code](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B03`
 
-- [A queried handle that exists in code passes](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B04`
+- [A queried handle that exists in code passes](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B04`
 
-- [A queried handle missing from code fails](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B05`
+- [A queried handle missing from code fails](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B05`
 
-- [The verdict names the missing handle and the querying flows](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B06`
+- [The verdict names the missing handle and the querying flows](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B06`
 
-- [A negative assertion on a missing handle fails](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B07`
+- [A negative assertion on a missing handle fails](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B07`
 
-- [An exposed template handle covers a queried instance](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B08`
+- [An exposed template handle covers a queried instance](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B08`
 
-- [A regex pattern in a flow matches an exposed prefix head](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B09`
+- [A regex pattern in a flow matches an exposed prefix head](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B09`
 
-- [A flow handle with runtime interpolation does not trigger a failure](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B10`
+- [A flow handle with runtime interpolation does not trigger a failure](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B10`
 
-- [A marked handle defined in a lookup table counts as exposed](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B11`
+- [A marked handle defined in a lookup table counts as exposed](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B11`
 
-- [A template behind a nullish coalescing fallback counts as exposed](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B12`
+- [A template behind a nullish coalescing fallback counts as exposed](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B12`
 
-- [A suffix composed in a child component counts as exposed](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B13`
+- [A suffix composed in a child component counts as exposed](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B13`
 
-- [A terminal suffix composed from a prop counts as exposed](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B14`
+- [A terminal suffix composed from a prop counts as exposed](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B14`
 
-- [A handle appearing only in a test file does not count as exposed](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B15`
+- [A handle appearing only in a test file does not count as exposed](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B15`
 
-- [Missing configuration never reports a pass](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-I01`
+- [Missing configuration never reports a pass](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-I01`
 
-- [Findings are grouped by handle identifier](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-I02`
+- [Findings are grouped by handle identifier](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-I02`
 
-- [Negative assertions are checked against code presence](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-I03`
+- [Negative assertions are checked against code presence](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-I03`
 
-- [Handles exposed in code but unused in flows are not accused](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-X01`
+- [Handles exposed in code but unused in flows are not accused](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-X01`
 
-- [Flow expressions requiring runtime execution are not evaluated](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-X02`
+- [Flow expressions requiring runtime execution are not evaluated](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-X02`
 
-- [No default pattern is assumed](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-X03`
+- [No default pattern is assumed](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-X03`
 
-- [A declared E2E directory missing from disk skips the gate](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-E01`
+- [A declared E2E directory missing from disk skips the gate](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-E01`
 
-- [An unreadable flow or source leaves the verdict pending](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-E02`
+- [An unreadable flow or source leaves the verdict pending](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-E02`
 
-- [A test file with no retry passes](camadas/gate.md#rtsrt--testsretried--a-test-that-passed-only-on-a-retry-under-load-stays-in-sight) `RTSRT-B01`
+- [A test file with no retry passes](layers/gate.md#rtsrt--testsretried--a-test-that-passed-only-on-a-retry-under-load-stays-in-sight) `RTSRT-B01`
 
-- [A test file with tests passed on retry is listed](camadas/gate.md#rtsrt--testsretried--a-test-that-passed-only-on-a-retry-under-load-stays-in-sight) `RTSRT-B02`
+- [A test file with tests passed on retry is listed](layers/gate.md#rtsrt--testsretried--a-test-that-passed-only-on-a-retry-under-load-stays-in-sight) `RTSRT-B02`
 
-- [Non-spec artifacts skip confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B01`
+- [Non-spec artifacts skip confrontation](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B01`
 
-- [Specifications without cited triggers skip confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B02`
+- [Specifications without cited triggers skip confrontation](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B02`
 
-- [Cited triggers return Pending when no vocabulary is declared](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B03`
+- [Cited triggers return Pending when no vocabulary is declared](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B03`
 
-- [Non-trigger key-value citations are ignored](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B04`
+- [Non-trigger key-value citations are ignored](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B04`
 
-- [Natural language mentions without backticks are ignored](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B05`
+- [Natural language mentions without backticks are ignored](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B05`
 
-- [Valid declared trigger values pass confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B06`
+- [Valid declared trigger values pass confrontation](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B06`
 
-- [Valid declared obligation names pass confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B07`
+- [Valid declared obligation names pass confrontation](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B07`
 
-- [An undeclared trigger value fails with a nearest-match suggestion](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B08`
+- [An undeclared trigger value fails with a nearest-match suggestion](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B08`
 
-- [An undeclared trigger without close match lists declared triggers](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B09`
+- [An undeclared trigger without close match lists declared triggers](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B09`
 
-- [An undeclared obligation name fails confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B10`
+- [An undeclared obligation name fails confrontation](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B10`
 
-- [Duplicate citations of triggers or obligations are deduplicated](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B11`
+- [Duplicate citations of triggers or obligations are deduplicated](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B11`
 
-- [Multiple vocabulary errors are sorted deterministically](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B12`
+- [Multiple vocabulary errors are sorted deterministically](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B12`
 
-- [The list of declared triggers is capped at four](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B13`
+- [The list of declared triggers is capped at four](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B13`
 
-- [Trigger confrontation applies exclusively to specification artifacts](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I01`
+- [Trigger confrontation applies exclusively to specification artifacts](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I01`
 
-- [Missing compliance packs produce Pending rather than Pass](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I02`
+- [Missing compliance packs produce Pending rather than Pass](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I02`
 
-- [Trigger keys are limited to recognized compliance predicates](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I03`
+- [Trigger keys are limited to recognized compliance predicates](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I03`
 
-- [Undeclared triggers produce a blocking Fail verdict](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I04`
+- [Undeclared triggers produce a blocking Fail verdict](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I04`
 
-- [The gate does not require every specification to cite triggers](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X01`
+- [The gate does not require every specification to cite triggers](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X01`
 
-- [Code and test artifacts are not checked for trigger citations](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X02`
+- [Code and test artifacts are not checked for trigger citations](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X02`
 
-- [Code obligation implementation is not evaluated by this gate](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X03`
+- [Code obligation implementation is not evaluated by this gate](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X03`
 
-- [Unquoted prose text is not evaluated as symbol citations](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X04`
+- [Unquoted prose text is not evaluated as symbol citations](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X04`
 
-- [A declared pack that does not load leaves the verdict pending](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-E02`
+- [A declared pack that does not load leaves the verdict pending](layers/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-E02`
 
-- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B01`
+- [An artifact that is not a spec leaves without a verdict](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B01`
 
-- [A recognised layer leaves without a verdict](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B02`
+- [A recognised layer leaves without a verdict](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B02`
 
-- [Without a map the verdict is undetermined](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B03`
+- [Without a map the verdict is undetermined](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B03`
 
-- [A spec with the three pieces linked passes](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B04`
+- [A spec with the three pieces linked passes](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B04`
 
-- [A spec missing a piece is failed, and the verdict names which](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B05`
+- [A spec missing a piece is failed, and the verdict names which](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B05`
 
-- [The layer may waive a piece for every spec in it](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B06`
+- [The layer may waive a piece for every spec in it](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B06`
 
-- [The unit may waive a piece in its own spec, with a written reason](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B07`
+- [The unit may waive a piece in its own spec, with a written reason](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B07`
 
-- [The test is reached in two hops, through the feature](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I01`
+- [The test is reached in two hops, through the feature](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I01`
 
-- [Waiving the test while the feature carries a scenario is a contradiction](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I02`
+- [Waiving the test while the feature carries a scenario is a contradiction](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I02`
 
-- [Waiving the test demands saying where the proof is, and the place must exist](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I03`
+- [Waiving the test demands saying where the proof is, and the place must exist](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I03`
 
-- [A waiver covers only the piece it declares](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I04`
+- [A waiver covers only the piece it declares](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-I04`
 
-- [The gate does not confront whether the pieces MATCH one another](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-X01`
+- [The gate does not confront whether the pieces MATCH one another](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-X01`
 
-- [A per-rule waiver in a table row does not waive the unit](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B09`
+- [A per-rule waiver in a table row does not waive the unit](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B09`
 
-- [A piece declared TO BE DEVELOPED leaves the verdict undetermined](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B08`
+- [A piece declared TO BE DEVELOPED leaves the verdict undetermined](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-B08`
 
-- [The gate does not judge the QUALITY of any piece](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-X02`
+- [The gate does not judge the QUALITY of any piece](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-X02`
 
-- [A test missing from disk does not orphan a reference another test resolves](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-E01`
+- [A test missing from disk does not orphan a reference another test resolves](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-E01`
 
-- [A feature missing from disk does not hide the scenario of the covered feature](camadas/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-E02`
+- [A feature missing from disk does not hide the scenario of the covered feature](layers/gate.md#untcp--unitcomplete--the-pieces-that-realize-a-spec-exist) `UNTCP-E02`
 
-- [A declaration matching its code line passes](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B01`
+- [A declaration matching its code line passes](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B01`
 
-- [A declaration whose code line says another value fails](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B02`
+- [A declaration whose code line says another value fails](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B02`
 
-- [Comment and blank lines between declaration and code are skipped](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B03`
+- [Comment and blank lines between declaration and code are skipped](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B03`
 
-- [Copies of the same key with different values are reported](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B04`
+- [Copies of the same key with different values are reported](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B04`
 
-- [The value a rule declares in the spec is the source](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B05`
+- [The value a rule declares in the spec is the source](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B05`
 
-- [Without a declared pattern the gate skips and says how to enable it](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B06`
+- [Without a declared pattern the gate skips and says how to enable it](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B06`
 
-- [A declaration with nothing below annotates nothing](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B07`
+- [A declaration with nothing below annotates nothing](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B07`
 
-- [An anchor inside prose is a mention, not a declaration](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B08`
+- [An anchor inside prose is a mention, not a declaration](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B08`
 
-- [A pattern with fewer than two capture groups is treated as not declared](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-I01`
+- [A pattern with fewer than two capture groups is treated as not declared](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-I01`
 
-- [Declarations are indexed once per graph instance](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-I02`
+- [Declarations are indexed once per graph instance](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-I02`
 
-- [With no built map the verdict is never approval](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-I03`
+- [With no built map the verdict is never approval](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-I03`
 
-- [A prose rule declares no value](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-X01`
+- [A prose rule declares no value](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-X01`
 
-- [A literal nobody declared is not charged](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-X02`
+- [A literal nobody declared is not charged](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-X02`
 
-- [A spec missing from disk does not drop the values of the other specs](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E01`
+- [A spec missing from disk does not drop the values of the other specs](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E01`
 
-- [A code file missing from disk does not hide the copies in the other files](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E02`
+- [A code file missing from disk does not hide the copies in the other files](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E02`
 
-- [A declared value anchor with too few groups is named, not called undeclared](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E03`
+- [A declared value anchor with too few groups is named, not called undeclared](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E03`
 
-- [Artifacts that are not feature files leave with verdict Skip](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B01`
+- [Artifacts that are not feature files leave with verdict Skip](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B01`
 
-- [Feature files declaring no visual regression scenarios leave with verdict Skip](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B02`
+- [Feature files declaring no visual regression scenarios leave with verdict Skip](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B02`
 
-- [Visual regression scenarios having matching baseline images pass](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B03`
+- [Visual regression scenarios having matching baseline images pass](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B03`
 
-- [Visual regression scenarios lacking baseline images fail naming missing codes](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B04`
+- [Visual regression scenarios lacking baseline images fail naming missing codes](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B04`
 
-- [Baseline image matching supports naming variants](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B05`
+- [Baseline image matching supports naming variants](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B05`
 
-- [Reads visual regime tag from project configuration](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B06`
+- [Reads visual regime tag from project configuration](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B06`
 
-- [Falls back to default visual regime tag when configuration is missing](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B07`
+- [Falls back to default visual regime tag when configuration is missing](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B07`
 
-- [Multiple missing baseline scenario codes are sorted alphabetically](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B08`
+- [Multiple missing baseline scenario codes are sorted alphabetically](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B08`
 
-- [Only scenario codes containing visual regression suffix are matched](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B09`
+- [Only scenario codes containing visual regression suffix are matched](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B09`
 
-- [Every visual regression scenario declared must correspond to a baseline image](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-I01`
+- [Every visual regression scenario declared must correspond to a baseline image](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-I01`
 
-- [Visual regime tag mapping treats map key as tag in feature](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-I02`
+- [Visual regime tag mapping treats map key as tag in feature](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-I02`
 
-- [Does not evaluate baseline staleness using disk modification timestamps](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-X01`
+- [Does not evaluate baseline staleness using disk modification timestamps](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-X01`
 
-- [Does not fail commits based on git commit dates of baseline images](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-X02`
+- [Does not fail commits based on git commit dates of baseline images](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-X02`
 
-- [Nothing to confront leaves every gate without a verdict](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B01`
+- [Nothing to confront leaves every gate without a verdict](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B01`
 
-- [Every state needs a VR scenario](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B02`
+- [Every state needs a VR scenario](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B02`
 
-- [Every VR scenario needs a VR test](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B03`
+- [Every VR scenario needs a VR test](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B03`
 
-- [Every VR scenario needs its baseline image, in any image format](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B04`
+- [Every VR scenario needs its baseline image, in any image format](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B04`
 
-- [A VR scenario of a state the spec does not register](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B05`
+- [A VR scenario of a state the spec does not register](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B05`
 
-- [A VR scenario of no state](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B06`
+- [A VR scenario of no state](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B06`
 
-- [A VR test of a scenario the feature does not declare](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B07`
+- [A VR test of a scenario the feature does not declare](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B07`
 
-- [A VR scenario carries the regime tag and the state's code, in either form](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B08`
+- [A VR scenario carries the regime tag and the state's code, in either form](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B08`
 
-- [Which tests are of the unit](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B09`
+- [Which tests are of the unit](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B09`
 
-- [The State letter comes from the project's rule types](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B10`
+- [The State letter comes from the project's rule types](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B10`
 
-- [vr-baseline accepts other image formats](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B11`
+- [vr-baseline accepts other image formats](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B11`
 
-- [One state never answers for another](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-I01`
+- [One state never answers for another](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-I01`
 
-- [A code file with no spec beside it leaves without a verdict](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-E01`
+- [A code file with no spec beside it leaves without a verdict](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-E01`
 
-- [A unit with no feature has no VR scenario](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-E02`
+- [A unit with no feature has no VR scenario](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-E02`
 
-- [A baseline that cannot be found counts as none](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-E03`
+- [A baseline that cannot be found counts as none](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-E03`
 
-- [A test that cannot be read is read by its path](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-E04`
+- [A test that cannot be read is read by its path](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-E04`
 
-- [A state with no visual value is exempted with @no-vr and a reason](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B12`
+- [A state with no visual value is exempted with @no-vr and a reason](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B12`
 
-- [Every message is captured like a state](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B13`
+- [Every message is captured like a state](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B13`
 
-- [The states registered are those of the States section](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B14`
+- [The states registered are those of the States section](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B14`
 
-- [A @no-vr exempts the code of its own row, never a code its reason mentions](camadas/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B15`
+- [A @no-vr exempts the code of its own row, never a code its reason mentions](layers/gate.md#vrstc--vrstatescovered--each-state-of-a-visual-unit-tied-to-its-visual-regression-both-ways) `VRSTC-B15`
 
 ## infra
 
@@ -6991,6 +6997,8 @@ teste prova.
 - [What the format cannot read back is refused](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-E02`
 
 - [A frozen plan's demand is out of the count](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B14`
+
+- [A demand with nothing in motion is settled](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B15`
 
 - [An enqueued task is born pending](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B01`
 

@@ -2471,6 +2471,13 @@ func (c *Config) validarPadroes() error {
 			}
 		}
 	}
+	if c.Docs != nil {
+		for _, glob := range c.Docs.Keep {
+			if strings.TrimSpace(glob) == "" || !doublestar.ValidatePattern(glob) {
+				return fmt.Errorf("`docs.keep` has an invalid glob: %q", glob)
+			}
+		}
+	}
 	for i, f := range c.FrozenPaths {
 		if strings.TrimSpace(f.Freeze) == "" {
 			return fmt.Errorf("`frozen_paths[%d].freeze` is empty: name the freeze's code, or its reason", i)

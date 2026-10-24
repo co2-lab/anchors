@@ -165,7 +165,7 @@ anchors progress start <task> [flags]
 
 ### `anchors progress summary`
 
-What is in progress: each demand and its stages, with their progress — never the tasks.
+What is in progress: each demand and its stages, with their progress — never the tasks; a settled demand (all done, or none started) is one line.
 
 #### Usage
 

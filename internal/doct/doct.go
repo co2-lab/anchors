@@ -602,6 +602,69 @@ func fnRules(s Spec) []Rule {
 type Result struct {
 	Written []string
 	Skipped []string // `.md` sem marcador: escrito à mão, não sobrescrito
+	// Removed are the pages this compiler generated from a template that no longer exists —
+	// renamed (a project's pages taking its language's names) or deleted —: left behind,
+	// they read as current documentation nobody keeps.
+	Removed []string
+}
+
+// sourceRE reads, from a generated page's marker, the template it came from.
+var sourceRE = regexp.MustCompile(`^(?:<!--|#) anchors:generated (?:from|de) (` + Dir + `/\S+)`)
+
+// keeps says whether the project keeps a page of `docs/` from the build's removal.
+func (c *Compiler) keeps(rel string) bool { return c.Config.KeepsDoc(rel) }
+
+// removeOrphans deletes the pages of `docs/` whose marker names a template of `doct/` that is
+// not among the templates — and a folder left empty by it. A page with no marker is someone's,
+// and is never touched.
+func (c *Compiler) removeOrphans(tmpls []string, dryRun bool) ([]string, error) {
+	have := map[string]bool{}
+	for _, t := range tmpls {
+		have[Dir+"/"+t] = true
+	}
+	out := filepath.Join(c.Root, OutDir)
+	var removed []string
+	var dirs []string
+	err := filepath.WalkDir(out, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil // @resilient: a folder that cannot be read keeps its pages; the build goes on
+		}
+		if d.IsDir() {
+			if p != out {
+				dirs = append(dirs, p)
+			}
+			return nil
+		}
+		b, err := os.ReadFile(p)
+		if err != nil {
+			return nil // @resilient: a page that cannot be read is not known to be generated, and stays
+		}
+		m := sourceRE.FindSubmatch(b)
+		if m == nil || have[string(m[1])] {
+			return nil
+		}
+		rel, _ := filepath.Rel(out, p)
+		// A page the project keeps (`docs.keep`) is its own, whatever generated it once.
+		if c.keeps(filepath.ToSlash(rel)) {
+			return nil
+		}
+		removed = append(removed, filepath.ToSlash(rel))
+		if !dryRun {
+			return os.Remove(p)
+		}
+		return nil
+	})
+	if err != nil || dryRun {
+		return removed, err
+	}
+	// The deepest first: a folder emptied by the removals goes with them.
+	sort.Sort(sort.Reverse(sort.StringSlice(dirs)))
+	for _, d := range dirs {
+		if entries, err := os.ReadDir(d); err == nil && len(entries) == 0 {
+			_ = os.Remove(d) // @resilient: a folder that stays is only an empty folder
+		}
+	}
+	return removed, nil
 }
 
 // Build compila todos os templates de `doct/` para `docs/`.
@@ -638,7 +701,9 @@ func (c *Compiler) Build(dryRun bool) (Result, error) {
 		}
 		res.Written = append(res.Written, saida)
 	}
-	return res, nil
+	removed, err := c.removeOrphans(tmpls, dryRun)
+	res.Removed = removed
+	return res, err
 }
 
 // templates lista os templates de `doct/`, INCLUSIVE os de subpasta.

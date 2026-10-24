@@ -42,7 +42,7 @@ func TestGeneratedPathsRegexSeparatesNoiseFromDivergence(t *testing.T) {
 	}
 	for path, generated := range map[string]bool{
 		"anchors.graph.yaml":         true,
-		"docs/arquitetura.md":        true,
+		"docs/architecture.md":       true,
 		"plans/0001-progress.md":     true,
 		"anchors.progress.md":        true,
 		"sub/anchors.progress.md":    false,

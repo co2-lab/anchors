@@ -1,0 +1,134 @@
+{{/* HOW the system is built — the C4: context, containers, and one level 3 per container */}}
+# Architecture
+
+{{/* THE C4 AS THE C4 IS.
+
+     The model's central rule is that each level ZOOMS INTO ONE BOX of the previous one.
+     Level 3 is the zoom of ONE container — not of the system. A component diagram mixing
+     the app, the API and the infrastructure is level 3 of nothing: it is the failure the
+     C4 exists to avoid, one drawing with everything inside.
+
+     A CONTAINER is what runs or stores data — application, service, DATABASE, queue, file
+     system. It is not a synonym of "a process we wrote": the database is a container, it
+     shows at level 2 with the protocol of the conversation, and being a third party's it
+     gets no level 3 — we have no components inside it.
+
+     MERMAID, not an image: GitHub renders it natively. A PNG exported from a drawing tool
+     would sit outside useful version control — the diff does not say what changed, and the
+     source file ends up elsewhere, or is lost.
+
+     Levels 1 and 2 are written by hand HERE: they describe the whole system, and no spec
+     alone knows them. Level 3 comes from the containers declared in the configuration. */}}
+
+## Level 1 — Context
+
+The system as a single box: who uses it, and which external systems it talks to.
+
+```mermaid
+graph TB
+    user["Person<br/><small>who uses the system</small>"]
+    sys["THE SYSTEM<br/><small>what this repository builds</small>"]
+    ext["External system<br/><small>where the data comes from</small>"]
+
+    user -->|"uses"| sys
+    sys -->|"queries"| ext
+
+    classDef person fill:#08427b,stroke:#052e56,color:#fff
+    classDef system fill:#1168bd,stroke:#0b4884,color:#fff
+    classDef external fill:#999,stroke:#6b6b6b,color:#fff
+    class user person
+    class sys system
+    class ext external
+```
+
+<!-- OUTSIDE this level: how the system is built inside. That is level 2. -->
+
+## Level 2 — Containers
+
+The zoom into the box "THE SYSTEM": what runs or stores data apart, and **which protocol each
+pair talks**. The protocol is what says what happens when the conversation fails.
+
+{{/* The boxes come from the containers declared in the configuration; the DATABASE is
+     among them, because a container is what runs OR STORES data. The arrows and the
+     protocols come from "talks", in the same declaration. */}}
+```mermaid
+graph TB
+    user["Person"]
+
+    subgraph sistema["THE SYSTEM"]
+{{range containers}}{{if not .External}}        {{.ID}}["{{.Name}}<br/><small>{{.Description}}</small>"]
+{{end}}{{end}}    end
+
+{{range containers}}{{if .External}}    {{.ID}}["{{.Name}}<br/><small>{{.Description}}</small>"]
+{{end}}{{end}}
+{{range containers}}{{$de := .ID}}{{range .Talks}}    {{$de}} -->|"{{.Protocol}}{{if .Why}}<br/>{{.Why}}{{end}}"| {{mermaidID .To}}
+{{end}}{{end}}
+    classDef person fill:#08427b,stroke:#052e56,color:#fff
+    classDef container fill:#438dd5,stroke:#2e6295,color:#fff
+    classDef external fill:#999,stroke:#6b6b6b,color:#fff
+    class user person
+{{range containers}}{{if .External}}    class {{.ID}} external
+{{else}}    class {{.ID}} container
+{{end}}{{end}}
+```
+{{if not containers}}
+> **No container declared.** Level 2 and the level 3 ones stay empty until the configuration
+> declares what runs apart. See the containers block in `anchors.yaml`.
+{{end}}
+
+<!-- OUTSIDE this level: the pieces INSIDE each container. That is level 3 — and there is one
+     diagram per container, because each level zooms into ONE box of the previous one. -->
+
+## Level 3 — Components
+
+One diagram **per container**: each zooms into one box of level 2. External containers do
+not show here — we have no components inside them, and drawing them would claim a
+knowledge we do not have.
+{{range internalContainers}}
+### {{.Name}}
+
+{{.Description}}
+
+{{if .Units}}
+```mermaid
+graph TB
+    subgraph {{.ID}}["{{.Name}}"]
+{{range .Layers}}        subgraph {{mermaidID .}}["{{.}}"]
+{{range $u := specs (printf "layer=%s" .)}}            {{mermaidID $u.Code}}["{{$u.Code}}<br/><small>{{$u.Titulo}}</small>"]
+{{else}}            {{mermaidID .}}_nospec["{{layerFiles .}} file(s), no spec"]
+{{end}}        end
+{{end}}    end
+```
+
+{{range .Layers}}
+#### {{.}}
+
+{{range specs (printf "layer=%s" .)}}- **{{.Code}}** — {{.Titulo}}
+{{else}}_No spec in this layer — {{layerFiles .}} governed file(s)._
+{{end}}{{else}}
+_This container declares no layer._
+{{end}}
+{{else}}{{with .Layers}}
+_No layer of this container has a spec yet:_
+
+{{range .}}- **{{.}}** — {{layerFiles .}} file(s)
+{{end}}{{else}}
+_No layer declares a unit that runs here. Either the container runs no code of this
+repository, or it still has to be tied to a layer in `containers.layers`._
+{{end}}{{end}}
+{{end}}
+{{with orphanLayers}}
+### Layers outside every container
+
+These layers exist in the project and no container declares them — they show in no level 3
+diagram. Either they still have to be declared, or they run nowhere:
+
+{{range .}}- `{{.}}`
+{{end}}{{end}}
+
+## Level 4 — Code
+
+<!-- Only where there is something not obvious. The map Anchors keeps is already the machine
+     version, and repeating it here would be duplication with no reader. -->
+
+_Nothing to highlight for now._

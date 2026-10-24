@@ -4,7 +4,11 @@
 
 package config
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/bmatcuk/doublestar/v4"
+)
 
 // --- as DOCUMENTAÇÕES que o projeto deve ter ---
 //
@@ -39,6 +43,24 @@ type Docs struct {
 	// false. Without it, a commit that changes a spec is barred by `docs-fresh` until
 	// someone runs `anchors docs build` by hand.
 	PreCommit *bool `yaml:"pre_commit,omitempty"`
+	// Keep are the pages of `docs/` the build never removes, by glob: a page generated once and
+	// kept by hand since — its template gone, its marker still there — is the project's. A page
+	// with no marker is never removed, kept or not.
+	Keep []string `yaml:"keep,omitempty"`
+}
+
+// KeepsDoc says whether the project keeps a page of `docs/` (a path relative to `docs/`) from
+// the build's removal.
+func (c *Config) KeepsDoc(rel string) bool {
+	if c == nil || c.Docs == nil {
+		return false
+	}
+	for _, glob := range c.Docs.Keep {
+		if ok, _ := doublestar.Match(glob, rel); ok {
+			return true
+		}
+	}
+	return false
 }
 
 // DocsOnPreCommit says whether the pre-commit compiles and stages the docs.

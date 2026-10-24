@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DTCDC
-  updated_at: 2026-10-08
+  updated_at: 2026-10-24
   layer: apoio
 -->
 # DocTemplateCompiler — compiles documentation pages from templates that reference the specs' content
@@ -60,6 +60,7 @@ reaches at all.
 | --- | --- |
 | `DTCDC-B22` | A compiled page is stale when it is missing, or when its stamp differs from the stamp of today's template and specs; a page whose stamp matches is fresh without being recompiled. |
 | `DTCDC-B23` | The stamp covers the template and every loaded spec, so editing either makes the page stale. |
+| `DTCDC-B24` | A build removes each page of `docs/` whose generated marker names a template of `doct/` that is gone — renamed or deleted —, and a folder left empty by it, and says which; a page with no marker, from a template that exists, or that the project keeps (`docs.keep`), stays; a dry run only says which it would remove. (`removeOrphans`, `Result.Removed`) |
 | `DTCDC-B13` | A spec header's `updated_at:` line, within the first ten lines, is not part of the stamp; the same line further down is content and is. |
 | `DTCDC-B14` | A page without the generated marker is never reported stale. |
 | `DTCDC-B17` | A page whose generated marker carries no stamp (compiled by an earlier version) is compared by its body below the marker line: stale when the body differs from today's compilation, fresh when it is the same. |

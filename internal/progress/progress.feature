@@ -2,7 +2,7 @@
 # @anchors
 #   code: PFFPR
 #   ref: DMLDD
-#   updated_at: 2026-10-20
+#   updated_at: 2026-10-24
 #   layer: feature
 
 @DMLDD
@@ -103,3 +103,9 @@ Feature: DemandLedger — the project's progress file
     Given three demands, one whose plan a frozen folder covers, one whose plan's header is frozen, and one live
     When the file is loaded
     Then the first two carry their freezes, their tasks leave the counted ones, their rows say so, and the file written back is unchanged
+
+  @DMLDD-B15 @unit-level
+  Scenario: A demand with nothing in motion is settled
+    Given a demand all done, one none started, one with a task in progress, and one half done
+    When each is asked whether it is settled
+    Then the first two are, and the last two are not

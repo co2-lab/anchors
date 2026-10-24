@@ -1,6 +1,6 @@
 <!-- @anchors
   code: LDCML
-  updated_at: 2026-10-20
+  updated_at: 2026-10-24
   layer: comando
 -->
 # LedgerCommand — `anchors progress`, the only writer of the project's progress file
@@ -35,6 +35,7 @@ keeps the shape Anchors reads back. The weight's unit is the one `anchors.yaml` 
 | `LDCML-B07` | `add task --unplanned` adds a task marked unplanned, where it arises; `unplanned <task>` marks one added before and `--undo` takes the mark off; the summary says, on a demand or stage with unplanned work, `· <n> of <total> <unit> unplanned`. |
 | `LDCML-B08` | `move <task> <demand|stage>` takes a task to another stage of its demand, and `drop <stage>` removes a stage left with no task; each says what it did. |
 | `LDCML-B09` | The summary's total, the monitor's and the status's leave a frozen plan's demand out, and its row says it is frozen and out of the total. (`printSummary`, FRUNF-D10) |
+| `LDCML-B10` | A settled demand — all done, or none started, nothing in progress — is one line: the summary and the monitor leave out its stages, and `show` of the whole file its stages and tasks; `show <demand>` details it, and the file and `--json` keep everything. (`printSummary`, `withoutSettledDetail`) |
 
 ## Errors
 

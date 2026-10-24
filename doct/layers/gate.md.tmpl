@@ -1,0 +1,55 @@
+{{/* what exists in the layer `gate`, with the content of each unit */}}
+# Layer: gate
+
+{{/* The FORMAT comes from the LAYOUT, decided once in `docs build` and the same for every
+     page — this one, the rules index and the behaviour index.
+
+     There is no threshold written here, on purpose. The first version let each template
+     pick its own, and the result was measured: 483 of 812 links broken, because the page
+     summarised by one criterion and the links were built by another.
+
+     To change this project's cut:  anchors docs build --max-units 30
+
+     What changes is what FITS on the page, never how many files the layer splits into:
+     splitting on crossing a threshold would break every external link the day the next
+     unit came in. */}}
+{{if big "layer=gate"}}
+> {{layout.Describe (size "layer=gate")}}
+
+{{range specs "layer=gate"}}
+## {{.Code}} — {{.Titulo}}
+
+{{section . "Overview"}}
+
+{{range rules .}}
+- **{{.Code}}** — {{.Titulo}}
+{{end}}
+{{end}}
+{{else}}
+{{range specs "layer=gate"}}
+## {{.Code}} — {{.Titulo}}
+
+{{section . "Overview"}}
+
+{{/* The rule sections carry their own rule headings, and so get NO label here: a
+     heading over the rule headings puts them at the same level, and the document's table
+     of contents lists the label as a sibling of what it holds. Both spec formats are
+     asked for — the older one's rules section, the current one's effects — and a
+     section the spec does not have is empty. */}}
+{{section . "Rules"}}
+
+{{section . "Effects"}}
+
+{{section . "Invariants"}}
+{{/* Each scenario is a HEADING, not a list item: it is what the behaviour index points
+     at, and an anchor only exists where there is a heading. An index whose link does not
+     resolve is worse than no index — it looks like it works. */}}
+{{range scenarios .}}
+#### {{.Code}} — {{.Titulo}}
+
+```gherkin
+{{.Corpo}}
+```
+{{end}}
+{{end}}
+{{end}}

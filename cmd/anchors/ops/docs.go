@@ -161,7 +161,15 @@ func printDocsResult(res doct.Result, dryRun bool) error {
 		fmt.Println("  Either delete the `.tmpl` (the document is manual), or delete the `.md`")
 		fmt.Println("  (the content is already in the specs and the template rebuilds it).")
 	}
-	if len(res.Written) == 0 && len(res.Skipped) == 0 {
+	// A page whose template is gone — renamed, or deleted — goes with it, said by name.
+	removed := "removed (its template is gone)"
+	if dryRun {
+		removed = "would be removed (its template is gone)"
+	}
+	for _, f := range res.Removed {
+		fmt.Printf("  ✗ %s/%s %s\n", doct.OutDir, f, removed)
+	}
+	if len(res.Written) == 0 && len(res.Skipped) == 0 && len(res.Removed) == 0 {
 		fmt.Printf("  no template in `%s/` — nothing to compile\n", doct.Dir)
 	}
 	return nil
@@ -177,7 +185,7 @@ func newDocsInitCmd() *cobra.Command {
 	var force bool
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Write the skeleton of `" + doct.Dir + "/` (arquitetura, comportamento, regras, camadas)",
+		Short: "Write the skeleton of `" + doct.Dir + "/` in the project's language (architecture, behavior, rules, a page per layer)",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {

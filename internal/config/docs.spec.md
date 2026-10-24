@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCRQA
-  updated_at: 2026-10-08
+  updated_at: 2026-10-24
   layer: config
 -->
 # DocsRequired — which aggregate documentation a change of a unit obliges to touch
@@ -46,6 +46,7 @@ when a unit does) is never owed by a unit change.
 | `DCRQA-B04` | A documentation with no trigger is never owed by a unit change. |
 | `DCRQA-B05` | A trigger matches ignoring case and the spaces around it. |
 | `DCRQA-B06` | Every declared documentation can be listed; a project with no docs block, or no configuration, owes none and lists none (`AllRequiredDocs`). |
+| `DCRQA-B07` | `docs.keep` names, by glob relative to `docs/`, the pages the build never removes; a glob that is none refuses the configuration. (`KeepsDoc`) |
 
 ## Invariants
 

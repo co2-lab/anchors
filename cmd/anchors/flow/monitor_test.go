@@ -225,8 +225,12 @@ func TestMonitor_saysTheProgressSummary(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		_, err = f.AddTask(s, "refunds", 2, false)
-		return err
+		task, err := f.AddTask(s, "refunds", 2, false)
+		if err != nil {
+			return err
+		}
+		// In progress: a demand in motion shows its stages.
+		return f.Start(task, "a", "2026-10-24", false)
 	}); err != nil {
 		t.Fatal(err)
 	}

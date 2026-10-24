@@ -494,3 +494,39 @@ func TestLoad_frozenPlans(t *testing.T) {
 		t.Error("the freeze is never written into the file")
 	}
 }
+
+func TestSettled(t *testing.T) {
+	t.Run("DMLDD-B15: A demand with nothing in motion is settled", func(t *testing.T) {})
+	f := &File{Unit: "hours"}
+	mk := func(states ...State) *Demand {
+		d, _ := f.AddDemand("d", "")
+		for range states {
+			if _, err := f.AddTask(d, "t", 1, false); err != nil {
+				t.Fatal(err)
+			}
+		}
+		dm := f.Demand(d)
+		for i, st := range states {
+			dm.Tasks[i].State = st
+		}
+		return dm
+	}
+	for _, c := range []struct {
+		d    *Demand
+		want bool
+	}{
+		{mk(Done, Done), true},
+		{mk(Todo, Todo), true},
+		{mk(Doing, Todo), false},
+		{mk(Done, Todo), false},
+	} {
+		if got := c.d.Settled(); got != c.want {
+			t.Errorf("%s settled = %v, want %v", c.d.ID, got, c.want)
+		}
+	}
+	for _, r := range Summary(f) {
+		if r.Settled() != f.Demand(r.ID).Settled() {
+			t.Errorf("the row and the demand agree: %s", r.ID)
+		}
+	}
+}

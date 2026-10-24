@@ -1,0 +1,14 @@
+{{/* WHAT HAPPENS — the index of the scenarios, which lead to the content on the layer's page */}}
+# Behavior
+
+Every scenario of the system. Each one leads to the unit that defines it.
+
+A scenario describes what the system does in a situation — it comes from the feature, and it
+is what the test proves.
+{{range $l := layers}}
+## {{$l}}
+{{range allScenarios (printf "layer=%s" $l)}}
+- [{{.Titulo}}]({{scenarioLink $l .}}) `{{.Code}}`
+{{else}}
+_No scenario yet: the units of this layer have no feature._
+{{end}}{{end}}

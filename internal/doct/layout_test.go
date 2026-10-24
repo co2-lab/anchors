@@ -61,7 +61,7 @@ func TestLayoutDescribe(t *testing.T) {
 			t.Errorf("a small selection gets no sentence, got %q", got)
 		}
 		got := l.Describe(Size{Units: 25, Rules: 90, Lines: 100})
-		for _, want := range []string{"25 unidades", "90 regras", "20", "2000"} {
+		for _, want := range []string{"25 units", "90 rules", "20", "2000"} {
 			if !strings.Contains(got, want) {
 				t.Errorf("the sentence does not name %q: %q", want, got)
 			}

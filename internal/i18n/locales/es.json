@@ -1086,6 +1086,7 @@
   "config.gate.unknown_severity": "gate %q: `severity.%s: %q` desconocido — use %q, %q o %q",
   "config.gate.severity_order": "gate %q: un nivel de veredicto es más fuerte que uno más grave (fail: %s, divergence: %s, pending: %s) — pending ≤ divergence ≤ fail, con block > inform > ignore",
   "gate.tool_cached": "(en caché: las mismas entradas dieron este veredicto en %s — `anchors check --no-cache` ejecuta la herramienta)",
+  "doct.layout.summary": "Esta capa tiene %d unidades y %d reglas — por encima del corte de %d unidades / %d líneas, así que esta página trae el RESUMEN de cada unidad. El texto completo está en la spec.",
   "gate.panicked": "el gate se rompió al medir (%s) — un defecto de Anchors, no del proyecto: repórtelo",
   "config.workflow.github_fields_outside_github": "workflow: `repo`/`labels` solo aplican con `mode: github` — en modo local no se leen, y dejarlos declarados hace que el archivo afirme una integración que no existe",
   "config.workflow.github_needs_repo": "workflow: `mode: github` exige `repo: owner/nombre` — Anchors no lo infiere del remote de git a propósito: en un fork, inferir enviaría la escritura al repositorio equivocado",

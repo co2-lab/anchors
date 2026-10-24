@@ -1086,6 +1086,7 @@
   "config.gate.unknown_severity": "gate %q: unknown `severity.%s: %q` — use %q, %q or %q",
   "config.gate.severity_order": "gate %q: a verdict level is stronger than a more serious one (fail: %s, divergence: %s, pending: %s) — pending ≤ divergence ≤ fail, as block > inform > ignore",
   "gate.tool_cached": "(cached: the same inputs gave this verdict at %s — `anchors check --no-cache` runs the tool)",
+  "doct.layout.summary": "This layer has %d units and %d rules — above the cut of %d units / %d lines, so this page brings the SUMMARY of each unit. The full text is in the spec.",
   "gate.panicked": "the gate broke while measuring (%s) — a defect of Anchors, not of the project: report it",
   "config.workflow.github_fields_outside_github": "workflow: `repo`/`labels` only apply under `mode: github` — in local mode they are not read, and leaving them declared makes the file assert an integration that does not exist",
   "config.workflow.github_needs_repo": "workflow: `mode: github` requires `repo: owner/name` — Anchors does not infer it from the git remote on purpose: in a fork, inferring would send the writes to the wrong repository",

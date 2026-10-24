@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCOXX
-  updated_at: 2026-09-26
+  updated_at: 2026-10-24
   layer: apoio
 -->
 # DocLayout — the one decision of whether a documentation page shows everything or summarizes
@@ -31,7 +31,7 @@ never changes by itself on the day the next unit enters without anyone having de
 | --- | --- |
 | `DCOXX-B01` | A selection is big when its unit count is above the unit cut-off OR its line count is above the line cut-off; either one passing is enough. |
 | `DCOXX-B02` | `DefaultLayout`: The default cut-off, when the project declares none, is 20 units or 2000 lines. |
-| `DCOXX-B03` | The summary sentence is empty for a selection that is not big; for a big one it states the unit count, the rule count and both cut-offs, so the reader knows the page is a summary and where the full text is. |
+| `DCOXX-B03` | The summary sentence is empty for a selection that is not big; for a big one it states the unit count, the rule count and both cut-offs, in the project's language, so the reader knows the page is a summary and where the full text is. |
 
 ## Domain
 
