@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MKSTP
-  updated_at: 2026-10-16
+  updated_at: 2026-10-24
   layer: gate
 -->
 # MockStampGenerator — writes the missing `@contract` stamps, and never rewrites one
@@ -44,6 +44,7 @@ Exposed as `anchors stamp [tests...]`, with `--dry-run`.
 | `MKSTP-B05` | A double of a module outside the map (a third-party library) is not stamped. |
 | `MKSTP-B06` | A whole-module stamp starts after the module's `@anchors` header, so an edit that only rewrites the header (`updated_at:`, which `check --fix` bumps on every edit) does not make it diverge. |
 | `MKSTP-B07` | A key added later to an already-stamped double gets its own stamp when no existing stamp of that module covers its export (same anchor, or a range containing it); the existing stamps are left untouched, and a second run adds nothing. |
+| `MKSTP-B08` | A package that shares a project file's basename is not stamped: a bare name of one segment is the project's only as a file at the root, never as a file of that name in some folder. |
 
 ## Invariants
 

@@ -174,6 +174,22 @@ func TestGenerateStamps_thirdPartyIsNotStamped(t *testing.T) {
 	}
 }
 
+// A package's name is not the basename of a project file: the npm `stripe` mocked beside the
+// project's infra/stripe.ts was stamped against it (reported from MIF), and every edit of that
+// file would have charged a stamp on a test that never reads it.
+func TestGenerateStamps_packageSharingABasenameIsNotStamped(t *testing.T) {
+	t.Run("MKSTP-B08: A package that shares a project file's basename is not stamped", func(t *testing.T) {})
+	test := "jest.mock('stripe', () => ({ default: jest.fn() }))\n"
+	root, g := stampProject(t, map[string]string{
+		"src/infra/stripeBalance.test.ts": test,
+		"src/infra/stripe.ts":             "export function charge() {}\n",
+	})
+	_, written, skipped, _ := GenerateStamps(test, "src/infra/stripeBalance.test.ts", root, g, stampCfg())
+	if len(written) != 0 || len(skipped) != 0 {
+		t.Errorf("a package is not the project's file of the same name: %v %v", written, skipped)
+	}
+}
+
 // A line that occurs twice cannot anchor: the gate refuses an ambiguous anchor, and a stamp
 // on it would fail the moment it was written. The generator moves on to a unique line.
 func TestGenerateStamps_ambiguousAnchorLineIsAvoided(t *testing.T) {

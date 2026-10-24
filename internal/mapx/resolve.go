@@ -138,6 +138,18 @@ func (m *Modules) Candidates(spec, from string, d config.Dialect) []string {
 	if best != "" {
 		tail = strings.TrimPrefix(target, best)
 		target = strings.TrimPrefix(aliases[best]+tail, "/")
+	} else if !strings.HasPrefix(spec, ".") && !strings.HasPrefix(spec, "/") && !strings.Contains(target, "/") {
+		// A bare name of one segment no alias maps is a package's (`stripe`), or a file at the
+		// root: a file of that name in some folder is only a basename it shares. Matched by
+		// its tail, the npm `stripe`'s double was stamped against the project's own
+		// infra/stripe.ts (reported from MIF).
+		var cands []string
+		for _, id := range m.code {
+			if WithoutExtension(id) == target {
+				cands = append(cands, id)
+			}
+		}
+		return cands
 	}
 	if cands := m.codeEndingIn(target); len(cands) > 0 || tail == "" {
 		return cands

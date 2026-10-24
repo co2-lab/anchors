@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:dbdf290bfe113782 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:c5c0d63999b72ee6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -4987,6 +4987,8 @@ in `layers/`.
 - [MKSTP-B06 — A whole-module stamp starts after the module's `@anchors` header, so an edit that only rewrites the header (`updated_at:`, which `check --fix` bumps on every edit) does not make it diverge.](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
 
 - [MKSTP-B07 — A key added later to an already-stamped double gets its own stamp when no existing stamp of that module covers its export (same anchor, or a range containing it); the existing stamps are left untouched, and a second run adds nothing.](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
+
+- [MKSTP-B08 — A package that shares a project file's basename is not stamped: a bare name of one segment is the project's only as a file at the root, never as a file of that name in some folder.](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
 
 - [MKSTP-I01 — An existing stamp is never rewritten, even when it diverges.](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
 

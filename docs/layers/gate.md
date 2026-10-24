@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:c28d12e7ff6ac200 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:d518d65dceabbc4f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 89 units and 1434 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 89 units and 1435 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2028,6 +2028,8 @@ Exposed as `anchors stamp [tests...]`, with `--dry-run`.
 - **MKSTP-B06** — A whole-module stamp starts after the module's `@anchors` header, so an edit that only rewrites the header (`updated_at:`, which `check --fix` bumps on every edit) does not make it diverge.
 
 - **MKSTP-B07** — A key added later to an already-stamped double gets its own stamp when no existing stamp of that module covers its export (same anchor, or a range containing it); the existing stamps are left untouched, and a second run adds nothing.
+
+- **MKSTP-B08** — A package that shares a project file's basename is not stamped: a bare name of one segment is the project's only as a file at the root, never as a file of that name in some folder.
 
 - **MKSTP-I01** — An existing stamp is never rewritten, even when it diverges.
 

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:a7b1cf462c0990c1 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:dd8bf8e617916592 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -4511,6 +4511,8 @@ is what the test proves.
 - [An automock gets one stamp over the whole module](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B04`
 
 - [A third-party double is not stamped](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B05`
+
+- [A package that shares a project file's basename is not stamped](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B08`
 
 - [The header stays out of a whole-module stamp](layers/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B06`
 

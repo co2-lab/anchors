@@ -2,7 +2,7 @@
 # @anchors
 #   code: MSGFM
 #   ref: MKSTP
-#   updated_at: 2026-10-03
+#   updated_at: 2026-10-24
 #   layer: feature
 
 @MKSTP
@@ -39,6 +39,12 @@ Feature: MockStampGenerator — writes the missing `@contract` stamps, and never
     Given a double of a library outside the map
     When the generator runs
     Then nothing is written
+
+  @MKSTP-B08 @unit-level
+  Scenario: A package that shares a project file's basename is not stamped
+    Given a double of the package `stripe`, and the project's own infra/stripe.ts
+    When the generator runs
+    Then nothing is written, because a package is not a file that shares its name
 
   @MKSTP-B06 @unit-level
   Scenario: The header stays out of a whole-module stamp

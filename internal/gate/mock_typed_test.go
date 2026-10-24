@@ -92,9 +92,9 @@ jest.mock('@backend/repositories/lotes', (): Partial<typeof Real> => ({
 // exatamente o buraco a pegar, e um veredito por arquivo o daria como resolvido.
 func TestMockTipado_cobraPorModuloNaoPorArquivo(t *testing.T) {
 	t.Run("MCTYM-B03: The charge is per module, not per file", func(t *testing.T) {})
-	src := `import type * as A from 'a'
-jest.mock('a', (): Partial<typeof A> => ({ f: jest.fn() }))
-jest.mock('b', () => ({ g: jest.fn() }))`
+	src := `import type * as A from 'src/a'
+jest.mock('src/a', (): Partial<typeof A> => ({ f: jest.fn() }))
+jest.mock('src/b', () => ({ g: jest.fn() }))`
 	v, msg := rodaMock(t, src, cfgComContrato())
 	if v != Fail {
 		t.Fatalf("um dublê solto entre vários basta para reprovar: %v", v)
@@ -177,7 +177,7 @@ func TestMockTipado_semDubleNadaACobrar(t *testing.T) {
 // O dialeto do runner é do projeto: `vi.mock` (vitest) conta igual a `jest.mock`.
 func TestMockTipado_reconheceVitest(t *testing.T) {
 	t.Run("MCTYM-B08: Another runner of the same ecosystem is recognised the same way", func(t *testing.T) {})
-	src := `vi.mock('a', () => ({ f: vi.fn() }))`
+	src := `vi.mock('src/a', () => ({ f: vi.fn() }))`
 	if v, _ := rodaMock(t, src, cfgComContrato()); v != Fail {
 		t.Errorf("`vi.mock` é dublê como qualquer outro: %v", v)
 	}
