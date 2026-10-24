@@ -126,11 +126,31 @@ jobs:
       # SHA fixo, não `@v2`: a action recebe um PAT CLÁSSICO, que tem poder amplo sobre
       # os repositórios da organização. Uma tag é móvel — quem controlasse a action
       # poderia trocar o código sob esse token sem que nada aqui mudasse.
-      - if: steps.existe.outputs.publicado == 'true'
+      #
+      # A SECOND ATTEMPT, a minute later. The submission to winget-pkgs fails now and then
+      # after the manifests are written, with an empty `Error:` — v0.1.370 and v0.1.371 both
+      # failed once and passed on a re-run of the job. The first attempt does not fail the
+      # job; the second decides it, so a real failure (an expired PAT, the upstream down)
+      # still fails it, twice.
+      - id: tentativa1
+        if: steps.existe.outputs.publicado == 'true'
+        continue-on-error: true
         uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
         with:
           identifier: co2lab.Anchors
           # PAT CLÁSSICO: o fine-grained não serve para operações de fork.
+          token: ${{ secrets.WINGET_GITHUB_TOKEN }}
+          release-tag: ${{ github.ref_name }}
+          fork-user: co2-lab
+          installers-regex: '_windows_\w+\.zip$'
+      - if: steps.existe.outputs.publicado == 'true' && steps.tentativa1.outcome == 'failure'
+        run: |
+          echo "::warning::A primeira submissão ao Winget falhou — nova tentativa em 60 s."
+          sleep 60
+      - if: steps.existe.outputs.publicado == 'true' && steps.tentativa1.outcome == 'failure'
+        uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
+        with:
+          identifier: co2lab.Anchors
           token: ${{ secrets.WINGET_GITHUB_TOKEN }}
           release-tag: ${{ github.ref_name }}
           fork-user: co2-lab
