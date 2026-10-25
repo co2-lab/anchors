@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:dd8bf8e617916592 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:1a6da5b7bc2b6492 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2623,6 +2623,10 @@ is what the test proves.
 - [The suites a later run did not replace come back from HEAD and are carried with the rest](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B05`
 
 - [The scenarios of a changed rule, marked stale by the rebuild, are kept too](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B06`
+
+- [The evidence kept survives a later change that proves nothing, as a header's date](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B07`
+
+- [A mutation a later run did not replace comes back from HEAD and is carried with the rest](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B08`
 
 - [The issues in todo and doing are counted, with the user-owned ones apart](layers/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines) `LCBCL-B01`
 

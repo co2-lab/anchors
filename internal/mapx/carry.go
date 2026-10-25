@@ -64,6 +64,19 @@ func (g *Graph) AdvanceTo(id string, content []byte, cfg *config.Config) (moved,
 	return true, carried
 }
 
+// TakeContent gives the node the revision and the evidence revisions of its file's content
+// as it is now, carrying nothing: what moved its evidence by declaration (`keep-evidence`,
+// `check --fix`) moved its revision alone, and the evidence revisions left those of the
+// previous content. The next rebuild compared them with the new content's, found the
+// evidence changed, and dropped what the declaration had kept (reported from MIF: a header
+// date after `keep-evidence --lines` took the mutation of 271 files).
+func (g *Graph) TakeContent(id string, content []byte, cfg *config.Config) {
+	if i := g.nodeIndex(id); i >= 0 {
+		n := &g.Nodes[i]
+		n.setEvidence(scan.ShortHash(content), scan.EvidenceOf(string(n.Kind), n.ID, content, cfg))
+	}
+}
+
 // FillOldEvidence gives each file the new build moved the evidence of its content at the
 // map's revision, read again by today's rule: the content is read by `read` — the commit's
 // copy, usually —, and taken only when its hash is that revision. A map written before

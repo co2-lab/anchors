@@ -2,7 +2,7 @@
 # @anchors
 #   code: KEFKP
 #   ref: KPEVD
-#   updated_at: 2026-10-08
+#   updated_at: 2026-10-24
 #   layer: feature
 
 @KPEVD
@@ -49,3 +49,15 @@ Feature: KeepEvidence — a change that proves nothing new keeps the files' evid
     Given a spec at its current content whose rule's scenario is stale
     When the evidence is kept with a reason
     Then the command says the scenario was kept and nothing is stale any more
+
+  @KPEVD-B07 @unit-level
+  Scenario: The evidence kept survives a later change that proves nothing, as a header's date
+    Given a spec whose evidence was kept while the map still held its previous content
+    When its header's date changes and the map is rebuilt
+    Then the proof kept goes along to the dated content
+
+  @KPEVD-B08 @unit-level
+  Scenario: A mutation a later run did not replace comes back from HEAD and is carried with the rest
+    Given a code file mutated at HEAD, changed, the map rebuilt and only its coverage run again
+    When keep-evidence runs on it with --lines
+    Then the mutation comes back from HEAD and is at the new content beside the coverage

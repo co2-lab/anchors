@@ -195,3 +195,73 @@ func TestKeepEvidence_clearsTheScenariosOfAChangedRule(t *testing.T) {
 		t.Errorf("nothing is stale any more, got %+v", n.Signal)
 	}
 }
+
+func TestKeepEvidence_survivesADateAfterwards(t *testing.T) {
+	t.Run("KPEVD-B07: The evidence kept survives a later change that proves nothing, as a header's date", func(t *testing.T) {})
+	// The map still at the content before the change: the command moves the node's revision
+	// and must move its evidence revisions with it, or the next rebuild drops what it kept.
+	r, mapPath := keepRepo(t, false)
+	if _, err := runQ(t, newKeepEvidenceCmd(), "--root", r.root, "src/pay.spec.md", "--reason", "only @realizes added"); err != nil {
+		t.Fatal(err)
+	}
+	dated := strings.Replace(keptSpec, "updated_at: 2026-09-01", "updated_at: 2026-10-24", 1)
+	touchWrite(t, r.root, "src/pay.spec.md", dated)
+	old, err := mapx.Load(mapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, _ := scan.Walk(r.root, r.cfg)
+	g := mapx.Build(files, r.cfg, gitmeta.AllCommitDates(r.root))
+	mapx.PreserveStamps(g, old)
+	rev := scan.ShortHash([]byte(dated))
+	if n := g.Node("src/pay.spec.md"); n.Rev != rev || n.Signal == nil || n.Signal.AtRev != rev || len(n.Signal.ProvenCodes) != 1 {
+		t.Errorf("the proof kept goes along with the date, got %+v %+v", n, n.Signal)
+	}
+}
+
+func TestKeepEvidence_mutationNotRunAgainComesFromHead(t *testing.T) {
+	t.Run("KPEVD-B08: A mutation a later run did not replace comes back from HEAD and is carried with the rest", func(t *testing.T) {})
+	r, mapPath := keepRepo(t, false)
+	// HEAD's map: the code file's mutation, at its old content.
+	g, err := mapx.Load(mapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := g.Node("src/pay.ts")
+	old := n.Rev
+	n.Signal = &mapx.TestSignal{MutantsKilled: 9, MutantsSurvived: 1, MutationScore: 90, AtRev: old, MutationAtRev: old,
+		MutationByScope: map[string]mapx.MutationScope{"isolated": {Killed: 9, Survived: 1, Score: 90, AtRev: old}}}
+	if err := mapx.Save(g, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	r.git("add", mapx.DefaultPath)
+	r.git("commit", "-qm", "mutated", "--", mapx.DefaultPath)
+	// Its import changes, the map is rebuilt, and only the coverage runs again: a new signal
+	// with no mutation.
+	edited := "export const pay = 1 // imports moved\n"
+	touchWrite(t, r.root, "src/pay.ts", edited)
+	rev := scan.ShortHash([]byte(edited))
+	g, _ = mapx.Load(mapPath)
+	n = g.Node("src/pay.ts")
+	n.Rev = rev
+	n.Signal = &mapx.TestSignal{CoveredLines: 1, TotalLines: 1, LineCoverage: 100, AtRev: rev,
+		CoverageBySuite: map[string]mapx.SuiteCoverage{"lcov.info": {CoveredLines: 1, TotalLines: 1, AtRev: rev}}}
+	if err := mapx.Save(g, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runQ(t, newKeepEvidenceCmd(), "--root", r.root, "src/pay.ts", "--lines", "--reason", "only the import specifiers moved")
+	if err != nil {
+		t.Fatal(err)
+	}
+	g, _ = mapx.Load(mapPath)
+	s := g.Node("src/pay.ts").Signal
+	if s == nil || s.MutationAtRev != rev || s.MutationScore != 90 || s.MutationByScope["isolated"].AtRev != rev ||
+		s.CoverageBySuite["lcov.info"].AtRev != rev || !strings.Contains(out, "evidence kept:") {
+		t.Errorf("the mutation comes back from HEAD at the new content beside the coverage run: %+v\n%s", s, out)
+	}
+	// A mutation measured again at the new content stays its own.
+	s.MutationScore, s.MutationAtRev = 50, rev
+	if s.AdoptMissingMutation(&mapx.TestSignal{MutationScore: 90, MutationAtRev: old}) || s.MutationScore != 50 {
+		t.Errorf("a signal with a mutation of its own adopts none, got %+v", s)
+	}
+}

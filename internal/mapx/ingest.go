@@ -733,6 +733,28 @@ func (s *TestSignal) AdoptMissingSuites(from *TestSignal, current string) bool {
 	return adopted
 }
 
+// AdoptMissingMutation gives the signal the mutation `from` holds, when it holds none of
+// its own: the mutation of another measurement of the same file — the map at HEAD — that no
+// run since has replaced. A signal with a mutation of its own was measured again, and stays
+// as it is. It says whether the mutation was adopted.
+//
+// A coverage run at the new content starts a new signal, with no mutation: `keep-evidence`
+// adopted the suites HEAD held and not its mutation, and found nothing to carry (reported
+// from MIF: 271 files left with no mutation after an edit of their imports alone).
+func (s *TestSignal) AdoptMissingMutation(from *TestSignal) bool {
+	if s == nil || from == nil || s.MutationAtRev != "" || len(s.MutationByScope) > 0 ||
+		(from.MutationAtRev == "" && len(from.MutationByScope) == 0) {
+		return false
+	}
+	s.MutantsKilled, s.MutantsSurvived, s.MutationScore = from.MutantsKilled, from.MutantsSurvived, from.MutationScore
+	s.MutantsNoCoverage, s.NoCoverageAt = from.MutantsNoCoverage, from.NoCoverageAt
+	s.MutantsIgnored, s.MutantsTimedOut = from.MutantsIgnored, from.MutantsTimedOut
+	s.MutationLow, s.MutationHigh = from.MutationLow, from.MutationHigh
+	s.MutationByScope = cloneScopes(from.MutationByScope)
+	s.MutationAtRev = from.MutationAtRev
+	return true
+}
+
 // IngestCoverage grava a cobertura de linha nos nós de CÓDIGO, casando por caminho.
 func (g *Graph) IngestCoverage(byFile map[string]FileCov, now string) (matched int) {
 	return g.IngestCoverageSuite(byFile, "", now)

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: KPEVD
-  updated_at: 2026-10-08
+  updated_at: 2026-10-24
   layer: comando
 -->
 # KeepEvidence — a change that proves nothing new keeps the files' evidence
@@ -34,6 +34,8 @@ they say it, with the reason recorded.
 | `KPEVD-B04` | The `@contract` stamps of the doubles pointing at the files kept are refreshed and listed, under the same declaration. |
 | `KPEVD-B05` | When the file's signal lacks suites the map at HEAD holds for it — the rebuild dropped the signal and only some suites ran again at the new content —, those suites come back from HEAD and are carried with the rest; a suite run again keeps its new measurement. A suite that ran again and proved nothing here also comes back: the command is the author's declaration that the change proves nothing new. |
 | `KPEVD-B06` | The scenarios a rebuild marked stale because their rule changed are kept too, and said, even when the evidence itself is already at the current content. |
+| `KPEVD-B07` | The node takes the evidence revisions of the content kept, with its revision: a later change that proves nothing — a header's date — carries what was kept, as it carries any evidence. |
+| `KPEVD-B08` | When the file's signal holds no mutation and the map at HEAD holds one for it — a coverage run at the new content started a new signal —, that mutation comes back from HEAD and is carried with the rest under `--lines`; a mutation measured again at the new content stays its own. |
 
 ## Errors
 

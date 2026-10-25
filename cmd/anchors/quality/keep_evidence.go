@@ -75,6 +75,10 @@ unproven.`,
 			if _, err := os.Stat(mapPath); err != nil {
 				return fmt.Errorf("no map at %s: run `anchors map build` first", mapx.DefaultPath)
 			}
+			cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			if err != nil {
+				return err
+			}
 			head := headMap(absRoot)
 			today := gitmeta.Today()
 			var files []string
@@ -97,6 +101,7 @@ unproven.`,
 								// A suite run since at the new content stays; the ones it did
 								// not replace come back from HEAD, to be carried with the rest.
 								n.Signal.AdoptMissingSuites(h.Signal, n.Rev)
+								n.Signal.AdoptMissingMutation(h.Signal)
 							}
 						}
 					}
@@ -104,6 +109,9 @@ unproven.`,
 					// the author vouches for too.
 					cleared := n.Signal.ClearStale()
 					carried := g.KeepEvidence(rel, scan.ShortHash(b), reason, today, lines)
+					// The evidence revisions follow: left those of the previous content, the
+					// next rebuild found the evidence changed and dropped what was kept.
+					g.TakeContent(rel, b, cfg)
 					if len(carried) == 0 && len(cleared) == 0 {
 						fmt.Printf("  %s — nothing to keep: its evidence is already at this content, or it has none\n", rel)
 						continue

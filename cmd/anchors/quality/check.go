@@ -224,7 +224,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 				// new content, as `keep-evidence` would carry it. Without this, the next map
 				// build dropped the proof of every file the chain's fixer flagged (measured on
 				// a peer: 141 files, the whole suite to run again for comments).
-				if kept := keepFixedEvidence(absRoot, mapPath, fixes); kept > 0 {
+				if kept := keepFixedEvidence(absRoot, mapPath, fixes, cfg); kept > 0 {
 					fmt.Println(i18n.T("check.fix_evidence_kept", kept))
 				}
 				fmt.Println()
@@ -2225,7 +2225,7 @@ func dropAbsentFromIndex(absRoot string, g *mapx.Graph) error {
 // keepFixedEvidence carries, in the map, the evidence of each file the repairs changed to
 // its new content; the line-level signals only when no line moved. It returns how many
 // files kept their evidence.
-func keepFixedEvidence(absRoot, mapPath string, fixes []gate.FixResult) int {
+func keepFixedEvidence(absRoot, mapPath string, fixes []gate.FixResult, cfg *config.Config) int {
 	moved := map[string]bool{}
 	var files []string
 	for _, f := range fixes {
@@ -2248,7 +2248,9 @@ func keepFixedEvidence(absRoot, mapPath string, fixes []gate.FixResult) int {
 			if err != nil || g.Node(rel) == nil {
 				continue
 			}
-			if len(g.KeepFixedEvidence(rel, scan.ShortHash(b), i18n.T("check.fix_evidence_reason"), today, !moved[rel])) > 0 {
+			carried := g.KeepFixedEvidence(rel, scan.ShortHash(b), i18n.T("check.fix_evidence_reason"), today, !moved[rel])
+			g.TakeContent(rel, b, cfg)
+			if len(carried) > 0 {
 				kept++
 			}
 		}

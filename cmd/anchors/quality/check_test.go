@@ -2876,7 +2876,7 @@ func TestKeepFixedEvidence(t *testing.T) {
 	write("a.ts", "import x from './b' // @dep: BBBBB\n")
 	write("b.ts", "// @used-by: AAAAA\nexport default 1\n")
 	g := &mapx.Graph{Nodes: []mapx.Node{
-		{ID: "a.ts", Kind: mapx.KindCode, Rev: "olda", Signal: &mapx.TestSignal{ProvenCodes: []string{"X-B01"}, AtRev: "olda"}},
+		{ID: "a.ts", Kind: mapx.KindCode, Rev: "olda", EvidenceRev: "oldea", Signal: &mapx.TestSignal{ProvenCodes: []string{"X-B01"}, AtRev: "olda"}},
 		{ID: "b.ts", Kind: mapx.KindCode, Rev: "oldb", Signal: &mapx.TestSignal{ProvenCodes: []string{"X-B02"}, AtRev: "oldb"}},
 	}}
 	mapPath := filepath.Join(dir, mapx.DefaultPath)
@@ -2884,7 +2884,7 @@ func TestKeepFixedEvidence(t *testing.T) {
 		t.Fatal(err)
 	}
 	fixes := []gate.FixResult{{Gate: "dep-declared", Target: "a.ts", Fixed: true}, {Gate: "used-by-declared", Target: "b.ts", Fixed: true, LinesMoved: true}, {Gate: "x", Target: "c.ts"}}
-	if n := keepFixedEvidence(dir, mapPath, fixes); n != 2 {
+	if n := keepFixedEvidence(dir, mapPath, fixes, &config.Config{}); n != 2 {
 		t.Fatalf("both repaired files keep their evidence, got %d", n)
 	}
 	got, err := mapx.Load(mapPath)
@@ -2897,9 +2897,22 @@ func TestKeepFixedEvidence(t *testing.T) {
 			t.Errorf("%s: the proof is at the repaired content, with the declaration: %+v", id, n)
 		}
 	}
+	// The evidence revisions follow the repaired content, or the next rebuild drops what was kept.
+	if e := scan.EvidenceOf("code", "a.ts", []byte("import x from './b' // @dep: BBBBB\n"), &config.Config{}); evidenceOf(got.Node("a.ts")) != e.Rev {
+		t.Errorf("the evidence revision is the repaired content's: got %+v, want %q", got.Node("a.ts"), e.Rev)
+	}
 	if !got.Node("b.ts").EvidenceKept[0].Lines == false || got.Node("a.ts").EvidenceKept[0].Lines != true {
 		t.Errorf("line-level signals go only where no line moved: a=%v b=%v", got.Node("a.ts").EvidenceKept[0].Lines, got.Node("b.ts").EvidenceKept[0].Lines)
 	}
+}
+
+// evidenceOf is the node's evidence revision: its own, or its revision when it has nothing to
+// leave out.
+func evidenceOf(n *mapx.Node) string {
+	if n.EvidenceRev != "" {
+		return n.EvidenceRev
+	}
+	return n.Rev
 }
 
 // Committing the progress file answered "not governed by the Structure" (reported from MIF) —

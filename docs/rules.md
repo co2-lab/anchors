@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:c5c0d63999b72ee6 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:0f60c5c8bd9cd9ec — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2873,6 +2873,10 @@ in `layers/`.
 - [KPEVD-B05 — When the file's signal lacks suites the map at HEAD holds for it — the rebuild dropped the signal and only some suites ran again at the new content —, those suites come back from HEAD and are carried with the rest; a suite run again keeps its new measurement. A suite that ran again and proved nothing here also comes back: the command is the author's declaration that the change proves nothing new.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
 
 - [KPEVD-B06 — The scenarios a rebuild marked stale because their rule changed are kept too, and said, even when the evidence itself is already at the current content.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
+
+- [KPEVD-B07 — The node takes the evidence revisions of the content kept, with its revision: a later change that proves nothing — a header's date — carries what was kept, as it carries any evidence.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
+
+- [KPEVD-B08 — When the file's signal holds no mutation and the map at HEAD holds one for it — a coverage run at the new content started a new signal —, that mutation comes back from HEAD and is carried with the rest under `--lines`; a mutation measured again at the new content stays its own.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
 
 - [KPEVD-E01 — The reason is missing or blank, a file is not in the map or cannot be read, or there is no map](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
 

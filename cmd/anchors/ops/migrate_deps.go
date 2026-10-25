@@ -60,7 +60,7 @@ func migrateSpecDependencies(absRoot string, cfg *config.Config, dryRun bool) ([
 		return nil, err
 	}
 	var out []SpecDepsReport
-	type rewrite struct{ rel, to string }
+	type rewrite struct{ rel, content string }
 	var written []rewrite
 	defer func() {
 		// Taking the table out proves nothing new: each spec keeps what held at its revision
@@ -75,7 +75,8 @@ func migrateSpecDependencies(absRoot string, cfg *config.Config, dryRun bool) ([
 		today := gitmeta.Today()
 		_ = mapx.Update(mapPath, func(g *mapx.Graph) error {
 			for _, w := range written {
-				g.KeepFixedEvidence(w.rel, w.to, "the spec's Dependencies table moved to the code's @dep flags", today, false)
+				g.KeepFixedEvidence(w.rel, scan.ShortHash([]byte(w.content)), "the spec's Dependencies table moved to the code's @dep flags", today, false)
+				g.TakeContent(w.rel, []byte(w.content), cfg)
 			}
 			return nil
 		})
@@ -99,7 +100,7 @@ func migrateSpecDependencies(absRoot string, cfg *config.Config, dryRun bool) ([
 			if err := writeKeepingMode(p, next); err != nil {
 				return out, err
 			}
-			written = append(written, rewrite{f, scan.ShortHash([]byte(next))})
+			written = append(written, rewrite{f, next})
 		}
 	}
 	return out, nil
