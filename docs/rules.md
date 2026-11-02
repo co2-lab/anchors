@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:51bbf409e893040b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:2f86d55ec90eebf3 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2167,6 +2167,8 @@ in `layers/`.
 - [ININT-B12 — When the default gates are seeded, the success JSON carries `gate_scripts`: a gate step doing more than calling one tool is written in the project's language, with the family's example; with no gates seeded it carries none.](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
 
 - [ININT-B13 — With the contributing answer yes, a project with no `AGENTS.md` or `CLAUDE.md` gets each, pointing to `CONTRIBUTING.md`, and the success JSON lists them as written; one the project already has stays byte for byte, and when it does not mention `CONTRIBUTING.md` the success JSON carries the line to add.](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
+
+- [ININT-B14 — What the non-interactive init writes passes its own gates: the configuration loads — in a project of several languages, with the naming conventions in `dialect:` —, and the header guide seeded carries its header and governs the layers it rules (HDGDH-B07, HDGDH-B08).](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
 
 - [ININT-I01 — Either every answer is accepted and the file is written, or nothing is written.](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
 
@@ -7258,7 +7260,7 @@ in `layers/`.
 
 - [BLCNB-B13 — A new project of a family with an example starts with the family's lexicon in its dialect (`config.FamilyLexicon`), and every new project with code starts with the comments of the examples covering its extensions and its family's configuration and scripts (`config.CommentsCovering`, `config.FamilyComments`); with neither, it has no dialect.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
-- [BLCNB-B14 — Code roots in several languages are proposed one dialect per family under `dialects:`, each its family's example; each code layer names its root's family and reads its family's extensions. One family keeps the one `dialect:` block.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
+- [BLCNB-B14 — Code roots in several languages are proposed one dialect per family under `dialects:`, each its family's example; each code layer names its root's family and reads its family's extensions; the naming conventions every family's example carries go in `dialect:`, never in a dialect (DLCTI-B40). One family keeps the one `dialect:` block.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
 - [BLCNB-B15 — In a project of several dialects each family gets its own test layer, `test-<family>`, by the conventions its files follow or its family's default, naming its dialect, and the colocation's test template per family; with no family to split by, the test layer names the main family's dialect.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
@@ -7453,6 +7455,10 @@ in `layers/`.
 - [HDGDH-B05 — The guide always carries the compliance-points section under the title of the current language, with the points CK1 to CK5.](layers/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares)
 
 - [HDGDH-B06 — The guide is titled "<family> project", or "project" with no family.](layers/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares)
+
+- [HDGDH-B07 — A guide init seeds — the header guide, the spec guide — carries its `@anchors` header, under a code made from its name that no file of the project holds nor another seeded guide took. (`WithGuideHeader`, `TakenCodes`)](layers/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares)
+
+- [HDGDH-B08 — A seeded guide the configuration reads as a guide governs the layers it rules — the header guide those whose files carry a header (code, tests, specs, features), the spec guide the specs —, one `governs` rule per tag, each once; a file the configuration reads as no guide governs nothing. (`SeedGoverns`, `HeaderLayerTags`, `SpecLayerTags`)](layers/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares)
 
 - [HDGDH-I01 — The guide seeded in any supported language is recognised by the compliance-section heading the `guide-checklist` gate looks for, with at least one checkable point.](layers/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares)
 

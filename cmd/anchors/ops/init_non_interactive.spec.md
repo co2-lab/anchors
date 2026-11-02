@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ININT
-  updated_at: 2026-10-11
+  updated_at: 2026-11-02
   layer: comando
 -->
 # InitNonInteractive — the init that an agent answers with flags: it asks in JSON, and writes only a complete, valid set of answers
@@ -53,6 +53,7 @@ the map.
 | `ININT-B11` | With the contributing answer yes (the default), a project with no `CONTRIBUTING.md` gets one rendered from the written configuration, and the success JSON says it was written; an existing one stays byte for byte, and the success JSON carries the section that would be added. `--contributing=false` touches nothing. |
 | `ININT-B12` | When the default gates are seeded, the success JSON carries `gate_scripts`: a gate step doing more than calling one tool is written in the project's language, with the family's example; with no gates seeded it carries none. |
 | `ININT-B13` | With the contributing answer yes, a project with no `AGENTS.md` or `CLAUDE.md` gets each, pointing to `CONTRIBUTING.md`, and the success JSON lists them as written; one the project already has stays byte for byte, and when it does not mention `CONTRIBUTING.md` the success JSON carries the line to add. |
+| `ININT-B14` | What the non-interactive init writes passes its own gates: the configuration loads — in a project of several languages, with the naming conventions in `dialect:` —, and the header guide seeded carries its header and governs the layers it rules (HDGDH-B07, HDGDH-B08). |
 
 ## Invariants
 

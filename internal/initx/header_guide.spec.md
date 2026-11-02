@@ -1,6 +1,6 @@
 <!-- @anchors
   code: HDGDH
-  updated_at: 2026-10-08
+  updated_at: 2026-11-02
   layer: infra
 -->
 # HeaderGuide — render the project's header guide in the language's comment dialect, passing the gate that init itself declares
@@ -40,6 +40,8 @@ what makes the guide confrontable rather than merely read.
 | `HDGDH-B04` | The guide always states the essentials — the `code:` and `updated_at:` annotations, the `header-valid` gate and a pointer to `anchors guide header` — even with no family. |
 | `HDGDH-B05` | The guide always carries the compliance-points section under the title of the current language, with the points CK1 to CK5. |
 | `HDGDH-B06` | The guide is titled "<family> project", or "project" with no family. |
+| `HDGDH-B07` | A guide init seeds — the header guide, the spec guide — carries its `@anchors` header, under a code made from its name that no file of the project holds nor another seeded guide took. (`WithGuideHeader`, `TakenCodes`) |
+| `HDGDH-B08` | A seeded guide the configuration reads as a guide governs the layers it rules — the header guide those whose files carry a header (code, tests, specs, features), the spec guide the specs —, one `governs` rule per tag, each once; a file the configuration reads as no guide governs nothing. (`SeedGoverns`, `HeaderLayerTags`, `SpecLayerTags`) |
 
 ## Invariants
 

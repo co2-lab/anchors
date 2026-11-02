@@ -6,9 +6,13 @@ package initx
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/code"
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // CommentStyle é o dialeto de comentário de uma linguagem, para os exemplos do
@@ -124,4 +128,89 @@ func projectTitle(family string) string {
 		return family + " project"
 	}
 	return "project"
+}
+
+// TakenCodes are the codes the project's files already hold — declared in a header or
+// owned —, read with the configuration init is writing: a seeded guide takes none of them.
+func TakenCodes(root string, cfg *config.Config) map[string]bool {
+	taken := map[string]bool{}
+	files, _ := scan.Walk(root, cfg)
+	for _, f := range files {
+		if f.HeaderCode != "" {
+			taken[f.HeaderCode] = true
+		}
+		for _, c := range f.Codes {
+			taken[c] = true
+		}
+	}
+	return taken
+}
+
+// WithGuideHeader is a seeded guide's text with its `@anchors` header, the code made from
+// its name and free in `taken`, which takes it. A guide init writes is a file of the guide
+// layer, and the header gate asks it for its header like any other: seeded without one, the
+// guide that teaches the header failed the header gate on the first commit (reported from SS).
+func WithGuideHeader(body, rel, name string, taken map[string]bool) string {
+	c := code.GenerateFromPath(rel, name, false, taken)
+	taken[c] = true
+	return "<!-- @anchors\n  code: " + c + "\n-->\n\n" + body
+}
+
+// SeedGoverns gives a seeded guide its `governs` rules — one per tag of the layers it rules —,
+// when the configuration reads it as a guide: a guide governing nothing is what the doctor
+// reports. A rule already declared is kept once.
+func SeedGoverns(cfg *config.Config, rel string, tags []string) {
+	if _, kind := cfg.LayerOf(rel); kind != "guide" {
+		return
+	}
+	have := map[string]bool{}
+	for _, r := range cfg.Governs {
+		have[r.From+"\x00"+r.Governs] = true
+	}
+	for _, t := range tags {
+		if !have[rel+"\x00"+t] {
+			have[rel+"\x00"+t] = true
+			cfg.Governs = append(cfg.Governs, config.GovernRule{From: rel, Governs: t})
+		}
+	}
+}
+
+// HeaderLayerTags are the tags of the layers whose files carry an `@anchors` header — code,
+// tests, specs, features —, sorted: what the header guide rules. A layer with no tag is
+// ruled by its name.
+func HeaderLayerTags(cfg *config.Config) []string {
+	seen := map[string]bool{}
+	for name, l := range cfg.Layers {
+		if l.Headless || (l.Kind != "code" && l.Kind != "test" && l.Kind != "spec" && l.Kind != "feature") {
+			continue
+		}
+		tag := name
+		if len(l.Tags) > 0 {
+			tag = l.Tags[0]
+		}
+		seen[tag] = true
+	}
+	out := make([]string, 0, len(seen))
+	for t := range seen {
+		out = append(out, t)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// SpecLayerTags are the tags of the spec layers, sorted: what the spec guide rules.
+func SpecLayerTags(cfg *config.Config) []string {
+	var out []string
+	for name, l := range cfg.Layers {
+		if l.Kind != "spec" {
+			continue
+		}
+		tag := name
+		if len(l.Tags) > 0 {
+			tag = l.Tags[0]
+		}
+		out = append(out, tag)
+	}
+	sort.Strings(out)
+	return out
 }

@@ -2,7 +2,7 @@
 # @anchors
 #   code: HGFHD
 #   ref: HDGDH
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @HDGDH
@@ -61,3 +61,15 @@ Feature: HeaderGuide — render the project's header guide in the language's com
     Given an empty working folder
     When the header guide is rendered
     Then the folder is still empty and the guide comes back as text
+
+  @HDGDH-B07 @unit-level
+  Scenario: A seeded guide carries its header under a free code
+    Given a header guide seeded twice into the same set of taken codes
+    When each is given its header
+    Then each opens with its @anchors header, and the second takes another code
+
+  @HDGDH-B08 @unit-level
+  Scenario: A seeded guide governs the layers it rules
+    Given a guide layer, a spec layer, a code layer and a headless doc
+    When the header and spec guides are given their rules, twice, and a file of no guide layer too
+    Then the header guide governs the spec and code tags, the spec guide the spec, each once, and the other file nothing

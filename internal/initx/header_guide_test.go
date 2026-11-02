@@ -6,10 +6,12 @@ package initx
 
 import (
 	"os"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 )
 
@@ -135,5 +137,39 @@ func TestSeededGuideHasTheChecklistInEveryLanguage(t *testing.T) {
 		if !itemRE.MatchString(g) {
 			t.Errorf("lang=%s: the section exists but has no CK point — nothing to confront item by item", lang)
 		}
+	}
+}
+
+func TestWithGuideHeader_aFreeCode(t *testing.T) {
+	t.Run("HDGDH-B07: A seeded guide carries its @anchors header, under a code made from its name that no file of the project holds", func(t *testing.T) {})
+	taken := map[string]bool{}
+	first := WithGuideHeader("# Header guide\n", "guides/HEADER_GUIDE.md", "HeaderGuide", taken)
+	if !strings.HasPrefix(first, "<!-- @anchors\n  code: ") || !strings.Contains(first, "-->\n\n# Header guide\n") || len(taken) != 1 {
+		t.Fatalf("the header opens the guide, its code taken: %q %v", first, taken)
+	}
+	second := WithGuideHeader("x", "guides/HEADER_GUIDE.md", "HeaderGuide", taken)
+	if second[:30] == first[:30] || len(taken) != 2 {
+		t.Errorf("a code already taken is not given again: %q / %q", first[:30], second[:30])
+	}
+}
+
+func TestSeedGoverns_whatTheGuideRules(t *testing.T) {
+	t.Run("HDGDH-B08: A seeded guide the configuration reads as a guide governs the layers it rules — the header guide those carrying a header, the spec guide the specs —, each rule once; one read as no guide governs nothing", func(t *testing.T) {})
+	cfg := &config.Config{Layers: map[string]config.Layer{
+		"guide":    {Pattern: "guides/*.md", Kind: "guide"},
+		"spec":     {Pattern: "**/*.spec.md", Kind: "spec", Tags: []string{"spec"}},
+		"web-code": {Pattern: "apps/**/*.ts", Kind: "code", Tags: []string{"web-code"}},
+		"readme":   {Pattern: "README.md", Kind: "doc", Headless: true},
+	}}
+	if got := HeaderLayerTags(cfg); !reflect.DeepEqual(got, []string{"spec", "web-code"}) {
+		t.Errorf("the layers carrying a header, got %v", got)
+	}
+	SeedGoverns(cfg, "guides/HEADER_GUIDE.md", HeaderLayerTags(cfg))
+	SeedGoverns(cfg, "guides/HEADER_GUIDE.md", HeaderLayerTags(cfg))
+	SeedGoverns(cfg, "guides/SPEC_GUIDE.md", SpecLayerTags(cfg))
+	SeedGoverns(cfg, "docs/NOT_A_GUIDE.md", []string{"spec"})
+	want := []config.GovernRule{{From: "guides/HEADER_GUIDE.md", Governs: "spec"}, {From: "guides/HEADER_GUIDE.md", Governs: "web-code"}, {From: "guides/SPEC_GUIDE.md", Governs: "spec"}}
+	if !reflect.DeepEqual(cfg.Governs, want) {
+		t.Errorf("each rule once, and none for a file read as no guide, got %+v", cfg.Governs)
 	}
 }

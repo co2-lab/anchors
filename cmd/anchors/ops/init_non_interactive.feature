@@ -2,7 +2,7 @@
 # @anchors
 #   code: INIFN
 #   ref: ININT
-#   updated_at: 2026-10-11
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @ININT
@@ -108,3 +108,8 @@ Feature: InitNonInteractive — the init that an agent answers with flags: it as
     When init runs with the contributing answer yes
     Then the first gets AGENTS.md and CLAUDE.md, and the second keeps its CLAUDE.md and is given the line to add
 
+  @ININT-B14 @unit-level
+  Scenario: What init writes passes its own gates
+    Given a TS app and a Go service
+    When init writes the configuration with the guide layer
+    Then the configuration loads with a dialect per family, and the header guide carries its header and governs

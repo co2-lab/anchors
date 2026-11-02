@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -237,21 +238,29 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta,
 		}
 	}
 
-	if err := config.Save(cfg, filepath.Join(root, config.DefaultFile)); err != nil {
-		return fmt.Errorf("save: %w", err)
-	}
-
 	// O header guide é semeado se pedido: é o padrão mandatório do bloco @anchors, e
-	// sem ele o gate de header não tem régua para confrontar.
+	// sem ele o gate de header não tem régua para confrontar. It is a file of the project
+	// like any other: with its header, under a code no file holds, governing the layers it
+	// rules — decided before the configuration is saved.
+	headerBody, headerRel := "", ""
 	if sim, _ := valor("header").(bool); sim {
 		guideDir := p.GuideDir
 		if guideDir == "" {
 			guideDir = "guides"
 		}
-		dest := filepath.Join(root, guideDir, "HEADER_GUIDE.md")
-		body := initx.RenderHeaderGuide(p.Family, nil)
+		headerRel = path.Join(guideDir, "HEADER_GUIDE.md")
+		headerBody = initx.WithGuideHeader(initx.RenderHeaderGuide(p.Family, nil), headerRel, "HeaderGuide", initx.TakenCodes(root, cfg))
+		initx.SeedGoverns(cfg, headerRel, initx.HeaderLayerTags(cfg))
+	}
+
+	if err := config.Save(cfg, filepath.Join(root, config.DefaultFile)); err != nil {
+		return fmt.Errorf("save: %w", err)
+	}
+
+	if headerRel != "" {
+		dest := filepath.Join(root, filepath.FromSlash(headerRel))
 		if os.MkdirAll(filepath.Dir(dest), 0o755) == nil {
-			_ = os.WriteFile(dest, []byte(body), 0o644)
+			_ = os.WriteFile(dest, []byte(headerBody), 0o644)
 		}
 	}
 

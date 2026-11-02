@@ -85,8 +85,22 @@ func (p *Proposal) buildConfig() *config.Config {
 	// roots are written in several.
 	if len(families) > 1 {
 		c.Dialects = map[string]*config.Dialect{}
+		// What is about no language — the naming conventions every family's example
+		// carries — is the project's, in `dialect:`: a dialect declaring it does not load
+		// (DLCTI-B40; reported from SS).
+		project := &config.Dialect{}
 		for _, fam := range families {
-			c.Dialects[fam] = p.familyDialect(fam, p.extsOf(fam))
+			d := p.familyDialect(fam, p.extsOf(fam))
+			if d != nil {
+				if project.SetPromise == "" {
+					project.SetPromise, project.SetSlice = d.SetPromise, d.SetSlice
+				}
+				d.SetPromise, d.SetSlice, d.GherkinLanguage = "", "", ""
+			}
+			c.Dialects[fam] = d
+		}
+		if project.SetPromise != "" || project.SetSlice != "" {
+			c.Dialect = project
 		}
 	} else {
 		c.Dialect = p.familyDialect(p.Family, p.CodeExts)

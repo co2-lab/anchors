@@ -268,8 +268,11 @@ func TestBuildConfig_aDialectPerFamily(t *testing.T) {
 		TestConventions: []TestConvention{{Suffix: ".test.ts", Ext: "ts", Family: "ts"}, {Suffix: "_test.go", Ext: "go", Family: "go"}},
 	}
 	c := p.buildConfig()
-	if c.Dialect != nil || len(c.Dialects) != 2 || c.Dialects["go"].Family != "go" || c.Dialects["ts"].ExportedFunc == "" {
-		t.Fatalf("one dialect per family, with its example: %+v %+v", c.Dialect, c.Dialects)
+	if len(c.Dialects) != 2 || c.Dialects["go"].Family != "go" || c.Dialects["ts"].ExportedFunc == "" {
+		t.Fatalf("one dialect per family, with its example: %+v", c.Dialects)
+	}
+	if c.Dialect == nil || c.Dialect.SetPromise == "" || c.Dialects["go"].SetPromise != "" || c.Dialects["ts"].SetSlice != "" {
+		t.Errorf("the naming conventions are the project's, in `dialect:`, never a dialect's: %+v", c.Dialect)
 	}
 	for name, l := range c.Layers {
 		want := map[string]string{"web-code": "ts", "api-code": "go"}[name]

@@ -368,3 +368,40 @@ func TestNonInteractiveSeedsTheAgentFiles(t *testing.T) {
 		t.Errorf("the line to add comes back: %v", c["agentes"])
 	}
 }
+
+// The guide that teaches the header failed the header gate on the first commit, and a
+// project in two languages wrote a configuration its own load refused (reported from SS).
+func TestNonInteractive_whatItSeedsPassesItsOwnGates(t *testing.T) {
+	t.Run("ININT-B14: The configuration written loads, and the header guide seeded carries its header and governs the layers it rules", func(t *testing.T) {})
+	root := t.TempDir()
+	for rel, body := range map[string]string{"apps/a/src/x.ts": "export const x = 1\n", "services/api/x.go": "package api\n\nfunc X() {}\n"} {
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err, _, out := runNonInteractive(t, root, "--artifacts=spec,feature,test,code,guide", "--colocation", "--workflow=manual"); err != nil {
+		t.Fatalf("init: %v\n%s", err, out)
+	}
+	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
+	if err != nil {
+		t.Fatalf("the configuration init writes loads: %v", err)
+	}
+	if len(cfg.Dialects) != 2 || cfg.Dialect == nil || cfg.Dialect.SetPromise == "" {
+		t.Errorf("a dialect per family, the naming conventions the project's: %+v %+v", cfg.Dialect, cfg.Dialects)
+	}
+	b, err := os.ReadFile(filepath.Join(root, "guides", "HEADER_GUIDE.md"))
+	if err != nil || !strings.HasPrefix(string(b), "<!-- @anchors\n  code: ") {
+		t.Errorf("the header guide carries its header: %v\n%.80s", err, b)
+	}
+	governed := false
+	for _, r := range cfg.Governs {
+		governed = governed || r.From == "guides/HEADER_GUIDE.md"
+	}
+	if !governed {
+		t.Errorf("the header guide governs the layers it rules, got %+v", cfg.Governs)
+	}
+}

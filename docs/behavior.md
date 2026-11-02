@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:90859b38ac35ffd8 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:784e2fe835ef7c7a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1971,6 +1971,8 @@ is what the test proves.
 - [Seeding the gates tells to write gate steps in the project's language](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B12`
 
 - [The agents' entry files are seeded beside the contributing guide](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B13`
+
+- [What init writes passes its own gates](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B14`
 
 - [An existing config is kept when the overwrite is not confirmed](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B01`
 
@@ -6769,6 +6771,10 @@ is what the test proves.
 - [The seeded guide passes the checklist heading in every language](layers/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-I01`
 
 - [Rendering writes nothing to disk](layers/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-X01`
+
+- [A seeded guide carries its header under a free code](layers/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B07`
+
+- [A seeded guide governs the layers it rules](layers/infra.md#hdgdh--headerguide--render-the-projects-header-guide-in-the-languages-comment-dialect-passing-the-gate-that-init-itself-declares) `HDGDH-B08`
 
 - [Dependency, build and tool directories are not walked](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B01`
 

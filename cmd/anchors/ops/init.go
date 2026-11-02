@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -248,6 +249,19 @@ func runInit(root string) error {
 		return errNoTTY("Nothing was written: an `anchors.yaml` generated without the answers " +
 			"would come out with 0 layers and 0 gates, would load without error and would govern nothing.")
 	}
+	// The seeded guides are files of the project like any other: each with its header, under a
+	// code no file holds, and governing the layers it rules.
+	taken := initx.TakenCodes(root, cfg)
+	if headerDest != "" {
+		rel := filepath.ToSlash(headerRel)
+		headerBody = initx.WithGuideHeader(headerBody, rel, "HeaderGuide", taken)
+		initx.SeedGoverns(cfg, rel, initx.HeaderLayerTags(cfg))
+	}
+	specRel := ""
+	if p.GuideDir != "" {
+		specRel = path.Join(p.GuideDir, "SPEC_GUIDE.md")
+		initx.SeedGoverns(cfg, specRel, initx.SpecLayerTags(cfg))
+	}
 	if err := config.Save(cfg, outPath); err != nil {
 		return fmt.Errorf("save: %w", err)
 	}
@@ -259,7 +273,7 @@ func runInit(root string) error {
 	if p.GuideDir != "" {
 		destSpec := filepath.Join(root, p.GuideDir, "SPEC_GUIDE.md")
 		if os.MkdirAll(filepath.Dir(destSpec), 0o755) == nil &&
-			os.WriteFile(destSpec, []byte(governance.RenderSpecGuide(cfg, "")), 0o644) == nil {
+			os.WriteFile(destSpec, []byte(initx.WithGuideHeader(governance.RenderSpecGuide(cfg, ""), specRel, "SpecGuide", taken)), 0o644) == nil {
 			fmt.Printf("Spec guide seeded: %s\n", filepath.Join(p.GuideDir, "SPEC_GUIDE.md"))
 		}
 	}
