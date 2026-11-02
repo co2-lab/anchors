@@ -5,6 +5,7 @@
 package health
 
 import (
+	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
 
@@ -420,5 +421,47 @@ func TestCheckGovernanceOpportunities_LexiconOfTheFamily(t *testing.T) {
 	}
 	if f := tip(&config.Config{Dialect: &config.Dialect{Family: "cobol"}, Gates: gate}); f != nil {
 		t.Errorf("a family with no example is offered nothing: %+v", f)
+	}
+}
+
+func TestCheckGovernanceOpportunities_perDialect(t *testing.T) {
+	t.Run("GVOPG-B15: In a project of several dialects each dialect is offered its own family's example, named at its place in `dialects:`", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "services/api/a.go", Kind: mapx.KindCode, Layer: "api"}, {ID: "apps/web/a.ts", Kind: mapx.KindCode, Layer: "web"}}}
+	cfg := testkit.TwoDialects()
+	cfg.Dialects["go"].EnvRead = ""
+	cfg.Gates = []config.Gate{{Name: "env-declared", Presupposes: []string{"dialect.env_read"}}}
+	var lexicon []Finding
+	for _, f := range checkGovernanceOpportunities(g, cfg) {
+		if f.Check == "sugestao-lexicon" {
+			lexicon = append(lexicon, f)
+		}
+	}
+	if len(lexicon) != 1 || !strings.Contains(lexicon[0].Detail, "`dialects.go.env_read`") || !strings.Contains(lexicon[0].Detail, "`dialects.go:`") || lexicon[0].Subject != "dialects.go.lexicon" {
+		t.Errorf("only the Go dialect misses it, and is told at its place: %+v", lexicon)
+	}
+}
+
+func TestCheckGovernanceOpportunities_aLayerOfAnotherLanguage(t *testing.T) {
+	t.Run("GVOPG-B16: A layer whose files are of a family its dialect's is not is named, with that family's example to declare in `dialects:`", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "apps/web/a.ts", Kind: mapx.KindCode, Layer: "code"},
+		{ID: "services/api/a.go", Kind: mapx.KindCode, Layer: "code"},
+		{ID: "services/api/b.go", Kind: mapx.KindCode, Layer: "code"},
+	}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}, Layers: map[string]config.Layer{"code": {Pattern: "**/*.{ts,go}", Kind: "code"}}})
+	var found []Finding
+	for _, f := range checkGovernanceOpportunities(g, cfg) {
+		if f.Check == "sugestao-dialeto-camada" {
+			found = append(found, f)
+		}
+	}
+	if len(found) != 1 || found[0].Subject != "code" || !strings.Contains(found[0].Detail, "2 file(s) of the family `go`") || !strings.Contains(found[0].Detail, "exported_func") {
+		t.Errorf("the TS-read layer holding Go files is named with the Go example: %+v", found)
+	}
+	own := &mapx.Graph{Nodes: []mapx.Node{{ID: "apps/web/a.ts", Kind: mapx.KindCode, Layer: "web"}, {ID: "services/api/a.go", Kind: mapx.KindCode, Layer: "api"}}}
+	for _, f := range checkGovernanceOpportunities(own, testkit.TwoDialects()) {
+		if f.Check == "sugestao-dialeto-camada" {
+			t.Errorf("each layer of its own language: nothing to say, got %+v", f)
+		}
 	}
 }

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INPRN
-  updated_at: 2026-10-11
+  updated_at: 2026-11-02
   layer: infra
 -->
 # InferProposal — walks the project and proposes its structure deterministically, for init to confirm
@@ -65,6 +65,7 @@ The proposal carries the configuration built from it (BLCNB).
 | `INPRN-B12` | The test conventions are the naming forms the project's test files follow, most followed first, ties by name; a file follows the longest form it ends with (`.spec.tsx` before `.tsx`). |
 | `INPRN-B13` | The walk skips what the scan skips — the folders and files the project's `.gitignore` excludes, the scan's built-in list, and the nested checkouts (a worktree, a clone) —, so no folder the map will never walk is proposed as a layer. |
 | `INPRN-B14` | OCaml's files (`.ml`, `.mli`, `.mly`, `.mll`) and C's (`.c`, `.h`) are code: their folders are candidate code directories and their extensions code extensions. |
+| `INPRN-B15` | Each code root's family is the family of its most common code extension (`DirFamily`); roots of two families propose a dialect each (BLCNB-B14). |
 
 ## Invariants
 

@@ -2,7 +2,7 @@
 # @anchors
 #   code: CSDFC
 #   ref: CSDCN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @CSDCN
@@ -165,3 +165,8 @@ Feature: ContractStatusDeclared — the output contract lists the status codes t
     When the handler emits 201 and 404
     Then the gate reads the Responses table and accuses 404 alone
 
+  @CSDCN-B14 @unit-level
+  Scenario: Each code file is read with its own dialect's http_status
+    Given a spec declaring 403 and 404, specifying a Go handler writing StatusForbidden and a TS handler answering 404
+    When contract-status-declared confronts the spec
+    Then both statuses are read, and it passes

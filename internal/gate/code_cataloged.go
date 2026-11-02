@@ -70,7 +70,7 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 	//
 	// Antes o padrão TS/JS vinha embutido, e num projeto Go ou Python ele casava zero
 	// símbolos e devolvia Pass: verde sobre o que não conferiu, com `blocking: true`.
-	exportRE := exportDetectDe(cfg)
+	exportRE := exportDetectDe(cfg, alvos[0].arquivo)
 	if exportRE == nil {
 		// Declared but unusable is not "not declared": saying so sent the author to write
 		// what was already there (CDCTC-E03).
@@ -93,6 +93,12 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 	var comOrfao []string
 	for _, a := range alvos {
 		antes := len(achados)
+		// Each file's exports by its own dialect; one whose dialect cannot read them is left
+		// as the first was: unread is no orphan.
+		exportRE := exportDetectDe(cfg, a.arquivo)
+		if exportRE == nil {
+			continue
+		}
 		for _, s := range symbolsWithLine(a.texto, exportRE, cfg.CommentsFor(a.arquivo)) {
 			if strings.Contains(content, s.nome) {
 				continue
@@ -141,9 +147,9 @@ var noRuleRE = regexp.MustCompile(`@no-rule[^\S\n]*:[^\S\n]*\S+`)
 const exportedREDefaultTS = `(?m)^\s*export\s+(?:async\s+)?(?:function|const|let|var|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)`
 
 // exportDetectDe devolve o regex que ESTE projeto declarou (via derived.export_detect
-// ou dialect.exported_func), ou nil se não declarou.
+// ou o exported_func do dialeto do arquivo `rel`), ou nil se não declarou.
 // nil não é erro: é o gate admitindo que não sabe ler, para pular em vez de aprovar.
-func exportDetectDe(cfg *config.Config) *regexp.Regexp {
+func exportDetectDe(cfg *config.Config, rel string) *regexp.Regexp {
 	if cfg == nil {
 		return nil
 	}
@@ -151,7 +157,7 @@ func exportDetectDe(cfg *config.Config) *regexp.Regexp {
 	if cfg.Derived != nil && strings.TrimSpace(cfg.Derived.ExportDetect) != "" {
 		pattern = cfg.Derived.ExportDetect
 	} else {
-		d := cfg.DialectFor()
+		d := cfg.DialectAt(rel)
 		if strings.TrimSpace(d.ExportedFunc) != "" {
 			pattern = d.ExportedFunc
 		}

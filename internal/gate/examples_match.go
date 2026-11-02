@@ -38,7 +38,7 @@ func checkExamplesMatch(content string, n mapx.Node, root string, g *mapx.Graph,
 	if len(outlines) == 0 {
 		return Skip, i18n.T("gate.examples_match.skip_no_examples")
 	}
-	if !testsSource(cfg).Declared() {
+	if !anyTestsSource(cfg) {
 		return Skip, i18n.T("gate.test_has_assertion.skip_no_source")
 	}
 	tests, _, err := projectTests(root, g, cfg)

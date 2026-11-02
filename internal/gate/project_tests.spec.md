@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRJTS
-  updated_at: 2026-10-11
+  updated_at: 2026-11-02
   layer: gate
 -->
 # ProjectTests — the gates read the project's tests through the source the project declares
@@ -34,6 +34,7 @@ syntax themselves, and a project on any other library had no title read at all.
 | `PRJTS-B06` | Support files are not read as tests, and are dropped from any list of test paths the gates confront. |
 | `PRJTS-B07` | Under `--index` a test's line is a line of the content the gates read: a pattern scans the files through the current source, and what a script lists of a file whose tree holds something else than the source is left out. (`projectTests`, `sameAsSource`) |
 | `PRJTS-B08` | The project's tests are offered to the commands as the gates read them, with whether the project declares how its tests are written. (`ProjectTests`) |
+| `PRJTS-B09` | In a project of several dialects each test file is read by its own dialect's `tests` source — its pattern, or its script given only its files —, and the tests found are united; a file whose dialect declares no source is left unread. With one dialect its source reads every test file, as before. |
 
 ## Errors
 

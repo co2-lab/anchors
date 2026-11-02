@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"hash"
 	"io/fs"
-	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -364,8 +363,8 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 		SharedCode:    sharedCodeRE.Match(content),
 		Deps:          depsFor(kind, content, root, rel, cs),
 		Composes:      composesFor(kind, content, cfg),
-		CodeDeps:      extractCodeDeps(content, rel, cfg.DialectFor()),
-		UsedBy:        extractUsedBy(content, rel, cfg.DialectFor()),
+		CodeDeps:      extractCodeDeps(content, rel, cfg.DialectAt(rel)),
+		UsedBy:        extractUsedBy(content, rel, cfg.DialectAt(rel)),
 		Navigates:     extractNavigates(content, cs),
 		Frozen:        extractFrozen(string(content), cs),
 		FrozenRules:   extractFrozenRules(kind, string(content)),
@@ -539,41 +538,14 @@ func ClassifyPath(rel string, cfg *config.Config) (layer, kind string) {
 	return classify(rel, cfg)
 }
 
+// classify is the layer and the kind of a path (config.LayerOf): the configuration decides
+// it, so the dialect of a file — its layer's — is read by the same rule the map uses.
 func classify(rel string, cfg *config.Config) (layer, kind string) {
-	// Normaliza AQUI, e não só em quem chama: são mais de dez chamadores (`check`, `code`,
-	// `new`, `watch`…), e basta um passar a forma nativa do Windows para o `doublestar.Match`
-	// abaixo não casar NENHUM pattern que tenha diretório — `apps/mobile/**` contra
-	// `apps\mobile\App.tsx`. O modo de falha é silencioso e caro: o arquivo não fica com a
-	// camada errada, ele fica SEM camada, some do mapa, e nenhum gate volta a confrontá-lo.
-	//
-	// MEDIDO em 24/08 no app de referência: `anchors map build` no Windows produzia 1857 nós e 5416
-	// arestas onde o mesmo commit dava 2799/11302 — sumiam TODOS os `depends-on`,
-	// `specifies`, `covered-by` e `seeds`, e metade dos `governs`. Sem uma linha de erro: o
-	// mapa encolhia 4× e o `check` seguinte acusava bloqueante em arquivo intocado.
-	//
-	// `strings.ReplaceAll`, NÃO `filepath.ToSlash`: este último troca pelo separador da
-	// plataforma ONDE RODA, então no macOS/Linux é no-op e a `\` passa intacta. O teste
-	// que cobre isto foi escrito no Windows (onde `ToSlash` resolvia) e reprovava aqui —
-	// o mesmo caminho tem de casar nas duas formas em QUALQUER máquina, porque o mapa é
-	// versionado e trafega entre elas.
-	rel = strings.ReplaceAll(rel, `\`, "/")
-	melhor := priority{prio: math.MinInt, tam: -1}
-	for name, l := range cfg.Layers {
-		if !matchGlob(l.Pattern, rel) {
-			continue
-		}
-		if excluded(rel, l.Exclude) {
-			continue
-		}
-		p := priority{prio: l.Priority, tam: len(l.Pattern), nome: name}
-		if layer == "" || p.venceContra(melhor) {
-			melhor, layer, kind = p, name, l.Kind
-		}
-	}
-	return layer, kind
+	return cfg.LayerOf(rel)
 }
 
-// priority é a régua de desempate, em ordem: declarada > comprimento > nome.
+// priority é a régua de desempate, em ordem: declarada > comprimento > nome. It is
+// config.LayerOf's, repeated here only to list the layers a file's tie-break left behind.
 type priority struct {
 	prio int
 	tam  int
@@ -1791,7 +1763,7 @@ func doublesOf(kind, rel string, content []byte, cfg *config.Config) []string {
 	if re == nil || !re.Match(content) {
 		return nil
 	}
-	code := cfg.DialectFor().CommentsFor(rel).Blank(string(content))
+	code := cfg.DialectAt(rel).CommentsFor(rel).Blank(string(content))
 	seen := map[string]bool{}
 	var out []string
 	for _, m := range re.FindAllStringSubmatch(code, -1) {

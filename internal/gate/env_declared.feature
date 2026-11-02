@@ -2,7 +2,7 @@
 # @anchors
 #   code: EDFNV
 #   ref: ENVDC
-#   updated_at: 2026-10-16
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @ENVDC
@@ -43,3 +43,9 @@ Feature: EnvDeclared — the environment variables a unit reads are the ones its
     Given a spec declaring PORT that specifies a file the disk does not have
     When env-declared confronts the spec
     Then PORT is named as declared and not read
+
+  @ENVDC-B06 @unit-level
+  Scenario: Each file is read by its own dialect's env_read
+    Given a spec declaring DB_URL and API_KEY, specifying a Go file reading DB_URL and a TS file reading API_KEY, in a project of a Go and a TS dialect
+    When env-declared confronts the spec, and again with the Go dialect declaring no env_read
+    Then both are read and it passes, and then it is pending naming dialects.go.env_read

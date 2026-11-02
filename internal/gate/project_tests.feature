@@ -2,7 +2,7 @@
 # @anchors
 #   code: PRFTD
 #   ref: PRJTS
-#   updated_at: 2026-10-11
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @PRJTS
@@ -56,3 +56,8 @@ Feature: ProjectTests — the gates read the project's tests through the source 
     When a command asks for the project's tests
     Then it gets that case with its file and title, and that the project declares how its tests are written
 
+  @PRJTS-B09 @unit-level
+  Scenario: Each test file is read by its own dialect's source
+    Given a Go test file and a TS test file, each holding in a comment what the other language's pattern reads
+    When the project's tests are read
+    Then each file gives its own test alone, and the two are united

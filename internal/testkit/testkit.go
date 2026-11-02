@@ -318,3 +318,27 @@ func Chain(family string) *config.Config {
 	d.Family = family
 	return WithComments(&config.Config{Dialect: d})
 }
+
+// TwoDialects is a project of two languages: TS apps under `apps/` read by the `ts` dialect,
+// Go services under `services/` by the `go` one — each its family's example with its own
+// comments —, its specs and features naming no dialect.
+func TwoDialects() *config.Config {
+	dialect := func(fam string) *config.Dialect {
+		d := &config.Dialect{Family: fam, Comments: config.FamilyComments(fam)}
+		FillFamily(d)
+		if ex := config.FamilyChain(fam); ex != nil {
+			d.Imports, d.ImportNames, d.Declarations, d.ImportResolve = ex.Imports, ex.ImportNames, ex.Declarations, ex.ImportResolve
+		}
+		return d
+	}
+	return &config.Config{
+		Dialects: map[string]*config.Dialect{"ts": dialect("ts"), "go": dialect("go")},
+		Layers: map[string]config.Layer{
+			"web":      {Pattern: "apps/**/*.{ts,tsx}", Kind: "code", Dialect: "ts", Exclude: []string{"**/*.test.ts"}},
+			"web-test": {Pattern: "apps/**/*.test.ts", Kind: "test", Dialect: "ts"},
+			"api":      {Pattern: "services/**/*.go", Kind: "code", Dialect: "go", Exclude: []string{"**/*_test.go"}},
+			"api-test": {Pattern: "services/**/*_test.go", Kind: "test", Dialect: "go"},
+			"spec":     {Pattern: "**/*.spec.md", Kind: "spec"},
+		},
+	}
+}

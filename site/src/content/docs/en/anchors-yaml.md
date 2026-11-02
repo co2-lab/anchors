@@ -279,6 +279,44 @@ all, the gates fall back to finding the code anywhere in the test file.
 
 ---
 
+## `dialects` — a project in several languages
+
+A repository can hold apps in one language and services in another, so the gates keep
+confronting the spec, the contract and the code across them. Declare each language's lexicon
+once, by name, under `dialects:`, and have each layer name the one its files are written in:
+
+```yaml
+dialect:
+  gherkin_language: en        # what is about no language stays here
+dialects:
+  ts:
+    family: ts
+    exported_func: '...'
+    tests: { pattern: '...' }
+  go:
+    family: go
+    exported_func: '...'
+    tests: { pattern: '...' }
+layers:
+  screen:  { pattern: "apps/**/*.tsx",          kind: code, dialect: ts }
+  handler: { pattern: "services/**/handler.go", kind: code, dialect: go }
+  go-test: { pattern: "services/**/*_test.go",  kind: test, dialect: go }
+```
+
+- **A file is read with its layer's dialect alone.** A file already belongs to one layer
+  (`priority` settles two matching patterns), and that layer says what it is written in.
+- **Beside `dialects:`, `dialect:` holds only `gherkin_language`, `set_promise` and
+  `set_slice`**: every feature is written in one language, and a name promises the whole set
+  in the same words in any file.
+- **With several dialects, every `code` and `test` layer names one**, or the configuration
+  does not load: a default would read Go with the TS lexicon and pass it green. Spec, feature
+  and doc layers name none.
+- A project of one language keeps its one `dialect:` block, with nothing to change.
+- `anchors doctor` names a layer holding files of a family its dialect's is not, with that
+  family's example; `anchors init` proposes one dialect per family it finds.
+
+---
+
 ## `changelog` — how `anchors changelog --write` writes
 
 ```yaml

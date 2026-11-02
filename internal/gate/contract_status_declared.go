@@ -103,55 +103,61 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 		return Pending, i18n.T("gate.contract_status.pending_no_code")
 	}
 
-	var corpo strings.Builder
+	// Each file is read with its own dialect: a Go handler writes `WriteHeader(403)`, a
+	// Lambda in TS `{ statusCode: 403 }`. Sem comentários: um `// devolve 404` num comentário
+	// não é um status emitido, e é exatamente o tipo de texto que descreve o comportamento
+	// ANTIGO.
+	emitidos := map[string]bool{}
+	temDinamico, lido, dispensado := false, false, 0
 	for _, cp := range codePaths {
 		b, err := readFile(root, cp)
 		if err != nil {
 			continue
 		}
-		// Sem comentários: um `// devolve 404` num comentário não é um status emitido,
-		// e é exatamente o tipo de texto que descreve o comportamento ANTIGO.
-		corpo.WriteString(stripComments(string(b), cp, cfg.DialectFor()))
-		corpo.WriteString("\n")
-	}
-	code := corpo.String()
-	if strings.TrimSpace(code) == "" {
-		return Pending, i18n.T("gate.contract_status.pending_read_code")
-	}
-
-	// O LÉXICO vem do dialeto do projeto — é o que mantém o gate agnóstico. Um
-	// projeto Go declara `http_status` casando `WriteHeader(403)`; um Rails, o
-	// O LÉXICO vem do dialeto do projeto — é o que mantém o gate agnóstico. Um
-	// projeto Go declara `http_status` casando `WriteHeader(403)`; um Rails, o
-	// `render status:`. Sem `dialect.http_status`, o gate fica Pendente (honestidade do
-	// medidor — não finge conformidade nem adivinha a stack).
-	d := cfg.DialectFor()
-	if d.HTTPStatus == "" {
-		if d.WaivedField("http_status") {
-			return Skip, i18n.T("gate.contract_status.skip_opt_out")
+		d := cfg.DialectAt(cp)
+		code := stripComments(string(b), cp, d)
+		if strings.TrimSpace(code) == "" {
+			continue
 		}
-		return Pending, i18n.T("gate.contract_status.pending_dialect_missing",
-			strings.Join(config.KnownDialectFamilies(), ", "))
-	}
-	reStatus := d.Compile(d.HTTPStatus)
-	if reStatus == nil {
-		return Pending, i18n.T("gate.contract_status.pending_invalid_regex")
-	}
-
-	emitidos := map[string]bool{}
-	for _, mm := range reStatus.FindAllStringSubmatch(code, -1) {
-		// Qualquer grupo que casou serve: o padrão tem uma alternativa por forma
-		// (envelope, helper, constante nomeada), e só uma casa por vez.
-		for _, g := range mm[1:] {
-			if g == "" {
+		lido = true
+		// O LÉXICO vem do dialeto — é o que mantém o gate agnóstico. Sem `http_status`, o
+		// gate fica Pendente (honestidade do medidor — não finge conformidade nem adivinha
+		// a stack).
+		if d.HTTPStatus == "" {
+			if d.WaivedField("http_status") {
+				dispensado++
 				continue
 			}
-			if num, ok := namedHTTPStatuses[g]; ok {
-				emitidos[num] = true
-			} else if len(g) == 3 && g[0] >= '1' && g[0] <= '5' {
-				emitidos[g] = true
+			return Pending, i18n.T("gate.contract_status.pending_dialect_missing",
+				strings.Join(config.KnownDialectFamilies(), ", "))
+		}
+		reStatus := d.Compile(d.HTTPStatus)
+		if reStatus == nil {
+			return Pending, i18n.T("gate.contract_status.pending_invalid_regex")
+		}
+		for _, mm := range reStatus.FindAllStringSubmatch(code, -1) {
+			// Qualquer grupo que casou serve: o padrão tem uma alternativa por forma
+			// (envelope, helper, constante nomeada), e só uma casa por vez.
+			for _, g := range mm[1:] {
+				if g == "" {
+					continue
+				}
+				if num, ok := namedHTTPStatuses[g]; ok {
+					emitidos[num] = true
+				} else if len(g) == 3 && g[0] >= '1' && g[0] <= '5' {
+					emitidos[g] = true
+				}
 			}
 		}
+		if reDin := d.Compile(d.HTTPStatusDynamic); reDin != nil && reDin.MatchString(code) {
+			temDinamico = true
+		}
+	}
+	if !lido {
+		return Pending, i18n.T("gate.contract_status.pending_read_code")
+	}
+	if dispensado > 0 && len(emitidos) == 0 && !temDinamico {
+		return Skip, i18n.T("gate.contract_status.skip_opt_out")
 	}
 	if len(emitidos) == 0 {
 		return Skip, i18n.T("gate.contract_status.skip_no_status_found")
@@ -178,9 +184,6 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 	// alcança — acusar seria falso-positivo. Este é o caso do `log-consent`, que
 	// define `fail(status, message)` e chama `fail(400, …)`: o gate vê o literal na
 	// chamada, mas se o helper fosse indireto não veria.
-	padraoDin := d.HTTPStatusDynamic
-	reDin := d.Compile(padraoDin)
-	temDinamico := reDin != nil && reDin.MatchString(code)
 	if !temDinamico {
 		for s := range declarados {
 			if !emitidos[s] {

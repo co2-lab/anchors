@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:1a6da5b7bc2b6492 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:d5066003a33d57b4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -3274,6 +3274,24 @@ is what the test proves.
 
 - [The ts example reads a types-only import written any of three ways](layers/config.md#dlcti-b36--the-ts-example-reads-a-types-only-import-written-any-of-three-ways) `DLCTI-B36`
 
+- [A file is read with its layer's dialect alone](layers/config.md#dlcti-b37--a-file-is-read-with-its-layers-dialect-alone) `DLCTI-B37`
+
+- [One dialect is every layer's](layers/config.md#dlcti-b38--one-dialect-is-every-layers) `DLCTI-B38`
+
+- [The project's fields are every dialect's](layers/config.md#dlcti-b39--the-projects-fields-are-every-dialects) `DLCTI-B39`
+
+- [The load refuses a dialect the layers cannot read by](layers/config.md#dlcti-b40--the-load-refuses-a-dialect-the-layers-cannot-read-by) `DLCTI-B40`
+
+- [Every dialect's patterns are checked](layers/config.md#dlcti-b41--every-dialects-patterns-are-checked) `DLCTI-B41`
+
+- [A presupposed field is missing at each dialect that has it not](layers/config.md#dlcti-b42--a-presupposed-field-is-missing-at-each-dialect-that-has-it-not) `DLCTI-B42`
+
+- [A file's family is read from its extension](layers/config.md#dlcti-b43--a-files-family-is-read-from-its-extension) `DLCTI-B43`
+
+- [Two layers matching a file give one dialect](layers/config.md#dlcti-i03--two-layers-matching-a-file-give-one-dialect) `DLCTI-I03`
+
+- [Another dialect changes only the layers that name it](layers/config.md#dlcti-x02--another-dialect-changes-only-the-layers-that-name-it) `DLCTI-X02`
+
 - [A trigger naming a layer charges every change in that layer, whatever the unit](layers/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
 - [A trigger naming a unit code charges that unit and not its neighbours in the same layer](layers/config.md#dcrqa-b02--a-trigger-naming-a-unit-code-charges-that-unit-and-not-its-neighbours-in-the-same-layer) `DCRQA-B02`
@@ -3558,6 +3576,8 @@ is what the test proves.
 
 - [The API catalog's Responses section is the output contract](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B13`
 
+- [Each code file is read with its own dialect's http_status](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B14`
+
 - [What is no API unit leaves without a verdict](layers/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B01`
 
 - [The feature must carry the contract scenario](layers/gate.md#cttst--contracttested--an-api-unit-is-proven-against-the-projects-openapi-document) `CTTST-B02`
@@ -3651,6 +3671,8 @@ is what the test proves.
 - [A flag whose kind contradicts its import is named](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B16`
 
 - [A line holding two statements of one module takes one flag](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B17`
+
+- [Each importer is read with its own dialect](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it) `DCGDP-B18`
 
 - [A spec still carrying a Dependencies table diverges, pointing at the migration](layers/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does) `DEPHN-B09`
 
@@ -3894,6 +3916,8 @@ is what the test proves.
 
 - [A specified file that cannot be read reads nothing](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-E01`
 
+- [Each file is read by its own dialect's env_read](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B06`
+
 - [An artifact that is not a test leaves without a verdict](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B01`
 
 - [Without a built map the gate stays quiet](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B02`
@@ -4035,6 +4059,8 @@ is what the test proves.
 - [A fallible call is cited by the name its pattern's name group says](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B24`
 
 - [A pattern with no name group names no function](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B25`
+
+- [The failure gates read a unit's code with its dialect, and are pending naming them when it is written in several](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B27`
 
 - [Non-feature artifacts skip confrontation](layers/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B01`
 
@@ -5084,6 +5110,8 @@ is what the test proves.
 
 - [The project's tests are offered to the commands](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B08`
 
+- [Each test file is read by its own dialect's source](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B09`
+
 - [Returns an empty list of Promotable gates when profile contains no gates](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B01`
 
 - [An informative gate with passes and zero failures is included](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B02`
@@ -5800,6 +5828,8 @@ is what the test proves.
 
 - [A member of the test's own type is not a copy of the unit's](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B09`
 
+- [Each side is read by its own dialect](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B10`
+
 - [Non-test artifacts skip confrontation](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B01`
 
 - [Confrontation without a dependency graph returns Pending](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B02`
@@ -5907,6 +5937,8 @@ is what the test proves.
 - [A derived handle whose segment ends it is queried with the id's end or a hyphen after](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B28`
 
 - [A handle of values alone is its file's own head's](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B29`
+
+- [The handle patterns are every dialect's together](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B30`
 
 - [Without the exposed and queried patterns declared the gate is pending, naming the field](layers/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B01`
 
@@ -6396,6 +6428,10 @@ is what the test proves.
 
 - [A gate presupposing a lexicon field the project left empty is offered the family's example](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B14`
 
+- [Each dialect is offered its own family's example at its place](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B15`
+
+- [A layer of another language is named with that family's example](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet) `GVOPG-B16`
+
 - [The report is sorted by check then subject, and counts the map](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B01`
 
 - [Warnings keeps only the warnings](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B02`
@@ -6545,6 +6581,10 @@ is what the test proves.
 - [A new project's dialect carries the family's example of a navigation call](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B12`
 
 - [A new project's dialect carries the family's lexicon and the comments of its files](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B13`
+
+- [Roots in several languages get a dialect per family](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B14`
+
+- [A test layer per family](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B15`
 
 - [The whole guide is a title, a seeding note and the section](layers/infra.md#cngdc--contributingguide--render-the-projects-contributingmd-from-the-configuration-init-writes) `CNGDC-B01`
 
@@ -6757,6 +6797,8 @@ is what the test proves.
 - [The proposal skips what the scan skips](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B13`
 
 - [OCaml and C are code](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B14`
+
+- [Each root's family is read](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B15`
 
 - [The @TBD instruction forbids pass, orders a waiver naming the absence, and names the piece asked about](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B04`
 
@@ -7909,6 +7951,8 @@ is what the test proves.
 - [A missing section is written whole, a flow-style one refused](layers/migra.md#mgsyn-b06--a-missing-section-is-written-whole-a-flow-style-one-refused) `MGSYN-B06`
 
 - [The example runners the project's suites run with are added](layers/migra.md#mgsyn-b07--the-example-runners-the-projects-suites-run-with-are-added) `MGSYN-B07`
+
+- [A project of several dialects has nothing to keep](layers/migra.md#mgsyn-b08--a-project-of-several-dialects-has-nothing-to-keep) `MGSYN-B08`
 
 ## scan
 

@@ -922,3 +922,178 @@ func TestFamilyChain_typeImportEitherWay(t *testing.T) {
 		t.Errorf("typeof import is a statement of its own, beside the require: %v", typeofAt)
 	}
 }
+
+// twoDialects is a project with TS apps and Go services, each layer naming its dialect.
+const twoDialects = `version: 8
+dialect:
+  gherkin_language: pt
+dialects:
+  ts:
+    family: ts
+    loop: '\bfor\s*\('
+    env_read: 'process\.env\.(\w+)'
+    comments:
+      - files: "**/*.ts"
+        line: ["//"]
+  go:
+    family: go
+    loop: '\bfor\b'
+    opt_out: [env_read]
+    comments:
+      - files: "**/*.go"
+        line: ["//"]
+layers:
+  screen:
+    pattern: "apps/**/*.ts"
+    kind: code
+    dialect: ts
+  handler:
+    pattern: "services/**/*.go"
+    kind: code
+    dialect: go
+  spec:
+    pattern: "**/*.spec.md"
+    kind: spec
+`
+
+func TestDialectAt_aFileIsReadWithItsLayersDialect(t *testing.T) {
+	t.Run("DLCTI-B37: Each layer names the dialect of `dialects:` its files are written in, and a file is read with that dialect alone", func(t *testing.T) {})
+	c, err := load(t, twoDialects)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ts, goD := c.DialectAt("apps/web/pay.ts"), c.DialectAt("services/api/pay.go")
+	if ts.Loop != `\bfor\s*\(` || goD.Loop != `\bfor\b` || goD.EnvRead != "" || ts.EnvRead == "" {
+		t.Errorf("each file reads its own dialect, nothing of the other: ts=%+v go=%+v", ts, goD)
+	}
+	if c.CommentsFor("services/api/pay.go") == nil || c.CommentsFor("apps/web/pay.ts") == nil || c.CommentsFor("apps/web/x.go") != nil {
+		t.Error("the comments are the file's dialect's: a .go file in a TS layer has none")
+	}
+	if c.DialectOfLayer("handler").Family != "go" || c.DialectPathAt("services/api/pay.go") != "dialects.go" {
+		t.Errorf("a layer's dialect and where it is declared: %q %q", c.DialectOfLayer("handler").Family, c.DialectPathAt("services/api/pay.go"))
+	}
+	t.Run("DLCTI-X02: Declaring another dialect changes the reading only of the layers that name it", func(t *testing.T) {})
+	one, err := load(t, strings.Replace(strings.Replace(twoDialects, "    dialect: go\n", "    dialect: ts\n", 1), "  go:\n    family: go\n    loop: '\\bfor\\b'\n    opt_out: [env_read]\n    comments:\n      - files: \"**/*.go\"\n        line: [\"//\"]\n", "", 1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(one.DialectAt("apps/web/pay.ts"), ts) {
+		t.Errorf("the TS layer reads as before the Go dialect was declared:\n%+v\n%+v", one.DialectAt("apps/web/pay.ts"), ts)
+	}
+}
+
+func TestDialectAt_oneDialectIsEveryLayers(t *testing.T) {
+	t.Run("DLCTI-B38: One dialect is every layer's: the one `dialect:` block, or a `dialects:` declaring one", func(t *testing.T) {})
+	c, err := load(t, "version: 8\ndialects:\n  go:\n    loop: x\nlayers:\n  code:\n    pattern: \"**/*.go\"\n    kind: code\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.DialectAt("a.go").Loop != "x" || c.DialectFor().Loop != "x" {
+		t.Errorf("a layer naming none reads the one dialect: %+v", c.DialectAt("a.go"))
+	}
+	single, err := load(t, "version: 8\ndialect:\n  loop: y\nlayers:\n  code:\n    pattern: \"**/*.go\"\n    kind: code\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if single.DialectAt("a.go").Loop != "y" || !reflect.DeepEqual(single.DialectAt("a.go"), single.DialectFor()) {
+		t.Error("the one `dialect:` block is every file's, as it always was")
+	}
+}
+
+func TestDialectAt_theProjectsFields(t *testing.T) {
+	t.Run("DLCTI-B39: Beside `dialects:`, `dialect:` holds what is about no language, which every dialect reads; a file whose layer names none has it alone", func(t *testing.T) {})
+	c, err := load(t, twoDialects)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lang, _ := c.DialectAt("services/api/pay.go").GherkinFor(); lang != "pt" {
+		t.Errorf("every dialect reads the project's Gherkin language, got %q", lang)
+	}
+	spec := c.DialectAt("apps/web/pay.spec.md")
+	if spec.GherkinLanguage != "pt" || spec.Loop != "" || spec.Family != "" {
+		t.Errorf("a spec's layer names no dialect: the project's fields alone, got %+v", spec)
+	}
+	if d := c.DialectFor(); d.GherkinLanguage != "pt" || d.Loop != "" {
+		t.Errorf("a question about no file reads the project's fields, got %+v", d)
+	}
+}
+
+func TestLoad_refusesADialectTheLayersCannotReadBy(t *testing.T) {
+	t.Run("DLCTI-B40: The load refuses a lexicon beside `dialects:`, a project field in a dialect, a dialect nobody declares, and a layer of code or tests naming none among several", func(t *testing.T) {})
+	for name, c := range map[string]struct{ from, to, want string }{
+		"a lexicon in dialect:":        {"  gherkin_language: pt\n", "  gherkin_language: pt\n  loop: x\n", "dialect.loop: beside `dialects:`"},
+		"a project field in a dialect": {"    family: go\n", "    family: go\n    gherkin_language: en\n", "dialects.go.gherkin_language: the project's"},
+		"an undeclared dialect":        {"    dialect: go\n", "    dialect: rust\n", "layers.handler.dialect: names \"rust\""},
+		"a code layer naming none":     {"    dialect: go\n", "", "layers.handler: a layer of code names the dialect"},
+	} {
+		if _, err := load(t, strings.Replace(twoDialects, c.from, c.to, 1)); err == nil || !strings.Contains(err.Error(), c.want) {
+			t.Errorf("%s: want a refusal with %q, got %v", name, c.want, err)
+		}
+	}
+	if _, err := load(t, "version: 8\nlayers:\n  code:\n    pattern: \"**/*.go\"\n    kind: code\n    dialect: go\n"); err == nil || !strings.Contains(err.Error(), "declares no `dialects:`") {
+		t.Errorf("a layer naming a dialect with no `dialects:` is refused, got %v", err)
+	}
+	if _, err := load(t, twoDialects); err != nil {
+		t.Errorf("a spec layer names no dialect and loads: %v", err)
+	}
+}
+
+func TestLoad_checksEveryDialectsPatterns(t *testing.T) {
+	t.Run("DLCTI-B41: Each dialect's patterns are checked on load as the one dialect's are, named at their place", func(t *testing.T) {})
+	_, err := load(t, strings.Replace(twoDialects, "    loop: '\\bfor\\b'\n", "    loop: '(unclosed'\n", 1))
+	if err == nil || !strings.Contains(err.Error(), "dialects.go.loop") {
+		t.Errorf("a pattern of a dialect that does not compile is named at its place, got %v", err)
+	}
+}
+
+func TestPremises_perDialect(t *testing.T) {
+	t.Run("DLCTI-B42: A field a gate presupposes is pending at each dialect that neither declares nor waives it, and does not apply when every dialect waives it", func(t *testing.T) {})
+	c, err := load(t, twoDialects)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if missing, waived := c.Premises(Gate{Presupposes: []string{"dialect.loop"}}); len(missing)+len(waived) != 0 {
+		t.Errorf("every dialect declares loop: the gate applies, got %v %v", missing, waived)
+	}
+	if missing, waived := c.Premises(Gate{Presupposes: []string{"dialect.env_read"}}); len(missing)+len(waived) != 0 {
+		t.Errorf("ts declares env_read and go waives it: the gate applies, got %v %v", missing, waived)
+	}
+	if missing, _ := c.Premises(Gate{Presupposes: []string{"dialect.cursor"}}); !reflect.DeepEqual(missing, []string{"dialects.go.cursor", "dialects.ts.cursor"}) {
+		t.Errorf("each dialect missing it is named, got %v", missing)
+	}
+	all, err := load(t, strings.Replace(twoDialects, "    family: ts\n", "    family: ts\n    opt_out: [cursor]\n", 1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	all.Dialects["go"].OptOut = append(all.Dialects["go"].OptOut, "cursor")
+	if missing, waived := all.Premises(Gate{Presupposes: []string{"dialect.cursor"}}); len(missing) != 0 || len(waived) != 1 {
+		t.Errorf("every dialect waiving it: the gate does not apply, got %v %v", missing, waived)
+	}
+	if missing, _ := c.Premises(Gate{Presupposes: []string{"dialect.gherkin_language"}}); len(missing) != 0 {
+		t.Errorf("a project field is the project's to declare, got %v", missing)
+	}
+}
+
+func TestFamilyOfFile(t *testing.T) {
+	t.Run("DLCTI-B43: A file's family is the family whose example reads its language; what every family comments alike tells none", func(t *testing.T) {})
+	for f, want := range map[string]string{"services/a.go": "go", "apps/x.tsx": "ts", "a.py": "python", "ci.yaml": "", "README": ""} {
+		if got := FamilyOfFile(f); got != want {
+			t.Errorf("%s: family %q, want %q", f, got, want)
+		}
+	}
+}
+
+func TestLayerOf_settlesTwoMatchingLayers(t *testing.T) {
+	t.Run("DLCTI-I03: A file is read with one dialect: of the layers matching it, the declared priority, then the longest pattern, then the name decide", func(t *testing.T) {})
+	c, err := load(t, twoDialects+"  any:\n    pattern: \"**/*.go\"\n    kind: code\n    dialect: ts\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if l, _ := c.LayerOf(`services\api\pay.go`); l != "handler" || c.DialectAt("services/api/pay.go").Family != "go" {
+		t.Errorf("the longer pattern wins and gives its dialect: %q", l)
+	}
+	c.Layers["any"] = Layer{Pattern: "**/*.go", Kind: "code", Dialect: "ts", Priority: 1}
+	if l, _ := c.LayerOf("services/api/pay.go"); l != "any" || c.DialectAt("services/api/pay.go").Family != "ts" {
+		t.Errorf("a declared priority wins and gives its dialect: %q", l)
+	}
+}

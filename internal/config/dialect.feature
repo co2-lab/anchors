@@ -2,7 +2,7 @@
 # @anchors
 #   code: DLFTA
 #   ref: DLCTI
-#   updated_at: 2026-10-20
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @DLCTI
@@ -249,3 +249,57 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given "import type { A } from 'x'", "import { type A, type B as C } from 'x'", "typeof import('x')", "import { type A, B } from 'x'" and "require('x')"
     When the ts example's type_import_pattern reads each
     Then the first three are types only and the last two are not
+
+  @DLCTI-B37 @unit-level
+  Scenario: A file is read with its layer's dialect alone
+    Given a project with a TS dialect and a Go dialect, each layer naming its own
+    When a TS file and a Go file are read
+    Then each has its dialect's lexicon and comments, and nothing of the other
+
+  @DLCTI-B38 @unit-level
+  Scenario: One dialect is every layer's
+    Given a dialects block declaring one dialect, and a project with the one dialect block
+    When a file of a layer naming none is read
+    Then it has that dialect
+
+  @DLCTI-B39 @unit-level
+  Scenario: The project's fields are every dialect's
+    Given a project of two dialects whose dialect block declares the Gherkin language
+    When a Go file, a spec and a question about no file are read
+    Then each has the project's Gherkin language, and the spec and the question no lexicon
+
+  @DLCTI-B40 @unit-level
+  Scenario: The load refuses a dialect the layers cannot read by
+    Given a lexicon beside dialects, a project field in a dialect, a layer naming an undeclared dialect, one naming a dialect with no dialects, and a code layer naming none among two
+    When each configuration is loaded
+    Then each is refused naming the field, and a spec layer naming none loads
+
+  @DLCTI-B41 @unit-level
+  Scenario: Every dialect's patterns are checked
+    Given a dialect whose loop does not compile
+    When the configuration is loaded
+    Then it is refused naming dialects.go.loop
+
+  @DLCTI-B42 @unit-level
+  Scenario: A presupposed field is missing at each dialect that has it not
+    Given a field both dialects declare, one declared by one and waived by the other, one neither declares, and one both waive
+    When the premises of a gate presupposing each are read
+    Then the first two apply, the third is missing at both dialects by name, the last does not apply
+
+  @DLCTI-B43 @unit-level
+  Scenario: A file's family is read from its extension
+    Given a Go, a TSX, a Python, a YAML and an extensionless file
+    When their families are read
+    Then go, ts and python, and none for the last two
+
+  @DLCTI-I03 @unit-level
+  Scenario: Two layers matching a file give one dialect
+    Given a Go file matched by a Go layer and by a broader TS one
+    When its layer and dialect are read, then with the broader one given a priority
+    Then the longer pattern's dialect, then the prioritised one's
+
+  @DLCTI-X02 @unit-level
+  Scenario: Another dialect changes only the layers that name it
+    Given the TS layer of a project before and after a Go dialect is declared
+    When the TS file is read
+    Then its dialect is the same

@@ -108,3 +108,9 @@ Feature: DependencyChain — every import flagged with the code it uses, and eve
     Given a line that requires a module as the typeof import of the same module, and a line that reads another only through typeof import
     When the fixer writes the flags and the chain gates confront the file
     Then the first line takes one value flag, the second one type flag, both gates pass, and a value flag on the second is named
+
+  @DCGDP-B18 @unit-level
+  Scenario: Each importer is read with its own dialect
+    Given a TS screen importing the tokens, and a Go file whose text holds what the TS lexicon reads as an import of them
+    When used-by-declared confronts the tokens
+    Then only the screen imports them, and it passes

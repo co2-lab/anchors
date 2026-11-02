@@ -468,13 +468,7 @@ func checkPresupposedFields(cfg *config.Config) []Finding {
 	}
 	var out []Finding
 	for _, gt := range cfg.Gates {
-		var missing []string
-		for _, p := range gt.Presupposes {
-			if cfg.Declares(p) || cfg.DialectFor().WaivedField(p[strings.LastIndex(p, ".")+1:]) {
-				continue
-			}
-			missing = append(missing, p)
-		}
+		missing, _ := cfg.Premises(gt)
 		if len(missing) > 0 {
 			out = append(out, Finding{"premissa-ausente", Warn, gt.Name, i18n.T("health.presupposed_missing", gt.Name, strings.Join(missing, ", "))})
 		}

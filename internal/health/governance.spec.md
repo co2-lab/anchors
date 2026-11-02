@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GVOPG
-  updated_at: 2026-10-16
+  updated_at: 2026-11-02
   layer: infra
 -->
 # GovernanceOpportunities — the doctor suggests the canonical gates and settings a project has not adopted yet
@@ -47,6 +47,8 @@ items, is the short hint other commands can show without getting in the way.
 | `GVOPG-B12` | A project that declares `nav-annotated` and no `dialect.navigation_call`, of a family with an example, is offered it as the block to copy under `dialect:`; one that declares its own, or not the gate, is offered nothing. |
 | `GVOPG-B13` | A map whose code or test files have no `dialect.comments` entry is offered the families' examples for the extensions they know, as the block to copy under `dialect:`, and the others named alone; Anchors' own formats and a project covering every file are offered nothing. |
 | `GVOPG-B14` | A project whose family has an example of the lexicon, and which declares a gate presupposing a `dialect` field it left empty and the example has, is offered the example of those fields, named, as the block to copy under `dialect:`; a field it declares, or a family with no example, is offered nothing. |
+| `GVOPG-B15` | In a project of several dialects each dialect is compared with its own family's example, and its tips name its fields at its place: `dialects.<name>.<field>`, to adapt under `dialects.<name>:`. |
+| `GVOPG-B16` | A layer of code or tests whose files are of a family its dialect's is not — Go files read by a TS dialect — is named with how many, and with that family's example to declare under `dialects:` and name on the layer (DLPLY-D02). A dialect with no family tells nothing to compare. |
 
 ## Invariants
 

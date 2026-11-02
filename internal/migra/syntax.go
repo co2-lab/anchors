@@ -68,7 +68,9 @@ func (s Syntax) Empty() bool {
 //   - the example runners of the tools its suites run with, which the old monitor knew.
 func DeclaredSyntax(cfg *config.Config, files []string) Syntax {
 	var s Syntax
-	if cfg == nil {
+	// A project of several dialects was written for a binary that reads only what it
+	// declares: there is no old table to keep.
+	if cfg == nil || len(cfg.Dialects) > 0 {
 		return s
 	}
 	d := config.Dialect{}

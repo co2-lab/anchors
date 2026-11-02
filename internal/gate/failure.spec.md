@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLRAI
-  updated_at: 2026-10-15
+  updated_at: 2026-11-02
   layer: gate
 -->
 # Failure — the failure a spec declares must be handled, recorded, and every handling declared
@@ -96,6 +96,7 @@ not match) closes its failure section with `none — <why>`, and that satisfies 
 | `FLRAI-B22` | `failure-handled`: each fallible call of the unit's code has its handling in its window — the call's statement from its first line (a destructuring above it that reads the error; the climb stops at a blank line or at one ending a statement, `;`, `}` or `)`), and the pattern's `window` after it (`DefaultFallibleWindow` when it declares none) —, matched by the pattern's `handled` or, when it declares none, the project's `handle_patterns`; a call with none fails, named by file, line and text, unless its line or the line above waives it with `@no-handle: <reason>`. (`unhandledCalls`) |
 | `FLRAI-B23` | A fallible call whose pattern's `propagates` group took part in the match — `(?P<propagates>\breturn\s+)?\bfetch\(` on `return fetch(…)` — hands its failure to the caller: `failure-handled` does not charge it, and `failure-declared` still asks the unit's spec to name it. The pattern says it, wherever its own prefix stands; the core reads no syntax of its own. (`propagated`) |
 | `FLRAI-B26` | A call whose pattern has no `propagates` group propagates nothing: a `return`ed call is charged like any other. |
+| `FLRAI-B27` | The failure gates read a unit's code with its dialect: a code file's own, and for a spec the one dialect of the code it specifies. A spec whose code is written in several dialects is pending, naming them: a unit's patterns are read over its code as a whole, and one lexicon over another language's files reads nothing and passes them. (`unitDialect`) |
 | `FLRAI-B24` | The name a fallible call is cited by is the `name` group of the pattern that recognises it (`\b(?P<name>fetchData)(?:<[^()]*>)?\(`): the pattern knows its language — a type argument, a template call —, and the core reads no syntax of its own. (`calledName`) |
 | `FLRAI-B25` | A pattern with no `name` group names no function: its call is answered by no failure, and the gate's failure says so, naming the pattern and the group to declare. |
 

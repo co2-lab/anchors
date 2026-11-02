@@ -2,7 +2,7 @@
 # @anchors
 #   code: BCFBL
 #   ref: BLCNB
-#   updated_at: 2026-10-16
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @BLCNB
@@ -109,3 +109,15 @@ Feature: BuildConfig — builds the configuration that inference proposes as the
     When the config is built
     Then the first has the go lexicon and the comments of Go, Python and the family's scripts
     And the second has only the Ruby comments
+
+  @BLCNB-B14 @unit-level
+  Scenario: Roots in several languages get a dialect per family
+    Given code roots in TS and in Go
+    When the configuration is proposed
+    Then a dialect per family, each code layer naming its own and reading its family's extensions
+
+  @BLCNB-B15 @unit-level
+  Scenario: A test layer per family
+    Given the same project with its test layer and colocation template
+    When the dialects are applied
+    Then a test layer per family naming its dialect, and a test template per family

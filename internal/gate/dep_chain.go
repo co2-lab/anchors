@@ -284,7 +284,7 @@ func checkDepDeclared(content string, n mapx.Node, root string, g *mapx.Graph, c
 	if !chainUnit(n) {
 		return Skip, i18n.T("gate.dep_chain.skip_not_code")
 	}
-	d := cfg.DialectFor()
+	d := cfg.DialectAt(n.ID)
 	if !hasImports(d) {
 		return Pending, i18n.T("gate.dep_chain.pending_no_pattern")
 	}
@@ -325,11 +325,11 @@ func checkDepHonored(content string, n mapx.Node, root string, g *mapx.Graph, cf
 	if !chainUnit(n) {
 		return Skip, i18n.T("gate.dep_chain.skip_not_code")
 	}
-	all := scan.CodeDepsIn([]byte(content), n.ID, cfg.DialectFor())
+	all := scan.CodeDepsIn([]byte(content), n.ID, cfg.DialectAt(n.ID))
 	if len(all) == 0 {
 		return Skip, i18n.T("gate.dep_chain.skip_no_flags")
 	}
-	d := cfg.DialectFor()
+	d := cfg.DialectAt(n.ID)
 	imps := ImportsOf(content, n.ID, d, g)
 	var wrong []string
 	for _, f := range all {
@@ -407,7 +407,7 @@ var (
 )
 
 // importersOf is the index of the imports of the project's code, built once per map.
-func importersOf(root string, g *mapx.Graph, d config.Dialect, withTests bool) *importerIndex {
+func importersOf(root string, g *mapx.Graph, cfg *config.Config, withTests bool) *importerIndex {
 	importersMu.Lock()
 	defer importersMu.Unlock()
 	key := fmt.Sprint(root, "\x00", withTests)
@@ -423,7 +423,8 @@ func importersOf(root string, g *mapx.Graph, d config.Dialect, withTests bool) *
 		if err != nil {
 			continue
 		}
-		for _, imp := range ImportsOf(string(b), n.ID, d, g) {
+		// Each importer is read with its own dialect: a Go file's imports by the Go lexicon.
+		for _, imp := range ImportsOf(string(b), n.ID, cfg.DialectAt(n.ID), g) {
 			if imp.Target == "" || imp.Dir {
 				continue
 			}
@@ -469,9 +470,9 @@ func gateOnTests(cfg *config.Config, name string) bool {
 
 // UsedByOf is, for a file, who imports each of its symbols — by the importers' codes,
 // sorted.
-func UsedByOf(root, id string, g *mapx.Graph, d config.Dialect, withTests bool) map[string][]string {
+func UsedByOf(root, id string, g *mapx.Graph, cfg *config.Config, withTests bool) map[string][]string {
 	out := map[string][]string{}
-	for sym, codes := range importersOf(root, g, d, withTests).usage[id] {
+	for sym, codes := range importersOf(root, g, cfg, withTests).usage[id] {
 		for c := range codes {
 			out[sym] = append(out[sym], c)
 		}
@@ -486,11 +487,11 @@ func checkUsedByDeclared(content string, n mapx.Node, root string, g *mapx.Graph
 	if !chainUnit(n) {
 		return Skip, i18n.T("gate.dep_chain.skip_not_code")
 	}
-	d := cfg.DialectFor()
+	d := cfg.DialectAt(n.ID)
 	if !hasImports(d) || g == nil {
 		return Pending, i18n.T("gate.dep_chain.pending_no_pattern")
 	}
-	want := UsedByOf(root, n.ID, g, d, testsInChain(cfg))
+	want := UsedByOf(root, n.ID, g, cfg, testsInChain(cfg))
 	have := map[string][]string{}
 	for _, u := range scan.UsedByIn([]byte(content), n.ID, d) {
 		if u.Symbol != "" {
@@ -534,7 +535,7 @@ func fixDepFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 	if !chainUnit(n) || g == nil {
 		return content, false, ""
 	}
-	d := fixConfig.DialectFor()
+	d := fixConfig.DialectAt(n.ID)
 	imps := ImportsOf(content, n.ID, d, g)
 	if byName(d) {
 		return fixDepFlagsByName(content, n, imps, g)
@@ -603,11 +604,11 @@ func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string,
 	if !chainUnit(n) || g == nil {
 		return content, false, ""
 	}
-	d := fixConfig.DialectFor()
+	d := fixConfig.DialectAt(n.ID)
 	if !hasImports(d) {
 		return content, false, ""
 	}
-	want := UsedByOf(root, n.ID, g, d, testsInChain(fixConfig))
+	want := UsedByOf(root, n.ID, g, fixConfig, testsInChain(fixConfig))
 	lines := strings.Split(content, "\n")
 	flagLine := map[string]int{} // symbol → 0-based line of its flag
 	for _, u := range scan.UsedByIn([]byte(content), n.ID, d) {
@@ -739,12 +740,12 @@ func fixDepFlagsByName(content string, n mapx.Node, imps []RealImport, g *mapx.G
 	}
 	have := map[string]bool{}
 	lines := strings.Split(content, "\n")
-	cs := fixConfig.DialectFor().CommentsFor(n.ID)
+	cs := fixConfig.DialectAt(n.ID).CommentsFor(n.ID)
 	var kept []string
 	var done []string
 	for i, l := range lines {
 		if scan.ChainFlagOnly(l, cs) {
-			if fs := scan.CodeDepsIn([]byte(l), n.ID, fixConfig.DialectFor()); len(fs) == 1 && fs[0].Code != "" && fs[0].Kind == "" {
+			if fs := scan.CodeDepsIn([]byte(l), n.ID, fixConfig.DialectAt(n.ID)); len(fs) == 1 && fs[0].Code != "" && fs[0].Kind == "" {
 				if !want[fs[0].Code] {
 					done = append(done, fmt.Sprintf("%d -%s", i+1, fs[0].Code))
 					continue
@@ -754,7 +755,7 @@ func fixDepFlagsByName(content string, n mapx.Node, imps []RealImport, g *mapx.G
 		}
 		kept = append(kept, l)
 	}
-	for _, f := range scan.CodeDepsIn([]byte(content), n.ID, fixConfig.DialectFor()) {
+	for _, f := range scan.CodeDepsIn([]byte(content), n.ID, fixConfig.DialectAt(n.ID)) {
 		have[f.Code] = true
 	}
 	var add []string

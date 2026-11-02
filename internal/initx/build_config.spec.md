@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BLCNB
-  updated_at: 2026-10-16
+  updated_at: 2026-11-02
   layer: infra
 -->
 # BuildConfig — builds the configuration that inference proposes as the default for the init questions
@@ -55,6 +55,8 @@ breaking a convention the project never promised.
 | `BLCNB-B11` | A new project whose family has an example of the chain patterns starts with it in its dialect — imports, import names, declarations, the type pattern, and the resolution (`config.FamilyChain`) —; a family with none starts with none. |
 | `BLCNB-B12` | A new project whose family has an example of a navigation call starts with it as its `navigation_call` (`config.FamilyNavigationCall`); a family with none starts with none. |
 | `BLCNB-B13` | A new project of a family with an example starts with the family's lexicon in its dialect (`config.FamilyLexicon`), and every new project with code starts with the comments of the examples covering its extensions and its family's configuration and scripts (`config.CommentsCovering`, `config.FamilyComments`); with neither, it has no dialect. |
+| `BLCNB-B14` | Code roots in several languages are proposed one dialect per family under `dialects:`, each its family's example; each code layer names its root's family and reads its family's extensions. One family keeps the one `dialect:` block. |
+| `BLCNB-B15` | In a project of several dialects each family gets its own test layer, `test-<family>`, by the conventions its files follow or its family's default, naming its dialect, and the colocation's test template per family; with no family to split by, the test layer names the main family's dialect. |
 
 ## Invariants
 

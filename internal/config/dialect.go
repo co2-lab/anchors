@@ -534,7 +534,16 @@ const (
 
 // DialectFor devolve o dialeto EFETIVO: a família (se declarada) com os campos
 // explícitos do projeto por cima, e os defaults de nomenclatura no piso.
+//
+// Beside `dialects:` it is the project's fields alone — every lexicon is a layer's, read with
+// DialectAt —, or the one dialect `dialects:` declares.
 func (c *Config) DialectFor() Dialect {
+	if c != nil && len(c.Dialects) > 0 {
+		if len(c.Dialects) == 1 {
+			return c.lexicon(c.DialectNames()[0])
+		}
+		return c.projectDialect()
+	}
 	var d Dialect
 	if c != nil && c.Dialect != nil {
 		d = *c.Dialect

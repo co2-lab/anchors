@@ -2,7 +2,7 @@
 # @anchors
 #   code: TRFTS
 #   ref: TSRCH
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @TSRCH
@@ -63,3 +63,9 @@ Feature: TestReach — a test reaches the unit it says it tests
     Then the test reaches the unit and copies nothing
     And a test that defines GormPinger.Ping again copies "GormPinger.Ping"
     And a Python test whose FakePinger class defines ping, beside the unit's DbPinger.ping, copies nothing
+
+  @TSRCH-B10 @unit-level
+  Scenario: Each side is read by its own dialect
+    Given a project of a TS and a Go dialect, a TS test naming what its TS unit defines and a Go test naming what its Go unit defines
+    When the reach is read
+    Then each test reaches its unit

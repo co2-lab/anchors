@@ -214,3 +214,11 @@ func TestDeclaredSyntax_runnersOfTheSuites(t *testing.T) {
 		t.Errorf("a project with no monitor block gets one:\n%s %v", out, err)
 	}
 }
+
+func TestDeclaredSyntax_severalDialectsHaveNothingToKeep(t *testing.T) {
+	t.Run("MGSYN-B08: A project of several dialects, written for a binary that reads only what it declares, has nothing added crossing format 8", func(t *testing.T) {})
+	cfg := &config.Config{Dialects: map[string]*config.Dialect{"go": {Family: "go"}, "ts": {Family: "ts"}}}
+	if s := DeclaredSyntax(cfg, []string{"a.go", "b.ts"}); !s.Empty() || len(s.Manual) != 0 {
+		t.Errorf("nothing to add, got %+v", s)
+	}
+}

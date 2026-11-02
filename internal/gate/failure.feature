@@ -2,7 +2,7 @@
 # @anchors
 #   code: FLFTB
 #   ref: FLRAI
-#   updated_at: 2026-10-15
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @FLRAI
@@ -193,3 +193,9 @@ Feature: Failure — the failure a spec declares must be handled, recorded, and 
     Given a unit whose fallible call is recognised by a pattern with no name group
     When its spec declares a failure naming the function
     Then the call is not answered, and the failure says the pattern names no function and to declare (?P<name>…)
+
+  @FLRAI-B27 @unit-level
+  Scenario: The failure gates read a unit's code with its dialect, and are pending naming them when it is written in several
+    Given a project with a TS dialect and a Go dialect, a spec specifying a Go file that handles its errors, and one specifying a Go and a TS file
+    When failure-handled, failure-logged and failure-declared confront them
+    Then the Go unit passes by the Go dialect, and the unit in two dialects is pending naming both

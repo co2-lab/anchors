@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:0f60c5c8bd9cd9ec — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:5a59eb32e0a3029a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3556,6 +3556,20 @@ in `layers/`.
 
 - [DLCTI-B36 — The `ts` example's `type_import_pattern` reads an import of types only written any of three ways: `import type {…}`, braces whose every name is a type — `import { type A, type B as C }` —, and `typeof import('…')`, which its imports read as a statement of its own; braces holding one value name, and a `require('…')`, are no types-only import. (`FamilyChain`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
+- [DLCTI-B37 — `dialects:` declares a project's lexicons, each once by name, and each layer names in `dialect` the one its files are written in (DESIGN-dialect-per-layer.md). A file's dialect is its layer's: it is read with that dialect alone, which is what it declares (REF B01) — no field of another dialect fills one it left empty. Its comments are its dialect's. (`DialectAt`, `DialectOfLayer`, `CommentsFor`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
+- [DLCTI-B38 — One dialect is every layer's: the one `dialect:` block, as always, or a `dialects:` that declares one, which a layer naming none reads. (`DialectAt`, `DialectFor`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
+- [DLCTI-B39 — Beside `dialects:`, `dialect:` holds only what is about no language — `gherkin_language`, `set_promise`, `set_slice` —, which every dialect reads. A file whose layer names no dialect — a spec, a feature, a doc, a file of no layer — and a question about no file get those fields alone. (`DialectAt`, `DialectFor`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
+- [DLCTI-B40 — The load refuses: a lexicon field in `dialect:` beside `dialects:`; a project field declared in a dialect; a layer naming a dialect `dialects:` does not declare, or naming one with no `dialects:`; and, with several dialects, a layer of code or tests naming none (DLPLY-D01) — a default would read it with another language's lexicon and pass it green. A layer of Anchors' own formats names none.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
+- [DLCTI-B41 — Each dialect's patterns are checked on load exactly as the one dialect's are, a wrong one named at its place (`dialects.<name>.<field>`).](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
+- [DLCTI-B42 — A field a gate presupposes (`dialect.<field>`) is missing at each dialect that neither declares it nor waives it in its own `opt_out`, named there (`dialects.<name>.<field>`); every dialect waiving it, the gate does not apply. A project field is the project's to declare. (`Premises`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
+- [DLCTI-B43 — A file's family is the family whose comments' example reads its language (`.go` → `go`); the configuration and scripts every family comments alike tell none. (`FamilyOfFile`)](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B14 — The Go and TS families' examples say how a test is written, its title in a `title` group — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` —, and a project's own `tests` is read as declared.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
@@ -3572,7 +3586,11 @@ in `layers/`.
 
 - [DLCTI-I02 — The keywords written for any language of the table are among those every reader recognises.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
+- [DLCTI-I03 — A file is read with one dialect: its layer's, the layer being the one the classification gives — of the layers whose patterns match it, the declared `priority`, then the longest pattern, then the name. No reader of code reads a file with another layer's lexicon.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
 - [DLCTI-X01 — No family brings a collection query: that pattern is always the project's to declare.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+
+- [DLCTI-X02 — Declaring another dialect changes the reading only of the layers that name it: every other file is read as before.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-E01 — REF[DLCTI-B09]: a pattern that does not compile is the failure B09 absorbs: it compiles to nothing, and the gate answers as for an undeclared pattern](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -3878,6 +3896,8 @@ in `layers/`.
 
 - [CSDCN-B13 — The API catalog's `Responses` section (`Respostas`, `Respuestas`) is read as the output contract, by its whole title: `Error Responses` (`Respostas de Erro`) is another section.](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
 
+- [CSDCN-B14 — Each code file the spec specifies is read with its own dialect's `http_status` and `http_status_dynamic`, and the statuses they emit are united; every file's dialect waiving `http_status` skips the gate, one whose dialect declares nothing leaves it pending.](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
+
 - [CSDCN-B12 — A project that explicitly waives the `http_status` field is skipped: the opt-out is declared, and it is honoured.](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
 
 - [CSDCN-I01 — The lexicon that reads the status comes from the project's dialect, never from the gate. Embedding one stack's syntax would make the gate silent on every other one — and silence reads as conformity.](layers/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
@@ -4003,6 +4023,8 @@ in `layers/`.
 - [DCGDP-B16 — dep-honored names a flag whose kind contradicts its import: `@dep:` on a statement the dialect's `type_import_pattern` reads as types only — to be `@dep[type]:` —, and `@dep[type]:` on one whose import pattern says it plainly runs — to be `@dep:`. What reads the map trusts the kind (`depends_on_layer` counts value edges); the fixer rewrites it, and the gate no longer lets it pass silent.](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 - [DCGDP-B17 — Statements of one module on the same line — `require('x') as typeof import('x')` — take ONE flag, which answers for them all: the fixer writes one and dep-declared asks for one; it is a type flag when every one of them is types only, and a value flag when any one is not — dep-honored confronts the flag with them together. A line importing two modules takes a flag for each. (`lineKind`, `statementFlag`)](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
+
+- [DCGDP-B18 — Who imports a file is read from each importer with its own dialect's `imports`: in a project of several dialects a Go file's text is not read as a TS import.](layers/gate.md#dcgdp--dependencychain--every-import-flagged-with-the-code-it-uses-and-every-symbol-with-who-uses-it)
 
 ### [DEPHN — DependencyHonored — a spec declares no dependency: the code does](layers/gate.md#dephn--dependencyhonored--a-spec-declares-no-dependency-the-code-does)
 
@@ -4314,6 +4336,8 @@ in `layers/`.
 
 - [ENVDC-B05 — With no `dialect.env_read` declared the gate is pending, naming the field: how code reads a variable is the language's, and the core knows none.](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
 
+- [ENVDC-B06 — Each code file the spec specifies is read with its own dialect's `env_read`; a file whose dialect declares none leaves the gate pending, naming the field at that dialect (`dialects.<name>.env_read`).](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
+
 - [ENVDC-E01 — A specified code file cannot be read.](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
 
 ### [EVFRV — EvidenceFresh — the score of this test holds against TODAY's code](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
@@ -4463,6 +4487,8 @@ in `layers/`.
 - [FLRAI-B23 — A fallible call whose pattern's `propagates` group took part in the match — `(?P<propagates>\breturn\s+)?\bfetch\(` on `return fetch(…)` — hands its failure to the caller: `failure-handled` does not charge it, and `failure-declared` still asks the unit's spec to name it. The pattern says it, wherever its own prefix stands; the core reads no syntax of its own. (`propagated`)](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
 - [FLRAI-B26 — A call whose pattern has no `propagates` group propagates nothing: a `return`ed call is charged like any other.](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
+
+- [FLRAI-B27 — The failure gates read a unit's code with its dialect: a code file's own, and for a spec the one dialect of the code it specifies. A spec whose code is written in several dialects is pending, naming them: a unit's patterns are read over its code as a whole, and one lexicon over another language's files reads nothing and passes them. (`unitDialect`)](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
 - [FLRAI-B24 — The name a fallible call is cited by is the `name` group of the pattern that recognises it (`\b(?P<name>fetchData)(?:<[^()]*>)?\(`): the pattern knows its language — a type argument, a template call —, and the core reads no syntax of its own. (`calledName`)](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
@@ -5612,6 +5638,8 @@ in `layers/`.
 
 - [PRJTS-B08 — The project's tests are offered to the commands as the gates read them, with whether the project declares how its tests are written. (`ProjectTests`)](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares)
 
+- [PRJTS-B09 — In a project of several dialects each test file is read by its own dialect's `tests` source — its pattern, or its script given only its files —, and the tests found are united; a file whose dialect declares no source is left unread. With one dialect its source reads every test file, as before.](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares)
+
 - [PRJTS-E01 — REF[PRJTS-B05]: the source fails or answers outside its contract](layers/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares)
 
 ### [PRGTP — PromotableGates — identifies clean informative gates ready for promotion to blocking](layers/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking)
@@ -6390,6 +6418,8 @@ in `layers/`.
 
 - [TSRCH-B09 — A definition is identified with its owner when the dialect's `definition` captures one (a Go method by its receiver type, `GormPinger.Ping`), and a definition indented under a type with no owner captured is a member; a test that defines a member of its own type — a fake that implements the unit's interface — copies nothing, and only the same name of the same owner defined again is a copy. A member's bare name still reaches the unit. (`definedNames`)](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests)
 
+- [TSRCH-B10 — The names a test defines are read with the test's dialect's `definition`, and the names its unit defines with the unit's; a file whose layer names no dialect has none.](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests)
+
 - [TSRCH-B08 — A test that carries `@no-unit-import: <why>` passes `test-exercises-unit`, copies included; a waiver with no reason waives nothing.](layers/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests)
 
 ### [TSTRT — TestTraceable — a test linked to a feature must declare what scenario it proves](layers/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves)
@@ -6479,6 +6509,8 @@ in `layers/`.
 - [TICTS-B28 — A derived handle whose segment ends it — `${testId}-spin` — is `*-spin`: a consumer queries it with the segment after a head and, after it, the id's end or a hyphen (`b-spin`, `b-spin-overlay`, never `b-spinner`); a caller's own handle is queried through it the same way (`:row-transfer-badge`). One a value follows — `${id}-row-${i}` — stays open, `*-row-*`.](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
 - [TICTS-B29 — A handle made of values alone in a file where the project's `exposed` patterns also find a head of its own — the prefix the unit gives its handles, as the default of the prop that carries it (`testIDPrefix = ':rlpc-role'`) — is that head's (`rlpc-role-*`): it is measured through the head, never pending. (`unmeasurableHandles`)](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
+
+- [TICTS-B30 — In a project of several dialects the handle patterns are every dialect's together — a flow queries what a screen of another language exposes —, each pattern reading the files it says.](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
 - [TICTS-B14 — The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading.](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it)
 
@@ -7050,6 +7082,10 @@ in `layers/`.
 
 - [GVOPG-B14 — A project whose family has an example of the lexicon, and which declares a gate presupposing a `dialect` field it left empty and the example has, is offered the example of those fields, named, as the block to copy under `dialect:`; a field it declares, or a family with no example, is offered nothing.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
+- [GVOPG-B15 — In a project of several dialects each dialect is compared with its own family's example, and its tips name its fields at its place: `dialects.<name>.<field>`, to adapt under `dialects.<name>:`.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
+
+- [GVOPG-B16 — A layer of code or tests whose files are of a family its dialect's is not — Go files read by a TS dialect — is named with how many, and with that family's example to declare under `dialects:` and name on the layer (DLPLY-D02). A dialect with no family tells nothing to compare.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
+
 - [GVOPG-I01 — Every opportunity is informational: this unit never raises a warning.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
 
 - [GVOPG-X01 — A gate the project already declares (blocking, for the secret gate) is never suggested again, and a project with JUnit output is not told to add it.](layers/infra.md#gvopg--governanceopportunities--the-doctor-suggests-the-canonical-gates-and-settings-a-project-has-not-adopted-yet)
@@ -7215,6 +7251,10 @@ in `layers/`.
 - [BLCNB-B12 — A new project whose family has an example of a navigation call starts with it as its `navigation_call` (`config.FamilyNavigationCall`); a family with none starts with none.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
 - [BLCNB-B13 — A new project of a family with an example starts with the family's lexicon in its dialect (`config.FamilyLexicon`), and every new project with code starts with the comments of the examples covering its extensions and its family's configuration and scripts (`config.CommentsCovering`, `config.FamilyComments`); with neither, it has no dialect.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
+
+- [BLCNB-B14 — Code roots in several languages are proposed one dialect per family under `dialects:`, each its family's example; each code layer names its root's family and reads its family's extensions. One family keeps the one `dialect:` block.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
+
+- [BLCNB-B15 — In a project of several dialects each family gets its own test layer, `test-<family>`, by the conventions its files follow or its family's default, naming its dialect, and the colocation's test template per family; with no family to split by, the test layer names the main family's dialect.](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
 - [BLCNB-I01 — REF[BLCNB-B05]: a proposal never carries a test handle the project does not use](layers/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions)
 
@@ -7441,6 +7481,8 @@ in `layers/`.
 - [INPRN-B13 — The walk skips what the scan skips — the folders and files the project's `.gitignore` excludes, the scan's built-in list, and the nested checkouts (a worktree, a clone) —, so no folder the map will never walk is proposed as a layer.](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm)
 
 - [INPRN-B14 — OCaml's files (`.ml`, `.mli`, `.mly`, `.mll`) and C's (`.c`, `.h`) are code: their folders are candidate code directories and their extensions code extensions.](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm)
+
+- [INPRN-B15 — Each code root's family is the family of its most common code extension (`DirFamily`); roots of two families propose a dialect each (BLCNB-B14).](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm)
 
 - [INPRN-I01 — REF[INPRN-B01]: nothing under a skipped directory ever reaches the proposal, whatever it holds](layers/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm)
 
@@ -8707,6 +8749,8 @@ in `layers/`.
 - [MGSYN-B06 — A section the file lacks is written whole: a top-level one at the end, after a blank line. One written in flow style that cannot take the fields is refused, naming it. (`WithSyntax`)](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
 
 - [MGSYN-B07 — The example runners (`config.ExampleRunners`) whose command line some suite's `run` is — tests or mutation — are added under `monitor.runners`, after the project's own, one it declares by name left out: the old monitor knew them by itself. (`DeclaredSyntax`, `WithSyntax`)](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
+
+- [MGSYN-B08 — A project declaring `dialects:` has nothing added crossing format 8: it was written for a binary that reads only what it declares.](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
 
 - [MGSYN-E01 — REF[MGSYN-B06]: a section in flow style cannot take the fields](layers/migra.md#mgsyn--declared-syntax--what-the-core-knew-of-a-language-written-into-the-project-at-format-8)
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DLCTI
-  updated_at: 2026-10-20
+  updated_at: 2026-11-02
   layer: config
 -->
 # Dialect — the lexicon of the project's language, between an agnostic gate and concrete code
@@ -30,6 +30,12 @@ READING a feature are those of every language in the table, because a reader tha
 the declared language would go blind on a feature written in another one — and blind here
 means reporting green over scenarios it cannot see.
 
+A project may speak more than one language: apps in one, services in another, in one
+repository. It then declares each lexicon once under `dialects:`, and each layer names the one
+its files are written in; `dialect:` beside it holds only what is about no language. A file is
+read with its layer's dialect alone: a pattern of one language over another's code matches
+nothing, and the gate approves in silence, which is the failure this unit exists to prevent.
+
 Finally it answers two small questions the gates ask: whether a declared pattern is usable
 (an empty or invalid one is the same as not declared), and whether the project declared that
 a lexicon field does not apply to it (an explicit opt-out, read by the field's name as it is
@@ -41,6 +47,7 @@ written in the configuration file).
 | --- | --- | --- | --- |
 | the declared dialect | a dialect block with a family, explicit patterns, an opt-out list, or none at all | — | this unit: a missing block yields the naming defaults alone |
 | the family name | any name, in any case | a name that is not a known family | this unit: an unknown family contributes nothing, and the known families are listed for the gates' messages |
+| the dialects of `dialects:` | a name each, holding the fields of a dialect but the project's; each code and test layer naming one in `dialect` | a lexicon in `dialect:` beside it, a project field in a dialect, a layer naming one undeclared, a code or test layer naming none among several | the configuration load: it refuses naming the field or the layer |
 | the Gherkin language | a language code, in any case, or nothing | — | this unit: nothing means English; a code outside the table keeps its code and uses English keywords |
 | a pattern to compile | any text | text that is not a valid regular expression | this unit: an empty or invalid pattern compiles to nothing; the configuration load refuses invalid declared patterns before this |
 | the field asked about for an opt-out | the field's name as written in the configuration file | the field's name in the code | the caller: it asks with the configuration name |
@@ -79,6 +86,13 @@ written in the configuration file).
 | `DLCTI-B34` | `dialect.test_handles.exposed` may capture a `suffix`: the segment a unit adds to a head its caller gives. The `ts` example reads it in a template opening on a value — `${testID}-option-${v}` gives `-option-`, `${prefix}${key}` an empty one. (`FamilyTestHandles`) |
 | `DLCTI-B35` | `dialect.generic_basenames` lists the file names that are a role in their folder (`handler`, `index`), compared ignoring case; every family's example carries the usual ones, and none is applied by itself. (`IsGenericBasename`, `ExampleGenericBasenames`) |
 | `DLCTI-B36` | The `ts` example's `type_import_pattern` reads an import of types only written any of three ways: `import type {…}`, braces whose every name is a type — `import { type A, type B as C }` —, and `typeof import('…')`, which its imports read as a statement of its own; braces holding one value name, and a `require('…')`, are no types-only import. (`FamilyChain`) |
+| `DLCTI-B37` | `dialects:` declares a project's lexicons, each once by name, and each layer names in `dialect` the one its files are written in (DESIGN-dialect-per-layer.md). A file's dialect is its layer's: it is read with that dialect alone, which is what it declares (REF B01) — no field of another dialect fills one it left empty. Its comments are its dialect's. (`DialectAt`, `DialectOfLayer`, `CommentsFor`) |
+| `DLCTI-B38` | One dialect is every layer's: the one `dialect:` block, as always, or a `dialects:` that declares one, which a layer naming none reads. (`DialectAt`, `DialectFor`) |
+| `DLCTI-B39` | Beside `dialects:`, `dialect:` holds only what is about no language — `gherkin_language`, `set_promise`, `set_slice` —, which every dialect reads. A file whose layer names no dialect — a spec, a feature, a doc, a file of no layer — and a question about no file get those fields alone. (`DialectAt`, `DialectFor`) |
+| `DLCTI-B40` | The load refuses: a lexicon field in `dialect:` beside `dialects:`; a project field declared in a dialect; a layer naming a dialect `dialects:` does not declare, or naming one with no `dialects:`; and, with several dialects, a layer of code or tests naming none (DLPLY-D01) — a default would read it with another language's lexicon and pass it green. A layer of Anchors' own formats names none. |
+| `DLCTI-B41` | Each dialect's patterns are checked on load exactly as the one dialect's are, a wrong one named at its place (`dialects.<name>.<field>`). |
+| `DLCTI-B42` | A field a gate presupposes (`dialect.<field>`) is missing at each dialect that neither declares it nor waives it in its own `opt_out`, named there (`dialects.<name>.<field>`); every dialect waiving it, the gate does not apply. A project field is the project's to declare. (`Premises`) |
+| `DLCTI-B43` | A file's family is the family whose comments' example reads its language (`.go` → `go`); the configuration and scripts every family comments alike tell none. (`FamilyOfFile`) |
 | `DLCTI-B19` | The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing. |
 | `DLCTI-B14` | The Go and TS families' examples say how a test is written, its title in a `title` group — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` —, and a project's own `tests` is read as declared. |
 | `DLCTI-B15` | The TS family recognises a `catch` as handling a failure with or without its binding: `catch (e) {` and `catch {`. |
@@ -92,12 +106,14 @@ written in the configuration file).
 | --- | --- | --- |
 | `DLCTI-I01` | Every pattern a built-in family or a naming default brings compiles. A built-in pattern that did not compile would be read as undeclared, and the gate would approve in silence. | resolves every known family and compiles each of its non-empty patterns |
 | `DLCTI-I02` | The keywords written for any language of the table are among those every reader recognises. | resolves the keywords of each language and looks them up in the recognised scenario and result keywords |
+| `DLCTI-I03` | A file is read with one dialect: its layer's, the layer being the one the classification gives — of the layers whose patterns match it, the declared `priority`, then the longest pattern, then the name. No reader of code reads a file with another layer's lexicon. | classifies a file two layers of different dialects match, with and without a declared priority, and reads its dialect |
 
 ## Constraints
 
 | Rule | Boundary | Why |
 | --- | --- | --- |
 | `DLCTI-X01` | No family brings a collection query: that pattern is always the project's to declare. | The query that returns many records is vendor-specific (a DynamoDB project and a SQL project look nothing alike); a built-in guess would name one vendor's API and be blind to the rest. |
+| `DLCTI-X02` | Declaring another dialect changes the reading only of the layers that name it: every other file is read as before. | A monorepo adding a service in a new language must not change what the gates see in the parts it did not touch; a change that leaks makes old code fail, or pass, for a reason nobody wrote. |
 
 ## Errors
 

@@ -460,3 +460,39 @@ func TestDepChain_oneFlagPerModuleOnALine(t *testing.T) {
 		t.Errorf("a value flag on typeof import alone is named: %v %s", v, msg)
 	}
 }
+
+func TestDepChain_eachImporterByItsDialect(t *testing.T) {
+	t.Run("DCGDP-B18: Who imports a file is read from each importer with its own dialect: a Go file's text is no TS import", func(t *testing.T) {})
+	root := t.TempDir()
+	for rel, body := range map[string]string{
+		"apps/web/Arena.tsx": "import { PALETTE } from './tokens'\nexport function Arena() {}\n",
+		"apps/web/tokens.ts": "// @used-by: ARSCR\nexport const PALETTE = {}\n",
+		// A Go file whose text holds what the TS lexicon reads as an import.
+		"services/api/doc.go": "package api\n\nconst doc = `\nimport { PALETTE } from '../../apps/web/tokens'\n`\n",
+	} {
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "apps/web/Arena.tsx", Kind: mapx.KindCode, FileCode: "ARSCR"},
+		{ID: "apps/web/tokens.ts", Kind: mapx.KindCode, FileCode: "TOKNS"},
+		{ID: "services/api/doc.go", Kind: mapx.KindCode, FileCode: "DOCGO"},
+	}}
+	cfg := testkit.TwoDialects()
+	// Patterns that name no files of their own: the dialect alone decides which files they read.
+	for i := range cfg.Dialects["ts"].Imports {
+		cfg.Dialects["ts"].Imports[i].Files = ""
+	}
+	importersMu.Lock()
+	importersCache = map[string]*importerIndex{}
+	importersMu.Unlock()
+	tokens := g.Nodes[1]
+	if v, msg := checkUsedByDeclared(read(t, root, tokens.ID), tokens, root, g, cfg); v != Pass {
+		t.Errorf("only the TS screen imports the tokens: %v %s", v, msg)
+	}
+}

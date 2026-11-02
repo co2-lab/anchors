@@ -239,6 +239,7 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 	}
 
 	var corpo strings.Builder
+	var imports []string
 	for _, cp := range codePaths {
 		b, err := readFile(root, cp)
 		if err != nil {
@@ -246,9 +247,12 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 		}
 		// SEM comentários, e é o ponto do gate: `orgPlans.ts` cita `orgBilling.ts`
 		// duas vezes em comentário e não importa uma linha. Contar o comentário
-		// aprovaria justamente o caso que motivou o gate.
-		corpo.WriteString(stripComments(string(b), cp, cfg.DialectFor()))
+		// aprovaria justamente o caso que motivou o gate. Each file's imports are read by
+		// its own dialect.
+		stripped := stripComments(string(b), cp, cfg.DialectAt(cp))
+		corpo.WriteString(stripped)
 		corpo.WriteString("\n")
+		imports = append(imports, importLines(stripped, cp, cfg)...)
 	}
 	code := corpo.String()
 	if strings.TrimSpace(code) == "" {
@@ -257,7 +261,7 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 
 	var quebradas []string
 	for _, ex := range exigencias {
-		if importsUnit(code, ex.arquivo, cfg) {
+		if importsUnit(imports, ex.arquivo) {
 			continue
 		}
 		quebradas = append(quebradas, fmt.Sprintf("%s → `%s`", ex.regra, ex.arquivo))
@@ -276,17 +280,17 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 	return Pass, ""
 }
 
-// importsUnit decide se `code` traz a unidade `alvo` por import. Compara pelo
+// importsUnit decide se as linhas de import (`imports`) trazem a unidade `alvo`. Compara pelo
 // NOME BASE sem extensão, não pelo caminho: a mesma unidade é citada na spec como
 // `packages/backend/business-logic/orgBilling.ts` e importada no código como
 // `@backend/business-logic/orgBilling` — alias e extensão variam por projeto, o
 // nome do módulo não.
-func importsUnit(code, alvo string, cfg *config.Config) bool {
+func importsUnit(imports []string, alvo string) bool {
 	base := strings.TrimSuffix(filepath.Base(alvo), filepath.Ext(alvo))
 	if base == "" {
 		return false
 	}
-	for _, l := range importLines(code, cfg) {
+	for _, l := range imports {
 		if strings.Contains(l, base) {
 			return true
 		}
@@ -298,12 +302,12 @@ func importsUnit(code, alvo string, cfg *config.Config) bool {
 // knows no language's import (DESIGN-core-without-syntax.md), and a project that declares
 // none has the gates that read them pending (presupposes). A name mentioned in a string is
 // not a dependency, so only these statements are read for one.
-func importLines(code string, cfg *config.Config) []string {
+//
+// `rel` is the file the code is of: its dialect's `imports` read it.
+func importLines(code, rel string, cfg *config.Config) []string {
 	var out []string
 	if cfg != nil {
-		// The statements the dialect's `imports` read, whichever file they apply to: the
-		// caller knows only the code.
-		for _, p := range cfg.DialectFor().Imports {
+		for _, p := range cfg.DialectAt(rel).Imports {
 			for _, m := range p.FindAll(code) {
 				out = append(out, code[m.Start:m.End])
 			}

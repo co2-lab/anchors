@@ -868,3 +868,17 @@ func TestTestIDContract_valuesOnlyHandleOfItsOwnHead(t *testing.T) {
 		t.Errorf("declared, exposed through its head, and queried: %v %s", v, msg)
 	}
 }
+
+func TestTestHandles_everyDialects(t *testing.T) {
+	t.Run("TICTS-B30: In a project of several dialects the handle patterns are every dialect's together: a flow queries what a screen of another language exposes", func(t *testing.T) {})
+	cfg := testkit.TwoDialects()
+	cfg.Dialects["ts"].TestHandles = &config.TestHandles{Exposed: config.Patterns{{Re: `testID="(?P<testid>[^"]+)"`}}}
+	cfg.Dialects["go"].TestHandles = &config.TestHandles{Queried: config.Patterns{{Re: `id: "(?P<testid>[^"]+)"`}}}
+	th := testHandles(cfg)
+	if th == nil || len(th.Exposed) != 1 || len(th.Queried) != 1 || len(exposedPatterns(cfg)) != 1 {
+		t.Errorf("both dialects' patterns are read, got %+v", th)
+	}
+	if testHandles(testkit.TwoDialects()) != nil {
+		t.Error("no dialect declares any: none")
+	}
+}

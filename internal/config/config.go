@@ -207,6 +207,10 @@ type Config struct {
 	// Dialect é o LÉXICO da linguagem do projeto — o que permite a um gate agnóstico
 	// reconhecer uma função/consulta no código concreto. Ver dialect.go.
 	Dialect *Dialect `yaml:"dialect,omitempty"`
+	// Dialects are the lexicons of a project that speaks more than one language, each declared
+	// once by name; each layer names its own (`Layer.Dialect`), and `dialect:` beside it holds
+	// only what is about no language (DESIGN-dialect-per-layer.md, dialect_layers.go).
+	Dialects map[string]*Dialect `yaml:"dialects,omitempty"`
 	// Boundaries são as FRONTEIRAS entre camadas: o que cada uma não pode alcançar.
 	// Declarar `layers:` sem isto é desenhar a arquitetura sem defendê-la. Ver Boundary.
 	Boundaries []Boundary `yaml:"boundaries,omitempty"`
@@ -1647,6 +1651,9 @@ type Layer struct {
 	// pattern, and a header would be noise for every reader (a README). The header gates and
 	// the header fixer leave them.
 	Headless bool `yaml:"headless,omitempty"`
+	// Dialect names the dialect of `dialects:` the layer's files are written in. A project with
+	// several dialects names one on every layer of code or tests; with one, it is every layer's.
+	Dialect string `yaml:"dialect,omitempty"`
 	// RequiresSections are the spec sections the layer's code calls for, each with what
 	// triggers it — `section-required` (DESIGN-section-required.md).
 	RequiresSections []SectionRequirement `yaml:"requires_sections,omitempty"`
@@ -2051,6 +2058,16 @@ func (c *Config) declaresGate(g Gate) bool {
 // the project's `dialect.opt_out` says does not exist here — the gate does not apply.
 func (c *Config) Premises(g Gate) (missing, waived []string) {
 	for _, p := range g.Presupposes {
+		if c != nil && len(c.Dialects) > 0 && strings.HasPrefix(p, "dialect.") {
+			applies, miss, all := c.presupposedInDialects(p)
+			switch {
+			case all:
+				waived = append(waived, p)
+			case !applies:
+				missing = append(missing, miss...)
+			}
+			continue
+		}
 		if c.Declares(p) {
 			continue
 		}
@@ -2149,6 +2166,9 @@ func Load(path string) (*Config, error) {
 	}
 	if err := c.validarMinVersion(); err != nil {
 		return nil, err
+	}
+	if err := c.validarDialetos(); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := c.validarPadroes(); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
@@ -2366,7 +2386,21 @@ func (c *Config) validarPadroes() error {
 		}
 		return nil
 	}
-	if d := c.Dialect; d != nil {
+	type namedDialect struct {
+		prefix string
+		d      *Dialect
+	}
+	dialects := []namedDialect{{"dialect", c.Dialect}}
+	for _, name := range c.DialectNames() {
+		if name != "" {
+			dialects = append(dialects, namedDialect{"dialects." + name, c.Dialects[name]})
+		}
+	}
+	for _, nd := range dialects {
+		d, prefix := nd.d, nd.prefix
+		if d == nil {
+			continue
+		}
 		for field, p := range map[string]string{
 			"exported_func": d.ExportedFunc, "param_name": d.ParamName, "loop": d.Loop,
 			"collection_query": d.CollectionQuery, "cursor": d.Cursor, "set_promise": d.SetPromise,
@@ -2374,18 +2408,18 @@ func (c *Config) validarPadroes() error {
 			"definition": d.Definition, "type_import_pattern": d.TypeImportPattern,
 			"statement_end": d.StatementEnd, "signature_end": d.SignatureEnd,
 		} {
-			if err := check("dialect."+field, p); err != nil {
+			if err := check(prefix+"."+field, p); err != nil {
 				return err
 			}
 		}
 		if t := d.Tests; t != nil {
 			if t.Pattern != "" && t.Script != "" {
-				return fmt.Errorf("`dialect.tests` declares both a pattern and a script; declare one")
+				return fmt.Errorf("`%s.tests` declares both a pattern and a script; declare one", prefix)
 			}
-			if err := check("dialect.tests.pattern", t.Pattern); err != nil {
+			if err := check(prefix+".tests.pattern", t.Pattern); err != nil {
 				return err
 			}
-			if err := check("dialect.tests.assertion", t.Assertion); err != nil {
+			if err := check(prefix+".tests.assertion", t.Assertion); err != nil {
 				return err
 			}
 		}
@@ -2394,24 +2428,24 @@ func (c *Config) validarPadroes() error {
 			patterns Patterns
 			groups   []string
 		}{
-			{"dialect.imports", d.Imports, []string{"path"}},
-			{"dialect.import_names", d.ImportNames, []string{"name", "default"}},
-			{"dialect.declarations", d.Declarations, []string{"name", "default"}},
-			{"dialect.limits", d.Limits, []string{"value", "param", "type"}},
+			{prefix + ".imports", d.Imports, []string{"path"}},
+			{prefix + ".import_names", d.ImportNames, []string{"name", "default"}},
+			{prefix + ".declarations", d.Declarations, []string{"name", "default"}},
+			{prefix + ".limits", d.Limits, []string{"value", "param", "type"}},
 		} {
 			if err := l.patterns.Validate(l.field, l.groups); err != nil {
 				return err
 			}
 		}
 		for i, cs := range d.Comments {
-			if err := cs.validate(fmt.Sprintf("dialect.comments[%d]", i)); err != nil {
+			if err := cs.validate(fmt.Sprintf("%s.comments[%d]", prefix, i)); err != nil {
 				return err
 			}
 		}
 		if r := d.ImportResolve; r != nil {
 			for i, sc := range r.Scoped {
 				if !doublestar.ValidatePattern(sc.Files) || strings.TrimSpace(sc.Files) == "" || len(sc.Aliases) == 0 {
-					return fmt.Errorf("dialect.import_resolve.scoped[%d]: an entry names the importers it holds for in `files` (a glob) and declares its `aliases`", i)
+					return fmt.Errorf("%s.import_resolve.scoped[%d]: an entry names the importers it holds for in `files` (a glob) and declares its `aliases`", prefix, i)
 				}
 			}
 		}
@@ -2424,7 +2458,7 @@ func (c *Config) validarPadroes() error {
 			"guard_patterns": d.GuardPatterns, "handle_patterns": d.HandlePatterns, "log_patterns": d.LogPatterns,
 		} {
 			for i, p := range ps {
-				if err := check(fmt.Sprintf("dialect.%s[%d]", field, i), p); err != nil {
+				if err := check(fmt.Sprintf("%s.%s[%d]", prefix, field, i), p); err != nil {
 					return err
 				}
 			}

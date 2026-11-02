@@ -96,7 +96,7 @@ func unboundImports(content string, n mapx.Node, g *mapx.Graph, cfg *config.Conf
 	}
 	seen := map[string]bool{}
 	var out []string
-	for _, imp := range ImportsOf(content, n.ID, cfg.DialectFor(), g) {
+	for _, imp := range ImportsOf(content, n.ID, cfg.DialectAt(n.ID), g) {
 		if imp.Target == "" || imp.TypeOnly || doubled[imp.Target] || seen[imp.Target] {
 			continue
 		}

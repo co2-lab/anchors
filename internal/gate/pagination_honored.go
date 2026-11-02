@@ -57,7 +57,7 @@ func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 	if n.Kind != mapx.KindCode {
 		return Skip, i18n.T("gate.pagination_honored.skip_not_code")
 	}
-	d := cfg.DialectFor()
+	d := cfg.DialectAt(n.ID)
 	// Cada padrão ausente é um olho fechado. Pendente nomeia QUAL falta, para a correção
 	// ser uma linha de YAML e não uma investigação.
 	var faltando []string

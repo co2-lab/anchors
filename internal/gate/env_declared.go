@@ -48,31 +48,33 @@ func checkEnvDeclared(content string, n mapx.Node, root string, g *mapx.Graph, c
 			deprecated[v] = true
 		}
 	}
-	var body strings.Builder
+	// Each file is read with its own dialect's `env_read`: a Go service and a TS app read a
+	// variable in ways that look nothing alike.
+	read := map[string]bool{}
 	for _, e := range g.Neighbors(n.ID).Out {
 		if e.Type != mapx.EdgeSpecifies {
 			continue
 		}
-		if b, err := readFile(root, e.To); err == nil {
-			body.WriteString(stripComments(string(b), e.To, cfg.DialectFor()))
-			body.WriteString("\n")
+		b, err := readFile(root, e.To)
+		if err != nil {
+			continue
 		}
-	}
-	read := map[string]bool{}
-	pat := cfg.DialectFor().EnvReadPattern()
-	if pat == "" {
-		// How code reads a variable is the language's: with no `env_read`, nothing can be
-		// confronted (DESIGN-core-without-syntax.md).
-		return Pending, i18n.T("gate.field_undeclared", "dialect.env_read")
-	}
-	if pat != "" {
-		if re, err := regexp.Compile(pat); err == nil {
-			for _, m := range re.FindAllStringSubmatch(body.String(), -1) {
-				for _, name := range m[1:] {
-					if name != "" {
-						read[name] = true
-						break
-					}
+		d := cfg.DialectAt(e.To)
+		pat := d.EnvReadPattern()
+		if pat == "" {
+			// How code reads a variable is the language's: with no `env_read`, nothing can be
+			// confronted (DESIGN-core-without-syntax.md).
+			return Pending, i18n.T("gate.field_undeclared", cfg.DialectPathAt(e.To)+".env_read")
+		}
+		re, err := regexp.Compile(pat)
+		if err != nil {
+			continue
+		}
+		for _, m := range re.FindAllStringSubmatch(stripComments(string(b), e.To, d), -1) {
+			for _, name := range m[1:] {
+				if name != "" {
+					read[name] = true
+					break
 				}
 			}
 		}

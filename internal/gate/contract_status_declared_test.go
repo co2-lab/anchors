@@ -557,3 +557,25 @@ func TestContrato_theAPIResponsesSectionIsTheContract(t *testing.T) {
 		t.Fatalf("the Responses table is read, and 404 is accused alone: %v %s", v, msg)
 	}
 }
+
+func TestContrato_cadaArquivoPeloSeuDialeto(t *testing.T) {
+	t.Run("CSDCN-B14: Each code file of the spec is read with its own dialect's http_status, and the statuses they emit are united", func(t *testing.T) {})
+	root := t.TempDir()
+	for rel, body := range map[string]string{
+		"services/api/seat.go": "func h(w http.ResponseWriter) {\n\tw.WriteHeader(http.StatusForbidden)\n}\n",
+		"apps/web/seat.ts":     "export const handler = async () => jsonResponse(404, { error: 'x' })\n",
+	} {
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		must(t, os.MkdirAll(filepath.Dir(p), 0o755))
+		must(t, os.WriteFile(p, []byte(body), 0o644))
+	}
+	n := mapx.Node{ID: "services/api/seat.spec.md", Kind: mapx.KindSpec}
+	g := &mapx.Graph{Edges: []mapx.Edge{
+		{From: n.ID, To: "services/api/seat.go", Type: mapx.EdgeSpecifies},
+		{From: n.ID, To: "apps/web/seat.ts", Type: mapx.EdgeSpecifies},
+	}}
+	spec := "## Contrato de Saída\n| Status | Quando |\n| --- | --- |\n| 403 | sem acesso |\n| 404 | não encontrado |\n"
+	if v, msg := checkContractStatusDeclared(spec, n, root, g, testkit.TwoDialects()); v != Pass {
+		t.Errorf("the 403 of the Go handler and the 404 of the TS one are both read: %v (%s)", v, msg)
+	}
+}

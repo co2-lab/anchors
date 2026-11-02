@@ -89,7 +89,6 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 // stops nothing: the proof keeps every file it reaches, which stales it more, never less.
 func doubledFiles(g *Graph, files []scan.File, cfg *config.Config) {
 	m := g.Modules()
-	d := cfg.DialectFor()
 	at := map[string]int{}
 	for i, n := range g.Nodes {
 		at[n.ID] = i
@@ -101,7 +100,7 @@ func doubledFiles(g *Graph, files []scan.File, cfg *config.Config) {
 		seen := map[string]bool{}
 		var out []string
 		for _, spec := range f.Doubles {
-			if file, _ := m.File(spec, f.Path, d); file != "" && file != f.Path && !seen[file] {
+			if file, _ := m.File(spec, f.Path, cfg.DialectAt(f.Path)); file != "" && file != f.Path && !seen[file] {
 				seen[file] = true
 				out = append(out, file)
 			}

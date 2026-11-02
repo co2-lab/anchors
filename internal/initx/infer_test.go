@@ -366,8 +366,9 @@ func TestInfer_tiesGiveTheSameProposalOnEveryRun(t *testing.T) {
 		if !reflect.DeepEqual(p.CodeExts, wantExts) || !reflect.DeepEqual(p.CodeDirs, wantDirs) {
 			t.Fatalf("tied counts must break by name: exts %v dirs %v, want %v %v", p.CodeExts, p.CodeDirs, wantExts, wantDirs)
 		}
-		if got := p.Config.Layers["go-code"].Pattern; got != "src/go/**/*.{go,js,py,ts}" {
-			t.Fatalf("layer pattern = %q, want the extensions in name order", got)
+		// Roots in three languages: each layer reads its family's extensions, in name order.
+		if got := p.Config.Layers["ts-code"].Pattern; got != "src/ts/**/*.{js,ts}" {
+			t.Fatalf("layer pattern = %q, want the family's extensions in name order", got)
 		}
 	}
 }
@@ -479,5 +480,25 @@ func TestInfer_ocamlAndCAreCode(t *testing.T) {
 		if !slices.Contains(p.CodeExts, e) {
 			t.Errorf("%s is a code extension: %v", e, p.CodeExts)
 		}
+	}
+}
+
+func TestInfer_eachRootsFamily(t *testing.T) {
+	t.Run("INPRN-B15: Each code root's family is the family of its most common code extension, and roots of two families propose a dialect each", func(t *testing.T) {})
+	dir := t.TempDir()
+	files := map[string]string{}
+	for k, v := range codeFiles("apps/web", ".ts", "", 3) {
+		files[k] = v
+	}
+	for k, v := range codeFiles("services/api", ".go", "", 3) {
+		files[k] = v
+	}
+	writeTree(t, dir, files)
+	p, err := Infer(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.DirFamily["apps/web"] != "ts" || p.DirFamily["services/api"] != "go" || len(p.Config.Dialects) != 2 {
+		t.Errorf("each root's family, a dialect each: %v %v", p.DirFamily, p.Config.Dialects)
 	}
 }

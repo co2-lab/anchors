@@ -99,20 +99,28 @@ type reach struct {
 
 // reachOf reads whether `test` reaches the unit at `unit` (a path relative to root), by
 // import, by a name the unit defines, or by one of the declared invocations.
-func reachOf(test, unit, root string, cfg *config.Config, def *regexp.Regexp, invocations []*regexp.Regexp) reach {
+//
+// Each side is read with its own dialect's `definition`: the test's names by the test's, the
+// unit's by the unit's.
+func reachOf(test, testPath, unit, root string, cfg *config.Config, invocations []*regexp.Regexp) reach {
 	var r reach
-	if importsModule(test, unit, cfg) || invokes(test, unit, invocations) {
+	if importsModule(test, testPath, unit, cfg) || invokes(test, unit, invocations) {
 		r.Reached = true
 	}
+	def := definitionOf(cfg, testPath)
 	if def == nil {
 		return r
+	}
+	unitDef := definitionOf(cfg, unit)
+	if unitDef == nil {
+		unitDef = def
 	}
 	b, err := readFile(root, unit)
 	if err != nil {
 		return r // @resilient: an unreadable unit defines nothing this reading can name; the map notices a missing file
 	}
 	own := definedNames(test, def)
-	for key, d := range definedNames(string(b), def) {
+	for key, d := range definedNames(string(b), unitDef) {
 		// A copy is the same definition again: the same name with the same owner. An
 		// indented member with no owner can be anyone's type, and is not read as one.
 		if t, ok := own[key]; ok && !(t.member && !strings.Contains(key, ".")) {
@@ -130,15 +138,16 @@ func reachOf(test, unit, root string, cfg *config.Config, def *regexp.Regexp, in
 // importsModule says whether an import line of the test names the unit's module: its file
 // name without extension, or its directory as a path (`internal/gate`), which is how a
 // package-per-directory language imports it.
-func importsModule(test, unit string, cfg *config.Config) bool {
-	if importsUnit(test, unit, cfg) {
+func importsModule(test, testPath, unit string, cfg *config.Config) bool {
+	lines := importLines(test, testPath, cfg)
+	if importsUnit(lines, unit) {
 		return true
 	}
 	dir := path.Dir(filepath.ToSlash(unit))
 	if dir == "." || dir == "" {
 		return false
 	}
-	for _, l := range importLines(test, cfg) {
+	for _, l := range lines {
 		if strings.Contains(l, dir) {
 			return true
 		}
@@ -174,12 +183,12 @@ func invokes(test, unit string, invocations []*regexp.Regexp) bool {
 	return false
 }
 
-// definitionOf is the dialect's `definition`, compiled; nil when the project has none.
-func definitionOf(cfg *config.Config) *regexp.Regexp {
+// definitionOf is the `definition` of the file's dialect, compiled; nil when it has none.
+func definitionOf(cfg *config.Config, rel string) *regexp.Regexp {
 	if cfg == nil {
 		return nil
 	}
-	d := cfg.DialectFor()
+	d := cfg.DialectAt(rel)
 	if strings.TrimSpace(d.Definition) == "" {
 		return nil
 	}
@@ -207,13 +216,12 @@ func checkTestExercisesUnit(content string, n mapx.Node, root string, g *mapx.Gr
 	if noUnitImportRE.MatchString(content) {
 		return Pass, "" // declared: the test reaches its unit another way, and says why
 	}
-	def := definitionOf(cfg)
-	if def == nil {
+	if definitionOf(cfg, n.ID) == nil {
 		return Skip, i18n.T("gate.test_reach.skip_no_definition")
 	}
 	var problems []string
 	for _, u := range units {
-		r := reachOf(content, u, root, cfg, def, nil)
+		r := reachOf(content, n.ID, u, root, cfg, nil)
 		if len(r.Copied) > 0 {
 			problems = append(problems, i18n.T("gate.test_exercises_unit.copied", u, strings.Join(r.Copied, ", ")))
 		}
@@ -247,9 +255,8 @@ func checkTestRefMatchesUnit(content string, n mapx.Node, root string, g *mapx.G
 			invocations = append(invocations, re)
 		}
 	}
-	def := definitionOf(cfg)
 	for _, u := range units {
-		if reachOf(content, u, root, cfg, def, invocations).Reached {
+		if reachOf(content, n.ID, u, root, cfg, invocations).Reached {
 			return Pass, ""
 		}
 	}

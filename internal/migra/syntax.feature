@@ -2,7 +2,7 @@
 # @anchors
 #   code: SYNFT
 #   ref: MGSYN
-#   updated_at: 2026-10-16
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @MGSYN
@@ -55,3 +55,9 @@ Feature: Declared syntax — what the core knew of a language, written into the 
     When the additions are written
     Then jest and stryker are appended to the project's runners, and maestro is kept as declared
     And a project with no monitor block gets one
+
+  @MGSYN-B08 @unit-level
+  Scenario: A project of several dialects has nothing to keep
+    Given a project declaring a Go and a TS dialect
+    When the additions are read
+    Then none

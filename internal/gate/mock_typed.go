@@ -52,7 +52,7 @@ func checkMockTyped(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 		// seria assumir TypeScript e reportar VERDE sobre o que não se conferiu em
 		// qualquer outro ecossistema — a pior falha possível num medidor.
 		// Pending until someone decides, as `mock-stamped`: the opt-out is the decision.
-		if cfg != nil && cfg.DialectFor().WaivedField("mock_contract") {
+		if cfg != nil && cfg.DialectAt(n.ID).WaivedField("mock_contract") {
 			return Skip, i18n.T("gate.mock_typed.skip_opt_out")
 		}
 		return Pending, i18n.T("gate.mock_typed.pending_no_mock_contract")
@@ -67,7 +67,7 @@ func checkMockTyped(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 	// Só o que o PROJETO rege é cobrado. Ver `ehModuloRegido`.
 	var dubles []declaredDouble
 	for _, d := range todos {
-		if isGovernedModule(d.module, n.ID, cfg.DialectFor(), g) {
+		if isGovernedModule(d.module, n.ID, cfg.DialectAt(n.ID), g) {
 			dubles = append(dubles, d)
 		}
 	}

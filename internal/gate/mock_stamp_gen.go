@@ -67,7 +67,6 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 	if detector == nil {
 		return content, nil, nil, fmt.Errorf("the project does not declare `derived.mock_detect` — without it no double can be found")
 	}
-	exportRE := exportDetectDe(cfg)
 
 	existing := declaredStamps(content)
 	lines := strings.Split(content, "\n")
@@ -89,15 +88,15 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 			continue
 		}
 		module := strings.TrimSpace(content[m[2]:m[3]])
-		if module == "" || done[module] || !isGovernedModule(module, testID, cfg.DialectFor(), g) {
+		if module == "" || done[module] || !isGovernedModule(module, testID, cfg.DialectAt(testID), g) {
 			continue
 		}
 		done[module] = true
 		// A stamped double is never rewritten — see the file comment. It can still GAIN a
 		// stamp: a key added to its factory later names an export no stamp covers.
-		stamped := moduleHasStamp(module, testID, cfg.DialectFor(), g, existing)
+		stamped := moduleHasStamp(module, testID, cfg.DialectAt(testID), g, existing)
 
-		file, reason := moduleFile(module, testID, cfg.DialectFor(), g)
+		file, reason := moduleFile(module, testID, cfg.DialectAt(testID), g)
 		if file == "" {
 			skipped = append(skipped, StampSkipped{module, reason})
 			continue
@@ -110,10 +109,10 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 		// The module as the stamp reads it: without the chain's flags (see stampLines).
 		modCS := cfg.CommentsFor(file)
 		modLines := stampLines(strings.Split(string(body), "\n"), modCS)
-		starts := declarationStarts(strings.Join(modLines, "\n"), file, cfg.DialectFor())
+		starts := declarationStarts(strings.Join(modLines, "\n"), file, cfg.DialectAt(file))
 
 		var stamps []StampWritten
-		if exportRE != nil {
+		if exportRE := exportDetectDe(cfg, file); exportRE != nil {
 			for _, key := range factoryNames(blanked, m[0], exportNames(modLines, exportRE)) {
 				if s, ok := stampForExport(module, file, key, modLines, exportRE, starts); ok {
 					if stamped && coveredByExisting(s.Anchor, file, modLines, existing) {

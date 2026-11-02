@@ -70,8 +70,12 @@ var ownComments = []Comments{
 
 // CommentsFor is the comment syntax of a file — its path relative to the root, with `/` —:
 // Anchors' own for its formats, else the first entry of `dialect.comments` whose glob matches
-// it; nil when nothing says how the file comments.
+// it — the dialect of the file's layer, in a project of several —; nil when nothing says how
+// the file comments.
 func (c *Config) CommentsFor(rel string) *Comments {
+	if c != nil && len(c.Dialects) > 0 {
+		return c.DialectAt(rel).CommentsFor(rel)
+	}
 	if c != nil && c.Dialect != nil {
 		return c.Dialect.CommentsFor(rel)
 	}

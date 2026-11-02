@@ -258,3 +258,37 @@ func TestBuildConfigSeedsTheFamilysLexiconAndComments(t *testing.T) {
 		t.Errorf("no family: the comments of its files alone, got %+v", c.Dialect)
 	}
 }
+
+func TestBuildConfig_aDialectPerFamily(t *testing.T) {
+	t.Run("BLCNB-B14: Code roots in several languages are proposed one dialect per family, each code layer naming its own and reading its family's extensions", func(t *testing.T) {})
+	p := &Proposal{
+		CodeDirs: []string{"apps/web", "services/api"}, CodeExts: []string{".ts", ".go"},
+		DirFamily: map[string]string{"apps/web": "ts", "services/api": "go"}, Family: "ts",
+		HasTest: true, Colocated: true,
+		TestConventions: []TestConvention{{Suffix: ".test.ts", Ext: "ts", Family: "ts"}, {Suffix: "_test.go", Ext: "go", Family: "go"}},
+	}
+	c := p.buildConfig()
+	if c.Dialect != nil || len(c.Dialects) != 2 || c.Dialects["go"].Family != "go" || c.Dialects["ts"].ExportedFunc == "" {
+		t.Fatalf("one dialect per family, with its example: %+v %+v", c.Dialect, c.Dialects)
+	}
+	for name, l := range c.Layers {
+		want := map[string]string{"web-code": "ts", "api-code": "go"}[name]
+		if l.Kind == "code" && (l.Dialect != want || (want == "go") != strings.HasSuffix(l.Pattern, ".go")) {
+			t.Errorf("%s: dialect %q pattern %q, want %q and its family's extensions", name, l.Dialect, l.Pattern, want)
+		}
+	}
+	t.Run("BLCNB-B15: In a project of several dialects each family gets its own test layer, by its convention, naming its dialect", func(t *testing.T) {})
+	c.Layers["test"] = config.Layer{Pattern: p.TestPattern(), Kind: "test", Tags: []string{"test"}}
+	c.Derived.Files["test"] = config.Padroes{p.TestTemplate()}
+	p.ApplyDialects(c)
+	if _, kept := c.Layers["test"]; kept || c.Layers["test-go"].Pattern != "**/*_test.go" || c.Layers["test-go"].Dialect != "go" || c.Layers["test-ts"].Dialect != "ts" {
+		t.Errorf("a test layer per family: %+v", c.Layers)
+	}
+	if c.Derived.Files["test-go"][0] != "{{dir}}/{{name}}_test.go" || c.Derived.Files["test"] != nil {
+		t.Errorf("the colocation's test template per family: %+v", c.Derived.Files)
+	}
+	one := (&Proposal{CodeDirs: []string{"src"}, CodeExts: []string{".go"}, DirFamily: map[string]string{"src": "go"}, Family: "go"}).buildConfig()
+	if one.Dialects != nil || one.Dialect == nil || one.Layers["src-code"].Dialect != "" {
+		t.Errorf("one family: the one `dialect:` block, as before: %+v", one.Layers)
+	}
+}

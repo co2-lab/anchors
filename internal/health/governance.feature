@@ -2,7 +2,7 @@
 # @anchors
 #   code: GVFTA
 #   ref: GVOPG
-#   updated_at: 2026-10-16
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @GVOPG
@@ -105,3 +105,15 @@ Feature: GovernanceOpportunities — the doctor suggests the canonical gates and
     Given a go project declaring env-declared with no env_read, one declaring it, and a cobol one
     When the governance opportunities are read
     Then only the first is offered the go env_read, named and as YAML that reads back
+
+  @GVOPG-B15 @unit-level
+  Scenario: Each dialect is offered its own family's example at its place
+    Given a project of a TS and a Go dialect, the Go one declaring no env_read, and a gate presupposing it
+    When the governance tips are read
+    Then only the Go dialect is told, at dialects.go
+
+  @GVOPG-B16 @unit-level
+  Scenario: A layer of another language is named with that family's example
+    Given a layer read by a TS dialect holding two Go files
+    When the governance tips are read
+    Then the layer is named with the two Go files and the Go example

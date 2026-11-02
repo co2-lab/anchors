@@ -38,7 +38,7 @@ func checkSiblingGuard(content string, n mapx.Node, root string, g *mapx.Graph, 
 	if n.Kind != mapx.KindCode {
 		return Skip, i18n.T("gate.sibling_guard.skip_not_code")
 	}
-	d := cfg.DialectFor()
+	d := cfg.DialectAt(n.ID)
 	if d.ExportedFunc == "" {
 		// Pendente, não Pass: sem saber reconhecer uma função, o gate não verificou nada —
 		// e um ✓ aqui seria mentira (QUALITY §7, o terceiro estado).

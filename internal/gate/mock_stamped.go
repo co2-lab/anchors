@@ -52,7 +52,7 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 		// indeterminate answer kept it out of the pending items and of the doctor — a
 		// project with 43 tests never learned the field was missing (reported from
 		// baas-proxy). The opt-out is the decision that makes it a Skip.
-		if cfg != nil && cfg.DialectFor().WaivedField("mock_detect") {
+		if cfg != nil && cfg.DialectAt(n.ID).WaivedField("mock_detect") {
 			return Skip, i18n.T("gate.mock_stamped.skip_opt_out")
 		}
 		return Pending, i18n.T("gate.mock_stamped.pending_no_mock_detect")
@@ -79,10 +79,10 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 	// adoção, e opt-out por unidade com razão escrita onde a decisão for deliberada.
 	var semCarimbo []string
 	for _, modulo := range detectedDoubles(content, detector) {
-		if !isGovernedModule(modulo, n.ID, cfg.DialectFor(), g) {
+		if !isGovernedModule(modulo, n.ID, cfg.DialectAt(n.ID), g) {
 			continue // biblioteca de terceiro não é cobrada (ver `ehModuloRegido`)
 		}
-		if !moduleHasStamp(modulo, n.ID, cfg.DialectFor(), g, carimbos) {
+		if !moduleHasStamp(modulo, n.ID, cfg.DialectAt(n.ID), g, carimbos) {
 			semCarimbo = append(semCarimbo, modulo)
 		}
 	}

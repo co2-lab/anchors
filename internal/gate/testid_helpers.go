@@ -140,12 +140,33 @@ var (
 	derivedSegs []string
 )
 
-// testHandles are the patterns the project declares for its test handles, or nil.
+// testHandles are the patterns the project declares for its test handles, or nil. A handle
+// crosses languages — a flow queries what a screen exposes —, so in a project of several
+// dialects they are every dialect's together, each pattern reading the files it says.
 func testHandles(cfg *config.Config) *config.TestHandles {
-	if cfg == nil || cfg.Dialect == nil {
+	if cfg == nil {
 		return nil
 	}
-	return cfg.Dialect.TestHandles
+	if len(cfg.Dialects) == 0 {
+		if cfg.Dialect == nil {
+			return nil
+		}
+		return cfg.Dialect.TestHandles
+	}
+	var out *config.TestHandles
+	for _, name := range cfg.DialectNames() {
+		th := cfg.Dialects[name].TestHandles
+		if th == nil {
+			continue
+		}
+		if out == nil {
+			out = &config.TestHandles{}
+		}
+		out.Exposed = append(out.Exposed, th.Exposed...)
+		out.Mentioned = append(out.Mentioned, th.Mentioned...)
+		out.Queried = append(out.Queried, th.Queried...)
+	}
+	return out
 }
 
 // exposedPatterns are the patterns of where the code exposes a handle; none when the

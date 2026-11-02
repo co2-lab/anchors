@@ -32,7 +32,7 @@ func flagScenarioOccurrences(content string, n mapx.Node, _ string, _ *mapx.Grap
 // things of who imports it, and the gate reads only one of them.
 func usedByOccurrences(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) []Occurrence {
 	var out []Occurrence
-	for _, u := range scan.UsedByIn([]byte(content), n.ID, cfg.DialectFor()) {
+	for _, u := range scan.UsedByIn([]byte(content), n.ID, cfg.DialectAt(n.ID)) {
 		if u.Symbol != "" {
 			out = append(out, Occurrence{Key: u.Symbol, Line: u.Line})
 		}

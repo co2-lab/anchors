@@ -34,12 +34,12 @@ func checkTestHasAssertion(content string, n mapx.Node, root string, g *mapx.Gra
 	if n.Kind != mapx.KindTest || n.Support {
 		return Skip, i18n.T("gate.test_has_assertion.skip_not_test")
 	}
-	src := testsSource(cfg)
+	src := testsSource(cfg, n.ID)
 	if !src.Declared() {
 		return Skip, i18n.T("gate.test_has_assertion.skip_no_source")
 	}
 	assertion := ""
-	if t := cfg.DialectFor().Tests; t != nil {
+	if t := cfg.DialectAt(n.ID).Tests; t != nil {
 		assertion = t.Assertion
 	}
 	if strings.TrimSpace(assertion) == "" {
@@ -88,7 +88,7 @@ type layout struct {
 
 func newLayout(lines []string, rel string, cfg *config.Config) layout {
 	var l layout
-	if t := cfg.DialectFor().Tests; t != nil {
+	if t := cfg.DialectAt(rel).Tests; t != nil {
 		l.open, l.close, l.empty = compileOrNil(t.BlockOpen), compileOrNil(t.BlockClose), compileOrNil(t.EmptyBody)
 	}
 	l.inString = cfg.CommentsFor(rel).InString(lines)

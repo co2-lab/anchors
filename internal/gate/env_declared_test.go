@@ -83,3 +83,20 @@ func TestEnvDeclared_anUnreadableFileReadsNothing(t *testing.T) {
 		t.Errorf("the declaration stands alone: %v %s", v, d)
 	}
 }
+
+func TestEnvDeclared_eachFileByItsDialect(t *testing.T) {
+	t.Run("ENVDC-B06: Each code file is read with its own dialect's env_read, and one whose dialect declares none leaves the gate pending naming that dialect", func(t *testing.T) {})
+	spec := envSpec("| `DB_URL` | string | yes | | | | db |", "| `API_KEY` | string | yes | | | | key |")
+	code := map[string]string{
+		"services/api/pay.go": "package pay\n\nvar u = os.Getenv(\"DB_URL\")\n",
+		"apps/web/pay.ts":     "export const k = process.env.API_KEY\n",
+	}
+	if v, msg := envRun(t, spec, testkit.TwoDialects(), code); v != Pass {
+		t.Errorf("the Go read by the Go dialect, the TS by the TS one: %v (%s)", v, msg)
+	}
+	cfg := testkit.TwoDialects()
+	cfg.Dialects["go"].EnvRead = ""
+	if v, msg := envRun(t, spec, cfg, code); v != Pending || !strings.Contains(msg, "dialects.go.env_read") {
+		t.Errorf("the Go dialect declares no env_read: pending naming it, got %v (%s)", v, msg)
+	}
+}

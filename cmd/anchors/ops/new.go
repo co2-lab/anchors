@@ -325,7 +325,7 @@ func renderArtifact(t template, name, id, outPath, root string, chosen map[strin
 		// {TEST_BODY} é resolvido pelo DIALETO: o esqueleto de caso de teste tem sintaxe,
 		// e sintaxe é do projeto (ver testBody em new_templates.go).
 		if strings.Contains(body, "{TEST_BODY}") {
-			body = strings.ReplaceAll(body, "{TEST_BODY}", testBody(cfg.DialectFor().Family, name, id))
+			body = strings.ReplaceAll(body, "{TEST_BODY}", testBody(artifactDialect(root, outPath, cfg).Family, name, id))
 		}
 		// A tag de REGIME é do projeto (`derived.regimes` faz o de-para para o regime
 		// canônico). Cravar `@unit-level` gerava um cenário que o gate de correspondência
@@ -628,7 +628,7 @@ func resolveNewCode(root, nameOrPath string) (string, error) {
 		if prefix != "" {
 			return code.GenerateUniqueWithPrefix(cfg.UnitName(nameOrPath), prefix, taken), nil
 		}
-		return code.GenerateFromPath(nameOrPath, cfg.UnitName(nameOrPath), cfg.DialectFor().IsGenericBasename(cfg.UnitName(nameOrPath)), taken), nil
+		return code.GenerateFromPath(nameOrPath, cfg.UnitName(nameOrPath), cfg.DialectAt(nameOrPath).IsGenericBasename(cfg.UnitName(nameOrPath)), taken), nil
 	}
 	return code.GenerateUnique(nameOrPath, taken), nil
 }
@@ -843,6 +843,15 @@ var sectionTitleRE = regexp.MustCompile(`(?m)^(#{2,4})\s+([^\n]+)\n`)
 // targetLayer resolve a camada da unidade que este artefato descreve — usada para achar
 // o léxico de seções DAQUELA camada (`section_titles`). O alvo é o irmão sem o sufixo de
 // peça derivada; sem alvo reconhecível, devolve vazio e vale o padrão do framework.
+// artifactDialect is the dialect of the file being written: its layer's.
+func artifactDialect(root, outPath string, cfg *config.Config) config.Dialect {
+	rel, err := filepath.Rel(root, outPath)
+	if err != nil {
+		return cfg.DialectFor()
+	}
+	return cfg.DialectAt(filepath.ToSlash(rel))
+}
+
 func targetLayer(root, outPath string, cfg *config.Config) string {
 	if cfg == nil {
 		return ""

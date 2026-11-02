@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:71a9c61d0f5056b7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:c9e7cf62b7759743 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 89 units and 1435 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 89 units and 1442 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -310,6 +310,8 @@ is nothing to confront.
 
 - **CSDCN-B13** — The API catalog's `Responses` section (`Respostas`, `Respuestas`) is read as the output contract, by its whole title: `Error Responses` (`Respostas de Erro`) is another section.
 
+- **CSDCN-B14** — Each code file the spec specifies is read with its own dialect's `http_status` and `http_status_dynamic`, and the statuses they emit are united; every file's dialect waiving `http_status` skips the gate, one whose dialect declares nothing leaves it pending.
+
 - **CSDCN-B12** — A project that explicitly waives the `http_status` field is skipped: the opt-out is declared, and it is honoured.
 
 - **CSDCN-I01** — The lexicon that reads the status comes from the project's dialect, never from the gate. Embedding one stack's syntax would make the gate silent on every other one — and silence reads as conformity.
@@ -510,6 +512,8 @@ the chain. A test takes no part: it is tied to its unit by its `ref:`.
 - **DCGDP-B16** — dep-honored names a flag whose kind contradicts its import: `@dep:` on a statement the dialect's `type_import_pattern` reads as types only — to be `@dep[type]:` —, and `@dep[type]:` on one whose import pattern says it plainly runs — to be `@dep:`. What reads the map trusts the kind (`depends_on_layer` counts value edges); the fixer rewrites it, and the gate no longer lets it pass silent.
 
 - **DCGDP-B17** — Statements of one module on the same line — `require('x') as typeof import('x')` — take ONE flag, which answers for them all: the fixer writes one and dep-declared asks for one; it is a type flag when every one of them is types only, and a value flag when any one is not — dep-honored confronts the flag with them together. A line importing two modules takes a flag for each. (`lineKind`, `statementFlag`)
+
+- **DCGDP-B18** — Who imports a file is read from each importer with its own dialect's `imports`: in a project of several dialects a Go file's text is not read as a TS import.
 
 
 ## DEPHN — DependencyHonored — a spec declares no dependency: the code does
@@ -1005,6 +1009,8 @@ read by a computed name is out of reach of the text.
 
 - **ENVDC-B05** — With no `dialect.env_read` declared the gate is pending, naming the field: how code reads a variable is the language's, and the core knows none.
 
+- **ENVDC-B06** — Each code file the spec specifies is read with its own dialect's `env_read`; a file whose dialect declares none leaves the gate pending, naming the field at that dialect (`dialects.<name>.env_read`).
+
 - **ENVDC-E01** — A specified code file cannot be read.
 
 
@@ -1223,6 +1229,8 @@ not match) closes its failure section with `none — <why>`, and that satisfies 
 - **FLRAI-B23** — A fallible call whose pattern's `propagates` group took part in the match — `(?P<propagates>\breturn\s+)?\bfetch\(` on `return fetch(…)` — hands its failure to the caller: `failure-handled` does not charge it, and `failure-declared` still asks the unit's spec to name it. The pattern says it, wherever its own prefix stands; the core reads no syntax of its own. (`propagated`)
 
 - **FLRAI-B26** — A call whose pattern has no `propagates` group propagates nothing: a `return`ed call is charged like any other.
+
+- **FLRAI-B27** — The failure gates read a unit's code with its dialect: a code file's own, and for a spec the one dialect of the code it specifies. A spec whose code is written in several dialects is pending, naming them: a unit's patterns are read over its code as a whole, and one lexicon over another language's files reads nothing and passes them. (`unitDialect`)
 
 - **FLRAI-B24** — The name a fallible call is cited by is the `name` group of the pattern that recognises it (`\b(?P<name>fetchData)(?:<[^()]*>)?\(`): the pattern knows its language — a type argument, a template call —, and the core reads no syntax of its own. (`calledName`)
 
@@ -3026,6 +3034,8 @@ syntax themselves, and a project on any other library had no title read at all.
 
 - **PRJTS-B08** — The project's tests are offered to the commands as the gates read them, with whether the project declares how its tests are written. (`ProjectTests`)
 
+- **PRJTS-B09** — In a project of several dialects each test file is read by its own dialect's `tests` source — its pattern, or its script given only its files —, and the tests found are united; a file whose dialect declares no source is left unread. With one dialect its source reads every test file, as before.
+
 - **PRJTS-E01** — REF[PRJTS-B05]: the source fails or answers outside its contract
 
 
@@ -4331,6 +4341,8 @@ a definition looks like), or — for the `ref:` — when a call the project decl
 
 - **TSRCH-B09** — A definition is identified with its owner when the dialect's `definition` captures one (a Go method by its receiver type, `GormPinger.Ping`), and a definition indented under a type with no owner captured is a member; a test that defines a member of its own type — a fake that implements the unit's interface — copies nothing, and only the same name of the same owner defined again is a copy. A member's bare name still reaches the unit. (`definedNames`)
 
+- **TSRCH-B10** — The names a test defines are read with the test's dialect's `definition`, and the names its unit defines with the unit's; a file whose layer names no dialect has none.
+
 - **TSRCH-B08** — A test that carries `@no-unit-import: <why>` passes `test-exercises-unit`, copies included; a waiver with no reason waives nothing.
 
 
@@ -4482,6 +4494,8 @@ belongs to a project-scope gate.
 - **TICTS-B28** — A derived handle whose segment ends it — `${testId}-spin` — is `*-spin`: a consumer queries it with the segment after a head and, after it, the id's end or a hyphen (`b-spin`, `b-spin-overlay`, never `b-spinner`); a caller's own handle is queried through it the same way (`:row-transfer-badge`). One a value follows — `${id}-row-${i}` — stays open, `*-row-*`.
 
 - **TICTS-B29** — A handle made of values alone in a file where the project's `exposed` patterns also find a head of its own — the prefix the unit gives its handles, as the default of the prop that carries it (`testIDPrefix = ':rlpc-role'`) — is that head's (`rlpc-role-*`): it is measured through the head, never pending. (`unmeasurableHandles`)
+
+- **TICTS-B30** — In a project of several dialects the handle patterns are every dialect's together — a flow queries what a screen of another language exposes —, each pattern reading the files it says.
 
 - **TICTS-B14** — The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading.
 

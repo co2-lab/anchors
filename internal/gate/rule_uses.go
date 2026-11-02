@@ -336,7 +336,7 @@ func checkRuleUsesImplemented(content string, n mapx.Node, root string, g *mapx.
 	if len(rows) == 0 {
 		return Skip, i18n.T("gate.rule_uses_resolve.skip_no_rows")
 	}
-	code, found := governedCode(n, root, g, cfg.DialectFor())
+	code, found := governedCodeAt(n, root, g, cfg)
 	if !found {
 		return Skip, i18n.T("gate.rule_uses_implemented.skip_no_code")
 	}

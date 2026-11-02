@@ -2,7 +2,7 @@
 # @anchors
 #   code: TCFTS
 #   ref: TICTS
-#   updated_at: 2026-10-20
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @TICTS
@@ -203,3 +203,9 @@ Feature: TestIDContract — a test handle is one contract with four ends: the co
     Given a component whose prop gives its handles the default head ":rlpc-role" and exposes `${testIDPrefix}-${r.key}`, and a test querying ":rlpc-role-admin"
     When testid-consistent confronts a spec declaring "rlpc-role-*"
     Then it passes, and is not pending
+
+  @TICTS-B30 @unit-level
+  Scenario: The handle patterns are every dialect's together
+    Given a TS dialect declaring where a handle is exposed and a Go dialect declaring how a flow queries one
+    When the handle gates read the patterns
+    Then both are read

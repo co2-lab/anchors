@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGSYN
-  updated_at: 2026-10-16
+  updated_at: 2026-11-02
   layer: migra
 -->
 # Declared syntax — what the core knew of a language, written into the project at format 8
@@ -43,6 +43,7 @@ This unit holds two pure parts:
 | `MGSYN-B05` | The additions are written at the end of their block, indented as its children are; a list of short texts on one line; a one-line flow mapping takes them inline. The rest of the text — comments, order, quoting — is kept, and the result reads back with nothing left to add. The fields added are named a line each. (`WithSyntax`, `Fields`) |
 | `MGSYN-B06` | A section the file lacks is written whole: a top-level one at the end, after a blank line. One written in flow style that cannot take the fields is refused, naming it. (`WithSyntax`) |
 | `MGSYN-B07` | The example runners (`config.ExampleRunners`) whose command line some suite's `run` is — tests or mutation — are added under `monitor.runners`, after the project's own, one it declares by name left out: the old monitor knew them by itself. (`DeclaredSyntax`, `WithSyntax`) |
+| `MGSYN-B08` | A project declaring `dialects:` has nothing added crossing format 8: it was written for a binary that reads only what it declares. |
 
 ## Errors
 

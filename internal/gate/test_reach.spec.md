@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSRCH
-  updated_at: 2026-10-16
+  updated_at: 2026-11-02
   layer: gate
 -->
 # TestReach — a test reaches the unit it says it tests
@@ -45,6 +45,7 @@ a definition looks like), or — for the `ref:` — when a call the project decl
 | `TSRCH-B06` | A declared invocation whose first non-empty capture is the unit's file name without extension, or one of its directories, reaches the unit; another capture does not. (`invokes`) |
 | `TSRCH-B07` | A node that is not a test or is a support file is skipped by both gates; `test-exercises-unit` skips a test no unit pairs with and a project with no definition; `test-ref-matches-unit` skips a test with no `ref:` and a `ref:` whose spec governs no code. |
 | `TSRCH-B09` | A definition is identified with its owner when the dialect's `definition` captures one (a Go method by its receiver type, `GormPinger.Ping`), and a definition indented under a type with no owner captured is a member; a test that defines a member of its own type — a fake that implements the unit's interface — copies nothing, and only the same name of the same owner defined again is a copy. A member's bare name still reaches the unit. (`definedNames`) |
+| `TSRCH-B10` | The names a test defines are read with the test's dialect's `definition`, and the names its unit defines with the unit's; a file whose layer names no dialect has none. |
 | `TSRCH-B08` | A test that carries `@no-unit-import: <why>` passes `test-exercises-unit`, copies included; a waiver with no reason waives nothing. |
 
 ## Errors

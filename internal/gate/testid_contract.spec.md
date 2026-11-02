@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TICTS
-  updated_at: 2026-10-20
+  updated_at: 2026-11-02
   layer: gate
 -->
 # TestIDContract — a test handle is one contract with four ends: the code exposes it, the spec declares it, a consumer queries it
@@ -76,6 +76,7 @@ belongs to a project-scope gate.
 | `TICTS-B27` | A consumer surface the gate could not read — a linked test, a flow, a neighbour test — holds queries nobody saw: the gate is pending, naming the files — neither failing a handle as unqueried nor passing it as having no consumer. The surfaces are read through the run's reader, the git index under `--index`. |
 | `TICTS-B28` | A derived handle whose segment ends it — `${testId}-spin` — is `*-spin`: a consumer queries it with the segment after a head and, after it, the id's end or a hyphen (`b-spin`, `b-spin-overlay`, never `b-spinner`); a caller's own handle is queried through it the same way (`:row-transfer-badge`). One a value follows — `${id}-row-${i}` — stays open, `*-row-*`. |
 | `TICTS-B29` | A handle made of values alone in a file where the project's `exposed` patterns also find a head of its own — the prefix the unit gives its handles, as the default of the prop that carries it (`testIDPrefix = ':rlpc-role'`) — is that head's (`rlpc-role-*`): it is measured through the head, never pending. (`unmeasurableHandles`) |
+| `TICTS-B30` | In a project of several dialects the handle patterns are every dialect's together — a flow queries what a screen of another language exposes —, each pattern reading the files it says. |
 | `TICTS-B14` | The spec's inventory is read only inside its test surface section, whose title may carry a qualifier, and the section ends at the next heading. |
 | `TICTS-B15` | In a table row of the inventory only the first cell is the id; on any other line every quoted id counts. |
 | `TICTS-B16` | The attribute's own name, quoted in the inventory, is not a declared id. |

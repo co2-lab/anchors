@@ -180,6 +180,29 @@ func governedCode(n mapx.Node, root string, g *mapx.Graph, d config.Dialect) (st
 	return body.String(), found
 }
 
+// governedCodeAt is governedCode with each file's comments stripped by its own dialect: for
+// a search of plain text, which reads no lexicon but the comments.
+func governedCodeAt(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (string, bool) {
+	if g == nil {
+		return "", false
+	}
+	var body strings.Builder
+	found := false
+	for _, e := range g.Neighbors(n.ID).Out {
+		if e.Type != mapx.EdgeSpecifies {
+			continue
+		}
+		b, err := readFile(root, e.To)
+		if err != nil {
+			continue
+		}
+		found = true
+		body.WriteString(stripComments(string(b), e.To, cfg.DialectAt(e.To)))
+		body.WriteString("\n")
+	}
+	return body.String(), found
+}
+
 // anyMatch says whether any of the declared patterns matches the code.
 func anyMatch(d config.Dialect, patterns []string, code string) bool {
 	for _, p := range patterns {
@@ -195,11 +218,15 @@ func checkFailureHandled(content string, n mapx.Node, root string, g *mapx.Graph
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.failure_handled.skip_not_spec")
 	}
+	d, mixed, one := unitDialect(n, g, cfg)
+	if !one {
+		return Pending, i18n.T("gate.dialect_mixed", mixed)
+	}
 	// EACH FALLIBLE CALL has its handling beside it. Read over the whole file, one `catch`
 	// anywhere answered a unit with five fetches, and the screen that reads `data` from a
 	// query and never looks at its error passed (reported from MIF: an endless spinner, an
 	// empty list, a form of defaults that erased the data on save).
-	if open := unhandledCalls(n, root, g, cfg.DialectFor()); len(open) > 0 {
+	if open := unhandledCalls(n, root, g, d); len(open) > 0 {
 		shown := open
 		if len(shown) > 5 {
 			shown = append(append([]string(nil), shown[:5]...), fmt.Sprintf("… +%d", len(open)-5))
@@ -210,13 +237,12 @@ func checkFailureHandled(content string, n mapx.Node, root string, g *mapx.Graph
 	if len(all) == 0 {
 		return Skip, i18n.T("gate.failure_handled.skip_none")
 	}
-	d := cfg.DialectFor()
 	if len(d.HandlePatterns) == 0 {
 		// Pending and not Pass: without knowing how to recognise a handling path, the gate
 		// verified nothing — and a ✓ here would stamp what was never measured.
 		return Pending, i18n.T("gate.failure_handled.skip_no_dialect")
 	}
-	code, ok := governedCode(n, root, g, cfg.DialectFor())
+	code, ok := governedCode(n, root, g, d)
 	if !ok {
 		return Pending, i18n.T("gate.failure_handled.pending_no_code")
 	}
@@ -253,15 +279,18 @@ func checkFailureLogged(content string, n mapx.Node, root string, g *mapx.Graph,
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.failure_handled.skip_not_spec")
 	}
+	d, mixed, one := unitDialect(n, g, cfg)
+	if !one {
+		return Pending, i18n.T("gate.dialect_mixed", mixed)
+	}
 	all, resilient := declaredFailures(content)
 	if len(all) == 0 {
 		return Skip, i18n.T("gate.failure_handled.skip_none")
 	}
-	d := cfg.DialectFor()
 	if len(d.HandlePatterns) == 0 || len(d.LogPatterns) == 0 {
 		return Pending, i18n.T("gate.failure_handled.skip_no_dialect")
 	}
-	code, ok := governedCode(n, root, g, cfg.DialectFor())
+	code, ok := governedCode(n, root, g, d)
 	if !ok {
 		return Pending, i18n.T("gate.failure_handled.pending_no_code")
 	}
@@ -300,7 +329,10 @@ func checkFailureDeclared(content string, n mapx.Node, root string, g *mapx.Grap
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.failure_handled.skip_not_spec")
 	}
-	d := cfg.DialectFor()
+	d, mixed, one := unitDialect(n, g, cfg)
+	if !one {
+		return Pending, i18n.T("gate.dialect_mixed", mixed)
+	}
 	// A unit that CAN fail declares how. The other questions start from what somebody
 	// wrote — a failure declared, a handling coded —, and a unit that consumes a fallible
 	// source and wrote neither passed all of them in silence (reported from MIF: six detail
@@ -323,7 +355,7 @@ func checkFailureDeclared(content string, n mapx.Node, root string, g *mapx.Grap
 	if len(d.HandlePatterns) == 0 {
 		return Pending, i18n.T("gate.failure_handled.skip_no_dialect")
 	}
-	code, ok := governedCode(n, root, g, cfg.DialectFor())
+	code, ok := governedCode(n, root, g, d)
 	if !ok {
 		return Pending, i18n.T("gate.failure_handled.pending_no_code")
 	}
@@ -698,4 +730,36 @@ func propagated(d config.Dialect, c FallibleCall) bool {
 	}
 	m := re.FindStringSubmatchIndex(c.Text)
 	return m != nil && m[2*i] >= 0
+}
+
+// unitDialect is the dialect a unit's code is read with: a code file's own, and for a spec,
+// the one dialect of the code it specifies. A spec whose code is written in several dialects
+// gives false, with their names: its patterns are read over the unit's code as a whole, and
+// one lexicon over another language's files matches nothing and passes them unread.
+func unitDialect(n mapx.Node, g *mapx.Graph, cfg *config.Config) (config.Dialect, string, bool) {
+	if n.Kind != mapx.KindSpec || g == nil || cfg == nil || len(cfg.Dialects) < 2 {
+		return cfg.DialectAt(n.ID), "", true
+	}
+	var at string
+	seen := map[string]bool{}
+	var names []string
+	for _, e := range g.Neighbors(n.ID).Out {
+		if e.Type != mapx.EdgeSpecifies {
+			continue
+		}
+		p := cfg.DialectPathAt(e.To)
+		if !seen[p] {
+			seen[p] = true
+			names = append(names, p)
+			at = e.To
+		}
+	}
+	if len(names) > 1 {
+		sort.Strings(names)
+		return config.Dialect{}, strings.Join(names, ", "), false
+	}
+	if at == "" {
+		return cfg.DialectAt(n.ID), "", true
+	}
+	return cfg.DialectAt(at), "", true
 }

@@ -279,6 +279,45 @@ gates voltam a procurar o código em qualquer ponto do arquivo de teste.
 
 ---
 
+## `dialects` — um projeto em várias linguagens
+
+Um repositório pode ter apps numa linguagem e serviços em outra, para que os gates continuem
+confrontando a spec, o contrato e o código entre elas. Declare o léxico de cada linguagem uma
+vez, por nome, em `dialects:`, e faça cada camada nomear aquele em que seus arquivos são
+escritos:
+
+```yaml
+dialect:
+  gherkin_language: pt        # o que não é de linguagem nenhuma fica aqui
+dialects:
+  ts:
+    family: ts
+    exported_func: '...'
+    tests: { pattern: '...' }
+  go:
+    family: go
+    exported_func: '...'
+    tests: { pattern: '...' }
+layers:
+  screen:  { pattern: "apps/**/*.tsx",          kind: code, dialect: ts }
+  handler: { pattern: "services/**/handler.go", kind: code, dialect: go }
+  go-test: { pattern: "services/**/*_test.go",  kind: test, dialect: go }
+```
+
+- **Um arquivo é lido só com o dialeto da sua camada.** Um arquivo já pertence a uma camada
+  (`priority` desempata dois padrões que casam), e essa camada diz em que ele é escrito.
+- **Ao lado de `dialects:`, `dialect:` guarda só `gherkin_language`, `set_promise` e
+  `set_slice`**: toda feature é escrita num idioma, e um nome promete o conjunto inteiro com as
+  mesmas palavras em qualquer arquivo.
+- **Com vários dialetos, toda camada `code` e `test` nomeia um**, ou a configuração não
+  carrega: um padrão leria Go com o léxico de TS e o aprovaria sem ler. Camadas de spec, feature
+  e doc não nomeiam nenhum.
+- Um projeto de uma linguagem só mantém o seu bloco `dialect:`, sem nada a mudar.
+- O `anchors doctor` aponta a camada com arquivos de uma família diferente da do seu dialeto,
+  com o exemplo dessa família; o `anchors init` propõe um dialeto por família que encontra.
+
+---
+
 ## `changelog` — como o `anchors changelog --write` escreve
 
 ```yaml

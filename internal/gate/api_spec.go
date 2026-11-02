@@ -302,7 +302,7 @@ func checkErrorCodesHonored(_ string, n mapx.Node, root string, g *mapx.Graph, c
 	var body strings.Builder
 	for _, p := range paths {
 		if b, err := readFile(root, p); err == nil {
-			body.WriteString(stripComments(string(b), p, cfg.DialectFor()))
+			body.WriteString(stripComments(string(b), p, cfg.DialectAt(p)))
 			body.WriteString("\n")
 		}
 	}

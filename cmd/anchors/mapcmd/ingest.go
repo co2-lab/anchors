@@ -389,11 +389,22 @@ func IngestArtifactsLate(absRoot, mapPath, junit, lcov, mutation, layer, scope, 
 // no folder, a name no file defines, or one two files define gives no file: guessing would
 // put one test's result on another's node.
 func caseFileResolver(g *mapx.Graph, cfg *config.Config, absRoot string) func(class, name string) string {
-	var def *regexp.Regexp
-	if cfg != nil {
-		if d := cfg.DialectFor().Definition; strings.TrimSpace(d) != "" {
-			def, _ = regexp.Compile(d)
+	// Each test file is read by its own dialect's `definition`.
+	defs := map[string]*regexp.Regexp{}
+	defOf := func(id string) *regexp.Regexp {
+		if cfg == nil {
+			return nil
 		}
+		d := cfg.DialectAt(id).Definition
+		if re, ok := defs[d]; ok {
+			return re
+		}
+		var re *regexp.Regexp
+		if strings.TrimSpace(d) != "" {
+			re, _ = regexp.Compile(d)
+		}
+		defs[d] = re
+		return re
 	}
 	testsByDir := map[string][]string{}
 	for _, n := range g.Nodes {
@@ -404,7 +415,7 @@ func caseFileResolver(g *mapx.Graph, cfg *config.Config, absRoot string) func(cl
 	}
 	definedIn := map[string]map[string][]string{} // folder → defined name → files
 	return func(class, name string) string {
-		if def == nil || class == "" || name == "" {
+		if class == "" || name == "" {
 			return ""
 		}
 		sep := "/"
@@ -436,6 +447,10 @@ func caseFileResolver(g *mapx.Graph, cfg *config.Config, absRoot string) func(cl
 				b, err := os.ReadFile(filepath.Join(absRoot, filepath.FromSlash(id)))
 				if err != nil {
 					continue // @resilient: an unreadable test file defines nothing here; the map notices a missing file
+				}
+				def := defOf(id)
+				if def == nil {
+					continue
 				}
 				owner := def.SubexpIndex("owner")
 				for _, m := range def.FindAllStringSubmatch(string(b), -1) {

@@ -460,3 +460,34 @@ func TestFailureDeclared_genericCall(t *testing.T) {
 		t.Errorf("a pattern with no name group fails, saying to declare it: %v %s", v, msg)
 	}
 }
+
+// A unit is read with its code's dialect; a unit whose code is in two languages is read with
+// neither, and says so — one lexicon over the other language's files reads nothing and passes.
+func TestFailureGates_readTheUnitsDialect(t *testing.T) {
+	t.Run("FLRAI-B27: The failure gates read a unit's code with its dialect, and are pending naming them when it is written in several", func(t *testing.T) {})
+	root := t.TempDir()
+	write := func(rel, body string) {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("services/api/pay.go", "func f() error {\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn nil\n}\n")
+	write("apps/web/pay.ts", "export const f = () => 1\n")
+	cfg := testkit.TwoDialects()
+	n := mapx.Node{ID: "services/api/pay.spec.md", Kind: mapx.KindSpec}
+	goOnly := &mapx.Graph{Edges: []mapx.Edge{{From: n.ID, To: "services/api/pay.go", Type: mapx.EdgeSpecifies}}}
+	if v, msg := checkFailureHandled(specWithFailure, n, root, goOnly, cfg); v != Pass {
+		t.Errorf("a Go unit is read with the Go dialect, whose handling it has: %v (%s)", v, msg)
+	}
+	both := &mapx.Graph{Edges: append(goOnly.Edges, mapx.Edge{From: n.ID, To: "apps/web/pay.ts", Type: mapx.EdgeSpecifies})}
+	for name, check := range map[string]func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string){
+		"failure-handled": checkFailureHandled, "failure-logged": checkFailureLogged, "failure-declared": checkFailureDeclared,
+	} {
+		if v, msg := check(specWithFailure, n, root, both, cfg); v != Pending || !strings.Contains(msg, "dialects.go, dialects.ts") {
+			t.Errorf("%s: a unit in two dialects is pending naming them, got %v (%s)", name, v, msg)
+		}
+	}
+}

@@ -21,16 +21,16 @@ import (
 
 func TestProjectTests_SourceResolution(t *testing.T) {
 	t.Run("PRJTS-B01: The project's own source wins over its family's, and neither declares nothing", func(t *testing.T) {})
-	ts := testsSource(testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}}))
+	ts := testsSource(testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}}), "a_test.ts")
 	if ts.Pattern == "" || ts.Script != "" {
 		t.Errorf("a ts project reads through its family's pattern, got %+v", ts)
 	}
-	own := testsSource(testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts", Tests: &config.TestsSource{Script: "list"}}}))
+	own := testsSource(testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts", Tests: &config.TestsSource{Script: "list"}}}), "a_test.ts")
 	if own != (testlist.Source{Script: "list"}) {
 		t.Errorf("the project's own script wins, got %+v", own)
 	}
 	for _, cfg := range []*config.Config{nil, {Dialect: &config.Dialect{Family: "python"}}} {
-		if testsSource(cfg).Declared() {
+		if testsSource(cfg, "a_test.ts").Declared() {
 			t.Errorf("%+v declares no source", cfg)
 		}
 	}
@@ -214,5 +214,33 @@ func TestProjectTests_offered(t *testing.T) {
 	tests, declared, err := ProjectTests(root, g, testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "go"}}))
 	if err != nil || !declared || len(tests) != 1 || tests[0].Title != "PAYUN-B01: pays" || tests[0].File != "a_test.go" {
 		t.Errorf("got %v %v %v", tests, declared, err)
+	}
+}
+
+func TestProjectTests_eachFileByItsDialect(t *testing.T) {
+	t.Run("PRJTS-B09: In a project of several dialects each test file is read by its own dialect's source, and the tests found are united", func(t *testing.T) {})
+	resetProjectTestsCache()
+	t.Cleanup(resetProjectTestsCache)
+	root := t.TempDir()
+	for rel, body := range map[string]string{
+		"services/api/pay_test.go": "t.Run(\"go case\", nil)\n// it('not a go test')\n",
+		"apps/web/pay.test.ts":     "it('ts case', () => {})\n// t.Run(\"not a ts test\", nil)\n",
+	} {
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "services/api/pay_test.go", Kind: mapx.KindTest}, {ID: "apps/web/pay.test.ts", Kind: mapx.KindTest}}}
+	tests, declared, err := projectTests(root, g, testkit.TwoDialects())
+	got := map[string]string{}
+	for _, tc := range tests {
+		got[tc.Title] = tc.File
+	}
+	if err != nil || !declared || len(got) != 2 || got["go case"] != "services/api/pay_test.go" || got["ts case"] != "apps/web/pay.test.ts" {
+		t.Errorf("each file by its own source, united: %v (%v, %v)", got, declared, err)
 	}
 }

@@ -242,7 +242,7 @@ func checkNavAnnotated(content string, n mapx.Node, root string, g *mapx.Graph, 
 	if !chainUnit(n) {
 		return Skip, i18n.T("gate.dep_chain.skip_not_code")
 	}
-	d := cfg.DialectFor()
+	d := cfg.DialectAt(n.ID)
 	if navigationCallRE(d) == nil {
 		return Pending, i18n.T("gate.nav_chain.pending_no_pattern")
 	}
@@ -516,7 +516,7 @@ func fixNavFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 	if !chainUnit(n) || g == nil {
 		return content, false, ""
 	}
-	d := fixConfig.DialectFor()
+	d := fixConfig.DialectAt(n.ID)
 	idx := screensOf(root, g)
 	lines := strings.Split(content, "\n")
 	cs := d.CommentsFor(n.ID)

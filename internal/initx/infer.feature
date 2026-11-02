@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTB
 #   ref: INPRN
-#   updated_at: 2026-10-11
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @INPRN
@@ -116,3 +116,8 @@ Feature: InferProposal — walks the project and proposes its structure determin
     When the project is inferred
     Then the core and the stubs are candidate code directories, and the OCaml and C extensions are code extensions
 
+  @INPRN-B15 @unit-level
+  Scenario: Each root's family is read
+    Given a TS root and a Go root
+    When the project is inferred
+    Then each root has its family, and two dialects are proposed

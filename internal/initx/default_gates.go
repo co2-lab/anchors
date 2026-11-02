@@ -955,13 +955,7 @@ func SeedFor(cfg *config.Config, gates []config.Gate, chosen map[string]bool) []
 		if !related {
 			continue
 		}
-		presupposed := true
-		for _, p := range g.Presupposes {
-			if !cfg.Declares(p) {
-				presupposed = false
-			}
-		}
-		if presupposed {
+		if missing, _ := cfg.Premises(g); len(missing) == 0 {
 			out = append(out, g)
 		}
 	}

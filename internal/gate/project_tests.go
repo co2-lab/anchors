@@ -26,9 +26,12 @@ import (
 // An error — a script that fails, output outside the contract — is the caller's to
 // report: the tests could not be read, and answering as if there were none would be the
 // silence the gates exist to break.
+//
+// In a project of several dialects each test file is read by its own dialect's source — a Go
+// test by the Go pattern, a TS one by the TS script —, and the tests found are united. A file
+// whose dialect declares no source is left unread, as in a project that declares none.
 func projectTests(root string, g *mapx.Graph, cfg *config.Config) (tests []testlist.Test, declared bool, err error) {
-	src := testsSource(cfg)
-	if !src.Declared() {
+	if !anyTestsSource(cfg) {
 		return nil, false, nil
 	}
 	ptMu.Lock()
@@ -36,12 +39,26 @@ func projectTests(root string, g *mapx.Graph, cfg *config.Config) (tests []testl
 	if ptOK && ptRoot == root && ptGraph == g && ptCfg == cfg {
 		return ptTests, true, ptErr
 	}
-	var files []string
+	var sources []testlist.Source
+	files := map[testlist.Source][]string{}
+	if len(cfg.Dialects) < 2 {
+		// One dialect: its source reads every test file, as it always has — a script is run
+		// even when the map holds none, and lists what it lists.
+		sources = []testlist.Source{testsSource(cfg, "")}
+	}
 	if g != nil {
 		for _, n := range g.Nodes {
-			if n.Kind == mapx.KindTest && !n.Support {
-				files = append(files, n.ID)
+			if n.Kind != mapx.KindTest || n.Support {
+				continue
 			}
+			src := testsSource(cfg, n.ID)
+			if !src.Declared() {
+				continue
+			}
+			if _, seen := files[src]; !seen && len(cfg.Dialects) >= 2 {
+				sources = append(sources, src)
+			}
+			files[src] = append(files[src], n.ID)
 		}
 	}
 	// Under `--index` a test's line must be a line of the content the gates read: a pattern
@@ -54,9 +71,16 @@ func projectTests(root string, g *mapx.Graph, cfg *config.Config) (tests []testl
 	if source != nil {
 		read = func(rel string) ([]byte, error) { return readFile(root, rel) }
 	}
-	tests, err = testlist.ListFrom(root, files, src, read)
-	if source != nil && src.Script != "" && err == nil {
-		tests = sameAsSource(root, tests)
+	for _, src := range sources {
+		found, lerr := testlist.ListFrom(root, files[src], src, read)
+		if lerr != nil {
+			err = lerr
+			break
+		}
+		if source != nil && src.Script != "" {
+			found = sameAsSource(root, found)
+		}
+		tests = append(tests, found...)
 	}
 	ptRoot, ptGraph, ptCfg, ptTests, ptErr, ptOK = root, g, cfg, tests, err, true
 	return tests, true, err
@@ -69,16 +93,28 @@ func ProjectTests(root string, g *mapx.Graph, cfg *config.Config) ([]testlist.Te
 	return projectTests(root, g, cfg)
 }
 
-// testsSource is the effective `tests` source of the project's dialect: its own, or its
-// family's.
-func testsSource(cfg *config.Config) testlist.Source {
+// testsSource is the `tests` source of the dialect a file is written in.
+func testsSource(cfg *config.Config, rel string) testlist.Source {
 	if cfg == nil {
 		return testlist.Source{}
 	}
-	if t := cfg.DialectFor().Tests; t != nil {
+	if t := cfg.DialectAt(rel).Tests; t != nil {
 		return testlist.Source{Pattern: t.Pattern, Script: t.Script}
 	}
 	return testlist.Source{}
+}
+
+// anyTestsSource says whether some dialect of the project declares how its tests are written.
+func anyTestsSource(cfg *config.Config) bool {
+	if cfg == nil {
+		return false
+	}
+	for _, name := range cfg.DialectNames() {
+		if t := cfg.Lexicon(name).Tests; t != nil && (testlist.Source{Pattern: t.Pattern, Script: t.Script}).Declared() {
+			return true
+		}
+	}
+	return false
 }
 
 // testsIn keeps the tests of the given files, in the order the files are given and, in

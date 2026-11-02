@@ -1046,7 +1046,7 @@ func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string, cf
 		}
 	}
 	for _, tp := range unread {
-		body, ok := strippedTest(root, g, tp, cfg.DialectFor())
+		body, ok := strippedTest(root, g, tp, cfg.DialectAt(tp))
 		if !ok {
 			continue
 		}

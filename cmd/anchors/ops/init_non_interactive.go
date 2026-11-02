@@ -192,6 +192,8 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta,
 	}
 	colocado, _ := valor("colocation").(bool)
 	initx.ApplyColocation(cfg, colocado, artefatos, p.TestTemplate())
+	// Roots in several languages: a test layer per family, each naming its dialect.
+	p.ApplyDialects(cfg)
 
 	// Only an ANSWERED `--layers` prunes. The untouched default means "keep every code
 	// layer", which is the TUI's pre-selection.

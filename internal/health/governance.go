@@ -36,18 +36,8 @@ func checkGovernanceOpportunities(g *mapx.Graph, cfg *config.Config) []Finding {
 		gateMap[gt.Name] = gt
 	}
 
-	// 0. fallible patterns: the family knows what can fail here, and the project declared
-	// nothing — the failure gates do not see a fetch that nobody handles. Declining is
-	// writing `fallible_patterns: []`, which silences this tip.
-	if hasKind[mapx.KindCode] && cfg.Dialect != nil && cfg.Dialect.FalliblePatterns == nil {
-		if fam := config.FamilyFalliblePatterns(cfg.Dialect.Family); len(fam) > 0 {
-			out = append(out, Finding{
-				Check:    "sugestao-fallible",
-				Severity: Info,
-				Subject:  "fallible_patterns",
-				Detail:   i18n.T("health.opportunity.fallible_patterns", cfg.Dialect.Family, len(fam), fallibleYAML(fam)),
-			})
-		}
+	for _, v := range dialectViews(cfg) {
+		out = append(out, v.rename(fallibleOpportunity(v.cfg, hasKind))...)
 	}
 
 	// 0a. comments: the files of the map whose comments the project does not declare — their
@@ -75,104 +65,13 @@ func checkGovernanceOpportunities(g *mapx.Graph, cfg *config.Config) []Finding {
 		})
 	}
 
-	// 0a'. the lexicon: a declared gate presupposes a field of the language's lexicon the
-	// project left empty — the gate is pending, since the core reads no syntax of its own.
-	// The family's example shows each one, to adapt.
-	if lex := lexiconMissing(cfg); len(lex) > 0 {
-		names := make([]string, 0, len(lex))
-		for k := range lex {
-			names = append(names, "`dialect."+k+"`")
-		}
-		sort.Strings(names)
-		out = append(out, Finding{
-			Check:    "sugestao-lexicon",
-			Severity: Info,
-			Subject:  "lexicon",
-			Detail:   i18n.T("health.opportunity.lexicon", cfg.Dialect.Family, strings.Join(names, ", "), dialectBlockYAML(lex)),
-		})
-	}
+	// 0a''. a layer of another language: its files are of a family its dialect's is not —
+	// a Go service in a project whose one dialect is TS —, and that dialect's lexicon reads
+	// nothing of them (DLPLY-D02).
+	out = append(out, foreignLayers(g, cfg)...)
 
-	// 0b. test handles: a handle gate is declared and the project says nothing of how its
-	// code exposes a handle — the gate is pending, since the core reads no syntax of its
-	// own. The family's example shows how to write it, for the attribute the project marks
-	// its elements with.
-	if cfg.Dialect == nil || cfg.Dialect.TestHandles == nil {
-		for _, name := range []string{"testid-consistent", "testid-queried-exists", "identity-consistent"} {
-			if _, ok := gateMap[name]; !ok {
-				continue
-			}
-			family, attr := "", "testID"
-			if cfg.Dialect != nil {
-				family = cfg.Dialect.Family
-			}
-			if cfg.Derived != nil && strings.TrimSpace(cfg.Derived.TestHandle) != "" {
-				attr = strings.TrimSpace(cfg.Derived.TestHandle)
-			}
-			example := config.FamilyTestHandles(family, attr)
-			if example == nil {
-				example = config.FamilyTestHandles("ts", attr)
-			}
-			out = append(out, Finding{
-				Check:    "sugestao-test-handles",
-				Severity: Info,
-				Subject:  "test_handles",
-				Detail:   i18n.T("health.opportunity.test_handles", name, testHandlesYAML(example)),
-			})
-			break
-		}
-	}
-
-	// 0c. chain patterns: a chain gate is declared and the project says nothing of how its
-	// imports are written — the gates are pending. The family's example shows how.
-	if cfg.Dialect == nil || len(cfg.Dialect.Imports) == 0 {
-		var chain []string
-		for _, name := range []string{"dep-declared", "dep-honored", "used-by-declared"} {
-			if _, ok := gateMap[name]; ok {
-				chain = append(chain, name)
-			}
-		}
-		family := ""
-		if cfg.Dialect != nil {
-			family = cfg.Dialect.Family
-		}
-		if ex := config.FamilyChain(family); len(chain) > 0 && ex != nil {
-			block := map[string]any{"imports": ex.Imports}
-			if len(ex.ImportNames) > 0 {
-				block["import_names"] = ex.ImportNames
-			}
-			if len(ex.Declarations) > 0 {
-				block["declarations"] = ex.Declarations
-			}
-			if ex.TypeImportPattern != "" {
-				block["type_import_pattern"] = ex.TypeImportPattern
-			}
-			if ex.ImportResolve != nil && (cfg.Dialect == nil || cfg.Dialect.ImportResolve == nil) {
-				block["import_resolve"] = ex.ImportResolve
-			}
-			out = append(out, Finding{
-				Check:    "sugestao-chain-patterns",
-				Severity: Info,
-				Subject:  "chain_patterns",
-				Detail:   i18n.T("health.opportunity.chain_patterns", strings.Join(chain, ", "), dialectBlockYAML(block)),
-			})
-		}
-	}
-
-	// 0d. navigation call: nav-annotated is declared and the project says nothing of how a
-	// navigation call is written — the gate is pending. The family's example shows how.
-	if _, ok := gateMap["nav-annotated"]; ok && (cfg.Dialect == nil || strings.TrimSpace(cfg.Dialect.NavigationCall) == "") {
-		family := ""
-		if cfg.Dialect != nil {
-			family = cfg.Dialect.Family
-		}
-		if ex := config.FamilyNavigationCall(family); ex != "" {
-			out = append(out, Finding{
-				Check:    "sugestao-navigation-call",
-				Severity: Info,
-				Subject:  "navigation_call",
-				Detail:   i18n.T("health.opportunity.navigation_call", dialectBlockYAML(map[string]any{"navigation_call": ex})),
-			})
-		}
+	for _, v := range dialectViews(cfg) {
+		out = append(out, v.rename(lexiconOpportunities(v.cfg, gateMap))...)
 	}
 
 	// 1. evidence-fresh: projeto tem testes e código, mas não monitora frescor (teste stale)
@@ -404,4 +303,219 @@ func appendComments(list []config.Comments, c config.Comments) []config.Comments
 		}
 	}
 	return append(list, c)
+}
+
+// dialectView is one dialect of the project seen as a project of that dialect alone, for the
+// tips that compare a dialect with its family's example; `prefix` is where it is declared.
+type dialectView struct {
+	cfg    *config.Config
+	prefix string
+}
+
+// dialectViews are the project's dialects: its one `dialect:`, or each of `dialects:`.
+func dialectViews(cfg *config.Config) []dialectView {
+	if len(cfg.Dialects) == 0 {
+		return []dialectView{{cfg, "dialect"}}
+	}
+	var out []dialectView
+	for _, name := range cfg.DialectNames() {
+		view := &config.Config{Dialect: cfg.Dialects[name], Gates: cfg.Gates, Derived: cfg.Derived, Layers: cfg.Layers}
+		out = append(out, dialectView{view, "dialects." + name})
+	}
+	return out
+}
+
+// rename writes the tips of a dialect of `dialects:` at its place: `dialect.x` and
+// `dialect:` become `dialects.<name>.x` and `dialects.<name>:` in every language, the keys
+// of the file being no words of a language.
+func (v dialectView) rename(fs []Finding) []Finding {
+	if v.prefix == "dialect" {
+		return fs
+	}
+	for i := range fs {
+		fs[i].Detail = strings.NewReplacer("`dialect.", "`"+v.prefix+".", "`dialect:`", "`"+v.prefix+":`").Replace(fs[i].Detail)
+		fs[i].Subject = v.prefix + "." + fs[i].Subject
+	}
+	return fs
+}
+
+// fallibleOpportunity: the family knows what can fail here, and the dialect declared
+// nothing — the failure gates do not see a fetch that nobody handles. Declining is writing
+// `fallible_patterns: []`, which silences this tip.
+func fallibleOpportunity(cfg *config.Config, hasKind map[mapx.Kind]bool) []Finding {
+	var out []Finding
+	if hasKind[mapx.KindCode] && cfg.Dialect != nil && cfg.Dialect.FalliblePatterns == nil {
+		if fam := config.FamilyFalliblePatterns(cfg.Dialect.Family); len(fam) > 0 {
+			out = append(out, Finding{
+				Check:    "sugestao-fallible",
+				Severity: Info,
+				Subject:  "fallible_patterns",
+				Detail:   i18n.T("health.opportunity.fallible_patterns", cfg.Dialect.Family, len(fam), fallibleYAML(fam)),
+			})
+		}
+	}
+
+	return out
+}
+
+// lexiconOpportunities: the tips of a dialect's lexicon, test handles, chain patterns and
+// navigation call, against its family's example.
+func lexiconOpportunities(cfg *config.Config, gateMap map[string]config.Gate) []Finding {
+	var out []Finding
+	// 0a'. the lexicon: a declared gate presupposes a field of the language's lexicon the
+	// project left empty — the gate is pending, since the core reads no syntax of its own.
+	// The family's example shows each one, to adapt.
+	if lex := lexiconMissing(cfg); len(lex) > 0 {
+		names := make([]string, 0, len(lex))
+		for k := range lex {
+			names = append(names, "`dialect."+k+"`")
+		}
+		sort.Strings(names)
+		out = append(out, Finding{
+			Check:    "sugestao-lexicon",
+			Severity: Info,
+			Subject:  "lexicon",
+			Detail:   i18n.T("health.opportunity.lexicon", cfg.Dialect.Family, strings.Join(names, ", "), dialectBlockYAML(lex)),
+		})
+	}
+
+	// 0b. test handles: a handle gate is declared and the project says nothing of how its
+	// code exposes a handle — the gate is pending, since the core reads no syntax of its
+	// own. The family's example shows how to write it, for the attribute the project marks
+	// its elements with.
+	if cfg.Dialect == nil || cfg.Dialect.TestHandles == nil {
+		for _, name := range []string{"testid-consistent", "testid-queried-exists", "identity-consistent"} {
+			if _, ok := gateMap[name]; !ok {
+				continue
+			}
+			family, attr := "", "testID"
+			if cfg.Dialect != nil {
+				family = cfg.Dialect.Family
+			}
+			if cfg.Derived != nil && strings.TrimSpace(cfg.Derived.TestHandle) != "" {
+				attr = strings.TrimSpace(cfg.Derived.TestHandle)
+			}
+			example := config.FamilyTestHandles(family, attr)
+			if example == nil {
+				example = config.FamilyTestHandles("ts", attr)
+			}
+			out = append(out, Finding{
+				Check:    "sugestao-test-handles",
+				Severity: Info,
+				Subject:  "test_handles",
+				Detail:   i18n.T("health.opportunity.test_handles", name, testHandlesYAML(example)),
+			})
+			break
+		}
+	}
+
+	// 0c. chain patterns: a chain gate is declared and the project says nothing of how its
+	// imports are written — the gates are pending. The family's example shows how.
+	if cfg.Dialect == nil || len(cfg.Dialect.Imports) == 0 {
+		var chain []string
+		for _, name := range []string{"dep-declared", "dep-honored", "used-by-declared"} {
+			if _, ok := gateMap[name]; ok {
+				chain = append(chain, name)
+			}
+		}
+		family := ""
+		if cfg.Dialect != nil {
+			family = cfg.Dialect.Family
+		}
+		if ex := config.FamilyChain(family); len(chain) > 0 && ex != nil {
+			block := map[string]any{"imports": ex.Imports}
+			if len(ex.ImportNames) > 0 {
+				block["import_names"] = ex.ImportNames
+			}
+			if len(ex.Declarations) > 0 {
+				block["declarations"] = ex.Declarations
+			}
+			if ex.TypeImportPattern != "" {
+				block["type_import_pattern"] = ex.TypeImportPattern
+			}
+			if ex.ImportResolve != nil && (cfg.Dialect == nil || cfg.Dialect.ImportResolve == nil) {
+				block["import_resolve"] = ex.ImportResolve
+			}
+			out = append(out, Finding{
+				Check:    "sugestao-chain-patterns",
+				Severity: Info,
+				Subject:  "chain_patterns",
+				Detail:   i18n.T("health.opportunity.chain_patterns", strings.Join(chain, ", "), dialectBlockYAML(block)),
+			})
+		}
+	}
+
+	// 0d. navigation call: nav-annotated is declared and the project says nothing of how a
+	// navigation call is written — the gate is pending. The family's example shows how.
+	if _, ok := gateMap["nav-annotated"]; ok && (cfg.Dialect == nil || strings.TrimSpace(cfg.Dialect.NavigationCall) == "") {
+		family := ""
+		if cfg.Dialect != nil {
+			family = cfg.Dialect.Family
+		}
+		if ex := config.FamilyNavigationCall(family); ex != "" {
+			out = append(out, Finding{
+				Check:    "sugestao-navigation-call",
+				Severity: Info,
+				Subject:  "navigation_call",
+				Detail:   i18n.T("health.opportunity.navigation_call", dialectBlockYAML(map[string]any{"navigation_call": ex})),
+			})
+		}
+	}
+
+	return out
+}
+
+// foreignLayers are the layers of code or tests holding files of a family their dialect's is
+// not, each with the example of the family of its files to declare under `dialects:` and name
+// on the layer. A dialect with no family tells nothing to compare.
+func foreignLayers(g *mapx.Graph, cfg *config.Config) []Finding {
+	type key struct{ layer, fam string }
+	count := map[key]int{}
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindCode && n.Kind != mapx.KindTest {
+			continue
+		}
+		fam := config.FamilyOfFile(n.ID)
+		have := strings.ToLower(cfg.DialectOfLayer(n.Layer).Family)
+		if fam == "" || have == "" || fam == have {
+			continue
+		}
+		count[key{n.Layer, fam}]++
+	}
+	keys := make([]key, 0, len(count))
+	for k := range count {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		if keys[i].layer != keys[j].layer {
+			return keys[i].layer < keys[j].layer
+		}
+		return keys[i].fam < keys[j].fam
+	})
+	var out []Finding
+	for _, k := range keys {
+		example := ""
+		if ex := config.FamilyLexicon(k.fam); ex != nil {
+			ex.Family = k.fam
+			example = dialectBlockYAML(map[string]any{k.fam: fieldsOf(ex)})
+		}
+		out = append(out, Finding{
+			Check:    "sugestao-dialeto-camada",
+			Severity: Info,
+			Subject:  k.layer,
+			Detail: i18n.T("health.opportunity.foreign_layer", k.layer, count[k], k.fam,
+				cfg.DialectPathAt(firstOf(g, k.layer)), cfg.DialectOfLayer(k.layer).Family, k.fam, example),
+		})
+	}
+	return out
+}
+
+// firstOf is a file of the layer, to name where its dialect is declared.
+func firstOf(g *mapx.Graph, layer string) string {
+	for _, n := range g.Nodes {
+		if n.Layer == layer {
+			return n.ID
+		}
+	}
+	return ""
 }

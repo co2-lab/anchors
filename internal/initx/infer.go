@@ -43,6 +43,10 @@ type Proposal struct {
 	// TestConventions are the test-naming conventions the project's own test files
 	// follow, most used first.
 	TestConventions []TestConvention
+	// DirFamily is the family of each code root, by its most common code extension: a
+	// project whose roots are written in several gets one dialect per family, each layer
+	// naming its own (DESIGN-dialect-per-layer.md).
+	DirFamily map[string]string
 }
 
 // knownHandles — os atributos de ancoragem de teste dos ecossistemas correntes,
@@ -64,6 +68,7 @@ func Infer(root string) (*Proposal, error) {
 	stems := map[string]map[string]bool{} // stem → conjunto de tipos (code/spec/feature/test)
 	handleCount := map[string]int{}       // atributo de ancoragem → ocorrências na amostra
 	conventionCount := map[TestConvention]int{}
+	dirFamily := map[string]map[string]int{} // diretório-raiz → família → nº de arquivos de código
 	lidosParaHandle := 0
 
 	// The proposal sees what the map will see: the same ignore as the scan — the project's
@@ -120,6 +125,12 @@ func Infer(root string) (*Proposal, error) {
 			ext := filepath.Ext(name)
 			extCount[ext]++
 			dirCode[topDir(rel)]++
+			if f, ok := extFamily[ext]; ok {
+				if dirFamily[topDir(rel)] == nil {
+					dirFamily[topDir(rel)] = map[string]int{}
+				}
+				dirFamily[topDir(rel)][f]++
+			}
 			mark(stems, stemOf(rel), "code")
 			// Detecção do handle de teste. Amostra os primeiros arquivos de código em
 			// vez de ler o repositório inteiro: o atributo, quando existe, é onipresente
@@ -145,6 +156,12 @@ func Infer(root string) (*Proposal, error) {
 	p.Colocated = detectColocation(stems)
 	p.TestHandle = handleDominante(handleCount)
 	p.Family = detectFamily(root, extCount)
+	p.DirFamily = map[string]string{}
+	for _, dir := range p.CodeDirs {
+		if fams := topKeys(dirFamily[dir], 1); len(fams) > 0 {
+			p.DirFamily[dir] = fams[0]
+		}
+	}
 	p.TestConventions = rankConventions(conventionCount)
 	sort.Strings(p.GuideFiles)
 

@@ -195,6 +195,8 @@ func runInit(root string) error {
 	}
 	useColocation := askConfirmDefault(title, p.Colocated)
 	initx.ApplyColocation(cfg, useColocation, chosenArtifacts, p.TestTemplate())
+	// Roots in several languages: a test layer per family, each naming its dialect.
+	p.ApplyDialects(cfg)
 
 	// 3) CAMADAS DE CÓDIGO — sempre perguntado se há dirs detectados; se vazio, avisa.
 	if names := initx.CodeLayerNames(cfg); len(names) > 0 {
