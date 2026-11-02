@@ -382,7 +382,14 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, layer, n
 					covered = append(covered, line)
 				}
 			}
-			n.Signal.CoverageBySuite[suite] = SuiteCoverage{
+			// A new measurement replaces the old ones (the user, 2026-11-02): a suite measured
+			// against another revision, or a report older than the file, says nothing of these
+			// lines, and kept beside a fresh one it held the node stale until that very suite
+			// ran again (reported from MIF). A report older than the file is itself the old
+			// measurement: beside a fresh one — of any suite, its own included — it is dropped,
+			// and alone it is kept with no revision, which neither joins the union nor passes
+			// for fresh.
+			entry := SuiteCoverage{
 				Instrumented: encodeRanges(instrumented),
 				Covered:      encodeRanges(covered),
 				CoveredLines: cov.Covered,
@@ -392,10 +399,19 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, layer, n
 				AtRev:        n.Rev,
 				Layer:        layer,
 			}
-			if cov.Predates {
-				e := n.Signal.CoverageBySuite[suite]
-				e.AtRev = ""
-				n.Signal.CoverageBySuite[suite] = e
+			switch {
+			case cov.Predates && freshMeasurement(n.Signal.CoverageBySuite, n.Rev):
+				// the older report, beside a measurement of this text: nothing to keep
+			case cov.Predates:
+				entry.AtRev = ""
+				n.Signal.CoverageBySuite[suite] = entry
+			default:
+				for other, sc := range n.Signal.CoverageBySuite {
+					if sc.AtRev != n.Rev {
+						delete(n.Signal.CoverageBySuite, other)
+					}
+				}
+				n.Signal.CoverageBySuite[suite] = entry
 			}
 			c, t := unionCoverage(n.Signal.CoverageBySuite, n.Rev)
 			n.Signal.CoveredLines, n.Signal.TotalLines = c, t
@@ -407,6 +423,16 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, layer, n
 		}
 	}
 	return
+}
+
+// freshMeasurement says whether a suite measured the current revision.
+func freshMeasurement(bySuite map[string]SuiteCoverage, currentRev string) bool {
+	for _, sc := range bySuite {
+		if sc.AtRev == currentRev {
+			return true
+		}
+	}
+	return false
 }
 
 // unionCoverage computes covered/total over the union of the suites' lines.

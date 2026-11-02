@@ -422,17 +422,21 @@ func TestIngestCoverageSuite_sameSuiteReplaces(t *testing.T) {
 	}
 }
 
-// The coverage one suite measured on an OLDER rev keeps the node stale — the lesson of
-// ProvenBySuite, applied here from the start.
-func TestIngestCoverageSuite_staleSuiteKeepsNodeStale(t *testing.T) {
-	t.Run("SGINA-B12: A suite measured before the edit stays out of the union", func(t *testing.T) {})
+// A new measurement replaces the old ones: the coverage one suite measured on an OLDER rev
+// held the node stale beside a fresh one until that very suite ran again (the user,
+// 2026-11-02). Alone, it still says the node is stale.
+func TestIngestCoverageSuite_aNewMeasurementReplacesTheOld(t *testing.T) {
+	t.Run("SGINA-B12: Only the suites measured at the current revision join the union, and a measurement at it replaces those measured at another", func(t *testing.T) {})
 	g := &Graph{Nodes: []Node{{ID: "a.ts", Kind: KindCode, Rev: "r1"}}}
 	g.IngestCoverageSuite(map[string]FileCov{"a.ts": {Covered: 1, Total: 2, Lines: coverageLines([]int{1}, []int{2})}}, "unit.info", "t1")
 	g.Nodes[0].Rev = "r2"
-	g.IngestCoverageSuite(map[string]FileCov{"a.ts": {Covered: 1, Total: 2, Lines: coverageLines([]int{2}, []int{1})}}, "integration.info", "t2")
-
 	if !g.Nodes[0].SignalStale() {
-		t.Error("the unit coverage was measured at r1 and the node was reported fresh at r2")
+		t.Error("the unit coverage was measured at r1, and with nothing measured since the node is stale at r2")
+	}
+	g.IngestCoverageSuite(map[string]FileCov{"a.ts": {Covered: 1, Total: 2, Lines: coverageLines([]int{2}, []int{1})}}, "integration.info", "t2")
+	sig := g.Nodes[0].Signal
+	if g.Nodes[0].SignalStale() || len(sig.CoverageBySuite) != 1 || sig.CoverageBySuite["integration.info"].AtRev != "r2" {
+		t.Errorf("the measurement at r2 replaces the one at r1: %+v", sig.CoverageBySuite)
 	}
 }
 
@@ -468,7 +472,7 @@ func TestRanges_roundTrip(t *testing.T) {
 // the fresh suite's mixes two texts. The reference case: unit fresh at 73/75, integration stale at
 // 0/76 — the union read 73/106 = 69% on a file covered at 97%.
 func TestIngestCoverageSuite_staleSuiteLinesDoNotJoinTheUnion(t *testing.T) {
-	t.Run("SGINA-B12: A suite measured before the edit stays out of the union", func(t *testing.T) {})
+	t.Run("SGINA-B12: Only the suites measured at the current revision join the union, and a measurement at it replaces those measured at another", func(t *testing.T) {})
 	g := &Graph{Nodes: []Node{{ID: "handler.ts", Kind: KindCode, Rev: "old"}}}
 	var oldLines []int
 	for l := 1; l <= 76; l++ {
@@ -489,28 +493,35 @@ func TestIngestCoverageSuite_staleSuiteLinesDoNotJoinTheUnion(t *testing.T) {
 		t.Errorf("only the fresh suite speaks of the current lines: want 73/75, got %d/%d (%.0f%%)",
 			sig.CoveredLines, sig.TotalLines, sig.LineCoverage)
 	}
-	if !g.Nodes[0].SignalStale() {
-		t.Error("the integration suite has not re-measured the new rev, and the node reads fresh")
+	if _, kept := sig.CoverageBySuite["integration.info"]; kept || g.Nodes[0].SignalStale() {
+		t.Error("the measurement of the new rev replaces the integration suite's of the old one")
 	}
 }
 
-// A report written before the file's current content is ingested with no rev: it neither joins
-// the union nor passes for fresh, even when ingested today.
+// A report written before the file's current content is ingested with no rev: alone, it
+// neither joins the union nor passes for fresh, even when ingested today; it is the old
+// measurement, so a fresh one replaces it, and beside a fresh one it is dropped.
 func TestIngestCoverageSuite_reportThatPredatesTheFileIsNotFresh(t *testing.T) {
-	t.Run("SGINA-B13: A report older than the file is kept without a revision", func(t *testing.T) {})
+	t.Run("SGINA-B13: A report older than the file is kept without a revision alone, and dropped beside a measurement of the current one", func(t *testing.T) {})
+	predating := map[string]FileCov{"handler.ts": {Covered: 0, Total: 4, Lines: coverageLines(nil, []int{31, 32, 33, 34}), Predates: true}}
+	fresh := map[string]FileCov{"handler.ts": {Covered: 3, Total: 4, Lines: coverageLines([]int{1, 2, 3}, []int{4})}}
 	g := &Graph{Nodes: []Node{{ID: "handler.ts", Kind: KindCode, Rev: "new"}}}
-	g.IngestCoverageSuite(map[string]FileCov{"handler.ts": {Covered: 0, Total: 4, Lines: coverageLines(nil, []int{31, 32, 33, 34}), Predates: true}}, "integration.info", "t1")
-	g.IngestCoverageSuite(map[string]FileCov{"handler.ts": {Covered: 3, Total: 4, Lines: coverageLines([]int{1, 2, 3}, []int{4})}}, "unit.info", "t2")
-
+	g.IngestCoverageSuite(predating, "integration.info", "t1")
 	sig := g.Nodes[0].Signal
-	if got := sig.CoverageBySuite["integration.info"].AtRev; got != "" {
-		t.Errorf("a report older than the file was stamped with rev %q", got)
+	if e, kept := sig.CoverageBySuite["integration.info"]; !kept || e.AtRev != "" || !g.Nodes[0].SignalStale() || sig.CoveredLines != 0 {
+		t.Errorf("alone, a report older than the file is kept with no rev and the node is stale: %+v", sig)
 	}
-	if sig.CoveredLines != 3 || sig.TotalLines != 4 {
-		t.Errorf("the predating report joined the union: %d/%d", sig.CoveredLines, sig.TotalLines)
+	g.IngestCoverageSuite(fresh, "unit.info", "t2")
+	if _, kept := sig.CoverageBySuite["integration.info"]; kept || sig.CoveredLines != 3 || sig.TotalLines != 4 || g.Nodes[0].SignalStale() {
+		t.Errorf("the fresh measurement replaces it: %+v", sig.CoverageBySuite)
 	}
-	if !g.Nodes[0].SignalStale() {
-		t.Error("with a suite that has not measured this text, the node reads fresh")
+	g.IngestCoverageSuite(predating, "integration.info", "t3")
+	if _, kept := sig.CoverageBySuite["integration.info"]; kept || g.Nodes[0].SignalStale() {
+		t.Errorf("beside a fresh measurement the older report is dropped: %+v", sig.CoverageBySuite)
+	}
+	g.IngestCoverageSuite(predating, "unit.info", "t4")
+	if e := sig.CoverageBySuite["unit.info"]; e.AtRev != "new" || sig.CoveredLines != 3 || g.Nodes[0].SignalStale() {
+		t.Errorf("an older report of the same suite does not replace its newer measurement: %+v", sig.CoverageBySuite)
 	}
 }
 

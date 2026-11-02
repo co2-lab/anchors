@@ -353,3 +353,19 @@ func TestSyncMap_aFileAsHeadHasItTakesHeadsMeasurement(t *testing.T) {
 		t.Errorf("the committed map has HEAD's proof of HEAD's content, got %+v", n)
 	}
 }
+
+func TestSyncMapForCommit_aMovedFileKeepsItsProof(t *testing.T) {
+	t.Run("MPSYN-B09: A file the commit moves is the same node at its new path in the committed map, its proof with it", func(t *testing.T) {})
+	r := newSyncRepo(t, true)
+	r.git("mv", "src/pay.spec.md", "src/payment.spec.md")
+	if _, err := syncMapForCommit(r.root, r.cfg, nil); err != nil {
+		t.Fatal(err)
+	}
+	m := r.stagedMap(t)
+	if nodeOf(m, "src/pay.spec.md") != nil {
+		t.Error("the old path is gone from the committed map")
+	}
+	if n := nodeOf(m, "src/payment.spec.md"); n == nil || n.Signal == nil || n.Signal.ProvenCodes[0] != "PAYMX-B01" || n.SignalStale() {
+		t.Errorf("the moved spec keeps its proof, fresh, got %+v", n)
+	}
+}

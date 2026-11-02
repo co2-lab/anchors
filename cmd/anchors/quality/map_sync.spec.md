@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPSYN
-  updated_at: 2026-10-08
+  updated_at: 2026-11-02
   layer: comando
 -->
 # MapSyncForCommit — the commit carries the map a build of the commit makes
@@ -34,6 +34,7 @@ stages it.
 | `MPSYN-B06` | When governed files of the tree differ from the index — unstaged edits, untracked files —, the commit's map goes straight into the index and the map on disk stays the tree's, with what was measured of those edits; with a tree that matches the index, the map on disk is the one staged. |
 | `MPSYN-B07` | What the map on disk measured of a file after the last commit — an ingestion since HEAD, or a new file measured before it was staged — survives the commit, in the committed map and in the map on disk, at the file's revision. (`PreserveStamps`) |
 | `MPSYN-B08` | A file the commit leaves as HEAD has it, and the tree edited since, takes HEAD's measurement of that content in the committed map — not one carried back from the tree's edit, which may have marked a changed rule's scenarios stale. |
+| `MPSYN-B09` | A file the commit moves is the same node at its new path in the committed map — taken from the map on disk and from HEAD's —, and keeps its proof as any file does. |
 | `MPSYN-B04` | A map git does not track, or no map, is left alone and nothing is staged. |
 
 ## Errors

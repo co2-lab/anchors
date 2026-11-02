@@ -32,6 +32,7 @@
   "check.legend.skip": "indeterminado — o gate não teve o que confrontar",
   "check.legend.frozen": "congelado — mantido como está por decisão até alguém descongelar (`anchors freeze show`)",
   "map.built": "mapa construído: %d nós, %d arestas",
+  "map.moved": "· %d arquivo(s) movido(s) pelo git mantêm a evidência no caminho novo (como qualquer arquivo, pelo conteúdo)",
   "map.written_to": "  escrito em %s",
   "map.version_mismatch": "⚠ o mapa foi gravado por `anchors %s` e este é o %s.\n  Versões diferentes escrevem o mapa de jeitos diferentes: a mais velha DESFAZ o que a mais nova gravou, e o mapa passa a oscilar — conflito a cada PR, sem ninguém errar nada.\n  Atualize o binário (ou rode `anchors map build` com o novo e commite) antes de seguir.",
   "not_governed": "%q não é regido pela Estrutura (não casa nenhuma camada do `layers:`) — nada a confrontar",

@@ -80,6 +80,10 @@ unproven.`,
 				return err
 			}
 			head := headMap(absRoot)
+			if g, err := mapx.Load(mapPath); err == nil && head != nil {
+				// A file git moved is found in HEAD's map at its old path.
+				mapx.FollowMoves(g, head, gitmeta.Renames(absRoot))
+			}
 			today := gitmeta.Today()
 			var files []string
 			err = mapx.Update(mapPath, func(g *mapx.Graph) error {

@@ -773,3 +773,38 @@ func TestJudgedBy_nodeAndConfiguration(t *testing.T) {
 		t.Error("the judgment expires when the file changes")
 	}
 }
+
+func TestFollowMoves_aMovedFileKeepsItsEvidence(t *testing.T) {
+	t.Run("EDSTD-B25: A file git moved is the same node at its new path: its evidence, the edges at it and what tests recorded of it go there, and the content decides as for any edit", func(t *testing.T) {})
+	old := &Graph{
+		Nodes: []Node{
+			{ID: "apps/mobile/pay.ts", Kind: KindCode, Rev: "r1", Signal: &TestSignal{MutationScore: 90, MutationAtRev: "r1", AtRev: "r1"}},
+			{ID: "apps/mobile/pay.test.ts", Kind: KindTest, Rev: "t1", Doubles: []string{"apps/mobile/pay.ts"},
+				Signal: &TestSignal{ClosureRev: map[string]string{"apps/mobile/pay.ts": "r1"}}},
+			{ID: "apps/mobile/gone.ts", Kind: KindCode, Rev: "g1"},
+		},
+		Edges: []Edge{{From: "apps/mobile/pay.test.ts", To: "apps/mobile/pay.ts", Type: EdgeCoveredBy}},
+	}
+	novo := &Graph{Nodes: []Node{
+		{ID: "packages/ui/pay.ts", Kind: KindCode, Rev: "r1"},
+		{ID: "apps/mobile/pay.test.ts", Kind: KindTest, Rev: "t1"},
+	}}
+	moved := FollowMoves(novo, old, map[string]string{
+		"apps/mobile/pay.ts":  "packages/ui/pay.ts",
+		"apps/mobile/gone.ts": "packages/ui/nowhere.ts", // the new map has no such file
+	})
+	if !reflect.DeepEqual(moved, []string{"packages/ui/pay.ts"}) {
+		t.Fatalf("only a move to a file the new map has is taken, got %v", moved)
+	}
+	test := old.Node("apps/mobile/pay.test.ts")
+	if test.Signal.ClosureRev["packages/ui/pay.ts"] != "r1" || test.Doubles[0] != "packages/ui/pay.ts" || old.Edges[0].To != "packages/ui/pay.ts" {
+		t.Errorf("what the tests recorded of it moves with it: %+v %+v", test, old.Edges)
+	}
+	PreserveStamps(novo, old)
+	if s := novo.Node("packages/ui/pay.ts").Signal; s == nil || s.MutationScore != 90 || s.MutationAtRev != "r1" {
+		t.Errorf("the same content keeps its mutation at the new path, got %+v", s)
+	}
+	if FollowMoves(novo, old, map[string]string{"apps/mobile/pay.test.ts": "x.ts"}) != nil {
+		t.Error("a path the new map still has is no move")
+	}
+}

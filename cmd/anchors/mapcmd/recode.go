@@ -135,6 +135,7 @@ must have a length declared in code_lengths.
 			var perdidos string
 			if err := mapx.WithLock(mapPath, func() error {
 				if anterior, lerr := mapx.Load(mapPath); lerr == nil {
+					mapx.FollowMoves(g, anterior, gitmeta.Renames(absRoot))
 					mapx.PreserveStamps(g, anterior)
 					g.Flow = anterior.Flow
 					perdidos = stampLossWarning(anterior, g)

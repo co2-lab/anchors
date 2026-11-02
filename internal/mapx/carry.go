@@ -235,3 +235,63 @@ func (s *TestSignal) FreshProven() []string {
 	}
 	return out
 }
+
+// FollowMoves carries, in `old`, each file git moved to its new path — the node, the edges at it,
+// the closures and doubles of the tests that name it —, so the rebuild carries its evidence as
+// it carries any file's: a node is known by its path, and a move lost every proof of a file
+// whose content had not changed (reported from MIF: 96 files moved to a package, every one
+// asking for its mutation again; the user: "se um arquivo foi movido no git o anchors pode
+// identificar isso e mover no mapa também"). The content then decides, as for any edit: the
+// same revision keeps everything, the same evidence carries it, another drops it. A move is
+// taken only from a path `novo` no longer has to one `old` does not have. It returns the new
+// paths moved, sorted.
+func FollowMoves(novo, old *Graph, moves map[string]string) []string {
+	if novo == nil || old == nil || len(moves) == 0 {
+		return nil
+	}
+	froms := make([]string, 0, len(moves))
+	for from := range moves {
+		froms = append(froms, from)
+	}
+	sort.Strings(froms)
+	var moved []string
+	for _, from := range froms {
+		to := moves[from]
+		if old.nodeIndex(from) < 0 || old.nodeIndex(to) >= 0 || novo.nodeIndex(to) < 0 || novo.nodeIndex(from) >= 0 {
+			continue
+		}
+		old.renameNode(from, to)
+		moved = append(moved, to)
+	}
+	sort.Strings(moved)
+	return moved
+}
+
+// renameNode gives the node `from` the path `to`, and every reference to it.
+func (g *Graph) renameNode(from, to string) {
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		if n.ID == from {
+			n.ID = to
+		}
+		if s := n.Signal; s != nil {
+			if r, ok := s.ClosureRev[from]; ok {
+				delete(s.ClosureRev, from)
+				s.ClosureRev[to] = r
+			}
+		}
+		for j, d := range n.Doubles {
+			if d == from {
+				n.Doubles[j] = to
+			}
+		}
+	}
+	for i := range g.Edges {
+		if g.Edges[i].From == from {
+			g.Edges[i].From = to
+		}
+		if g.Edges[i].To == from {
+			g.Edges[i].To = to
+		}
+	}
+}

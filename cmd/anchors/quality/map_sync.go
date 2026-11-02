@@ -62,11 +62,17 @@ func syncMapForCommit(absRoot string, cfg *config.Config, bumped []touchDecision
 		return "", err
 	}
 	head := headMap(absRoot)
+	// A file git moved is the same node at its new path, in the map on disk and in HEAD's.
+	moves := gitmeta.Renames(absRoot)
+	mapx.FollowMoves(fresh, head, moves)
 	apart := len(ahead) > 0
 	if err := mapx.WithLock(mapPath, func() error {
 		before, err := mapx.Load(mapPath)
 		if err != nil && !os.IsNotExist(err) {
 			return fmt.Errorf("read the map: %w", err)
+		}
+		if err == nil {
+			mapx.FollowMoves(fresh, before, moves)
 		}
 		// A file the commit leaves as HEAD has it, and the tree has edited since, takes HEAD's
 		// measurement of that content: carried back from the edit, its proofs could have lost

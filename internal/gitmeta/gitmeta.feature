@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTA
 #   ref: GTMTG
-#   updated_at: 2026-10-21
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @GTMTG
@@ -115,3 +115,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a repository with a committed file, a new file, and an ignored one
     When its files are listed, and those of a folder that is no repository
     Then the committed and the new are listed and the ignored is not, and the folder has none
+
+  @GTMTG-B17 @unit-level
+  Scenario: The moves since HEAD are read
+    Given a file committed, then moved with git mv
+    When the moves are read before the first commit and after the move
+    Then none, then the move by its old and new paths

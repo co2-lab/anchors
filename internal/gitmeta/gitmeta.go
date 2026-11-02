@@ -327,3 +327,26 @@ func HooksDir(root string) (string, bool) {
 	}
 	return dir, true
 }
+
+// Renames are the files git reads as moved since HEAD — staged or in the tree —, from their
+// old path to their new one, both relative to root; nil outside git, before the first commit,
+// or with nothing moved. git decides a move by content, as `git mv` and `git status` say it.
+func Renames(root string) map[string]string {
+	out, err := exec.Command("git", "-C", root, "diff", "HEAD", "--relative", "-M", "--name-status", "-z").Output()
+	if err != nil {
+		return nil // @resilient: no git, or no HEAD yet: nothing was moved since a commit
+	}
+	var moves map[string]string
+	entries := strings.Split(string(out), "\x00")
+	for i := 0; i+2 < len(entries); i++ {
+		if !strings.HasPrefix(entries[i], "R") {
+			continue
+		}
+		if moves == nil {
+			moves = map[string]string{}
+		}
+		moves[entries[i+1]] = entries[i+2]
+		i += 2
+	}
+	return moves
+}

@@ -491,3 +491,25 @@ func TestProjectFiles(t *testing.T) {
 		t.Error("a folder that is no repository has none")
 	}
 }
+
+func TestRenames(t *testing.T) {
+	t.Run("GTMTG-B17: The files git reads as moved since HEAD, staged or in the tree, by their old and new paths; none before a first commit", func(t *testing.T) {})
+	d := gitRepo(t)
+	if err := os.MkdirAll(filepath.Join(d, "src"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	os.WriteFile(filepath.Join(d, "src", "pay.ts"), []byte("export const pay = 1\nexport const fee = 2\n"), 0o644)
+	if Renames(d) != nil {
+		t.Error("before a first commit nothing was moved")
+	}
+	commitOn(t, d, "2026-01-10", "first")
+	if err := os.MkdirAll(filepath.Join(d, "pkg"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := exec.Command("git", "-C", d, "mv", "src/pay.ts", "pkg/pay.ts").Run(); err != nil {
+		t.Fatal(err)
+	}
+	if got := Renames(d); !reflect.DeepEqual(got, map[string]string{"src/pay.ts": "pkg/pay.ts"}) {
+		t.Errorf("the move is read, got %v", got)
+	}
+}

@@ -2,7 +2,7 @@
 # @anchors
 #   code: MSFMA
 #   ref: MPSYN
-#   updated_at: 2026-10-08
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @MPSYN
@@ -61,3 +61,9 @@ Feature: MapSyncForCommit — the commit carries the map a build of the commit m
     Given a proven spec whose rule another session edited without staging, and a rebuild that marked its scenario stale
     When a commit carries only another file
     Then the committed map has HEAD's proof of the spec, with nothing stale
+
+  @MPSYN-B09 @unit-level
+  Scenario: A file the commit moves keeps its proof
+    Given a proven spec moved with git mv
+    When the commit's map is written
+    Then the old path is gone and the spec keeps its proof, fresh, at the new one

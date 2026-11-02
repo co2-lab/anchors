@@ -265,3 +265,26 @@ func TestKeepEvidence_mutationNotRunAgainComesFromHead(t *testing.T) {
 		t.Errorf("a signal with a mutation of its own adopts none, got %+v", s)
 	}
 }
+
+func TestKeepEvidence_aMovedFileFromHead(t *testing.T) {
+	t.Run("KPEVD-B09: The map at HEAD gives the evidence of a file git moved since, found at its old path", func(t *testing.T) {})
+	r := newSyncRepo(t, true)
+	before, _ := os.ReadFile(filepath.Join(r.root, "src/pay.spec.md"))
+	r.git("mv", "src/pay.spec.md", "src/payment.spec.md")
+	// The map rebuilt with nothing kept: the proof is only in HEAD's map, at the old path.
+	mapPath := filepath.Join(r.root, mapx.DefaultPath)
+	files, _ := scan.Walk(r.root, r.cfg)
+	if err := mapx.Save(mapx.Build(files, r.cfg, gitmeta.AllCommitDates(r.root)), mapPath); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runQ(t, newKeepEvidenceCmd(), "--root", r.root, "src/payment.spec.md", "--reason", "moved to another name"); err != nil {
+		t.Fatal(err)
+	}
+	g, err := mapx.Load(mapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := g.Node("src/payment.spec.md"); n == nil || n.Signal == nil || n.Signal.AtRev != scan.ShortHash(before) || len(n.Signal.ProvenCodes) != 1 {
+		t.Errorf("the proof HEAD holds at the old path comes to the new one, got %+v", n)
+	}
+}

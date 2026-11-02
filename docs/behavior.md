@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:d5066003a33d57b4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:90859b38ac35ffd8 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2628,6 +2628,8 @@ is what the test proves.
 
 - [A mutation a later run did not replace comes back from HEAD and is carried with the rest](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B08`
 
+- [A moved file's evidence comes from HEAD at its old path](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B09`
+
 - [The issues in todo and doing are counted, with the user-owned ones apart](layers/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines) `LCBCL-B01`
 
 - [The pending and claimed tasks are counted](layers/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines) `LCBCL-B02`
@@ -2659,6 +2661,8 @@ is what the test proves.
 - [What was measured after the last commit survives the next one](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B07`
 
 - [A file the commit leaves as HEAD has it takes HEAD's measurement over one carried from the tree's edit](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B08`
+
+- [A file the commit moves keeps its proof](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B09`
 
 - [The quality domain registers exactly its thirteen commands](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command) `QLCMQ-B01`
 
@@ -6356,6 +6360,8 @@ is what the test proves.
 
 - [The project's files are tracked and new, never ignored](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B16`
 
+- [The moves since HEAD are read](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B17`
+
 - [Only an administrator whose protection spares administrators can bypass it](layers/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B01`
 
 - [Each refusal of the bypass names its reason](layers/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B02`
@@ -7678,9 +7684,9 @@ is what the test proves.
 
 - [Totals-only suites fall back to the best suite](layers/mapa.md#sgina-b11--totals-only-suites-fall-back-to-the-best-suite) `SGINA-B11`
 
-- [A suite measured before the edit stays out of the union](layers/mapa.md#sgina-b12--a-suite-measured-before-the-edit-stays-out-of-the-union) `SGINA-B12`
+- [A measurement of the current text replaces those of another](layers/mapa.md#sgina-b12--a-measurement-of-the-current-text-replaces-those-of-another) `SGINA-B12`
 
-- [A report older than the file is kept without a revision](layers/mapa.md#sgina-b13--a-report-older-than-the-file-is-kept-without-a-revision) `SGINA-B13`
+- [A report older than the file is kept without a revision alone, and dropped beside a fresh one](layers/mapa.md#sgina-b13--a-report-older-than-the-file-is-kept-without-a-revision-alone-and-dropped-beside-a-fresh-one) `SGINA-B13`
 
 - [Line ranges round-trip](layers/mapa.md#sgina-b14--line-ranges-round-trip) `SGINA-B14`
 
@@ -7847,6 +7853,8 @@ is what the test proves.
 - [A moved file's old evidence is read again from the content at its revision](layers/mapa.md#edstd-b23--a-moved-files-old-evidence-is-read-again-from-the-content-at-its-revision) `EDSTD-B23`
 
 - [A judgment on a node with no edge, and one about the configuration](layers/mapa.md#edstd-b24--a-judgment-on-a-node-with-no-edge-and-one-about-the-configuration) `EDSTD-B24`
+
+- [A moved file keeps its evidence at its new path](layers/mapa.md#edstd-b25--a-moved-file-keeps-its-evidence-at-its-new-path) `EDSTD-B25`
 
 - [Saving stamps the current format and the running binary's release](layers/mapa.md#grprg-b01--saving-stamps-the-current-format-and-the-running-binarys-release) `GRPRG-B01`
 

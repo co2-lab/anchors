@@ -1,6 +1,6 @@
 <!-- @anchors
   code: KPEVD
-  updated_at: 2026-10-24
+  updated_at: 2026-11-02
   layer: comando
 -->
 # KeepEvidence — a change that proves nothing new keeps the files' evidence
@@ -36,6 +36,7 @@ they say it, with the reason recorded.
 | `KPEVD-B06` | The scenarios a rebuild marked stale because their rule changed are kept too, and said, even when the evidence itself is already at the current content. |
 | `KPEVD-B07` | The node takes the evidence revisions of the content kept, with its revision: a later change that proves nothing — a header's date — carries what was kept, as it carries any evidence. |
 | `KPEVD-B08` | When the file's signal holds no mutation and the map at HEAD holds one for it — a coverage run at the new content started a new signal —, that mutation comes back from HEAD and is carried with the rest under `--lines`; a mutation measured again at the new content stays its own. |
+| `KPEVD-B09` | A file git moved since HEAD is found in HEAD's map at its old path: its evidence comes back from there as a file's at its own path does. |
 
 ## Errors
 

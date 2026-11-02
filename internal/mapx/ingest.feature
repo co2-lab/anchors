@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTD
 #   ref: SGINA
-#   updated_at: 2026-10-21
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @SGINA
@@ -75,16 +75,16 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Then the file reads 5 of 10
 
   @SGINA-B12 @unit-level
-  Scenario: A suite measured before the edit stays out of the union
+  Scenario: A measurement of the current text replaces those of another
     Given the integration suite measured 76 lines of the old text, and the file was edited
     When the unit suite covering 73 of 75 lines of the new text is ingested
-    Then the file reads 73 of 75 and the node reads stale
+    Then the file reads 73 of 75, the integration entry is gone, and the node reads fresh
 
   @SGINA-B13 @unit-level
-  Scenario: A report older than the file is kept without a revision
+  Scenario: A report older than the file is kept without a revision alone, and dropped beside a fresh one
     Given an integration report written before the file's current text
-    When it is ingested along with a fresh unit report covering 3 of 4 lines
-    Then the integration entry has no revision, the file reads 3 of 4, and the node reads stale
+    When it is ingested alone, then a fresh unit report covering 3 of 4 lines, then the old reports again
+    Then alone it has no revision and the node reads stale; the fresh report replaces it; and beside it the old reports are dropped
 
   @SGINA-B14 @unit-level
   Scenario: Line ranges round-trip

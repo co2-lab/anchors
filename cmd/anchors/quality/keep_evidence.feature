@@ -2,7 +2,7 @@
 # @anchors
 #   code: KEFKP
 #   ref: KPEVD
-#   updated_at: 2026-10-24
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @KPEVD
@@ -61,3 +61,9 @@ Feature: KeepEvidence — a change that proves nothing new keeps the files' evid
     Given a code file mutated at HEAD, changed, the map rebuilt and only its coverage run again
     When keep-evidence runs on it with --lines
     Then the mutation comes back from HEAD and is at the new content beside the coverage
+
+  @KPEVD-B09 @unit-level
+  Scenario: A moved file's evidence comes from HEAD at its old path
+    Given a spec proven at HEAD, moved with git mv, and the map rebuilt with nothing kept
+    When keep-evidence runs on the spec at its new path
+    Then the proof HEAD holds at the old path is at the new one

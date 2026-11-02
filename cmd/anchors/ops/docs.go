@@ -106,6 +106,7 @@ func newDocsBuildCmd() *cobra.Command {
 				}
 				g = mapx.Build(files, cfg, gitmeta.AllCommitDates(absRoot))
 				if anterior, err := mapx.Load(mapPath); err == nil {
+					mapx.FollowMoves(g, anterior, gitmeta.Renames(absRoot))
 					mapx.PreserveStamps(g, anterior)
 				}
 			}

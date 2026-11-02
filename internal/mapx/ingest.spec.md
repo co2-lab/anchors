@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SGINA
-  updated_at: 2026-10-21
+  updated_at: 2026-11-02
   layer: mapa
 -->
 # SignalIngestion — hanging the runner's results on the map's nodes: executions, proven rules, coverage and mutation
@@ -32,7 +32,7 @@ it does not keep nodes stale forever.
 
 Coverage from several suites is a union of LINES — a line covered by any suite is covered, once. Only
 suites measured against the current text take part: a suite recorded before the file was edited numbers
-other lines. A report that gave only totals cannot join a union of lines, and the best single suite is used
+other lines, and a new measurement of the current text replaces it. A report that gave only totals cannot join a union of lines, and the best single suite is used
 instead — an under-estimate, never a double count.
 
 ## Domain
@@ -73,8 +73,8 @@ instead — an under-estimate, never a double count.
 | `SGINA-B09` | With no suite named, a code node matched by a report path receives its covered and total lines, its percentage and its revision, and the percentage it replaces is kept as the baseline for the delta. |
 | `SGINA-B10` | With a suite named, the node's coverage is the union of the lines covered by any suite, a line covered by two suites counting once, and ingesting a suite again replaces its own lines. |
 | `SGINA-B11` | When a suite reported only totals, the union falls back to the suite with the most covered lines. |
-| `SGINA-B12` | Only suites measured against the node's current revision join the union; a suite measured against an earlier one stays stored and keeps the node stale. |
-| `SGINA-B13` | A report older than the file's current text is kept with no revision: it neither joins the union nor passes for fresh. |
+| `SGINA-B12` | Only suites measured against the node's current revision join the union. A new measurement replaces the old ones (the user, 2026-11-02): a coverage ingestion of the current revision removes every suite's entry measured against another revision, or with none. A suite measured against an earlier revision with no measurement since stays stored and keeps the node stale. |
+| `SGINA-B13` | A report older than the file's current text is the old measurement: beside a suite measured against the current revision — its own suite's included — it is dropped; alone, it is kept with no revision, which neither joins the union nor passes for fresh. |
 | `SGINA-B14` | The lines of a suite are stored as compact ranges and read back as the same lines. |
 | `SGINA-B19` | A report that instruments no line of the file sets the node's percentage to zero with its zero total, with or without a suite: the previous ingestion's percentage is never left beside a total of zero. |
 

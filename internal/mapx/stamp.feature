@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTE
 #   ref: EDSTD
-#   updated_at: 2026-10-11
+#   updated_at: 2026-11-02
 #   layer: feature
 
 @EDSTD
@@ -165,3 +165,8 @@ Feature: EdgeStamping — recording on each relation that it was confronted, wit
     When it is judged, the map rebuilt, then the file changed, and then only the configuration changed
     Then the verdict is on the node and survives the rebuild, expires when the file changes, and expires on a configuration change only for a gate about the configuration
 
+  @EDSTD-B25 @unit-level
+  Scenario: A moved file keeps its evidence at its new path
+    Given a code file with its mutation moved to a package with the same content, a test recording it in its closure and doubles, and a move to a file the new map does not have
+    When the moves are applied and the previous map carried
+    Then the file keeps its mutation at the new path, the test's records name it there, and the move to nowhere is not taken

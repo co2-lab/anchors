@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:5a59eb32e0a3029a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:51bbf409e893040b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2878,6 +2878,8 @@ in `layers/`.
 
 - [KPEVD-B08 — When the file's signal holds no mutation and the map at HEAD holds one for it — a coverage run at the new content started a new signal —, that mutation comes back from HEAD and is carried with the rest under `--lines`; a mutation measured again at the new content stays its own.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
 
+- [KPEVD-B09 — A file git moved since HEAD is found in HEAD's map at its old path: its evidence comes back from there as a file's at its own path does.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
+
 - [KPEVD-E01 — The reason is missing or blank, a file is not in the map or cannot be read, or there is no map](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
 
 ### [LCBCL — LocalBacklog — what is still open locally after a full check, said in two lines](layers/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines)
@@ -2911,6 +2913,8 @@ in `layers/`.
 - [MPSYN-B07 — What the map on disk measured of a file after the last commit — an ingestion since HEAD, or a new file measured before it was staged — survives the commit, in the committed map and in the map on disk, at the file's revision. (`PreserveStamps`)](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
 
 - [MPSYN-B08 — A file the commit leaves as HEAD has it, and the tree edited since, takes HEAD's measurement of that content in the committed map — not one carried back from the tree's edit, which may have marked a changed rule's scenarios stale.](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
+
+- [MPSYN-B09 — A file the commit moves is the same node at its new path in the committed map — taken from the map on disk and from HEAD's —, and keeps its proof as any file does.](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
 
 - [MPSYN-B04 — A map git does not track, or no map, is left alone and nothing is staged.](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
 
@@ -6996,6 +7000,8 @@ in `layers/`.
 
 - [GTMTG-B16 — The project's files are the ones git tracks and the new ones it does not ignore, each once; outside a repository there are none, and it says so. (`ProjectFiles`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
+- [GTMTG-B17 — The files git reads as moved since HEAD — staged or in the tree, decided by their content as `git status` decides it — are given from their old path to their new one, relative to the root; none outside git or before a first commit. (`Renames`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+
 - [GTMTG-X01 — The dirty count never answers 0 when it could not count: outside a repository or without git it answers a negative number.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-X02 — The pending-change question never answers "known" when it could not ask: outside a repository it answers not known and no change.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
@@ -8454,9 +8460,9 @@ in `layers/`.
 
 - [SGINA-B11 — When a suite reported only totals, the union falls back to the suite with the most covered lines.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
-- [SGINA-B12 — Only suites measured against the node's current revision join the union; a suite measured against an earlier one stays stored and keeps the node stale.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
+- [SGINA-B12 — Only suites measured against the node's current revision join the union. A new measurement replaces the old ones (the user, 2026-11-02): a coverage ingestion of the current revision removes every suite's entry measured against another revision, or with none. A suite measured against an earlier revision with no measurement since stays stored and keeps the node stale.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
-- [SGINA-B13 — A report older than the file's current text is kept with no revision: it neither joins the union nor passes for fresh.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
+- [SGINA-B13 — A report older than the file's current text is the old measurement: beside a suite measured against the current revision — its own suite's included — it is dropped; alone, it is kept with no revision, which neither joins the union nor passes for fresh.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B14 — The lines of a suite are stored as compact ranges and read back as the same lines.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
@@ -8625,6 +8631,8 @@ in `layers/`.
 - [EDSTD-B23 — Each file the new build moved has the evidence of its content at the map's revision read again by today's rule — the content read from the commit's copy, or the index's, taken only when its hash is that revision: a map written before evidence revisions, or by an older rule, compares an edit with what today's rule makes of the old content. (`FillOldEvidence`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 
 - [EDSTD-B24 — A judgment given on a node with no edge is kept on the node, at its revision, and survives a rebuild; every judgment records the revision of the configuration the map was built with, and a gate whose judgment is about the configuration (`stale_on_config`) holds it only while that revision is the map's. (`JudgedBy`, `StampNodeByGate`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
+
+- [EDSTD-B25 — A file git moved since HEAD is the same node at its new path: before a rebuild carries the previous map, the node, the edges at it, and the closures and doubles of the tests that name it move to the new path, so its evidence is carried as any file's — the same revision keeps it, the same evidence carries it, another drops it. A move is taken only from a path the new map no longer has to one the previous map does not have (the user, 2026-11-02). (`FollowMoves`)](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 
 - [EDSTD-B14 — Judging a node or a single relation keeps a waived stamp recorded by another gate, or when no gate is named, and still records the judging gate's judgment; the gate that recorded the waiver replaces it, and a new waiver always replaces the stamp.](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 

@@ -167,8 +167,12 @@ map's edges by co-location (file names) and by scenario code
 			// flow — is read UNDER the lock, right before writing: an ingest that finished
 			// while the tree was being scanned is in it, and is kept.
 			var perdidos string
+			var moved []string
 			if err := mapx.WithLock(outPath, func() error {
 				if anterior, err := mapx.Load(outPath); err == nil {
+					// A file git moved is the same node at its new path: its evidence goes with it
+					// as any file's does.
+					moved = mapx.FollowMoves(g, anterior, gitmeta.Renames(absRoot))
 					mapx.FillOldEvidence(g, anterior, AtHeadReader(absRoot), cfg)
 					mapx.PreserveStamps(g, anterior)
 					// O FLUXO sobrevive ao rebuild do mapa, pela mesma razão dos carimbos e
@@ -207,6 +211,9 @@ map's edges by co-location (file names) and by scenario code
 			fmt.Println(i18n.T("map.built", len(g.Nodes), len(g.Edges)))
 			fmt.Println(i18n.T("map.written_to", outPath))
 			printEdgeSummary(g)
+			if len(moved) > 0 {
+				fmt.Println(i18n.T("map.moved", len(moved)))
+			}
 			printLayerAmbiguities(scan.Ambiguities(files, cfg))
 			if perdidos != "" {
 				fmt.Print(perdidos)

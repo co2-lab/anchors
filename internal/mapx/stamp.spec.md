@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EDSTD
-  updated_at: 2026-10-11
+  updated_at: 2026-11-02
   layer: mapa
 -->
 # EdgeStamping — recording on each relation that it was confronted, with what result, and since when
@@ -71,6 +71,7 @@ an unrelated gate erase a person's decision, which is what the check already ref
 | `EDSTD-B22` | Advancing a node to its file's content moves its revisions and carries the evidence they show unchanged, saying whether the revision moved and whether the evidence went along; an unknown file is left alone. (`AdvanceTo`) |
 | `EDSTD-B23` | Each file the new build moved has the evidence of its content at the map's revision read again by today's rule — the content read from the commit's copy, or the index's, taken only when its hash is that revision: a map written before evidence revisions, or by an older rule, compares an edit with what today's rule makes of the old content. (`FillOldEvidence`) |
 | `EDSTD-B24` | A judgment given on a node with no edge is kept on the node, at its revision, and survives a rebuild; every judgment records the revision of the configuration the map was built with, and a gate whose judgment is about the configuration (`stale_on_config`) holds it only while that revision is the map's. (`JudgedBy`, `StampNodeByGate`) |
+| `EDSTD-B25` | A file git moved since HEAD is the same node at its new path: before a rebuild carries the previous map, the node, the edges at it, and the closures and doubles of the tests that name it move to the new path, so its evidence is carried as any file's — the same revision keeps it, the same evidence carries it, another drops it. A move is taken only from a path the new map no longer has to one the previous map does not have (the user, 2026-11-02). (`FollowMoves`) |
 | `EDSTD-B14` | Judging a node or a single relation keeps a waived stamp recorded by another gate, or when no gate is named, and still records the judging gate's judgment; the gate that recorded the waiver replaces it, and a new waiver always replaces the stamp. |
 
 ## Invariants
