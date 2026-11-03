@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CDGNC
-  updated_at: 2026-10-08
+  updated_at: 2026-11-03
   layer: infra
 -->
 # CodeGenerator — the short, stable identity code suggested for a unit's name
@@ -47,6 +47,7 @@ it instead of generating a different code.
 | `CDGNC-B08` | A code not taken is returned as generated; a taken one is varied deterministically, trying every other letter in the last position, then in the one before, never changing the positions of the module prefix. (`GenerateUnique`, `GenerateUniqueWithPrefix`) |
 | `CDGNC-B09` | The module prefix of a module name is its initial and its first consonant, padded with X to two characters. (`ModulePrefix`) |
 | `CDGNC-B10` | The generated length is the smallest declared code length of at least 2; loading the project's configuration applies it, and an empty list leaves the length unchanged. (`SetSlots`) |
+| `CDGNC-B11` | A name's letters are taken without their accents (`à` → `a`, `ç` → `c`), and any other character outside A–Z and 0–9 ends a word: the code is always letters and digits, whatever language the name is written in. (`asciiName`) |
 
 ## Invariants
 

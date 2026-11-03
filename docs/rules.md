@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:2f86d55ec90eebf3 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:f3ed6c071a43417a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -6899,6 +6899,8 @@ in `layers/`.
 - [CDGNC-B09 — The module prefix of a module name is its initial and its first consonant, padded with X to two characters. (`ModulePrefix`)](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name)
 
 - [CDGNC-B10 — The generated length is the smallest declared code length of at least 2; loading the project's configuration applies it, and an empty list leaves the length unchanged. (`SetSlots`)](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name)
+
+- [CDGNC-B11 — A name's letters are taken without their accents (`à` → `a`, `ç` → `c`), and any other character outside A–Z and 0–9 ends a word: the code is always letters and digits, whatever language the name is written in. (`asciiName`)](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name)
 
 - [CDGNC-I01 — The same name and the same taken codes always give the same code, and a resolved collision is never a taken code.](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name)
 

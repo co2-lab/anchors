@@ -264,3 +264,25 @@ func TestSlots_followTheProjectsSmallestLength(t *testing.T) {
 		t.Errorf("a declared length of 2 is the smallest accepted, got %d", Slots)
 	}
 }
+
+func TestGenerate_accentedNames(t *testing.T) {
+	t.Run("CDGNC-B11: A name's letters are taken without their accents, and any other character outside A–Z and 0–9 ends a word: the code is always of letters and digits", func(t *testing.T) {})
+	for name, want := range map[string]string{
+		"Resposta à proposta": Generate("Resposta a proposta"),
+		"Ação de cobrança":    Generate("Acao de cobranca"),
+		"Configuração":        Generate("Configuracao"),
+	} {
+		got := Generate(name)
+		if got != want {
+			t.Errorf("%q: %q, want %q (its letters without accents)", name, got, want)
+		}
+	}
+	for _, name := range []string{"Straße", "Ελληνικά Login", "Résumé"} {
+		for _, r := range Generate(name) {
+			if !(r >= 'A' && r <= 'Z' || r >= '0' && r <= '9') {
+				t.Errorf("%q gave %q: a code is letters and digits", name, Generate(name))
+				break
+			}
+		}
+	}
+}

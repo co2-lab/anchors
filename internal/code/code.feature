@@ -2,7 +2,7 @@
 # @anchors
 #   code: CDFTA
 #   ref: CDGNC
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-03
 #   layer: feature
 
 @CDGNC
@@ -81,3 +81,9 @@ Feature: CodeGenerator — the short, stable identity code suggested for a unit'
     Given the code of "Spacer" and every single-position variation of it already taken
     When a unique code for "Spacer" is generated
     Then the answer is the generated code, taken as it is
+
+  @CDGNC-B11 @unit-level
+  Scenario: An accented name gives a code of letters
+    Given the names "Resposta à proposta", "Ação de cobrança" and "Straße"
+    When their codes are generated
+    Then each is the code of its letters without accents, of letters and digits only

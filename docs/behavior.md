@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:784e2fe835ef7c7a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:2577b22467179b70 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -6275,6 +6275,8 @@ is what the test proves.
 - [Generation is deterministic and a resolved code is free](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name) `CDGNC-I01`
 
 - [A saturated namespace returns the generated code](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name) `CDGNC-X01`
+
+- [An accented name gives a code of letters](layers/infra.md#cdgnc--codegenerator--the-short-stable-identity-code-suggested-for-a-units-name) `CDGNC-B11`
 
 - [Whether a name is generic is the caller's to say](layers/infra.md#cfpcd--codefrompath--the-most-meaningful-unique-code-for-a-unit-given-its-file-path) `CFPCD-B01`
 

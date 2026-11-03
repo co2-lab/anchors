@@ -16,6 +16,11 @@ package code
 
 import (
 	"strings"
+	"unicode"
+
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 
 	"github.com/co2-lab/anchors/internal/config"
 )
@@ -101,6 +106,25 @@ func tokenize(name string) []string {
 	return strings.Fields(b.String())
 }
 
+// asciiName is the name as the code's letters can take it: each letter without its accent
+// (`à` → `a`, `ç` → `c`), and any other character not of A–Z or 0–9 a word's end. The code is
+// read byte by byte; a name in Portuguese gave `R` and half an `à` (reported from SS).
+func asciiName(name string) string {
+	folded, _, err := transform.String(transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC), name)
+	if err != nil {
+		folded = name // @resilient: an untransformable name keeps its characters, each a word's end below
+	}
+	var b strings.Builder
+	for _, r := range folded {
+		if r < 0x80 {
+			b.WriteRune(r)
+		} else {
+			b.WriteByte(' ')
+		}
+	}
+	return b.String()
+}
+
 // Generate produz o código canônico de um nome, SEM resolução de colisão (Camada 2).
 func Generate(name string) string { return GenerateWithPrefix(name, "") }
 
@@ -110,6 +134,7 @@ func Generate(name string) string { return GenerateWithPrefix(name, "") }
 // Espelha o SPEC_GUIDE: ≥4 palavras → iniciais; 2-3 → consoantes 2+2; 1 → consoantes
 // e depois vogais. Sempre padronizado para Slots com X-padding.
 func GenerateWithPrefix(name, prefix string) string {
+	name = asciiName(name)
 	if prefix != "" {
 		p := strings.ToUpper(prefix)
 		if len(p) > Slots {
