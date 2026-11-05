@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WRPRW
-  updated_at: 2026-10-16
+  updated_at: 2026-11-05
   layer: comando
 -->
 # WorkPrompt — compose the work prompt of one stage over one target, from what the project declares
@@ -71,6 +71,7 @@ STOP: a production script under a heading that forbids the piece made workers cr
 | `WRPRW-B20` | The code stage requires marking each rule in the code when the project's rule-marking policy is required, and only suggests it otherwise. |
 | `WRPRW-B21` | A target a freeze covers opens the prompt, after its title, with a warning naming the freeze and its reason and saying not to change it without an order from a person; a target whose unit holds frozen rules names each with its freeze; with no map, or nothing frozen, there is no warning. (`frozenNoteIn`, `frozenNote`) |
 | `WRPRW-B22` | After what is not its scope, the prompt says that work the plan does not list, found on the way, is recorded before it is done, with `anchors progress add task … --unplanned`. |
+| `WRPRW-B23` | The pieces a target's unit is born with are those of its unit's layer: a spec whose header declares `layer:` takes that layer's `derived.overrides`, as the map does, and the prompt names the unit layer beside the file's. |
 
 ## Invariants
 

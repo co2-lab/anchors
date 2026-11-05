@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:069f466a0e4c1de2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:4e7aa06e8e6980ae — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -1320,6 +1320,8 @@ in `layers/`.
 
 - [WRPRW-B22 — After what is not its scope, the prompt says that work the plan does not list, found on the way, is recorded before it is done, with `anchors progress add task … --unplanned`.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
+- [WRPRW-B23 — The pieces a target's unit is born with are those of its unit's layer: a spec whose header declares `layer:` takes that layer's `derived.overrides`, as the map does, and the prompt names the unit layer beside the file's.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
+
 - [WRPRW-I01 — A prompt never both records a delivery and closes a review.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
 - [WRPRW-X01 — Composing the prompt writes nothing to the project.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
@@ -2569,6 +2571,8 @@ in `layers/`.
 - [CGPCH-B97 — With `--show-skips`, every indeterminate (`~`) of the scan is listed, whatever its size: by gate, then by reason — the first line of the gate's message, the commonest first, with its count —, then the address of each target; a Skip with no message is listed under a reason of its own. Without the flag, the reasons are shown only for a small scan, as before. (`printSkips`)](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B98 — In a scan that is not the full one, the warning names only a gate no node of the MAP reaches by its kinds and tags: a gate with no target in the cut — one whose `requires` asks a mark no changed file carries — reaches nodes of the map, and is not said to have nothing to measure. (`warnGatesWithoutTarget`, `gate.MatchesShape`)](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
+- [CGPCH-B99 — The pieces of a changed file's unit are named by its unit's layer — the one a spec's header declares —, so a `derived.overrides` of that layer brings the pieces it puts elsewhere; `deliver` and `watch` look for a unit's pieces by the same layer.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B92 — A gate the project declares counts as declared in the catalog line and the governance tips even when this run leaves it out — `when: [manual]`, `skip_on`, another phase.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 

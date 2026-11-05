@@ -647,7 +647,7 @@ func missingPieceToReview(root, unidade string, cfg *config.Config) bool {
 	if cfg == nil {
 		return true
 	}
-	layer, _ := scan.Classify(unidade, cfg)
+	layer := scan.LayerOfUnit(root, unidade, cfg)
 	for _, test := range cfg.PiecePaths(unidade, layer, "test") {
 		if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(test))); err == nil {
 			return false

@@ -1007,7 +1007,7 @@ func impactOf(g *mapx.Graph, cfg *config.Config, changed, root string) ([]string
 	// não dispara `feature-test-match`, `feature-nao-vazia` nem `teste-nao-vazio`, e um
 	// worker que siga o comando prescrito pelo `anchors work` declara "todos os
 	// bloqueantes ✗0" sem jamais ter rodado o bloqueante mais importante da sua etapa.
-	for _, peca := range unitPieces(target, cfg) {
+	for _, peca := range unitPieces(root, target, cfg) {
 		if common.NodeExists(g, peca) {
 			ids[peca] = true
 		}
@@ -2060,9 +2060,11 @@ func pendingCount(p gate.Profile, gateName string) int {
 // now also drops the `_test` suffix, and the candidates carry the target's own extension
 // in its code and test forms, besides the fixed Go and TypeScript names a spec target
 // (whose extension says nothing about the code) needs. A candidate only enters when the
-// map holds it, so a name that does not exist costs nothing.
-func unitPieces(target string, cfg *config.Config) []string {
-	layer, _ := scan.Classify(target, cfg)
+// map holds it, so a name that does not exist costs nothing. The derivation is the unit's
+// layer's — a spec's header `layer:` —, as the map's: by the spec's own, an override of its
+// unit's layer was never read (reported from SS: a handler's `_test.go`).
+func unitPieces(root, target string, cfg *config.Config) []string {
+	layer := scan.LayerOfUnit(root, target, cfg)
 	var cands []string
 	for _, piece := range []string{"spec", "feature", "test"} {
 		cands = append(cands, cfg.PiecePaths(target, layer, piece)...)

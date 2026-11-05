@@ -264,7 +264,7 @@ func existingPiece(root, rel string, cfg *config.Config) (string, bool) {
 	if cfg == nil {
 		return "", false
 	}
-	layer, _ := scan.Classify(rel, cfg)
+	layer := scan.LayerOfUnit(root, rel, cfg)
 	var cands []string
 	for _, piece := range []string{"spec", "feature", "test"} {
 		cands = append(cands, cfg.PiecePaths(rel, layer, piece)...)

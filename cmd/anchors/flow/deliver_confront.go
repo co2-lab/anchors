@@ -197,7 +197,7 @@ func mutationNotMeasured(root, unit string, cfg *config.Config) string {
 		return ""
 	}
 	temTeste := false
-	layer, _ := scan.Classify(unit, cfg)
+	layer := scan.LayerOfUnit(root, unit, cfg)
 	for _, test := range cfg.PiecePaths(unit, layer, "test") {
 		if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(test))); err == nil {
 			temTeste = true

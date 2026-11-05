@@ -2,7 +2,7 @@
 # @anchors
 #   code: CHFTA
 #   ref: CGPCH
-#   updated_at: 2026-10-21
+#   updated_at: 2026-11-05
 #   layer: feature
 
 @CGPCH
@@ -665,3 +665,9 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a map with a spec, a gate on specs that requires a mark, and a gate on features
     When neither gate was evaluated, in a partial scan and in the full one
     Then the partial scan names the feature gate alone, and the full scan names both
+
+  @CGPCH-B99 @unit-level
+  Scenario: A spec whose header names its unit's layer brings the pieces that layer's override names
+    Given a spec declaring the layer handler, whose override puts the test under tests/, and that test in the map
+    When the impact path of the spec is computed
+    Then the overridden test is in it

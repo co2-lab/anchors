@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:f4dc65d28ee7cff0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:e6054d89cae29eec — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1207,6 +1207,8 @@ is what the test proves.
 - [A frozen target is said before the work](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares) `WRPRW-B21`
 
 - [The prompt says how to record unplanned work](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares) `WRPRW-B22`
+
+- [The pieces of a spec's unit are those of the layer its header declares](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares) `WRPRW-B23`
 
 - [A file the map does not know is refused](layers/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-B01`
 
@@ -2507,6 +2509,8 @@ is what the test proves.
 - [--show-skips lists every indeterminate by gate and reason](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B97`
 
 - [A partial scan does not say a gate with targets in the map has nothing to measure](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B98`
+
+- [A spec whose header names its unit's layer brings the pieces that layer's override names](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B99`
 
 - [The scenarios of one spec are listed as proven or not](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 

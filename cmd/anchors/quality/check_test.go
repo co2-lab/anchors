@@ -3006,3 +3006,39 @@ func TestWarnGatesWithoutTarget_partialScan(t *testing.T) {
 		t.Errorf("the full scan names both:\n%s", full)
 	}
 }
+
+// A spec names its unit's layer in the header; the pieces that layer's override puts
+// elsewhere enter by that layer, as the map derives them — not by the spec's own layer.
+func TestImpactOfAHeaderLayerSpecBringsItsOverriddenPieces(t *testing.T) {
+	t.Run("CGPCH-B99: A spec whose header names its unit's layer brings the pieces that layer's override names", func(t *testing.T) {})
+	cfg := &config.Config{
+		Layers: map[string]config.Layer{
+			"handler": {Pattern: "svc/*/*.go", Kind: "code"},
+			"spec":    {Pattern: "**/*.spec.md", Kind: "spec"},
+		},
+		Derived: &config.Derived{
+			Files: map[string]config.Padroes{"test": {"{{dir}}/{{name}}.test.{{ext}}"}},
+			Overrides: []config.DerivedOverride{
+				{When: "handler", Files: map[string]config.Padroes{"test": {"{{dir}}/tests/{{name}}_test.go"}}},
+			},
+		},
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "svc/id/get.spec.md", Kind: mapx.KindSpec},
+		{ID: "svc/id/tests/get_test.go", Kind: mapx.KindTest},
+	}}
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "svc", "id"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "svc", "id", "get.spec.md"), []byte("<!-- @anchors\n  code: GTPRF\n  layer: handler\n-->\n# Get\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ids, err := impactOf(g, cfg, filepath.Join(root, "svc", "id", "get.spec.md"), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(strings.Join(ids, " "), "svc/id/tests/get_test.go") {
+		t.Errorf("the test the handler's override names is in the spec's impact: %v", ids)
+	}
+}

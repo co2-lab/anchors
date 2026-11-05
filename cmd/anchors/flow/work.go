@@ -121,6 +121,9 @@ The content is COMPOSED from anchors.yaml — nothing is invented here.`,
 func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.Graph) (string, error) {
 	layer, _ := scan.Classify(rel, cfg)
 	l, hasLayer := cfg.Layers[layer]
+	// The unit's pieces are derived by the unit's layer — a spec's header `layer:` —, as the
+	// map derives them; the target's own layer says how this file is written.
+	unit := scan.LayerOfUnit(root, rel, cfg)
 
 	var b strings.Builder
 	// O REVIEW não produz artefato — ele CONFRONTA. Chamar de "trabalho de review" e
@@ -151,13 +154,13 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// **feature**" e o roteiro completo de produção, e a dispensa aparecia quatro linhas
 	// abaixo, como item de uma lista. Um worker que segue a manchete cria o arquivo
 	// proibido — e a régua tinha dito as duas coisas.
-	if hasLayer && waivedPieces(layer, cfg)[artifact] {
+	if hasLayer && waivedPieces(unit, cfg)[artifact] {
 		fmt.Fprintf(&b, "## STOP\n\n`%s` — the layer **%s** WAIVES the piece `%s` "+
 			"(`optional_unit_edges` in anchors.yaml).\n\nThe waiver is declared, not an "+
 			"oversight: this layer does not prove behavior with this piece. Creating it "+
 			"would produce the empty artifact the declaration exists to avoid.\n\n"+
 			"Do not create the %s. If the queue gave you this task, it is noise — discard it "+
-			"(`anchors drop`) and report.\n", rel, layer, artifact, artifact)
+			"(`anchors drop`) and report.\n", rel, unit, artifact, artifact)
 		return b.String(), nil
 	}
 	if hasLayer && l.Regime == "declarativo" && (artifact == "spec" || artifact == "feature" || artifact == "test") {
@@ -199,6 +202,9 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 		if len(l.Tags) > 0 {
 			fmt.Fprintf(&b, "- Tags: %s\n", strings.Join(l.Tags, ", "))
 		}
+		if unit != layer {
+			fmt.Fprintf(&b, "- Unit layer: **%s** (declared in the header) — the pieces below are its\n", unit)
+		}
 	} else {
 		b.WriteString("- Layer: **unclassified** — confirm whether the path belongs to some " +
 			"layer of `layers:` in anchors.yaml before proceeding.\n")
@@ -232,7 +238,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 		// do confronto. E vê o registro de entrega, que dá escopo e traz a intenção
 		// declarada pelo autor para ser confrontada contra o disco.
 		b.WriteString("\n## What you are going to confront\n\n")
-		writeUnitPaths(&b, root, rel, artifact, layer, cfg, g)
+		writeUnitPaths(&b, root, rel, artifact, unit, cfg, g)
 		writeDeliveryRecord(&b, root, rel, cfg)
 	} else if hasLayer && l.Regime == "declarativo" {
 		b.WriteString("\n## The pieces and where they are born\n\n")
@@ -244,7 +250,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 			"the decision is missing there — not that this layer needs one.\n")
 	} else {
 		b.WriteString("\n## The pieces and where they are born\n\n")
-		writeUnitPaths(&b, root, rel, artifact, layer, cfg, g)
+		writeUnitPaths(&b, root, rel, artifact, unit, cfg, g)
 	}
 
 	// REGIMES: as tags de nível que os cenários da feature DEVEM declarar. Estão no
@@ -412,7 +418,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// `spec`, o `.ts` do alvo em geral ainda não existe, e o `check` aborta sem conferir
 	// nada. Prescrever um comando que a própria etapa impede de funcionar é a régua se
 	// contradizendo dentro do mesmo prompt.
-	alvo := verificationTarget(rel, artifact, layer, cfg)
+	alvo := verificationTarget(rel, artifact, unit, cfg)
 	fmt.Fprintf(&b, "anchors check --changed %s --no-record --deterministic\n```\n\n", alvo)
 	b.WriteString("Every **blocking** gate must come out with `✗0`. A `~` is not a failure — it is the " +
 		"gate saying it had nothing to confront (the reason comes written). If a gate fails, " +

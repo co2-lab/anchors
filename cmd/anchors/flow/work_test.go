@@ -591,3 +591,14 @@ func TestComposeWorkPrompt_unplannedWork(t *testing.T) {
 	out := prompt(t, t.TempDir(), "src/pricing.ts", "code", workCfg())
 	wantAll(t, out, "Work the plan does not list", "--unplanned")
 }
+
+// A spec whose header names its unit's layer is worked with that layer's pieces: the map
+// derives them so, and the prompt prescribed the default's — a file no gate would find.
+func TestComposeWorkPrompt_aSpecTakesItsHeaderLayer(t *testing.T) {
+	t.Run("WRPRW-B23: The pieces of a spec's unit are those of the layer its header declares", func(t *testing.T) {})
+	root := t.TempDir()
+	writeFile(t, root, "lambdas/push/send.spec.md", "<!-- @anchors\n  code: SNDPS\n  layer: handler\n-->\n# Send\n")
+	out := prompt(t, root, "lambdas/push/send.spec.md", "code", workCfg())
+	wantAll(t, out, "- Unit layer: **handler**", "`tests/unit/push.test.ts` — test  ← layer override (not co-located)")
+	wantNone(t, out, "lambdas/push/send.test.ts")
+}

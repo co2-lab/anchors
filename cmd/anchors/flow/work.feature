@@ -2,7 +2,7 @@
 # @anchors
 #   code: WRFTW
 #   ref: WRPRW
-#   updated_at: 2026-10-13
+#   updated_at: 2026-11-05
 #   layer: feature
 
 @WRPRW
@@ -180,3 +180,9 @@ Feature: WorkPrompt — compose the work prompt of one stage over one target, fr
     Given any target
     When its work prompt is composed
     Then it says to record work the plan does not list with anchors progress add task --unplanned
+
+  @WRPRW-B23 @unit-level
+  Scenario: The pieces of a spec's unit are those of the layer its header declares
+    Given a spec whose header declares a layer with a test override, and no code yet
+    When the code stage of the spec is composed
+    Then the prompt names the unit layer and the overridden test, not the default one
