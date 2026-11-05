@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:2577b22467179b70 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:f4dc65d28ee7cff0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -3396,9 +3396,15 @@ is what the test proves.
 
 - [A compiled YAML is recognised as generated and its freshness checked](layers/doct.md#opnap-b05--a-compiled-yaml-is-recognised-as-generated-and-its-freshness-checked) `OPNAP-B05`
 
+- [A Type cell citing a contract's code is a reference to its schema, and the contract a shared schema](layers/doct.md#opnap-b06--a-type-cell-citing-a-contracts-code-is-a-reference-to-its-schema-and-the-contract-a-shared-schema) `OPNAP-B06`
+
+- [A contract that cites itself, or one citing it back, is a reference and compiles](layers/doct.md#opnap-b07--a-contract-that-cites-itself-or-one-citing-it-back-is-a-reference-and-compiles) `OPNAP-B07`
+
 - [A contract cited and not found fails the build, naming it](layers/doct.md#opnap-e01--a-contract-cited-and-not-found-fails-the-build-naming-it) `OPNAP-E01`
 
 - [An Endpoint row with no path fails the build](layers/doct.md#opnap-e02--an-endpoint-row-with-no-path-fails-the-build) `OPNAP-E02`
+
+- [A Type cell citing a code no spec has fails the build, naming it](layers/doct.md#opnap-e03--a-type-cell-citing-a-code-no-spec-has-fails-the-build-naming-it) `OPNAP-E03`
 
 ## gate
 

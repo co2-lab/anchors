@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:f3ed6c071a43417a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:069f466a0e4c1de2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3722,9 +3722,15 @@ in `layers/`.
 
 - [OPNAP-B05 — A compiled YAML is recognised as generated — overwritten, never skipped — and goes stale when a spec it reads changes.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
 
+- [OPNAP-B06 — A Type cell citing a contract's code in backticks — alone, `array of` it, or it with `[]` — is a `$ref` to that contract's schema (in `items` for an array), the field keeping what it accepts as its description; the contract is a shared schema, cited by a field alone or not.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
+- [OPNAP-B07 — A contract citing itself, or a contract citing it back, is a reference like any other, and the document compiles.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
 - [OPNAP-E01 — A Contract cell cites no spec's code, or a code no spec of the project has.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
 
 - [OPNAP-E02 — An Endpoint row has no method or no path.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
+- [OPNAP-E03 — A Type cell cites a code in backticks no spec of the project has.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
 
 ## gate
 

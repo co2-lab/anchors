@@ -84,12 +84,16 @@ func (c *Compiler) operation(sp Spec, ep map[string]string, schemas map[string]*
 		XCode:       sp.Code,
 	}
 	for _, p := range sectionTable(sp, "Parameters") {
+		schema, err := c.typeSchema(sp, cell(p, "type"), schemas)
+		if err != nil {
+			return nil, err
+		}
 		op.Parameters = append(op.Parameters, oaParameter{
 			Name:        strings.Trim(cell(p, "name"), "` "),
 			In:          strings.ToLower(strings.TrimSpace(cell(p, "in"))),
 			Required:    yes(cell(p, "required")),
 			Description: cell(p, "description"),
-			Schema:      typeSchema(cell(p, "type")),
+			Schema:      schema,
 		})
 	}
 	if rows := sectionTable(sp, "Request Body"); len(rows) > 0 {
@@ -163,8 +167,7 @@ func (c *Compiler) operation(sp Spec, ep map[string]string, schemas map[string]*
 var codeInCellRE = regexp.MustCompile("`([A-Z0-9][A-Z0-9-]*)`|^([A-Z0-9]{3,})$")
 
 // contractRef resolves a Contract cell — the cited code of the contract's spec — to a
-// reference to its schema, building the schema from the contract's Domain once. An empty
-// cell, or `—`, is a body-less response.
+// reference to its schema. An empty cell, or `—`, is a body-less response.
 func (c *Compiler) contractRef(sp Spec, raw string, schemas map[string]*oaSchema) (*oaSchema, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" || raw == "—" || raw == "-" {
@@ -174,15 +177,27 @@ func (c *Compiler) contractRef(sp Spec, raw string, schemas map[string]*oaSchema
 	if m == nil {
 		return nil, fmt.Errorf("%s: the contract %q is not a spec's code — cite it as `CODE`", sp.Path, raw)
 	}
-	code := m[1] + m[2]
+	return c.schemaRef(sp, m[1]+m[2], schemas)
+}
+
+// schemaRef is a reference to the schema of the contract with that code, building the
+// schema from the contract's Domain once. The schema is reserved before its fields are
+// read, so a contract that cites itself, or one that cites it back, is a reference.
+func (c *Compiler) schemaRef(sp Spec, code string, schemas map[string]*oaSchema) (*oaSchema, error) {
 	contract, err := c.fnSpecByCode(code)
 	if err != nil {
 		return nil, fmt.Errorf("%s: the contract `%s` is no spec of the project", sp.Path, code)
 	}
 	name := schemaName(contract.Path)
 	if _, ok := schemas[name]; !ok {
-		schemas[name] = domainSchema(*contract)
+		s := &oaSchema{}
+		schemas[name] = s
 		c.markConsumed([]Spec{*contract})
+		built, err := c.domainSchema(*contract, schemas)
+		if err != nil {
+			return nil, err
+		}
+		*s = *built
 	}
 	return &oaSchema{Ref: "#/components/schemas/" + name}, nil
 }
@@ -190,14 +205,17 @@ func (c *Compiler) contractRef(sp Spec, raw string, schemas map[string]*oaSchema
 // domainSchema is the object a contract's Domain describes: one property per input, with
 // the `Type` and `Required` columns when the table has them, and what it accepts as the
 // description.
-func domainSchema(sp Spec) *oaSchema {
+func (c *Compiler) domainSchema(sp Spec, schemas map[string]*oaSchema) (*oaSchema, error) {
 	s := &oaSchema{Type: "object", Properties: map[string]*oaSchema{}, Description: sp.Titulo, XSpec: sp.Path}
 	for _, r := range sectionTable(sp, "Domain") {
 		name := strings.Trim(cell(r, "input"), "` ")
 		if name == "" {
 			continue
 		}
-		p := typeSchema(cell(r, "type"))
+		p, err := c.typeSchema(sp, cell(r, "type"), schemas)
+		if err != nil {
+			return nil, err
+		}
 		if p == nil {
 			p = &oaSchema{}
 		}
@@ -208,37 +226,57 @@ func domainSchema(sp Spec) *oaSchema {
 		}
 	}
 	sort.Strings(s.Required)
-	return s
+	return s, nil
 }
 
-var typeFormatRE = regexp.MustCompile(`^([a-zA-Z]+)\s*(?:\(([^)]*)\))?$`)
+var (
+	typeFormatRE = regexp.MustCompile(`^([a-zA-Z]+)\s*(?:\(([^)]*)\))?$`)
+	typeCodeRE   = regexp.MustCompile("^`([A-Z0-9][A-Z0-9-]*)`$")
+)
 
 // typeSchema reads a Type cell — `string (uuid)`, `integer`, `array of string` — into a
-// schema; an empty cell is no type at all.
-func typeSchema(raw string) *oaSchema {
-	raw = strings.Trim(strings.TrimSpace(raw), "`")
+// schema; an empty cell is no type at all. A contract's code in backticks — `CBRNC`,
+// array of `CBRNC`, `CBRNC`[] — is a reference to that contract's schema: a field
+// holding another contract had no type, and the clients generated from the document typed
+// its items as anything (reported from SS: 19 fields, the items of 17 pages among them).
+func (c *Compiler) typeSchema(sp Spec, raw string, schemas map[string]*oaSchema) (*oaSchema, error) {
+	raw = strings.TrimSpace(raw)
+	if m := typeCodeRE.FindStringSubmatch(raw); m != nil {
+		return c.schemaRef(sp, m[1], schemas)
+	}
 	if raw == "" || raw == "—" {
-		return nil
+		return nil, nil
 	}
 	low := strings.ToLower(raw)
 	for _, pre := range []string{"array of ", "list of ", "lista de ", "arreglo de "} {
 		if strings.HasPrefix(low, pre) {
-			return &oaSchema{Type: "array", Items: typeSchema(raw[len(pre):])}
+			return c.arraySchema(sp, raw[len(pre):], schemas)
 		}
 	}
 	if strings.HasSuffix(raw, "[]") {
-		return &oaSchema{Type: "array", Items: typeSchema(strings.TrimSuffix(raw, "[]"))}
+		return c.arraySchema(sp, strings.TrimSuffix(raw, "[]"), schemas)
+	}
+	if inner := strings.Trim(raw, "`"); inner != raw {
+		return c.typeSchema(sp, inner, schemas)
 	}
 	m := typeFormatRE.FindStringSubmatch(raw)
 	if m == nil {
-		return &oaSchema{Description: raw}
+		return &oaSchema{Description: raw}, nil
 	}
 	t := map[string]string{"string": "string", "text": "string", "int": "integer", "integer": "integer", "long": "integer",
 		"number": "number", "decimal": "number", "float": "number", "boolean": "boolean", "bool": "boolean", "object": "object"}[strings.ToLower(m[1])]
 	if t == "" {
-		return &oaSchema{Description: raw}
+		return &oaSchema{Description: raw}, nil
 	}
-	return &oaSchema{Type: t, Format: strings.TrimSpace(m[2])}
+	return &oaSchema{Type: t, Format: strings.TrimSpace(m[2])}, nil
+}
+
+func (c *Compiler) arraySchema(sp Spec, item string, schemas map[string]*oaSchema) (*oaSchema, error) {
+	items, err := c.typeSchema(sp, item, schemas)
+	if err != nil {
+		return nil, err
+	}
+	return &oaSchema{Type: "array", Items: items}, nil
 }
 
 // securityScheme reads a Security row: `apiKey` with where it travels (`header x-api-key`),

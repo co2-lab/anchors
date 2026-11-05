@@ -189,3 +189,83 @@ func TestOpenAPI_aCompiledYAMLIsKeptFresh(t *testing.T) {
 		t.Errorf("a generated YAML is overwritten, never skipped: %+v", res)
 	}
 }
+
+// A page of charges: its items, and the rule of each charge, are other contracts.
+const pageSpec = `<!-- @anchors
+  code: CBPAG
+-->
+# Charges page
+
+## Domain
+
+| Input | Type | Required | Accepts | Outside the domain | Who guarantees |
+| --- | --- | --- | --- | --- | --- |
+| ` + "`items`" + ` | array of ` + "`QRCDM`" + ` | yes | the page's charges | — | payments |
+| ` + "`ids`" + ` | ` + "`QRCDM`" + `[] | no | the same, as a list | — | payments |
+| ` + "`first`" + ` | ` + "`QRRUL`" + ` | no | the first charge's rule | — | payments |
+`
+
+const ruleSpec = `<!-- @anchors
+  code: QRRUL
+-->
+# Recurrence rule
+
+## Domain
+
+| Input | Type | Required | Accepts | Outside the domain | Who guarantees |
+| --- | --- | --- | --- | --- | --- |
+| ` + "`every`" + ` | string | yes | a period | — | payments |
+| ` + "`next`" + ` | ` + "`QRRUL`" + ` | no | the rule after it | — | payments |
+`
+
+func pageAPI() string {
+	return strings.Replace(apiSpec, "| 201 | the QR Code was created | application/json | `QRCDM` |",
+		"| 201 | the QR Code was created | application/json | `CBPAG` |", 1)
+}
+
+func TestOpenAPI_aFieldOfAnotherContractIsAReference(t *testing.T) {
+	t.Run("OPNAP-B06: A Type cell citing a contract's code is a reference to its schema, and the contract a shared schema", func(t *testing.T) {})
+	t.Run("OPNAP-B07: A contract that cites itself, or one citing it back, is a reference and compiles", func(t *testing.T) {})
+	out, err := buildOpenAPI(t, map[string]string{"src/generateQrCode.spec.md": pageAPI(),
+		"src/models/qrBody.spec.md": bodySpec, "src/models/qrCode.spec.md": qrSpec,
+		"src/models/chargesPage.spec.md": pageSpec, "src/models/rule.spec.md": ruleSpec})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc struct {
+		Components struct {
+			Schemas map[string]*oaSchema `yaml:"schemas"`
+		} `yaml:"components"`
+	}
+	if err := yaml.Unmarshal([]byte(out), &doc); err != nil {
+		t.Fatalf("the document is YAML: %v\n%s", err, out)
+	}
+	page := doc.Components.Schemas["ChargesPage"]
+	if page == nil {
+		t.Fatalf("the page is a schema:\n%s", out)
+	}
+	for _, f := range []string{"items", "ids"} {
+		p := page.Properties[f]
+		if p == nil || p.Type != "array" || p.Items == nil || p.Items.Ref != "#/components/schemas/QrCode" {
+			t.Errorf("%s is an array of references to QrCode: %+v\n%s", f, p, out)
+		}
+	}
+	if p := page.Properties["first"]; p == nil || p.Ref != "#/components/schemas/Rule" || p.Description != "the first charge's rule" {
+		t.Errorf("first is a reference to Rule, with what it accepts: %+v", p)
+	}
+	rule := doc.Components.Schemas["Rule"]
+	if rule == nil || rule.Properties["every"] == nil || rule.Properties["next"] == nil ||
+		rule.Properties["next"].Ref != "#/components/schemas/Rule" {
+		t.Errorf("a contract cited only by a field is a schema, and one citing itself a reference: %+v\n%s", rule, out)
+	}
+}
+
+func TestOpenAPI_aFieldCitingNoContractFailsTheBuild(t *testing.T) {
+	t.Run("OPNAP-E03: A Type cell citing a code no spec has fails the build, naming it", func(t *testing.T) {})
+	_, err := buildOpenAPI(t, map[string]string{"src/generateQrCode.spec.md": pageAPI(),
+		"src/models/qrBody.spec.md": bodySpec, "src/models/qrCode.spec.md": qrSpec,
+		"src/models/chargesPage.spec.md": pageSpec})
+	if err == nil || !strings.Contains(err.Error(), "QRRUL") || !strings.Contains(err.Error(), "chargesPage.spec.md") {
+		t.Errorf("a field's contract not found fails the build by name, got %v", err)
+	}
+}
