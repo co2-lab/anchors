@@ -92,7 +92,7 @@ func TestInstallHooksOutsideGitExplainsWhy(t *testing.T) {
 // A fresh install writes the three hooks (executable, with the marker) and registers both
 // merge drivers: the attribute line and the git config that says how to call them.
 func TestInstallHooksWritesTheHooksAndTheMergeDrivers(t *testing.T) {
-	t.Run("INHKN-B02: A fresh install writes the three managed hooks, executable", func(t *testing.T) {})
+	t.Run("INHKN-B02: A fresh install writes the four managed hooks, executable", func(t *testing.T) {})
 	t.Run("INHKN-B11: Both merge drivers are registered in git config and .gitattributes", func(t *testing.T) {})
 	root := hookProject(t)
 	err, out := installHooks(t, root)
@@ -102,6 +102,7 @@ func TestInstallHooksWritesTheHooksAndTheMergeDrivers(t *testing.T) {
 	hooks := filepath.Join(root, ".git", "hooks")
 	for name, want := range map[string]string{
 		"pre-commit": preCommitScript, "commit-msg": commitMsgScript, "pre-push": prePushScript,
+		"pre-merge-commit": preMergeCommitScript,
 	} {
 		p := filepath.Join(hooks, name)
 		b, rerr := os.ReadFile(p)
@@ -599,5 +600,63 @@ func TestInstallHooks_speakTheProjectsLanguage(t *testing.T) {
 	ph, _ := gitHooksDir(plain)
 	if b, _ := os.ReadFile(filepath.Join(ph, "pre-push")); string(b) != prePushScript {
 		t.Error("with no lang the hook is the English script")
+	}
+}
+
+func TestHooksRefuseACommitOnAProtectedBranch(t *testing.T) {
+	t.Run("INHKN-B17: The installed hooks refuse a commit, and a merge commit, on a branch the flow protects", func(t *testing.T) {})
+	if testing.Short() {
+		t.Skip("builds the anchors binary")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("no git")
+	}
+	bin := t.TempDir()
+	exe := filepath.Join(bin, "anchors")
+	if runtime.GOOS == "windows" {
+		exe += ".exe"
+	}
+	if out, err := exec.Command("go", "build", "-o", exe, "github.com/co2-lab/anchors/cmd/anchors").CombinedOutput(); err != nil {
+		t.Fatalf("build anchors: %v %s", err, out)
+	}
+	testkit.OnPath(t, bin)
+	root := t.TempDir()
+	run := func(name string, args ...string) (string, error) {
+		c := exec.Command(name, args...)
+		c.Dir = root
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
+		out, err := c.CombinedOutput()
+		return string(out), err
+	}
+	must := func(name string, args ...string) {
+		t.Helper()
+		if out, err := run(name, args...); err != nil {
+			t.Fatalf("%s %v: %v\n%s", name, args, err, out)
+		}
+	}
+	must("git", "init", "-q", "-b", "production")
+	writeFile(t, root, "anchors.yaml", "version: 6\nlayers:\n  notes:\n    pattern: \"*.txt\"\n    kind: code\n"+
+		"gates:\n  - name: must-pass\n    on: [code]\n    blocking: true\n    run: \"exit 0\"\n"+
+		"branch_flow:\n  protected: [production]\n  merges:\n    production: [\"hotfix/*\"]\n")
+	writeFile(t, root, "a.txt", "one\n")
+	must(exe, "map", "build")
+	must("git", "add", ".")
+	must("git", "commit", "-qm", "chore: base", "--no-verify")
+	if err := runInstallHooks(root, false); err != nil {
+		t.Fatal(err)
+	}
+
+	writeFile(t, root, "a.txt", "two\n")
+	must("git", "add", "a.txt")
+	if out, err := run("git", "commit", "-qm", "chore: direct"); err == nil || !strings.Contains(out, "production is protected") {
+		t.Fatalf("a commit on a protected branch is refused, got %v:\n%s", err, out)
+	}
+	must("git", "checkout", "-q", "-b", "hotfix/a")
+	if out, err := run("git", "commit", "-qm", "chore: on the hotfix"); err != nil {
+		t.Fatalf("a branch the flow does not protect takes a commit, got %v:\n%s", err, out)
+	}
+	must("git", "checkout", "-q", "production")
+	if out, err := run("git", "merge", "--no-ff", "-m", "merge", "hotfix/a"); err == nil || !strings.Contains(out, "production is protected") {
+		t.Fatalf("a merge commit on a protected branch is refused, got %v:\n%s", err, out)
 	}
 }

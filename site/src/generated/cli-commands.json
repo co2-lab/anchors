@@ -16,6 +16,10 @@
     "slug": "docs/cli/commands/board"
   },
   {
+    "label": "anchors branch",
+    "slug": "docs/cli/commands/branch"
+  },
+  {
     "label": "anchors changelog",
     "slug": "docs/cli/commands/changelog"
   },

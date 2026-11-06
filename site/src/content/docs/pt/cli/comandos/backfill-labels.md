@@ -49,5 +49,6 @@ Comandos da mesma família — o que distingue cada um:
 | [`anchors pr-body`](/pt/docs/cli/commands/pr-body/) | Write the lines linking this work's cards, in the platform's syntax |
 | **`anchors backfill-labels`** | Write into open issues the links the new version began to mark |
 | [`anchors report`](/pt/docs/cli/commands/report/) | Generate reports in docs/ by perspective (cuts of what Anchors measures) |
+| [`anchors branch`](/pt/docs/cli/commands/branch/) | Confront merges and commits with the project's branch flow (`branch_flow:`) |
 
 <!-- cli-reference:end -->

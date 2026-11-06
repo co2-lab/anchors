@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:41c278587904efed — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:b2f9c7724e48c9ad — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1758,6 +1758,18 @@ is what the test proves.
 
 - [Without a repository the command points at --repo](layers/comando.md#brsrb--boardserve--the-board-page-served-locally-with-live-state-read-from-the-host-only-when-something-changed) `BRSRB-E03`
 
+- [A pull request is allowed when the flow allows its head into its base, and refused naming what the base takes](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow) `BCSBR-B01`
+
+- [A push to a guarded branch is allowed only as the merge of a pull request the flow allows](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow) `BCSBR-B02`
+
+- [A commit on a protected branch is refused; another branch, or a detached HEAD, commits](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow) `BCSBR-B03`
+
+- [A check with a side missing fails naming what is missing](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow) `BCSBR-E01`
+
+- [A push that cannot be confronted fails](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow) `BCSBR-E02`
+
+- [A configuration that does not load fails the check and the guard](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow) `BCSBR-E03`
+
 - [The latest release by default](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B01`
 
 - [From a tag, or every release](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B02`
@@ -2032,7 +2044,7 @@ is what the test proves.
 
 - [The hooks go where git looks for them](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B01`
 
-- [A fresh install writes the three managed hooks, executable](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B02`
+- [A fresh install writes the four managed hooks, executable](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B02`
 
 - [Foreign hooks are respected unless forced](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B03`
 
@@ -2069,6 +2081,8 @@ is what the test proves.
 - [The agent's hook goes into the user's own settings](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B15`
 
 - [The hooks speak the project's language](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B16`
+
+- [The installed hooks refuse a commit, and a merge commit, on a branch the flow protects](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B17`
 
 - [Both the map and the config reach the current format](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B01`
 
@@ -2190,7 +2204,7 @@ is what the test proves.
 
 - [The catalog ties rules to what they use](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B12`
 
-- [The root receives the fifteen operation commands](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
+- [The root receives the sixteen operation commands](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
 
 - [Each operation command is registered exactly once](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-I01`
 
@@ -2995,6 +3009,14 @@ is what the test proves.
 - [A hidden command shows no telemetry notice](layers/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze) `CLRTC-B09`
 
 ## config
+
+- [A merge is allowed when the base's entry names its head](layers/config.md#bfsbr-b01--a-merge-is-allowed-when-the-bases-entry-names-its-head) `BFSBR-B01`
+
+- [A base no entry names takes any head, unless it is protected](layers/config.md#bfsbr-b02--a-base-no-entry-names-takes-any-head-unless-it-is-protected) `BFSBR-B02`
+
+- [A branch pattern is a glob whose * does not cross /, or a regular expression after re:](layers/config.md#bfsbr-b03--a-branch-pattern-is-a-glob-whose--does-not-cross--or-a-regular-expression-after-re) `BFSBR-B03`
+
+- [A branch pattern that is neither a glob nor a regular expression refuses the configuration](layers/config.md#bfsbr-e01--a-branch-pattern-that-is-neither-a-glob-nor-a-regular-expression-refuses-the-configuration) `BFSBR-E01`
 
 - [A file's syntax is the first entry that covers it, or Anchors' own for its formats](layers/config.md#cmmrc-b01--a-files-syntax-is-the-first-entry-that-covers-it-or-anchors-own-for-its-formats) `CMMRC-B01`
 

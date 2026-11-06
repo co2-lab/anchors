@@ -165,6 +165,16 @@ func runInstallHooks(root string, force bool) error {
 		return fmt.Errorf("write %s: %w", pushHook, err)
 	}
 
+	// The PRE-MERGE-COMMIT is the pre-commit of a merge: `git merge` makes its commit without
+	// the pre-commit, and a merge commit on a protected branch is a commit of its own too.
+	mergeHook := filepath.Join(hooksDir, "pre-merge-commit")
+	if existing, rerr := os.ReadFile(mergeHook); rerr == nil &&
+		!writtenByAnchors(existing) && !force {
+		fmt.Printf("⚠  %s exists and was not written by anchors — not overwritten.\n", mergeHook)
+	} else if err := os.WriteFile(mergeHook, []byte(preMergeCommitScript), 0o755); err != nil {
+		return fmt.Errorf("write %s: %w", mergeHook, err)
+	}
+
 	if err := os.WriteFile(hookPath, []byte(localizeHook(preCommitScript)), 0o755); err != nil {
 		return fmt.Errorf("write %s: %w", hookPath, err)
 	}
@@ -178,6 +188,8 @@ func runInstallHooks(root string, force bool) error {
 	fmt.Println("  a GOVERNED file outside the map also stops it (run `anchors map build`); a non-governed one is ignored.")
 	fmt.Printf("✓ pre-push installed at %s\n", pushHook)
 	fmt.Println("  both check whether the project is FROZEN on the remote before letting the work proceed.")
+	fmt.Printf("✓ pre-merge-commit installed at %s\n", mergeHook)
+	fmt.Println("  the commit hooks refuse a commit on a branch `branch_flow.protected` names.")
 
 	// O MERGE DRIVER do mapa vem junto: sem ele, o git mescla o
 	// `anchors.graph.yaml` como texto e apaga carimbo sem conflito e sem aviso.
@@ -428,6 +440,10 @@ if [ -n "$congelado" ]; then
   exit 1
 fi
 
+# A branch the flow protects (branch_flow.protected) takes no commit of its own: it receives
+# merged pull requests only. A detached HEAD — a rebase — is on no branch, and passes.
+(cd "$ROOT" && anchors branch guard) || exit 1
+
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$STAGED" ] && exit 0
 
@@ -576,6 +592,16 @@ fi
 // e quem clona depois do congelamento não passa por ele até instalar os hooks. Por isso
 // ele é a SEGUNDA camada — a primeira é o ruleset no remoto, que ninguém contorna de
 // dentro. Este existe para que a pessoa DESCUBRA cedo, não para ser inviolável.
+// preMergeCommitScript refuses a merge commit on a branch the flow protects, as the pre-commit
+// refuses any other commit there.
+const preMergeCommitScript = `#!/usr/bin/env bash
+` + hookMarker + `
+# Refuses a merge commit on a branch branch_flow protects: it takes merged pull requests only.
+# Reinstall/update with: anchors install-hooks --force
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)" && anchors branch guard
+`
+
 const prePushScript = `#!/usr/bin/env bash
 # managed-by: anchors install-hooks
 # Recusa o push quando o projeto está CONGELADO no remoto, ou quando o anchors.yaml

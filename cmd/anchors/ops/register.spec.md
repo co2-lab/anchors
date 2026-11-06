@@ -1,6 +1,6 @@
 <!-- @anchors
   code: OPRGP
-  updated_at: 2026-10-08
+  updated_at: 2026-11-06
   layer: comando
 -->
 # OpsRegister — the operation commands reach the CLI through one registration point
@@ -29,7 +29,7 @@ is an `unknown command` for whoever follows the instruction.
 
 | Effect | Description |
 | --- | --- |
-| `OPRGP-B01` | The root receives the fifteen operation commands: board, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, settings, suggest, synthesize and thaw. |
+| `OPRGP-B01` | The root receives the sixteen operation commands: board, branch, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, settings, suggest, synthesize and thaw. |
 
 ## Invariants
 

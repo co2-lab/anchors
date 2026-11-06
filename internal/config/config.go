@@ -211,6 +211,9 @@ type Config struct {
 	// once by name; each layer names its own (`Layer.Dialect`), and `dialect:` beside it holds
 	// only what is about no language (DESIGN-dialect-per-layer.md, dialect_layers.go).
 	Dialects map[string]*Dialect `yaml:"dialects,omitempty"`
+	// BranchFlow is the project's branch flow: which branch merges into which, and which
+	// branches take no commit of their own. See branch_flow.go.
+	BranchFlow *BranchFlow `yaml:"branch_flow,omitempty"`
 	// Boundaries são as FRONTEIRAS entre camadas: o que cada uma não pode alcançar.
 	// Declarar `layers:` sem isto é desenhar a arquitetura sem defendê-la. Ver Boundary.
 	Boundaries []Boundary `yaml:"boundaries,omitempty"`
@@ -2166,6 +2169,9 @@ func Load(path string) (*Config, error) {
 	}
 	if err := c.validarMinVersion(); err != nil {
 		return nil, err
+	}
+	if err := validateBranchFlow(c.BranchFlow); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := c.validarDialetos(); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)

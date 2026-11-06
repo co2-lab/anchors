@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INHKN
-  updated_at: 2026-10-13
+  updated_at: 2026-11-06
   layer: comando
 -->
 # InstallHooks — the git hooks that confront every commit and push with the gates and the freeze, installed without taking a hook the user wrote
@@ -42,7 +42,7 @@ theirs and is not replaced without `--force`.
 | Effect | Description |
 | --- | --- |
 | `INHKN-B01` | The hooks go to `core.hooksPath` when set, resolved against the root when relative, and otherwise to the `hooks` directory of the common git directory. |
-| `INHKN-B02` | A fresh install writes the pre-commit, commit-msg and pre-push hooks, executable, each holding the managed script. |
+| `INHKN-B02` | A fresh install writes the pre-commit, commit-msg, pre-push and pre-merge-commit hooks, executable, each holding the managed script. |
 | `INHKN-B03` | A pre-commit the user wrote refuses the whole install unless `--force`, and nothing is written; a user's commit-msg or pre-push is left in place with a warning while the rest installs; `--force` replaces them all. |
 | `INHKN-B04` | A hook anchors wrote, recognized by the current marker or the legacy commit-msg marker, is replaced on reinstall without `--force`, and is not reported as foreign. |
 | `INHKN-B05` | The installed pre-commit refuses a commit while the remote's configuration is frozen, showing the freeze reason. |
@@ -57,6 +57,7 @@ theirs and is not replaced without `--force`.
 | `INHKN-B14` | With `--agent`, the agent's hook goes into the project's Claude Code settings (`.claude/settings.json`), before and after each command of the agent and when a subagent starts and stops, and the freeze's hook before each of its edits (`anchors freeze hook`, `Edit|Write|MultiEdit|NotebookEdit`): the rest of the settings is kept, installing again adds nothing, settings that are not valid JSON are refused naming the file, and a folder with no anchors.yaml is refused. (`installAgentHook`) |
 | `INHKN-B15` | With `--agent --user`, the agent's hook goes into the user's own Claude Code settings (`~/.claude/settings.json`), the same way, from any folder — the hook records nothing outside a project with an anchors.yaml —, and the project's settings are left untouched; `--user` without `--agent` is refused. (`agentSettingsPath`) |
 | `INHKN-B16` | The hooks speak the project's language (`lang`): each message they print is written in it when they are installed, its shell variables kept, and a message with no translation, or a configuration that does not load, stays in English; `install-hooks --force` rewrites them after the language changes. (`localizeHook`, `hookMessageKey`) |
+| `INHKN-B17` | The pre-commit and the pre-merge-commit refuse a commit, and a merge commit, on a branch `branch_flow.protected` names (`anchors branch guard`); another branch, or a detached HEAD, commits. |
 
 ## Invariants
 

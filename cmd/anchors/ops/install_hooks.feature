@@ -2,7 +2,7 @@
 # @anchors
 #   code: IHFNS
 #   ref: INHKN
-#   updated_at: 2026-10-13
+#   updated_at: 2026-11-06
 #   layer: feature
 
 @INHKN
@@ -17,10 +17,10 @@ Feature: InstallHooks — the git hooks that confront every commit and push with
     And the absolute path itself when absolute
 
   @INHKN-B02 @unit-level
-  Scenario: A fresh install writes the three managed hooks, executable
+  Scenario: A fresh install writes the four managed hooks, executable
     Given a governed repository with no hooks
     When install-hooks runs
-    Then pre-commit, commit-msg and pre-push hold the managed scripts and are executable
+    Then pre-commit, commit-msg, pre-push and pre-merge-commit hold the managed scripts and are executable
 
   @INHKN-B03 @unit-level
   Scenario: Foreign hooks are respected unless forced
@@ -141,3 +141,8 @@ Feature: InstallHooks — the git hooks that confront every commit and push with
     When the hooks are installed in each
     Then the first's hooks print every message in Portuguese with their variables kept, and the second's are the English scripts
 
+  @INHKN-B17 @unit-level
+  Scenario: The installed hooks refuse a commit, and a merge commit, on a branch the flow protects
+    Given a repository on production, which branch_flow protects, with the hooks installed
+    When a commit is made on production, one on hotfix/a, and hotfix/a is merged into production
+    Then the first and the merge are refused naming production as protected, and the hotfix commit lands

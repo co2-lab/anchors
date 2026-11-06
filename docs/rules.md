@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:1d5587a53f7b8687 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:20ce8c6b026e0a8f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -1938,6 +1938,20 @@ in `layers/`.
 
 - [BRSRB-E03 — No `--repo` is given and the repository cannot be discovered from the clone.](layers/comando.md#brsrb--boardserve--the-board-page-served-locally-with-live-state-read-from-the-host-only-when-something-changed)
 
+### [BCSBR — Branch — confront merges and commits with the project's branch flow](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
+
+- [BCSBR-B01 — `branch check` with a pull request's sides passes when the flow allows its head into its base, and fails naming the pair and the heads the base takes. (`checkMerge`)](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
+
+- [BCSBR-B02 — `branch check` on a push passes for a branch the flow does not guard, and for a guarded one only when a merged pull request into that branch, whose merge commit is the pushed sha, comes from a head the flow allows; otherwise it fails, naming the refused pull requests or that none made the push. A push it cannot confront — no `gh`, no answer — fails. (`checkPush`)](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
+
+- [BCSBR-B03 — `branch guard` fails on a branch the flow protects, naming the heads it takes; on another branch, or a detached HEAD, it passes. (`guardCommit`)](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
+
+- [BCSBR-E01 — A pull request's head or base, or a push's branch or sha, is given neither by flag nor by the CI's environment.](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
+
+- [BCSBR-E02 — A push cannot be confronted: `gh` is not in the PATH, GitHub does not answer, or its answer is not read.](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
+
+- [BCSBR-E03 — The configuration does not load.](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
+
 ### [CLGCM — anchors changelog — the technical changelog, printed or written](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
 - [CLGCM-B01 — With no range flag, only the latest release is printed.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
@@ -2242,7 +2256,7 @@ in `layers/`.
 
 - [INHKN-B01 — The hooks go to `core.hooksPath` when set, resolved against the root when relative, and otherwise to the `hooks` directory of the common git directory.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
-- [INHKN-B02 — A fresh install writes the pre-commit, commit-msg and pre-push hooks, executable, each holding the managed script.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
+- [INHKN-B02 — A fresh install writes the pre-commit, commit-msg, pre-push and pre-merge-commit hooks, executable, each holding the managed script.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-B03 — A pre-commit the user wrote refuses the whole install unless `--force`, and nothing is written; a user's commit-msg or pre-push is left in place with a warning while the rest installs; `--force` replaces them all.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
@@ -2271,6 +2285,8 @@ in `layers/`.
 - [INHKN-B15 — With `--agent --user`, the agent's hook goes into the user's own Claude Code settings (`~/.claude/settings.json`), the same way, from any folder — the hook records nothing outside a project with an anchors.yaml —, and the project's settings are left untouched; `--user` without `--agent` is refused. (`agentSettingsPath`)](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-B16 — The hooks speak the project's language (`lang`): each message they print is written in it when they are installed, its shell variables kept, and a message with no translation, or a configuration that does not load, stays in English; `install-hooks --force` rewrites them after the language changes. (`localizeHook`, `hookMessageKey`)](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
+
+- [INHKN-B17 — The pre-commit and the pre-merge-commit refuse a commit, and a merge commit, on a branch `branch_flow.protected` names (`anchors branch guard`); another branch, or a detached HEAD, commits.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-I01 — However many times the install runs, each merge attribute line appears once in `.gitattributes` and the user's own lines are kept intact.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
@@ -2420,7 +2436,7 @@ in `layers/`.
 
 ### [OPRGP — OpsRegister — the operation commands reach the CLI through one registration point](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point)
 
-- [OPRGP-B01 — The root receives the fifteen operation commands: board, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, settings, suggest, synthesize and thaw.](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point)
+- [OPRGP-B01 — The root receives the sixteen operation commands: board, branch, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, settings, suggest, synthesize and thaw.](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point)
 
 - [OPRGP-I01 — Each operation command is registered exactly once.](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point)
 
@@ -3271,6 +3287,16 @@ in `layers/`.
 - [CLRTC-E01 — REF[CLRTC-B01]: a command run in a frozen project is the failure the root raises](layers/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze)
 
 ## config
+
+### [BFSBR — BranchFlow — which branch merges into which, and which branches take no commit](layers/config.md#bfsbr--branchflow--which-branch-merges-into-which-and-which-branches-take-no-commit)
+
+- [BFSBR-B01 — A merge of a head into a base is allowed when the base's entry names a pattern the head matches; refused, the base's heads are named. The entry naming the base exactly wins over a pattern that matches it. (`MergeAllowed`)](layers/config.md#bfsbr--branchflow--which-branch-merges-into-which-and-which-branches-take-no-commit)
+
+- [BFSBR-B02 — A base no entry names takes any head, unless it is protected: a protected branch takes only what an entry allows. With no `branch_flow:`, nothing is guarded.](layers/config.md#bfsbr--branchflow--which-branch-merges-into-which-and-which-branches-take-no-commit)
+
+- [BFSBR-B03 — A branch pattern is a glob whose `*` does not cross `/` — `hotfix/*` names `hotfix/login`, not `hotfix/a/b` —, or a regular expression after `re:`, matched whole. (`BranchMatches`)](layers/config.md#bfsbr--branchflow--which-branch-merges-into-which-and-which-branches-take-no-commit)
+
+- [BFSBR-E01 — A pattern of `merges` or `protected` is neither a glob nor a regular expression.](layers/config.md#bfsbr--branchflow--which-branch-merges-into-which-and-which-branches-take-no-commit)
 
 ### [CMMRC — Comments — how the project's files write a comment, declared in the dialect](layers/config.md#cmmrc--comments--how-the-projects-files-write-a-comment-declared-in-the-dialect)
 

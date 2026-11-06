@@ -230,6 +230,46 @@ escrita em lugar errado é o erro que não se desfaz com um revert.
 
 ---
 
+## `branch_flow` — qual branch entra em qual
+
+```yaml
+branch_flow:
+  merges:                      # base: as heads que um pull request pode mergear nela
+    review:     [develop, "hotfix/*"]
+    production: [review, "hotfix/*"]
+    develop:    [review, production, "hotfix/*"]
+  protected: [review, production]   # não recebem commit próprio, só merge
+```
+
+Uma branch é um glob cujo `*` não cruza `/` (`hotfix/*`), ou uma expressão regular depois de
+`re:`. Uma base que nenhuma entrada nomeia recebe merge de qualquer branch, a menos que seja
+protegida.
+
+- **No remoto**, `anchors branch check` num job do evento de pull request recusa um par que o
+  fluxo não permite. No evento de push, recusa um push numa branch guardada que não seja o merge
+  de um pull request permitido: um repositório sem proteção no servidor ainda aceita push direto.
+  A consulta ao GitHub é pelo `gh` (`GH_TOKEN`).
+- **Na máquina**, os hooks pre-commit e pre-merge-commit recusam commit numa branch protegida
+  (`anchors branch guard`). Merge não é confrontado ali: ele chega ao remoto como pull request.
+
+```yaml
+# .github/workflows/branch-flow.yml
+on:
+  pull_request:
+  push:
+    branches: [review, production]
+jobs:
+  flow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: anchors branch check
+        env:
+          GH_TOKEN: ${{ github.token }}
+```
+
+---
+
 ## `enabled` — o botão de pânico
 
 ```yaml
