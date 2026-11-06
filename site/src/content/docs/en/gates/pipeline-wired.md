@@ -17,7 +17,7 @@ A stage the pipeline asks about is refused at run time when the configuration la
 the release is already running. A declared stage no workflow calls is worse, a guard that guards nothing
 while the configuration says it does. And a workflow that calls no stage runs unconfronted. This gate
 reads the workflows `pipeline.workflows` names (GitHub's by default) for the calls `anchors pipeline
-can-run|done|run <stage>`, and confronts them with `pipeline.stages` (PCSPP) before anything runs.
+can-run|record|done|run <stage>`, and confronts them with `pipeline.stages` (PCSPP) before anything runs.
 
 It is a question of the project, never of one file: declared with `scope: project`, it gives one
 verdict.

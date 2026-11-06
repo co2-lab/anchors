@@ -318,11 +318,11 @@ jobs:
     permissions: { statuses: write }
     steps:
       - uses: actions/checkout@v4
-      - run: anchors pipeline done review-release
+      - run: anchors pipeline record review-release
         env: { GH_TOKEN: "${{ github.token }}" }
 ```
 
-O `done` roda o `verify:` e registra o resultado no commit status `anchors/pipeline/<etapa>`. É esse
+O `record` (apelido `done`) roda o `verify:` e registra o resultado no commit status `anchors/pipeline/<etapa>`. É esse
 registro que o `passed:` lê. `anchors pipeline run <etapa>` faz can-run, `run:`, `verify:` e o
 registro num passo só. O gate `pipeline-wired` lê os workflows. Ele reprova chamada a etapa não
 declarada, etapa declarada que nenhum workflow chama, etapa nunca registrada, e workflow que não

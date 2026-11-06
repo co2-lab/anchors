@@ -35,7 +35,7 @@ type Stage struct {
 	Requires []Requirement `yaml:"requires,omitempty"`
 	// Run is the command that executes the stage, when the Anchors runs it (`pipeline run`).
 	Run string `yaml:"run,omitempty"`
-	// Verify is the command that validates the stage once it ran (`pipeline done`).
+	// Verify is the command that validates the stage once it ran (`pipeline record`).
 	Verify string `yaml:"verify,omitempty"`
 }
 

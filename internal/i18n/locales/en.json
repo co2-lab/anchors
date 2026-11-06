@@ -1292,6 +1292,6 @@
   "gate.pipeline_wired.unguarded_workflow": "%s calls no stage and is not under pipeline.unguarded",
   "gate.pipeline_wired.unknown_stage": "%s calls the stage %s, which pipeline.stages does not declare",
   "gate.pipeline_wired.uncalled_stage": "the stage %s is declared and no workflow calls it",
-  "gate.pipeline_wired.no_record": "the stage %s is asked with can-run and never recorded (done or run): no later stage can see it passed",
+  "gate.pipeline_wired.no_record": "the stage %s is asked with can-run and never recorded (record or run): no later stage can see it passed",
   "gate.pipeline_wired.pass": "%d workflow(s), %d stage(s): every call names a declared stage, and every stage is called and recorded"
 }

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:0ea3549a019b9b60 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:cf9a35614828b307 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2440,7 +2440,7 @@ in `layers/`.
 
 - [PCSPA-B02 — `passed: <stage>` holds when the sha, or else the head of the merged pull request that made it, carries the status `anchors/pipeline/<stage>` as success; `from: <pattern>` holds when that pull request's head matches; `any:` holds when one of its requirements does.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
-- [PCSPA-B03 — `done` runs the stage's `verify:` and records the outcome on the sha as the commit status `anchors/pipeline/<stage>`: success when it passed; failure, and the command fails, when it did not. (`finish`)](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+- [PCSPA-B03 — `record` — alias `done` — runs the stage's `verify:` and records the outcome on the sha as the commit status `anchors/pipeline/<stage>`: success when it passed; failure, and the command fails, when it did not. (`finish`)](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
 - [PCSPA-B04 — `run` confronts the stage as `can-run` does, runs its `run:`, then its `verify:`, and records the outcome; a `run:` that fails stops before `verify:` and records failure.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
@@ -2450,7 +2450,7 @@ in `layers/`.
 
 - [PCSPA-E02 — No branch or sha is given, by flag or environment.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
-- [PCSPA-E03 — GitHub cannot be asked — no `gh`, no answer —, or `done` names a stage with no `verify:`.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+- [PCSPA-E03 — GitHub cannot be asked — no `gh`, no answer —, or `record` names a stage with no `verify:`.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
 ### [OPRGP — OpsRegister — the operation commands reach the CLI through one registration point](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point)
 
@@ -5422,7 +5422,7 @@ in `layers/`.
 
 ### [PWSPP — PipelineWired — the stages the workflows call are the stages the configuration declares](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares)
 
-- [PWSPP-B01 — The gate passes when every call names a declared stage, every declared stage is called and recorded — by `done` or `run` —, and every workflow calls a stage or is under `pipeline.unguarded`, by its path or its file name; it says how many workflows and stages it read.](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares)
+- [PWSPP-B01 — The gate passes when every call names a declared stage, every declared stage is called and recorded — by `record`, `done` or `run` —, and every workflow calls a stage or is under `pipeline.unguarded`, by its path or its file name; it says how many workflows and stages it read.](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares)
 
 - [PWSPP-B02 — The gate fails naming each gap: a workflow calling a stage `pipeline.stages` does not declare; a declared stage no workflow calls; a stage asked with `can-run` and never recorded, which no later stage could see passed; a workflow calling no stage and not unguarded.](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares)
 

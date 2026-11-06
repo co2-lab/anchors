@@ -112,14 +112,15 @@ func newPipelineCmd() *cobra.Command {
         verify: node scripts/smoke-prod.mjs
 
   anchors pipeline can-run <stage>   the first job: refuses a stage that may not run
-  anchors pipeline done <stage>      the last job: runs verify:, records the pass on the sha
+  anchors pipeline record <stage>    the last job: runs verify:, records the pass on the sha
+                                     (alias done; record reads clean to shellcheck, done does not)
   anchors pipeline run <stage>       can-run, run:, verify: and the record, in one step
 
 A stage the configuration does not declare does not run. The branch and the sha come from
 --branch and --sha, or $GITHUB_REF_NAME and $GITHUB_SHA. The pass is a commit status
 anchors/pipeline/<stage>, written and read with the gh CLI (GH_TOKEN, statuses: write).`,
 	}
-	cmd.AddCommand(newPipelineCanRunCmd(), newPipelineDoneCmd(), newPipelineRunCmd())
+	cmd.AddCommand(newPipelineCanRunCmd(), newPipelineRecordCmd(), newPipelineRunCmd())
 	return cmd
 }
 
@@ -177,13 +178,18 @@ func newPipelineCanRunCmd() *cobra.Command {
 	})
 }
 
-func newPipelineDoneCmd() *cobra.Command {
-	return stageCommand("done", "Run the stage's verify: and record on the sha that the stage passed", func(t stageTarget) error {
+// newPipelineRecordCmd is the stage's last job. It was named `done`, and shellcheck — through
+// actionlint, on every workflow that calls it — read the word as the end of a loop (SC1010,
+// reported from MIF); `done` stays as an alias, so a workflow written with it still runs.
+func newPipelineRecordCmd() *cobra.Command {
+	cmd := stageCommand("record", "Run the stage's verify: and record on the sha that the stage passed", func(t stageTarget) error {
 		if strings.TrimSpace(t.stage.Verify) == "" {
 			return fmt.Errorf("✗ %s declares no verify: — a stage the Anchors runs is run with `anchors pipeline run %s`", t.name, t.name)
 		}
 		return finish(t, runCommand(t.root, t.stage.Verify), "verify")
 	})
+	cmd.Aliases = []string{"done"}
+	return cmd
 }
 
 func newPipelineRunCmd() *cobra.Command {

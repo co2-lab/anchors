@@ -24,7 +24,8 @@ The stages anchors.yaml declares, asked by the pipeline:
         verify: node scripts/smoke-prod.mjs
 
   anchors pipeline can-run <stage>   the first job: refuses a stage that may not run
-  anchors pipeline done <stage>      the last job: runs verify:, records the pass on the sha
+  anchors pipeline record <stage>    the last job: runs verify:, records the pass on the sha
+                                     (alias done; record reads clean to shellcheck, done does not)
   anchors pipeline run <stage>       can-run, run:, verify: and the record, in one step
 
 A stage the configuration does not declare does not run. The branch and the sha come from
@@ -58,14 +59,14 @@ anchors pipeline can-run <stage> [flags]
 | `--root` | `.` | project root |
 | `--sha` |  | the commit the stage runs on (default $GITHUB_SHA) |
 
-### `anchors pipeline done`
+### `anchors pipeline record`
 
 Run the stage's verify: and record on the sha that the stage passed.
 
 #### Uso
 
 ```bash
-anchors pipeline done <stage> [flags]
+anchors pipeline record <stage> [flags]
 ```
 
 #### Flags

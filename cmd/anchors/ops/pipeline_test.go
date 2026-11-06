@@ -145,12 +145,12 @@ func TestPipeline_anUndeclaredStageDoesNotRun(t *testing.T) {
 }
 
 func TestPipeline_doneRecordsThePass(t *testing.T) {
-	t.Run("PCSPA-B03: done runs verify: and records the stage's outcome on the sha as a commit status", func(t *testing.T) {})
+	t.Run("PCSPA-B03: record runs verify: and records the stage's outcome on the sha as a commit status", func(t *testing.T) {})
 	root := pipelineProject(t)
 	f := fakeForge(t)
 	t.Setenv("GITHUB_REF_NAME", "review")
 	t.Setenv("GITHUB_SHA", "r1")
-	if out, err := runPipeline(t, root, "done", "review-release"); err != nil || f.statuses["r1|anchors/pipeline/review-release"] != "success" || !strings.Contains(out, "recorded on r1") {
+	if out, err := runPipeline(t, root, "record", "review-release"); err != nil || f.statuses["r1|anchors/pipeline/review-release"] != "success" || !strings.Contains(out, "recorded on r1") {
 		t.Errorf("a verify that passes records success: %v %v\n%s", err, f.statuses, out)
 	}
 	f.failing["verify-review"] = true
@@ -176,7 +176,7 @@ func TestPipeline_runRunsTheStage(t *testing.T) {
 }
 
 func TestPipeline_aStageItCannotConfrontDoesNotRun(t *testing.T) {
-	t.Run("PCSPA-E03: A requirement GitHub cannot answer refuses the stage; a stage with no verify: is not done", func(t *testing.T) {})
+	t.Run("PCSPA-E03: A requirement GitHub cannot answer refuses the stage; a stage with no verify: is not recorded", func(t *testing.T) {})
 	root := pipelineProject(t)
 	fakeForge(t)
 	old := pullsOf
@@ -188,7 +188,7 @@ func TestPipeline_aStageItCannotConfrontDoesNotRun(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "anchors.yaml"), []byte("version: 8\npipeline:\n  stages:\n    only-run:\n      run: x\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := runPipeline(t, root, "done", "only-run", "--branch", "b", "--sha", "s"); err == nil || !strings.Contains(err.Error(), "anchors pipeline run only-run") {
+	if _, err := runPipeline(t, root, "record", "only-run", "--branch", "b", "--sha", "s"); err == nil || !strings.Contains(err.Error(), "anchors pipeline run only-run") {
 		t.Errorf("a stage with no verify: is not done: %v", err)
 	}
 }

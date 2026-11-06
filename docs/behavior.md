@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:b6cb301bc856eabc — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:a66a172700702b6f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2208,7 +2208,7 @@ is what the test proves.
 
 - [passed: asks whether the head the sha was merged from passed that stage; from: whether it came from that head](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B02`
 
-- [done runs verify: and records the stage's outcome on the sha as a commit status](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B03`
+- [record runs verify: and records the stage's outcome on the sha as a commit status](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B03`
 
 - [run confronts the stage, runs its run: and its verify:, and records the outcome](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B04`
 
@@ -2216,7 +2216,7 @@ is what the test proves.
 
 - [A stage with no branch or sha, by flag or environment, does not run](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-E02`
 
-- [A requirement GitHub cannot answer refuses the stage; a stage with no verify: is not done](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-E03`
+- [A requirement GitHub cannot answer refuses the stage; a stage with no verify: is not recorded](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-E03`
 
 - [passed: holds when the sha itself carries the stage's success, before asking the head it was merged from](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B05`
 

@@ -25,7 +25,7 @@ import (
 // runs (requested by MIF: "toda etapa que chama o Anchors no pipeline tem de estar
 // configurada").
 
-var pipelineCallRE = regexp.MustCompile(`anchors\s+pipeline\s+(can-run|done|run)\s+([A-Za-z0-9_.-]+)`)
+var pipelineCallRE = regexp.MustCompile(`anchors\s+pipeline\s+(can-run|record|done|run)\s+([A-Za-z0-9_.-]+)`)
 
 func checkPipelineWired(_ config.Gate, root string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	p := cfg.Pipeline
@@ -71,7 +71,7 @@ func checkPipelineWired(_ config.Gate, root string, _ *mapx.Graph, cfg *config.C
 		switch verbs := called[s]; {
 		case verbs == nil:
 			gaps = append(gaps, i18n.T("gate.pipeline_wired.uncalled_stage", s))
-		case verbs["can-run"] && !verbs["done"] && !verbs["run"]:
+		case verbs["can-run"] && !verbs["record"] && !verbs["done"] && !verbs["run"]:
 			gaps = append(gaps, i18n.T("gate.pipeline_wired.no_record", s))
 		}
 	}

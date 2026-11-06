@@ -21,10 +21,10 @@ Feature: Pipeline — ask whether a stage may run, and record that it passed
     Then the first is refused, and the second and the hotfix may run
 
   @PCSPA-B03 @unit-level
-  Scenario: done runs verify: and records the stage's outcome on the sha as a commit status
+  Scenario: record runs verify: and records the stage's outcome on the sha as a commit status
     Given a review stage whose verify passes, then fails
-    When done runs for it
-    Then the sha carries anchors/pipeline/review-release as success, then as failure, and the second done fails
+    When record runs for it, then done, its alias
+    Then the sha carries anchors/pipeline/review-release as success, then as failure, and the done fails
 
   @PCSPA-B04 @unit-level
   Scenario: run confronts the stage, runs its run: and its verify:, and records the outcome
@@ -45,10 +45,10 @@ Feature: Pipeline — ask whether a stage may run, and record that it passed
     Then it fails naming the flags and the variables
 
   @PCSPA-E03 @unit-level
-  Scenario: A requirement GitHub cannot answer refuses the stage; a stage with no verify: is not done
+  Scenario: A requirement GitHub cannot answer refuses the stage; a stage with no verify: is not recorded
     Given GitHub that cannot be asked, and a stage with only run
-    When can-run asks for the production stage, and done for the stage with only run
-    Then the stage is refused naming why, and done points to pipeline run
+    When can-run asks for the production stage, and record for the stage with only run
+    Then the stage is refused naming why, and record points to pipeline run
 
   @PCSPA-B05 @unit-level
   Scenario: passed: holds when the sha itself carries the stage's success, before asking the head it was merged from

@@ -22,7 +22,7 @@ func wiredCfg() *config.Config {
 }
 
 const reviewWorkflow = "jobs:\n  guard:\n    steps:\n      - run: anchors pipeline can-run review-release\n  done:\n    steps:\n      - run: anchors pipeline done review-release\n"
-const prodWorkflow = "jobs:\n  guard:\n    steps:\n      - run: anchors pipeline can-run production-release\n  done:\n    steps:\n      - run: anchors pipeline done production-release\n"
+const prodWorkflow = "jobs:\n  guard:\n    steps:\n      - run: anchors pipeline can-run production-release\n  done:\n    steps:\n      - run: anchors pipeline record production-release\n"
 
 func TestPipelineWired_everyStageCalledAndEveryCallDeclared(t *testing.T) {
 	t.Run("PWSPP-B01: The gate passes when every call names a declared stage, every stage is called and recorded, and every workflow calls one or is unguarded", func(t *testing.T) {})

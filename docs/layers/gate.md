@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:47290918f9c19e8e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:3c87812b7d3c1605 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
@@ -2567,7 +2567,7 @@ A stage the pipeline asks about is refused at run time when the configuration la
 the release is already running. A declared stage no workflow calls is worse, a guard that guards nothing
 while the configuration says it does. And a workflow that calls no stage runs unconfronted. This gate
 reads the workflows `pipeline.workflows` names (GitHub's by default) for the calls `anchors pipeline
-can-run|done|run <stage>`, and confronts them with `pipeline.stages` (PCSPP) before anything runs.
+can-run|record|done|run <stage>`, and confronts them with `pipeline.stages` (PCSPP) before anything runs.
 
 It is a question of the project, never of one file: declared with `scope: project`, it gives one
 verdict.
@@ -2582,7 +2582,7 @@ gates:
 ```
 
 
-- **PWSPP-B01** — The gate passes when every call names a declared stage, every declared stage is called and recorded — by `done` or `run` —, and every workflow calls a stage or is under `pipeline.unguarded`, by its path or its file name; it says how many workflows and stages it read.
+- **PWSPP-B01** — The gate passes when every call names a declared stage, every declared stage is called and recorded — by `record`, `done` or `run` —, and every workflow calls a stage or is under `pipeline.unguarded`, by its path or its file name; it says how many workflows and stages it read.
 
 - **PWSPP-B02** — The gate fails naming each gap: a workflow calling a stage `pipeline.stages` does not declare; a declared stage no workflow calls; a stage asked with `can-run` and never recorded, which no later stage could see passed; a workflow calling no stage and not unguarded.
 
