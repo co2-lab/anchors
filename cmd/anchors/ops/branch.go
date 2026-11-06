@@ -57,6 +57,7 @@ type pullRequest struct {
 	MergeCommitSHA string `json:"merge_commit_sha"`
 	Head           struct {
 		Ref string `json:"ref"`
+		SHA string `json:"sha"`
 	} `json:"head"`
 	Base struct {
 		Ref string `json:"ref"`
@@ -150,20 +151,13 @@ func checkPush(root string, f *config.BranchFlow, ref, sha string) (string, erro
 	if !guards(f, ref) {
 		return fmt.Sprintf("✓ %s: the branch flow does not guard it", ref), nil
 	}
-	prs, err := pullsOf(root, sha)
+	pr, refused, err := mergingPR(root, f, ref, sha)
 	if err != nil {
 		return "", err
 	}
-	var refused []string
-	for _, pr := range prs {
-		if pr.MergedAt == "" || pr.Base.Ref != ref || pr.MergeCommitSHA != sha {
-			continue
-		}
-		if ok, _ := f.MergeAllowed(pr.Head.Ref, ref); ok {
-			return fmt.Sprintf("✓ %s: %s is the merge of #%d, %s → %s, allowed by the branch flow",
-				ref, short(sha), pr.Number, pr.Head.Ref, ref), nil
-		}
-		refused = append(refused, fmt.Sprintf("#%d from %s", pr.Number, pr.Head.Ref))
+	if pr != nil {
+		return fmt.Sprintf("✓ %s: %s is the merge of #%d, %s → %s, allowed by the branch flow",
+			ref, short(sha), pr.Number, pr.Head.Ref, ref), nil
 	}
 	_, heads := f.MergeAllowed("", ref)
 	if len(refused) > 0 {
@@ -172,6 +166,26 @@ func checkPush(root string, f *config.BranchFlow, ref, sha string) (string, erro
 	}
 	return "", fmt.Errorf("✗ %s: %s is the merge of no pull request — a guarded branch takes only a merged pull request, from %s",
 		ref, short(sha), takes(heads))
+}
+
+// mergingPR is the merged pull request into ref whose merge commit is sha and whose head the
+// flow allows, or nil with the merged pull requests the flow refuses.
+func mergingPR(root string, f *config.BranchFlow, ref, sha string) (*pullRequest, []string, error) {
+	prs, err := pullsOf(root, sha)
+	if err != nil {
+		return nil, nil, err
+	}
+	var refused []string
+	for i, pr := range prs {
+		if pr.MergedAt == "" || pr.Base.Ref != ref || pr.MergeCommitSHA != sha {
+			continue
+		}
+		if ok, _ := f.MergeAllowed(pr.Head.Ref, ref); ok {
+			return &prs[i], nil, nil
+		}
+		refused = append(refused, fmt.Sprintf("#%d from %s", pr.Number, pr.Head.Ref))
+	}
+	return nil, refused, nil
 }
 
 // guards says whether the flow rules a branch: an entry names it, or it is protected.

@@ -1286,5 +1286,12 @@
   "hook.0cbe4f9358": "your binary is $local_ver.",
   "hook.12a219bcea": "Different versions write the map in different ways: the older one UNDOES what",
   "hook.0f572f74bf": "the newer one wrote, and the map oscillates with a conflict on every PR without anyone",
-  "hook.e30cf88b74": "doing anything wrong."
+  "hook.e30cf88b74": "doing anything wrong.",
+  "gate.pipeline_wired.no_pipeline": "no `pipeline:` stage is declared: there is no stage to wire",
+  "gate.pipeline_wired.no_workflows": "no workflow matches %s: nothing calls the stages",
+  "gate.pipeline_wired.unguarded_workflow": "%s calls no stage and is not under pipeline.unguarded",
+  "gate.pipeline_wired.unknown_stage": "%s calls the stage %s, which pipeline.stages does not declare",
+  "gate.pipeline_wired.uncalled_stage": "the stage %s is declared and no workflow calls it",
+  "gate.pipeline_wired.no_record": "the stage %s is asked with can-run and never recorded (done or run): no later stage can see it passed",
+  "gate.pipeline_wired.pass": "%d workflow(s), %d stage(s): every call names a declared stage, and every stage is called and recorded"
 }

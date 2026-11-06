@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:b2f9c7724e48c9ad — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:47b75e885ac84f39 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2204,7 +2204,21 @@ is what the test proves.
 
 - [The catalog ties rules to what they use](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B12`
 
-- [The root receives the sixteen operation commands](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
+- [can-run passes a stage on its branch when every requirement holds, naming each, and refuses it otherwise](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B01`
+
+- [passed: asks whether the head the sha was merged from passed that stage; from: whether it came from that head](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B02`
+
+- [done runs verify: and records the stage's outcome on the sha as a commit status](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B03`
+
+- [run confronts the stage, runs its run: and its verify:, and records the outcome](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B04`
+
+- [A stage the configuration does not declare does not run](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-E01`
+
+- [A stage with no branch or sha, by flag or environment, does not run](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-E02`
+
+- [A requirement GitHub cannot answer refuses the stage; a stage with no verify: is not done](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-E03`
+
+- [The root receives the seventeen operation commands](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
 
 - [Each operation command is registered exactly once](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-I01`
 
@@ -3373,6 +3387,10 @@ is what the test proves.
 - [What is written back reads back as the same patterns](layers/config.md#drptd-i01--what-is-written-back-reads-back-as-the-same-patterns) `DRPTD-I01`
 
 - [The patterns are kept as written, neither expanded nor checked as globs](layers/config.md#drptd-x01--the-patterns-are-kept-as-written-neither-expanded-nor-checked-as-globs) `DRPTD-X01`
+
+- [A stage declares its branches, its requirements and the command that runs or validates it](layers/config.md#pcspp-b01--a-stage-declares-its-branches-its-requirements-and-the-command-that-runs-or-validates-it) `PCSPP-B01`
+
+- [A stage with nothing that runs or validates it, a passed: naming no stage, or an unknown requirement refuses the configuration](layers/config.md#pcspp-e01--a-stage-with-nothing-that-runs-or-validates-it-a-passed-naming-no-stage-or-an-unknown-requirement-refuses-the-configuration) `PCSPP-E01`
 
 - [The project root is the nearest directory above the start that holds the config](layers/config.md#prrpr-b01--the-project-root-is-the-nearest-directory-above-the-start-that-holds-the-config) `PRRPR-B01`
 
@@ -4895,6 +4913,12 @@ is what the test proves.
 - [A plan missing from disk does not unresolve the phases of the other plans](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-E02`
 
 - [The dependency is read in any supported language](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B14`
+
+- [The gate passes when every call names a declared stage, every stage is called and recorded, and every workflow calls one or is unguarded](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares) `PWSPP-B01`
+
+- [A call to an undeclared stage, a stage no workflow calls, a stage asked and never recorded, and a workflow calling none fail the gate](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares) `PWSPP-B02`
+
+- [With no stage declared, or no workflow found, the gate is pending](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares) `PWSPP-B03`
 
 - [A raw skeleton fails confrontation](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B01`
 

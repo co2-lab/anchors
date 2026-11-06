@@ -154,7 +154,7 @@ anchors report tests [flags]
 | `--out` |  | output file (default docs/anchors-test-report.md) |
 | `--root` | `.` | project root |
 
-## Changelog e pull requests — família
+## Changelog, pull requests e pipeline — família
 
 Comandos da mesma família — o que distingue cada um:
 
@@ -166,5 +166,6 @@ Comandos da mesma família — o que distingue cada um:
 | [`anchors backfill-labels`](/pt/docs/cli/commands/backfill-labels/) | Write into open issues the links the new version began to mark |
 | **`anchors report`** | Generate reports in docs/ by perspective (cuts of what Anchors measures) |
 | [`anchors branch`](/pt/docs/cli/commands/branch/) | Confront merges and commits with the project's branch flow (`branch_flow:`) |
+| [`anchors pipeline`](/pt/docs/cli/commands/pipeline/) | Ask whether a stage of the pipeline may run, and record that it passed (`pipeline:`) |
 
 <!-- cli-reference:end -->

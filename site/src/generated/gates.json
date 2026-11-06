@@ -272,6 +272,10 @@
         "slug": "docs/gates/marker-parity"
       },
       {
+        "label": "pipeline-wired",
+        "slug": "docs/gates/pipeline-wired"
+      },
+      {
         "label": "obligation-honored",
         "slug": "docs/gates/obligation-honored"
       },

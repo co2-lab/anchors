@@ -152,6 +152,10 @@
     "slug": "docs/cli/commands/next"
   },
   {
+    "label": "anchors pipeline",
+    "slug": "docs/cli/commands/pipeline"
+  },
+  {
     "label": "anchors pr-body",
     "slug": "docs/cli/commands/pr-body"
   },

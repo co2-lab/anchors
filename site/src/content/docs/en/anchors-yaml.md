@@ -270,6 +270,65 @@ jobs:
 
 ---
 
+## `pipeline` — what each stage of the pipeline asks before it runs
+
+```yaml
+pipeline:
+  unguarded:                       # workflows that call no stage, with the reason
+    build-android.yml: only builds an artifact
+  stages:
+    review-release:
+      branches: [review]
+      requires: [flow, { gates: ci }]
+      verify: node scripts/smoke-review.mjs
+    production-release:
+      branches: [production]
+      requires:
+        - flow
+        - any:
+            - passed: review-release
+            - from: "hotfix/*"
+      verify: node scripts/smoke-prod.mjs
+```
+
+A requirement is one of these:
+
+- `flow`: the sha is the merge of a pull request `branch_flow` allows.
+- `gates: <phase>`: the phase's gates pass.
+- `passed: <stage>`: the head the sha was merged from passed that stage.
+- `from: <branch>`: the sha was merged from that head.
+- `any:`: one of several holds.
+
+A stage needs `verify:`, `run:`, or both. A stage the configuration does not declare does not run.
+
+```yaml
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: anchors pipeline can-run review-release
+        env: { GH_TOKEN: "${{ github.token }}" }
+  deploy:
+    needs: guard
+    # … the stage's own steps
+  done:
+    needs: [deploy]
+    permissions: { statuses: write }
+    steps:
+      - uses: actions/checkout@v4
+      - run: anchors pipeline done review-release
+        env: { GH_TOKEN: "${{ github.token }}" }
+```
+
+`done` runs `verify:` and records the outcome as the commit status `anchors/pipeline/<stage>`.
+That record is what `passed:` reads. `anchors pipeline run <stage>` does can-run, `run:`,
+`verify:` and the record in one step. The `pipeline-wired` gate reads the workflows. It fails on a
+call to an undeclared stage, a declared stage no workflow calls, a stage never recorded, and a
+workflow that calls no stage and is not unguarded.
+
+---
+
 ## `enabled` — the panic button
 
 ```yaml

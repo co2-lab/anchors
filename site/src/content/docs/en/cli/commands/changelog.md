@@ -48,7 +48,7 @@ anchors changelog [flags]
 | `--unreleased` |  | also list what came after the last tag |
 | `--write` |  | write to the file(s) `changelog:` names instead of printing |
 
-## Changelog and pull requests — family
+## Changelog, pull requests and pipeline — family
 
 Commands of the same family — what tells each apart:
 
@@ -60,5 +60,6 @@ Commands of the same family — what tells each apart:
 | [`anchors backfill-labels`](/docs/cli/commands/backfill-labels/) | Write into open issues the links the new version began to mark |
 | [`anchors report`](/docs/cli/commands/report/) | Generate reports in docs/ by perspective (cuts of what Anchors measures) |
 | [`anchors branch`](/docs/cli/commands/branch/) | Confront merges and commits with the project's branch flow (`branch_flow:`) |
+| [`anchors pipeline`](/docs/cli/commands/pipeline/) | Ask whether a stage of the pipeline may run, and record that it passed (`pipeline:`) |
 
 <!-- cli-reference:end -->

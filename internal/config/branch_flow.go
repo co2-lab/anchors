@@ -95,13 +95,21 @@ func validateBranchFlow(f *BranchFlow) error {
 	pats = append(pats, f.Protected...)
 	sort.Strings(pats)
 	for _, p := range pats {
-		if re, ok := strings.CutPrefix(p, "re:"); ok {
-			if _, err := regexp.Compile(re); err != nil {
-				return fmt.Errorf("branch_flow: %q is not a regular expression: %v", p, err)
-			}
-		} else if _, err := path.Match(p, ""); err != nil {
-			return fmt.Errorf("branch_flow: %q is not a branch pattern: %v", p, err)
+		if err := validBranchPattern(p); err != nil {
+			return fmt.Errorf("branch_flow: %w", err)
 		}
+	}
+	return nil
+}
+
+// validBranchPattern refuses a pattern that is neither a glob nor a regular expression.
+func validBranchPattern(p string) error {
+	if re, ok := strings.CutPrefix(p, "re:"); ok {
+		if _, err := regexp.Compile(re); err != nil {
+			return fmt.Errorf("%q is not a regular expression: %v", p, err)
+		}
+	} else if _, err := path.Match(p, ""); err != nil {
+		return fmt.Errorf("%q is not a branch pattern: %v", p, err)
 	}
 	return nil
 }

@@ -87,6 +87,7 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`rule-types`](/docs/gates/rule-types/) | `spec` | Every code letter is declared in the vocabulary, with no conflict |
 | [`rule-implemented`](/docs/gates/rule-implemented/) | `spec` | Every rule the spec catalogs is marked in its code target, unless waived on its line with `@no-mark: <reason>` |
 | [`marker-parity`](/docs/gates/marker-parity/) | — |  |
+| [`pipeline-wired`](/docs/gates/pipeline-wired/) | — |  |
 | [`obligation-honored`](/docs/gates/obligation-honored/) | `spec` | The artifact fulfils the cross-cutting obligations it takes on |
 | [`updated-at-atual`](/docs/gates/updated-at-atual/) | `spec` `feature` `code` `test` | The header's `updated_at` is the day of the file's last commit |
 | [`guide-checklist`](/docs/gates/guide-checklist/) | `guide` | The guide has the conformance-points section (CKn) |

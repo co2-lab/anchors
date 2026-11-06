@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:20ce8c6b026e0a8f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:737cf27af61cdf0e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2434,9 +2434,25 @@ in `layers/`.
 
 - [NWTMN-X01 — REF[NWTMN-B08]: the catalog never guesses the syntax of a language it does not know](layers/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them)
 
+### [PCSPA — Pipeline — ask whether a stage may run, and record that it passed](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
+- [PCSPA-B01 — `can-run` passes a stage on a branch its `branches` match when every requirement holds, writing one line per requirement with why; on another branch it fails naming the stage's branches, and with a requirement that does not hold it fails naming it. `flow` holds for a branch the flow does not guard, or for the merge of a pull request the flow allows; `gates:` holds when the phase's gates pass. (`canRun`)](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
+- [PCSPA-B02 — `passed: <stage>` holds when the head of the merged pull request that made the sha — the sha itself when none did — carries the status `anchors/pipeline/<stage>` as success; `from: <pattern>` holds when that pull request's head matches; `any:` holds when one of its requirements does.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
+- [PCSPA-B03 — `done` runs the stage's `verify:` and records the outcome on the sha as the commit status `anchors/pipeline/<stage>`: success when it passed; failure, and the command fails, when it did not. (`finish`)](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
+- [PCSPA-B04 — `run` confronts the stage as `can-run` does, runs its `run:`, then its `verify:`, and records the outcome; a `run:` that fails stops before `verify:` and records failure.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
+- [PCSPA-E01 — The stage is not declared in `pipeline.stages`.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
+- [PCSPA-E02 — No branch or sha is given, by flag or environment.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
+- [PCSPA-E03 — GitHub cannot be asked — no `gh`, no answer —, or `done` names a stage with no `verify:`.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
 ### [OPRGP — OpsRegister — the operation commands reach the CLI through one registration point](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point)
 
-- [OPRGP-B01 — The root receives the sixteen operation commands: board, branch, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, settings, suggest, synthesize and thaw.](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point)
+- [OPRGP-B01 — The root receives the seventeen operation commands: board, branch, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, pipeline, settings, suggest, synthesize and thaw.](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point)
 
 - [OPRGP-I01 — Each operation command is registered exactly once.](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point)
 
@@ -3693,6 +3709,12 @@ in `layers/`.
 - [DRPTD-E01 — REF[DRPTD-B03]: an empty list is the shape failure B03 refuses, naming the cause](layers/config.md#drptd--derivedpatterns--a-derived-file-declared-as-one-pattern-or-as-a-list-of-them)
 
 - [DRPTD-E02 — REF[DRPTD-B04]: a mapping or a list of mappings is the shape failure B04 refuses](layers/config.md#drptd--derivedpatterns--a-derived-file-declared-as-one-pattern-or-as-a-list-of-them)
+
+### [PCSPP — Pipeline — the stages a workflow asks about, what each requires, and what validates it](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
+
+- [PCSPP-B01 — A stage declares the branches it runs on, its requirements in order — `flow`, `gates:`, `passed:`, `from:`, `any:`, each written back as declared —, and the commands that run and validate it; the stages are listed sorted, the unguarded workflows keep their reasons, and the workflows default to `.github/workflows/*.yml` and `*.yaml`. (`StageNames`, `WorkflowGlobs`, `Requirement.String`)](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
+
+- [PCSPP-E01 — A stage has neither `run` nor `verify`; a requirement is an unknown word, an unknown key or empty; `passed:` names no stage; a branch pattern is neither glob nor regular expression.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
 
 ### [PRRPR — ProjectRootResolution — the project root a command works on](layers/config.md#prrpr--projectrootresolution--the-project-root-a-command-works-on)
 
@@ -5395,6 +5417,14 @@ in `layers/`.
 - [PHORP-E01 — No map has been built when a spec's `needs:` or an artifact's `parent:` is confronted.](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent)
 
 - [PHORP-E02 — A plan the map lists is no longer on disk when the phases it catalogues are collected.](layers/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent)
+
+### [PWSPP — PipelineWired — the stages the workflows call are the stages the configuration declares](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares)
+
+- [PWSPP-B01 — The gate passes when every call names a declared stage, every declared stage is called and recorded — by `done` or `run` —, and every workflow calls a stage or is under `pipeline.unguarded`, by its path or its file name; it says how many workflows and stages it read.](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares)
+
+- [PWSPP-B02 — The gate fails naming each gap: a workflow calling a stage `pipeline.stages` does not declare; a declared stage no workflow calls; a stage asked with `can-run` and never recorded, which no later stage could see passed; a workflow calling no stage and not unguarded.](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares)
+
+- [PWSPP-B03 — With no stage declared, or no workflow matching `pipeline.workflows`, the gate is pending, naming the globs.](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares)
 
 ### [PLCFL — PlaceholderFilled — the skeleton the generator emits must be FILLED IN](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in)
 

@@ -1286,5 +1286,12 @@
   "hook.0cbe4f9358": "o seu binário é o $local_ver.",
   "hook.12a219bcea": "Versões diferentes escrevem o mapa de jeitos diferentes: a mais velha DESFAZ o que",
   "hook.0f572f74bf": "a mais nova escreveu, e o mapa oscila com conflito em todo PR sem que ninguém",
-  "hook.e30cf88b74": "tenha feito nada de errado."
+  "hook.e30cf88b74": "tenha feito nada de errado.",
+  "gate.pipeline_wired.no_pipeline": "nenhuma etapa de `pipeline:` declarada: não há etapa a ligar",
+  "gate.pipeline_wired.no_workflows": "nenhum workflow casa %s: nada chama as etapas",
+  "gate.pipeline_wired.unguarded_workflow": "%s não chama etapa nenhuma e não está em pipeline.unguarded",
+  "gate.pipeline_wired.unknown_stage": "%s chama a etapa %s, que pipeline.stages não declara",
+  "gate.pipeline_wired.uncalled_stage": "a etapa %s está declarada e nenhum workflow a chama",
+  "gate.pipeline_wired.no_record": "a etapa %s é consultada com can-run e nunca registrada (done ou run): nenhuma etapa seguinte vê que ela passou",
+  "gate.pipeline_wired.pass": "%d workflow(s), %d etapa(s): toda chamada nomeia uma etapa declarada, e toda etapa é chamada e registrada"
 }

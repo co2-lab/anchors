@@ -12,9 +12,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Register hands the root the sixteen operation commands, each exactly once.
+// Register hands the root the seventeen operation commands, each exactly once.
 func TestRegisterAddsEachOpsCommandOnce(t *testing.T) {
-	t.Run("OPRGP-B01: The root receives the sixteen operation commands", func(t *testing.T) {})
+	t.Run("OPRGP-B01: The root receives the seventeen operation commands", func(t *testing.T) {})
 	t.Run("OPRGP-I01: Each operation command is registered exactly once", func(t *testing.T) {})
 	t.Run("OPRGP-X01: The registration adds commands and nothing else", func(t *testing.T) {})
 	root := &cobra.Command{Use: "anchors"}
@@ -24,7 +24,7 @@ func TestRegisterAddsEachOpsCommandOnce(t *testing.T) {
 		names = append(names, c.Name())
 	}
 	sort.Strings(names)
-	want := "board,branch,changelog,code,commit-msg,docs,freeze,generated-paths,init,install-hooks,migrate,new,settings,suggest,synthesize,thaw"
+	want := "board,branch,changelog,code,commit-msg,docs,freeze,generated-paths,init,install-hooks,migrate,new,pipeline,settings,suggest,synthesize,thaw"
 	if got := strings.Join(names, ","); got != want {
 		t.Errorf("registered = %s\nwant       = %s", got, want)
 	}

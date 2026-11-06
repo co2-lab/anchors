@@ -29,7 +29,7 @@ is an `unknown command` for whoever follows the instruction.
 
 | Effect | Description |
 | --- | --- |
-| `OPRGP-B01` | The root receives the sixteen operation commands: board, branch, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, settings, suggest, synthesize and thaw. |
+| `OPRGP-B01` | The root receives the seventeen operation commands: board, branch, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, pipeline, settings, suggest, synthesize and thaw. |
 
 ## Invariants
 

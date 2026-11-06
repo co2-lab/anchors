@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:745ef5916b0bd244 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:946ad9c06d529e49 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 89 units and 1442 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 90 units and 1445 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2559,6 +2559,34 @@ This gate confronts three complementary structural ordering contracts:
 - **PHORP-E01** — No map has been built when a spec's `needs:` or an artifact's `parent:` is confronted.
 
 - **PHORP-E02** — A plan the map lists is no longer on disk when the phases it catalogues are collected.
+
+
+## PWSPP — PipelineWired — the stages the workflows call are the stages the configuration declares
+
+A stage the pipeline asks about is refused at run time when the configuration lacks it, which is late:
+the release is already running. A declared stage no workflow calls is worse, a guard that guards nothing
+while the configuration says it does. And a workflow that calls no stage runs unconfronted. This gate
+reads the workflows `pipeline.workflows` names (GitHub's by default) for the calls `anchors pipeline
+can-run|done|run <stage>`, and confronts them with `pipeline.stages` (PCSPP) before anything runs.
+
+It is a question of the project, never of one file: declared with `scope: project`, it gives one
+verdict.
+
+```yaml
+gates:
+  - name: pipeline-wired
+    check: pipeline-wired
+    scope: project
+    on: [spec, code]
+    blocking: true
+```
+
+
+- **PWSPP-B01** — The gate passes when every call names a declared stage, every declared stage is called and recorded — by `done` or `run` —, and every workflow calls a stage or is under `pipeline.unguarded`, by its path or its file name; it says how many workflows and stages it read.
+
+- **PWSPP-B02** — The gate fails naming each gap: a workflow calling a stage `pipeline.stages` does not declare; a declared stage no workflow calls; a stage asked with `can-run` and never recorded, which no later stage could see passed; a workflow calling no stage and not unguarded.
+
+- **PWSPP-B03** — With no stage declared, or no workflow matching `pipeline.workflows`, the gate is pending, naming the globs.
 
 
 ## PLCFL — PlaceholderFilled — the skeleton the generator emits must be FILLED IN

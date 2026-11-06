@@ -9,10 +9,10 @@
 Feature: OpsRegister — the operation commands reach the CLI through one registration point
 
   @OPRGP-B01 @unit-level
-  Scenario: The root receives the sixteen operation commands
+  Scenario: The root receives the seventeen operation commands
     Given a bare root command
     When the operations are registered
-    Then its commands are board, branch, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, settings, suggest, synthesize and thaw
+    Then its commands are board, branch, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, pipeline, settings, suggest, synthesize and thaw
 
   @OPRGP-I01 @unit-level
   Scenario: Each operation command is registered exactly once

@@ -196,6 +196,9 @@ var checkersComGate = map[string]func(g config.Gate, root string, graph *mapx.Gr
 	// AGREGADO: um veredito por DOCUMENTO, não por unidade. A versão por-nó produziu 37
 	// cards que escreviam nos mesmos dois arquivos, e cada merge invalidava os outros 36.
 	"doc-required": checkDocRequiredAggregate,
+	// The stages the workflows call against the ones the configuration declares: a question
+	// of the project, never of one file.
+	"pipeline-wired": checkPipelineWired,
 }
 
 // runInternalAggregate executa um checker interno de escopo batch/project.

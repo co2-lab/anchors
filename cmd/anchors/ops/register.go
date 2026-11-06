@@ -24,4 +24,5 @@ func Register(root *cobra.Command) {
 	root.AddCommand(newCodeCmd())
 	root.AddCommand(newGeneratedPathsCmd())
 	root.AddCommand(newBranchCmd())
+	root.AddCommand(newPipelineCmd())
 }

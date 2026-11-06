@@ -214,6 +214,8 @@ type Config struct {
 	// BranchFlow is the project's branch flow: which branch merges into which, and which
 	// branches take no commit of their own. See branch_flow.go.
 	BranchFlow *BranchFlow `yaml:"branch_flow,omitempty"`
+	// Pipeline is what the pipeline's stages ask before they run. See pipeline.go.
+	Pipeline *Pipeline `yaml:"pipeline,omitempty"`
 	// Boundaries são as FRONTEIRAS entre camadas: o que cada uma não pode alcançar.
 	// Declarar `layers:` sem isto é desenhar a arquitetura sem defendê-la. Ver Boundary.
 	Boundaries []Boundary `yaml:"boundaries,omitempty"`
@@ -2171,6 +2173,9 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	if err := validateBranchFlow(c.BranchFlow); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := validatePipeline(c.Pipeline); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := c.validarDialetos(); err != nil {
