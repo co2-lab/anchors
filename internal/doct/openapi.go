@@ -141,22 +141,27 @@ func (c *Compiler) operation(sp Spec, ep map[string]string, schemas map[string]*
 			Message: strings.Trim(cell(e, "message"), `"`), When: cell(e, "when"),
 		})
 	}
+	// The rows of a Security table are one requirement: every scheme they name, together. One
+	// requirement per row made each an alternative in OpenAPI, and a client or a gateway
+	// reading the document accepted a call with any one of them (reported from SS: a session
+	// and an App Check, both required, compiled as either).
+	requirement := map[string][]string{}
 	for _, s := range sectionTable(sp, "Security") {
 		name := strings.Trim(cell(s, "scheme"), "` ")
 		if name == "" {
 			continue
 		}
 		security[name] = securityScheme(cell(s, "type"), cell(s, "where"))
-		var scopes []string
+		scopes := []string{}
 		for _, sc := range strings.Split(cell(s, "scopes"), ",") {
 			if sc = strings.Trim(strings.TrimSpace(sc), "`"); sc != "" && sc != "—" && sc != "-" {
 				scopes = append(scopes, sc)
 			}
 		}
-		if scopes == nil {
-			scopes = []string{}
-		}
-		op.Security = append(op.Security, map[string][]string{name: scopes})
+		requirement[name] = scopes
+	}
+	if len(requirement) > 0 {
+		op.Security = []map[string][]string{requirement}
 	}
 	for _, l := range sectionTable(sp, "Limits") {
 		op.XLimits = append(op.XLimits, oaLimit{Limit: cell(l, "limit"), Value: cell(l, "value"), Why: cell(l, "why")})

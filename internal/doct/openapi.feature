@@ -49,6 +49,12 @@ Feature: OpenAPI — the project's API document, compiled from the specs of its 
     When the OpenAPI template is compiled
     Then the field is a $ref to its own schema
 
+  @OPNAP-B08 @unit-level
+  Scenario: The rows of a Security table are one requirement, every scheme together
+    Given an API spec whose Security table names an API key and a bearer session with two scopes
+    When the OpenAPI template is compiled
+    Then the operation has one security requirement holding both schemes, with their scopes
+
   @OPNAP-E01 @unit-level
   Scenario: A contract cited and not found fails the build, naming it
     Given an API spec whose body cites a contract no spec has

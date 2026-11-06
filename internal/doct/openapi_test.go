@@ -269,3 +269,26 @@ func TestOpenAPI_aFieldCitingNoContractFailsTheBuild(t *testing.T) {
 		t.Errorf("a field's contract not found fails the build by name, got %v", err)
 	}
 }
+
+func TestOpenAPI_theSecurityRowsAreOneRequirement(t *testing.T) {
+	t.Run("OPNAP-B08: The rows of a Security table are one requirement, every scheme together", func(t *testing.T) {})
+	twoSchemes := strings.Replace(apiSpec, "| marketplaceKey | apiKey | header x-api-key | — |",
+		"| marketplaceKey | apiKey | header x-api-key | — |\n| session | http bearer | header Authorization | `read`, `write` |", 1)
+	out, err := buildOpenAPI(t, map[string]string{"src/generateQrCode.spec.md": twoSchemes,
+		"src/models/qrBody.spec.md": bodySpec, "src/models/qrCode.spec.md": qrSpec})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc struct {
+		Paths map[string]map[string]struct {
+			Security []map[string][]string `yaml:"security"`
+		} `yaml:"paths"`
+	}
+	if err := yaml.Unmarshal([]byte(out), &doc); err != nil {
+		t.Fatalf("the document is YAML: %v\n%s", err, out)
+	}
+	sec := doc.Paths["/v1/qrcodes"]["post"].Security
+	if len(sec) != 1 || sec[0]["marketplaceKey"] == nil || len(sec[0]["session"]) != 2 {
+		t.Errorf("both schemes are one requirement, with their scopes: %v\n%s", sec, out)
+	}
+}

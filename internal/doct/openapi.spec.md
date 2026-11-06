@@ -43,6 +43,7 @@ whose `Type` cites another contract's code is a reference to that contract's sch
 | `OPNAP-B05` | A compiled YAML is recognised as generated — overwritten, never skipped — and goes stale when a spec it reads changes. |
 | `OPNAP-B06` | A Type cell citing a contract's code in backticks — alone, `array of` it, or it with `[]` — is a `$ref` to that contract's schema (in `items` for an array), the field keeping what it accepts as its description; the contract is a shared schema, cited by a field alone or not. |
 | `OPNAP-B07` | A contract citing itself, or a contract citing it back, is a reference like any other, and the document compiles. |
+| `OPNAP-B08` | The rows of an operation's Security table are one security requirement: every scheme they name is required together, each with its scopes — not one alternative per row. |
 
 ## Errors
 

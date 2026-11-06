@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:e6054d89cae29eec — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:41c278587904efed — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -3403,6 +3403,8 @@ is what the test proves.
 - [A Type cell citing a contract's code is a reference to its schema, and the contract a shared schema](layers/doct.md#opnap-b06--a-type-cell-citing-a-contracts-code-is-a-reference-to-its-schema-and-the-contract-a-shared-schema) `OPNAP-B06`
 
 - [A contract that cites itself, or one citing it back, is a reference and compiles](layers/doct.md#opnap-b07--a-contract-that-cites-itself-or-one-citing-it-back-is-a-reference-and-compiles) `OPNAP-B07`
+
+- [The rows of a Security table are one requirement, every scheme together](layers/doct.md#opnap-b08--the-rows-of-a-security-table-are-one-requirement-every-scheme-together) `OPNAP-B08`
 
 - [A contract cited and not found fails the build, naming it](layers/doct.md#opnap-e01--a-contract-cited-and-not-found-fails-the-build-naming-it) `OPNAP-E01`
 

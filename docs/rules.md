@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:4e7aa06e8e6980ae — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:1d5587a53f7b8687 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3729,6 +3729,8 @@ in `layers/`.
 - [OPNAP-B06 — A Type cell citing a contract's code in backticks — alone, `array of` it, or it with `[]` — is a `$ref` to that contract's schema (in `items` for an array), the field keeping what it accepts as its description; the contract is a shared schema, cited by a field alone or not.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
 
 - [OPNAP-B07 — A contract citing itself, or a contract citing it back, is a reference like any other, and the document compiles.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
+
+- [OPNAP-B08 — The rows of an operation's Security table are one security requirement: every scheme they name is required together, each with its scopes — not one alternative per row.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
 
 - [OPNAP-E01 — A Contract cell cites no spec's code, or a code no spec of the project has.](layers/doct.md#opnap--openapi--the-projects-api-document-compiled-from-the-specs-of-its-api-units)
 

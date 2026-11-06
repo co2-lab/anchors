@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:3db4e4909511e4f5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:e1853f72bac1b4ba — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
