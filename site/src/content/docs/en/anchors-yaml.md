@@ -295,7 +295,7 @@ A requirement is one of these:
 
 - `flow`: the sha is the merge of a pull request `branch_flow` allows.
 - `gates: <phase>`: the phase's gates pass.
-- `passed: <stage>`: the head the sha was merged from passed that stage.
+- `passed: <stage>`: the sha, or else the head it was merged from, passed that stage.
 - `from: <branch>`: the sha was merged from that head.
 - `any:`: one of several holds.
 

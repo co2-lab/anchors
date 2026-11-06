@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:737cf27af61cdf0e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:0ea3549a019b9b60 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2438,11 +2438,13 @@ in `layers/`.
 
 - [PCSPA-B01 — `can-run` passes a stage on a branch its `branches` match when every requirement holds, writing one line per requirement with why; on another branch it fails naming the stage's branches, and with a requirement that does not hold it fails naming it. `flow` holds for a branch the flow does not guard, or for the merge of a pull request the flow allows; `gates:` holds when the phase's gates pass. (`canRun`)](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
-- [PCSPA-B02 — `passed: <stage>` holds when the head of the merged pull request that made the sha — the sha itself when none did — carries the status `anchors/pipeline/<stage>` as success; `from: <pattern>` holds when that pull request's head matches; `any:` holds when one of its requirements does.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+- [PCSPA-B02 — `passed: <stage>` holds when the sha, or else the head of the merged pull request that made it, carries the status `anchors/pipeline/<stage>` as success; `from: <pattern>` holds when that pull request's head matches; `any:` holds when one of its requirements does.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
 - [PCSPA-B03 — `done` runs the stage's `verify:` and records the outcome on the sha as the commit status `anchors/pipeline/<stage>`: success when it passed; failure, and the command fails, when it did not. (`finish`)](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
 - [PCSPA-B04 — `run` confronts the stage as `can-run` does, runs its `run:`, then its `verify:`, and records the outcome; a `run:` that fails stops before `verify:` and records failure.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
+- [PCSPA-B05 — `passed:` reads the sha itself before the head it was merged from: a stage recorded on the same sha — the production release before the version pointer flips — satisfies a later stage of that branch.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
 - [PCSPA-E01 — The stage is not declared in `pipeline.stages`.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 

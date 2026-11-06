@@ -18,8 +18,9 @@ step.
 
 What passed is recorded where the next stage reads it — on the sha, as the commit status
 `anchors/pipeline/<stage>`, written and read through the `gh` CLI. A production stage requiring
-`passed: review-release` asks it of the head the production sha was merged from: the review commit
-that came in, whatever merge commit the pull request made.
+`passed: <stage>` asks it of the sha itself — a later stage of the same branch reads the stage before
+it there —, and else of the head the sha was merged from: the review commit that came into
+production, whatever merge commit the pull request made.
 
 A stage the configuration does not declare does not run.
 
@@ -38,9 +39,10 @@ A stage the configuration does not declare does not run.
 | Effect | Description |
 | --- | --- |
 | `PCSPA-B01` | `can-run` passes a stage on a branch its `branches` match when every requirement holds, writing one line per requirement with why; on another branch it fails naming the stage's branches, and with a requirement that does not hold it fails naming it. `flow` holds for a branch the flow does not guard, or for the merge of a pull request the flow allows; `gates:` holds when the phase's gates pass. (`canRun`) |
-| `PCSPA-B02` | `passed: <stage>` holds when the head of the merged pull request that made the sha — the sha itself when none did — carries the status `anchors/pipeline/<stage>` as success; `from: <pattern>` holds when that pull request's head matches; `any:` holds when one of its requirements does. |
+| `PCSPA-B02` | `passed: <stage>` holds when the sha, or else the head of the merged pull request that made it, carries the status `anchors/pipeline/<stage>` as success; `from: <pattern>` holds when that pull request's head matches; `any:` holds when one of its requirements does. |
 | `PCSPA-B03` | `done` runs the stage's `verify:` and records the outcome on the sha as the commit status `anchors/pipeline/<stage>`: success when it passed; failure, and the command fails, when it did not. (`finish`) |
 | `PCSPA-B04` | `run` confronts the stage as `can-run` does, runs its `run:`, then its `verify:`, and records the outcome; a `run:` that fails stops before `verify:` and records failure. |
+| `PCSPA-B05` | `passed:` reads the sha itself before the head it was merged from: a stage recorded on the same sha — the production release before the version pointer flips — satisfies a later stage of that branch. |
 
 ## Errors
 

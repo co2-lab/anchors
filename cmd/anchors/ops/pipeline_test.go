@@ -116,7 +116,7 @@ func TestPipeline_productionTakesWhatPassedReview(t *testing.T) {
 	t.Run("PCSPA-B02: passed: asks whether the head the sha was merged from passed that stage; from: whether it came from that head", func(t *testing.T) {})
 	root := pipelineProject(t)
 	f := fakeForge(t, withHead(pr(9, "review", "production", "p1"), "r1"))
-	if out, err := runPipeline(t, root, "can-run", "production-release", "--branch", "production", "--sha", "p1"); err == nil || !strings.Contains(out, "has not passed review-release") {
+	if out, err := runPipeline(t, root, "can-run", "production-release", "--branch", "production", "--sha", "p1"); err == nil || !strings.Contains(out, "neither this commit nor the head of #9") {
 		t.Errorf("a review head that did not pass review refuses production: %v\n%s", err, out)
 	}
 	f.statuses["r1|anchors/pipeline/review-release"] = "success"
@@ -190,5 +190,23 @@ func TestPipeline_aStageItCannotConfrontDoesNotRun(t *testing.T) {
 	}
 	if _, err := runPipeline(t, root, "done", "only-run", "--branch", "b", "--sha", "s"); err == nil || !strings.Contains(err.Error(), "anchors pipeline run only-run") {
 		t.Errorf("a stage with no verify: is not done: %v", err)
+	}
+}
+
+func TestPipeline_aLaterStageOfTheSameShaReadsItsRecord(t *testing.T) {
+	t.Run("PCSPA-B05: passed: holds when the sha itself carries the stage's success, before asking the head it was merged from", func(t *testing.T) {})
+	root := t.TempDir()
+	yaml := "version: 8\npipeline:\n  stages:\n    production-release:\n      branches: [production]\n      verify: v\n" +
+		"    publish-app-config:\n      branches: [production]\n      requires: [{ passed: production-release }]\n      verify: v\n"
+	if err := os.WriteFile(filepath.Join(root, "anchors.yaml"), []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	f := fakeForge(t, withHead(pr(9, "review", "production", "p1"), "r1"))
+	if _, err := runPipeline(t, root, "can-run", "publish-app-config", "--branch", "production", "--sha", "p1"); err == nil {
+		t.Error("the pointer does not flip before production passed on the sha")
+	}
+	f.statuses["p1|anchors/pipeline/production-release"] = "success"
+	if out, err := runPipeline(t, root, "can-run", "publish-app-config", "--branch", "production", "--sha", "p1"); err != nil || !strings.Contains(out, "this commit passed production-release") {
+		t.Errorf("the production release recorded on the same sha lets the pointer flip: %v\n%s", err, out)
 	}
 }

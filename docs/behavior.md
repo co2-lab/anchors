@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:47b75e885ac84f39 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:b6cb301bc856eabc — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2217,6 +2217,8 @@ is what the test proves.
 - [A stage with no branch or sha, by flag or environment, does not run](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-E02`
 
 - [A requirement GitHub cannot answer refuses the stage; a stage with no verify: is not done](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-E03`
+
+- [passed: holds when the sha itself carries the stage's success, before asking the head it was merged from](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B05`
 
 - [The root receives the seventeen operation commands](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
 

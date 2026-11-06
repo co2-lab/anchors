@@ -295,7 +295,7 @@ Um requisito é um destes:
 
 - `flow`: o sha é o merge de um pull request que o `branch_flow` permite.
 - `gates: <fase>`: os gates da fase passam.
-- `passed: <etapa>`: a head de onde o sha foi mergeado passou por aquela etapa.
+- `passed: <etapa>`: o sha, ou então a head de onde ele foi mergeado, passou por aquela etapa.
 - `from: <branch>`: o sha foi mergeado daquela head.
 - `any:`: vale um de vários.
 

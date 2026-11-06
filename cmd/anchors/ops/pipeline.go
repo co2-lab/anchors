@@ -300,16 +300,28 @@ func (e *stageEval) holds(r config.Requirement) (bool, string) {
 		}
 		return true, "the " + r.Gates + " gates pass"
 	case r.Passed != "":
-		sha, of := t.sha, "this commit"
-		if pr, err := e.merged(); err == nil && pr != nil && pr.Head.SHA != "" {
-			sha, of = pr.Head.SHA, fmt.Sprintf("the head of #%d (%s)", pr.Number, short(pr.Head.SHA))
-		}
-		state, err := statusOf(t.root, sha, statusContext(r.Passed))
+		// The sha itself first — a later stage of the same branch reads the stage before it
+		// there (reported from MIF: the version pointer flipped only after the production
+		// release passed on the same sha, which the head of the review pull request never
+		// carries) —, then the head the sha was merged from, the commit a stage of the branch
+		// before it passed.
+		state, err := statusOf(t.root, t.sha, statusContext(r.Passed))
 		if err != nil {
 			return false, err.Error()
 		}
+		if state == "success" {
+			return true, fmt.Sprintf("this commit passed %s", r.Passed)
+		}
+		pr, perr := e.merged()
+		if perr != nil || pr == nil || pr.Head.SHA == "" {
+			return false, fmt.Sprintf("this commit has not passed %s (%s)", r.Passed, or(state, "no record"))
+		}
+		of := fmt.Sprintf("the head of #%d (%s)", pr.Number, short(pr.Head.SHA))
+		if state, err = statusOf(t.root, pr.Head.SHA, statusContext(r.Passed)); err != nil {
+			return false, err.Error()
+		}
 		if state != "success" {
-			return false, fmt.Sprintf("%s has not passed %s (%s)", of, r.Passed, or(state, "no record"))
+			return false, fmt.Sprintf("neither this commit nor %s passed %s (%s)", of, r.Passed, or(state, "no record"))
 		}
 		return true, fmt.Sprintf("%s passed %s", of, r.Passed)
 	case r.From != "":

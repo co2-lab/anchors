@@ -49,3 +49,9 @@ Feature: Pipeline — ask whether a stage may run, and record that it passed
     Given GitHub that cannot be asked, and a stage with only run
     When can-run asks for the production stage, and done for the stage with only run
     Then the stage is refused naming why, and done points to pipeline run
+
+  @PCSPA-B05 @unit-level
+  Scenario: passed: holds when the sha itself carries the stage's success, before asking the head it was merged from
+    Given a production sha merged from review, and a stage requiring passed: production-release
+    When can-run asks before and after the production release is recorded on that sha
+    Then it is refused before, and may run after, naming this commit
