@@ -217,6 +217,10 @@ type Node struct {
 	// upstream: the node carries no local code, and the internal gates do not charge it a
 	// unit the project could never honestly write.
 	Upstream bool `yaml:"upstream,omitempty"`
+	// External — the file lives at a URL, outside the project: a guide `governs:` reads from
+	// another repository. It governs as a local guide does; no gate confronts it, since the
+	// project neither writes nor versions it.
+	External bool `yaml:"external,omitempty"`
 	// Support: a file of a test layer that serves the tests without being one (the layer's
 	// `support:` list). It stays in the map for impact; the gates that judge a test skip it.
 	Support bool `yaml:"support,omitempty"`

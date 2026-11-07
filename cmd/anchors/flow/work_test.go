@@ -5,6 +5,8 @@
 package flow
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -601,4 +603,24 @@ func TestComposeWorkPrompt_aSpecTakesItsHeaderLayer(t *testing.T) {
 	out := prompt(t, root, "lambdas/push/send.spec.md", "code", workCfg())
 	wantAll(t, out, "- Unit layer: **handler**", "`tests/unit/push.test.ts` — test  ← layer override (not co-located)")
 	wantNone(t, out, "lambdas/push/send.test.ts")
+}
+
+func TestComposeWorkPrompt_aGuideReadFromAURL(t *testing.T) {
+	t.Run("WRPRW-B07: The guides to read are the artifact's and the layer's, each once and sorted", func(t *testing.T) {})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/develop/BACKEND.md" {
+			_, _ = w.Write([]byte("# backend"))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer srv.Close()
+	cfg := workCfg()
+	cfg.Governs = []config.GovernRule{{From: srv.URL + "/{{branch|develop}}/BACKEND.md", Governs: "backend"}}
+	out := prompt(t, t.TempDir(), "src/pricing.ts", "spec", cfg)
+	wantAll(t, out, "2. `"+srv.URL+"/develop/BACKEND.md`")
+	cfg.Governs = []config.GovernRule{{From: srv.URL + "/{{branch|develop}}/NOPE.md", Governs: "backend"}}
+	if _, err := composeWorkPrompt(t.TempDir(), "src/pricing.ts", "spec", cfg, nil); err == nil || !strings.Contains(err.Error(), "does not exist") {
+		t.Errorf("a guide URL that answers nothing fails the prompt: %v", err)
+	}
 }

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WRPRW
-  updated_at: 2026-11-05
+  updated_at: 2026-11-06
   layer: comando
 -->
 # WorkPrompt — compose the work prompt of one stage over one target, from what the project declares
@@ -55,7 +55,7 @@ STOP: a production script under a heading that forbids the piece made workers cr
 | --- | --- |
 | `WRPRW-B05` | The heading names the stage and the target — "Work: <artifact> of", "Review of", or "WHOLE review —" — and the role follows: producer, reviewer of the unit, or reviewer of the whole. |
 | `WRPRW-B06` | The target section names the file, its layer with its regime and its tags, or says the layer is unclassified and to confirm it. |
-| `WRPRW-B07` | "Read first" lists the artifact's guide, then every project guide that governs the artifact or one of the layer's tags, each once and sorted, then the target and its neighbours; without such guides it says no project guide governs the layer. |
+| `WRPRW-B07` | "Read first" lists the artifact's guide, then every project guide that governs the artifact or one of the layer's tags, each once and sorted — a guide read from a URL named by the URL that answered, its `{{branch}}` resolved (PTRFS), and one that answers nothing failing the prompt —, then the target and its neighbours; without such guides it says no project guide governs the layer. |
 | `WRPRW-B08` | The pieces are listed at the paths the project derives for the target's layer — the stage's own piece marked, the existing ones (under the project root) marked, overridden paths noted, waived pieces marked not to be created — with the unit's name cut at its compound suffix; without derived paths it says so, and a declarative layer's code stage lists only the file itself. |
 | `WRPRW-B09` | The feature and test stages list the project's regime tags, sorted, with the surface each is proved on. |
 | `WRPRW-B10` | Each stage states what is NOT its scope. |

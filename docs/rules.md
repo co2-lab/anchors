@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:dae404b3ea8e6d93 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:078a7d5df6736b81 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -465,6 +465,16 @@ in `layers/`.
 - [MSCMG-E01 — A step inside the requested interval is missing — the next registered step produces a later format.](layers/apoio.md#mscmg--migrationstepchain--one-step-per-format-version-chained-in-order-and-a-hole-in-the-chain-is-an-error)
 
 - [MSCMG-E02 — The target is beyond the last registered step.](layers/apoio.md#mscmg--migrationstepchain--one-step-per-format-version-chained-in-order-and-a-hole-in-the-chain-is-an-error)
+
+### [PTRFS — PathRef — the file a path of anchors.yaml names, in the project or at a URL](layers/apoio.md#ptrfs--pathref--the-file-a-path-of-anchorsyaml-names-in-the-project-or-at-a-url)
+
+- [PTRFS-B01 — A path reads the project's file, and a URL the external file: a 200 is its content, a 404 a file that does not exist, any other answer or no answer an error. (`Read`, `IsURL`)](layers/apoio.md#ptrfs--pathref--the-file-a-path-of-anchorsyaml-names-in-the-project-or-at-a-url)
+
+- [PTRFS-B02 — `{{branch}}` reads the current branch's mirror first and, when the server answers it does not exist or no branch is checked out, the default's; the reader is named the URL that answered. (`Resolve`, `Candidates`)](layers/apoio.md#ptrfs--pathref--the-file-a-path-of-anchorsyaml-names-in-the-project-or-at-a-url)
+
+- [PTRFS-B03 — With the server unreachable, the last copy kept of the URL answers — the branch's, else the default's. (`Read`)](layers/apoio.md#ptrfs--pathref--the-file-a-path-of-anchorsyaml-names-in-the-project-or-at-a-url)
+
+- [PTRFS-E01 — The server answers that neither the branch's nor the default's file exists; the URL asks for the branch with none checked out and no default; the server is unreachable and no copy is kept.](layers/apoio.md#ptrfs--pathref--the-file-a-path-of-anchorsyaml-names-in-the-project-or-at-a-url)
 
 ### [AGRLG — AgentRoles — who is who in a project, and the capabilities each role carries](layers/apoio.md#agrlg--agentroles--who-is-who-in-a-project-and-the-capabilities-each-role-carries)
 
@@ -1288,7 +1298,7 @@ in `layers/`.
 
 - [WRPRW-B06 — The target section names the file, its layer with its regime and its tags, or says the layer is unclassified and to confirm it.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
-- [WRPRW-B07 — "Read first" lists the artifact's guide, then every project guide that governs the artifact or one of the layer's tags, each once and sorted, then the target and its neighbours; without such guides it says no project guide governs the layer.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
+- [WRPRW-B07 — "Read first" lists the artifact's guide, then every project guide that governs the artifact or one of the layer's tags, each once and sorted — a guide read from a URL named by the URL that answered, its `{{branch}}` resolved (PTRFS), and one that answers nothing failing the prompt —, then the target and its neighbours; without such guides it says no project guide governs the layer.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
 - [WRPRW-B08 — The pieces are listed at the paths the project derives for the target's layer — the stage's own piece marked, the existing ones (under the project root) marked, overridden paths noted, waived pieces marked not to be created — with the unit's name cut at its compound suffix; without derived paths it says so, and a declarative layer's code stage lists only the file itself.](layers/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares)
 
@@ -1964,7 +1974,7 @@ in `layers/`.
 
 - [CLGCM-B05 — `--write` in `per_version` mode writes one file per release into the directory; a release's file that exists is not rewritten, the unreleased one is.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
-- [CLGCM-B06 — `changelog.template` replaces the built-in template, and the headings of the built-in one follow the project's `lang`.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
+- [CLGCM-B06 — `changelog.template` replaces the built-in template — a file of the project, or one read from a URL through PTRFS —, and the headings of the built-in one follow the project's `lang`.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
 - [CLGCM-B07 — A project with no `anchors.yaml` gets the defaults.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
@@ -1972,7 +1982,7 @@ in `layers/`.
 
 - [CLGCM-E01 — `--from` names no tag reachable from `--to`.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
-- [CLGCM-E02 — `changelog.template` names a file that cannot be read.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
+- [CLGCM-E02 — `changelog.template` names a file that cannot be read, or a URL that answers nothing (PTRFS-E01).](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
 - [CLGCM-E03 — `anchors.yaml` exists and does not load.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
@@ -2662,7 +2672,7 @@ in `layers/`.
 
 - [CGPCH-B26 — The judgment brief names every target awaiting judgment.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
-- [CGPCH-B27 — The judgment brief carries each gate's question and the guide where its ruler is.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+- [CGPCH-B27 — The judgment brief carries each gate's question and the guide where its ruler is — a guide read from a URL named by the URL that answered, its `{{branch}}` resolved (PTRFS).](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B28 — The judgment brief groups the targets by gate, so each question is asked once.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
@@ -2789,6 +2799,8 @@ in `layers/`.
 - [CGPCH-E06 — A changed file is governed by a layer but is not in the map.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-E07 — A changed path exists neither on disk nor in the map.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
+- [CGPCH-E08 — A judgment gate's guide is a URL that answers nothing (PTRFS-E01).](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 ### [CVCMC — CoverageCommand — answers the confidence questions from the ingested signals: by scenario, by line, of the diff and the delta](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
 
@@ -3694,9 +3706,9 @@ in `layers/`.
 
 ### [PTHSA — Paths — the aliases a path of anchors.yaml may open with, translated in one place](layers/config.md#pthsa--paths--the-aliases-a-path-of-anchorsyaml-may-open-with-translated-in-one-place)
 
-- [PTHSA-B01 — A path whose first segment is a declared alias reads the alias's path in its place, in every field that holds one — a file read (`governs[].from`, `gates[].guide`, `changelog.template`, `packs`), a glob (`layers`, `frozen_paths`, `suites[].paths`, the keys of `no_signal`…) or a file written (`derived.files`, `docs.required[].path`, `changelog.path`, the suites' reports); the alias alone reads its path; a first segment opening with `@` that names no alias but an entry of the root is kept as written. (`Aliases.Expand`, `Config.ExpandPaths`)](layers/config.md#pthsa--paths--the-aliases-a-path-of-anchorsyaml-may-open-with-translated-in-one-place)
+- [PTHSA-B01 — A path whose first segment is a declared alias reads the alias's path in its place, in every field that holds one — a file read (`governs[].from`, `gates[].guide`, `changelog.template`, `packs`), a glob (`layers`, `frozen_paths`, `suites[].paths`, the keys of `no_signal`…) or a file written (`derived.files`, `docs.required[].path`, `changelog.path`, the suites' reports); the alias alone reads its path; a first segment opening with `@` that names no alias but an entry of the root is kept as written; a field that reads a file keeps a URL, its `{{branch}}` left for PTRFS. (`Aliases.Expand`, `Config.ExpandPaths`)](layers/config.md#pthsa--paths--the-aliases-a-path-of-anchorsyaml-may-open-with-translated-in-one-place)
 
-- [PTHSA-E01 — An alias's name does not open with `@`; its path is empty, a URL or opens with another alias; a path cites an alias `aliases:` does not declare.](layers/config.md#pthsa--paths--the-aliases-a-path-of-anchorsyaml-may-open-with-translated-in-one-place)
+- [PTHSA-E01 — An alias's name does not open with `@`; its path is empty or opens with another alias; a path cites an alias `aliases:` does not declare; a glob or a file written is a URL.](layers/config.md#pthsa--paths--the-aliases-a-path-of-anchorsyaml-may-open-with-translated-in-one-place)
 
 ### [DRPTD — DerivedPatterns — a derived file declared as one pattern or as a list of them](layers/config.md#drptd--derivedpatterns--a-derived-file-declared-as-one-pattern-or-as-a-list-of-them)
 
@@ -4781,6 +4793,8 @@ in `layers/`.
 - [GTENG-B34 — A target whose last commit is older than its gate's `legacy.before`, with no uncommitted change, answers with the legacy severity: the verdict is the same, its action the legacy's; a target changed since — committed after, uncommitted, never committed — or a scope answers with the gate's own. (`markSeverityAt`, `legacyTarget`)](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B35 — A gate declaring `cache.inputs` keeps its tool's verdict under a key of the gate as declared, each target's content, each input's content among the project's files, and the version of Anchors, and replays it — marked as kept, with when it was measured — while the key comes again: a pass always, a failure only with `cache.failures`, and in a CI only with `cache.ci`. A tool that did not run (a batch failing with no output) is kept nowhere, and `check --no-cache` runs every tool. (`cachedTool`, `toolKey`, `SetNoToolCache`)](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
+- [GTENG-B36 — An external file — a guide `governs:` reads from a URL (PTRFS) — is out of every gate, internal or external: the project neither writes nor versions it, and there is no file here to confront. It still governs, as a local guide does.](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B06 — An UNREADABLE target does not apply: better to stop charging than to charge blind.](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
@@ -7814,6 +7828,8 @@ in `layers/`.
 
 - [OBPCB-B06 — A global pack, a pack without jurisdiction, or any pack of a project that declares no jurisdictions is loaded.](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project)
 
+- [OBPCB-B07 — A reference that is a URL reads the pack from it, through PTRFS — a pack kept in another repository, its `{{branch}}` resolved.](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project)
+
 - [OBPCB-E01 — A pack has no name.](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project)
 
 - [OBPCB-E02 — A pack has no obligations.](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project)
@@ -7821,6 +7837,8 @@ in `layers/`.
 - [OBPCB-E03 — A pack file is not valid YAML, or does not exist.](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project)
 
 - [OBPCB-E04 — A required value or a placeholder of a pack is not declared by the project.](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project)
+
+- [OBPCB-E05 — A pack's URL answers nothing (PTRFS-E01).](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project)
 
 ### [DMLDD — DemandLedger — the project's progress file: demands, stages and weighted tasks, written only by Anchors](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
@@ -9042,6 +9060,8 @@ in `layers/`.
 
 - [RPSCR-B58 — A test file's doubles are the first group of each match of the project's `derived.mock_detect`, read with the file's comments blanked and each specifier once; a file that is no test, a project with no pattern, or a pattern that does not compile or captures nothing, gives none. (`doublesOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
+- [RPSCR-B59 — A guide `governs:` reads from a URL enters the scan once, with the URL as declared for its path — its `{{branch}}` kept, so the edges it governs keep their ends — and the revision of the content PTRFS read: a guide changed in its repository, or read from another branch, leaves the edges it governs to be confronted again. It is marked external and belongs to no layer. (`externalGuides`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-I01 — The classification of a path is the same on every run with the same configuration.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
@@ -9053,6 +9073,8 @@ in `layers/`.
 - [RPSCR-E01 — The root cannot be walked (it does not exist or cannot be read).](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-E02 — A file that matches a layer cannot be read (other than having vanished since the listing).](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-E03 — A guide `governs:` reads from a URL answers nothing (PTRFS-E01).](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 ### [UPOWP — UpstreamOwnership — which files Anchors still owns in a project, and where a file's `@anchors` header begins and ends](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
 

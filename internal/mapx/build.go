@@ -49,6 +49,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			Layer:         f.Layer,
 			Parent:        f.Parent,
 			Upstream:      f.Upstream,
+			External:      f.External,
 			Support:       f.Support,
 			Revises:       f.Revises,
 			Code:          nodeCode(f, ancoraDeDerivado),

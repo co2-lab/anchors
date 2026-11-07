@@ -41,6 +41,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/pathref"
 	"gopkg.in/yaml.v3"
 )
 
@@ -91,6 +92,11 @@ func Load(path string) (*Pack, error) {
 	if err != nil {
 		return nil, err
 	}
+	return parse(path, b)
+}
+
+// parse reads a pack's content; path names it in the errors.
+func parse(path string, b []byte) (*Pack, error) {
 	var p Pack
 	if err := yaml.Unmarshal(b, &p); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
@@ -121,8 +127,18 @@ func LoadAll(root string, refs []string, values map[string]string, jurisdictions
 	}
 
 	for _, ref := range refs {
-		path := resolveRef(root, ref)
-		p, err := Load(path)
+		var p *Pack
+		var err error
+		if pathref.IsURL(ref) {
+			// A pack kept in another repository is read through pathref, as every
+			// external file of anchors.yaml is.
+			var b []byte
+			if b, err = pathref.Read(root, ref); err == nil {
+				p, err = parse(ref, b)
+			}
+		} else {
+			p, err = Load(resolveRef(root, ref))
+		}
 		if err != nil {
 			return nil, nil, err
 		}

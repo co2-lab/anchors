@@ -29,6 +29,7 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/pathref"
 )
 
 // scenarioCodeRE reconhece um código de cenário (TRACEABILITY §3): `<UNIDADE>-<LETRA><NN>`.
@@ -163,6 +164,9 @@ type File struct {
 	Parent string
 	// Upstream: the file is a copy Anchors seeded and still owns — see IsUpstreamOwned.
 	Upstream bool
+	// External: the file lives outside the project, at a URL — a guide `governs:` reads from
+	// another repository (see externalGuides). Its path is the URL as declared.
+	External bool
 	// Support: the file matches its layer's `support:` list — it serves the tests without
 	// being one (see config.Layer.Support).
 	Support bool
@@ -332,6 +336,31 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 		if read[i] {
 			out = append(out, files[i])
 		}
+	}
+	ext, err := externalGuides(root, cfg)
+	if err != nil {
+		return out, err
+	}
+	return append(out, ext...), nil
+}
+
+// externalGuides are the guides `governs:` reads from a URL, each a node of the map whose
+// path is the URL as declared and whose revision is its content's: a guide changed in its
+// repository leaves the edges it governs to be confronted again, as a local one does. A URL
+// that cannot be read fails the walk — the map would otherwise lose the guide without a word.
+func externalGuides(root string, cfg *config.Config) ([]File, error) {
+	var out []File
+	seen := map[string]bool{}
+	for _, rule := range cfg.Governs {
+		if !pathref.IsURL(rule.From) || seen[rule.From] {
+			continue
+		}
+		seen[rule.From] = true
+		body, err := pathref.Read(root, rule.From)
+		if err != nil {
+			return nil, fmt.Errorf("governs: %w", err)
+		}
+		out = append(out, File{Path: rule.From, Kind: "guide", Rev: shortHash(body), External: true})
 	}
 	return out, nil
 }

@@ -169,6 +169,32 @@ gates. Um caminho que cita um alias não declarado recusa a configuração,
 nomeando o campo; uma pasta real com `@` no nome (`@scope/pkg`) fica como
 escrita.
 
+### Arquivos externos
+
+Um campo que **lê** um arquivo — `governs[].from`, o `guide` de um gate de
+julgamento, `changelog.template`, `packs` — pode nomear uma URL, direto ou por
+um alias. Um guia compartilhado por vários repositórios mora num lugar só:
+
+```yaml
+aliases:
+    "@std": https://raw.githubusercontent.com/acme/padroes/{{branch|develop}}
+governs:
+    - from: "@std/TELA.md"
+      governs: [ui]
+```
+
+`{{branch}}` é a branch atual do projeto (o head do pull request no CI): um
+projeto em `develop` lê a `develop` do repositório de padrões;
+`{{branch|develop}}` lê `develop` quando a espelhada não existe. Uma URL que
+não responde — nem a da branch nem a do default — faz falhar todo comando que a
+lê. Cada URL fica guardada em `.anchors/cache/`, e sem rede a última cópia
+responde. Um repositório privado do GitHub é lido com `GH_TOKEN` ou
+`GITHUB_TOKEN`.
+
+Um glob (`layers`, `frozen_paths`, …) ou um arquivo gravado (`derived`,
+`changelog.path`, os relatórios das suítes) não pode ser URL: a configuração o
+recusa.
+
 ---
 
 ## `governs` — quais guias regem quais arquivos

@@ -733,6 +733,24 @@ func TestAppliesUpstreamOnlyToExternalCommands(t *testing.T) {
 	}
 }
 
+// A guide read from a URL is no file of the project: neither an internal ruler nor an
+// external command has a file here to confront.
+func TestAppliesToNoExternalFile(t *testing.T) {
+	t.Run("GTENG-B36: An external file — a guide read from a URL — is out of every gate", func(t *testing.T) {})
+
+	external := mapx.Node{ID: "https://raw.example/std/{{branch|develop}}/GUIDE.md", Kind: mapx.KindGuide, External: true}
+	local := mapx.Node{ID: "guides/GUIDE.md", Kind: mapx.KindGuide}
+	header := config.Gate{Name: "header-valid", On: []string{"guide"}, Check: "header-valid"}
+	command := config.Gate{Name: "no-secret-leaked", On: []string{"guide"}, Run: "gitleaks"}
+
+	if applies(header, external, t.TempDir()) || applies(command, external, t.TempDir()) {
+		t.Error("no gate reaches an external file")
+	}
+	if !applies(header, local, t.TempDir()) {
+		t.Error("a local guide is still confronted")
+	}
+}
+
 func TestPortaComDispensaProduzVereditoParaTodos(t *testing.T) {
 	t.Run("GTENG-B21: The entry point that honours a waiver by target keeps the gate running", func(t *testing.T) {})
 

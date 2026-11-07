@@ -137,6 +137,11 @@ func MatchesShape(g config.Gate, n mapx.Node) bool {
 	if n.Upstream && g.Run == "" {
 		return false
 	}
+	// An EXTERNAL file — a guide read from a URL — is no file of this project: no gate,
+	// internal or external, has a file here to confront.
+	if n.External {
+		return false
+	}
 	// A exclusão vem ANTES do filtro positivo, e a ordem é a decisão: um nó excluído fica
 	// fora mesmo que também case uma tag do `tags`. Camadas costumam carregar rótulos
 	// transversais (`backend`, `code`) junto com o seu próprio, então a exceção precisa

@@ -2,7 +2,7 @@
 # @anchors
 #   code: SCFTC
 #   ref: RPSCR
-#   updated_at: 2026-10-19
+#   updated_at: 2026-11-06
 #   layer: feature
 
 @RPSCR
@@ -390,3 +390,15 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a test that doubles a client twice, a store once, and a module in a comment
     When its doubles are read
     Then they are the client and the store, each once; a code file, no pattern, one that does not compile and one with no group give none
+
+  @RPSCR-B59 @unit-level
+  Scenario: A guide governs: reads from a URL enters the scan, by its URL, revised by its content
+    Given a layer tagged ui and a guide served at a URL governing ui and api
+    When the project is walked
+    Then the guide enters once, by its URL, external, with its content's revision
+
+  @RPSCR-E03 @unit-level
+  Scenario: A guide URL that answers nothing fails the walk
+    Given a guide URL the server does not have
+    When the project is walked
+    Then the walk fails saying it does not exist

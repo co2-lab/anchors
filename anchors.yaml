@@ -143,7 +143,7 @@ layers:
   # catalogue, the log scanner, the settings, the doc compiler, the format migrations
   # and the telemetry.
   apoio:
-    pattern: "internal/{board,flagx,flowx,i18n,logscan,settings,doct,migra,telemetry}/*.go"
+    pattern: "internal/{board,flagx,flowx,i18n,logscan,pathref,settings,doct,migra,telemetry}/*.go"
     kind: code
     tags: [apoio]
     exclude: ["**/*_test.go"]

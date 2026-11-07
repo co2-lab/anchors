@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTG
 #   ref: GTENG
-#   updated_at: 2026-10-21
+#   updated_at: 2026-11-06
 #   layer: feature
 
 @GTENG
@@ -289,3 +289,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a gate keeping its tool's verdict over a config file, in a repository
     When the run is made twice, after the config changes, with a failure, in a CI, and with the cache off
     Then the tool runs once for the first two, again after the change, every time for a failure, in a CI and with the cache off, and the kept verdict says so
+
+  @GTENG-B36 @unit-level
+  Scenario: An external file — a guide read from a URL — is out of every gate
+    Given a guide read from a URL and a guide of the project
+    When an internal ruler and an external command ask whether they apply
+    Then neither applies to the external guide, and the local one is still confronted

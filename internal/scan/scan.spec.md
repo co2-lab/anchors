@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPSCR
-  updated_at: 2026-10-19
+  updated_at: 2026-11-06
   layer: scan
 -->
 # RepoScan — the repository read as text: which files exist, of which layer, and what each declares
@@ -130,6 +130,7 @@ heuristic decided.
 | `RPSCR-B56` | The chain's flags — dependency, waiver, used-by and navigation — may stand in a block comment of the file's syntax (OCaml's `(* … *)`): each reads to the comment's closer, and the evidence leaves them out like any other comment. (`flagText`) |
 | `RPSCR-B57` | The symbol a used-by flag names in parentheses is whatever stands there, in any script — the flag is Anchors' syntax, the name the language's —, and the names the dialect's patterns capture are kept whole: `categoriasDoOrçamento` is read as written. |
 | `RPSCR-B58` | A test file's doubles are the first group of each match of the project's `derived.mock_detect`, read with the file's comments blanked and each specifier once; a file that is no test, a project with no pattern, or a pattern that does not compile or captures nothing, gives none. (`doublesOf`) |
+| `RPSCR-B59` | A guide `governs:` reads from a URL enters the scan once, with the URL as declared for its path — its `{{branch}}` kept, so the edges it governs keep their ends — and the revision of the content PTRFS read: a guide changed in its repository, or read from another branch, leaves the edges it governs to be confronted again. It is marked external and belongs to no layer. (`externalGuides`) |
 | `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants
@@ -151,6 +152,7 @@ heuristic decided.
 | --- | --- | --- | --- |
 | `RPSCR-E01` | The root cannot be walked (it does not exist or cannot be read). | The walk error is returned to the caller. | A map built from an unreadable root would be empty without saying so. |
 | `RPSCR-E02` | A file that matches a layer cannot be read (other than having vanished since the listing). | The walk fails with an error naming the file. | Dropping it would shrink the map without a line of error; a file that vanished has nothing to map and is skipped. |
+| `RPSCR-E03` | A guide `governs:` reads from a URL answers nothing (PTRFS-E01). | The walk fails naming the URLs tried, and so does every command that maps the project. | A map without the guide would leave its layers ungoverned without a word. |
 
 ## Open Decisions
 

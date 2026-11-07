@@ -31,6 +31,7 @@ func TestPaths_aliasesExpandInEveryPathField(t *testing.T) {
 	c, err := loadAliased(t, `aliases:
   "@guides": docs/engineering/guides/
   "@app": apps/mobile/src
+  "@std": https://raw.githubusercontent.com/co2-lab/standards
 layers:
   ui:
     pattern: "@app/screens/**/*.tsx"
@@ -50,6 +51,9 @@ gates:
   - name: line-coverage
     no_signal:
       "@app/generated/**": generated
+  - name: screen-review
+    measures: judgment
+    guide: "@std/{{branch|develop}}/SCREEN.md"
 changelog:
   template: "@guides"
 `)
@@ -80,17 +84,23 @@ changelog:
 	if gate.NoSignal["apps/mobile/src/generated/**"] != "generated" || len(gate.NoSignal) != 1 {
 		t.Errorf("a glob that is a map's key: %v", gate.NoSignal)
 	}
+	for _, g := range c.Gates {
+		if g.Name == "screen-review" && g.Guide != "https://raw.githubusercontent.com/co2-lab/standards/{{branch|develop}}/SCREEN.md" {
+			t.Errorf("a file read may be a URL, by an alias: %s", g.Guide)
+		}
+	}
 	if got := c.Changelog.Template; got != "docs/engineering/guides" {
 		t.Errorf("the alias alone is its path: %s", got)
 	}
 }
 
 func TestPaths_aBadAliasRefusesTheConfiguration(t *testing.T) {
-	t.Run("PTHSA-E01: An alias badly named, empty, a URL or opening with another, or a path citing an undeclared alias, refuses the configuration", func(t *testing.T) {})
+	t.Run("PTHSA-E01: An alias badly named, empty or opening with another, a path citing an undeclared alias, or a URL in a glob or a file written, refuses the configuration", func(t *testing.T) {})
 	for name, tc := range map[string]struct{ body, want string }{
 		"no @":      {"aliases:\n  guides: docs\n", "`aliases.guides`"},
 		"empty":     {"aliases:\n  \"@g\": \"\"\n", "names no path"},
-		"a URL":     {"aliases:\n  \"@g\": https://raw.githubusercontent.com/o/r/main\n", "is a URL"},
+		"URL glob":  {"aliases:\n  \"@g\": https://raw.example/o/r/main\nlayers:\n  ui:\n    pattern: \"@g/**\"\n    kind: code\n", "`layers.ui.pattern` is a URL"},
+		"URL write": {"changelog:\n  path: https://raw.example/CHANGELOG.md\n", "`changelog.path` is a URL"},
 		"chained":   {"aliases:\n  \"@a\": docs\n  \"@b\": \"@a/guides\"\n", "opens with another alias"},
 		"undeclare": {"layers:\n  ui:\n    pattern: \"@ap/**\"\n    kind: code\n", "`layers.ui.pattern` cites the alias `@ap`"},
 	} {

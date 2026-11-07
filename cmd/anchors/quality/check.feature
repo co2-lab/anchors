@@ -2,7 +2,7 @@
 # @anchors
 #   code: CHFTA
 #   ref: CGPCH
-#   updated_at: 2026-11-05
+#   updated_at: 2026-11-06
 #   layer: feature
 
 @CGPCH
@@ -571,6 +571,12 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given an empty map and a path that does not exist
     When the nodes are selected for that path
     Then it fails, and not as not-governed
+
+  @CGPCH-E08 @unit-level
+  Scenario: A judgment gate's guide URL that answers nothing fails the check
+    Given a judgment gate whose guide is a URL with {{branch|develop}}, served on develop, and then one the server does not have
+    When the judgment guides are read
+    Then the first is named by the develop URL, and the second fails naming the gate
 
   @CGPCH-B84 @unit-level
   Scenario: The check's stamps do not erase what another process wrote meanwhile

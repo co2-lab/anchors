@@ -167,6 +167,31 @@ holds one — layers, guides, `derived`, `frozen_paths`, suites, gate exceptions
 A path citing an alias nobody declared refuses the configuration, naming the
 field; a real folder named with `@` (`@scope/pkg`) is kept as written.
 
+### External files
+
+A field that **reads** a file — `governs[].from`, a judgment gate's `guide`,
+`changelog.template`, `packs` — may name a URL, directly or through an alias.
+A guide shared by several repositories lives in one place:
+
+```yaml
+aliases:
+    "@std": https://raw.githubusercontent.com/acme/standards/{{branch|develop}}
+governs:
+    - from: "@std/SCREEN_GUIDE.md"
+      governs: [ui]
+```
+
+`{{branch}}` is the project's current branch (a pull request's head in CI), so
+a project on `develop` reads the `develop` of the standards repository;
+`{{branch|develop}}` reads `develop` when the mirror does not exist. A URL that
+answers nothing — neither the branch nor the default — fails every command
+that reads it. Each URL is kept in `.anchors/cache/`, and offline the last copy
+answers. A private GitHub repository is read with `GH_TOKEN` or `GITHUB_TOKEN`.
+
+A glob (`layers`, `frozen_paths`, …) or a file written (`derived`,
+`changelog.path`, the suites' reports) cannot be a URL: the configuration
+refuses it.
+
 ---
 
 ## `governs` — which guides govern which files

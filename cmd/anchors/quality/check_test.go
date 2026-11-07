@@ -7,7 +7,8 @@ package quality
 import (
 	"errors"
 	"fmt"
-	"github.com/co2-lab/anchors/internal/progress"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,6 +17,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/co2-lab/anchors/internal/progress"
 
 	"github.com/co2-lab/anchors/internal/testkit"
 
@@ -3040,5 +3043,27 @@ func TestImpactOfAHeaderLayerSpecBringsItsOverriddenPieces(t *testing.T) {
 	}
 	if !strings.Contains(strings.Join(ids, " "), "svc/id/tests/get_test.go") {
 		t.Errorf("the test the handler's override names is in the spec's impact: %v", ids)
+	}
+}
+
+func TestJudgmentGuides_aGuideReadFromAURL(t *testing.T) {
+	t.Run("CGPCH-B27: The judgment brief carries the question and the guide", func(t *testing.T) {})
+	t.Run("CGPCH-E08: A judgment gate's guide URL that answers nothing fails the check", func(t *testing.T) {})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/develop/SPEC.md" {
+			_, _ = w.Write([]byte("# spec ruler"))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer srv.Close()
+	cfg := &config.Config{Gates: []config.Gate{{Name: "spec-review", Measures: "judgment", Guide: srv.URL + "/{{branch|develop}}/SPEC.md", Ask: "?"}}}
+	guides, _, err := judgmentGuides(t.TempDir(), cfg)
+	if err != nil || guides["spec-review"] != srv.URL+"/develop/SPEC.md" {
+		t.Fatalf("the guide is named by the URL that answered: %v %v", guides, err)
+	}
+	cfg.Gates[0].Guide = srv.URL + "/{{branch|develop}}/NOPE.md"
+	if _, _, err := judgmentGuides(t.TempDir(), cfg); err == nil || !strings.Contains(err.Error(), "gate spec-review, guide") {
+		t.Errorf("a guide URL that answers nothing: %v", err)
 	}
 }

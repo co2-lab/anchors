@@ -2,7 +2,7 @@
 # @anchors
 #   code: PCFTA
 #   ref: OBPCB
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-06
 #   layer: feature
 
 @OBPCB
@@ -68,3 +68,15 @@ Feature: ObligationPack — distributable sets of obligations from a norm, resol
     Given the lgpd pack and a project that declares no values
     When the packs are loaded
     Then the load is refused with "pack `lgpd` needs the project to declare `audit_log`, `erasure_handler`"
+
+  @OBPCB-B07 @unit-level
+  Scenario: A reference that is a URL reads the pack from it
+    Given the lgpd pack served at a URL
+    When the pack is loaded by its URL
+    Then it loads as from a file of the project
+
+  @OBPCB-E05 @unit-level
+  Scenario: A pack URL that answers nothing refuses the load
+    Given a pack URL the server does not have
+    When the pack is loaded
+    Then the load is refused saying it does not exist

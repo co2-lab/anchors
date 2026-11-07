@@ -18,6 +18,7 @@ import (
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/issue"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/pathref"
 	"github.com/co2-lab/anchors/internal/progress"
 	"github.com/co2-lab/anchors/internal/queue"
 	"github.com/co2-lab/anchors/internal/scan"
@@ -215,6 +216,15 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 		b.WriteString("\n## Read first (in this order)\n\n")
 		fmt.Fprintf(&b, "1. `anchors guide %s` — the doctrine of the artifact (what it is, what it is not)\n", artifact)
 		for i, g := range guides {
+			// A guide read from a URL is named by the URL that answered, its `{{branch}}`
+			// resolved; one that answers nothing fails the prompt.
+			if pathref.IsURL(g) {
+				u, _, err := pathref.Resolve(root, g)
+				if err != nil {
+					return "", fmt.Errorf("governs: %w", err)
+				}
+				g = u
+			}
 			fmt.Fprintf(&b, "%d. `%s` — this project's ruler for this layer\n", i+2, g)
 		}
 		fmt.Fprintf(&b, "%d. The target (`%s`) and its layer neighbors, to follow the local dialect\n",

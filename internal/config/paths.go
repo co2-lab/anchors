@@ -36,8 +36,9 @@ const (
 
 var aliasNameRE = regexp.MustCompile(`^@[A-Za-z0-9_.-]+$`)
 
-// validate refuses an alias whose name does not open with `@`, whose path is empty, a URL
-// or itself opens with an alias.
+// validate refuses an alias whose name does not open with `@`, whose path is empty or
+// itself opens with an alias. An alias may stand for a URL: the fields that read a file
+// accept it, the others refuse it where it is cited.
 func (a Aliases) validate() error {
 	for _, name := range a.names() {
 		value := a[name]
@@ -46,8 +47,6 @@ func (a Aliases) validate() error {
 			return fmt.Errorf("`aliases.%s`: an alias is named `@` and letters, digits, `_`, `.` or `-` (`@guides`)", name)
 		case strings.TrimSpace(value) == "":
 			return fmt.Errorf("`aliases.%s` names no path", name)
-		case isURL(value):
-			return fmt.Errorf("`aliases.%s` is a URL (%s): a path of anchors.yaml names a file of the project", name, value)
 		case strings.HasPrefix(value, "@"):
 			return fmt.Errorf("`aliases.%s` opens with another alias (%s): write the path it stands for", name, value)
 		}
@@ -95,11 +94,20 @@ func (c *Config) ExpandPaths(root string) error {
 	if err := c.Aliases.validate(); err != nil {
 		return err
 	}
-	return walkPaths(reflect.ValueOf(c).Elem(), "", func(field string, _ PathKind, p string) (string, error) {
+	return walkPaths(reflect.ValueOf(c).Elem(), "", func(field string, kind PathKind, p string) (string, error) {
 		out, ok := c.Aliases.Expand(root, p)
 		if !ok {
 			head, _, _ := strings.Cut(p, "/")
 			return "", fmt.Errorf("`%s` cites the alias `%s`, which `aliases:` does not declare", field, head)
+		}
+		// Only a file the Anchors reads may live elsewhere: a glob lists the project's
+		// files, and a file written is written here and confronted by the git history.
+		if isURL(out) && kind != PathRead {
+			what := "a glob over the project's files"
+			if kind == PathWrite {
+				what = "a file written in the project"
+			}
+			return "", fmt.Errorf("`%s` is a URL (%s): it names %s, which cannot be external", field, out, what)
 		}
 		return out, nil
 	})

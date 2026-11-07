@@ -1,6 +1,6 @@
 <!-- @anchors
   code: OBPCB
-  updated_at: 2026-09-26
+  updated_at: 2026-11-06
   layer: infra
 -->
 # ObligationPack — distributable sets of obligations from a norm, resolved against the project
@@ -42,6 +42,7 @@ without jurisdiction, or a project that declares no jurisdictions loads everythi
 | `OBPCB-B04` | The loaded packs come back sorted by name. |
 | `OBPCB-B05` | A pack of a jurisdiction the project does not declare is not loaded, and a warning names the pack and its jurisdiction; jurisdictions are compared ignoring case and surrounding spaces. |
 | `OBPCB-B06` | A global pack, a pack without jurisdiction, or any pack of a project that declares no jurisdictions is loaded. |
+| `OBPCB-B07` | A reference that is a URL reads the pack from it, through PTRFS — a pack kept in another repository, its `{{branch}}` resolved. |
 
 ## Errors
 
@@ -51,6 +52,7 @@ without jurisdiction, or a project that declares no jurisdictions loads everythi
 | `OBPCB-E02` | A pack has no obligations. | Refused with "pack without obligations". | An empty pack confronts nothing and would look like conformity. |
 | `OBPCB-E03` | A pack file is not valid YAML, or does not exist. | Refused with the parse error naming the file, or with the read error. | Loading part of the packs would report fewer duties than the project declared. |
 | `OBPCB-E04` | A required value or a placeholder of a pack is not declared by the project. | The whole load is refused, naming the pack and every missing value, sorted. | A duty that points nowhere passes green without verifying anything. |
+| `OBPCB-E05` | A pack's URL answers nothing (PTRFS-E01). | The load is refused, naming the URLs tried. | A pack that reads nothing would confront no duty while the project believes it adopted them. |
 
 ## Dependencies
 

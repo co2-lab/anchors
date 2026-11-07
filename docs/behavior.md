@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:8ab6ca313ed578ab — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:241ad50eff41b8c0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -421,6 +421,14 @@ is what the test proves.
 - [A hole in the chain is an error naming the missing format](layers/apoio.md#mscmg--migrationstepchain--one-step-per-format-version-chained-in-order-and-a-hole-in-the-chain-is-an-error) `MSCMG-E01`
 
 - [A target beyond the last step is an error naming the first missing format](layers/apoio.md#mscmg--migrationstepchain--one-step-per-format-version-chained-in-order-and-a-hole-in-the-chain-is-an-error) `MSCMG-E02`
+
+- [A path reads the project's file, and a URL the external file](layers/apoio.md#ptrfs--pathref--the-file-a-path-of-anchorsyaml-names-in-the-project-or-at-a-url) `PTRFS-B01`
+
+- [{{branch}} reads the current branch's mirror, and the default when the mirror does not exist](layers/apoio.md#ptrfs--pathref--the-file-a-path-of-anchorsyaml-names-in-the-project-or-at-a-url) `PTRFS-B02`
+
+- [With the server unreachable, the last copy kept answers](layers/apoio.md#ptrfs--pathref--the-file-a-path-of-anchorsyaml-names-in-the-project-or-at-a-url) `PTRFS-B03`
+
+- [A URL that answers nothing, with or without the default, or unreachable with no copy, fails naming what was tried](layers/apoio.md#ptrfs--pathref--the-file-a-path-of-anchorsyaml-names-in-the-project-or-at-a-url) `PTRFS-E01`
 
 - [Every known role presents itself](layers/apoio.md#agrlg--agentroles--who-is-who-in-a-project-and-the-capabilities-each-role-carries) `AGRLG-B01`
 
@@ -2510,6 +2518,8 @@ is what the test proves.
 
 - [A path on neither disk nor map is an error](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-E07`
 
+- [A judgment gate's guide URL that answers nothing fails the check](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-E08`
+
 - [The check's stamps do not erase what another process wrote meanwhile](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B84`
 
 - [The index flag reads what the commit records](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B85`
@@ -3378,7 +3388,7 @@ is what the test proves.
 
 - [A path that opens with an alias reads the path the alias stands for, in every field that holds a path](layers/config.md#pthsa-b01--a-path-that-opens-with-an-alias-reads-the-path-the-alias-stands-for-in-every-field-that-holds-a-path) `PTHSA-B01`
 
-- [An alias badly named, empty, a URL or opening with another, or a path citing an undeclared alias, refuses the configuration](layers/config.md#pthsa-e01--an-alias-badly-named-empty-a-url-or-opening-with-another-or-a-path-citing-an-undeclared-alias-refuses-the-configuration) `PTHSA-E01`
+- [An alias badly named, empty or opening with another, a path citing an undeclared alias, or a URL in a glob or a file written, refuses the configuration](layers/config.md#pthsa-e01--an-alias-badly-named-empty-or-opening-with-another-a-path-citing-an-undeclared-alias-or-a-url-in-a-glob-or-a-file-written-refuses-the-configuration) `PTHSA-E01`
 
 - [A single pattern written as text becomes a list of one](layers/config.md#drptd-b01--a-single-pattern-written-as-text-becomes-a-list-of-one) `DRPTD-B01`
 
@@ -4373,6 +4383,8 @@ is what the test proves.
 - [A target older than the legacy cutoff answers with the legacy severity](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B34`
 
 - [A tool is not run again over the same inputs](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B35`
+
+- [An external file — a guide read from a URL — is out of every gate](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B36`
 
 - [The guidance points to the agreement](layers/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B01`
 
@@ -7098,6 +7110,10 @@ is what the test proves.
 
 - [Unresolved placeholders refuse the whole load](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project) `OBPCB-E04`
 
+- [A reference that is a URL reads the pack from it](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project) `OBPCB-B07`
+
+- [A pack URL that answers nothing refuses the load](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project) `OBPCB-E05`
+
 - [The file is rendered and read back](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B01`
 
 - [Progress counts the done weight over the weight not cancelled](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B02`
@@ -8233,6 +8249,10 @@ is what the test proves.
 - [An identifier the chain reads may hold letters of any script](layers/scan.md#rpscr-b57--an-identifier-the-chain-reads-may-hold-letters-of-any-script) `RPSCR-B57`
 
 - [A test file's doubles are what mock_detect captures, outside the comments](layers/scan.md#rpscr-b58--a-test-files-doubles-are-what-mock-detect-captures-outside-the-comments) `RPSCR-B58`
+
+- [A guide governs: reads from a URL enters the scan, by its URL, revised by its content](layers/scan.md#rpscr-b59--a-guide-governs-reads-from-a-url-enters-the-scan-by-its-url-revised-by-its-content) `RPSCR-B59`
+
+- [A guide URL that answers nothing fails the walk](layers/scan.md#rpscr-e03--a-guide-url-that-answers-nothing-fails-the-walk) `RPSCR-E03`
 
 - [Only a marked workflow is owned upstream](layers/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

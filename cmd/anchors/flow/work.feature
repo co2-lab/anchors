@@ -2,7 +2,7 @@
 # @anchors
 #   code: WRFTW
 #   ref: WRPRW
-#   updated_at: 2026-11-05
+#   updated_at: 2026-11-06
 #   layer: feature
 
 @WRPRW
@@ -55,6 +55,7 @@ Feature: WorkPrompt — compose the work prompt of one stage over one target, fr
     Given "guides/SPEC_GUIDE.md" governing spec, and "guides/BACKEND.md" governing both backend and spec
     When the spec prompt of "src/pricing.ts" is composed
     Then it lists "2. `guides/BACKEND.md`" and "3. `guides/SPEC_GUIDE.md`", BACKEND once
+    And a guide governing backend from a URL with {{branch|develop}} is listed by the develop URL that answered, and one that answers nothing fails the prompt
     And a target with no governing guide says "No project guide governs this layer"
 
   @WRPRW-B08 @unit-level

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CLGCM
-  updated_at: 2026-10-08
+  updated_at: 2026-11-06
   layer: comando
 -->
 # anchors changelog — the technical changelog, printed or written
@@ -36,7 +36,7 @@ project's `lang`, and `changelog.template` replaces the built-in template.
 | `CLGCM-B03` | `--unreleased` adds what came after the last tag on top; a history with no tag is printed as unreleased without the flag. |
 | `CLGCM-B04` | `--write` in incremental mode writes the path the block names (`CHANGELOG.md` by default), titled in the project's language, and a second run reports the file already holds every release and leaves it as it was. |
 | `CLGCM-B05` | `--write` in `per_version` mode writes one file per release into the directory; a release's file that exists is not rewritten, the unreleased one is. |
-| `CLGCM-B06` | `changelog.template` replaces the built-in template, and the headings of the built-in one follow the project's `lang`. |
+| `CLGCM-B06` | `changelog.template` replaces the built-in template — a file of the project, or one read from a URL through PTRFS —, and the headings of the built-in one follow the project's `lang`. |
 | `CLGCM-B07` | A project with no `anchors.yaml` gets the defaults. |
 | `CLGCM-B08` | A range with nothing to list prints nothing, and says so on the error stream. |
 
@@ -45,7 +45,7 @@ project's `lang`, and `changelog.template` replaces the built-in template.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `CLGCM-E01` | `--from` names no tag reachable from `--to`. | The command fails naming the tag. | An unknown start would silently print nothing, or everything. |
-| `CLGCM-E02` | `changelog.template` names a file that cannot be read. | The command fails naming `changelog.template`. | Falling back to the built-in template would write a changelog the project did not ask for. |
+| `CLGCM-E02` | `changelog.template` names a file that cannot be read, or a URL that answers nothing (PTRFS-E01). | The command fails naming `changelog.template`. | Falling back to the built-in template would write a changelog the project did not ask for. |
 | `CLGCM-E03` | `anchors.yaml` exists and does not load. | The command fails naming the file. | A broken configuration must not be read as the defaults. |
 
 ## Open Decisions

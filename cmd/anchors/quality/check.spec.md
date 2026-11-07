@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CGPCH
-  updated_at: 2026-11-05
+  updated_at: 2026-11-06
   layer: comando
 -->
 # CheckGatePipeline — confronts the map's nodes against the declared gates, records the verdicts and reports the profile
@@ -114,7 +114,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-B24` | The drop of stale judge tasks happens only on the full sweep; an incremental check keeps the judge tasks of the targets it did not look at. |
 | `CGPCH-B25` | In github mode the check prints the judgment brief even without recording, and queues no judgment locally: the queue there is the board. |
 | `CGPCH-B26` | The judgment brief names every target awaiting judgment. |
-| `CGPCH-B27` | The judgment brief carries each gate's question and the guide where its ruler is. |
+| `CGPCH-B27` | The judgment brief carries each gate's question and the guide where its ruler is — a guide read from a URL named by the URL that answered, its `{{branch}}` resolved (PTRFS). |
 | `CGPCH-B28` | The judgment brief groups the targets by gate, so each question is asked once. |
 | `CGPCH-B29` | The judgment brief says the pipeline does not judge and points at the review checklist item. |
 | `CGPCH-B30` | The judgment brief lists at most ten targets per gate and counts the rest. |
@@ -213,6 +213,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-E05` | Neither changed files nor the full sweep is asked for. | Error asking for one of the two. | There is no default scope: guessing one would confront either too little or everything. |
 | `CGPCH-E06` | A changed file is governed by a layer but is not in the map. | Error saying the file is GOVERNED and to run the map build first. | Outside the map no gate confronts it: a new governed file would pass with no spec, feature or test. |
 | `CGPCH-E07` | A changed path exists neither on disk nor in the map. | Error asking to check the path. | A typo must not become "not governed" and let the hook continue in silence. |
+| `CGPCH-E08` | A judgment gate's guide is a URL that answers nothing (PTRFS-E01). | Error naming the gate and the URLs tried, before any gate runs. | A judgment pointed at no ruler would be answered from nothing. |
 
 ## Open Decisions
 

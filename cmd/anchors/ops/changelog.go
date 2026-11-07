@@ -15,6 +15,7 @@ import (
 	"github.com/co2-lab/anchors/internal/changelog"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/pathref"
 	"github.com/spf13/cobra"
 )
 
@@ -56,7 +57,7 @@ the project's ` + "`lang`" + `, and ` + "`changelog.template`" + ` replaces the 
 			}
 			tmpl := changelog.DefaultTemplate
 			if cl != nil && cl.Template != "" {
-				b, err := os.ReadFile(filepath.Join(absRoot, cl.Template))
+				b, err := pathref.Read(absRoot, cl.Template)
 				if err != nil {
 					return fmt.Errorf("changelog.template: %w", err)
 				}

@@ -2,7 +2,7 @@
 # @anchors
 #   code: CHFTC
 #   ref: CLGCM
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-06
 #   layer: feature
 
 @CLGCM
@@ -42,7 +42,7 @@ Feature: anchors changelog — the technical changelog, printed or written
   Scenario: The project's template and language
     Given a project in Spanish with its own template
     When the changelog is printed
-    Then the project's template renders the release
+    Then the project's template renders the release, read from the project or from a URL
 
   @CLGCM-B07 @unit-level
   Scenario: No anchors.yaml
@@ -64,7 +64,7 @@ Feature: anchors changelog — the technical changelog, printed or written
 
   @CLGCM-E02 @unit-level
   Scenario: A template that cannot be read
-    Given a project whose template file does not exist
+    Given a project whose template file does not exist, or whose template URL answers nothing
     When the changelog is printed
     Then the command fails naming changelog.template
 

@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:9a31225b7a67f1c0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:8d7df44a7fafa301 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 90 units and 1445 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 90 units and 1446 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1564,6 +1564,8 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 - **GTENG-B34** — A target whose last commit is older than its gate's `legacy.before`, with no uncommitted change, answers with the legacy severity: the verdict is the same, its action the legacy's; a target changed since — committed after, uncommitted, never committed — or a scope answers with the gate's own. (`markSeverityAt`, `legacyTarget`)
 
 - **GTENG-B35** — A gate declaring `cache.inputs` keeps its tool's verdict under a key of the gate as declared, each target's content, each input's content among the project's files, and the version of Anchors, and replays it — marked as kept, with when it was measured — while the key comes again: a pass always, a failure only with `cache.failures`, and in a CI only with `cache.ci`. A tool that did not run (a batch failing with no output) is kept nowhere, and `check --no-cache` runs every tool. (`cachedTool`, `toolKey`, `SetNoToolCache`)
+
+- **GTENG-B36** — An external file — a guide `governs:` reads from a URL (PTRFS) — is out of every gate, internal or external: the project neither writes nor versions it, and there is no file here to confront. It still governs, as a local guide does.
 
 - **GTENG-B06** — An UNREADABLE target does not apply: better to stop charging than to charge blind.
 

@@ -5,6 +5,8 @@
 package pack
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -163,5 +165,26 @@ func TestLoadAll_refusesUnresolvedPlaceholders(t *testing.T) {
 
 	if _, _, err := LoadAll(root, []string{"privacy/missing"}, nil, nil); err == nil {
 		t.Fatal("a missing pack must be an error")
+	}
+}
+
+func TestLoadAll_aPackAtAURL(t *testing.T) {
+	t.Run("OBPCB-B07: A reference that is a URL reads the pack from it", func(t *testing.T) {})
+	t.Run("OBPCB-E05: A pack URL that answers nothing refuses the load", func(t *testing.T) {})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/packs/lgpd.yaml" {
+			_, _ = w.Write([]byte(lgpdFixture))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer srv.Close()
+	values := map[string]string{"erasure_handler": "api/erase.go", "audit_log": "api/audit"}
+	packs, _, err := LoadAll(t.TempDir(), []string{srv.URL + "/packs/lgpd.yaml"}, values, nil)
+	if err != nil || len(packs) != 1 || packs[0].Name != "lgpd" {
+		t.Fatalf("a pack at a URL: %v %v", packs, err)
+	}
+	if _, _, err := LoadAll(t.TempDir(), []string{srv.URL + "/packs/nope.yaml"}, values, nil); err == nil || !strings.Contains(err.Error(), "does not exist") {
+		t.Errorf("a pack URL that answers nothing: %v", err)
 	}
 }

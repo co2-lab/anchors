@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/pathref"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/cmd/anchors/mapcmd"
@@ -64,6 +65,11 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
 			if err != nil {
 				return fmt.Errorf("load config: %w", err)
+			}
+			// A judgment gate's guide read from a URL that answers nothing fails the check
+			// here, before any gate runs, rather than pointing the reviewer nowhere.
+			if _, _, err := judgmentGuides(absRoot, cfg); err != nil {
+				return err
 			}
 			// `--index`: the gates read the project's files as the git index has them —
 			// what the commit records —, not as the tree does.
@@ -270,7 +276,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// Enqueueing is a write and stays under `!noRecord`; telling the reviewer what
 			// is left to judge writes nothing.
 			if len(profile.Judged) > 0 && cfg.GitHubMode() {
-				guides, asks := judgmentGuides(cfg)
+				guides, asks, _ := judgmentGuides(absRoot, cfg)
 				printJudgmentBrief(profile.Judged, guides, asks)
 			}
 
@@ -500,14 +506,12 @@ func filterGates(gates []config.Gate, phase, category string, skipSlow bool, per
 // como pendente (verdict Judge). A task carrega o gate e o guide, para o worker (a
 // IA) saber o que ler e confrontar. Reusa a fila. Idempotente pelo dedup da fila.
 func enqueueJudgments(root string, cfg *config.Config, p gate.Profile, varreduraCompleta bool) int {
-	// índice gate → (guide, ask) para enriquecer a task
-	guideOf := map[string]string{}
-	askOf := map[string]string{}
+	// índice gate → (guide, ask) para enriquecer a task; the guides were read at the
+	// check's start, so an error cannot come back here.
+	guideOf, askOf, _ := judgmentGuides(root, cfg)
 	knownJudgmentGates = knownJudgmentGates[:0]
 	for _, g := range cfg.Gates {
 		if g.IsJudgment() {
-			guideOf[g.Name] = g.Guide
-			askOf[g.Name] = g.Ask
 			knownJudgmentGates = append(knownJudgmentGates, g.Name)
 		}
 	}
@@ -1328,19 +1332,30 @@ func reportTiming(show bool, p gate.Profile) {
 // The same reading `enqueueJudgments` does to enrich a task: the gate declares both, and
 // whoever judges needs both — the guide says where the ruler is, the question says what
 // to confront.
-func judgmentGuides(cfg *config.Config) (map[string]string, map[string]string) {
+//
+// A guide read from a URL is named by the URL that answered — its `{{branch}}` resolved —,
+// and one that answers nothing is an error.
+func judgmentGuides(root string, cfg *config.Config) (map[string]string, map[string]string, error) {
 	guideOf := map[string]string{}
 	askOf := map[string]string{}
 	if cfg == nil {
-		return guideOf, askOf
+		return guideOf, askOf, nil
 	}
 	for _, g := range cfg.Gates {
 		if g.IsJudgment() {
-			guideOf[g.Name] = g.Guide
+			guide := g.Guide
+			if pathref.IsURL(guide) {
+				u, _, err := pathref.Resolve(root, guide)
+				if err != nil {
+					return nil, nil, fmt.Errorf("gate %s, guide: %w", g.Name, err)
+				}
+				guide = u
+			}
+			guideOf[g.Name] = guide
 			askOf[g.Name] = g.Ask
 		}
 	}
-	return guideOf, askOf
+	return guideOf, askOf, nil
 }
 
 // printJudgmentBrief hands the REVIEWER the list of what is left to judge.

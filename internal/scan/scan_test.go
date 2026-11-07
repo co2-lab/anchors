@@ -6,6 +6,8 @@ package scan
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,6 +22,44 @@ import (
 )
 
 // ---- Walk ----
+
+func TestWalk_aGuideReadFromAURL(t *testing.T) {
+	t.Run("RPSCR-B59: A guide governs: reads from a URL enters the scan, by its URL, revised by its content", func(t *testing.T) {})
+	t.Run("RPSCR-E03: A guide URL that answers nothing fails the walk", func(t *testing.T) {})
+	body := "# guide v1"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/GUIDE.md" {
+			_, _ = w.Write([]byte(body))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer srv.Close()
+	root := t.TempDir()
+	must(t, writeDeep(filepath.Join(root, "src", "a.ts"), "x"))
+	from := srv.URL + "/GUIDE.md"
+	cfg := &config.Config{
+		Layers:  map[string]config.Layer{"code": {Pattern: "src/*.ts", Kind: "code", Tags: []string{"ui"}}},
+		Governs: []config.GovernRule{{From: from, Governs: "ui"}, {From: from, Governs: "api"}},
+	}
+	files, err := Walk(root, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var guide *File
+	for i := range files {
+		if files[i].Path == from {
+			guide = &files[i]
+		}
+	}
+	if len(files) != 2 || guide == nil || !guide.External || guide.Kind != "guide" || guide.Rev != shortHash([]byte(body)) {
+		t.Fatalf("the external guide, once, by its URL and its content's revision: %+v", files)
+	}
+	cfg.Governs = []config.GovernRule{{From: srv.URL + "/NOPE.md", Governs: "ui"}}
+	if _, err := Walk(root, cfg); err == nil || !strings.Contains(err.Error(), "NOPE.md does not exist") {
+		t.Errorf("a guide URL that answers nothing: %v", err)
+	}
+}
 
 func TestWalk_onlyDeclaredLayersEnter(t *testing.T) {
 	t.Run("RPSCR-B01: Only files in a declared layer enter the scan", func(t *testing.T) {})

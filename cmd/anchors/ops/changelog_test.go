@@ -6,6 +6,8 @@ package ops
 
 import (
 	"bytes"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -152,6 +154,27 @@ func TestChangelog_TemplateAndLang(t *testing.T) {
 	root = historyRepo(t, "file:anchors.yaml=version: 1\nlang: es\n", "fix: x", "tag:v1")
 	if out, _, _ := changelogRun(t, "--root", root); !strings.Contains(out, "### Correcciones") {
 		t.Errorf("the built-in headings follow lang, got %q", out)
+	}
+}
+
+func TestChangelog_TemplateAtAURL(t *testing.T) {
+	t.Run("CLGCM-B06: The project's template and language", func(t *testing.T) {})
+	t.Run("CLGCM-E02: A template that cannot be read", func(t *testing.T) {})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/cl.tmpl" {
+			_, _ = w.Write([]byte("<{{.Version}}>\n"))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer srv.Close()
+	root := historyRepo(t, "file:anchors.yaml=version: 1\nchangelog:\n  template: "+srv.URL+"/cl.tmpl\n", "feat: a", "tag:v1")
+	if out, _, err := changelogRun(t, "--root", root); err != nil || out != "<v1>\n" {
+		t.Fatalf("a template read from a URL: %v %q", err, out)
+	}
+	root = historyRepo(t, "file:anchors.yaml=version: 1\nchangelog:\n  template: "+srv.URL+"/nope.tmpl\n", "feat: a", "tag:v1")
+	if _, _, err := changelogRun(t, "--root", root); err == nil || !strings.Contains(err.Error(), "changelog.template") {
+		t.Errorf("a template URL that answers nothing: %v", err)
 	}
 }
 
