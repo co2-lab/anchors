@@ -142,6 +142,33 @@ them.
 
 ---
 
+## `aliases` — short names for long paths
+
+A path written in `anchors.yaml` can be long, and the same prefix repeats in
+layers, guides, derived templates and gate exceptions. `aliases` names it once,
+as a tsconfig's `paths` or Jest's `moduleNameMapper` do:
+
+```yaml
+aliases:
+    "@app": apps/mobile/src
+    "@guides": docs/engineering/guides
+layers:
+    ui:
+        pattern: "@app/screens/**/*.tsx"
+        kind: code
+governs:
+    - from: "@guides/SCREEN_GUIDE.md"
+      governs: [ui]
+```
+
+An alias is named `@` and a word, and stands for a path relative to the root.
+It is translated only as the **first segment** of a path, in every field that
+holds one — layers, guides, `derived`, `frozen_paths`, suites, gate exceptions.
+A path citing an alias nobody declared refuses the configuration, naming the
+field; a real folder named with `@` (`@scope/pkg`) is kept as written.
+
+---
+
 ## `governs` — which guides govern which files
 
 A **guide** is a cross-cutting rule document: the accessibility standard, the

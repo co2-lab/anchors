@@ -118,6 +118,8 @@ type Config struct {
 	Version  int                 `yaml:"version"`
 	Comments map[string][]string `yaml:"comments,omitempty"` // override/extensão dos marcadores (D4)
 	Layers   map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
+	// Aliases are the short names a path of this file may open with (see Aliases).
+	Aliases Aliases `yaml:"aliases,omitempty"`
 	// Guidance turns the canonical guidance layer off with `guidance: false`; absent or true,
 	// every project has it (DESIGN-guidance-layer.md, GuidanceLayer).
 	Guidance *bool `yaml:"guidance,omitempty"`
@@ -180,7 +182,7 @@ type Config struct {
 	// RouteRegistry: onde o projeto REGISTRA suas rotas de navegação (globs). O Anchors
 	// não pode adivinhar — cada stack tem o seu lugar e a sua sintaxe. Sem isto, o gate
 	// `route-exists` fica Pendente em vez de afirmar que uma rota existe sem ter olhado.
-	RouteRegistryGlobs []string `yaml:"route_registry,omitempty"`
+	RouteRegistryGlobs []string `yaml:"route_registry,omitempty" path:"glob"`
 	// DataStates: whether the data states a spec defines (`DS-<field>-<variant>` in the
 	// first cell of a table row) are requirements of their unit like its rules — each
 	// asking for its scenario, its passing test and its citation in the code. Off by
@@ -225,11 +227,11 @@ type Config struct {
 	// Sem eles, cada projeto declarava os mesmos deveres do zero, com vocabulário próprio
 	// — e não havia como responder "quais deveres se aplicam a mim". Um pack traz o dever
 	// e a norma que o origina; o PROJETO traz onde isso vive nele (`pack_values`).
-	Packs []string `yaml:"packs,omitempty"`
+	Packs []string `yaml:"packs,omitempty" path:"read"`
 	// PackValues resolve os placeholders que os packs usam: `{{purge_handler}}` vira o
 	// caminho real deste projeto. É a divisão que impede o pack de adivinhar a estrutura
 	// alheia — o dever é universal, o endereço é local.
-	PackValues map[string]string `yaml:"pack_values,omitempty"`
+	PackValues map[string]string `yaml:"pack_values,omitempty" path:"glob"`
 	// EnableAutoJudgment permite que a IA DECIDA sozinha as sugestões de julgamento, em vez de
 	// deixá-las aguardando aprovação humana.
 	//
@@ -267,7 +269,7 @@ type Config struct {
 // generated or vendored files, whose header nobody maintains by hand. They add to the
 // command's `--exclude` flags.
 type Touch struct {
-	Exclude []string `yaml:"exclude,omitempty"`
+	Exclude []string `yaml:"exclude,omitempty" path:"glob"`
 	// PreCommit: the pre-commit phase (`anchors verify --phase pre-commit --staged`, what
 	// the installed hook calls) bumps the staged files BEFORE the gates run. On unless
 	// declared false. The date is a mechanical fact — the file changed today — and the
@@ -521,7 +523,7 @@ type Obligation struct {
 	// nó (ex.: "carries: pii"). Vocabulário do projeto.
 	When string `yaml:"when"`
 	// MustAppearIn: os arquivos onde o nó DEVE aparecer (globs). É o dever.
-	MustAppearIn []string `yaml:"must_appear_in"`
+	MustAppearIn []string `yaml:"must_appear_in" path:"glob"`
 	// IdentifiedBy: como o nome do nó aparece no destino. O nome do artefato e a forma
 	// como ele é referenciado raramente coincidem (`MetadataEntry` vira
 	// `METADATA_ENTRIES_TABLE_NAME`). Valores: "as-is" (default), "screaming-snake",
@@ -846,7 +848,7 @@ type Recode struct {
 	// FilePatterns: globs de NOMES de arquivo que contêm o código, com a variável
 	// {{code}} (ex.: "**/{{code}}-*.yaml", "**/*.{{code}}-*.png"). O recode renomeia
 	// esses arquivos (git mv) ao aplicar, e atualiza as referências a eles.
-	FilePatterns []string `yaml:"file_patterns,omitempty"`
+	FilePatterns []string `yaml:"file_patterns,omitempty" path:"glob"`
 }
 
 // Gate é um gate de qualidade declarado (QUALITY §4: "ligar um gate é declarativo").
@@ -909,8 +911,8 @@ type Gate struct {
 	// JULGAMENTO POR IA: o CLI não computa — enfileira o alvo para uma IA confrontar
 	// e reportar o veredito via `anchors judge`. Mesma dupla saída (carimbo + issue).
 	Measures string `yaml:"measures,omitempty"`
-	Guide    string `yaml:"guide,omitempty"` // (judgment) o arquivo-régua que a IA deve ler
-	Ask      string `yaml:"ask,omitempty"`   // (judgment) a pergunta específica do gate para a IA
+	Guide    string `yaml:"guide,omitempty" path:"read"` // (judgment) o arquivo-régua que a IA deve ler
+	Ask      string `yaml:"ask,omitempty"`               // (judgment) a pergunta específica do gate para a IA
 	// StaleOnConfig: the judgment is about the project's configuration too, so a change to
 	// anchors.yaml asks it again, as a change to the target does (guidance-honored).
 	StaleOnConfig bool `yaml:"stale_on_config,omitempty"`
@@ -1090,7 +1092,7 @@ type Gate struct {
 	// matches, each with the reason (`why`). It is the honest exception: the file is still
 	// measured, against a floor the project wrote down and justified, where `no_signal`
 	// would stop measuring it. A floor with no reason is refused at load.
-	CoverageFloors map[string]CoverageFloor `yaml:"coverage_floors,omitempty"`
+	CoverageFloors map[string]CoverageFloor `yaml:"coverage_floors,omitempty" path:"glob,keys"`
 
 	// NoSignal — the targets this gate has nothing to measure on, each with the reason: a
 	// glob of the target's path → why. A coverage or mutation report never lists a file
@@ -1098,7 +1100,7 @@ type Gate struct {
 	// on another platform), and without the declaration the gate waited for a signal that
 	// never comes. The runner skips a matching target naming the reason. It is declared,
 	// not inferred: the project says which files have no signal and why.
-	NoSignal map[string]string `yaml:"no_signal,omitempty"`
+	NoSignal map[string]string `yaml:"no_signal,omitempty" path:"glob,keys"`
 
 	// Letters — for `rule-uses-declared`: the rule letters whose rules must say what they
 	// use. Empty asks about every rule but an open question's, a plan phase's and a flag
@@ -1154,7 +1156,7 @@ type LegacySeverity struct {
 
 // ToolCache is how a gate's tool result is kept (see Gate.Cache).
 type ToolCache struct {
-	Inputs   []string `yaml:"inputs"`
+	Inputs   []string `yaml:"inputs" path:"glob"`
 	Failures bool     `yaml:"failures,omitempty"`
 	CI       bool     `yaml:"ci,omitempty"`
 }
@@ -1401,7 +1403,7 @@ func (g Gate) TimeoutCeilingOrDefault() float64 {
 // FrozenPath is a freeze's scope by path: the freeze, and the globs of the files it covers.
 type FrozenPath struct {
 	Freeze string   `yaml:"freeze"`
-	Paths  []string `yaml:"paths"`
+	Paths  []string `yaml:"paths" path:"glob"`
 }
 
 // FrozenPathOf is the freeze whose globs match the file, or empty: the first declared that
@@ -1626,7 +1628,7 @@ func (g Gate) IsExternal() bool { return g.Run != "" }
 // Layer — uma camada declarada: como reconhecer seus arquivos, o kind do nó, e as
 // tags (rótulos de agrupamento transversais) pelas quais um guide pode regê-la.
 type Layer struct {
-	Pattern string `yaml:"pattern"` // glob que reconhece arquivos da camada
+	Pattern string `yaml:"pattern" path:"glob"` // glob que reconhece arquivos da camada
 	// Fallible: the layer reaches what can fail — a network, a database, a device: the
 	// hooks that read, the repositories, the services. A unit whose spec depends on a file
 	// of such a layer consumes a fallible source, and its spec declares how it fails.
@@ -1634,10 +1636,10 @@ type Layer struct {
 	// MayBeEmpty: the layer has no file on purpose most of the time — plans under review
 	// that are moved on once decided — and the doctor does not report it empty.
 	MayBeEmpty bool     `yaml:"may_be_empty,omitempty"`
-	Kind       string   `yaml:"kind"`              // spec|feature|test|code|doc|guide|plan
-	Tags       []string `yaml:"tags,omitempty"`    // rótulos p/ governs (ex.: frontend, mobile)
-	Regime     string   `yaml:"regime,omitempty"`  // comportamental|declarativo|misto
-	Exclude    []string `yaml:"exclude,omitempty"` // globs a excluir (derivados que casam o glob amplo)
+	Kind       string   `yaml:"kind"`                          // spec|feature|test|code|doc|guide|plan
+	Tags       []string `yaml:"tags,omitempty"`                // rótulos p/ governs (ex.: frontend, mobile)
+	Regime     string   `yaml:"regime,omitempty"`              // comportamental|declarativo|misto
+	Exclude    []string `yaml:"exclude,omitempty" path:"glob"` // globs a excluir (derivados que casam o glob amplo)
 	// Support: globs, among the files of this layer, of files that SUPPORT the tests
 	// without being tests — sub-flows other flows call, suite aggregators, helper files.
 	// They stay in the map (a change to a helper still reaches every test that uses it),
@@ -1645,7 +1647,7 @@ type Layer struct {
 	// test-traceable) skip them: such a file has no execution of its own and proves no
 	// scenario. Measured in the reference app: ~190 pending in tests-pass and ~86 in
 	// test-feature-match came from its Maestro utils and suites.
-	Support []string `yaml:"support,omitempty"`
+	Support []string `yaml:"support,omitempty" path:"glob"`
 	// Priority: desempate DECLARADO quando dois patterns casam o mesmo arquivo. Maior
 	// vence; ausente = 0. Sem isso, o Anchors desempata por comprimento do pattern —
 	// uma heurística que mede verbosidade, não precisão, e que já classificou errado
@@ -1728,7 +1730,7 @@ type Derived struct {
 	//
 	// A chave `patterns` é RESERVADA e não é uma camada: ela declara o CONJUNTO de
 	// arquivos que a spec governa, e substitui `code` quando presente. Ver ChavePatterns.
-	Files     map[string]Padroes `yaml:"files,omitempty"`
+	Files     map[string]Padroes `yaml:"files,omitempty" path:"write"`
 	Overrides []DerivedOverride  `yaml:"overrides,omitempty"` // padrões por camada-âncora (não co-localizado)
 	// Regimes — o de-para do vocabulário de REGIME de teste do PROJETO para o regime
 	// CANÔNICO do framework (unit|integration|e2e|vr). Chave = a tag do projeto (sem @,
@@ -1968,7 +1970,7 @@ type DerivedOverride struct {
 	// precedência que o resto do framework já usa (camada > projeto > framework).
 	Code string `yaml:"code,omitempty"`
 	// Files: camada-derivada → template de região (aceita {{module}}).
-	Files map[string]Padroes `yaml:"files,omitempty"`
+	Files map[string]Padroes `yaml:"files,omitempty" path:"write"`
 }
 
 // PadroesDe devolve os padrões declarados, seja pelo nome novo ou pelo antigo.
@@ -1987,8 +1989,8 @@ func (o DerivedOverride) PadroesDe() map[string]Padroes {
 //
 // `from` é o caminho do arquivo-régua (ex.: guides/SCREEN_GUIDE.md).
 type GovernRule struct {
-	From    string `yaml:"from"`    // caminho do arquivo-régua (o guide)
-	Governs string `yaml:"governs"` // a tag que ele rege (casa layers com essa tag)
+	From    string `yaml:"from" path:"read"` // caminho do arquivo-régua (o guide)
+	Governs string `yaml:"governs"`          // a tag que ele rege (casa layers com essa tag)
 }
 
 // canonicalGate resolve a declaração canônica de um gate pelo nome. É INJETADO por
@@ -2141,6 +2143,11 @@ func Load(path string) (*Config, error) {
 	dec.KnownFields(true)
 	if err := dec.Decode(&c); err != nil {
 		return nil, fmt.Errorf("%s: %w%s%s", filepath.Base(path), err, versionHint(err, data), syntaxHint(err, data))
+	}
+	// The aliases are translated here, before anything reads a path: the validations below
+	// see the path the alias stands for, and so does every consumer.
+	if err := c.ExpandPaths(filepath.Dir(path)); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	for i := range c.Gates {
 		c.Gates[i] = mergeCanonical(c.Gates[i])
@@ -2761,7 +2768,7 @@ type LogsConfig struct {
 	// O Anchors nunca adivinha: sem caminho declarado, ele não varre nada. Sair procurando
 	// arquivo que pareça log seria a heurística que lê o que não devia — e log costuma
 	// carregar justamente o que não pode vazar.
-	Paths []string `yaml:"paths,omitempty"`
+	Paths []string `yaml:"paths,omitempty" path:"glob"`
 	// Delimiters cercam o código no log: `#[CRED-E01]` por padrão.
 	//
 	// É o que separa a falha do que apenas se PARECE com ela, e a escolha é medida contra
@@ -2839,16 +2846,16 @@ type Suite struct {
 	// kind. In a monorepo each workspace's suite declares its own: without it the mobile
 	// mutation suite was handed the landing page's files (reported from the reference app).
 	// The files reach `run_changed:` as ABSOLUTE paths, with forward slashes.
-	Paths []string `yaml:"paths,omitempty"`
+	Paths []string `yaml:"paths,omitempty" path:"glob"`
 	// JUnit e Lcov são os relatórios que a suíte DEIXA, ingeridos ao final se o
 	// comando passar. Vazios: o Anchors roda e não ingere nada — o que ainda é útil
 	// (um comando só) mas mantém o gate reclamando, e é melhor dizer isso do que
 	// fingir que ingeriu.
-	JUnit string `yaml:"junit,omitempty"`
-	Lcov  string `yaml:"lcov,omitempty"`
+	JUnit string `yaml:"junit,omitempty" path:"write"`
+	Lcov  string `yaml:"lcov,omitempty" path:"write"`
 	// Report é o relatório de MUTAÇÃO (formato Mutation Testing Elements) e só vale
 	// nas suítes de `mutation:`.
-	Report string `yaml:"report,omitempty"`
+	Report string `yaml:"report,omitempty" path:"write"`
 	// Scope diz se os mutantes rodaram contra o teste da própria unidade (`isolated`)
 	// ou também contra o dos dependentes (`full`). Importa: com os dois ingeridos, o
 	// gate julga pelo ISOLADO, que é bem mais duro.
@@ -3132,11 +3139,11 @@ type Changelog struct {
 	Mode string `yaml:"mode,omitempty"`
 	// Path is the file (incremental, default CHANGELOG.md) or the directory (per_version,
 	// default changelog/), relative to the root.
-	Path string `yaml:"path,omitempty"`
+	Path string `yaml:"path,omitempty" path:"write"`
 	// Template is a text/template file that renders one release, relative to the root;
 	// empty uses the built-in one. It receives the release and a `t` function that
 	// translates the section headings to the project's language.
-	Template string `yaml:"template,omitempty"`
+	Template string `yaml:"template,omitempty" path:"read"`
 }
 
 // ChangelogModes are the ways a changelog can be written.
@@ -3230,7 +3237,7 @@ type Monitor struct {
 	Runners []MonitorRunner `yaml:"runners,omitempty"`
 	// Reports are globs of test reports (JUnit) whose landing is an event, beside the ones the
 	// suites declare.
-	Reports []string `yaml:"reports,omitempty"`
+	Reports []string `yaml:"reports,omitempty" path:"glob"`
 	// Keep and KeepDays bound the records of ended runs: the latest Keep, within KeepDays.
 	Keep     int `yaml:"keep,omitempty"`
 	KeepDays int `yaml:"keep_days,omitempty"`

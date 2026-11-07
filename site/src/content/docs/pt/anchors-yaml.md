@@ -142,6 +142,35 @@ reprova com razão — o arquivo existe, mas nada os liga.
 
 ---
 
+## `aliases` — nomes curtos para caminhos longos
+
+Um caminho escrito no `anchors.yaml` pode ser longo, e o mesmo prefixo se
+repete em camadas, guias, templates de derivados e exceções de gates. O
+`aliases` o nomeia uma vez, como o `paths` do tsconfig ou o
+`moduleNameMapper` do Jest:
+
+```yaml
+aliases:
+    "@app": apps/mobile/src
+    "@guias": docs/engenharia/guias
+layers:
+    ui:
+        pattern: "@app/screens/**/*.tsx"
+        kind: code
+governs:
+    - from: "@guias/TELA.md"
+      governs: [ui]
+```
+
+Um alias se chama `@` e uma palavra, e vale por um caminho relativo à raiz.
+Ele é traduzido só como o **primeiro segmento** de um caminho, em todo campo
+que guarda um — camadas, guias, `derived`, `frozen_paths`, suítes, exceções de
+gates. Um caminho que cita um alias não declarado recusa a configuração,
+nomeando o campo; uma pasta real com `@` no nome (`@scope/pkg`) fica como
+escrita.
+
+---
+
 ## `governs` — quais guias regem quais arquivos
 
 Um **guia** é um documento de régua transversal: o padrão de acessibilidade, a

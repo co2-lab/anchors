@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:a66a172700702b6f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:8ab6ca313ed578ab — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -3375,6 +3375,10 @@ is what the test proves.
 - [Swapping the two versions always flips the order](layers/config.md#mnvrm-i01--swapping-the-two-versions-always-flips-the-order) `MNVRM-I01`
 
 - [A pre-release is never compared as if it were its final release](layers/config.md#mnvrm-x01--a-pre-release-is-never-compared-as-if-it-were-its-final-release) `MNVRM-X01`
+
+- [A path that opens with an alias reads the path the alias stands for, in every field that holds a path](layers/config.md#pthsa-b01--a-path-that-opens-with-an-alias-reads-the-path-the-alias-stands-for-in-every-field-that-holds-a-path) `PTHSA-B01`
+
+- [An alias badly named, empty, a URL or opening with another, or a path citing an undeclared alias, refuses the configuration](layers/config.md#pthsa-e01--an-alias-badly-named-empty-a-url-or-opening-with-another-or-a-path-citing-an-undeclared-alias-refuses-the-configuration) `PTHSA-E01`
 
 - [A single pattern written as text becomes a list of one](layers/config.md#drptd-b01--a-single-pattern-written-as-text-becomes-a-list-of-one) `DRPTD-B01`
 

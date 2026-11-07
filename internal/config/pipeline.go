@@ -19,9 +19,9 @@ import (
 type Pipeline struct {
 	// Workflows are the globs of the pipeline's definitions, read by `pipeline-wired`.
 	// Empty: `.github/workflows/*.yml` and `*.yaml`.
-	Workflows []string `yaml:"workflows,omitempty"`
+	Workflows []string `yaml:"workflows,omitempty" path:"glob"`
 	// Unguarded names the workflows that call no stage, each with the reason.
-	Unguarded map[string]string `yaml:"unguarded,omitempty"`
+	Unguarded map[string]string `yaml:"unguarded,omitempty" path:"glob,keys"`
 	// Stages are the stages a workflow may ask about, by name.
 	Stages map[string]Stage `yaml:"stages,omitempty"`
 }

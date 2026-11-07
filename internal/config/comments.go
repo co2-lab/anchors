@@ -26,7 +26,7 @@ import (
 type Comments struct {
 	// Files is the glob of the files the entry speaks of (`**/*.{ts,tsx}`); empty is every
 	// file.
-	Files string `yaml:"files,omitempty"`
+	Files string `yaml:"files,omitempty" path:"glob"`
 	// Line are the markers that open a comment running to the end of the line.
 	Line []string `yaml:"line,omitempty"`
 	// Block are the delimiters of a comment that may span lines, as `[open, close]`.

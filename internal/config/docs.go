@@ -46,7 +46,7 @@ type Docs struct {
 	// Keep are the pages of `docs/` the build never removes, by glob: a page generated once and
 	// kept by hand since — its template gone, its marker still there — is the project's. A page
 	// with no marker is never removed, kept or not.
-	Keep []string `yaml:"keep,omitempty"`
+	Keep []string `yaml:"keep,omitempty" path:"glob"`
 }
 
 // KeepsDoc says whether the project keeps a page of `docs/` (a path relative to `docs/`) from
@@ -78,7 +78,7 @@ type DocArtifact struct {
 	// Anchors não conhece ele não instrui — mas cobra a existência.
 	Kind string `yaml:"kind"`
 	// Path é o arquivo. É o que o gate confere e o que o `anchors next` nomeia.
-	Path string `yaml:"path"`
+	Path string `yaml:"path" path:"write"`
 	// Trigger são as camadas OU UNIDADES cuja alteração obriga tocar esta doc.
 	//
 	// É o campo que transforma "documente" em algo verificável: mexer numa lambda de

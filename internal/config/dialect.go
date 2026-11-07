@@ -979,7 +979,7 @@ type ImportResolve struct {
 
 // ScopedAliases are aliases for the importers its glob matches (see ImportResolve.Scoped).
 type ScopedAliases struct {
-	Files   string            `yaml:"files"`
+	Files   string            `yaml:"files" path:"glob"`
 	Aliases map[string]string `yaml:"aliases"`
 }
 

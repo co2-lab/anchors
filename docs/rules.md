@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:cf9a35614828b307 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:dae404b3ea8e6d93 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3691,6 +3691,12 @@ in `layers/`.
 - [MNVRM-E01 — REF[MNVRM-B05]: a malformed declared minimum is the load failure B05 answers: the configuration does not load](layers/config.md#mnvrm--minversion--whether-the-running-binary-meets-the-minimum-version-the-project-declares)
 
 - [MNVRM-E02 — REF[MNVRM-B04]: a running version that cannot be ordered is the comparison failure B04 answers: it does not meet the minimum, with the reason](layers/config.md#mnvrm--minversion--whether-the-running-binary-meets-the-minimum-version-the-project-declares)
+
+### [PTHSA — Paths — the aliases a path of anchors.yaml may open with, translated in one place](layers/config.md#pthsa--paths--the-aliases-a-path-of-anchorsyaml-may-open-with-translated-in-one-place)
+
+- [PTHSA-B01 — A path whose first segment is a declared alias reads the alias's path in its place, in every field that holds one — a file read (`governs[].from`, `gates[].guide`, `changelog.template`, `packs`), a glob (`layers`, `frozen_paths`, `suites[].paths`, the keys of `no_signal`…) or a file written (`derived.files`, `docs.required[].path`, `changelog.path`, the suites' reports); the alias alone reads its path; a first segment opening with `@` that names no alias but an entry of the root is kept as written. (`Aliases.Expand`, `Config.ExpandPaths`)](layers/config.md#pthsa--paths--the-aliases-a-path-of-anchorsyaml-may-open-with-translated-in-one-place)
+
+- [PTHSA-E01 — An alias's name does not open with `@`; its path is empty, a URL or opens with another alias; a path cites an alias `aliases:` does not declare.](layers/config.md#pthsa--paths--the-aliases-a-path-of-anchorsyaml-may-open-with-translated-in-one-place)
 
 ### [DRPTD — DerivedPatterns — a derived file declared as one pattern or as a list of them](layers/config.md#drptd--derivedpatterns--a-derived-file-declared-as-one-pattern-or-as-a-list-of-them)
 

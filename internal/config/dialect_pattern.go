@@ -33,7 +33,7 @@ type Pattern struct {
 	Re       string `yaml:"re,omitempty"`
 	Within   string `yaml:"within,omitempty"`
 	Each     string `yaml:"each,omitempty"`
-	Files    string `yaml:"files,omitempty"`
+	Files    string `yaml:"files,omitempty" path:"glob"`
 	Relative bool   `yaml:"relative,omitempty"`
 	Runs     bool   `yaml:"runs,omitempty"`
 }
