@@ -2,7 +2,7 @@
 # @anchors
 #   code: SCFTC
 #   ref: RPSCR
-#   updated_at: 2026-11-06
+#   updated_at: 2026-11-10
 #   layer: feature
 
 @RPSCR
@@ -396,6 +396,12 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a layer tagged ui and a guide served at a URL governing ui and api
     When the project is walked
     Then the guide enters once, by its URL, external, with its content's revision
+
+  @RPSCR-B60 @unit-level
+  Scenario: A header's writes and reads are the data the file persists and consumes
+    Given a code file whose header writes two data and reads one, one in backticks
+    When the project is walked
+    Then the file writes the two and reads the one, by name
 
   @RPSCR-E03 @unit-level
   Scenario: A guide URL that answers nothing fails the walk

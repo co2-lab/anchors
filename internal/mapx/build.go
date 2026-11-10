@@ -78,6 +78,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 	g.Edges = append(g.Edges, captureEdges(files)...)
 	unitLayerTags(g, files)
 	g.Edges = append(g.Edges, composesEdges(files)...)
+	g.Edges = append(g.Edges, readsFromEdges(files)...)
 	applyFreezes(g, files, ancoraDeDerivado, cfg)
 
 	sortGraph(g)
@@ -1055,6 +1056,29 @@ func layerOfUnit(f scan.File) string {
 		return f.HeaderLayer
 	}
 	return f.Layer
+}
+
+// readsFromEdges tie each file that reads a data (`reads:` in its header) to every other file
+// that writes it (`writes:`), one edge per data, carrying the data's name. A data no file
+// writes makes no edge — `reads-written` names it.
+func readsFromEdges(files []scan.File) []Edge {
+	writers := map[string][]string{}
+	for _, f := range files {
+		for _, d := range f.Writes {
+			writers[d] = append(writers[d], f.Path)
+		}
+	}
+	var out []Edge
+	for _, f := range files {
+		for _, d := range f.Reads {
+			for _, w := range writers[d] {
+				if w != f.Path {
+					out = append(out, Edge{From: f.Path, To: w, Type: EdgeReadsFrom, Origin: OriginDeclared, Method: d})
+				}
+			}
+		}
+	}
+	return out
 }
 
 // flagEdges are the edges the code's own flags declare, addressed by code: `@dep: CODE` on an

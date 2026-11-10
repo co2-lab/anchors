@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:a442904d47faa45c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:490af8f8a6051b94 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 91 units and 1452 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 92 units and 1455 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -3180,6 +3180,29 @@ it does not go hunting duplicated concepts across the project.
 - **PCBPR-X02** — Does not compare the VALUES on the two sides.
 
 - **PCBPR-X03** — Does not decide whether an unmarked prose claim blocks.
+
+
+## RDWRS — ReadsWritten — every data a header reads is written by some file's header
+
+A file that persists a record and a file that consumes it are tied by nothing an import says: the
+writer and the reader of an audit item may never import each other. Measured in MIF: seven
+defects where the writer and the reader of one persisted record disagreed on a field, a sign, a
+vocabulary or a rename, each side green against its own fixture.
+
+The headers say it: `writes: AuditItem` on the writer, `reads: AuditItem` on the reader. The map
+ties the reader to every writer of the data (`reads-from`, GRBLG-B33), and the reader's evidence
+holds the writer, so a change to the writer's shape stales the reader's proof (EVFRA-B16).
+
+This gate closes the silent end of that tie: a data a header reads that no header writes makes no
+edge, and the reader would look tied while tied to nothing — a typo, or a writer that never
+declared itself. A file whose header reads nothing is not its subject.
+
+
+- **RDWRS-B01** — A data the header reads that ties the file to no writer fails, naming it; every read tied to a writer passes. (`checkReadsWritten`)
+
+- **RDWRS-B02** — A file whose header reads nothing is skipped.
+
+- **RDWRS-E01** — No map is built.
 
 
 ## RFRSR — RefResolves — the reference points at the spec that REALLY describes the unit

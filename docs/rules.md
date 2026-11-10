@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:8e8e7fa05d94dce9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:cac467fe1b0e5a08 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -5814,6 +5814,14 @@ in `layers/`.
 
 - [PCBPR-X03 — Does not decide whether an unmarked prose claim blocks.](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side)
 
+### [RDWRS — ReadsWritten — every data a header reads is written by some file's header](layers/gate.md#rdwrs--readswritten--every-data-a-header-reads-is-written-by-some-files-header)
+
+- [RDWRS-B01 — A data the header reads that ties the file to no writer fails, naming it; every read tied to a writer passes. (`checkReadsWritten`)](layers/gate.md#rdwrs--readswritten--every-data-a-header-reads-is-written-by-some-files-header)
+
+- [RDWRS-B02 — A file whose header reads nothing is skipped.](layers/gate.md#rdwrs--readswritten--every-data-a-header-reads-is-written-by-some-files-header)
+
+- [RDWRS-E01 — No map is built.](layers/gate.md#rdwrs--readswritten--every-data-a-header-reads-is-written-by-some-files-header)
+
 ### [RFRSR — RefResolves — the reference points at the spec that REALLY describes the unit](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit)
 
 - [RFRSR-B01 — A reference that does not match the sibling spec's identity FAILS — the refactoring that nobody propagated.](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit)
@@ -8452,6 +8460,8 @@ in `layers/`.
 
 - [GRBLG-B32 — A test's doubles are the code files its double specifiers name, each resolved as the dependency chain resolves an import — relative to the test or through a declared alias, with the declared extensions, else by the path's tail — to ONE file of the map; a specifier that names no file of the project, or several the test's folder does not decide between, is no double of the map. (`doubledFiles`, `Modules.File`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
+- [GRBLG-B33 — A file that reads a data is tied by `reads-from`, carrying the data, to every other file that writes it; a data no file writes ties nothing. (`readsFromEdges`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
+
 - [GRBLG-B23 — Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`)](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
 
 - [GRBLG-I01 — The same files and configuration always build the same graph, whatever order the files arrive in.](layers/mapa.md#grblg--graphbuild--projecting-the-declared-structure-onto-the-scanned-files-one-node-per-file-and-the-relations-between-them)
@@ -8491,6 +8501,8 @@ in `layers/`.
 - [EVFRA-B14 — A test's closure stops at the files it replaces with a double — wherever the walk meets one, not only among the test's own imports —: it neither holds them nor descends from them, so a change to a doubled module, or to what only it reaches, stales nothing; the double's stamp answers for that drift (`mock-stamped`). A stored closure that held a doubled file is read through this rule (B13). (`EvidenceClosure`, `Node.Doubles`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-B15 — Judging many tests reads the graph's shape once — its edges by node, where each node stands —, never a revision: a revision changed in place on a node after the first judgment is the one the next judgment reads. (`evidenceIndex`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
+
+- [EVFRA-B16 — A test's evidence holds the writer of every data its unit reads (`reads-from`), and not what the writer itself uses: a change to the writer stales the reader's proof, a change to the writer's own dependencies is the writer's proof's. (`evidenceClosure`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
 - [EVFRA-B13 — A proof's stored closure is read through today's rule: a file it holds that the rule leaves out — a screen on the path, what a util reaches — stales nothing; a file no rule reaches is judged as before. (`EvidenceStaleFor`)](layers/mapa.md#evfra--evidencefreshness--a-tests-evidence-expires-when-anything-it-exercises-changes-not-only-its-own-file)
 
@@ -9077,6 +9089,8 @@ in `layers/`.
 - [RPSCR-B58 — A test file's doubles are the first group of each match of the project's `derived.mock_detect`, read with the file's comments blanked and each specifier once; a file that is no test, a project with no pattern, or a pattern that does not compile or captures nothing, gives none. (`doublesOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B59 — A guide `governs:` reads from a URL enters the scan once, with the URL as declared for its path — its `{{branch}}` kept, so the edges it governs keep their ends — and the revision of the content PTRFS read: a guide changed in its repository, or read from another branch, leaves the edges it governs to be confronted again. It is marked external and belongs to no layer. (`externalGuides`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B60 — A header's `writes:` and `reads:` are the data the file persists and consumes, each a comma-separated list of names the project chooses, out of their backticks. (`HeaderData`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

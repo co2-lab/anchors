@@ -352,3 +352,27 @@ func TestEvidenceIndex_readsRevisionsLive(t *testing.T) {
 		t.Errorf("the revision changed in place stales the proof: %+v", ev)
 	}
 }
+
+func TestEvidenceClosure_holdsTheWriterOfWhatItsUnitReads(t *testing.T) {
+	t.Run("EVFRA-B16: A reader's proof holds the writer of its data, and not what the writer uses", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{
+			{ID: "reader.test.ts", Kind: KindTest, Rev: "t1"},
+			{ID: "reader.ts", Kind: KindCode, Rev: "r1"},
+			{ID: "writer.ts", Kind: KindCode, Rev: "w1"},
+			{ID: "helper.ts", Kind: KindCode, Rev: "h1"},
+		},
+		Edges: []Edge{
+			{From: "reader.test.ts", To: "reader.ts", Type: EdgeDependsOn},
+			{From: "reader.ts", To: "writer.ts", Type: EdgeReadsFrom, Method: "AuditItem"},
+			{From: "writer.ts", To: "helper.ts", Type: EdgeDependsOn},
+		},
+	}
+	c := g.EvidenceClosure("reader.test.ts")
+	if _, ok := c["writer.ts"]; !ok {
+		t.Errorf("the writer is in the reader's proof: %v", c)
+	}
+	if _, ok := c["helper.ts"]; ok {
+		t.Errorf("the writer's own dependency is not: %v", c)
+	}
+}

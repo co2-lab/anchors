@@ -1468,3 +1468,15 @@ func TestDoublesOf(t *testing.T) {
 		}
 	}
 }
+
+func TestHeaderData_writesAndReads(t *testing.T) {
+	t.Run("RPSCR-B60: A header's writes and reads are the data the file persists and consumes", func(t *testing.T) {})
+	src := []byte("// @anchors\n//   code: ALRTX\n//   writes: AuditItem, `NotificationLog`\n//   reads: Device\n\npackage x\n")
+	w, r := HeaderData(src, testkit.Comments("x.ts"))
+	if strings.Join(w, "|") != "AuditItem|NotificationLog" || strings.Join(r, "|") != "Device" {
+		t.Errorf("writes %v, reads %v", w, r)
+	}
+	if w, r := HeaderData([]byte("package x\n"), testkit.Comments("x.ts")); w != nil || r != nil {
+		t.Errorf("no header, no data: %v %v", w, r)
+	}
+}

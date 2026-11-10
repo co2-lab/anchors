@@ -2,7 +2,7 @@
 # @anchors
 #   code: BLFTA
 #   ref: GRBLG
-#   updated_at: 2026-10-19
+#   updated_at: 2026-11-10
 #   layer: feature
 
 @GRBLG
@@ -225,3 +225,9 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Given a test doubling a sibling client, a store through an alias, a third-party package, a tail two folders share, and itself
     When the map is built
     Then its doubles are the client and the store
+
+  @GRBLG-B33 @unit-level
+  Scenario: A reader is tied to every writer of its data
+    Given two files writing one data, a file reading it and another, and a file that writes and reads the same data
+    When the map is built
+    Then the reader has a reads-from edge to each writer, carrying the data, and none for the data nobody writes, nor to itself

@@ -544,6 +544,10 @@
         "slug": "docs/gates/rule-uses-implemented"
       },
       {
+        "label": "reads-written",
+        "slug": "docs/gates/reads-written"
+      },
+      {
         "label": "contract-impact",
         "slug": "docs/gates/contract-impact"
       },

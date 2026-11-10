@@ -160,6 +160,11 @@ func (g *Graph) evidenceClosure(id string, asserts bool, adj adjacency) map[stri
 			// that has no capture of its own — a hook, a store, a service, transitively — up
 			// to the next unit that is captured. A component the screen uses has its own
 			// capture, and its change stales that one, not this.
+			// A writer of what the test's unit reads is held for its shape, and the walk does
+			// not descend into what the writer itself uses: that is the writer's proof.
+			if e.Type == EdgeReadsFrom {
+				continue
+			}
 			if e.Type == EdgeCaptures {
 				for d, r := range g.uncapturedDeps(filho, adj, rev, asserts, cut) {
 					if !visto[d] && d != id {

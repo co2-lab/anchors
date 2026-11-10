@@ -1124,3 +1124,24 @@ func TestBuild_doublesResolveToOneFile(t *testing.T) {
 		t.Errorf("a relative path and an alias resolve; a third party, an undecided tail and the test itself are none: %s", got)
 	}
 }
+
+func TestBuild_readsFromTiesAReaderToEachWriter(t *testing.T) {
+	t.Run("GRBLG-B33: A reader is tied to every writer of its data", func(t *testing.T) {})
+	files := []scan.File{
+		{Path: "a/writer.ts", Kind: "code", Rev: "1", Writes: []string{"AuditItem"}},
+		{Path: "b/writer.ts", Kind: "code", Rev: "1", Writes: []string{"AuditItem"}},
+		{Path: "c/reader.ts", Kind: "code", Rev: "1", Reads: []string{"AuditItem", "Nobody"}},
+		{Path: "d/both.ts", Kind: "code", Rev: "1", Writes: []string{"Log"}, Reads: []string{"Log"}},
+	}
+	g := Build(files, &config.Config{}, nil)
+	var got []string
+	for _, e := range g.Edges {
+		if e.Type == EdgeReadsFrom {
+			got = append(got, e.From+">"+e.To+":"+e.Method)
+		}
+	}
+	slices.Sort(got)
+	if strings.Join(got, " ") != "c/reader.ts>a/writer.ts:AuditItem c/reader.ts>b/writer.ts:AuditItem" {
+		t.Errorf("reads-from edges: %v", got)
+	}
+}

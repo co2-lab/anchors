@@ -61,6 +61,10 @@ const (
 	// §"arestas declared"): a spec consumidora depende de outra camada (tela→hook/store,
 	// usecase→repository). É por ela que a Propagação desce pelas camadas de dados.
 	EdgeDependsOn EdgeType = "depends-on"
+	// EdgeReadsFrom — a file that reads a data to the file that writes it, both declared in
+	// their headers (`reads:`, `writes:`): a reader's proof holds against the writer's shape,
+	// so a change to the writer stales the reader's evidence. The data is the edge's Method.
+	EdgeReadsFrom EdgeType = "reads-from"
 	// EdgeSeeds — o PLANO semeia a spec. É a aresta que liga a decisão de fazer ao
 	// artefato que a realiza, e sem ela o plano fica órfão do grafo: `anchors impact`
 	// respondia "nenhum filho depende dele" sobre um plano que nomeia 11 specs, e

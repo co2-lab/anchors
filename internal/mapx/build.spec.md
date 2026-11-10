@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRBLG
-  updated_at: 2026-10-19
+  updated_at: 2026-11-10
   layer: mapa
 -->
 # GraphBuild — projecting the declared structure onto the scanned files: one node per file, and the relations between them
@@ -103,6 +103,7 @@ of the nodes whose content did not change.
 | `GRBLG-B30` | A spec whose header declares its unit's layer (`layer: screen`), another than its file's, is tagged with it, and so is the feature that covers it: a gate scoped by tag confronts a unit by what it is. |
 | `GRBLG-B31` | A `depends-on` edge whose every flag is `@dep[type]` — an import of the target's types only — is of kind `type`; when a value import (`@dep:`) also ties the same files, the edge is a value one. (`flagEdges`) |
 | `GRBLG-B32` | A test's doubles are the code files its double specifiers name, each resolved as the dependency chain resolves an import — relative to the test or through a declared alias, with the declared extensions, else by the path's tail — to ONE file of the map; a specifier that names no file of the project, or several the test's folder does not decide between, is no double of the map. (`doubledFiles`, `Modules.File`) |
+| `GRBLG-B33` | A file that reads a data is tied by `reads-from`, carrying the data, to every other file that writes it; a data no file writes ties nothing. (`readsFromEdges`) |
 | `GRBLG-B23` | Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`) |
 
 ## Invariants

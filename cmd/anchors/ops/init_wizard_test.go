@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -355,7 +356,9 @@ func TestRunInitInLineModeRefusesToWriteOnEndOfInput(t *testing.T) {
 	if _, serr := os.Stat(filepath.Join(root, "guides", "HEADER_GUIDE.md")); serr == nil {
 		t.Error("an init that refused left guides/HEADER_GUIDE.md behind")
 	}
-	if strings.Contains(out, "written") {
+	// A write is announced as `✓ <file> written`; a gate's name in the seeding question
+	// (`reads-written`) announces nothing.
+	if regexp.MustCompile(`✓[^\n]*written`).MatchString(out) {
 		t.Errorf("the output announces a write that did not happen:\n%s", out)
 	}
 }

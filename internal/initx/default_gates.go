@@ -750,6 +750,11 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		})
 
 		gates = append(gates, config.Gate{
+			Name: "reads-written", ID: "reads-written", On: []string{"code"}, Check: "reads-written",
+			Blocking: config.Bool(false), Measures: "every data a header reads (`reads:`) is written by some file's header (`writes:`)",
+		})
+
+		gates = append(gates, config.Gate{
 			Name: "variants-proven", ID: "variants-proven", On: []string{"spec"}, Check: "variants-proven",
 			Blocking: config.Bool(false), Measures: "a rule that names its variants (`@variants:`) has a scenario for each one",
 		})

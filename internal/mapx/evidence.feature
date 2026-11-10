@@ -2,7 +2,7 @@
 # @anchors
 #   code: EVFTV
 #   ref: EVFRA
-#   updated_at: 2026-10-20
+#   updated_at: 2026-11-10
 #   layer: feature
 
 @EVFRA
@@ -111,3 +111,9 @@ Feature: EvidenceFreshness — a test's evidence expires when anything it exerci
     Given a proof judged fresh
     When the code it reaches changes its revision in place on the same graph
     Then the next judgment names the code as the culprit
+
+  @EVFRA-B16 @unit-level
+  Scenario: A reader's proof holds the writer of its data, and not what the writer uses
+    Given a test of a reader tied to the writer of its data, the writer depending on a helper
+    When the test's evidence closure is taken
+    Then it holds the writer and not the helper

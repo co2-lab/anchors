@@ -170,6 +170,7 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | [`rule-uses-declared`](/pt/docs/gates/rule-uses-declared/) | `spec` | Every rule says what it uses — the fields, codes and dependencies it reads |
 | [`rule-uses-resolve`](/pt/docs/gates/rule-uses-resolve/) | `spec` | What a rule says it uses exists in the spec — a declared field, a dependency row |
 | [`rule-uses-implemented`](/pt/docs/gates/rule-uses-implemented/) | `spec` | The fields a rule says it uses appear in the code the spec governs |
+| [`reads-written`](/pt/docs/gates/reads-written/) | `code` | Every data a header reads (`reads:`) is written by some file's header (`writes:`) |
 | [`contract-impact`](/pt/docs/gates/contract-impact/) | `spec` | A field changed since the last commit names the rules that use it, and their tests |
 | [`contract-status-declared`](/pt/docs/gates/contract-status-declared/) | `spec` | The Output Contract statuses are the ones the handler returns — and only those |
 | [`contract-tested`](/pt/docs/gates/contract-tested/) | `code` | Every API unit has a contract scenario and a contract test that validates it against the project's OpenAPI document |

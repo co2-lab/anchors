@@ -233,6 +233,14 @@ flag on the import line is the declaration — removing or changing the import s
 which flag goes with it. 'anchors map deps <CODE>' walks the chain as a tree; 'anchors map
 nav' prints the screens' edges.
 
+A PERSISTED DATA ties files no import does: the writer of a record and its reader. The header
+says it, with names the project chooses:
+- 'writes: AuditItem, NotificationLog' — the data this file persists;
+- 'reads: AuditItem' — the data it consumes.
+The map ties each reader to every writer of its data, and a reader's test proof then holds the
+writer: a change to the writer's shape asks the reader's tests again ('evidence-fresh'). A
+name no header writes ties nothing, and the gate over the reads names it.
+
 ## Header rules
 
 - ALWAYS at the top of the file (before the code), so it is the first thing read. Only

@@ -201,6 +201,8 @@
   "gate.variants.follows_nothing": "%s follows the variants of %s, which names none of its own",
   "gate.variants.only_on": "%s is proven only without %s, the variants of %s it follows",
   "gate.variants.missing": "variants with no scenario of their rule (a `@variant:<value>` tag or a row of its Examples): %s",
+  "gate.reads_written.skip_none": "the header reads no data (`reads:`)",
+  "gate.reads_written.unwritten": "reads data no file's header writes (`writes:`), so nothing ties this file to its writer: %s",
   "gate.waived": "waived: %s",
   "gate.guidance_linked.skip_not_guidance": "not a guidance file",
   "gate.guidance_linked.no_agreement": "`%s` does not exist: the guidance has no working agreement to point to — `anchors init` seeds it from the configuration",

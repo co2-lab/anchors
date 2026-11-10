@@ -129,6 +129,11 @@ type File struct {
 	// the screen each call leads to, and the rule that triggers it — and the `@no-nav:`
 	// waivers.
 	Navigates []Navigation
+	// Writes and Reads are the data the file's header says it persists (`writes: AuditItem`)
+	// and consumes (`reads: AuditItem`): a reader's proof depends on the writer's shape as
+	// much as on its own code, and nothing in an import says so.
+	Writes []string
+	Reads  []string
 	// OutRows are a screen spec's navigation rows — its Out table —, each by the rule that
 	// triggers it, with a revision of the row alone: a flow that asserts a navigation is
 	// stale when its row changes, and not when the rest of the spec does.
@@ -395,6 +400,8 @@ func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) F
 		CodeDeps:      extractCodeDeps(content, rel, cfg.DialectAt(rel)),
 		UsedBy:        extractUsedBy(content, rel, cfg.DialectAt(rel)),
 		Navigates:     extractNavigates(content, cs),
+		Writes:        headerList(headerWritesRE, content, cs),
+		Reads:         headerList(headerReadsRE, content, cs),
 		Frozen:        extractFrozen(string(content), cs),
 		FrozenRules:   extractFrozenRules(kind, string(content)),
 		Freezes:       extractFreezes(kind, string(content)),
@@ -785,6 +792,34 @@ var headerNeedsRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `needs
 // Enquanto só havia `needs`, a árvore inferia o pai a partir da ordem, e desenhava as
 // quatro fases de um plano encaixadas uma na outra como uma escada.
 var headerParentRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `parent:\s*(.+)$`)
+
+// headerWritesRE and headerReadsRE read the data a file's header says it persists and
+// consumes, a comma-separated list of names the project chooses.
+var (
+	headerWritesRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `writes:\s*(.+)$`)
+	headerReadsRE  = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `reads:\s*(.+)$`)
+)
+
+// HeaderData is what a file's header says it writes and reads (`writes:`, `reads:`).
+func HeaderData(content []byte, cs *config.Comments) (writes, reads []string) {
+	return headerList(headerWritesRE, content, cs), headerList(headerReadsRE, content, cs)
+}
+
+// headerList reads a comma-separated header field: each name trimmed, out of its backticks.
+func headerList(re *regexp.Regexp, content []byte, cs *config.Comments) []string {
+	m := re.FindSubmatch(AnchorsHeader(content, cs))
+	if m == nil {
+		return nil
+	}
+	raw := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "-->"))
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		if p := stripInlineCode(strings.TrimSpace(part)); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
 
 // headerRevisesRE captura `revises:` — o plano que REVISA outro.
 //

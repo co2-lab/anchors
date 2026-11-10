@@ -201,6 +201,8 @@
   "gate.variants.follows_nothing": "%s sigue las variantes de %s, que no nombra ninguna",
   "gate.variants.only_on": "%s está probada solo sin %s, variantes de %s que sigue",
   "gate.variants.missing": "variantes sin escenario de su regla (tag `@variant:<valor>` o fila de sus Ejemplos): %s",
+  "gate.reads_written.skip_none": "el header no lee ningún dato (`reads:`)",
+  "gate.reads_written.unwritten": "lee datos que el header de ningún archivo escribe (`writes:`), así que nada liga este archivo a su escritor: %s",
   "gate.waived": "eximido: %s",
   "gate.guidance_linked.skip_not_guidance": "no es un archivo de orientación",
   "gate.guidance_linked.no_agreement": "`%s` no existe: la orientación no tiene acuerdo de trabajo al que apuntar — `anchors init` lo siembra desde la configuración",

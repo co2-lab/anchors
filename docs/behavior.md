@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:7ff6b335ad4a5516 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:de2b3add18b82e29 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -5266,6 +5266,12 @@ is what the test proves.
 
 - [The gate does not decide whether an unmarked prose claim blocks](layers/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-X03`
 
+- [A data read that ties the file to no writer fails, naming it](layers/gate.md#rdwrs--readswritten--every-data-a-header-reads-is-written-by-some-files-header) `RDWRS-B01`
+
+- [A file whose header reads nothing is skipped](layers/gate.md#rdwrs--readswritten--every-data-a-header-reads-is-written-by-some-files-header) `RDWRS-B02`
+
+- [Without a map the gate is pending](layers/gate.md#rdwrs--readswritten--every-data-a-header-reads-is-written-by-some-files-header) `RDWRS-E01`
+
 - [A reference that does not match the sibling spec fails](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B01`
 
 - [The failing verdict names both sides of the divergence](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B02`
@@ -7684,6 +7690,8 @@ is what the test proves.
 
 - [A test's doubles are resolved to one file each](layers/mapa.md#grblg-b32--a-tests-doubles-are-resolved-to-one-file-each) `GRBLG-B32`
 
+- [A reader is tied to every writer of its data](layers/mapa.md#grblg-b33--a-reader-is-tied-to-every-writer-of-its-data) `GRBLG-B33`
+
 - [A test that was never ingested has no verdict](layers/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 
 - [The test's own change expires its evidence](layers/mapa.md#evfra-b02--the-tests-own-change-expires-its-evidence) `EVFRA-B02`
@@ -7717,6 +7725,8 @@ is what the test proves.
 - [A test's closure stops at the files it replaces with a double](layers/mapa.md#evfra-b14--a-tests-closure-stops-at-the-files-it-replaces-with-a-double) `EVFRA-B14`
 
 - [A revision changed in place is the one the next judgment reads](layers/mapa.md#evfra-b15--a-revision-changed-in-place-is-the-one-the-next-judgment-reads) `EVFRA-B15`
+
+- [A reader's proof holds the writer of its data, and not what the writer uses](layers/mapa.md#evfra-b16--a-readers-proof-holds-the-writer-of-its-data-and-not-what-the-writer-uses) `EVFRA-B16`
 
 - [The written format and the oldest readable format are both accepted](layers/mapa.md#mpfrm-b01--the-written-format-and-the-oldest-readable-format-are-both-accepted) `MPFRM-B01`
 
@@ -8265,6 +8275,8 @@ is what the test proves.
 - [A test file's doubles are what mock_detect captures, outside the comments](layers/scan.md#rpscr-b58--a-test-files-doubles-are-what-mock-detect-captures-outside-the-comments) `RPSCR-B58`
 
 - [A guide governs: reads from a URL enters the scan, by its URL, revised by its content](layers/scan.md#rpscr-b59--a-guide-governs-reads-from-a-url-enters-the-scan-by-its-url-revised-by-its-content) `RPSCR-B59`
+
+- [A header's writes and reads are the data the file persists and consumes](layers/scan.md#rpscr-b60--a-headers-writes-and-reads-are-the-data-the-file-persists-and-consumes) `RPSCR-B60`
 
 - [A guide URL that answers nothing fails the walk](layers/scan.md#rpscr-e03--a-guide-url-that-answers-nothing-fails-the-walk) `RPSCR-E03`
 

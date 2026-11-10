@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPSCR
-  updated_at: 2026-11-06
+  updated_at: 2026-11-10
   layer: scan
 -->
 # RepoScan — the repository read as text: which files exist, of which layer, and what each declares
@@ -131,6 +131,7 @@ heuristic decided.
 | `RPSCR-B57` | The symbol a used-by flag names in parentheses is whatever stands there, in any script — the flag is Anchors' syntax, the name the language's —, and the names the dialect's patterns capture are kept whole: `categoriasDoOrçamento` is read as written. |
 | `RPSCR-B58` | A test file's doubles are the first group of each match of the project's `derived.mock_detect`, read with the file's comments blanked and each specifier once; a file that is no test, a project with no pattern, or a pattern that does not compile or captures nothing, gives none. (`doublesOf`) |
 | `RPSCR-B59` | A guide `governs:` reads from a URL enters the scan once, with the URL as declared for its path — its `{{branch}}` kept, so the edges it governs keep their ends — and the revision of the content PTRFS read: a guide changed in its repository, or read from another branch, leaves the edges it governs to be confronted again. It is marked external and belongs to no layer. (`externalGuides`) |
+| `RPSCR-B60` | A header's `writes:` and `reads:` are the data the file persists and consumes, each a comma-separated list of names the project chooses, out of their backticks. (`HeaderData`) |
 | `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants
