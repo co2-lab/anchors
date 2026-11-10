@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:d85395cc7e89e571 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:382c258f693badf9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3442,7 +3442,7 @@ in `layers/`.
 
 - [CNFGO-B76 — `frozen_paths` lists freezes by folder — each a freeze (its code, or the reason itself) and the globs it covers —; `FrozenPathOf` is the freeze of the first entry whose glob matches a file, in the order declared, or empty. (`FrozenPath`, `FrozenPathOf`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
-- [CNFGO-B77 — A gate may declare `legacy` — a `before` date and a `severity` for the targets last changed before it, each level falling back to the gate's own — and `cache` — the `inputs` its tool reads besides its targets, and whether a failure (`failures`) and a CI (`ci`) keep its verdict. (`LegacySeverity`, `LegacyActionFor`, `ToolCache`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+- [CNFGO-B77 — A gate may declare `legacy` — a `before` date and a `severity` for the targets last changed before it, each level falling back to the gate's own, and an `until` date from which the legacy ends — and `cache` — the `inputs` its tool reads besides its targets, and whether a failure (`failures`) and a CI (`ci`) keep its verdict. (`LegacySeverity`, `LegacyActionFor`, `ToolCache`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -3538,7 +3538,7 @@ in `layers/`.
 
 - [CNFGO-E12 — A `frozen_paths` entry with no freeze, no paths, or a glob that is empty or does not compile.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
-- [CNFGO-E13 — A `legacy` whose `before` is no date, that names no severity, or whose severity is stronger than the gate's at any level; a `cache` with no inputs or a glob that is none.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+- [CNFGO-E13 — A `legacy` whose `before` or `until` is no date, whose `until` does not come after its `before`, that names no severity, or whose severity is stronger than the gate's at any level; a `cache` with no inputs or a glob that is none.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 ### [CNTNR — Containers — what runs separately, and which layers run inside each](layers/config.md#cntnr--containers--what-runs-separately-and-which-layers-run-inside-each)
 
@@ -4795,6 +4795,8 @@ in `layers/`.
 - [GTENG-B35 — A gate declaring `cache.inputs` keeps its tool's verdict under a key of the gate as declared, each target's content, each input's content among the project's files, and the version of Anchors, and replays it — marked as kept, with when it was measured — while the key comes again: a pass always, a failure only with `cache.failures`, and in a CI only with `cache.ci`. A tool that did not run (a batch failing with no output) is kept nowhere, and `check --no-cache` runs every tool. (`cachedTool`, `toolKey`, `SetNoToolCache`)](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B36 — An external file — a guide `governs:` reads from a URL (PTRFS) — is out of every gate, internal or external: the project neither writes nor versions it, and there is no file here to confront. It still governs, as a local guide does.](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
+- [GTENG-B37 — From its gate's `legacy.until` on, no target is legacy: every one answers with the gate's own severity; before it, a legacy target's verdict that the legacy softened says until when, and what it will do after. (`legacyTarget`, `markSeverityAt`)](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B06 — An UNREADABLE target does not apply: better to stop charging than to charge blind.](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 

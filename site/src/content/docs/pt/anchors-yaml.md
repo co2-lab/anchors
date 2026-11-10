@@ -249,6 +249,7 @@ Um gate canônico precisa só do nome — `- name: unit-complete` — e herda o 
 | --- | --- |
 | `when: [manual]` | o gate roda só com `anchors check --phase manual`; um check sem fase o deixa de fora |
 | `severity:` | o que cada nível de veredito faz (`fail`, `divergence`, `pending` → `block`, `inform`, `ignore`); sem ele, um gate bloqueante barra só as falhas. Um `severity:` no topo é o padrão do projeto |
+| `legacy:` | a severidade dos alvos alterados pela última vez antes de uma data: `before:` a data, `severity:` o que os vereditos deles fazem (nunca mais forte que o do gate), `until:` o prazo a partir do qual o legado acaba e todo alvo responde com a severidade do gate — um gate novo barra o código novo já e o antigo a partir de uma data |
 | `presupposes:` | os campos de configuração que o gate dá como declarados (`derived.mock_detect`); faltando um, o gate fica pendente e não pergunta nada, e com ele em `dialect.opt_out` é pulado |
 | `review:` | os alvos do gate também ficam marcados para revisão, à parte do veredito (`review: {ask: "..."}`) — veja [julgamento e review](/pt/docs/concepts/ai-judgment/) |
 | `min_coverage:` | para o `line-coverage`: o piso, 70 quando não declarado |

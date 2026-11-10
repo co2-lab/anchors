@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:e5b003528cbd700b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:72c061b7c95c986e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -4385,6 +4385,8 @@ is what the test proves.
 - [A tool is not run again over the same inputs](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B35`
 
 - [An external file — a guide read from a URL — is out of every gate](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B36`
+
+- [Past the legacy deadline, every target answers with the gate's own severity](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B37`
 
 - [The guidance points to the agreement](layers/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B01`
 

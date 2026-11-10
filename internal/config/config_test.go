@@ -2039,10 +2039,12 @@ func TestGateLegacyAndCache(t *testing.T) {
 	}
 	base := "version: 1\nlayers: {}\ngates:\n  - name: m\n    run: \"true\"\n    blocking: true\n"
 	for want, extra := range map[string]string{
-		"must be a date":    "    legacy: {before: soon, severity: {pending: inform}}\n",
-		"names no severity": "    legacy: {before: 2026-10-21}\n",
-		"stronger than":     "    legacy: {before: 2026-10-21, severity: {pending: block}}\n",
-		"names no inputs":   "    cache: {failures: true}\n",
+		"must be a date":               "    legacy: {before: soon, severity: {pending: inform}}\n",
+		"names no severity":            "    legacy: {before: 2026-10-21}\n",
+		"stronger than":                "    legacy: {before: 2026-10-21, severity: {pending: block}}\n",
+		"names no inputs":              "    cache: {failures: true}\n",
+		"legacy.until` must be a date": "    legacy: {before: 2026-10-21, until: later, severity: {pending: inform}}\n",
+		"must come after":              "    legacy: {before: 2026-10-21, until: 2026-10-01, severity: {pending: inform}}\n",
 	} {
 		p := filepath.Join(t.TempDir(), DefaultFile)
 		if err := os.WriteFile(p, []byte(base+extra), 0o644); err != nil {

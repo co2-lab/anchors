@@ -1152,6 +1152,9 @@ type Gate struct {
 type LegacySeverity struct {
 	Before   string    `yaml:"before"`
 	Severity *Severity `yaml:"severity"`
+	// Until is the deadline of the legacy: from that date on, no target is legacy and every
+	// one answers with the gate's own severity. Empty, the legacy has no end.
+	Until string `yaml:"until,omitempty"`
 }
 
 // ToolCache is how a gate's tool result is kept (see Gate.Cache).
@@ -1183,6 +1186,14 @@ func (g Gate) checkLegacyAndCache() error {
 		}
 		if l.Severity == nil {
 			return fmt.Errorf("`gates[%s].legacy` names no severity: say what a legacy target's verdict does", g.Name)
+		}
+		if u := strings.TrimSpace(l.Until); u != "" {
+			if _, err := time.Parse("2006-01-02", u); err != nil {
+				return fmt.Errorf("`gates[%s].legacy.until` must be a date (2026-12-31), got %q", g.Name, l.Until)
+			}
+			if u <= strings.TrimSpace(l.Before) {
+				return fmt.Errorf("`gates[%s].legacy.until` (%s) must come after `legacy.before` (%s): the deadline ends a legacy that began before it", g.Name, u, l.Before)
+			}
 		}
 		for _, lv := range []string{LevelFail, LevelDivergence, LevelPending} {
 			a := g.LegacyActionFor(lv)

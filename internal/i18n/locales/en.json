@@ -194,6 +194,7 @@
   "settings.user_issues.prompt": "Do you decide the direction of this product?\n\n  ESCALATED cards (`needs-user`) await decisions from someone who knows\n  the product — the agent found something that changes direction and escalated.\n\n  Answer `sim` if you can make these decisions; `nao` if they belong to\n  someone else. On `nao`, this agent continues on standard cards and\n  escalated cards await whoever resolves them.\n\n  [sim/nao] ",
   "settings.user_issues.unrecognized_error": "no recognized answer — declare with `anchors settings user-issues sim|nao --date YYYY-MM-DD`",
   "gate.missing_tool": "missing tool: %s — gate not executed",
+  "gate.legacy_until": "(legacy until %s; after it: %s)",
   "gate.waived": "waived: %s",
   "gate.guidance_linked.skip_not_guidance": "not a guidance file",
   "gate.guidance_linked.no_agreement": "`%s` does not exist: the guidance has no working agreement to point to — `anchors init` seeds it from the configuration",

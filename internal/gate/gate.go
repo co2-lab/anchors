@@ -646,6 +646,9 @@ func markSeverityAt(g config.Gate, root string, r *Result) {
 	// severity — never stronger —; one changed since answers with the gate's own.
 	if root != "" && legacyTarget(g, root, r.Target) {
 		r.Action = g.LegacyActionFor(level)
+		if u := strings.TrimSpace(g.Legacy.Until); u != "" && r.Action != g.ActionFor(level) {
+			r.Detail = strings.TrimSpace(r.Detail + " " + i18n.T("gate.legacy_until", u, g.ActionFor(level)))
+		}
 	}
 	// A finding the project DECLARED — a debt with its deadline, a rule marked `@TBD` —, or
 	// one its own threshold accepts, is known: it informs, and never bars the promotion.
@@ -673,11 +676,19 @@ func (r Result) Blocks() bool {
 // Ignored says whether the result is counted and not reported: its level's state is `ignore`.
 func (r Result) Ignored() bool { return r.Action == config.ActionIgnore }
 
+// today is the date the legacy deadline is read against; a variable so the tests set it.
+var today = func() string { return time.Now().Format("2006-01-02") }
+
 // legacyTarget says whether a target is legacy for the gate: a file whose last commit is older
-// than the gate's `legacy.before`, with no uncommitted change. A file never committed, changed
-// since, or no file at all (a scope) is not; outside git nothing is.
+// than the gate's `legacy.before`, with no uncommitted change, while the gate's `legacy.until`
+// has not come. A file never committed, changed since, or no file at all (a scope) is not;
+// outside git nothing is.
 func legacyTarget(g config.Gate, root, target string) bool {
 	if g.Legacy == nil || target == "" || strings.HasPrefix(target, "(") {
+		return false
+	}
+	// Past the deadline the legacy is over: every target answers with the gate's own.
+	if u := strings.TrimSpace(g.Legacy.Until); u != "" && today() >= u {
 		return false
 	}
 	if dirty, known := gitState(root).dirtyFiles(); !known || dirty[target] {

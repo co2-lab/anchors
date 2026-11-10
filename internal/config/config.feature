@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTC
 #   ref: CNFGO
-#   updated_at: 2026-10-21
+#   updated_at: 2026-11-10
 #   layer: feature
 
 @CNFGO
@@ -536,6 +536,6 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
 
   @CNFGO-E13 @unit-level
   Scenario: A legacy or a cache that cannot hold is refused
-    Given a legacy with no date, with no severity, and stronger than the gate, and a cache with no inputs
+    Given a legacy with no date, with a deadline that is no date or comes before its start, with no severity, and stronger than the gate, and a cache with no inputs
     When each configuration is loaded
     Then each is refused naming the field

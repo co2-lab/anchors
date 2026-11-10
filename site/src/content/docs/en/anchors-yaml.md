@@ -246,6 +246,7 @@ A canonical gate needs only its name — `- name: unit-complete` — and inherit
 | --- | --- |
 | `when: [manual]` | the gate runs only under `anchors check --phase manual`; a check with no phase leaves it out |
 | `severity:` | what each verdict level does (`fail`, `divergence`, `pending` → `block`, `inform`, `ignore`); with none, a blocking gate blocks only its failures. A top-level `severity:` is the project's default |
+| `legacy:` | the severity of the targets last changed before a date: `before:` the date, `severity:` what their verdicts do (never stronger than the gate's), `until:` the deadline from which the legacy ends and every target answers with the gate's own — a new gate can bar the new code at once and the old code from a date on |
 | `presupposes:` | the configuration fields the gate takes as declared (`derived.mock_detect`); with one missing the gate is pending and asks nothing, and with it in `dialect.opt_out` it skips |
 | `review:` | the gate's targets are also marked to review, apart from its verdict (`review: {ask: "..."}`) — see [judgment and review](/docs/concepts/ai-judgment/) |
 | `min_coverage:` | for `line-coverage`: the floor, 70 when undeclared |

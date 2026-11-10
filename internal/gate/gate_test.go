@@ -1577,6 +1577,27 @@ func TestLegacyCutoff(t *testing.T) {
 	}
 }
 
+func TestLegacyDeadline(t *testing.T) {
+	t.Run("GTENG-B37: Past the legacy deadline, every target answers with the gate's own severity", func(t *testing.T) {})
+	root := legacyRepo(t)
+	old := today
+	t.Cleanup(func() { today = old })
+	g := config.Gate{Name: "x", On: []string{"code"}, Blocking: config.Bool(true), Run: "echo bad; exit 1",
+		Legacy: &config.LegacySeverity{Before: "2026-10-21", Until: "2026-12-01", Severity: &config.Severity{Fail: config.ActionInform}}}
+	nodes := []mapx.Node{{ID: "old.ts", Kind: mapx.KindCode}}
+	today = func() string { return "2026-11-30" }
+	ForgetRunState()
+	r := RunWithConfig([]config.Gate{g}, nodes, root, nil, nil)[0]
+	if r.Action != config.ActionInform || !strings.Contains(r.Detail, "2026-12-01") {
+		t.Errorf("before the deadline the legacy informs, and says until when: %+v", r)
+	}
+	today = func() string { return "2026-12-01" }
+	ForgetRunState()
+	if r := RunWithConfig([]config.Gate{g}, nodes, root, nil, nil)[0]; r.Action != config.ActionBlock {
+		t.Errorf("from the deadline on, the legacy file blocks as any other: %+v", r)
+	}
+}
+
 func TestToolCache(t *testing.T) {
 	t.Run("GTENG-B35: A tool is not run again over the same inputs", func(t *testing.T) {})
 	root := legacyRepo(t)

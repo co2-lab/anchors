@@ -296,3 +296,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a guide read from a URL and a guide of the project
     When an internal ruler and an external command ask whether they apply
     Then neither applies to the external guide, and the local one is still confronted
+
+  @GTENG-B37 @unit-level
+  Scenario: Past the legacy deadline, every target answers with the gate's own severity
+    Given a blocking gate whose legacy informs failures before a date, until a deadline, and a file last committed before the date
+    When the gate fails on it the day before the deadline and on the deadline
+    Then the day before it informs, saying until when, and on the deadline it blocks

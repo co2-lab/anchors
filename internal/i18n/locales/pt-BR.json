@@ -194,6 +194,7 @@
   "settings.user_issues.prompt": "Você decide o rumo deste produto?\n\n  Os cards ESCALONADOS (`needs-user`) esperam decisão de quem conhece o\n  produto — o agente achou algo que muda a direção e escalou.\n\n  Responda `sim` se você pode tomar essas decisões; `nao` se elas são de\n  outra pessoa. No `nao`, este agente segue nos cards comuns e os\n  escalonados esperam quem os resolve.\n\n  [sim/nao] ",
   "settings.user_issues.unrecognized_error": "sem resposta reconhecida — declare com `anchors settings user-issues sim|nao --date AAAA-MM-DD`",
   "gate.missing_tool": "ferramenta ausente: %s — gate não executado",
+  "gate.legacy_until": "(legado até %s; depois disso: %s)",
   "gate.waived": "dispensado: %s",
   "gate.guidance_linked.skip_not_guidance": "não é um arquivo de orientação",
   "gate.guidance_linked.no_agreement": "`%s` não existe: a orientação não tem acordo de trabalho para onde apontar — o `anchors init` o semeia a partir da configuração",
