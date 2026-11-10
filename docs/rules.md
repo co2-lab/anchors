@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:382c258f693badf9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:af716d05fea1b343 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -6811,6 +6811,18 @@ in `layers/`.
 - [VLANV-E02 — A code file the map lists is no longer on disk when the project index is built.](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value)
 
 - [VLANV-E03 — `derived.value_anchor` is declared with fewer than two capture groups.](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value)
+
+### [VRPRS — VariantsProven — a rule that names its variants is proven once per variant](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant)
+
+- [VRPRS-B01 — A rule's own variant that no scenario of the rule names — by its tag or a row of its Examples — fails, naming the rule and the variant. (`checkVariantsProven`, `declaredVariants`)](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant)
+
+- [VRPRS-B02 — A rule that follows another's variants asks each of them; one with no scenario of the follower diverges, saying the rule is proven only without it.](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant)
+
+- [VRPRS-B03 — A spec whose rules name no variants, a spec with no linked feature, or an artifact that is no spec, is skipped.](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant)
+
+- [VRPRS-E01 — A rule follows the variants of a rule that names none of its own.](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant)
+
+- [VRPRS-E02 — No map is built.](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant)
 
 ### [VRBSV — VRBaseline — ensures visual regression scenarios have captured reference baseline images](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images)
 

@@ -63,8 +63,8 @@ into. Status: `planned`, `in progress`, `shipped vX`, `MIF's` (nothing for Ancho
 | ID | From | Item | Already in Anchors | To build (Anchors) | Opt-in | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | G01 | P3 | **A new gate bars the legacy too, after a deadline** | `gates[].legacy: {before, severity}` softens targets last changed before a date — forever | `legacy.until: <date>`: from that date the legacy severity no longer applies and the gate's own does; before it, a softened verdict says until when and what it will do after (GTENG-B37, CNFGO-B77/E13) | the field | shipped v0.1.389 |
-| G02 | A, P5 | **Variants as units of proof** | `spec-feature-match` (a scenario per requirement), `data_states` (`DS-` states of a unit), `examples-match` (each Examples row is a run case) | a rule declares its variants (`@variants: audit, notification` on its line, or a discriminant the guide names); the gate asks one scenario per variant, or an Outline whose Examples cover each; counts Examples rows | the tag / a gate `variants-proven` | planned |
-| G03 | A (2nd half) | **Siblings proven only on the old variant** | revisions and stamped edges | when a rule gains a variant, the other rules of the unit whose proofs do not cite the new variant are flagged divergence ("proven only on <old>") until a proof names it | part of `variants-proven` | planned |
+| G02 | A, P5 | **Variants as units of proof** | `spec-feature-match` (a scenario per requirement), `data_states` (`DS-` states of a unit), `examples-match` (each Examples row is a run case) | gate `variants-proven`: a rule names its variants on its line (`@variants: audit, notification`); each asks a scenario of the rule carrying `@variant:<value>`, or an outline whose Examples name it (VRPRS) | the marker | shipped v0.1.390 |
+| G03 | A (2nd half) | **Siblings proven only on the old variant** | revisions and stamped edges | a rule follows another's variants (`@variants: B02`); while one of them has no scenario of the follower, `variants-proven` diverges: "proven only without <variant>" (VRPRS-B02). Detecting siblings with no declaration was left out: which rules share the code is the author's knowledge | the marker | shipped v0.1.390 |
 | G04 | B, P11 | **Rule × test coherence, judged** | judgment gates (`measures: judgment`, `ask`, `guide`), `anchors judge` | a built-in question `rule-test-coherent`: for each tagged test, what it asserts (expect targets, function/table names) against the rule's text; an explicit contradiction is pending; a default `ask` shipped, the project may replace it | declaring the gate | planned |
 | G05 | P11 | **Negative cases required** | `scenario-asserts` | a rule tagged `@matching` or `@timing` (names configurable) asks for at least one scenario whose outcome is a refusal/no-match | the tags | planned |
 | G06 | P4 | **Order, idempotency, concurrency** | — | rule tags `@order`, `@idempotent`, `@concurrent` (names configurable); each asks a proof of its kind: a test run in both orders / twice / interleaved, recognised by a declared test-name or helper pattern; guide text for the five patterns MIF lists (double tap on a writing action, read-then-write with conditional write, matching in both orders, total tie-break in sort, timer stopped on every exit) | the tags | planned |
@@ -99,7 +99,8 @@ Each item ships alone, with the release workflow, and MIF is told what to declar
 
 ## Rules that bind every item
 
-- Opt-in: a project that declares nothing sees no new finding.
+- Opt-in: a project that declares nothing sees no new finding. A new gate joins the catalog
+  (informative) only when it asks nothing until the project writes its marker or config.
 - Generic: tag names, patterns, suites, boundaries are configured; nothing names AppSync, Stripe or
   Expo in the engine.
 - Each item's spec rows and scenarios before its code; each new test fails on the old code.

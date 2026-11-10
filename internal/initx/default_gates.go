@@ -730,6 +730,11 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		})
 
 		gates = append(gates, config.Gate{
+			Name: "variants-proven", ID: "variants-proven", On: []string{"spec"}, Check: "variants-proven",
+			Blocking: config.Bool(false), Measures: "a rule that names its variants (`@variants:`) has a scenario for each one",
+		})
+
+		gates = append(gates, config.Gate{
 			Name: "open-questions-resolved", ID: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved",
 			Blocking: config.Bool(false), Measures: "the spec has no open question — implementing is not guessing",
 		})

@@ -31,6 +31,7 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`header-layer-declared`](/docs/gates/header-layer-declared/) | `spec` `feature` `code` `test` | The layer a header declares is one the Estrutura has |
 | [`ref-resolves`](/docs/gates/ref-resolves/) | `code` `feature` `test` | The `ref:` points at the sibling spec's `code:` |
 | [`examples-match`](/docs/gates/examples-match/) | `feature` | Every row of an outline's Examples is run by a test citing the scenario |
+| [`variants-proven`](/docs/gates/variants-proven/) | `spec` | A rule that names its variants (`@variants:`) has a scenario for each one |
 
 ## Presentation & UI
 

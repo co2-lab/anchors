@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:ba1025edb470d045 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:22301c2d3ded27ac — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 90 units and 1447 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 91 units and 1452 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -4841,6 +4841,35 @@ copies are the truth.
 - **VLANV-E02** — A code file the map lists is no longer on disk when the project index is built.
 
 - **VLANV-E03** — `derived.value_anchor` is declared with fewer than two capture groups.
+
+
+## VRPRS — VariantsProven — a rule that names its variants is proven once per variant
+
+A rule may speak of several cases of one discriminant — an item that is an audit or a
+notification, a payment by card or by pix. `spec-feature-match` asks one scenario per rule, and
+one scenario proving one case satisfies it. Measured in MIF (Sentry MIF-1S): the alerts rule
+spoke of audits and notifications, its one scenario tapped an audit, and the notification path
+reached the store review broken, with every gate green — mutation at 100%, because the code both
+cases share has no branch per case, and every mutant died by the audit's test.
+
+The rule names its variants on its line, `@variants: audit, notification`, and each variant asks
+a scenario of the rule that names it: a `@variant:<value>` tag beside the rule's tag, or a row of
+the scenario's Examples. A rule that follows another's variants — an error rule shared by every
+kind — writes `@variants: B02`, and asks the new kind as soon as the rule it follows gains it.
+
+A spec that names no variants is not this gate's subject: the gate is in the catalog, and asks
+nothing until a rule declares them.
+
+
+- **VRPRS-B01** — A rule's own variant that no scenario of the rule names — by its tag or a row of its Examples — fails, naming the rule and the variant. (`checkVariantsProven`, `declaredVariants`)
+
+- **VRPRS-B02** — A rule that follows another's variants asks each of them; one with no scenario of the follower diverges, saying the rule is proven only without it.
+
+- **VRPRS-B03** — A spec whose rules name no variants, a spec with no linked feature, or an artifact that is no spec, is skipped.
+
+- **VRPRS-E01** — A rule follows the variants of a rule that names none of its own.
+
+- **VRPRS-E02** — No map is built.
 
 
 ## VRBSV — VRBaseline — ensures visual regression scenarios have captured reference baseline images

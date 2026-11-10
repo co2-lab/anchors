@@ -90,6 +90,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"test-ref-matches-unit":           checkTestRefMatchesUnit,
 	"branch-coverage":                 checkBranchCoverage,
 	"examples-match":                  checkExamplesMatch,
+	"variants-proven":                 checkVariantsProven,
 	"header-layer-declared":           checkHeaderLayerDeclared,
 	"presentation-exhaustive":         checkPresentationExhaustive,
 	"presentation-conflict":           checkPresentationConflict,

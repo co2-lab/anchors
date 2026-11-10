@@ -81,6 +81,12 @@ is the capture (see ` + "`anchors guide test`" + `). Every VR scenario is of a s
 registers — a state removed from the spec takes its scenario with it —, and none is of a
 state the spec exempts with ` + "`@no-vr`" + `.
 
+A rule that names its VARIANTS (` + "`@variants: audit, notification`" + ` on its line, or
+` + "`@variants: B02`" + ` to follow another rule's) is proven once per variant: each scenario of the
+rule says which variant it proves with a ` + "`@variant:<value>`" + ` tag, or an outline names them
+in its Examples. One scenario proving one variant leaves the others unproven, however much of
+the code they share.
+
 ## The unit with no interface (traceability, not BDD)
 
 A backend rule, a gate, a repository, a pure function: the feature of a unit with no

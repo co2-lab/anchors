@@ -155,6 +155,11 @@ a rule nobody wrote. So do not stop at the first draft — write it in four pass
    - each combination of options that are not independent.
    A variation that does NOT change the behaviour is said on the rule ("whatever the
    order of the files"), so the reader knows it was considered.
+   When one rule holds for several values of a discriminant and they share the code
+   (an item that is an audit or a notification), name them on the rule's line —
+   ` + "`@variants: audit, notification`" + ` —, and on each rule that follows them, an error
+   or an effect common to every kind, ` + "`@variants: B02`" + `: each variant then asks its own
+   scenario, and a new value asks it of every rule that follows.
 3. GENERALIZE. When a rule is one instance of a wider truth, write the wider truth as
    an invariant (` + "`I`" + `) and keep the instance as its consequence:
      ✗ "under --index, this gate reads the staged file"

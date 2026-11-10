@@ -86,6 +86,10 @@
       {
         "label": "examples-match",
         "slug": "docs/gates/examples-match"
+      },
+      {
+        "label": "variants-proven",
+        "slug": "docs/gates/variants-proven"
       }
     ]
   },

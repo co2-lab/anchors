@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:72c061b7c95c986e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:c3e9641266310185 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -6183,6 +6183,16 @@ is what the test proves.
 - [A code file missing from disk does not hide the copies in the other files](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E02`
 
 - [A declared value anchor with too few groups is named, not called undeclared](layers/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E03`
+
+- [A variant no scenario of its rule names fails, naming it](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant) `VRPRS-B01`
+
+- [A rule that follows another's variants diverges while one of them is unproven](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant) `VRPRS-B02`
+
+- [A spec naming no variants, with no feature, or no spec at all, is skipped](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant) `VRPRS-B03`
+
+- [A rule following a rule that names no variants fails](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant) `VRPRS-E01`
+
+- [Without a map the gate is pending](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant) `VRPRS-E02`
 
 - [Artifacts that are not feature files leave with verdict Skip](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B01`
 
