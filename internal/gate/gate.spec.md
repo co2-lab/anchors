@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTENG
-  updated_at: 2026-11-06
+  updated_at: 2026-11-10
   layer: gate
 -->
 # GateEngine — which gates reach which node, and what the run concludes
@@ -99,7 +99,7 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-B06` | An UNREADABLE target does not apply: better to stop charging than to charge blind. |
 | `GTENG-B07` | A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check. |
 | `GTENG-B08` | A gate whose required binary is absent steps aside and never fails — the gate did not measure, and the missing piece is the tool. |
-| `GTENG-B09` | A waiver naming THIS target spares only this node, with the written reason in the verdict, and the gate keeps confronting the others. |
+| `GTENG-B09` | A waiver naming THIS target — by its unit's code or by the file's own `code:` — spares only this node, with the written reason in the verdict, and the gate keeps confronting the others. |
 | `GTENG-B10` | An aggregate-scope gate runs ONCE and reports a single verdict against the scope itself, not against one of the files. |
 | `GTENG-B11` | A judgment gate emits a request for judgment when nothing has answered it yet. |
 | `GTENG-B12` | A judgment gate reads the stamp left by an earlier judgement and turns it into the verdict, so work already done stops being invisible. |

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:241ad50eff41b8c0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:e5b003528cbd700b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -5548,7 +5548,7 @@ is what the test proves.
 
 - [A spec with no linked code is not this gate's subject](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B05`
 
-- [A waiver with no named rule covers every rule of the spec](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B06`
+- [A waiver with no named rule covers the rule of its line, or every rule outside one](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B06`
 
 - [Requiring the marking never punishes whoever already marks](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-I01`
 

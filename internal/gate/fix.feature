@@ -2,7 +2,7 @@
 # @anchors
 #   code: FXFTF
 #   ref: FXIXX
-#   updated_at: 2026-10-07
+#   updated_at: 2026-11-10
 #   layer: feature
 
 @FXIXX
@@ -92,6 +92,7 @@ Feature: Fix — the self-healer that applies the mechanical, safe repairs of `c
     Given a code file whose header refs its unit and has no code of its own
     When the header fix runs, then again
     Then the header gets a five-character code that is not the unit's, beside the ref, and the second run changes nothing
+    And files fixed in one run that would generate the same code from their names each get a different one
 
   @FXIXX-B11 @unit-level
   Scenario: FixWithConfig gives the fixers the project's config for that run

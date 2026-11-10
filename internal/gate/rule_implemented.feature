@@ -2,7 +2,7 @@
 # @anchors
 #   code: RIFRL
 #   ref: RLIMR
-#   updated_at: 2026-10-07
+#   updated_at: 2026-11-10
 #   layer: feature
 
 @RLIMR
@@ -48,10 +48,12 @@ Feature: RuleImplemented — the spec catalogues rules, and the code shows it re
       confrontation to make — and who accuses the absence is the unit gate
 
   @RLIMR-B06 @unit-level
-  Scenario: A waiver with no named rule covers every rule of the spec
-    Given a spec whose waiver marker names no rule in particular
+  Scenario: A waiver with no named rule covers the rule of its line, or every rule outside one
+    Given a spec whose waiver marker names no rule in particular, written on a line of its own
     When the gate confronts it
     Then it returns Pass, because the waiver was declared for the unit as a whole
+    And when the same marker sits on the row of one rule, only that rule is waived and the
+      gate still names the others the code does not mark
 
   @RLIMR-I01 @unit-level
   Scenario: Requiring the marking never punishes whoever already marks

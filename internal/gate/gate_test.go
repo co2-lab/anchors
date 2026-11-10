@@ -346,6 +346,16 @@ func TestDispensaPorAlvoPoupaUmESoUm(t *testing.T) {
 	if v := porAlvo["confrontado.md"].Verdict; v != Fail {
 		t.Errorf("o alvo NÃO dispensado continua confrontado e reprova; veio %v", v)
 	}
+
+	// The file's own code names the target too: a feature carries its unit's code and
+	// its own, and the author reads the second in its header.
+	proprio, _ := ParseWaiver("non-empty@POUPF=rascunho declarado do plano 0007")
+	res = RunWithWaiver([]config.Gate{g}, []mapx.Node{
+		{ID: "poupado.md", Kind: mapx.KindSpec, Code: "POUPA", FileCode: "POUPF"},
+	}, root, nil, nil, false, proprio)
+	if len(res) != 1 || res[0].Verdict != Skip {
+		t.Errorf("the file's own code names the target as the unit's does; got %+v", res)
+	}
 }
 
 // O gate AGREGADO roda UMA vez, e o alvo reportado é o próprio escopo. Atribuir a falha

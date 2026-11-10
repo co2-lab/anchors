@@ -297,3 +297,34 @@ func TestFixWithConfig_theDialectAndTheMovedLines(t *testing.T) {
 		t.Error("an insertion with a removal moves lines; a flag rewritten in place does not")
 	}
 }
+
+func TestFix_oneRunGivesNoCodeTwice(t *testing.T) {
+	t.Run("FXIXX-B10: The fix gives a file with an identity and no code of its own a code unique in the map", func(t *testing.T) {})
+	root := t.TempDir()
+	var nodes []mapx.Node
+	for _, dir := range []string{"a", "b", "c"} {
+		p := filepath.Join(root, "guides", dir, "GUIDE.md")
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte("# Guide\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		nodes = append(nodes, mapx.Node{ID: "guides/" + dir + "/GUIDE.md", Kind: mapx.KindGuide, Layer: "guide"})
+	}
+	g := &mapx.Graph{Nodes: nodes}
+	gates := []config.Gate{{Name: "header-valid", Check: "header-valid", On: []string{"guide"}}}
+	FixWithConfig(gates, nodes, root, g, testkit.WithComments(&config.Config{}))
+	seen := map[string]string{}
+	for _, n := range nodes {
+		b, _ := os.ReadFile(filepath.Join(root, n.ID))
+		m := regexp.MustCompile(`code: ([A-Z0-9]{5})`).FindStringSubmatch(string(b))
+		if m == nil {
+			t.Fatalf("%s got no code: %q", n.ID, b)
+		}
+		if other, dup := seen[m[1]]; dup {
+			t.Errorf("one run gave %s to both %s and %s", m[1], other, n.ID)
+		}
+		seen[m[1]] = n.ID
+	}
+}

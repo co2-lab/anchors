@@ -53,6 +53,9 @@ var fixers = map[string]func(content string, n mapx.Node, root string, g *mapx.G
 // chain); set by FixWithConfig.
 var fixConfig *config.Config
 
+// fixAssigned are the own codes the current Fix run has written, so none is given twice.
+var fixAssigned map[string]bool
+
 // FixWithConfig is Fix with the project's config: the fixers that read the code by the
 // dialect — the dependency chain's — have it.
 func FixWithConfig(gates []config.Gate, nodes []mapx.Node, root string, g *mapx.Graph, cfg *config.Config) []FixResult {
@@ -72,6 +75,8 @@ func Fixable(check string) bool {
 // veredito do gate: é o fixer quem decide se há o que corrigir, e um nó já correto
 // não muda e não entra no resultado.
 func Fix(gates []config.Gate, nodes []mapx.Node, root string, g *mapx.Graph) []FixResult {
+	fixAssigned = map[string]bool{}
+	defer func() { fixAssigned = nil }()
 	for _, gt := range gates {
 		if gt.Check == "updated-at-atual" {
 			dirty, known := gitmeta.DirtyFiles(root)
@@ -187,8 +192,18 @@ func fixMissingHeader(content string, n mapx.Node, _ string, g *mapx.Graph) (str
 				}
 			}
 		}
+		// The codes this run already gave: the map was read before the run, so two files of
+		// one batch would otherwise both find the same code free (measured in SS: 12
+		// collisions over 69 headers fixed in one run).
+		for c := range fixAssigned {
+			taken[c] = true
+		}
 		f := scan.File{Path: n.ID, Layer: n.Layer, Kind: string(n.Kind)}
-		fields = append(fields, "code: "+code.GenerateUnique(migra.FileCodeName(f), taken))
+		own := code.GenerateUnique(migra.FileCodeName(f), taken)
+		if fixAssigned != nil {
+			fixAssigned[own] = true
+		}
+		fields = append(fields, "code: "+own)
 	}
 	if !headerCodeRE().MatchString(b) && !headerRefRE().MatchString(b) && !headerLayerRE.MatchString(b) {
 		var field string

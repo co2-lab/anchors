@@ -365,7 +365,13 @@ func runGate(g config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, c
 			// DISPENSA POR ALVO: o gate roda, e só este nó é poupado. O veredito é
 			// `Skip` com o motivo escrito — some do placar de reprovações sem sumir
 			// do relatório, que é a diferença entre dispensar e esconder.
-			if motivo, ok := disp.WaivedTarget(RuleID(idDoGate(g)), n.Code); ok {
+			// The target may be named by the unit's code or by the file's own: a feature's
+			// author reads its `code:` in its header, and refusing it cost SS a retry.
+			motivo, ok := disp.WaivedTarget(RuleID(idDoGate(g)), n.Code)
+			if !ok && n.FileCode != "" && n.FileCode != n.Code {
+				motivo, ok = disp.WaivedTarget(RuleID(idDoGate(g)), n.FileCode)
+			}
+			if ok {
 				results = append(results, Result{
 					Gate: g.Name, Regra: idDoGate(g), Target: n.ID,
 					Verdict: Skip, Blocking: g.IsBlocking(),

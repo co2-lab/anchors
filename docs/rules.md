@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:078a7d5df6736b81 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:d85395cc7e89e571 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -4676,7 +4676,7 @@ in `layers/`.
 
 - [FXIXX-B09 — `--fix` writes the header a governed file lacks, at its top after any shebang, in the comment of the file's language — a block comment (`<!--`, `(*`) with its fields indented and its closer on a line of its own: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document, a test support file or a file of a layer the project declares `regime: declarativo` (which originates no rule and has no spec); to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`)](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
-- [FXIXX-B10 — `--fix` gives a file whose header has an identity (or gets one) and no `code:` of its own a code generated from its name and its type, unique among the codes in the map, written below `@anchors` beside the identity; a header with its own code is left as it is. (`fixMissingHeader`)](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
+- [FXIXX-B10 — `--fix` gives a file whose header has an identity (or gets one) and no `code:` of its own a code generated from its name and its type, unique among the codes in the map and the codes the same run already gave, written below `@anchors` beside the identity; a header with its own code is left as it is. (`fixMissingHeader`)](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
 - [FXIXX-B11 — `FixWithConfig` runs the fixers with the project's config, so the ones that read the code by the dialect — the dependency chain's — have it; the config is theirs only for that run.](layers/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
@@ -4802,7 +4802,7 @@ in `layers/`.
 
 - [GTENG-B08 — A gate whose required binary is absent steps aside and never fails — the gate did not measure, and the missing piece is the tool.](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
-- [GTENG-B09 — A waiver naming THIS target spares only this node, with the written reason in the verdict, and the gate keeps confronting the others.](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+- [GTENG-B09 — A waiver naming THIS target — by its unit's code or by the file's own `code:` — spares only this node, with the written reason in the verdict, and the gate keeps confronting the others.](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B10 — An aggregate-scope gate runs ONCE and reports a single verdict against the scope itself, not against one of the files.](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
@@ -6124,7 +6124,7 @@ in `layers/`.
 
 - [RLIMR-B05 — A spec with no linked code is not this gate's subject: without the piece on the other side there is no confrontation to make.](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
 
-- [RLIMR-B06 — The waiver may name the rule it covers, or count for all of them when it names none.](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
+- [RLIMR-B06 — The waiver may name the rules it covers; naming none, it covers the rule its own line declares (a table row, a list item or a heading that opens with the code), and every rule of the spec only when written on a line that declares no rule.](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
 
 - [RLIMR-B07 — With `data_states.required`, the code of the unit cites each data state its spec defines, as it cites a rule; off, the data states are not asked of the code.](layers/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
 

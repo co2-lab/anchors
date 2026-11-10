@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTG
 #   ref: GTENG
-#   updated_at: 2026-11-06
+#   updated_at: 2026-11-10
 #   layer: feature
 
 @GTENG
@@ -68,6 +68,7 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     And two applicable nodes, one of them that code
     When the run confronts both
     Then the named one returns Skip carrying the reason and the other is still confronted
+    And a waiver naming a file's own code spares it as one naming its unit's code does
 
   @GTENG-B10 @unit-level
   Scenario: An aggregate gate runs once and reports against the scope

@@ -273,6 +273,27 @@ func TestNoMarkSemAlvoValeParaTodas(t *testing.T) {
 	}
 }
 
+// Sem alvo NA LINHA DE UMA REGRA, a dispensa é só dela: medido no SS, um `@no-mark:` numa
+// única linha de tabela dispensava a spec inteira — as outras regras, sem marca no código,
+// passavam sem que ninguém tivesse dispensado nenhuma.
+func TestNoMarkSemAlvoNaLinhaDeUmaRegraValeSoParaEla(t *testing.T) {
+	t.Run("RLIMR-B06: A waiver with no named rule covers the rule of its line, or every rule outside one", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte("nada marcado aqui\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	spec := "<!-- @anchors\ncode: MTVRX\n-->\n\n## Regras\n\n" +
+		"| Regra | Efeito |\n| --- | --- |\n" +
+		"| `MTVRX-B01` | resolve a versão |\n" +
+		"| `MTVRX-X01` | NÃO faz I/O @no-mark: satisfeita pela ausência de import |\n" +
+		"\n### MTVRX-B02 — lê o arquivo @no-mark: não há linha que o realize\n"
+	n := mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}
+	v, msg := checkRuleImplemented(spec, n, root, nil, ruleCfg())
+	if v == Pass || !strings.Contains(msg, "MTVRX-B01") || strings.Contains(msg, "MTVRX-X01") || strings.Contains(msg, "MTVRX-B02") {
+		t.Errorf("a dispensa de uma linha não pode cobrir a MTVRX-B01; veio %v (%s)", v, msg)
+	}
+}
+
 // A régua é DETERMINÍSTICA: a marca existe, ou a dispensa existe com razão. Se o código
 // marcado faz o que a regra descreve é JULGAMENTO, e julgamento é de outra classe de gate.
 func TestRegraImplementada_naoJulgaSeAImplementacaoEstaCerta(t *testing.T) {

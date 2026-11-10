@@ -174,7 +174,8 @@ func explainGate(w io.Writer, cfg *config.Config, name string) error {
 When it fails, the failure's detail names what is missing. The ways out, in order:
   1. Fix what it names, then confront the change again: anchors check --changed <file>
   2. If the failure is right in general but not here, waive it for that unit, with the reason,
-     in the commit message: [skip-%s@<CODE>: why]
+     in the commit message: [skip-%s@<CODE>: why] — <CODE> is the unit's code (its spec's,
+     the prefix of its rules and scenarios) or the file's own header 'code:'
   3. If the project decides the gate should only inform, that is anchors.yaml's: blocking: false
      — a decision for whoever owns the project, not a way around one failure.
 

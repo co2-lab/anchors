@@ -86,7 +86,7 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 		if strings.Contains(texto, r) {
 			continue
 		}
-		if waived(content, r) {
+		if waived(content, unidade, r) {
 			continue
 		}
 		faltando = append(faltando, r)
@@ -114,13 +114,13 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 	// indistinguível de "ninguém olhou". Medido: uma spec descrevia uma unidade que o
 	// código não implementava, o gate viu a regra ausente, caiu aqui e devolveu
 	// pendência. O defeito atravessou os 44 gates.
-	if len(faltando) == len(regras) && !hasAnyDeclaration(content, texto, regras) &&
+	if len(faltando) == len(regras) && !hasAnyDeclaration(content, unidade, texto, regras) &&
 		requiresMarking(cfg) {
 		sort.Strings(faltando)
 		return Fail, i18n.T("gate.rule_implemented.marking_required", len(regras), unidade)
 	}
 
-	if len(faltando) == len(regras) && !hasAnyDeclaration(content, texto, regras) {
+	if len(faltando) == len(regras) && !hasAnyDeclaration(content, unidade, texto, regras) {
 		return Diverge, i18n.T("gate.rule_implemented.pending_migration", len(regras), unidade)
 	}
 	sort.Strings(faltando)
@@ -150,9 +150,10 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 //	@no-mark:[WRKSP-B02, WRKSP-B04] satisfeitas pela AUSÊNCIA de dependência
 //	@no-mark: esta spec inteira descreve configuração, e nada nela recebe marcação
 //
-// COM alvo, dispensa só as regras nomeadas. SEM alvo, equivale a `[all]`: vale para a
-// spec inteira — é a saída de quem tem uma unidade em que NADA se marca, e nomear todas
-// seria repetir a mesma razão N vezes.
+// COM alvo, dispensa só as regras nomeadas. SEM alvo, na linha de uma regra, dispensa só
+// ela; numa linha que não declara regra, equivale a `[all]`: vale para a spec inteira — é
+// a saída de quem tem uma unidade em que NADA se marca, e nomear todas seria repetir a
+// mesma razão N vezes.
 //
 // A escolha entre as duas é a diferença entre "estas duas não têm onde ser marcadas" e
 // "esta unidade não é marcável". A segunda é mais forte, e por isso a razão importa mais:
@@ -173,8 +174,12 @@ var noMarkRE = regexp.MustCompile(
 // para `X-I01`, e não para a regra onde está escrito. É o que permite agrupar várias numa
 // declaração só sem que o gate confunda quem está dispensando.
 //
-// SEM alvo, vale para a spec inteira (`[all]`) — a unidade em que nada se marca.
-func waived(content, regra string) bool {
+// SEM alvo, vale para a regra que a própria linha declara (a linha de uma tabela, de uma
+// lista ou um título que abre com o código); numa linha que não declara regra — um
+// parágrafo, uma citação —, vale para a spec inteira (`[all]`), a unidade em que nada se
+// marca. Medido no SS: um `@no-mark:` sem alvo numa única linha de tabela dispensava as
+// outras centenas de regras da spec, sem que ninguém o lesse assim.
+func waived(content, unidade, regra string) bool {
 	for _, linha := range strings.Split(content, "\n") {
 		m := noMarkRE.FindStringSubmatch(linha)
 		if m == nil {
@@ -183,8 +188,17 @@ func waived(content, regra string) bool {
 		// O alvo casa em m[1] (antes dos dois-pontos) ou m[2] (depois): as duas formas
 		// são naturais de escrever, e recusar uma seria pegadinha de sintaxe.
 		alvos := strings.TrimSpace(m[1] + m[2])
-		if alvos == "" || strings.EqualFold(alvos, "all") {
-			return true // sem alvo = todas
+		if strings.EqualFold(alvos, "all") {
+			return true
+		}
+		if alvos == "" {
+			if declarada := ruleOnLine(linha, unidade); declarada != "" {
+				if declarada == regra {
+					return true
+				}
+				continue // sem alvo na linha de uma regra = só ela
+			}
+			return true // sem alvo fora de uma regra = todas
 		}
 		for _, a := range strings.Split(alvos, ",") {
 			if strings.TrimSpace(a) == regra {
@@ -193,6 +207,17 @@ func waived(content, regra string) bool {
 		}
 	}
 	return false
+}
+
+// ruleOnLine é a regra que a linha DECLARA — a que a abre, como `declaredRules` a lê —,
+// de qualquer unidade, ou o estado de dados que ela define; vazio numa linha que não
+// declara nenhuma.
+func ruleOnLine(linha, unidade string) string {
+	re := regexp.MustCompile(`^\s*(?:\|\s*|-\s*|#{2,4}\s+)` + "`?" + `([A-Z0-9]` + config.CodeLengthPattern() + `-[A-Z]\d{2})\b`)
+	if m := re.FindStringSubmatch(linha); m != nil {
+		return m[1]
+	}
+	return definedDataState(linha, unidade)
 }
 
 // codeRE lê a identidade declarada no header da spec.
@@ -268,9 +293,9 @@ func suffixRest(n int) string {
 // hasAnyDeclaration diz se a unidade JÁ ENTROU na prática — se alguma regra foi marcada
 // no código ou dispensada na spec. É o que separa a dívida de migração (ninguém declarou
 // nada, porque a prática não existia) do defeito (declarou umas, esqueceu outras).
-func hasAnyDeclaration(spec, codigo string, regras []string) bool {
+func hasAnyDeclaration(spec, unidade, codigo string, regras []string) bool {
 	for _, r := range regras {
-		if strings.Contains(codigo, r) || waived(spec, r) {
+		if strings.Contains(codigo, r) || waived(spec, unidade, r) {
 			return true
 		}
 	}
