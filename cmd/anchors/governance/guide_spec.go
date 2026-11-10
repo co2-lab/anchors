@@ -160,6 +160,16 @@ a rule nobody wrote. So do not stop at the first draft — write it in four pass
    ` + "`@variants: audit, notification`" + ` —, and on each rule that follows them, an error
    or an effect common to every kind, ` + "`@variants: B02`" + `: each variant then asks its own
    scenario, and a new value asks it of every rule that follows.
+   The same marker names the cases a deterministic test never meets unless asked:
+   - a rule that MATCHES or decides by time also refuses: ` + "`@variants: matches, does-not-match`" + `
+     — a rule proven only where it matches is proven half;
+   - ORDER: two things that meet in either order (a payment and its notice, two events)
+     ` + "`@variants: a-first, b-first`" + `, and a sort says its total tie-break;
+   - IDEMPOTENCY: an action that writes — a double tap, a retried request, a
+     read-then-write — ` + "`@variants: once, repeated`" + `, the repeat changing nothing;
+   - CONCURRENCY: two actors on the same data ` + "`@variants: alone, interleaved`" + `, with
+     the write conditional on what was read;
+   - a TIMER or a subscription is stopped on every exit: ` + "`@variants: completes, leaves`" + `.
 3. GENERALIZE. When a rule is one instance of a wider truth, write the wider truth as
    an invariant (` + "`I`" + `) and keep the instance as its consequence:
      ✗ "under --index, this gate reads the staged file"

@@ -618,3 +618,11 @@ func TestSeedForRelatesAndPresupposes(t *testing.T) {
 		}
 	}
 }
+
+func TestRuleTestCoherentIsJudgedOnSpecs(t *testing.T) {
+	t.Run("DFGTD-B22: rule-test-coherent asks whether the tests assert what the rule says", func(t *testing.T) {})
+	g, ok := CanonicalGate("rule-test-coherent")
+	if !ok || !g.IsJudgment() || len(g.On) != 1 || g.On[0] != "spec" || !strings.Contains(g.Ask, "ASSERT") || !strings.Contains(g.Ask, "@TBD") {
+		t.Errorf("rule-test-coherent should judge each spec against what its tests assert: %+v %v", g, ok)
+	}
+}

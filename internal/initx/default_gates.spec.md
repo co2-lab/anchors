@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DFGTD
-  updated_at: 2026-10-16
+  updated_at: 2026-11-10
   layer: infra
 -->
 # DefaultGates — the gates a project is born with, by artifact and by project age, and the canonical gate catalog
@@ -74,6 +74,7 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 | `DFGTD-B19` | `rule-fulfilled` is judged and also marked to review: the marks it judges were put by the agents who wrote the code, and a second look is a different thing from their judgment. |
 | `DFGTD-B20` | The catalog carries the checkers that measure a kind of the unit and had no canonical gate — among them `evidence-fresh`, `feature-test-match`, `rule-implemented`, `scenario-identity`, `scenario-letter-declared`, `placeholder-filled` and `updated-at-atual` — each on the kinds it measures, with the field it presupposes when it needs one (`scenario-type-aligned` the `rule_types` tags), and the UI ones scoped by the `screen` and `component` tags. |
 | `DFGTD-B21` | Init seeds (`SeedFor`) the default gates related to the project — a declared layer of a kind they measure, with their tags, or a kind the project chose and has no layer of yet — whose presupposed fields the configuration declares; a gate over an undeclared field is not seeded. |
+| `DFGTD-B22` | `rule-test-coherent` is judged on each spec: whether what the tests carrying a rule's code assert agrees with the rule's text — the pair of `rule-fulfilled` on the test's side. |
 
 ## Invariants
 

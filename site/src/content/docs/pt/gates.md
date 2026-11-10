@@ -114,6 +114,7 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | Gate | Confronta | O que mede |
 | --- | --- | --- |
 | [`rule-fulfilled`](/pt/docs/gates/rule-fulfilled/) | `spec` | Each rule of this spec is marked in the code by a comment carrying its code (`// ABCDX-B01: …`) |
+| [`rule-test-coherent`](/pt/docs/gates/rule-test-coherent/) | `spec` | Each rule of this spec is proven by tests that carry its code (a tag, a title, a comment) |
 | [`no-test-proof-real`](/pt/docs/gates/no-test-proof-real/) | `spec` | This spec waives its own test with `@no-test` and points at a scenario code as the proof elsewhere |
 
 ## Planejamento e Progresso

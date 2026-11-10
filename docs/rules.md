@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:af716d05fea1b343 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:8e8e7fa05d94dce9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -7461,6 +7461,8 @@ in `layers/`.
 - [DFGTD-B20 — The catalog carries the checkers that measure a kind of the unit and had no canonical gate — among them `evidence-fresh`, `feature-test-match`, `rule-implemented`, `scenario-identity`, `scenario-letter-declared`, `placeholder-filled` and `updated-at-atual` — each on the kinds it measures, with the field it presupposes when it needs one (`scenario-type-aligned` the `rule_types` tags), and the UI ones scoped by the `screen` and `component` tags.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-B21 — Init seeds (`SeedFor`) the default gates related to the project — a declared layer of a kind they measure, with their tags, or a kind the project chose and has no layer of yet — whose presupposed fields the configuration declares; a gate over an undeclared field is not seeded.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
+
+- [DFGTD-B22 — `rule-test-coherent` is judged on each spec: whether what the tests carrying a rule's code assert agrees with the rule's text — the pair of `rule-fulfilled` on the test's side.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-I01 — The list of seeded gates, and its order, does not change with the age of the project; only the maturation state does.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 

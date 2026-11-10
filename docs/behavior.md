@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:c3e9641266310185 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:7ff6b335ad4a5516 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -6775,6 +6775,8 @@ is what the test proves.
 - [The catalog carries the checkers that measure the unit's kinds](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B20`
 
 - [Init seeds what relates to the project and has its premise](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B21`
+
+- [rule-test-coherent asks whether the tests assert what the rule says](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B22`
 
 - [The local board page is the published page](layers/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B01`
 

@@ -133,6 +133,26 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 					"code does? Record each finding — what, where (file:line), why — to become " +
 					"a failing test and a fix, or dismiss it with the reason."},
 			},
+			// The pair of `rule-fulfilled` on the other side: that one asks whether the CODE
+			// does what the rule says; this one whether the TEST asserts it. Measured in MIF
+			// (MIF-1S): a rule said the tap records the item in the notification log, and the
+			// test carrying its tag asserted `markAuditSeen` — the tag matched, the test was
+			// green, and no ruler read the two side by side.
+			config.Gate{
+				Name: "rule-test-coherent", ID: "rule-test-coherent", On: []string{"spec"},
+				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
+				Ask: "Each rule of this spec is proven by tests that carry its code (a tag, a " +
+					"title, a comment). For each rule, read its text and what those tests ASSERT — " +
+					"the targets of their expect/assert, the functions, tables, fields and values " +
+					"they check — and answer: does what the tests assert agree with what the rule " +
+					"says? Fail it when the rule names one thing and the test asserts another (the " +
+					"rule records the item in one place, the test expects a call that writes " +
+					"another), when the test asserts the opposite of the rule, or when the rule " +
+					"names variants and the tests carrying it prove only some. Agreement in other " +
+					"words is a pass. For each contradiction, name the rule, the test (file:line) " +
+					"and both sides, and say which one is wrong if the spec or the code tells." +
+					tbdInstruction("the test"),
+			},
 			// O vocabulário de letras do código é do PROJETO (`rule_types`), mas o gate
 			// que impede conflito e letra não declarada é universal: uma letra fora do
 			// vocabulário torna a regra INVISÍVEL à rastreabilidade — ela aparece na

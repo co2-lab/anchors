@@ -360,6 +360,10 @@
         "slug": "docs/gates/rule-fulfilled"
       },
       {
+        "label": "rule-test-coherent",
+        "slug": "docs/gates/rule-test-coherent"
+      },
+      {
         "label": "no-test-proof-real",
         "slug": "docs/gates/no-test-proof-real"
       }

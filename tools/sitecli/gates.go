@@ -39,7 +39,7 @@ var gateGroups = []gateGroup{
 	{"Test Doubles & Mocks", "Dublês e Mocks", []string{"mock-stamped", "mock-typed", "mock-detect-covers-dialect"}},
 	{"Failure & Governance", "Falhas e Governança", []string{"failure-declared", "failure-handled", "failure-logged", "region-pair-honored", "rule-types", "rule-implemented", "marker-parity", "pipeline-wired", "obligation-honored", "updated-at-atual", "guide-checklist", "guidance-linked", "guidance-honored", "docs-fresh", "docs-covered", "doc-required", "doc-self-contained"}},
 	{"Architectural Boundaries", "Fronteiras Arquiteturais", []string{"layer-boundary", "sibling-guard", "proof-crosses-boundary", "circular", "deadcode"}},
-	{"AI Judgment & Review", "Julgamento por IA e Review", []string{"rule-fulfilled", "no-test-proof-real"}},
+	{"AI Judgment & Review", "Julgamento por IA e Review", []string{"rule-fulfilled", "rule-test-coherent", "no-test-proof-real"}},
 	{"Planning & Progress", "Planejamento e Progresso", []string{"phase-exists", "phase-ordered", "parent-valid", "plan-seeds-valid", "plan-source-declared", "plan-revised", "plan-change-justified", "open-questions-resolved", "progress-honest", "progress-intact", "revision-orphans"}},
 	{"Proof & Execution", "Prova e Execução", []string{"tests-green", "test-has-assertion", "test-exercises-unit", "test-ref-matches-unit", "evidence-fresh", "line-coverage", "branch-coverage", "coverage-delta", "mutation-score", "scenario-coverage", "single-test-per-unit", "test-level-codes", "test-traceable", "tests-retried"}},
 	{"Security & Hygiene", "Segurança e Higiene", []string{"no-secret-leaked", "dependency-vulnerable", "sbom-generated", "license-compatible", "no-duplication", "spellcheck"}},

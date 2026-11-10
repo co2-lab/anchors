@@ -2,7 +2,7 @@
 # @anchors
 #   code: DGFDF
 #   ref: DFGTD
-#   updated_at: 2026-10-16
+#   updated_at: 2026-11-10
 #   layer: feature
 
 @DFGTD
@@ -183,3 +183,9 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     When the default gates are filtered for it
     Then feature-test-match and the security gates over code are seeded
     And scenario-type-aligned, presupposing rule_types, and route-declared, scoped by the screen tag, are not
+
+  @DFGTD-B22 @unit-level
+  Scenario: rule-test-coherent asks whether the tests assert what the rule says
+    Given the default gates of a project with specs and tests
+    When rule-test-coherent is inspected
+    Then it measures each spec by judgment, asking to compare what the tests assert with the rule's text
