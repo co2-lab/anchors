@@ -213,3 +213,65 @@ func TestNavChain_aDormantNavigationIsNoEdge(t *testing.T) {
 		t.Errorf("the dormant call is annotated: %s", msg)
 	}
 }
+
+// twoApps is a repository of two apps that share a screen's name and route: each Home leads to
+// its own Profile, and each Home's code flags its own.
+func twoApps(t *testing.T) (string, *mapx.Graph, *config.Config) {
+	t.Helper()
+	root := t.TempDir()
+	g := &mapx.Graph{}
+	for _, a := range []struct{ app, home, profile, homeFile, profileFile string }{
+		{"apps/ss", "CSHOM", "CSPRF", "CSHMF", "CSPFF"}, {"apps/ss-business", "BSHOM", "BSPRB", "BSHMF", "BSPFF"},
+	} {
+		files := map[string]string{
+			a.app + "/screens/HomeScreen.spec.md":    screenSpecText(a.home, "Home", "", "| `"+a.home+"-A01` | ProfileScreen | tap the avatar |\n"),
+			a.app + "/screens/ProfileScreen.spec.md": screenSpecText(a.profile, "Profile", "| HomeScreen | tap the avatar |\n", ""),
+			a.app + "/screens/HomeScreen.tsx":        "navigation.navigate('Profile') // @navigates: " + a.profile + " [" + a.home + "-A01]\n",
+			a.app + "/screens/ProfileScreen.tsx":     "export const P = 1\n",
+		}
+		for rel, body := range files {
+			if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		for _, sc := range []struct{ name, code, file string }{{"Home", a.home, a.homeFile}, {"Profile", a.profile, a.profileFile}} {
+			spec := a.app + "/screens/" + sc.name + "Screen.spec.md"
+			code := a.app + "/screens/" + sc.name + "Screen.tsx"
+			g.Nodes = append(g.Nodes, mapx.Node{ID: spec, Kind: mapx.KindSpec, Code: sc.code, Layer: "spec"},
+				mapx.Node{ID: code, Kind: mapx.KindCode, Code: sc.code, FileCode: sc.file})
+			g.Edges = append(g.Edges, mapx.Edge{From: spec, To: code, Type: mapx.EdgeSpecifies})
+		}
+	}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts", NavigationCall: config.FamilyNavigationCall("ts")}, Navigation: &config.Navigation{Entry: []string{"Home"}}})
+	screensMu.Lock()
+	delete(screensCache, root)
+	screensMu.Unlock()
+	return root, g, cfg
+}
+
+func TestNavChain_aNameTwoAppsShareIsTheNearest(t *testing.T) {
+	t.Run("NCGNV-B09: A screen name or route several screens share names the one nearest the file that cites it, and a screen's code names it alone", func(t *testing.T) {})
+	root, g, cfg := twoApps(t)
+	for _, app := range []string{"apps/ss", "apps/ss-business"} {
+		home := app + "/screens/HomeScreen"
+		if v, msg := checkNavMatchesSpec("", navNode(g, home+".spec.md"), root, g, cfg); v != Pass {
+			t.Errorf("%s's Out leads to its own Profile: %v %s", app, v, msg)
+		}
+		if v, msg := checkNavSymmetric("", navNode(g, home+".spec.md"), root, g, cfg); v != Pass {
+			t.Errorf("%s's Profile answers its own Home: %v %s", app, v, msg)
+		}
+		if v, msg := checkNavAnnotated(read(t, root, home+".tsx"), navNode(g, home+".tsx"), root, g, cfg); v != Pass {
+			t.Errorf("%s's flag names its own Profile: %v %s", app, v, msg)
+		}
+	}
+	idx := screensOf(root, g)
+	if s := idx.screenNamed("`BSPRB`", "apps/ss/screens/HomeScreen.spec.md"); s == nil || s.Code != "BSPRB" {
+		t.Errorf("a screen's code names it from anywhere: %+v", s)
+	}
+	if v, msg := checkNavReachable("", navNode(g, "apps/ss-business/screens/ProfileScreen.spec.md"), root, g, cfg); v != Pass {
+		t.Errorf("each app's Home is an entry, so each Profile is reached: %v %s", v, msg)
+	}
+}

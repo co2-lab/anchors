@@ -54,3 +54,9 @@ Feature: NavigationChain — every navigation flagged with the screen it leads t
     Given a card Home renders, whose navigation to Lonely is marked dormant with a reason
     When nav-matches-spec and nav-annotated run
     Then Home's Out table is not asked for Lonely, and the call counts as annotated
+
+  @NCGNV-B09 @unit-level
+  Scenario: A name two apps share names the screen nearest the file that cites it
+    Given two apps of one repository, each with a Home leading to its own Profile, the same name and route in both
+    When the navigation gates confront each app's Home, its code and its Profile
+    Then each Out row, flag and In resolves to the screen of its own app, a screen's code names it from anywhere, and each Profile is reached from its app's Home

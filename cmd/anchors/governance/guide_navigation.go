@@ -37,7 +37,9 @@ A screen is a spec of the 'screen' layer. Its Navigation section has two tables:
     | 'GLDTG-A01' | GoalEditScreen | edit |
 
 - Out: one row per navigation the screen makes, with the rule that triggers it — a code of
-  this spec — and the screen it leads to, by name or route.
+  this spec — and the screen it leads to, by name or route. Where several apps of the
+  repository share a name, it names the screen of the nearest folder — this app's; the
+  screen's code ('BSPRB') names one screen wherever it is.
 - In: one row per screen that leads here.
 - The headings and columns are read in English, Portuguese or Spanish (Entrada/Saída,
   Origem/Destino, Regra).

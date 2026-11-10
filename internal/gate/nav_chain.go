@@ -118,7 +118,7 @@ func navTables(content string) (in, out []NavRow) {
 type screenIndex struct {
 	g       *mapx.Graph
 	screens []*Screen
-	byName  map[string]*Screen // by stem and by route, lower-cased
+	byName  map[string][]*Screen // by stem and by route, lower-cased; a name two apps share holds both
 	byCode  map[string]*Screen
 	bySpec  map[string]*Screen
 }
@@ -135,7 +135,7 @@ func screensOf(root string, g *mapx.Graph) *screenIndex {
 	if idx, ok := screensCache[root]; ok && idx.g == g {
 		return idx
 	}
-	idx := &screenIndex{g: g, byName: map[string]*Screen{}, byCode: map[string]*Screen{}, bySpec: map[string]*Screen{}}
+	idx := &screenIndex{g: g, byName: map[string][]*Screen{}, byCode: map[string]*Screen{}, bySpec: map[string]*Screen{}}
 	if g == nil {
 		return idx
 	}
@@ -164,20 +164,61 @@ func screensOf(root string, g *mapx.Graph) *screenIndex {
 		for _, c := range s.Codes {
 			idx.byCode[c] = s
 		}
+		seen := map[string]bool{}
 		for _, k := range []string{s.Name, strings.TrimSuffix(s.Name, "Screen"), s.Route} {
-			if k != "" {
-				idx.byName[strings.ToLower(strings.Trim(k, "/"))] = s
+			if k = strings.ToLower(strings.Trim(k, "/")); k != "" && !seen[k] {
+				seen[k] = true
+				idx.byName[k] = append(idx.byName[k], s)
 			}
 		}
 	}
 	sort.Slice(idx.screens, func(i, j int) bool { return idx.screens[i].Spec < idx.screens[j].Spec })
+	for _, ss := range idx.byName {
+		sort.Slice(ss, func(i, j int) bool { return ss[i].Spec < ss[j].Spec })
+	}
 	screensCache[root] = idx
 	return idx
 }
 
-// screenNamed is the screen a table cell or a route names.
-func (idx *screenIndex) screenNamed(name string) *Screen {
+// screenNamed is the screen a table cell or a route names, as read from the file at `from`:
+// a screen's code names it alone; a name or a route that several screens share — two apps of
+// one repository, each with its Profile — is the one nearest `from`, the screen sharing the
+// longest folder with it (reported from SS: apps/ss and apps/ss-business share 30 screen
+// names, and every Out row of one app resolved to the other's).
+func (idx *screenIndex) screenNamed(name, from string) *Screen {
+	key := strings.Trim(name, "` ")
+	if s := idx.byCode[key]; s != nil {
+		return s
+	}
+	cands := idx.screensNamed(key)
+	if len(cands) <= 1 || from == "" {
+		if len(cands) == 0 {
+			return nil
+		}
+		return cands[0]
+	}
+	best, bestDepth := cands[0], -1
+	for _, c := range cands {
+		if d := sharedDirs(c.Spec, from); d > bestDepth {
+			best, bestDepth = c, d
+		}
+	}
+	return best
+}
+
+// screensNamed are every screen a name or a route names, in the order of their specs.
+func (idx *screenIndex) screensNamed(name string) []*Screen {
 	return idx.byName[strings.ToLower(strings.Trim(strings.Trim(name, "` "), "/"))]
+}
+
+// sharedDirs is how many leading folders two paths share.
+func sharedDirs(a, b string) int {
+	da, db := strings.Split(path.Dir(a), "/"), strings.Split(path.Dir(b), "/")
+	n := 0
+	for n < len(da) && n < len(db) && da[n] == db[n] {
+		n++
+	}
+	return n
 }
 
 // screenOfNode is the screen a code file belongs to: the screen whose spec specifies it.
@@ -256,7 +297,7 @@ func checkNavAnnotated(content string, n mapx.Node, root string, g *mapx.Graph, 
 		if c.Flag.Waiver != "" || c.Route == "" {
 			continue
 		}
-		target := idx.screenNamed(c.Route)
+		target := idx.screenNamed(c.Route, n.ID)
 		if target == nil {
 			continue // a route no screen spec declares: route-exists asks about it
 		}
@@ -369,7 +410,7 @@ func checkNavMatchesSpec(content string, n mapx.Node, root string, g *mapx.Graph
 	declared := map[string]bool{}
 	var gaps []string
 	for _, r := range s.Out {
-		t := idx.screenNamed(r.Name)
+		t := idx.screenNamed(r.Name, s.Spec)
 		if t == nil {
 			gaps = append(gaps, i18n.T("gate.nav_chain.out_unknown", r.Name))
 			continue
@@ -399,10 +440,10 @@ func checkNavSymmetric(content string, n mapx.Node, root string, g *mapx.Graph, 
 	if s == nil {
 		return Skip, i18n.T("gate.nav_chain.skip_not_screen")
 	}
-	names := func(rows []NavRow) map[string]bool {
+	names := func(of *Screen, rows []NavRow) map[string]bool {
 		out := map[string]bool{}
 		for _, r := range rows {
-			if t := idx.screenNamed(r.Name); t != nil {
+			if t := idx.screenNamed(r.Name, of.Spec); t != nil {
 				out[t.Spec] = true
 			}
 		}
@@ -410,14 +451,14 @@ func checkNavSymmetric(content string, n mapx.Node, root string, g *mapx.Graph, 
 	}
 	var gaps []string
 	for _, r := range s.Out {
-		t := idx.screenNamed(r.Name)
-		if t != nil && t.Spec != s.Spec && !names(t.In)[s.Spec] {
+		t := idx.screenNamed(r.Name, s.Spec)
+		if t != nil && t.Spec != s.Spec && !names(t, t.In)[s.Spec] {
 			gaps = append(gaps, i18n.T("gate.nav_chain.out_without_in", t.Name, s.Name))
 		}
 	}
 	for _, r := range s.In {
-		o := idx.screenNamed(r.Name)
-		if o != nil && o.Spec != s.Spec && !names(o.Out)[s.Spec] {
+		o := idx.screenNamed(r.Name, s.Spec)
+		if o != nil && o.Spec != s.Spec && !names(o, o.Out)[s.Spec] {
 			gaps = append(gaps, i18n.T("gate.nav_chain.in_without_out", o.Name, s.Name))
 		}
 	}
@@ -440,7 +481,7 @@ func NavEdges(root string, g *mapx.Graph, cfg *config.Config) map[string]map[str
 	}
 	for _, s := range idx.screens {
 		for _, r := range s.Out {
-			if t := idx.screenNamed(r.Name); t != nil {
+			if t := idx.screenNamed(r.Name, s.Spec); t != nil {
 				add(s.Spec, t.Spec)
 			}
 		}
@@ -475,10 +516,14 @@ func reachableScreens(root string, g *mapx.Graph, idx *screenIndex, entries []st
 	edges := NavEdges(root, g, cfg)
 	seen := map[string]bool{}
 	var queue []string
+	// An entry route is the project's, read from no file: every screen it names is an entry
+	// — each app of a repository enters at its own.
 	for _, e := range entries {
-		if t := idx.screenNamed(e); t != nil && !seen[t.Spec] {
-			seen[t.Spec] = true
-			queue = append(queue, t.Spec)
+		for _, t := range idx.screensNamed(e) {
+			if !seen[t.Spec] {
+				seen[t.Spec] = true
+				queue = append(queue, t.Spec)
+			}
 		}
 	}
 	for len(queue) > 0 {
@@ -529,7 +574,7 @@ func fixNavFlags(content string, n mapx.Node, root string, g *mapx.Graph) (strin
 		if c.Flag != nil || c.Route == "" {
 			continue
 		}
-		t := idx.screenNamed(c.Route)
+		t := idx.screenNamed(c.Route, n.ID)
 		if t == nil || t.Code == "" {
 			continue
 		}

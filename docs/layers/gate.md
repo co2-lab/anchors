@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:490af8f8a6051b94 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:db55cec5ae7cf5d4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 92 units and 1455 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 92 units and 1456 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2259,6 +2259,8 @@ route.
 - **NCGNV-B07** — A screen navigates from its own files and from every file they reach along the dependency chain — the components it renders, transitively —, stopping at a file another screen specifies: a navigation call flagged in a component counts for each screen that renders it, in `nav-matches-spec`, `nav-reachable` and the navigation edges. (`screenFiles`)
 
 - **NCGNV-B08** — A dormant navigation — its flag carrying `@dormant` and a reason — annotates its call and is no edge: no screen that renders the component leads anywhere by it, in `nav-matches-spec`, `nav-reachable` and the map, until the marker is removed.
+
+- **NCGNV-B09** — A screen name or route several screens share — two apps of one repository, each with its Profile — names the one nearest the file that cites it, the screen sharing the longest folder with it; a screen's code in a Destination names that screen wherever it is; an entry route names every screen it fits, each app entering at its own. (`screenNamed`, `screensNamed`)
 
 
 ## OBHNB — ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit

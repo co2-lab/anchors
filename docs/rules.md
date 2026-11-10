@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:cac467fe1b0e5a08 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:b54811e3fd763c4c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -5255,6 +5255,8 @@ in `layers/`.
 - [NCGNV-B07 — A screen navigates from its own files and from every file they reach along the dependency chain — the components it renders, transitively —, stopping at a file another screen specifies: a navigation call flagged in a component counts for each screen that renders it, in `nav-matches-spec`, `nav-reachable` and the navigation edges. (`screenFiles`)](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
 
 - [NCGNV-B08 — A dormant navigation — its flag carrying `@dormant` and a reason — annotates its call and is no edge: no screen that renders the component leads anywhere by it, in `nav-matches-spec`, `nav-reachable` and the map, until the marker is removed.](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
+
+- [NCGNV-B09 — A screen name or route several screens share — two apps of one repository, each with its Profile — names the one nearest the file that cites it, the screen sharing the longest folder with it; a screen's code in a Destination names that screen wherever it is; an entry route names every screen it fits, each app entering at its own. (`screenNamed`, `screensNamed`)](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it)
 
 ### [OBHNB — ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit)
 

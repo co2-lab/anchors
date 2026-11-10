@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:de2b3add18b82e29 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:0780f3ab716cb7e3 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -4763,6 +4763,8 @@ is what the test proves.
 - [A component's navigation counts for every screen that renders it](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B07`
 
 - [A dormant navigation is no edge](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B08`
+
+- [A name two apps share names the screen nearest the file that cites it](layers/gate.md#ncgnv--navigationchain--every-navigation-flagged-with-the-screen-it-leads-to-and-the-screens-tables-confronted-with-it) `NCGNV-B09`
 
 - [A node that carries the trigger and is absent from the demanded file fails](layers/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B01`
 
