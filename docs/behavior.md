@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:0d3b588d1e546c9e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:40e2f142d505900f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2814,6 +2814,8 @@ is what the test proves.
 
 - [A file the suite does not run is named as unproven](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B18`
 
+- [A run that proved none of its files fails](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B19`
+
 - [Expired test evidence is listed before the stale edges](layers/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges) `STEDS-B01`
 
 - [Each expired evidence names why it expired](layers/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges) `STEDS-B02`
@@ -3451,6 +3453,8 @@ is what the test proves.
 - [The resolved root is always absolute, even outside any project](layers/config.md#prrpr-i01--the-resolved-root-is-always-absolute-even-outside-any-project) `PRRPR-I01`
 
 - [An explicit root is made absolute and never walked above](layers/config.md#prrpr-x01--an-explicit-root-is-made-absolute-and-never-walked-above) `PRRPR-X01`
+
+- [The root is written as the disk names it](layers/config.md#prrpr-b04--the-root-is-written-as-the-disk-names-it) `PRRPR-B04`
 
 - [The project declares its bypasses and the layers that run the skipped path](layers/config.md#tbysa-b01--the-project-declares-its-bypasses-and-the-layers-that-run-the-skipped-path) `TBYSA-B01`
 

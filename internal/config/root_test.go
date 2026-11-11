@@ -97,3 +97,28 @@ func TestAbsRoot_alwaysAbsolute(t *testing.T) {
 		}
 	}
 }
+
+func TestAbsRoot_trueCase(t *testing.T) {
+	t.Run("PRRPR-B04: The root is written as the disk names it", func(t *testing.T) {})
+	base := t.TempDir()
+	real := filepath.Join(base, "MixedCase")
+	if err := os.MkdirAll(filepath.Join(real, "Sub"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	typed := filepath.Join(base, "mixedcase", "sub")
+	if _, err := os.Stat(typed); err != nil {
+		if got := TrueCase(typed); got != typed {
+			t.Errorf("a path the disk does not hold comes back as given, got %q", got)
+		}
+		t.Skip("this file system tells case apart")
+	}
+	if got := TrueCase(typed); got != filepath.Join(real, "Sub") {
+		t.Errorf("want %q, got %q", filepath.Join(real, "Sub"), got)
+	}
+	if got, _ := AbsRoot(typed); got != filepath.Join(real, "Sub") {
+		t.Errorf("an explicit root in another case: %q", got)
+	}
+	if got := TrueCase(filepath.Join(real, "Sub", "ghost")); got != filepath.Join(real, "Sub", "ghost") {
+		t.Errorf("a part the disk does not list stays: %q", got)
+	}
+}

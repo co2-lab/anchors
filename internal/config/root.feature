@@ -2,7 +2,7 @@
 # @anchors
 #   code: RTFTA
 #   ref: PRRPR
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-11
 #   layer: feature
 
 @PRRPR
@@ -37,3 +37,10 @@ Feature: ProjectRootResolution — the project root a command works on
     Given the working directory "outer", which holds a project, and its subdirectory "pkg/deep", which does not
     When the root is resolved from the explicit option "pkg/deep"
     Then it is the absolute path of "outer/pkg/deep", not "outer"
+
+  @PRRPR-B04 @unit-level
+  Scenario: The root is written as the disk names it
+    Given a folder MixedCase/Sub under a temporary folder reached through a link
+    When the root is given as mixedcase/sub, and a path below it the disk does not hold
+    Then it comes back as MixedCase/Sub with the link kept, and the missing part stays as given
+

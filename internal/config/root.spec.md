@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRRPR
-  updated_at: 2026-10-08
+  updated_at: 2026-11-11
   layer: config
 -->
 # ProjectRootResolution — the project root a command works on
@@ -38,6 +38,7 @@ instruction.
 | `PRRPR-B01` | The project root is the nearest directory, from the start upwards, that holds the configuration file; a project nested in another is its own. |
 | `PRRPR-B02` | With no project above the start, the start comes back unchanged, relative if it was relative. |
 | `PRRPR-B03` | With no root given (empty or `.`), the root is found by walking up from the working directory (`AbsRoot`). |
+| `PRRPR-B04` | The root is written as the disk names it: on a file system that ignores case, a root typed in another case — the shell's working directory, or `--root` — comes back in the disk's case, a part under a symbolic link keeps the link as written, and a part the disk does not hold stays as given. (`TrueCase`) |
 
 ## Invariants
 

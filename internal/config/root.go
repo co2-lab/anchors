@@ -7,6 +7,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // ProjectRoot sobe a partir de `inicio` até achar o diretório que tem o `anchors.yaml`.
@@ -46,13 +47,51 @@ func ProjectRoot(inicio string) string {
 //
 // Um `--root` EXPLÍCITO é respeitado como dado: quem aponta para um diretório específico
 // está dizendo onde quer trabalhar, e subir por cima disso seria ignorar a instrução.
+//
+// The root is written as the disk names it (TrueCase): on a file system that ignores case,
+// the working directory comes as the shell typed it, and a tool handed paths built on it
+// does not find its own files under them.
 func AbsRoot(root string) (string, error) {
 	abs, err := filepath.Abs(root)
 	if err != nil {
 		return "", err
 	}
 	if root == "." || root == "" {
-		return ProjectRoot(abs), nil
+		return TrueCase(ProjectRoot(abs)), nil
 	}
-	return abs, nil
+	return TrueCase(abs), nil
+}
+
+// TrueCase is an absolute path as the disk names it: on a file system that ignores case,
+// `/Users/x/mif` and `/Users/x/MIF` are one folder, and the disk calls it `MIF`. Only the
+// case changes — a symbolic link is kept as written —, and where the system cannot say, the
+// path comes back as given (diskPath, per system).
+//
+// Measured in MIF on macOS: the shell's working directory was `.../mif`, the folder is
+// `.../MIF`, and `jest --findRelatedTests` handed `.../mif/...` matched none of the files it
+// knows under `.../MIF/`; it ran no test and exited 0, in five suites.
+func TrueCase(path string) string {
+	if !filepath.IsAbs(path) {
+		return path
+	}
+	disk, ok := diskPath(path)
+	if !ok || disk == path {
+		return path
+	}
+	// The kernel's path also resolves links (`/var` is `/private/var` on macOS): the case is
+	// taken from its last parts, as many as stand under no link — those the resolved path
+	// names as the given one does, but for case.
+	resolved, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return path
+	}
+	sep := string(filepath.Separator)
+	given, real, typed := strings.Split(path, sep), strings.Split(disk, sep), strings.Split(resolved, sep)
+	for i, j, k := len(given)-1, len(real)-1, len(typed)-1; i >= 0 && j >= 0 && k >= 0; i, j, k = i-1, j-1, k-1 {
+		if given[i] != typed[k] || !strings.EqualFold(typed[k], real[j]) {
+			break
+		}
+		given[i] = real[j]
+	}
+	return strings.Join(given, sep)
 }

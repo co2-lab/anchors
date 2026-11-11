@@ -122,3 +122,9 @@ Feature: RunSelection — a run takes only what is stale and below the minimum, 
     When the test run takes both
     Then the run names the other as handed and come back with no result, and says how to narrow the suite
 
+  @SLCTN-B19 @unit-level
+  Scenario: A run that proved none of its files fails
+    Given two never-measured test files, and a suite whose runner reports no case and exits 0
+    When the test run takes both
+    Then the run fails naming the count and the first path handed
+

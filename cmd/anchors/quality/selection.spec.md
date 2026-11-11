@@ -54,6 +54,7 @@ whole, saying so.
 | `SLCTN-B16` | A file a freeze covers is never run, whatever its state, and the run counts it among what it left out, as frozen. (`selectFiles`) |
 | `SLCTN-B17` | A test run takes every stale test file by default, whatever its last result — a stale result is no proof, and `evidence-fresh` refuses it —; a mutation run keeps a stale score at the floor or above out unless `--include-passing`. (`selectFiles`) |
 | `SLCTN-B18` | After a test run, the files handed to a suite that came back with no fresh result are named as unproven, with the way out: narrow the suite's `paths:` to what its runner runs, and declare the suite that runs the others. (`reportUnproven`) |
+| `SLCTN-B19` | A test run whose suite reports a result for none of the files handed to it fails, naming the suite, the count and the first path it was handed — a suite that ran no test proved nothing, whatever its exit code; a suite that declares no `junit:` report is not judged. (`reportUnproven`) |
 
 ## Errors
 

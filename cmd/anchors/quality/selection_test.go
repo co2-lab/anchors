@@ -430,3 +430,17 @@ func TestSelection_ReportsFilesTheSuiteDoesNotRun(t *testing.T) {
 		t.Errorf("the file the suite did not run is named, and only it:\n%s", out)
 	}
 }
+
+func TestSelection_FailsARunThatProvedNothing(t *testing.T) {
+	t.Run("SLCTN-B19: A run whose suite reports a result for none of the files handed to it fails, naming the first", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a_test.go", Kind: mapx.KindTest, Rev: "r"}, {ID: "b_test.go", Kind: mapx.KindTest, Rev: "r"}}}
+	dir := budgetProject(t, "tests", "sh none.sh {{files}}", g)
+	none := "#!/bin/sh\necho '<testsuites><testsuite name=\"s\"></testsuite></testsuites>' > out/junit.xml\n"
+	if err := os.WriteFile(filepath.Join(dir, "none.sh"), []byte(none), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	_, err := runQ(t, newTestCmd(), "--root", dir)
+	if err == nil || !strings.Contains(err.Error(), "handed 2 file(s) and reported a result for none") || !strings.Contains(err.Error(), "a_test.go") {
+		t.Fatalf("a run that proved nothing passed: %v", err)
+	}
+}

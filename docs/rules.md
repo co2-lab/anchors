@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:d4b445410d9388bb — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:c2ecb707ee0d922f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3088,6 +3088,8 @@ in `layers/`.
 
 - [SLCTN-B18 — After a test run, the files handed to a suite that came back with no fresh result are named as unproven, with the way out: narrow the suite's `paths:` to what its runner runs, and declare the suite that runs the others. (`reportUnproven`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
+- [SLCTN-B19 — A test run whose suite reports a result for none of the files handed to it fails, naming the suite, the count and the first path it was handed — a suite that ran no test proved nothing, whatever its exit code; a suite that declares no `junit:` report is not judged. (`reportUnproven`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
+
 - [SLCTN-E01 — The map cannot be loaded for a selective run](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
 ### [STEDS — StaleEdges — lists the confrontation debt: expired test evidence and stale edges](layers/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges)
@@ -3789,6 +3791,8 @@ in `layers/`.
 - [PRRPR-B02 — With no project above the start, the start comes back unchanged, relative if it was relative.](layers/config.md#prrpr--projectrootresolution--the-project-root-a-command-works-on)
 
 - [PRRPR-B03 — With no root given (empty or `.`), the root is found by walking up from the working directory (`AbsRoot`).](layers/config.md#prrpr--projectrootresolution--the-project-root-a-command-works-on)
+
+- [PRRPR-B04 — The root is written as the disk names it: on a file system that ignores case, a root typed in another case — the shell's working directory, or `--root` — comes back in the disk's case, a part under a symbolic link keeps the link as written, and a part the disk does not hold stays as given. (`TrueCase`)](layers/config.md#prrpr--projectrootresolution--the-project-root-a-command-works-on)
 
 - [PRRPR-I01 — The resolved root is always absolute, even outside any project.](layers/config.md#prrpr--projectrootresolution--the-project-root-a-command-works-on)
 

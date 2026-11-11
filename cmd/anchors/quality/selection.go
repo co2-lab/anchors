@@ -323,7 +323,9 @@ func runSelective(cs suiteCommand, suites []config.Suite, cfg *config.Config, ab
 			return err
 		}
 		if !mutation {
-			reportUnproven(cfg, absRoot, s, files[i])
+			if err := reportUnproven(cfg, absRoot, s, files[i]); err != nil {
+				return err
+			}
 		}
 	}
 	if len(whole) > 0 {
@@ -416,10 +418,17 @@ func withImpactedTests(run []string, g *mapx.Graph, cfg *config.Config, root, ke
 // suite whose `paths:` cover files its runner does not run — a flow of another tool beside its
 // tests — hands them over and proves nothing, and the run read as if they had run. Measured in
 // MIF: 34 Maestro flows went to `jest --findRelatedTests`, which found no test in them.
-func reportUnproven(cfg *config.Config, absRoot string, s config.Suite, ids []string) {
+//
+// When NONE of the files came back with a result, the run proved nothing, and that is a
+// failure, not a quiet success: measured in MIF, a root in the wrong case handed jest paths it
+// did not know, it answered "No tests found" with exit 0, and five suites read as run.
+func reportUnproven(cfg *config.Config, absRoot string, s config.Suite, ids []string) error {
+	if strings.TrimSpace(s.JUnit) == "" {
+		return nil // a suite that declares no report cannot be told to have run nothing
+	}
 	g, err := mapx.Load(filepath.Join(absRoot, mapx.DefaultPath))
 	if err != nil {
-		return
+		return nil
 	}
 	currentRevs(g, absRoot, cfg)
 	byID := map[string]mapx.Node{}
@@ -437,7 +446,11 @@ func reportUnproven(cfg *config.Config, absRoot string, s config.Suite, ids []st
 		}
 	}
 	if len(none) == 0 {
-		return
+		return nil
+	}
+	if len(none) == len(ids) {
+		return fmt.Errorf("layer %q: the suite was handed %d file(s) and reported a result for none — it ran no test of them (a path it does not know as its own? the first was %s)",
+			s.Layer, len(ids), absFiles(absRoot, ids[:1])[0])
 	}
 	shown := none
 	if len(shown) > 10 {
@@ -449,4 +462,5 @@ func reportUnproven(cfg *config.Config, absRoot string, s config.Suite, ids []st
 		fmt.Printf(" (+%d)", len(none)-len(shown))
 	}
 	fmt.Print("\n  Narrow the suite's `paths:` to the files its runner runs, and declare the suite that runs the others.\n\n")
+	return nil
 }
