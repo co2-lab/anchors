@@ -76,8 +76,9 @@ func StripChainFlag(l string, cs *config.Comments) string {
 // declares (`dialect.comments`) are no evidence: a line that is only a comment, and a
 // comment at the end of a line of code, leave it. Nothing a comment says runs — a rule
 // cited above the code that answers it staled every proof of the file, and a `// @no-handle`
-// at the end of a call cost MIF 56 flows to run again. A file whose comments nobody declared
-// keeps them all.
+// at the end of a call cost MIF 56 flows to run again. A comment inside a line of code leaves
+// it as if never written (withoutComments). A file whose comments nobody declared keeps them
+// all.
 func EvidenceOf(kind, rel string, content []byte, cfg *config.Config) Evidence {
 	cs := cfg.CommentsFor(rel)
 	lines := strings.Split(string(content), "\n")
@@ -85,7 +86,7 @@ func EvidenceOf(kind, rel string, content []byte, cfg *config.Config) Evidence {
 	if kind == "spec" {
 		return specEvidence(lines, header, cfg)
 	}
-	blanked := strings.Split(cs.Blank(string(content)), "\n")
+	blanked := strings.Split(withoutComments(string(content), cs), "\n")
 	var kept, placed []string
 	for i, l := range lines {
 		code := strings.TrimRight(blanked[i], " \t\r")
@@ -101,6 +102,45 @@ func EvidenceOf(kind, rel string, content []byte, cfg *config.Config) Evidence {
 		Rev:     shortHash([]byte(strings.Join(kept, "\n"))),
 		LineRev: shortHash([]byte(strings.Join(placed, "\n"))),
 	}
+}
+
+// withoutComments is the content with its comments taken out, each line where it was: a line
+// that was only a comment is left blank. A comment inside a line of code goes with the blank
+// it was written with — before a blank or a closer, the one before it; after an opener, the
+// one after it — so `load(a /* X */)` reads as `load(a)`, not as `load(a        )`: blanked
+// in place, a rule cited inside a call staled every proof of the file.
+func withoutComments(src string, cs *config.Comments) string {
+	out := make([]byte, 0, len(src))
+	at := 0
+	for _, sp := range cs.Spans(src) {
+		out = append(out, src[at:sp[0]]...)
+		at = sp[1]
+		left, right := byte('\n'), byte('\n')
+		if len(out) > 0 {
+			left = out[len(out)-1]
+		}
+		if at < len(src) {
+			right = src[at]
+		}
+		switch {
+		case isBlank(left) && (isBlank(right) || !isWordByte(right)):
+			for len(out) > 0 && isBlank(out[len(out)-1]) {
+				out = out[:len(out)-1]
+			}
+		case strings.IndexByte("([{", left) >= 0:
+			for at < len(src) && isBlank(src[at]) {
+				at++
+			}
+		}
+		out = append(out, strings.Repeat("\n", strings.Count(src[sp[0]:sp[1]], "\n"))...)
+	}
+	return string(append(out, src[at:]...))
+}
+
+func isBlank(c byte) bool { return c == ' ' || c == '\t' }
+
+func isWordByte(c byte) bool {
+	return c == '_' || c == '$' || c >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= 0x80
 }
 
 // headerSpan marks the lines of the `@anchors` header (AnchorsHeader): the date the hook

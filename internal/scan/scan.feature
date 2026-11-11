@@ -2,7 +2,7 @@
 # @anchors
 #   code: SCFTC
 #   ref: RPSCR
-#   updated_at: 2026-11-10
+#   updated_at: 2026-11-11
 #   layer: feature
 
 @RPSCR
@@ -402,6 +402,12 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a code file whose header writes two data and reads one, one in backticks
     When the project is walked
     Then the file writes the two and reads the one, by name
+
+  @RPSCR-B61 @unit-level
+  Scenario: A block comment inside a line of code leaves the evidence as if never written
+    Given a module, and the same with block comments after an opener, before a closer, between operands and after a comma
+    When their evidence is read, and then with the code's own spacing changed
+    Then they have one evidence and one line revision, and the spacing moves the evidence
 
   @RPSCR-E03 @unit-level
   Scenario: A guide URL that answers nothing fails the walk

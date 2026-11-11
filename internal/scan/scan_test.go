@@ -1480,3 +1480,25 @@ func TestHeaderData_writesAndReads(t *testing.T) {
 		t.Errorf("no header, no data: %v %v", w, r)
 	}
 }
+
+func TestEvidenceOf_blockCommentInsideCode(t *testing.T) {
+	t.Run("RPSCR-B61: A block comment inside a line of code leaves the evidence as if never written", func(t *testing.T) {})
+	ev := func(src string) Evidence { return EvidenceOf("code", "a.tsx", []byte(src), testkit.AllComments()) }
+	plain := ev("const x = load(a, b)\nconst y = 1 + 2\n")
+	for _, marked := range []string{
+		"const x = load(/* ARSCA-S04 */a, b)\nconst y = 1 + 2\n",
+		"const x = load(a, b /* ARSCA-S04 */)\nconst y = 1 /* two */ + 2\n",
+		"const x = load(a,/* c */ b)\nconst y = 1 + 2\n",
+	} {
+		e := ev(marked)
+		if e.Rev != plain.Rev {
+			t.Errorf("a block comment inside the code proves nothing: %q", marked)
+		}
+		if e.LineRev != plain.LineRev {
+			t.Errorf("a block comment inside a line keeps the lines: %q", marked)
+		}
+	}
+	if ev("const x = load(a,b)\nconst y = 1 + 2\n").Rev == plain.Rev {
+		t.Error("the code's own spacing still moves the evidence")
+	}
+}

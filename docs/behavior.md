@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:2216d6ee3f70b976 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:40af245024553ebd — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -8315,6 +8315,8 @@ is what the test proves.
 - [A guide governs: reads from a URL enters the scan, by its URL, revised by its content](layers/scan.md#rpscr-b59--a-guide-governs-reads-from-a-url-enters-the-scan-by-its-url-revised-by-its-content) `RPSCR-B59`
 
 - [A header's writes and reads are the data the file persists and consumes](layers/scan.md#rpscr-b60--a-headers-writes-and-reads-are-the-data-the-file-persists-and-consumes) `RPSCR-B60`
+
+- [A block comment inside a line of code leaves the evidence as if never written](layers/scan.md#rpscr-b61--a-block-comment-inside-a-line-of-code-leaves-the-evidence-as-if-never-written) `RPSCR-B61`
 
 - [A guide URL that answers nothing fails the walk](layers/scan.md#rpscr-e03--a-guide-url-that-answers-nothing-fails-the-walk) `RPSCR-E03`
 

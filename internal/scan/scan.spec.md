@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPSCR
-  updated_at: 2026-11-10
+  updated_at: 2026-11-11
   layer: scan
 -->
 # RepoScan — the repository read as text: which files exist, of which layer, and what each declares
@@ -132,6 +132,7 @@ heuristic decided.
 | `RPSCR-B58` | A test file's doubles are the first group of each match of the project's `derived.mock_detect`, read with the file's comments blanked and each specifier once; a file that is no test, a project with no pattern, or a pattern that does not compile or captures nothing, gives none. (`doublesOf`) |
 | `RPSCR-B59` | A guide `governs:` reads from a URL enters the scan once, with the URL as declared for its path — its `{{branch}}` kept, so the edges it governs keep their ends — and the revision of the content PTRFS read: a guide changed in its repository, or read from another branch, leaves the edges it governs to be confronted again. It is marked external and belongs to no layer. (`externalGuides`) |
 | `RPSCR-B60` | A header's `writes:` and `reads:` are the data the file persists and consumes, each a comma-separated list of names the project chooses, out of their backticks. (`HeaderData`) |
+| `RPSCR-B61` | A comment inside a line of code leaves the file's evidence revision and its line revision as if never written: it goes out with the blank before it when a blank, a closer or the end of the line follows, and with the blank after it when an opener precedes it — `load(a /* X */)` reads as `load(a)`. (`EvidenceOf`) |
 | `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants
