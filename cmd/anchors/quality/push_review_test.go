@@ -23,6 +23,13 @@ func pushRepo(t *testing.T, yaml string, g *mapx.Graph) (string, string) {
 	if _, err := exec.LookPath("git"); err != nil {
 		t.Skip("git unavailable")
 	}
+	// The review's commit is made with the user's identity; a CI runner has none.
+	for _, k := range []string{"GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME"} {
+		t.Setenv(k, "t")
+	}
+	for _, k := range []string{"GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL"} {
+		t.Setenv(k, "t@t")
+	}
 	root := qProject(t, yaml, checkFiles(), g)
 	gitIn(t, root, "init", "-q")
 	gitIn(t, root, "add", ".")
