@@ -13326,7 +13326,7 @@ nodes:
       line_rev: 72e8ca22e5fd
     - id: internal/config/root.spec.md
       kind: spec
-      rev: a7e1c4351029
+      rev: 3b96d202625e
       updated_at: "2026-11-11"
       code: PRRPR
       file_code: PRRPR
@@ -13352,11 +13352,13 @@ nodes:
                 - PRRPR-I01
                 - PRRPR-X01
         proven_rev_by_suite:
-            .anchors/junit.xml: a7e1c4351029
-        at_rev: a7e1c4351029
+            .anchors/junit.xml: 3b96d202625e
+        at_rev: 3b96d202625e
+        stale_codes:
+            - PRRPR-B04
         ingested_at: "2026-11-11T11:39:08-03:00"
-      evidence_rev: 9e1e5d41b33d
-      rule_revs: {PRRPR-B01: f76b13d9d75c, PRRPR-B02: e33383750304, PRRPR-B03: af22827aaba6, PRRPR-B04: 4db2d4d2ac31, PRRPR-I01: b89af2e22e18, PRRPR-X01: 409bc11f6027}
+      evidence_rev: ac9b68e5eb6f
+      rule_revs: {PRRPR-B01: f76b13d9d75c, PRRPR-B02: e33383750304, PRRPR-B03: af22827aaba6, PRRPR-B04: dd3eaf670247, PRRPR-I01: b89af2e22e18, PRRPR-X01: 409bc11f6027}
       rest_rev: 34f379a5f07a
     - id: internal/config/root_darwin.go
       kind: code
@@ -13388,7 +13390,7 @@ nodes:
       line_rev: 271fc8a6095a
     - id: internal/config/root_other.go
       kind: code
-      rev: 670814868dd3
+      rev: 5c8aec4577bf
       updated_at: "2026-11-11"
       code: PRRPR
       file_code: RTOTH
@@ -13399,7 +13401,7 @@ nodes:
       signal:
         coverage_omitted: 670814868dd3
       evidence_rev: 6260906c4346
-      line_rev: 0c411dfbb475
+      line_rev: 6cbd6a203cb4
     - id: internal/config/root_test.go
       kind: test
       rev: ed355a6a5547
@@ -13418,6 +13420,18 @@ nodes:
         ingested_at: "2026-11-11T11:39:08-03:00"
       evidence_rev: c65e2c6c3f59
       line_rev: 7cd4818b5acc
+    - id: internal/config/root_windows.go
+      kind: code
+      rev: 3e51846fd1e2
+      updated_at: "2026-11-11"
+      code: PRRPR
+      file_code: RTWND
+      layer: config
+      tags:
+        - nucleo
+        - config
+      evidence_rev: 94b989a7270c
+      line_rev: a43d9737252a
     - id: internal/config/test_bypass.feature
       kind: feature
       rev: fdc324559e2d
@@ -35733,6 +35747,10 @@ edges:
       type: governs
       origin: declared
     - from: CONCEPT.md
+      to: internal/config/root_windows.go
+      type: governs
+      origin: declared
+    - from: CONCEPT.md
       to: internal/config/test_bypass.go
       type: governs
       origin: declared
@@ -37815,7 +37833,7 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: 83fdad85c2e3
-        validated_to_rev: a7e1c4351029
+        validated_to_rev: 3b96d202625e
         changed_at: "2026-09-28"
         verdict: ok
     - from: SPEC.md
@@ -40284,7 +40302,7 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: 2ba0ba1e8da9
-        validated_to_rev: a7e1c4351029
+        validated_to_rev: 3b96d202625e
         changed_at: "2026-09-28"
         verdict: ok
     - from: SPEC_TYPES.md
@@ -41965,6 +41983,10 @@ edges:
       origin: declared
     - from: STRUCTURE.md
       to: internal/config/root_other.go
+      type: governs
+      origin: declared
+    - from: STRUCTURE.md
+      to: internal/config/root_windows.go
       type: governs
       origin: declared
     - from: STRUCTURE.md
@@ -45525,7 +45547,7 @@ edges:
       type: covered-by
       origin: convention
       stamp:
-        validated_from_rev: a7e1c4351029
+        validated_from_rev: 3b96d202625e
         validated_to_rev: 66742d143457
         changed_at: "2026-09-28"
         verdict: ok
@@ -45534,7 +45556,7 @@ edges:
       type: specifies
       origin: convention
       stamp:
-        validated_from_rev: a7e1c4351029
+        validated_from_rev: 3b96d202625e
         validated_to_rev: 3cbb6f987969
         changed_at: "2026-09-28"
         verdict: ok

@@ -1,4 +1,4 @@
-//go:build !darwin
+//go:build !darwin && !windows
 
 // @anchors
 //   code: RTOTH
@@ -6,6 +6,5 @@
 
 package config
 
-// diskPath says nothing outside macOS: Linux tells case apart, and a Windows working
-// directory comes from the system in its own case.
+// diskPath says nothing on Linux and the other Unixes: their file systems tell case apart.
 func diskPath(string) (string, bool) { return "", false }

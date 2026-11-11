@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:d3a677b50e5f7f66 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:e18a51c8edca1e16 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3792,7 +3792,7 @@ in `layers/`.
 
 - [PRRPR-B03 — With no root given (empty or `.`), the root is found by walking up from the working directory (`AbsRoot`).](layers/config.md#prrpr--projectrootresolution--the-project-root-a-command-works-on)
 
-- [PRRPR-B04 — The root is written as the disk names it: on a file system that ignores case, a root typed in another case — the shell's working directory, or `--root` — comes back in the disk's case, a part under a symbolic link keeps the link as written, and a part the disk does not hold stays as given. (`TrueCase`)](layers/config.md#prrpr--projectrootresolution--the-project-root-a-command-works-on)
+- [PRRPR-B04 — The root is written as the disk names it: on a file system that ignores case, a root typed in another case — the shell's working directory, or `--root` — comes back in the disk's case, a part under a symbolic link keeps the link as written, and a part the disk does not hold stays as given; macOS reads it from the kernel, Windows from each folder's listing, and the systems that tell case apart leave the root as given. (`TrueCase`, `diskPath`)](layers/config.md#prrpr--projectrootresolution--the-project-root-a-command-works-on)
 
 - [PRRPR-I01 — The resolved root is always absolute, even outside any project.](layers/config.md#prrpr--projectrootresolution--the-project-root-a-command-works-on)
 
