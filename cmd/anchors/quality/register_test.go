@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var qualityCommandNames = []string{"affected-tests", "check", "coverage", "doctor", "keep-evidence", "mutation", "report", "stale", "stamp", "status", "test", "touch", "verify"}
+var qualityCommandNames = []string{"affected-tests", "check", "coverage", "doctor", "keep-evidence", "mutation", "push-review", "report", "stale", "stamp", "status", "test", "touch", "verify"}
 
 func TestRegisterAddsExactlyTheQualityCommands(t *testing.T) {
 	t.Run("QLCMQ-B01: The quality domain registers exactly its thirteen commands", func(t *testing.T) {})

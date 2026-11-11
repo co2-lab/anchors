@@ -551,6 +551,32 @@ This is the technical changelog; see `anchors guide changelog` for the product o
 
 ---
 
+## `push_review` — the evidence each push carries
+
+```yaml
+push_review:
+  required: true          # each pushed commit is covered by a review whose verdict is ok
+  file: REVIEWS.md        # where the reviews are written (the default)
+  retention: 30d          # writing a review drops those older; empty keeps them all
+  require_judgment: true  # each judgment gate the pushed commits reach has a verdict
+```
+
+Off unless declared. The pre-push hook runs `anchors push-review verify` with the refs the push
+sends (`anchors install-hooks --force` brings the hook up to date):
+
+- **`required`** — whoever pushes reviews the commits it sends (`anchors guide review` is the
+  ruler) and records the verdict: `anchors push-review --ok "<what was validated, and how>" --by
+  <who>`, or `--fail "<what failed>"`, with `--note` for each observation. The review goes to the
+  top of `file` and is committed alone. A commit no review covers stops the push, and so does one
+  whose newest review failed. A review covers a commit by its hash, or by its patch id after a
+  rebase; a commit that changes only the reviews' file and the map owes no review.
+- **`require_judgment`** — each judgment gate the pushed commits reach has a verdict
+  (`anchors judge`) in the map the push sends; an ok review is not recorded over one still
+  awaiting. It works with or without `required`.
+- **`retention`** — days a review stays in the file; older ones are dropped when one is written.
+
+---
+
 ## Advanced blocks
 
 You probably won't need these early on.

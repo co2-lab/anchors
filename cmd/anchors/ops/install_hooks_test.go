@@ -293,6 +293,7 @@ func fakeAnchors(t *testing.T) {
 case "$1" in
 commit-msg) exit "${FAKE_MSG_STATUS:-0}" ;;
 verify) exit "${FAKE_VERIFY_STATUS:-0}" ;;
+push-review) cat > "${FAKE_PUSH_REFS:-/dev/null}"; exit "${FAKE_PUSH_REVIEW_STATUS:-0}" ;;
 --version) echo "anchors version ${FAKE_VERSION:-1.0.0}" ;;
 esac
 exit 0
@@ -342,6 +343,29 @@ func TestInstalledHooksRefuseWorkOnAFrozenRemote(t *testing.T) {
 	out, err = runGit(root, "push", "-q", "origin", "main")
 	if err == nil || !strings.Contains(out, "PUSH REFUSED — the project is FROZEN") {
 		t.Fatalf("the pre-push let a push through on a frozen remote (%v):\n%s", err, out)
+	}
+}
+
+// The push's evidence is confronted by `push-review verify`, which reads the refs git hands
+// the hook: its refusal stops the push.
+func TestInstalledPrePushConfrontsThePushReview(t *testing.T) {
+	t.Run("INHKN-B18: The pre-push hands the pushed refs to push-review verify, and its refusal stops the push", func(t *testing.T) {})
+	root := hookedRepo(t, "version: 1\n")
+	if out, err := commitFile(t, root, "a.txt", "feat: a"); err != nil {
+		t.Fatal(out)
+	}
+	refs := filepath.Join(t.TempDir(), "refs")
+	t.Setenv("FAKE_PUSH_REFS", refs)
+	t.Setenv("FAKE_PUSH_REVIEW_STATUS", "1")
+	if out, err := runGit(root, "push", "-q", "origin", "main"); err == nil {
+		t.Fatalf("a refused review let the push through:\n%s", out)
+	}
+	if b, _ := os.ReadFile(refs); !strings.Contains(string(b), "refs/heads/main") {
+		t.Errorf("push-review verify did not get the pushed refs: %q", b)
+	}
+	t.Setenv("FAKE_PUSH_REVIEW_STATUS", "0")
+	if out, err := runGit(root, "push", "-q", "origin", "main"); err != nil {
+		t.Fatalf("an accepted review stopped the push (%v):\n%s", err, out)
 	}
 }
 

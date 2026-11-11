@@ -245,6 +245,28 @@ Only the reviewer the claim assigned counts, and only a line posted after the as
 a verdict from an earlier round does not approve this one. Changed your mind? Post a new
 line; the last one wins. Inside a code block the line is an example, not a verdict.
 
+## BEFORE THE PUSH: the review the push carries
+
+When the project declares ` + "`push_review:`" + ` in anchors.yaml, the pre-push hook asks the push for
+its evidence, and whoever pushes is the reviewer of what the push sends — before a PR exists:
+
+1. Run the judgment gates the commits reach. ` + "`anchors check --changed <files>`" + ` lists each one
+   awaiting a verdict, with its guide; answer each with ` + "`anchors judge`" + `, and commit the map. With
+   ` + "`require_judgment`" + `, a push whose map leaves one unanswered is refused, and so is an ok review
+   recorded over it.
+2. Review the commits with the ruler of this guide — what is yours above is yours here too.
+3. Record the verdict:
+
+       anchors push-review --ok "<what was validated, and how>" --by <who> [--note "<observation>"]
+       anchors push-review --fail "<what failed>" --by <who> [--note "<observation>"]
+
+   It is written to the reviews' file (REVIEWS.md unless ` + "`push_review.file`" + ` names another) and
+   committed alone. Say WHAT you validated and HOW — "looks good" proves nothing to whoever reads
+   the file later.
+
+A failed review stops the push: fix what it says, review again, and record an ok review. The
+review covers what the branch has beyond its upstream; ` + "`--range <base>..<tip>`" + ` names another.
+
 ## Pontos de conformidade
 
 The list exists so that nothing is missed by FORGETTING. Each point distils a question

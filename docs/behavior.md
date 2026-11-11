@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:40af245024553ebd — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:3b695a42cb7b89f9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1334,6 +1334,8 @@ is what the test proves.
 
 - [The spec guide explains the sections a layer calls for](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B31`
 
+- [The review guide teaches the review the push carries](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B32`
+
 - [The board ranks each guide by how many files it governs](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
 - [A map without governance has an empty board](layers/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B02`
@@ -2094,6 +2096,8 @@ is what the test proves.
 
 - [The installed hooks refuse a commit, and a merge commit, on a branch the flow protects](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B17`
 
+- [The pre-push confronts the push's review](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B18`
+
 - [Both the map and the config reach the current format](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B01`
 
 - [A missing file is reported and the other still migrates](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B02`
@@ -2711,6 +2715,18 @@ is what the test proves.
 - [A file the commit leaves as HEAD has it takes HEAD's measurement over one carried from the tree's edit](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B08`
 
 - [A file the commit moves keeps its proof](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B09`
+
+- [A review is written to the reviews' file and committed alone](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook) `PRCMS-B01`
+
+- [A review with no verdict, two verdicts or no author is refused](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook) `PRCMS-E01`
+
+- [The push asks an ok review of its commits](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook) `PRCMS-B02`
+
+- [The refs the hook gets say what the push sends](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook) `PRCMS-B05`
+
+- [Without push_review the push confronts nothing](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook) `PRCMS-B06`
+
+- [The push asks the judgments its changes reach](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook) `PRCMS-B08`
 
 - [The quality domain registers exactly its thirteen commands](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command) `QLCMQ-B01`
 
@@ -3415,6 +3431,10 @@ is what the test proves.
 - [A stage declares its branches, its requirements and the command that runs or validates it](layers/config.md#pcspp-b01--a-stage-declares-its-branches-its-requirements-and-the-command-that-runs-or-validates-it) `PCSPP-B01`
 
 - [A stage with nothing that runs or validates it, a passed: naming no stage, or an unknown requirement refuses the configuration](layers/config.md#pcspp-e01--a-stage-with-nothing-that-runs-or-validates-it-a-passed-naming-no-stage-or-an-unknown-requirement-refuses-the-configuration) `PCSPP-E01`
+
+- [The section declares the review, the judgments, the file and the retention](layers/config.md#psrsa-b01--the-section-declares-the-review-the-judgments-the-file-and-the-retention) `PSRSA-B01`
+
+- [A retention or a file that cannot hold refuses the configuration](layers/config.md#psrsa-e01--a-retention-or-a-file-that-cannot-hold-refuses-the-configuration) `PSRSA-E01`
 
 - [The project root is the nearest directory above the start that holds the config](layers/config.md#prrpr-b01--the-project-root-is-the-nearest-directory-above-the-start-that-holds-the-config) `PRRPR-B01`
 
@@ -7205,6 +7225,22 @@ is what the test proves.
 - [A frozen plan's demand is out of the count](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B14`
 
 - [A demand with nothing in motion is settled](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors) `DMLDD-B15`
+
+- [A review is written as an entry](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them) `PRVLS-B01`
+
+- [The file is read back into its entries](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them) `PRVLS-B02`
+
+- [Writing a review drops the entries older than the retention](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them) `PRVLS-B03`
+
+- [A commit is covered by the newest entry that names it](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them) `PRVLS-B04`
+
+- [A commit that changes only the evidence owes no review](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them) `PRVLS-B05`
+
+- [The commits of a range are read with their patch id and files](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them) `PRVLS-B06`
+
+- [A range git cannot list fails naming it](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them) `PRVLS-E01`
+
+- [A commit git gives no files or patch id is covered by hash and owes a review](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them) `PRVLS-E02`
 
 - [An enqueued task is born pending](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B01`
 

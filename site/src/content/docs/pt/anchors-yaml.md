@@ -558,6 +558,33 @@ Este é o changelog técnico; o de produto está em `anchors guide changelog`.
 
 ---
 
+## `push_review` — a evidência que cada push carrega
+
+```yaml
+push_review:
+  required: true          # cada commit do push é coberto por um review com veredito ok
+  file: REVIEWS.md        # onde os reviews são gravados (o padrão)
+  retention: 30d          # gravar um review descarta os mais antigos; vazio guarda todos
+  require_judgment: true  # cada gate de julgamento que os commits alcançam tem veredito
+```
+
+Desligado se não for declarado. O hook pre-push roda `anchors push-review verify` com as refs que
+o push envia (`anchors install-hooks --force` atualiza o hook):
+
+- **`required`** — quem faz o push revisa os commits que envia (`anchors guide review` é a régua)
+  e registra o veredito: `anchors push-review --ok "<o que foi validado, e como>" --by <quem>`, ou
+  `--fail "<o que falhou>"`, com `--note` para cada observação. O review entra no topo de `file` e
+  é commitado sozinho. Um commit que nenhum review cobre barra o push, e também um cujo review
+  mais recente falhou. Um review cobre o commit pelo hash, ou pelo patch id depois de um rebase;
+  um commit que só muda o arquivo de reviews e o mapa não deve review.
+- **`require_judgment`** — cada gate de julgamento que os commits do push alcançam tem veredito
+  (`anchors judge`) no mapa que o push envia; um review ok não é registrado sobre um que ainda
+  aguarda. Vale com ou sem `required`.
+- **`retention`** — dias que um review fica no arquivo; os mais antigos saem quando um novo é
+  gravado.
+
+---
+
 ## Blocos avançados
 
 Você provavelmente não vai precisar destes no começo.

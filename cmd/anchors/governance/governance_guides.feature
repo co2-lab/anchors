@@ -2,7 +2,7 @@
 # @anchors
 #   code: GGFGV
 #   ref: GVGDG
-#   updated_at: 2026-10-18
+#   updated_at: 2026-11-11
 #   layer: feature
 
 @GVGDG
@@ -224,3 +224,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Given the spec guide
     When it is read
     Then it names requires_sections and section-required, and says a unit with none of the section writes it saying so
+
+  @GVGDG-B32 @unit-level
+  Scenario: The review guide teaches the review the push carries
+    Given the review guide
+    When it is read
+    Then it says to run the judgment gates and commit the map, review with the guide, record with push-review ok or fail saying what and how, and that a failed review stops the push

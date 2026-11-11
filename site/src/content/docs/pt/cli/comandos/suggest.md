@@ -122,6 +122,7 @@ Comandos da mesma família — o que distingue cada um:
 | --- | --- |
 | [`anchors judge`](/pt/docs/cli/commands/judge/) | Record an AI's verdict for a judgment gate |
 | [`anchors review`](/pt/docs/cli/commands/review/) | Record a review of a target, or list what is to review |
+| [`anchors push-review`](/pt/docs/cli/commands/push-review/) | Record the review of what a push sends; the pre-push hook confronts it |
 | **`anchors suggest`** | List, apply and decide the proposed fixes |
 
 <!-- cli-reference:end -->

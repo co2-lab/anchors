@@ -133,6 +133,9 @@ type Config struct {
 	// new releases are added to the top of (`incremental`, the default), or one file per
 	// release (`per_version`), and the template that renders a release.
 	Changelog *Changelog `yaml:"changelog,omitempty"`
+	// PushReview asks each push to carry a review of its commits and the answers of the
+	// judgment gates they reach (see PushReview).
+	PushReview *PushReview `yaml:"push_review,omitempty"`
 	// ContainersDecl é o que roda SEPARADO — o nível 2 do C4. A Estrutura diz o que cada
 	// peça é; isto diz onde ela roda. Ver containers.go.
 	ContainersDecl []Container  `yaml:"containers,omitempty"`
@@ -2216,6 +2219,9 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := validateTestBypass(c.TestBypass); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := validatePushReview(c.PushReview); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := c.applyProjectSeverity(); err != nil {

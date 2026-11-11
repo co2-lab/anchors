@@ -613,6 +613,11 @@ ROOT="$(git rev-parse --show-toplevel)"
 CFG="anchors.yaml"
 [ -f "$ROOT/$CFG" ] || exit 0
 
+# THE PUSH'S EVIDENCE — when the project asks for it (push_review), each pushed commit
+# carries its review and the judgment gates' verdicts. It is local, so it comes before the
+# network; git hands the refs this push sends on stdin, and the subshell passes them on.
+(cd "$ROOT" && anchors push-review verify)
+
 remoto="${1:-origin}"
 
 # O branch de INTEGRAÇÃO é a referência, não o branch atual: o congelamento é declarado

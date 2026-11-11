@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:5c70e41e5b5e3c26 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:43849175bf5a69be — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -1446,6 +1446,8 @@ in `layers/`.
 
 - [GVGDG-B31 — The spec guide says a layer may declare the sections its code calls for (`requires_sections`), that `section-required` fails a spec missing one its code triggers, and that a unit with none of it writes the section saying so.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
+- [GVGDG-B32 — The review guide says that with `push_review` whoever pushes reviews what the push sends: runs the judgment gates the commits reach and commits the map, reviews with the guide's ruler, and records the verdict with `anchors push-review --ok` or `--fail`, saying what was validated and how; a failed review stops the push until an ok one.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B20 — The test guide strongly recommends a contract test for every API unit, validating the API against the OpenAPI compiled from the specs with the language's own tool, named by `{CODE}-CT`, loading the document instead of copying it, and asserting each error response's status, code and message.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
@@ -2300,6 +2302,8 @@ in `layers/`.
 
 - [INHKN-B17 — The pre-commit and the pre-merge-commit refuse a commit, and a merge commit, on a branch `branch_flow.protected` names (`anchors branch guard`); another branch, or a detached HEAD, commits.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
+- [INHKN-B18 — The installed pre-push hands the refs the push sends to `anchors push-review verify` before it reaches the network, and a refusal there stops the push; an accepted one lets it go on.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
+
 - [INHKN-I01 — However many times the install runs, each merge attribute line appears once in `.gitattributes` and the user's own lines are kept intact.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-X01 — A hook the user wrote is never replaced without `--force`.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
@@ -2974,9 +2978,29 @@ in `layers/`.
 
 - [MPSYN-E01 — The index cannot be read or the map cannot be written or staged.](layers/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
 
+### [PRCMS — PushReview — the review of what a push sends, recorded by whoever pushes and confronted by the pre-push hook](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
+
+- [PRCMS-B01 — A review is written at the top of the reviews' file with its verdict, author, range, commits, the judgment gates' answers, its text and notes, and committed alone as `chore(review): <verdict> <range>`; whatever else is staged or changed stays out. `--no-commit` writes without committing.](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
+
+- [PRCMS-B02 — With `push_review.required`, a push whose commits no review covers — in the reviews' file as the pushed tip has it — is refused, naming each commit and how to record the review.](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
+
+- [PRCMS-B03 — A push whose commits' newest review failed is refused, showing that review.](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
+
+- [PRCMS-B04 — A push whose commits an ok review covers goes through; a commit that changes only the reviews' file and the map owes none.](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
+
+- [PRCMS-B05 — The refs git hands the pre-push hook say what each ref sends: the commits after the remote's tip, or, for a new branch, those no remote branch has; a deletion sends nothing. With no input, the range is what the branch has beyond its upstream.](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
+
+- [PRCMS-B06 — Without `push_review`, or with neither demand, the push confronts nothing.](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
+
+- [PRCMS-B07 — Writing a review drops those older than `push_review.retention`.](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
+
+- [PRCMS-B08 — With `push_review.require_judgment`, a push whose changed files reach a judgment gate with no verdict in the map the pushed tip holds is refused, naming each gate and target, and so is an ok review recorded over them; a verdict in a map the push does not send answers nothing.](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
+
+- [PRCMS-E01 — No verdict, both verdicts, no `--by`, or a range with no commit that owes a review.](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
+
 ### [QLCMQ — QualityCommands — the quality domain puts its thirteen commands under the root command](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command)
 
-- [QLCMQ-B01 — Registers exactly thirteen commands under the root: check, verify, doctor, status, stale, affected-tests, coverage, report, test, mutation, stamp, touch and keep-evidence.](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command)
+- [QLCMQ-B01 — Registers exactly fourteen commands under the root: check, verify, doctor, status, stale, affected-tests, coverage, report, test, mutation, stamp, touch, keep-evidence and push-review.](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command)
 
 - [QLCMQ-B02 — Each registered command is reachable from the root by its name.](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command)
 
@@ -3745,6 +3769,12 @@ in `layers/`.
 - [PCSPP-B01 — A stage declares the branches it runs on, its requirements in order — `flow`, `gates:`, `passed:`, `from:`, `any:`, each written back as declared —, and the commands that run and validate it; the stages are listed sorted, the unguarded workflows keep their reasons, and the workflows default to `.github/workflows/*.yml` and `*.yaml`. (`StageNames`, `WorkflowGlobs`, `Requirement.String`)](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
 
 - [PCSPP-E01 — A stage has neither `run` nor `verify`; a requirement is an unknown word, an unknown key or empty; `passed:` names no stage; a branch pattern is neither glob nor regular expression.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
+
+### [PSRSA — PushReview — the evidence each push carries: a review of its commits and the judgments they reach](layers/config.md#psrsa--pushreview--the-evidence-each-push-carries-a-review-of-its-commits-and-the-judgments-they-reach)
+
+- [PSRSA-B01 — The section declares whether a push needs a review, whether it needs the judgments, where the reviews are written — `REVIEWS.md` when it names no file — and how many days a review stays; with no retention every review stays, and with neither demand the push confronts nothing. (`PushReview`, `FileOrDefault`, `RetentionDays`, `Enforced`)](layers/config.md#psrsa--pushreview--the-evidence-each-push-carries-a-review-of-its-commits-and-the-judgments-they-reach)
+
+- [PSRSA-E01 — A `retention` that is not a number of days, or a `file` that is absolute or outside the project.](layers/config.md#psrsa--pushreview--the-evidence-each-push-carries-a-review-of-its-commits-and-the-judgments-they-reach)
 
 ### [PRRPR — ProjectRootResolution — the project root a command works on](layers/config.md#prrpr--projectrootresolution--the-project-root-a-command-works-on)
 
@@ -7949,6 +7979,24 @@ in `layers/`.
 - [DMLDD-E01 — The file's content does not match its sum, or holds a line this unit does not write.](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
 
 - [DMLDD-E02 — A title or reason that is empty, spans lines or holds ` · `; a weight that is not positive; an id that does not exist.](layers/infra.md#dmldd--demandledger--the-projects-progress-file-demands-stages-and-weighted-tasks-written-only-by-anchors)
+
+### [PRVLS — PushReview — the reviews a push carries, as the repository keeps them](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them)
+
+- [PRVLS-B01 — A review is written as an entry: a heading with its date, verdict and range, the machine line with its date, verdict and author, the commits with hash, patch id and subject, the judgment gates' answers, what was validated — or what failed — and the notes. (`Review.Entry`)](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them)
+
+- [PRVLS-B02 — The file is read back into its entries, in its order, each with its date, verdict, author and commits and its text as written; a section with no machine line is no review. Written again, the file holds its header and the same entries. (`Parse`, `Render`)](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them)
+
+- [PRVLS-B03 — Writing a review drops the entries older than the retention; with no retention, or with a date nobody can read, an entry stays. (`Keep`)](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them)
+
+- [PRVLS-B04 — A commit is covered by the newest entry that names it by hash, a short hash included, or by patch id; a commit no entry names is not covered. (`Covering`)](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them)
+
+- [PRVLS-B05 — A commit that changes only the reviews' file and the map owes no review; one that changes anything else, or nothing, owes one. (`Exempt`)](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them)
+
+- [PRVLS-B06 — The commits of a range are read oldest first with their patch id and subject, merges left out, and a commit's files as the paths it changes; a commit reworded keeps its patch id. (`Commits`, `Files`)](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them)
+
+- [PRVLS-E01 — git cannot list the range: a revision it does not know, or no repository.](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them)
+
+- [PRVLS-E02 — git gives a commit no files or no patch id: an empty commit, or git failing on it.](layers/infra.md#prvls--pushreview--the-reviews-a-push-carries-as-the-repository-keeps-them)
 
 ### [TSQUT — TaskQueue — the file-backed queue between "something changed" and "someone works on it"](layers/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it)
 

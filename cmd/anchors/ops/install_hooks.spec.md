@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INHKN
-  updated_at: 2026-11-06
+  updated_at: 2026-11-11
   layer: comando
 -->
 # InstallHooks — the git hooks that confront every commit and push with the gates and the freeze, installed without taking a hook the user wrote
@@ -58,6 +58,7 @@ theirs and is not replaced without `--force`.
 | `INHKN-B15` | With `--agent --user`, the agent's hook goes into the user's own Claude Code settings (`~/.claude/settings.json`), the same way, from any folder — the hook records nothing outside a project with an anchors.yaml —, and the project's settings are left untouched; `--user` without `--agent` is refused. (`agentSettingsPath`) |
 | `INHKN-B16` | The hooks speak the project's language (`lang`): each message they print is written in it when they are installed, its shell variables kept, and a message with no translation, or a configuration that does not load, stays in English; `install-hooks --force` rewrites them after the language changes. (`localizeHook`, `hookMessageKey`) |
 | `INHKN-B17` | The pre-commit and the pre-merge-commit refuse a commit, and a merge commit, on a branch `branch_flow.protected` names (`anchors branch guard`); another branch, or a detached HEAD, commits. |
+| `INHKN-B18` | The installed pre-push hands the refs the push sends to `anchors push-review verify` before it reaches the network, and a refusal there stops the push; an accepted one lets it go on. |
 
 ## Invariants
 

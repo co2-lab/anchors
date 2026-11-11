@@ -2,7 +2,7 @@
 # @anchors
 #   code: IHFNS
 #   ref: INHKN
-#   updated_at: 2026-11-06
+#   updated_at: 2026-11-11
 #   layer: feature
 
 @INHKN
@@ -146,3 +146,9 @@ Feature: InstallHooks — the git hooks that confront every commit and push with
     Given a repository on production, which branch_flow protects, with the hooks installed
     When a commit is made on production, one on hotfix/a, and hotfix/a is merged into production
     Then the first and the merge are refused naming production as protected, and the hotfix commit lands
+
+  @INHKN-B18 @unit-level
+  Scenario: The pre-push confronts the push's review
+    Given a repository with the hooks installed and a commit to push
+    When it is pushed with push-review verify refusing, and then accepting
+    Then the first push is stopped with the pushed refs handed over, and the second goes through

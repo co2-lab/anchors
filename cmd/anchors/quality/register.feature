@@ -2,7 +2,7 @@
 # @anchors
 #   code: RGFTC
 #   ref: QLCMQ
-#   updated_at: 2026-10-11
+#   updated_at: 2026-11-11
 #   layer: feature
 
 @QLCMQ
@@ -12,7 +12,7 @@ Feature: QualityCommands — the quality domain puts its thirteen commands under
   Scenario: The quality domain registers exactly its thirteen commands
     Given an empty root command
     When the quality domain registers into it
-    Then the root holds exactly check, verify, doctor, status, stale, affected-tests, coverage, report, test, mutation, stamp, touch and keep-evidence
+    Then the root holds exactly check, verify, doctor, status, stale, affected-tests, coverage, report, test, mutation, stamp, touch, keep-evidence and push-review
 
   @QLCMQ-B02 @unit-level
   Scenario: Each quality command is reachable by its name

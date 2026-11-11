@@ -1,6 +1,6 @@
 <!-- @anchors
   code: QLCMQ
-  updated_at: 2026-10-11
+  updated_at: 2026-11-11
   layer: comando
 -->
 # QualityCommands — the quality domain puts its thirteen commands under the root command
@@ -30,7 +30,7 @@ would make one of the two unreachable.
 
 | Effect | Description |
 | --- | --- |
-| `QLCMQ-B01` | Registers exactly thirteen commands under the root: check, verify, doctor, status, stale, affected-tests, coverage, report, test, mutation, stamp, touch and keep-evidence. |
+| `QLCMQ-B01` | Registers exactly fourteen commands under the root: check, verify, doctor, status, stale, affected-tests, coverage, report, test, mutation, stamp, touch, keep-evidence and push-review. |
 | `QLCMQ-B02` | Each registered command is reachable from the root by its name. |
 
 ## Invariants
