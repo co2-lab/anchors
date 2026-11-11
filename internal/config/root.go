@@ -88,7 +88,8 @@ func TrueCase(path string) string {
 	sep := string(filepath.Separator)
 	given, real, typed := strings.Split(path, sep), strings.Split(disk, sep), strings.Split(resolved, sep)
 	for i, j, k := len(given)-1, len(real)-1, len(typed)-1; i >= 0 && j >= 0 && k >= 0; i, j, k = i-1, j-1, k-1 {
-		if given[i] != typed[k] || !strings.EqualFold(typed[k], real[j]) {
+		// EqualFold on both sides: Windows resolves the case along with the links.
+		if !strings.EqualFold(given[i], typed[k]) || !strings.EqualFold(typed[k], real[j]) {
 			break
 		}
 		given[i] = real[j]
