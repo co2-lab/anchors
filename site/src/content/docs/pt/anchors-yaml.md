@@ -252,6 +252,20 @@ de outra versão, divergindo na mais velha que `max_age`.
 
 ---
 
+## `required_states` — os estados que toda spec de uma camada registra
+
+```yaml
+required_states:
+  screen: [loading, error, empty, offline]
+```
+
+Uma spec registra os estados em que o autor pensou.
+[`states-required`](/pt/docs/gates/states-required/) pede, a cada spec da camada (o `layer:` do
+header), um estado com cada nome — uma linha com o código do estado e o nome — ou
+`@no-state: <nome> — <motivo>`. Os nomes são seus.
+
+---
+
 ## `test_bypass` — o que o código pula enquanto um teste roda
 
 ```yaml

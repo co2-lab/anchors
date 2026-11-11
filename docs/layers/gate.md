@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:bf2ca81faf38a2d1 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:ee90fb328645347f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 95 units and 1466 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 96 units and 1468 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -4362,6 +4362,30 @@ it; sections and columns are read in any language of the catalog.
 - **VTRST-B05** — `error-message-declared` fails naming each error that cites no message code of the unit, and each that cites codes the Messages section does not catalog; `@no-message: <reason>` on its row exempts it; a spec with no error leaves without a verdict.
 
 - **VTRST-E01** — The spec beside the code file cannot be read, or there is none.
+
+
+## STRQS — StatesRequired — every spec of a layer registers the states the project requires of it
+
+A spec registers the states its author thought of, and every state gate confronts only those.
+Measured in MIF: nine released defects were a screen state nobody wrote — an error shown as an
+empty list, a not-found that spun forever, an offline screen with no way back.
+
+The project names the states each layer owes, by the layer a spec's header declares:
+
+```yaml
+required_states:
+  screen: [loading, error, empty, offline]
+```
+
+Each spec of that layer registers a state by each name — a line carrying the state's code
+(`<CODE>-S03`) and the name, its heading or its row —, or says why not, on a line of its own:
+`@no-state: offline — the screen reads only local data`. The names are the project's: Anchors
+proposes none.
+
+
+- **STRQS-B01** — A spec of a layer with required states that registers none by one of the names, and does not waive it with a reason, fails, naming the layer and the missing states; registered or waived, it passes. (`checkStatesRequired`)
+
+- **STRQS-B02** — A project that requires no state, a spec of a layer with none required, or an artifact that is no spec, is skipped.
 
 
 ## THSAS — TestHasAssertion — every test asserts something in its body

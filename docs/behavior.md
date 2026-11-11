@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:da6099b2519f9478 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:2216d6ee3f70b976 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -3236,6 +3236,8 @@ is what the test proves.
 
 - [A gate declares a legacy severity and a tool cache](layers/config.md#cnfgo-b77--a-gate-declares-a-legacy-severity-and-a-tool-cache) `CNFGO-B77`
 
+- [required_states maps a spec layer to the states its specs register](layers/config.md#cnfgo-b78--required-states-maps-a-spec-layer-to-the-states-its-specs-register) `CNFGO-B78`
+
 - [A legacy or a cache that cannot hold is refused](layers/config.md#cnfgo-e13--a-legacy-or-a-cache-that-cannot-hold-is-refused) `CNFGO-E13`
 
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
@@ -5893,6 +5895,10 @@ is what the test proves.
 - [A code file with no spec beside it leaves without a verdict](layers/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-E01`
 
 - [Sections nested under another are found](layers/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows) `VTRST-B06`
+
+- [A required state the spec neither registers nor waives fails](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it) `STRQS-B01`
+
+- [Outside its subject the gate is skipped](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it) `STRQS-B02`
 
 - [A test with no assertion fails, named by its line and title](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B01`
 

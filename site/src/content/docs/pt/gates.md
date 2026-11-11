@@ -38,6 +38,7 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | Gate | Confronta | O que mede |
 | --- | --- | --- |
 | [`presentation-exhaustive`](/pt/docs/gates/presentation-exhaustive/) | `spec` | Every value of a prop or state the presentation reads has an appearance decided |
+| [`states-required`](/pt/docs/gates/states-required/) | `spec` | Every spec of a layer registers the states the project requires of it (`required_states:`) |
 | [`presentation-conflict`](/pt/docs/gates/presentation-conflict/) | `spec` | One prop and one condition do not lead to two appearances |
 | [`presentation-copy-single-source`](/pt/docs/gates/presentation-copy-single-source/) | `spec` | The text a presentation shows is a message code, not copy repeated in the rule |
 | [`presentation-observable`](/pt/docs/gates/presentation-observable/) | `spec` | What a presentation changes is an element a test can point at |

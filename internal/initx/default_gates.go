@@ -765,6 +765,11 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		})
 
 		gates = append(gates, config.Gate{
+			Name: "states-required", ID: "states-required", On: []string{"spec"}, Check: "states-required",
+			Blocking: config.Bool(false), Measures: "every spec of a layer registers the states the project requires of it (`required_states:`)",
+		})
+
+		gates = append(gates, config.Gate{
 			Name: "reads-written", ID: "reads-written", On: []string{"code"}, Check: "reads-written",
 			Blocking: config.Bool(false), Measures: "every data a header reads (`reads:`) is written by some file's header (`writes:`)",
 		})

@@ -534,6 +534,12 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     When the action of each level is asked for a legacy target
     Then the pending informs and the failure blocks, as the gate's own
 
+  @CNFGO-B78 @unit-level
+  Scenario: required_states maps a spec layer to the states its specs register
+    Given a configuration requiring loading, error and empty of the screen layer
+    When it is loaded
+    Then the screen layer requires the three, in order
+
   @CNFGO-E13 @unit-level
   Scenario: A legacy or a cache that cannot hold is refused
     Given a legacy with no date, with a deadline that is no date or comes before its start, with no severity, and stronger than the gate, and a cache with no inputs

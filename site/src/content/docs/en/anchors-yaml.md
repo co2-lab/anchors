@@ -249,6 +249,20 @@ another version, diverging on one older than `max_age`.
 
 ---
 
+## `required_states` — the states every spec of a layer registers
+
+```yaml
+required_states:
+  screen: [loading, error, empty, offline]
+```
+
+A spec registers the states its author thought of.
+[`states-required`](/docs/gates/states-required/) asks each spec of the layer (its header's
+`layer:`) for a state by each name — a line with the state's code and the name — or
+`@no-state: <name> — <reason>`. The names are yours.
+
+---
+
 ## `test_bypass` — what the code skips while a test runs
 
 ```yaml

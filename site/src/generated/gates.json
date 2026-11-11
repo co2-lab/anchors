@@ -106,6 +106,10 @@
         "slug": "docs/gates/presentation-exhaustive"
       },
       {
+        "label": "states-required",
+        "slug": "docs/gates/states-required"
+      },
+      {
         "label": "presentation-conflict",
         "slug": "docs/gates/presentation-conflict"
       },

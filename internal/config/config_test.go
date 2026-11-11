@@ -2055,3 +2055,18 @@ func TestGateLegacyAndCache(t *testing.T) {
 		}
 	}
 }
+
+func TestRequiredStates(t *testing.T) {
+	t.Run("CNFGO-B78: required_states maps a spec layer to the states its specs register", func(t *testing.T) {})
+	p := filepath.Join(t.TempDir(), DefaultFile)
+	if err := os.WriteFile(p, []byte("version: 1\nlayers: {}\nrequired_states:\n  screen: [loading, error, empty]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c, err := Load(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Join(c.RequiredStates["screen"], ","); got != "loading,error,empty" {
+		t.Errorf("required states: %s", got)
+	}
+}

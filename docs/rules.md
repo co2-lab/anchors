@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:9d37e1a921d5a9a9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:dddc03da83ff4056 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3446,6 +3446,8 @@ in `layers/`.
 
 - [CNFGO-B77 — A gate may declare `legacy` — a `before` date and a `severity` for the targets last changed before it, each level falling back to the gate's own, and an `until` date from which the legacy ends — and `cache` — the `inputs` its tool reads besides its targets, and whether a failure (`failures`) and a CI (`ci`) keep its verdict. (`LegacySeverity`, `LegacyActionFor`, `ToolCache`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
+- [CNFGO-B78 — `required_states` maps a spec layer to the names of the states every spec of it registers; the names are the project's. (`RequiredStates`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
@@ -6505,6 +6507,12 @@ in `layers/`.
 - [VTRST-B05 — `error-message-declared` fails naming each error that cites no message code of the unit, and each that cites codes the Messages section does not catalog; `@no-message: <reason>` on its row exempts it; a spec with no error leaves without a verdict.](layers/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
 
 - [VTRST-E01 — The spec beside the code file cannot be read, or there is none.](layers/gate.md#vtrst--statetransitions--every-change-of-a-visual-unit-is-proven-through-what-the-screen-shows)
+
+### [STRQS — StatesRequired — every spec of a layer registers the states the project requires of it](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it)
+
+- [STRQS-B01 — A spec of a layer with required states that registers none by one of the names, and does not waive it with a reason, fails, naming the layer and the missing states; registered or waived, it passes. (`checkStatesRequired`)](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it)
+
+- [STRQS-B02 — A project that requires no state, a spec of a layer with none required, or an artifact that is no spec, is skipped.](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it)
 
 ### [THSAS — TestHasAssertion — every test asserts something in its body](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body)
 

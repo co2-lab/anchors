@@ -153,6 +153,10 @@ type Config struct {
 	// TestBypass is how the code skips an effect while a test runs, and the suites whose
 	// proofs run the path it skips.
 	TestBypass *TestBypass `yaml:"test_bypass,omitempty"`
+	// RequiredStates are the states every spec of a layer registers — a screen's loading, error
+	// and empty —, by the spec's declared layer (`layer:` in its header). The names are the
+	// project's; Anchors proposes none (gate `states-required`).
+	RequiredStates map[string][]string `yaml:"required_states,omitempty"`
 	// Logs diz ONDE estão os logs — e só isso, porque só isso é preciso.
 	//
 	// O FORMATO não entra aqui, e a razão é o que torna a varredura possível sem ditar
