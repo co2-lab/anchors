@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:db55cec5ae7cf5d4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:332754fceb2f9027 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 92 units and 1456 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 94 units and 1463 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1149,6 +1149,29 @@ Executes an external command (such as jest, eslint, or tsc) defined in `anchors.
 - **EXCMX-E01** — REF[EXCMX-B02]: a command that exits non-zero is answered by B02: Fail with its trimmed output
 
 - **EXCMX-E02** — REF[EXCMX-B03]: a command that fails with no output is answered by B03: the detail says it produced none, with the execution error
+
+
+## EXPRS — ExternalProven — a file that calls a real system is proven by a test that reached it
+
+A unit test proves a file against doubles. A double of a database or an API accepts whatever it
+is given, so a file that sends the real system a query it refuses stays green in every unit test.
+Measured in MIF: fourteen defects crossed such a boundary — an index that did not exist, a
+condition outside the key schema, an owner field the API refused —, each green against a double.
+The unit tests were right about the unit; no gate asked whether any proof of the file ever met
+the real system.
+
+The project declares its real systems (`external_systems:`, EXSSA): how a call to each is
+recognised, and the suite layers that reach it. A code file that calls one asks a test of its
+own — derived beside it by the project's templates, importing it, or testing the feature that
+covers its spec — that passed in one of those layers. A file whose calls stay behind a flag, or
+that only a CI may run against the system, waives it with `@no-external-proof: <reason>`.
+
+
+- **EXPRS-B01** — A code file whose content matches a declared system's `calls`, and no test of which passed in a suite of that system's `proven_by` layers, fails, naming the system, the layers and how many tests of the file were seen; one with such a test passes. (`checkExternalProven`, `testsOfUnit`, `provenIn`)
+
+- **EXPRS-B02** — A project that declares no system, a file that is no code, a file that calls no declared system, or one that waives the proof with a reason, is skipped.
+
+- **EXPRS-E01** — No map is built.
 
 
 ## FLRAI — Failure — the failure a spec declares must be handled, recorded, and every handling declared
@@ -3205,6 +3228,29 @@ declared itself. A file whose header reads nothing is not its subject.
 - **RDWRS-B02** — A file whose header reads nothing is skipped.
 
 - **RDWRS-E01** — No map is built.
+
+
+## RCCRS — RecordingCurrent — a recorded response is of the system the project speaks to today
+
+A double built from a real response is right on the day it is recorded. Measured in MIF: nine
+defects passed against recordings whose system had moved on — an API version that changed
+(Stripe's `dahlia`), a capability added, a presign condition the old response did not have —,
+and the double kept answering the old shape.
+
+Each recording says where it came from, on a line of its own: `@recorded: <system> <version>
+<date>`. The project declares, per system (`external_systems:`, EXSSA), the version it speaks and
+how many days a recording lives. A recording of another version, of an undeclared system, or
+whose mark does not say the three, fails; one past its system's age diverges until it is
+recorded again.
+
+
+- **RCCRS-B01** — A recording of a version other than its system's declared `version` fails, saying the two versions; a recording of the declared one, or of a system that declares none, passes. (`checkRecordingCurrent`)
+
+- **RCCRS-B02** — A recording older than its system's `max_age` diverges, saying its date and age; with no `max_age`, a recording does not age.
+
+- **RCCRS-B03** — A file with no recording is skipped.
+
+- **RCCRS-E01** — A mark that does not say the system, the version and a date, or that names a system `external_systems:` does not declare.
 
 
 ## RFRSR — RefResolves — the reference points at the spec that REALLY describes the unit

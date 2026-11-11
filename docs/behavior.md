@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:0780f3ab716cb7e3 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:c3c3460d9ca0ee99 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -3368,6 +3368,10 @@ is what the test proves.
 
 - [The project keeps pages from the build's removal](layers/config.md#dcrqa-b07--the-project-keeps-pages-from-the-builds-removal) `DCRQA-B07`
 
+- [A system declares its calls, the layers that reach it, its version and a recording's age](layers/config.md#exssa-b01--a-system-declares-its-calls-the-layers-that-reach-it-its-version-and-a-recordings-age) `EXSSA-B01`
+
+- [A system that cannot hold refuses the configuration](layers/config.md#exssa-e01--a-system-that-cannot-hold-refuses-the-configuration) `EXSSA-E01`
+
 - [Versions are ordered part by part as numbers](layers/config.md#mnvrm-b01--versions-are-ordered-part-by-part-as-numbers) `MNVRM-B01`
 
 - [The tag prefix v is accepted on either side](layers/config.md#mnvrm-b02--the-tag-prefix-v-is-accepted-on-either-side) `MNVRM-B02`
@@ -4077,6 +4081,12 @@ is what the test proves.
 - [The gate does not aggregate cross-file state across partitioned batches](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-X02`
 
 - [Under --index a command reads the commit's content](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B14`
+
+- [A file calling a real system with no test passed in a suite that reaches it fails](layers/gate.md#exprs--externalproven--a-file-that-calls-a-real-system-is-proven-by-a-test-that-reached-it) `EXPRS-B01`
+
+- [Outside its subject the gate is skipped](layers/gate.md#exprs--externalproven--a-file-that-calls-a-real-system-is-proven-by-a-test-that-reached-it) `EXPRS-B02`
+
+- [Without a map the gate is pending](layers/gate.md#exprs--externalproven--a-file-that-calls-a-real-system-is-proven-by-a-test-that-reached-it) `EXPRS-E01`
 
 - [Every failure gate skips an artifact that is not a spec](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B01`
 
@@ -5273,6 +5283,14 @@ is what the test proves.
 - [A file whose header reads nothing is skipped](layers/gate.md#rdwrs--readswritten--every-data-a-header-reads-is-written-by-some-files-header) `RDWRS-B02`
 
 - [Without a map the gate is pending](layers/gate.md#rdwrs--readswritten--every-data-a-header-reads-is-written-by-some-files-header) `RDWRS-E01`
+
+- [A recording of another version fails](layers/gate.md#rccrs--recordingcurrent--a-recorded-response-is-of-the-system-the-project-speaks-to-today) `RCCRS-B01`
+
+- [A recording past its system's age diverges](layers/gate.md#rccrs--recordingcurrent--a-recorded-response-is-of-the-system-the-project-speaks-to-today) `RCCRS-B02`
+
+- [A file with no recording is skipped](layers/gate.md#rccrs--recordingcurrent--a-recorded-response-is-of-the-system-the-project-speaks-to-today) `RCCRS-B03`
+
+- [A mark that cannot be placed fails](layers/gate.md#rccrs--recordingcurrent--a-recorded-response-is-of-the-system-the-project-speaks-to-today) `RCCRS-E01`
 
 - [A reference that does not match the sibling spec fails](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B01`
 

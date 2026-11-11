@@ -750,6 +750,16 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		})
 
 		gates = append(gates, config.Gate{
+			Name: "external-proven", ID: "external-proven", On: []string{"code"}, Check: "external-proven",
+			Blocking: config.Bool(false), Measures: "a file that calls a declared external system has a test that passed in a suite reaching it",
+		})
+
+		gates = append(gates, config.Gate{
+			Name: "recording-current", ID: "recording-current", On: []string{"test"}, Check: "recording-current",
+			Blocking: config.Bool(false), Measures: "a response recorded from a real system (`@recorded:`) is of the version the project speaks, and within its max_age",
+		})
+
+		gates = append(gates, config.Gate{
 			Name: "reads-written", ID: "reads-written", On: []string{"code"}, Check: "reads-written",
 			Blocking: config.Bool(false), Measures: "every data a header reads (`reads:`) is written by some file's header (`writes:`)",
 		})

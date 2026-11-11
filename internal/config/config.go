@@ -147,6 +147,9 @@ type Config struct {
 	Severity *Severity `yaml:"severity,omitempty"`
 	Tests    []Suite   `yaml:"tests,omitempty"`
 	Mutation []Suite   `yaml:"mutation,omitempty"`
+	// ExternalSystems are the real systems the code talks to, and the suite layers that reach
+	// them: a code file that calls one is proven by a test that ran in such a suite.
+	ExternalSystems []ExternalSystem `yaml:"external_systems,omitempty"`
 	// Logs diz ONDE estão os logs — e só isso, porque só isso é preciso.
 	//
 	// O FORMATO não entra aqui, e a razão é o que torna a varredura possível sem ditar
@@ -2200,6 +2203,9 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := c.validarPadroes(); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := validateExternalSystems(c.ExternalSystems); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := c.applyProjectSeverity(); err != nil {

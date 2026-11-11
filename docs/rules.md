@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:b54811e3fd763c4c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:d97b9a6c5cdfe68a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3680,6 +3680,12 @@ in `layers/`.
 
 - [DCRQA-X01 — A trigger is matched whole, never as part of a longer or shorter name.](layers/config.md#dcrqa--docsrequired--which-aggregate-documentation-a-change-of-a-unit-obliges-to-touch)
 
+### [EXSSA — ExternalSystems — the real systems the code talks to, and the suites that reach them](layers/config.md#exssa--externalsystems--the-real-systems-the-code-talks-to-and-the-suites-that-reach-them)
+
+- [EXSSA-B01 — Each system declares its name, the pattern of a call to it, the suite layers that reach it, the API version the project speaks, and the days a recording lives. (`ExternalSystem`, `CallsRE`, `MaxAgeDays`)](layers/config.md#exssa--externalsystems--the-real-systems-the-code-talks-to-and-the-suites-that-reach-them)
+
+- [EXSSA-E01 — A system with no name or a repeated one, an empty or invalid `calls`, no `proven_by`, or a `max_age` that is not a number of days.](layers/config.md#exssa--externalsystems--the-real-systems-the-code-talks-to-and-the-suites-that-reach-them)
+
 ### [MNVRM — MinVersion — whether the running binary meets the minimum version the project declares](layers/config.md#mnvrm--minversion--whether-the-running-binary-meets-the-minimum-version-the-project-declares)
 
 - [MNVRM-B01 — Versions are ordered part by part as numbers: major over minor over patch, and 9 is smaller than 84 (`VersionOrder`).](layers/config.md#mnvrm--minversion--whether-the-running-binary-meets-the-minimum-version-the-project-declares)
@@ -4523,6 +4529,14 @@ in `layers/`.
 - [EXCMX-E01 — REF[EXCMX-B02]: a command that exits non-zero is answered by B02: Fail with its trimmed output](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments)
 
 - [EXCMX-E02 — REF[EXCMX-B03]: a command that fails with no output is answered by B03: the detail says it produced none, with the execution error](layers/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments)
+
+### [EXPRS — ExternalProven — a file that calls a real system is proven by a test that reached it](layers/gate.md#exprs--externalproven--a-file-that-calls-a-real-system-is-proven-by-a-test-that-reached-it)
+
+- [EXPRS-B01 — A code file whose content matches a declared system's `calls`, and no test of which passed in a suite of that system's `proven_by` layers, fails, naming the system, the layers and how many tests of the file were seen; one with such a test passes. (`checkExternalProven`, `testsOfUnit`, `provenIn`)](layers/gate.md#exprs--externalproven--a-file-that-calls-a-real-system-is-proven-by-a-test-that-reached-it)
+
+- [EXPRS-B02 — A project that declares no system, a file that is no code, a file that calls no declared system, or one that waives the proof with a reason, is skipped.](layers/gate.md#exprs--externalproven--a-file-that-calls-a-real-system-is-proven-by-a-test-that-reached-it)
+
+- [EXPRS-E01 — No map is built.](layers/gate.md#exprs--externalproven--a-file-that-calls-a-real-system-is-proven-by-a-test-that-reached-it)
 
 ### [FLRAI — Failure — the failure a spec declares must be handled, recorded, and every handling declared](layers/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared)
 
@@ -5823,6 +5837,16 @@ in `layers/`.
 - [RDWRS-B02 — A file whose header reads nothing is skipped.](layers/gate.md#rdwrs--readswritten--every-data-a-header-reads-is-written-by-some-files-header)
 
 - [RDWRS-E01 — No map is built.](layers/gate.md#rdwrs--readswritten--every-data-a-header-reads-is-written-by-some-files-header)
+
+### [RCCRS — RecordingCurrent — a recorded response is of the system the project speaks to today](layers/gate.md#rccrs--recordingcurrent--a-recorded-response-is-of-the-system-the-project-speaks-to-today)
+
+- [RCCRS-B01 — A recording of a version other than its system's declared `version` fails, saying the two versions; a recording of the declared one, or of a system that declares none, passes. (`checkRecordingCurrent`)](layers/gate.md#rccrs--recordingcurrent--a-recorded-response-is-of-the-system-the-project-speaks-to-today)
+
+- [RCCRS-B02 — A recording older than its system's `max_age` diverges, saying its date and age; with no `max_age`, a recording does not age.](layers/gate.md#rccrs--recordingcurrent--a-recorded-response-is-of-the-system-the-project-speaks-to-today)
+
+- [RCCRS-B03 — A file with no recording is skipped.](layers/gate.md#rccrs--recordingcurrent--a-recorded-response-is-of-the-system-the-project-speaks-to-today)
+
+- [RCCRS-E01 — A mark that does not say the system, the version and a date, or that names a system `external_systems:` does not declare.](layers/gate.md#rccrs--recordingcurrent--a-recorded-response-is-of-the-system-the-project-speaks-to-today)
 
 ### [RFRSR — RefResolves — the reference points at the spec that REALLY describes the unit](layers/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit)
 

@@ -85,6 +85,16 @@ The refresh rewrites the tests it lists, and each one then needs its ` + "`updat
 ` + "`anchors touch`" + ` does it for every changed file (a ` + "`@contract`" + ` stamp never covers the header,
 so the order of the two does not matter).
 
+## Doubles of a real system: what proves the boundary
+
+A double of a database, an API or a store accepts whatever it is given: a query on an index
+that does not exist, a field the API refuses. When the project declares its real systems
+(` + "`external_systems:`" + ` in anchors.yaml), a file that calls one also needs a test that ran in a
+suite reaching the real system (an integration or live layer) — the unit test is still right,
+and still not that proof. A response recorded from the real system says where and when it came
+from, on a line of its own: ` + "`@recorded: stripe 2025-09-30.dahlia 2026-10-02`" + ` — when the
+project moves to another version of the API, or the recording passes its age, record it again.
+
 ## Environment safety (when the test touches external state)
 
 - DISCOVER THE ENVIRONMENT BY IDENTITY, NOT BY NAME. Validate that the resources belong

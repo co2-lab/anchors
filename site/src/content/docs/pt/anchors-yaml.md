@@ -229,6 +229,29 @@ primeira reação de quem esbarra nela é removê-la.
 
 ---
 
+## `external_systems` — os sistemas reais com que o código fala
+
+```yaml
+external_systems:
+  - name: appsync
+    calls: "\\bclient\\.graphql\\("        # como uma chamada a ele é reconhecida no código
+    proven_by: [integration, live]           # as camadas de suíte que alcançam o sistema real
+  - name: stripe
+    calls: "\\bstripe\\.[a-z]+\\.(create|update)\\("
+    proven_by: [live]
+    version: 2025-09-30.dahlia               # a versão da API que o projeto fala
+    max_age: 90d                             # quanto tempo uma resposta gravada vale
+```
+
+Um teste de unidade prova o arquivo contra dublês, e um dublê aceita a forma que receber.
+[`external-proven`](/pt/docs/gates/external-proven/) pede, a cada arquivo que chama um sistema
+declarado, um teste dele que passou numa das camadas de `proven_by` (`tests[].layer`); o arquivo
+dispensa com `@no-external-proof: <motivo>`. [`recording-current`](/pt/docs/gates/recording-current/)
+lê a marca de cada resposta gravada, `@recorded: stripe 2025-09-30.dahlia 2026-10-02`, e reprova a
+de outra versão, divergindo na mais velha que `max_age`.
+
+---
+
 ## `gates` — o que é confrontado
 
 Este bloco tem [página própria](/pt/docs/gates///), porque é o mais extenso. O

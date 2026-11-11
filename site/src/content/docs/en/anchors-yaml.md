@@ -226,6 +226,29 @@ first reaction of whoever hits it is to remove it.
 
 ---
 
+## `external_systems` — the real systems your code talks to
+
+```yaml
+external_systems:
+  - name: appsync
+    calls: "\\bclient\\.graphql\\("        # how a call to it is recognised in the code
+    proven_by: [integration, live]           # the suite layers that reach the real system
+  - name: stripe
+    calls: "\\bstripe\\.[a-z]+\\.(create|update)\\("
+    proven_by: [live]
+    version: 2025-09-30.dahlia               # the API version the project speaks
+    max_age: 90d                             # how long a recorded response lives
+```
+
+A unit test proves a file against doubles, and a double accepts whatever shape it is given.
+[`external-proven`](/docs/gates/external-proven/) asks each file that calls a declared system for
+a test of its own that passed in one of its `proven_by` layers (`tests[].layer`); a file waives it
+with `@no-external-proof: <reason>`. [`recording-current`](/docs/gates/recording-current/) reads
+each recorded response's mark, `@recorded: stripe 2025-09-30.dahlia 2026-10-02`, and fails one of
+another version, diverging on one older than `max_age`.
+
+---
+
 ## `gates` — what gets confronted
 
 This block has [its own page](/docs/gates/), being the longest. The minimal

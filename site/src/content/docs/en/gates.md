@@ -76,6 +76,7 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`mock-stamped`](/docs/gates/mock-stamped/) | `test` | The double's stamp matches the real snippet (recomputed, not just validated) |
 | [`mock-typed`](/docs/gates/mock-typed/) | `test` | The test double derives from the real module (not a frozen copy of the contract) |
 | [`mock-detect-covers-dialect`](/docs/gates/mock-detect-covers-dialect/) | `test` | The project declares `derived.mock_detect` — the regex that recognises a test double in this ecosystem |
+| [`recording-current`](/docs/gates/recording-current/) | `test` | A response recorded from a real system (`@recorded:`) is of the version the project speaks, and within its max_age |
 
 ## Failure & Governance
 
@@ -106,6 +107,7 @@ Every gate below is generated from the catalog in the code. `anchors init` seeds
 | [`layer-boundary`](/docs/gates/layer-boundary/) | `code` | The layer does not reach what is not its own (`boundaries:`) |
 | [`sibling-guard`](/docs/gates/sibling-guard/) | `code` | Sibling functions handle the same parameter consistently |
 | [`proof-crosses-boundary`](/docs/gates/proof-crosses-boundary/) | `spec` | A rule asserting a relation with another unit has the code importing that unit |
+| [`external-proven`](/docs/gates/external-proven/) | `code` | A file that calls a declared external system has a test that passed in a suite reaching it |
 | [`circular`](/docs/gates/circular/) | `code` | There is no import cycle between modules |
 | [`deadcode`](/docs/gates/deadcode/) | `code` | There is no orphan export, symbol or file in the project |
 

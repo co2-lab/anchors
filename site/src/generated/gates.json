@@ -236,6 +236,10 @@
       {
         "label": "mock-detect-covers-dialect",
         "slug": "docs/gates/mock-detect-covers-dialect"
+      },
+      {
+        "label": "recording-current",
+        "slug": "docs/gates/recording-current"
       }
     ]
   },
@@ -336,6 +340,10 @@
       {
         "label": "proof-crosses-boundary",
         "slug": "docs/gates/proof-crosses-boundary"
+      },
+      {
+        "label": "external-proven",
+        "slug": "docs/gates/external-proven"
       },
       {
         "label": "circular",
