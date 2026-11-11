@@ -215,11 +215,16 @@ security rule applies to every lambda" without listing files one by one.
 
 ```yaml
 boundaries:
-    - from: shared
-      forbid: [lambdas, infra]
+    - layer: shared
+      forbid: "from ['\"](\\.\\./)*(lambdas|infra)/"
       because: 'the contract does not know its consumers'
+    - layer: screen
+      forbid: "<Text[^>]*>\\{[^}]*\\.(kind|category|action|status)\\}"
+      because: 'a value the backend writes is a key, not a label: map it to its text'
 ```
 
+Each boundary names a layer (empty: all code), a pattern its files may not contain — an
+import, or any other construct, such as a backend's enum shown raw on a screen —, and why.
 `because` isn't decoration: it's the text shown when the `layer-boundary` gate
 fails. A boundary with no written reason becomes "a rule someone added", and the
 first reaction of whoever hits it is to remove it.

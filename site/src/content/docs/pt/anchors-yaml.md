@@ -218,12 +218,17 @@ régua de segurança vale para toda lambda" sem listar arquivo por arquivo.
 
 ```yaml
 boundaries:
-    - from: shared
-      forbid: [lambdas, infra]
+    - layer: shared
+      forbid: "from ['\"](\\.\\./)*(lambdas|infra)/"
       because: 'o contrato não conhece quem o consome'
+    - layer: screen
+      forbid: "<Text[^>]*>\\{[^}]*\\.(kind|category|action|status)\\}"
+      because: 'um valor que o backend grava é chave, não rótulo: mapeie para o texto'
 ```
 
-O `because` não é enfeite: é o texto que aparece quando o gate [`layer-boundary`](/pt/docs/gates///layer-boundary/)
+Cada fronteira nomeia uma camada (vazia: todo o código), um padrão que os arquivos dela não
+podem conter — um import, ou qualquer outra construção, como um enum do backend exibido cru na
+tela —, e o porquê. O `because` não é enfeite: é o texto que aparece quando o gate [`layer-boundary`](/pt/docs/gates///layer-boundary/)
 reprova. Uma fronteira sem razão escrita vira "regra que alguém pôs", e a
 primeira reação de quem esbarra nela é removê-la.
 

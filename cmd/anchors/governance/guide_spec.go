@@ -169,7 +169,11 @@ a rule nobody wrote. So do not stop at the first draft — write it in four pass
      read-then-write — ` + "`@variants: once, repeated`" + `, the repeat changing nothing;
    - CONCURRENCY: two actors on the same data ` + "`@variants: alone, interleaved`" + `, with
      the write conditional on what was read;
-   - a TIMER or a subscription is stopped on every exit: ` + "`@variants: completes, leaves`" + `.
+   - a TIMER or a subscription is stopped on every exit: ` + "`@variants: completes, leaves`" + `;
+   - a screen that reads a STATUS the backend writes, one variant per value it can hold
+     (` + "`@variants: active, past_due, suspended`" + `) — a value with no rule is a state nobody wrote;
+   - a write behind an AUTHORIZATION also refuses: ` + "`@variants: allowed, denied`" + `, the denied
+     scenario proving the refusal where the write happens, not only on the screen.
 3. GENERALIZE. When a rule is one instance of a wider truth, write the wider truth as
    an invariant (` + "`I`" + `) and keep the instance as its consequence:
      ✗ "under --index, this gate reads the staged file"

@@ -28,7 +28,7 @@ required_states:
 ```
 
 Each spec of that layer registers a state by each name — a line carrying the state's code
-(`SCRNX-S03`) and the name, its heading or its row —, or says why not, on a line of its own:
+(`<CODE>-S03`) and the name, its heading or its row —, or says why not, on a line of its own:
 `@no-state: offline — the screen reads only local data`. The names are the project's: Anchors
 proposes none.
 
