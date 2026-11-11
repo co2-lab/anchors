@@ -214,7 +214,11 @@ func selectFiles(g *mapx.Graph, cfg *config.Config, root string, mutation bool, 
 			}
 			st = testState(g, n, layer)
 		}
-		if sel.wants(st) {
+		// A test whose result is stale proves nothing, whatever it was: `evidence-fresh`
+		// refuses it. Measured in MIF: the default left out 578 stale files that had passed
+		// once, the run read green, and the gate stayed red. A mutation score is a measure,
+		// not a proof, and keeps the square.
+		if sel.wants(st) || (!mutation && st == stalePassing) {
 			run = append(run, n.ID)
 		} else {
 			left[st]++
@@ -318,6 +322,9 @@ func runSelective(cs suiteCommand, suites []config.Suite, cfg *config.Config, ab
 		if err := runFiles(cs, s, absRoot, target, files[i]); err != nil {
 			return err
 		}
+		if !mutation {
+			reportUnproven(cfg, absRoot, s, files[i])
+		}
 	}
 	if len(whole) > 0 {
 		return runSuites(cs, whole, absRoot, target, nil)
@@ -403,4 +410,43 @@ func withImpactedTests(run []string, g *mapx.Graph, cfg *config.Config, root, ke
 			workspaceLabel(suite), suite.Layer, len(added), strings.Join(added, ", "))
 	}
 	return run
+}
+
+// reportUnproven says which files the suite was handed and came back with no fresh result: a
+// suite whose `paths:` cover files its runner does not run — a flow of another tool beside its
+// tests — hands them over and proves nothing, and the run read as if they had run. Measured in
+// MIF: 34 Maestro flows went to `jest --findRelatedTests`, which found no test in them.
+func reportUnproven(cfg *config.Config, absRoot string, s config.Suite, ids []string) {
+	g, err := mapx.Load(filepath.Join(absRoot, mapx.DefaultPath))
+	if err != nil {
+		return
+	}
+	currentRevs(g, absRoot, cfg)
+	byID := map[string]mapx.Node{}
+	for _, n := range g.Nodes {
+		byID[n.ID] = n
+	}
+	var none []string
+	for _, id := range ids {
+		n, ok := byID[id]
+		if !ok {
+			continue
+		}
+		if st := testState(g, n, s.Layer); st == unmeasured || st == stalePassing || st == staleBelow {
+			none = append(none, id)
+		}
+	}
+	if len(none) == 0 {
+		return
+	}
+	shown := none
+	if len(shown) > 10 {
+		shown = shown[:10]
+	}
+	fmt.Printf("⚠ [%s%s] %d file(s) handed to the suite came back with no result — it does not run them, and they stay unproven: %s",
+		workspaceLabel(s), s.Layer, len(none), strings.Join(shown, ", "))
+	if len(none) > len(shown) {
+		fmt.Printf(" (+%d)", len(none)-len(shown))
+	}
+	fmt.Print("\n  Narrow the suite's `paths:` to the files its runner runs, and declare the suite that runs the others.\n\n")
 }

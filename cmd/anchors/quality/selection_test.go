@@ -201,13 +201,12 @@ func TestSelection_RunSaysWhatItTookAndLeft(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
 	}
-	if got := readLog(t, dir); !reflect.DeepEqual(got, []string{"new_test.go sb_test.go"}) {
-		t.Fatalf("by default only the stale failing and the never measured run, in one batch, got %v", got)
+	if got := readLog(t, dir); !reflect.DeepEqual(got, []string{"new_test.go sb_test.go sp_test.go"}) {
+		t.Fatalf("by default the stale and the never measured run, in one batch, got %v", got)
 	}
 	for _, want := range []string{
-		"[unit] selected 2 file(s) to run",
+		"[unit] selected 3 file(s) to run",
 		"1 fresh and passing (--include-fresh --include-passing)",
-		"1 stale but passing (--include-passing)",
 		"1 fresh and below the minimum (--include-fresh)",
 	} {
 		if !strings.Contains(out, want) {
@@ -394,5 +393,40 @@ func TestSelection_FrozenNeverRuns(t *testing.T) {
 		if !reflect.DeepEqual(run, []string{c.want}) || left[frozen] != 1 || !strings.Contains(describeLeftOut(left), "1 frozen") {
 			t.Errorf("mutation=%v: run %v, left %v (%s)", c.mutation, run, left, describeLeftOut(left))
 		}
+	}
+}
+
+func TestSelection_StaleTestsRunByDefault(t *testing.T) {
+	t.Run("SLCTN-B17: A test run takes every stale file by default, whatever its last result; a mutation run keeps the stale passing out", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{testNode("sp_test.go", 3, 0, false)}}
+	run, left := selectFiles(g, nil, t.TempDir(), false, "k", config.Suite{Layer: "unit"}, runSelection{})
+	if !reflect.DeepEqual(run, []string{"sp_test.go"}) || left[stalePassing] != 0 {
+		t.Errorf("a stale test that passed once runs: %v %v", run, left)
+	}
+	code := codeNode("a.go", 9, 1, 0, 70, false)
+	run, left = selectFiles(&mapx.Graph{Nodes: []mapx.Node{code}}, nil, t.TempDir(), true, "k", config.Suite{Layer: "unit"}, runSelection{})
+	if len(run) != 0 || left[stalePassing] != 1 {
+		t.Errorf("a stale mutation score at the floor stays out: %v %v", run, left)
+	}
+}
+
+func TestSelection_ReportsFilesTheSuiteDoesNotRun(t *testing.T) {
+	t.Run("SLCTN-B18: A file handed to the suite that comes back with no result is named as unproven", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "a_test.go", Kind: mapx.KindTest, Rev: "r"},
+		{ID: "flow_test.go", Kind: mapx.KindTest, Rev: "r"},
+	}}
+	dir := budgetProject(t, "tests", "sh skip.sh {{files}}", g)
+	skip := "#!/bin/sh\n{\n  echo '<testsuites><testsuite name=\"s\">'\n  for f in \"$@\"; do case \"$f\" in *flow_test.go) ;; *) echo \"<testcase name=\\\"case\\\" file=\\\"$f\\\" time=\\\"0.4\\\"/>\";; esac; done\n  echo '</testsuite></testsuites>'\n} > out/junit.xml\n"
+	if err := os.WriteFile(filepath.Join(dir, "skip.sh"), []byte(skip), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runQ(t, newTestCmd(), "--root", dir)
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	if !strings.Contains(out, "1 file(s) handed to the suite came back with no result") || !strings.Contains(out, "flow_test.go") ||
+		strings.Contains(out, "unproven: a_test.go") {
+		t.Errorf("the file the suite did not run is named, and only it:\n%s", out)
 	}
 }

@@ -2,7 +2,7 @@
 # @anchors
 #   code: SLFTS
 #   ref: SLCTN
-#   updated_at: 2026-10-11
+#   updated_at: 2026-11-11
 #   layer: feature
 
 @SLCTN
@@ -18,7 +18,7 @@ Feature: RunSelection — a run takes only what is stale and below the minimum, 
   Scenario: The default takes stale below the minimum and never measured, and each flag opens a side
     Given one file in each box and one never measured
     When the selection is made with no flag, with each flag, with both, and with skip-unmeasured
-    Then no flag takes stale-below and never-measured, each flag adds its side, both add fresh passing, and skip-unmeasured drops the never measured
+    Then no flag takes stale-below and never-measured, each flag adds its side (stale passing for a mutation run), both add fresh passing, and skip-unmeasured drops the never measured
 
   @SLCTN-B03 @unit-level
   Scenario: A test file is stale through what it exercises and passes by its own layer
@@ -109,3 +109,16 @@ Feature: RunSelection — a run takes only what is stale and below the minimum, 
     Given a stale failing test and a stale surviving code file, both frozen, beside the same unfrozen
     When the test and the mutation runs select their files
     Then only the unfrozen files run, and each run says it left one frozen file out
+
+  @SLCTN-B17 @unit-level
+  Scenario: A test run takes every stale file by default
+    Given a stale test file that passed once, and a code file with a stale mutation score at the floor
+    When a test run and a mutation run select with no flag
+    Then the test file runs, and the code file stays out as stale but passing
+
+  @SLCTN-B18 @unit-level
+  Scenario: A file the suite does not run is named as unproven
+    Given two never-measured test files, and a suite whose runner reports a result for one of them only
+    When the test run takes both
+    Then the run names the other as handed and come back with no result, and says how to narrow the suite
+

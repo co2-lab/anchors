@@ -59,11 +59,10 @@ func newTestCmd() *cobra.Command {
     junit: "apps/mobile/test-output/junit/e2e.xml"`,
 		usoLongo: `Runs what the PROJECT declared in ` + "`tests:`" + ` and ingests what the run left behind.
 
-  anchors test                    every declared layer: only its files STALE and below the minimum,
-                                  and the never measured (each suite's run_changed: receives them)
+  anchors test                    every declared layer: its STALE files, whatever their last
+                                  result, and the never measured (each suite's run_changed: receives them)
   anchors test --all              every file, through run: — the whole run
   anchors test --include-fresh    also the fresh files below the minimum
-  anchors test --include-passing  also the stale files at the minimum or above
   anchors test --budget 60s       fastest first, until the time is spent
   anchors test unit               unit only
   anchors test unit integration   more than one, in the file's order
@@ -253,7 +252,7 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 	cmd.Flags().StringSliceVar(&changed, "changed", nil, "INCREMENTAL mode: changed file(s) — runs the `run_changed:` over the union of the impact paths, the same slice as `check --changed`")
 	cmd.Flags().BoolVar(&all, "all", false, "run every file of the suites through `run:`, whatever their state — the whole run, as before the state selection")
 	cmd.Flags().BoolVar(&picked.IncludeFresh, "include-fresh", false, "also run files measured at the current version that are below the minimum (by default only STALE files below the minimum run)")
-	cmd.Flags().BoolVar(&picked.IncludePassing, "include-passing", false, "also run stale files at the minimum or above (by default only files BELOW the minimum run); with --include-fresh, fresh passing files too")
+	cmd.Flags().BoolVar(&picked.IncludePassing, "include-passing", false, "mutation: also run stale files at the minimum or above (a test run takes every stale file by default); with --include-fresh, fresh passing files too")
 	cmd.Flags().BoolVar(&picked.SkipUnmeasured, "skip-unmeasured", false, "leave out the files never measured (by default they run)")
 	cmd.Flags().DurationVar(&budget, "budget", 0, "run the files FASTEST FIRST, in batches through `run_changed:`, until this much time is spent (e.g. 60s, 10m); the rest is left for a later run. The order comes from the times recorded by earlier runs; files never timed go last")
 	cmd.Flags().StringVar(&then, "then", "", "on PASSING, chains Anchors commands: `check`, `coverage` (separate by comma). Opt-in — without this, it runs and stops")

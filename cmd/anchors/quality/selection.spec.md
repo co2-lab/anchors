@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SLCTN
-  updated_at: 2026-10-11
+  updated_at: 2026-11-11
   layer: comando
 -->
 # RunSelection — a run takes only what is stale and below the minimum, unless told otherwise
@@ -37,7 +37,7 @@ whole, saying so.
 | Effect | Description |
 | --- | --- |
 | `SLCTN-B01` | A file is placed by two answers — fresh or stale, passing or below the minimum — into one of four boxes; a file with no result is never measured. |
-| `SLCTN-B02` | By default a run takes the files stale and below the minimum and the ones never measured; `--include-fresh` adds the fresh ones below the minimum, `--include-passing` the stale passing ones, both together the fresh passing ones too, and `--skip-unmeasured` leaves out the never measured. |
+| `SLCTN-B02` | By default a run takes the files stale and below the minimum and the ones never measured; `--include-fresh` adds the fresh ones below the minimum, `--include-passing` the stale passing ones of a mutation run (a test run takes them by default, `SLCTN-B17`), both together the fresh passing ones too, and `--skip-unmeasured` leaves out the never measured. |
 | `SLCTN-B03` | A test file is stale when it or anything it exercises changed since its result; its passing is read from the suite's own layer when the file ran in several; a file whose cases were all skipped is not passing. |
 | `SLCTN-B04` | A code file's mutation result is stale when measured at another revision of the file — its own, not the one a later coverage ingestion moves —, and one taken under load — more timed-out mutants than the gate's ceiling — counts as stale; it passes at the report's floor or 70% when the report declares none, and a file where no mutant ran passes. |
 | `SLCTN-B05` | A test file belongs to the suite that timed it; before any time, to the suite whose layer ran it; a file no suite ran is offered to every suite. |
@@ -52,6 +52,8 @@ whole, saying so.
 | `SLCTN-B14` | A test run also takes the test files of the rules a contract field changed since the last commit reaches, when the suite runs them — saying which were added and why —, whatever state their own file is in. |
 | `SLCTN-B15` | The map is read as a build would leave it now: a file edited since the last build has no result — the build drops the result of another version — and is selected as never measured; an unchanged file keeps its result, and so does a file whose edit changed nothing its result proved — a flag of the chains —, as the build carries it. (`currentRevs`) |
 | `SLCTN-B16` | A file a freeze covers is never run, whatever its state, and the run counts it among what it left out, as frozen. (`selectFiles`) |
+| `SLCTN-B17` | A test run takes every stale test file by default, whatever its last result — a stale result is no proof, and `evidence-fresh` refuses it —; a mutation run keeps a stale score at the floor or above out unless `--include-passing`. (`selectFiles`) |
+| `SLCTN-B18` | After a test run, the files handed to a suite that came back with no fresh result are named as unproven, with the way out: narrow the suite's `paths:` to what its runner runs, and declare the suite that runs the others. (`reportUnproven`) |
 
 ## Errors
 

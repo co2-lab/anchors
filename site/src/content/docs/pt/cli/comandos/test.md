@@ -10,11 +10,10 @@ Run the test suites declared in anchors.yaml and ingest the reports.
 ```text
 Runs what the PROJECT declared in `tests:` and ingests what the run left behind.
 
-  anchors test                    every declared layer: only its files STALE and below the minimum,
-                                  and the never measured (each suite's run_changed: receives them)
+  anchors test                    every declared layer: its STALE files, whatever their last
+                                  result, and the never measured (each suite's run_changed: receives them)
   anchors test --all              every file, through run: — the whole run
   anchors test --include-fresh    also the fresh files below the minimum
-  anchors test --include-passing  also the stale files at the minimum or above
   anchors test --budget 60s       fastest first, until the time is spent
   anchors test unit               unit only
   anchors test unit integration   more than one, in the file's order
@@ -45,7 +44,7 @@ anchors test [layers...] [flags]
 | `--budget` | `0s` | run the files FASTEST FIRST, in batches through `run_changed:`, until this much time is spent (e.g. 60s, 10m); the rest is left for a later run. The order comes from the times recorded by earlier runs; files never timed go last |
 | `--changed` |  | INCREMENTAL mode: changed file(s) — runs the `run_changed:` over the union of the impact paths, the same slice as `check --changed` |
 | `--include-fresh` |  | also run files measured at the current version that are below the minimum (by default only STALE files below the minimum run) |
-| `--include-passing` |  | also run stale files at the minimum or above (by default only files BELOW the minimum run); with --include-fresh, fresh passing files too |
+| `--include-passing` |  | mutation: also run stale files at the minimum or above (a test run takes every stale file by default); with --include-fresh, fresh passing files too |
 | `--root` | `.` | project root |
 | `--scope` |  | filters by the declared SCOPE (`isolated`, `full`) — only on mutation. Without this, runs whichever are declared |
 | `--skip-unmeasured` |  | leave out the files never measured (by default they run) |

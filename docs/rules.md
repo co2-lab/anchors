@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:43849175bf5a69be — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:4c9168597ec2482b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3052,7 +3052,7 @@ in `layers/`.
 
 - [SLCTN-B01 — A file is placed by two answers — fresh or stale, passing or below the minimum — into one of four boxes; a file with no result is never measured.](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
-- [SLCTN-B02 — By default a run takes the files stale and below the minimum and the ones never measured; `--include-fresh` adds the fresh ones below the minimum, `--include-passing` the stale passing ones, both together the fresh passing ones too, and `--skip-unmeasured` leaves out the never measured.](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
+- [SLCTN-B02 — By default a run takes the files stale and below the minimum and the ones never measured; `--include-fresh` adds the fresh ones below the minimum, `--include-passing` the stale passing ones of a mutation run (a test run takes them by default, `SLCTN-B17`), both together the fresh passing ones too, and `--skip-unmeasured` leaves out the never measured.](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
 - [SLCTN-B03 — A test file is stale when it or anything it exercises changed since its result; its passing is read from the suite's own layer when the file ran in several; a file whose cases were all skipped is not passing.](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
@@ -3081,6 +3081,10 @@ in `layers/`.
 - [SLCTN-B15 — The map is read as a build would leave it now: a file edited since the last build has no result — the build drops the result of another version — and is selected as never measured; an unchanged file keeps its result, and so does a file whose edit changed nothing its result proved — a flag of the chains —, as the build carries it. (`currentRevs`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
 - [SLCTN-B16 — A file a freeze covers is never run, whatever its state, and the run counts it among what it left out, as frozen. (`selectFiles`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
+
+- [SLCTN-B17 — A test run takes every stale test file by default, whatever its last result — a stale result is no proof, and `evidence-fresh` refuses it —; a mutation run keeps a stale score at the floor or above out unless `--include-passing`. (`selectFiles`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
+
+- [SLCTN-B18 — After a test run, the files handed to a suite that came back with no fresh result are named as unproven, with the way out: narrow the suite's `paths:` to what its runner runs, and declare the suite that runs the others. (`reportUnproven`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
 - [SLCTN-E01 — The map cannot be loaded for a selective run](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
