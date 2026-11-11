@@ -267,6 +267,11 @@ its evidence, and whoever pushes is the reviewer of what the push sends — befo
 A failed review stops the push: fix what it says, review again, and record an ok review. The
 review covers what the branch has beyond its upstream; ` + "`--range <base>..<tip>`" + ` names another.
 
+With ` + "`require_gates`" + `, the blocking gates run again over what the push sends, and a
+` + "`[skip-<gate>@<CODE>: why]`" + ` in a commit message no longer counts: it freed the commit, and
+is settled before the push. Fix each failure; a waiver meant to reach the remote goes in the
+artifact (` + "`@no-*`" + `), where the gate reads it.
+
 ## Pontos de conformidade
 
 The list exists so that nothing is missed by FORGETTING. Each point distils a question

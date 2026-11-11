@@ -22,6 +22,7 @@ import (
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/pushreview"
+	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
 )
 
@@ -242,6 +243,9 @@ func confrontPush(root string, cfg *config.Config, p pushRange) []string {
 			problems = append(problems, i18n.T("push_review.failed", f))
 		}
 	}
+	if cfg.PushReview.RequireGates {
+		problems = append(problems, gatesOverPush(root, cfg, p, files)...)
+	}
 	if cfg.PushReview.RequireJudgment {
 		var g *mapx.Graph
 		if b, ok := gitmeta.AtCommit(root, p.tip, mapx.DefaultPath); ok {
@@ -372,4 +376,117 @@ func suffixAll(items []string, suffix string) []string {
 		out[i] = s + suffix
 	}
 	return out
+}
+
+// gatesOverPush runs the blocking gates — those a commit or a push charges, judgment left to
+// `require_judgment` — over what the pushed files reach, reading every file as the pushed tip
+// holds it, with no waiver: a `[skip-<gate>@<CODE>: why]` in a commit message frees that commit,
+// and is settled before the push. Each failure names the gate, the target, and the pushed commit
+// whose message waived it, when one did.
+func gatesOverPush(root string, cfg *config.Config, p pushRange, files []string) []string {
+	read, err := scan.CommitReader(root, p.tip)
+	if err != nil {
+		return []string{err.Error()}
+	}
+	defer gate.SetFileSource(read)()
+	defer gate.SetChangedSource(func(string, string) (bool, bool) { return false, true })()
+	g := mapAt(root, p.tip)
+	if g == nil {
+		return nil
+	}
+	var present []string
+	for _, f := range files {
+		if _, err := read(f); err == nil {
+			present = append(present, f)
+		}
+	}
+	var gates []config.Gate
+	for _, gc := range cfg.Gates {
+		if !gc.IsJudgment() && (gc.RunsIn("pre-commit") || gc.RunsIn("pre-push")) {
+			gates = append(gates, gc)
+		}
+	}
+	if len(present) == 0 || len(gates) == 0 {
+		return nil
+	}
+	nodes, _, err := selectNodes(g, cfg, false, present, root)
+	if err != nil || len(nodes) == 0 {
+		return nil
+	}
+	messages := pushMessages(root, p.revs)
+	var failed []string
+	for _, r := range gate.RunWithWaiver(gates, nodes, root, g, cfg, false, gate.Waiver{}) {
+		if r.Verdict == gate.Pass || r.Verdict == gate.Skip || r.Verdict == gate.Judge || !r.Blocks() {
+			continue
+		}
+		line := r.Gate + " @ " + r.Target
+		if d := firstLine(r.Detail); d != "" {
+			line += " — " + d
+		}
+		if c := waivedIn(messages, r.Gate, r.Regra); c != "" {
+			line += " " + i18n.T("push_review.waived_in", c)
+		}
+		failed = append(failed, line)
+	}
+	if len(failed) == 0 {
+		return nil
+	}
+	sort.Strings(failed)
+	return []string{i18n.T("push_review.gates_failed", len(failed), bulletList(failed))}
+}
+
+// mapAt is the map as a commit holds it, or the map on disk when the commit holds none.
+func mapAt(root, rev string) *mapx.Graph {
+	if b, ok := gitmeta.AtCommit(root, rev, mapx.DefaultPath); ok {
+		if g, err := mapx.LoadBytes(b, mapx.DefaultPath); err == nil {
+			return g
+		}
+	}
+	g, err := mapx.Load(filepath.Join(root, mapx.DefaultPath))
+	if err != nil {
+		return nil
+	}
+	return g
+}
+
+// pushMessage is a pushed commit's short hash, subject and whole message.
+type pushMessage struct{ short, subject, body string }
+
+// pushMessages are the messages of every commit the range sends, newest first.
+func pushMessages(root string, revs []string) []pushMessage {
+	commits, err := pushreview.Commits(root, revs...)
+	if err != nil {
+		return nil
+	}
+	var out []pushMessage
+	for i := len(commits) - 1; i >= 0; i-- {
+		c := commits[i]
+		body, _ := exec.Command("git", "-C", root, "show", "-s", "--format=%B", c.Hash).Output()
+		out = append(out, pushMessage{short: short(c.Hash), subject: c.Subject, body: string(body)})
+	}
+	return out
+}
+
+// waivedIn is the newest pushed commit whose message waives the gate (`[skip-<gate>` or the
+// rule's id), as `<hash> <subject>`; empty when none does.
+func waivedIn(messages []pushMessage, gateName, rule string) string {
+	for _, m := range messages {
+		for _, id := range []string{gateName, rule} {
+			if id != "" && strings.Contains(m.body, "[skip-"+id) {
+				return m.short + " " + m.subject
+			}
+		}
+	}
+	return ""
+}
+
+func firstLine(s string) string {
+	s = strings.TrimSpace(s)
+	if i := strings.IndexByte(s, '\n'); i >= 0 {
+		s = s[:i]
+	}
+	if len(s) > 160 {
+		s = s[:157] + "..."
+	}
+	return s
 }

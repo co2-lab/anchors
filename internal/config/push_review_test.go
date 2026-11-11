@@ -41,6 +41,10 @@ func TestPushReview_declared(t *testing.T) {
 	if none.Enforced() || none.FileOrDefault() != "REVIEWS.md" || (&PushReview{File: "x.md"}).Enforced() {
 		t.Error("without a demand the push confronts nothing")
 	}
+	c, err = loadPushReview(t, "  require_gates: true\n")
+	if err != nil || !c.PushReview.RequireGates || c.PushReview.Required || !c.PushReview.Enforced() {
+		t.Errorf("only the gates: %+v %v", c.PushReview, err)
+	}
 }
 
 func TestPushReview_refused(t *testing.T) {

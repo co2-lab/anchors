@@ -234,6 +234,8 @@
   "push_review.missing": "%d commit(s) no review covers:\n%s\n\nReview them — `anchors guide review` is the ruler; run the judgment gates while you do — and record the verdict: `anchors push-review --ok \"<what was validated, and how>\" --by <who>` (or --fail \"<what failed>\"). It is written to %s and committed.",
   "push_review.failed": "The latest review of these commits FAILED. Fix what it says, review again, and record an ok review:\n\n%s",
   "push_review.judgment_pending": "%d judgment gate(s) the pushed commits reach have no verdict in the map the push sends:\n%s\n\n`anchors check --changed %s` lists each with its guide; `anchors judge` records each verdict — then commit the map.",
+  "push_review.gates_failed": "%d blocking gate failure(s) over what the push sends, read as its last commit holds them — a waiver in a commit message frees the commit, not the push:\n%s\n\nFix each, or — if the project means it to reach the remote — waive it in the artifact (`@no-*`), which the gate reads.",
+  "push_review.waived_in": "(waived in %s)",
   "gate.waived": "waived: %s",
   "gate.guidance_linked.skip_not_guidance": "not a guidance file",
   "gate.guidance_linked.no_agreement": "`%s` does not exist: the guidance has no working agreement to point to — `anchors init` seeds it from the configuration",

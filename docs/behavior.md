@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:d73ee1729df757c5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:0d3b588d1e546c9e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2727,6 +2727,8 @@ is what the test proves.
 - [Without push_review the push confronts nothing](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook) `PRCMS-B06`
 
 - [The push asks the judgments its changes reach](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook) `PRCMS-B08`
+
+- [The push asks the blocking gates to pass, with no waiver of a commit message](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook) `PRCMS-B09`
 
 - [The quality domain registers exactly its thirteen commands](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command) `QLCMQ-B01`
 
@@ -8357,6 +8359,8 @@ is what the test proves.
 - [A header's writes and reads are the data the file persists and consumes](layers/scan.md#rpscr-b60--a-headers-writes-and-reads-are-the-data-the-file-persists-and-consumes) `RPSCR-B60`
 
 - [A block comment inside a line of code leaves the evidence as if never written](layers/scan.md#rpscr-b61--a-block-comment-inside-a-line-of-code-leaves-the-evidence-as-if-never-written) `RPSCR-B61`
+
+- [The commit reader reads what a commit holds](layers/scan.md#rpscr-b62--the-commit-reader-reads-what-a-commit-holds) `RPSCR-B62`
 
 - [A guide URL that answers nothing fails the walk](layers/scan.md#rpscr-e03--a-guide-url-that-answers-nothing-fails-the-walk) `RPSCR-E03`
 

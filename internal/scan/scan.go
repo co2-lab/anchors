@@ -1483,6 +1483,34 @@ func IndexReader(root string) (func(rel string) ([]byte, error), error) {
 			blobs[filepath.ToSlash(path)] = f[1]
 		}
 	}
+	return blobReader(root, blobs), nil
+}
+
+// CommitReader reads the project's files as a commit has them — what a push sends: a file
+// the commit does not hold does not exist, and a file the tree holds as the commit does is
+// read from the tree. It is what the pushed commits' gates read, so an edit not yet committed
+// is not judged as if it were pushed.
+func CommitReader(root, rev string) (func(rel string) ([]byte, error), error) {
+	out, err := exec.Command("git", "-C", root, "ls-tree", "-r", "-z", rev).Output()
+	if err != nil {
+		return nil, err
+	}
+	blobs := map[string]string{}
+	for _, entry := range strings.Split(string(out), "\x00") {
+		meta, path, ok := strings.Cut(entry, "\t")
+		if !ok {
+			continue
+		}
+		if f := strings.Fields(meta); len(f) == 3 && f[1] == "blob" {
+			blobs[filepath.ToSlash(path)] = f[2]
+		}
+	}
+	return blobReader(root, blobs), nil
+}
+
+// blobReader reads each path as the blob the listing gives it: the tree's copy when its blob
+// hash is that one, the blob otherwise, and nothing for a path the listing does not hold.
+func blobReader(root string, blobs map[string]string) func(rel string) ([]byte, error) {
 	return func(rel string) ([]byte, error) {
 		rel = filepath.ToSlash(filepath.Clean(rel))
 		id, ok := blobs[rel]
@@ -1497,7 +1525,7 @@ func IndexReader(root string) (func(rel string) ([]byte, error), error) {
 			return nil, &os.PathError{Op: "read", Path: rel, Err: os.ErrNotExist}
 		}
 		return b, nil
-	}, nil
+	}
 }
 
 // blobID is git's object id of a blob with this content, in the repository's hash: SHA-1

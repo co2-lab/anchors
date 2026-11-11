@@ -133,6 +133,7 @@ heuristic decided.
 | `RPSCR-B59` | A guide `governs:` reads from a URL enters the scan once, with the URL as declared for its path — its `{{branch}}` kept, so the edges it governs keep their ends — and the revision of the content PTRFS read: a guide changed in its repository, or read from another branch, leaves the edges it governs to be confronted again. It is marked external and belongs to no layer. (`externalGuides`) |
 | `RPSCR-B60` | A header's `writes:` and `reads:` are the data the file persists and consumes, each a comma-separated list of names the project chooses, out of their backticks. (`HeaderData`) |
 | `RPSCR-B61` | A comment inside a line of code leaves the file's evidence revision and its line revision as if never written: it goes out with the blank before it when a blank, a closer or the end of the line follows, and with the blank after it when an opener precedes it — `load(a /* X */)` reads as `load(a)`. (`EvidenceOf`) |
+| `RPSCR-B62` | The commit reader reads a file as a commit holds it — what a push sends: an edit not committed reads as committed, a file the commit does not hold is absent, a file the tree holds as the commit does is read from the tree; a revision git does not know is refused. (`CommitReader`) |
 | `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants

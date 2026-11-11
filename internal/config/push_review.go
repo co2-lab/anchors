@@ -26,6 +26,10 @@ type PushReview struct {
 	// RequireJudgment makes the pre-push hook refuse commits that reach a judgment gate no
 	// verdict answers in the map the push sends.
 	RequireJudgment bool `yaml:"require_judgment,omitempty"`
+	// RequireGates makes the pre-push hook run the blocking gates over what the pushed
+	// commits reach, as the pushed tip holds it, with no waiver a commit message declared: a
+	// waiver frees a commit in the middle of the work, and is settled before the push.
+	RequireGates bool `yaml:"require_gates,omitempty"`
 }
 
 // DefaultReviewFile is where the reviews are written when the project names no file.
@@ -47,9 +51,10 @@ func (p *PushReview) RetentionDays() int {
 	return ExternalSystem{MaxAge: p.Retention}.MaxAgeDays()
 }
 
-// Enforced says whether the pre-push hook confronts anything: a review, or the judgments.
+// Enforced says whether the pre-push hook confronts anything: a review, the judgments, or
+// the blocking gates.
 func (p *PushReview) Enforced() bool {
-	return p != nil && (p.Required || p.RequireJudgment)
+	return p != nil && (p.Required || p.RequireJudgment || p.RequireGates)
 }
 
 // validatePushReview refuses a retention that is not a number of days, and a file outside

@@ -43,3 +43,10 @@ Feature: PushReview — the review of what a push sends, recorded by whoever pus
     Given a repository requiring judgments, whose pushed change reaches a judgment gate with no verdict
     When the push is confronted, an ok review is recorded, the verdict is written to the map, and the map is committed
     Then the push and the review are refused naming the gate and target, the uncommitted verdict answers nothing, and the committed one lets the push through
+
+  @PRCMS-B09 @unit-level
+  Scenario: The push asks the blocking gates to pass, with no waiver of a commit message
+    Given a repository requiring the gates, whose pushed commit breaks a blocking gate and waives it in its message
+    When the push is confronted, the fix is written but not committed, and then committed
+    Then the push is refused naming the gate, the target and the commit that waived it, the uncommitted fix changes nothing, and the committed one lets the push through
+

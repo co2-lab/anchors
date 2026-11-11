@@ -779,7 +779,7 @@ func TestSpecGuide_sectionsALayerCallsFor(t *testing.T) {
 func TestReviewGuideTeachesThePushReview(t *testing.T) {
 	t.Run("GVGDG-B32: The review guide teaches the review the push carries", func(t *testing.T) {})
 	review := flat(guideIn(t, "review"))
-	for _, want := range []string{"push_review", "anchors judge", "commit the map", "anchors push-review --ok", "--fail", "WHAT you validated and HOW", "A failed review stops the push"} {
+	for _, want := range []string{"push_review", "anchors judge", "commit the map", "anchors push-review --ok", "--fail", "WHAT you validated and HOW", "A failed review stops the push", "require_gates", "settled before the push"} {
 		if !strings.Contains(review, want) {
 			t.Errorf("the review guide lacks %q", want)
 		}

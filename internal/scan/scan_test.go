@@ -1502,3 +1502,37 @@ func TestEvidenceOf_blockCommentInsideCode(t *testing.T) {
 		t.Error("the code's own spacing still moves the evidence")
 	}
 }
+
+func TestCommitReader(t *testing.T) {
+	t.Run("RPSCR-B62: The commit reader reads what a commit holds", func(t *testing.T) {})
+	root := t.TempDir()
+	git := func(args ...string) {
+		t.Helper()
+		if out, err := exec.Command("git", append([]string{"-C", root, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)...).CombinedOutput(); err != nil {
+			t.Skipf("git %v: %v %s", args, err, out)
+		}
+	}
+	git("init", "-q")
+	must(t, writeDeep(filepath.Join(root, "a.spec.md"), "# A v1\n"))
+	must(t, writeDeep(filepath.Join(root, "d", "same.md"), "# same\n"))
+	git("add", ".")
+	git("commit", "-qm", "base")
+	must(t, writeDeep(filepath.Join(root, "a.spec.md"), "# A v2, not committed\n"))
+	must(t, writeDeep(filepath.Join(root, "b.spec.md"), "# B, staged only\n"))
+	git("add", "b.spec.md")
+	read, err := CommitReader(root, "HEAD")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for rel, want := range map[string]string{"a.spec.md": "# A v1\n", "./d/same.md": "# same\n"} {
+		if b, err := read(rel); err != nil || string(b) != want {
+			t.Errorf("%s reads %q, got %q %v", rel, want, b, err)
+		}
+	}
+	if _, err := read("b.spec.md"); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("a file the commit does not hold is absent, got %v", err)
+	}
+	if _, err := CommitReader(root, "nope"); err == nil {
+		t.Error("a revision git does not know has nothing to read")
+	}
+}

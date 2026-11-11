@@ -21,7 +21,7 @@ verdict:
 The review goes to the file `push_review.file` names (REVIEWS.md by default), newest first, as
 PRVLS writes it, and is committed alone. The pre-push hook runs `anchors push-review verify`
 with the refs git hands it. A commit no ok review covers stops the push, and so does one that
-reaches a judgment gate no verdict answers in the map the push sends.
+reaches a judgment gate no verdict answers in the map the push sends, and — with `require_gates` — one a blocking gate fails over, whatever a commit message waived: that waiver frees the commit, not the push.
 
 The range is what the branch has beyond its upstream, or beyond every remote branch when it has
 none, unless `--range <base>..<tip>` names it. A commit that changes only the reviews' file and the
@@ -48,6 +48,7 @@ map owes no review, so the review's own commit, and the map's judgments, push wi
 | `PRCMS-B06` | Without `push_review`, or with neither demand, the push confronts nothing. |
 | `PRCMS-B07` | Writing a review drops those older than `push_review.retention`. |
 | `PRCMS-B08` | With `push_review.require_judgment`, a push whose changed files reach a judgment gate with no verdict in the map the pushed tip holds is refused, naming each gate and target, and so is an ok review recorded over them; a verdict in a map the push does not send answers nothing. |
+| `PRCMS-B09` | With `push_review.require_gates`, the blocking gates a commit or a push charges — judgment left to `require_judgment` — run over what the pushed files reach, every file read as the pushed tip holds it, with no waiver a commit message declared; each failure refuses the push naming the gate, the target and the pushed commit whose message waived it, and an edit not committed is not what the push sends. (`gatesOverPush`) |
 
 ## Errors
 

@@ -559,6 +559,7 @@ push_review:
   file: REVIEWS.md        # where the reviews are written (the default)
   retention: 30d          # writing a review drops those older; empty keeps them all
   require_judgment: true  # each judgment gate the pushed commits reach has a verdict
+  require_gates: true     # the blocking gates pass over what the push sends, no waiver
 ```
 
 Off unless declared. The pre-push hook runs `anchors push-review verify` with the refs the push
@@ -573,6 +574,11 @@ sends (`anchors install-hooks --force` brings the hook up to date):
 - **`require_judgment`** — each judgment gate the pushed commits reach has a verdict
   (`anchors judge`) in the map the push sends; an ok review is not recorded over one still
   awaiting. It works with or without `required`.
+- **`require_gates`** — the blocking gates a commit or a push charges run over what the pushed
+  commits reach, each file read as the pushed tip holds it, and no waiver a commit message
+  declared (`[skip-<gate>@<CODE>: why]`) counts: it frees the commit in the middle of the work,
+  and is settled before the push. A failure refuses the push naming the gate, the target and the
+  commit that waived it. A waiver meant to reach the remote goes in the artifact (`@no-*`).
 - **`retention`** — days a review stays in the file; older ones are dropped when one is written.
 
 ---

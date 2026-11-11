@@ -194,3 +194,26 @@ func TestPushReview_judgments(t *testing.T) {
 		t.Errorf("a judgment the pushed map answers: %v", err)
 	}
 }
+
+func TestPushReviewVerify_gatesWithoutWaivers(t *testing.T) {
+	t.Run("PRCMS-B09: With require_gates, a blocking gate failing over what the push sends refuses it, whatever a commit message waived, read as the pushed tip holds the files", func(t *testing.T) {})
+	englishOutput(t)
+	yaml := "version: 2\nlayers:\n  code:\n    kind: code\n    pattern: \"*.go\"\ngates:\n  - name: no-forbidden\n    on: [code]\n    blocking: true\n    run: \"! grep -q FORBIDDEN \\\"$1\\\"\"\npush_review:\n  require_gates: true\n"
+	root, base := pushRepo(t, yaml, checkGraph())
+	writeQ(t, root, "a.go", "package a\n\n// FORBIDDEN\n")
+	gitIn(t, root, "commit", "-q", "-am", "feat: y\n\n[skip-no-forbidden@a.go: fixed before the push]")
+	waiver := pushHead(t, root)[:8]
+	rng := base + "..HEAD"
+	_, err := runQ(t, newPushReviewVerifyCmd(), "--root", root, "--range", rng)
+	if err == nil || !strings.Contains(err.Error(), "no-forbidden @ a.go") || !strings.Contains(err.Error(), "waived in "+waiver+" feat: y") {
+		t.Fatalf("a failure a commit message waived: %v", err)
+	}
+	writeQ(t, root, "a.go", "package a\n")
+	if _, err := runQ(t, newPushReviewVerifyCmd(), "--root", root, "--range", rng); err == nil {
+		t.Error("a fix not committed is not what the push sends")
+	}
+	gitIn(t, root, "commit", "-q", "-am", "fix: y")
+	if _, err := runQ(t, newPushReviewVerifyCmd(), "--root", root, "--range", rng); err != nil {
+		t.Errorf("the committed fix lets the push through: %v", err)
+	}
+}

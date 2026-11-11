@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:4c9168597ec2482b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:d4b445410d9388bb — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -1446,7 +1446,7 @@ in `layers/`.
 
 - [GVGDG-B31 — The spec guide says a layer may declare the sections its code calls for (`requires_sections`), that `section-required` fails a spec missing one its code triggers, and that a unit with none of it writes the section saying so.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
-- [GVGDG-B32 — The review guide says that with `push_review` whoever pushes reviews what the push sends: runs the judgment gates the commits reach and commits the map, reviews with the guide's ruler, and records the verdict with `anchors push-review --ok` or `--fail`, saying what was validated and how; a failed review stops the push until an ok one.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
+- [GVGDG-B32 — The review guide says that with `push_review` whoever pushes reviews what the push sends: runs the judgment gates the commits reach and commits the map, reviews with the guide's ruler, and records the verdict with `anchors push-review --ok` or `--fail`, saying what was validated and how; a failed review stops the push until an ok one; and with `require_gates`, a commit-message waiver is settled before the push, a waiver meant for the remote going in the artifact.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
 - [GVGDG-B21 — The spec guide ties every validation of a visual unit to a State Flow transition (or `@no-state: <reason>`) and every error to the message it shows (or `@no-message: <reason>`), and the test and feature guides ask a visual-regression capture of every message as of every state.](layers/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on)
 
@@ -2996,6 +2996,8 @@ in `layers/`.
 
 - [PRCMS-B08 — With `push_review.require_judgment`, a push whose changed files reach a judgment gate with no verdict in the map the pushed tip holds is refused, naming each gate and target, and so is an ok review recorded over them; a verdict in a map the push does not send answers nothing.](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
 
+- [PRCMS-B09 — With `push_review.require_gates`, the blocking gates a commit or a push charges — judgment left to `require_judgment` — run over what the pushed files reach, every file read as the pushed tip holds it, with no waiver a commit message declared; each failure refuses the push naming the gate, the target and the pushed commit whose message waived it, and an edit not committed is not what the push sends. (`gatesOverPush`)](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
+
 - [PRCMS-E01 — No verdict, both verdicts, no `--by`, or a range with no commit that owes a review.](layers/comando.md#prcms--pushreview--the-review-of-what-a-push-sends-recorded-by-whoever-pushes-and-confronted-by-the-pre-push-hook)
 
 ### [QLCMQ — QualityCommands — the quality domain puts its thirteen commands under the root command](layers/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-thirteen-commands-under-the-root-command)
@@ -3776,7 +3778,7 @@ in `layers/`.
 
 ### [PSRSA — PushReview — the evidence each push carries: a review of its commits and the judgments they reach](layers/config.md#psrsa--pushreview--the-evidence-each-push-carries-a-review-of-its-commits-and-the-judgments-they-reach)
 
-- [PSRSA-B01 — The section declares whether a push needs a review, whether it needs the judgments, where the reviews are written — `REVIEWS.md` when it names no file — and how many days a review stays; with no retention every review stays, and with neither demand the push confronts nothing. (`PushReview`, `FileOrDefault`, `RetentionDays`, `Enforced`)](layers/config.md#psrsa--pushreview--the-evidence-each-push-carries-a-review-of-its-commits-and-the-judgments-they-reach)
+- [PSRSA-B01 — The section declares whether a push needs a review, whether it needs the judgments, whether it needs the blocking gates to pass, where the reviews are written — `REVIEWS.md` when it names no file — and how many days a review stays; with no retention every review stays, and with neither demand the push confronts nothing. (`PushReview`, `FileOrDefault`, `RetentionDays`, `Enforced`)](layers/config.md#psrsa--pushreview--the-evidence-each-push-carries-a-review-of-its-commits-and-the-judgments-they-reach)
 
 - [PSRSA-E01 — A `retention` that is not a number of days, or a `file` that is absolute or outside the project.](layers/config.md#psrsa--pushreview--the-evidence-each-push-carries-a-review-of-its-commits-and-the-judgments-they-reach)
 
@@ -9195,6 +9197,8 @@ in `layers/`.
 - [RPSCR-B60 — A header's `writes:` and `reads:` are the data the file persists and consumes, each a comma-separated list of names the project chooses, out of their backticks. (`HeaderData`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B61 — A comment inside a line of code leaves the file's evidence revision and its line revision as if never written: it goes out with the blank before it when a blank, a closer or the end of the line follows, and with the blank after it when an opener precedes it — `load(a /* X */)` reads as `load(a)`. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+
+- [RPSCR-B62 — The commit reader reads a file as a commit holds it — what a push sends: an edit not committed reads as committed, a file the commit does not hold is absent, a file the tree holds as the commit does is read from the tree; a revision git does not know is refused. (`CommitReader`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B38 — `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition.](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 

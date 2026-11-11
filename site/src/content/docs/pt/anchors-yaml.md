@@ -566,6 +566,7 @@ push_review:
   file: REVIEWS.md        # onde os reviews são gravados (o padrão)
   retention: 30d          # gravar um review descarta os mais antigos; vazio guarda todos
   require_judgment: true  # cada gate de julgamento que os commits alcançam tem veredito
+  require_gates: true     # os gates bloqueantes passam sobre o que o push envia, sem dispensa
 ```
 
 Desligado se não for declarado. O hook pre-push roda `anchors push-review verify` com as refs que
@@ -580,6 +581,11 @@ o push envia (`anchors install-hooks --force` atualiza o hook):
 - **`require_judgment`** — cada gate de julgamento que os commits do push alcançam tem veredito
   (`anchors judge`) no mapa que o push envia; um review ok não é registrado sobre um que ainda
   aguarda. Vale com ou sem `required`.
+- **`require_gates`** — os gates bloqueantes que o commit ou o push cobram rodam sobre o que os
+  commits do push alcançam, cada arquivo lido como o último commit do push o tem, e nenhuma
+  dispensa de mensagem de commit (`[skip-<gate>@<CÓDIGO>: motivo]`) vale: ela libera o commit no
+  meio do trabalho, e é resolvida antes do push. Uma reprovação recusa o push nomeando o gate, o
+  alvo e o commit que a dispensou. Dispensa que deve chegar ao remoto vai no artefato (`@no-*`).
 - **`retention`** — dias que um review fica no arquivo; os mais antigos saem quando um novo é
   gravado.
 

@@ -20,22 +20,25 @@ push_review:
   file: REVIEWS.md        # where the reviews are written (the default)
   retention: 30d          # writing a review drops those older; empty keeps them all
   require_judgment: true  # each judgment gate the pushed commits reach has a verdict in the map
+  require_gates: true     # the blocking gates pass over what the pushed commits reach, no waiver
 ```
 
-The two demands are independent: a project may ask for the judgments without a review, or the
-reverse. Without the section, the push confronts neither.
+The demands are independent: a project may ask for the judgments or the gates without a review,
+or the reverse. A commit-message waiver (`[skip-<gate>@<CODE>: why]`) frees a commit in the
+middle of the work; with `require_gates` it is settled before the push, and a waiver meant to
+reach the remote is one the artifact carries (`@no-*`), which the gate reads. Without the section, the push confronts neither.
 
 ## Domain
 
 | Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
-| `push_review` | `required` and `require_judgment` as booleans, a `file` inside the project, a `retention` in days (`30d`) | a `retention` that is not days, a `file` that is absolute or leaves the project | this unit: refuses the configuration (`PSRSA-E01`) |
+| `push_review` | `required`, `require_judgment` and `require_gates` as booleans, a `file` inside the project, a `retention` in days (`30d`) | a `retention` that is not days, a `file` that is absolute or leaves the project | this unit: refuses the configuration (`PSRSA-E01`) |
 
 ## Effects
 
 | Effect | Description |
 | --- | --- |
-| `PSRSA-B01` | The section declares whether a push needs a review, whether it needs the judgments, where the reviews are written — `REVIEWS.md` when it names no file — and how many days a review stays; with no retention every review stays, and with neither demand the push confronts nothing. (`PushReview`, `FileOrDefault`, `RetentionDays`, `Enforced`) |
+| `PSRSA-B01` | The section declares whether a push needs a review, whether it needs the judgments, whether it needs the blocking gates to pass, where the reviews are written — `REVIEWS.md` when it names no file — and how many days a review stays; with no retention every review stays, and with neither demand the push confronts nothing. (`PushReview`, `FileOrDefault`, `RetentionDays`, `Enforced`) |
 
 ## Errors
 

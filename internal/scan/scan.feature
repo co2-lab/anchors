@@ -409,6 +409,12 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     When their evidence is read, and then with the code's own spacing changed
     Then they have one evidence and one line revision, and the spacing moves the evidence
 
+  @RPSCR-B62 @unit-level
+  Scenario: The commit reader reads what a commit holds
+    Given a repository with a committed file edited after, a file only staged, and one unchanged
+    When the files are read as HEAD holds them, and as a revision git does not know
+    Then the edited one reads as committed, the staged one is absent, the unchanged one reads, and the unknown revision is refused
+
   @RPSCR-E03 @unit-level
   Scenario: A guide URL that answers nothing fails the walk
     Given a guide URL the server does not have

@@ -234,6 +234,8 @@
   "push_review.missing": "%d commit(s) que ningún review cubre:\n%s\n\nRevísalos — `anchors guide review` es la regla; ejecuta los gates de juicio durante el review — y registra el veredicto: `anchors push-review --ok \"<qué se validó, y cómo>\" --by <quién>` (o --fail \"<qué falló>\"). Se graba en %s y se hace commit.",
   "push_review.failed": "El último review de estos commits FALLÓ. Corrige lo que dice, revisa de nuevo y registra un review ok:\n\n%s",
   "push_review.judgment_pending": "%d gate(s) de juicio que los commits del push alcanzan no tienen veredicto en el mapa que el push envía:\n%s\n\n`anchors check --changed %s` lista cada uno con su guía; `anchors judge` graba cada veredicto — luego haz commit del mapa.",
+  "push_review.gates_failed": "%d fallo(s) de gate bloqueante sobre lo que el push envía, leído como lo tiene su último commit — una dispensa en el mensaje de commit libera el commit, no el push:\n%s\n\nCorrige cada uno o, si el proyecto quiere llevarlo al remoto, dispénsalo en el artefacto (`@no-*`), que el gate lee.",
+  "push_review.waived_in": "(dispensado en %s)",
   "gate.waived": "eximido: %s",
   "gate.guidance_linked.skip_not_guidance": "no es un archivo de orientación",
   "gate.guidance_linked.no_agreement": "`%s` no existe: la orientación no tiene acuerdo de trabajo al que apuntar — `anchors init` lo siembra desde la configuración",
