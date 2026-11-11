@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:332754fceb2f9027 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:95c8bf50cc4b2380 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 94 units and 1463 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 95 units and 1466 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -65,6 +65,27 @@ nothing the tests do reaches it.
 - **BRCOV-B04** — A node that is not code is skipped; a node with no coverage, or coverage of another revision, is pending; a coverage with no branch is skipped.
 
 - **BRCOV-B05** — A file a coverage report listed with no instrumentable line is skipped, and one a whole run of its suite left out of the report is a divergence, as `line-coverage` reads them. (`coverageAbsence`)
+
+
+## BYPRS — BypassProven — a path the code skips while a test runs is run by a suite that reaches it
+
+An effect the code skips while a test runs is proven by no test that skips it. Measured in MIF
+(MIF-1S): a hook returned early under `EXPO_PUBLIC_E2E` so the visual captures stayed clean; the
+unit tests doubled the write, the end-to-end skipped it, and nothing ran it — the write reached
+the store review broken.
+
+The project declares its bypasses and the suite layers that run the skipped path
+(`test_bypass:`, TBYSA). A code file with a bypass asks a test of its own — derived beside it,
+importing it, or testing its spec's feature — that passed in one of those layers. A bypass whose
+path is proven elsewhere, or that guards nothing a test must run, waives it with
+`@no-bypass-proof: <reason>` on its line or the line above.
+
+
+- **BYPRS-B01** — A code file with a bypass not waived, no test of which passed in a `proven_by` layer, fails, naming the bypasses' lines and the layers; one with such a test passes. (`checkBypassProven`)
+
+- **BYPRS-B02** — A project that declares no bypass, a file that is no code, or one whose every bypass is waived with a reason on its line or the line above, is skipped.
+
+- **BYPRS-E01** — No map is built.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code

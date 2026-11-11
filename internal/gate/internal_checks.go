@@ -94,6 +94,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"reads-written":                   checkReadsWritten,
 	"external-proven":                 checkExternalProven,
 	"recording-current":               checkRecordingCurrent,
+	"bypass-proven":                   checkBypassProven,
 	"header-layer-declared":           checkHeaderLayerDeclared,
 	"presentation-exhaustive":         checkPresentationExhaustive,
 	"presentation-conflict":           checkPresentationConflict,

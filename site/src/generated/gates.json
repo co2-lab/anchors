@@ -346,6 +346,10 @@
         "slug": "docs/gates/external-proven"
       },
       {
+        "label": "bypass-proven",
+        "slug": "docs/gates/bypass-proven"
+      },
+      {
         "label": "circular",
         "slug": "docs/gates/circular"
       },

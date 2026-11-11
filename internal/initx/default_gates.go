@@ -760,6 +760,11 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		})
 
 		gates = append(gates, config.Gate{
+			Name: "bypass-proven", ID: "bypass-proven", On: []string{"code"}, Check: "bypass-proven",
+			Blocking: config.Bool(false), Measures: "a path the code skips while a test runs (`test_bypass:`) is run by a suite that reaches it",
+		})
+
+		gates = append(gates, config.Gate{
 			Name: "reads-written", ID: "reads-written", On: []string{"code"}, Check: "reads-written",
 			Blocking: config.Bool(false), Measures: "every data a header reads (`reads:`) is written by some file's header (`writes:`)",
 		})

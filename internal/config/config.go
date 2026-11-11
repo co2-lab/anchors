@@ -150,6 +150,9 @@ type Config struct {
 	// ExternalSystems are the real systems the code talks to, and the suite layers that reach
 	// them: a code file that calls one is proven by a test that ran in such a suite.
 	ExternalSystems []ExternalSystem `yaml:"external_systems,omitempty"`
+	// TestBypass is how the code skips an effect while a test runs, and the suites whose
+	// proofs run the path it skips.
+	TestBypass *TestBypass `yaml:"test_bypass,omitempty"`
 	// Logs diz ONDE estão os logs — e só isso, porque só isso é preciso.
 	//
 	// O FORMATO não entra aqui, e a razão é o que torna a varredura possível sem ditar
@@ -2206,6 +2209,9 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := validateExternalSystems(c.ExternalSystems); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := validateTestBypass(c.TestBypass); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := c.applyProjectSeverity(); err != nil {

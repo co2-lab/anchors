@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:d97b9a6c5cdfe68a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:a6dcf6825e665f95 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3754,6 +3754,12 @@ in `layers/`.
 
 - [PRRPR-X01 — An explicit root is made absolute and never walked above, even when a directory above it holds a project.](layers/config.md#prrpr--projectrootresolution--the-project-root-a-command-works-on)
 
+### [TBYSA — TestBypass — how the code skips an effect while a test runs, and the suites that run it](layers/config.md#tbysa--testbypass--how-the-code-skips-an-effect-while-a-test-runs-and-the-suites-that-run-it)
+
+- [TBYSA-B01 — The project declares the patterns of its bypasses and the suite layers that run the skipped path. (`TestBypass`, `PatternREs`)](layers/config.md#tbysa--testbypass--how-the-code-skips-an-effect-while-a-test-runs-and-the-suites-that-run-it)
+
+- [TBYSA-E01 — No pattern, an empty or invalid pattern, or no `proven_by` layer.](layers/config.md#tbysa--testbypass--how-the-code-skips-an-effect-while-a-test-runs-and-the-suites-that-run-it)
+
 ### [GTVCG — GateVocabulary — the list of default gate names, injected into the configuration layer](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
 - [GTVCG-B01 — With no source registered, the default gate names are absent, and asking is not a failure (`DefaultGateNamesForTest`).](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
@@ -3843,6 +3849,14 @@ in `layers/`.
 - [BRCOV-B04 — A node that is not code is skipped; a node with no coverage, or coverage of another revision, is pending; a coverage with no branch is skipped.](layers/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has)
 
 - [BRCOV-B05 — A file a coverage report listed with no instrumentable line is skipped, and one a whole run of its suite left out of the report is a divergence, as `line-coverage` reads them. (`coverageAbsence`)](layers/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has)
+
+### [BYPRS — BypassProven — a path the code skips while a test runs is run by a suite that reaches it](layers/gate.md#byprs--bypassproven--a-path-the-code-skips-while-a-test-runs-is-run-by-a-suite-that-reaches-it)
+
+- [BYPRS-B01 — A code file with a bypass not waived, no test of which passed in a `proven_by` layer, fails, naming the bypasses' lines and the layers; one with such a test passes. (`checkBypassProven`)](layers/gate.md#byprs--bypassproven--a-path-the-code-skips-while-a-test-runs-is-run-by-a-suite-that-reaches-it)
+
+- [BYPRS-B02 — A project that declares no bypass, a file that is no code, or one whose every bypass is waived with a reason on its line or the line above, is skipped.](layers/gate.md#byprs--bypassproven--a-path-the-code-skips-while-a-test-runs-is-run-by-a-suite-that-reaches-it)
+
+- [BYPRS-E01 — No map is built.](layers/gate.md#byprs--bypassproven--a-path-the-code-skips-while-a-test-runs-is-run-by-a-suite-that-reaches-it)
 
 ### [CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code)
 

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:c3c3460d9ca0ee99 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:8bbde0a55a9c265e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -3422,6 +3422,10 @@ is what the test proves.
 
 - [An explicit root is made absolute and never walked above](layers/config.md#prrpr-x01--an-explicit-root-is-made-absolute-and-never-walked-above) `PRRPR-X01`
 
+- [The project declares its bypasses and the layers that run the skipped path](layers/config.md#tbysa-b01--the-project-declares-its-bypasses-and-the-layers-that-run-the-skipped-path) `TBYSA-B01`
+
+- [A bypass declaration that cannot hold refuses the configuration](layers/config.md#tbysa-e01--a-bypass-declaration-that-cannot-hold-refuses-the-configuration) `TBYSA-E01`
+
 - [With no source registered, the default gate names are absent, not a failure](layers/config.md#gtvcg-b01--with-no-source-registered-the-default-gate-names-are-absent-not-a-failure) `GTVCG-B01`
 
 - [With a source registered, the default gate names are the ones it gives](layers/config.md#gtvcg-b02--with-a-source-registered-the-default-gate-names-are-the-ones-it-gives) `GTVCG-B02`
@@ -3499,6 +3503,12 @@ is what the test proves.
 - [Nothing to measure is skipped or pending](layers/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B04`
 
 - [Branch coverage reads a file with nothing to cover as line coverage does](layers/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B05`
+
+- [A bypass with no test passed in a suite that runs its path fails](layers/gate.md#byprs--bypassproven--a-path-the-code-skips-while-a-test-runs-is-run-by-a-suite-that-reaches-it) `BYPRS-B01`
+
+- [Outside its subject the gate is skipped](layers/gate.md#byprs--bypassproven--a-path-the-code-skips-while-a-test-runs-is-run-by-a-suite-that-reaches-it) `BYPRS-B02`
+
+- [Without a map the gate is pending](layers/gate.md#byprs--bypassproven--a-path-the-code-skips-while-a-test-runs-is-run-by-a-suite-that-reaches-it) `BYPRS-E01`
 
 - [An artifact that is not a spec leaves without a verdict](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B01`
 

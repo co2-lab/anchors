@@ -108,6 +108,7 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | [`sibling-guard`](/pt/docs/gates/sibling-guard/) | `code` | Sibling functions handle the same parameter consistently |
 | [`proof-crosses-boundary`](/pt/docs/gates/proof-crosses-boundary/) | `spec` | A rule asserting a relation with another unit has the code importing that unit |
 | [`external-proven`](/pt/docs/gates/external-proven/) | `code` | A file that calls a declared external system has a test that passed in a suite reaching it |
+| [`bypass-proven`](/pt/docs/gates/bypass-proven/) | `code` | A path the code skips while a test runs (`test_bypass:`) is run by a suite that reaches it |
 | [`circular`](/pt/docs/gates/circular/) | `code` | There is no import cycle between modules |
 | [`deadcode`](/pt/docs/gates/deadcode/) | `code` | There is no orphan export, symbol or file in the project |
 
