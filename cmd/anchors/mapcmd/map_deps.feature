@@ -24,3 +24,9 @@ Feature: MapDeps — the dependency tree of a file
     Given two files reaching the transactions table and one reaching the Stripe API
     When the db resources are listed
     Then transactions is listed with both files, and Stripe is not
+
+  @MDCMP-B04 @unit-level
+  Scenario: --flat prints the closure as sorted paths, one per line
+    Given a handler that uses a service, which uses a client, and the client uses the service back
+    When the closure is asked down, up from the client, and down with depth 1
+    Then each file of the closure appears once, sorted, the start included, and depth 1 stops at the service

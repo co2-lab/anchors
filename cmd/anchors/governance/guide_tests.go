@@ -95,6 +95,11 @@ and still not that proof. A response recorded from the real system says where an
 from, on a line of its own: ` + "`@recorded: stripe 2025-09-30.dahlia 2026-10-02`" + ` — when the
 project moves to another version of the API, or the recording passes its age, record it again.
 
+A path the code SKIPS while a test runs — an early return under an end-to-end flag, a write
+left out under CI — is proven by no test that skips it. When the project declares its bypasses
+(` + "`test_bypass:`" + `), a file with one needs a test that ran the skipped path in a suite that
+reaches it, or ` + "`@no-bypass-proof: <reason>`" + ` on the bypass saying where it is proven.
+
 ## Environment safety (when the test touches external state)
 
 - DISCOVER THE ENVIRONMENT BY IDENTITY, NOT BY NAME. Validate that the resources belong

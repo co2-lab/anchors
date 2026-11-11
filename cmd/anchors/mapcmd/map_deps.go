@@ -20,6 +20,7 @@ func newMapDepsCmd() *cobra.Command {
 	var up bool
 	var depth int
 	var kind string
+	var flat bool
 	cmd := &cobra.Command{
 		Use:   "deps <CODE|file> | --kind <kind>",
 		Short: "The dependency tree of a file: what it uses, or who uses it (--up)",
@@ -29,6 +30,8 @@ code's ` + "`@dep:`" + ` flags declare:
   anchors map deps TOKNS              — what the file of code TOKNS uses, down the tree
   anchors map deps src/theme/tokens.ts --up   — who uses it, up the tree
   anchors map deps ARSCR --depth 2    — two levels
+  anchors map deps HANDL --flat       — every file the handler reaches, one path per line, for
+                                        a script to cross with its env, tables or grants
   anchors map deps --kind db          — each database resource the code reaches, and the files
                                         that reach it (` + "`@dep[db]: <name>`" + `)`,
 		Args: cobra.RangeArgs(0, 1),
@@ -54,6 +57,12 @@ code's ` + "`@dep:`" + ` flags declare:
 			if start == "" {
 				return fmt.Errorf("%s is no code nor file of the map", args[0])
 			}
+			if flat {
+				for _, l := range DepsClosure(g, start, up, depth) {
+					fmt.Fprintln(cmd.OutOrStdout(), l)
+				}
+				return nil
+			}
 			for _, l := range DepsTree(g, start, up, depth) {
 				fmt.Fprintln(cmd.OutOrStdout(), l)
 			}
@@ -63,6 +72,7 @@ code's ` + "`@dep:`" + ` flags declare:
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().BoolVar(&up, "up", false, "who uses the file, instead of what it uses")
 	cmd.Flags().IntVar(&depth, "depth", 0, "levels to print (0 = all)")
+	cmd.Flags().BoolVar(&flat, "flat", false, "the closure as paths, one per line and sorted, the file itself included")
 	cmd.Flags().StringVar(&kind, "kind", "", "list the resources of a kind (`db`, `api`…) and the files that reach each")
 	return cmd
 }
@@ -159,5 +169,43 @@ func DepsTree(g *mapx.Graph, start string, up bool, depth int) []string {
 		delete(branch, id)
 	}
 	walk(start, 0, map[string]bool{})
+	return out
+}
+
+// DepsClosure is every file of the tree DepsTree prints — the start included —, each once, as
+// a path, sorted: the shape a script reads to cross the closure with what it checks (the
+// environment a handler's dependencies read, the tables they touch).
+func DepsClosure(g *mapx.Graph, start string, up bool, depth int) []string {
+	next := map[string][]string{}
+	for _, e := range g.Edges {
+		if e.Type != mapx.EdgeDependsOn {
+			continue
+		}
+		if up {
+			next[e.To] = append(next[e.To], e.From)
+		} else {
+			next[e.From] = append(next[e.From], e.To)
+		}
+	}
+	level := map[string]int{start: 0}
+	queue := []string{start}
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		if depth > 0 && level[cur] >= depth {
+			continue
+		}
+		for _, k := range next[cur] {
+			if _, ok := level[k]; !ok {
+				level[k] = level[cur] + 1
+				queue = append(queue, k)
+			}
+		}
+	}
+	out := make([]string, 0, len(level))
+	for p := range level {
+		out = append(out, p)
+	}
+	sort.Strings(out)
 	return out
 }

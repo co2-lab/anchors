@@ -49,6 +49,8 @@ code's `@dep:` flags declare:
   anchors map deps TOKNS              — what the file of code TOKNS uses, down the tree
   anchors map deps src/theme/tokens.ts --up   — who uses it, up the tree
   anchors map deps ARSCR --depth 2    — two levels
+  anchors map deps HANDL --flat       — every file the handler reaches, one path per line, for
+                                        a script to cross with its env, tables or grants
   anchors map deps --kind db          — each database resource the code reaches, and the files
                                         that reach it (`@dep[db]: <name>`)
 ```
@@ -64,6 +66,7 @@ anchors map deps <CODE|file> | --kind <kind> [flags]
 | Flag | Default | What it does |
 | --- | --- | --- |
 | `--depth` | `0` | levels to print (0 = all) |
+| `--flat` |  | the closure as paths, one per line and sorted, the file itself included |
 | `--kind` |  | list the resources of a kind (`db`, `api`…) and the files that reach each |
 | `--root` | `.` | project root |
 | `--up` |  | who uses the file, instead of what it uses |

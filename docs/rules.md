@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:a6dcf6825e665f95 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:9d37e1a921d5a9a9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -1779,6 +1779,8 @@ in `layers/`.
 - [MDCMP-B02 — The file is named by its own code first, then by its unit's code (its code file), then by its path; a name that is none of them is refused. (`resolveDepsStart`)](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file)
 
 - [MDCMP-B03 — `--kind <kind>` lists each resource of that kind the code reaches, by name, and under each the files that reach it, by their codes. (`ResourceUsers`)](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file)
+
+- [MDCMP-B04 — `--flat` prints the closure the tree would — down or, with `--up`, up, within `--depth` — as paths, the file itself included, each once and sorted, one per line: what a script reads to cross the closure with the environment, tables or grants it checks. (`DepsClosure`)](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file)
 
 - [MDCMP-E01 — REF[MDCMP-B02]: a name that is no code nor file of the map is refused, naming it](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file)
 

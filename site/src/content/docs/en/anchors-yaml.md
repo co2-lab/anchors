@@ -249,6 +249,22 @@ another version, diverging on one older than `max_age`.
 
 ---
 
+## `test_bypass` — what the code skips while a test runs
+
+```yaml
+test_bypass:
+  patterns:
+    - "process\\.env\\.EXPO_PUBLIC_E2E === 'true'\\)\\s*return"
+  proven_by: [integration]              # the suite layers that run the skipped path
+```
+
+An effect skipped while a test runs is proven by no test that skips it.
+[`bypass-proven`](/docs/gates/bypass-proven/) asks each code file with a bypass for a test of its
+own that passed in a `proven_by` layer; `@no-bypass-proof: <reason>` on the bypass's line, or the
+line above, waives it.
+
+---
+
 ## `gates` — what gets confronted
 
 This block has [its own page](/docs/gates/), being the longest. The minimal

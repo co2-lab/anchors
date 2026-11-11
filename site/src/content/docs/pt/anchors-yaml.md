@@ -252,6 +252,22 @@ de outra versão, divergindo na mais velha que `max_age`.
 
 ---
 
+## `test_bypass` — o que o código pula enquanto um teste roda
+
+```yaml
+test_bypass:
+  patterns:
+    - "process\\.env\\.EXPO_PUBLIC_E2E === 'true'\\)\\s*return"
+  proven_by: [integration]              # as camadas de suíte que rodam o caminho pulado
+```
+
+Um efeito pulado enquanto um teste roda não é provado por nenhum teste que o pula.
+[`bypass-proven`](/pt/docs/gates/bypass-proven/) pede, a cada arquivo de código com um desvio, um
+teste dele que passou numa camada de `proven_by`; `@no-bypass-proof: <motivo>` na linha do desvio,
+ou na de cima, dispensa.
+
+---
+
 ## `gates` — o que é confrontado
 
 Este bloco tem [página própria](/pt/docs/gates///), porque é o mais extenso. O

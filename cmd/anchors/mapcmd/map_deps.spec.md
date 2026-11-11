@@ -28,6 +28,7 @@ question the dependency chain exists to answer (DESIGN-dependencies-and-navigati
 | `MDCMP-B01` | The tree is printed one file per line, `CODE path`, indented by level: down the files it uses, or with `--up` the files that use it, each level sorted, `--depth` limiting the levels; a file already on the branch is marked `↺` and not walked again, so a cycle ends. (`DepsTree`) |
 | `MDCMP-B02` | The file is named by its own code first, then by its unit's code (its code file), then by its path; a name that is none of them is refused. (`resolveDepsStart`) |
 | `MDCMP-B03` | `--kind <kind>` lists each resource of that kind the code reaches, by name, and under each the files that reach it, by their codes. (`ResourceUsers`) |
+| `MDCMP-B04` | `--flat` prints the closure the tree would — down or, with `--up`, up, within `--depth` — as paths, the file itself included, each once and sorted, one per line: what a script reads to cross the closure with the environment, tables or grants it checks. (`DepsClosure`) |
 
 ## Errors
 

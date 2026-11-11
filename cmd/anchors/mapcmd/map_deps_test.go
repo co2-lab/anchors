@@ -54,3 +54,24 @@ func TestResourceUsers(t *testing.T) {
 		t.Errorf("got:\n%s", got)
 	}
 }
+
+func TestDepsClosure_flat(t *testing.T) {
+	t.Run("MDCMP-B04: --flat prints the closure as sorted paths, one per line", func(t *testing.T) {})
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{{ID: "h/handler.ts", FileCode: "HANDL"}, {ID: "s/service.ts", FileCode: "SERVC"}, {ID: "c/client.ts", FileCode: "CLINT"}},
+		Edges: []mapx.Edge{
+			{From: "h/handler.ts", To: "s/service.ts", Type: mapx.EdgeDependsOn},
+			{From: "s/service.ts", To: "c/client.ts", Type: mapx.EdgeDependsOn},
+			{From: "c/client.ts", To: "s/service.ts", Type: mapx.EdgeDependsOn},
+		},
+	}
+	if got := strings.Join(DepsClosure(g, "h/handler.ts", false, 0), " "); got != "c/client.ts h/handler.ts s/service.ts" {
+		t.Errorf("down: %s", got)
+	}
+	if got := strings.Join(DepsClosure(g, "c/client.ts", true, 0), " "); got != "c/client.ts h/handler.ts s/service.ts" {
+		t.Errorf("up: %s", got)
+	}
+	if got := strings.Join(DepsClosure(g, "h/handler.ts", false, 1), " "); got != "h/handler.ts s/service.ts" {
+		t.Errorf("depth 1: %s", got)
+	}
+}

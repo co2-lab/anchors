@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:8bbde0a55a9c265e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:da6099b2519f9478 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1617,6 +1617,8 @@ is what the test proves.
 - [A file is named by its own code, its unit's code or its path](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file) `MDCMP-B02`
 
 - [The resources of a kind and the files that reach them](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file) `MDCMP-B03`
+
+- [--flat prints the closure as sorted paths, one per line](layers/comando.md#mdcmp--mapdeps--the-dependency-tree-of-a-file) `MDCMP-B04`
 
 - [The merged map is written onto our side's file](layers/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-B01`
 
