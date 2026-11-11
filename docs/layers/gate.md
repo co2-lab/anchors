@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:af73e654f18269f5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:dbcc1ba636533cdc — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 96 units and 1468 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 96 units and 1469 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2171,6 +2171,8 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 - **MCSTM-B22** — A chain flag in a block comment inside a line — the form the navigation fixer writes after a call on a JSX line — is read out of the stamped snippet too, and only the comment: the code after it stays, so a change there still fails.
 
 - **MCSTM-B23** — A double whose specifier an alias maps into another folder (`@mif/shared/x` → `packages/shared/src/x.ts`), or that names a directory resolved to its index by an extension (`…/evaluators` → `…/evaluators/index.ts`), is covered by the stamp `anchors stamp` wrote for it.
+
+- **MCSTM-B24** — A stamp whose block differs from the version it was taken at only in comments holds: the version is found in the module's recent history by its hash, and the block's code — comments out, blank lines left out — is the same today, a comment edited, added at a line's end or on a line of its own; a change to the code still fails. A comment changes no contract, as it changes no evidence. (`onlyCommentsMoved`)
 
 - **MCSTM-I01** — The gate RECOMPUTES the hash against the real module; it never validates the stamp's format alone. A stamp nobody confronts would certify itself, because whoever edits the test regenerates it to match their own mock.
 

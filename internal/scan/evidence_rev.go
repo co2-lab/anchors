@@ -137,6 +137,10 @@ func withoutComments(src string, cs *config.Comments) string {
 	return string(append(out, src[at:]...))
 }
 
+// CodeOf is the content with its comments taken out as the evidence reads it
+// (withoutComments): each line where it was, a comment inside a line gone with its blank.
+func CodeOf(src string, cs *config.Comments) string { return withoutComments(src, cs) }
+
 func isBlank(c byte) bool { return c == ' ' || c == '\t' }
 
 func isWordByte(c byte) bool {

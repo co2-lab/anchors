@@ -7,6 +7,7 @@ package gate
 import (
 	"github.com/co2-lab/anchors/internal/testkit"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -714,5 +715,43 @@ func TestMockStamped_writerAndGateResolveAlike(t *testing.T) {
 	}
 	if v, msg := checkMockStamped(out, mapx.Node{ID: testID, Kind: mapx.KindTest}, root, g, cfg); v != Pass {
 		t.Errorf("what the writer stamped is what the gate finds: %v / %s", v, msg)
+	}
+}
+
+func TestMockStamped_onlyCommentsMoved(t *testing.T) {
+	t.Run("MCSTM-B24: A stamp holds when its block changed only in comments since the version it was taken at", func(t *testing.T) {})
+	hooks := strings.Replace(realHooks, "export function useBalance(id) {\n", "export function useBalance(id) {\n  // BLNCH-B01: loads the balance\n", 1)
+	test := "jest.mock('@/src/hooks/balance', () => ({\n  useBalance: jest.fn(),\n  useLimits: jest.fn(),\n}))\n\nit('shows', () => {})\n"
+	root, g := stampProject(t, map[string]string{"apps/mobile/src/hooks/balance.ts": hooks, "apps/mobile/src/screens/Home.test.tsx": test})
+	testID := "apps/mobile/src/screens/Home.test.tsx"
+	stamped, _, _, err := GenerateStamps(test, testID, root, g, stampCfg())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, testID), []byte(stamped), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{{"init", "-q"}, {"add", "."}, {"-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "base"}} {
+		if out, err := exec.Command("git", append([]string{"-C", root}, args...)...).CombinedOutput(); err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+	}
+	mod := filepath.Join(root, "apps/mobile/src/hooks/balance.ts")
+	node := mapx.Node{ID: testID, Kind: mapx.KindTest}
+	for name, c := range map[string]struct {
+		body string
+		want Verdict
+	}{
+		"a comment edited":          {strings.Replace(hooks, "// BLNCH-B01:", "// BLNCH-B01/BLNCH-A01:", 1), Pass},
+		"a comment at a line's end": {strings.Replace(hooks, "fetchBalance(id))", "fetchBalance(id)) // BLNCH-S01", 1), Pass},
+		"a comment line added":      {strings.Replace(hooks, "  return useQuery(['balance'", "  // BLNCH-E01: the error\n  return useQuery(['balance'", 1), Pass},
+		"the code changed":          {strings.Replace(hooks, "['balance', id]", "['balance', id, 'v2']", 1), Fail},
+	} {
+		if err := os.WriteFile(mod, []byte(c.body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if v, msg := checkMockStamped(stamped, node, root, g, stampCfg()); v != c.want {
+			t.Errorf("%s: want %v, got %v %s", name, c.want, v, msg)
+		}
 	}
 }

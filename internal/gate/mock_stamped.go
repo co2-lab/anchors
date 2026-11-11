@@ -9,12 +9,16 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
@@ -185,10 +189,123 @@ func declaredStamps(content string) []declaredStamp {
 // snippet as written.
 func stampHolds(root string, c declaredStamp, cfg *config.Config) (current string, holds bool, err error) {
 	h, raw, err := recomputeStampBoth(root, c, cfg)
+	if err == nil && (h == c.hash || (raw != "" && raw == c.hash)) {
+		return h, true, nil
+	}
+	if onlyCommentsMoved(root, c, cfg) {
+		return h, true, nil
+	}
 	if err != nil {
 		return "", false, err
 	}
-	return h, h == c.hash || (raw != "" && raw == c.hash), nil
+	return h, false, nil
+}
+
+// onlyCommentsMoved says whether the stamped block differs from the version the stamp was
+// taken at only in its comments: the version is found in the module's history by its hash, and
+// the block's code — without comments, blank lines left out — is the same today, a comment
+// line added inside it or not. A comment changes no contract, as it changes no evidence
+// (EvidenceOf): measured in MIF, a rule's mark edited in a comment (`// RPBTR-B02:` →
+// `// RPBTR-B02/RPBTR-A01:`) broke 81 stamps, each asking a refresh that reconfirms nothing.
+func onlyCommentsMoved(root string, c declaredStamp, cfg *config.Config) bool {
+	cs := cfg.CommentsFor(c.file)
+	if cs == nil || c.count <= 0 {
+		return false
+	}
+	then, ok := stampedVersion(root, c, cs)
+	if !ok {
+		return false
+	}
+	before, ok := stampedCode(then, c.anchor, c.count, cs)
+	if !ok || len(before) == 0 {
+		return false
+	}
+	now, err := readFile(root, c.file)
+	if err != nil {
+		return false
+	}
+	after, ok := codeFrom(string(now), c.anchor, len(before), cs)
+	return ok && slices.Equal(before, after)
+}
+
+// stampedVersion is the module's content at the newest commit whose block hashes to the
+// stamp, among the last ones that touched it; false when none does.
+func stampedVersion(root string, c declaredStamp, cs *config.Comments) (string, bool) {
+	key := root + "\x00" + c.file + "\x00" + c.anchor + "\x00" + c.hash
+	if v, ok := stampedVersions.Load(key); ok {
+		s := v.(string)
+		return s, s != ""
+	}
+	found := ""
+	out, err := exec.Command("git", "-C", root, "log", "-n", "50", "--format=%H", "--", c.file).Output()
+	if err == nil {
+		for _, sha := range strings.Fields(string(out)) {
+			b, ok := gitmeta.AtCommit(root, sha, c.file)
+			if !ok {
+				continue
+			}
+			lines := strings.Split(string(b), "\n")
+			h, _ := snippetOf(stampLines(lines, cs), stripChainFlag(c.anchor, cs), c.count)
+			raw, _ := snippetOf(lines, c.anchor, c.count)
+			if h == c.hash || raw == c.hash {
+				found = string(b)
+				break
+			}
+		}
+	}
+	stampedVersions.Store(key, found)
+	return found, found != ""
+}
+
+var stampedVersions sync.Map
+
+// stampedCode is the code of the block a stamp covers in a content: its `count` lines from the
+// anchor, without comments, blank lines left out.
+func stampedCode(content, anchor string, count int, cs *config.Comments) ([]string, bool) {
+	snip, ok := StampSnippet(content, anchor, count, cs)
+	if !ok {
+		return nil, false
+	}
+	return stampCodeLines(snip, cs), true
+}
+
+// codeFrom is the first n lines of code from the anchor — the line whose code is the anchor's —,
+// comments and blank lines left out; false when the anchor is absent or repeated.
+func codeFrom(content, anchor string, n int, cs *config.Comments) ([]string, bool) {
+	lines := stampCodeLines(strings.Join(stampLines(strings.Split(content, "\n"), cs), "\n"), cs)
+	want := stampCodeLines(stripChainFlag(anchor, cs), cs)
+	if len(want) != 1 {
+		return nil, false
+	}
+	idx := -1
+	for i, l := range lines {
+		if l == want[0] {
+			if idx >= 0 {
+				return nil, false
+			}
+			idx = i
+		}
+	}
+	if idx < 0 {
+		return nil, false
+	}
+	end := idx + n
+	if end > len(lines) {
+		end = len(lines)
+	}
+	return lines[idx:end], true
+}
+
+// stampCodeLines are a text's lines of code: comments out, trailing blanks trimmed, the lines left
+// blank dropped.
+func stampCodeLines(s string, cs *config.Comments) []string {
+	var out []string
+	for _, l := range strings.Split(scan.CodeOf(s, cs), "\n") {
+		if l = strings.TrimRight(l, " \t\r"); strings.TrimSpace(l) != "" {
+			out = append(out, l)
+		}
+	}
+	return out
 }
 
 // recomputeStampBoth reads the module and returns the hash of the stamped snippet today, read

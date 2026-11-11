@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCSTM
-  updated_at: 2026-10-17
+  updated_at: 2026-11-11
   layer: gate
 -->
 # MockStamped — the double carries the mark of the snippet it replaces, and the gate RECOMPUTES it
@@ -71,6 +71,7 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-B21` | A stamp reads its module without the chain's flags — a dependency (kinded or not), used-by or navigation flag (or its waiver) at the end of a line, and a line that only carries one —, the reading the map's evidence revisions share: a flag `check --fix` writes changes no contract, and the stamp's anchor and snippet hold through it. A stamp taken while the flags were in the module, as written, holds too; a change to the stamped code itself still fails, and a refresh writes the hash read without the flags. (`StampSnippet`) |
 | `MCSTM-B22` | A chain flag in a block comment inside a line — the form the navigation fixer writes after a call on a JSX line — is read out of the stamped snippet too, and only the comment: the code after it stays, so a change there still fails. |
 | `MCSTM-B23` | A double whose specifier an alias maps into another folder (`@mif/shared/x` → `packages/shared/src/x.ts`), or that names a directory resolved to its index by an extension (`…/evaluators` → `…/evaluators/index.ts`), is covered by the stamp `anchors stamp` wrote for it. |
+| `MCSTM-B24` | A stamp whose block differs from the version it was taken at only in comments holds: the version is found in the module's recent history by its hash, and the block's code — comments out, blank lines left out — is the same today, a comment edited, added at a line's end or on a line of its own; a change to the code still fails. A comment changes no contract, as it changes no evidence. (`onlyCommentsMoved`) |
 
 ## Invariants
 

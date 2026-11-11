@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:40e2f142d505900f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:806047473fb82c3d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -4755,6 +4755,8 @@ is what the test proves.
 - [A flag in a block comment inside a line changes no contract](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B22`
 
 - [The stamp the writer wrote covers an aliased module and a directory's index](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B23`
+
+- [A stamp holds across a change only to comments](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B24`
 
 - [A double with no tie fails and the verdict names the loose module](layers/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B01`
 

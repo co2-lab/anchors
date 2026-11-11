@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:c2ecb707ee0d922f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:d3a677b50e5f7f66 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -5242,6 +5242,8 @@ in `layers/`.
 
 - [MCSTM-B23 — A double whose specifier an alias maps into another folder (`@mif/shared/x` → `packages/shared/src/x.ts`), or that names a directory resolved to its index by an extension (`…/evaluators` → `…/evaluators/index.ts`), is covered by the stamp `anchors stamp` wrote for it.](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
+- [MCSTM-B24 — A stamp whose block differs from the version it was taken at only in comments holds: the version is found in the module's recent history by its hash, and the block's code — comments out, blank lines left out — is the same today, a comment edited, added at a line's end or on a line of its own; a change to the code still fails. A comment changes no contract, as it changes no evidence. (`onlyCommentsMoved`)](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
+
 - [MCSTM-I01 — The gate RECOMPUTES the hash against the real module; it never validates the stamp's format alone. A stamp nobody confronts would certify itself, because whoever edits the test regenerates it to match their own mock.](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
 - [MCSTM-I02 — The double and the stamp are tied by the FILE the stamp names: the double's specifier is resolved as `anchors stamp` resolves it — the project's aliases and extensions, then the tail —, so what the writer stamped is what the gate finds.](layers/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
@@ -9200,7 +9202,7 @@ in `layers/`.
 
 - [RPSCR-B60 — A header's `writes:` and `reads:` are the data the file persists and consumes, each a comma-separated list of names the project chooses, out of their backticks. (`HeaderData`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
-- [RPSCR-B61 — A comment inside a line of code leaves the file's evidence revision and its line revision as if never written: it goes out with the blank before it when a blank, a closer or the end of the line follows, and with the blank after it when an opener precedes it — `load(a /* X */)` reads as `load(a)`. (`EvidenceOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
+- [RPSCR-B61 — A comment inside a line of code leaves the file's evidence revision and its line revision as if never written: it goes out with the blank before it when a blank, a closer or the end of the line follows, and with the blank after it when an opener precedes it — `load(a /* X */)` reads as `load(a)`. (`EvidenceOf`, `CodeOf`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
 - [RPSCR-B62 — The commit reader reads a file as a commit holds it — what a push sends: an edit not committed reads as committed, a file the commit does not hold is absent, a file the tree holds as the commit does is read from the tree; a revision git does not know is refused. (`CommitReader`)](layers/scan.md#rpscr--reposcan--the-repository-read-as-text-which-files-exist-of-which-layer-and-what-each-declares)
 
