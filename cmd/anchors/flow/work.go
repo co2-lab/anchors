@@ -985,7 +985,9 @@ func gateRequirements(artifact string, cfg *config.Config) []string {
 			noneValue() + "` is an ASSERTION — \"I looked and there is no doubt\" —, different from omitting the " +
 			"section, which says nothing. Whatever is open there holds the spec until it is decided.",
 		"code-reference-valid": "Every **cited code** must exist in the project (an orphan citation fails).",
-		"scenario-asserts":     "The RESULT step asserts an **observable result** — not `\\\"effect X is verified\\\"`.",
+		"symbol-exists": "A name marked as a symbol — `@@name`, `#name` or `$name` — in a comment or the spec " +
+			"must exist in the project's code; a line citing a name gone on purpose carries `@no-symbol-check: <reason>`.",
+		"scenario-asserts": "The RESULT step asserts an **observable result** — not `\\\"effect X is verified\\\"`.",
 		"feature-test-match": "Each scenario of the feature has a test that proves it, and the test " +
 			"**declares which scenario it proves**: the code goes in the TITLE of the case (`it('[ABCDX-B01] " +
 			"…')` or `describe('… [ABCDX-B01]')`), not in a comment — the gate removes comments " +

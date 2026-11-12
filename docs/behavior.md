@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:7b58d4d637fa7dac — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:c081fbaf59c0f016 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -5933,6 +5933,18 @@ is what the test proves.
 - [A required state the spec neither registers nor waives fails](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it) `STRQS-B01`
 
 - [Outside its subject the gate is skipped](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it) `STRQS-B02`
+
+- [A marked name the code no longer has fails, naming where it is cited](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code) `SYMXS-B01`
+
+- [Only real marks in comments and in the spec's prose are confronted](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code) `SYMXS-B02`
+
+- [A line that cites a name on purpose is waived](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code) `SYMXS-B03`
+
+- [No mark, or another kind of artifact, is skipped](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code) `SYMXS-B04`
+
+- [A code file whose comments the project does not declare is pending](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code) `SYMXS-E01`
+
+- [Without a map the gate is pending](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code) `SYMXS-E02`
 
 - [A test with no assertion fails, named by its line and title](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B01`
 

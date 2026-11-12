@@ -64,6 +64,10 @@
         "slug": "docs/gates/code-reference-valid"
       },
       {
+        "label": "symbol-exists",
+        "slug": "docs/gates/symbol-exists"
+      },
+      {
         "label": "code-cataloged",
         "slug": "docs/gates/code-cataloged"
       },

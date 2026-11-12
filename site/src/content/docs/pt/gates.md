@@ -25,6 +25,7 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | [`scenario-type-aligned`](/pt/docs/gates/scenario-type-aligned/) | `feature` | A scenario's nature tag agrees with the letter of its code |
 | [`scenario-letter-declared`](/pt/docs/gates/scenario-letter-declared/) | `feature` | Every scenario code's letter is a rule letter — the project's `rule_types`, or the canonical ones |
 | [`code-reference-valid`](/pt/docs/gates/code-reference-valid/) | `spec` | Every code the spec cites exists in the project |
+| [`symbol-exists`](/pt/docs/gates/symbol-exists/) | `code` `spec` | Every name a comment or spec marks as a symbol (`@@name`, `#name`, `$name`) is in the project's code |
 | [`code-cataloged`](/pt/docs/gates/code-cataloged/) | `spec` | Every exported symbol has a rule in the spec or a written waiver |
 | [`placeholder-filled`](/pt/docs/gates/placeholder-filled/) | `spec` `feature` | No generator placeholder remains in a value position: header field, table cell, rule or title line |
 | [`header-valid`](/pt/docs/gates/header-valid/) | `spec` `feature` `code` `test` `guide` `doc` `plan` `product` `flag` | The @anchors header carries the artifact's identity |

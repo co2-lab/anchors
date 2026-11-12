@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:337e24ad1e769d7b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:aebfb0c687f87df8 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -6557,6 +6557,20 @@ in `layers/`.
 - [STRQS-B01 — A spec of a layer with required states that registers none by one of the names, and does not waive it with a reason, fails, naming the layer and the missing states; registered or waived, it passes. (`checkStatesRequired`)](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it)
 
 - [STRQS-B02 — A project that requires no state, a spec of a layer with none required, or an artifact that is no spec, is skipped.](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it)
+
+### [SYMXS — SymbolExists — a name marked as a symbol is in the project's code](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
+
+- [SYMXS-B01 — A marked name — every dotted part of it — that is an identifier of the project's code passes; one that is not fails, naming the file, the line and the name. (`checkSymbolExists`, `projectSymbols`)](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
+
+- [SYMXS-B02 — A code file is read in its comments only, a spec outside its fenced blocks; a mark glued to a word, a path or a link, a name followed by a dash, an editor's folding directive (`#region`, `#endregion`), a color (`#` and 3, 4, 6 or 8 hex digits) and the `#` that opens a comment are not marks. (`citedSymbols`, `markedAt`, `commentText`, `withoutFences`)](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
+
+- [SYMXS-B03 — A line carrying `@no-symbol-check: <reason>` is not confronted.](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
+
+- [SYMXS-B04 — An artifact with no mark, or of another kind, is skipped.](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
+
+- [SYMXS-E01 — The project declares no comments for the code file.](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
+
+- [SYMXS-E02 — No map is built.](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
 
 ### [THSAS — TestHasAssertion — every test asserts something in its body](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body)
 

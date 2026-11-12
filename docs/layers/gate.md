@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:65add379511b4c61 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:9334118c78d988d2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 96 units and 1469 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 97 units and 1475 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -4388,6 +4388,35 @@ proposes none.
 - **STRQS-B01** — A spec of a layer with required states that registers none by one of the names, and does not waive it with a reason, fails, naming the layer and the missing states; registered or waived, it passes. (`checkStatesRequired`)
 
 - **STRQS-B02** — A project that requires no state, a spec of a layer with none required, or an artifact that is no spec, is skipped.
+
+
+## SYMXS — SymbolExists — a name marked as a symbol is in the project's code
+
+A comment or a spec that names a symbol makes a claim about the code: this option, this
+function, this field exists. Nothing confronted the claim. Measured in MIF (2026-11-12): a
+comment of the import handler explained a rule by an option, `isEvalSupported`, that the PDF
+library had removed and the reader no longer passed; the rule's code was right at all four
+ends, every gate passed, and only a review caught the stale name.
+
+Prose cannot be told from a name by its shape, so the project marks the names it cites:
+`@@name`, `#name` or `$name`, with dotted parts (`#Reader.open`). The gate reads the marks of a
+code file's comments and of a spec's text, and confronts each against the identifiers of the
+map's code and test files, read with their comments removed. Only the project is searched: a
+name of a dependency the project does not use is cited on purpose, and says so with
+`@no-symbol-check: <reason>` on its line.
+
+
+- **SYMXS-B01** — A marked name — every dotted part of it — that is an identifier of the project's code passes; one that is not fails, naming the file, the line and the name. (`checkSymbolExists`, `projectSymbols`)
+
+- **SYMXS-B02** — A code file is read in its comments only, a spec outside its fenced blocks; a mark glued to a word, a path or a link, a name followed by a dash, an editor's folding directive (`#region`, `#endregion`), a color (`#` and 3, 4, 6 or 8 hex digits) and the `#` that opens a comment are not marks. (`citedSymbols`, `markedAt`, `commentText`, `withoutFences`)
+
+- **SYMXS-B03** — A line carrying `@no-symbol-check: <reason>` is not confronted.
+
+- **SYMXS-B04** — An artifact with no mark, or of another kind, is skipped.
+
+- **SYMXS-E01** — The project declares no comments for the code file.
+
+- **SYMXS-E02** — No map is built.
 
 
 ## THSAS — TestHasAssertion — every test asserts something in its body

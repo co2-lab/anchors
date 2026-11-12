@@ -811,6 +811,13 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Name: "code-reference-valid", ID: "code-reference-valid", On: []string{"spec"}, Check: "code-reference-valid",
 			Blocking: config.Bool(false), Measures: "every code the spec cites exists in the project",
 		})
+		// A name a comment or a spec marks as a symbol (`@@name`, `#name`, `$name`) is in the
+		// project's code: a comment citing an option the code stopped passing passed every
+		// gate (measured in MIF).
+		gates = append(gates, config.Gate{
+			Name: "symbol-exists", ID: "symbol-exists", On: []string{"code", "spec"}, Check: "symbol-exists",
+			Blocking: config.Bool(false), Measures: "every name a comment or spec marks as a symbol (`@@name`, `#name`, `$name`) is in the project's code",
+		})
 		// A spec uses no other unit's content: what two units share lives in the product,
 		// which each realizes. A navigation names a screen — a reference, not a citation.
 		gates = append(gates, config.Gate{
