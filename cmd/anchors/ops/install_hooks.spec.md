@@ -59,6 +59,7 @@ theirs and is not replaced without `--force`.
 | `INHKN-B16` | The hooks speak the project's language (`lang`): each message they print is written in it when they are installed, its shell variables kept, and a message with no translation, or a configuration that does not load, stays in English; `install-hooks --force` rewrites them after the language changes. (`localizeHook`, `hookMessageKey`) |
 | `INHKN-B17` | The pre-commit and the pre-merge-commit refuse a commit, and a merge commit, on a branch `branch_flow.protected` names (`anchors branch guard`); another branch, or a detached HEAD, commits. |
 | `INHKN-B18` | The installed pre-push hands the refs the push sends to `anchors push-review verify` before it reaches the network, and a refusal there stops the push; an accepted one lets it go on. |
+| `INHKN-B19` | The installed pre-commit looks for the commit-msg, and for `pre-commit.d`, where git runs hooks from (`git rev-parse --git-path hooks`): in a worktree, whose git dir holds no hooks, it defers a gate failure to the commit-msg as in the main tree. |
 
 ## Invariants
 

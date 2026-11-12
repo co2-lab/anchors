@@ -369,6 +369,26 @@ func TestInstalledPrePushConfrontsThePushReview(t *testing.T) {
 	}
 }
 
+// In a worktree the git dir has no hooks/: the pre-commit finds the commit-msg where git runs
+// it from, and defers to it as in the main tree.
+func TestInstalledPreCommitDefersInAWorktree(t *testing.T) {
+	t.Run("INHKN-B19: In a worktree the pre-commit finds the commit-msg where git runs hooks from, and defers to it", func(t *testing.T) {})
+	root := hookedRepo(t, "version: 1\n")
+	wt := filepath.Join(t.TempDir(), "wt")
+	if out, err := runGit(root, "worktree", "add", "-q", wt, "-b", "feat/x"); err != nil {
+		t.Fatal(out)
+	}
+	t.Setenv("FAKE_VERIFY_STATUS", "1")
+	writeFile(t, wt, "b.txt", "x\n")
+	if out, err := runGit(wt, "add", "b.txt"); err != nil {
+		t.Fatal(out)
+	}
+	out, _ := runGit(wt, "commit", "-q", "-m", "feat: b")
+	if strings.Contains(out, "commit BLOCKED by the anchors gates. Fix the above") || !strings.Contains(out, "Without that, the commit-msg blocks it.") {
+		t.Errorf("in a worktree the pre-commit must defer to the commit-msg:\n%s", out)
+	}
+}
+
 // The gates' verdict: "not governed" (exit 3) passes; a failure is deferred by the
 // pre-commit to the commit-msg, which has the message in hand and blocks.
 func TestInstalledHooksDeferTheVerdictToTheCommitMsg(t *testing.T) {

@@ -368,6 +368,9 @@ ROOT="$(git rev-parse --show-toplevel)"
 # worktree quando e um.
 GITDIR="$(git rev-parse --git-dir)"
 CACHE="$GITDIR/anchors-freeze-cache"
+# The hooks live where git runs them from: in a worktree, the git dir is
+# .git/worktrees/<name>, with no hooks/; --git-path follows the worktree and core.hooksPath.
+HOOKS="$(git rev-parse --path-format=absolute --git-path hooks 2>/dev/null || git rev-parse --git-path hooks)"
 JANELA=600
 
 congelado=""
@@ -499,7 +502,7 @@ if [ "$FAIL" -ne 0 ]; then
   # Então este hook REPORTA e deixa seguir; o 'commit-msg' reconfronta com a mensagem em
   # mãos e barra se a dispensa não cobrir o que reprovou. Quem não usa dispensa nenhuma vê
   # o mesmo resultado, um passo depois.
-  if [ -x "$GITDIR/hooks/commit-msg" ]; then
+  if [ -x "$HOOKS/commit-msg" ]; then
     echo "──────────────────────────────────────────────────────────────"
     echo "· gates failed. If it is deliberate, declare it in the commit message:"
     echo "    [skip-<rule>@<CODE>: why]"
@@ -515,7 +518,7 @@ fi
 # arquitetura de import). Cada executável em .git/hooks/pre-commit.d/ roda com os
 # arquivos staged como argumentos; qualquer um que falhe barra o commit.
 # (Portável a bash 3.2 do macOS — sem mapfile.)
-HOOK_D="$GITDIR/hooks/pre-commit.d"
+HOOK_D="$HOOKS/pre-commit.d"
 if [ -d "$HOOK_D" ]; then
   STAGED_ARR=()
   while IFS= read -r line; do [ -n "$line" ] && STAGED_ARR+=("$line"); done <<< "$STAGED"

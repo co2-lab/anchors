@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:e9398f32799b2400 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:7b58d4d637fa7dac — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2097,6 +2097,8 @@ is what the test proves.
 - [The installed hooks refuse a commit, and a merge commit, on a branch the flow protects](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B17`
 
 - [The pre-push confronts the push's review](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B18`
+
+- [In a worktree the pre-commit defers to the commit-msg](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B19`
 
 - [Both the map and the config reach the current format](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B01`
 

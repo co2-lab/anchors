@@ -152,3 +152,10 @@ Feature: InstallHooks — the git hooks that confront every commit and push with
     Given a repository with the hooks installed and a commit to push
     When it is pushed with push-review verify refusing, and then accepting
     Then the first push is stopped with the pushed refs handed over, and the second goes through
+
+  @INHKN-B19 @unit-level
+  Scenario: In a worktree the pre-commit defers to the commit-msg
+    Given a repository with the hooks installed, and a worktree of it
+    When a commit with a failing gate is made in the worktree
+    Then the pre-commit reports and defers to the commit-msg, as in the main tree
+

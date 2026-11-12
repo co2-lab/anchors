@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:e18a51c8edca1e16 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:337e24ad1e769d7b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2303,6 +2303,8 @@ in `layers/`.
 - [INHKN-B17 — The pre-commit and the pre-merge-commit refuse a commit, and a merge commit, on a branch `branch_flow.protected` names (`anchors branch guard`); another branch, or a detached HEAD, commits.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-B18 — The installed pre-push hands the refs the push sends to `anchors push-review verify` before it reaches the network, and a refusal there stops the push; an accepted one lets it go on.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
+
+- [INHKN-B19 — The installed pre-commit looks for the commit-msg, and for `pre-commit.d`, where git runs hooks from (`git rev-parse --git-path hooks`): in a worktree, whose git dir holds no hooks, it defers a gate failure to the commit-msg as in the main tree.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
 - [INHKN-I01 — However many times the install runs, each merge attribute line appears once in `.gitattributes` and the user's own lines are kept intact.](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
