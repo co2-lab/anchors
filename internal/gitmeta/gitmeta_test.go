@@ -301,6 +301,36 @@ func TestDirtyFiles(t *testing.T) {
 	}
 }
 
+func TestAllCommitDates_aMerge(t *testing.T) {
+	t.Run("GTMTG-B18: A merge dates the files it changed against every parent, and leaves those that came from one side unchanged", func(t *testing.T) {})
+	d := gitRepo(t)
+	git := func(date string, args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", d}, args...)...)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_DATE="+date+"T12:00:00", "GIT_COMMITTER_DATE="+date+"T12:00:00")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v %s", args, err, out)
+		}
+	}
+	os.WriteFile(filepath.Join(d, "keep.txt"), []byte("a"), 0o644)
+	commitOn(t, d, "2026-11-01", "base")
+	git("2026-11-01", "checkout", "-q", "-b", "branch")
+	os.WriteFile(filepath.Join(d, "came.txt"), []byte("1"), 0o644)
+	os.WriteFile(filepath.Join(d, "dated.txt"), []byte("updated_at: 2026-11-11"), 0o644)
+	commitOn(t, d, "2026-11-11", "branch")
+	git("2026-11-11", "checkout", "-q", "-")
+	os.WriteFile(filepath.Join(d, "keep.txt"), []byte("b"), 0o644)
+	commitOn(t, d, "2026-11-11", "main")
+	git("2026-11-12", "merge", "-q", "--no-ff", "--no-commit", "branch")
+	os.WriteFile(filepath.Join(d, "dated.txt"), []byte("updated_at: 2026-11-12"), 0o644)
+	commitOn(t, d, "2026-11-12", "merge")
+
+	got := AllCommitDates(d)
+	if got["dated.txt"] != "2026-11-12" || got["came.txt"] != "2026-11-11" {
+		t.Errorf("dated in the merge, and came unchanged from the branch: %v", got)
+	}
+}
+
 func TestAllCommitDatesUnder(t *testing.T) {
 	t.Run("GTMTG-B11: The bulk date reader under a folder gives paths relative to it", func(t *testing.T) {})
 	d := gitRepo(t)

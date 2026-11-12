@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTMTG
-  updated_at: 2026-11-02
+  updated_at: 2026-11-12
   layer: infra
 -->
 # GitMeta — what git knows about the files: last commit dates, pending changes, HEAD, dirty count
@@ -52,6 +52,7 @@ snapshot that never existed.
 | `GTMTG-B15` | The commit a run at a moment measured is the last commit of HEAD made at or before it, and none when every commit is younger; a reference names its commit in full, and its time; a file's content at a commit is returned as that commit has it, and none when the commit lacks it. (`CommitAt`, `Commit`, `CommitTime`, `AtCommit`) |
 | `GTMTG-B16` | The project's files are the ones git tracks and the new ones it does not ignore, each once; outside a repository there are none, and it says so. (`ProjectFiles`) |
 | `GTMTG-B17` | The files git reads as moved since HEAD — staged or in the tree, decided by their content as `git status` decides it — are given from their old path to their new one, relative to the root; none outside git or before a first commit. (`Renames`) |
+| `GTMTG-B18` | A merge commit counts, in the bulk reader, for the files it changed against every parent — a conflict resolved, a header dated in the merge —, as the one-file reader counts it; a file that came from one side unchanged keeps the day of that side's commit. (`AllCommitDates`) |
 
 ## Constraints
 

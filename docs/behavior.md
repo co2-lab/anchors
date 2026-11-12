@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:c081fbaf59c0f016 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:85d114722a65bae4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -6543,6 +6543,8 @@ is what the test proves.
 - [The project's files are tracked and new, never ignored](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B16`
 
 - [The moves since HEAD are read](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B17`
+
+- [A merge dates the files it changed, not the ones it brought unchanged](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B18`
 
 - [Only an administrator whose protection spares administrators can bypass it](layers/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B01`
 

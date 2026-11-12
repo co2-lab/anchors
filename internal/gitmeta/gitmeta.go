@@ -63,7 +63,11 @@ func AllCommitDatesUnder(root string) map[string]string {
 }
 
 func AllCommitDates(root string) map[string]string {
-	cmd := exec.Command("git", "-C", root, "log", "--format=D:%ad", "--date=short", "--name-only")
+	// `-c`: a merge lists the files it changed against every parent — a conflict resolved, a
+	// header the hook dated in it — as `git log -- <file>` counts it. Without it a merge lists
+	// nothing, and a file dated in a merge read the date of the commit before (reported by MIF).
+	// A file that came from one side unchanged is not listed: its date is that side's commit.
+	cmd := exec.Command("git", "-C", root, "log", "-c", "--format=D:%ad", "--date=short", "--name-only")
 	out, err := cmd.Output()
 	if err != nil {
 		return map[string]string{}

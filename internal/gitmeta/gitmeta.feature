@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTA
 #   ref: GTMTG
-#   updated_at: 2026-11-02
+#   updated_at: 2026-11-12
 #   layer: feature
 
 @GTMTG
@@ -121,3 +121,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a file committed, then moved with git mv
     When the moves are read before the first commit and after the move
     Then none, then the move by its old and new paths
+
+  @GTMTG-B18 @unit-level
+  Scenario: A merge dates the files it changed, not the ones it brought unchanged
+    Given a branch adding two files on the 11th, merged on the 12th with one of them edited in the merge
+    When the bulk reader reads the dates
+    Then the edited file has the 12th and the other the 11th

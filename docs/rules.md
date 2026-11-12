@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:aebfb0c687f87df8 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:b47fd752974b1cbe — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -7225,6 +7225,8 @@ in `layers/`.
 - [GTMTG-B16 — The project's files are the ones git tracks and the new ones it does not ignore, each once; outside a repository there are none, and it says so. (`ProjectFiles`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-B17 — The files git reads as moved since HEAD — staged or in the tree, decided by their content as `git status` decides it — are given from their old path to their new one, relative to the root; none outside git or before a first commit. (`Renames`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+
+- [GTMTG-B18 — A merge commit counts, in the bulk reader, for the files it changed against every parent — a conflict resolved, a header dated in the merge —, as the one-file reader counts it; a file that came from one side unchanged keeps the day of that side's commit. (`AllCommitDates`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-X01 — The dirty count never answers 0 when it could not count: outside a repository or without git it answers a negative number.](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
