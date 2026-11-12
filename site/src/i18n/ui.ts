@@ -52,6 +52,9 @@ export const ui = {
 		'climb.3.title': 'Demarca por onde você passou',
 		'climb.3.climbing': 'A rota fica registrada — quem vier depois não precisa decifrar a parede de novo, só seguir o que já foi validado.',
 		'climb.3.dev': 'O grafo de dependências e o histórico de issues fazem o mesmo: a próxima sessão lê o que ficou provado e continua dali — não recomeça do zero.',
+		'board.eyebrow': 'E o conceito',
+		'board.title': 'Veio do quadro de evidências.',
+		'board.body': 'O nome vem da escalada; o conceito vem do quadro de evidências — o quadro de investigação, o quadro da conspiração, a crazy wall. Cada evidência presa com uma tachinha, linhas ligando uma à outra: uma peça que nenhuma linha alcança é palpite. No Anchors, as tachinhas são a spec, a feature, o teste e o código; as linhas são os códigos de identidade e o mapa que os ligam; e os gates puxam cada linha para ver se ela segura.',
 
 		'specfirst.eyebrow': 'A categoria',
 		'specfirst.title': 'Anchors é spec-first.',
@@ -197,6 +200,9 @@ export const ui = {
 		'climb.3.title': 'Marks where you’ve been',
 		'climb.3.climbing': 'The route stays recorded — whoever comes next doesn’t have to decode the wall again, just follow what’s already validated.',
 		'climb.3.dev': 'The dependency graph and the issue history do the same: the next session reads what’s already proven and continues from there — it doesn’t start from zero.',
+		'board.eyebrow': 'And the concept',
+		'board.title': 'It came from the evidence board.',
+		'board.body': 'The name comes from climbing; the concept comes from the evidence board — the investigation board, the conspiracy board, the crazy wall. Each piece of evidence held by a pushpin, strings tying one to the next: a piece no string reaches is a guess. In Anchors, the pins are the spec, the feature, the test and the code; the strings are the identity codes and the map that tie them; and the gates pull each string to see whether it holds.',
 
 		'specfirst.eyebrow': 'The category',
 		'specfirst.title': 'Anchors is spec-first.',
@@ -342,6 +348,9 @@ export const ui = {
 		'climb.3.title': 'Marca por dónde pasaste',
 		'climb.3.climbing': 'La ruta queda registrada — quien venga después no tiene que descifrar la pared de nuevo, solo seguir lo ya validado.',
 		'climb.3.dev': 'El grafo de dependencias y el historial de issues hacen lo mismo: la próxima sesión lee lo ya probado y continúa desde ahí — no empieza de cero.',
+		'board.eyebrow': 'Y el concepto',
+		'board.title': 'Vino del tablero de evidencias.',
+		'board.body': 'El nombre viene de la escalada; el concepto viene del tablero de evidencias — el tablero de investigación, el tablero de la conspiración, la crazy wall. Cada evidencia sujeta con una chincheta, hilos uniendo una con otra: una pieza que ningún hilo alcanza es una conjetura. En Anchors, las chinchetas son la spec, la feature, el test y el código; los hilos son los códigos de identidad y el mapa que los unen; y los gates tiran de cada hilo para ver si aguanta.',
 
 		'specfirst.eyebrow': 'La categoría',
 		'specfirst.title': 'Anchors es spec-first.',

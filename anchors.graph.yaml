@@ -31,8 +31,8 @@ nodes:
       line_rev: 71f20b47da5a
     - id: CONCEPT.md
       kind: guide
-      rev: a0d83f75d9c0
-      updated_at: "2026-10-03"
+      rev: 5a8624f28a5a
+      updated_at: "2026-11-12"
       code: CNDTC
       file_code: CNDTC
       layer: doutrina
@@ -40,8 +40,8 @@ nodes:
       tags:
         - doutrina
         - guide
-      evidence_rev: 1dcb6cbebf6b
-      line_rev: 7c3531327097
+      evidence_rev: 22f1f9ad8242
+      line_rev: e063afdb0b42
     - id: CONTRIBUTING.md
       kind: doc
       rev: 499f733f82c2
@@ -494,8 +494,8 @@ nodes:
       line_rev: dac525662514
     - id: README.md
       kind: doc
-      rev: 873aa34e9e1b
-      updated_at: "2026-10-03"
+      rev: af2b32df5734
+      updated_at: "2026-11-12"
       code: RDDCR
       file_code: RDDCR
       layer: guidance
@@ -504,8 +504,8 @@ nodes:
         - guidance
       regime: declarativo
       no_propagation: true
-      evidence_rev: 214e8f39387a
-      line_rev: 855f95638af5
+      evidence_rev: e983b1df9b6c
+      line_rev: 8f26e75c557b
     - id: SPEC.md
       kind: guide
       rev: a1e6e019af09

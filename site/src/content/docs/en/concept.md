@@ -146,6 +146,14 @@ anchors — fixed points that do three things: they tell you **where to go**
 fall** (the safepoint), and **mark where you've been** (the route's
 record). In Anchors it's the same.
 
+The concept comes from somewhere else: the **evidence board** — the investigation
+board, the conspiracy board, the *crazy wall* of detective films. Each piece of evidence
+is pinned to the board with a pushpin, and strings stretched from pin to pin show what
+connects to what; a piece no string reaches is a guess, and a string that leads nowhere
+is a theory without proof. In Anchors, the pins are the documents — spec, feature,
+test, code —, the strings are the identity codes and the edges of the map that tie
+them, and the gates pull each string to see whether it holds.
+
 > An **anchor** is any document that we write and that accompanies us in
 > the project's climb — pointing to the next step, holding the rope so we
 > don't fall, or marking where we've been.

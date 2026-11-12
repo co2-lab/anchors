@@ -108,6 +108,14 @@ ponto na superfície sem apoio), **seguram a corda para você não cair** (o
 safepoint), e **demarcam por onde você passou** (o registro da rota). No Anchors é
 igual.
 
+O conceito vem de outro lugar: do **quadro de evidências** — o quadro de investigação,
+o quadro da conspiração, a *crazy wall* dos filmes de detetive. Cada evidência é presa
+no quadro com uma tachinha, e linhas esticadas de uma tachinha a outra mostram o que
+liga o quê; uma peça que nenhuma linha alcança é palpite, e uma linha que não chega a
+lugar nenhum é teoria sem prova. No Anchors, as tachinhas são os documentos — spec,
+feature, teste, código —, as linhas são os códigos de identidade e as arestas do mapa
+que os ligam, e os gates puxam cada linha para ver se ela segura.
+
 > Uma **âncora** é qualquer documento que redigimos e que nos acompanha na
 > escalada do projeto — apontando o próximo passo, segurando a corda para não
 > cairmos, ou marcando por onde passamos.

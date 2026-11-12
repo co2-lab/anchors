@@ -40,6 +40,25 @@ Instead of keeping requirements in issue trackers or wiki pages disconnected fro
 
 An anchor is not just a file; it is the **formal relationship** that connects intent to implementation.
 
+### The concept: the evidence board
+
+The name comes from climbing; the **concept** comes from the **evidence board** — the investigation board, the conspiracy board, the *crazy wall* of detective films. Each piece of evidence is pinned to the board with a **pushpin**, and **strings** stretched from pin to pin show what connects to what. A piece no string reaches is a guess; a string that leads nowhere is a theory without proof.
+
+```
+   (📌 SPEC AUTH-B01) ─────────── (📌 FEATURE @AUTH-B01)
+          │  ╲                            │
+          │    ╲                          │
+          │      ╲                        │
+   (📌 CODE ref: AUTH) ──────── (📌 TEST [AUTH-B01])
+```
+
+In Anchors:
+
+- **The pins are the documents** — spec, feature, test, code —, each pinned in the repository with its identity.
+- **The strings are the identity codes and the edges of the map** — the `AUTH-B01` that appears in the spec, the scenario and the test, the code's `ref:` —, tying one piece to the next.
+- **The gates pull each string to see whether it holds**: a rule with no scenario, a scenario with no test, a code citing a unit that does not exist are loose strings, and the gate calls them out.
+
+
 ---
 
 ## 2. The Anchor Lifecycle

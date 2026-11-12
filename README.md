@@ -37,6 +37,14 @@ dizem **para onde ir**, **seguram a corda para você não cair** e **demarcam po
 passou**. No Anchors, âncoras são os documentos que nos acompanham na escalada do
 projeto — specs, planos, features, guides, docs.
 
+O conceito vem de outro lugar: do **quadro de evidências** — o quadro de investigação,
+o quadro da conspiração, a *crazy wall* dos filmes de detetive. Cada evidência é presa
+no quadro com uma tachinha, e linhas esticadas de uma tachinha a outra mostram o que
+liga o quê; uma peça que nenhuma linha alcança é palpite, e uma linha que não chega a
+lugar nenhum é teoria sem prova. No Anchors, as tachinhas são os documentos — spec,
+feature, teste, código —, as linhas são os códigos de identidade e as arestas do mapa
+que os ligam, e os gates puxam cada linha para ver se ela segura.
+
 ---
 
 ## Duas partes

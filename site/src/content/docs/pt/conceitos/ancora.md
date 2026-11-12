@@ -41,6 +41,25 @@ No desenvolvimento de software assistido por IA, uma **âncora** funciona exatam
 2. **Segura a corda (Safepoint inegociável)**: Se a IA (ou você!) tentar commitar um código que viole as regras estabelecidas, a âncora **barra** o commit ou o merge. Ela impede a queda.
 3. **Demarca (Rastro auditável)**: Qualquer desenvolvedor ou novo agente que entrar no repositório daqui a seis meses saberá exatamente quais decisões foram tomadas e por quê.
 
+### O conceito: o quadro de evidências
+
+O nome vem da escalada; o **conceito** vem do **quadro de evidências** — o quadro de investigação, o quadro da conspiração, a *crazy wall* dos filmes de detetive. Cada evidência é presa no quadro com uma **tachinha**, e **linhas** esticadas de uma tachinha a outra mostram o que liga o quê. Uma peça que nenhuma linha alcança é palpite; uma linha que não chega a lugar nenhum é teoria sem prova.
+
+```
+   (📌 SPEC AUTH-B01) ─────────── (📌 FEATURE @AUTH-B01)
+          │  ╲                            │
+          │    ╲                          │
+          │      ╲                        │
+   (📌 CODE ref: AUTH) ──────── (📌 TEST [AUTH-B01])
+```
+
+No Anchors:
+
+- **As tachinhas são os documentos** — spec, feature, teste, código —, cada um preso no repositório com sua identidade.
+- **As linhas são os códigos de identidade e as arestas do mapa** — o `AUTH-B01` que aparece na spec, no cenário e no teste, o `ref:` do código —, que ligam uma peça à outra.
+- **Os gates puxam cada linha para ver se ela segura**: uma regra sem cenário, um cenário sem teste, um código que cita uma unidade inexistente são linhas soltas, e o gate as acusa.
+
+
 ---
 
 ## 2. O que conta como uma Âncora?
