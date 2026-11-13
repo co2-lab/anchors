@@ -1,6 +1,6 @@
 <!-- @anchors
   code: VPFVR
-  updated_at: 2026-10-08
+  updated_at: 2026-11-13
   layer: comando
 -->
 # VerifyPhaseFacade — one invocation per phase, delegated to the check pipeline
@@ -74,6 +74,7 @@ stays a failure.
 | `VPFVR-E03` | Neither the staged scope, nor a file, nor the full sweep is given. | Error asking for one of the three. | A verify with no scope would pass having confronted nothing. |
 | `VPFVR-E04` | The staged scope is asked for outside a git repository. | Error explaining which of git or the repository is missing. | There is no index to list, and the raw git error does not say why. |
 | `VPFVR-E05` | Dating the staged files fails. | A warning is printed and the verify goes on. | The updated-at gate still checks the dates; a failed convenience must not block the commit. |
+| `VPFVR-E06` | A positional argument is given — a file after `--changed`'s value. | Error before anything runs, naming the arguments and the two ways to list files: one per `--changed`, or a comma-separated list. | The verify hands its files to the check; one it dropped would be judged by nobody, and the phase would read green. |
 
 ## Open Decisions
 

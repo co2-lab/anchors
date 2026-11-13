@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:599da14567b076ca — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:db1100ae10546ad7 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2530,6 +2530,8 @@ is what the test proves.
 
 - [A judgment gate's guide URL that answers nothing fails the check](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-E08`
 
+- [A positional argument is refused, pointing at --changed](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-E09`
+
 - [The check's stamps do not erase what another process wrote meanwhile](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B84`
 
 - [The index flag reads what the commit records](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B85`
@@ -3041,6 +3043,8 @@ is what the test proves.
 - [The staged scope outside a git repository is refused](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-E04`
 
 - [A dating failure warns and does not stop the verify](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-E05`
+
+- [A positional argument is refused, pointing at --changed](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-E06`
 
 - [Over the index the check reads the index](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B11`
 

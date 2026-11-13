@@ -43,6 +43,7 @@ func newCheckCmd() *cobra.Command {
 	var msgPath string
 	cmd := &cobra.Command{
 		Use:   "check",
+		Args:  noPositionalFiles("check"),
 		Short: "Run the quality gates (the pipeline)",
 		Long: `Confronts the nodes against the quality gates declared in anchors.yaml
 and reports the verdict profile (QUALITY §5-§6).

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CGPCH
-  updated_at: 2026-11-06
+  updated_at: 2026-11-13
   layer: comando
 -->
 # CheckGatePipeline — confronts the map's nodes against the declared gates, records the verdicts and reports the profile
@@ -214,6 +214,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-E06` | A changed file is governed by a layer but is not in the map. | Error saying the file is GOVERNED and to run the map build first. | Outside the map no gate confronts it: a new governed file would pass with no spec, feature or test. |
 | `CGPCH-E07` | A changed path exists neither on disk nor in the map. | Error asking to check the path. | A typo must not become "not governed" and let the hook continue in silence. |
 | `CGPCH-E08` | A judgment gate's guide is a URL that answers nothing (PTRFS-E01). | Error naming the gate and the URLs tried, before any gate runs. | A judgment pointed at no ruler would be answered from nothing. |
+| `CGPCH-E09` | A positional argument is given — a file after `--changed`'s value, as in `--changed a b c`. | Error before anything runs, naming the arguments and the two ways to list files: one per `--changed`, or a comma-separated list. | The command takes its files through the flag only; one it dropped was judged by nobody, and the check read green over files it never read (measured in MIF: 1 of 1728). |
 
 ## Open Decisions
 

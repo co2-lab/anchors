@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/shell"
 )
 
@@ -359,4 +360,14 @@ func shellRun(t *testing.T, script string) error {
 		t.Skip(err)
 	}
 	return cmd.Run()
+}
+
+func TestVerifyRefusesPositionalFiles(t *testing.T) {
+	t.Run("VPFVR-E06: A positional argument is refused, pointing at --changed", func(t *testing.T) {})
+	dir := qProject(t, judgmentYAML, map[string]string{"a.go": "package a\n", "b.go": "package a\n"},
+		&mapx.Graph{Nodes: []mapx.Node{{ID: "a.go", Kind: mapx.KindCode}, {ID: "b.go", Kind: mapx.KindCode}}})
+	if _, err := runQ(t, newVerifyCmd(), "--root", dir, "--no-record", "--changed", "a.go", "b.go"); err == nil ||
+		!strings.Contains(err.Error(), "`anchors verify` takes no positional argument, and got 1: b.go") {
+		t.Errorf("verify refuses the file after --changed's value; got %v", err)
+	}
 }

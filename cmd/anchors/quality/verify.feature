@@ -2,7 +2,7 @@
 # @anchors
 #   code: VRFTV
 #   ref: VPFVR
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-13
 #   layer: feature
 
 @VPFVR
@@ -109,6 +109,12 @@ Feature: VerifyPhaseFacade — one invocation per phase, delegated to the check 
     Given dating the staged files failed with "boom"
     When the dating result is printed
     Then it prints "· touch: could not date the staged files (boom)"
+
+  @VPFVR-E06 @unit-level
+  Scenario: A positional argument is refused, pointing at --changed
+    Given a project with a.go and b.go
+    When verify runs with "--changed a.go b.go"
+    Then it fails naming b.go, saying verify takes no positional argument
 
   @VPFVR-B11 @unit-level
   Scenario: Over the index the check reads the index

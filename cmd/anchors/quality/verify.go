@@ -39,6 +39,7 @@ func newVerifyCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "verify",
+		Args:  noPositionalFiles("verify"),
 		Short: "Run EVERYTHING the phase requires: Anchors gates + external tools",
 		Long: `One invocation per PHASE, instead of one command per tool.
 

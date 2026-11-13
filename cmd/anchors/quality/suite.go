@@ -113,6 +113,28 @@ instead of it being proven by the dependents.`,
 	})
 }
 
+// noPositionalFiles refuses the positional arguments of a command that takes none: its files
+// come through `--changed`. Cobra accepted them and the command dropped them — measured in MIF,
+// `check --changed a b c` judged `a` alone and answered "all gates passed" over 1728 files it
+// never read. A check that read less than it was given must not read green.
+func noPositionalFiles(command string) cobra.PositionalArgs {
+	return func(_ *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return nil
+		}
+		shown := args
+		if len(shown) > 3 {
+			shown = shown[:3]
+		}
+		more := ""
+		if len(args) > len(shown) {
+			more = fmt.Sprintf(" (+%d)", len(args)-len(shown))
+		}
+		return fmt.Errorf("`anchors %s` takes no positional argument, and got %d: %s%s\n  `--changed` takes one file per flag (`--changed a --changed b`) or a comma-separated list (`--changed a,b,c`)",
+			command, len(args), strings.Join(shown, " "), more)
+	}
+}
+
 // filesAsLayers is the hint for the arguments taken as layers that are files of the project:
 // the arguments name layers, and a file goes through `--changed`, one value per flag. Measured
 // in MIF: four test paths after the layer read as four undeclared layers, and `--changed a.ts

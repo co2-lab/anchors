@@ -2,7 +2,7 @@
 # @anchors
 #   code: CHFTA
 #   ref: CGPCH
-#   updated_at: 2026-11-06
+#   updated_at: 2026-11-13
 #   layer: feature
 
 @CGPCH
@@ -577,6 +577,12 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a judgment gate whose guide is a URL with {{branch|develop}}, served on develop, and then one the server does not have
     When the judgment guides are read
     Then the first is named by the develop URL, and the second fails naming the gate
+
+  @CGPCH-E09 @unit-level
+  Scenario: A positional argument is refused, pointing at --changed
+    Given a project with a.go and b.go
+    When the check runs with "--changed a.go b.go", and verify the same, and the check with "--changed a.go,b.go"
+    Then the first two fail naming b.go and "--changed a,b,c" before judging anything, and the comma list is accepted
 
   @CGPCH-B84 @unit-level
   Scenario: The check's stamps do not erase what another process wrote meanwhile

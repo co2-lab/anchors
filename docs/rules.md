@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:79498666d1626ce6 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:0798387b7d6b99b5 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2812,6 +2812,8 @@ in `layers/`.
 
 - [CGPCH-E08 — A judgment gate's guide is a URL that answers nothing (PTRFS-E01).](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
+- [CGPCH-E09 — A positional argument is given — a file after `--changed`'s value, as in `--changed a b c`.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
 ### [CVCMC — CoverageCommand — answers the confidence questions from the ingested signals: by scenario, by line, of the diff and the delta](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
 
 - [CVCMC-B01 — For one spec, lists each scenario code it declares, in order, as proven by a green test or not, then how many are proven out of how many and which are missing.](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
@@ -3329,6 +3331,8 @@ in `layers/`.
 - [VPFVR-E04 — The staged scope is asked for outside a git repository.](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline)
 
 - [VPFVR-E05 — Dating the staged files fails.](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline)
+
+- [VPFVR-E06 — A positional argument is given — a file after `--changed`'s value.](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline)
 
 ### [CLRTC — CliRoot — every command passes through one root that speaks the project's language and honours the freeze](layers/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze)
 

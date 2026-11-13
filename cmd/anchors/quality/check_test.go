@@ -3067,3 +3067,21 @@ func TestJudgmentGuides_aGuideReadFromAURL(t *testing.T) {
 		t.Errorf("a guide URL that answers nothing: %v", err)
 	}
 }
+
+func TestCheckRefusesPositionalFiles(t *testing.T) {
+	t.Run("CGPCH-E09: A positional argument is refused, pointing at --changed", func(t *testing.T) {})
+	dir := qProject(t, judgmentYAML, map[string]string{"a.go": "package a\n", "b.go": "package a\n"},
+		&mapx.Graph{Nodes: []mapx.Node{{ID: "a.go", Kind: mapx.KindCode}, {ID: "b.go", Kind: mapx.KindCode}}})
+	// Measured in MIF: `--changed a b c` judged a alone and read green.
+	out, err := runQ(t, newCheckCmd(), "--root", dir, "--no-record", "--changed", "a.go", "b.go")
+	if err == nil || !strings.Contains(err.Error(), "takes no positional argument, and got 1: b.go") ||
+		!strings.Contains(err.Error(), "--changed a,b,c") {
+		t.Errorf("the file after --changed's value is refused, naming the two ways to list files; got %v", err)
+	}
+	if strings.Contains(out, "a.go") {
+		t.Errorf("nothing is judged when an argument would be dropped:\n%s", out)
+	}
+	if _, err := runQ(t, newCheckCmd(), "--root", dir, "--no-record", "--changed", "a.go,b.go"); err != nil && strings.Contains(err.Error(), "positional") {
+		t.Errorf("a comma-separated list is no positional argument; got %v", err)
+	}
+}
