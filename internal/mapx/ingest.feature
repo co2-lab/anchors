@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTD
 #   ref: SGINA
-#   updated_at: 2026-11-02
+#   updated_at: 2026-11-13
 #   layer: feature
 
 @SGINA
@@ -224,3 +224,9 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a spec proven by a fresh suite, and by an old suite whose only scenario the spec renamed since
     When another report is ingested
     Then the old suite leaves the proof with its revision, and the spec is proven at its revision now
+
+  @SGINA-B34 @unit-level
+  Scenario: An old suite whose codes are all proven again at the current rev does not stale the union
+    Given a spec proven at rev1 by two suites, then at rev2 by a third that proves every code of both
+    When the node's freshness is read, and again when an old suite proves a code the new one does not
+    Then the first reads fresh, and the second stale

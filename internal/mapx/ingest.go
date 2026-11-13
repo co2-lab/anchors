@@ -704,22 +704,50 @@ func unionProven(bySuite map[string][]string) []string {
 //
 // An entry with no recorded rev (written before `ProvenRevBySuite` existed) has unknown
 // freshness, and unknown is not fresh: it returns a rev that can never match.
+//
+// A suite that measured an earlier rev holds the union back only for what it alone proves:
+// when every code it proves is proven again by a suite at the current rev, nothing of the
+// union rests on the old spec. Measured in MIF: proofs ingested by hand under reports no
+// suite writes again (`out/fx.xml`, `t22.xml`…) kept 15 specs stale after the unit suite
+// proved every one of their codes at the current rev — no run could ever clear them.
 func unionRev(sig *TestSignal, current string) string {
 	suites := make([]string, 0, len(sig.ProvenBySuite))
 	for s := range sig.ProvenBySuite {
 		suites = append(suites, s)
 	}
 	sort.Strings(suites) // stable: the map is versioned
+	fresh := map[string]bool{}
+	for _, s := range suites {
+		if rev, ok := sig.ProvenRevBySuite[s]; ok && rev == current {
+			for _, c := range sig.ProvenBySuite[s] {
+				fresh[c] = true
+			}
+		}
+	}
 	for _, s := range suites {
 		rev, ok := sig.ProvenRevBySuite[s]
+		if ok && rev == current || reproven(sig.ProvenBySuite[s], fresh) {
+			continue
+		}
 		if !ok {
 			return "unknown"
 		}
-		if rev != current {
-			return rev
-		}
+		return rev
 	}
 	return current
+}
+
+// reproven says whether every code is in the set proven at the current rev.
+func reproven(codes []string, fresh map[string]bool) bool {
+	if len(codes) == 0 || len(fresh) == 0 {
+		return false
+	}
+	for _, c := range codes {
+		if !fresh[c] {
+			return false
+		}
+	}
+	return true
 }
 
 // AdoptMissingSuites gives the signal the proofs of each suite `from` holds and it does not:

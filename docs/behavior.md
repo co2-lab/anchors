@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:8a038fae5e5e0df3 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:599da14567b076ca — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -7961,6 +7961,8 @@ is what the test proves.
 - [A late run stamps what changed after it as changed](layers/mapa.md#sgina-b32--a-late-run-stamps-what-changed-after-it-as-changed) `SGINA-B32`
 
 - [A suite proving only a scenario the spec no longer declares leaves](layers/mapa.md#sgina-b33--a-suite-proving-only-a-scenario-the-spec-no-longer-declares-leaves) `SGINA-B33`
+
+- [An old suite whose codes are all proven again at the current rev does not stale the union](layers/mapa.md#sgina-b34--an-old-suite-whose-codes-are-all-proven-again-at-the-current-rev-does-not-stale-the-union) `SGINA-B34`
 
 - [The lock is a file beside the map with its owner](layers/mapa.md#mplck-b01--the-lock-is-a-file-beside-the-map-with-its-owner) `MPLCK-B01`
 

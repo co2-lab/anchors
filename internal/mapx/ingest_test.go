@@ -187,6 +187,32 @@ func TestIngestSuite_staleSuiteKeepsTheNodeStale(t *testing.T) {
 	}
 }
 
+// A suite at an earlier rev whose every code another suite proves at the current rev holds
+// nothing of the union back. Measured in MIF: proofs ingested by hand under reports no suite
+// writes again kept 15 specs stale after the unit suite proved all their codes.
+func TestIngestSuite_reprovenOldSuiteDoesNotHoldBack(t *testing.T) {
+	t.Run("SGINA-B34: An old suite whose codes are all proven again at the current rev does not stale the union", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec, Rev: "rev1"}}}
+	decl := map[string][]string{"a.spec.md": {"AAAAA-B01", "AAAAA-B02"}}
+
+	g.IngestExecutionSuite(nil, map[string]bool{"AAAAA-B01": true, "AAAAA-B02": true}, nil, decl, "", "out/fx.xml", "t1")
+	g.IngestExecutionSuite(nil, map[string]bool{"AAAAA-B01": true}, nil, decl, "", "out/e2e.xml", "t1")
+	g.Nodes[0].Rev = "rev2"
+	g.IngestExecutionSuite(nil, map[string]bool{"AAAAA-B01": true, "AAAAA-B02": true}, nil, decl, "", "out/unit.xml", "t2")
+	if g.Nodes[0].SignalStale() {
+		t.Errorf("every code the old suites prove is proven at rev2: the union is fresh (at_rev=%s)", g.Nodes[0].Signal.AtRev)
+	}
+
+	// An old suite that proves a code no fresh suite proves still holds the union back.
+	g = &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec, Rev: "rev1"}}}
+	g.IngestExecutionSuite(nil, map[string]bool{"AAAAA-B01": true, "AAAAA-B02": true}, nil, decl, "", "out/e2e.xml", "t1")
+	g.Nodes[0].Rev = "rev2"
+	g.IngestExecutionSuite(nil, map[string]bool{"AAAAA-B02": true}, nil, decl, "", "out/unit.xml", "t2")
+	if !g.Nodes[0].SignalStale() {
+		t.Error("AAAAA-B01 rests only on the proof of rev1: the union is stale")
+	}
+}
+
 // A suite that stops proving anything leaves the union and leaves no empty entry behind.
 func TestIngestSuite_suiteThatProvesNothingLeaves(t *testing.T) {
 	t.Run("SGINA-B05: A suite that proves nothing leaves the union", func(t *testing.T) {})

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SGINA
-  updated_at: 2026-11-02
+  updated_at: 2026-11-13
   layer: mapa
 -->
 # SignalIngestion — hanging the runner's results on the map's nodes: executions, proven rules, coverage and mutation
@@ -62,7 +62,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B03` | A node's proven rules are the ones it declares that a passing case named; a full run with no suite writes that result even when empty, so a proof that stopped existing is erased. |
 | `SGINA-B04` | With a suite named, each suite's proof is kept apart and the node's proven rules are their union: another suite's ingestion never erases it, and ingesting the same suite again replaces its own entry. |
 | `SGINA-B05` | A suite that no longer proves anything on a node leaves the union and leaves no empty entry behind. |
-| `SGINA-B06` | The union is only as fresh as its oldest contributor: the node reads stale while any contributing suite measured an earlier revision, and an entry with no recorded revision is never fresh. |
+| `SGINA-B06` | The union is only as fresh as its oldest contributor (but `SGINA-B34`): the node reads stale while any contributing suite measured an earlier revision, and an entry with no recorded revision is never fresh. |
 | `SGINA-B07` | A partial run changes only what it saw: a node none of whose declared rules the run named keeps its proof, a rule it named takes this run's result, and a rule it did not name keeps its earlier proof. |
 | `SGINA-B08` | Dropping the external proof a full run measured again removes, from each suite of a report from outside the repository, the scenarios the run saw — the suite's entry goes when none is left, the scenarios the run did not see keep their proof and its revision — recomputes the node's union and freshness from what remains, and names each suite touched, sorted. (`DropExternalProof`) |
 
@@ -103,6 +103,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B31` | Dropping the external coverage for a full run removes the coverage of the reports from outside the repository only on the files that run covered and only of the run's own test layer — an entry with no layer recorded is `unit`, the default —, recomputes their coverage from what remains, and names each suite touched; a file the run did not cover, and another layer's coverage, keep it. (`DropExternalCoverage`) |
 | `SGINA-B32` | A late ingestion's run placed (`SetRunAsOf`) stamps each file its proofs stand on — the test, each file and navigation row of its closure, each spec whose scenarios it proves — with its revision now when the run measured the same file, and `changed-after-run` otherwise, which no revision equals: the proof reads as stale, naming the file. The signals it stamps record when the run happened and the aliases it was read with. With no run placed, everything is stamped as the map holds it. (`RunAsOf`, `revAsOf`, `ChangedAfterRun`) |
 | `SGINA-B33` | Each ingestion drops, from a spec's proof, the scenarios whose rule the spec no longer declares — from every suite, the ones this ingestion did not run included —, a suite left with none leaves with its revision, and what the spec proves and the revision it was proven at are recomputed: a suite nobody runs again keeps no spec stale through a scenario the spec renamed or removed. (`dropUndeclared`) |
+| `SGINA-B34` | A suite that measured an earlier revision holds the union back only for what it alone proves: when every code it proves is proven again by a suite at the current revision, the node reads fresh; a code it alone proves keeps the node stale. (`unionRev`) |
 | `SGINA-B24` | The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. A node whose evidence revisions held carries its evidence, as a rebuild does — the tests reaching it stay fresh. (`RefreshRevs`) |
 | `SGINA-B23` | A run time Anchors measured itself is recorded on the node under the suite; a node the map does not have is ignored. (`RecordRunSeconds`) |
 | `SGINA-B24` | `AdoptMissingSuites` gives a signal the proofs of each suite another measurement holds and it does not, at that suite's own revision, and recomputes the union and its revision; a suite the signal already has stays as it is. |

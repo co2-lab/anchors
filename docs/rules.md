@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:0e07e45297b03eb2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:79498666d1626ce6 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -8720,7 +8720,7 @@ in `layers/`.
 
 - [SGINA-B05 — A suite that no longer proves anything on a node leaves the union and leaves no empty entry behind.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
-- [SGINA-B06 — The union is only as fresh as its oldest contributor: the node reads stale while any contributing suite measured an earlier revision, and an entry with no recorded revision is never fresh.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
+- [SGINA-B06 — The union is only as fresh as its oldest contributor (but `SGINA-B34`): the node reads stale while any contributing suite measured an earlier revision, and an entry with no recorded revision is never fresh.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B07 — A partial run changes only what it saw: a node none of whose declared rules the run named keeps its proof, a rule it named takes this run's result, and a rule it did not name keeps its earlier proof.](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
@@ -8771,6 +8771,8 @@ in `layers/`.
 - [SGINA-B32 — A late ingestion's run placed (`SetRunAsOf`) stamps each file its proofs stand on — the test, each file and navigation row of its closure, each spec whose scenarios it proves — with its revision now when the run measured the same file, and `changed-after-run` otherwise, which no revision equals: the proof reads as stale, naming the file. The signals it stamps record when the run happened and the aliases it was read with. With no run placed, everything is stamped as the map holds it. (`RunAsOf`, `revAsOf`, `ChangedAfterRun`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B33 — Each ingestion drops, from a spec's proof, the scenarios whose rule the spec no longer declares — from every suite, the ones this ingestion did not run included —, a suite left with none leaves with its revision, and what the spec proves and the revision it was proven at are recomputed: a suite nobody runs again keeps no spec stale through a scenario the spec renamed or removed. (`dropUndeclared`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
+
+- [SGINA-B34 — A suite that measured an earlier revision holds the union back only for what it alone proves: when every code it proves is proven again by a suite at the current revision, the node reads fresh; a code it alone proves keeps the node stale. (`unionRev`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
 - [SGINA-B24 — The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. A node whose evidence revisions held carries its evidence, as a rebuild does — the tests reaching it stay fresh. (`RefreshRevs`)](layers/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 
