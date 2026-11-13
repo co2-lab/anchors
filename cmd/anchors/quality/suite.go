@@ -113,6 +113,36 @@ instead of it being proven by the dependents.`,
 	})
 }
 
+// filesAsLayers is the hint for the arguments taken as layers that are files of the project:
+// the arguments name layers, and a file goes through `--changed`, one value per flag. Measured
+// in MIF: four test paths after the layer read as four undeclared layers, and `--changed a.ts
+// b.ts` took the second file as a layer.
+func filesAsLayers(absRoot, command string, args, workspaces []string) string {
+	var files []string
+	for _, a := range args {
+		if st, err := os.Stat(filepath.Join(absRoot, filepath.FromSlash(a))); err == nil && !st.IsDir() {
+			files = append(files, a)
+		}
+	}
+	if len(files) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "\n  %d of them are files, not layers: the arguments name layers, and a file goes through `--changed`, one per flag:\n    anchors %s", len(files), command)
+	for _, a := range args {
+		if !slices.Contains(files, a) {
+			fmt.Fprintf(&b, " %s", a)
+		}
+	}
+	for _, w := range workspaces {
+		fmt.Fprintf(&b, " -w %s", w)
+	}
+	for _, f := range files {
+		fmt.Fprintf(&b, " --changed %s", f)
+	}
+	return b.String()
+}
+
 // suiteCommand descreve o que muda entre `test` e `mutation` — o resto é idêntico, e
 // duplicar os dois faria a mensagem de "não configurado" divergir com o tempo.
 type suiteCommand struct {
@@ -154,11 +184,12 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 
 			sel, ausentes := config.SelecionaSuites(declaradas, args, workspaces, escopos)
 			if len(ausentes) > 0 {
-				return fmt.Errorf("not declared in `%s:`: %s\n  declared layers:     %s\n  declared workspaces: %s\n  declared scopes:     %s",
+				return fmt.Errorf("not declared in `%s:`: %s\n  declared layers:     %s\n  declared workspaces: %s\n  declared scopes:     %s%s",
 					cs.secao, strings.Join(ausentes, ", "),
 					strings.Join(config.DeclaredLayers(declaradas), ", "),
 					joinOrDash(config.DeclaredWorkspaces(declaradas)),
-					joinOrDash(config.DeclaredScopes(declaradas)))
+					joinOrDash(config.DeclaredScopes(declaradas)),
+					filesAsLayers(absRoot, cs.nome, args, workspaces))
 			}
 			// Combinação válida mas vazia não é erro de digitação — é "não existe essa
 			// suíte". Dizer isso com clareza evita a leitura de que o comando rodou e
@@ -249,7 +280,7 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 	// para obtê-la devolveria o passo manual que estes comandos vieram eliminar.
 	cmd.Flags().StringSliceVar(&escopos, "scope", nil, "filters by the declared SCOPE (`isolated`, `full`) — only on mutation. Without this, runs whichever are declared")
 	cmd.Flags().StringVar(&target, "target", "", "target that replaces `{{target}}` in the declared `run:` (e.g. the file to mutate)")
-	cmd.Flags().StringSliceVar(&changed, "changed", nil, "INCREMENTAL mode: changed file(s) — runs the `run_changed:` over the union of the impact paths, the same slice as `check --changed`")
+	cmd.Flags().StringSliceVar(&changed, "changed", nil, "INCREMENTAL mode: changed file(s) — runs the `run_changed:` over the union of the impact paths, the same slice as `check --changed`. One value per flag: repeat it (`--changed a.ts --changed b.ts`) or separate with commas")
 	cmd.Flags().BoolVar(&all, "all", false, "run every file of the suites through `run:`, whatever their state — the whole run, as before the state selection")
 	cmd.Flags().BoolVar(&picked.IncludeFresh, "include-fresh", false, "also run files measured at the current version that are below the minimum (by default only STALE files below the minimum run)")
 	cmd.Flags().BoolVar(&picked.IncludePassing, "include-passing", false, "mutation: also run stale files at the minimum or above (a test run takes every stale file by default); with --include-fresh, fresh passing files too")
@@ -624,7 +655,7 @@ func joinOrDash(vs []string) string {
 
 // coveredBy keeps, of absolute file paths, the ones the suite's `paths:` cover.
 func coveredBy(s config.Suite, absRoot string, files []string) []string {
-	if len(s.Paths) == 0 {
+	if len(s.Paths) == 0 && len(s.Exclude) == 0 {
 		return files
 	}
 	var out []string

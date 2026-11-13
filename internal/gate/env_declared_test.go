@@ -100,3 +100,38 @@ func TestEnvDeclared_eachFileByItsDialect(t *testing.T) {
 		t.Errorf("the Go dialect declares no env_read: pending naming it, got %v (%s)", v, msg)
 	}
 }
+
+func TestEnvDeclared_readByADependency(t *testing.T) {
+	t.Run("ENVDC-B07: A declared variable the unit's dependencies read is read", func(t *testing.T) {})
+	root := t.TempDir()
+	for rel, body := range map[string]string{
+		"pay/pay.go":     "package pay\nvar url = os.Getenv(\"PAYMENTS_URL\")\n",
+		"quota/quota.go": "package quota\n",
+		"usage/usage.go": "package usage\nvar table = os.Getenv(\"USAGE_TABLE\")\n",
+		"other/other.go": "package other\nvar k = os.Getenv(\"STRAY_KEY\")\n",
+	} {
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		must(t, os.MkdirAll(filepath.Dir(p), 0o755))
+		must(t, os.WriteFile(p, []byte(body), 0o644))
+	}
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{{ID: "pay/pay.go", Kind: mapx.KindCode}, {ID: "quota/quota.go", Kind: mapx.KindCode},
+			{ID: "usage/usage.go", Kind: mapx.KindCode}, {ID: "other/other.go", Kind: mapx.KindCode}},
+		Edges: []mapx.Edge{
+			{From: "pay/pay.spec.md", To: "pay/pay.go", Type: mapx.EdgeSpecifies},
+			{From: "pay/pay.go", To: "quota/quota.go", Type: mapx.EdgeDependsOn},
+			{From: "quota/quota.go", To: "usage/usage.go", Type: mapx.EdgeDependsOn},
+		},
+	}
+	n := mapx.Node{ID: "pay/pay.spec.md", Kind: mapx.KindSpec}
+	spec := envSpec("| PAYMENTS_URL | string | yes | — | — | no | base URL |",
+		"| USAGE_TABLE | string | yes | — | — | no | read by the quota helper's model |")
+	if v, msg := checkEnvDeclared(spec, n, root, g, goDialect); v != Pass {
+		t.Errorf("a variable a dependency of a dependency reads is the unit's to declare: %v %s", v, msg)
+	}
+	stray := envSpec("| PAYMENTS_URL | string | yes | — | — | no | base URL |",
+		"| STRAY_KEY | string | yes | — | — | no | read by no dependency |")
+	if v, msg := checkEnvDeclared(stray, n, root, g, goDialect); v != Fail || !strings.Contains(msg, "STRAY_KEY") {
+		t.Errorf("a file the unit does not depend on reads nothing for it: %v %s", v, msg)
+	}
+}

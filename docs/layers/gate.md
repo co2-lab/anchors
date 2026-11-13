@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:f0b6f722df92ce44 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:7a34937bd72f90c5 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 97 units and 1475 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 97 units and 1478 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1031,6 +1031,8 @@ read by a computed name is out of reach of the text.
 - **ENVDC-B05** — With no `dialect.env_read` declared the gate is pending, naming the field: how code reads a variable is the language's, and the core knows none.
 
 - **ENVDC-B06** — Each code file the spec specifies is read with its own dialect's `env_read`; a file whose dialect declares none leaves the gate pending, naming the field at that dialect (`dialects.<name>.env_read`).
+
+- **ENVDC-B07** — A variable the spec declares and its own code does not read is read when a code file the unit depends on reads it — reached from the specified files through `depends-on`, transitively: a shared helper's read is the unit's deploy contract. A variable read only by a dependency is not asked of the spec. (`readByDependencies`)
 
 - **ENVDC-E01** — A specified code file cannot be read.
 
@@ -3916,6 +3918,8 @@ it uses exists in the spec.
 
 - **RLUSG-B07** — `rule-uses-implemented` fails naming each field a rule uses that no code file the spec governs mentions as a whole word — the name, or the first or last segment of a dotted one —; codes and `DEPn` are not fields; a spec with no rule uses, or governing no code, is skipped.
 
+- **RLUSG-B08** — `rule-uses-implemented` does not ask a rule whose line carries `@no-uses: <why>` what it reads, as `rule-uses-declared` does not: its row's field cell may stay empty.
+
 
 ## SCASS — ScenarioAsserts — scenario outcome steps must assert concrete verifiable outcomes
 
@@ -4388,6 +4392,8 @@ proposes none.
 - **STRQS-B01** — A spec of a layer with required states that registers none by one of the names, and does not waive it with a reason, fails, naming the layer and the missing states; registered or waived, it passes. (`checkStatesRequired`)
 
 - **STRQS-B02** — A project that requires no state, a spec of a layer with none required, or an artifact that is no spec, is skipped.
+
+- **STRQS-B03** — A state is registered where the spec defines it, by its name: a heading that opens with the state's code (its whole text), a table row whose first cell is the code (that cell and the next), a list item that opens with the code (up to the first spaced dash or period). A line that only cites a state's code registers no name. (`stateNames`)
 
 
 ## SYMXS — SymbolExists — a name marked as a symbol is in the project's code

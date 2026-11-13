@@ -390,6 +390,16 @@ func TestSuiteSelectionErrors(t *testing.T) {
 		t.Error("an undeclared workspace must be refused")
 	}
 
+	t.Run("STPRS-E10: A file given where a layer goes is refused pointing at --changed", func(t *testing.T) {})
+	_, err = runQ(t, newTestCmd(), "--root", dir, "unit", "-w", "backend", "a_test.go")
+	if err == nil || !strings.Contains(err.Error(), "1 of them are files, not layers") ||
+		!strings.Contains(err.Error(), "anchors test unit -w backend --changed a_test.go") {
+		t.Errorf("a file taken as a layer points at --changed, one per flag; got %v", err)
+	}
+	if _, err = runQ(t, newTestCmd(), "--root", dir, "e2e"); err == nil || strings.Contains(err.Error(), "are files") {
+		t.Errorf("a layer that is no file gets no hint about files; got %v", err)
+	}
+
 	// no suite declared at all: show how to declare, and fail
 	bare := qProject(t, suiteLayers, suiteFiles(), suiteGraph())
 	out, err := runQ(t, newMutationCmd(), "--root", bare)

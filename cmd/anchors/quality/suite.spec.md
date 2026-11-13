@@ -1,6 +1,6 @@
 <!-- @anchors
   code: STPRS
-  updated_at: 2026-10-13
+  updated_at: 2026-11-13
   layer: comando
 -->
 # SuiteProxy — runs the test and mutation suites the project declared, and binds their reports to the map
@@ -88,6 +88,7 @@ coverage, or the check over the run's own scope: the same changed files, or the 
 | `STPRS-E07` | One invocation is longer than the platform's ceiling (overridable by an environment variable): a full run, or a single file of the impact path. | Error before running, with the ceiling and the ways out. | Past the ceiling the command fails without writing anything, and that failure looks like a red test. |
 | `STPRS-E08` | The chain names a command other than check or coverage. | Error naming what is accepted. | The chain is not a disguised shell runner. |
 | `STPRS-E09` | The incremental mode without a map points at the map build. | Error pointing at `anchors map build`. | The impact path is read from the map. |
+| `STPRS-E10` | A value given where a layer goes is a file of the project — a test path after the layer, or the second value of `--changed a b`. | The error of `STPRS-E03` adds that those are files, and the command that runs them: the same layers and workspaces, each file through its own `--changed`. | The arguments name layers; a file read as a layer is a typo with a known fix, and the flag takes one value at a time. |
 
 ## Open Decisions
 

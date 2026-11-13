@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNFGO
-  updated_at: 2026-11-10
+  updated_at: 2026-11-13
   layer: config
 -->
 # Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default
@@ -97,6 +97,7 @@ patterns a spec governs.
 | `CNFGO-B76` | `frozen_paths` lists freezes by folder — each a freeze (its code, or the reason itself) and the globs it covers —; `FrozenPathOf` is the freeze of the first entry whose glob matches a file, in the order declared, or empty. (`FrozenPath`, `FrozenPathOf`) |
 | `CNFGO-B77` | A gate may declare `legacy` — a `before` date and a `severity` for the targets last changed before it, each level falling back to the gate's own, and an `until` date from which the legacy ends — and `cache` — the `inputs` its tool reads besides its targets, and whether a failure (`failures`) and a CI (`ci`) keep its verdict. (`LegacySeverity`, `LegacyActionFor`, `ToolCache`) |
 | `CNFGO-B78` | `required_states` maps a spec layer to the names of the states every spec of it registers; the names are the project's. (`RequiredStates`) |
+| `CNFGO-B79` | A suite's `exclude` globs leave out files its `paths` cover — or, with no `paths`, files it would run otherwise; a glob that is not valid fails the load naming the section, the suite and the index. (`Suite.Covers`) |
 | `CNFGO-B60` | A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RLUSG
-  updated_at: 2026-10-08
+  updated_at: 2026-11-13
   layer: gate
 -->
 # RuleUses — each rule says what it uses, and what it uses exists
@@ -39,6 +39,7 @@ it uses exists in the spec.
 | `RLUSG-B05` | `rule-uses-resolve` accepts a field the spec declares — the first cell of a row of any of its other tables, or a backticked name in a heading —, a dotted or indexed name by its first segment, a `DEPn` that is a row of the dependencies table, and leaves codes to `code-reference-valid`; it fails naming each use that resolves to nothing, with its rule. |
 | `RLUSG-B06` | `rule-uses-resolve` skips a node that is not a spec, and a spec whose rules do not say what they use yet. |
 | `RLUSG-B07` | `rule-uses-implemented` fails naming each field a rule uses that no code file the spec governs mentions as a whole word — the name, or the first or last segment of a dotted one —; codes and `DEPn` are not fields; a spec with no rule uses, or governing no code, is skipped. |
+| `RLUSG-B08` | `rule-uses-implemented` does not ask a rule whose line carries `@no-uses: <why>` what it reads, as `rule-uses-declared` does not: its row's field cell may stay empty. |
 
 ## Errors
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: STRQS
-  updated_at: 2026-11-10
+  updated_at: 2026-11-13
   layer: gate
 -->
 # StatesRequired — every spec of a layer registers the states the project requires of it
@@ -39,3 +39,8 @@ proposes none.
 | --- | --- |
 | `STRQS-B01` | A spec of a layer with required states that registers none by one of the names, and does not waive it with a reason, fails, naming the layer and the missing states; registered or waived, it passes. (`checkStatesRequired`) |
 | `STRQS-B02` | A project that requires no state, a spec of a layer with none required, or an artifact that is no spec, is skipped. |
+| `STRQS-B03` | A state is registered where the spec defines it, by its name: a heading that opens with the state's code (its whole text), a table row whose first cell is the code (that cell and the next), a list item that opens with the code (up to the first spaced dash or period). A line that only cites a state's code registers no name. (`stateNames`) |
+
+## Errors
+
+none — the gate reads only the spec's text; a spec with no code defines no state, and what it does not register is a verdict, not a failure

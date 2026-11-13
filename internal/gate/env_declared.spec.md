@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ENVDC
-  updated_at: 2026-11-02
+  updated_at: 2026-11-13
   layer: gate
 -->
 # EnvDeclared — the environment variables a unit reads are the ones its spec declares
@@ -26,7 +26,7 @@ read by a computed name is out of reach of the text.
 | --- | --- | --- | --- |
 | the node | a spec | any other kind | this unit: leaves without a verdict |
 | the declared variables | the `Variable` cells of the Environment Variables table, in any language | a `TODO` placeholder | this unit: not a variable |
-| the code | the files the spec `specifies`, comments removed | — | the map |
+| the code | the files the spec `specifies`, comments removed; for a declared variable they do not read, also the code files they depend on (`depends-on`, transitively) | — | the map |
 | the read pattern | a regular expression whose first non-empty group is the name | one that does not compile | this unit: reads nothing |
 
 ## Effects
@@ -39,6 +39,7 @@ read by a computed name is out of reach of the text.
 | `ENVDC-B04` | A read inside a comment is no read. |
 | `ENVDC-B05` | With no `dialect.env_read` declared the gate is pending, naming the field: how code reads a variable is the language's, and the core knows none. |
 | `ENVDC-B06` | Each code file the spec specifies is read with its own dialect's `env_read`; a file whose dialect declares none leaves the gate pending, naming the field at that dialect (`dialects.<name>.env_read`). |
+| `ENVDC-B07` | A variable the spec declares and its own code does not read is read when a code file the unit depends on reads it — reached from the specified files through `depends-on`, transitively: a shared helper's read is the unit's deploy contract. A variable read only by a dependency is not asked of the spec. (`readByDependencies`) |
 
 ## Errors
 

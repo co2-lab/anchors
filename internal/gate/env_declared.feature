@@ -2,7 +2,7 @@
 # @anchors
 #   code: EDFNV
 #   ref: ENVDC
-#   updated_at: 2026-11-02
+#   updated_at: 2026-11-13
 #   layer: feature
 
 @ENVDC
@@ -49,3 +49,9 @@ Feature: EnvDeclared — the environment variables a unit reads are the ones its
     Given a spec declaring DB_URL and API_KEY, specifying a Go file reading DB_URL and a TS file reading API_KEY, in a project of a Go and a TS dialect
     When env-declared confronts the spec, and again with the Go dialect declaring no env_read
     Then both are read and it passes, and then it is pending naming dialects.go.env_read
+
+  @ENVDC-B07 @unit-level
+  Scenario: A declared variable the unit's dependencies read is read
+    Given a spec declaring PAYMENTS_URL and USAGE_TABLE, whose code reads PAYMENTS_URL and depends on a helper that depends on a model reading USAGE_TABLE
+    When env-declared confronts the spec, and again declaring STRAY_KEY, read by a file the unit does not depend on
+    Then the first passes, and the second names STRAY_KEY as not read

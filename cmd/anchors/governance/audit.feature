@@ -2,7 +2,7 @@
 # @anchors
 #   code: ADFTD
 #   ref: DTAUI
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-13
 #   layer: feature
 
 @DTAUI
@@ -82,3 +82,9 @@ Feature: Audit — the dossier of everything pending on one file, for fixing it 
     Given a project with anchors.yaml and no map
     When anchors audit runs there
     Then it fails with "load map" and the hint "run `anchors map build`"
+
+  @DTAUI-B10 @unit-level
+  Scenario: The dossier leaves out the gates of the whole project and the slow ones
+    Given a project with a failing file gate, a failing gate of scope project and a failing gate of cost slow
+    When anchors audit runs on a.go
+    Then only the file gate shows, and the dossier names the two it left out with "anchors check --changed a.go"

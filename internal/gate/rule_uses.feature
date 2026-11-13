@@ -2,7 +2,7 @@
 # @anchors
 #   code: RUFRL
 #   ref: RLUSG
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-13
 #   layer: feature
 
 @RLUSG
@@ -49,3 +49,9 @@ Feature: RuleUses — each rule says what it uses, and what it uses exists
     Given a spec whose rules use a field the code reads, a dotted field whose last segment it reads, a dependency, and a field no code mentions
     When rule-uses-implemented confronts it, and a spec governing no code
     Then only the unmentioned field is named, and the spec with no code is skipped
+
+  @RLUSG-B08 @unit-level
+  Scenario: A rule waived by @no-uses is not asked what it reads
+    Given the same spec with the rule of the unmentioned field marked "@no-uses: the check is delegated to the wallet"
+    When rule-uses-implemented confronts it
+    Then that field is not named, and the other unmentioned fields still are

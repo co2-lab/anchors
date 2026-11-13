@@ -33,7 +33,8 @@ func newAuditCmd() *cobra.Command {
 		Use:   "audit <file>",
 		Short: "Dossier of one file's pending items (gates + doctor), for batch fixing",
 		Long: `Gathers, for one file, EVERYTHING pending on it:
-  • the quality gates that apply to its kind (what 'check' would run)
+  • the quality gates that apply to its kind (what 'check' would run), but those of the
+    whole project (scope: project) and the slow ones (cost: slow), which it names
   • the systemic findings from 'doctor' that cite it (collision, orphan, identity…)
 
 Default: the file itself only. With --impact, includes the nodes on the impact path
@@ -82,17 +83,41 @@ fixes all the pending items at once (header, spec, identity, coverage…).`,
 			}
 
 			// 1) GATES sobre esses nós
-			gateResults := gate.RunWithConfig(cfg.Gates, nodes, absRoot, g, cfg)
+			gates, left := fileGates(cfg.Gates)
+			gateResults := gate.RunWithConfig(gates, nodes, absRoot, g, cfg)
 			// 2) DOCTOR — os achados que citam algum desses nós
 			rep := health.Diagnose(g, cfg, absRoot)
 
-			return printAudit(target, withImpact, nodes, gateResults, rep, ids)
+			if err := printAudit(target, withImpact, nodes, gateResults, rep, ids); err != nil {
+				return err
+			}
+			if len(left) > 0 {
+				fmt.Printf("\nleft out: %d gate(s) of the whole project or declared slow (%s) — `anchors check --changed %s` charges them\n",
+					len(left), strings.Join(left, ", "), target)
+			}
+			return nil
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().StringVar(&mapPath, "map", "", "path to the map")
 	cmd.Flags().BoolVar(&withImpact, "impact", false, "includes the impact path (the whole unit), not just the file")
 	return cmd
+}
+
+// fileGates are the gates a dossier of one file runs, and the names of those it leaves out: a
+// gate of the whole project (`scope: project`) answers about the project, not the file, and a
+// slow one (`cost: slow`) costs what a sweep of one agent per file cannot pay. Measured in MIF:
+// every audit ran the SBOM over the repository, the typecheck and the dead-code search — 10 to
+// 30 minutes a file, with the machine stalled under the load.
+func fileGates(gates []config.Gate) (run []config.Gate, left []string) {
+	for _, g := range gates {
+		if g.EffectiveScope() == config.ScopeProject || g.IsSlow() {
+			left = append(left, g.Name)
+			continue
+		}
+		run = append(run, g)
+	}
+	return run, left
 }
 
 func printAudit(target string, withImpact bool, nodes []mapx.Node, results []gate.Result, rep health.Report, ids map[string]bool) error {

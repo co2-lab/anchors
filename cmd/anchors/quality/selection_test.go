@@ -140,9 +140,44 @@ func TestSelection_Ownership(t *testing.T) {
 	layerHere := mapx.Node{ID: "c", Signal: &mapx.TestSignal{ByLayer: map[string]mapx.LayerExec{"unit": {Passed: 1}}}}
 	layerElsewhere := mapx.Node{ID: "d", Signal: &mapx.TestSignal{ByLayer: map[string]mapx.LayerExec{"e2e": {Passed: 1}}}}
 	for n, want := range map[*mapx.Node]bool{&timedHere: true, &timedElsewhere: false, &layerHere: true, &layerElsewhere: false, {ID: "e"}: true} {
-		if got := ownedBy(*n, "out/unit.xml", "unit"); got != want {
+		if got := ownedBy(*n, "out/unit.xml", "unit", nil); got != want {
 			t.Errorf("%s: want %v, got %v", n.ID, want, got)
 		}
+	}
+}
+
+func TestSelection_OwnershipByDeclaredReports(t *testing.T) {
+	t.Run("SLCTN-B20: A time under a report no suite declares names no suite", func(t *testing.T) {})
+	declared := map[string]bool{"out/unit.xml": true, "out/integration.xml": true}
+	byHand := func(layer string) mapx.Node {
+		return mapx.Node{ID: layer, Signal: &mapx.TestSignal{
+			SecondsBySuite: map[string]float64{"out/fx.xml": 1},
+			ByLayer:        map[string]mapx.LayerExec{layer: {Passed: 1}}}}
+	}
+	if !ownedBy(byHand("unit"), "out/unit.xml", "unit", declared) {
+		t.Error("a test timed only under a report ingested by hand belongs to the suite of its layer")
+	}
+	if ownedBy(byHand("integration"), "out/unit.xml", "unit", declared) {
+		t.Error("its layer is another suite's: the time by hand does not make it this one's")
+	}
+	other := mapx.Node{ID: "o", Signal: &mapx.TestSignal{SecondsBySuite: map[string]float64{"out/fx.xml": 1, "out/integration.xml": 1}}}
+	if ownedBy(other, "out/unit.xml", "unit", declared) {
+		t.Error("a test a declared suite timed is that suite's")
+	}
+
+	// Measured in MIF: the stale proof the hook refused was left out of the selection, and not
+	// counted either.
+	root := t.TempDir()
+	cfg := &config.Config{Tests: []config.Suite{
+		{Layer: "unit", JUnit: "out/unit.xml"},
+		{Layer: "integration", JUnit: "out/integration.xml"},
+	}}
+	stale := testNode("models/a.test.ts", 4, 0, false)
+	stale.Signal.SecondsBySuite = map[string]float64{"out/fx.xml": 1.8}
+	stale.Signal.ByLayer = map[string]mapx.LayerExec{"unit": {Passed: 4}}
+	g := &mapx.Graph{Nodes: []mapx.Node{stale}}
+	if run, _ := selectFiles(g, cfg, root, false, "out/unit.xml", cfg.Tests[0], runSelection{}); !reflect.DeepEqual(run, []string{"models/a.test.ts"}) {
+		t.Errorf("the stale test timed by hand runs in its layer's suite, got %v", run)
 	}
 }
 

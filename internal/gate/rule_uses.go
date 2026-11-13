@@ -197,15 +197,7 @@ func checkRuleUsesDeclared(content string, n mapx.Node, root string, g *mapx.Gra
 	for _, l := range gateEntry(cfg, "rule-uses-declared").Letters {
 		letters[strings.ToUpper(strings.TrimSpace(l))] = true
 	}
-	waived := map[string]bool{}
-	code := ruleCodeRE()
-	for _, l := range strings.Split(content, "\n") {
-		if noUsesRE.MatchString(l) {
-			for _, c := range code.FindAllString(l, -1) {
-				waived[c] = true
-			}
-		}
-	}
+	waived := noUsesWaived(content)
 	declared := map[string]bool{}
 	for _, u := range ruleUsesOf(content, cfg, n.Layer) {
 		declared[u.Rule] = true
@@ -228,6 +220,21 @@ func checkRuleUsesDeclared(content string, n mapx.Node, root string, g *mapx.Gra
 		return Fail, i18n.T("gate.rule_uses_declared.fail_missing", len(missing), listCodes(missing))
 	}
 	return Pass, ""
+}
+
+// noUsesWaived are the rules whose line carries `@no-uses: <why>`: the rule reads no datum of
+// its own, and no gate of the uses asks it what it reads.
+func noUsesWaived(content string) map[string]bool {
+	waived := map[string]bool{}
+	code := ruleCodeRE()
+	for _, l := range strings.Split(content, "\n") {
+		if noUsesRE.MatchString(l) {
+			for _, c := range code.FindAllString(l, -1) {
+				waived[c] = true
+			}
+		}
+	}
+	return waived
 }
 
 // rule-uses-resolve: what a rule says it uses exists. A field is a name the spec declares —
@@ -327,7 +334,9 @@ func listCodes(codes []string) string {
 // tested, and checking nothing the implementation touches. The search is plain text — the
 // field's name as a whole word, or its first or last segment for a dotted name
 // (`summary.balance`) —, so no language is assumed. Codes and dependency rows are not
-// fields, and are left to the other gates.
+// fields, and are left to the other gates. A rule waived by `@no-uses` is not asked: measured
+// in MIF, a validation that delegates its check to another screen carried the mark, and this
+// gate went on charging the row's field cell.
 func checkRuleUsesImplemented(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.rule_uses.skip_not_spec")
@@ -341,8 +350,12 @@ func checkRuleUsesImplemented(content string, n mapx.Node, root string, g *mapx.
 		return Skip, i18n.T("gate.rule_uses_implemented.skip_no_code")
 	}
 	codeRE := ruleCodeRE()
+	waived := noUsesWaived(content)
 	var orphan []string
 	for _, u := range rows {
+		if waived[u.Rule] {
+			continue
+		}
 		for _, it := range u.Uses {
 			if codeRE.FindString(it) == it || depRefRE.MatchString(it) {
 				continue

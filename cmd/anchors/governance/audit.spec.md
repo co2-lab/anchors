@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DTAUI
-  updated_at: 2026-10-08
+  updated_at: 2026-11-13
   layer: comando
 -->
 # Audit — the dossier of everything pending on one file, for fixing it in one pass
@@ -9,7 +9,7 @@
 
 ## Overview
 
-`anchors audit <file>` gathers in one place everything pending on a target: the quality gates that apply to its kind, which is what `check` would run, and the systemic findings of `doctor` that cite it. It exists for parallel sweeping. One agent takes one file, reads the whole dossier, fixes every pending item at once — header, spec, identity, coverage — and moves on, instead of opening the same file again for each gate.
+`anchors audit <file>` gathers in one place everything pending on a target: the quality gates that apply to its kind, which is what `check` would run but the gates of the whole project and the slow ones, and the systemic findings of `doctor` that cite it. It exists for parallel sweeping. One agent takes one file, reads the whole dossier, fixes every pending item at once — header, spec, identity, coverage — and moves on, instead of opening the same file again for each gate.
 
 By default the scope is the file alone. With `--impact` the scope grows to the impact path of the target: the rest of its unit and what it propagates to or is validated by, so a single worker can fix the whole unit.
 
@@ -36,6 +36,7 @@ The dossier separates what is actionable from what is only shown. A failing gate
 | `DTAUI-B07` | When nothing is left to show, the dossier says "✓ nothing pending". |
 | `DTAUI-B08` | The target's block prints first, marked ●; every other node in scope prints after it, marked ○ and "(impact)". |
 | `DTAUI-B09` | The impact nodes print sorted by path, so the same tree gives the same dossier on every run. |
+| `DTAUI-B10` | The dossier runs no gate of the whole project (`scope: project`) and no gate declared slow (`cost: slow`): they answer about the project, or cost what a sweep of one agent per file cannot pay. It names them after the dossier, with the `check --changed` that charges them. |
 
 ## Invariants
 

@@ -533,6 +533,21 @@ func TestSuitePaths(t *testing.T) {
 	}
 }
 
+func TestSuiteExclude(t *testing.T) {
+	t.Run("CNFGO-B79: A suite's exclude leaves out files its paths cover", func(t *testing.T) {})
+	unit := Suite{Paths: []string{"packages/backend/**"}, Exclude: []string{"packages/backend/__tests__/integration/**"}}
+	if !unit.Covers("packages/backend/__tests__/unit/a.test.ts") || unit.Covers("packages/backend/__tests__/integration/infra/appleServer.test.ts") {
+		t.Error("the unit suite runs its tree but the integration folder it excludes")
+	}
+	if (Suite{Exclude: []string{"e2e/**"}}).Covers("e2e/login.yaml") || !(Suite{Exclude: []string{"e2e/**"}}).Covers("src/a.ts") {
+		t.Error("with no paths the suite runs any file but those it excludes")
+	}
+	_, err := load(t, "version: 1\ntests:\n  - layer: unit\n    run: x\n    exclude: [\"apps/[m\"]\n")
+	if err == nil || !strings.Contains(err.Error(), "tests[0].exclude[0]") {
+		t.Errorf("a malformed exclude glob must fail the load naming it, got %v", err)
+	}
+}
+
 func TestChangelogConfig(t *testing.T) {
 	t.Run("CNFGO-B50: The changelog block has defaults and refuses an unknown mode", func(t *testing.T) {})
 	var none *Changelog

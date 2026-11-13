@@ -93,14 +93,24 @@ func testState(g *mapx.Graph, n mapx.Node, layer string) fileState {
 // ownedBy says whether a test file is one this suite runs. A suite that timed the file
 // owns it; before any time was recorded, the suite whose layer ran it does. A file no
 // suite ever ran is offered to every suite — in a monorepo, once, until a run times it.
-func ownedBy(n mapx.Node, key, layer string) bool {
+//
+// A time counts only under a report a declared suite writes (`declared`, the keys of the
+// project's `tests:`; nil counts every report). A report ingested by hand — `ingest --junit
+// out/fx.xml` — names no suite: measured in MIF, four tests timed only under such reports
+// belonged to no suite, every selection left them out without counting them, and `anchors
+// test` read "318 fresh and passing" while the commit hook refused their stale proofs.
+func ownedBy(n mapx.Node, key, layer string, declared map[string]bool) bool {
 	s := n.Signal
 	if s == nil {
 		return true
 	}
-	if len(s.SecondsBySuite) > 0 {
-		_, ok := s.SecondsBySuite[key]
-		return ok
+	if _, ok := s.SecondsBySuite[key]; ok {
+		return true
+	}
+	for k := range s.SecondsBySuite {
+		if declared == nil || declared[k] {
+			return false
+		}
 	}
 	if len(s.ByLayer) > 0 {
 		_, ok := s.ByLayer[layer]
@@ -146,6 +156,21 @@ func currentRevs(g *mapx.Graph, root string, cfg *config.Config) {
 	}
 }
 
+// declaredSuiteKeys are the keys of the reports the project's test suites write, as the
+// ingestion keys a time; nil when the project declares none.
+func declaredSuiteKeys(cfg *config.Config, root string) map[string]bool {
+	if cfg == nil || len(cfg.Tests) == 0 {
+		return nil
+	}
+	keys := map[string]bool{}
+	for _, s := range cfg.Tests {
+		if strings.TrimSpace(s.JUnit) != "" {
+			keys[mapcmd.SuiteKey(root, absPath(root, s.JUnit))] = true
+		}
+	}
+	return keys
+}
+
 func square(stale, passing bool) fileState {
 	switch {
 	case !stale && passing:
@@ -180,6 +205,7 @@ func selectFiles(g *mapx.Graph, cfg *config.Config, root string, mutation bool, 
 			}
 		}
 	}
+	declaredKeys := declaredSuiteKeys(cfg, root)
 	left = map[fileState]int{}
 	for _, n := range g.Nodes {
 		if n.Kind != kind || n.Support || !suite.Covers(n.ID) {
@@ -189,7 +215,7 @@ func selectFiles(g *mapx.Graph, cfg *config.Config, root string, mutation bool, 
 			continue
 		}
 		if n.Frozen != "" {
-			if mutation || ownedBy(n, key, layer) {
+			if mutation || ownedBy(n, key, layer, declaredKeys) {
 				left[frozen]++
 			}
 			continue
@@ -209,7 +235,7 @@ func selectFiles(g *mapx.Graph, cfg *config.Config, root string, mutation bool, 
 			// candidate of each mutation suite.
 			st = mutationState(n, ceiling)
 		} else {
-			if !ownedBy(n, key, layer) {
+			if !ownedBy(n, key, layer, declaredKeys) {
 				continue
 			}
 			st = testState(g, n, layer)
@@ -397,10 +423,11 @@ func withImpactedTests(run []string, g *mapx.Graph, cfg *config.Config, root, ke
 	for _, n := range g.Nodes {
 		byID[n.ID] = n
 	}
+	declaredKeys := declaredSuiteKeys(cfg, root)
 	var added []string
 	for _, t := range gate.ImpactedTests(root, g, cfg) {
 		n, ok := byID[t]
-		if !ok || n.Support || !suite.Covers(t) || !ownedBy(n, key, suite.Layer) || slices.Contains(run, t) {
+		if !ok || n.Support || !suite.Covers(t) || !ownedBy(n, key, suite.Layer, declaredKeys) || slices.Contains(run, t) {
 			continue
 		}
 		run = append(run, t)
@@ -449,7 +476,7 @@ func reportUnproven(cfg *config.Config, absRoot string, s config.Suite, ids []st
 		return nil
 	}
 	if len(none) == len(ids) {
-		return fmt.Errorf("layer %q: the suite was handed %d file(s) and reported a result for none — it ran no test of them (a path it does not know as its own? the first was %s)",
+		return fmt.Errorf("layer %q: the suite was handed %d file(s) and reported a result for none — it ran no test of them (a path it does not know as its own? the first was %s; a file another suite runs is left out with the suite's `exclude:`)",
 			s.Layer, len(ids), absFiles(absRoot, ids[:1])[0])
 	}
 	shown := none
@@ -461,6 +488,6 @@ func reportUnproven(cfg *config.Config, absRoot string, s config.Suite, ids []st
 	if len(none) > len(shown) {
 		fmt.Printf(" (+%d)", len(none)-len(shown))
 	}
-	fmt.Print("\n  Narrow the suite's `paths:` to the files its runner runs, and declare the suite that runs the others.\n\n")
+	fmt.Print("\n  Narrow the suite's `paths:` (or `exclude:` what it does not run) to the files its runner runs, and declare the suite that runs the others.\n\n")
 	return nil
 }

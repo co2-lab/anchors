@@ -109,6 +109,11 @@ func TestRuleUsesImplemented(t *testing.T) {
 	if v != Fail || !strings.Contains(msg, "PAYMT-B02 → `ghost`") || !strings.Contains(msg, "PAYMT-B03 → `amounts`") || !strings.Contains(msg, "PAYMT-B04 → `bal`") || strings.Contains(msg, "B01") {
 		t.Fatalf("only the fields no code mentions as a word, got %v: %s", v, msg)
 	}
+	t.Run("RLUSG-B08: A rule waived by @no-uses is not asked what it reads", func(t *testing.T) {})
+	waived := strings.Replace(spec, "| `PAYMT-B02` |", "| `PAYMT-B02` @no-uses: the check is delegated to the wallet |", 1)
+	if v, msg := checkRuleUsesImplemented(waived, n, root, g, testkit.WithComments(nil)); v != Fail || strings.Contains(msg, "ghost") || !strings.Contains(msg, "PAYMT-B03") {
+		t.Errorf("the waived rule's field is not charged, the others still are, got %v: %s", v, msg)
+	}
 	if v, _ := checkRuleUsesImplemented(spec, n, root, &mapx.Graph{}, testkit.WithComments(nil)); v != Skip {
 		t.Errorf("a spec governing no code is skipped, got %v", v)
 	}

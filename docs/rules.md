@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:b47fd752974b1cbe — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:0e07e45297b03eb2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -1359,6 +1359,8 @@ in `layers/`.
 - [DTAUI-B08 — The target's block prints first, marked ●; every other node in scope prints after it, marked ○ and "(impact)".](layers/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass)
 
 - [DTAUI-B09 — The impact nodes print sorted by path, so the same tree gives the same dossier on every run.](layers/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass)
+
+- [DTAUI-B10 — The dossier runs no gate of the whole project (`scope: project`) and no gate declared slow (`cost: slow`): they answer about the project, or cost what a sweep of one agent per file cannot pay. It names them after the dossier, with the `check --changed` that charges them.](layers/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass)
 
 - [DTAUI-I01 — Nothing about a node outside the audited scope reaches the dossier: neither a gate line nor a doctor finding.](layers/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass)
 
@@ -3092,6 +3094,8 @@ in `layers/`.
 
 - [SLCTN-B19 — A test run whose suite reports a result for none of the files handed to it fails, naming the suite, the count and the first path it was handed — a suite that ran no test proved nothing, whatever its exit code; a suite that declares no `junit:` report is not judged. (`reportUnproven`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
+- [SLCTN-B20 — A time recorded under a report no declared suite writes — one ingested by hand — names no suite: the test file belongs, as before any time, to the suite whose layer ran it, and a stale proof of it is selected there. (`ownedBy`, `declaredSuiteKeys`)](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
+
 - [SLCTN-E01 — The map cannot be loaded for a selective run](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
 ### [STEDS — StaleEdges — lists the confrontation debt: expired test evidence and stale edges](layers/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges)
@@ -3241,6 +3245,8 @@ in `layers/`.
 - [STPRS-E07 — One invocation is longer than the platform's ceiling (overridable by an environment variable): a full run, or a single file of the impact path.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
 - [STPRS-E09 — The incremental mode without a map points at the map build.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
+
+- [STPRS-E10 — A value given where a layer goes is a file of the project — a test path after the layer, or the second value of `--changed a b`.](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map)
 
 ### [HDTHD — HeaderDateTouch — bumps the header date of the files that changed, and only of those](layers/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those)
 
@@ -3481,6 +3487,8 @@ in `layers/`.
 - [CNFGO-B77 — A gate may declare `legacy` — a `before` date and a `severity` for the targets last changed before it, each level falling back to the gate's own, and an `until` date from which the legacy ends — and `cache` — the `inputs` its tool reads besides its targets, and whether a failure (`failures`) and a CI (`ci`) keep its verdict. (`LegacySeverity`, `LegacyActionFor`, `ToolCache`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B78 — `required_states` maps a spec layer to the names of the states every spec of it registers; the names are the project's. (`RequiredStates`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-B79 — A suite's `exclude` globs leave out files its `paths` cover — or, with no `paths`, files it would run otherwise; a glob that is not valid fails the load naming the section, the suite and the index. (`Suite.Covers`)](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B60 — A gate relates to the project (`Relates`) when a declared layer is of a kind it measures and, for a gate scoped by tags, carries one of them; the catalog gates (registered by `SetGateCatalog`) that relate and that the project declares by neither name nor checker are its applicable undeclared gates (`ApplicableUndeclared`), in catalog order.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -4489,6 +4497,8 @@ in `layers/`.
 - [ENVDC-B05 — With no `dialect.env_read` declared the gate is pending, naming the field: how code reads a variable is the language's, and the core knows none.](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
 
 - [ENVDC-B06 — Each code file the spec specifies is read with its own dialect's `env_read`; a file whose dialect declares none leaves the gate pending, naming the field at that dialect (`dialects.<name>.env_read`).](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
+
+- [ENVDC-B07 — A variable the spec declares and its own code does not read is read when a code file the unit depends on reads it — reached from the specified files through `depends-on`, transitively: a shared helper's read is the unit's deploy contract. A variable read only by a dependency is not asked of the spec. (`readByDependencies`)](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
 
 - [ENVDC-E01 — A specified code file cannot be read.](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares)
 
@@ -6292,6 +6302,8 @@ in `layers/`.
 
 - [RLUSG-B07 — `rule-uses-implemented` fails naming each field a rule uses that no code file the spec governs mentions as a whole word — the name, or the first or last segment of a dotted one —; codes and `DEPn` are not fields; a spec with no rule uses, or governing no code, is skipped.](layers/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists)
 
+- [RLUSG-B08 — `rule-uses-implemented` does not ask a rule whose line carries `@no-uses: <why>` what it reads, as `rule-uses-declared` does not: its row's field cell may stay empty.](layers/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists)
+
 ### [SCASS — ScenarioAsserts — scenario outcome steps must assert concrete verifiable outcomes](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes)
 
 - [SCASS-B01 — When the confronted node kind is not a feature, the gate skips confrontation.](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes)
@@ -6557,6 +6569,8 @@ in `layers/`.
 - [STRQS-B01 — A spec of a layer with required states that registers none by one of the names, and does not waive it with a reason, fails, naming the layer and the missing states; registered or waived, it passes. (`checkStatesRequired`)](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it)
 
 - [STRQS-B02 — A project that requires no state, a spec of a layer with none required, or an artifact that is no spec, is skipped.](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it)
+
+- [STRQS-B03 — A state is registered where the spec defines it, by its name: a heading that opens with the state's code (its whole text), a table row whose first cell is the code (that cell and the next), a list item that opens with the code (up to the first spaced dash or period). A line that only cites a state's code registers no name. (`stateNames`)](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it)
 
 ### [SYMXS — SymbolExists — a name marked as a symbol is in the project's code](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
 

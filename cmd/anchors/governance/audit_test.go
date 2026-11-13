@@ -83,6 +83,35 @@ func TestAuditFileOnly(t *testing.T) {
 	}
 }
 
+// A dossier of one file leaves out the gates of the whole project and the slow ones, and names
+// them with the command that charges them.
+func TestAuditLeavesOutProjectAndSlowGates(t *testing.T) {
+	t.Run("DTAUI-B10: The dossier leaves out the gates of the whole project and the slow ones", func(t *testing.T) {})
+	yaml := auditYAML + `  - name: whole-typecheck
+    on: [code]
+    scope: project
+    run: "echo typecheck ran; exit 1"
+  - name: slow-scan
+    on: [code]
+    cost: slow
+    run: "echo slow ran; exit 1"
+`
+	dir := govProject(t, yaml, auditFiles(), auditGraph())
+	out, err := runCmd(t, newAuditCmd(), "--root", dir, "a.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "whole-typecheck —") || strings.Contains(out, "slow-scan —") {
+		t.Errorf("neither the project gate nor the slow one runs for one file:\n%s", out)
+	}
+	if !strings.Contains(out, "left out: 2 gate(s) of the whole project or declared slow (whole-typecheck, slow-scan) — `anchors check --changed a.go` charges them") {
+		t.Errorf("the dossier names what it left out and the command that charges it:\n%s", out)
+	}
+	if !strings.Contains(out, "✗ [gate] always-fails") {
+		t.Errorf("the gates of the file still run:\n%s", out)
+	}
+}
+
 // With --impact the unit's other nodes join the scope and print after the target.
 func TestAuditWithImpactIncludesTheUnit(t *testing.T) {
 	t.Run("DTAUI-B03: With impact the dossier covers the unit on the impact path", func(t *testing.T) {})

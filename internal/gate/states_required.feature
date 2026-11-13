@@ -2,7 +2,7 @@
 # @anchors
 #   code: STRQF
 #   ref: STRQS
-#   updated_at: 2026-11-10
+#   updated_at: 2026-11-13
 #   layer: feature
 
 @STRQS
@@ -19,3 +19,9 @@ Feature: StatesRequired — every spec of a layer registers the states the proje
     Given a project requiring no state, a spec of a layer with none required, and a code file
     When the gate confronts each
     Then each is skipped
+
+  @STRQS-B03 @unit-level
+  Scenario: A state is registered where it is defined, by its name
+    Given a screen spec with no empty state, whose message and data rows cite another state and say "empty"
+    When states-required confronts it, and again with a row, a list item or a heading that defines the empty state
+    Then the first fails naming empty, the definitions pass, and a definition whose name is another word fails

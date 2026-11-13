@@ -9,7 +9,8 @@ Dossier of one file's pending items (gates + doctor), for batch fixing.
 
 ```text
 Gathers, for one file, EVERYTHING pending on it:
-  • the quality gates that apply to its kind (what 'check' would run)
+  • the quality gates that apply to its kind (what 'check' would run), but those of the
+    whole project (scope: project) and the slow ones (cost: slow), which it names
   • the systemic findings from 'doctor' that cite it (collision, orphan, identity…)
 
 Default: the file itself only. With --impact, includes the nodes on the impact path

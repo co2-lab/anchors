@@ -42,7 +42,7 @@ anchors test [layers...] [flags]
 | --- | --- | --- |
 | `--all` |  | run every file of the suites through `run:`, whatever their state — the whole run, as before the state selection |
 | `--budget` | `0s` | run the files FASTEST FIRST, in batches through `run_changed:`, until this much time is spent (e.g. 60s, 10m); the rest is left for a later run. The order comes from the times recorded by earlier runs; files never timed go last |
-| `--changed` |  | INCREMENTAL mode: changed file(s) — runs the `run_changed:` over the union of the impact paths, the same slice as `check --changed` |
+| `--changed` |  | INCREMENTAL mode: changed file(s) — runs the `run_changed:` over the union of the impact paths, the same slice as `check --changed`. One value per flag: repeat it (`--changed a.ts --changed b.ts`) or separate with commas |
 | `--include-fresh` |  | also run files measured at the current version that are below the minimum (by default only STALE files below the minimum run) |
 | `--include-passing` |  | mutation: also run stale files at the minimum or above (a test run takes every stale file by default); with --include-fresh, fresh passing files too |
 | `--root` | `.` | project root |

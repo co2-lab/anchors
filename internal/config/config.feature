@@ -2,7 +2,7 @@
 # @anchors
 #   code: CNFTC
 #   ref: CNFGO
-#   updated_at: 2026-11-10
+#   updated_at: 2026-11-13
 #   layer: feature
 
 @CNFGO
@@ -539,6 +539,12 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a configuration requiring loading, error and empty of the screen layer
     When it is loaded
     Then the screen layer requires the three, in order
+
+  @CNFGO-B79 @unit-level
+  Scenario: A suite's exclude leaves out files its paths cover
+    Given a unit suite of paths packages/backend/** that excludes packages/backend/__tests__/integration/**
+    When it is asked whether it runs a unit test and an integration test of the backend
+    Then it runs the unit test and not the integration one, and a malformed exclude glob fails the load naming tests[0].exclude[0]
 
   @CNFGO-E13 @unit-level
   Scenario: A legacy or a cache that cannot hold is refused

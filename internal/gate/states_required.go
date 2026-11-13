@@ -22,6 +22,12 @@ import (
 // empty]}`), and each spec of that layer registers a state by each name — a state line, its
 // heading or its row, carrying the state's code and the name —, or says why not on a line of
 // its own: `@no-state: offline — the screen reads only local data`.
+//
+// A state is registered where it is DEFINED, by its name: the heading `### CODE-S01: Error`, the
+// row whose first cell is the code and whose next cell names it, the list item that opens with
+// the code. A line that only cites a state — measured in MIF: a message row "Empty state —
+// ARSCA-S02", a prose line that mentions an error on its way — registered whatever word it
+// carried, and a screen with no error state of its own passed.
 func checkStatesRequired(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.states_required.skip_not_spec")
@@ -34,14 +40,7 @@ func checkStatesRequired(content string, n mapx.Node, root string, g *mapx.Graph
 	if len(required) == 0 {
 		return Skip, i18n.T("gate.states_required.skip_layer", layer)
 	}
-	code := specCode(content)
-	stateLine := regexp.MustCompile(`\b` + regexp.QuoteMeta(code) + `-` + regexp.QuoteMeta(stateLetter(cfg)) + `\d{2}\b`)
-	var states []string
-	for _, l := range strings.Split(content, "\n") {
-		if code != "" && stateLine.MatchString(l) {
-			states = append(states, strings.ToLower(l))
-		}
-	}
+	states := stateNames(content, specCode(content), stateLetter(cfg))
 	waived := map[string]bool{}
 	for _, m := range noStateRE.FindAllStringSubmatch(content, -1) {
 		waived[strings.ToLower(m[1])] = true
@@ -68,6 +67,42 @@ func checkStatesRequired(content string, n mapx.Node, root string, g *mapx.Graph
 	}
 	return Fail, i18n.T("gate.states_required.missing", layer, strings.Join(missing, ", "))
 }
+
+// stateNames are the names of the states the spec defines, lowercased: a heading's text, the
+// cell after the code in a row, a list item's text up to the first dash or period that ends
+// its name.
+func stateNames(content, code, letter string) []string {
+	if code == "" {
+		return nil
+	}
+	def := regexp.MustCompile("^\\s*(#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}" +
+		regexp.QuoteMeta(code) + "-" + regexp.QuoteMeta(letter) + `\d{2}\b(.*)$`)
+	var out []string
+	for _, l := range strings.Split(content, "\n") {
+		m := def.FindStringSubmatch(l)
+		if m == nil {
+			continue
+		}
+		name := m[2]
+		switch strings.TrimSpace(m[1])[0] {
+		case '|':
+			cells := strings.Split(name, "|")
+			if len(cells) > 1 {
+				cells = cells[:2]
+			}
+			name = strings.Join(cells, " ")
+		case '-', '*':
+			if i := listNameEnd.FindStringIndex(name); i != nil {
+				name = name[:i[0]]
+			}
+		}
+		out = append(out, strings.ToLower(name))
+	}
+	return out
+}
+
+// listNameEnd is where a list item's state name ends: a spaced dash or a period.
+var listNameEnd = regexp.MustCompile(`\s[—–-]\s|\.(\s|$)`)
 
 // noStateRE is a spec's waiver of a required state: its name, then a dash and the reason.
 var noStateRE = regexp.MustCompile(`@no-state[^\S\n]*:[^\S\n]*([^\s—–-]+)[^\S\n]*[—–-][^\S\n]*\S`)

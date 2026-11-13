@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTD
 #   ref: STPRS
-#   updated_at: 2026-10-13
+#   updated_at: 2026-11-13
 #   layer: feature
 
 @STPRS
@@ -156,6 +156,12 @@ Feature: SuiteProxy — runs the test and mutation suites the project declared, 
     Given a project with a suite and no map
     When the test command runs incrementally for a.go
     Then it fails with an error naming "anchors map build"
+
+  @STPRS-E10 @unit-level
+  Scenario: A file given where a layer goes is refused pointing at --changed
+    Given a project with a unit suite of the backend workspace and a test file a_test.go
+    When the test command runs for layer unit, workspace backend and a_test.go
+    Then it fails saying a_test.go is a file, with "anchors test unit -w backend --changed a_test.go"
 
   @STPRS-B12 @unit-level
   Scenario: An incremental run hands each suite only its own impact files

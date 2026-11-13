@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SLCTN
-  updated_at: 2026-11-11
+  updated_at: 2026-11-13
   layer: comando
 -->
 # RunSelection — a run takes only what is stale and below the minimum, unless told otherwise
@@ -55,6 +55,7 @@ whole, saying so.
 | `SLCTN-B17` | A test run takes every stale test file by default, whatever its last result — a stale result is no proof, and `evidence-fresh` refuses it —; a mutation run keeps a stale score at the floor or above out unless `--include-passing`. (`selectFiles`) |
 | `SLCTN-B18` | After a test run, the files handed to a suite that came back with no fresh result are named as unproven, with the way out: narrow the suite's `paths:` to what its runner runs, and declare the suite that runs the others. (`reportUnproven`) |
 | `SLCTN-B19` | A test run whose suite reports a result for none of the files handed to it fails, naming the suite, the count and the first path it was handed — a suite that ran no test proved nothing, whatever its exit code; a suite that declares no `junit:` report is not judged. (`reportUnproven`) |
+| `SLCTN-B20` | A time recorded under a report no declared suite writes — one ingested by hand — names no suite: the test file belongs, as before any time, to the suite whose layer ran it, and a stale proof of it is selected there. (`ownedBy`, `declaredSuiteKeys`) |
 
 ## Errors
 

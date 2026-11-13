@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:85d114722a65bae4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:8a038fae5e5e0df3 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1241,6 +1241,8 @@ is what the test proves.
 - [A project without configuration fails loading it](layers/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-E01`
 
 - [A project without a map fails pointing at the map build](layers/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-E02`
+
+- [The dossier leaves out the gates of the whole project and the slow ones](layers/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-B10`
 
 - [Each duty is reported under the norm that originates it](layers/comando.md#cmpln--compliance--the-state-of-each-regulatory-duty-grouped-by-the-norm-that-imposes-it) `CMPLN-B01`
 
@@ -2818,6 +2820,8 @@ is what the test proves.
 
 - [A run that proved none of its files fails](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B19`
 
+- [A time under a report no suite declares names no suite](layers/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B20`
+
 - [Expired test evidence is listed before the stale edges](layers/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges) `STEDS-B01`
 
 - [Each expired evidence names why it expired](layers/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges) `STEDS-B02`
@@ -2947,6 +2951,8 @@ is what the test proves.
 - [A chain naming another command is refused](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-E08`
 
 - [The incremental mode without a map points at the map build](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-E09`
+
+- [A file given where a layer goes is refused pointing at --changed](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-E10`
 
 - [An incremental run hands each suite only its own impact files](layers/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B12`
 
@@ -3263,6 +3269,8 @@ is what the test proves.
 - [A gate declares a legacy severity and a tool cache](layers/config.md#cnfgo-b77--a-gate-declares-a-legacy-severity-and-a-tool-cache) `CNFGO-B77`
 
 - [required_states maps a spec layer to the states its specs register](layers/config.md#cnfgo-b78--required-states-maps-a-spec-layer-to-the-states-its-specs-register) `CNFGO-B78`
+
+- [A suite's exclude leaves out files its paths cover](layers/config.md#cnfgo-b79--a-suites-exclude-leaves-out-files-its-paths-cover) `CNFGO-B79`
 
 - [A legacy or a cache that cannot hold is refused](layers/config.md#cnfgo-e13--a-legacy-or-a-cache-that-cannot-hold-is-refused) `CNFGO-E13`
 
@@ -4041,6 +4049,8 @@ is what the test proves.
 - [A specified file that cannot be read reads nothing](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-E01`
 
 - [Each file is read by its own dialect's env_read](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B06`
+
+- [A declared variable the unit's dependencies read is read](layers/gate.md#envdc--envdeclared--the-environment-variables-a-unit-reads-are-the-ones-its-spec-declares) `ENVDC-B07`
 
 - [An artifact that is not a test leaves without a verdict](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B01`
 
@@ -5690,6 +5700,8 @@ is what the test proves.
 
 - [The fields a rule uses appear in the code the spec governs](layers/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B07`
 
+- [A rule waived by @no-uses is not asked what it reads](layers/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B08`
+
 - [Non-feature artifacts skip confrontation](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B01`
 
 - [Genuinely assertive outcome steps pass](layers/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B02`
@@ -5933,6 +5945,8 @@ is what the test proves.
 - [A required state the spec neither registers nor waives fails](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it) `STRQS-B01`
 
 - [Outside its subject the gate is skipped](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it) `STRQS-B02`
+
+- [A state is registered where it is defined, by its name](layers/gate.md#strqs--statesrequired--every-spec-of-a-layer-registers-the-states-the-project-requires-of-it) `STRQS-B03`
 
 - [A marked name the code no longer has fails, naming where it is cited](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code) `SYMXS-B01`
 

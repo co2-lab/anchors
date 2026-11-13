@@ -2,7 +2,7 @@
 # @anchors
 #   code: SLFTS
 #   ref: SLCTN
-#   updated_at: 2026-11-11
+#   updated_at: 2026-11-13
 #   layer: feature
 
 @SLCTN
@@ -128,3 +128,8 @@ Feature: RunSelection — a run takes only what is stale and below the minimum, 
     When the test run takes both
     Then the run fails naming the count and the first path handed
 
+  @SLCTN-B20 @unit-level
+  Scenario: A time under a report no suite declares names no suite
+    Given a stale passing unit test timed only under a report ingested by hand, and suites that declare other reports
+    When the unit suite selects its files
+    Then the test is the unit suite's and runs, and a test a declared suite timed stays that suite's
