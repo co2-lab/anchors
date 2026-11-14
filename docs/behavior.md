@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:db1100ae10546ad7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:dd3de7341c5ae4cd — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -161,6 +161,8 @@ is what the test proves.
 - [The rules are read in the three catalogued forms, the spec's own codes at their first definition](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B23`
 
 - [A page whose template is gone goes with it](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B24`
+
+- [A compiled page whose @anchors header opens it is still compiled, and keeps its header](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B25`
 
 - [Every known kind has a title, items to cover and a trap](layers/apoio.md#dcknd--dockinds--what-each-kind-of-project-documentation-must-answer-told-to-the-agent-that-writes-it) `DCKND-B01`
 

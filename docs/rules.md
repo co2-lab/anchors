@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:0798387b7d6b99b5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:4cabc6124292254f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -139,6 +139,8 @@ in `layers/`.
 - [DTCDC-B23 — The stamp covers the template and every loaded spec, so editing either makes the page stale.](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content)
 
 - [DTCDC-B24 — A build removes each page of `docs/` whose generated marker names a template of `doct/` that is gone — renamed or deleted —, and a folder left empty by it, and says which; a page with no marker, from a template that exists, or that the project keeps (`docs.keep`), stays; a dry run only says which it would remove. (`removeOrphans`, `Result.Removed`)](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content)
+
+- [DTCDC-B25 — A page whose project `@anchors` header — an HTML comment, or `#` lines in a YAML — opens it above the marker is a compiled page: it is judged out of date, compiled, pruned and staged by what follows the header, and the header is kept as it is above the compiled content. A page with a header and no marker is handwritten. (`splitHeader`, `withHeaderOf`)](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content)
 
 - [DTCDC-B13 — A spec header's `updated_at:` line, within the first ten lines, is not part of the stamp; the same line further down is content and is.](layers/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content)
 

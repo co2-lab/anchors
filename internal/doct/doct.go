@@ -124,7 +124,39 @@ const HandwrittenMarker = `<!-- anchors:handwritten — this page is NOT generat
 var handwrittenRE = regexp.MustCompile(`^<!-- anchors:handwritten`)
 
 // IsGenerated diz se o conteúdo de um `.md` foi produzido pelo compilador.
-func IsGenerated(conteudo []byte) bool { return markerRE.Match(conteudo) }
+func IsGenerated(conteudo []byte) bool { return markerRE.Match(bodyOf(conteudo)) }
+
+// headerRE is the project's `@anchors` header that may open a compiled page above the marker:
+// an HTML comment, or `#` lines in a YAML. The format 7 migration wrote one at the top of every
+// page that carried a code, and the marker, no longer the first line, read as absent: measured
+// in MIF, 25 pages were refused as written by hand from 2026-10-04 on, and none was compiled
+// again.
+var headerRE = regexp.MustCompile(`^(?:<!--[^\S\n]*@anchors\b[\s\S]*?-->|#[^\S\n]*@anchors[^\n]*(?:\n#[^\n]*?(?:[^\S\n]{2,}|:)[^\n]*)*)[^\S\n]*\n(?:[^\S\n]*\n)*`)
+
+// splitHeader is the page's `@anchors` header with the blank lines after it, and the rest; a
+// page that opens with none has no header.
+func splitHeader(b []byte) (header, body []byte) {
+	if loc := headerRE.FindIndex(b); loc != nil && markerRE.Match(b[loc[1]:]) {
+		return b[:loc[1]], b[loc[1]:]
+	}
+	return nil, b
+}
+
+// bodyOf is the page below its `@anchors` header, which opens with the marker when compiled.
+func bodyOf(b []byte) []byte {
+	_, body := splitHeader(b)
+	return body
+}
+
+// withHeaderOf is the compiled page with the header the page on disk opens with, kept: it is
+// the project's, and the compiler writes only what follows it.
+func withHeaderOf(current, compiled []byte) []byte {
+	header, _ := splitHeader(current)
+	if len(header) == 0 {
+		return compiled
+	}
+	return append(append([]byte(nil), header...), compiled...)
+}
 
 // IsHandwritten diz se a página se DECLARA escrita à mão.
 //
@@ -639,7 +671,7 @@ func (c *Compiler) removeOrphans(tmpls []string, dryRun bool) ([]string, error) 
 		if err != nil {
 			return nil // @resilient: a page that cannot be read is not known to be generated, and stays
 		}
-		m := sourceRE.FindSubmatch(b)
+		m := sourceRE.FindSubmatch(bodyOf(b))
 		if m == nil || have[string(m[1])] {
 			return nil
 		}
@@ -682,7 +714,8 @@ func (c *Compiler) Build(dryRun bool) (Result, error) {
 		//
 		// Um `docs/produto.md` escrito à mão não pode ser destruído porque alguém criou um
 		// `doct/produto.md.tmpl` — o compilador para e reporta, em vez de apagar trabalho.
-		if b, err := os.ReadFile(destino); err == nil && !markerRE.Match(b) {
+		atual, errAtual := os.ReadFile(destino)
+		if errAtual == nil && !markerRE.Match(bodyOf(atual)) {
 			res.Skipped = append(res.Skipped, saida)
 			continue
 		}
@@ -691,6 +724,7 @@ func (c *Compiler) Build(dryRun bool) (Result, error) {
 		if err != nil {
 			return res, err
 		}
+		out = withHeaderOf(atual, out)
 		if !dryRun {
 			if err := os.MkdirAll(filepath.Dir(destino), 0o755); err != nil {
 				return res, err
@@ -857,6 +891,7 @@ func (c *Compiler) Stale() ([]string, error) {
 		// nao o carregam, e acusa-las mandaria o autor rodar um build que nao conserta
 		// nada que ele tenha feito. Para elas o caminho antigo continua valendo — compila
 		// e compara — e o proximo `docs build` grava o carimbo.
+		atual = bodyOf(atual)
 		if m := markerHashRE.FindSubmatch(atual); m != nil {
 			b, errT := c.readRel(filepath.Join(Dir, filepath.FromSlash(rel)))
 			if errT != nil {
@@ -912,6 +947,9 @@ func (c *Compiler) Compiled() ([]Page, error) {
 		b, err := c.compile(tmpl, saida)
 		if err != nil {
 			return nil, err
+		}
+		if atual, err := c.readRel(filepath.Join(OutDir, filepath.FromSlash(saida))); err == nil {
+			b = withHeaderOf(atual, b)
 		}
 		out = append(out, Page{Path: path.Join(OutDir, saida), Content: b})
 	}

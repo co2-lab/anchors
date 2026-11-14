@@ -2,7 +2,7 @@
 # @anchors
 #   code: DCFTE
 #   ref: DTCDC
-#   updated_at: 2026-10-24
+#   updated_at: 2026-11-14
 #   layer: feature
 
 @DTCDC
@@ -208,3 +208,9 @@ Feature: DocTemplateCompiler — compiles documentation pages from templates tha
     Given a page generated from a template renamed since, in a folder of its own, a handwritten page, and a generated page the project keeps
     When the docs are built, once as a dry run and once for real
     Then the dry run names the orphan and removes nothing, and the build removes it and its empty folder, keeping the handwritten and the kept one
+
+  @DTCDC-B25 @unit-level
+  Scenario: A compiled page whose @anchors header opens it is still compiled, and keeps its header
+    Given a compiled page that opens with an @anchors header, the marker below it, and an old body
+    When the docs are judged and built
+    Then the page is out of date, compiled again below the same header, and then in date; a page with a header and no marker is left as written

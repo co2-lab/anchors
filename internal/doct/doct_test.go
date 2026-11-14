@@ -256,6 +256,59 @@ func TestBuild_doesNotOverwriteHandwrittenDoc(t *testing.T) {
 	}
 }
 
+// A compiled page whose `@anchors` header sits above the marker is still compiled, and keeps
+// its header. Measured in MIF: the format 7 migration put the header there, and 25 pages were
+// refused as handwritten from then on.
+func TestBuild_markerBelowTheAnchorsHeader(t *testing.T) {
+	t.Run("DTCDC-B25: A compiled page whose @anchors header opens it is still compiled, and keeps its header", func(t *testing.T) {})
+	root, g := projetoDeTeste(t, map[string]string{"pkg/GoLive.spec.md": specDeExemplo})
+	escreveTemplate(t, root, "comportamento.md.tmpl", "new body")
+	docs := filepath.Join(root, OutDir)
+	must := func(err error) {
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	must(os.MkdirAll(docs, 0o755))
+	header := "<!-- @anchors\n  code: CMDCA\n-->\n\n"
+	page := header + "<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b8a3c5f3e8e08959 — DO NOT EDIT: run `anchors docs build` -->\nold body\n"
+	must(os.WriteFile(filepath.Join(docs, "comportamento.md"), []byte(page), 0o644))
+
+	c, _ := New(root, g)
+	stale, err := c.Stale()
+	must(err)
+	if len(stale) != 1 {
+		t.Errorf("the page under its header is out of date, got %v", stale)
+	}
+	res, err := c.Build(false)
+	must(err)
+	if len(res.Skipped) != 0 {
+		t.Errorf("a page under its @anchors header is no handwritten page: skipped %v", res.Skipped)
+	}
+	b, _ := os.ReadFile(filepath.Join(docs, "comportamento.md"))
+	if !strings.HasPrefix(string(b), header+"<!-- anchors:generated from doct/comportamento.md.tmpl") || !strings.Contains(string(b), "new body") {
+		t.Errorf("the page is compiled again below the header it opens with:\n%s", b)
+	}
+	if stale, _ := c.Stale(); len(stale) != 0 {
+		t.Errorf("once compiled it is in date, got %v", stale)
+	}
+	pages, err := c.Compiled()
+	must(err)
+	if len(pages) != 0 {
+		t.Errorf("nothing left to compile for the commit, got %d", len(pages))
+	}
+
+	// A handwritten page with a header and no marker stays the project's.
+	byHand := header + "# Produto\n\nWritten by hand.\n"
+	escreveTemplate(t, root, "produto.md.tmpl", "gerado")
+	must(os.WriteFile(filepath.Join(docs, "produto.md"), []byte(byHand), 0o644))
+	res, err = c.Build(false)
+	must(err)
+	if b, _ := os.ReadFile(filepath.Join(docs, "produto.md")); string(b) != byHand || len(res.Skipped) != 1 {
+		t.Errorf("a page with a header and no marker is not overwritten: skipped %v\n%s", res.Skipped, b)
+	}
+}
+
 // `--dry-run` does not write: it compares without touching the disk.
 func TestBuild_dryRunDoesNotWrite(t *testing.T) {
 	t.Run("DTCDC-B04: A dry run writes nothing", func(t *testing.T) {})
