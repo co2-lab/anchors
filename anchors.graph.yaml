@@ -2,7 +2,7 @@
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 8
 generated_by: dev
-config_rev: cbe06d5ba71d
+config_rev: d1da9f9572c1
 nodes:
     - id: BOOTSTRAP.md
       kind: doc

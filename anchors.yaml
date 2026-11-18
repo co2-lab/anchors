@@ -13,9 +13,9 @@ lang: en
 # "código em: [cli/internal cli/cmd]" — e não usou; os caminhos daquele dia tinham o
 # prefixo `cli/`, que saiu quando o `go.mod` foi para a raiz).
 version: 8
-# The version floor: `mode: manual` (below) exists from 0.1.190 on. An older binary would
+# The version floor: `versioning:` (below) exists from 0.2.1 on. An older binary would
 # refuse to load this file; with the floor it asks to be updated instead.
-min_version: 0.1.190
+min_version: 0.2.1
 # THE VERSION OF THE CLI: only in its tags (`v0.2.1`), with no file holding it — the release
 # builds it into the binary. Each release raises the patch; `anchors version` shows the next.
 versioning:
