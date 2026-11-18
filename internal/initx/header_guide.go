@@ -1,0 +1,216 @@
+// @anchors
+//   code: HGIHD
+//   ref: HDGDH
+
+package initx
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/code"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/scan"
+)
+
+// CommentStyle é o dialeto de comentário de uma linguagem, para os exemplos do
+// HEADER_GUIDE semeado. A maioria usa `//`; scripts/config usam `#`; markdown `<!--`.
+type CommentStyle struct {
+	Line  string // prefixo de comentário de linha (ex: "//", "#")
+	Open  string // abertura de bloco, se houver (ex: "<!--")
+	Close string // fechamento de bloco (ex: "-->")
+}
+
+// commentStyleFor is a language family's comment dialect: `#` for Python and Ruby, `//`
+// for every other family. It only shapes the EXAMPLE in the guide — Anchors reads any
+// comment at run time, whatever this says.
+func commentStyleFor(family string) CommentStyle {
+	switch family {
+	case "python", "ruby":
+		return CommentStyle{Line: "#"}
+	default: // go, ts, java, kotlin, csharp, php, rust, and an unknown family
+		return CommentStyle{Line: "//"}
+	}
+}
+
+// RenderHeaderGuide gera o HEADER_GUIDE.md concreto para o projeto — a régua embutida
+// (a doutrina) instanciada com o dialeto de comentário da família da linguagem e as
+// features/módulos reais. `moduleNames` são as features do projeto (para o exemplo de
+// @feature). Vazio → exemplo genérico.
+func RenderHeaderGuide(family string, moduleNames []string) string {
+	cs := commentStyleFor(family)
+	c := cs.Line
+
+	feat := "auth"
+	if len(moduleNames) > 0 {
+		feat = moduleNames[0]
+	}
+
+	var b strings.Builder
+	b.WriteString("# Header guide — " + projectTitle(family) + "\n\n")
+	b.WriteString("> The annotation block at the top of EVERY file in this project. Seeded by\n")
+	b.WriteString("> `anchors init`; it is the built-in ruler (`anchors guide header`) instantiated for\n")
+	b.WriteString("> the language here. Mandatory: a file without this header is invisible to what\n")
+	b.WriteString("> Anchors does best.\n\n")
+
+	b.WriteString("## The block, in this language's dialect\n\n")
+	b.WriteString("In CODE/test/feature (references the spec unit):\n\n```\n")
+	fmt.Fprintf(&b, "%s @anchors\n", c)
+	fmt.Fprintf(&b, "%s   ref: LGNN             # references the owning unit (the spec); NOT ownership\n", c)
+	fmt.Fprintf(&b, "%s   updated_at: 2026-08-08 # day of the last change (the gate checks vs. git)\n", c)
+	fmt.Fprintf(&b, "%s   layer: screen         # Structure layer (normally inferred from the path)\n", c)
+	fmt.Fprintf(&b, "%s   @feature: %s\n", c, feat)
+	b.WriteString("```\n\n")
+	b.WriteString("In the SPEC (the OWNER of the identity):\n\n```\n")
+	if cs.Open != "" {
+		fmt.Fprintf(&b, "%s @anchors\n  code: LGNN            # the spec OWNS the code\n  updated_at: 2026-08-08\n  layer: screen\n%s\n", cs.Open, cs.Close)
+	} else {
+		fmt.Fprintf(&b, "%s @anchors\n%s   code: LGNN            # the spec OWNS the code\n%s   updated_at: 2026-08-08\n", c, c, c)
+	}
+	b.WriteString("```\n\n")
+
+	b.WriteString("## The annotations\n\n")
+	b.WriteString("- `code:` — OWNERSHIP of the identity (the SPEC is the owner). `ref:` — REFERENCE\n")
+	b.WriteString("  (code/feature/test point to the spec unit; it may be multiple: `ref: A, B`). Every\n")
+	b.WriteString("  file needs one of the two. Generate the code with `anchors code <name>`.\n")
+	b.WriteString("- `updated_at:` — the day of the last change. Whoever changes it updates it; the gate\n")
+	b.WriteString("  `updated-at-atual` checks against git (year-month-day only) and `anchors check --fix`\n")
+	b.WriteString("  fixes it. Do NOT make up the date — let it match the commit.\n")
+	b.WriteString("- `layer:` — the layer; normally inferred from the path, declare it only to override.\n")
+	// A tag AGRUPA e nao e' confrontada; a doutrina de produto DECIDE e e' confrontada.
+	//
+	// Dizer so' "o modulo vertical" deixava as duas parecendo o mesmo eixo, uma delas nao
+	// implementada — e desde que `product/` existe, essa leitura custa caro: quem quer
+	// que uma regra transversal tenha um lugar escreveria a tag e esperaria um gate que
+	// nunca vem.
+	b.WriteString("- `@feature: <name>` — a free GROUPING label for the vertical module. ")
+	if len(moduleNames) > 0 {
+		b.WriteString("In this project: " + strings.Join(moduleNames, ", ") + ".")
+	}
+	b.WriteString(" Nothing reads it: no gate, no edge.\n")
+	b.WriteString("  The vertical axis that IS confronted is product doctrine — `product/<name>.doctrine.md`,\n")
+	b.WriteString("  which the spec points at with `@realizes` (see `anchors guide product`).\n")
+	b.WriteString("  The tag groups; the doctrine decides. The mechanism grows toward FILTER and VIEW,\n")
+	b.WriteString("  never toward a gate that demands the label.\n")
+	b.WriteString("- `@noPropagation`, `@anchors-shared-code` — honest opt-outs (always with the why alongside).\n\n")
+
+	b.WriteString("## Rules\n\n")
+	b.WriteString("- Always at the TOP of the file: only blank lines, comments and a shebang before it.\n")
+	b.WriteString("  A block below the code is read as text, not as the header. When the language truly\n")
+	b.WriteString("  demands something first, declare why inside the block: `@fixed-header: <why>`.\n")
+	b.WriteString("- `code` is the mandatory minimum (gate `header-valid`).\n")
+	b.WriteString("- `updated_at` matches the day of the last commit (gate `updated-at-atual`; `--fix` repairs it).\n")
+	b.WriteString("- Opt-out always with a why alongside.\n\n")
+	// A seção de conformidade não é ornamento: o gate `guide-checklist` a exige, e um
+	// guide semeado pelo init que reprova o próprio gate do init é a pior primeira
+	// impressão possível — medido num projeto real, foi o primeiro achado bloqueante.
+	//
+	// Ela existe por um motivo mais fundo que o gate: um guide em prosa é lido e
+	// interpretado; um guide com pontos CK é CONFRONTÁVEL. É o que separa "siga o
+	// padrão" de "estes cinco itens são verificáveis um a um".
+	fmt.Fprintf(&b, "## %s\n\n", i18n.TIn(i18n.Current(), "section.title.compliance_points"))
+	b.WriteString("Each item is verifiable in a single file, in isolation. It is what a judgment\n")
+	b.WriteString("gate confronts — and what keeps judgment from turning into heuristics.\n\n")
+	b.WriteString("- **CK1** — the block is at the TOP of the file, before any code.\n")
+	b.WriteString("- **CK2** — there is a `code:` line with a single identity code.\n")
+	b.WriteString("- **CK3** — the comment dialect is that of the file's language.\n")
+	b.WriteString("- **CK4** — `updated_at`, when present, is the day of the last commit that touched the file.\n")
+	b.WriteString("- **CK5** — every opt-out (`@no-…`, `@allow-…`) carries the why on the same line.\n\n")
+	b.WriteString("_(Complete, universal ruler: `anchors guide header`.)_\n")
+	return b.String()
+}
+
+// projectTitle is the guide's title: the family's project, or "project" with no family.
+func projectTitle(family string) string {
+	if family != "" {
+		return family + " project"
+	}
+	return "project"
+}
+
+// TakenCodes are the codes the project's files already hold — declared in a header or
+// owned —, read with the configuration init is writing: a seeded guide takes none of them.
+func TakenCodes(root string, cfg *config.Config) map[string]bool {
+	taken := map[string]bool{}
+	files, _ := scan.Walk(root, cfg)
+	for _, f := range files {
+		if f.HeaderCode != "" {
+			taken[f.HeaderCode] = true
+		}
+		for _, c := range f.Codes {
+			taken[c] = true
+		}
+	}
+	return taken
+}
+
+// WithGuideHeader is a seeded guide's text with its `@anchors` header, the code made from
+// its name and free in `taken`, which takes it. A guide init writes is a file of the guide
+// layer, and the header gate asks it for its header like any other: seeded without one, the
+// guide that teaches the header failed the header gate on the first commit (reported from a project).
+func WithGuideHeader(body, rel, name string, taken map[string]bool) string {
+	c := code.GenerateFromPath(rel, name, false, taken)
+	taken[c] = true
+	return "<!-- @anchors\n  code: " + c + "\n-->\n\n" + body
+}
+
+// SeedGoverns gives a seeded guide its `governs` rules — one per tag of the layers it rules —,
+// when the configuration reads it as a guide: a guide governing nothing is what the doctor
+// reports. A rule already declared is kept once.
+func SeedGoverns(cfg *config.Config, rel string, tags []string) {
+	if _, kind := cfg.LayerOf(rel); kind != "guide" {
+		return
+	}
+	have := map[string]bool{}
+	for _, r := range cfg.Governs {
+		have[r.From+"\x00"+r.Governs] = true
+	}
+	for _, t := range tags {
+		if !have[rel+"\x00"+t] {
+			have[rel+"\x00"+t] = true
+			cfg.Governs = append(cfg.Governs, config.GovernRule{From: rel, Governs: t})
+		}
+	}
+}
+
+// HeaderLayerTags are the tags of the layers whose files carry an `@anchors` header — code,
+// tests, specs, features —, sorted: what the header guide rules. A layer with no tag is
+// ruled by its name.
+func HeaderLayerTags(cfg *config.Config) []string {
+	seen := map[string]bool{}
+	for name, l := range cfg.Layers {
+		if l.Headless || (l.Kind != "code" && l.Kind != "test" && l.Kind != "spec" && l.Kind != "feature") {
+			continue
+		}
+		tag := name
+		if len(l.Tags) > 0 {
+			tag = l.Tags[0]
+		}
+		seen[tag] = true
+	}
+	out := make([]string, 0, len(seen))
+	for t := range seen {
+		out = append(out, t)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// SpecLayerTags are the tags of the spec layers, sorted: what the spec guide rules.
+func SpecLayerTags(cfg *config.Config) []string {
+	var out []string
+	for name, l := range cfg.Layers {
+		if l.Kind != "spec" {
+			continue
+		}
+		tag := name
+		if len(l.Tags) > 0 {
+			tag = l.Tags[0]
+		}
+		out = append(out, tag)
+	}
+	sort.Strings(out)
+	return out
+}

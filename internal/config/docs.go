@@ -1,0 +1,163 @@
+// @anchors
+//   code: DCCND
+//   ref: DCRQA
+
+package config
+
+import (
+	"strings"
+
+	"github.com/bmatcuk/doublestar/v4"
+)
+
+// --- as DOCUMENTAÇÕES que o projeto deve ter ---
+//
+// O Anchors sempre cobrou o que está DENTRO da unidade — a spec, a feature, o teste, o
+// código. A documentação ficava como uma frase no entregável do card ("a documentação
+// evolui junto"), e uma frase assim não diz QUAL documentação.
+//
+// O buraco é real e depende do tipo de projeto. Uma API tem um contrato que vive fora do
+// código — o OpenAPI — e um endpoint novo que não entra nele é invisível para quem
+// consome. Um design system tem o catálogo de componentes. Um projeto com banco tem o
+// esquema. Nada disso o gate de unidade alcança, porque não é arquivo da unidade: é o
+// artefato AGREGADO que várias unidades alimentam.
+//
+// E há um que todo projeto tem: a ARQUITETURA. O Anchors já regula a estrutura — as
+// camadas, o `needs:` entre planos, as fronteiras que o `layer-boundary` cobra — mas essa
+// regulação vive espalhada no `anchors.yaml` e no mapa, em formato de máquina. Quem chega
+// no projeto precisa da mesma informação em formato de gente, e o C4 é a notação que
+// separa isso em níveis (contexto → contêineres → componentes → código), o que impede a
+// falha clássica do diagrama de arquitetura: um desenho só, com tudo, ilegível.
+//
+// A DECLARAÇÃO é o ato. Um projeto que não declara `docs:` não é cobrado — cobrar OpenAPI
+// de quem não tem API seria ruído. Declarar é dizer "esta documentação é contrato, cobre-a
+// de mim".
+
+// Docs declara as documentações agregadas do projeto.
+type Docs struct {
+	// Required são as documentações obrigatórias. Cada uma nomeia o arquivo, o que ela
+	// existe para responder, e QUANDO precisa ser tocada.
+	Required []DocArtifact `yaml:"required,omitempty"`
+	// PreCommit: the pre-commit phase compiles the pages of `docs/` from the commit's specs
+	// and templates and stages them with the commit, as it does the map. On unless declared
+	// false. Without it, a commit that changes a spec is barred by `docs-fresh` until
+	// someone runs `anchors docs build` by hand.
+	PreCommit *bool `yaml:"pre_commit,omitempty"`
+	// Keep are the pages of `docs/` the build never removes, by glob: a page generated once and
+	// kept by hand since — its template gone, its marker still there — is the project's. A page
+	// with no marker is never removed, kept or not.
+	Keep []string `yaml:"keep,omitempty" path:"glob"`
+}
+
+// KeepsDoc says whether the project keeps a page of `docs/` (a path relative to `docs/`) from
+// the build's removal.
+func (c *Config) KeepsDoc(rel string) bool {
+	if c == nil || c.Docs == nil {
+		return false
+	}
+	for _, glob := range c.Docs.Keep {
+		if ok, _ := doublestar.Match(glob, rel); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// DocsOnPreCommit says whether the pre-commit compiles and stages the docs.
+func (c *Config) DocsOnPreCommit() bool {
+	return c == nil || c.Docs == nil || c.Docs.PreCommit == nil || *c.Docs.PreCommit
+}
+
+// DocArtifact é uma documentação agregada — um artefato que várias unidades alimentam.
+type DocArtifact struct {
+	// Kind é o tipo, e é o que dá ao agente a instrução certa: `openapi` pede o contrato
+	// dos endpoints, `c4` pede os quatro níveis, `schema` pede as tabelas.
+	//
+	// Tipo desconhecido não é erro: o projeto pode ter uma documentação que o Anchors não
+	// conhece, e recusá-la faria o mecanismo servir só ao que já foi previsto. O que o
+	// Anchors não conhece ele não instrui — mas cobra a existência.
+	Kind string `yaml:"kind"`
+	// Path é o arquivo. É o que o gate confere e o que o `anchors next` nomeia.
+	Path string `yaml:"path" path:"write"`
+	// Trigger são as camadas OU UNIDADES cuja alteração obriga tocar esta doc.
+	//
+	// É o campo que transforma "documente" em algo verificável: mexer numa lambda de
+	// rota muda o contrato da API, e o OpenAPI tem de acompanhar. Mexer num utilitário
+	// interno não muda contrato nenhum, e cobrar ali seria cobrar por cobrar — o agente
+	// aprenderia a atualizar o arquivo sem pensar, que é pior que não atualizar.
+	//
+	// Aceita as duas granularidades porque a camada erra sozinha. Medido: a camada
+	// `infra` do projeto de referência tem nove unidades, e apenas UMA toca esquema de
+	// dados — as outras oito são API Gateway, autenticação, mTLS, uma régua de processo.
+	// Cobrar o esquema de todas ensina o agente a ignorar o aviso, que é o pior
+	// resultado possível: o gate continua lá e ninguém o lê.
+	//
+	// Um item que casa uma CAMADA declarada é lido como camada; qualquer outro é lido
+	// como CÓDIGO de unidade. A ordem importa — se um código coincidir com um nome de
+	// camada, a camada vence, porque é a leitura que abrange mais.
+	//
+	// Vazio = a doc não tem gatilho (é o caso do C4, que muda quando a ESTRUTURA muda,
+	// não quando uma unidade muda).
+	Trigger []string `yaml:"trigger,omitempty"`
+	// Why é por que esta documentação existe. Vai para o texto do card: um agente que
+	// sabe o que a doc responde escreve melhor do que um que só sabe o caminho dela.
+	Why string `yaml:"why,omitempty"`
+}
+
+// KindOpenAPI e companhia são os tipos que o Anchors sabe instruir.
+const (
+	KindOpenAPI   = "openapi"
+	KindC4        = "c4"
+	KindSchema    = "schema"
+	KindComponent = "components"
+	KindADR       = "adr"
+	KindRunbook   = "runbook"
+)
+
+// TriggeredBy diz se alterar uma unidade obriga tocar esta documentação.
+//
+// Recebe a camada E o código da unidade, e basta um dos dois casar: quem declarou
+// `trigger: [lambdas]` quer toda a camada; quem declarou `trigger: [DTSTD]` quer aquela
+// unidade. Código vazio é o caso de quem pergunta só pela camada.
+func (d DocArtifact) TriggeredBy(layer, code string) bool {
+	for _, t := range d.Trigger {
+		t = strings.TrimSpace(t)
+		if strings.EqualFold(t, layer) {
+			return true
+		}
+		if code != "" && strings.EqualFold(t, code) {
+			return true
+		}
+	}
+	return false
+}
+
+// RequiredFor devolve as documentações que a alteração obriga tocar.
+//
+// O `code` é opcional: sem ele a resposta é a da CAMADA inteira — o que serve ao
+// `anchors docs duties --layer x`, que pergunta em abstrato. Com ele, a resposta é a da
+// unidade, e é a que o card do agente precisa.
+func (c *Config) RequiredFor(layer string, code ...string) []DocArtifact {
+	if c == nil || c.Docs == nil {
+		return nil
+	}
+	unidade := ""
+	if len(code) > 0 {
+		unidade = code[0]
+	}
+	var out []DocArtifact
+	for _, d := range c.Docs.Required {
+		if d.TriggeredBy(layer, unidade) {
+			out = append(out, d)
+		}
+	}
+	return out
+}
+
+// AllRequiredDocs devolve todas as documentações declaradas.
+func (c *Config) AllRequiredDocs() []DocArtifact {
+	if c == nil || c.Docs == nil {
+		return nil
+	}
+	return c.Docs.Required
+}

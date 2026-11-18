@@ -1,0 +1,365 @@
+# Anchors — pipeline de IDENTIFICAÇÃO
+#
+# A regra que ele materializa: um artefato chegou ao repositório e não tem card que o
+# governe → cria o card. É o que faz o ciclo (plano → specs → código → teste) avançar
+# sozinho, sem alguém lembrar de abrir a próxima issue.
+#
+# A identidade vem do CÓDIGO que o Anchors gera para cada artefato, registrado no TÍTULO
+# da issue entre colchetes: `[XXXXX-001] Implementar tal coisa`. É isso que torna
+# "artefato sem card" uma consulta com resposta, e não um palpite.
+#
+# SEQUENCIAL, nunca paralelo. Duas execuções simultâneas veriam o mesmo artefato órfão e
+# criariam dois cards para ele. A idempotência não vem de esperteza no código — vem de
+# nunca haver duas instâncias decidindo ao mesmo tempo.
+#
+# E porque é sequencial, ele PRECISA ser rápido: cada execução lenta segura a fila
+# inteira, e o gargalo cresce com o projeto. Por isso ele olha só os arquivos que o PUSH
+# mudou, não o projeto todo — um artefato só pode ficar órfão quando aparece, e quando
+# aparece ele está no diff. A varredura completa continua disponível sob demanda
+# (`workflow_dispatch` com `tudo: true`), para quando se quer reconciliar o passado.
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
+name: anchors · identificar trabalho
+
+# Dispara na ABERTURA DO PR, não no push da main.
+#
+# Todo trabalho entra por PR, e o push na main acontece DEPOIS do merge — criar o card
+# ali o faria nascer para trabalho que já terminou. Na abertura do PR os artefatos novos
+# existem e o trabalho que vem deles ainda não: é o momento em que o card serve.
+#
+# `synchronize` cobre o commit adicionado ao PR já aberto: uma spec nova numa revisão
+# seguinte também precisa de card.
+on:
+  pull_request:
+    # O BRANCH DE INTEGRAÇÃO — onde o trabalho chega. `anchors doctor --fix` substitui
+    # esta linha pelo `workflow.integration_branch` do anchors.yaml.
+    #
+    # Não é sempre `main`: num fluxo em que o trabalho é integrado em `develop`,
+    # promovido para `staging` e só chega à `main` em produção, o card precisa nascer no
+    # PR para `develop` — na `main` ele nasceria no fim, para trabalho que já terminou.
+    #
+    # Um PR entre branches de feature não entra: é trabalho em curso, e criaria card para
+    # artefato que talvez nem seja integrado.
+    branches: [main] # anchors:integration-branch
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      tudo:
+        description: "varrer o projeto INTEIRO (reconciliação; mais lento)"
+        type: boolean
+        default: false
+
+# A serialização que o desenho inteiro pressupõe. `cancel-in-progress: false` é
+# deliberado: cancelar a execução em curso poderia matá-la DEPOIS de ela ter criado
+# metade dos cards, e o push seguinte não saberia o que ficou pela metade.
+concurrency:
+  group: anchors-identify
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  identificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # o mapa precisa do histórico para carimbar updated_at
+
+      # Baixa o BINÁRIO da release, não compila. É a forma como o projeto se distribui
+      # (goreleaser, 6 plataformas), e num pipeline serializado o tempo economizado —
+      # sem toolchain Go, sem baixar dependências — é fila que não se forma.
+      - name: Instalar o Anchors
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # WHICH ANCHORS: the one `min_version` in anchors.yaml names, and the latest
+          # release ONLY when the project declares none. A project pinned to a version
+          # keeps that binary in CI until someone raises the floor; with `latest` the CI
+          # would jump to a newer binary on its own, and what it does would depend on
+          # WHEN it ran. Every template that installs Anchors runs this same snippet —
+          # a test compares them, so they cannot drift apart again.
+          MIN=$(grep -m1 -E '^min_version:' anchors.yaml 2>/dev/null | cut -d'#' -f1 \
+            | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+          if [ -n "$MIN" ]; then
+            TAG="v$MIN"
+            echo "installing Anchors $TAG (the min_version in anchors.yaml)"
+          else
+            TAG=$(gh release view --repo co2-lab/anchors --json tagName --jq .tagName)
+            echo "installing Anchors $TAG (latest: anchors.yaml declares no min_version)"
+          fi
+          gh release download "$TAG" --repo co2-lab/anchors \
+            --pattern 'anchors_*_linux_amd64.tar.gz' --output /tmp/anchors.tar.gz --clobber
+          tar -xzf /tmp/anchors.tar.gz -C /tmp anchors
+          sudo install /tmp/anchors /usr/local/bin/anchors
+          anchors --version
+
+      # O mapa chega pronto no push: `anchors.graph.yaml` é versionado, e o pre-commit
+      # (`anchors install-hooks`) o mantém em dia. Reconstruí-lo a cada execução custaria
+      # o projeto inteiro — medido: 0,45s em 332 arquivos, 12,7s em 3.587 nós — e como
+      # este workflow é SERIALIZADO, esse tempo não é do push, é da fila toda.
+      #
+      # Então: VERIFICA o barato, e só reconstrói se precisar. A verificação olha apenas
+      # os arquivos do CHANGE (os que este push mudou estão no mapa?), e é o caminho
+      # normal — quase de graça. Se algum ficou de fora, o mapa commitado está velho, e aí
+      # sim roda o `map build` COMPLETO: o mapa é um grafo, e as arestas ligam unidades
+      # diferentes (`governs`, propagação), então não existe reconstruir "só o pedaço".
+      # O mapa chega pronto no push: `anchors.graph.yaml` é versionado, e o pre-commit
+      # (`anchors install-hooks`) o mantém em dia.
+      #
+      # A pergunta certa NÃO é "os arquivos do diff estão no mapa?" — a primeira versão
+      # perguntava isso e produzia falso positivo em todo `.gitignore`, `PROJECT.md` ou
+      # no próprio grafo: eles não estão no mapa porque NÃO SÃO REGIDOS, não porque o
+      # mapa envelheceu. Medido no primeiro push real: 4 falsos positivos, e o rebuild
+      # devolveu exatamente o mesmo mapa.
+      #
+      # A pergunta certa é "o mapa mudaria se eu o reconstruísse?". Construir num arquivo
+      # temporário e comparar responde exatamente isso, e o `map build` só é ADOTADO
+      # quando a resposta é sim — nas outras vezes o mapa commitado segue valendo.
+      # O PIPELINE está atualizado?
+      #
+      # Um pipeline desatualizado falha em SILÊNCIO: ele roda, faz o que a versão dele
+      # sabia fazer, e o que foi corrigido depois simplesmente não acontece. Medido — um
+      # passo novo deste arquivo não rodou por três execuções sem que nada acusasse, e só
+      # apareceu quando alguém foi ler o log procurando outra coisa.
+      #
+      # Não BARRA, e a escolha é deliberada: o pipeline desatualizado ainda faz o trabalho
+      # antigo, e derrubá-lo trocaria "faz menos do que devia" por "não faz nada". O aviso
+      # aparece no resumo do run, onde quem investiga já vai olhar.
+      - name: Conferir se este pipeline está atualizado
+        run: |
+          # SEM `continue-on-error`: quem decide se isto barra é o PROJETO, pelo
+          # `stale_pipeline_blocks` no anchors.yaml. O padrão do comando é avisar e sair
+          # com 0 — e um `continue-on-error` aqui anularia a escolha de quem declarou que
+          # prefere barrar.
+          # AQUI O AVISO BASTA, e a diferença com o `anchors-gates.yml` é o que o passo
+          # FAZ. Lá o pipeline decide se o trabalho é aceito, e um verificador velho aceita
+          # o que a versão nova recusaria — por isso ele barra (`stale_pipeline_blocks`).
+          #
+          # Este publica e move card. Reprová-lo por pipeline velho trocaria "o board
+          # atualiza com o desenho antigo" por "o board não atualiza" — e ninguém saberia
+          # onde o trabalho está. O aviso é a escolha certa para quem informa.
+          if ! anchors doctor --check-pipelines; then
+            echo "::warning::Este pipeline está desatualizado — ele roda, mas o que foi corrigido depois NÃO acontece. Rode \`anchors doctor --fix\`, commite e suba."
+          fi
+
+
+      - name: Garantir que o mapa está em dia
+        run: |
+          set -euo pipefail
+          if [ ! -f anchors.graph.yaml ]; then
+            echo "não há mapa no repositório — construindo"
+            anchors map build
+            exit 0
+          fi
+          anchors map build --out /tmp/mapa-conferido.yaml >/dev/null
+          if diff -q anchors.graph.yaml /tmp/mapa-conferido.yaml >/dev/null 2>&1; then
+            echo "mapa em dia"
+          else
+            echo "::warning::o anchors.graph.yaml commitado está defasado — usando o reconstruído."
+            echo "  (o pre-commit deveria mantê-lo em dia: rode \`anchors install-hooks\`)"
+            cp /tmp/mapa-conferido.yaml anchors.graph.yaml
+          fi
+
+      - name: Criar card para cada artefato sem card
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LABEL: anchors
+          # O ponto de partida do diff é a BASE do PR: tudo que o PR acrescenta em
+          # relação a ela é o que pode ter chegado sem card. Num `workflow_dispatch` não
+          # há PR, e aí o fallback (`git show`) olha o commit atual.
+          BEFORE: ${{ github.event.pull_request.base.sha }}
+          TUDO: ${{ inputs.tudo }}
+        run: |
+          set -euo pipefail
+
+          # Os códigos que JÁ têm card. Lê issues abertas E fechadas: um artefato cujo
+          # trabalho terminou não pode ganhar card novo a cada push.
+          gh issue list --state all --limit 1000 --json title \
+            --jq '.[].title | capture("^\\[(?<c>[^]]+)\\]").c' \
+            | sort -u > /tmp/com-card.txt
+
+          # Os códigos que existem no projeto. `anchors code list` lê a identidade do
+          # MAPA (não faz grep no texto), e `--json` separa o código das pastas — no TSV
+          # elas vêm juntas por ", ", que se confunde com uma vírgula dentro do caminho.
+          anchors code list --json > /tmp/codigos.json
+
+          # O RECORTE que mantém este pipeline rápido: só as unidades que o push tocou.
+          # Um artefato só fica órfão quando APARECE, e quando aparece ele está no diff —
+          # varrer o projeto inteiro a cada push refaz o mesmo trabalho para centenas de
+          # códigos que já têm card, e como este workflow é serializado, o custo vira fila.
+          if [ "${TUDO:-false}" = "true" ]; then
+            cp /tmp/codigos.json /tmp/alvo.json
+            echo "modo reconciliação: varrendo o projeto inteiro"
+          else
+            git diff --name-only "${BEFORE}" "${GITHUB_SHA}" > /tmp/mudados.txt || \
+              git show --name-only --format= "${GITHUB_SHA}" > /tmp/mudados.txt
+            # Uma unidade entra se QUALQUER arquivo mudado está sob a pasta dela.
+            jq --rawfile mudados /tmp/mudados.txt \
+              '[ ($mudados | split("\n") | map(select(length > 0))) as $m
+                 | .[] | select([.onde[] as $o | $m[] | startswith($o + "/")] | any) ]' \
+              /tmp/codigos.json > /tmp/alvo.json
+            echo "$(jq length /tmp/alvo.json) unidade(s) tocada(s) neste push"
+          fi
+
+          jq -r '.[] | [.code, (.onde | join(", ")), .kind, .titulo] | @tsv' /tmp/alvo.json |
+          while IFS=$'\t' read -r code onde kind titulo; do
+            [ -n "$code" ] || continue
+            if grep -qxF "$code" /tmp/com-card.txt; then
+              continue
+            fi
+
+            # O título diz O QUE FAZER, com que TIPO de artefato, e SOBRE O QUÊ:
+            #   [FNDTN] Implementar plan — Plano 0001 — Fundação
+            #
+            # O verbo importa: o card é uma tarefa, não um rótulo do arquivo. E o CAMINHO
+            # não entra — `onde` é a PASTA da unidade, e 16 planos em `plans/` sairiam com
+            # o mesmo título. Ele já está no corpo do card.
+            if [ -n "$titulo" ]; then
+              titulo="Implementar ${kind:-artefato} — $titulo"
+            else
+              # Sem `# título` (um arquivo de código, por exemplo), a pasta é o que há.
+              titulo="Implementar ${kind:-artefato} em $onde"
+            fi
+
+            url=$(gh issue create \
+              --title "[$code] $titulo" \
+              --label "$LABEL" \
+              --label "anchors:to-do" \
+              --body "$(printf 'Unidade: `%s`\nCódigo: `%s`\n\nCard criado pelo pipeline de identificação do Anchors: o artefato existe no repositório e não havia issue para ele.\n\n**Antes de começar, rode:**\n\n    anchors guide work\n\nEle diz a ordem do board, o que fazer com o achado que NÃO é deste card, e o que o `anchors check` cobra antes do commit. E `anchors guide <artefato>` (spec, code, feature, test) diz como escrever o que você vai escrever.' "$onde" "$code")")
+
+            echo "criado: [$code] $onde → $url"
+          done
+
+      - name: Avisar os cards que a revisão de plano atinge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: anchors
+        run: |
+          set -euo pipefail
+
+          # UM PLANO REVISADO deixa cards DESATUALIZADOS, e o que fazer depende de quanto
+          # trabalho já foi investido — não de quanto o Anchors sabe.
+          #
+          #   • `to-do` — FECHA. Ninguém pegou, e o plano que revisa vai semear a spec
+          #     nova: manter o card aberto convida alguém a fazer trabalho que será
+          #     descartado. Fechar com a razão escrita é mais honesto que avisar e deixar
+          #     na fila.
+          #
+          #   • `in-progress` — COMENTA e deixa seguir. Alguém está codificando, e o
+          #     trabalho vai passar por review de qualquer forma. É LÁ que a decisão cabe:
+          #     o revisor tem o trabalho pronto à vista e consegue estimar se aceitar dá
+          #     menos trabalho que rejeitar — quem for implementar o plano revisado herda
+          #     o que entrar. Escalar antes disso pediria decisão sobre algo que ninguém
+          #     viu, e pararia o trabalho para obtê-la.
+          #
+          #   • `ready-to-review` / `in-review` — COMENTA. A revisão acontece de todo
+          #     jeito, e o comentário é o que o revisor precisa para decidir com contexto.
+          #
+          #   • `ready-to-test` em diante — NADA. Já foi mesclado. O que mudou vira
+          #     trabalho novo, e reabrir apagaria a entrega.
+          #
+          # Em nenhum caso o card é ESCALADO ao usuário: a decisão tem um lugar natural no
+          # fluxo (o review), e criar um segundo lugar para ela só a antecipa sem
+          # informação.
+
+          # Os planos que declaram `revises`, e as specs que eles semeiam.
+          anchors code list --json > /tmp/todos.json 2>/dev/null || echo '[]' > /tmp/todos.json
+          revisados=$(jq -r '[.[] | select(.kind == "plan") | .needs // [], .revises // []]
+                             | flatten | .[]' /tmp/todos.json 2>/dev/null | sort -u || true)
+          [ -z "$revisados" ] && exit 0
+
+          for plano in $revisados; do
+            # O CÓDIGO do plano revisado, e as specs que pertencem a ele (`parent`).
+            cod=$(jq -r --arg p "$plano" '.[] | select(.arquivo == $p) | .code' /tmp/todos.json)
+            [ -n "$cod" ] || continue
+
+            # AS FASES ATINGIDAS, e não o plano inteiro.
+            #
+            # `revises` diz que o plano mudou; as marcações de parte dizem ONDE. Avisar
+            # todas as specs do plano por causa de uma fase alterada é o ruído que faz o
+            # aviso deixar de ser lido — e o custo é alto, porque quem recebe um aviso que
+            # não se aplica aprende a ignorar o próximo, que se aplica.
+            #
+            # A fase atingida é a que CONTÉM a marcação — a última declarada antes dela.
+            #
+            # Uma janela de linhas em volta do `[!WARNING]` não serve: ela alcança o
+            # cabeçalho da fase ANTERIOR e avisa cards que a revisão não toca. Medido: 3
+            # fases acusadas onde só 2 mudaram.
+            fases=$(awk -v cod="$cod" '
+              $0 ~ ("^#+ +" cod "-W[0-9][0-9]") { match($0, cod "-W[0-9][0-9]"); atual=substr($0, RSTART, RLENGTH) }
+              /\[!WARNING\]|@amended-by/ && atual != "" { print atual }
+            ' "$plano" 2>/dev/null | sort -u || true)
+            if [ -z "$fases" ]; then
+              echo "· $plano é revisado e não marca fase nenhuma — nenhum card a avisar"
+              continue
+            fi
+            afetadas=""
+            for f in $fases; do
+              afetadas="$afetadas $(jq -r --arg f "$f" \
+                '.[] | select((.parent // "") == $f) | .code' /tmp/todos.json || true)"
+            done
+
+            for spec in $afetadas; do
+              n=$(gh issue list --state open --label "$LABEL" --limit 200 --json number,title \
+                --jq "[.[] | select(.title | startswith(\"[$spec]\"))] | .[0].number // empty")
+              [ -n "$n" ] || continue
+
+              # JÁ AVISADO? Um pipeline que repete o aviso a cada push transforma o card
+              # num mural, e ninguém lê mural.
+              if gh issue view "$n" --json comments \
+                   --jq '[.comments[].body | select(contains("plano revisado"))] | length' \
+                 | grep -qv '^0$'; then
+                continue
+              fi
+
+              estado=$(gh issue view "$n" --json labels --jq \
+                '[.labels[].name | select(startswith("anchors:"))] | .[0] // ""')
+              case "$estado" in
+                anchors:ready-to-test|anchors:in-test|anchors:ready-to-release|anchors:production)
+                  # Entregue sob a régua da época: não se reabre.
+                  continue ;;
+              esac
+
+              # `to-do` FECHA: o plano que revisa semeia a spec nova, e um card aberto
+              # sobre a régua antiga é convite a trabalho descartável.
+              if [ "$estado" = "anchors:to-do" ]; then
+                gh issue close "$n" --reason "not planned" --comment "$(printf '⚠ **Fechado: o plano que rege esta unidade foi revisado.**\n\nO plano `%s` foi revisado, e a fase a que esta spec pertence mudou. Como ninguém tinha pego este card, o trabalho será feito sob a régua nova — o plano que revisa semeia a spec, e o pipeline de identificação cria o card correspondente.\n\nFechar em vez de avisar é o que impede alguém de implementar a versão antiga.' "$plano")" >/dev/null 2>&1
+                echo "fechado: #$n ($spec) — plano $plano revisado, o trabalho volta sob a régua nova"
+                continue
+              fi
+
+              printf '%s\n' \
+                '⚠ **O plano que rege esta unidade foi revisado.**' '' \
+                "O plano \`$plano\` foi revisado por outro, e o que se espera desta spec pode" \
+                'ter mudado. Leia o aviso no topo dele e as marcações de parte antes de' \
+                'continuar.' \
+                > /tmp/aviso-rev.md
+
+              case "$estado" in
+                anchors:in-progress)
+                  printf '%s\n' '' \
+                    '**Siga em frente.** O trabalho vai passar por review de qualquer forma, e é' \
+                    'lá que a decisão cabe — com o que você fez à vista, o revisor consegue' \
+                    'estimar se aceitar dá menos trabalho que rejeitar.' \
+                    >> /tmp/aviso-rev.md
+                  ;;
+                anchors:ready-to-review|anchors:in-review)
+                  printf '%s\n' '' \
+                    '**Para quem revisa:** a régua mudou depois que este trabalho começou. A' \
+                    'pergunta não é "está certo?", é "aceitar dá menos trabalho que rejeitar?" —' \
+                    'quem for implementar o plano revisado herda o que entrar aqui.' \
+                    >> /tmp/aviso-rev.md
+                  ;;
+              esac
+
+              gh issue comment "$n" --body-file /tmp/aviso-rev.md
+              echo "avisado: #$n ($spec) — plano $plano revisado, card em ${estado#anchors:}"
+            done
+          done

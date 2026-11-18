@@ -1,0 +1,198 @@
+// @anchors
+//   code: ADCMD
+//   ref: DTAUI
+
+package governance
+
+import (
+	"fmt"
+	"path/filepath"
+	"sort"
+	"strings"
+
+	"github.com/co2-lab/anchors/cmd/anchors/common"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gate"
+	"github.com/co2-lab/anchors/internal/health"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/spf13/cobra"
+)
+
+// `anchors audit <arquivo>` é o DOSSIÊ POR ARQUIVO — tudo que pende sobre um alvo num
+// só lugar: os gates de qualidade que se aplicam a ele E os achados sistêmicos do
+// doctor sobre ele. Feito para o trabalho paralelo: um agente pega um arquivo, roda
+// audit, vê TODAS as suas pendências (não só o header), conserta tudo de uma vez, e
+// passa ao próximo. Vários agentes varrem o projeto, um arquivo cada.
+//
+// Default: só o arquivo. Com --impact: estende ao caminho de impacto (a unidade —
+// spec↔code↔feature↔test — e o que o alvo propaga/valida).
+func newAuditCmd() *cobra.Command {
+	var root, mapPath string
+	var withImpact bool
+	cmd := &cobra.Command{
+		Use:   "audit <file>",
+		Short: "Dossier of one file's pending items (gates + doctor), for batch fixing",
+		Long: `Gathers, for one file, EVERYTHING pending on it:
+  • the quality gates that apply to its kind (what 'check' would run), but those of the
+    whole project (scope: project) and the slow ones (cost: slow), which it names
+  • the systemic findings from 'doctor' that cite it (collision, orphan, identity…)
+
+Default: the file itself only. With --impact, includes the nodes on the impact path
+(the unit's pieces and what the target propagates/validates) — to fix the whole unit.
+
+Designed for PARALLEL sweeping: one agent per file, 'anchors audit <file>',
+fixes all the pending items at once (header, spec, identity, coverage…).`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			absRoot, err := config.AbsRoot(root)
+			if err != nil {
+				return err
+			}
+			cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+			if mapPath == "" {
+				mapPath = filepath.Join(absRoot, mapx.DefaultPath)
+			}
+			g, err := mapx.Load(mapPath)
+			if err != nil {
+				return fmt.Errorf("load map: %w (run `anchors map build`)", err)
+			}
+			target := common.RelTo(absRoot, args[0])
+			if !common.NodeExists(g, target) {
+				return fmt.Errorf("file %q is not in the map", target)
+			}
+
+			// o conjunto de nós a auditar: o alvo, + o caminho de impacto se pedido.
+			ids := map[string]bool{target: true}
+			if withImpact {
+				imp := g.AnalyzeImpact(target)
+				for _, n := range imp.Propagate {
+					ids[n] = true
+				}
+				for _, n := range imp.Validate {
+					ids[n] = true
+				}
+			}
+			var nodes []mapx.Node
+			for _, n := range g.Nodes {
+				if ids[n.ID] {
+					nodes = append(nodes, n)
+				}
+			}
+
+			// 1) GATES sobre esses nós
+			gates, left := fileGates(cfg.Gates)
+			gateResults := gate.RunWithConfig(gates, nodes, absRoot, g, cfg)
+			// 2) DOCTOR — os achados que citam algum desses nós
+			rep := health.Diagnose(g, cfg, absRoot)
+
+			if err := printAudit(target, withImpact, nodes, gateResults, rep, ids); err != nil {
+				return err
+			}
+			if len(left) > 0 {
+				fmt.Printf("\nleft out: %d gate(s) of the whole project or declared slow (%s) — `anchors check --changed %s` charges them\n",
+					len(left), strings.Join(left, ", "), target)
+			}
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&root, "root", ".", "project root")
+	cmd.Flags().StringVar(&mapPath, "map", "", "path to the map")
+	cmd.Flags().BoolVar(&withImpact, "impact", false, "includes the impact path (the whole unit), not just the file")
+	return cmd
+}
+
+// fileGates are the gates a dossier of one file runs, and the names of those it leaves out: a
+// gate of the whole project (`scope: project`) answers about the project, not the file, and a
+// slow one (`cost: slow`) costs what a sweep of one agent per file cannot pay. Measured on a project:
+// every audit ran the SBOM over the repository, the typecheck and the dead-code search — 10 to
+// 30 minutes a file, with the machine stalled under the load.
+func fileGates(gates []config.Gate) (run []config.Gate, left []string) {
+	for _, g := range gates {
+		if g.EffectiveScope() == config.ScopeProject || g.IsSlow() {
+			left = append(left, g.Name)
+			continue
+		}
+		run = append(run, g)
+	}
+	return run, left
+}
+
+func printAudit(target string, withImpact bool, nodes []mapx.Node, results []gate.Result, rep health.Report, ids map[string]bool) error {
+	scope := "the file"
+	if withImpact {
+		scope = fmt.Sprintf("the unit (%d nodes on the impact path)", len(nodes))
+	}
+	fmt.Printf("audit: %s — %s\n\n", target, scope)
+
+	// agrupa por nó, para o dossiê ser "por arquivo"
+	byNode := map[string][]string{} // nó → linhas de pendência
+	pending := 0
+
+	for _, r := range results {
+		if r.Verdict == gate.Pass || r.Verdict == gate.Skip {
+			continue
+		}
+		mark := map[gate.Verdict]string{gate.Fail: "✗", gate.Diverge: "⚠", gate.Pending: "?", gate.Judge: "⏳", gate.Frozen: "❄", gate.Awaiting: "⏸"}[r.Verdict]
+		line := fmt.Sprintf("  %s [gate] %s — %s", mark, r.Gate, firstLineAudit(r.Detail))
+		byNode[r.Target] = append(byNode[r.Target], line)
+		if r.Verdict == gate.Fail {
+			pending++
+		}
+	}
+	for _, f := range rep.Findings {
+		if !ids[f.Subject] {
+			continue // só achados que citam um nó do escopo
+		}
+		sev := "ℹ"
+		if f.Severity == health.Warn {
+			sev = "⚠"
+		}
+		byNode[f.Subject] = append(byNode[f.Subject], fmt.Sprintf("  %s [doctor:%s] %s", sev, f.Check, f.Detail))
+		if f.Severity == health.Warn {
+			pending++
+		}
+	}
+
+	if len(byNode) == 0 {
+		fmt.Println("✓ nothing pending — the file (and the scope) is compliant.")
+		return nil
+	}
+	// imprime o alvo primeiro, depois os demais nós do impacto — SORTED: they came
+	// straight from ranging over a map, and two runs of `--impact` on the same tree
+	// printed the dossier in different orders.
+	var rest []string
+	for id := range byNode {
+		if id != target {
+			rest = append(rest, id)
+		}
+	}
+	sort.Strings(rest)
+	order := append([]string{target}, rest...)
+	for _, id := range order {
+		lines := byNode[id]
+		if len(lines) == 0 {
+			continue
+		}
+		if id == target {
+			fmt.Printf("● %s\n", id)
+		} else {
+			fmt.Printf("○ %s (impact)\n", id)
+		}
+		for _, l := range lines {
+			fmt.Println(l)
+		}
+		fmt.Println()
+	}
+	fmt.Printf("%d actionable pending item(s) — fix them all before moving to the next file.\n", pending)
+	return nil
+}
+
+func firstLineAudit(s string) string {
+	if i := strings.IndexByte(s, '\n'); i >= 0 {
+		return s[:i]
+	}
+	return s
+}

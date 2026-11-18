@@ -1,0 +1,166 @@
+<!-- @anchors
+  code: RPSCR
+  updated_at: 2026-11-16
+  layer: scan
+-->
+# RepoScan — the repository read as text: which files exist, of which layer, and what each declares
+
+> **Code**: `RPSCR`
+
+## Overview
+
+The scan is the map's entry door. It walks the repository reading TEXT — never parsing code — and
+extracts the facts the map is built from: which files exist, which declared layer each belongs to,
+which rule codes each carries, and what each declares in its header and body (identity, unit layer,
+dependencies, the plans it waits for or revises, its parent, the doctrine rules it realizes, the flag
+scenarios that gate it, the specs a plan seeds). Every gate stands on these facts.
+
+The failure mode the unit is built against is SILENCE. A file the scan misses is not reported as
+missing: it never exists for any gate. A wrong vocabulary, a native path separator, an unanchored
+ignore pattern or a verbose layer pattern all produced a smaller map without a single error line, and
+each rule below closes one of those holes. Where the scan must choose — two layers matching one file —
+the default is a heuristic, the project's declaration wins over it, and the choice is reported when the
+heuristic decided.
+
+## Domain
+
+| Input | Accepts | Outside the domain | Who guarantees |
+| --- | --- | --- | --- |
+| the project root | a readable directory | a path that does not exist or cannot be walked | this unit: the walk error is returned to the caller |
+| the configuration | the loaded project configuration with its layers, their patterns, priorities, exclusions and kinds, and the rule letters | an absent configuration | the caller loads it before walking |
+| a path to classify | a root-relative path, with `/` or `\` separators | an absolute path | the callers pass root-relative paths; the separator is normalized here |
+| the file content | any text | — | this unit: content without codes or declarations yields empty facts |
+| a spec's dependency table | a markdown table under the dependencies heading, in any catalogue language, with a code column and a file column | a table without a code column, which is documental | this unit: such a table yields no dependency |
+
+## Effects
+
+### Walk — which files enter the map
+
+| Effect | Description |
+| --- | --- |
+| `RPSCR-B01` | `Walk`: Only files that match a declared layer are returned, each with the layer and the kind of that layer; a file outside every layer is left out. |
+| `RPSCR-B02` | Directories and files the ignore set excludes (the project's `.gitignore`, the built-in list, editor ephemera) are not returned. |
+| `RPSCR-B03` | A directory that is another checkout — it holds its own `.git`, a file in a worktree or a directory in a clone — is not descended into. (`NestedCheckout`) |
+| `RPSCR-B04` | A plan's progress companion is not returned, even when a layer matches it. |
+| `RPSCR-B05` | A workflow owned upstream enters with no rule codes of its own: the codes in its comments are the Anchors project's examples. |
+| `RPSCR-B06` | `ShortHash`: A file's revision is a short hash of its content with CRLF line endings normalized to LF, so the same content has the same revision on every machine, and different content a different one. |
+
+### Classification — which layer a file belongs to
+
+| Effect | Description |
+| --- | --- |
+| `RPSCR-B07` | `Classify`, `ClassifyPath`: When several layers match, the highest declared priority wins; at equal priority the longer pattern wins; at equal length the lexically smaller layer name wins. |
+| `RPSCR-B08` | A layer's exclusion globs remove a path from that layer; the path may still belong to another layer. |
+| `RPSCR-B09` | A path written with Windows separators is classified the same as its slash form. |
+| `RPSCR-B10` | `Ambiguities`: A file matched by two or more layers whose winner was not decided by a higher declared priority is reported as an ambiguity naming the winner and the losers; a winner by declared priority is not reported. |
+| `RPSCR-B11` | `LayerOfUnit`: The layer of a file's UNIT is the `layer:` its header declares; without one it is the file's classified layer. |
+
+### Codes — what a file owns
+
+| Effect | Description |
+| --- | --- |
+| `RPSCR-B12` | The rule codes a file owns are those outside its comments, in the syntax the project declares for it (`dialect.comments`), each listed once in order of first appearance; in Anchors' own formats (a spec, a feature) and in a file whose comments nobody declared, every code counts. |
+| `RPSCR-B13` | `ScenarioCodeRE`, `SetRuleLetters`: Rule codes are recognised with the rule letters the project declares, not a fixed set. |
+| `RPSCR-B14` | The identity declared on the header's `code:` line is recorded apart from the codes cited in the body, and the `@anchors-shared-code` and `@noPropagation` annotations are recorded as flags; the same reading is offered to other packages (`HeaderCodeOf`). |
+
+### Header declarations — relations a file declares
+
+| Effect | Description |
+| --- | --- |
+| `RPSCR-B15` | A file's `parent:` is read only inside its `@anchors` header; a body line starting with `parent:` is not a declaration. |
+| `RPSCR-B16` | A plan's `needs:` lists plan paths, each resolved against the root; a spec's `needs:` keeps only phase codes (`CODE-Fnn`) and drops anything else; other kinds need nothing. |
+| `RPSCR-B17` | Only a plan declares `revises:`, whose paths are resolved like `needs:`; any other kind revises nothing. |
+| `RPSCR-B18` | A file that is not a spec declares its dependencies on the header's `dep:` line, a comma-separated list of paths resolved against the root. |
+| `RPSCR-B19` | A YAML test script's dependencies are the scripts it composes, each recorded with the method `runFlow`. |
+
+### Dependency table — what a spec consumes
+
+| Effect | Description |
+| --- | --- |
+| `RPSCR-B20` | A spec's dependencies are the rows of the first table under the dependencies heading, recognised in every catalogue language; the columns are found by the meaning of their header in any order, and a spec without the heading has none. |
+| `RPSCR-B21` | A row without a file, or whose code is not `DEP` followed by digits, is not a dependency. |
+| `RPSCR-B22` | The method cell keeps its backticks, the sign that it names a symbol; the other cells lose them. |
+| `RPSCR-B23` | A declared file resolves to the first existing of: the path as written, the path under the spec's `src/` directory, and the path next to that `src/`; when none exists, the path is kept as written. |
+
+### Rule tags — `@realizes` and `@gated-by`
+
+| Effect | Description |
+| --- | --- |
+| `RPSCR-B24` | An `@realizes` tag is paired with the rule code of the same line or of the nearest rule line above it, in all three rule forms: heading, table row and bold bullet. |
+| `RPSCR-B25` | A blank line closes a rule's scope: a tag after it has no owning rule. |
+| `RPSCR-B26` | Only a spec declares rule tags; in any other kind they are not read. |
+| `RPSCR-B27` | A repeated (rule, target) pair is recorded once; one rule realizing several targets, and several rules realizing one target, are all kept. |
+| `RPSCR-B28` | An `@gated-by` tag is read only when it names a flag scenario code (letter `G`); a tag naming any other letter is not a declaration. |
+
+### Seeds — what a plan promises
+
+| Effect | Description |
+| --- | --- |
+| `RPSCR-B29` | A plan seeds the backticked `.spec.md` and `.doctrine.md` paths it cites that contain a directory, carry no glob character and are not templates, each once; no other kind seeds. |
+
+### Header keys — where a declaration is read
+
+| Effect | Description |
+| --- | --- |
+| `RPSCR-B30` | The header keys `code:`, `layer:`, `needs:`, `revises:` and `dep:` are read only inside the file's `@anchors` header, like `parent:`; a body line starting with one of them is not a declaration. The header's layer is offered to other packages (`HeaderLayerOf`). |
+| `RPSCR-B31` | The rule tags `@realizes` and `@gated-by`, and the rule a tag belongs to, are read with the code length the project declares (`code_lengths`): a fixed length left the edges of every other length undrawn. |
+| `RPSCR-B32` | A file that matches its own layer's `support` list is marked as support; a file of the layer outside the list, or matching only another layer's list, is not. |
+| `RPSCR-B33` | Given paths, the scan reads only them, each exactly as the walk reads it in the tree, and leaves out one that is ignored, in an ignored directory, the progress file, in no layer, or missing; the governed paths of the tree can be listed without reading any file. (`ScanPaths`, `GovernedPaths`) |
+| `RPSCR-B34` | The staged walk reads the governed files as the git index has them: a file with unstaged changes as it is staged, and no untracked file. (`WalkStaged`) |
+| `RPSCR-B35` | The index reader reads a file as the commit being made records it: a file with unstaged changes as staged, a file git does not track as absent, any other from the tree. (`IndexReader`) |
+| `RPSCR-B36` | The governed files where the tree and the index part are listed: tracked files with unstaged changes and untracked ones, of a governed layer and not ignored. (`GovernedTreeChanges`) |
+| `RPSCR-B37` | The index reader confronts the tree with the index at each read: a file deleted or edited in the tree after the reader was made still reads as the index has it. (`IndexReader`) |
+| `RPSCR-B39` | A spec's Parts Used section — under the catalog's title in any language, or the title the project's `section_titles` gives `components` — yields the names in backticks of its table's first column (`Composes`); a spec with no such section, and any file that is not a spec, yields none. |
+| `RPSCR-B40` | The header's `ref:` line yields the units it names, in order (`HeaderRefs`). |
+| `RPSCR-B41` | The dependency flag on an import line (`@dep` with a colon and the used file's own code) is read with the symbols the import brings — what the dialect's `import_names` capture in the statement of `imports` whose lines hold the flag: a `name` each, `default` for a module's default —; a waiver (`@no-dep:` with its reason) is read the same way. A dialect with no import patterns reads the flags with no symbols. (`CodeDepsIn`) |
+| `RPSCR-B42` | Each used-by flag (`@used-by` with a colon and the codes that use it) is read with the symbol it names in parentheses, or the one the first declaration starting in the five lines below declares, by the dialect's `declarations` — a `name`, or `default` —; two patterns reading one statement are no list — `export default function X` is the module's default, by the first pattern —; a declaration of several names (a region: an export list) gives none, and the flag must name it. (`UsedByIn`) |
+| `RPSCR-B43` | Each navigation flag (`@navigates` with a colon, the screens' codes and, in brackets, the rule that triggers it) is read with its call's line — its own, or the next one when the flag stands alone on its line —, and each navigation waiver (`@no-nav` with a colon) with its reason. (`Navigation`, `Navigates`, `NavigatesIn`) The rule may be a data state (`CODE-DS-<name>`), which an Out row can be triggered by. |
+| `RPSCR-B44` | A spec's Out rows — the table under its Out heading, in any language of the catalog — are read by the rule each cites, with a revision of the row alone, its spacing normalized; a row citing no rule, and a table under any other heading, are not read. (`OutRows`) |
+| `RPSCR-B45` | A spec's Dependencies table is no dependency of the map — a spec precedes the code, and the files a unit imports are declared where the import is —; the table is still read for the migration that removes it. |
+| `RPSCR-B46` | A dependency that is no import — `@dep[<kind>]: <name>` on the line that calls it — is read with its kind and name, apart from the import flags. (`CodeDep`) |
+| `RPSCR-B47` | A navigation flag may carry `@dormant` with a colon and its reason after it: the call is kept for a feature not turned on, and the flag is read with that reason; a marker with no reason is no dormancy, and the flag stays a plain one. (`Navigation`) |
+| `RPSCR-B48` | A spec's evidence revision is its content without its `@anchors` header, its navigation and change-history sections — in any language of the catalog, or as the project names them — and an Out table under any title, with its blank lines and trailing spaces normalized; each rule it defines has a revision of its definition — its heading and what is under it, its table rows, its bold bullet —, and the rest of what it reads has one of its own. (`EvidenceOf`) |
+| `RPSCR-B49` | Any other file's evidence revision is its content without its `@anchors` header and without its comments, in the syntax the project declares for it — the chain's flags with them —; its line revision keeps every line in place, the header and the lines that were only a comment blank. (`EvidenceOf`) |
+| `RPSCR-B50` | `@dep[type]: CODE` on an import line is an import of types only: read with its code and the symbols the import brings, apart from the dependencies that are no import. (`CodeDep`, `TypeDepKind`) |
+| `RPSCR-B51` | The spec sections a project declares with no side effect (`evidence.no_side_effect.sections`) are the ones left out of its evidence, in place of navigation and change history. (`EvidenceOf`) |
+| `RPSCR-B52` | A comment, in the syntax the project declares for the file, is no evidence: a line that is only a comment — a block's inner lines included — is left out and blank in the line revision, and a comment at the end of a line of code leaves the line as its code; a marker inside a string is code. A file whose comments nobody declared is read whole. (`EvidenceOf`) |
+| `RPSCR-B53` | A file's header may declare it frozen — `frozen:` with a freeze's code or, with no doctrine, the reason —, read with its value. (`Frozen`, `FrozenOf`) |
+| `RPSCR-B54` | In a spec or a doctrine document, a `@frozen:` mark on a rule's line, or on a line of the rule's own block, freezes that rule; on a heading that defines no rule, it freezes every rule under it down to the next heading of its level or above; each is read with its mark's value, without the form's punctuation; a mark inside backticks is a citation, and freezes nothing. (`FrozenRules`) |
+| `RPSCR-B55` | A doctrine document's rules of the freeze letter are its freeze entries, read with the text after the code as the reason, in any of the three forms a rule is written in; a value is a freeze's code when it is a code of that letter. (`Freezes`, `IsFreezeCode`) |
+| `RPSCR-B56` | The chain's flags — dependency, waiver, used-by and navigation — may stand in a block comment of the file's syntax (OCaml's `(* … *)`): each reads to the comment's closer, and the evidence leaves them out like any other comment. (`flagText`) |
+| `RPSCR-B57` | The symbol a used-by flag names in parentheses is whatever stands there, in any script — the flag is Anchors' syntax, the name the language's —, and the names the dialect's patterns capture are kept whole: `categoriasDoOrçamento` is read as written. |
+| `RPSCR-B58` | A test file's doubles are the first group of each match of the project's `derived.mock_detect`, read with the file's comments blanked and each specifier once; a file that is no test, a project with no pattern, or a pattern that does not compile or captures nothing, gives none. (`doublesOf`) |
+| `RPSCR-B59` | A guide `governs:` reads from a URL enters the scan once, with the URL as declared for its path — its `{{branch}}` kept, so the edges it governs keep their ends — and the revision of the content PTRFS read: a guide changed in its repository, or read from another branch, leaves the edges it governs to be confronted again. It is marked external and belongs to no layer. (`externalGuides`) |
+| `RPSCR-B60` | A header's `writes:` and `reads:` are the data the file persists and consumes, each a comma-separated list of names the project chooses, out of their backticks. (`HeaderData`) |
+| `RPSCR-B61` | A comment inside a line of code leaves the file's evidence revision and its line revision as if never written: it goes out with the blank before it when a blank, a closer or the end of the line follows, and with the blank after it when an opener precedes it — `load(a /* X */)` reads as `load(a)`. (`EvidenceOf`, `CodeOf`) |
+| `RPSCR-B62` | The commit reader reads a file as a commit holds it — what a push sends: an edit not committed reads as committed, a file the commit does not hold is absent, a file the tree holds as the commit does is read from the tree; a revision git does not know is refused. (`CommitReader`) |
+| `RPSCR-B63` | Outside specs, the evidence lists the numbers of the lines its revision reads, in order (`Kept`), and the hash of the comments that match one of the project's coverage directives, in order — empty when none (`Directives`). (`EvidenceOf`) |
+| `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
+
+## Invariants
+
+| Rule | Always holds | How it is proven |
+| --- | --- | --- |
+| `RPSCR-I01` | The classification of a path is the same on every run with the same configuration. | classifies the same path fifty times under a tie of patterns and verifies a single answer |
+
+## Constraints
+
+| Rule | Boundary | Why |
+| --- | --- | --- |
+| `RPSCR-X01` | The dependency table is read only from specs: a guide's table under a dependencies heading is not a dependency. | A document can list related files under that heading; only a spec's table is a reuse contract. |
+| `RPSCR-X02` | A spec's dependencies come from its table only; a `dep:` line in a spec is not read. | The spec has the table as its contract; two sources for the same relation would disagree. |
+
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `RPSCR-E01` | The root cannot be walked (it does not exist or cannot be read). | The walk error is returned to the caller. | A map built from an unreadable root would be empty without saying so. |
+| `RPSCR-E02` | A file that matches a layer cannot be read (other than having vanished since the listing). | The walk fails with an error naming the file. | Dropping it would shrink the map without a line of error; a file that vanished has nothing to map and is skipped. |
+| `RPSCR-E03` | A guide `governs:` reads from a URL answers nothing (PTRFS-E01). | The walk fails naming the URLs tried, and so does every command that maps the project. | A map without the guide would leave its layers ungoverned without a word. |
+
+## Open Decisions
+
+| Code | Question | Who decides | Becomes |
+| --- | --- | --- | --- |
+
+none

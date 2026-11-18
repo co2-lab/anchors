@@ -1,0 +1,157 @@
+// @anchors
+//   code: DFIND
+//   ref: DCLDF
+
+package testsig
+
+import (
+	"bufio"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
+)
+
+// ChangedLines mapeia arquivo (relativo à raiz) → conjunto de linhas ADICIONADAS ou
+// ALTERADAS naquele arquivo, segundo um diff. É a metade "o que mudei" da cobertura
+// de diff; a outra metade (o que está coberto) vem do lcov ingerido.
+type ChangedLines map[string]map[int]bool
+
+// GitDiff roda `git diff --unified=0 <ref>` na raiz e devolve as linhas mudadas por
+// arquivo. `ref` é a base da comparação (ex.: "main", "HEAD~1"); vazio compara o
+// working tree contra HEAD. Só linhas do lado NOVO (adições) — são as que precisam
+// de teste. Requer git; erro se não for um repositório.
+func GitDiff(root, ref string) (ChangedLines, error) {
+	args := []string{"-C", root, "diff", "--unified=0", "--no-color"}
+	if ref != "" {
+		args = append(args, ref)
+	}
+	out, err := exec.Command("git", args...).Output()
+	if err != nil {
+		return nil, err
+	}
+	return parseUnifiedDiff(string(out)), nil
+}
+
+// ParseDiffFile lê um arquivo de unified diff (o fallback não-git: qualquer fonte que
+// produza `git diff`/`diff -u` serve). Mesma extração do GitDiff.
+func ParseDiffFile(path string) (ChangedLines, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return parseUnifiedDiff(string(data)), nil
+}
+
+// parseUnifiedDiff extrai as linhas do lado NOVO de um unified diff. Acompanha o
+// arquivo corrente (linha "+++ b/<path>") e o cursor de linha nova (do hunk
+// "@@ -a,b +c,d @@"), incrementando a cada linha de adição ("+").
+func parseUnifiedDiff(diff string) ChangedLines {
+	changed := ChangedLines{}
+	var curFile string
+	newLine := 0
+	// oldLeft/newLeft: the lines the current hunk still owes on each side, from its header.
+	// Inside a hunk every line is content, whatever it looks like: an added line whose
+	// text starts with `++ ` reads `+++ …`, and it used to be taken as a new-file header —
+	// the line was lost and the next ones were booked under a file named after its text.
+	oldLeft, newLeft := 0, 0
+
+	sc := bufio.NewScanner(strings.NewReader(diff))
+	sc.Buffer(make([]byte, 0, 64*1024), 8*1024*1024)
+	for sc.Scan() {
+		line := sc.Text()
+		if oldLeft > 0 || newLeft > 0 {
+			switch {
+			case strings.HasPrefix(line, "+"):
+				if curFile != "" {
+					changed[curFile][newLine] = true
+				}
+				newLine++
+				newLeft--
+			case strings.HasPrefix(line, "-"):
+				oldLeft-- // remoção: não avança o cursor do lado novo
+			case strings.HasPrefix(line, `\`):
+				// "\ No newline at end of file": not a line of either side
+			default:
+				newLine++ // contexto
+				oldLeft--
+				newLeft--
+			}
+			continue
+		}
+		switch {
+		case strings.HasPrefix(line, "+++ "):
+			curFile = stripDiffPath(strings.TrimPrefix(line, "+++ "))
+			if curFile != "" && changed[curFile] == nil {
+				changed[curFile] = map[int]bool{}
+			}
+		case strings.HasPrefix(line, "@@"):
+			newLine = hunkNewStart(line)
+			oldLeft, newLeft = hunkCounts(line)
+		case strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++"):
+			if curFile != "" {
+				changed[curFile][newLine] = true
+			}
+			newLine++
+		case strings.HasPrefix(line, "-") && !strings.HasPrefix(line, "---"):
+			// remoção: não avança o cursor do lado novo
+		case strings.HasPrefix(line, " "):
+			newLine++ // contexto (só existe com --unified>0; inofensivo)
+		}
+	}
+	// remove arquivos sem linhas mudadas (ex.: só remoções)
+	for f, lines := range changed {
+		if len(lines) == 0 {
+			delete(changed, f)
+		}
+	}
+	return changed
+}
+
+// stripDiffPath remove o prefixo "a/" ou "b/" e o sufixo de timestamp de um caminho
+// de diff. "/dev/null" (arquivo deletado) vira vazio.
+func stripDiffPath(p string) string {
+	p = strings.TrimSpace(p)
+	p, _, _ = strings.Cut(p, "\t")
+	if p == "/dev/null" {
+		return ""
+	}
+	p = strings.TrimPrefix(p, "a/")
+	p = strings.TrimPrefix(p, "b/")
+	return filepath.ToSlash(p)
+}
+
+// hunkCounts reads the line counts of both sides of a hunk header "@@ -a,b +c,d @@"; a side
+// written without a count ("-a" or "+c") has one line, as in the unified format.
+func hunkCounts(hunk string) (old, new int) {
+	f := strings.Fields(hunk)
+	count := func(side string, sign byte) int {
+		if len(side) == 0 || side[0] != sign {
+			return 0
+		}
+		if _, c, ok := strings.Cut(side, ","); ok {
+			n, _ := strconv.Atoi(c)
+			return n
+		}
+		return 1
+	}
+	if len(f) >= 3 {
+		return count(f[1], '-'), count(f[2], '+')
+	}
+	return 0, 0
+}
+
+// hunkNewStart extrai o início do lado novo de um cabeçalho de hunk "@@ -a,b +c,d @@".
+func hunkNewStart(hunk string) int {
+	_, rest, ok := strings.Cut(hunk, "+")
+	if !ok {
+		return 0
+	}
+	end := strings.IndexAny(rest, ", ")
+	if end < 0 {
+		end = len(rest)
+	}
+	n, _ := strconv.Atoi(rest[:end])
+	return n
+}

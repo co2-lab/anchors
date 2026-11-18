@@ -1,0 +1,216 @@
+# language: en
+# @anchors
+#   code: DCFTE
+#   ref: DTCDC
+#   updated_at: 2026-11-14
+#   layer: feature
+
+@DTCDC
+Feature: DocTemplateCompiler — compiles documentation pages from templates that reference the specs' content
+
+  @DTCDC-B01 @unit-level
+  Scenario: The spec's content enters the compiled page
+    Given a spec in layer infra with an overview section, and a template printing each infra spec's title and overview
+    When the documentation is built
+    Then the compiled page contains the overview's text and the spec's title
+
+  @DTCDC-B02 @unit-level
+  Scenario: The compiled page opens with the generated marker, its template path and a stamp
+    Given a template "doct/x.md.tmpl"
+    When the documentation is built
+    Then the compiled page starts with the generated marker naming "doct/x.md.tmpl" and an inputs stamp
+
+  @DTCDC-B03 @unit-level
+  Scenario: A handwritten page is never overwritten
+    Given a handwritten "docs/produto.md" and a template of the same name
+    When the documentation is built
+    Then the handwritten page is unchanged and "produto.md" is reported as skipped
+
+  @DTCDC-B04 @unit-level
+  Scenario: A dry run writes nothing
+    Given a template
+    When the documentation is built as a dry run
+    Then no compiled page exists on disk
+
+  @DTCDC-B05 @unit-level
+  Scenario: A template in a subfolder is compiled
+    Given a template at "doct/camadas/infra.md.tmpl"
+    When the documentation is built
+    Then "camadas/infra.md" is written with the selected spec's code
+
+  @DTCDC-B06 @unit-level
+  Scenario: The layer comes from the spec's header
+    Given a spec whose header says infra while the map says spec
+    When specs are selected by layer
+    Then "layer=infra" finds it and "layer=spec" fails
+
+  @DTCDC-B07 @unit-level
+  Scenario: Only layers that have specs are offered
+    Given a project whose only spec is in infra
+    When the layers are listed
+    Then the list is exactly infra
+
+  @DTCDC-B08 @unit-level
+  Scenario: A section runs to the next heading of its own level
+    Given a spec whose rules section holds several rule headings, followed by an invariants section
+    When the rules section is cut
+    Then it contains every rule and nothing of the invariants section
+    And a section the spec does not have is empty
+
+  @DTCDC-B09 @unit-level
+  Scenario: A spec is split into its separate rules
+    Given a spec with rules B01 and B02 and invariant I01 as rule headings
+    When its rules are listed
+    Then there are three rules with their codes and titles, and B02's body stops before the next section
+
+  @DTCDC-B10 @unit-level
+  Scenario: A rule's title drops the HTML comment on its heading
+    Given a rule heading ending in an HTML comment carrying a waiver
+    When the rules index is built
+    Then the rule's link label has the title's words and no comment
+
+  @DTCDC-B11 @unit-level
+  Scenario: A missing page or a page with a different stamp is stale
+    Given a built documentation
+    When one spec's body changes, and later a compiled page is deleted
+    Then the page is reported stale in both cases, and a matching stamp is not
+
+  @DTCDC-B12 @unit-level
+  Scenario: Editing the template makes its page stale
+    Given a built documentation
+    When the template is edited
+    Then its page is reported stale
+
+  @DTCDC-B13 @unit-level
+  Scenario: The header's date is not part of the stamp
+    Given a spec whose only change is the updated_at line of its header
+    When the stamp is computed before and after
+    Then the stamp is the same, while a body change or a date line far below the header changes it
+
+  @DTCDC-B14 @unit-level
+  Scenario: A handwritten page is never reported stale
+    Given a template whose page on disk has no generated marker
+    When the stale pages are asked
+    Then the page is not reported
+
+  @DTCDC-B15 @unit-level
+  Scenario: The specs no template reaches are uncovered
+    Given two specs in layers infra and screen and a template selecting only infra
+    When the uncovered specs are asked
+    Then only the screen spec is reported
+
+  @DTCDC-B16 @unit-level
+  Scenario: Generated and handwritten markers are recognised
+    Given a page with the generated marker, one with the handwritten marker and one with neither
+    When each is inspected
+    Then the first is generated, the second is handwritten, and the third is neither
+
+  @DTCDC-B17 @unit-level
+  Scenario: A page with the unhashed marker is stale only when its body differs
+    Given a compiled page whose marker line is replaced by the unhashed marker of an earlier version
+    When the stale pages are asked, before and after a line is added to its body
+    Then the page is fresh first, and "x.md" is stale after the edit
+
+  @DTCDC-I01 @unit-level
+  Scenario: Right after a build nothing is stale
+    Given templates at the root and in a subfolder
+    When the documentation is built and the stale pages are asked
+    Then none is reported
+
+  @DTCDC-X01 @unit-level
+  Scenario: Asking for stale pages writes nothing
+    Given a compiled page made stale by a spec change
+    When the stale pages are asked
+    Then the page on disk is unchanged
+
+  @DTCDC-X02 @unit-level
+  Scenario: A spec file the map does not list is not loaded
+    Given a spec file on disk that is not in the map
+    When the compiler loads the specs
+    Then no layer and no spec comes from it
+
+  @DTCDC-E01 @unit-level
+  Scenario: A wrong selection filter fails with a message that helps fix it
+    Given the filters "layar=infra", "layer=screen", "infra" and "code=NAOEX"
+    When specs are selected with each
+    Then each fails, naming the unknown field, the existing layers, the missing "=" or the missing code
+
+  @DTCDC-E02 @unit-level
+  Scenario: A failing selection fails the build without writing the page
+    Given a template selecting a layer that does not exist
+    When the documentation is built
+    Then the build fails and the page is not written
+
+  @DTCDC-E03 @unit-level
+  Scenario: A broken template fails the build
+    Given a template with a range and no end
+    When the documentation is built
+    Then the build fails
+
+  @DTCDC-E04 @unit-level
+  Scenario: A spec in the map but not on disk fails the compiler
+    Given a map listing a spec file that does not exist
+    When the compiler is created
+    Then it fails
+
+  @DTCDC-E05 @unit-level
+  Scenario: A project without templates fails the build and has nothing stale or uncovered
+    Given a project with no doct folder
+    When the documentation is built and the stale and uncovered pages are asked
+    Then the build fails telling to run docs init, and the other two answer with nothing
+
+  @DTCDC-E06 @unit-level
+  Scenario: Asking one spec by an unknown code fails
+    Given a project without the code NAOEX
+    When a template asks for the spec NAOEX
+    Then an error names NAOEX
+
+  @DTCDC-B18 @unit-level
+  Scenario: A layer with files and no spec is said, not an error
+    Given a container whose layers are one declared in the Estrutura and one with a file in the map, neither with a spec
+    When the architecture page is built
+    Then the build passes and each layer shows its files and that it has no spec
+
+  @DTCDC-B19 @unit-level
+  Scenario: The compiler reads through its source
+    Given a spec whose tree text differs from what a source answers
+    When the compiler is built with the source and without
+    Then the first reads the source's title and the second the tree's
+
+  @DTCDC-B20 @unit-level
+  Scenario: A compiler with a source compiles the templates it holds
+    Given a template on disk with one text and in the source with another, and a template only on disk
+    When the pages out of date are compiled through the source
+    Then the page comes from the source's template, and the template the source lacks is not compiled
+
+  @DTCDC-B21 @unit-level
+  Scenario: The pages out of date, compiled without writing
+    Given a page out of date, a page up to date, and a page written by hand
+    When the out-of-date pages are compiled
+    Then only the out-of-date one comes back, compiled, and nothing is written
+
+  @DTCDC-B22 @unit-level
+  Scenario: A section asked by its title in one language is found under another
+    Given an English spec with an "Overview" section
+    When the sections "Visão Geral" and "Visión General" are cut
+    Then both give the Overview's text
+    And "Fora de escopo", outside the catalog, gives nothing
+
+  @DTCDC-B23 @unit-level
+  Scenario: The rules are read in the three catalogued forms, the spec's own codes at their first definition
+    Given a spec with a table rule B01, a bullet rule B02, a heading rule B03, another spec's code in a table, and B01 again in a Rule uses table
+    When its rules are listed
+    Then there are B01, B02 and B03, once each, with their titles
+    And only B03 has a heading of its own, with its body
+
+  @DTCDC-B24 @unit-level
+  Scenario: A page whose template is gone goes with it
+    Given a page generated from a template renamed since, in a folder of its own, a handwritten page, and a generated page the project keeps
+    When the docs are built, once as a dry run and once for real
+    Then the dry run names the orphan and removes nothing, and the build removes it and its empty folder, keeping the handwritten and the kept one
+
+  @DTCDC-B25 @unit-level
+  Scenario: A compiled page whose @anchors header opens it is still compiled, and keeps its header
+    Given a compiled page that opens with an @anchors header, the marker below it, and an old body
+    When the docs are judged and built
+    Then the page is out of date, compiled again below the same header, and then in date; a page with a header and no marker is left as written

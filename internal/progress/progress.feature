@@ -1,0 +1,117 @@
+# language: en
+# @anchors
+#   code: PFFPR
+#   ref: DMLDD
+#   updated_at: 2026-11-16
+#   layer: feature
+
+@DMLDD
+Feature: DemandLedger — the project's progress file
+
+  @DMLDD-B01 @unit-level
+  Scenario: The file is rendered and read back
+    Given a demand tied to a plan, with a stage-less task and a stage of tasks to do, in progress, done, cancelled and estimated
+    When the file is rendered and parsed again
+    Then it opens with its header and the whole progress, each record has its line, it closes with the sum, and it reads back the same
+
+  @DMLDD-B02 @unit-level
+  Scenario: Progress counts the done weight over the weight not cancelled
+    Given tasks of weight 3 done, 2 done, 8 in progress and 5 cancelled
+    When the progress is computed
+    Then it is 38% of 13, and with nothing counted it is a dash
+
+  @DMLDD-B03 @unit-level
+  Scenario: Records are numbered in order
+    Given a demand with two stages and tasks added to each and to the demand
+    When the ids are read
+    Then the stages are S1 and S2, the tasks T1 to T3 across the demand, and a weight of zero is refused
+
+  @DMLDD-B04 @unit-level
+  Scenario: A task moves through its states
+    Given a task
+    When one agent starts it, another tries, takes it over, it is done, reopened, cancelled and weighed
+    Then the second agent is refused until it takes it over, and each state carries who, when or why
+
+  @DMLDD-B05 @unit-level
+  Scenario: Changes made at once are all kept
+    Given twenty goroutines each adding a task through the lock
+    When they all finish
+    Then the file holds the twenty tasks
+
+  @DMLDD-B06 @unit-level
+  Scenario: The summary shows demands and stages, not tasks
+    Given a demand with two stages and a demand with none
+    When the summary is made
+    Then it has a row per demand and per stage, with their progress and open tasks
+
+  @DMLDD-B07 @unit-level
+  Scenario: Two branches merge by id
+    Given a base with one task, our side finishing it and adding T2, their side adding a different T2 and a stage
+    When the sides are merged
+    Then the task is done, both T2 tasks stay with theirs renumbered T3, and their stage joins
+
+  @DMLDD-B08 @unit-level
+  Scenario: A plan becomes a demand
+    Given a plan titled Checkout declaring two phases
+    When it is tracked
+    Then the demand is titled Checkout with two stages, and tracking it again is refused
+
+  @DMLDD-B09 @unit-level
+  Scenario: Per-plan progress files are migrated
+    Given a plan's -progress.md with a phase, a checked item, an open item and a TODO placeholder
+    When the project is migrated
+    Then the plan is a demand titled as the plan, with a stage, two tasks weighing 1 as estimates, one done, the file is deleted, and a dry run writes nothing
+
+  @DMLDD-B10 @unit-level
+  Scenario: A task in progress says when it was started
+    Given a task started at a minute, and a line of an older file with only the date
+    When the file is written and read back
+    Then the minute is kept and read, and the older line reads as the start of its day
+
+  @DMLDD-B11 @unit-level
+  Scenario: A demand, a stage or a task is renamed
+    Given a demand with a stage holding a done task
+    When each is renamed, then an id that names nothing, then a title with the separator
+    Then the titles change and the ids, the task's state and history stay, and the last two are refused
+
+  @DMLDD-B12 @unit-level
+  Scenario: A task is marked unplanned
+    Given a demand with a stage holding a task marked unplanned, an estimate also unplanned, a cancelled unplanned one and a planned one
+    When the file is written and read back, a mark is taken off, the other side of a merge marks a task, and a line with an unknown mark is read
+    Then the marks are kept in the lines, the summary says the unplanned weight without the cancelled, the mark comes off, the merge keeps it, and the unknown mark is refused
+
+  @DMLDD-B13 @unit-level
+  Scenario: A task moves within its demand, and an empty stage is removed
+    Given a demand with a stage of found work holding a done unplanned task, another stage, and a second demand
+    When the task moves to the other stage, then to the demand, then to the second demand; the emptied stage is removed, and the other stage, still holding a task, is not
+    Then it keeps its id, state and mark wherever it goes within the demand, the other demand is refused, and only the empty stage goes
+
+  @DMLDD-E01 @unit-level
+  Scenario: A hand edit is refused
+    Given a progress file with a line added by hand
+    When it is read or changed
+    Then the read fails as edited by hand and nothing is written over it
+
+  @DMLDD-E02 @unit-level
+  Scenario: What the format cannot read back is refused
+    Given a title holding the separator, an empty reason and an unknown task
+    When they are added or used
+    Then each change is refused naming its cause
+
+  @DMLDD-B14 @unit-level
+  Scenario: A frozen plan's demand is out of the count
+    Given three demands, one whose plan a frozen folder covers, one whose plan's header is frozen, and one live
+    When the file is loaded
+    Then the first two carry their freezes, their tasks leave the counted ones, their rows say so, and the file written back is unchanged
+
+  @DMLDD-B15 @unit-level
+  Scenario: A demand with nothing in motion is settled
+    Given a demand all done, one none started, one with a task in progress, and one half done
+    When each is asked whether it is settled
+    Then the first two are, and the last two are not
+
+  @DMLDD-B16 @unit-level
+  Scenario: A demand points at another plan, by hand or by the plan's move
+    Given a demand developing plans/review/videos.md, with a stage and a task
+    When its plan moves to plans/videos.md, and then it is replanned to plans/videos-v2.md, and an unknown demand and an empty plan are replanned
+    Then the demand follows the move and says so, takes the new plan with its stage kept and written back, and the last two are refused

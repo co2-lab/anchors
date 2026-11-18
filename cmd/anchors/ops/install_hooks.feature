@@ -1,0 +1,161 @@
+# language: en
+# @anchors
+#   code: IHFNS
+#   ref: INHKN
+#   updated_at: 2026-11-11
+#   layer: feature
+
+@INHKN
+Feature: InstallHooks — the git hooks that confront every commit and push with the gates and the freeze, installed without taking a hook the user wrote
+
+  @INHKN-B01 @unit-level
+  Scenario: The hooks go where git looks for them
+    Given a repository without and then with core.hooksPath
+    When the hooks directory is resolved
+    Then it is <root>/.git/hooks by default
+    And <root>/.githooks for the relative .githooks
+    And the absolute path itself when absolute
+
+  @INHKN-B02 @unit-level
+  Scenario: A fresh install writes the four managed hooks, executable
+    Given a governed repository with no hooks
+    When install-hooks runs
+    Then pre-commit, commit-msg, pre-push and pre-merge-commit hold the managed scripts and are executable
+
+  @INHKN-B03 @unit-level
+  Scenario: Foreign hooks are respected unless forced
+    Given a repository where the user wrote pre-commit, commit-msg and pre-push
+    When install-hooks runs, then again without the pre-commit, then with --force
+    Then the first run fails pointing at --force and overwrites nothing
+    And the second installs the pre-commit and warns about the other two, keeping them
+    And --force replaces them
+
+  @INHKN-B04 @unit-level
+  Scenario: The hooks anchors wrote, old or new, are updated on reinstall
+    Given a commit-msg with the legacy anchors header, then one with the current marker but changed
+    When install-hooks runs each time
+    Then the commit-msg becomes the current script
+    And it is not reported as foreign
+
+  @INHKN-B05 @unit-level
+  Scenario: The pre-commit refuses a commit while the remote is frozen
+    Given a remote whose anchors.yaml is frozen for "rotate the key"
+    When a file is committed
+    Then the commit fails with "COMMIT REFUSED — the project is FROZEN" and "rotate the key"
+
+  @INHKN-B06 @unit-level
+  Scenario: A staged set with nothing governed passes the pre-commit
+    Given gates that answer exit 3
+    When package.json is committed
+    Then the commit succeeds
+    And the pre-commit says no staged file is governed and reports no failure
+
+  @INHKN-B07 @unit-level
+  Scenario: A gate failure is deferred to the commit-msg, which blocks it
+    Given gates that fail
+    When a file is committed
+    Then the pre-commit says "gates failed. If it is deliberate"
+    And the commit-msg says the commit is BLOCKED and the commit fails
+
+  @INHKN-B08 @unit-level
+  Scenario: The pre-push refuses a push while the remote is frozen
+    Given a remote whose anchors.yaml is frozen and a commit made past the hooks
+    When the branch is pushed
+    Then the push fails with "PUSH REFUSED — the project is FROZEN"
+
+  @INHKN-B09 @unit-level
+  Scenario: The commit-msg refuses a subject the message check refuses
+    Given a message check that refuses
+    When a file is committed
+    Then the commit fails
+
+  @INHKN-B10 @unit-level
+  Scenario: The pre-push refuses a binary older than the remote's minimum version
+    Given a remote declaring min_version 2.0.0
+    When the branch is pushed with a binary 1.9.0, then with 2.0.0
+    Then the first push fails saying it requires 'anchors' 2.0.0 or newer
+    And the second succeeds
+
+  @INHKN-B11 @unit-level
+  Scenario: Both merge drivers are registered in git config and .gitattributes
+    Given a governed repository
+    When install-hooks runs
+    Then .gitattributes holds "anchors.graph.yaml merge=anchors-map" and "anchors.progress.md merge=anchors-progress" once
+    And git config holds both driver commands
+
+  @INHKN-I01 @unit-level
+  Scenario: Reinstalling never duplicates an attribute line nor damages the user's lines
+    Given a .gitattributes holding "*.png binary" with no final newline
+    When install-hooks runs twice
+    Then the file still starts with "*.png binary"
+    And the map driver line appears once
+    And the second run says the drivers are already configured
+
+  @INHKN-X01 @unit-level
+  Scenario: A hook the user wrote is never replaced without --force
+    Given a pre-commit the user wrote
+    When install-hooks runs without --force
+    Then the user's pre-commit is byte for byte what it was
+
+  @INHKN-E01 @unit-level
+  Scenario: A directory without anchors.yaml gets no hook
+    Given a git repository with no anchors.yaml
+    When install-hooks runs
+    Then it fails pointing at anchors init
+    And no pre-commit exists
+
+  @INHKN-E02 @unit-level
+  Scenario: Outside a repository the error explains what needs git
+    Given a directory with anchors.yaml outside git
+    When install-hooks runs
+    Then it fails explaining it needs git to install the pre-commit
+
+  @INHKN-B12 @unit-level
+  Scenario: The pre-push warns when the remote map was written by another version
+    Given a remote whose anchors.graph.yaml says "generated_by: 0.9.0" (and, again, the legacy "gerado_por: 0.9.0")
+    When a binary of version 1.0.0 pushes
+    Then the push succeeds with the warning "was written by 'anchors 0.9.0'"
+    And a binary of version 0.9.0 pushes with no such warning
+
+  @INHKN-B13 @unit-level
+  Scenario: The installed hooks run on a real commit, on every system
+    Given a repository with the hooks installed, the anchors of this tree on PATH, and a blocking gate that fails
+    When a commit is made, and made again after the gate passes
+    Then the first is refused and the second lands
+
+  @INHKN-B14 @unit-level
+  Scenario: The agent's hook goes into the project's Claude Code settings
+    Given a project whose Claude Code settings already hold a permission and another hook
+    When the agent's hook is installed twice, then into settings that are not valid JSON, then into a folder with no anchors.yaml
+    Then the settings keep theirs and gain the hook once, before and after each command and when a subagent starts and stops, and the freeze's hook once before each edit, and the last two are refused
+
+  @INHKN-B15 @unit-level
+  Scenario: The agent's hook goes into the user's own settings
+    Given a home folder and a folder with no anchors.yaml
+    When the agent's hook is installed for the user, and --user is given without --agent
+    Then the user's settings gain the hook, the folder gets no settings, and the second is refused
+
+  @INHKN-B16 @unit-level
+  Scenario: The hooks speak the project's language
+    Given a project declaring lang pt-BR, and one declaring nothing
+    When the hooks are installed in each
+    Then the first's hooks print every message in Portuguese with their variables kept, and the second's are the English scripts
+
+  @INHKN-B17 @unit-level
+  Scenario: The installed hooks refuse a commit, and a merge commit, on a branch the flow protects
+    Given a repository on production, which branch_flow protects, with the hooks installed
+    When a commit is made on production, one on hotfix/a, and hotfix/a is merged into production
+    Then the first and the merge are refused naming production as protected, and the hotfix commit lands
+
+  @INHKN-B18 @unit-level
+  Scenario: The pre-push confronts the push's review
+    Given a repository with the hooks installed and a commit to push
+    When it is pushed with push-review verify refusing, and then accepting
+    Then the first push is stopped with the pushed refs handed over, and the second goes through
+
+  @INHKN-B19 @unit-level
+  Scenario: In a worktree the pre-commit defers to the commit-msg
+    Given a repository with the hooks installed, and a worktree of it
+    When a commit with a failing gate is made in the worktree
+    Then the pre-commit reports and defers to the commit-msg, as in the main tree
+

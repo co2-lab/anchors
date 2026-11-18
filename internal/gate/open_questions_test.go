@@ -1,0 +1,432 @@
+// @anchors
+//   code: OQTPN
+//   ref: OPQSP
+
+package gate
+
+// Item em aberto dá PENDING, não FAIL: declarar o que a spec ainda não decidiu é o
+// comportamento que este gate existe para produzir, e reprová-lo como defeito inverte o
+// incentivo — o caminho mais curto para o verde vira apagar a seção.
+
+import (
+	"github.com/co2-lab/anchors/internal/testkit"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+func rodaAberto(t *testing.T, content string) (Verdict, string) {
+	t.Helper()
+	return checkOpenQuestions(content, mapx.Node{Kind: mapx.KindSpec}, "", nil, testkit.WithComments(nil))
+}
+
+// A distinção que decide se o gate é útil ou ritual: quem NÃO abriu a seção não é
+// cobrado (specs simples não têm o que declarar); quem ABRIU precisa fechar.
+func TestOpenQuestionsSoCobraQuemAbriu(t *testing.T) {
+	t.Run("OPQSP-B02: Whoever OPENED the section is confronted by its content", func(t *testing.T) {})
+	semSeção := `# Spec — Cálculo de parcelas
+
+## Regras
+
+### PARCX-B01 — divide o total em N parcelas
+`
+	// Sem a seção: PENDENTE, não Skip. A seção é `Default: true` no catálogo e o
+	// `anchors new` já a emite fechada com `nenhuma` — então a ausência é dívida (spec
+	// anterior à prática) ou apagamento, e nenhum sinal separa os dois. `Skip` diria "não
+	// se aplica", e um gate bloqueante com ✓0 ✗0 ~586 parece vigiar e não vigia.
+	if v, msg := rodaAberto(t, semSeção); v != Diverge {
+		t.Fatalf("spec sem a seção deveria ser Pending (dívida nomeada), foi %s: %s", v, msg)
+	}
+
+	comPergunta := semSeção + `
+## Decisões em aberto
+
+- Arredondamento da última parcela: sobra vai na primeira ou na última? Contabilidade
+  não respondeu.
+`
+	v, d := rodaAberto(t, comPergunta)
+	if v != Diverge {
+		t.Fatalf("spec com pergunta aberta deveria reprovar, foi %s", v)
+	}
+	if !strings.Contains(d, "Arredondamento") {
+		t.Errorf("a mensagem não mostra QUAL pergunta: %s", d)
+	}
+}
+
+// O fechamento honesto: afirmar que se olhou e não há dúvida vale, e é diferente de
+// omitir a seção. É o opt-out explícito do CONCEPT §5.1.
+func TestOpenQuestionsFechamentoHonesto(t *testing.T) {
+	t.Run("OPQSP-B04: A section closed honestly releases the spec", func(t *testing.T) {})
+	for _, fecho := range []string{"nenhuma", "Nenhuma.", "- nenhuma", "none", "N/A", "sem pendências", "—"} {
+		t.Run(fecho, func(t *testing.T) {
+			spec := "# Spec\n\n## Decisões em aberto\n\n" + fecho + "\n"
+			if v, d := rodaAberto(t, spec); v != Pass {
+				t.Fatalf("fechamento %q deveria passar, foi %s (%s)", fecho, v, d)
+			}
+		})
+	}
+}
+
+// A spec using English heading ## Open Decisions closed with "none" releases the spec.
+func TestOpenQuestionsOpenDecisionsEnglishTitle(t *testing.T) {
+	t.Run("OPQSP-B04: A section closed honestly releases the spec", func(t *testing.T) {})
+	spec := "# Spec\n\n## Open Decisions\n\nnone\n"
+	if v, d := rodaAberto(t, spec); v != Pass {
+		t.Fatalf("spec with '## Open Decisions' closed with 'none' should pass, got %s (%s)", v, d)
+	}
+}
+
+// A pergunta respondida vira REGRA; o item fica marcado como resolvido em vez de sumir.
+// O rastro tem valor: mostra que a decisão foi tomada, não esquecida.
+func TestOpenQuestionsItemResolvidoNaoBloqueia(t *testing.T) {
+	t.Run("OPQSP-B05: An item marked as resolved does not block", func(t *testing.T) {})
+	spec := `# Spec
+
+## Decisões em aberto
+
+- [x] Arredondamento da última parcela → decidido: sobra na última (virou ` + "`PARCX-R03`" + `)
+- ~~Moeda estrangeira~~ → fora de escopo nesta versão
+`
+	if v, d := rodaAberto(t, spec); v != Pass {
+		t.Fatalf("itens resolvidos não deveriam bloquear, foi %s (%s)", v, d)
+	}
+
+	misto := spec + "- Fuso horário do vencimento: UTC ou local do usuário?\n"
+	v, d := rodaAberto(t, misto)
+	if v != Diverge {
+		t.Fatalf("um item ainda aberto deveria reprovar, foi %s", v)
+	}
+	if !strings.Contains(d, "1 decisão") && !strings.Contains(d, "1 open decision") {
+		t.Errorf("deveria contar só o item ABERTO (1), não os resolvidos: %s", d)
+	}
+}
+
+// Prosa que explica a seção não é pendência — senão o texto de abertura viraria um item
+// fantasma e o autor aprenderia a não escrever nada, que é o oposto do objetivo.
+func TestOpenQuestionsProsaNaoEhItem(t *testing.T) {
+	t.Run("OPQSP-I01: Prose is not an item", func(t *testing.T) {})
+	spec := `# Spec
+
+## Decisões em aberto
+
+Esta seção lista o que a spec ainda não decide. Quando a resposta vier, ela deve virar
+uma regra com código, e o item é marcado como resolvido.
+
+nenhuma
+`
+	if v, d := rodaAberto(t, spec); v != Pass {
+		t.Fatalf("prosa explicativa não é pendência, foi %s (%s)", v, d)
+	}
+}
+
+// A seção também vale como TABELA — formato comum quando a pergunta tem dono e prazo.
+// Cabeçalho e separador não são itens.
+func TestOpenQuestionsTabela(t *testing.T) {
+	t.Run("OPQSP-B03: An open item bars the spec", func(t *testing.T) {})
+	vazia := `# Spec
+
+## Decisões em aberto
+
+| Pergunta | Quem decide | Vira |
+| --- | --- | --- |
+`
+	if v, d := rodaAberto(t, vazia); v != Pass {
+		t.Fatalf("tabela só com cabeçalho não tem pendência, foi %s (%s)", v, d)
+	}
+
+	comLinha := vazia + "| Fuso do vencimento: UTC ou local? | Produto | `PARCX-R04` |\n"
+	v, d := rodaAberto(t, comLinha)
+	if v != Diverge {
+		t.Fatalf("linha de tabela é pendência, foi %s", v)
+	}
+	if !strings.Contains(d, "Fuso") {
+		t.Errorf("não mostrou a pergunta da tabela: %s", d)
+	}
+}
+
+// A seção termina no próximo cabeçalho: pendência não pode vazar para as seções
+// seguintes, nem regras seguintes serem lidas como pendência.
+func TestOpenQuestionsRespeitaFronteiraDaSecao(t *testing.T) {
+	t.Run("OPQSP-I02: The section boundary is respected", func(t *testing.T) {})
+	spec := `# Spec
+
+## Decisões em aberto
+
+nenhuma
+
+## Regras
+
+- ` + "`PARCX-B01`" + ` — divide o total
+- ` + "`PARCX-B02`" + ` — arredonda na última
+`
+	if v, d := rodaAberto(t, spec); v != Pass {
+		t.Fatalf("regras da seção seguinte não são pendências, foi %s (%s)", v, d)
+	}
+}
+
+// Variações de escrita não podem decidir o veredito — reprovar por causa de um acento
+// ensinaria o autor a fugir da seção.
+func TestOpenQuestionsAceitaVariacoesDoTitulo(t *testing.T) {
+	títulos := []string{
+		"## Decisões em aberto", "## Decisoes em aberto", "### Decisão em aberto",
+		"## Questões em aberto", "## Open Questions", "## Em aberto",
+		"## Pendências de decisão",
+	}
+	for _, tt := range títulos {
+		t.Run(tt, func(t *testing.T) {
+			spec := "# Spec\n\n" + tt + "\n\n- Pergunta que ninguém respondeu\n"
+			if v, d := rodaAberto(t, spec); v != Diverge {
+				t.Fatalf("título %q não foi reconhecido (veredito %s: %s)", tt, v, d)
+			}
+		})
+	}
+}
+
+// O gate é da SPEC: é ela que decide. Cobrar isso de código ou teste seria pedir que
+// implemente resolva a ambiguidade — exatamente o chute que se quer evitar.
+func TestOpenQuestionsSoSpec(t *testing.T) {
+	t.Run("OPQSP-B01: An artifact that is not a spec leaves without a verdict", func(t *testing.T) {})
+	spec := "# X\n\n## Decisões em aberto\n\n- pergunta\n"
+	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
+		t.Run(string(k), func(t *testing.T) {
+			v, _ := checkOpenQuestions(spec, mapx.Node{Kind: k}, "", nil, testkit.WithComments(nil))
+			if v != Skip {
+				t.Fatalf("kind %s deveria ser Skip, foi %s", k, v)
+			}
+		})
+	}
+}
+
+// A pergunta precisa de CÓDIGO. Sem identidade ela não vira issue rastreável, não
+// sobrevive a uma reescrita da spec, e nada liga depois a regra à pergunta que a originou.
+func TestOpenQuestions_cobraCodigoNaPergunta(t *testing.T) {
+	t.Run("OPQSP-B06: A question with no code is charged", func(t *testing.T) {})
+	base := "## Decisões em aberto\n\n| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n"
+
+	// SEM código na primeira célula: achado próprio, distinto de "há pendência".
+	anonima := base + "| | Fuso do vencimento: UTC ou local? | Produto | `PARCX-R04` |\n"
+	v, d := rodaAberto(t, anonima)
+	if v != Diverge {
+		t.Fatalf("pergunta anônima é pendência, foi %s", v)
+	}
+	if !strings.Contains(d, "SEM CÓDIGO") && !strings.Contains(d, "WITHOUT CODE") {
+		t.Errorf("o achado deveria ser o da identidade ausente, veio: %s", d)
+	}
+
+	// COM código: volta a ser a pendência normal, e a mensagem traz código E assunto.
+	t.Run("OPQSP-B09: An identified open decision awaits a person's decision, naming who decides", func(t *testing.T) {})
+	comCodigo := base + "| `PARCX-Q01` | Fuso do vencimento: UTC ou local? | Produto | `PARCX-R04` |\n"
+	v, d = rodaAberto(t, comCodigo)
+	if v != Awaiting {
+		t.Fatalf("pergunta identificada aguarda a decisão de quem decide, foi %s", v)
+	}
+	if !strings.Contains(d, i18n.T("gate.open_questions.who_decides", "Produto")) {
+		t.Errorf("the awaited decision names who decides: %s", d)
+	}
+	if strings.Contains(d, "SEM CÓDIGO") || strings.Contains(d, "WITHOUT CODE") {
+		t.Errorf("a pergunta tem código; não podia ser cobrada por identidade: %s", d)
+	}
+	if !strings.Contains(d, "PARCX-Q01") {
+		t.Errorf("a mensagem deveria nomear a pergunta pelo código: %s", d)
+	}
+	if !strings.Contains(d, "Fuso") {
+		t.Errorf("só o código faria abrir a spec para saber do que se trata: %s", d)
+	}
+}
+
+// O código da coluna "Vira" é a REGRA FUTURA, não a identidade da pergunta. Lê-lo como
+// identidade daria por identificada justamente a pergunta mais bem escrita — a que já
+// declarou seu destino.
+func TestOpenQuestions_naoConfundeViraComIdentidade(t *testing.T) {
+	base := "## Decisões em aberto\n\n| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n"
+	semIdentidadeMasComDestino := base + "| | Fuso do vencimento? | Produto | `PARCX-R04` |\n"
+
+	_, d := rodaAberto(t, semIdentidadeMasComDestino)
+	if !strings.Contains(d, "SEM CÓDIGO") && !strings.Contains(d, "WITHOUT CODE") {
+		t.Errorf("`PARCX-R04` está na coluna Vira e não identifica a pergunta: %s", d)
+	}
+}
+
+// O TÍTULO DA SEÇÃO é do projeto, não do framework. A lista de variantes cravada no gate
+// cobria português e inglês; uma spec em qualquer outro idioma caía no ramo "a spec não
+// declara a seção" TENDO a seção com perguntas dentro — o gate afirmava ausência onde
+// havia conteúdo, que é a falha mais cara que ele pode ter.
+func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
+	espanhol := "## Decisiones pendientes\n\n| Código | Pregunta | Quién decide |\n| --- | --- | --- |\n" +
+		"| `PARCX-Q01` | ¿Zona horaria del vencimiento? | Producto |\n"
+
+	// SEM declarar: o framework não conhece o título, e o gate reporta a seção como
+	// ausente — dívida, não defeito, e por isso Pending e não Fail.
+	corpo, achou := openDecisionsSectionCfg(espanhol, nil, "")
+	if achou {
+		t.Errorf("sem declaração, o framework não tem como conhecer o título: %q", corpo)
+	}
+
+	// DECLARANDO `section_titles.open`, o gate encontra a seção e conta a pergunta.
+	cfg := testkit.WithComments(&config.Config{SectionTitles: config.SectionTitles{"open": "Decisiones pendientes"}})
+	if n := OpenDecisions(espanhol, cfg, ""); n != 1 {
+		t.Errorf("com o título declarado, a pergunta deveria ser contada; veio %d", n)
+	}
+
+	// O GATE, e não só o contador, respeita o título: ele recebia o cfg na assinatura e
+	// passava nil adiante — a correção não alcançaria o caminho principal.
+	cfgEs := testkit.WithComments(&config.Config{SectionTitles: config.SectionTitles{"open": "Decisiones pendientes"}})
+	if v, d := checkOpenQuestions(espanhol, mapx.Node{Kind: mapx.KindSpec}, "", nil, cfgEs); v != Awaiting || !strings.Contains(d, "PARCX-Q01") {
+		t.Errorf("o gate deveria achar a seção declarada e nomear a pergunta: %s — %s", v, d)
+	}
+
+	// E o título declarado VENCE o padrão do framework: um projeto que renomeia a seção
+	// não pode ser cobrado pelo nome que o framework usaria.
+	misto := "## Decisões em aberto\n\nnenhuma\n\n## Pendências de produto\n\n" +
+		"| Código | Pergunta |\n| --- | --- |\n| `PARCX-Q01` | Fuso? |\n"
+	cfgProduto := testkit.WithComments(&config.Config{SectionTitles: config.SectionTitles{"open": "Pendências de produto"}})
+	if n := OpenDecisions(misto, cfgProduto, ""); n != 1 {
+		t.Errorf("a seção declarada é a que vale, e ela tem 1 pergunta; veio %d", n)
+	}
+}
+
+// TABELA HISTÓRICA não é pergunta aberta.
+//
+// Uma tabela é a forma mais legível de mostrar de onde a regra veio, e o `[x]` obriga a
+// bullet. Medido no app de referência (co2-lab/anchors#7): escrevi o histórico da spec do
+// DataStore como `| era | virou |` e o gate contou as duas linhas de dados como perguntas
+// ABERTAS — na seção que abre com `nenhuma.` e cuja tabela diz que elas viraram regra.
+//
+// A defesa por NOME de coluna não alcançava: `| era | virou |` não casa
+// `código|pergunta|decisão`, então o cabeçalho entrava como item e as linhas também.
+//
+// E o efeito de errar aqui não é cosmético: o veredito fica `Pending`, o `check` só fecha
+// issue em `Pass`, e o card `needs-user` fica aberto para sempre com o claim pulando o
+// trabalho.
+func TestOpenItems_deParaDePerguntaParaRegraNaoEhPerguntaAberta(t *testing.T) {
+	corpo := "nenhuma.\n\n" +
+		"| era | virou |\n" +
+		"|---|---|\n" +
+		"| `DTSTD-Q01` — qual a retenção do PITR | `DTSTD-B07` — 35 dias, o máximo |\n" +
+		"| `DTSTD-Q02` — o histórico tem limite | `DTSTD-B08` — não tem, e é declarado |\n"
+
+	if itens := openItems(corpo); len(itens) != 0 {
+		t.Errorf("contou %d item(ns) aberto(s) numa tabela de HISTÓRICO: %q", len(itens), itens)
+	}
+}
+
+// A pergunta que AINDA não virou regra continua contando — a correção não pode virar
+// vale-tudo para qualquer linha de tabela.
+func TestOpenItems_perguntaSemRegraAindaConta(t *testing.T) {
+	casos := map[string]int{
+		"| `DTSTD-Q01` | qual a retenção do PITR | usuário |": 1,
+		"- `DTSTD-Q03` — o cache do cliente tem TTL próprio?": 1,
+		"| `DTSTD-Q01` → `DTSTD-B07` | decidido |":            0, // de-para
+		// duas perguntas na MESMA linha contam como UM item: o gate conta LINHAS, e o
+		// laudo depois extrai os códigos de cada uma. O que importa aqui é que a linha
+		// NÃO foi confundida com de-para.
+		"| `DTSTD-Q01` — pergunta | `DTSTD-Q02` — outra pergunta |": 1,
+	}
+	for corpo, quer := range casos {
+		if got := len(openItems(corpo)); got != quer {
+			t.Errorf("openItems(%q) = %d item(ns), queria %d", corpo, got, quer)
+		}
+	}
+}
+
+// A coluna "Vira" cita o que a resposta VAI PRODUZIR, e isso nunca é uma regra: é
+// revisão, fase, ou outra spec. Só a regra JÁ EXISTENTE fecha a pergunta.
+//
+// Três letras tiveram de sair da classe de "regra" no de-para, e cada uma custou um
+// defeito medido:
+//
+//	R  revisão   quebrou o `cobraCodigoNaPergunta` (a coluna Vira traz `-R04`)
+//	F  fase      SILENCIOU a `THMEX-Q01` do app de referência: ela dizia "vira uma revisão
+//	             THMEX-R0001, ou uma spec de decisão no DSSYD-W01", e o `F01` fez a
+//	             linha parecer de-para. O gate passou `✓1` com a pergunta em aberto
+//	Q  pergunta  faria duas perguntas na mesma linha parecerem de-para
+//
+// O `F` é o pior dos três: um falso NEGATIVO criado pela correção que existia para não
+// criar falso negativo.
+func TestOpenItems_colunaViraNaoFechaAPergunta(t *testing.T) {
+	t.Run("OPQSP-I03: Filling in what the question BECOMES does not close the question", func(t *testing.T) {})
+	casos := map[string]int{
+		// a coluna "Vira" citando REVISÃO — a pergunta continua aberta
+		"| `PARCX-Q01` | UTC ou local? | Produto | `PARCX-R04` |": 1,
+		// citando FASE e revisão — o caso do app de referência
+		"| `THMEX-Q01` | qual lib? | usuário | uma revisão `THMEX-R0001`, ou uma spec no `DSSYD-W01` |": 1,
+		// citando outra SPEC pelo código de fase dela
+		"| `ABCDE-Q02` | onde isto mora? | usuário | uma spec nova em `WXYZ-W03` |": 1,
+		// e o de-para DE VERDADE, com a regra que nasceu: fecha
+		"- [x] `DTSTD-Q01` — a retenção do PITR → virou `DTSTD-B07`: 35 dias": 0,
+		"| `DTSTD-Q02` — o histórico tem limite | `DTSTD-B08` — não tem |":    0,
+	}
+	for corpo, quer := range casos {
+		if got := len(openItems(corpo)); got != quer {
+			t.Errorf("openItems(%q)\n  = %d item(ns), queria %d", corpo, got, quer)
+		}
+	}
+}
+
+// A CONTAGEM lê o léxico do projeto pela mesma via do confronto. Contar zero numa spec
+// cuja seção se chama outra coisa afirmaria "não há decisão pendente" sobre uma spec
+// cheia delas — o silêncio que este gate existe para eliminar.
+func TestOpenDecisions_contaLendoOLexicoDoProjeto(t *testing.T) {
+	t.Run("OPQSP-B07: The count of pending decisions reads the project's own lexicon", func(t *testing.T) {})
+	spec := "# Spec\n\n## Perguntas pendentes\n\n" +
+		"| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n" +
+		"| `PARCX-Q01` | Fuso do vencimento? | Produto | |\n" +
+		"| `PARCX-Q02` | Arredondamento? | Produto | |\n"
+	cfg := testkit.WithComments(&config.Config{SectionTitles: config.SectionTitles{"open": "Perguntas pendentes"}})
+	if n := OpenDecisions(spec, cfg, ""); n != 2 {
+		t.Errorf("contou %d decisões; a seção tem 2, e o título é o do PROJETO", n)
+	}
+}
+
+// A régua é determinística: existe item em aberto, ou não existe. Avaliar o MÉRITO de uma
+// dúvida é julgamento, e julgamento é de outra classe de gate.
+func TestOpenQuestions_naoJulgaSeAPerguntaEhBoa(t *testing.T) {
+	t.Run("OPQSP-X01: The gate does not judge whether the question is good", func(t *testing.T) {})
+	trivial := "# Spec\n\n## Decisões em aberto\n\n" +
+		"| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n" +
+		"| `PARCX-Q01` | A vírgula do rótulo fica antes ou depois? | Produto | |\n"
+	if v, _ := rodaAberto(t, trivial); v != Awaiting {
+		t.Errorf("o gate julgou o mérito da pergunta; a régua é a EXISTÊNCIA do item: %v", v)
+	}
+}
+
+// Exigir a seção de toda spec transformaria instrumento em ritual. Quem não abriu não é
+// cobrado — e quem não tem dúvida gasta uma palavra declarando isso.
+func TestOpenQuestions_ausenciaDaSecaoEhPendenciaQueEnsinaASaida(t *testing.T) {
+	t.Run("OPQSP-X02: A spec with no section is a divergence item, and the verdict teaches the way out", func(t *testing.T) {})
+	semSecao := "# Spec\n\n## Regras\n\n### PARCX-B01 — algo\n"
+	v, d := rodaAberto(t, semSecao)
+	if v != Diverge {
+		t.Fatalf("a ausência da seção é pendência, não reprovação nem aprovação: %v (%s)", v, d)
+	}
+	// E o veredito tem de ENSINAR a saída: registrar a dívida sem dizer como fechá-la
+	// deixa a pendência eterna, que é indistinguível de ninguém ter olhado.
+	if !strings.Contains(d, "none") {
+		t.Errorf("o veredito não ensina como fechar a seção: %s", d)
+	}
+}
+
+// A code the QUESTION cites as context is no answer: only a rule code where the answer is
+// written — a cell after the question, or after an arrow or a word of resolution — closes it.
+func TestOpenItems_codigoCitadoNaPerguntaNaoAFecha(t *testing.T) {
+	t.Run("OPQSP-B08: A code the question cites as context does not close it", func(t *testing.T) {})
+	for _, open := range []string{
+		"| `BGETB-Q01` | Is the Loading (`BGETB-S01`) only a spinner? | product | a rule B… |",
+		"- `BGETB-Q02` does `BGETB-B03` apply to archived goals?",
+	} {
+		if got := openItems(open + "\n"); len(got) != 1 {
+			t.Errorf("openItems(%q) = %d item(s), want 1: the question is still open", open, len(got))
+		}
+	}
+	for _, closed := range []string{
+		"| `BGETB-Q01` | Is the Loading (`BGETB-S01`) only a spinner? | product | `BGETB-B05` |",
+		"- `BGETB-Q02` does it apply to archived goals? → `BGETB-B07`",
+	} {
+		if got := openItems(closed + "\n"); len(got) != 0 {
+			t.Errorf("openItems(%q) = %d item(s), want 0: the answer is written", closed, len(got))
+		}
+	}
+}

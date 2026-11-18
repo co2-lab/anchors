@@ -1,0 +1,534 @@
+// @anchors
+//   code: MTTMC
+//   ref: MCTYM
+
+package gate
+
+import (
+	"github.com/co2-lab/anchors/internal/testkit"
+	"regexp"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+func testNode() mapx.Node { return mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest} }
+
+func cfgComContrato() *config.Config {
+	return withTSMocks(testkit.WithComments(&config.Config{Derived: &config.Derived{MockContract: "Partial<typeof {{module}}>"}}))
+}
+
+// withTSMocks gives a test's configuration the ts example of the mock fields it leaves
+// empty (config.FamilyMocks), and the import resolution the tests' specifiers use: `@/` is the
+// root, `@backend/` the backend package.
+func withTSMocks(cfg *config.Config) *config.Config {
+	ex := config.FamilyMocks("ts")
+	if cfg.Derived == nil {
+		cfg.Derived = &config.Derived{}
+	}
+	for _, f := range []struct {
+		dst *string
+		src string
+	}{
+		{&cfg.Derived.MockDetect, ex.MockDetect}, {&cfg.Derived.MockFactory, ex.MockFactory}, {&cfg.Derived.MockTyped, ex.MockTyped},
+	} {
+		if *f.dst == "" {
+			*f.dst = f.src
+		}
+	}
+	cfg.Dialect.ImportResolve = &config.ImportResolve{Extensions: []string{".ts", ".tsx"},
+		Aliases: map[string]string{"@backend/": "packages/backend/", "@app/": "", "@/": ""}}
+	return cfg
+}
+
+// grafoDoProjeto — os módulos que o projeto REGE. Só eles são cobrados; a biblioteca
+// de terceiro não aparece no mapa e por isso fica de fora (ver `ehModuloRegido`).
+func grafoDoProjeto() *mapx.Graph {
+	return &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "packages/backend/repositories/lotes.ts", Kind: mapx.KindCode},
+		{ID: "src/a.ts", Kind: mapx.KindCode},
+		{ID: "src/b.ts", Kind: mapx.KindCode},
+	}}
+}
+
+func rodaMock(t *testing.T, content string, cfg *config.Config) (Verdict, string) {
+	t.Helper()
+	return checkMockTyped(content, testNode(), "", grafoDoProjeto(), cfg)
+}
+
+// O caso que o gate existe para pegar: dublê SEM amarra continua verde depois que o
+// módulo muda de assinatura. É prova falsa, não ausência de prova.
+func TestMockTipado_dubleSemAmarraReprova(t *testing.T) {
+	t.Run("MCTYM-B01: A double with no tie fails and the verdict names the loose module", func(t *testing.T) {})
+	src := `jest.mock('@backend/repositories/lotes', () => ({
+  listar: jest.fn(),
+}))`
+	v, msg := rodaMock(t, src, cfgComContrato())
+	if v != Fail {
+		t.Fatalf("dublê sem amarra deve reprovar: %v (%s)", v, msg)
+	}
+	if !strings.Contains(msg, "@backend/repositories/lotes") {
+		t.Errorf("a mensagem deve NOMEAR o módulo solto: %s", msg)
+	}
+}
+
+// A amarra é uma anotação de tipo na fábrica — é ela que faz o compilador conferir
+// nome, assinatura e retorno contra o módulo real.
+func TestMockTipado_dubleAmarradoPassa(t *testing.T) {
+	t.Run("MCTYM-B02: A double whose factory carries the declared tie passes", func(t *testing.T) {})
+	src := `import type * as Real from '@backend/repositories/lotes'
+jest.mock('@backend/repositories/lotes', (): Partial<typeof Real> => ({
+  listar: jest.fn(),
+}))`
+	if v, msg := rodaMock(t, src, cfgComContrato()); v != Pass {
+		t.Errorf("dublê anotado deveria passar: %v (%s)", v, msg)
+	}
+}
+
+// A cobrança é por MÓDULO, não por arquivo: tipar três e esquecer o quarto é
+// exatamente o buraco a pegar, e um veredito por arquivo o daria como resolvido.
+func TestMockTipado_cobraPorModuloNaoPorArquivo(t *testing.T) {
+	t.Run("MCTYM-B03: The charge is per module, not per file", func(t *testing.T) {})
+	src := `import type * as A from 'src/a'
+jest.mock('src/a', (): Partial<typeof A> => ({ f: jest.fn() }))
+jest.mock('src/b', () => ({ g: jest.fn() }))`
+	v, msg := rodaMock(t, src, cfgComContrato())
+	if v != Fail {
+		t.Fatalf("um dublê solto entre vários basta para reprovar: %v", v)
+	}
+	// A contagem é o que separa "um solto" de "todos soltos": nomear `b` sem dizer
+	// quantos deixaria o leitor sem saber se `a` também está na lista.
+	if !strings.Contains(msg, "1 dublê(s) sem amarra") && !strings.Contains(msg, "1 double(s) without binding") {
+		t.Errorf("deve contar apenas o solto: %s", msg)
+	}
+	// O módulo amarrado NÃO entra na lista de soltos. (A verificação é sobre a lista,
+	// não sobre a mensagem inteira: o texto do contrato declarado — que contém
+	// `typeof` — aparece legitimamente na instrução de conserto ao final.)
+	var lista string
+	if parts := strings.SplitN(msg, "real: ", 2); len(parts) > 1 {
+		lista = strings.SplitN(parts[1], ".", 2)[0]
+	}
+	if strings.Contains(lista, "a") {
+		t.Errorf("o módulo amarrado não deve ser acusado: lista=%q", lista)
+	}
+}
+
+// `jest.mock('x')` sem fábrica usa o automock, que deriva do módulo real por
+// construção — não drifta, e cobrá-lo seria ruído que se aprende a ignorar.
+func TestMockTipado_automockNaoEhCobrado(t *testing.T) {
+	t.Run("MCTYM-B04: A double with no factory is not charged", func(t *testing.T) {})
+	src := `jest.mock('@backend/repositories/lotes')`
+	if v, msg := rodaMock(t, src, cfgComContrato()); v != Skip {
+		t.Errorf("automock não tem fábrica que possa mentir: %v (%s)", v, msg)
+	}
+	// An automock followed by a third party's double with a factory: the next call's factory
+	// is not the automock's.
+	next := "jest.mock('@backend/repositories/lotes')\njest.mock('react-native', () => ({ Platform: {} }))\n"
+	if v, msg := rodaMock(t, next, cfgComContrato()); v == Fail {
+		t.Errorf("the automock does not borrow the next double's factory: %v (%s)", v, msg)
+	}
+}
+
+// Sem `derived.mock_contract` o gate PULA. Inferir `Partial<typeof …>` assumiria
+// TypeScript e reportaria verde sobre o que não se conferiu em qualquer outro
+// ecossistema — a pior falha possível num medidor.
+func TestMockTipado_semContratoDeclaradoPula(t *testing.T) {
+	t.Run("MCTYM-B05: Without the tie shape declared the gate goes quiet", func(t *testing.T) {})
+	src := `jest.mock('a', () => ({ f: jest.fn() }))`
+	v, msg := rodaMock(t, src, testkit.WithComments(&config.Config{}))
+	if v != Pending {
+		t.Errorf("with no tie shape declared the gate did not check, and says so: %v", v)
+	}
+	if !strings.Contains(msg, "mock_contract") || !strings.Contains(msg, "opt_out") {
+		t.Errorf("the message names the field and the opt-out: %s", msg)
+	}
+	if v, _ := rodaMock(t, src, testkit.WithComments(&config.Config{Dialect: &config.Dialect{OptOut: []string{"mock_contract"}}})); v != Skip {
+		t.Errorf("a waived field is the project's decision, and skips: %v", v)
+	}
+	// testa com config nil
+	if c := mockContract(nil); c != "" {
+		t.Errorf("esperava vazio para cfg nil, veio %q", c)
+	}
+}
+
+// A cobrança é do TESTE — é lá que o dublê vive. Rodar sobre a spec acusaria o
+// arquivo errado.
+func TestMockTipado_soRodaSobreTeste(t *testing.T) {
+	t.Run("MCTYM-B06: An artifact that is not a test leaves without a verdict", func(t *testing.T) {})
+	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}
+	if v, _ := checkMockTyped("", n, "", grafoDoProjeto(), cfgComContrato()); v != Skip {
+		t.Errorf("o dublê é cobrado do teste: %v", v)
+	}
+}
+
+// Teste que não dubla ninguém não tem o que amarrar — Skip, não Pass: não houve
+// verificação, e um Pass aqui inflaria a contagem de verdes com nada.
+func TestMockTipado_semDubleNadaACobrar(t *testing.T) {
+	t.Run("MCTYM-B07: A test that doubles nobody leaves without a verdict", func(t *testing.T) {})
+	src := `it('soma', () => { expect(1+1).toBe(2) })`
+	if v, _ := rodaMock(t, src, cfgComContrato()); v != Skip {
+		t.Errorf("sem dublê não há amarra a cobrar: %v", v)
+	}
+}
+
+// O dialeto do runner é do projeto: `vi.mock` (vitest) conta igual a `jest.mock`.
+func TestMockTipado_reconheceVitest(t *testing.T) {
+	t.Run("MCTYM-B08: Another runner of the same ecosystem is recognised the same way", func(t *testing.T) {})
+	src := `vi.mock('src/a', () => ({ f: vi.fn() }))`
+	if v, _ := rodaMock(t, src, cfgComContrato()); v != Fail {
+		t.Errorf("`vi.mock` é dublê como qualquer outro: %v", v)
+	}
+}
+
+// Biblioteca de TERCEIRO não é cobrada. O drift que o gate persegue é "o vizinho mudou
+// e o dublê não soube", e o vizinho que muda toda semana é o módulo próprio: a
+// dependência externa tem versão travada no lockfile, e o dublê dela troca um
+// componente por um stub em vez de reproduzir um contrato.
+//
+// Medido: sem este recorte o gate acusou 305 arquivos num projeto real, 245 deles por
+// dublê de terceiro. Gate que acusa tudo não é lido — é desligado, e leva junto os
+// achados legítimos.
+func TestMockTipado_terceiroNaoEhCobrado(t *testing.T) {
+	t.Run("MCTYM-B09: A third-party library double is not charged", func(t *testing.T) {})
+	src := `jest.mock('@gorhom/bottom-sheet', () => ({ BottomSheet: 'View' }))
+jest.mock('@react-navigation/native', () => ({ useNavigation: jest.fn() }))`
+	v, msg := rodaMock(t, src, cfgComContrato())
+	if v != Skip {
+		t.Errorf("dublê de fora do projeto não é cobrado: %v (%s)", v, msg)
+	}
+}
+
+// O recorte não pode virar escape: com um dublê PRÓPRIO solto no meio dos de terceiro,
+// o gate continua reprovando — e nomeia só o próprio.
+func TestMockTipado_terceiroNaoEsconde0Proprio(t *testing.T) {
+	t.Run("MCTYM-B10: The third-party exemption is not an escape hatch", func(t *testing.T) {})
+	src := `jest.mock('@gorhom/bottom-sheet', () => ({ BottomSheet: 'View' }))
+jest.mock('@backend/repositories/lotes', () => ({ listar: jest.fn() }))`
+	v, msg := rodaMock(t, src, cfgComContrato())
+	if v != Fail {
+		t.Fatalf("o próprio solto deve reprovar mesmo cercado de terceiros: %v", v)
+	}
+	if strings.Contains(msg, "gorhom") {
+		t.Errorf("terceiro não deve ser acusado: %s", msg)
+	}
+	if !strings.Contains(msg, "1 dublê(s) sem amarra") && !strings.Contains(msg, "1 double(s) without binding") {
+		t.Errorf("deve contar só o próprio: %s", msg)
+	}
+}
+
+// Import relativo (`../stores/auth.store`) é módulo próprio como qualquer outro — o
+// critério é resolver para um nó do mapa, não a forma do especificador.
+func TestMockTipado_relativoEhProprio(t *testing.T) {
+	t.Run("MCTYM-B11: A relative import that resolves in the map is an own module", func(t *testing.T) {})
+	src := `jest.mock('../a', () => ({ f: jest.fn() }))`
+	if v, _ := rodaMock(t, src, cfgComContrato()); v != Fail {
+		t.Errorf("import relativo que resolve no mapa é próprio: %v", v)
+	}
+}
+
+func TestMockTipado_mockDetectGenerico(t *testing.T) {
+	t.Run("MCTYM-B12: Another ecosystem's dialect is charged the same way", func(t *testing.T) {})
+	cfg := testkit.WithComments(&config.Config{
+		Derived: &config.Derived{
+			MockDetect:   `(?:mock\.)?patch\(['"]([^'"]+)`,
+			MockContract: "autospec=True",
+		},
+	})
+	srcSemAmarra := `@patch('src/a')
+def test_foo():
+    pass`
+	v, msg := rodaMock(t, srcSemAmarra, cfg)
+	if v != Fail {
+		t.Fatalf("patch sem autospec=True devia reprovar: %v (%s)", v, msg)
+	}
+	if !strings.Contains(msg, "src/a") {
+		t.Errorf("devia acusar src/a: %s", msg)
+	}
+
+	srcComAmarra := `@patch('src/a', autospec=True)
+def test_foo():
+    pass`
+	v2, msg2 := rodaMock(t, srcComAmarra, cfg)
+	if v2 != Pass {
+		t.Fatalf("patch com autospec=True devia passar: %v (%s)", v2, msg2)
+	}
+}
+
+// O que é REGIDO é decidido pelo GRAFO, não por lista de prefixos na config. As três
+// formas de especificador — alias, relativo e nome nu — apontam para o MESMO nó do
+// mapa, e as três são cobradas. Isso não pede configuração nova e acompanha o projeto
+// sozinho: código que nasce entra no mapa e passa a ser cobrado.
+func TestMockTipado_regidoEhDecididoPeloGrafo(t *testing.T) {
+	t.Run("MCTYM-I01: What is governed is decided by the graph, never by a prefix list", func(t *testing.T) {})
+	formas := []struct {
+		nome string
+		spec string
+	}{
+		{"alias", "@app/src/a"},
+		{"relativo", "../src/a"},
+		{"nome nu", "src/a"},
+	}
+	for _, f := range formas {
+		src := "jest.mock('" + f.spec + "', () => ({ f: jest.fn() }))"
+		v, msg := rodaMock(t, src, cfgComContrato())
+		if v != Fail {
+			t.Errorf("%s: resolve para um nó do mapa e devia ser cobrado; obteve %v (%s)", f.nome, v, msg)
+		}
+	}
+	// E o que NÃO resolve no mapa não é cobrado — a diferença vem do grafo, não da forma.
+	if v, _ := rodaMock(t, "jest.mock('@terceiro/nada', () => ({ f: jest.fn() }))", cfgComContrato()); v != Skip {
+		t.Errorf("o que não resolve no grafo não é regido; obteve %v", v)
+	}
+
+}
+
+// A forma de amarra não declarada PULA em vez de adivinhar. Inferir `Partial<typeof …>`
+// assumiria TypeScript e reportaria verde sobre o que não se conferiu em qualquer
+// outro ecossistema.
+func TestMockTipado_formaNaoDeclaradaPulaEmVezDeAdivinhar(t *testing.T) {
+	t.Run("MCTYM-I02: An undeclared tie shape skips instead of guessing one", func(t *testing.T) {})
+	src := `jest.mock('src/a', () => ({ f: jest.fn() }))`
+	// Sem forma declarada: Skip.
+	v, _ := rodaMock(t, src, testkit.WithComments(&config.Config{Derived: &config.Derived{}}))
+	if v != Pending {
+		t.Fatalf("with no shape declared the gate is pending, never guessing; got %v", v)
+	}
+	// Com a forma declarada: o MESMO arquivo é cobrado. Prova de que o Skip vem da
+	// ausência de declaração, não da ausência de dublê solto.
+	if v2, _ := rodaMock(t, src, cfgComContrato()); v2 != Fail {
+		t.Fatalf("com a forma declarada o mesmo arquivo devia reprovar; obteve %v", v2)
+	}
+}
+
+// O veredito CONTA os soltos, não só nomeia. Nomear um sem dizer quantos deixaria o
+// leitor sem saber se os outros também estão na lista.
+func TestMockTipado_veredictoContaOsSoltos(t *testing.T) {
+	t.Run("MCTYM-I03: The verdict counts the loose doubles, not just names them", func(t *testing.T) {})
+	src := `import type * as A from 'src/a'
+jest.mock('src/a', (): Partial<typeof A> => ({ f: jest.fn() }))
+jest.mock('src/b', () => ({ g: jest.fn() }))`
+	v, msg := rodaMock(t, src, cfgComContrato())
+	if v != Fail {
+		t.Fatalf("um solto entre dois devia reprovar; obteve %v (%s)", v, msg)
+	}
+	if !strings.Contains(msg, "1 dublê(s) sem amarra") && !strings.Contains(msg, "1 double(s) without binding") {
+		t.Errorf("o veredito devia dizer QUANTOS estão soltos; msg = %q", msg)
+	}
+	if strings.Contains(msg, "2 dublê") || strings.Contains(msg, "2 double") {
+		t.Errorf("o amarrado não entra na conta; msg = %q", msg)
+	}
+}
+
+// O gate não confere se o tipo anotado CORRESPONDE ao módulo — quem confere é o
+// compilador da linguagem, que já faz isso e faz melhor. Aqui a régua é que a amarra
+// FOI ESCRITA, e é escrevê-la que entrega a conferência ao compilador.
+func TestMockTipado_naoConfereSeOTipoCorresponde(t *testing.T) {
+	t.Run("MCTYM-X01: The gate does not check whether the annotated type matches the real module", func(t *testing.T) {})
+	src := `import type * as Outro from 'totalmente/outra/coisa'
+jest.mock('src/a', (): Partial<typeof Outro> => ({ f: jest.fn() }))`
+	if v, msg := rodaMock(t, src, cfgComContrato()); v != Pass {
+		t.Fatalf("a régua é a presença da amarra, não a sua correção; obteve %v (%s)", v, msg)
+	}
+}
+
+// LIMITE explícito: o gate cobre drift de FORMA, não de COMPORTAMENTO. Uma fábrica
+// amarrada que devolve a forma certa com o sentido errado passa — e prometer mais
+// seria vender um verde que este gate não dá.
+func TestMockTipado_naoCobreDriftDeComportamento(t *testing.T) {
+	t.Run("MCTYM-X02: The gate does not cover drift of behaviour", func(t *testing.T) {})
+	src := `import type * as A from 'src/a'
+jest.mock('src/a', (): Partial<typeof A> => ({
+  calcularSaldo: jest.fn(() => -1),
+}))`
+	if v, msg := rodaMock(t, src, cfgComContrato()); v != Pass {
+		t.Fatalf("forma certa e sentido errado ainda passa — é o limite declarado; obteve %v (%s)", v, msg)
+	}
+}
+
+// O gate não carrega forma nem ecossistema embutidos. Num projeto onde o dublê não é
+// uma chamada a detectar (em Go é uma interface satisfeita), sem nada declarado ele
+// PULA: o veredito certo é "não se aplica", não um verde sobre o que não se conferiu.
+func TestMockTipado_semFormaNemDialetoNaoSeAplica(t *testing.T) {
+	t.Run("MCTYM-X03: The gate carries no built-in tie shape and no built-in ecosystem", func(t *testing.T) {})
+	// Um teste Go: o dublê é um tipo que satisfaz a interface — não há chamada.
+	src := `type repoFalso struct{}
+func (repoFalso) Listar() []int { return nil }
+func TestX(t *testing.T) { usar(repoFalso{}) }`
+	v, msg := checkMockTyped(src, mapx.Node{ID: "x_test.go", Kind: mapx.KindTest},
+		"", grafoDoProjeto(), testkit.WithComments(&config.Config{Derived: &config.Derived{}}))
+	if v != Pending {
+		t.Fatalf("with no shape and no dialect the gate is pending until the project decides; got %v (%s)", v, msg)
+	}
+	waived := testkit.WithComments(&config.Config{Derived: &config.Derived{}, Dialect: &config.Dialect{OptOut: []string{"mock_contract"}}})
+	if v, _ := checkMockTyped(src, mapx.Node{ID: "x_test.go", Kind: mapx.KindTest}, "", grafoDoProjeto(), waived); v != Skip {
+		t.Errorf("the project said the gate does not apply: Skip, got %v", v)
+	}
+}
+
+// Terceiro não é cobrado, e a razão é medida: sem este recorte o gate acusou 305
+// arquivos de uma vez num projeto real, 245 deles por dublê de biblioteca. Gate que
+// acusa tudo é desligado, e leva junto os achados legítimos.
+func TestMockTipado_terceirosEmVolumeNaoSaoCobrados(t *testing.T) {
+	t.Run("MCTYM-X04: The gate does not charge third-party library doubles", func(t *testing.T) {})
+	src := `jest.mock('@react-navigation/native', () => ({ useNavigation: jest.fn() }))
+jest.mock('@aws-sdk/client-s3', () => ({ S3: jest.fn() }))
+jest.mock('@gorhom/bottom-sheet', () => ({ BottomSheet: 'View' }))`
+	v, msg := rodaMock(t, src, cfgComContrato())
+	if v != Skip {
+		t.Fatalf("três dublês de terceiro não produzem achado nenhum; obteve %v (%s)", v, msg)
+	}
+	for _, lib := range []string{"react-navigation", "aws-sdk", "gorhom"} {
+		if strings.Contains(msg, lib) {
+			t.Errorf("terceiro não devia ser nomeado: %s em %q", lib, msg)
+		}
+	}
+}
+
+// Vitest's spy mode (`vi.mock('x', { spy: true })`) loads the REAL module and only wraps
+// the functions — it has no factory, and there is nothing to annotate. The earlier
+// `[^=]*` crossed line breaks and gave the spy the factory of a LATER mock; measured in
+// the reference app, 3 of 4 "loose doubles" were exactly this.
+func TestMockTyped_spyIsNotAnotherMocksFactory(t *testing.T) {
+	t.Run("MCTYM-X05: A double with no factory is not charged", func(t *testing.T) {})
+	src := `vi.mock('src/a', { spy: true })
+vi.mock('src/b', (): Partial<typeof import('src/b')> => ({
+  algo: vi.fn(),
+}))`
+	if v, msg := rodaMock(t, src, cfgComContrato()); v != Pass {
+		t.Errorf("a spy followed by an annotated factory should pass: %v (%s)", v, msg)
+	}
+}
+
+// A factory on the NEXT line (as prettier breaks it) is still read — and its annotation
+// still counts. Without the `\s*` before the group, the break would drop the match and
+// the annotated double would pass as having no factory.
+func TestMockTyped_factoryOnTheNextLine(t *testing.T) {
+	t.Run("MCTYM-B13: A factory on the next line is still read, tie and all", func(t *testing.T) {})
+	annotated := `vi.mock(
+  'src/a',
+  (): Partial<typeof import('src/a')> => ({ x: vi.fn() }),
+)`
+	if v, msg := rodaMock(t, annotated, cfgComContrato()); v != Pass {
+		t.Errorf("an annotated factory on the next line should pass: %v (%s)", v, msg)
+	}
+	loose := `vi.mock(
+  'src/a',
+  () => ({ x: vi.fn() }),
+)`
+	if v, _ := rodaMock(t, loose, cfgComContrato()); v != Fail {
+		t.Errorf("an UNannotated factory on the next line should fail: %v", v)
+	}
+}
+
+// With `mock_detect` declared (a project declares it for `mock-stamped`), the detector
+// started deciding what needs a type: automocks and spy mocks were charged, though both
+// derive from the real module by construction. Measured: 38 tests at once, 0 before.
+func TestMockTyped_doubleWithoutFactoryIsNotCharged(t *testing.T) {
+	t.Run("MCTYM-X05: a double with no factory is not charged", func(t *testing.T) {})
+	cfg := cfgComContrato()
+	cfg.Derived.MockDetect = `(?:jest|vi)\.mock\(['"]([^'"]+)`
+
+	// Single-line calls: the `mock_detect` path reads the detector line by line, so a call
+	// whose specifier sits on the next line is not detected at all (a separate limit).
+	derived := "jest.mock('src/a')\nvi.mock('src/b', { spy: true })\njest.mock('packages/backend/repositories/lotes', { virtual: true, spy: true })\n"
+	if v, msg := rodaMock(t, derived, cfg); v == Fail {
+		t.Errorf("an automock and spy mocks were charged: %s", msg)
+	}
+
+	// The narrowing must not blind the gate: an unannotated FACTORY is still charged,
+	// inline or on the next line.
+	for _, loose := range []string{
+		"jest.mock('src/a', () => ({ x: jest.fn() }))\n",
+		"vi.mock('src/a',\n  () => ({ x: vi.fn() }),\n)\n",
+		"jest.mock('src/a', factory)\n",
+	} {
+		if v, _ := rodaMock(t, loose, cfg); v != Fail {
+			t.Errorf("an unannotated factory stopped being charged (%v): %q", v, loose)
+		}
+	}
+}
+
+// With no map the gate cannot tell the project's doubles from third-party ones, and says
+// so instead of claiming they are all external.
+func TestMockTipado_noMapIsPending(t *testing.T) {
+	t.Run("MCTYM-E02: With no map the verdict is pending, not an external-only skip", func(t *testing.T) {})
+	content := "jest.mock('@backend/repositories/lotes', () => ({\n  listar: jest.fn(),\n}))\n"
+	v, msg := checkMockTyped(content, testNode(), "", nil, cfgComContrato())
+	if v != Pending {
+		t.Fatalf("with no map the verdict must be Pending, got %v (%s)", v, msg)
+	}
+}
+
+func TestMockTyped_skipReasons(t *testing.T) {
+	t.Run("MCTYM-B07: A test that doubles nobody leaves without a verdict", func(t *testing.T) {
+		// with no map loaded too: there is no double whose owner would need the map
+		v, msg := checkMockTyped("test('x', () => {})\n", testNode(), "", nil, cfgComContrato())
+		if v != Skip || msg != i18n.T("gate.mock_typed.skip_no_doubles") {
+			t.Errorf("got %v (%s)", v, msg)
+		}
+	})
+	t.Run("MCTYM-B09: A third-party library double is not charged", func(t *testing.T) {
+		v, msg := rodaMock(t, "jest.mock('@aws-sdk/client-s3', () => ({}))\n", cfgComContrato())
+		if v != Skip || msg != i18n.T("gate.mock_typed.skip_external_only") {
+			t.Errorf("the skip says the doubles are all external: %v (%s)", v, msg)
+		}
+	})
+}
+
+// The ts example says what a double WITH a factory looks like (derived.mock_factory).
+func TestMockFactoryExample(t *testing.T) {
+	factory := regexp.MustCompile(config.FamilyMocks("ts").MockFactory)
+	cases := []struct {
+		text string
+		want bool
+	}{
+		{"jest.mock('x', () => ({}))", true},
+		{"jest.mock('x')", false},
+		{"jest.mock('x', { spy: true })", false},
+		{"jest.mock(require.resolve('./x'), () => ({}))", true}, // a nested call in the first argument
+		{"jest.mock(\n  'x',\n)\nconst f = () => 1", false},     // prettier's trailing comma: no factory
+		{"vi.mock('x', factory", true},                          // unclosed: read to the end
+		{"no call here", false},
+	}
+	for _, c := range cases {
+		if got := factory.MatchString(c.text); got != c.want {
+			t.Errorf("mock_factory(%q) = %v, want %v", c.text, got, c.want)
+		}
+	}
+}
+
+func TestWithoutExtension(t *testing.T) {
+	cases := map[string]string{
+		"x/y.ts":       "x/y",
+		"y.test.ts":    "y.test",
+		"Makefile":     "Makefile",
+		"a.dir/Readme": "a.dir/Readme",
+	}
+	for in, want := range cases {
+		if got := withoutExtension(in); got != want {
+			t.Errorf("withoutExtension(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestMockTipado_aliasTailOfAnotherWorkspace(t *testing.T) {
+	t.Run("MCTYM-B14: A double of a module another workspace names with the same alias is the project's", func(t *testing.T) {})
+	cfg := cfgComContrato()
+	cfg.Dialect.ImportResolve.Aliases = map[string]string{"@/": "apps/mobile/"}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "apps/landing/src/lib/orgService.ts", Kind: mapx.KindCode}}}
+	test := mapx.Node{ID: "apps/landing/src/app/page.test.tsx", Kind: mapx.KindTest}
+	if v, msg := checkMockTyped("jest.mock('@/lib/orgService', () => ({ load: jest.fn() }))\n", test, "", g, cfg); v != Fail {
+		t.Errorf("the landing's module is the project's: %v (%s)", v, msg)
+	}
+	if v, _ := checkMockTyped("jest.mock('next/navigation', () => ({ useRouter: jest.fn() }))\n", test, "", g, cfg); v != Skip {
+		t.Errorf("a package no file of the map ends in is not: %v", v)
+	}
+	// Declared for the landing's importers, the alias resolves the file itself.
+	cfg.Dialect.ImportResolve.Scoped = []config.ScopedAliases{{Files: "apps/landing/**", Aliases: map[string]string{"@/": "apps/landing/src/"}}}
+	if got := moduleCandidates("@/lib/orgService", test.ID, cfg.DialectFor(), g); len(got) != 1 || got[0] != "apps/landing/src/lib/orgService.ts" {
+		t.Errorf("a scoped alias resolves the landing's module: %v", got)
+	}
+}

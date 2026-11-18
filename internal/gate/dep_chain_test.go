@@ -1,0 +1,498 @@
+// @anchors
+//   code: DCTDP
+//   ref: DCGDP
+
+package gate
+
+import (
+	"fmt"
+	"github.com/co2-lab/anchors/internal/testkit"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+const chainScreen = `import {
+  PALETTE,
+  withAlpha as alpha,
+} from '../theme/tokens'
+import useToast from '@/hooks/useToast' // @dep: WRONG
+import React from 'react'
+import type { Goal } from './types' // @no-dep: types only
+const legacy = { case: 1, member: 2 }
+export { withAlpha } from '../theme/tokens'
+
+export function Arena() {}
+`
+
+const chainTokens = `// @used-by: OLDXX
+export const PALETTE = {}
+
+export function withAlpha() {}
+
+// @used-by: ARSCR
+export const unused = 1
+`
+
+// chainProject is a TS project: a screen importing the tokens (names spanning lines, one
+// aliased), a hook through an alias with a wrong flag, a package outside, and a waived import.
+func chainProject(t *testing.T) (string, *mapx.Graph, *config.Config) {
+	t.Helper()
+	root := t.TempDir()
+	for rel, body := range map[string]string{
+		"src/ui/Arena.tsx":      chainScreen,
+		"src/theme/tokens.ts":   chainTokens,
+		"src/hooks/useToast.ts": "module.exports = function useToast() {}\n",
+		"src/ui/types.ts":       "export type Goal = {}\n",
+	} {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "src/ui/Arena.tsx", Kind: mapx.KindCode, FileCode: "ARSCR"},
+		{ID: "src/theme/tokens.ts", Kind: mapx.KindCode, FileCode: "TOKNS"},
+		{ID: "src/hooks/useToast.ts", Kind: mapx.KindCode, FileCode: "USTST"},
+		{ID: "src/ui/types.ts", Kind: mapx.KindCode, FileCode: "TYPSU"},
+	}}
+	cfg := testkit.WithComments(&config.Config{Dialect: withChain("ts")})
+	cfg.Dialect.ImportResolve.Aliases = map[string]string{"@/": "src/"}
+	importersMu.Lock()
+	delete(importersCache, root)
+	importersMu.Unlock()
+	return root, g, cfg
+}
+
+func read(t *testing.T, root, rel string) string {
+	t.Helper()
+	b, err := os.ReadFile(filepath.Join(root, rel))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
+
+func TestDepChain_importsAreReadAndResolved(t *testing.T) {
+	t.Run("DCGDP-B01: The imports are read by the dialect's pattern and resolved to files of the map", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	imps := ImportsOf(read(t, root, "src/ui/Arena.tsx"), "src/ui/Arena.tsx", cfg.DialectFor(), g)
+	if len(imps) != 5 {
+		t.Fatalf("five import statements: %+v", imps)
+	}
+	if re := imps[4]; re.First != re.Line || strings.Join(re.Symbols, ",") != "withAlpha" {
+		t.Errorf("an export-from on its own line is its own statement, with its own names only: %+v", re)
+	}
+	tok := imps[0]
+	if tok.First != 1 || tok.Line != 4 || tok.Target != "src/theme/tokens.ts" || strings.Join(tok.Symbols, ",") != "PALETTE,withAlpha" {
+		t.Errorf("an import whose names span lines is one statement, its path on its last line, the alias read as the name: %+v", tok)
+	}
+	if imps[1].Target != "src/hooks/useToast.ts" || imps[2].Target != "" {
+		t.Errorf("an alias resolves into the project, a package stays outside: %+v %+v", imps[1], imps[2])
+	}
+	if ImportsOf("import x from './y'\n", "a.ts", config.Dialect{}, g) != nil {
+		t.Error("with no pattern for the dialect, nothing is read")
+	}
+}
+
+func TestDepChain_declaredAndHonored(t *testing.T) {
+	t.Run("DCGDP-B02: dep-declared names each import of a governed file with no flag, and the code it would carry", func(t *testing.T) {})
+	t.Run("DCGDP-B03: dep-honored names each flag whose code is not the one its import resolves to", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	n := g.Nodes[0]
+	content := read(t, root, n.ID)
+	v, msg := checkDepDeclared(content, n, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "4 `../theme/tokens` → TOKNS") || strings.Contains(msg, "react") || strings.Contains(msg, "types") {
+		t.Errorf("only the unflagged import of a governed file is named: %v %s", v, msg)
+	}
+	v, msg = checkDepHonored(content, n, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "WRONG") || !strings.Contains(msg, "USTST") {
+		t.Errorf("the wrong code is named with the right one: %v %s", v, msg)
+	}
+	if v, _ := checkDepDeclared("", mapx.Node{ID: "vendor/x.ts", Kind: mapx.KindCode, Upstream: true}, root, g, cfg); v != Skip {
+		t.Error("a vendored file takes no part in the chain")
+	}
+}
+
+func TestDepChain_usedByAndTheFixers(t *testing.T) {
+	t.Run("DCGDP-B04: used-by-declared names each imported symbol whose flag is missing or wrong, and each flag nobody imports", func(t *testing.T) {})
+	t.Run("DCGDP-B05: The fixers write the dependency and used-by flags, correct a wrong code, and remove a stale flag", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	tokens := g.Nodes[1]
+	v, msg := checkUsedByDeclared(read(t, root, tokens.ID), tokens, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "`PALETTE` says `@used-by: OLDXX`") || !strings.Contains(msg, "`withAlpha` is imported by ARSCR") || !strings.Contains(msg, "`unused`") || !strings.Contains(msg, "anchors guide header") {
+		t.Errorf("wrong, missing and stale flags are named: %v %s", v, msg)
+	}
+	gates := []config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code"}}, {Name: "used-by-declared", Check: "used-by-declared", On: []string{"code"}}}
+	res := FixWithConfig(gates, g.Nodes, root, g, cfg)
+	movedOf := map[string]bool{}
+	for _, r := range res {
+		movedOf[r.Target] = movedOf[r.Target] || r.LinesMoved
+	}
+	if movedOf["src/ui/Arena.tsx"] || !movedOf["src/theme/tokens.ts"] {
+		t.Errorf("the flag on the import's line moves none, the used-by line inserted moves: %+v", movedOf)
+	}
+	arena := read(t, root, "src/ui/Arena.tsx")
+	if !strings.Contains(arena, "} from '../theme/tokens' // @dep: TOKNS") || !strings.Contains(arena, "// @dep: USTST") || strings.Contains(arena, "WRONG") {
+		t.Errorf("the flags are written and corrected:\n%s", arena)
+	}
+	if hook := read(t, root, "src/hooks/useToast.ts"); !strings.HasPrefix(hook, "// @used-by: ARSCR\nmodule.exports") {
+		t.Errorf("a default import is the module's default, flagged above its declaration:\n%s", hook)
+	}
+	tok := read(t, root, "src/theme/tokens.ts")
+	if !strings.Contains(tok, "// @used-by: ARSCR\nexport const PALETTE") || !strings.Contains(tok, "// @used-by: ARSCR\nexport function withAlpha") || strings.Contains(tok, "OLDXX") || strings.Contains(tok, "@used-by: ARSCR\nexport const unused") {
+		t.Errorf("the used-by flags are exactly who imports each symbol:\n%s", tok)
+	}
+	for i, n := range g.Nodes[:2] {
+		for _, check := range []func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string){checkDepDeclared, checkDepHonored, checkUsedByDeclared} {
+			if v, msg := check(read(t, root, n.ID), n, root, g, cfg); v == Fail {
+				t.Errorf("node %d after the fix: %s", i, msg)
+			}
+		}
+	}
+}
+
+func TestDepChain_reExportsAndInlineImports(t *testing.T) {
+	t.Run("DCGDP-B06: A re-export declares the names it lists, and an inline import brings the member it reads", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	for rel, body := range map[string]string{
+		"src/theme/barrel.ts": "export { PALETTE } from './tokens' // @dep: TOKNS\nexport type { Goal, Mode } from '../ui/types' // @dep: TYPSU\nexport {\n  alpha,\n  beta as gamma,\n} from './more'\n",
+		"src/ui/Shop.tsx":     "import { PALETTE, Mode, gamma } from '../theme/barrel'\n",
+		"src/ui/Cart.tsx":     "type R = { item: import('../theme/barrel').Goal }\n",
+	} {
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g.Nodes = append(g.Nodes,
+		mapx.Node{ID: "src/theme/barrel.ts", Kind: mapx.KindCode, FileCode: "BARRL"},
+		mapx.Node{ID: "src/ui/Shop.tsx", Kind: mapx.KindCode, FileCode: "SHOPU"},
+		mapx.Node{ID: "src/ui/Cart.tsx", Kind: mapx.KindCode, FileCode: "CARTU"})
+	if imps := ImportsOf(read(t, root, "src/ui/Cart.tsx"), "src/ui/Cart.tsx", cfg.DialectFor(), g); len(imps) != 1 || strings.Join(imps[0].Symbols, ",") != "Goal" {
+		t.Errorf("the inline import brings the member it reads: %+v", imps)
+	}
+	gates := []config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code"}}, {Name: "used-by-declared", Check: "used-by-declared", On: []string{"code"}}}
+	FixWithConfig(gates, g.Nodes, root, g, cfg)
+	barrel := read(t, root, "src/theme/barrel.ts")
+	for _, want := range []string{
+		"// @used-by: SHOPU (PALETTE)\nexport { PALETTE }",
+		"// @used-by: CARTU (Goal)\n// @used-by: SHOPU (Mode)\nexport type { Goal, Mode }",
+		"// @used-by: SHOPU (gamma)\nexport {\n  alpha,",
+	} {
+		if !strings.Contains(barrel, want) {
+			t.Errorf("the flag stands above the list and names its symbol — want %q in:\n%s", want, barrel)
+		}
+	}
+	if cart := read(t, root, "src/ui/Cart.tsx"); !strings.Contains(cart, ".Goal } // @dep: BARRL") {
+		t.Errorf("the inline import carries its flag:\n%s", cart)
+	}
+	n := g.Nodes[len(g.Nodes)-3]
+	if v, msg := checkUsedByDeclared(barrel, n, root, g, cfg); v == Fail {
+		t.Errorf("after the fix the re-exports answer their importers: %s", msg)
+	}
+}
+
+func TestDepChain_everyImporter(t *testing.T) {
+	t.Run("DCGDP-B07: Tests, test support and flows take part in the chain: their imports carry the dependency flag, the fixer writes it, and a symbol a test imports lists the test in its used-by flag", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	for rel, body := range map[string]string{
+		"src/ui/Arena.test.tsx":  "import { Arena } from './Arena'\nimport { tokensFixture } from '../test/fixtures'\n",
+		"src/test/fixtures.ts":   "export const tokensFixture = {}\n",
+		"flows/arena.yaml":       "appId: x\n---\n- runFlow: utils/login.yaml\n- runFlow:\n    file: utils/login.yaml\n",
+		"flows/utils/login.yaml": "appId: x\n---\n- tapOn: login\n",
+	} {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g.Nodes = append(g.Nodes,
+		mapx.Node{ID: "src/ui/Arena.test.tsx", Kind: mapx.KindTest, FileCode: "ARTST"},
+		mapx.Node{ID: "src/test/fixtures.ts", Kind: mapx.KindTest, Support: true, FileCode: "FXTRS"},
+		mapx.Node{ID: "flows/arena.yaml", Kind: mapx.KindTest, FileCode: "ARFLW"},
+		mapx.Node{ID: "flows/utils/login.yaml", Kind: mapx.KindTest, Support: true, FileCode: "LGFLW"})
+	test := g.Nodes[len(g.Nodes)-4]
+	v, msg := checkDepDeclared(read(t, root, test.ID), test, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "ARSCR") || !strings.Contains(msg, "FXTRS") {
+		t.Errorf("a test's imports are charged: %v %s", v, msg)
+	}
+	flow := g.Nodes[len(g.Nodes)-2]
+	if imps := ImportsOf(read(t, root, flow.ID), flow.ID, cfg.DialectFor(), g); len(imps) != 2 || imps[0].Target != "flows/utils/login.yaml" || imps[1].Target != "flows/utils/login.yaml" {
+		t.Errorf("a flow composing another imports it, inline or by file: %+v", imps)
+	}
+	// With the used-by gate on code alone, a test is no importer: adopting the chain on the
+	// tests is the project's decision.
+	codeOnly := *cfg
+	codeOnly.Gates = []config.Gate{{Name: "used-by-declared", Check: "used-by-declared", On: []string{"code"}}}
+	if v, msg := checkUsedByDeclared(read(t, root, "src/test/fixtures.ts"), mapx.Node{ID: "src/test/fixtures.ts", Kind: mapx.KindTest, Support: true, FileCode: "FXTRS"}, root, g, &codeOnly); v == Fail {
+		t.Errorf("with the gate on code alone, the test importing the fixture is not asked for: %s", msg)
+	}
+	gates := []config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code", "test"}}, {Name: "used-by-declared", Check: "used-by-declared", On: []string{"code", "test"}}}
+	cfg.Gates = gates
+	FixWithConfig(gates, g.Nodes, root, g, cfg)
+	if got := read(t, root, test.ID); !strings.Contains(got, "from './Arena' // @dep: ARSCR") || !strings.Contains(got, "fixtures' // @dep: FXTRS") {
+		t.Errorf("the fixer flags a test's imports:\n%s", got)
+	}
+	if got := read(t, root, flow.ID); !strings.Contains(got, "runFlow: utils/login.yaml # @dep: LGFLW") {
+		t.Errorf("the fixer flags a flow's composition with the flow's comment:\n%s", got)
+	}
+	if got := read(t, root, "src/test/fixtures.ts"); !strings.Contains(got, "// @used-by: ARTST\nexport const tokensFixture") {
+		t.Errorf("a fixture's symbol lists the test that imports it:\n%s", got)
+	}
+}
+
+func TestDepChain_kindedDependencies(t *testing.T) {
+	t.Run("DCGDP-B08: A kinded dependency needs a declared kind, and no import", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	cfg.DependencyKinds = []string{"db"}
+	content := "await db.query(sql) // @dep[db]: transactions\nqueue.push(job) // @dep[queue]: jobs\n"
+	v, msg := checkDepHonored(content, mapx.Node{ID: "src/ui/Arena.tsx", Kind: mapx.KindCode, FileCode: "ARSCR"}, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "queue") || strings.Contains(msg, "transactions") || strings.Contains(msg, "imports nothing") {
+		t.Errorf("only the undeclared kind is named, and no kinded flag is taken for an import: %v %s", v, msg)
+	}
+}
+
+func TestDepChain_typeImports(t *testing.T) {
+	t.Run("DCGDP-B09: An import of types only is flagged as such", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	body := "import type { Goal } from './types'\nimport type { Goal as G } from '@/ui/types' // @dep: TYPSU\nimport { PALETTE } from '../theme/tokens' // @dep[type]: TOKNS\ntype P = import('./types').Goal // @dep[type]: TYPSU\n"
+	if err := os.WriteFile(filepath.Join(root, "src/ui/Shop.tsx"), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	shop := mapx.Node{ID: "src/ui/Shop.tsx", Kind: mapx.KindCode, FileCode: "SHOPS"}
+	g.Nodes = append(g.Nodes, shop)
+	gates := []config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code"}}}
+	FixWithConfig(gates, []mapx.Node{shop}, root, g, cfg)
+	got := read(t, root, "src/ui/Shop.tsx")
+	want := "import type { Goal } from './types' // @dep[type]: TYPSU\nimport type { Goal as G } from '@/ui/types' // @dep[type]: TYPSU\nimport { PALETTE } from '../theme/tokens' // @dep: TOKNS\ntype P = import('./types').Goal // @dep[type]: TYPSU\n"
+	if got != want {
+		t.Errorf("type imports flagged as types, the runtime one plainly:\n%s", got)
+	}
+	if v, msg := checkDepHonored(got, shop, root, g, cfg); v == Fail {
+		t.Errorf("a type flag is confronted as an import: %s", msg)
+	}
+}
+
+func TestDepChain_byName(t *testing.T) {
+	t.Run("DCGDP-B10: Imports by name are flagged per file", func(t *testing.T) {})
+	root := t.TempDir()
+	parse := "(* @anchors\n  code: PARSR\n*)\n(* @dep: GHOST *)\nopen Lexer\n(* see Pars.old, Eval.legacy *)\nlet parse x = Eval.apply (Some x) |> List.map id\n"
+	for rel, body := range map[string]string{
+		"src/core/parse.ml":  parse,
+		"src/core/eval.ml":   "let apply x = x\n",
+		"src/front/lexer.ml": "let token x = x\n",
+		"src/ghost/ghost.ml": "let g = 1\n",
+	} {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "src/core/parse.ml", Kind: mapx.KindCode, FileCode: "PARSR"},
+		{ID: "src/core/eval.ml", Kind: mapx.KindCode, FileCode: "EVALC"},
+		{ID: "src/front/lexer.ml", Kind: mapx.KindCode, FileCode: "LEXRF"},
+		{ID: "src/ghost/ghost.ml", Kind: mapx.KindCode, FileCode: "GHOST"},
+	}}
+	cfg := testkit.WithComments(&config.Config{Dialect: withChain("ocaml")})
+	var targets []string
+	for _, imp := range ImportsOf(parse, "src/core/parse.ml", cfg.DialectFor(), g) {
+		if imp.Target != "" {
+			targets = append(targets, imp.Path+"="+imp.Target)
+		}
+	}
+	if strings.Join(targets, " ") != "Lexer=src/front/lexer.ml Eval=src/core/eval.ml" {
+		t.Errorf("imports: %v", targets)
+	}
+	n := g.Nodes[0]
+	if v, msg := checkDepDeclared(parse, n, root, g, cfg); v != Fail || !strings.Contains(msg, "LEXRF") || !strings.Contains(msg, "EVALC") {
+		t.Errorf("declared: %v %s", v, msg)
+	}
+	if v, msg := checkDepHonored(parse, n, root, g, cfg); v != Fail || !strings.Contains(msg, "GHOST") {
+		t.Errorf("honored: %v %s", v, msg)
+	}
+	FixWithConfig([]config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code"}}}, g.Nodes[:1], root, g, cfg)
+	got := read(t, root, "src/core/parse.ml")
+	if !strings.HasPrefix(got, "(* @anchors\n  code: PARSR\n*)\n(* @dep: EVALC *)\n(* @dep: LEXRF *)\nopen Lexer\n") || strings.Contains(got, "GHOST") {
+		t.Errorf("fixed:\n%s", got)
+	}
+	for _, check := range []func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string){checkDepDeclared, checkDepHonored} {
+		if v, msg := check(got, n, root, g, cfg); v != Pass {
+			t.Errorf("after the fix: %v %s", v, msg)
+		}
+	}
+}
+
+func TestDeclarationLine_unicodeName(t *testing.T) {
+	t.Run("DCGDP-B11: The fixer finds a declaration whose name ends in a letter outside ASCII", func(t *testing.T) {})
+	content := "export const caféForte = 1\nexport const café = 2\n"
+	if at, _ := declarationLine(content, "x.ts", *withChain("ts"), "café"); at != 1 {
+		t.Errorf("café is declared on the second line, got %d", at)
+	}
+}
+
+// withChain is a dialect of the family holding the family's example of the chain patterns —
+// what a project of that family declares.
+func withChain(family string) *config.Dialect {
+	d := config.FamilyChain(family)
+	d.Family = family
+	if d.ImportResolve == nil {
+		d.ImportResolve = &config.ImportResolve{}
+	}
+	return d
+}
+
+func TestDepChain_noPatternsAndComments(t *testing.T) {
+	t.Run("DCGDP-B12: Without import patterns the chain is pending, and a commented import is none", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	content := "import { PALETTE } from '../theme/tokens'\n// import useToast from '../hooks/useToast'\nconst x = 1 // import { Goal } from './types'\n"
+	imps := ImportsOf(content, "src/ui/Arena.tsx", *cfg.Dialect, g)
+	if len(imps) != 1 || imps[0].Path != "../theme/tokens" {
+		t.Errorf("the commented imports are none: %+v", imps)
+	}
+	n := mapx.Node{ID: "src/ui/Arena.tsx", Kind: mapx.KindCode, FileCode: "ARSCR"}
+	bare := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
+	if v, msg := checkDepDeclared(content, n, root, g, bare); v != Pending || !strings.Contains(msg, "dialect.imports") {
+		t.Errorf("no imports declared: pending, naming the field — %v %s", v, msg)
+	}
+}
+
+func TestDepChain_goBlocks(t *testing.T) {
+	t.Run("DCGDP-B13: A Go import block is read import by import", func(t *testing.T) {})
+	src := "package x\n\nimport \"example.com/m/a\"\n\nimport (\n\t\"example.com/m/b\"\n\tc \"example.com/m/c\"\n)\n\nvar s = []string{\n\t\"example.com/m/d\",\n}\n"
+	var got []string
+	for _, imp := range ImportsOf(src, "x/x.go", *withChain("go"), &mapx.Graph{}) {
+		got = append(got, fmt.Sprintf("%s@%d", imp.Path, imp.Line))
+	}
+	if strings.Join(got, ",") != "example.com/m/a@3,example.com/m/b@6,example.com/m/c@7" {
+		t.Errorf("each import on its line, the slice none: %v", got)
+	}
+}
+
+func TestDepChain_separator(t *testing.T) {
+	t.Run("DCGDP-B14: An import path divided by another separator resolves by it", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "src/app/core/money.py", Kind: mapx.KindCode},
+		{ID: "src/app/core/__init__.py", Kind: mapx.KindCode},
+		{ID: "src/app/api/views.py", Kind: mapx.KindCode},
+		{ID: "src/app/api/helpers.py", Kind: mapx.KindCode},
+	}}
+	d := withChain("python")
+	d.ImportResolve.Aliases = map[string]string{"app/": "src/app/"}
+	src := "from app.core.money import charge\nfrom .helpers import h\nfrom ..core import money\nimport requests\n"
+	var got []string
+	for _, imp := range ImportsOf(src, "src/app/api/views.py", *d, g) {
+		got = append(got, imp.Path+"→"+imp.Target)
+	}
+	want := "app.core.money→src/app/core/money.py,.helpers→src/app/api/helpers.py,..core→src/app/core/__init__.py,requests→"
+	if strings.Join(got, ",") != want {
+		t.Errorf("got  %v\nwant %s", got, want)
+	}
+}
+
+func TestUsedByFlag_insideTheComment(t *testing.T) {
+	t.Run("DCGDP-B15: The symbol of a listed used-by flag is written inside the comment", func(t *testing.T) {})
+	for rel, want := range map[string]string{
+		"a.ts": "// @used-by: AAAAA, BBBBB (Mode)",
+		"a.ml": "(* @used-by: AAAAA, BBBBB (Mode) *)",
+		"a.md": "<!-- @used-by: AAAAA, BBBBB (Mode) -->",
+	} {
+		if got := usedByFlag(testkit.Comments(rel), []string{"AAAAA", "BBBBB"}, "Mode", true); got != want {
+			t.Errorf("%s: got %q, want %q", rel, got, want)
+		}
+	}
+	if got := usedByFlag(testkit.Comments("a.ml"), []string{"AAAAA"}, "x", false); got != "(* @used-by: AAAAA *)" {
+		t.Errorf("an unlisted symbol is not named: %q", got)
+	}
+}
+
+func TestDepChain_flagKindMatchesTheImport(t *testing.T) {
+	t.Run("DCGDP-B16: A flag whose kind contradicts its import is named", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	n := mapx.Node{ID: "src/ui/Card.tsx", Kind: mapx.KindCode, FileCode: "CARDS"}
+	g.Nodes = append(g.Nodes, n)
+	content := "import { type Goal } from './types' // @dep: TYPSU\n" +
+		"import { PALETTE } from '../theme/tokens' // @dep[type]: TOKNS\n" +
+		"import { type Goal as G, type Goal as H } from './types' // @dep[type]: TYPSU\n"
+	v, msg := checkDepHonored(content, n, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "line 1: `@dep: TYPSU` flags an import of types only") ||
+		!strings.Contains(msg, "line 2: `@dep[type]: TOKNS` flags an import that runs") || strings.Contains(msg, "line 3") {
+		t.Errorf("each contradiction named, the right one left alone: %v %s", v, msg)
+	}
+}
+
+func TestDepChain_oneFlagPerModuleOnALine(t *testing.T) {
+	t.Run("DCGDP-B17: A line holding two statements of one module takes one flag, typeof import is types only", func(t *testing.T) {})
+	root, g, cfg := chainProject(t)
+	content := "const svc = () => require('@/theme/tokens') as typeof import('@/theme/tokens')\n" +
+		"const toast: Partial<typeof import('@/hooks/useToast')> = {}\n"
+	if err := os.WriteFile(filepath.Join(root, "src/ui/Arena.tsx"), []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n := g.Nodes[0]
+	if v, msg := checkDepDeclared(content, n, root, g, cfg); v != Fail || strings.Count(msg, "TOKNS") != 1 {
+		t.Errorf("one missing flag per module on a line: %v %s", v, msg)
+	}
+	FixWithConfig([]config.Gate{{Name: "dep-declared", Check: "dep-declared", On: []string{"code"}}}, g.Nodes[:1], root, g, cfg)
+	got := read(t, root, "src/ui/Arena.tsx")
+	want := "const svc = () => require('@/theme/tokens') as typeof import('@/theme/tokens') // @dep: TOKNS\n" +
+		"const toast: Partial<typeof import('@/hooks/useToast')> = {} // @dep[type]: USTST\n"
+	if got != want {
+		t.Errorf("one flag per module, a value where one statement runs, a type where only typeof reads it:\n%s", got)
+	}
+	for _, check := range []func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string){checkDepDeclared, checkDepHonored} {
+		if v, msg := check(got, n, root, g, cfg); v != Pass {
+			t.Errorf("after the fix: %v %s", v, msg)
+		}
+	}
+	wrongKind := strings.Replace(got, "@dep[type]: USTST", "@dep: USTST", 1)
+	if v, msg := checkDepHonored(wrongKind, n, root, g, cfg); v != Fail || !strings.Contains(msg, "USTST") {
+		t.Errorf("a value flag on typeof import alone is named: %v %s", v, msg)
+	}
+}
+
+func TestDepChain_eachImporterByItsDialect(t *testing.T) {
+	t.Run("DCGDP-B18: Who imports a file is read from each importer with its own dialect: a Go file's text is no TS import", func(t *testing.T) {})
+	root := t.TempDir()
+	for rel, body := range map[string]string{
+		"apps/web/Arena.tsx": "import { PALETTE } from './tokens'\nexport function Arena() {}\n",
+		"apps/web/tokens.ts": "// @used-by: ARSCR\nexport const PALETTE = {}\n",
+		// A Go file whose text holds what the TS lexicon reads as an import.
+		"services/api/doc.go": "package api\n\nconst doc = `\nimport { PALETTE } from '../../apps/web/tokens'\n`\n",
+	} {
+		p := filepath.Join(root, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "apps/web/Arena.tsx", Kind: mapx.KindCode, FileCode: "ARSCR"},
+		{ID: "apps/web/tokens.ts", Kind: mapx.KindCode, FileCode: "TOKNS"},
+		{ID: "services/api/doc.go", Kind: mapx.KindCode, FileCode: "DOCGO"},
+	}}
+	cfg := testkit.TwoDialects()
+	// Patterns that name no files of their own: the dialect alone decides which files they read.
+	for i := range cfg.Dialects["ts"].Imports {
+		cfg.Dialects["ts"].Imports[i].Files = ""
+	}
+	importersMu.Lock()
+	importersCache = map[string]*importerIndex{}
+	importersMu.Unlock()
+	tokens := g.Nodes[1]
+	if v, msg := checkUsedByDeclared(read(t, root, tokens.ID), tokens, root, g, cfg); v != Pass {
+		t.Errorf("only the TS screen imports the tokens: %v %s", v, msg)
+	}
+}

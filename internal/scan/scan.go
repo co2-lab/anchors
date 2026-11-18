@@ -1,0 +1,1889 @@
+// @anchors
+//   code: SCSCS
+//   ref: RPSCR
+
+// Package scan percorre o repositório lendo TEXTO (nunca parseando código) e
+// extrai os fatos de que o mapa precisa: que arquivos existem, de que CAMADA (pela
+// Estrutura declarada, não por regra fixa), e que código de cenário cada um
+// carrega. Ver DECISIONS.md D2.
+package scan
+
+import (
+	"bytes"
+	"crypto/sha1"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"hash"
+	"io/fs"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"runtime"
+	"sort"
+	"strings"
+	"sync"
+
+	"github.com/bmatcuk/doublestar/v4"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/pathref"
+)
+
+// scenarioCodeRE reconhece um código de cenário (TRACEABILITY §3): `<UNIDADE>-<LETRA><NN>`.
+//
+// A classe de LETRAS é o vocabulário de tipos de regra do projeto (`rule_types`), não uma
+// constante. As canônicas são só o DEFAULT de quem não declara nada — um projeto que
+// declare a sua (uma letra para "Invariante", por exemplo) precisa ser enxergado aqui.
+//
+// Este regex já esteve soldado com as letras canônicas enquanto `gate` e `testsig` se
+// reconfiguravam pela config. A consequência não seria um erro: seria SILÊNCIO. Os gates
+// enxergariam o código novo e o scan não, então a unidade simplesmente não entraria no
+// mapa — e nenhum gate acusaria a ausência, porque para eles ela nunca existiu. É o mesmo
+// modo de falha já medido duas vezes neste engine (um dialeto de assinatura que só
+// reconhecia `export function` cegava 97,6% do código; um regex só em inglês escondia 108
+// cenários de um gate BLOQUEANTE): **vocabulário errado não dá erro, dá silêncio.**
+var scenarioCodeRE = scenarioCodeREFor(config.DefaultRuleLetters)
+
+func scenarioCodeREFor(letters string) *regexp.Regexp {
+	if letters == "" {
+		letters = config.DefaultRuleLetters
+	}
+	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) +
+		`]\d{2}(?:-[a-z][a-z0-9-]*)?|DS-[A-Za-z0-9-]+|VR(?:-[` + regexp.QuoteMeta(letters) + `]\d{2})?|CT)\b`)
+}
+
+// SetRuleLetters reconfigura a gramática de código deste pacote para o vocabulário do
+// projeto. Espelha as funções de mesmo nome em `gate` e `testsig` — os três leem os mesmos
+// códigos e precisam concordar sobre o que é um código.
+func SetRuleLetters(letters string) {
+	// Built again only when what it reads changed: a walk inside a gate of a parallel run
+	// would otherwise write what the other gates read.
+	key := letters + "\x00" + config.CodeLengthPattern()
+	if key == scenarioCodeKey {
+		return
+	}
+	scenarioCodeRE, scenarioCodeKey = scenarioCodeREFor(letters), key
+}
+
+// scenarioCodeKey is what scenarioCodeRE was built from.
+var scenarioCodeKey string
+
+// ScenarioCodeRE expõe a gramática VIGENTE de código de cenário — já com as
+// `rule_types` do projeto aplicadas por SetRuleLetters.
+//
+// Existe para que outros pacotes reconheçam código sem reescrever o regex: uma cópia com
+// as letras canônicas fixas rejeitaria o código de uma letra que o projeto declarou, e o
+// Anchors passaria a exigir uma referência que ele mesmo se recusa a reconhecer.
+func ScenarioCodeRE() *regexp.Regexp { return scenarioCodeRE }
+
+// noPropRE detecta a anotação @noPropagation (opt-out honesto no filho).
+var noPropRE = regexp.MustCompile(`@noPropagation\b`)
+
+// sharedCodeRE detecta @anchors-shared-code — o opt-out honesto da colisão de
+// identidade: "os códigos de cenário aqui pertencem a OUTRA unidade de propósito"
+// (ex.: um teste de util/handler que prova o cenário da tela que ele serve). Deixa o
+// registro no código (datado, localizado) em vez de silenciar a regra escondido —
+// como `// eslint-disable`. O detector de identidade-duplicada ignora quem a declara.
+var sharedCodeRE = regexp.MustCompile(`@anchors-shared-code\b`)
+
+// File é um arquivo escaneado, já classificado numa camada da Estrutura.
+type File struct {
+	Path  string // relativo à raiz
+	Layer string // nome da camada que casou (ex.: "spec", "code")
+	Kind  string // kind do nó (vem da camada)
+	Rev   string // sha256 curto do conteúdo
+	Codes []string
+	// HeaderCode é a identidade DECLARADA no header (`code: XXXX`) — a fonte de verdade
+	// quando existe. Sem ela, a identidade é inferida do primeiro código de cenário do
+	// texto, o que erra quando a spec CITA outra unidade antes de definir a sua: uma spec
+	// de modelo que abre referenciando `DTAXX-B11` era registrada no mapa como dona de
+	// `DTAX`, e todo gate relacional passava a olhar a unidade errada.
+	HeaderCode string
+	// HeaderRefs are the units the file declares it realizes (`ref: X, Y`). A file with a
+	// `ref:` is not its unit's owner: its own `code:`, when it has one, names the FILE.
+	HeaderRefs []string
+	// HeaderLayer é a camada da UNIDADE, declarada no header (`layer: screen`).
+	//
+	// Distinta do `Layer`, que é a camada do ARQUIVO: uma spec casa `**/*.spec.md` e o
+	// `Layer` dela é `spec`. Quem pergunta "que camada é esta unidade" quer esta.
+	//
+	// Medido: o `derived.overrides` com `when: screen` nunca casava para uma spec, porque
+	// comparava contra o `Layer` — e o mapa procurava `{{name}}.ts` numa camada cujo
+	// pattern exige `.tsx`. O `unit-complete` respondia "falta o código" com o arquivo no
+	// disco.
+	HeaderLayer   string
+	NoPropagation bool  // o texto contém a anotação @noPropagation
+	SharedCode    bool  // o texto contém @anchors-shared-code (opt-out de colisão)
+	Deps          []Dep // dependências de reúso declaradas (Tabela de Dependências, SPEC_TYPES §5)
+	// CodeDeps are the `@dep: CODE` flags on the file's import lines — what the file uses,
+	// addressed by the used file's own code, with the symbols the import brings — and the
+	// `@no-dep: <reason>` waivers.
+	CodeDeps []CodeDep
+	// UsedBy are the `@used-by: CODE, CODE` flags above the file's exported symbols — the
+	// way back of `@dep:`: who uses each symbol.
+	UsedBy []UsedBy
+	// Navigates are the `@navigates: CODE [CODE-X01]` flags on the file's navigation calls —
+	// the screen each call leads to, and the rule that triggers it — and the `@no-nav:`
+	// waivers.
+	Navigates []Navigation
+	// Writes and Reads are the data the file's header says it persists (`writes: AuditItem`)
+	// and consumes (`reads: AuditItem`): a reader's proof depends on the writer's shape as
+	// much as on its own code, and nothing in an import says so.
+	Writes []string
+	Reads  []string
+	// OutRows are a screen spec's navigation rows — its Out table —, each by the rule that
+	// triggers it, with a revision of the row alone: a flow that asserts a navigation is
+	// stale when its row changes, and not when the rest of the spec does.
+	OutRows map[string]string
+	// Evidence are the revisions the file's proofs are measured against: its content without
+	// what proves nothing (see EvidenceOf).
+	Evidence Evidence
+	// CaptureCodes are the visual-regression and contract codes the file names outside its
+	// comment lines — `HOMEH-VR`, `HOMEH-VR-S02`, `PAYMX-CT` —, each whole with its state: what a
+	// capture test compares against. A code a comment mentions captures nothing.
+	CaptureCodes []string
+	// Doubles are the modules a test replaces with a double — what `derived.mock_detect`
+	// captures, outside the comments —, as written: the map resolves them to the files the
+	// test's proof stops at (see mapx's evidence closure).
+	Doubles []string
+	// Composes are the units a spec's Parts Used section names — the components a screen is
+	// made of, by name (`BottomSheet`). The map ties the spec to each one's code, so a
+	// component whose capture diverged can ask the captures of who uses it again.
+	Composes []string
+	// Seeds: os caminhos de spec que um PLANO semeia. Extraídos aqui porque o scan já tem
+	// o conteúdo em mãos — o mapa não precisa reabrir o arquivo só para isso.
+	Seeds []string
+	// Needs: os planos que precisam TERMINAR antes deste começar (`needs:` no header).
+	//
+	// É diferente de `Deps`: aquele diz "consumo este arquivo", este diz "não comece
+	// antes daquele trabalho acabar". A distinção existe porque com vários agentes
+	// puxando cards de uma fila comum, alguém pegaria o plano de uma feature antes de a
+	// fundação existir — e descobriria isso ao tentar criar o primeiro arquivo.
+	Needs []string
+	// Parent é o CÓDIGO do artefato que contém este — a fase de um card, o plano de uma
+	// fase. Um só: pertencimento é uma relação de um pai, ao contrário de `needs`, que é
+	// lista porque uma coisa pode depender de várias.
+	Parent string
+	// Upstream: the file is a copy Anchors seeded and still owns — see IsUpstreamOwned.
+	Upstream bool
+	// External: the file lives outside the project, at a URL — a guide `governs:` reads from
+	// another repository (see externalGuides). Its path is the URL as declared.
+	External bool
+	// Support: the file matches its layer's `support:` list — it serves the tests without
+	// being one (see config.Layer.Support).
+	Support bool
+	// Revises são os planos que ESTE revisa — caminhos, como o `needs`.
+	Revises []string
+	// Realizes: as REGRAS DE DOUTRINA DE PRODUTO que as regras desta spec concretizam,
+	// declaradas com `@realizes <CODIGO-REGRA>` na linha da regra.
+	//
+	// Guarda o codigo da regra de produto, e nao o caminho do arquivo: quem escreve a
+	// spec sabe QUAL regra esta' realizando, e obrigar o caminho faria toda spec quebrar
+	// quando o arquivo de doutrina fosse renomeado. O mapa resolve codigo -> arquivo,
+	// que e' o trabalho dele.
+	Realizes []Realizes
+	// GatedBy: os CENARIOS DE FEATURE FLAG sob os quais as regras desta spec valem.
+	//
+	// Mesma forma do `Realizes`, e nao por acaso: as duas declaram que uma regra local
+	// depende de algo que vive fora da arvore de alvos. O que muda e' a pergunta — o
+	// `realizes` diz "concretiza esta regra transversal", o `gated-by` diz "so' vale
+	// quando a flag estiver assim".
+	GatedBy []Realizes
+	// Frozen is the freeze the file's header declares (`frozen: QLDTQ-F01`, or the reason
+	// itself where there is no doctrine): the whole file — a spec's whole unit — is kept as
+	// it is until someone thaws it.
+	Frozen string
+	// FrozenRules are the rules a spec or a doctrine document marks as frozen (`@frozen:`
+	// on the rule's line, or on a heading above it), each with its mark's value.
+	FrozenRules map[string]string
+	// Freezes are a doctrine document's freeze entries — its rules of the freeze letter —,
+	// each with its reason.
+	Freezes map[string]string
+}
+
+// Realizes e' uma declaracao `@realizes` — a regra local que concretiza uma regra de
+// produto. Vira uma aresta `realizes` da spec para o arquivo de doutrina.
+type Realizes struct {
+	// From e' o codigo da regra DESTA spec que faz a declaracao (`CRED-V01`), quando da'
+	// para saber. Vazio quando a tag aparece solta, fora de uma regra catalogada — o
+	// gate trata os dois casos, mas so' o primeiro permite dizer QUAL regra realiza o que.
+	From string
+	// To e' o codigo da regra de produto realizada (`LIMIT-R03`).
+	To string
+}
+
+// Dep é uma linha da Tabela de Dependências de uma spec consumidora (SPEC_TYPES §5):
+// a declaração de que esta unidade consome outra camada. Vira uma aresta `depends-on`
+// da spec para o Arquivo, com Method como metadado (impacto fino).
+type Dep struct {
+	Code   string // DEPn — local à spec (ponteiro que o data contract usa)
+	File   string // arquivo da camada consumida (o alvo da aresta, relativo à raiz)
+	Method string // método/símbolo consumido (metadado da aresta)
+	Layer  string // tipo/camada declarado da dependência (p/ gate de limite de camada)
+}
+
+// NestedCheckout reports whether a directory below the root is another checkout — a git
+// worktree or a nested repository, marked by its own `.git` (a file in a worktree, a
+// directory in a clone). Its files belong to that checkout, not to this project.
+//
+// Measured in this repository: four agent worktrees under `.claude/worktrees/` put 1360
+// copies of the project's own files into the map. They were excluded in
+// `.git/info/exclude`, which the scan does not read — and should not need to: a checkout
+// inside the tree is never the project's material, whatever the ignore files say.
+func NestedCheckout(path, rel string) bool {
+	if rel == "." {
+		return false
+	}
+	_, err := os.Lstat(filepath.Join(path, ".git"))
+	return err == nil
+}
+
+// Walk percorre root e classifica cada arquivo pelas CAMADAS da config. Um arquivo
+// que não casa nenhuma camada é ignorado. Quando casa mais de uma, vence a de
+// pattern mais específico (heurística: maior comprimento do pattern).
+func Walk(root string, cfg *config.Config) ([]File, error) {
+	// O vocabulário é ligado AQUI, na porta de entrada, e não em cada chamador: um
+	// chamador novo que esquecesse a ligação não daria erro — daria um mapa sem as
+	// unidades cujo código usa letra declarada pelo projeto, silenciosamente.
+	SetRuleLetters(cfg.RuleLetters())
+	var out []File
+	// O que o projeto declarou descartável no `.gitignore` também não é trabalho para o
+	// Anchors. Antes, só o WATCHER respeitava essa lista, e o `Walk` — que alimenta
+	// `check`, `map` e `recode` — usava a lista embutida: a sonda de um revisor não era
+	// enfileirada pelo watcher, mas o `check` a contava como unidade a fazer. Duas fontes
+	// da régua discordando sobre o mesmo assunto, que é o modo de falha mais caro medido
+	// neste engine — regra ausente produz pergunta; regra contraditória produz
+	// desobediência sem consciência.
+	ig := LoadIgnoreFor(root, cfg)
+	// The walk only lists the files of the layers; reading and parsing each — what costs —
+	// runs on every core, each file on its own (fileOf reads nothing of the others), and the
+	// files come back in the walk's order.
+	type job struct{ path, rel, layer, kind string }
+	var jobs []job
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		// `filepath.Rel` devolve o separador do SO — no Windows, `\`. O resto do Anchors
+		// fala em `/`: os patterns do `layers:`, os IDs dos nós do mapa, as arestas, os
+		// caminhos que o usuário digita. Normalizar aqui, na fronteira, é o que impede a
+		// forma nativa de vazar para dentro do grafo.
+		rel := filepath.ToSlash(mustRel(root, path))
+		if d.IsDir() {
+			if ig.SkipDir(d.Name(), rel) || NestedCheckout(path, rel) {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if ig.SkipFile(rel) {
+			return nil
+		}
+		// O ARQUIVO DE PROGRESSO fica fora do mapa, mesmo casando a camada do plano.
+		//
+		// Ele é ESTADO, e existe para mudar: uma fase que termina é um `[x]` novo. Todo
+		// gate que cobra justificativa de mudança — `plano-alterado-justificado` à frente
+		// — o acusaria a cada avanço, e a única saída seria escrever uma revisão dizendo
+		// "o trabalho andou". Ruído em gate bloqueante é o que faz alguém desligá-lo.
+		//
+		// Ele VAI para o git (é o histórico do trabalho); o que não vai é para o mapa. Por
+		// isso a exclusão mora aqui, e não no `.gitignore`.
+		if IsProgressFile(rel) {
+			return nil
+		}
+		layer, kind := classify(rel, cfg)
+		if layer == "" {
+			return nil // não pertence a nenhuma camada declarada
+		}
+		jobs = append(jobs, job{path, rel, layer, kind})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	files := make([]File, len(jobs))
+	read := make([]bool, len(jobs))
+	errs := make([]error, len(jobs))
+	next := make(chan int)
+	var wg sync.WaitGroup
+	for w := 0; w < runtime.GOMAXPROCS(0); w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range next {
+				j := jobs[i]
+				content, readErr := os.ReadFile(j.path)
+				if readErr != nil {
+					// A file that vanished between the listing and the read has nothing to
+					// map. Any other failure (a permission) used to drop the file here with
+					// no word: the map lost a unit of a declared layer and no gate ever
+					// confronted it.
+					if !errors.Is(readErr, fs.ErrNotExist) {
+						errs[i] = fmt.Errorf(i18n.T("scan.err_unreadable"), j.rel, readErr)
+					}
+					continue
+				}
+				files[i], read[i] = fileOf(root, j.rel, j.layer, j.kind, content, cfg), true
+			}
+		}()
+	}
+	for i := range jobs {
+		next <- i
+	}
+	close(next)
+	wg.Wait()
+	for i := range jobs {
+		if errs[i] != nil {
+			return out, errs[i]
+		}
+		if read[i] {
+			out = append(out, files[i])
+		}
+	}
+	ext, err := externalGuides(root, cfg)
+	if err != nil {
+		return out, err
+	}
+	return append(out, ext...), nil
+}
+
+// externalGuides are the guides `governs:` reads from a URL, each a node of the map whose
+// path is the URL as declared and whose revision is its content's: a guide changed in its
+// repository leaves the edges it governs to be confronted again, as a local one does. A URL
+// that cannot be read fails the walk — the map would otherwise lose the guide without a word.
+func externalGuides(root string, cfg *config.Config) ([]File, error) {
+	var out []File
+	seen := map[string]bool{}
+	for _, rule := range cfg.Governs {
+		if !pathref.IsURL(rule.From) || seen[rule.From] {
+			continue
+		}
+		seen[rule.From] = true
+		body, err := pathref.Read(root, rule.From)
+		if err != nil {
+			return nil, fmt.Errorf("governs: %w", err)
+		}
+		out = append(out, File{Path: rule.From, Kind: "guide", Rev: shortHash(body), External: true})
+	}
+	return out, nil
+}
+
+// fileOf reads what the map needs from ONE file's content. Every field depends only on the
+// file, the configuration and — for a declared dependency's path — the disk, never on the
+// other files of the tree: that is what lets a new file enter the map without the whole
+// tree being read (`ScanPaths`).
+func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) File {
+	cs := cfg.CommentsFor(rel)
+	f := File{
+		Path:          rel,
+		Layer:         layer,
+		Kind:          kind,
+		Rev:           shortHash(content),
+		Codes:         extractCodes(content, codeComments(kind, rel, cs)),
+		HeaderCode:    extractHeaderCode(string(content), cs),
+		HeaderRefs:    extractHeaderRefs(string(content), cs),
+		HeaderLayer:   extractHeaderLayer(string(content), cs),
+		Seeds:         extractSeeds(kind, string(content)),
+		Realizes:      extractRealizes(kind, string(content)),
+		GatedBy:       extractGatedBy(kind, string(content)),
+		Needs:         needsFor(kind, content, root, rel, cs),
+		Parent:        parentDe(content, cs),
+		Upstream:      IsUpstreamOwned(rel, content),
+		Support:       excluded(rel, cfg.Layers[layer].Support),
+		Revises:       revisesDe(kind, content, root, rel, cs),
+		NoPropagation: noPropRE.Match(content),
+		SharedCode:    sharedCodeRE.Match(content),
+		Deps:          depsFor(kind, content, root, rel, cs),
+		Composes:      composesFor(kind, content, cfg),
+		CodeDeps:      extractCodeDeps(content, rel, cfg.DialectAt(rel)),
+		UsedBy:        extractUsedBy(content, rel, cfg.DialectAt(rel)),
+		Navigates:     extractNavigates(content, cs),
+		Writes:        headerList(headerWritesRE, content, cs),
+		Reads:         headerList(headerReadsRE, content, cs),
+		Frozen:        extractFrozen(string(content), cs),
+		FrozenRules:   extractFrozenRules(kind, string(content)),
+		Freezes:       extractFreezes(kind, string(content)),
+	}
+	if kind == "spec" {
+		f.OutRows = extractOutRows(content)
+	}
+	f.Evidence = EvidenceOf(kind, rel, content, cfg)
+	f.CaptureCodes = captureCodes(rel, content, cs)
+	f.Doubles = doublesOf(kind, rel, content, cfg)
+	// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
+	// project's vocabulary, not a claim on this project's units. Counting them would give
+	// the file an inferred identity it does not own.
+	if f.Upstream {
+		f.Codes = nil
+	}
+	return f
+}
+
+// codeComments is the comment syntax whose comments extractCodes leaves out: none in Anchors'
+// own formats, where a code in a comment is still the artifact's.
+func codeComments(kind, rel string, cs *config.Comments) *config.Comments {
+	if kind == "spec" || kind == "feature" || strings.HasSuffix(rel, ".md") || strings.HasSuffix(rel, ".feature") {
+		return nil
+	}
+	return cs
+}
+
+// ScanPaths reads the given files, relative to the root, as `Walk` would read them in the
+// tree — with the same ignore rules, the progress-file exclusion and the layer
+// classification —, and nothing else. A path that is ignored, belongs to no layer or does
+// not exist is left out. It is what the incremental map update reads: the new files and
+// the few existing ones they touch, not the whole tree.
+func ScanPaths(root string, cfg *config.Config, rels []string) ([]File, error) {
+	SetRuleLetters(cfg.RuleLetters())
+	ig := LoadIgnoreFor(root, cfg)
+	var out []File
+	for _, rel := range rels {
+		rel = filepath.ToSlash(rel)
+		if ig.SkipFile(rel) || IsProgressFile(rel) || ignoredDirIn(ig, rel) {
+			continue
+		}
+		layer, kind := classify(rel, cfg)
+		if layer == "" {
+			continue
+		}
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(rel)))
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				continue
+			}
+			return out, fmt.Errorf(i18n.T("scan.err_unreadable"), rel, err)
+		}
+		out = append(out, fileOf(root, rel, layer, kind, content, cfg))
+	}
+	return out, nil
+}
+
+// ignoredDirIn says whether one of the directories on the path is one the walk skips.
+func ignoredDirIn(ig *Ignore, rel string) bool {
+	parts := strings.Split(rel, "/")
+	for i := 1; i < len(parts); i++ {
+		if ig.SkipDir(parts[i-1], strings.Join(parts[:i], "/")) {
+			return true
+		}
+	}
+	return false
+}
+
+// GovernedPaths lists, without reading them, the files of the tree that belong to a
+// layer — the paths `Walk` would read. Comparing them with the map's nodes tells which
+// files are new without reading any of them.
+func GovernedPaths(root string, cfg *config.Config) ([]string, error) {
+	ig := LoadIgnoreFor(root, cfg)
+	var out []string
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel := filepath.ToSlash(mustRel(root, path))
+		if d.IsDir() {
+			if ig.SkipDir(d.Name(), rel) || NestedCheckout(path, rel) {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if ig.SkipFile(rel) || IsProgressFile(rel) {
+			return nil
+		}
+		if layer, _ := classify(rel, cfg); layer != "" {
+			out = append(out, rel)
+		}
+		return nil
+	})
+	return out, err
+}
+
+// Classify decide a que camada (e kind) um caminho relativo pertence, pelos
+// patterns da Estrutura. Devolve layer="" se não pertence a nenhuma. Exportada
+// para o watcher classificar um único arquivo alterado sem re-escanear tudo.
+func Classify(rel string, cfg *config.Config) (layer, kind string) {
+	return classify(rel, cfg)
+}
+
+// classify decide a que camada um arquivo pertence, pelos patterns da Estrutura.
+// Respeita `exclude`.
+//
+// Quando DOIS patterns casam o mesmo arquivo, alguém tem de desempatar — e o `doublestar`
+// não ajuda: uma biblioteca de glob responde sim/não, porque glob não é uma linguagem com
+// precedência (diferente de CSS ou de roteamento HTTP, onde a especificidade faz parte da
+// especificação). O desempate é, necessariamente, decisão do Anchors.
+//
+// A régua é COMPRIMENTO DO PATTERN, e ela é um chute — mede verbosidade, não precisão. O
+// caso que expôs isso: `packages/backend/{infra/**,functions/**/index.ts,…}` (108 chars)
+// vencia `packages/backend/infra/models/**/*.ts` (37 chars), embora o segundo aponte para
+// um subconjunto do primeiro. A alternativa ganhou por ser prolixa.
+//
+// Foram tentadas três réguas melhores (prefixo literal; prefixo+sufixo; expansão de
+// alternativas medindo o pior caso). Todas acertaram o caso que as motivou e quebraram
+// outro: a terceira reclassificou 72 nós do repositório real, porque um `**` no MEIO do
+// pattern (`apps/mobile/src/**/business-logic/**/*.ts`) esconde justamente a parte
+// discriminante. A lição medida: **toda heurística de especificidade acerta o exemplo à
+// vista e erra o que não está sendo olhado** — ela adivinha intenção a partir de sintaxe.
+//
+// Então o comprimento fica como DEFAULT (não regride nada no repo real), e a intenção,
+// quando existe, é DECLARADA: `priority: N` na camada vence qualquer heurística. É o mesmo
+// princípio de `identified_as_form` e `dialect` — onde o framework não pode saber, ele
+// pergunta em vez de adivinhar, e a resposta fica à vista na Estrutura.
+//
+// A iteração sobre `cfg.Layers` é um map, cuja ordem Go não define. Empate TOTAL (mesma
+// prioridade e mesmo comprimento) sortearia a camada a cada execução — e uma classificação
+// que muda entre duas rodadas do mesmo comando envenena todo gate que depende dela. Por
+// isso o desempate final é o NOME da camada: arbitrário, mas estável.
+// headerLayerRE lê a camada que o próprio arquivo DECLARA no header.
+//
+// The comment prefix is part of the line: a code file's header writes `//   layer: x`
+// (or `#`, `--`, ` * `), and without the prefix the layer a code file declared was never read.
+var headerLayerRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `layer:\s*([a-zA-Z0-9_-]+)`)
+
+// LayerOfUnit devolve a camada da UNIDADE a que um arquivo pertence — não a do arquivo.
+//
+// A distinção existe porque uma spec casa dois padrões: o dela (`**/*.spec.md`, camada
+// `spec`) e o da unidade que ela governa. O `ClassifyPath` devolve o primeiro, que é o
+// certo para o mapa — a spec É um nó da camada `spec`. Mas quem pergunta "que camada é
+// esta unidade" quer o segundo.
+//
+// Medido: `anchors docs duties --unit <arquivo>.spec.md` respondia "nenhuma documentação
+// obrigatória" para uma lambda cuja camada deve o OpenAPI. Com o `.ts` da mesma unidade a
+// resposta era certa — e o card aponta a SPEC, que é o caminho que o agente usa.
+//
+// A camada declarada no header vence porque é a que o autor escreveu. Sem header, cai no
+// `ClassifyPath` — que para todo arquivo que não é spec já devolve a camada da unidade.
+func LayerOfUnit(root, rel string, cfg *config.Config) string {
+	if b, err := os.ReadFile(filepath.Join(root, rel)); err == nil {
+		if m := headerLayerRE.FindSubmatch(AnchorsHeader(b, cfg.CommentsFor(rel))); m != nil {
+			return string(m[1])
+		}
+	}
+	layer, _ := classify(rel, cfg)
+	return layer
+}
+
+// ClassifyPath devolve a CAMADA e o KIND de um caminho, pelos padrões do projeto.
+//
+// Exportada porque a resolução de camada é usada fora do scanner — o `anchors next`
+// precisa dela para saber quais documentações a alteração obriga tocar. Reimplementá-la
+// lá seria manter duas leituras dos mesmos padrões, e elas divergiriam na primeira
+// mudança da Estrutura: um `overrides` novo passaria a valer para o mapa e não para o card.
+func ClassifyPath(rel string, cfg *config.Config) (layer, kind string) {
+	return classify(rel, cfg)
+}
+
+// classify is the layer and the kind of a path (config.LayerOf): the configuration decides
+// it, so the dialect of a file — its layer's — is read by the same rule the map uses.
+func classify(rel string, cfg *config.Config) (layer, kind string) {
+	return cfg.LayerOf(rel)
+}
+
+// priority é a régua de desempate, em ordem: declarada > comprimento > nome. It is
+// config.LayerOf's, repeated here only to list the layers a file's tie-break left behind.
+type priority struct {
+	prio int
+	tam  int
+	nome string
+}
+
+func (a priority) venceContra(b priority) bool {
+	if a.prio != b.prio {
+		return a.prio > b.prio
+	}
+	if a.tam != b.tam {
+		return a.tam > b.tam
+	}
+	return a.nome < b.nome // estabilidade: o map não tem ordem
+}
+
+// LayerAmbiguity é um arquivo cuja camada foi decidida por HEURÍSTICA — dois patterns
+// casaram, nenhum declarou `priority`, e o desempate foi o comprimento do pattern.
+//
+// Não é erro: na maioria das vezes o comprimento acerta. É um AVISO, porque é o ponto onde
+// o Anchors adivinhou a intenção do projeto, e adivinhação silenciosa é o que produz a
+// classificação errada que ninguém vê. Quem quiser resolver, declara `priority`.
+type LayerAmbiguity struct {
+	Arquivo    string
+	Vencedora  string
+	Perdedoras []string
+}
+
+// Ambiguities devolve os arquivos classificados por desempate heurístico — o material do
+// alerta em `check`/`doctor`.
+func Ambiguities(files []File, cfg *config.Config) []LayerAmbiguity {
+	var out []LayerAmbiguity
+	for _, f := range files {
+		var casam []priority
+		for name, l := range cfg.Layers {
+			if !matchGlob(l.Pattern, f.Path) || excluded(f.Path, l.Exclude) {
+				continue
+			}
+			casam = append(casam, priority{prio: l.Priority, tam: len(l.Pattern), nome: name})
+		}
+		if len(casam) < 2 {
+			continue
+		}
+		sort.Slice(casam, func(i, j int) bool { return casam[i].venceContra(casam[j]) })
+		// Se a vencedora se distingue por prioridade DECLARADA, o projeto já decidiu —
+		// não há adivinhação a denunciar.
+		if casam[0].prio > casam[1].prio {
+			continue
+		}
+		a := LayerAmbiguity{Arquivo: f.Path, Vencedora: casam[0].nome}
+		for _, p := range casam[1:] {
+			a.Perdedoras = append(a.Perdedoras, p.nome)
+		}
+		out = append(out, a)
+	}
+	return out
+}
+
+func excluded(rel string, globs []string) bool {
+	for _, g := range globs {
+		if matchGlob(g, rel) {
+			return true
+		}
+	}
+	return false
+}
+
+// matchGlob casa um glob (com ** e {a,b}) contra um caminho relativo.
+// mustRel devolve o caminho relativo à raiz. O erro só ocorre quando `path` não está sob
+// `root` — impossível vindo de `WalkDir(root, …)`. Se ocorresse, engolir o erro devolveria
+// o caminho ABSOLUTO como se fosse relativo, e todo pattern deixaria de casar: o arquivo
+// sumiria do mapa em silêncio, que é exatamente o modo de falha que o `ToSlash` acima
+// existe para fechar. Devolver vazio é ruidoso de propósito.
+func mustRel(root, path string) string {
+	rel, err := filepath.Rel(root, path)
+	if err != nil {
+		return ""
+	}
+	return rel
+}
+
+func matchGlob(pattern, path string) bool {
+	ok, err := doublestar.Match(pattern, path)
+	return err == nil && ok
+}
+
+// extractCodes devolve os códigos que o arquivo POSSUI — ignorando os que aparecem
+// apenas em COMENTÁRIOS, na sintaxe que o projeto declara para o arquivo. Um código citado
+// num comentário (`// ...vê CODEX-VR`) é uma REFERÊNCIA a outra unidade, não posse; contá-lo
+// como posse gera colisão de identidade falsa (TRACEABILITY §3). `cs` nil (os formatos do
+// próprio Anchors — spec, feature —, ou um arquivo cujos comentários ninguém declarou) não
+// tira nada.
+func extractCodes(content []byte, cs *config.Comments) []string {
+	stripped := cs.Blank(string(content))
+	matches := scenarioCodeRE.FindAllString(stripped, -1)
+	if len(matches) == 0 {
+		return nil
+	}
+	seen := map[string]bool{}
+	var codes []string
+	for _, m := range matches {
+		if !seen[m] {
+			seen[m] = true
+			codes = append(codes, m)
+		}
+	}
+	return codes
+}
+
+// depHeadingRE casa o cabeçalho da seção de dependências (markdown), tolerante a
+// nível de heading e acentuação/caixa: "## Dependências", "### Dependencias de Dados".
+// A seção é reconhecida em QUALQUER idioma do catálogo, e não só em português.
+//
+// O acoplamento que isto desfaz: o `anchors new spec` emite o título traduzido pelo
+// `lang:` do projeto, e a regex antiga só casava a forma portuguesa. Um projeto `lang: en`
+// escrevia a Tabela de Dependências no título que o próprio gerador deu, o scan não a
+// achava, e nenhuma aresta `depends-on` nascia — o `dependency-honored` ficava
+// INDETERMINADO sobre um contrato que estava declarado. Medido aqui: dez specs passaram de
+// ✓ a ~ na hora em que o projeto virou `lang: en`.
+var depHeadingRE = regexp.MustCompile(`(?im)^#{1,6}\s+(?:` +
+	strings.Join(escapeAll(i18n.AllTranslations("section.title.deps")), "|") + `)\b`)
+
+// escapeAll prepara títulos traduzidos para entrar numa alternância de regex.
+func escapeAll(xs []string) []string {
+	out := make([]string, 0, len(xs))
+	for _, x := range xs {
+		if x != "" {
+			out = append(out, regexp.QuoteMeta(x))
+		}
+	}
+	if len(out) == 0 {
+		out = append(out, `depend[e\x{00ea}]ncias?`)
+	}
+	return out
+}
+
+// partsHeadingRE is the heading of the Parts Used section, in any language of the catalog.
+var partsHeadingRE = regexp.MustCompile(`(?im)^#{1,6}\s+(?:` +
+	strings.Join(escapeAll(i18n.AllTranslations("section.title.components")), "|") + `)\b`)
+
+var backtickNameRE = regexp.MustCompile("`([A-Za-z_][A-Za-z0-9_.]*)`")
+
+// composesFor reads, from a spec, the names in the first column of its Parts Used table.
+func composesFor(kind string, content []byte, cfg *config.Config) []string {
+	if kind != "spec" {
+		return nil
+	}
+	s := string(content)
+	loc := partsHeadingRE.FindStringIndex(s)
+	if loc == nil {
+		// The project's own title for the section (`components: "Componentes Utilizados"`).
+		if own := cfg.SectionTitlesFor("components"); len(own) > 0 {
+			loc = regexp.MustCompile(`(?im)^#{1,6}\s+(?:` + strings.Join(escapeAll(own), "|") + `)\b`).FindStringIndex(s)
+		}
+	}
+	if loc == nil {
+		return nil
+	}
+	var out []string
+	inTable := false
+	for _, ln := range strings.Split(s[loc[1]:], "\n") {
+		t := strings.TrimSpace(ln)
+		if !strings.HasPrefix(t, "|") {
+			if inTable || strings.HasPrefix(t, "#") {
+				break
+			}
+			continue
+		}
+		if !inTable {
+			inTable = true // the header
+			continue
+		}
+		if isDividerRow(t) {
+			continue
+		}
+		if cells := splitRow(t); len(cells) > 0 {
+			if m := backtickNameRE.FindStringSubmatch(cells[0]); m != nil {
+				out = append(out, m[1])
+			}
+		}
+	}
+	return out
+}
+
+// depCodeRE valida o código de uma linha de dependência: DEP seguido de dígitos.
+var depCodeRE = regexp.MustCompile(`^DEP\d+$`)
+
+// The header keys below (`dep:`, `needs:`, `revises:`, and `code:`/`layer:` further down)
+// are matched only against AnchorsHeader(content), never the whole file. Over the whole file
+// a body line was a declaration: a spec citing `code: X` in prose took X as its identity, and
+// a `// dep:` comment in code became an edge — the hole `parent:` had first (parentDe).
+//
+// headerDepRE captura a linha `dep:` do cabeçalho @anchors (camadas reconhecidas sem
+// spec declaram aqui os ARQUIVOS de que dependem — a "Tabela de Dependências inline",
+// já que não têm .spec.md). Aceita 1+ caminhos separados por vírgula.
+var headerDepRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `dep:\s*(.+)$`)
+
+// headerNeedsRE captura a linha `needs:` do cabeçalho @anchors de um PLANO: os planos
+// que precisam terminar antes deste começar. Aceita 1+ caminhos separados por vírgula.
+var headerNeedsRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `needs:\s*(.+)$`)
+
+// headerParentRE captura a linha `parent:` — QUEM É O PAI deste artefato.
+//
+// `parent` e `needs` são relações DIFERENTES, e confundi-las produz uma árvore errada:
+// `needs` é ORDEM ("vem depois de"), `parent` é PERTENCIMENTO ("está dentro de"). A fase 2
+// vem depois da fase 1 e NÃO está dentro dela — as duas pertencem ao mesmo plano.
+//
+// Enquanto só havia `needs`, a árvore inferia o pai a partir da ordem, e desenhava as
+// quatro fases de um plano encaixadas uma na outra como uma escada.
+var headerParentRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `parent:\s*(.+)$`)
+
+// headerWritesRE and headerReadsRE read the data a file's header says it persists and
+// consumes, a comma-separated list of names the project chooses.
+var (
+	headerWritesRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `writes:\s*(.+)$`)
+	headerReadsRE  = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `reads:\s*(.+)$`)
+)
+
+// HeaderData is what a file's header says it writes and reads (`writes:`, `reads:`).
+func HeaderData(content []byte, cs *config.Comments) (writes, reads []string) {
+	return headerList(headerWritesRE, content, cs), headerList(headerReadsRE, content, cs)
+}
+
+// headerList reads a comma-separated header field: each name trimmed, out of its backticks.
+func headerList(re *regexp.Regexp, content []byte, cs *config.Comments) []string {
+	m := re.FindSubmatch(AnchorsHeader(content, cs))
+	if m == nil {
+		return nil
+	}
+	raw := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "-->"))
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		if p := stripInlineCode(strings.TrimSpace(part)); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// headerRevisesRE captura `revises:` — o plano que REVISA outro.
+//
+// Planejar erra, e o erro aparece quando o trabalho começa: uma fase que faltava, uma
+// decisão que não cabia. Há dois caminhos, e a escolha não é de gosto:
+//
+//   - EDITAR o plano antigo perde o registro. Um plano é ÂNCORA, como a spec — e editar
+//     um plano já implementado faz o registro descrever algo que não foi o que aconteceu.
+//     Quem ler depois vê um plano coerente e não sabe que ele mudou no meio.
+//
+//   - UM PLANO NOVO que declara `revises:` preserva os dois lados. O antigo continua
+//     dizendo o que se decidiu na época; o novo diz o que mudou e por quê.
+//
+// O custo do segundo é a leitura fora de ordem — quem abre o plano antigo não sabe que
+// existe um mais novo. Por isso o `revises` é confrontado por gate: o plano revisado
+// ganha um aviso no topo apontando para quem o revisou.
+var headerRevisesRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `revises:\s*(.+)$`)
+
+// needsFor lê `needs:` de um PLANO (caminhos de outros planos) ou de uma SPEC (o CÓDIGO
+// da fase que precisa fechar antes).
+//
+// Na spec o `needs:` era recusado, com o argumento de que "uma spec não espera trabalho
+// terminar, ela É o trabalho". Isso vale para a spec como DOCUMENTO — mas não para o
+// trabalho de implementá-la, que é o que vira card. A ordem dentro de um plano vivia em
+// prosa ("Fase 3 — depende da Fase 2"), e prosa não é confrontável: as specs de um plano
+// nasciam todas disponíveis, e o agente pegava a da fase 3 com a fase 1 em aberto.
+//
+// Na spec o valor é um CÓDIGO (`FNDTN-W02`), não um caminho — a fase não é um arquivo, é
+// um item catalogado dentro do plano. Por isso a resolução de caminho não se aplica aqui.
+func needsFor(kind string, content []byte, root, rel string, cs *config.Comments) []string {
+	switch kind {
+	case "plan":
+		return extractNeeds(content, root, rel, cs)
+	case "spec":
+		return extractNeedsCode(content, cs)
+	}
+	return nil
+}
+
+// revisesDe lê o `revises:` — só de PLANO, porque revisar planejamento é o que
+// planos fazem. Uma spec que "revisa" outra é outra coisa: ou a unidade mudou (e a spec é
+// editada, porque descreve o presente), ou virou outra unidade (e tem código próprio).
+func revisesDe(kind string, content []byte, root, rel string, cs *config.Comments) []string {
+	if kind != "plan" {
+		return nil
+	}
+	m := headerRevisesRE.FindSubmatch(AnchorsHeader(content, cs))
+	if m == nil {
+		return nil
+	}
+	raw := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "-->"))
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		if p := stripInlineCode(strings.TrimSpace(part)); p != "" {
+			out = append(out, resolveDepPath(root, rel, p))
+		}
+	}
+	return out
+}
+
+// parentDe lê o `parent:` do header — o código de quem contém este artefato.
+//
+// Vale para qualquer kind: uma spec pertence a uma fase, uma fase a um plano, e um plano
+// pode pertencer a outro num projeto que agrupe por épico. A hierarquia é livre porque a
+// forma de organizar trabalho varia, e o Anchors não tem por que impor uma.
+//
+// ONLY INSIDE THE `@anchors` HEADER. The pattern alone matched any line starting with
+// `parent:` — measured in the reference app: `anchors-board.yml` carries a jq program whose line
+// `parent: ([$cod[0][] | select(...) | .parent // "")] | first // "")` became the node's
+// parent in the map, and the tree hung the workflow under a jq expression.
+func parentDe(content []byte, cs *config.Comments) string {
+	m := headerParentRE.FindSubmatch(AnchorsHeader(content, cs))
+	if m == nil {
+		return ""
+	}
+	raw := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "-->"))
+	return stripInlineCode(raw)
+}
+
+// extractNeedsCode lê o `needs:` de uma spec, onde o valor é o código da fase.
+func extractNeedsCode(content []byte, cs *config.Comments) []string {
+	m := headerNeedsRE.FindSubmatch(AnchorsHeader(content, cs))
+	if m == nil {
+		return nil
+	}
+	raw := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "-->"))
+	var out []string
+	phase := phaseCodeRE()
+	for _, part := range strings.Split(raw, ",") {
+		p := stripInlineCode(strings.TrimSpace(part))
+		// Só o que PARECE código de fase. Um caminho aqui é engano de quem escreveu (a
+		// spec depende de uma FASE, não de um arquivo), e aceitá-lo em silêncio deixaria
+		// a dependência sem efeito — o gate não a encontraria no plano.
+		if p == "" || !phase.MatchString(p) {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out
+}
+
+// phaseCodeRE matches `FNDTN-W02` — the code of a plan phase.
+//
+// Compiled per CALL and not in a `var`: the length comes from `code_lengths`, loaded
+// AFTER the globals — in a `var` it froze the default `[5]` (see `codeRE` in the gate).
+func phaseCodeRE() *regexp.Regexp {
+	return regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `-` + config.PhaseLetter + `\d{2}$`)
+}
+
+// extractNeeds lê a linha `needs:` e resolve cada caminho relativo à raiz. Só faz
+// sentido em plano — um `needs:` numa spec seria a pergunta errada: spec não espera
+// trabalho terminar, ela É o trabalho.
+func extractNeeds(content []byte, root, rel string, cs *config.Comments) []string {
+	m := headerNeedsRE.FindSubmatch(AnchorsHeader(content, cs))
+	if m == nil {
+		return nil
+	}
+	raw := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "-->"))
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		p := stripInlineCode(strings.TrimSpace(part))
+		if p == "" {
+			continue
+		}
+		out = append(out, resolveDepPath(root, rel, p))
+	}
+	return out
+}
+
+// depsFor extrai as dependências de reúso conforme o papel do arquivo:
+//   - SPEC → a Tabela de Dependências markdown (SPEC_TYPES §5).
+//   - demais (código de camada reconhecida sem spec) → a linha `dep:` do header @anchors.
+//
+// Um guide/doc pode ter uma seção "Dependências" documental (tabela Arquivo|Descrição)
+// que NÃO é dep de reúso; por isso a tabela é lida só p/ spec (o header `dep:` não colide).
+func depsFor(kind string, content []byte, root, rel string, cs *config.Comments) []Dep {
+	// A spec declares no dependency: it precedes the code, and the files a unit imports are
+	// born with it — declared where the import is, by `@dep:` (DOOSD). A Dependencies table
+	// not yet migrated is read by `anchors migrate`, never into the map.
+	if kind == "spec" {
+		return nil
+	}
+	// Roteiro de teste (.yaml): a dependência é a COMPOSIÇÃO — o `runFlow:` que ele
+	// executa. Um roteiro não tem header `@anchors` com linha `dep:`, então sem este
+	// ramo ele ficaria sem nenhuma aresta de saída, e a composição (um util usado por
+	// centenas de flows) seria invisível ao impacto e ao frescor de evidência.
+	if kind == "test" && (strings.HasSuffix(rel, ".yaml") || strings.HasSuffix(rel, ".yml")) {
+		var deps []Dep
+		for _, alvo := range ComposeRefs(string(content), rel) {
+			deps = append(deps, Dep{File: alvo, Method: "runFlow"})
+		}
+		return deps
+	}
+	return extractHeaderDeps(content, root, rel, cs)
+}
+
+// extractHeaderDeps lê a linha `dep:` do cabeçalho e resolve cada caminho para um alvo
+// relativo à raiz. Sem código local (DEPn) — a identidade da dep é o próprio arquivo.
+func extractHeaderDeps(content []byte, root, rel string, cs *config.Comments) []Dep {
+	m := headerDepRE.FindSubmatch(AnchorsHeader(content, cs))
+	if m == nil {
+		return nil
+	}
+	raw := strings.TrimSpace(string(m[1]))
+	// corta comentário-fecho de markdown e um "porquê" após " -- " ou " # "
+	raw = strings.TrimSuffix(strings.TrimSpace(strings.TrimSuffix(raw, "-->")), "")
+	var deps []Dep
+	for _, part := range strings.Split(raw, ",") {
+		p := stripInlineCode(strings.TrimSpace(part))
+		if p == "" {
+			continue
+		}
+		deps = append(deps, Dep{File: resolveDepPath(root, rel, p)})
+	}
+	return deps
+}
+
+// extractDeps lê a Tabela de Dependências de uma spec (SPEC_TYPES §5) e devolve suas
+// linhas. Só specs (markdown) têm essa tabela; para os demais devolve nil. O parsing
+// é de TEXTO (coerente com D2 — nunca parseia código): acha a 1ª seção cujo heading
+// casa `Dependências`, lê a 1ª tabela markdown ali, mapeia as colunas pelo header
+// (Cód/Arquivo/Método/Camada, em qualquer ordem) e extrai as linhas válidas.
+//
+// O Arquivo declarado na tabela é resolvido para caminho relativo à raiz: aceita-se
+// tanto um caminho já relativo à raiz quanto um relativo ao src comum (o autor
+// escreve `stores/auth.store.ts`); a resolução tenta casar contra um arquivo existente.
+func extractDeps(content []byte, root, specRel string) []Dep {
+	s := string(content)
+	loc := depHeadingRE.FindStringIndex(s)
+	if loc == nil {
+		return nil
+	}
+	// varre da seção em diante, pega a primeira tabela (linhas iniciando com '|')
+	lines := strings.Split(s[loc[1]:], "\n")
+	var header []string
+	var rows [][]string
+	inTable := false
+	for _, ln := range lines {
+		t := strings.TrimSpace(ln)
+		if !inTable {
+			// nova seção antes da tabela → não há tabela nesta seção
+			if strings.HasPrefix(t, "#") {
+				break
+			}
+			if strings.HasPrefix(t, "|") {
+				header = splitRow(t)
+				inTable = true
+			}
+			continue
+		}
+		if !strings.HasPrefix(t, "|") {
+			break // fim da tabela
+		}
+		if isDividerRow(t) {
+			continue // a linha |---|---| do markdown
+		}
+		rows = append(rows, splitRow(t))
+	}
+	if header == nil {
+		return nil
+	}
+	ci := columnIndex(header) // mapeia papel→índice pela semântica do header
+	// A Tabela de Dependências (SPEC_TYPES §5) EXIGE as colunas Cód (DEPn) E Arquivo.
+	// A coluna Cód é o que a distingue de uma tabela documental de "Dependências" (ex.:
+	// um guide que lista arquivos relacionados numa tabela Arquivo|Descrição) — sem
+	// código local não há a referência que o data contract usa, e não é dep de reúso.
+	if ci.code < 0 || ci.file < 0 {
+		return nil
+	}
+	var deps []Dep
+	for _, r := range rows {
+		get := func(i int) string {
+			if i < 0 || i >= len(r) {
+				return ""
+			}
+			return stripInlineCode(strings.TrimSpace(r[i]))
+		}
+		getRaw := func(i int) string {
+			if i < 0 || i >= len(r) {
+				return ""
+			}
+			return strings.TrimSpace(r[i])
+		}
+		code := get(ci.code)
+		file := get(ci.file)
+		if file == "" || (ci.code >= 0 && !depCodeRE.MatchString(code)) {
+			continue // linha sem arquivo, ou com código malformado, não é dep válida
+		}
+		deps = append(deps, Dep{
+			Code: code,
+			File: resolveDepPath(root, specRel, file),
+			// Method PRESERVA as crases: elas são o sinal de que o autor prometeu um
+			// SÍMBOLO (verificável pelo gate dependency-honored), não prosa descritiva.
+			// Medido: 81% das células já usavam crase — remover apagava o contrato.
+			Method: getRaw(ci.method),
+			Layer:  get(ci.layer),
+		})
+	}
+	return deps
+}
+
+type depCols struct{ code, file, method, layer int }
+
+// columnIndex mapeia cada papel para o índice da coluna pela SEMÂNTICA do header
+// (tolerante a acento/caixa e a colunas extras/reordenadas).
+func columnIndex(header []string) depCols {
+	ci := depCols{code: -1, file: -1, method: -1, layer: -1}
+	for i, h := range header {
+		switch norm(h) {
+		case "cod", "codigo", "code":
+			ci.code = i
+		case "arquivo", "file", "origem":
+			if ci.file < 0 {
+				ci.file = i
+			}
+		case "metodo", "method", "simbolo", "funcao":
+			ci.method = i
+		case "camada", "layer", "tipo":
+			ci.layer = i
+		}
+	}
+	return ci
+}
+
+// resolveDepPath resolve o arquivo declarado na tabela para um caminho relativo à
+// raiz. O autor escreve o path na convenção que lhe é natural (relativo à raiz, ou
+// relativo ao `src/` do pacote com ou sem o próprio `src/` — como os imports `@/src/…`
+// do projeto). Tenta as variantes em ordem e devolve a 1ª que existe no disco:
+//  1. decl cru (já relativo à raiz)
+//  2. <base até e incluindo /src/> + decl   (decl SEM o `src/`, ex.: "hooks/x.ts")
+//  3. <base antes de /src/> + decl          (decl COM o `src/`, ex.: "src/hooks/x.ts")
+//
+// Se nada existir, devolve o valor original (o anti-drift do mapa acusa a aresta morta
+// depois — melhor uma aresta a resolver que o silêncio).
+func resolveDepPath(root, specRel, decl string) string {
+	decl = strings.TrimPrefix(filepath.ToSlash(decl), "./")
+	try := []string{decl}
+	if i := strings.Index(specRel, "/src/"); i >= 0 {
+		base := filepath.ToSlash(specRel[:i+len("/src/")]) // ".../src/"
+		try = append(try,
+			base+decl,                         // decl sem "src/"
+			base[:len(base)-len("src/")]+decl, // decl com "src/" (evita "src/src/")
+		)
+	}
+	for _, cand := range try {
+		if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(cand))); err == nil {
+			return cand
+		}
+	}
+	return decl
+}
+
+func splitRow(t string) []string {
+	t = strings.Trim(t, "|")
+	parts := strings.Split(t, "|")
+	for i := range parts {
+		parts[i] = strings.TrimSpace(parts[i])
+	}
+	return parts
+}
+
+func isDividerRow(t string) bool {
+	for _, c := range strings.Trim(t, "|") {
+		if c != '-' && c != ':' && c != ' ' {
+			return false
+		}
+	}
+	return strings.Contains(t, "-")
+}
+
+// stripInlineCode tira o markdown de código inline (backticks) de uma célula.
+func stripInlineCode(s string) string { return strings.Trim(s, "`") }
+
+// norm normaliza um header de coluna: minúsculo, sem acento comum, só a 1ª palavra.
+func norm(h string) string {
+	h = strings.ToLower(strings.TrimSpace(stripInlineCode(h)))
+	r := strings.NewReplacer("ó", "o", "é", "e", "ê", "e", "í", "i", "á", "a", "ç", "c", "ú", "u")
+	h = r.Replace(h)
+	if i := strings.IndexAny(h, " ("); i >= 0 {
+		h = h[:i] // "cod (arquivo·metodo)" → "cod"
+	}
+	return h
+}
+
+// shortHash é o `rev` de um nó: a identidade do CONTEÚDO, e é ela que decide se um sinal
+// ingerido (teste passou? mutante sobreviveu?) ainda vale e se uma aresta carimbada ficou
+// velha.
+//
+// O `\r\n` sai ANTES do hash, e isso não é cosmética: com `core.autocrlf=true` o mesmo
+// commit tem bytes diferentes no Windows e no macOS, então o rev de TODO arquivo divergia
+// entre as duas máquinas. O efeito aparecia longe da causa — um `map build` no Windows
+// reescrevia os 2799 revs, o `preservarSinais` não reconhecia nenhum nó e DESCARTAVA os
+// 1061 sinais acumulados; commitado, o mapa fazia o mesmo estrago do outro lado.
+//
+// MEDIDO em 24/08 no app de referência: `entitlementDecision.feature` dava `9d743c6d9abb` em bytes
+// brutos e `daa7cef87644` normalizado — e é `daa7cef87644` que está no mapa gerado no
+// macOS. Ou seja, normalizar não migra nada: faz o Windows CONCORDAR com o que já existe.
+func shortHash(b []byte) string {
+	sum := sha256.Sum256(bytes.ReplaceAll(b, []byte("\r\n"), []byte("\n")))
+	return hex.EncodeToString(sum[:])[:12]
+}
+
+// ShortHash expõe o hash de revisão (mesma fórmula do scan) para o watcher
+// recalcular o rev de um único arquivo alterado.
+func ShortHash(b []byte) string { return shortHash(b) }
+
+// headerCodeRE captura a identidade declarada no header `@anchors`. Os prefixos cobrem os
+// dialetos de comentário dos artefatos (HTML/Markdown, `//`, `#`).
+// Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
+// projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
+// default e a declaração do projeto não teria efeito.
+func headerCodeRE() *regexp.Regexp {
+	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
+}
+
+// headerRefRE is the header's `ref:` line: the units the file realizes.
+var headerRefRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `ref:\s*([A-Z0-9][A-Z0-9 ,]*)`)
+
+// extractHeaderRefs are the units the header's `ref:` names, in order.
+func extractHeaderRefs(content string, cs *config.Comments) []string {
+	m := headerRefRE.FindStringSubmatch(string(AnchorsHeader([]byte(content), cs)))
+	if m == nil {
+		return nil
+	}
+	var out []string
+	for _, r := range strings.Split(m[1], ",") {
+		if r = strings.TrimSpace(r); r != "" {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+// extractHeaderCode devolve a identidade DECLARADA, ou vazio se o header não a declara.
+func extractHeaderCode(content string, cs *config.Comments) string {
+	if m := headerCodeRE().FindStringSubmatch(string(AnchorsHeader([]byte(content), cs))); m != nil {
+		return m[1]
+	}
+	return ""
+}
+
+// realizesRE acha a tag `@realizes CODIGO-R03` em qualquer lugar da linha. Aceita o
+// codigo entre crases ou nu, porque quem escreve a spec alterna entre os dois sem pensar
+// nisso — e recusar um dos formatos faria a declaracao sumir em silencio, que e' o modo
+// de falha que os gates existem para acabar.
+func realizesRE() *regexp.Regexp {
+	return regexp.MustCompile("@realizes\\s+`?([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]{1,2}[0-9]{2})`?")
+}
+
+// gatedByRE acha as declaracoes `@gated-by` — a regra desta spec so' vale sob um CENARIO
+// de feature flag. Mesma tolerancia de crases do `@realizes`, pela mesma razao: quem
+// escreve alterna entre as duas formas sem pensar, e recusar uma faria a declaracao sumir
+// em silencio.
+//
+// A letra e' fixa em `G` de proposito. `@gated-by CRED-B03` nao e' uma flag — e' um erro
+// de quem escreveu, e casar qualquer letra faria o mapa criar uma aresta para um cenario
+// que nunca vai existir, em vez de deixar o gate reportar o codigo errado.
+func gatedByRE() *regexp.Regexp {
+	return regexp.MustCompile("@gated-by\\s+`?([A-Z0-9]" + config.CodeLengthPattern() + "-G[0-9]{2})`?")
+}
+
+// RuleDefinitionRE is the line that defines a rule, in any of the three catalogued forms
+// (heading, table row, bold bullet), capturing its code. Exported so the documentation
+// compiler reads a spec's rules the way the map does — a reader of its own saw only the
+// heading form, and a spec written in tables came out with no rule at all.
+func RuleDefinitionRE() *regexp.Regexp { return localRuleRE() }
+
+// localRuleRE acha o codigo da regra DESTA spec numa linha — as tres formas catalogadas
+// (cabecalho, linha de tabela, bullet-negrito).
+func localRuleRE() *regexp.Regexp {
+	return regexp.MustCompile("(?:^#{1,6}\\s+|^\\s*\\|\\s*`?|^\\s*-\\s+\\*\\*)([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]{1,2}[0-9]{2})")
+}
+
+// extractRealizes le as declaracoes `@realizes` de uma spec.
+//
+// A tag vive NA LINHA DA REGRA, e nao numa coluna de tabela, por uma razao medida: a
+// regra catalogada tem TRES formas validas (cabecalho, linha de tabela, bullet-negrito),
+// e uma coluna so' existe na do meio. Com coluna, referenciar doutrina obrigaria a spec
+// a trocar de formato — a tag vale nas tres.
+//
+// A regra local que declara e' a que aparece na MESMA linha, ou o ultimo cabecalho de
+// regra visto antes dela: `### CRED-V01 — limite` numa linha e `@realizes LIMIT-R03` na
+// seguinte e' a forma natural de escrever quando a descricao e' longa.
+func extractRealizes(kind, content string) []Realizes {
+	return extractRuleTags(kind, content, realizesRE())
+}
+
+// extractGatedBy le as declaracoes `@gated-by` de uma spec.
+//
+// Mesma mecanica do `@realizes` — e compartilha o codigo com ele de proposito. As duas
+// tags tem a mesma forma (vive na linha da regra, vale nas tres formas de regra, escopo
+// fechado pela linha em branco), e duas copias da mesma varredura divergiriam na primeira
+// correcao aplicada a uma so'. E' a licao que a lista de letras ja' deu tres vezes neste
+// mesmo repositorio.
+func extractGatedBy(kind, content string) []Realizes {
+	return extractRuleTags(kind, content, gatedByRE())
+}
+
+// extractRuleTags varre as declaracoes de uma tag que vive NA LINHA DA REGRA e aponta
+// para um codigo de fora da spec.
+func extractRuleTags(kind, content string, tagRE *regexp.Regexp) []Realizes {
+	if kind != "spec" {
+		return nil
+	}
+	var out []Realizes
+	visto := map[string]bool{}
+	current := ""
+	// Built per call from `code_lengths`: a fixed {3,6} never saw a code of another
+	// declared length, and its @realizes / @gated-by edges were never drawn.
+	localRE := localRuleRE()
+	for _, linha := range strings.Split(content, "\n") {
+		if m := localRE.FindStringSubmatch(linha); m != nil {
+			current = m[1]
+		} else if strings.TrimSpace(linha) == "" {
+			// A LINHA EM BRANCO fecha o escopo da regra. Sem isso, um `@realizes` escrito
+			// em prosa paragrafos abaixo era atribuido a ultima regra vista — uma aresta
+			// FALSA, apontando para a regra errada, que e' pior que nao capturar nada:
+			// o gate confirmaria uma realizacao que ninguem declarou.
+			//
+			// Achado por sonda: `@realizes ORFA-R01` num paragrafo solto saia como
+			// `from=CRED-B03`, a regra tres linhas acima.
+			current = ""
+		}
+		for _, r := range tagRE.FindAllStringSubmatch(linha, -1) {
+			// A MESMA regra local pode realizar varias regras de produto, e regras
+			// diferentes podem realizar a mesma — so' o PAR se repete sem dizer nada.
+			key := current + "\x00" + r[1]
+			if visto[key] {
+				continue
+			}
+			visto[key] = true
+			out = append(out, Realizes{From: current, To: r[1]})
+		}
+	}
+	return out
+}
+
+// planSeedRE acha os caminhos de ARTEFATO ANCORA que um plano SEMEIA (cita entre crases).
+//
+// Duas extensoes, e a segunda foi acrescentada com o conceito de doutrina de produto: um
+// plano nao promete apenas as specs das unidades, promete tambem as REGRAS DE PRODUTO que
+// elas vao realizar. Com o regex cravado em `.spec.md`, uma doutrina citada num plano era
+// invisivel ao grafo — o plano prometia a regra transversal e nada cobrava a entrega.
+var planSeedRE = regexp.MustCompile("`([^`]+\\.(?:spec|doctrine)\\.md)`")
+
+// extractSeeds devolve as specs que um plano semeia. Vazio para qualquer outro kind — só
+// plano semeia.
+func extractSeeds(kind, content string) []string {
+	if kind != "plan" {
+		return nil
+	}
+	visto := map[string]bool{}
+	var out []string
+	for _, m := range planSeedRE.FindAllStringSubmatch(content, -1) {
+		// Um caminho com metacaractere de glob (`*.spec.md`) é PROSA sobre um conjunto
+		// ("todo `*.spec.md` precisa de header"), não a citação de um arquivo que vai
+		// nascer. Tratá-lo como seed fazia o plano parecer eternamente não-cumprido,
+		// porque o "arquivo" nunca existiria.
+		if visto[m[1]] || strings.HasPrefix(filepath.Base(m[1]), "_TEMPLATE") ||
+			strings.ContainsAny(m[1], "*?[{") {
+			continue
+		}
+		// SEM DIRETÓRIO não é caminho — é o nome do arquivo citado em prosa.
+		//
+		// Uma revisão escreve "o `MutualTls.spec.md` migrou para a PLTFR-W03" ao explicar
+		// o que mudou, e isso não é a promessa de criar um arquivo: o plano semeia
+		// `packages/infra/MutualTls.spec.md`, com o caminho inteiro.
+		//
+		// Medido no app de referência: três menções assim (`MutualTls`, `CertificatePinning`,
+		// `DataStore`, todas em revisões) fizeram o `anchors next` dizer "1 de 12 spec(s)
+		// deste plano ainda não existem" num plano com as 9 entregues — e semear trabalho
+		// para criar arquivos cujo nome sem diretório não aponta para lugar nenhum.
+		//
+		// O efeito é o pior tipo: o plano parece eternamente não-cumprido, e a fila
+		// entrega trabalho impossível. Quanto MAIS revisões um plano acumula, pior fica.
+		//
+		// A régua é o separador, e não o item de lista (`- [ ]`): há planos que semeiam em
+		// prosa ("a spec de `apps/x/Tela.spec.md` nasce nesta fase"), e o
+		// `TestSeedIgnoraGlobEmProsa` registra que isso vale. O que não vale é citar o
+		// nome sem dizer ONDE.
+		if !strings.Contains(m[1], "/") {
+			continue
+		}
+		visto[m[1]] = true
+		out = append(out, m[1])
+	}
+	return out
+}
+
+// extractHeaderLayer lê a camada que o arquivo DECLARA no header.
+//
+// Vazio quando não há declaração — e aí quem consulta cai no `Layer` do arquivo, que para
+// tudo o que não é spec já é a camada da unidade.
+func extractHeaderLayer(content string, cs *config.Comments) string {
+	if m := headerLayerRE.FindStringSubmatch(string(AnchorsHeader([]byte(content), cs))); m != nil {
+		return m[1]
+	}
+	return ""
+}
+
+// HeaderLayerOf is the layer a file declares in its `@anchors` header (`layer: screen`), or
+// empty: the header block only, never an example further down the text.
+func HeaderLayerOf(content string, cs *config.Comments) string {
+	return extractHeaderLayer(content, cs)
+}
+
+// HeaderCodeOf is the identity a file declares in its `@anchors` header (`code: XXXX`), or
+// empty. It is what the migration reads to know which unit a plan, flow or action file is.
+func HeaderCodeOf(content string, cs *config.Comments) string { return extractHeaderCode(content, cs) }
+
+// WalkStaged reads the governed files as the git INDEX has them — what the commit being
+// made will record. It is the walk of the tree, corrected where the tree and the index
+// differ: a file with unstaged changes is read as it is staged, one only the index still
+// has is read from it, and an untracked file is left out. The commit hook builds the map
+// from this, so the map it commits is the one a build of the commit will make — not one
+// with somebody else's unstaged edits, or a file the commit does not carry.
+func WalkStaged(root string, cfg *config.Config) ([]File, error) {
+	files, err := Walk(root, cfg)
+	if err != nil {
+		return nil, err
+	}
+	untracked, differ, err := stagedDiffs(root)
+	if err != nil {
+		return nil, err
+	}
+	drop := map[string]bool{}
+	for _, p := range append(untracked, differ...) {
+		drop[p] = true
+	}
+	var out []File
+	for _, f := range files {
+		if !drop[f.Path] {
+			out = append(out, f)
+		}
+	}
+	ig := LoadIgnoreFor(root, cfg)
+	for _, rel := range differ {
+		if ig.SkipFile(rel) || IsProgressFile(rel) || ignoredDirIn(ig, rel) {
+			continue
+		}
+		layer, kind := classify(rel, cfg)
+		if layer == "" {
+			continue
+		}
+		content, err := exec.Command("git", "-C", root, "show", ":./"+rel).Output()
+		if err != nil {
+			continue // not in the index either: the commit does not carry it
+		}
+		out = append(out, fileOf(root, rel, layer, kind, content, cfg))
+	}
+	return out, nil
+}
+
+// stagedDiffs lists where the tree and the index part: the files git does not track, and
+// the tracked ones whose tree content differs from the index.
+func stagedDiffs(root string) (untracked, differ []string, err error) {
+	gitList := func(args ...string) ([]string, error) {
+		out, err := exec.Command("git", append([]string{"-C", root}, args...)...).Output()
+		if err != nil {
+			return nil, err
+		}
+		var paths []string
+		for _, p := range strings.Split(string(out), "\x00") {
+			if p != "" {
+				paths = append(paths, filepath.ToSlash(p))
+			}
+		}
+		return paths, nil
+	}
+	if untracked, err = gitList("ls-files", "--others", "--exclude-standard", "-z"); err != nil {
+		return nil, nil, err
+	}
+	if differ, err = gitList("diff", "--name-only", "--relative", "-z"); err != nil {
+		return nil, nil, err
+	}
+	return untracked, differ, nil
+}
+
+// IndexReader reads the project's files as the git INDEX has them — what the commit being
+// made will record: a file with unstaged changes is read as staged, a file git does not
+// track does not exist, and every other file is read from the tree, where it is the same.
+// It is what the commit's gates read, so another session's unstaged edit to a spec the
+// commit does not carry cannot bar it.
+//
+// The tree is confronted with the index at each read, not once at the start: another
+// session keeps editing, moving and deleting files while the gates run, and a file listed
+// as unchanged a second ago may be gone by the time a gate reads it. The tree's copy is
+// used only when its blob hash is the index's; otherwise the index's blob is read.
+func IndexReader(root string) (func(rel string) ([]byte, error), error) {
+	out, err := exec.Command("git", "-C", root, "ls-files", "--stage", "-z").Output()
+	if err != nil {
+		return nil, err
+	}
+	blobs := map[string]string{}
+	for _, entry := range strings.Split(string(out), "\x00") {
+		meta, path, ok := strings.Cut(entry, "\t")
+		if !ok {
+			continue
+		}
+		if f := strings.Fields(meta); len(f) == 3 && f[2] == "0" {
+			blobs[filepath.ToSlash(path)] = f[1]
+		}
+	}
+	return blobReader(root, blobs), nil
+}
+
+// CommitReader reads the project's files as a commit has them — what a push sends: a file
+// the commit does not hold does not exist, and a file the tree holds as the commit does is
+// read from the tree. It is what the pushed commits' gates read, so an edit not yet committed
+// is not judged as if it were pushed.
+func CommitReader(root, rev string) (func(rel string) ([]byte, error), error) {
+	out, err := exec.Command("git", "-C", root, "ls-tree", "-r", "-z", rev).Output()
+	if err != nil {
+		return nil, err
+	}
+	blobs := map[string]string{}
+	for _, entry := range strings.Split(string(out), "\x00") {
+		meta, path, ok := strings.Cut(entry, "\t")
+		if !ok {
+			continue
+		}
+		if f := strings.Fields(meta); len(f) == 3 && f[1] == "blob" {
+			blobs[filepath.ToSlash(path)] = f[2]
+		}
+	}
+	return blobReader(root, blobs), nil
+}
+
+// blobReader reads each path as the blob the listing gives it: the tree's copy when its blob
+// hash is that one, the blob otherwise, and nothing for a path the listing does not hold.
+func blobReader(root string, blobs map[string]string) func(rel string) ([]byte, error) {
+	return func(rel string) ([]byte, error) {
+		rel = filepath.ToSlash(filepath.Clean(rel))
+		id, ok := blobs[rel]
+		if !ok {
+			return nil, &os.PathError{Op: "read", Path: rel, Err: os.ErrNotExist}
+		}
+		if b, err := os.ReadFile(filepath.Join(root, rel)); err == nil && blobID(b, len(id)) == id {
+			return b, nil
+		}
+		b, err := exec.Command("git", "-C", root, "cat-file", "blob", id).Output()
+		if err != nil {
+			return nil, &os.PathError{Op: "read", Path: rel, Err: os.ErrNotExist}
+		}
+		return b, nil
+	}
+}
+
+// blobID is git's object id of a blob with this content, in the repository's hash: SHA-1
+// for a 40-digit id, SHA-256 for a 64-digit one. Another length has no id this can match.
+func blobID(content []byte, digits int) string {
+	var h hash.Hash
+	switch digits {
+	case 40:
+		h = sha1.New()
+	case 64:
+		h = sha256.New()
+	default:
+		return ""
+	}
+	fmt.Fprintf(h, "blob %d\x00", len(content))
+	h.Write(content)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// GovernedTreeChanges lists the governed files where the tree and the index part: tracked
+// files with unstaged changes, and untracked ones. The commit hook reads it to know whether
+// the map of the commit is also the map of the tree.
+func GovernedTreeChanges(root string, cfg *config.Config) ([]string, error) {
+	untracked, differ, err := stagedDiffs(root)
+	if err != nil {
+		return nil, err
+	}
+	ig := LoadIgnoreFor(root, cfg)
+	var out []string
+	for _, rel := range append(untracked, differ...) {
+		if ig.SkipFile(rel) || IsProgressFile(rel) || ignoredDirIn(ig, rel) {
+			continue
+		}
+		if layer, _ := classify(rel, cfg); layer != "" {
+			out = append(out, rel)
+		}
+	}
+	return out, nil
+}
+
+// CodeDep is a `@dep:` flag on an import line (see File.CodeDeps).
+// TypeDepKind is the kind of an import of types only — `@dep[type]: CODE`: it names a file by
+// its code, as `@dep:` does, and nothing of that file runs with the importer's code.
+const TypeDepKind = "type"
+
+type CodeDep struct {
+	Code string // the used file's own code; empty for a waiver
+	// Kind and Name: what the code reaches that is no import — `@dep[db]: transactions` on
+	// the line that calls it. The kinds are the project's (`dependency_kinds:`).
+	Kind, Name string
+	Symbols    []string // what the import line brings, by name
+	Line       int      // 1-based
+	Waiver     string   // the reason of `@no-dep:`, for a waived import
+}
+
+// UsedBy is a `@used-by:` flag above an exported symbol (see File.UsedBy).
+type UsedBy struct {
+	Symbol string   // the symbol declared on the next code line
+	Codes  []string // the codes of the files that use it
+	Line   int      // 1-based, the flag's
+}
+
+// Navigation is a `@navigates:` flag on a navigation call (see File.Navigates).
+type Navigation struct {
+	Codes  []string // the screens the call leads to (a back navigation may return to several)
+	Rule   string   // the rule that triggers it, when the flag names one
+	Line   int      // 1-based, the call's
+	Waiver string   // the reason of `@no-nav:`, for a waived call
+	// Dormant is the reason of `@dormant:` after the flag: a call the code keeps for a feature
+	// not turned on yet. It annotates the call and is no edge: no screen leads anywhere by it.
+	Dormant string
+}
+
+var (
+	codeDepRE = regexp.MustCompile(`@dep:\s*([A-Z0-9]+)\b`)
+	// kindedDepRE is a dependency that is no import: `@dep[<kind>]: <name>`.
+	kindedDepRE = regexp.MustCompile(`@dep\[([a-z][a-z0-9-]*)\]:\s*([^\s*]+)`)
+	noDepRE     = regexp.MustCompile(`@no-dep:\s*(\S.*?)\s*$`)
+	// usedByRE: the codes, and the symbol in parentheses when the flag stands above an
+	// export list — `// @used-by: ARNAA (Budget)` — where the next line names several.
+	//
+	// The symbol is whatever stands in the parentheses: the flag is Anchors' syntax, the name
+	// is the language's, and the core says nothing of what a name is. `[A-Za-z_$][\w$]*`
+	// read `categoriasDoOrçamento` as `categoriasDoOr` (reported from a project).
+	usedByRE = regexp.MustCompile(`@used-by:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\(\s*([^()\s]+)\s*\))?\s*$`)
+	// navigatesRE: the flag at the end of the line, or a block comment inside it — after the
+	// call on a JSX line, where text after the tag would render (`/* @navigates: X */}>`).
+	navigatesRE = regexp.MustCompile(`@navigates:\s*([A-Z0-9][A-Z0-9 ,]*?)\s*(?:\[\s*([A-Z0-9]+-(?:[A-Z]\d{2}|DS-[A-Za-z0-9_-]+))\s*\])?\s*(?:@dormant:\s*(\S.*?)?)?\s*$`)
+	noNavRE     = regexp.MustCompile(`@no-nav:\s*(\S.*?)\s*$`)
+)
+
+// flagText is a line up to where the comment holding its flag closes — at the first closer of
+// the syntax's block comments after the flag (`*/`, `*)`, `-->`) —: the flag reads to the
+// end of its comment, and what follows a block comment is code.
+func flagText(line string, cs *config.Comments) string {
+	at := strings.Index(line, "@")
+	if cs == nil || at < 0 {
+		return line
+	}
+	end := len(line)
+	for _, b := range cs.Block {
+		if i := strings.Index(line[at:], b.Close); i >= 0 && at+i < end {
+			end = at + i
+		}
+	}
+	return line[:end]
+}
+
+// splitCodes splits a list of codes written with commas or spaces.
+func splitCodes(s string) []string {
+	var out []string
+	for _, f := range strings.FieldsFunc(s, func(r rune) bool { return r == ',' || r == ' ' }) {
+		if f != "" {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+// extractCodeDeps reads the `@dep:` and `@no-dep:` flags, one per import line. The flags
+// are comment text, read in any dialect: a line that carries one is the import it flags.
+func extractCodeDeps(content []byte, rel string, d config.Dialect) []CodeDep {
+	if !strings.Contains(string(content), "@dep:") && !strings.Contains(string(content), "@no-dep:") && !strings.Contains(string(content), "@dep[") {
+		return nil
+	}
+	// What the flagged import brings, by the dialect: the names of the statement whose lines
+	// hold the flag. A dialect with no import patterns says nothing of them.
+	src := string(content)
+	statements := d.Imports.FindAll(src, rel)
+	importSymbols := func(i int) []string {
+		line := i + 1
+		for _, m := range statements {
+			if config.LineOf(src, m.Start) <= line && line <= config.LineOf(src, m.End) {
+				return d.NamesBrought(src[m.Start:m.End], rel)
+			}
+		}
+		return nil
+	}
+	cs := d.CommentsFor(rel)
+	var out []CodeDep
+	for i, line := range strings.Split(src, "\n") {
+		line = flagText(line, cs)
+		if m := kindedDepRE.FindStringSubmatch(line); m != nil {
+			// `@dep[type]: CODE` is an import, of types only: it names a file by its code,
+			// like `@dep:`, and the kind says nothing of it runs.
+			if m[1] == TypeDepKind {
+				out = append(out, CodeDep{Code: strings.TrimRight(m[2], ",;"), Kind: TypeDepKind, Symbols: importSymbols(i), Line: i + 1})
+				continue
+			}
+			out = append(out, CodeDep{Kind: m[1], Name: strings.TrimRight(m[2], ",;"), Line: i + 1})
+			continue
+		}
+		if m := codeDepRE.FindStringSubmatch(line); m != nil {
+			out = append(out, CodeDep{Code: m[1], Symbols: importSymbols(i), Line: i + 1})
+			continue
+		}
+		if m := noDepRE.FindStringSubmatch(line); m != nil {
+			out = append(out, CodeDep{Symbols: importSymbols(i), Line: i + 1, Waiver: m[1]})
+		}
+	}
+	return out
+}
+
+// extractUsedBy reads each `@used-by:` flag, and the symbol it speaks of: the one in its
+// parentheses, or the one the first declaration in the five lines below it declares, by the
+// dialect's `declarations`. A declaration of several names — an export list — needs the
+// flag to name its symbol.
+func extractUsedBy(content []byte, rel string, d config.Dialect) []UsedBy {
+	if !strings.Contains(string(content), "@used-by:") {
+		return nil
+	}
+	src := string(content)
+	decls := d.Declarations.FindAll(src, rel)
+	lines := strings.Split(src, "\n")
+	var out []UsedBy
+	for i, line := range lines {
+		m := usedByRE.FindStringSubmatch(flagText(line, d.CommentsFor(rel)))
+		if m == nil {
+			continue
+		}
+		u := UsedBy{Codes: splitCodes(m[1]), Line: i + 1, Symbol: m[2]}
+		if u.Symbol == "" {
+			u.Symbol = declaredBelow(src, decls, i+1)
+		}
+		out = append(out, u)
+	}
+	return out
+}
+
+// declaredBelow is the symbol the first declaration starting in the five lines after `line`
+// declares: its name, or `default`. Two patterns reading the same statement — `export default
+// function Simulator` is a default and a name — are not a list: the first pattern speaks for
+// it. A list is a region: of several names it gives none, and the flag must name its symbol.
+func declaredBelow(src string, decls []config.Match, line int) string {
+	region := -1
+	var first string
+	var listed []string
+	for _, m := range decls {
+		at := config.LineOf(src, m.Region)
+		if at <= line || at > line+5 {
+			continue
+		}
+		if region < 0 || m.Region < region {
+			region, first, listed = m.Region, "", nil
+		}
+		if m.Region != region {
+			continue
+		}
+		name := m.Groups["name"].Value
+		if m.Has("default") {
+			name = "default"
+		}
+		switch {
+		case name == "":
+		case m.Listed:
+			listed = append(listed, name)
+		case first == "":
+			first = name
+		}
+	}
+	switch {
+	case len(listed) == 1:
+		return listed[0]
+	case len(listed) > 1:
+		return ""
+	}
+	return first
+}
+
+// extractNavigates reads each `@navigates:` and `@no-nav:` flag. A flag on a line of its
+// own speaks of the call on the next line; one beside a call, of that call.
+func extractNavigates(content []byte, cs *config.Comments) []Navigation {
+	if !strings.Contains(string(content), "@navigates:") && !strings.Contains(string(content), "@no-nav:") {
+		return nil
+	}
+	lines := strings.Split(string(content), "\n")
+	only := cs.CommentOnly(lines)
+	callLine := func(i int) int {
+		if only[i] && i+1 < len(lines) {
+			return i + 2 // the flag stands alone: the call is the next line
+		}
+		return i + 1
+	}
+	var out []Navigation
+	for i, line := range lines {
+		line = flagText(line, cs)
+		if m := navigatesRE.FindStringSubmatch(line); m != nil {
+			out = append(out, Navigation{Codes: splitCodes(m[1]), Rule: m[2], Line: callLine(i), Dormant: m[3]})
+			continue
+		}
+		if m := noNavRE.FindStringSubmatch(line); m != nil {
+			out = append(out, Navigation{Line: callLine(i), Waiver: m[1]})
+		}
+	}
+	return out
+}
+
+// CodeDepsIn are the dependency flags of a file's content (see File.CodeDeps).
+func CodeDepsIn(content []byte, rel string, d config.Dialect) []CodeDep {
+	return extractCodeDeps(content, rel, d)
+}
+
+// UsedByIn are the used-by flags of a file's content (see File.UsedBy), the symbols read by
+// the dialect's declarations.
+func UsedByIn(content []byte, rel string, d config.Dialect) []UsedBy {
+	return extractUsedBy(content, rel, d)
+}
+
+// NavigatesIn are the navigation flags of a file's content (see File.Navigates).
+func NavigatesIn(content []byte, cs *config.Comments) []Navigation {
+	return extractNavigates(content, cs)
+}
+
+var (
+	// outHeadingRE opens a spec's Out table, in the languages of the catalog.
+	outHeadingRE = regexp.MustCompile(`(?i)^#{2,4}\s+(?:Sa[íi]da|Exit|Out|Outgoing|Destino|Destination)\b`)
+	// outRuleRE is the rule a row cites: the first scenario code in it.
+	outRuleRE = regexp.MustCompile("`?([A-Z0-9]{3,}-[A-Z][0-9]{2})`?")
+)
+
+// extractOutRows reads the rows under a spec's Out heading: each row's rule, with the
+// short hash of the row's cells, spaces normalized. A row citing no rule is no navigation
+// a flow can assert.
+func extractOutRows(content []byte) map[string]string {
+	var out map[string]string
+	in, header := false, false
+	for _, line := range strings.Split(string(content), "\n") {
+		t := strings.TrimSpace(line)
+		switch {
+		case outHeadingRE.MatchString(t):
+			in, header = true, false
+			continue
+		case strings.HasPrefix(t, "#"):
+			in = false
+			continue
+		}
+		if !in || !strings.HasPrefix(t, "|") {
+			continue
+		}
+		if !header {
+			header = true // the column names
+			continue
+		}
+		m := outRuleRE.FindStringSubmatch(t)
+		if m == nil {
+			continue // the separator, or a row with no rule
+		}
+		if out == nil {
+			out = map[string]string{}
+		}
+		out[m[1]] = shortHash([]byte(strings.Join(strings.Fields(t), " ")))
+	}
+	return out
+}
+
+// doublesOf are the modules a test file replaces with a double: the first group of each match
+// of the project's `derived.mock_detect`, in the file with its comments blanked — a double
+// commented out replaces nothing. No pattern, or one that does not compile (the mock gates
+// report it), finds none.
+func doublesOf(kind, rel string, content []byte, cfg *config.Config) []string {
+	if kind != "test" || cfg == nil || cfg.Derived == nil {
+		return nil
+	}
+	re := mockDetect(strings.TrimSpace(cfg.Derived.MockDetect))
+	// A file the pattern finds nothing in has no double, commented or not: blanking its
+	// comments — the costly part — is spared.
+	if re == nil || !re.Match(content) {
+		return nil
+	}
+	code := cfg.DialectAt(rel).CommentsFor(rel).Blank(string(content))
+	seen := map[string]bool{}
+	var out []string
+	for _, m := range re.FindAllStringSubmatch(code, -1) {
+		if len(m) < 2 {
+			continue
+		}
+		if spec := strings.TrimSpace(m[1]); spec != "" && !seen[spec] {
+			seen[spec] = true
+			out = append(out, spec)
+		}
+	}
+	return out
+}
+
+var mockDetectRE sync.Map // pattern → *regexp.Regexp, or nil when it does not compile
+
+func mockDetect(pattern string) *regexp.Regexp {
+	if pattern == "" {
+		return nil
+	}
+	if v, ok := mockDetectRE.Load(pattern); ok {
+		re, _ := v.(*regexp.Regexp)
+		return re
+	}
+	re, err := regexp.Compile(pattern)
+	if err != nil || re.NumSubexp() < 1 {
+		re = nil
+	}
+	mockDetectRE.Store(pattern, re)
+	return re
+}

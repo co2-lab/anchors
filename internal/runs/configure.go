@@ -1,0 +1,216 @@
+// @anchors
+//   code: RNCFG
+//   ref: MNTRS
+
+package runs
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"time"
+
+	"github.com/bmatcuk/doublestar/v4"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/testsig"
+)
+
+// Settings are the monitor's settings as the project declares them over the defaults.
+type Settings struct {
+	Timing  Timing
+	Runners []Runner
+	Reports []string
+	Keep    int
+	MaxAge  time.Duration
+	// Summary is whether the monitor says the progress of anchors.progress.md when it
+	// changes; off unless the block or the command asks for it. SummaryEvery repeats it
+	// unchanged at that interval; 0, the default, never.
+	Summary      bool
+	SummaryEvery time.Duration
+	// Level is LevelAll, the default, or LevelAction.
+	Level string
+	// Idle is how long a task in progress may go without activity from its holder before
+	// the monitor says so; 0 is off.
+	Idle time.Duration
+}
+
+// Configure reads the project's `monitor:` block over the defaults: its timing, its runners
+// — read before Anchors' own, a runner of the same name replacing it —, the reports
+// its suites declare and the ones it adds, and how many ended runs to keep. A duration or a
+// pattern that does not read is an error, naming it.
+func Configure(cfg *config.Config) (Settings, error) {
+	s := Settings{Timing: DefaultTiming(), Runners: OwnRunners(), Keep: 50, MaxAge: 7 * 24 * time.Hour, Level: LevelAll,
+		Idle: DefaultIdle}
+	if cfg == nil {
+		return s, nil
+	}
+	for _, suites := range [][]config.Suite{cfg.Tests, cfg.Mutation} {
+		for _, su := range suites {
+			if su.JUnit != "" {
+				s.Reports = append(s.Reports, su.JUnit)
+			}
+		}
+	}
+	m := cfg.Monitor
+	if m == nil {
+		return s, nil
+	}
+	for _, d := range []struct {
+		name string
+		val  string
+		to   *time.Duration
+	}{{"every", m.Every, &s.Timing.Every}, {"heartbeat", m.Heartbeat, &s.Timing.Heartbeat},
+		{"progress", m.Progress, &s.Timing.Progress}, {"stall", m.Stall, &s.Timing.Stall}} {
+		if err := setDuration(d.val, d.to); err != nil {
+			return s, fmt.Errorf("monitor.%s: %w", d.name, err)
+		}
+	}
+	s.Summary = m.Summary
+	if err := setDuration(m.SummaryEvery, &s.SummaryEvery); err != nil {
+		return s, fmt.Errorf("monitor.summary_every: %w", err)
+	}
+	if m.Idle == "off" {
+		s.Idle = 0
+	} else if err := setDuration(m.Idle, &s.Idle); err != nil {
+		return s, fmt.Errorf("monitor.idle: %w, nor off", err)
+	} else if m.Idle != "" {
+		s.Timing.AgentStall = s.Idle // the same quiet time, for a held task and a subagent
+	}
+	if m.Level != "" {
+		if err := CheckLevel(m.Level); err != nil {
+			return s, fmt.Errorf("monitor.level: %w", err)
+		}
+		s.Level = m.Level
+	}
+	own, err := CompileRunners(m.Runners)
+	if err != nil {
+		return s, err
+	}
+	replaced := map[string]bool{}
+	for _, r := range own {
+		replaced[r.Name] = true
+	}
+	for _, d := range s.Runners {
+		if !replaced[d.Name] {
+			own = append(own, d)
+		}
+	}
+	s.Runners = own
+	s.Reports = append(s.Reports, m.Reports...)
+	if m.Keep > 0 {
+		s.Keep = m.Keep
+	}
+	if m.KeepDays > 0 {
+		s.MaxAge = time.Duration(m.KeepDays) * 24 * time.Hour
+	}
+	return s, nil
+}
+
+// CompileRunners reads declared runners: each one's patterns compiled, its kind `other` when
+// it names none. A pattern or a duration that does not read, or a runner with no match, is
+// an error naming it.
+func CompileRunners(declared []config.MonitorRunner) ([]Runner, error) {
+	var out []Runner
+	for _, r := range declared {
+		rn := Runner{Name: r.Name, Kind: r.Kind}
+		if rn.Kind == "" {
+			rn.Kind = "other"
+		}
+		for _, p := range []struct {
+			name string
+			val  string
+			to   **regexp.Regexp
+		}{{"match", r.Match, &rn.Match}, {"pass", r.Pass, &rn.Pass}, {"fail", r.Fail, &rn.Fail}, {"progress", r.Progress, &rn.Progress}} {
+			if p.val == "" {
+				continue
+			}
+			x, err := regexp.Compile(p.val)
+			if err != nil {
+				return nil, fmt.Errorf("monitor.runners[%s].%s: %w", r.Name, p.name, err)
+			}
+			*p.to = x
+		}
+		if rn.Match == nil {
+			return nil, fmt.Errorf("monitor.runners[%s]: match is required", r.Name)
+		}
+		if err := setDuration(r.Stall, &rn.Stall); err != nil {
+			return nil, fmt.Errorf("monitor.runners[%s].stall: %w", r.Name, err)
+		}
+		out = append(out, rn)
+	}
+	return out, nil
+}
+
+// DefaultIdle is how long a held task may go without activity from its holder before the
+// monitor says so: 10 minutes (the user, 2026-10-13).
+const DefaultIdle = 10 * time.Minute
+
+// CheckLevel refuses a level that is neither all nor action.
+func CheckLevel(level string) error {
+	if level != LevelAll && level != LevelAction {
+		return fmt.Errorf("%q is neither %s nor %s", level, LevelAll, LevelAction)
+	}
+	return nil
+}
+
+func setDuration(val string, to *time.Duration) error {
+	if val == "" {
+		return nil
+	}
+	d, err := time.ParseDuration(val)
+	if err != nil {
+		return err
+	}
+	if d <= 0 {
+		return fmt.Errorf("%q is not a positive duration", val)
+	}
+	*to = d
+	return nil
+}
+
+// ReadReports reads the reports the globs find under root: each one modified after what
+// `known` holds for it is parsed for its tests and failures; the others are given with their
+// time alone, which is all the monitor compares.
+func ReadReports(root string, globs []string, known map[string]time.Time) []Report {
+	var out []Report
+	seen := map[string]bool{}
+	for _, g := range globs {
+		pattern := g
+		if !filepath.IsAbs(pattern) {
+			pattern = filepath.Join(root, filepath.FromSlash(g))
+		}
+		matches, _ := doublestar.FilepathGlob(pattern)
+		for _, p := range matches {
+			if seen[p] {
+				continue
+			}
+			seen[p] = true
+			st, err := os.Stat(p)
+			if err != nil || st.IsDir() {
+				continue
+			}
+			rel, err := filepath.Rel(root, p)
+			if err != nil {
+				rel = p
+			}
+			rel = filepath.ToSlash(rel)
+			rep := Report{Path: rel, Modified: st.ModTime()}
+			if last, ok := known[rel]; !ok || st.ModTime().After(last) {
+				if ex, err := testsig.ParseJUnit(p); err == nil {
+					for _, c := range ex.Cases {
+						rep.Tests++
+						if c.Failed {
+							rep.Failures++
+							if rep.First == "" {
+								rep.First = c.Name
+							}
+						}
+					}
+				}
+			}
+			out = append(out, rep)
+		}
+	}
+	return out
+}

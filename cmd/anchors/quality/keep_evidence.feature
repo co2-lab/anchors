@@ -1,0 +1,69 @@
+# language: en
+# @anchors
+#   code: KEFKP
+#   ref: KPEVD
+#   updated_at: 2026-11-02
+#   layer: feature
+
+@KPEVD
+Feature: KeepEvidence — a change that proves nothing new keeps the files' evidence
+
+  @KPEVD-B01 @unit-level
+  Scenario: The evidence moves to the current content with the reason
+    Given a proven spec whose rule line gained a @realizes, with the map still holding its proof
+    When its evidence is kept with a reason
+    Then the proof is at the current content and the reason is recorded
+
+  @KPEVD-B02 @unit-level
+  Scenario: A rebuilt map's lost evidence comes from HEAD
+    Given the same change after a map build dropped the proof
+    When its evidence is kept
+    Then the proof comes back from the map at HEAD
+
+  @KPEVD-B03 @unit-level
+  Scenario: Nothing to keep is said
+    Given a file whose evidence is already at its content
+    When its evidence is kept
+    Then the command says there is nothing to keep
+
+  @KPEVD-B04 @unit-level
+  Scenario: The contract stamps are refreshed under the same declaration
+    Given a file kept
+    When the command ends
+    Then it lists the @contract stamps pointing at it under the same declaration
+
+  @KPEVD-E01 @unit-level
+  Scenario: A missing reason, file or map fails
+    Given no reason, a file outside the map, and a project with no map
+    When the command runs with each
+    Then it fails saying which
+
+  @KPEVD-B05 @unit-level
+  Scenario: The suites a later run did not replace come back from HEAD and are carried with the rest
+    Given a spec proven at HEAD by a unit suite and an e2e suite, changed, the map rebuilt and only the unit suite run again
+    When keep-evidence runs on the spec
+    Then the e2e proof comes back from HEAD, and both suites are at the new content
+
+  @KPEVD-B06 @unit-level
+  Scenario: The scenarios of a changed rule, marked stale by the rebuild, are kept too
+    Given a spec at its current content whose rule's scenario is stale
+    When the evidence is kept with a reason
+    Then the command says the scenario was kept and nothing is stale any more
+
+  @KPEVD-B07 @unit-level
+  Scenario: The evidence kept survives a later change that proves nothing, as a header's date
+    Given a spec whose evidence was kept while the map still held its previous content
+    When its header's date changes and the map is rebuilt
+    Then the proof kept goes along to the dated content
+
+  @KPEVD-B08 @unit-level
+  Scenario: A mutation a later run did not replace comes back from HEAD and is carried with the rest
+    Given a code file mutated at HEAD, changed, the map rebuilt and only its coverage run again
+    When keep-evidence runs on it with --lines
+    Then the mutation comes back from HEAD and is at the new content beside the coverage
+
+  @KPEVD-B09 @unit-level
+  Scenario: A moved file's evidence comes from HEAD at its old path
+    Given a spec proven at HEAD, moved with git mv, and the map rebuilt with nothing kept
+    When keep-evidence runs on the spec at its new path
+    Then the proof HEAD holds at the old path is at the new one

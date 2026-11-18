@@ -1,0 +1,785 @@
+// @anchors
+//   code: DCGDA
+//   ref: DCGDP
+
+package gate
+
+import (
+	"fmt"
+	"path"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+	"sync"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
+)
+
+// THE DEPENDENCY CHAIN, flagged in the code and confronted with it:
+//
+//	dep-declared      every real import of a governed file carries `@dep: <its code>`
+//	dep-honored       every `@dep:` names the code of the file its import resolves to
+//	used-by-declared  every imported symbol carries `@used-by:` with exactly who imports it
+//
+// Anchors does not parse the language. It reads each import statement with the project's
+// patterns — the dialect's `imports`, the path in the group `path`; `import_names` for what
+// it brings —, and resolves the path to a file of the map with the dialect's
+// `import_resolve`. The core knows no syntax of an import. An import of a
+// package outside the project resolves to nothing, and is no dependency of the chain.
+
+// RealImport is one import statement of a file, as the code writes it.
+type RealImport struct {
+	First   int    // 1-based, the statement's first line
+	Line    int    // 1-based, the line that carries the path — where the flag goes
+	Path    string // as written
+	Target  string // the file it resolves to; empty when outside the project
+	Dir     bool   // it resolves to a directory — a package of several files
+	Symbols []string
+	// TypeOnly: the statement brings types only (the dialect's type_import_pattern).
+	TypeOnly bool
+	// Relative: the pattern that read it says its path is relative to the importer.
+	Relative bool
+	// Runs: the pattern that read it says the statement plainly runs.
+	Runs bool
+}
+
+// importResolve is the project's import resolution: nil when it declares none.
+func importResolve(d config.Dialect) *config.ImportResolve { return d.ImportResolve }
+
+// byName says whether the dialect's imports are module names read anywhere in the code,
+// flagged per file (config.ImportResolve.ByName).
+func byName(d config.Dialect) bool {
+	r := importResolve(d)
+	return r != nil && r.ByName
+}
+
+// fileName is a module name as its file is named.
+func fileName(name, nameCase string) string {
+	switch nameCase {
+	case "lower_first":
+		if name == "" {
+			return name
+		}
+		return strings.ToLower(name[:1]) + name[1:]
+	case "lower":
+		return strings.ToLower(name)
+	}
+	return name
+}
+
+// importsByName are the modules a file names, one import per module, at its first mention,
+// each resolved to the code file named after it. The file's comments — in the syntax the
+// project declares for it — name nothing.
+func importsByName(content, rel string, d config.Dialect, g *mapx.Graph) []RealImport {
+	r := importResolve(d)
+	seen := map[string]bool{}
+	var out []RealImport
+	for i, ln := range strings.Split(d.CommentsFor(rel).Blank(content), "\n") {
+		for _, m := range d.Imports.FindAll(ln, rel) {
+			name := m.Groups["path"].Value
+			if name == "" || seen[name] {
+				continue
+			}
+			seen[name] = true
+			target := resolveByName(rel, name, r, g)
+			out = append(out, RealImport{First: i + 1, Line: i + 1, Path: name, Target: target})
+		}
+	}
+	return out
+}
+
+// resolveByName is the code file named after the module: the one beside the importer when
+// there is one, or the only one in the project. A name several files carry, none of them
+// beside the importer, is not told apart — no target rather than a wrong one.
+func resolveByName(rel, name string, r *config.ImportResolve, g *mapx.Graph) string {
+	if g == nil || r == nil {
+		return ""
+	}
+	exts := r.Extensions
+	if len(exts) == 0 {
+		exts = []string{""}
+	}
+	stem := fileName(name, r.NameCase)
+	var near, all []string
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindCode || n.ID == rel {
+			continue
+		}
+		for _, e := range exts {
+			if path.Base(n.ID) == stem+e {
+				all = append(all, n.ID)
+				if path.Dir(n.ID) == path.Dir(rel) {
+					near = append(near, n.ID)
+				}
+			}
+		}
+	}
+	switch {
+	case len(near) == 1:
+		return near[0]
+	case len(all) == 1:
+		return all[0]
+	}
+	return ""
+}
+
+// hasImports says whether the project declares how its imports are written: without it
+// the chain gates have nothing to read the code with.
+func hasImports(d config.Dialect) bool { return len(d.Imports) > 0 }
+
+// blankComments is the content with each comment the file's syntax declares turned into
+// spaces, its offsets and lines kept: an import commented out is no import.
+func blankComments(content, rel string, d config.Dialect) string {
+	return d.CommentsFor(rel).Blank(content)
+}
+
+// ImportsOf are the import statements of a file's content, resolved against the map's files.
+// Each is a match of one of the dialect's `imports` patterns: the match is the statement, its
+// `path` group the path and the line its flag goes on. Without patterns there is nothing to
+// read.
+func ImportsOf(content, rel string, d config.Dialect, g *mapx.Graph) []RealImport {
+	if !hasImports(d) {
+		return nil
+	}
+	if byName(d) {
+		return importsByName(content, rel, d, g)
+	}
+	var typeRE *regexp.Regexp
+	if p := strings.TrimSpace(d.TypeImportPattern); p != "" {
+		typeRE = d.Compile(p)
+	}
+	code := blankComments(content, rel, d)
+	seen := map[int]bool{} // a path captured by two patterns is one import
+	var out []RealImport
+	for _, m := range d.Imports.FindAll(code, rel) {
+		p, ok := m.Groups["path"]
+		if !ok || p.Value == "" || seen[p.Start] {
+			continue
+		}
+		seen[p.Start] = true
+		statement := code[m.Start:m.End]
+		imp := RealImport{
+			First:    config.LineOf(code, m.Start+len(statement)-len(strings.TrimLeft(statement, " \t\n"))),
+			Line:     config.LineOf(code, p.Start),
+			Path:     p.Value,
+			Relative: m.Relative,
+			Runs:     m.Runs,
+			Symbols:  d.NamesBrought(statement, rel),
+			TypeOnly: typeRE != nil && typeRE.MatchString(statement),
+		}
+		imp.Target, imp.Dir = resolveImport(rel, imp, d, g)
+		out = append(out, imp)
+	}
+	return out
+}
+
+// resolveImport turns an import's path into a file of the map: relative to the importer,
+// or through an alias the project declares; then as written, or with each extension. A
+// path that names a directory of governed files is a package. Anything else is outside
+// the project.
+func resolveImport(rel string, imp RealImport, d config.Dialect, g *mapx.Graph) (string, bool) {
+	if g == nil {
+		return "", false
+	}
+	return g.Modules().Resolve(rel, imp.Path, imp.Relative, d)
+}
+
+// codesOfTarget are the codes a flag may name for an import: the target file's own code,
+// or, for a package, the own code of any of its code files.
+func codesOfTarget(imp RealImport, g *mapx.Graph) []string {
+	if g == nil || imp.Target == "" {
+		return nil
+	}
+	if !imp.Dir {
+		if n := g.Node(imp.Target); n != nil && n.FileCode != "" {
+			return []string{n.FileCode}
+		}
+		return nil
+	}
+	var out []string
+	for _, n := range g.Nodes {
+		if path.Dir(n.ID) == imp.Target && n.Kind == mapx.KindCode && n.FileCode != "" {
+			out = append(out, n.FileCode)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// flagsInLines are the file's dependency flags by the line they stand on — several where a line
+// holds a flag per module.
+func flagsInLines(content, rel string, d config.Dialect) map[int][]scan.CodeDep {
+	out := map[int][]scan.CodeDep{}
+	for _, f := range scan.CodeDepsIn([]byte(content), rel, d) {
+		out[f.Line] = append(out[f.Line], f)
+	}
+	return out
+}
+
+// statementFlag is the flag a statement's lines hold for the module it imports: the one naming
+// that module's code; else a flag naming no module any import of those lines brings — a wrong
+// code, the fixer's to rewrite —; else a waiver (`@no-dep:`); else none.
+func statementFlag(inLines map[int][]scan.CodeDep, imp RealImport, want string, imps []RealImport, g *mapx.Graph) *scan.CodeDep {
+	brought := map[string]bool{}
+	for _, other := range imps {
+		if other.First <= imp.Line && other.Line >= imp.First {
+			for _, c := range codesOfTarget(other, g) {
+				brought[c] = true
+			}
+		}
+	}
+	var stray, waiver *scan.CodeDep
+	for l := imp.First; l <= imp.Line; l++ {
+		for i := range inLines[l] {
+			f := inLines[l][i]
+			switch {
+			case f.Code == want:
+				return &f
+			case f.Code == "" && f.Kind == "":
+				if waiver == nil {
+					waiver = &f
+				}
+			case f.Code != "" && !brought[f.Code] && stray == nil:
+				stray = &f
+			}
+		}
+	}
+	if stray != nil {
+		return stray
+	}
+	return waiver
+}
+
+// lineKind is what the statements of a module standing on the same lines bring, together: types
+// only when every one of them does, run when any one plainly runs. Their one flag answers for
+// them all.
+func lineKind(imps []RealImport, first, last int, code string, g *mapx.Graph) (typeOnly, runs bool) {
+	typeOnly = true
+	for _, imp := range imps {
+		if imp.Line < first || imp.First > last || !contains(codesOfTarget(imp, g), code) {
+			continue
+		}
+		typeOnly = typeOnly && imp.TypeOnly
+		runs = runs || imp.Runs
+	}
+	return typeOnly, runs
+}
+
+// chainUnit says whether a node takes part in the chain: every artifact of the project that
+// imports — code, tests, test support, flows —, never a vendored one. A test imports what it
+// tests, its fixtures and its helpers, and a moved fixture breaks it as a moved hook breaks a
+// screen.
+func chainUnit(n mapx.Node) bool {
+	return (n.Kind == mapx.KindCode || n.Kind == mapx.KindTest) && !n.Upstream
+}
+
+// checkDepDeclared: does every import of a governed file carry `@dep:` with a code, or a
+// waiver?
+func checkDepDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if !chainUnit(n) {
+		return Skip, i18n.T("gate.dep_chain.skip_not_code")
+	}
+	d := cfg.DialectAt(n.ID)
+	if !hasImports(d) {
+		return Pending, i18n.T("gate.dep_chain.pending_no_pattern")
+	}
+	imps := ImportsOf(content, n.ID, d, g)
+	inLines := flagsInLines(content, n.ID, d)
+	// By name, the flags are the file's: each module it uses is flagged once, anywhere.
+	fileFlags := map[string]bool{}
+	if byName(d) {
+		for _, f := range scan.CodeDepsIn([]byte(content), n.ID, d) {
+			fileFlags[f.Code] = true
+		}
+	}
+	var missing []string
+	seen := map[string]bool{}
+	for _, imp := range imps {
+		codes := codesOfTarget(imp, g)
+		if len(codes) == 0 || anyFlagged(codes, fileFlags) || seen[strconv.Itoa(imp.Line)+imp.Path] {
+			continue
+		}
+		flagged := false
+		for _, c := range codes {
+			flagged = flagged || statementFlag(inLines, imp, c, imps, g) != nil
+		}
+		if flagged {
+			continue
+		}
+		seen[strconv.Itoa(imp.Line)+imp.Path] = true
+		missing = append(missing, fmt.Sprintf("%d `%s` → %s", imp.Line, imp.Path, strings.Join(codes, "|")))
+	}
+	if len(missing) == 0 {
+		return Pass, ""
+	}
+	return Fail, i18n.T("gate.dep_chain.undeclared", len(missing), strings.Join(missing, "; ")) + i18n.T("gate.dep_chain.guide")
+}
+
+// checkDepHonored: does every `@dep:` name the code of the file its import resolves to?
+func checkDepHonored(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if !chainUnit(n) {
+		return Skip, i18n.T("gate.dep_chain.skip_not_code")
+	}
+	all := scan.CodeDepsIn([]byte(content), n.ID, cfg.DialectAt(n.ID))
+	if len(all) == 0 {
+		return Skip, i18n.T("gate.dep_chain.skip_no_flags")
+	}
+	d := cfg.DialectAt(n.ID)
+	imps := ImportsOf(content, n.ID, d, g)
+	var wrong []string
+	for _, f := range all {
+		if f.Kind != "" && f.Kind != scan.TypeDepKind {
+			// What the code reaches that is no import: the kind must be one the project
+			// declares; the call is the author's to name.
+			if !contains(cfg.DependencyKinds, f.Kind) {
+				wrong = append(wrong, i18n.T("gate.dep_chain.kind_undeclared", f.Line, f.Kind, f.Name))
+			}
+			continue
+		}
+		if f.Code == "" {
+			continue // a waiver names no code
+		}
+		if byName(d) {
+			if !usesCode(imps, g, f.Code) {
+				wrong = append(wrong, i18n.T("gate.dep_chain.flag_unused_module", f.Line, f.Code))
+			}
+			continue
+		}
+		// Every statement whose lines hold the flag: a line may hold two of one module
+		// (`require('x') as typeof import('x')`), and its one flag answers for both.
+		var covering []RealImport
+		for _, imp := range imps {
+			if f.Line >= imp.First && f.Line <= imp.Line {
+				covering = append(covering, imp)
+			}
+		}
+		if len(covering) == 0 {
+			wrong = append(wrong, i18n.T("gate.dep_chain.flag_without_import", f.Line, f.Code))
+			continue
+		}
+		var imp *RealImport
+		for i := range covering {
+			if contains(codesOfTarget(covering[i], g), f.Code) {
+				imp = &covering[i]
+				break
+			}
+		}
+		if imp == nil {
+			want := strings.Join(codesOfTarget(covering[0], g), "|")
+			if want == "" {
+				want = "—"
+			}
+			wrong = append(wrong, i18n.T("gate.dep_chain.flag_wrong_code", f.Line, f.Code, covering[0].Path, want))
+			continue
+		}
+		// The flag's kind says what the import brings, and what reads the map trusts it
+		// (`depends_on_layer` counts value edges): an import of types only flagged as a value
+		// one, or a statement that plainly runs flagged as types, says the opposite of the
+		// code — the same mismatch the fixer rewrites, named instead of left silent.
+		typeOnly, runs := lineKind(covering, imp.First, imp.Line, f.Code, g)
+		switch {
+		case typeOnly && f.Kind != scan.TypeDepKind:
+			wrong = append(wrong, i18n.T("gate.dep_chain.flag_should_be_type", f.Line, f.Code, f.Code))
+		case !typeOnly && f.Kind == scan.TypeDepKind && runs:
+			wrong = append(wrong, i18n.T("gate.dep_chain.flag_should_be_value", f.Line, f.Code, f.Code))
+		}
+	}
+	if len(wrong) == 0 {
+		return Pass, ""
+	}
+	return Fail, strings.Join(wrong, "; ") + i18n.T("gate.dep_chain.guide")
+}
+
+// importerIndex is, per file, who imports which of its symbols — read once per run.
+type importerIndex struct {
+	g     *mapx.Graph
+	usage map[string]map[string]map[string]bool // target → symbol → importer codes
+}
+
+var (
+	importersMu    sync.Mutex
+	importersCache = map[string]*importerIndex{}
+)
+
+// importersOf is the index of the imports of the project's code, built once per map.
+func importersOf(root string, g *mapx.Graph, cfg *config.Config, withTests bool) *importerIndex {
+	importersMu.Lock()
+	defer importersMu.Unlock()
+	key := fmt.Sprint(root, "\x00", withTests)
+	if idx, ok := importersCache[key]; ok && idx.g == g {
+		return idx
+	}
+	idx := &importerIndex{g: g, usage: map[string]map[string]map[string]bool{}}
+	for _, n := range g.Nodes {
+		if !chainUnit(n) || n.FileCode == "" || n.Kind == mapx.KindTest && !withTests {
+			continue
+		}
+		b, err := readFile(root, n.ID)
+		if err != nil {
+			continue
+		}
+		// Each importer is read with its own dialect: a Go file's imports by the Go lexicon.
+		for _, imp := range ImportsOf(string(b), n.ID, cfg.DialectAt(n.ID), g) {
+			if imp.Target == "" || imp.Dir {
+				continue
+			}
+			for _, s := range imp.Symbols {
+				if idx.usage[imp.Target] == nil {
+					idx.usage[imp.Target] = map[string]map[string]bool{}
+				}
+				if idx.usage[imp.Target][s] == nil {
+					idx.usage[imp.Target][s] = map[string]bool{}
+				}
+				idx.usage[imp.Target][s][n.FileCode] = true
+			}
+		}
+	}
+	importersCache[key] = idx
+	return idx
+}
+
+// testsInChain says whether the project put its tests in the chain: the used-by gate
+// confronts tests (`on:` holds `test`). Then a symbol a test imports lists the test; with the
+// gate on code alone, @used-by lists the code that imports it, as before the tests could take
+// part — adopting the chain on the tests is the project's decision, not a version's (reported
+// from a project: 768 symbols asked for their tests after an upgrade).
+func testsInChain(cfg *config.Config) bool { return gateOnTests(cfg, "used-by-declared") }
+
+// gateOnTests says whether the project's gate of that name confronts tests (`on:` holds
+// `test`).
+func gateOnTests(cfg *config.Config, name string) bool {
+	if cfg == nil {
+		return false
+	}
+	for _, g := range cfg.Gates {
+		if g.Check == name || g.Name == name {
+			for _, k := range g.On {
+				if k == "test" {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// UsedByOf is, for a file, who imports each of its symbols — by the importers' codes,
+// sorted.
+func UsedByOf(root, id string, g *mapx.Graph, cfg *config.Config, withTests bool) map[string][]string {
+	out := map[string][]string{}
+	for sym, codes := range importersOf(root, g, cfg, withTests).usage[id] {
+		for c := range codes {
+			out[sym] = append(out[sym], c)
+		}
+		sort.Strings(out[sym])
+	}
+	return out
+}
+
+// checkUsedByDeclared: does every symbol another file imports carry `@used-by:` with
+// exactly the codes of who imports it?
+func checkUsedByDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if !chainUnit(n) {
+		return Skip, i18n.T("gate.dep_chain.skip_not_code")
+	}
+	d := cfg.DialectAt(n.ID)
+	if !hasImports(d) || g == nil {
+		return Pending, i18n.T("gate.dep_chain.pending_no_pattern")
+	}
+	want := UsedByOf(root, n.ID, g, cfg, testsInChain(cfg))
+	have := map[string][]string{}
+	for _, u := range scan.UsedByIn([]byte(content), n.ID, d) {
+		if u.Symbol != "" {
+			codes := append([]string(nil), u.Codes...)
+			sort.Strings(codes)
+			have[u.Symbol] = codes
+		}
+	}
+	var gaps []string
+	syms := make([]string, 0, len(want))
+	for s := range want {
+		syms = append(syms, s)
+	}
+	sort.Strings(syms)
+	for _, s := range syms {
+		got, ok := have[s]
+		switch {
+		case !ok:
+			gaps = append(gaps, i18n.T("gate.dep_chain.used_by_missing", s, strings.Join(want[s], ", ")))
+		case strings.Join(got, ",") != strings.Join(want[s], ","):
+			gaps = append(gaps, i18n.T("gate.dep_chain.used_by_wrong", s, strings.Join(got, ", "), strings.Join(want[s], ", ")))
+		}
+	}
+	for s := range have {
+		if _, ok := want[s]; !ok {
+			gaps = append(gaps, i18n.T("gate.dep_chain.used_by_stale", s))
+		}
+	}
+	if len(gaps) == 0 {
+		return Pass, ""
+	}
+	sort.Strings(gaps)
+	return Fail, strings.Join(gaps, "; ") + i18n.T("gate.dep_chain.guide")
+}
+
+// fixDepFlags writes the `@dep:` of each import of a governed file that has none, and
+// corrects the code of one that names another file — the mechanical half of the chain.
+// An import of a package of several files is left as it is: which file it uses is the
+// author's to say.
+func fixDepFlags(content string, n mapx.Node, root string, g *mapx.Graph) (string, bool, string) {
+	if !chainUnit(n) || g == nil {
+		return content, false, ""
+	}
+	d := fixConfig.DialectAt(n.ID)
+	imps := ImportsOf(content, n.ID, d, g)
+	if byName(d) {
+		return fixDepFlagsByName(content, n, imps, g)
+	}
+	if len(imps) == 0 {
+		return content, false, ""
+	}
+	inLines := flagsInLines(content, n.ID, d)
+	lines := strings.Split(content, "\n")
+	cs := d.CommentsFor(n.ID)
+	marker := cs.LineMarker()
+	if marker == "" {
+		return content, false, ""
+	}
+	var done []string
+	handled := map[string]bool{}
+	for _, imp := range imps {
+		codes := codesOfTarget(imp, g)
+		if len(codes) != 1 {
+			continue
+		}
+		want := codes[0]
+		// One flag per module on a line: `require('x') as typeof import('x')` is two
+		// statements of one module, and the line's flag answers for both.
+		key := strconv.Itoa(imp.Line) + "\x00" + want
+		if handled[key] {
+			continue
+		}
+		handled[key] = true
+		typeOnly, runs := lineKind(imps, imp.First, imp.Line, want, g)
+		// An import of types only is flagged `@dep[type]:` — nothing of it runs, and the
+		// project's evidence may say so (`evidence.no_side_effect.flags`).
+		flag := "@dep: "
+		f := statementFlag(inLines, imp, want, imps, g)
+		// A type flag the author wrote stays unless the statement plainly runs (its pattern
+		// says `runs`): an inline `import('…').T` in a type position reads like any other
+		// import, and only the author knows which it is.
+		if typeOnly || (f != nil && f.Kind == scan.TypeDepKind && !runs) {
+			flag = "@dep[" + scan.TypeDepKind + "]: "
+		}
+		switch {
+		case f == nil:
+			lines[imp.Line-1] = strings.TrimRight(lines[imp.Line-1], " \t") + " " + marker + " " + flag + want + cs.CloseFor(marker)
+			done = append(done, fmt.Sprintf("%d %s", imp.Line, want))
+		case f.Code != "" && (f.Code != want || (typeOnly && f.Kind != scan.TypeDepKind) ||
+			(!typeOnly && f.Kind == scan.TypeDepKind && runs)):
+			l := lines[f.Line-1]
+			had := "@dep: " + f.Code
+			if f.Kind != "" {
+				had = "@dep[" + f.Kind + "]: " + f.Code
+			}
+			lines[f.Line-1] = strings.Replace(l, had, flag+want, 1)
+			done = append(done, fmt.Sprintf("%d %s→%s%s", f.Line, f.Code, strings.TrimSuffix(flag, " "), want))
+		}
+	}
+	if len(done) == 0 {
+		return content, false, ""
+	}
+	return strings.Join(lines, "\n"), true, i18n.T("gate.fix.dep_written", strings.Join(done, ", "))
+}
+
+// fixUsedBy writes, above each symbol another file imports, the `@used-by:` with exactly
+// who imports it, replacing a flag that says otherwise; a flag on a symbol nobody imports
+// is removed.
+func fixUsedBy(content string, n mapx.Node, root string, g *mapx.Graph) (string, bool, string) {
+	if !chainUnit(n) || g == nil {
+		return content, false, ""
+	}
+	d := fixConfig.DialectAt(n.ID)
+	if !hasImports(d) {
+		return content, false, ""
+	}
+	want := UsedByOf(root, n.ID, g, fixConfig, testsInChain(fixConfig))
+	lines := strings.Split(content, "\n")
+	flagLine := map[string]int{} // symbol → 0-based line of its flag
+	for _, u := range scan.UsedByIn([]byte(content), n.ID, d) {
+		if u.Symbol != "" {
+			flagLine[u.Symbol] = u.Line - 1
+		}
+	}
+	cs := d.CommentsFor(n.ID)
+	marker := cs.LineMarker()
+	if marker == "" {
+		return content, false, ""
+	}
+	type edit struct {
+		at     int
+		insert bool
+		text   string
+		remove bool
+	}
+	var edits []edit
+	var done []string
+	syms := make([]string, 0, len(want))
+	for sym := range want {
+		syms = append(syms, sym)
+	}
+	sort.Strings(syms)
+	for _, sym := range syms {
+		codes := want[sym]
+		at, listed := declarationLine(content, n.ID, d, sym)
+		text := usedByFlag(cs, codes, sym, listed)
+		if at, ok := flagLine[sym]; ok {
+			indent := lines[at][:len(lines[at])-len(strings.TrimLeft(lines[at], " \t"))]
+			if strings.TrimSpace(lines[at]) != text {
+				edits = append(edits, edit{at: at, text: indent + text})
+				done = append(done, sym)
+			}
+			continue
+		}
+		if at < 0 {
+			continue
+		}
+		indent := lines[at][:len(lines[at])-len(strings.TrimLeft(lines[at], " \t"))]
+		edits = append(edits, edit{at: at, insert: true, text: indent + text})
+		done = append(done, sym)
+	}
+	for sym, at := range flagLine {
+		if _, ok := want[sym]; !ok {
+			edits = append(edits, edit{at: at, remove: true})
+			done = append(done, "-"+sym)
+		}
+	}
+	if len(edits) == 0 {
+		return content, false, ""
+	}
+	// From the bottom up; flags inserted above the same line land in the order of their text.
+	sort.SliceStable(edits, func(i, j int) bool {
+		if edits[i].at != edits[j].at {
+			return edits[i].at > edits[j].at
+		}
+		return edits[i].text > edits[j].text
+	})
+	for _, e := range edits {
+		switch {
+		case e.remove:
+			lines = append(lines[:e.at], lines[e.at+1:]...)
+		case e.insert:
+			lines = append(lines[:e.at], append([]string{e.text}, lines[e.at:]...)...)
+		default:
+			lines[e.at] = e.text
+		}
+	}
+	sort.Strings(done)
+	return strings.Join(lines, "\n"), true, i18n.T("gate.fix.used_by_written", strings.Join(done, ", "))
+}
+
+// usedByFlag is the used-by flag the fixer writes, in the file's comment: the symbol, when a
+// list declares it, goes inside the comment — after a block comment's closer (`*)`, `-->`)
+// it would be code.
+func usedByFlag(cs *config.Comments, codes []string, sym string, listed bool) string {
+	marker := cs.LineMarker()
+	text := marker + " @used-by: " + strings.Join(codes, ", ")
+	if listed {
+		text += " (" + sym + ")"
+	}
+	return text + cs.CloseFor(marker)
+}
+
+// declarationLine is the 0-based line that declares a symbol, by the dialect's
+// `declarations` — where the statement of the declaration starts —, or -1; listed when the
+// declaration is one of a list, where a flag must name its symbol.
+func declarationLine(content, rel string, d config.Dialect, sym string) (int, bool) {
+	code := blankComments(content, rel, d)
+	for _, m := range d.Declarations.FindAll(code, rel) {
+		if (sym == "default" && m.Has("default")) || (sym != "default" && m.Groups["name"].Value == sym) {
+			return config.LineOf(code, m.Region) - 1, m.Listed
+		}
+	}
+	return -1, false
+}
+
+// anyFlagged says whether one of the codes is in the set.
+func anyFlagged(codes []string, set map[string]bool) bool {
+	for _, c := range codes {
+		if set[c] {
+			return true
+		}
+	}
+	return false
+}
+
+// usesCode says whether one of the file's imports resolves to a file of that code.
+func usesCode(imps []RealImport, g *mapx.Graph, code string) bool {
+	for _, imp := range imps {
+		if contains(codesOfTarget(imp, g), code) {
+			return true
+		}
+	}
+	return false
+}
+
+// fixDepFlagsByName writes, below the file's header, a flag line for each module the file
+// uses that none flags, and removes a flag line whose module it no longer uses: by name, the
+// flags are the file's, one per line, in its comment.
+func fixDepFlagsByName(content string, n mapx.Node, imps []RealImport, g *mapx.Graph) (string, bool, string) {
+	want := map[string]bool{}
+	for _, imp := range imps {
+		if codes := codesOfTarget(imp, g); len(codes) == 1 {
+			want[codes[0]] = true
+		}
+	}
+	have := map[string]bool{}
+	lines := strings.Split(content, "\n")
+	cs := fixConfig.DialectAt(n.ID).CommentsFor(n.ID)
+	var kept []string
+	var done []string
+	for i, l := range lines {
+		if scan.ChainFlagOnly(l, cs) {
+			if fs := scan.CodeDepsIn([]byte(l), n.ID, fixConfig.DialectAt(n.ID)); len(fs) == 1 && fs[0].Code != "" && fs[0].Kind == "" {
+				if !want[fs[0].Code] {
+					done = append(done, fmt.Sprintf("%d -%s", i+1, fs[0].Code))
+					continue
+				}
+				have[fs[0].Code] = true
+			}
+		}
+		kept = append(kept, l)
+	}
+	for _, f := range scan.CodeDepsIn([]byte(content), n.ID, fixConfig.DialectAt(n.ID)) {
+		have[f.Code] = true
+	}
+	var add []string
+	for c := range want {
+		if !have[c] {
+			add = append(add, c)
+		}
+	}
+	sort.Strings(add)
+	if len(add) == 0 && len(done) == 0 {
+		return content, false, ""
+	}
+	marker := cs.LineMarker()
+	if marker == "" {
+		return content, false, ""
+	}
+	var flagLines []string
+	for _, c := range add {
+		flagLines = append(flagLines, marker+" @dep: "+c+cs.CloseFor(marker))
+		done = append(done, c)
+	}
+	at := 0
+	if block := scan.AnchorsHeader([]byte(strings.Join(kept, "\n")), cs); block != nil {
+		at = strings.Count(strings.SplitN(strings.Join(kept, "\n"), string(block), 2)[0], "\n") + strings.Count(string(block), "\n") + 1
+	}
+	out := append(append(append([]string{}, kept[:at]...), flagLines...), kept[at:]...)
+	return strings.Join(out, "\n"), true, i18n.T("gate.fix.dep_written", strings.Join(done, ", "))
+}

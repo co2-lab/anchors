@@ -1,0 +1,155 @@
+---
+// Three AI sessions: the board fades from one to the next, until the third rewrites what the first had built; below them, the anchors kept in the repository, which every session reads.
+// Card text stays in English on purpose, as on the evidence board: names and codes are what a
+// project shows.
+interface Props {
+	label: string;
+}
+const { label } = Astro.props;
+---
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" role="img" aria-label={label} class="landing-figure">
+  <defs>
+    <pattern id="am-cork" width="14" height="14" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" fill="#201e1d"/>
+      <circle cx="3" cy="4" r="0.9" fill="#2e2b29"/>
+      <circle cx="10" cy="10" r="0.7" fill="#2a2725"/>
+    </pattern>
+    <filter id="am-shadow" x="-10%" y="-10%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <radialGradient id="am-pin" cx="35%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#f8907a"/>
+      <stop offset="0.45" stop-color="#ec3013"/>
+      <stop offset="1" stop-color="#7a1a08"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="960" height="400" rx="10" fill="#2e2b29"/>
+  <rect x="12" y="12" width="304" height="250" rx="6" fill="url(#am-cork)"/>
+  <text x="28" y="36" class="am-m am-hint">session 1</text>
+  <rect x="328" y="12" width="304" height="250" rx="6" fill="url(#am-cork)"/>
+  <text x="344" y="36" class="am-m am-hint">session 2</text>
+  <rect x="644" y="12" width="304" height="250" rx="6" fill="url(#am-cork)"/>
+  <text x="660" y="36" class="am-m am-hint">session 3</text>
+  <g transform="rotate(-2 82 84)" opacity="1" filter="url(#am-shadow)">
+    <rect x="40" y="60" width="84" height="46" rx="2" fill="#f2efec"/>
+    <text x="48" y="76" class="am-t am-kind">SPEC</text>
+    <text x="48" y="92" class="am-m am-name">Login.spec</text>
+  </g>
+  <g transform="rotate(3 242 80)" opacity="1" filter="url(#am-shadow)">
+    <rect x="200" y="56" width="84" height="46" rx="2" fill="#f2efec"/>
+    <text x="208" y="72" class="am-t am-kind">FEATURE</text>
+    <text x="208" y="88" class="am-m am-name">login.feature</text>
+  </g>
+  <g transform="rotate(2 88 194)" opacity="1" filter="url(#am-shadow)">
+    <rect x="46" y="170" width="84" height="46" rx="2" fill="#f2efec"/>
+    <text x="54" y="186" class="am-t am-kind">TEST</text>
+    <text x="54" y="202" class="am-m am-name">Login.test</text>
+  </g>
+  <g transform="rotate(-3 246 196)" opacity="1" filter="url(#am-shadow)">
+    <rect x="204" y="172" width="84" height="46" rx="2" fill="#f2efec"/>
+    <text x="212" y="188" class="am-t am-kind">CODE</text>
+    <text x="212" y="204" class="am-m am-name">Login.tsx</text>
+  </g>
+  <path class="am-string" d="M124 86 Q160 92 200 82"/>
+  <path class="am-string" d="M84 106 Q76 140 88 172"/>
+  <path class="am-string" d="M124 100 Q170 140 210 186"/>
+  <path class="am-string" d="M244 104 Q256 140 246 172"/>
+  <circle cx="124" cy="86" r="4.5" fill="url(#am-pin)"/>
+  <circle cx="200" cy="82" r="4.5" fill="url(#am-pin)"/>
+  <circle cx="84" cy="106" r="4.5" fill="url(#am-pin)"/>
+  <circle cx="88" cy="172" r="4.5" fill="url(#am-pin)"/>
+  <circle cx="124" cy="100" r="4.5" fill="url(#am-pin)"/>
+  <circle cx="210" cy="186" r="4.5" fill="url(#am-pin)"/>
+  <circle cx="244" cy="104" r="4.5" fill="url(#am-pin)"/>
+  <circle cx="246" cy="172" r="4.5" fill="url(#am-pin)"/>
+  <g transform="rotate(-2 398 84)" opacity="0.45" filter="url(#am-shadow)">
+    <rect x="356" y="60" width="84" height="46" rx="2" fill="#f2efec"/>
+    <text x="364" y="76" class="am-t am-kind">SPEC</text>
+    <text x="364" y="92" class="am-m am-name">Login.spec</text>
+  </g>
+  <rect x="516" y="56" width="84" height="46" rx="2" fill="none" stroke="#5e5854" stroke-dasharray="4 3" transform="rotate(3 558 80)"/>
+  <g transform="rotate(2 404 194)" opacity="0.45" filter="url(#am-shadow)">
+    <rect x="362" y="170" width="84" height="46" rx="2" fill="#f2efec"/>
+    <text x="370" y="186" class="am-t am-kind">TEST</text>
+    <text x="370" y="202" class="am-m am-name">Login.test</text>
+  </g>
+  <g transform="rotate(-3 562 196)" opacity="0.75" filter="url(#am-shadow)">
+    <rect x="520" y="172" width="84" height="46" rx="2" fill="#f2efec"/>
+    <text x="528" y="188" class="am-t am-kind">CODE</text>
+    <text x="528" y="204" class="am-m am-name">Login.tsx</text>
+  </g>
+  <path class="am-string" d="M400 106 Q392 140 404 172" opacity="0.4"/>
+  <path class="am-string" d="M440 100 Q470 120 480 150" opacity="0.6" stroke-dasharray="4 3"/>
+  <circle cx="400" cy="106" r="4.5" fill="url(#am-pin)" opacity="0.5"/>
+  <circle cx="404" cy="172" r="4.5" fill="url(#am-pin)" opacity="0.5"/>
+  <circle cx="440" cy="100" r="4.5" fill="url(#am-pin)" opacity="0.6"/>
+  <circle cx="562" cy="172" r="4.5" fill="url(#am-pin)" opacity="1"/>
+  <rect x="672" y="60" width="84" height="46" rx="2" fill="none" stroke="#5e5854" stroke-dasharray="4 3" transform="rotate(-2 714 84)"/>
+  <rect x="832" y="56" width="84" height="46" rx="2" fill="none" stroke="#5e5854" stroke-dasharray="4 3" transform="rotate(3 874 80)"/>
+  <rect x="678" y="170" width="84" height="46" rx="2" fill="none" stroke="#5e5854" stroke-dasharray="4 3" transform="rotate(2 720 194)"/>
+  <g transform="rotate(-6 870 190)" opacity="1" filter="url(#am-shadow)">
+    <rect x="828" y="166" width="84" height="46" rx="2" fill="#f2efec"/>
+    <text x="836" y="182" class="am-t am-kind">CODE</text>
+    <text x="836" y="198" class="am-m am-name">Login2.tsx</text>
+  </g>
+  <circle cx="870" cy="168" r="4.5" fill="url(#am-pin)" opacity="1"/>
+  <g transform="rotate(4 742 140)" filter="url(#am-shadow)">
+    <rect x="702" y="112" width="96" height="52" fill="#f4e27a"/>
+    <text x="712" y="134" class="am-m am-name" style="font-size:9px">where was I?</text>
+    <text x="712" y="150" class="am-m am-name" style="font-size:8px;font-weight:400">rewrite login…</text>
+  </g>
+  <rect x="12" y="282" width="936" height="106" rx="6" fill="#161413" stroke="#45403d"/>
+  <text x="28" y="304" class="am-m am-hint" style="fill:#f4613f;font-weight:700">anchored in the repository</text>
+  <g filter="url(#am-shadow)">
+    <rect x="40" y="318" width="132" height="40" rx="2" fill="#faf8f6"/>
+    <text x="50" y="333" class="am-t am-kind">SPEC</text>
+    <text x="50" y="349" class="am-m am-name">Login.spec.md</text>
+  </g>
+  <circle cx="106" cy="316" r="4.5" fill="url(#am-pin)" opacity="1"/>
+  <g filter="url(#am-shadow)">
+    <rect x="200" y="318" width="132" height="40" rx="2" fill="#faf8f6"/>
+    <text x="210" y="333" class="am-t am-kind">FEATURE</text>
+    <text x="210" y="349" class="am-m am-name">login.feature</text>
+  </g>
+  <circle cx="266" cy="316" r="4.5" fill="url(#am-pin)" opacity="1"/>
+  <g filter="url(#am-shadow)">
+    <rect x="360" y="318" width="132" height="40" rx="2" fill="#faf8f6"/>
+    <text x="370" y="333" class="am-t am-kind">TEST</text>
+    <text x="370" y="349" class="am-m am-name">Login.test.tsx</text>
+  </g>
+  <circle cx="426" cy="316" r="4.5" fill="url(#am-pin)" opacity="1"/>
+  <g filter="url(#am-shadow)">
+    <rect x="520" y="318" width="132" height="40" rx="2" fill="#faf8f6"/>
+    <text x="530" y="333" class="am-t am-kind">CODE</text>
+    <text x="530" y="349" class="am-m am-name">Login.tsx</text>
+  </g>
+  <circle cx="586" cy="316" r="4.5" fill="url(#am-pin)" opacity="1"/>
+  <g filter="url(#am-shadow)">
+    <rect x="680" y="318" width="132" height="40" rx="2" fill="#faf8f6"/>
+    <text x="690" y="333" class="am-t am-kind">MAP</text>
+    <text x="690" y="349" class="am-m am-name">anchors.graph.yaml</text>
+  </g>
+  <circle cx="746" cy="316" r="4.5" fill="url(#am-pin)" opacity="1"/>
+  <path class="am-string" d="M106 316 Q186 300 266 316 Q346 300 426 316 Q506 300 586 316 Q666 300 746 316"/>
+  <path d="M164 262 L164 280" stroke="#f4613f" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <path d="M480 262 L480 280" stroke="#f4613f" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <path d="M796 262 L796 280" stroke="#f4613f" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <g filter="url(#am-shadow)" transform="rotate(-3 880 340)">
+    <rect x="828" y="316" width="112" height="44" rx="2" fill="#ec3013"/>
+    <text x="836" y="332" class="am-m am-tag">every session</text>
+    <text x="836" y="346" class="am-m am-sub">is forced to</text>
+    <text x="836" y="357" class="am-m am-sub">respect it</text>
+  </g>
+</svg>
+
+<style>
+	.am-t { font-family: Archivo, "Helvetica Neue", Arial, sans-serif; }
+	.am-m { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+	.am-kind { font-size: 7.5px; letter-spacing: 0.12em; fill: #ec3013; font-weight: 700; }
+	.am-name { font-size: 9.5px; fill: #161413; font-weight: 700; }
+	.am-hint { font-size: 10px; fill: #a8a09b; }
+	.am-string { fill: none; stroke: #ec3013; stroke-width: 1.5; stroke-linecap: round; }
+	.am-tag { font-size: 9px; fill: #faf8f6; font-weight: 700; }
+	.am-sub { font-size: 8.5px; fill: #fde3dc; }
+</style>

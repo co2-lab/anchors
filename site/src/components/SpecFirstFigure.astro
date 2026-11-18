@@ -1,0 +1,130 @@
+---
+// The spec written first, the feature, test and code that derive from it, one identity code running through all of them, and the code that diverged confronted against the spec.
+// Card text stays in English on purpose, as on the evidence board: names and codes are what a
+// project shows.
+interface Props {
+	label: string;
+}
+const { label } = Astro.props;
+---
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 380" role="img" aria-label={label} class="landing-figure">
+  <defs>
+    <pattern id="sf-cork" width="14" height="14" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" fill="#201e1d"/>
+      <circle cx="3" cy="4" r="0.9" fill="#2e2b29"/>
+      <circle cx="10" cy="10" r="0.7" fill="#2a2725"/>
+      <circle cx="11" cy="2" r="0.5" fill="#2e2b29"/>
+    </pattern>
+    <filter id="sf-shadow" x="-10%" y="-10%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <radialGradient id="sf-pin" cx="35%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#f8907a"/>
+      <stop offset="0.45" stop-color="#ec3013"/>
+      <stop offset="1" stop-color="#7a1a08"/>
+    </radialGradient>
+    <marker id="sf-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#a8a09b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="960" height="380" rx="10" fill="#2e2b29"/>
+  <rect x="8" y="8" width="944" height="364" rx="6" fill="url(#sf-cork)"/>
+
+  {/* order: the spec first, everything else derives from it */}
+  <text x="40" y="44" class="sf-m sf-step">① written first</text>
+  <text x="400" y="44" class="sf-m sf-step">② feature</text>
+  <text x="580" y="44" class="sf-m sf-step">③ test</text>
+  <text x="760" y="44" class="sf-m sf-step">④ code</text>
+  <path d="M160 40 L380 40" stroke="#a8a09b" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#sf-arrow)"/>
+  <text x="235" y="34" class="sf-m sf-step" style="font-size:9px;fill:#a8a09b">derives</text>
+
+  {/* the spec */}
+  <g transform="rotate(-1 170 175)" filter="url(#sf-shadow)">
+    <rect x="40" y="62" width="260" height="226" rx="2" fill="#faf8f6"/>
+    <rect x="40" y="62" width="260" height="5" fill="#ec3013"/>
+    <text x="56" y="90" class="sf-t sf-kind">SPEC · SOURCE OF TRUTH</text>
+    <text x="56" y="110" class="sf-m sf-name" style="font-size:14px">Login.spec.md</text>
+    <text x="56" y="128" class="sf-m sf-row sf-dim">updated_at 2026-11-03</text>
+    <text x="56" y="154" class="sf-m sf-row"><tspan class="sf-code">AUTH-B01</tspan> sign in by e-mail</text>
+    <text x="56" y="184" class="sf-m sf-row"><tspan class="sf-code">AUTH-B02</tspan> lock after 5 tries</text>
+    <text x="56" y="214" class="sf-m sf-row"><tspan class="sf-code">AUTH-S01</tspan> the error is visible</text>
+    <text x="56" y="262" class="sf-m sf-row sf-dim">what to build — before any line</text>
+  </g>
+
+  {/* feature */}
+  <g transform="rotate(2 480 170)" filter="url(#sf-shadow)">
+    <rect x="400" y="72" width="160" height="196" rx="2" fill="#f2efec"/>
+    <text x="412" y="94" class="sf-t sf-kind">FEATURE</text>
+    <text x="412" y="111" class="sf-m sf-name">login.feature</text>
+    <text x="412" y="127" class="sf-m sf-row sf-dim">2026-11-04</text>
+    <text x="412" y="154" class="sf-m sf-row"><tspan class="sf-code">@AUTH-B01</tspan></text>
+    <text x="412" y="167" class="sf-m sf-row sf-dim">Scenario: signs in</text>
+    <text x="412" y="184" class="sf-m sf-row"><tspan class="sf-code">@AUTH-B02</tspan></text>
+    <text x="412" y="197" class="sf-m sf-row sf-dim">Scenario: 5 tries</text>
+  </g>
+
+  {/* test */}
+  <g transform="rotate(-2 660 170)" filter="url(#sf-shadow)">
+    <rect x="580" y="72" width="160" height="196" rx="2" fill="#f2efec"/>
+    <text x="592" y="94" class="sf-t sf-kind">TEST</text>
+    <text x="592" y="111" class="sf-m sf-name">Login.test.tsx</text>
+    <text x="592" y="127" class="sf-m sf-row sf-dim">2026-11-05</text>
+    <text x="592" y="154" class="sf-m sf-row"><tspan style="fill:#3f8f4a;font-weight:700">✓</tspan> <tspan class="sf-code">AUTH-B01</tspan></text>
+    <text x="592" y="184" class="sf-m sf-row"><tspan style="fill:#3f8f4a;font-weight:700">✓</tspan> <tspan class="sf-code">AUTH-B02</tspan></text>
+    <text x="592" y="197" class="sf-m sf-row sf-dim">expects 5 tries</text>
+  </g>
+
+  {/* code */}
+  <g transform="rotate(1.5 840 170)" filter="url(#sf-shadow)">
+    <rect x="760" y="72" width="164" height="196" rx="2" fill="#f2efec"/>
+    <text x="772" y="94" class="sf-t sf-kind">CODE</text>
+    <text x="772" y="111" class="sf-m sf-name">Login.tsx</text>
+    <text x="772" y="127" class="sf-m sf-row sf-dim">2026-11-17 · edited</text>
+    <text x="772" y="154" class="sf-m sf-row sf-dim">// <tspan class="sf-code">AUTH-B01</tspan></text>
+    <text x="772" y="167" class="sf-m sf-row">await signIn(email)</text>
+    <text x="772" y="184" class="sf-m sf-row sf-dim">// <tspan class="sf-code">AUTH-B02</tspan></text>
+    <text x="772" y="197" class="sf-m sf-row">lockAfter(<tspan style="fill:#ec3013;font-weight:700">3</tspan>)</text>
+    <ellipse cx="834" cy="194" rx="11" ry="9" fill="none" stroke="#ec3013" stroke-width="1.5"/>
+  </g>
+
+  {/* the thread: one identity code running through every piece (traceable) */}
+  <path class="sf-thread" d="M296 150 Q350 140 401 152 Q490 160 580 152 Q670 144 760 152"/>
+  <circle cx="296" cy="150" r="5" fill="url(#sf-pin)"/>
+  <circle cx="401" cy="152" r="5" fill="url(#sf-pin)"/>
+  <circle cx="580" cy="152" r="5" fill="url(#sf-pin)"/>
+  <circle cx="760" cy="152" r="5" fill="url(#sf-pin)"/>
+  <g>
+    <rect x="322" y="122" width="54" height="15" rx="2" fill="#a8210b"/>
+    <text x="327" y="133" class="sf-m sf-tag">AUTH-B01</text>
+  </g>
+
+  {/* the confrontation: the code diverged, and the string goes back to the spec */}
+  <path class="sf-thread" d="M836 205 Q700 370 300 186" stroke-dasharray="6 4"/>
+  <circle cx="300" cy="186" r="5" fill="url(#sf-pin)"/>
+  <g transform="rotate(-3 560 316)">
+    <rect x="462" y="298" width="210" height="36" rx="2" fill="#ec3013" filter="url(#sf-shadow)"/>
+    <text x="471" y="313" class="sf-m sf-tag">✗ the code diverges from AUTH-B02</text>
+    <text x="471" y="326" class="sf-m sf-tag" style="font-weight:400">spec says 5 · fix the code or the spec</text>
+  </g>
+
+  {/* pins holding the cards */}
+  <circle cx="170" cy="70" r="6" fill="url(#sf-pin)"/>
+  <circle cx="480" cy="78" r="6" fill="url(#sf-pin)"/>
+  <circle cx="660" cy="78" r="6" fill="url(#sf-pin)"/>
+  <circle cx="842" cy="78" r="6" fill="url(#sf-pin)"/>
+</svg>
+
+<style>
+	.sf-t { font-family: Archivo, "Helvetica Neue", Arial, sans-serif; }
+	.sf-m { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+	.sf-kind { font-size: 9px; letter-spacing: 0.12em; fill: #ec3013; font-weight: 700; }
+	.sf-name { font-size: 12px; fill: #161413; font-weight: 700; }
+	.sf-row { font-size: 9.5px; fill: #45403d; }
+	.sf-dim { fill: #837b76; }
+	.sf-code { fill: #a8210b; font-weight: 700; }
+	.sf-step { font-size: 10px; fill: #cdc7c2; }
+	.sf-thread { fill: none; stroke: #ec3013; stroke-width: 2; stroke-linecap: round; }
+	.sf-tag { font-size: 8.5px; fill: #faf8f6; font-weight: 700; }
+</style>

@@ -1,0 +1,815 @@
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
+# Anchors — o PR VERDE move o card para revisão
+#
+# Antes, quem movia o card para `ready-to-review` era o agente que implementou. Isso tem
+# dois defeitos, e o segundo é o caro:
+#
+#   • ESQUECIMENTO — o PR sobe e o card fica em `in-progress`; ninguém revisa, e nada
+#     acusa, porque o board diz que alguém ainda está trabalhando.
+#   • TRABALHO QUEBRADO NA FILA DE REVISÃO — o agente move a label mesmo com os checks
+#     reprovando, e o revisor pega um PR que nem passa. `ready-to-review` deixava de
+#     significar "pronto para alguém olhar" e passava a significar "alguém achou que
+#     estava".
+#
+# Com este pipeline, `ready-to-review` PASSA A SIGNIFICAR "os checks passaram". O agente
+# que abriu o PR não escreve label nenhuma: a obrigação dele é olhar o resultado e
+# consertar o que reprovou.
+#
+# THE REVIEW IS A COMMIT STATUS, `anchors/review` (reference app).
+#
+# Before it, a PR could be merged while the review this pipeline itself asked for was
+# still running — and the merge moved the card to `ready-to-test` all the same. The review
+# was a column on the board, not a fact the merge button could see.
+#
+# The `review` job publishes `anchors/review` on the PR head commit:
+#
+#   pending  — the card waits for a reviewer (`ready-to-review`), or the assigned reviewer
+#              has not posted a verdict yet
+#   success  — ONLY when the ASSIGNED reviewer posted, on the PR, the verdict line
+#                  anchors-review: approved by <reviewer>
+#   failure  — when that reviewer posted
+#                  anchors-review: rejected by <reviewer>
+#
+# The assigned reviewer is the `anchors-owner:` of the card at the moment the claim moved
+# it to `in-review`; a verdict posted before that moment belongs to an earlier round and
+# does not count. The line is written by the reviewer (`anchors guide review`), at the
+# start of a line, outside code blocks, in a comment by someone with write access.
+#
+# MAKE IT REQUIRED to have the merge wait for the review: in the branch protection (or
+# ruleset) of the integration branch, add `anchors/review` to the required status checks.
+# The Anchors does not require it on its own — a PR that declares no card gets no review
+# and no status, and requiring it is the project's decision to route every PR through a
+# card. A merge with `--admin` still goes through; the difference is that the merger sees
+# `anchors/review` red or pending on the button, and the card says so afterwards (below).
+#
+# A MERGE WITHOUT THE OUTCOME IS NOT SILENT (reference app): the card still moves to
+# `ready-to-test` — the work landed, and the board must not contradict the repository —
+# but the card gets a comment saying the PR merged without the review outcome, naming the
+# reviewer and the PR.
+name: anchors · PR verde move o card
+
+on:
+  # `check_suite` cobre o caso real: os checks terminam DEPOIS do push, e é o fim deles
+  # que interessa — não a abertura do PR.
+  check_suite:
+    types: [completed]
+  # `pull_request` cobre a reabertura e o caso em que não há check algum configurado.
+  pull_request:
+    # `closed` cobre o MERGE: sem ele o card fica em `ready-to-review` para sempre, mesmo
+    # depois de o trabalho entrar. E o efeito não é só cosmético — o claim usa o estado
+    # para saber se uma fase fechou, e uma fase que nunca fecha bloqueia tudo o que
+    # depende dela.
+    types: [opened, reopened, synchronize, closed]
+    branches: [main] # anchors:integration-branch
+  # The reviewer's VERDICT arrives as a PR comment, and it is the event that turns
+  # `anchors/review` green or red. Every comment in the repository fires this trigger;
+  # the `review` job filters down to PR comments that carry a verdict line.
+  issue_comment:
+    types: [created, edited]
+  # À MÃO, para quando algo travar: um card que ficou em `in-progress` porque o evento se
+  # perdeu não tem outra saída — e um pipeline sem escape manual transforma um percalço
+  # em trabalho parado sem remédio.
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "número do PR a reavaliar"
+        required: true
+        type: string
+
+# Serializado POR PR, e não no repositório inteiro.
+#
+# A razão de serializar é a escrita no card: dois eventos do MESMO PR (o `check_suite` e o
+# `synchronize`) podem chegar juntos e mover o mesmo card duas vezes. O grupo por PR resolve
+# isso — e PRs diferentes mexem em cards diferentes.
+#
+# O GRUPO GLOBAL CUSTAVA O WORKFLOW INTEIRO. O GitHub mantém 1 rodando + 1 pendente por
+# grupo, e um terceiro run enfileirado CANCELA o pendente. Com uma fila grande, quase todo
+# PR perde a corrida.
+#
+# E o cancelamento é pior que falha: um job que falha aparece vermelho; um job cancelado
+# ANTES de criar o check run não aparece de forma alguma — o rollup do PR fica idêntico ao
+# de um PR onde este workflow nunca existiu.
+#
+# MEDIDO no projeto de referência (#821): com 19 PRs abertos, 10 de 10 conferidos estavam
+# SEM o check deste workflow. E ele é quem move o card para `ready-to-test` no merge —
+# então o card não se movia, e a coluna ficava parada sem ninguém saber por quê.
+#
+# O `anchors-gates.yml` já usava o grupo por PR no mesmo repositório; este ficou para trás.
+concurrency:
+  # `issue.number` is the PR number on a PR comment — the verdict of a PR serializes with
+  # the other events of the same PR.
+  group: anchors-pr-checks-${{ github.event.pull_request.number || github.event.issue.number || github.event.inputs.pr || github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+  checks: read
+  # `anchors/review` is a commit status on the PR head.
+  statuses: write
+
+jobs:
+  # O CONFLITO QUE SÓ O MAPA CAUSA — e o GitHub não sabe resolvê-lo.
+  #
+  # O `anchors.graph.yaml` é GERADO e muda em todo PR. O Anchors traz um merge driver que
+  # sabe uni-lo (o `anchors map merge`, instalado pelo `install-hooks`), mas ele vive no
+  # clone de quem trabalha: o merge do servidor não o tem, e cai no merge textual.
+  #
+  # O EFEITO, medido no projeto de referência: onze PRs de trabalho INDEPENDENTE — cada um
+  # tocando só os arquivos da sua unidade — ficaram `CONFLICTING` de uma vez, porque um
+  # deles mergeou. O único arquivo em comum era o mapa.
+  #
+  # Quem abre o PR vê "conflitos" e presume que mexeu no que outro mexeu. Não mexeu — e a
+  # saída é um `git rebase` local, onde o driver está. Sem alguém DIZER isso, o PR espera.
+  conflito-do-mapa:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: É só o mapa que conflita?
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          estado=$(gh pr view "$PR" --json mergeable --jq .mergeable 2>/dev/null || echo "")
+          if [ "$estado" != "CONFLICTING" ]; then
+            echo "· #$PR: $estado — nada a diagnosticar"
+            exit 0
+          fi
+
+          # O ARQUIVO QUE O PR TOCA, cruzado com o que mudou no alvo desde a base. Se a
+          # interseção for SÓ o mapa, o conflito é mecânico.
+          base="${{ github.event.pull_request.base.ref }}"
+          meus=$(gh pr view "$PR" --json files --jq '[.files[].path] | sort | .[]')
+          outros=$(gh api "repos/$GH_REPO/compare/${{ github.event.pull_request.base.sha }}...$base" \
+            --jq '[.files[].filename] | sort | .[]' 2>/dev/null || echo "")
+          comuns=$(comm -12 <(printf '%s\n' "$meus") <(printf '%s\n' "$outros") | grep -v '^$' || true)
+
+          if [ "$comuns" = "anchors.graph.yaml" ]; then
+            echo "::warning::#$PR conflita SÓ no \`anchors.graph.yaml\` — arquivo gerado. O merge driver do Anchors resolve, mas ele vive no seu clone: rode \`git rebase origin/$base\` e suba de novo."
+            {
+              echo "### O conflito é só o mapa"
+              echo ""
+              echo "Este PR e o \`$base\` mudaram **um único arquivo em comum**:"
+              echo "\`anchors.graph.yaml\` — que é gerado, não escrito."
+              echo ""
+              echo "O Anchors traz um merge driver que sabe uni-lo (preserva os julgamentos"
+              echo "dos dois lados). Ele está no seu clone, não no servidor — por isso o"
+              echo "GitHub mostra conflito onde não há trabalho disputado."
+              echo ""
+              echo '```console'
+              echo "\$ git fetch origin $base"
+              echo "\$ git rebase origin/$base     # o driver resolve o mapa"
+              echo "\$ anchors map build && git add anchors.graph.yaml"
+              echo "\$ git push --force-with-lease"
+              echo '```'
+              echo ""
+              echo "Se o \`rebase\` pedir resolução manual do mapa, o driver não está"
+              echo "instalado neste clone: \`anchors install-hooks\` o registra."
+            } >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "$comuns" ]; then
+            echo "· #$PR conflita em arquivos de trabalho, não só no mapa:"
+            printf '%s\n' "$comuns" | sed 's/^/    /'
+          fi
+
+  # THE REVIEW OUTCOME, as the `anchors/review` commit status (see the header).
+  #
+  # It runs BEFORE `mover` (which `needs` it): on the merge, `mover` reads the outcome
+  # computed here to decide whether the card gets the "merged without the review outcome"
+  # comment. Not on `check_suite` — the only card change there is `mover`'s move to
+  # `ready-to-review`, and `mover` publishes that `pending` itself, after the move.
+  review:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
+       contains(github.event.comment.body, 'anchors-review:'))
+    outputs:
+      state: ${{ steps.outcome.outputs.state }}
+      reviewer: ${{ steps.outcome.outputs.reviewer }}
+    steps:
+      - name: Publish the review outcome (anchors/review)
+        id: outcome
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: anchors
+          PR: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          saida() { echo "$1=$2" >> "${GITHUB_OUTPUT:-/dev/null}"; }
+          saida state none
+
+          sha="$HEAD_SHA"
+          if [ -z "$sha" ]; then
+            sha=$(gh pr view "$PR" --json headRefOid --jq .headRefOid 2>/dev/null || true)
+          fi
+          if [ -z "$sha" ]; then
+            echo "PR #$PR: no head commit found — no status to publish"
+            exit 0
+          fi
+
+          # THE CARD, by the same two sources `mover` uses: the link declared in the body
+          # (outside code blocks, and only if it carries the Anchors label), then the code
+          # in the title.
+          corpo=$(gh pr view "$PR" --json body --jq '.body // ""' 2>/dev/null || true)
+          # The line that CLOSES wins over a `Refs`, whatever the order in the body. A body
+          # that opens with `Refs #414` (a related card) and ends with `Closes #968` (the
+          # card under review) resolved #414 — the verdict went to the wrong card and the
+          # status stayed `pending` for good (reference app). The mover below and its
+          # "other lines" check use the same order, so the three agree on which is first.
+          card=$(printf '%s\n' "$corpo" \
+            | sed 's/\r$//' \
+            | awk '
+                /^[[:space:]]*```/ { emBloco = !emBloco; next }
+                emBloco { next }
+                /^[[:space:]]{4}/ { next }
+                { print }
+              ' \
+            | grep -oiE '^[[:space:]]*(refs|closes|fixes|resolves)[[:space:]]+#[0-9]+' \
+            | awk '{ print (tolower($1) == "refs" ? 1 : 0) "\t" $0 }' | sort -s -k1,1n | cut -f2- \
+            | grep -oE '[0-9]+' | head -1 || true)
+          if [ -n "$card" ]; then
+            temLabel=$(gh issue view "$card" --json labels \
+              --jq "[.labels[].name] | index(\"$LABEL\") // empty" 2>/dev/null || true)
+            if [ -z "$temLabel" ]; then card=""; fi
+          fi
+          if [ -z "$card" ]; then
+            titulo=$(gh pr view "$PR" --json title --jq .title 2>/dev/null || true)
+            codigo=$(echo "$titulo" | sed -n 's/^\[\([^]]*\)\].*/\1/p')
+            if [ -n "$codigo" ]; then
+              card=$(gh issue list --state all --label "$LABEL" --limit 200 \
+                --json number,title --jq "[.[] | select(.title | startswith(\"[$codigo]\"))] | .[0].number // empty" \
+                2>/dev/null || true)
+            fi
+          fi
+          # NO CARD, NO STATUS: the pipeline assigned no review to this PR, and inventing a
+          # verdict for it would be the green that states work nobody did.
+          if [ -z "$card" ]; then
+            echo "PR #$PR declares no card — no review was assigned, no status published"
+            exit 0
+          fi
+
+          labels=$(gh issue view "$card" --json labels --jq '.labels[].name' 2>/dev/null || true)
+
+          # THE ASSIGNED REVIEWER: the card's `anchors-owner:` when the claim last moved it
+          # to `in-review`. The moment matters twice — the owner BEFORE it is the one the
+          # claim assigned, and a verdict BEFORE it belongs to an earlier round.
+          atribuido=$(gh api "repos/$GH_REPO/issues/$card/events" --paginate \
+            --jq '.[] | select(.event == "labeled" and .label.name == "anchors:in-review") | .created_at' \
+            2>/dev/null | tail -1 || true)
+          revisor=""
+          if [ -n "$atribuido" ]; then
+            revisor=$(gh issue view "$card" --json comments \
+              --jq "[.comments[] | select(.createdAt <= \"$atribuido\") | .body
+                     | select(startswith(\"anchors-owner: \"))
+                     | ltrimstr(\"anchors-owner: \") | split(\"\n\")[0] | split(\" \")[0]
+                     | select(startswith(\"(\") | not)] | last // empty" 2>/dev/null || true)
+          fi
+          saida reviewer "$revisor"
+
+          # THE VERDICT LINE, on the PR, by the assigned reviewer, after the assignment.
+          # The last one wins: a reviewer who changes their mind posts a new line.
+          #
+          # Only comments by someone with WRITE access count: on a public repository anyone
+          # can comment, and a line typed by a stranger would turn the status green.
+          #
+          # `author_association` alone is NOT that test. A PRIVATE org membership is hidden
+          # from the workflow's `GITHUB_TOKEN`: the same comment reads `MEMBER` to the
+          # member's own `gh` and `CONTRIBUTOR` to the job. Measured in the reference app: an
+          # org with no public members, where every `approved` line was dropped and
+          # `anchors/review` stayed `pending` on every PR. When the association does not
+          # vouch for the author, the repository PERMISSION of that login decides.
+          veredito=""
+          if [ -n "$revisor" ]; then
+            comentarios=$(gh api "repos/$GH_REPO/issues/$PR/comments" --paginate \
+              --jq ".[] | select(.created_at >= \"$atribuido\")
+                        | \"\\(.author_association) \\(.user.login) \\(.body | @base64)\"" 2>/dev/null || true)
+            while read -r assoc autor c; do
+              [ -z "${c:-}" ] && continue
+              case "$assoc" in
+                OWNER|MEMBER|COLLABORATOR) ;;
+                *)
+                  perm=$(gh api "repos/$GH_REPO/collaborators/$autor/permission" \
+                    --jq .permission 2>/dev/null </dev/null || true)
+                  case "$perm" in admin|maintain|write) ;; *) continue ;; esac
+                  ;;
+              esac
+              linhas=$(printf '%s' "$c" | base64 --decode \
+                | sed 's/\r$//' \
+                | awk '
+                    /^[[:space:]]*```/ { emBloco = !emBloco; next }
+                    emBloco { next }
+                    /^[[:space:]]{4}/ { next }
+                    { print }
+                  ' \
+                | sed -nE 's/^anchors-review: (approved|rejected) by ([^[:space:]]+)[[:space:]]*$/\1 \2/p' || true)
+              while read -r v quem; do
+                if [ -n "$v" ] && [ "$quem" = "$revisor" ]; then veredito="$v"; fi
+              done <<< "$linhas"
+            done <<< "$comentarios"
+          fi
+
+          # `ready-to-review` WINS over any earlier verdict: the card is back in the queue
+          # (a reviewer fixed it and released it), and the new round has no reviewer yet.
+          if echo "$labels" | grep -qx "anchors:ready-to-review"; then
+            state=pending; desc="awaiting a reviewer: card #$card is in ready-to-review"
+          elif [ -z "$revisor" ]; then
+            echo "card #$card was never assigned for review — no status published"
+            exit 0
+          elif [ "$veredito" = "approved" ]; then
+            state=success; desc="approved by $revisor (card #$card)"
+          elif [ "$veredito" = "rejected" ]; then
+            state=failure; desc="rejected by $revisor (card #$card)"
+          else
+            state=pending; desc="awaiting the verdict of $revisor (card #$card)"
+          fi
+
+          gh api --method POST "repos/$GH_REPO/statuses/$sha" \
+            -f state="$state" -f context="anchors/review" \
+            -f description="${desc:0:140}" -f target_url="$RUN_URL" >/dev/null
+          saida state "$state"
+          echo "anchors/review → $state on $sha: $desc"
+
+          # THE VERDICT FREES THE REVIEWER. Once the assigned reviewer posted `approved` or
+          # `rejected`, the review is done — but the card still named them as owner, and
+          # `anchors next` kept resuming it ("FINISH it before taking another") until the
+          # merge or a person moved it. The release has no "sem progresso", so the claim does
+          # not re-offer the card: it waits for the merge (approved) or the author (rejected).
+          # Only when the reviewer is still the owner — an edited comment re-runs this job.
+          if [ "$veredito" = "approved" ] || [ "$veredito" = "rejected" ]; then
+            ultimo=$(gh issue view "$card" --json comments \
+              --jq '[.comments[].body | split("\n")[0] | select(startswith("anchors-owner:"))] | last // ""')
+            if [ "$ultimo" = "anchors-owner: $revisor" ]; then
+              gh issue comment "$card" --body "anchors-owner: (liberado) — revisão concluída: $veredito por $revisor"
+              echo "card #$card: $revisor released after the $veredito verdict"
+
+              # REJECTED: THE CARD GOES BACK TO `to-do`, OWNED BY ITS AUTHOR.
+              #
+              # "It waits for the author" was the intent above, and nothing did it: the card
+              # stayed in `in-review` with no owner, and no agent was ever handed it.
+              # Measured in the reference app, 2026-09-24: six rejected cards among 31 in the
+              # working columns, two with a live owner.
+              #
+              # `to-do` with the author as owner uses what already exists: the author's next
+              # `anchors next` finds it as their own card and resumes it; if they do not ask
+              # for work, the stale releases it after HORAS_RETRABALHO (1h)
+              # and any agent takes it. The author is the last named owner before the
+              # assignment that is not the reviewer.
+              if [ "$veredito" = "rejected" ] && echo "$labels" | grep -qx "anchors:in-review"; then
+                autor=$(gh issue view "$card" --json comments \
+                  --jq "[.comments[] | select(.createdAt <= \"$atribuido\") | .body
+                         | select(startswith(\"anchors-owner: \"))
+                         | ltrimstr(\"anchors-owner: \") | split(\"\n\")[0] | split(\" \")[0]
+                         | select(startswith(\"(\") | not)
+                         | select(. != \"$revisor\")] | last // empty" 2>/dev/null || true)
+                gh issue edit "$card" --remove-label "anchors:in-review" --add-label "anchors:to-do" >/dev/null
+                if [ -n "$autor" ]; then
+                  gh issue comment "$card" --body "anchors-owner: $autor"
+                fi
+                gh issue comment "$card" --body "↩ PR #$PR rejected by $revisor — the card is back in \`to-do\`${autor:+, with its author ($autor): their next \`anchors next\` resumes it, and if they do not ask for work in 1h the card is released to any agent}. Whoever holds it fixes what the \`## Revisão\` on the PR asks, on the PR's branch (it is theirs while they hold the card), and delivers again."
+                echo "card #$card: rejected — back to to-do${autor:+, owner $autor}"
+              fi
+            fi
+          fi
+
+          # AN APPROVAL WITH FINDINGS STILL OPEN UNDER THE CARD is told on the PR — never
+          # barred. A request for changes with several items lived only in the review's text:
+          # one item became a finding and was fixed, the other vanished, and the next reviewer
+          # approved what they were following (reported from the reference app, PR #364). The
+          # findings registered under the card (`anchors:under-<card>`, or the old `sob-`) are
+          # the list a reviewer can see; an approval that arrives with any still open says so,
+          # once per head commit.
+          if [ "$veredito" = "approved" ]; then
+            abertos=$( { gh issue list --state open --label "anchors:under-$card" --limit 50 \
+                           --json number,title --jq '.[] | "#\(.number) \(.title)"' 2>/dev/null || true
+                         gh issue list --state open --label "anchors:sob-$card" --limit 50 \
+                           --json number,title --jq '.[] | "#\(.number) \(.title)"' 2>/dev/null || true
+                       } | sed '/^$/d' | sort -u)
+            if [ -n "$abertos" ]; then
+              marca="anchors-open-findings: $sha"
+              ja=$(gh api "repos/$GH_REPO/issues/$PR/comments" --paginate \
+                --jq "[.[] | select(.body | contains(\"$marca\"))] | length" 2>/dev/null || echo 0)
+              if [ "${ja:-0}" = "0" ]; then
+                gh issue comment "$PR" --body "$(printf '⚠ Approved by %s with findings still open under card #%s:\n\n%s\n\nEach one is part of what this review round asked. Close it when the PR answers it, or say on it why it does not belong to this PR — the approval does not close them.\n\n<!-- %s -->' "$revisor" "$card" "$(printf '%s\n' "$abertos" | sed 's/^/- /')" "$marca")"
+                echo "PR #$PR: approved with $(printf '%s\n' "$abertos" | wc -l | tr -d ' ') finding(s) open under card #$card — told on the PR"
+              fi
+            fi
+          fi
+
+  mover:
+    runs-on: ubuntu-latest
+    # AFTER `review`, and even when it failed or was skipped (`always()`): the card moves
+    # by fact, and a status that could not be read must not hold it. A PR comment is only
+    # a verdict — it moves nothing.
+    needs: review
+    if: ${{ always() && github.event_name != 'issue_comment' }}
+    steps:
+      - name: Mover o card quando o PR ficar verde
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: anchors
+          REVIEW_STATE: ${{ needs.review.outputs.state }}
+          REVIEWER: ${{ needs.review.outputs.reviewer }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          # O PR do evento. `check_suite` não traz o número, então ele é procurado pelo
+          # SHA — um check_suite pode não ter PR nenhum (push direto), e aí não há o que
+          # fazer.
+          pr="${{ inputs.pr }}"
+          if [ -z "$pr" ]; then
+            pr=$(gh api "repos/$GH_REPO/commits/${{ github.event.check_suite.head_sha || github.event.pull_request.head.sha }}/pulls" \
+              --jq '.[0].number // empty' 2>/dev/null || true)
+          fi
+          if [ -z "$pr" ]; then
+            echo "nenhum PR para este evento — nada a mover"
+            exit 0
+          fi
+
+          # TODOS os checks precisam ter terminado E passado. Um PR com check ainda em
+          # curso não é "verde": mover agora colocaria na fila de revisão um trabalho que
+          # ainda pode reprovar, que é o defeito que este pipeline existe para eliminar.
+          #
+          # `SKIPPED` e `NEUTRAL` contam como OK: um job que não se aplica àquele PR não
+          # é reprovação, e tratá-lo como tal travaria todo PR que não toca certas áreas.
+          # No MERGE não se confere check: o trabalho JÁ entrou, e a decisão de mesclar
+          # foi de quem tinha a informação. Conferir aqui deixaria o card parado quando um
+          # check ficou vermelho depois do merge (um scan noturno, um serviço fora do ar) —
+          # e o board passaria a contradizer o repositório.
+          estado=""
+          if [ "${{ github.event.action }}" != "closed" ]; then
+            estado=$(gh pr checks "$pr" --json bucket --jq '[.[].bucket] | unique | join(",")' 2>/dev/null || echo "")
+          fi
+          if echo "$estado" | grep -q "pending"; then
+            echo "PR #$pr ainda tem check em curso ($estado) — espero o fim"
+            exit 0
+          fi
+          if echo "$estado" | grep -qE "fail|cancel"; then
+            echo "PR #$pr reprovou ($estado) — o card FICA em in-progress."
+            echo "Quem abriu o PR conserta o que reprovou; o card não avança com trabalho quebrado."
+            exit 0
+          fi
+
+          # QUAL CARD ESTE PR AVANÇA — duas fontes, e a ordem importa.
+          #
+          # 1) o VÍNCULO DECLARADO no corpo (`Refs #N`), que é o que o `anchors pr-body`
+          #    escreve. `closes|fixes|resolves` continuam aceitos — PR antigo e PR escrito
+          #    à mão usam essas palavras, e recusá-las quebraria o vínculo de quem não
+          #    passou pelo `pr-body`.
+          #
+          #    POR QUE `Refs` E NÃO `Closes`: o `Closes` fazia duas afirmações de uma vez,
+          #    e só uma é do Anchors. O pipeline o lia para saber que o PR CONCLUI a
+          #    implementação; o GitHub o lia para FECHAR a issue no merge. A esteira não
+          #    acaba aqui — vêm `in-test`, `ready-to-release`, `production`, que são do CD
+          #    e o Anchors não rastreia. O card fechava com três estados à frente, e quem
+          #    ia testar perdia de vista o que testar. MEDIDO: 71 cards fechados em
+          #    `ready-to-test` contra 7 abertos, 35 num só dia.
+          #
+          #    É a fonte primária porque é a que o fluxo ENSINA: o `guide work`
+          #    descreve o `pr-body` em detalhe e não menciona o título em lugar nenhum.
+          #    Exigir o título era uma segunda convenção para a mesma pergunta, e quem
+          #    seguia o guia satisfazia só uma — em silêncio.
+          #
+          # 2) o CÓDIGO no título (`[XXXXX] ...`), como fallback. Continua valendo para PR
+          #    escrito à mão, sem `pr-body`.
+          #
+          # ADIVINHAR continua fora de questão: sem nenhuma das duas, o card fica onde
+          # está. Mover o card errado tira da fila um trabalho que ninguém terminou.
+          corpo=$(gh pr view "$pr" --json body --jq '.body // ""')
+          # Só as linhas que COMEÇAM com a palavra de vínculo: um `Refs #12` citado no
+          # meio de uma frase ("o #12 não é tocado por este PR") não é vínculo.
+          #
+          # E FORA DE BLOCO DE CÓDIGO, onde um exemplo não é declaração. O `awk` rastreia
+          # a cerca em vez de filtrar as linhas que a formam: um `grep -v` sobre "```"
+          # remove a cerca e DEIXA o conteúdo entre elas — medido, um `Closes #55` dentro
+          # de um exemplo era capturado. Bloco indentado (4 espaços) também sai.
+          #
+          # Este mesmo defeito já foi corrigido uma vez no pipeline de gates, lendo
+          # `Closes #N` de dentro de bloco de código. Aqui ele voltou por outro caminho.
+          card=$(printf '%s\n' "$corpo" \
+            | sed 's/\r$//' \
+            | awk '
+                /^[[:space:]]*```/ { emBloco = !emBloco; next }
+                emBloco { next }
+                /^[[:space:]]{4}/ { next }
+                { print }
+              ' \
+            | grep -oiE '^[[:space:]]*(refs|closes|fixes|resolves)[[:space:]]+#[0-9]+' \
+            | awk '{ print (tolower($1) == "refs" ? 1 : 0) "\t" $0 }' | sort -s -k1,1n | cut -f2- \
+            | grep -oE '[0-9]+' | head -1 || true)
+
+          # A LISTA COM VÍRGULA NÃO FECHA O SEGUNDO CARD, e o PR parece que fechou os dois.
+          #
+          #   Closes #419, #473    → o GitHub fecha SÓ o #419
+          #
+          # A palavra de fechamento tem de vir antes de CADA número. O `anchors pr-body` já
+          # emite uma linha por card; o risco é quem escreve o corpo à mão.
+          #
+          # MEDIDO no projeto de referência: o PR #475 trazia essa linha exata, mergeou,
+          # fechou o #419 — e o #473 ficou aberto com o trabalho já entregue. Um agente
+          # notou e fechou à mão; a trava de estado reverteu, porque pela regra que ela
+          # conhece aquilo era um card saindo da fila sem merge. O card voltou a `in-progress`
+          # e ficou três horas parado esperando um trabalho que já existia.
+          #
+          # AVISO e não reprovação: o vínculo real do PR com o card está declarado, e barrar
+          # um merge por sintaxe seria pior que o defeito. O que faltava era alguém DIZER que
+          # os números depois da vírgula não valem.
+          extras=$(printf '%s\n' "$corpo" \
+            | sed 's/\r$//' \
+            | grep -oiE '^[[:space:]]*(refs|closes|fixes|resolves)[[:space:]]+#[0-9]+([[:space:]]*,[[:space:]]*#[0-9]+)+' \
+            | grep -oE '#[0-9]+' | tail -n +2 | tr '\n' ' ' || true)
+          if [ -n "$extras" ]; then
+            todos="$card $(echo "$extras" | tr -d '#')"
+            echo "::warning::o corpo declara os cards numa lista separada por vírgula, e a plataforma reconhece apenas o PRIMEIRO — $extras ficará aberto depois do merge. Rode \`anchors pr-body --cards $(echo $todos | tr ' ' ',')\` e substitua o bloco."
+            {
+              echo "### ⚠ cards que NÃO serão fechados"
+              echo
+              echo "O corpo declara os cards numa lista separada por vírgula, e a plataforma"
+              echo "reconhece apenas o primeiro número: **$extras** ficará aberto depois do merge,"
+              echo "com o trabalho já entregue."
+              echo
+              echo "Cada card precisa da sua própria linha. O comando gera as linhas prontas,"
+              echo "na sintaxe que esta plataforma entende:"
+              echo
+              echo '```console'
+              echo "\$ anchors pr-body --cards $(echo $todos | tr ' ' ',')"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          # O NÚMERO DO CORPO PRECISA SER CONFERIDO — ele é texto que alguém digitou.
+          #
+          # O caminho pelo TÍTULO já confere sem querer: ele procura na lista de issues com
+          # a label do Anchors, então uma issue que não existe ou que não é card
+          # simplesmente não aparece. O caminho pelo corpo pega o número direto, e sem esta
+          # conferência dois casos passariam:
+          #
+          #   `Closes #99999`  — issue que não existe
+          #   `Closes #12`     — issue REAL, mas não é card do Anchors (um bug report, uma
+          #                      discussão). O pipeline tentaria mover labels de estado numa
+          #                      issue que não participa do fluxo.
+          #
+          # O segundo é o perigoso: falha silenciosamente para o lado errado — o PR parece
+          # ter avançado um card, e o card de verdade fica parado.
+          # TODAS as linhas `Closes`, e não só a primeira.
+          #
+          # A conferência abaixo olha o `$card` — o PRIMEIRO número declarado. Um PR que
+          # fecha vários cards traz uma linha para cada, e as demais passavam sem ninguém
+          # olhar.
+          #
+          # MEDIDO: um PR consolidando 19 trabalhos trouxe 19 linhas `Closes`, e todos os 19
+          # números eram de PULL REQUESTS, não dos cards. No GitHub um PR também é uma issue,
+          # então `gh issue view` aceita o número e responde — o que salva é ele não ter a
+          # label do Anchors. A conferência teria pego, se tivesse olhado além da primeira
+          # linha. Dezoito cards ficaram abertos com o trabalho entregue.
+          outros=$(printf '%s\n' "$corpo" \
+            | sed 's/\r$//' \
+            | awk '
+                /^[[:space:]]*```/ { emBloco = !emBloco; next }
+                emBloco { next }
+                /^[[:space:]]{4}/ { next }
+                { print }
+              ' \
+            | grep -oiE '^[[:space:]]*(refs|closes|fixes|resolves)[[:space:]]+#[0-9]+' \
+            | awk '{ print (tolower($1) == "refs" ? 1 : 0) "\t" $0 }' | sort -s -k1,1n | cut -f2- \
+            | grep -oE '[0-9]+' | tail -n +2 || true)
+          naoSaoCards=""
+          for o in $outros; do
+            t=$(gh issue view "$o" --json labels \
+              --jq "[.labels[].name] | index(\"$LABEL\") // empty" 2>/dev/null || true)
+            [ -z "$t" ] && naoSaoCards="$naoSaoCards #$o"
+          done
+          if [ -n "$naoSaoCards" ]; then
+            echo "::warning::o corpo declara$naoSaoCards, que não são cards do Anchors (sem a label \`$LABEL\`). Um número de PULL REQUEST aqui não fecha card nenhum — confira com \`anchors pr-body\`."
+            {
+              echo "### ⚠ números declarados que não são cards"
+              echo ""
+              echo "O corpo declara$naoSaoCards — nenhum deles tem a label \`$LABEL\`."
+              echo ""
+              echo "No GitHub um pull request também é uma issue, então declarar o número de um"
+              echo "PR aqui não dá erro: o merge fecha o PR, e o card que devia fechar fica"
+              echo "aberto com o trabalho já entregue."
+              echo ""
+              echo "\`anchors pr-body --cards <n>,<n>\` escreve as linhas a partir dos CARDS."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ -n "$card" ]; then
+            temLabel=$(gh issue view "$card" --json labels \
+              --jq "[.labels[].name] | index(\"$LABEL\") // empty" 2>/dev/null || true)
+            if [ -z "$temLabel" ]; then
+              echo "::warning::o corpo do PR #$pr declara \`#$card\`, que não é um card do Anchors (sem a label \`$LABEL\`)"
+              echo "  pode ser uma issue comum, ou um número errado — caindo para o título."
+              {
+                echo "### ⚠ O vínculo do corpo não é um card"
+                echo ""
+                echo "O corpo declara \`#$card\`, e essa issue não tem a label \`$LABEL\` —"
+                echo "ou não existe."
+                echo ""
+                echo "Se era para ser um card, confira o número. O \`anchors pr-body\` escreve"
+                echo "as linhas certas a partir do card que você pegou."
+              } >> "$GITHUB_STEP_SUMMARY"
+              card=""
+            fi
+          fi
+
+          # DUAS PERGUNTAS DIFERENTES, e confundi-las avançou um card que não terminou.
+          #
+          #   "este PR PERTENCE ao card?"  → o código no título responde
+          #   "este PR CONCLUI o card?"    → só o `Closes #N` responde
+          #
+          # O título serve para ENCONTRAR o card — relatório, contexto, saber de onde o
+          # trabalho veio. Avançar de ESTADO exige o vínculo declarado no corpo.
+          #
+          # Medido no app de referência: um PR entregou 1 das 3 specs de uma fase e removeu o
+          # `Closes` de propósito, justamente porque não concluía o plano. O `mover` achou
+          # o card pelo título `[PLTFR]` e o levou a `ready-to-test` — o fim da alçada do
+          # agente, com duas specs por escrever. O card só voltou porque alguém olhou.
+          concluiOCard=""
+          if [ -n "$card" ]; then
+            concluiOCard="sim"
+            echo "card #$card veio do vínculo declarado no corpo do PR (o que o \`anchors pr-body\` escreve)"
+          else
+            titulo=$(gh pr view "$pr" --json title --jq .title)
+            codigo=$(echo "$titulo" | sed -n 's/^\[\([^]]*\)\].*/\1/p')
+            if [ -z "$codigo" ]; then
+              echo "::warning::o PR #$pr não declara card no corpo (\`Closes #N\`) nem traz código no título (\`[XXXXX] …\`)"
+              echo "  sem um dos dois não dá para saber qual card avançar — o card fica onde está."
+              echo "  o caminho prescrito é \`anchors pr-body\`, que escreve as linhas de fechamento."
+              # O RESULTADO PRECISA APARECER SEM ABRIR O LOG.
+              #
+              # Este passo termina com sucesso de propósito: um PR sem card é legítimo
+              # (infraestrutura, correção de pipeline), e falhar barraria trabalho que
+              # ninguém errou. Mas "verde" sozinho AFIRMA que o trabalho foi feito, e aqui
+              # ele não foi — é a família de defeito que este projeto já mediu quatro
+              # vezes, e a mais cara: o check passa anunciando, só no log, que não fez
+              # nada.
+              #
+              # O summary é o que a interface mostra ao lado do check, sem clicar.
+              {
+                echo "### ⚠ Nenhum card foi movido"
+                echo ""
+                echo "Este PR não declara qual card ele avança, e o card (se houver) **fica onde está**."
+                echo ""
+                echo "O caminho prescrito é o \`anchors pr-body\`, que escreve as linhas de fechamento:"
+                echo ""
+                echo '```'
+                echo "anchors pr-body --cards <n>"
+                echo '```'
+                echo ""
+                echo "Alternativa: o código do artefato no título, \`[XXXXX] …\`."
+                echo ""
+                echo "_Este passo não falha: PR sem card é legítimo (infraestrutura, pipeline). O aviso existe para o caso em que era para haver card._"
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            # `--state all` e não `open`: no evento de MERGE o `Closes #N` do corpo já
+            # fechou o card ANTES deste pipeline rodar, e procurar só entre os abertos não
+            # o encontrava. Medido: "nenhum card aberto para o código [MTUAO] — nada a
+            # mover", com o card fechado e a label parada em `ready-to-review`. Era uma
+            # corrida entre dois mecanismos do próprio fluxo, e o pipeline reportava
+            # sucesso enquanto não fazia nada.
+            card=$(gh issue list --state all --label "$LABEL" --limit 200 \
+              --json number,title --jq "[.[] | select(.title | startswith(\"[$codigo]\"))] | .[0].number // empty")
+            if [ -z "$card" ]; then
+              echo "nenhum card para o código [$codigo] — nada a mover"
+              {
+                echo "### ⚠ Nenhum card foi movido"
+                echo ""
+                echo "O título declara o código \`[$codigo]\`, e não há card com esse código —"
+                echo "nem aberto nem fechado."
+                echo ""
+                echo "Ou o código está errado, ou o card nunca foi criado."
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          fi
+
+          # PR MERGEADO: o trabalho entrou, e o card avança para o fim da alçada do
+          # Anchors. Daí em diante quem move são os pipelines de entrega do projeto.
+          #
+          # PR fechado SEM merge não avança nada: o trabalho não entrou, e tratar os dois
+          # igual marcaria como pronto o que foi abandonado.
+          if [ "${{ github.event.action }}" = "closed" ]; then
+            if [ "${{ github.event.pull_request.merged }}" != "true" ]; then
+              echo "PR #$pr foi fechado sem merge — o card fica onde está"
+              exit 0
+            fi
+            estado_atual=$(gh issue view "$card" --json labels --jq '.labels[].name' |
+              grep -E '^anchors:(in-progress|ready-to-review|in-review)$' | head -1 || true)
+            if [ -z "$estado_atual" ]; then
+              echo "card #$card não está em trabalho ativo — nada a fazer"
+              exit 0
+            fi
+            for e in anchors:to-do anchors:in-progress anchors:ready-to-review \
+                     anchors:in-review anchors:in-test anchors:ready-to-release \
+                     anchors:production; do
+              gh issue edit "$card" --remove-label "$e" >/dev/null 2>&1 || true
+            done
+            if [ -z "$concluiOCard" ]; then
+              echo "card #$card foi encontrado pelo TÍTULO, e o PR não o declara com \`Closes\`."
+              echo "  o card fica onde está: o título diz que este PR PERTENCE ao card,"
+              echo "  não que ele o CONCLUI — e são perguntas diferentes."
+              {
+                echo "### ○ O card não foi avançado"
+                echo ""
+                echo "Este PR foi ligado ao card **#$card** pelo código no título, e não declara"
+                echo "\`Closes #$card\` no corpo."
+                echo ""
+                echo "O título diz que o PR **pertence** ao card. Avançar de estado exige que ele"
+                echo "**conclua** o card — e essa é a pergunta que só o \`Closes\` responde."
+                echo ""
+                echo "Se este PR conclui o card, use \`anchors pr-body\` e cole as linhas no corpo."
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            gh issue edit "$card" --add-label "anchors:ready-to-test"
+            # O card fica ABERTO de propósito, e o comentário diz por quê — senão o
+            # próximo a ler o board conclui que o pipeline esqueceu de fechar.
+            gh issue comment "$card" --body "$(printf '%s\n' \
+              "PR #$pr mergeado — card em \`ready-to-test\`." \
+              "" \
+              "O card fica **ABERTO**: a alçada do Anchors termina aqui, a esteira não." \
+              "O que vem depois — \`in-test\`, \`ready-to-release\`, \`production\` — é do" \
+              "CD do projeto, e fechar agora declararia entregue um trabalho com três" \
+              "estados à frente." \
+              "" \
+              "Quem fecha o card é quem termina a esteira.")"
+            # MERGED WITHOUT THE REVIEW OUTCOME (reference app). The card moves all the
+            # same — the work landed, and a card held back would make the board contradict
+            # the repository. What must not happen is the move looking like every other
+            # one: whoever reads the card later has to see that nobody signed the review.
+            if [ "$REVIEW_STATE" != "success" ]; then
+              quemRevisava="${REVIEWER:-no reviewer had been assigned}"
+              gh issue comment "$card" --body "$(printf '%s\n' \
+                "⚠ **PR #$pr merged WITHOUT the review outcome.**" \
+                "" \
+                "\`anchors/review\` was \`${REVIEW_STATE:-not reported}\` at the merge; reviewer: **$quemRevisava**." \
+                "" \
+                "The card moved to \`ready-to-test\` because the work landed — but no" \
+                "\`anchors-review: approved by <reviewer>\` line was posted on PR #$pr by the" \
+                "assigned reviewer. If a review is still owed, it is owed on what is now in" \
+                "the integration branch." \
+                "" \
+                "To make the merge wait for the review, require the \`anchors/review\` status" \
+                "in the branch protection; a merge with \`--admin\` still goes through, and" \
+                "lands here." \
+                "" \
+                "Run: $RUN_URL")"
+              echo "::warning::PR #$pr merged without the review outcome (anchors/review: ${REVIEW_STATE:-not reported}; reviewer: $quemRevisava) — said so on card #$card"
+            fi
+            echo "card #$card → ready-to-test (PR #$pr mergeado)"
+            exit 0
+          fi
+
+          # Só avança quem está EM IMPLEMENTAÇÃO. Um card em `in-review` já passou por
+          # aqui (o revisor está com ele), e um em `to-do` não tem dono — mover qualquer
+          # um dos dois faria o board descrever um trabalho que não é o que acontece.
+          if ! gh issue view "$card" --json labels --jq '.labels[].name' | grep -qx "anchors:in-progress"; then
+            echo "card #$card não está em in-progress — nada a fazer"
+            exit 0
+          fi
+
+          # Remoção e adição em chamadas SEPARADAS: `gh issue edit` que remove e adiciona
+          # a mesma label numa chamada só aplica a remoção.
+          for e in anchors:to-do anchors:in-progress anchors:in-review \
+                   anchors:ready-to-test anchors:in-test \
+                   anchors:ready-to-release anchors:production; do
+            gh issue edit "$card" --remove-label "$e" >/dev/null 2>&1 || true
+          done
+          gh issue edit "$card" --add-label "anchors:ready-to-review"
+          # LIBERA A POSSE. O card muda de MÃO aqui: quem implementou terminou, e quem
+          # revisa é outro agente — o desenho inteiro depende disso ("o agente que
+          # implementa não fecha o próprio trabalho", BOOTSTRAP §7.9).
+          #
+          # Sem liberar, o card fica com o dono anterior e NINGUÉM o pega: o claim só
+          # entrega o que está livre, então ele pula o `ready-to-review` e vai para o
+          # `to-do` seguinte. Medido — a fila de revisão parou de ser atendida sem que
+          # nada acusasse, e a prioridade direita-para-esquerda deixou de valer na prática.
+          gh issue comment "$card" --body "anchors-owner: (liberado) — implementação concluída; o card espera REVISÃO de outro agente"
+          gh issue comment "$card" --body "Os checks do PR #$pr passaram — card em \`ready-to-review\`, esperando revisor."
+          # THE REVIEW IS NOW OWED, and the merge button has to see it: `anchors/review`
+          # goes `pending` on the head commit. Published HERE, after the move, and not by
+          # the `review` job — that one ran before this move and saw the card still in
+          # `in-progress`.
+          sha=$(gh pr view "$pr" --json headRefOid --jq .headRefOid 2>/dev/null || true)
+          if [ -n "$sha" ]; then
+            gh api --method POST "repos/$GH_REPO/statuses/$sha" \
+              -f state=pending -f context="anchors/review" \
+              -f description="awaiting a reviewer: card #$card is in ready-to-review" \
+              -f target_url="$RUN_URL" >/dev/null || \
+              echo "::warning::could not publish anchors/review on $sha"
+          fi
+          echo "card #$card → ready-to-review (PR #$pr verde)"

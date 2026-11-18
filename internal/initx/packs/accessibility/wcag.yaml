@@ -1,0 +1,46 @@
+# WCAG 2.2 / EN 301 549 / LBI (Lei Brasileira de Inclusão)
+#
+# Este pack é o mais diferente dos quatro domínios, e a diferença ensina onde está o
+# limite do mecanismo.
+#
+# Privacidade, pagamento e saúde impõem deveres de ALCANCE: "este dado precisa chegar
+# àquele lugar". Isso é confrontável por presença de token, que é o que `obligations:`
+# sabe fazer.
+#
+# Acessibilidade é majoritariamente QUALITATIVA: "o contraste é suficiente", "o rótulo
+# descreve a função", "a ordem de foco é lógica". Nada disso se prova por presença — um
+# `aria-label="botão"` satisfaz qualquer gate de presença e não descreve nada.
+#
+# Então este pack cobre só o que é ESTRUTURALMENTE confrontável, e diz em voz alta o que
+# não cobre. Prometer mais seria pior que não ter o pack: um relatório verde que afirma
+# conformidade de acessibilidade sem tê-la medido.
+name: wcag
+domain: accessibility
+jurisdiction: global
+authority: "WCAG 2.2 (W3C) / EN 301 549 / Lei 13.146/2015 (LBI)"
+
+requires:
+  - a11y_labels        # onde os rótulos acessíveis são declarados (arquivo de i18n, tokens…)
+
+obligations:
+  # 1.1.1 — conteúdo não-textual precisa de alternativa textual. Confrontável por
+  # alcance: quem declara exibir imagem/ícone com significado precisa ter rótulo
+  # declarado no lugar onde o projeto os mantém.
+  - name: wcag-alt-textual
+    article: "1.1.1 Non-text Content"
+    when: "renders: non-text"
+    must_appear_in: ["{{a11y_labels}}"]
+    because: "conteúdo não-textual precisa de alternativa textual que cumpra a mesma função — sem ela, o conteúdo não existe para quem usa leitor de tela"
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# O QUE ESTE PACK NÃO COBRE, e por que isso está escrito aqui:
+#
+#   1.4.3 contraste mínimo      → medida de cor; precisa de ferramenta que renderize
+#   2.4.3 ordem de foco         → depende da árvore em runtime
+#   2.5.8 tamanho do alvo       → medida de layout renderizado
+#   3.3.2 rótulo ou instrução   → julgamento: o rótulo DESCREVE a função?
+#
+# Estes são verificáveis, mas por INSTRUMENTO (axe, Lighthouse, teste de a11y no
+# runtime), não por confronto de declaração. Ligue-os como gate externo (`run:`) ou
+# ingira o resultado — e não como obrigação, que mediria presença e chamaria de
+# conformidade.

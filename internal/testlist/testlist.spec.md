@@ -1,0 +1,72 @@
+<!-- @anchors
+  code: TSTLS
+  updated_at: 2026-10-16
+  layer: infra
+-->
+# TestList — the project's tests, read the way the project says they are written
+
+> **Code**: `TSTLS`
+
+## Overview
+
+Reads the project's tests: which tests exist, in which file, on which line, and under which title.
+How a test is written belongs to the project's language and test library, not to Anchors, so the
+project declares it, choosing one of two sources:
+
+- a **pattern**: the regular expression of the call that opens a test, up to its opening parenthesis.
+  The title is the string literal right after it.
+- a **script**: a command the project provides, run at the project root, which prints the tests on
+  stdout under a versioned contract. The script can ask the test library itself, so when the library
+  changes its answer changes with it.
+
+The script's contract, version 1, is one JSON object:
+`{"version": 1, "tests": [{"file": "src/a.test.ts", "line": 12, "title": "…"}]}` — `file` relative
+to the project root, `line` counted from one, `title` as written.
+
+## Domain
+
+| Input | Accepts | Outside the domain | Who guarantees |
+| --- | --- | --- | --- |
+| the source | a pattern, a script, or neither | both at once | this unit: refuses, naming the conflict |
+| the pattern | a regular expression that compiles | one that does not compile | this unit: refuses, naming the error |
+| the files | paths relative to the root | — | the caller, from the map's test nodes |
+| the script's output | the contract's JSON object | anything else | this unit: refuses, naming what is wrong |
+
+## Effects
+
+| Effect | Description |
+| --- | --- |
+| `TSTLS-B01` | With a pattern, each match is a test: its title is what the pattern's `title` group captured, and its line the line where the match starts. |
+| `TSTLS-B02` | A pattern may name several title groups — `title`, `title2`… —, one for each way its language quotes a title; the title is the first that took part, read as captured: the core resolves no escape and knows no quote. |
+| `TSTLS-B03` | A match whose title groups captured nothing is not a test this reading can name, and is left out. |
+| `TSTLS-B04` | The pattern's tests come in file order, then in the order they appear in each file. |
+| `TSTLS-B05` | With a script, the command runs at the project root and the tests are what it prints under the contract. |
+| `TSTLS-B06` | Output outside the contract is refused, naming what is wrong: not a single JSON object, an unknown field, a version other than 1, no `tests`, an empty or non-relative `file`, a `line` below 1, an `end` before its `line`, or an empty `title`. (`Parse`) |
+| `TSTLS-B07` | A `file` in the script's output is read with forward slashes and without redundant segments, so it matches the map's IDs. |
+| `TSTLS-B08` | A source that declares neither a pattern nor a script lists no test and raises no error. |
+| `TSTLS-B09` | The script may say where each test ends (`end`, its last line), and the test carries it; a test without `end`, and every test a pattern reads, carries zero — the end is not known. |
+| `TSTLS-B10` | A pattern scans the test files through the reader given to `ListFrom` — the git index, under `--index` —, and through the tree when none is given. (`ListFrom`) |
+
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `TSTLS-E01` | The source declares both a pattern and a script | an error naming the conflict | Two sources could disagree, and the project must say which one speaks |
+| `TSTLS-E02` | The pattern does not compile | an error naming the compile error | A pattern that matches nothing would read as a project with no tests |
+| `TSTLS-E03` | The script exits with an error | an error naming the command, the exit and the last line it wrote to stderr | A failed script listed nothing, which is not the same as no tests |
+| `TSTLS-E04` | REF[TSTLS-B06]: the script answers outside the contract | — | — |
+| `TSTLS-E05` | The pattern names no `title` group | an error saying where to name it | Without it the core would have to know how the language quotes a title |
+
+## Dependencies
+
+| Code | File | Method | Layer |
+| --- | --- | --- | --- |
+
+none
+
+## Open Decisions
+
+| Code | Question | Who decides | Becomes |
+| --- | --- | --- | --- |
+
+none

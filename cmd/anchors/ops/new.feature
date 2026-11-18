@@ -1,0 +1,169 @@
+# language: en
+# @anchors
+#   code: NWFTN
+#   ref: NWARN
+#   updated_at: 2026-10-12
+#   layer: feature
+
+@NWARN
+Feature: NewArtifact — a new artifact is born beside its unit, with a resolved identity and the sections of the project's ruler
+
+  @NWARN-B01 @unit-level
+  Scenario: An unknown kind is refused
+    Given the kind widget
+    When new runs
+    Then it fails with unknown kind "widget"
+
+  @NWARN-B02 @unit-level
+  Scenario: The name and the output path are required
+    Given a spec with no name, then one with no --out
+    When new runs
+    Then it asks for the unit name
+    And it asks for --out
+
+  @NWARN-B03 @unit-level
+  Scenario: A spec is born with a code no unit uses
+    Given a map where another unit holds the canonical code of Login
+    When new spec Login runs
+    Then the header code is another code
+    And and a path in a layer with prefix AU gets a code starting with AU
+
+  @NWARN-B04 @unit-level
+  Scenario: A feature or test takes its identity from the sibling spec, or warns it is orphaned
+    Given src/auth/Login.spec.md with code LGNSP
+    When new feature Login runs with --out src/auth/Login.feature, then Orphan elsewhere
+    Then the first reads LGNSP from src/auth/Login.spec.md and writes it
+    And the second warns that no spec was found and it is born ORPHANED
+
+  @NWARN-B05 @unit-level
+  Scenario: Code pins the identity
+    Given a plan Foundation
+    When new plan runs with --code FNDTN
+    Then the plan's header holds code FNDTN
+
+  @NWARN-B06 @unit-level
+  Scenario: With and without are validated against the kind's sections
+    Given a spec
+    When new runs with --with errors --without overview, then with --with nope
+    Then errors is chosen and overview is not
+    And nope is refused as an unknown section
+
+  @NWARN-B07 @unit-level
+  Scenario: A preset fixes the sections and their order, and extra sections follow
+    Given the store preset, then the validation preset with --with auth
+    When the sections are resolved and sorted
+    Then state shape comes before invariants, actions after state shape, and open closes
+    And auth comes last
+
+  @NWARN-B08 @unit-level
+  Scenario: A spec for a declarative layer is refused
+    Given a layer dao with regime declarativo
+    When new spec UserDao runs with --out src/dao/UserDao.spec.md
+    Then it fails naming dao as a RECOGNIZED layer
+    And no spec is written
+
+  @NWARN-B09 @unit-level
+  Scenario: Section titles and bodies follow the project lexicon, then its language
+    Given the screen preset
+    When it is rendered with lang en, es and pt-BR, with a declared overview title, with a rule type for B, and in a layer with its own title
+    Then the titles follow each language, English by default
+    And the declared title, the rule type's section and the layer's title win in that order
+    And no Portuguese body text leaks into an English artifact
+
+  @NWARN-B10 @unit-level
+  Scenario: Features and tests follow the project's declared dialect
+    Given a dialect with Gherkin language pt and family python
+    When a feature and a test are rendered
+    Then the feature opens with "# language: pt" and uses Funcionalidade
+    And the test holds def test_calc_total( and no describe(
+
+  @NWARN-B11 @unit-level
+  Scenario: The unit regime tag comes from the project, or a visible placeholder
+    Given regime mappings in Portuguese, English and the project's own words, and configs with none
+    When the unit regime tag is taken
+    Then it is @nivel-unit, @level-unit and @fast
+    And with none it is a placeholder asking for the mapping
+
+  @NWARN-B12 @unit-level
+  Scenario: The artifact is written where out says and never overwritten
+    Given a map and new spec Login with --out src/auth/Login.spec.md
+    When new runs twice
+    Then the first writes the file and names its code and "anchors check --changed src/auth/Login.spec.md"
+    And the second fails because the file already exists
+
+  @NWARN-B13 @unit-level
+  Scenario: A plan is born tracked as a demand
+    Given a plan at plans/0001-foundation.md
+    When new plan runs
+    Then anchors.progress.md tracks it as a demand, and no progress file is written beside it
+    And no orphan warning is printed
+
+  @NWARN-B14 @unit-level
+  Scenario: List-sections prints the menu, with presets only for specs
+    Given the spec and feature kinds
+    When new runs with --list-sections
+    Then the spec menu lists default and optional sections and the presets
+    And the feature menu lists no presets
+
+  @NWARN-B15 @unit-level
+  Scenario: The target layer is the one of the unit the artifact describes
+    Given a tsx screen layer and a ts catch-all layer
+    When the target layer of app/P.spec.md and app/Q.spec.md is resolved with Q.ts on disk
+    Then P gets screen
+    And Q gets catchall
+
+  @NWARN-I01 @unit-level
+  Scenario: A refused new leaves nothing behind
+    Given an empty root
+    When every refused new runs
+    Then the root is still empty
+
+  @NWARN-X01 @unit-level
+  Scenario: A feature references the spec's identity instead of owning one
+    Given src/auth/Login.spec.md with code LGNSP
+    When new feature Login runs beside it
+    Then the feature's header references LGNSP
+
+  @NWARN-B16 @unit-level
+  Scenario: The help and the unknown-kind refusal name every kind, and --out is mandatory
+    Given the new command
+    When its help is read and it runs with the kind widget
+    Then the help and the refusal name action, feature, flow, plan, product, spec and test
+    And the --out help says it is mandatory and names no default
+
+  @NWARN-B17 @unit-level
+  Scenario: The new artifact enters the map at once
+    Given a project with a configuration and a map
+    When a spec is created with anchors new
+    Then the map has its node, and the output says it was added
+
+  @NWARN-B18 @unit-level
+  Scenario: A new artifact that refs its unit is born with a code of its own
+    Given a project whose map has the spec of the unit Pay
+    When a feature is created for Pay
+    Then the feature refs PAYMT and carries a five-character code of its own
+
+  @NWARN-B19 @unit-level
+  Scenario: A rule section takes the title its letter lists alone, not one every letter shares
+    Given rule types where every letter lists "Uso das regras", some first, beside a title of their own
+    When the title of each letter's section is chosen
+    Then each letter takes its own title, a letter with only the shared one takes it, and an unknown letter takes none
+
+  @NWARN-B20 @unit-level
+  Scenario: The screen preset writes the four states of a unit that loads data and the failure of its load, under the titles of States and Errors
+    Given the screen preset, and a project that renamed its States section
+    When a screen spec is rendered for each
+    Then it has the four load states and the load failure under States and Errors, and under the project's own title for States
+
+  @NWARN-B21 @unit-level
+  Scenario: Two sections of one letter never define the same code, and a section of the rules' letter with no title of its own goes inside the rules section the layer names
+    Given the screen preset, a project whose letter B lists "Efeitos" first, and a layer naming its rules section "Rules (Regras de Negócio)"
+    When a screen spec is rendered, and then for a project that names neither
+    Then the loading table sits inside the rules section as a subsection with PRBOE-B02, PRBOE-B01 is defined once, and without the names the sections stay apart with distinct codes
+
+  @NWARN-B22 @unit-level
+  Scenario: No spec template writes a Dependencies section
+    Given every spec section of the catalog and every spec preset
+    When each is rendered
+    Then none writes a Dependencies section nor cites a DEPn
+

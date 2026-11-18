@@ -1,0 +1,481 @@
+// @anchors
+//   code: CVCMA
+//   ref: CVCMC
+
+package quality
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+
+	"github.com/co2-lab/anchors/cmd/anchors/common"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gate"
+	"github.com/co2-lab/anchors/internal/gitmeta"
+
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/testsig"
+	"github.com/spf13/cobra"
+)
+
+func readFileString(path string) (string, error) {
+	b, err := os.ReadFile(path)
+	return string(b), err
+}
+
+// `anchors coverage` lê os sinais ingeridos e responde as duas perguntas de confiança:
+//   - cobertura por CENÁRIO: cada código de cenário da spec tem um teste que passou?
+//     (o diferencial — cobertura semântica, "o requisito está provado?")
+//   - cobertura de LINHA: quais arquivos de código estão abaixo do limiar (do lcov).
+//
+// Sinais STALE (o arquivo mudou desde a ingestão) são marcados — não confie neles.
+func newCoverageCmd() *cobra.Command {
+	var root, mapPath, diffRef, diffFile, lcov string
+	var threshold float64
+	var delta bool
+	cmd := &cobra.Command{
+		Use:   "coverage [<spec>]",
+		Short: "Show coverage by scenario, by line, of the DIFF and the delta",
+		Long: `Reads the signals from 'anchors ingest' and answers the confidence questions:
+
+  anchors coverage                    overview: scenarios with no green test + line < threshold
+  anchors coverage <spec>             the scenarios of ONE spec and which are proven
+  anchors coverage --diff main --lcov cov.info   is what I CHANGED (vs main) covered?
+  anchors coverage --delta            has coverage DROPPED since the previous ingestion?
+
+Three complementary questions:
+- by SCENARIO: does each spec requirement have a test that passed? (semantics)
+- of the DIFF: are the lines you changed (git diff) covered? (catches a bug on the new line)
+- DELTA: has global coverage dropped vs. the previous measurement? (catches coverage regression —
+  code fully covered in the diff, but which brought down the coverage of another part)`,
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			absRoot, err := config.AbsRoot(root)
+			if err != nil {
+				return err
+			}
+			// --diff não usa o grafo (é um cruzamento diff × lcov) — não exige o mapa.
+			if diffRef != "" || diffFile != "" {
+				return coverageDiff(absRoot, diffRef, diffFile, lcov, threshold)
+			}
+			if mapPath == "" {
+				mapPath = filepath.Join(absRoot, mapx.DefaultPath)
+			}
+			g, err := mapx.Load(mapPath)
+			if err != nil {
+				return fmt.Errorf("load map: %w (run `anchors map build`)", err)
+			}
+			// A frozen part is kept as it is by decision: its coverage is no news.
+			if len(args) == 0 {
+				g = g.Unfrozen()
+			}
+			if delta {
+				return coverageDelta(g)
+			}
+			// The requirements are read as the gates read them, under the project's choices.
+			cfg, cerr := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			if cerr != nil {
+				return fmt.Errorf("load %s: %w", config.DefaultFile, cerr)
+			}
+			if len(args) == 1 {
+				return coverageForSpec(g, absRoot, common.RelTo(absRoot, args[0]), cfg)
+			}
+			return coveragePanorama(g, absRoot, threshold, cfg)
+		},
+	}
+	cmd.Flags().StringVar(&root, "root", ".", "project root")
+	cmd.Flags().StringVar(&mapPath, "map", "", "path to the map")
+	cmd.Flags().Float64Var(&threshold, "threshold", 70, "coverage threshold (%)")
+	cmd.Flags().StringVar(&diffRef, "diff", "", "coverage of the DIFF vs this git ref (e.g. main)")
+	cmd.Flags().StringVar(&diffFile, "diff-file", "", "coverage of the DIFF from a unified diff (non-git fallback)")
+	cmd.Flags().StringVar(&lcov, "lcov", "", "the lcov to cross with the diff (mandatory with --diff)")
+	cmd.Flags().BoolVar(&delta, "delta", false, "has coverage dropped since the previous ingestion?")
+	return cmd
+}
+
+// coverageForSpec: lê os códigos de cenário declarados na spec (do arquivo) e cruza
+// com os provados (o Signal do próprio nó da spec, gravado na ingestão).
+func coverageForSpec(g *mapx.Graph, root, specID string, cfg *config.Config) error {
+	var node *mapx.Node
+	for i := range g.Nodes {
+		if g.Nodes[i].ID == specID {
+			node = &g.Nodes[i]
+			break
+		}
+	}
+	if node == nil {
+		return fmt.Errorf("spec %q is not in the map", specID)
+	}
+	declared, err := specRequirements(filepath.Join(root, specID), cfg)
+	if err != nil {
+		return fmt.Errorf("read the spec: %w", err)
+	}
+	if node.Frozen != "" {
+		fmt.Printf("%s is FROZEN (%s) — its coverage is not asked until someone thaws it\n", specID, g.DescribeFreeze(node.Frozen))
+		return nil
+	}
+	declared = node.WithoutFrozenRules(declared)
+	if len(declared) == 0 {
+		fmt.Printf("%s declares no scenario codes (nothing to cover)\n", specID)
+		return nil
+	}
+	proven := provenRules(g, root, *node)
+	sort.Strings(declared)
+	provados, faltando := 0, []string{}
+	fmt.Printf("coverage by scenario — %s:\n\n", specID)
+	for _, code := range declared {
+		if proven[code] {
+			fmt.Printf("  ✓ %s — proven by a green test\n", code)
+			provados++
+		} else {
+			fmt.Printf("  ✗ %s — no passing test\n", code)
+			faltando = append(faltando, code)
+		}
+	}
+	fmt.Printf("\n%d/%d scenario(s) proven", provados, len(declared))
+	if node.SignalStale() {
+		fmt.Printf("  ⚠ STALE SIGNAL (the spec changed since ingestion — re-ingest)")
+	}
+	fmt.Println()
+	if len(faltando) > 0 {
+		fmt.Printf("green tests missing for: %v\n", faltando)
+	}
+	return nil
+}
+
+func coveragePanorama(g *mapx.Graph, root string, threshold float64, cfg *config.Config) error {
+	// cenários sem prova: specs cujos códigos declarados não estão todos provados
+	var specGaps, lineGaps, stale int
+	fmt.Println("== coverage by scenario (specs with a requirement lacking a green test) ==")
+	specShown := 0
+	for i := range g.Nodes {
+		n := g.Nodes[i]
+		if n.Kind != mapx.KindSpec {
+			continue
+		}
+		declared, _ := specRequirements(filepath.Join(root, n.ID), cfg)
+		declared = n.WithoutFrozenRules(declared)
+		if len(declared) == 0 {
+			continue
+		}
+		proven := provenRules(g, root, n)
+		var missing []string
+		for _, c := range declared {
+			if !proven[c] {
+				missing = append(missing, c)
+			}
+		}
+		if len(missing) > 0 {
+			specGaps++
+			if specShown < 15 {
+				sort.Strings(missing)
+				fmt.Printf("  %s — %d/%d unproven: %v\n", n.ID, len(missing), len(declared), missing)
+				specShown++
+			}
+		}
+	}
+	if specGaps == 0 {
+		fmt.Println("  (none — every declared scenario has a green test, OR nothing was ingested)")
+	} else if specGaps > specShown {
+		fmt.Printf("  … and %d more spec(s) with a scenario gap\n", specGaps-specShown)
+	}
+
+	// quantos nós de código TÊM cada sinal — o denominador que separa "medido e bom" de
+	// "não medido".
+	var comCov, comMut, códigos int
+	for i := range g.Nodes {
+		if g.Nodes[i].Kind != mapx.KindCode {
+			continue
+		}
+		códigos++
+		if sg := g.Nodes[i].Signal; sg != nil {
+			if sg.TotalLines > 0 {
+				comCov++
+			}
+			if sg.MutantsKilled > 0 || sg.MutantsSurvived > 0 {
+				comMut++
+			}
+		}
+	}
+
+	fmt.Printf("\n== line coverage (< %.0f%%) ==\n", threshold)
+	lineShown := 0
+	for i := range g.Nodes {
+		n := g.Nodes[i]
+		if n.Kind != mapx.KindCode || n.Signal == nil || n.Signal.TotalLines == 0 {
+			continue
+		}
+		if n.Signal.LineCoverage < threshold {
+			lineGaps++
+			if lineShown < 15 {
+				mark := ""
+				if n.SignalStale() {
+					mark = " ⚠stale"
+					stale++
+				}
+				fmt.Printf("  %s — %.0f%%%s\n", n.ID, n.Signal.LineCoverage, mark)
+				lineShown++
+			}
+		}
+	}
+	if lineGaps == 0 {
+		// Distingue os dois casos que antes se confundiam num só texto: "tudo coberto" e
+		// "nada medido" levam ao mesmo silêncio, e são conclusões opostas.
+		if comCov == 0 {
+			fmt.Println("  ⚠ no line coverage ingested — this report is NOT " +
+				"saying everything is covered, it is saying nothing was measured. " +
+				"Run `anchors ingest --lcov <file>`")
+		} else {
+			fmt.Printf("  ✓ none of the %d measured file(s) below the threshold\n", comCov)
+		}
+	} else if lineGaps > lineShown {
+		fmt.Printf("  … and %d more file(s) below the threshold\n", lineGaps-lineShown)
+	}
+
+	// MUTAÇÃO — a pergunta que as duas seções acima não respondem. Cobertura de linha
+	// diz que a linha executou; mutação diz se alguém verificou o resultado.
+	fmt.Printf("\n== mutation: does the test PROVE the line? ==\n")
+	mutGaps, mutShown, sobreviventes := 0, 0, 0
+	for i := range g.Nodes {
+		n := g.Nodes[i]
+		if n.Kind != mapx.KindCode || n.Signal == nil {
+			continue
+		}
+		// Mesma régua do gate: sem mutante mensurável não há o que listar. O `Ignored`
+		// não muda a decisão aqui — muda no gate, que precisa distinguir "nunca rodou".
+		if n.Signal.MutantsKilled == 0 && n.Signal.MutantsSurvived == 0 {
+			continue
+		}
+		sobreviventes += n.Signal.MutantsSurvived
+		if n.Signal.MutationScore < threshold {
+			mutGaps++
+			if mutShown < 15 {
+				mark := ""
+				if n.SignalStale() {
+					mark = " ⚠stale"
+				}
+				fmt.Printf("  %s — %.0f%% (%d survivor(s))%s\n",
+					n.ID, n.Signal.MutationScore, n.Signal.MutantsSurvived, mark)
+				mutShown++
+			}
+		}
+	}
+	switch {
+	case comMut == 0:
+		fmt.Printf("  ⚠ no mutation signal ingested (%d code file(s)). "+
+			"A suite can be 100%% green and 100%% covered and still not fail "+
+			"a single test when you delete a guard. If the stack has a tool "+
+			"(Stryker/PIT/Infection/mutmut), run it and `anchors ingest --mutation <report>`\n",
+			códigos)
+	case mutGaps == 0:
+		// Acima do limiar NÃO é o mesmo que sem sobreviventes: cada sobrevivente ainda é
+		// uma linha que ninguém prova. O limiar é tolerância, não aprovação.
+		if sobreviventes > 0 {
+			fmt.Printf("  ~ %d measured file(s) above the threshold, but with %d surviving "+
+				"mutant(s) — lines that no test proves\n", comMut, sobreviventes)
+		} else {
+			fmt.Printf("  ✓ %d measured file(s), no mutant survived\n", comMut)
+		}
+		if comMut < códigos {
+			fmt.Printf("  (without that signal: %d of %d code file(s))\n", códigos-comMut, códigos)
+		}
+	default:
+		if mutGaps > mutShown {
+			fmt.Printf("  … and %d more file(s) below the threshold\n", mutGaps-mutShown)
+		}
+		if comMut < códigos {
+			fmt.Printf("  (measured: %d of %d code file(s))\n", comMut, códigos)
+		}
+	}
+
+	fmt.Printf("\nsummary: %d spec(s) with an unproven scenario", specGaps)
+	// "0 abaixo do limiar" e "nada medido" são conclusões opostas; o resumo não pode
+	// imprimir o mesmo número para as duas.
+	if comCov > 0 {
+		fmt.Printf("; %d file(s) < %.0f%% of lines", lineGaps, threshold)
+	} else {
+		fmt.Printf("; line coverage NOT measured")
+	}
+	if comMut > 0 {
+		fmt.Printf("; %d surviving mutant(s) in %d measured file(s)", sobreviventes, comMut)
+	} else {
+		fmt.Printf("; mutation NOT measured")
+	}
+	if stale > 0 {
+		fmt.Printf("; %d stale signal(s) (re-ingest)", stale)
+	}
+	fmt.Println()
+	return nil
+}
+
+// coverageDiff responde "as linhas que eu mudei estão cobertas?" — cruza o diff
+// (git ou arquivo) com o lcov. Só linhas INSTRUMENTADAS do diff contam (comentários/
+// blanks não). Reporta as linhas mudadas e descobertas + o % de cobertura do diff.
+func coverageDiff(root, ref, diffFile, lcov string, threshold float64) error {
+	if lcov == "" {
+		return fmt.Errorf("--lcov <file> is mandatory with --diff (Anchors crosses the diff with the coverage)")
+	}
+	var changed testsig.ChangedLines
+	var err error
+	if diffFile != "" {
+		changed, err = testsig.ParseDiffFile(diffFile)
+	} else {
+		changed, err = testsig.GitDiff(root, ref)
+	}
+	if err != nil {
+		// A cobertura DE DIFF pergunta "as linhas que você mudou estão cobertas?" — a
+		// pergunta inteira depende de haver histórico contra o que comparar.
+		if msg := gitmeta.Explain(gitmeta.Check(root), "get the diff"); msg != "" {
+			return errors.New(msg + "\n  (`--diff-file` accepts a unified diff from any source, if you have one)")
+		}
+		return fmt.Errorf("get the diff: %w", err)
+	}
+	cov, err := testsig.ParseLCOV(lcov)
+	if err != nil {
+		return fmt.Errorf("parse lcov: %w", err)
+	}
+	// índice cobertura por arquivo (casa por sufixo de caminho)
+	covByFile := map[string]testsig.FileCoverage{}
+	for _, fc := range cov.Files {
+		covByFile[filepath.ToSlash(fc.File)] = fc
+	}
+
+	fmt.Printf("diff coverage")
+	if ref != "" {
+		fmt.Printf(" (vs %s)", ref)
+	}
+	fmt.Println(":")
+	var totalInstr, totalUncov int
+	shown := false
+	// In path order: ranging over the map printed the files in a different order on every
+	// run, and two runs over the same diff could not be compared line by line.
+	files := make([]string, 0, len(changed))
+	for file := range changed {
+		files = append(files, file)
+	}
+	sort.Strings(files)
+	for _, file := range files {
+		lines := changed[file]
+		fc, ok := matchCoverage(file, covByFile)
+		if !ok {
+			continue // arquivo mudado sem cobertura ingerida (ex.: não é código)
+		}
+		instr := fc.InstrumentedIn(lines)
+		if instr == 0 {
+			continue
+		}
+		uncov := fc.UncoveredIn(lines)
+		totalInstr += instr
+		totalUncov += len(uncov)
+		shown = true
+		pct := float64(instr-len(uncov)) / float64(instr) * 100
+		fmt.Printf("  %s — %d instrumented changed line(s), %.0f%% covered", file, instr, pct)
+		if len(uncov) > 0 {
+			sort.Ints(uncov)
+			fmt.Printf(" — NO test: %v", uncov)
+		}
+		fmt.Println()
+	}
+	if !shown {
+		fmt.Println("  (no instrumented code line in the diff — nothing to cover)")
+		return nil
+	}
+	diffPct := float64(totalInstr-totalUncov) / float64(totalInstr) * 100
+	fmt.Printf("\ndiff coverage: %.0f%% (%d/%d changed lines covered)\n", diffPct, totalInstr-totalUncov, totalInstr)
+	if diffPct < threshold {
+		fmt.Printf("✗ below the threshold (%.0f%%) — the changes introduce untested code\n", threshold)
+		return common.ExitCode{Code: 1}
+	}
+	fmt.Println("✓ what you changed is covered")
+	return nil
+}
+
+// coverageDelta responde "a cobertura caiu?" — compara, por nó, a cobertura atual
+// contra a anterior (o baseline preservado no Signal na última ingestão).
+func coverageDelta(g *mapx.Graph) error {
+	fmt.Println("coverage delta (vs. the previous ingestion):")
+	var dropped, improved int
+	worst := 0.0
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindCode || n.Signal == nil || n.Signal.PrevLineCoverage == 0 {
+			continue
+		}
+		delta := n.Signal.LineCoverage - n.Signal.PrevLineCoverage
+		if delta < -0.01 {
+			dropped++
+			fmt.Printf("  ⚠ %s — %.0f%% → %.0f%% (%.0f)\n", n.ID, n.Signal.PrevLineCoverage, n.Signal.LineCoverage, delta)
+			if delta < worst {
+				worst = delta
+			}
+		} else if delta > 0.01 {
+			improved++
+		}
+	}
+	if dropped == 0 {
+		fmt.Println("  ✓ no file lost coverage since the last ingestion")
+		if improved > 0 {
+			fmt.Printf("  (%d file(s) improved)\n", improved)
+		}
+		return nil
+	}
+	fmt.Printf("\n✗ %d file(s) lost coverage (worst: %.0f points)\n", dropped, worst)
+	return common.ExitCode{Code: 1}
+}
+
+// matchCoverage acha a cobertura de um arquivo do diff, casando por sufixo de caminho
+// (o lcov pode ter caminho absoluto ou com prefixo).
+func matchCoverage(diffFile string, covByFile map[string]testsig.FileCoverage) (testsig.FileCoverage, bool) {
+	if fc, ok := covByFile[diffFile]; ok {
+		return fc, true
+	}
+	// The candidates in path order, and the first match wins: ranging over the map picked
+	// whichever matching entry came first on that run, so a file whose suffix two entries
+	// share (two builds of the same package) was covered on one run and not on the next.
+	keys := make([]string, 0, len(covByFile))
+	for cf := range covByFile {
+		keys = append(keys, cf)
+	}
+	sort.Strings(keys)
+	for _, cf := range keys {
+		if strings.HasSuffix(cf, "/"+diffFile) || strings.HasSuffix(diffFile, "/"+cf) {
+			return covByFile[cf], true
+		}
+	}
+	return testsig.FileCoverage{}, false
+}
+
+// specRequirements are the requirements the spec defines, as scenario-coverage reads them
+// (gate.SpecRequirements): a code a Test IDs table or a paragraph only cites is no
+// requirement, and a line marked `@no-scenario` asks no scenario. Read as every code of the
+// unit in the text, the report counted citations as scenarios and ignored the waivers, and
+// showed gaps the gate did not (reported from a project: 11/16 on a spec the gate passed).
+func specRequirements(path string, cfg *config.Config) ([]string, error) {
+	data, err := readFileString(path)
+	if err != nil {
+		return nil, err
+	}
+	return gate.SpecRequirements(data, cfg), nil
+}
+
+// provenRules are the rules of the spec its signal proves: a rule is proven when each
+// scenario its features declare — each variant `#NN` — is (see testsig.RulesProven).
+func provenRules(g *mapx.Graph, root string, n mapx.Node) map[string]bool {
+	var proven []string
+	if n.Signal != nil {
+		proven = n.Signal.FreshProven()
+	}
+	var scenarios []string
+	for _, e := range g.Edges {
+		if e.Type != mapx.EdgeCoveredBy || e.From != n.ID {
+			continue
+		}
+		if b, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(e.To))); err == nil {
+			scenarios = append(scenarios, testsig.FeatureScenarios(string(b))...)
+		}
+	}
+	return testsig.RulesProven(proven, scenarios)
+}

@@ -1,0 +1,277 @@
+// @anchors
+//   code: NCTNV
+//   ref: NCGNV
+
+package gate
+
+import (
+	"github.com/co2-lab/anchors/internal/testkit"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+func screenSpecText(code, route, in, out string) string {
+	return "<!-- @anchors\n  code: " + code + "\n  layer: screen\n-->\n# S\n\n> **Route**: `" + route + "`\n\n## Navigation\n\n### In\n\n" +
+		"| Origin | Action |\n| --- | --- |\n" + in + "\n### Out\n\n| Rule | Destination | Action |\n| --- | --- | --- |\n" + out + "\n## Rules\n"
+}
+
+// navProject is an app: Home leads to GoalDetail, which leads to GoalEdit, which goes back
+// — GoalDetail's In forgets GoalEdit —, and Lonely is reached by nothing.
+func navProject(t *testing.T) (string, *mapx.Graph, *config.Config) {
+	t.Helper()
+	root := t.TempDir()
+	files := map[string]string{
+		"s/HomeScreen.spec.md":       screenSpecText("HOMEH", "Home", "", "| `HOMEH-A01` | GoalDetailScreen | tap a goal |\n"),
+		"s/GoalDetailScreen.spec.md": screenSpecText("GLDTG", "GoalDetail", "| HomeScreen | tap |\n", "| `GLDTG-A01` | GoalEditScreen | edit |\n"),
+		"s/GoalEditScreen.spec.md":   screenSpecText("GLETG", "GoalEdit", "| GoalDetailScreen | edit |\n", "| `GLETG-A02` | GoalDetailScreen | save |\n"),
+		"s/LonelyScreen.spec.md":     screenSpecText("LNLYS", "Lonely", "", ""),
+		"s/HomeScreen.tsx":           "onPress={() => navigation.navigate('GoalDetail')}\n",
+		"s/GoalDetailScreen.tsx":     "navigation.navigate('GoalEdit') // @navigates: GLETG [GLDTG-A01]\n// @no-nav: closes the sheet of this screen\nnavigation.goBack()\n",
+		"s/GoalEditScreen.tsx":       "navigation.navigate('GoalDetail') // @navigates: HOMEH\n",
+		"s/LonelyScreen.tsx":         "export const L = 1\n",
+	}
+	for rel, body := range files {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &mapx.Graph{}
+	for _, s := range []struct{ name, code, file string }{{"Home", "HOMEH", "HMSCR"}, {"GoalDetail", "GLDTG", "GDSCR"}, {"GoalEdit", "GLETG", "GESCR"}, {"Lonely", "LNLYS", "LNSCR"}} {
+		spec := "s/" + s.name + "Screen.spec.md"
+		code := "s/" + s.name + "Screen.tsx"
+		g.Nodes = append(g.Nodes, mapx.Node{ID: spec, Kind: mapx.KindSpec, Code: s.code, Layer: "spec"},
+			mapx.Node{ID: code, Kind: mapx.KindCode, Code: s.code, FileCode: s.file})
+		g.Edges = append(g.Edges, mapx.Edge{From: spec, To: code, Type: mapx.EdgeSpecifies})
+	}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts", NavigationCall: config.FamilyNavigationCall("ts")}, Navigation: &config.Navigation{Entry: []string{"Home"}}})
+	screensMu.Lock()
+	delete(screensCache, root)
+	screensMu.Unlock()
+	return root, g, cfg
+}
+
+func navNode(g *mapx.Graph, id string) mapx.Node { return *g.Node(id) }
+
+func TestNavChain_annotated(t *testing.T) {
+	t.Run("NCGNV-B01: nav-annotated names each navigation call with no flag, and each flag naming another screen than its route", func(t *testing.T) {})
+	root, g, cfg := navProject(t)
+	v, msg := checkNavAnnotated(read(t, root, "s/HomeScreen.tsx"), navNode(g, "s/HomeScreen.tsx"), root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "line 1") || !strings.Contains(msg, "GoalDetail") || !strings.Contains(msg, "anchors guide navigation") {
+		t.Errorf("the unflagged call is named: %v %s", v, msg)
+	}
+	if v, msg := checkNavAnnotated(read(t, root, "s/GoalDetailScreen.tsx"), navNode(g, "s/GoalDetailScreen.tsx"), root, g, cfg); v != Pass {
+		t.Errorf("a right flag and a waived back navigation pass: %v %s", v, msg)
+	}
+	v, msg = checkNavAnnotated(read(t, root, "s/GoalEditScreen.tsx"), navNode(g, "s/GoalEditScreen.tsx"), root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "HOMEH") || !strings.Contains(msg, "GLDTG") {
+		t.Errorf("a flag naming another screen than its route is named: %v %s", v, msg)
+	}
+}
+
+func TestNavChain_matchesSpecAndSymmetric(t *testing.T) {
+	t.Run("NCGNV-B02: nav-matches-spec names each Out row no flag answers, and each flag the Out table does not declare", func(t *testing.T) {})
+	t.Run("NCGNV-B03: nav-symmetric names each Out with no matching In, and each In with no matching Out", func(t *testing.T) {})
+	root, g, cfg := navProject(t)
+	if v, msg := checkNavMatchesSpec("", navNode(g, "s/GoalDetailScreen.spec.md"), root, g, cfg); v != Pass {
+		t.Errorf("GoalDetail's Out and its flag agree: %v %s", v, msg)
+	}
+	v, msg := checkNavMatchesSpec("", navNode(g, "s/GoalEditScreen.spec.md"), root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "GoalDetailScreen") || !strings.Contains(msg, "HomeScreen") {
+		t.Errorf("GoalEdit's Out says GoalDetail, its flag says Home: %v %s", v, msg)
+	}
+	v, msg = checkNavSymmetric("", navNode(g, "s/GoalEditScreen.spec.md"), root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "GoalDetailScreen") {
+		t.Errorf("GoalEdit leads to GoalDetail, whose In forgets it: %v %s", v, msg)
+	}
+	if v, msg := checkNavSymmetric("", navNode(g, "s/HomeScreen.spec.md"), root, g, cfg); v != Pass {
+		t.Errorf("Home → GoalDetail is answered by GoalDetail's In: %v %s", v, msg)
+	}
+	if v, _ := checkNavMatchesSpec("", mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, root, g, cfg); v != Skip {
+		t.Error("a spec that is no screen is skipped")
+	}
+}
+
+func TestNavChain_reachableAndTheFix(t *testing.T) {
+	t.Run("NCGNV-B04: nav-reachable fails a screen no entry route reaches, and is pending with no entry declared", func(t *testing.T) {})
+	t.Run("NCGNV-B05: The fixer flags a navigation call whose route names one screen, and leaves a back navigation to the author", func(t *testing.T) {})
+	root, g, cfg := navProject(t)
+	if v, msg := checkNavReachable("", navNode(g, "s/GoalEditScreen.spec.md"), root, g, cfg); v != Pass {
+		t.Errorf("GoalEdit is reached from Home through GoalDetail: %v %s", v, msg)
+	}
+	if v, msg := checkNavReachable("", navNode(g, "s/LonelyScreen.spec.md"), root, g, cfg); v != Fail || !strings.Contains(msg, "LonelyScreen") {
+		t.Errorf("Lonely is reached by nothing: %v %s", v, msg)
+	}
+	if v, _ := checkNavReachable("", navNode(g, "s/LonelyScreen.spec.md"), root, g, testkit.WithComments(&config.Config{})); v != Pending {
+		t.Error("with no entry declared, there is nothing to reach from")
+	}
+	gates := []config.Gate{{Name: "nav-annotated", Check: "nav-annotated", On: []string{"code"}}}
+	FixWithConfig(gates, g.Nodes, root, g, cfg)
+	if home := read(t, root, "s/HomeScreen.tsx"); !strings.Contains(home, "navigation.navigate('GoalDetail')} // @navigates: GLDTG") {
+		t.Errorf("the call to GoalDetail is flagged with its screen:\n%s", home)
+	}
+	if detail := read(t, root, "s/GoalDetailScreen.tsx"); strings.Count(detail, "@navigates") != 1 {
+		t.Errorf("the waived back navigation is left as it is:\n%s", detail)
+	}
+}
+
+func TestNavChain_theFixerNeverWritesIntoJSXText(t *testing.T) {
+	t.Run("NCGNV-B06: On a line ending in a JSX tag the fixer writes the flag as a block comment right after the call, where it renders nothing, and the flag is read there", func(t *testing.T) {})
+	root, g, cfg := navProject(t)
+	jsx := "<Text style={link} onPress={() => navigation.navigate('GoalDetail')}>\n" +
+		"<Pressable onPress={() => go(navigation.navigate('GoalDetail', { id: f(x) }))}>\n"
+	if err := os.WriteFile(filepath.Join(root, "s/HomeScreen.tsx"), []byte(jsx), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	gates := []config.Gate{{Name: "nav-annotated", Check: "nav-annotated", On: []string{"code"}}}
+	FixWithConfig(gates, g.Nodes, root, g, cfg)
+	home := read(t, root, "s/HomeScreen.tsx")
+	for _, want := range []string{
+		"navigation.navigate('GoalDetail') /* @navigates: GLDTG */}>",
+		"navigation.navigate('GoalDetail', { id: f(x) }) /* @navigates: GLDTG */)}>",
+	} {
+		if !strings.Contains(home, want) {
+			t.Errorf("the flag sits after the call, inside the expression — want %q in:\n%s", want, home)
+		}
+	}
+	if strings.Contains(home, "> //") {
+		t.Errorf("nothing is written after the tag:\n%s", home)
+	}
+	if v, msg := checkNavAnnotated(home, navNode(g, "s/HomeScreen.tsx"), root, g, cfg); v != Pass {
+		t.Errorf("the block flags are read: %v %s", v, msg)
+	}
+}
+
+func TestNavChain_aComponentNavigatesForItsScreens(t *testing.T) {
+	t.Run("NCGNV-B07: A component's navigation counts for every screen that reaches it along the dependency chain, transitively, and not past another screen's file", func(t *testing.T) {})
+	root, g, cfg := navProject(t)
+	// Lonely is reached only through a card Home renders, inside a section it renders too.
+	files := map[string]string{
+		"s/HomeScreen.tsx":         "navigation.navigate('GoalDetail') // @navigates: GLDTG\n",
+		"s/components/Section.tsx": "export const Section = 1\n",
+		"s/components/Card.tsx":    "navigation.navigate('Lonely') // @navigates: LNLYS\n",
+	}
+	for rel, body := range files {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g.Nodes = append(g.Nodes, mapx.Node{ID: "s/components/Section.tsx", Kind: mapx.KindCode, FileCode: "SECTC"},
+		mapx.Node{ID: "s/components/Card.tsx", Kind: mapx.KindCode, FileCode: "CARDC"})
+	g.Edges = append(g.Edges,
+		mapx.Edge{From: "s/HomeScreen.tsx", To: "s/components/Section.tsx", Type: mapx.EdgeDependsOn},
+		mapx.Edge{From: "s/components/Section.tsx", To: "s/components/Card.tsx", Type: mapx.EdgeDependsOn},
+		// GoalDetail's code imports Home's file: Home's flags are Home's, not GoalDetail's.
+		mapx.Edge{From: "s/GoalDetailScreen.tsx", To: "s/HomeScreen.tsx", Type: mapx.EdgeDependsOn})
+	screensMu.Lock()
+	delete(screensCache, root)
+	screensMu.Unlock()
+	if v, msg := checkNavReachable("", navNode(g, "s/LonelyScreen.spec.md"), root, g, cfg); v != Pass {
+		t.Errorf("Lonely is reached through the card Home renders: %v %s", v, msg)
+	}
+	v, msg := checkNavMatchesSpec("", navNode(g, "s/HomeScreen.spec.md"), root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "LonelyScreen") {
+		t.Errorf("the card's navigation is Home's, and Home's Out table does not say it: %v %s", v, msg)
+	}
+	if v, msg := checkNavMatchesSpec("", navNode(g, "s/GoalDetailScreen.spec.md"), root, g, cfg); v != Pass {
+		t.Errorf("Home's flags do not cross into GoalDetail through Home's file: %v %s", v, msg)
+	}
+}
+
+func TestNavChain_aDormantNavigationIsNoEdge(t *testing.T) {
+	t.Run("NCGNV-B08: A dormant navigation is no edge", func(t *testing.T) {})
+	root, g, cfg := navProject(t)
+	card := "navigation.navigate('Lonely') // @navigates: LNLYS @dormant: the plan mode is not on yet\n"
+	if err := os.MkdirAll(filepath.Join(root, "s/components"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "s/components/Card.tsx"), []byte(card), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "s/HomeScreen.tsx"), []byte("navigation.navigate('GoalDetail') // @navigates: GLDTG\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g.Nodes = append(g.Nodes, mapx.Node{ID: "s/components/Card.tsx", Kind: mapx.KindCode, FileCode: "CARDC"})
+	g.Edges = append(g.Edges, mapx.Edge{From: "s/HomeScreen.tsx", To: "s/components/Card.tsx", Type: mapx.EdgeDependsOn})
+	screensMu.Lock()
+	delete(screensCache, root)
+	screensMu.Unlock()
+	if v, msg := checkNavMatchesSpec("", navNode(g, "s/HomeScreen.spec.md"), root, g, cfg); v != Pass {
+		t.Errorf("Home inherits no dormant edge: %v %s", v, msg)
+	}
+	if v, msg := checkNavAnnotated(card, mapx.Node{ID: "s/components/Card.tsx", Kind: mapx.KindCode}, root, g, cfg); v == Fail {
+		t.Errorf("the dormant call is annotated: %s", msg)
+	}
+}
+
+// twoApps is a repository of two apps that share a screen's name and route: each Home leads to
+// its own Profile, and each Home's code flags its own.
+func twoApps(t *testing.T) (string, *mapx.Graph, *config.Config) {
+	t.Helper()
+	root := t.TempDir()
+	g := &mapx.Graph{}
+	for _, a := range []struct{ app, home, profile, homeFile, profileFile string }{
+		{"apps/shop", "CSHOM", "CSPRF", "CSHMF", "CSPFF"}, {"apps/shop-admin", "BSHOM", "BSPRB", "BSHMF", "BSPFF"},
+	} {
+		files := map[string]string{
+			a.app + "/screens/HomeScreen.spec.md":    screenSpecText(a.home, "Home", "", "| `"+a.home+"-A01` | ProfileScreen | tap the avatar |\n"),
+			a.app + "/screens/ProfileScreen.spec.md": screenSpecText(a.profile, "Profile", "| HomeScreen | tap the avatar |\n", ""),
+			a.app + "/screens/HomeScreen.tsx":        "navigation.navigate('Profile') // @navigates: " + a.profile + " [" + a.home + "-A01]\n",
+			a.app + "/screens/ProfileScreen.tsx":     "export const P = 1\n",
+		}
+		for rel, body := range files {
+			if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		for _, sc := range []struct{ name, code, file string }{{"Home", a.home, a.homeFile}, {"Profile", a.profile, a.profileFile}} {
+			spec := a.app + "/screens/" + sc.name + "Screen.spec.md"
+			code := a.app + "/screens/" + sc.name + "Screen.tsx"
+			g.Nodes = append(g.Nodes, mapx.Node{ID: spec, Kind: mapx.KindSpec, Code: sc.code, Layer: "spec"},
+				mapx.Node{ID: code, Kind: mapx.KindCode, Code: sc.code, FileCode: sc.file})
+			g.Edges = append(g.Edges, mapx.Edge{From: spec, To: code, Type: mapx.EdgeSpecifies})
+		}
+	}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts", NavigationCall: config.FamilyNavigationCall("ts")}, Navigation: &config.Navigation{Entry: []string{"Home"}}})
+	screensMu.Lock()
+	delete(screensCache, root)
+	screensMu.Unlock()
+	return root, g, cfg
+}
+
+func TestNavChain_aNameTwoAppsShareIsTheNearest(t *testing.T) {
+	t.Run("NCGNV-B09: A screen name or route several screens share names the one nearest the file that cites it, and a screen's code names it alone", func(t *testing.T) {})
+	root, g, cfg := twoApps(t)
+	for _, app := range []string{"apps/shop", "apps/shop-admin"} {
+		home := app + "/screens/HomeScreen"
+		if v, msg := checkNavMatchesSpec("", navNode(g, home+".spec.md"), root, g, cfg); v != Pass {
+			t.Errorf("%s's Out leads to its own Profile: %v %s", app, v, msg)
+		}
+		if v, msg := checkNavSymmetric("", navNode(g, home+".spec.md"), root, g, cfg); v != Pass {
+			t.Errorf("%s's Profile answers its own Home: %v %s", app, v, msg)
+		}
+		if v, msg := checkNavAnnotated(read(t, root, home+".tsx"), navNode(g, home+".tsx"), root, g, cfg); v != Pass {
+			t.Errorf("%s's flag names its own Profile: %v %s", app, v, msg)
+		}
+	}
+	idx := screensOf(root, g)
+	if s := idx.screenNamed("`BSPRB`", "apps/shop/screens/HomeScreen.spec.md"); s == nil || s.Code != "BSPRB" {
+		t.Errorf("a screen's code names it from anywhere: %+v", s)
+	}
+	if v, msg := checkNavReachable("", navNode(g, "apps/shop-admin/screens/ProfileScreen.spec.md"), root, g, cfg); v != Pass {
+		t.Errorf("each app's Home is an entry, so each Profile is reached: %v %s", v, msg)
+	}
+}

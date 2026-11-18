@@ -1,0 +1,497 @@
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
+# Anchors — o CARD SE MOVE PELO FATO, e a trava é o que garante isso
+#
+# O board não é um quadro que alguém arrasta: cada estado é a consequência de um FATO
+# verificável. `in-progress` porque o claim entregou. `ready-to-review` porque os checks
+# passaram. `ready-to-test` porque o PR mergeou. Fechado porque a linha `Closes #N` do PR
+# foi executada pelo GitHub.
+#
+# O QUE ACONTECE SEM A TRAVA, medido no projeto de referência:
+#
+# Um agente fechou o card #432 às 15:47 e abriu o PR às 15:48 — um minuto depois. O mesmo
+# padrão em oito PRs seguidos. O efeito não aparece no card: aparece na FILA.
+#
+#   · o card sai de `ready-to-review` antes de alguém revisar;
+#   · o claim procura revisão PRIMEIRO (a ordem da direita para a esquerda) e não acha nada;
+#   · então entrega trabalho NOVO, e o PR fica esperando.
+#
+# Resultado: 25 PRs verdes esperando revisão com ZERO cards em `ready-to-review`. O board
+# dizia que não havia nada para revisar enquanto 25 trabalhos esperavam.
+#
+# POR QUE REVERTER E NÃO SÓ AVISAR
+#
+# Avisar já era o que acontecia — o histórico do card registra tudo, e ninguém olhou. Um
+# aviso que ninguém lê tem o mesmo efeito de não existir, e foi assim que os 25 PRs
+# acumularam.
+#
+# O OPT-OUT é a label `anchors:manual`. Ela existe porque há casos legítimos (mover um card
+# para `ready-to-test` depois de um teste manual, por exemplo), e porque uma trava sem
+# escape transforma percalço em trabalho parado. O custo dela — pôr a label antes de mexer —
+# É O PONTO: mover um card é raro, e o que a trava impede é o movimento que ninguém pensou
+# duas vezes antes de fazer.
+name: anchors · trava e histórico de estado
+
+on:
+  issues:
+    types: [opened, closed, reopened, labeled, unlabeled]
+  # À MÃO: uma trava sem escape transforma percalço em trabalho parado sem remédio. Aqui o
+  # dispatch serve para conferir a configuração sem precisar mexer num card de verdade.
+  workflow_dispatch:
+
+concurrency:
+  # SERIAL por card: uma reversão escreve label, e duas execuções sobre o mesmo card
+  # brigariam entre si — o `unlabeled` que a própria reversão dispara chegaria antes de a
+  # primeira terminar.
+  group: anchors-guard-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+  # O TIMELINE de uma issue traz o PR que a referencia, e o `merged_at` dele é o fato que
+  # distingue "fechado à mão para burlar a fila" de "fechado à mão porque o `Closes` da
+  # lista com vírgula não pegou". Sem esta permissão o campo vem nulo e a exceção nunca
+  # dispara — a trava voltaria a reverter fechamento legítimo, em silêncio.
+  pull-requests: read
+
+jobs:
+  # TODO CARD NASCE COM ESTADO — e quem garante é o pipeline, não quem cria.
+  #
+  # MEDIDO no projeto de referência: 59 de 95 cards abertos estavam FORA do fluxo — 53 sem
+  # label de estado nenhuma, 6 só com `anchors:under-N` (que é bloqueio, não estado). O
+  # `claim` varre `to-do` e `ready-to-review`; um card sem nenhum dos dois é invisível.
+  #
+  # O efeito medido: três agentes pediram trabalho, ouviram "nenhum card livre", e pararam
+  # — com 53 cards de trabalho real parados no board.
+  #
+  # A CAUSA é que achado de gate nasce por caminhos diferentes (`anchors judge`,
+  # `anchors escalate`, o reporter dos gates), e nenhum aplicava estado. Consertar um por
+  # um deixa os outros, e o próximo caminho de criação nasce quebrado de novo — não há
+  # régua que cubra "todo lugar que cria issue".
+  #
+  # Por isso aqui: o pipeline vê a issue NASCER, venha de onde vier. É o mesmo raciocínio
+  # do `stale` e da trava abaixo — o pipeline corrige o fato, em vez de depender de cada
+  # um lembrar.
+  estado-inicial:
+    # TWO MOMENTS when a card enters Anchors, and the job has to see both.
+    #
+    # `opened` covers whoever is born with the `anchors` label. But the label also arrives
+    # LATER: the person creates the issue and tags it right after. MEASURED in the
+    # reference project: #912 was born at 18:39:23 and got `anchors` at 18:40:06 — when
+    # this job ran on `opened`, the card did not belong to Anchors yet, and it left without
+    # acting. The card stayed stateless forever, invisible to `claim`, with no revert in
+    # the trail to explain why.
+    if: >-
+      github.event_name == 'issues' && (
+        github.event.action == 'opened' ||
+        (github.event.action == 'labeled' && github.event.label.name == 'anchors')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Quem nasce sem estado nasce em to-do
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          N: ${{ github.event.issue.number }}
+          LABEL: anchors
+        run: |
+          set -euo pipefail
+
+          # Só o que é do Anchors. O board é compartilhado, e pôr estado numa issue de
+          # outro fluxo a arrastaria para uma fila que não é dela.
+          if ! gh issue view "$N" --repo "$GH_REPO" --json labels \
+             --jq '[.labels[].name] | any(. == "'"$LABEL"'")' | grep -q true; then
+            echo "#$N não é card do Anchors — não é comigo"
+            exit 0
+          fi
+
+          # JÁ TEM ESTADO? Então quem criou sabia o que fazia, e sobrescrever seria pior
+          # que não agir: um card criado direto em `in-review` voltaria para a fila e
+          # seria reimplementado do zero.
+          #
+          # `anchors:under-N` NÃO conta: é marca de bloqueio, não estado. Um card só com
+          # ela é tão invisível ao `claim` quanto um sem label nenhuma — foi metade dos
+          # seis que a medição achou.
+          atual=$(gh issue view "$N" --repo "$GH_REPO" --json labels \
+            --jq '[.labels[].name
+                   | select(startswith("anchors:"))
+                   | select(startswith("anchors:under-") | not)]
+                  | length')
+          if [ "${atual:-0}" -gt 0 ]; then
+            echo "#$N já nasceu com estado — nada a fazer"
+            exit 0
+          fi
+
+          gh issue edit "$N" --repo "$GH_REPO" --add-label "anchors:to-do"
+          echo "#$N nasceu sem estado — posto em \`to-do\`, onde o \`claim\` o enxerga"
+
+      - name: O card escalado nasce com procedência
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          N: ${{ github.event.issue.number }}
+          LABEL: anchors
+        run: |
+          set -euo pipefail
+
+          # POR QUE AQUI, e não num hook do `gh`.
+          #
+          # O `gh` é um cliente HTTP e não tem sistema de hooks — não existe
+          # `pre-issue-create`. E se existisse não bastaria: `gh api -X POST`, `curl` e a
+          # interface web criam a issue pelo mesmo endpoint, sem passar por ele.
+          #
+          # O `anchors escalate` valida, e protege só quem o usa. Este passo é o único
+          # ponto por onde TODO card passa, de qualquer origem — e não dá para contornar.
+          #
+          # NÃO IMPEDE A CRIAÇÃO: o GitHub não tem "recusar issue". O que ele faz é ACUSAR
+          # em segundos, no próprio card, para quem criou corrigir antes de alguém pegar.
+          #
+          # MEDIDO no projeto de referência: 18 de 27 decisões abertas sem amarração
+          # alguma. Todas traziam o arquivo (`**Onde:**`) e nenhuma o card de origem — e
+          # uma escreveu "o achado veio do #690" em PROSA, que não se consulta.
+
+          if ! gh issue view "$N" --repo "$GH_REPO" --json labels \
+             --jq '[.labels[].name] | any(. == "'"$LABEL"'")' | grep -q true; then
+            exit 0
+          fi
+
+          # SÓ O CARD ESCALADO. Um card de trabalho não nasce de outro card: ele vem do
+          # plano, e exigir procedência dele seria cobrar um vínculo que não existe.
+          if ! gh issue view "$N" --repo "$GH_REPO" --json labels \
+             --jq '[.labels[].name] | any(. == "anchors:needs-user")' | grep -q true; then
+            exit 0
+          fi
+
+          # A PROCEDÊNCIA É LABEL, e é isso que se confere. O `under-<n>` diz de qual
+          # trabalho o achado nasceu. Frase no corpo não conta: não dá para listar o que
+          # pende sob um card, nem para o board desenhar a relação — é a razão de o
+          # vínculo ser label desde o início.
+          tem=$(gh issue view "$N" --repo "$GH_REPO" --json labels \
+            --jq '[.labels[].name | select(startswith("anchors:under-"))] | length')
+          if [ "${tem:-0}" -gt 0 ]; then
+            echo "#$N nasceu com procedência — nada a dizer"
+            exit 0
+          fi
+
+          # ONE WARNING PER CARD. This job runs on `opened` AND on the late `anchors` label,
+          # and a card created with its labels fires both — so the same warning was posted
+          # twice. The runs are serialised per issue (`concurrency` above), which is what
+          # makes checking before commenting enough.
+          ja_avisou=$(gh issue view "$N" --repo "$GH_REPO" --json comments \
+            --jq '[.comments[].body | select(startswith("⚠ **Este card não diz de qual trabalho nasceu.**"))] | length')
+          if [ "${ja_avisou:-0}" -gt 0 ]; then
+            echo "#$N já recebeu o aviso de procedência — não repito"
+            exit 0
+          fi
+
+          echo "::warning title=Card escalado sem procedência::#$N não diz de qual trabalho nasceu"
+          gh issue comment "$N" --repo "$GH_REPO" --body "$(printf '%s\n' \
+            "⚠ **Este card não diz de qual trabalho nasceu.**" \
+            "" \
+            "Falta \`anchors:under-<n>\` — a label que liga o achado ao card onde ele foi" \
+            "descoberto. Sem ela ninguém consegue perguntar *o que este trabalho gerou?*," \
+            "e o achado fica solto: quem decidir não sabe o que a resposta destrava." \
+            "" \
+            "**Se ele nasceu de um card:**" \
+            "" \
+            "    gh issue edit $N --add-label anchors:under-<n>" \
+            "" \
+            "**Se nasceu fora de um trabalho** — alguém escalou algo que viu de fora —," \
+            "está certo como está; este aviso é só para o caso comum." \
+            "" \
+            "O \`anchors escalate --card <n>\` põe a label sozinho, e desde a v0.1.135" \
+            "descobre o card pelo \`anchors-owner\` quando você não passa a flag." \
+            "" \
+            "> O texto do corpo não serve: **\`**Onde:**\`** diz em qual ARQUIVO está o" \
+            "> problema, não de qual trabalho ele saiu. E frase em prosa não se consulta —" \
+            "> é por isso que o vínculo é label.")" >/dev/null
+
+  # O HISTÓRICO: quanto tempo o card passou em cada coluna.
+  #
+  # Quem registra é este pipeline e não o que MOVE, e a razão é cobertura: o `claim` move
+  # para `in-progress`, o `pr-checks` para `ready-to-review` e `ready-to-test`, e uma pessoa
+  # pode mover à mão. Instrumentar cada um deles deixaria buracos no primeiro que fosse
+  # esquecido — aqui o evento é o mesmo `labeled` que a trava já observa.
+  #
+  # A ALTERNATIVA descartada: reconstruir o histórico do timeline do GitHub a cada
+  # publicação do board. Medido: 296 cards × 0,9s = ~4,5 minutos e 296 chamadas de API, num
+  # pipeline que roda a cada push. Aqui o dado NASCE no ato, e custa uma linha.
+  #
+  # O QUE ISSO NÃO FAZ: o passado. Cards movidos antes deste pipeline existir não têm
+  # registro — e o Gantt os mostra com `criado`→`fechado`, sem detalhe por coluna. Colher o
+  # passado é possível (o timeline tem tudo), e é trabalho de uma vez só, não deste laço.
+  historico:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'labeled' && startsWith(github.event.label.name, 'anchors:')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # O histórico é COMMITADO: ele é o dado do roadmap, e precisa sobreviver à
+          # máquina descartável do runner.
+          ref: ${{ github.event.repository.default_branch }}
+      - name: Registrar a entrada no estado
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          N: ${{ github.event.issue.number }}
+          ESTADO: ${{ github.event.label.name }}
+          QUANDO: ${{ github.event.issue.updated_at }}
+        run: |
+          set -euo pipefail
+
+          # SÓ AS LABELS DE ESTADO. `needs-user`, `sob-<n>` e `manual` não são colunas — um
+          # card escalado continua onde o trabalho parou, e registrar isso como transição
+          # inventaria uma coluna que não existe.
+          case "$ESTADO" in
+            anchors:to-do|anchors:in-progress|anchors:ready-to-review|anchors:in-review|anchors:ready-to-test|anchors:in-test|anchors:ready-to-release|anchors:production) ;;
+            *) echo "$ESTADO não é coluna — nada a registrar"; exit 0 ;;
+          esac
+
+          mkdir -p .anchors-historico
+          arq=".anchors-historico/estados.jsonl"
+
+          # JSONL e não JSON: o arquivo só CRESCE, uma linha por transição. Um JSON exigiria
+          # ler, parsear e reescrever o todo a cada evento — e dois eventos simultâneos
+          # perderiam um. Acrescentar uma linha é atômico o bastante.
+          printf '{"card":%s,"estado":"%s","em":"%s"}\n' "$N" "$ESTADO" "$QUANDO" >> "$arq"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$arq"
+          git diff --cached --quiet && { echo "nada novo"; exit 0; }
+          git commit -q -m "chore(histórico): #$N → ${ESTADO#anchors:}"
+
+          # `--rebase` e não `--force`: outro evento pode ter commitado no meio. O arquivo
+          # só cresce, então o rebase nunca conflita de verdade.
+          git pull -q --rebase origin "${{ github.event.repository.default_branch }}" || true
+          git push -q origin HEAD:"${{ github.event.repository.default_branch }}" || \
+            echo "⚠ não consegui gravar o histórico — o board segue sem o tempo por coluna"
+
+  reverter:
+    runs-on: ubuntu-latest
+    # O PRÓPRIO PIPELINE não se vigia: ele move card o tempo todo, e reagir aos próprios
+    # eventos seria um laço. Esta é a distinção que o `actor` permite — e a única que ele
+    # permite, porque os agentes usam a mesma conta que a pessoa.
+    if: github.event.sender.login != 'github-actions[bot]'
+    steps:
+      - name: Desfazer a mudança que não veio do fluxo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: anchors
+          N: ${{ github.event.issue.number }}
+          ACAO: ${{ github.event.action }}
+          LABEL_MEXIDA: ${{ github.event.label.name }}
+          QUEM: ${{ github.event.sender.login }}
+        run: |
+          set -euo pipefail
+
+          # É CARD DO ANCHORS? Uma issue comum do projeto não tem nada a ver com esta
+          # trava, e reverter uma seria pior que o defeito que ela evita.
+          #
+          # `--label "$LABEL"` e não uma leitura das labels da issue: é o mesmo filtro que
+          # os outros pipelines usam, e a régua `TestPipelinesSoTocamCardsDoAnchors` o
+          # confronta — duas formas de perguntar a mesma coisa divergiriam na primeira vez
+          # que uma delas mudasse.
+          if ! gh issue list --repo "$GH_REPO" --state all --label "$LABEL" \
+               --limit 200 --json number --jq '[.[].number] | index('"$N"')' | grep -qv null; then
+            echo "#$N não é card do Anchors — fora da alçada desta trava"
+            exit 0
+          fi
+
+          # O DESCARTADO JÁ SAIU DO FLUXO, e reabri-lo o traria de volta.
+          #
+          # O `anchors discard` fecha o card depois de marcá-lo — e fechar à mão é
+          # exatamente o que esta trava reverte. Sem esta saída, o card descartado voltaria
+          # a abrir em dez segundos, e o `claim` o serviria como trabalho novo: o mesmo
+          # ciclo que o #410 sofreu, agora por outra porta.
+          if gh issue view "$N" --repo "$GH_REPO" --json labels \
+             --jq '[.labels[].name] | any(. == "anchors:discarded")' | grep -q true; then
+            echo "#$N está DESCARTADO — fora do fluxo, e fora desta trava"
+            exit 0
+          fi
+
+          # O OPT-OUT. A label diz "este card sou eu que movo", e é um ato deliberado que
+          # fica no card, à vista, até alguém removê-la.
+          if gh issue view "$N" --repo "$GH_REPO" --json labels \
+             --jq '[.labels[].name] | any(. == "anchors:manual")' | grep -q true; then
+            echo "#$N tem \`anchors:manual\` — movimento manual autorizado"
+            exit 0
+          fi
+
+          # SÓ OS ESTADOS DA ALÇADA DO ANCHORS, e a lista para em `ready-to-test`.
+          #
+          # Duas exclusões, por razões diferentes:
+          #
+          #   · `sob-<n>`, `desbloqueia-<n>` e `needs-user` são postas à mão DE PROPÓSITO —
+          #     o `escalate` e o `unblock` fazem isso pela CLI, que autentica como a pessoa.
+          #     Revertê-las desfaria o trabalho dos próprios comandos do Anchors.
+          #
+          #   · `in-test`, `ready-to-release` e `production` são dos PIPELINES DE ENTREGA do
+          #     projeto. O Anchors escreve até `ready-to-test` e larga — o que vem depois é
+          #     de outro fluxo, e reverter ali seria desfazer trabalho que não é dele.
+          if [ "$ACAO" = "labeled" ] || [ "$ACAO" = "unlabeled" ]; then
+            case "$LABEL_MEXIDA" in
+              anchors:to-do|anchors:in-progress|anchors:ready-to-review|anchors:in-review|anchors:ready-to-test)
+                ;;
+              *)
+                echo "#$N: \`$LABEL_MEXIDA\` não é label de estado — fora da alçada"
+                exit 0
+                ;;
+            esac
+          fi
+
+          # A REVERSÃO, e cada caso tem o seu inverso.
+          case "$ACAO" in
+            closed)
+              # Quem fecha é o MERGE, pela linha `Closes #N`. Um fechamento manual tira o
+              # card da fila antes de o trabalho ser aceito.
+              #
+              # SALVO QUANDO O TRABALHO JÁ ENTROU — e essa é a exceção que faltava.
+              #
+              # A plataforma reconhece só o PRIMEIRO número de uma lista com vírgula. Um PR
+              # com `Closes #419, #473` merge, fecha o #419, e deixa o #473 aberto com o
+              # trabalho já entregue. Quem nota fecha o card à mão, que é o ato CERTO — e a
+              # trava o desfazia, porque pela regra que ela conhecia aquilo era um card
+              # saindo da fila sem merge.
+              #
+              # Medido: o #473 voltou para `in-progress` e ficou três horas parado esperando
+              # um trabalho que já existia. A trava produziu exatamente o que existe para
+              # impedir: um card fora do estado que o fato manda.
+              #
+              # O FATO que decide é um PR MERGEADO que cita o card. Não o corpo do PR (a
+              # linha `Closes` é justamente a que falhou), nem a palavra de quem fechou:
+              # o merge é registro da plataforma, e é o mesmo fato que fecharia o card se a
+              # sintaxe estivesse certa.
+              #
+              # O TIMELINE e não `gh pr list --search`. A busca é TEXTUAL e difusa — medido,
+              # `--search 99999` devolveu um PR que não tem nada com o número. Uma trava que
+              # deixa de reverter por um falso positivo é pior que não ter trava: ela
+              # continuaria dizendo que vigia.
+              #
+              # O PR MERGEADO NÃO ISENTA MAIS O FECHAMENTO, e a mudança é de doutrina.
+              #
+              # Isto consultava o timeline: se um PR mergeado citava o card, o fechamento
+              # era tratado como LEGÍTIMO e a trava não revertia. A premissa era que o
+              # merge encerra o trabalho — e ele não encerra.
+              #
+              # A alçada do Anchors acaba em `ready-to-test`; a esteira não. Vêm `in-test`,
+              # `ready-to-release` e `production` — do CD do projeto, que o Anchors não
+              # rastreia. Um card fechado no merge declara entregue um trabalho com três
+              # estados à frente, e quem ia testar perde de vista o que testar.
+              #
+              # MEDIDO: 71 cards fechados em `ready-to-test` contra 7 abertos, 35 num só
+              # dia. A coluna que devia acumular o que espera teste mostrava só o resíduo.
+              #
+              # Agora o merge move o card para `ready-to-test` (o `pr-checks` faz isso) e
+              # ele fica ABERTO ali. Quem fecha é quem termina a esteira, declarando
+              # `anchors:manual` (entregue) ou `anchors:discarded` (saiu do roadmap) — e
+              # essas duas saem desta trava antes de chegar aqui.
+              #
+              # `Refs #N` (v0.1.130) é o que o `pr-body` gera, e não fecha. Os cards que
+              # `Closes` fechou antes disso são passado, não regra.
+              gh issue reopen "$N" --repo "$GH_REPO" >/dev/null
+              motivo="fechado à mão"
+              inverso="reaberto"
+              ;;
+            reopened)
+              # REABRIR NEM SEMPRE É VIOLAÇÃO — e a assimetria é de propósito.
+              #
+              # A trava era simétrica: fechou à mão, reabre; reabriu à mão, fecha. Isso
+              # valia enquanto fechar significava "trabalho encerrado". Não significa
+              # mais: o card fica ABERTO em `ready-to-test` até alguém terminar a esteira,
+              # e todo card que o `Closes` fechou antes da v0.1.130 está fechado por um
+              # motivo que deixou de existir.
+              #
+              # Reabrir um desses CORRIGE o estado. Fechá-lo de volta faria a trava
+              # defender uma regra revogada — e faria isso em massa exatamente quando
+              # alguém tenta consertar o passivo.
+              #
+              # O QUE CONTINUA BARRADO: reabrir um card DECLARADO encerrado. `manual`
+              # (entregue) e `discarded` (fora do roadmap) são decisões de alguém, e
+              # desfazê-las à mão é a mexida que esta trava existe para reverter.
+              #
+              # A conferência é REPETIDA aqui de propósito. As guardas lá em cima desviam
+              # esses dois casos e nunca chegariam neste ponto — mas elas desviam por
+              # motivos próprios ("o descartado saiu do fluxo", "o opt-out autoriza"), e
+              # depender da ordem delas deixaria este ramo correto por acidente. Se
+              # qualquer uma mudar, aqui continua decidindo pelo que importa aqui.
+              if gh issue view "$N" --repo "$GH_REPO" --json labels \
+                 --jq '[.labels[].name] | any(. == "anchors:manual" or . == "anchors:discarded")' \
+                 | grep -q true; then
+                gh issue close "$N" --repo "$GH_REPO" >/dev/null
+                motivo="reaberto à mão, e o encerramento estava DECLARADO"
+                inverso="fechado de novo"
+              else
+                echo "· #$N: reaberto sem declaração de encerramento — mantido ABERTO"
+                gh issue comment "$N" --repo "$GH_REPO" --body "$(printf '%s\n' \
+                  "↩️ **Reabertura mantida.**" \
+                  "" \
+                  "Este card estava fechado sem \`anchors:manual\` nem \`anchors:discarded\`" \
+                  "— fechou por efeito do \`Closes\` no corpo de um PR, não por decisão de" \
+                  "alguém." \
+                  "" \
+                  "A alçada do Anchors termina em \`ready-to-test\`; a esteira segue no CD" \
+                  "(\`in-test\`, \`ready-to-release\`, \`production\`). O card fica aberto até" \
+                  "quem termina a esteira declarar o encerramento.")" >/dev/null
+                exit 0
+              fi
+              ;;
+            labeled)
+              # PUTTING `to-do` ON A STATELESS CARD IS ENTERING THE FLOW, NOT A MOVE.
+              #
+              # Whoever creates the card already with `anchors:to-do` — by hand, through
+              # `anchors escalate`, through the web UI — fires `labeled` as a human, and this
+              # lock treated it as tampering: it removed the label twenty seconds later. The
+              # `estado-inicial` job above did not fix it, because when it looked the card
+              # ALREADY had a state. The two jobs ran together and cancelled each other out.
+              #
+              # MEASURED in the reference project: 21 open cards with no state at all, all
+              # with the same trail — born with `to-do`, and `github-actions[bot]` removes it
+              # in ~20s. Invisible to `claim`, which only sweeps states: real work no agent
+              # picks up, while the board shows an empty queue.
+              #
+              # The distinction is what the card ALREADY HAD. With no other state, `to-do` is
+              # the entrance — exactly what `estado-inicial` would have set. With another
+              # state (someone moving an `in-progress` back to the queue by hand), it is a
+              # move, and it is still reverted.
+              if [ "$LABEL_MEXIDA" = "anchors:to-do" ]; then
+                outros=$(gh issue view "$N" --repo "$GH_REPO" --json labels \
+                  --jq '[.labels[].name
+                         | select(. == "anchors:in-progress" or . == "anchors:ready-to-review"
+                                  or . == "anchors:in-review" or . == "anchors:ready-to-test")]
+                        | length')
+                if [ "${outros:-0}" -eq 0 ]; then
+                  echo "#$N: \`to-do\` on a stateless card — it is entering the flow, kept"
+                  exit 0
+                fi
+              fi
+              gh issue edit "$N" --repo "$GH_REPO" --remove-label "$LABEL_MEXIDA" >/dev/null
+              motivo="a label \`$LABEL_MEXIDA\` foi posta à mão"
+              inverso="removida"
+              ;;
+            unlabeled)
+              gh issue edit "$N" --repo "$GH_REPO" --add-label "$LABEL_MEXIDA" >/dev/null
+              motivo="a label \`$LABEL_MEXIDA\` foi removida à mão"
+              inverso="devolvida"
+              ;;
+            *)
+              exit 0
+              ;;
+          esac
+
+          # O COMENTÁRIO é o que transforma a reversão em ensinamento. Sem ele, quem mexeu
+          # vê o card voltar sozinho e conclui que o pipeline está quebrado.
+          gh issue comment "$N" --repo "$GH_REPO" --body "🔒 **Revertido: $motivo** (por \`$QUEM\`), e o card foi $inverso.
+
+          O card se move pelo FATO, não à mão: \`in-progress\` porque o claim entregou, \`ready-to-review\` porque os checks passaram, \`ready-to-test\` porque o PR mergeou. E ali ele FICA ABERTO: a alçada do Anchors termina no CI, a esteira segue no CD (\`in-test\`, \`ready-to-release\`, \`production\`). Quem fecha é quem termina a esteira, declarando \`anchors:manual\` (entregue) ou \`anchors:discarded\` (saiu do roadmap).
+
+          **O que isto evita:** um card fechado antes do merge sai de \`ready-to-review\` sem ser revisado. O claim procura revisão primeiro e não acha nada — então entrega trabalho novo, e o PR fica esperando. Medido: 25 PRs verdes acumulados com zero cards na fila de revisão.
+
+          **Se o movimento era deliberado**, ponha a label \`anchors:manual\` no card e refaça. Ela é o opt-out, e fica visível para quem vier depois." >/dev/null
+
+          echo "· #$N REVERTIDO: $motivo → $inverso"

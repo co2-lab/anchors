@@ -1,0 +1,399 @@
+// @anchors
+//   code: PCJTP
+//   ref: PCJPL
+
+package gate
+
+import (
+	"github.com/co2-lab/anchors/internal/testkit"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// O CASO QUE MOTIVOU O GATE: alguém achou uma inconsistência no plano e corrigiu em
+// silêncio. O arquivo fica VÁLIDO — a inconsistência foi removida —, e é por isso que
+// nenhum gate de estado o pega. O que denuncia é a mudança sem justificativa.
+func TestAlterado_semRevisaoReprova(t *testing.T) {
+	t.Run("PCJPL-B03: A changed plan or spec with no declared revision fails", func(t *testing.T) {})
+	v, d := checkPlanChangeJustified(
+		"# Plano 0001 — Fundação\n\n## Objetivo\n\nTexto corrigido sem dizer nada.\n",
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
+	if v != Fail {
+		t.Fatalf("plano alterado sem revisão deve reprovar, veio %v: %s", v, d)
+	}
+	// O laudo tem de ENSINAR as duas saídas, senão o agente escolhe a errada por não
+	// saber que a outra existe.
+	if !strings.Contains(d, "FNDTN-R0001") {
+		t.Errorf("o laudo deve mostrar o formato com o código do arquivo; veio: %s", d)
+	}
+	if !strings.Contains(d, "anchors escalate") {
+		t.Errorf("o laudo deve dar a SAÍDA para quando a correção MUDA A DIREÇÃO — nomear a "+
+			"label não basta, o comando é o que torna escalar tão barato quanto corrigir; "+
+			"veio: %s", d)
+	}
+}
+
+func TestAlterado_comRevisaoPassa(t *testing.T) {
+	t.Run("PCJPL-B04: A changed plan or spec with a valid revision passes", func(t *testing.T) {})
+	t.Run("PCJPL-X01: The gate does not judge whether a correction is directional", func(t *testing.T) {})
+	v, d := checkPlanChangeJustified(
+		"# Plano 0001\n\n> **FNDTN-R0001:** o exemplo citava um pacote que não existe.\n",
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
+	if v != Pass {
+		t.Fatalf("revisão declarada deveria passar, veio %v: %s", v, d)
+	}
+}
+
+// A revisão de OUTRO documento não justifica a mudança deste. Sem isto, bastaria citar a
+// revisão alheia ao explicar o contexto para o gate calar.
+func TestAlterado_revisaoDeOutroNaoConta(t *testing.T) {
+	t.Run("PCJPL-B05: Citing the revision of another document does not count", func(t *testing.T) {})
+	v, _ := checkPlanChangeJustified(
+		"# Plano 0017\n\nComo explica a `MTUAO-R0001`, o CI mudou.\n",
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
+	if v != Fail {
+		t.Fatalf("revisão de outro código não justifica a mudança deste, veio %v", v)
+	}
+}
+
+// A NUMERAÇÃO é o que uma marca solta não daria: quantas vezes o documento mudou. Com
+// buraco ela para de responder isso.
+func TestAlterado_numeracaoComBuracoReprova(t *testing.T) {
+	t.Run("PCJPL-B06: Revisions with non-sequential numbering fail", func(t *testing.T) {})
+	t.Run("PCJPL-I02: Revisions must be sequential from one without gaps", func(t *testing.T) {})
+	v, d := checkPlanChangeJustified(
+		"> **FNDTN-R0001:** primeira.\n\n> **FNDTN-R0007:** pulou do 1 para o 7.\n",
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
+	if v != Fail {
+		t.Fatalf("numeração com buraco deve reprovar, veio %v: %s", v, d)
+	}
+}
+
+func TestAlterado_variasRevisoesSequenciaisPassam(t *testing.T) {
+	t.Run("PCJPL-B07: Multiple sequential revisions pass and cite the latest", func(t *testing.T) {})
+	v, d := checkPlanChangeJustified(
+		"> **FNDTN-R0001:** primeira.\n\n> **FNDTN-R0002:** segunda.\n\n> **FNDTN-R0003:** terceira.\n",
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
+	if v != Pass {
+		t.Fatalf("três revisões sequenciais deveriam passar, veio %v: %s", v, d)
+	}
+	// O laudo cita a ÚLTIMA — é a que explica a mudança que está sendo confrontada.
+	if !strings.Contains(d, "R0003") {
+		t.Errorf("o laudo deve citar a revisão mais recente; veio: %s", d)
+	}
+}
+
+// Sem código não há como saber de quem é a revisão. Skip, e não Fail: quem cobra o código
+// é outro gate, e reprovar aqui daria dois achados para um defeito só.
+func TestAlterado_semCodigoPula(t *testing.T) {
+	t.Run("PCJPL-B02: An artifact with no identity code is skipped", func(t *testing.T) {})
+	t.Run("PCJPL-X02: The gate does not enforce identity code presence", func(t *testing.T) {})
+	v, _ := checkPlanChangeJustified("# Plano\n", mapx.Node{ID: "plans/0001.md"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
+	if v != Skip {
+		t.Fatalf("sem código o gate deve pular, veio %v", v)
+	}
+}
+
+// O marcador tem de sobreviver às formas que as pessoas escrevem markdown: dentro de
+// alerta, em negrito, como item de lista.
+func TestAlterado_formasDeEscreverAMarca(t *testing.T) {
+	t.Run("PCJPL-B08: Revisions written in various markdown formats pass", func(t *testing.T) {})
+	for _, forma := range []string{
+		"> **FNDTN-R0001:** dentro de citação e negrito",
+		"FNDTN-R0001: cru, no começo da linha",
+		"> [!NOTE]\n> FNDTN-R0001: dentro de um alerta do GitHub",
+		"**FNDTN-R0001**: negrito antes dos dois-pontos",
+	} {
+		if v, d := checkPlanChangeJustified(forma, mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md")); v != Pass {
+			t.Errorf("deveria aceitar %q, veio %v: %s", forma, v, d)
+		}
+	}
+}
+
+// cfgAlterado monta o config com a lista do que MUDOU nesta execução.
+func cfgAlterado(paths ...string) *config.Config {
+	return testkit.WithComments(&config.Config{Alterados: paths})
+}
+
+// O CASO QUE O GATE ACUSAVA ERRADO, e que os outros testes não pegavam por passarem só o
+// nó alterado: `--changed X` entrega o RAIO DE IMPACTO de X, e as specs que X semeia
+// entram no escopo sem terem mudado.
+//
+// Medido no app de referência: alterar UM plano acusava 8 arquivos, 7 intocados. Um gate
+// bloqueante que acusa inocente é pior que gate nenhum — a saída barata vira desligá-lo.
+func TestAlterado_noRaioDeImpactoMasIntocadoPula(t *testing.T) {
+	t.Run("PCJPL-B01: An artifact reached only by the impact radius is skipped", func(t *testing.T) {})
+	t.Run("PCJPL-I01: Untouched nodes in the impact radius are never charged", func(t *testing.T) {})
+	v, d := checkPlanChangeJustified(
+		"# Spec que ninguém tocou\n",
+		mapx.Node{ID: "packages/shared/Workspace.spec.md", Code: "WKSPC"},
+		semGit(t), nil, cfgAlterado("plans/0001-fundacao.md"))
+	if v != Skip {
+		t.Fatalf("nó alcançado só pelo raio de impacto não tem o que justificar, veio %v: %s", v, d)
+	}
+}
+
+// Sem a lista (chamada que não passou config) o gate se cala: acusar sem saber o que mudou
+// é exatamente o defeito que ele acabou de corrigir.
+func TestAlterado_semListaDeAlteradosPula(t *testing.T) {
+	t.Run("PCJPL-X03: Without a changed files list the gate skips confrontation", func(t *testing.T) {})
+	v, _ := checkPlanChangeJustified("# Plano\n",
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, testkit.WithComments(nil))
+	if v != Skip {
+		t.Fatalf("sem saber o que mudou, o gate deve se calar, veio %v", v)
+	}
+}
+
+// O DEFEITO QUE O EXERCÍCIO REVELOU: os planos do PR de mutação já diziam por que mudaram
+// — um com `revises:`, o outro com `@revised-by` —, e o gate reprovava os dois por não
+// usarem a notação `-R0001`.
+//
+// Exigir a mesma informação em duas notações ensina a satisfazer o gate em vez de
+// comunicar, que é o oposto do que ele existe para fazer.
+func TestAlterado_jaExplicadoPorRevisaoDePlanoPassa(t *testing.T) {
+	t.Run("PCJPL-B09: A change already explained by the plan revision mechanism passes", func(t *testing.T) {})
+	for _, conteudo := range []string{
+		"<!-- @anchors\n  revises: plans/0001-fundacao.md\n-->\n# Plano 0017\n",
+		"# Plano 0001\n\n> [!IMPORTANT]\n> `@revised-by: plans/0017-mutacao.md`\n",
+		"# Plano 0001\n\n> [!WARNING]\n> `@amended-by: plans/0017-mutacao.md`\n",
+	} {
+		v, d := checkPlanChangeJustified(conteudo,
+			mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
+		if v != Pass {
+			t.Errorf("já explicado pelo mecanismo de revisão deveria passar, veio %v: %s\n%s",
+				v, d, conteudo)
+		}
+	}
+}
+
+// `--changed X` é uma AFIRMAÇÃO de quem chama, não uma medição — e o gate não pode
+// acreditar nela sozinho.
+//
+// Medido: rodei `check --changed Workspace.spec.md` para testar outra coisa, com o
+// arquivo INTOCADO, e o gate cobrou justificativa. O mesmo vale no pre-commit, que passa
+// todo arquivo staged — inclusive os que entraram por rebase ou merge sem ninguém os ter
+// editado. Cobrar de quem não mexeu é o pior defeito num gate bloqueante: barra trabalho
+// correto, e a saída barata vira desligá-lo.
+func TestAlterado_gitDesmenteAListaRecebida(t *testing.T) {
+	t.Run("PCJPL-B13: Outside a git repository the gate trusts the changed list", func(t *testing.T) {})
+	// Diretório sem git: o gate NÃO pode se calar por não conseguir medir — ali ele
+	// devolve o benefício da dúvida a quem chamou.
+	if !gitSaysChanged(t.TempDir(), "qualquer.md") {
+		t.Error("sem git não há como desmentir a lista: o gate deve confiar em quem chamou, " +
+			"senão se silencia justamente onde não consegue medir")
+	}
+}
+
+// semGit devolve um diretório FORA de repositório git.
+//
+// Sem isto os testes rodavam com `root: ""` — o diretório do próprio Anchors, um repo de
+// verdade onde `plans/0001.md` não existe e o git diz, com razão, que nada mudou. O teste
+// media o repositório errado.
+func semGit(t *testing.T) string {
+	t.Helper()
+	return t.TempDir()
+}
+
+// ARQUIVO NOVO não tem o que justificar — ele não existia, então nada foi ALTERADO.
+//
+// Medido ao escrever as duas primeiras specs de uma fase: o gate cobrou `-R0001` de
+// arquivos que nasciam naquele commit. Num arquivo novo o texto INTEIRO é a decisão;
+// exigir uma revisão de si mesmo no primeiro commit é ruído puro, e ruído em gate
+// bloqueante é o que faz alguém desligá-lo.
+func TestAlterado_arquivoNovoNaoTemOQueJustificar(t *testing.T) {
+	t.Run("PCJPL-B10: A newly created untracked file is skipped", func(t *testing.T) {})
+	dir := t.TempDir()
+	if out, err := exec.Command("git", "-C", dir, "init", "-q").CombinedOutput(); err != nil {
+		t.Skipf("sem git: %v — %s", err, out)
+	}
+	novo := filepath.Join(dir, "nova.spec.md")
+	if err := os.WriteFile(novo, []byte("# Spec nova\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	v, d := checkPlanChangeJustified("# Spec nova\n",
+		mapx.Node{ID: "nova.spec.md", Code: "NOVAA"}, dir, nil, cfgAlterado("nova.spec.md"))
+	if v != Skip {
+		t.Fatalf("arquivo que nunca foi commitado não tem alteração a justificar, veio %v: %s", v, d)
+	}
+}
+
+// ARQUIVO NOVO **STAGED** também não tem o que justificar — e este é o caso REAL.
+//
+// O teste acima escreve o arquivo e não o adiciona ao index, o que exercita só o caso
+// fácil (untracked). Mas o pre-commit roda com tudo já STAGED: é exatamente aí que o gate
+// precisa acertar, e é aí que ele errava.
+//
+// A guarda usava `git ls-files`, que consulta o INDEX — um arquivo novo staged aparece
+// como rastreado, a guarda não disparava, e o gate cobrava `-R0001` de arquivo
+// recém-nascido. Medido no app de referência: a `MutationHarness.spec.md` estava em `A` no
+// `git status` e foi acusada de "foi ALTERADO e não diz por quê"; o arquivo que de fato
+// mudou (`M`) não foi acusado.
+//
+// A pergunta certa é "existe no ÚLTIMO COMMIT?", não "é rastreado?".
+func TestAlterado_arquivoNovoSTAGEDNaoTemOQueJustificar(t *testing.T) {
+	t.Run("PCJPL-B11: A newly created staged file is skipped", func(t *testing.T) {})
+	t.Run("PCJPL-I03: Files not existing in HEAD are never charged", func(t *testing.T) {})
+	dir := t.TempDir()
+	if out, err := exec.Command("git", "-C", dir, "init", "-q").CombinedOutput(); err != nil {
+		t.Skipf("sem git: %v — %s", err, out)
+	}
+	// Um commit base: sem ele o repositório não tem HEAD, e o teste não distinguiria
+	// "não existe no HEAD" de "não há HEAD" — que é outro caminho.
+	for _, args := range [][]string{
+		{"-C", dir, "config", "user.email", "t@t"},
+		{"-C", dir, "config", "user.name", "t"},
+		{"-C", dir, "commit", "-q", "--allow-empty", "-m", "base"},
+	} {
+		if out, err := exec.Command("git", args...).CombinedOutput(); err != nil {
+			t.Skipf("git %v: %v — %s", args, err, out)
+		}
+	}
+
+	novo := filepath.Join(dir, "nova.spec.md")
+	if err := os.WriteFile(novo, []byte("# Spec nova\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// O PASSO QUE FALTAVA: o arquivo entra no index, como o pre-commit o encontra.
+	if out, err := exec.Command("git", "-C", dir, "add", "nova.spec.md").CombinedOutput(); err != nil {
+		t.Fatalf("git add: %v — %s", err, out)
+	}
+
+	v, d := checkPlanChangeJustified("# Spec nova\n",
+		mapx.Node{ID: "nova.spec.md", Code: "NOVAA"}, dir, nil, cfgAlterado("nova.spec.md"))
+	if v != Skip {
+		t.Fatalf("arquivo novo STAGED não tem alteração a justificar, veio %v: %s", v, d)
+	}
+}
+
+// E o arquivo que EXISTE no último commit e mudou continua sendo cobrado.
+//
+// Contraprova da correção acima: trocar `ls-files` por `cat-file -e HEAD:` não pode ter
+// silenciado o gate para todo mundo. Sem este teste, uma guarda que responde "é novo"
+// sempre passaria os dois casos anteriores e o gate não protegeria nada.
+func TestAlterado_arquivoQueJaExistiaNoCommitEMudouEhCobrado(t *testing.T) {
+	t.Run("PCJPL-B12: An existing committed file modified without a revision fails", func(t *testing.T) {})
+	dir := t.TempDir()
+	if out, err := exec.Command("git", "-C", dir, "init", "-q").CombinedOutput(); err != nil {
+		t.Skipf("sem git: %v — %s", err, out)
+	}
+	arq := filepath.Join(dir, "plano.md")
+	if err := os.WriteFile(arq, []byte("# Plano\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{
+		{"-C", dir, "config", "user.email", "t@t"},
+		{"-C", dir, "config", "user.name", "t"},
+		{"-C", dir, "add", "plano.md"},
+		{"-C", dir, "commit", "-q", "-m", "base"},
+	} {
+		if out, err := exec.Command("git", args...).CombinedOutput(); err != nil {
+			t.Skipf("git %v: %v — %s", args, err, out)
+		}
+	}
+
+	// Agora ele MUDA, sem declarar revisão.
+	if err := os.WriteFile(arq, []byte("# Plano\n\nmudou sem dizer por quê\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	v, d := checkPlanChangeJustified("# Plano\n\nmudou sem dizer por quê\n",
+		mapx.Node{ID: "plano.md", Code: "PLANO"}, dir, nil, cfgAlterado("plano.md"))
+	if v != Fail {
+		t.Fatalf("arquivo que existia no commit e mudou sem revisão tem de reprovar, veio %v: %s", v, d)
+	}
+}
+
+func TestRevisionsOf_extraiRevisoesEmOrdem(t *testing.T) {
+	t.Run("PCJPL-B14: RevisionsOf parses declared revisions in order", func(t *testing.T) {})
+	conteudo := "# Documento\n\n" +
+		"> **FNDTN-R0001**: primeira revisão.\n\n" +
+		"### FNDTN-R0002 — segunda revisão como título.\n"
+	revs := RevisionsOf(conteudo)
+	if len(revs) != 2 {
+		t.Fatalf("esperava 2 revisões, obteve %d", len(revs))
+	}
+	if revs[0].Code != "FNDTN" || revs[0].Number != 1 || revs[0].Explanation != "primeira revisão." {
+		t.Errorf("primeira revisão incorreta: %+v", revs[0])
+	}
+	if revs[1].Code != "FNDTN" || revs[1].Number != 2 || revs[1].Explanation != "segunda revisão como título." {
+		t.Errorf("segunda revisão incorreta: %+v", revs[1])
+	}
+}
+
+// THE SECTION-TITLE FORMAT, measured in the reference app.
+//
+// The guide shows the revision as `> **CODE-R0001:** what changed`, and the regex demands
+// the colon. But a spec may record it as a section TITLE — the natural format when there is
+// more than one and they grow a body:
+//
+//	## Revisões
+//
+//	### SRMTS-R0001 — a `B06` afirmava um vocabulário que não existe
+//
+// Measured: `ServiceMetrics` had `R0001` like that and `R0002` in the header (with `:`). The
+// gate counted ONE revision, saw the highest as `-R0002` — and failed it as "not sequential".
+//
+// The diagnosis it gave was right about the symptom and wrong about the cause: the
+// revisions WERE sequential; one of them was not seen.
+func TestRevisionsOf_readsTheSectionTitle(t *testing.T) {
+	t.Run("PCJPL-B14: RevisionsOf parses declared revisions in order", func(t *testing.T) {})
+	t.Run("PCJPL-B15: A revision written as a section title is read with the others", func(t *testing.T) {})
+	content := "## Revisões\n\n" +
+		"### SRMTS-R0001 — a `B06` afirmava um vocabulário que não existe\n\n" +
+		"A regra dizia que as severidades já eram conhecidas.\n"
+
+	revs := RevisionsOf(content)
+
+	if len(revs) != 1 {
+		t.Fatalf("the revision in a section title was not seen: %d found", len(revs))
+	}
+	if revs[0].Number != 1 || revs[0].Code != "SRMTS" {
+		t.Errorf("read %s-R%04d", revs[0].Code, revs[0].Number)
+	}
+}
+
+// And the two formats live together in the same file: it is the real state of a spec that
+// got its second revision in the header after having the first one in a section.
+func TestRevisionsOf_bothFormatsLiveTogether(t *testing.T) {
+	t.Run("PCJPL-B15: A revision written as a section title is read with the others", func(t *testing.T) {})
+	content := "> **SRMTS-R0002:** a `B06` passou a citar o vocabulário publicado\n\n" +
+		"## Revisões\n\n### SRMTS-R0001 — a `B06` afirmava um vocabulário que não existe\n"
+
+	if revs := RevisionsOf(content); len(revs) != 2 {
+		t.Errorf("expected 2 revisions, got %d — the numbering would look non-sequential", len(revs))
+	}
+}
+
+// A migration or a recode changes a plan only mechanically — the `@anchors` header, and the
+// codes renamed in anchors.renames.yaml —, and that asks for no revision; any other change
+// does.
+func TestAlterado_mudancaMecanicaPula(t *testing.T) {
+	t.Run("PCJPL-B16: A change only in the header and in renamed codes is mechanical and skips", func(t *testing.T) {})
+	seed := "<!-- @anchors\n  code: FNDT\n-->\n# Plan FNDT\n\n### FNDT-W01 — set up ARNA, the CNPJ screen\n"
+	dir := fixRepo(t, "plan.md", seed)
+	if err := os.WriteFile(filepath.Join(dir, "anchors.renames.yaml"), []byte("2026-10-04:\n  FNDT: FNDTN\n  ARNA: ARNAA\n  CNPJ: CNPJC\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// header gains a code line, the codes are widened; the bare CNPJ is left as it was
+	migrated := "<!-- @anchors\n  code: FNDTN\n  updated_at: 2026-10-04\n-->\n# Plan FNDTN\n\n### FNDTN-W01 — set up ARNAA, the CNPJ screen\n"
+	if err := os.WriteFile(filepath.Join(dir, "plan.md"), []byte(migrated), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n := mapx.Node{ID: "plan.md", Code: "FNDTN"}
+	if v, d := checkPlanChangeJustified(migrated, n, dir, nil, cfgAlterado("plan.md")); v != Skip {
+		t.Errorf("a mechanical change asks for no revision: %v %s", v, d)
+	}
+	edited := migrated + "\nA new sentence that changes the plan.\n"
+	if err := os.WriteFile(filepath.Join(dir, "plan.md"), []byte(edited), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if v, d := checkPlanChangeJustified(edited, n, dir, nil, cfgAlterado("plan.md")); v != Fail {
+		t.Errorf("a change beyond the mechanical one still asks for its revision: %v %s", v, d)
+	}
+}

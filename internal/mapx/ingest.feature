@@ -1,0 +1,238 @@
+# language: en
+# @anchors
+#   code: INFTD
+#   ref: SGINA
+#   updated_at: 2026-11-15
+#   layer: feature
+
+@SGINA
+Feature: SignalIngestion — hanging the runner's results on the map's nodes
+
+  @SGINA-B01 @unit-level
+  Scenario: A test node sums its layers and records its revisions
+    Given a test node A.test.tsx at r1 that composes a util at u1
+    When 2 passed are ingested with no layer named and then 1 failed under layer e2e
+    Then the node holds unit 2 passed and e2e 1 failed, totals 2 passed and 1 failed, revision r1, the util at u1 in its closure, and the ingestion date
+
+  @SGINA-B02 @unit-level
+  Scenario: Re-ingesting a layer replaces only that layer
+    Given a test node with unit 2 passed and e2e 1 failed
+    When unit is ingested again with 5 passed
+    Then the node holds unit 5 passed and e2e still 1 failed, totals 5 passed and 1 failed
+
+  @SGINA-B03 @unit-level
+  Scenario: A full run records the proven rules and erases the lost ones
+    Given the A spec declares V01, V02 and V03, and the cases naming V01 and V02 passed
+    When the run is ingested, and later a run where nothing passed is ingested
+    Then the spec proves V01 and V02 after the first, and nothing after the second
+
+  @SGINA-B04 @unit-level
+  Scenario: One suite never erases another suite's proof
+    Given a backend spec proven by the backend suite
+    When the mobile suite is ingested, and then the backend suite again without the proof
+    Then the backend spec keeps its proof after the mobile suite, and loses it after its own suite stopped proving it
+
+  @SGINA-B05 @unit-level
+  Scenario: A suite that proves nothing leaves the union
+    Given a spec whose B01 is proven only by the mobile suite
+    When the mobile suite is ingested again with nothing proven
+    Then the spec proves nothing and holds no mobile entry
+
+  @SGINA-B06 @unit-level
+  Scenario: The union is as fresh as its oldest contributor
+    Given the mobile suite proved B01 at rev1, the spec moved to rev2, and the backend suite proved B02 at rev2
+    When the node's freshness is read, and again after the mobile suite ran at rev2
+    Then it reads stale first and fresh after, and an entry with no recorded revision keeps it stale
+
+  @SGINA-B07 @unit-level
+  Scenario: A partial run changes only what it saw
+    Given the money and member specs fully proven
+    When a partial run that saw only member's B01 passing and B02 failing is ingested
+    Then money keeps both proofs and member keeps only B01, and a later partial run seeing only money's B01 leaves money's B02 proven
+
+  @SGINA-B08 @unit-level
+  Scenario: The external proof a full run measured again is dropped
+    Given a spec whose B02 and visual V01 an external report proved at rev1, and the repository suite proving B01 at rev2
+    When the external proof of the scenarios the run saw, B01 and B02, is dropped
+    Then external/report.xml is named, V01 keeps its external proof at rev1, B02 is gone, and once V01 is seen too the spec is fresh with only the repository proof
+
+  @SGINA-B09 @unit-level
+  Scenario: Coverage with no suite records the percentage and the baseline
+    Given the A code file with no signal
+    When 3 of 5 lines are ingested, and then 4 of 5
+    Then it reads 60 percent with no baseline after the first, and 80 percent with a baseline of 60 after the second
+
+  @SGINA-B10 @unit-level
+  Scenario: Suite coverage is the union of lines
+    Given the unit suite covering lines 1 and 2 of 4, and the integration suite covering lines 3 and 4
+    When both are ingested
+    Then the file reads 4 of 4, 100 percent; two suites covering the same lines count them once; and a suite ingested again replaces its lines
+
+  @SGINA-B11 @unit-level
+  Scenario: Totals-only suites fall back to the best suite
+    Given the unit suite reporting 3 of 10 and the integration suite 5 of 10, with no line detail
+    When both are ingested
+    Then the file reads 5 of 10
+
+  @SGINA-B12 @unit-level
+  Scenario: A measurement of the current text replaces those of another
+    Given the integration suite measured 76 lines of the old text, and the file was edited
+    When the unit suite covering 73 of 75 lines of the new text is ingested
+    Then the file reads 73 of 75, the integration entry is gone, and the node reads fresh
+
+  @SGINA-B13 @unit-level
+  Scenario: A report older than the file is kept without a revision alone, and dropped beside a fresh one
+    Given an integration report written before the file's current text
+    When it is ingested alone, then a fresh unit report covering 3 of 4 lines, then the old reports again
+    Then alone it has no revision and the node reads stale; the fresh report replaces it; and beside it the old reports are dropped
+
+  @SGINA-B14 @unit-level
+  Scenario: Line ranges round-trip
+    Given the lines 12, 1, 2, 3, 9, 13, 5, 4 and 20
+    When they are written as ranges and read back
+    Then the ranges read 1-5,9,12-13,20 and give back nine lines
+
+  @SGINA-B15 @unit-level
+  Scenario: Mutation totals and the per-scope measurement
+    Given the A code file at r1
+    When a mutation report of 8 killed and 2 survived with thresholds 60 and 80 is ingested under scope isolated
+    Then the file holds 8 killed, 2 survived, the thresholds 60 and 80, and the isolated scope holds the same numbers at r1
+
+  @SGINA-B16 @unit-level
+  Scenario: A signal goes stale when its file moves
+    Given a code file whose coverage was ingested at r1
+    When the file moves to r2
+    Then its signal is stale, while a signal with no recorded revision never is
+
+  @SGINA-B17 @unit-level
+  Scenario: Paths match at a path boundary in either direction
+    Given the node apps/mobile/src/A.tsx and the node a/b.go
+    When the report paths /abs/apps/mobile/src/A.tsx, src/A.tsx and xa/b.go are compared
+    Then the first two match apps/mobile/src/A.tsx and xa/b.go does not match a/b.go
+
+  @SGINA-B18 @unit-level
+  Scenario: Report paths resolve by the report's folder, or stay unowned
+    Given Label.tsx in both the landing and the mobile workspace
+    When src/atoms/Label.tsx is resolved for a report under the landing folder and for a report at the root
+    Then it goes to the landing's Label.tsx first and is ambiguous, with no owner, second
+
+  @SGINA-B19 @unit-level
+  Scenario: A report with no instrumented line leaves no percentage behind
+    Given the A code file ingested at 4 of 5 lines, with and without a suite
+    When a report of 0 of 0 lines is ingested for it
+    Then it reads 0 lines at 0 percent
+
+  @SGINA-B20 @unit-level
+  Scenario: Among several report paths matching a node, the exact one, then the closest in length, is always chosen
+    Given reports where src/A.test.tsx and src/A.tsx are each matched by several paths
+    When the execution, coverage and mutation are ingested fifty times over
+    Then the test node always takes the exact path's counts, and the code node the closest path's coverage and, on a length tie, the first path's mutants
+
+  @SGINA-I01 @unit-level
+  Scenario: The proven rules are the sorted union of the suites
+    Given suite one proving B02 and B01 and suite two proving B03 and B01
+    When both are ingested
+    Then the spec's proven rules are B01, B02 and B03
+
+  @SGINA-X01 @unit-level
+  Scenario: Each measurement lands only on its kind of node
+    Given a spec, a code file and a test file all matched by the same report path
+    When execution, coverage and mutation are ingested for that path
+    Then only the test file holds the execution and only the code file holds coverage and mutation
+
+  @SGINA-B21 @unit-level
+  Scenario: A mutation ingestion records the timed-out apart
+    Given a mutation report where some killed mutants timed out
+    When it is ingested
+    Then the node records the killed and, apart, how many of them timed out
+
+  @SGINA-B22 @unit-level
+  Scenario: An execution ingestion records each test file's run time under its suite
+    Given a report where one test file's cases took 1.5 seconds and another's carry no time
+    When it is ingested under a suite, and under a layer with no suite
+    Then the first records 1.5 seconds under the suite, then under the layer, and the second records nothing
+
+  @SGINA-B25 @unit-level
+  Scenario: The mutation result keeps its own rev
+    Given a code file whose mutation was measured, then changed, then covered again
+    When its mutation freshness is read
+    Then it is stale, and a map with no mutation rev falls back to the shared one
+
+  @SGINA-B24 @unit-level
+  Scenario: The tree's revs replace the map's
+    Given a map with a spec, a code file and a test file
+    When the revs of the spec and the code are refreshed, one of them unchanged, with a path the map does not have
+    Then only the changed one is counted, both carry the tree's rev, and the test keeps its own
+    And a code file whose used-by line only lost a code keeps the test reaching it fresh
+
+  @SGINA-B23 @unit-level
+  Scenario: A run time Anchors measured is recorded on the node
+    Given a map with a code file
+    When a run time is recorded for it and for a file the map does not have
+    Then the file carries the time under the suite and nothing else changes
+
+  @SGINA-B26 @unit-level
+  Scenario: The branches are the union of the fresh suites
+    Given a unit suite missing two branches, an integration suite taking one of them, and a stale suite missing another
+    When both fresh suites are ingested
+    Then the node's total is the largest listed and its missed branch is only the one both fresh suites missed
+
+  @SGINA-B27 @unit-level
+  Scenario: The lines of mutants no test ran are recorded
+    Given a mutation report with mutants no test ran on three lines
+    When it is ingested
+    Then the node reads the same lines back
+
+  @SGINA-B28 @unit-level
+  Scenario: A proven variant is kept on the node that declares its rule
+    Given a spec declaring a rule, and a run proving one variant of it and a code of another unit
+    When the run is ingested
+    Then the spec keeps the variant it proved, and nothing of the other unit
+
+  @SGINA-B29 @unit-level
+  Scenario: A file the coverage report lists, or leaves out, says so
+    Given a coverage report listing one file with lines and one with none, and a third file the suite covers that it does not list
+    When the report is ingested and the omitted files are marked
+    Then the first two record the revision they were listed at, and the third the revision it was omitted at
+
+  @SGINA-B30 @unit-level
+  Scenario: A suite that ran none of a file's lines leaves its coverage
+    Given a file whose unit suite covered all its lines and whose integration suite instrumented other lines and ran none
+    When both are ingested
+    Then the file's coverage is the unit suite's, and with neither having run it the coverage is none
+
+  @SGINA-B31 @unit-level
+  Scenario: The external coverage goes only from the files the run covered
+    Given two code files covered by an external unit report and the first also by an external integration report, and the repository's integration suite covering only the first
+    When the external coverage for the repository's integration run is dropped
+    Then external/it.lcov is named, the first file keeps the repository's coverage and the external unit one, and the second keeps the external unit one
+
+  @SGINA-B24 @unit-level
+  Scenario: The suites another measurement holds and this signal does not are adopted, and the ones it has stay
+    Given a signal with the unit suite at the new revision, and HEAD's with the unit and e2e suites at the old one
+    When the missing suites are adopted from HEAD's
+    Then the e2e suite joins at its own revision, the unit run stays, and a second adoption adds nothing
+
+  @SGINA-B32 @unit-level
+  Scenario: A late run stamps what changed after it as changed
+    Given a test reaching two code files, one of them changed after the run, and a spec it proves that changed after the run
+    When the run is ingested placed in time
+    Then the changed file and the spec's suite are stamped changed-after-run, the other file and the test as they are, the proof is stale naming the file, and the signals record when the run happened and its aliases
+
+  @SGINA-B33 @unit-level
+  Scenario: A suite proving only a scenario the spec no longer declares leaves
+    Given a spec proven by a fresh suite, and by an old suite whose only scenario the spec renamed since
+    When another report is ingested
+    Then the old suite leaves the proof with its revision, and the spec is proven at its revision now
+
+  @SGINA-B34 @unit-level
+  Scenario: An old suite whose codes are all proven again at the current rev does not stale the union
+    Given a spec proven at rev1 by two suites, then at rev2 by a third that proves every code of both
+    When the node's freshness is read, and again when an old suite proves a code the new one does not
+    Then the first reads fresh, and the second stale
+
+  @SGINA-B35 @unit-level
+  Scenario: The static survivors of a file are kept on its signal and its scope
+    Given a mutation report of a file with 6 killed mutants and 3 static survivors
+    When it is ingested for the isolated scope
+    Then the signal and the isolated scope keep the 3 static survivors

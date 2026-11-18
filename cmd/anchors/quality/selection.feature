@@ -1,0 +1,135 @@
+# language: en
+# @anchors
+#   code: SLFTS
+#   ref: SLCTN
+#   updated_at: 2026-11-13
+#   layer: feature
+
+@SLCTN
+Feature: RunSelection — a run takes only what is stale and below the minimum, unless told otherwise
+
+  @SLCTN-B01 @unit-level
+  Scenario: A file is placed in one of four boxes
+    Given results fresh and stale, passing and below the minimum, and a file never measured
+    When each is placed
+    Then each lands in its box and the one with no result is never measured
+
+  @SLCTN-B02 @unit-level
+  Scenario: The default takes stale below the minimum and never measured, and each flag opens a side
+    Given one file in each box and one never measured
+    When the selection is made with no flag, with each flag, with both, and with skip-unmeasured
+    Then no flag takes stale-below and never-measured, each flag adds its side (stale passing for a mutation run), both add fresh passing, and skip-unmeasured drops the never measured
+
+  @SLCTN-B03 @unit-level
+  Scenario: A test file is stale through what it exercises and passes by its own layer
+    Given a test whose exercised code changed, one that failed in integration but passed in unit, and one with only skipped cases
+    When their states are read for the unit layer
+    Then the first is stale, the second passes in unit, and the third is not passing
+
+  @SLCTN-B04 @unit-level
+  Scenario: A mutation result under load counts as stale and passes at the floor
+    Given code files measured under load, at a report floor, below the default floor, and with no mutant run
+    When their states are read
+    Then the one under load is stale, the others pass or not by the floor, and the one with no mutant run passes
+
+  @SLCTN-B05 @unit-level
+  Scenario: A test file belongs to the suite that ran it
+    Given a file timed by this suite, one timed only by another, one run only by this suite's layer, and one never run
+    When ownership is asked for this suite
+    Then the first, third and fourth are this suite's and the second is not
+
+  @SLCTN-B06 @unit-level
+  Scenario: Support files and no_signal targets never run
+    Given a stale failing support file and a stale failing code file the mutation gate declares in no_signal
+    When the selection is made
+    Then neither is taken
+
+  @SLCTN-B07 @unit-level
+  Scenario: The run says what it selected and what it left out
+    Given a suite with files in several boxes
+    When it runs by default
+    Then it says how many were selected and, by box, how many were left out with the flag that takes them
+
+  @SLCTN-B08 @unit-level
+  Scenario: A suite without run_changed runs whole
+    Given a suite that declares no run_changed
+    When it runs by default, and with a budget
+    Then it runs whole saying why, and with a budget it is refused before anything runs
+
+  @SLCTN-B09 @unit-level
+  Scenario: A selection that takes nothing runs nothing
+    Given a suite whose files are all fresh and passing
+    When it runs by default
+    Then it says there is nothing to run and no command runs
+
+  @SLCTN-B10 @unit-level
+  Scenario: The selected files run in as few batches as the ceiling allows
+    Given files whose command line exceeds the ceiling together, and one longer than the ceiling alone
+    When they are split into batches
+    Then each batch stays under the ceiling and the long one runs alone
+
+  @SLCTN-B11 @unit-level
+  Scenario: --all runs whole and does not combine with the other choices
+    Given a suite with run_changed and files in every box
+    When it runs with --all, and with --all together with --changed or a state flag, and a state flag with --changed
+    Then --all runs the whole command, and each combination is refused before anything runs
+
+  @SLCTN-B12 @unit-level
+  Scenario: A suite with paths is handed only its own files
+    Given a mobile mutation suite whose paths cover apps/mobile, and code files of mobile and of the landing page
+    When the selection is made for it
+    Then only the mobile files are selected and the landing page's are not counted
+
+  @SLCTN-E01 @unit-level
+  Scenario: A selective run without a map is refused
+    Given a project whose map was never built
+    When a suite with run_changed runs by default
+    Then it is refused saying to build the map or to use --all
+
+  @SLCTN-B13 @unit-level
+  Scenario: A file the gate does not confront is not run for it
+    Given a mutation gate on code that excludes the tag resource, and code files tagged resource, logic and none
+    When the mutation selection runs, and again with a gate entry that declares no kinds
+    Then only the untagged and logic files run, and without kinds every code file runs
+
+  @SLCTN-B14 @unit-level
+  Scenario: The tests of the rules a changed contract field reaches are taken
+    Given a committed spec whose rule a test proves, and the field that rule uses edited
+    When the test selection adds the impacted tests
+    Then the test file is taken, once, and the run says it was added for a changed contract field
+
+  @SLCTN-B15 @unit-level
+  Scenario: A file edited since the map was built is read as it is now
+    Given two passing tests measured at their revisions in the map, one edited on disk after the map was built and the other given only a dependency flag
+    When the default run selects
+    Then the edited one runs as never measured, and the flagged one is left out as fresh and passing
+
+  @SLCTN-B16 @unit-level
+  Scenario: A frozen file is never run
+    Given a stale failing test and a stale surviving code file, both frozen, beside the same unfrozen
+    When the test and the mutation runs select their files
+    Then only the unfrozen files run, and each run says it left one frozen file out
+
+  @SLCTN-B17 @unit-level
+  Scenario: A test run takes every stale file by default
+    Given a stale test file that passed once, and a code file with a stale mutation score at the floor
+    When a test run and a mutation run select with no flag
+    Then the test file runs, and the code file stays out as stale but passing
+
+  @SLCTN-B18 @unit-level
+  Scenario: A file the suite does not run is named as unproven
+    Given two never-measured test files, and a suite whose runner reports a result for one of them only
+    When the test run takes both
+    Then the run names the other as handed and come back with no result, and says how to narrow the suite
+
+  @SLCTN-B19 @unit-level
+  Scenario: A run that proved none of its files fails
+    Given two never-measured test files, and a suite whose runner reports no case and exits 0
+    When the test run takes both
+    Then the run fails naming the count and the first path handed
+
+  @SLCTN-B20 @unit-level
+  Scenario: A time under a report no suite declares names no suite
+    Given a stale passing unit test timed only under a report ingested by hand, and suites that declare other reports
+    When the unit suite selects its files
+    Then the test is the unit suite's and runs, and a test a declared suite timed stays that suite's

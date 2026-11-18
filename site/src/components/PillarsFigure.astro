@@ -1,0 +1,113 @@
+---
+// Six pillars holding the project — structure, planning, spec, traceability, propagation and quality — with a crack a gate found in one of them, beside a crossed-out dashboard number.
+// Card text stays in English on purpose, as on the evidence board: names and codes are what a
+// project shows.
+interface Props {
+	label: string;
+}
+const { label } = Astro.props;
+---
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" role="img" aria-label={label} class="landing-figure">
+  <defs>
+    <pattern id="pl-cork" width="14" height="14" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" fill="#201e1d"/>
+      <circle cx="3" cy="4" r="0.9" fill="#2e2b29"/>
+      <circle cx="10" cy="10" r="0.7" fill="#2a2725"/>
+    </pattern>
+    <filter id="pl-shadow" x="-10%" y="-10%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <radialGradient id="pl-pin" cx="35%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#f8907a"/>
+      <stop offset="0.45" stop-color="#ec3013"/>
+      <stop offset="1" stop-color="#7a1a08"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="960" height="400" rx="10" fill="#2e2b29"/>
+  <rect x="8" y="8" width="944" height="384" rx="6" fill="url(#pl-cork)"/>
+  {/* the roof: the project */}
+  <path d="M200 92 L560 34 L920 92 Z" fill="#cdc7c2"/>
+  <rect x="200" y="92" width="720" height="22" fill="#e6e2df"/>
+  <text x="560" y="80" text-anchor="middle" class="pl-m pl-name" style="font-size:12px">your project</text>
+  <rect x="226" y="114" width="68" height="12" fill="#cdc7c2"/>
+  <rect x="234" y="126" width="52" height="170" fill="#e6e2df"/>
+  <line x1="246" y1="130" x2="246" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="260" y1="130" x2="260" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="274" y1="130" x2="274" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <rect x="226" y="296" width="68" height="12" fill="#cdc7c2"/>
+  <text x="260" y="332" text-anchor="middle" class="pl-m pl-hint" style="fill:#ec3013;font-weight:700">01</text>
+  <text x="260" y="348" text-anchor="middle" class="pl-m pl-hint" style="fill:#e6e2df;font-size:9px">STRUCTURE</text>
+  <rect x="346" y="114" width="68" height="12" fill="#cdc7c2"/>
+  <rect x="354" y="126" width="52" height="170" fill="#e6e2df"/>
+  <line x1="366" y1="130" x2="366" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="380" y1="130" x2="380" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="394" y1="130" x2="394" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <rect x="346" y="296" width="68" height="12" fill="#cdc7c2"/>
+  <text x="380" y="332" text-anchor="middle" class="pl-m pl-hint" style="fill:#ec3013;font-weight:700">02</text>
+  <text x="380" y="348" text-anchor="middle" class="pl-m pl-hint" style="fill:#e6e2df;font-size:9px">PLANNING</text>
+  <rect x="466" y="114" width="68" height="12" fill="#cdc7c2"/>
+  <rect x="474" y="126" width="52" height="170" fill="#e6e2df"/>
+  <line x1="486" y1="130" x2="486" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="500" y1="130" x2="500" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="514" y1="130" x2="514" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <rect x="466" y="296" width="68" height="12" fill="#cdc7c2"/>
+  <text x="500" y="332" text-anchor="middle" class="pl-m pl-hint" style="fill:#ec3013;font-weight:700">03</text>
+  <text x="500" y="348" text-anchor="middle" class="pl-m pl-hint" style="fill:#e6e2df;font-size:9px">SPEC</text>
+  <rect x="586" y="114" width="68" height="12" fill="#cdc7c2"/>
+  <rect x="594" y="126" width="52" height="170" fill="#e6e2df"/>
+  <line x1="606" y1="130" x2="606" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="620" y1="130" x2="620" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="634" y1="130" x2="634" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <rect x="586" y="296" width="68" height="12" fill="#cdc7c2"/>
+  <text x="620" y="332" text-anchor="middle" class="pl-m pl-hint" style="fill:#ec3013;font-weight:700">04</text>
+  <text x="620" y="348" text-anchor="middle" class="pl-m pl-hint" style="fill:#e6e2df;font-size:9px">TRACEABILITY</text>
+  <rect x="706" y="114" width="68" height="12" fill="#cdc7c2"/>
+  <rect x="714" y="126" width="52" height="170" fill="#e6e2df"/>
+  <line x1="726" y1="130" x2="726" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="740" y1="130" x2="740" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="754" y1="130" x2="754" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <rect x="706" y="296" width="68" height="12" fill="#cdc7c2"/>
+  <text x="740" y="332" text-anchor="middle" class="pl-m pl-hint" style="fill:#ec3013;font-weight:700">05</text>
+  <text x="740" y="348" text-anchor="middle" class="pl-m pl-hint" style="fill:#e6e2df;font-size:9px">PROPAGATION</text>
+  <rect x="826" y="114" width="68" height="12" fill="#cdc7c2"/>
+  <rect x="834" y="126" width="52" height="170" fill="#e6e2df"/>
+  <line x1="846" y1="130" x2="846" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="860" y1="130" x2="860" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <line x1="874" y1="130" x2="874" y2="292" stroke="#cdc7c2" stroke-width="2"/>
+  <rect x="826" y="296" width="68" height="12" fill="#cdc7c2"/>
+  <text x="860" y="332" text-anchor="middle" class="pl-m pl-hint" style="fill:#ec3013;font-weight:700">06</text>
+  <text x="860" y="348" text-anchor="middle" class="pl-m pl-hint" style="fill:#e6e2df;font-size:9px">QUALITY</text>
+  <path d="M614 140 L628 170 L616 195 L630 228 L620 258 L626 290" fill="none" stroke="#ec3013" stroke-width="2.5" stroke-linejoin="round"/>
+  <path class="pl-string" d="M628 200 Q680 220 690 250"/>
+  <circle cx="628" cy="200" r="4.5" fill="url(#pl-pin)" opacity="1"/>
+  <g filter="url(#pl-shadow)" transform="rotate(-4 730 262)">
+    <rect x="670" y="246" width="150" height="36" rx="2" fill="#ec3013"/>
+    <text x="678" y="261" class="pl-m pl-tag">✗ rule-implemented</text>
+    <text x="678" y="274" class="pl-m pl-sub">3 rules no code realizes</text>
+  </g>
+  <g transform="rotate(-4 100 150)" filter="url(#pl-shadow)">
+    <rect x="30" y="96" width="140" height="112" rx="2" fill="#f2efec"/>
+    <text x="42" y="116" class="pl-t pl-kind">DASHBOARD</text>
+    <path d="M56 176 A44 44 0 0 1 144 176" fill="none" stroke="#cdc7c2" stroke-width="10"/>
+    <path d="M56 176 A44 44 0 0 1 136 150" fill="none" stroke="#837b76" stroke-width="10"/>
+    <text x="100" y="172" text-anchor="middle" class="pl-m pl-name" style="font-size:16px">82%</text>
+    <text x="100" y="196" text-anchor="middle" class="pl-m pl-name" style="font-size:8px;font-weight:400">coverage</text>
+  </g>
+  <path d="M36 104 L166 206 M166 104 L36 206" stroke="#ec3013" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+  <circle cx="100" cy="98" r="5" fill="url(#pl-pin)"/>
+  <text x="34" y="240" class="pl-m pl-hint">one number</text>
+  <text x="34" y="254" class="pl-m pl-hint">says nothing about</text>
+  <text x="34" y="268" class="pl-m pl-hint">the pillars</text>
+</svg>
+
+<style>
+	.pl-t { font-family: Archivo, "Helvetica Neue", Arial, sans-serif; }
+	.pl-m { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+	.pl-kind { font-size: 7.5px; letter-spacing: 0.12em; fill: #ec3013; font-weight: 700; }
+	.pl-name { font-size: 9.5px; fill: #161413; font-weight: 700; }
+	.pl-hint { font-size: 10px; fill: #a8a09b; }
+	.pl-string { fill: none; stroke: #ec3013; stroke-width: 1.5; stroke-linecap: round; }
+	.pl-tag { font-size: 9px; fill: #faf8f6; font-weight: 700; }
+	.pl-sub { font-size: 8.5px; fill: #fde3dc; }
+</style>

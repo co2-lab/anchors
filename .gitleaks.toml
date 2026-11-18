@@ -1,0 +1,32 @@
+# Allowlist do gate `secret-nao-vazado`.
+#
+# Cada entrada é uma DECLARAÇÃO de que alguém olhou o achado e concluiu que não é segredo
+# — nunca um silenciador genérico. O gate é o único BLOQUEANTE da leva de segurança,
+# porque segredo vazado é o único achado sem volta: rotacionar chave custa, e o histórico
+# do git guarda a original.
+#
+# Nasce quase vazia de propósito. Uma allowlist herdada de outro projeto silencia achados
+# que ninguém verificou AQUI — que é exatamente o contrário do que ela existe para ser.
+# Cada linha abaixo entrou depois de um achado real, verificado, com o motivo escrito.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Falsos positivos verificados um a um"
+
+# `regexTarget = "match"`: por padrão o gitleaks aplica `regexes` à LINHA inteira, e os
+# padrões abaixo descrevem o MATCH. Sem isto a allowlist parece ignorada.
+regexTarget = "match"
+
+paths = [
+  # O bundle do histórico antigo, quando existir na raiz: é um arquivo binário de git,
+  # varrê-lo reporta o conteúdo de commits que já foram descartados.
+  '''.*\.bundle$''',
+]
+
+regexes = [
+  # Hashes de exemplo nos testes e nos comentários que registram medições (rev de nó,
+  # sha de commit citado num comentário). São dados do próprio grafo, não credenciais.
+  '''(?i)(rev|sha|hash|commit):\s*[0-9a-f]{7,40}''',
+]

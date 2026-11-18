@@ -1,0 +1,11 @@
+{
+  "minLines": 20,
+  "ignore": [
+    "**/.claude/**",
+    "**/node_modules/**",
+    ".anchors/**",
+    "docs/**",
+    "site/**",
+    "internal/initx/workflows/**"
+  ]
+}

@@ -1,0 +1,545 @@
+// @anchors
+//   code: GTTSA
+//   ref: GTMTG
+
+package gitmeta
+
+import (
+	"github.com/co2-lab/anchors/internal/shell"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"testing"
+	"time"
+)
+
+func gitRepo(t *testing.T) string {
+	t.Helper()
+	d := t.TempDir()
+	for _, args := range [][]string{
+		{"init", "-q"}, {"config", "user.email", "t@t.co"}, {"config", "user.name", "t"},
+	} {
+		if err := exec.Command("git", append([]string{"-C", d}, args...)...).Run(); err != nil {
+			t.Skip("git unavailable")
+		}
+	}
+	return d
+}
+
+func TestLastCommitDate(t *testing.T) {
+	t.Run("GTMTG-B02: The last commit date is the day of the most recent commit of the file", func(t *testing.T) {})
+	d := gitRepo(t)
+	os.WriteFile(filepath.Join(d, "a.txt"), []byte("1"), 0o644)
+	commitOn(t, d, "2026-01-10", "first")
+	os.WriteFile(filepath.Join(d, "a.txt"), []byte("2"), 0o644)
+	commitOn(t, d, "2026-03-05", "second")
+	date, ok := LastCommitDate(d, "a.txt")
+	if !ok || date != "2026-03-05" {
+		t.Fatalf("want the day of the most recent commit 2026-03-05, got %q ok=%v", date, ok)
+	}
+	// a file never committed → not ok
+	if _, ok := LastCommitDate(d, "nao-existe.txt"); ok {
+		t.Error("a file without a commit should give ok=false")
+	}
+}
+
+func TestHasUncommittedChanges(t *testing.T) {
+	t.Run("GTMTG-B05: The shortcut says yes after an edit and no after a commit", func(t *testing.T) {})
+	d := gitRepo(t)
+	p := filepath.Join(d, "a.txt")
+	os.WriteFile(p, []byte("x"), 0o644)
+	exec.Command("git", "-C", d, "add", "-A").Run()
+	exec.Command("git", "-C", d, "commit", "-q", "-m", "c").Run()
+	if HasUncommittedChanges(d, "a.txt") {
+		t.Error("a just-committed file should have no changes")
+	}
+	os.WriteFile(p, []byte("y"), 0o644)
+	if !HasUncommittedChanges(d, "a.txt") {
+		t.Error("after an edit it should have uncommitted changes")
+	}
+}
+
+func TestToday(t *testing.T) {
+	t.Run("GTMTG-B01: Today is the system date", func(t *testing.T) {})
+	before := time.Now().Format("2006-01-02")
+	got := Today()
+	after := time.Now().Format("2006-01-02")
+	if got != before && got != after {
+		t.Errorf("Today = %q, want the system date %q", got, before)
+	}
+}
+
+// commitOn commits everything staged-or-not with the given author date.
+func commitOn(t *testing.T, d, date, msg string) {
+	t.Helper()
+	exec.Command("git", "-C", d, "add", "-A").Run()
+	c := exec.Command("git", "-C", d, "commit", "-q", "-m", msg)
+	c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_DATE="+date+"T12:00:00", "GIT_COMMITTER_DATE="+date+"T12:00:00")
+	if out, err := c.CombinedOutput(); err != nil {
+		t.Fatalf("commit: %v %s", err, out)
+	}
+}
+
+func TestAllCommitDates(t *testing.T) {
+	t.Run("GTMTG-B03: The bulk reader gives each file its most recent commit day", func(t *testing.T) {})
+	d := gitRepo(t)
+	os.MkdirAll(filepath.Join(d, "pkg"), 0o755)
+	os.WriteFile(filepath.Join(d, "a.txt"), []byte("1"), 0o644)
+	os.WriteFile(filepath.Join(d, "pkg", "b.txt"), []byte("1"), 0o644)
+	commitOn(t, d, "2026-01-10", "first")
+	os.WriteFile(filepath.Join(d, "a.txt"), []byte("2"), 0o644)
+	commitOn(t, d, "2026-03-05", "second")
+
+	got := AllCommitDates(d)
+	// Each file carries the date of the MOST RECENT commit that touched it.
+	want := map[string]string{"a.txt": "2026-03-05", "pkg/b.txt": "2026-01-10"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("AllCommitDates = %v, want %v", got, want)
+	}
+
+	if got := AllCommitDates(t.TempDir()); len(got) != 0 {
+		t.Fatalf("outside a repository the map must be empty, got %v", got)
+	}
+}
+
+func TestHead(t *testing.T) {
+	t.Run("GTMTG-B06: HEAD is the short hash and subject, and unknown without a commit", func(t *testing.T) {})
+	d := gitRepo(t)
+	if _, _, ok := Head(d); ok {
+		t.Fatal("a repository without commits has no HEAD to report")
+	}
+	if _, _, ok := Head(t.TempDir()); ok {
+		t.Fatal("outside a repository Head must report ok=false")
+	}
+
+	os.WriteFile(filepath.Join(d, "a.txt"), []byte("x"), 0o644)
+	commitOn(t, d, "2026-02-01", "feat: the subject line")
+	short, subject, ok := Head(d)
+	want, _ := exec.Command("git", "-C", d, "rev-parse", "--short", "HEAD").Output()
+	if !ok || short != strings.TrimSpace(string(want)) || subject != "feat: the subject line" {
+		t.Fatalf("Head = %q, %q, %v; want %q, the subject, true", short, subject, ok, want)
+	}
+}
+
+// The reassuring silence: without a repository, `DirtyCount` used to return 0 — and 0 becomes
+// "tree: clean" in the report header. A report that CLAIMS a clean tree without having been
+// able to look stamps a snapshot that never existed.
+func TestDirtyCountDoesNotClaimACleanTreeItDidNotCheck(t *testing.T) {
+	t.Run("GTMTG-X01: A tree that could not be counted is not reported clean", func(t *testing.T) {})
+	dir := outsideAnyRepo(t)
+
+	if n := DirtyCount(dir); n >= 0 {
+		t.Fatalf("without a repository DirtyCount must say it does not know (<0), got %d", n)
+	}
+}
+
+// The counterpart: in a real repo the count is still the count.
+func TestDirtyCountCountsInARealRepo(t *testing.T) {
+	t.Run("GTMTG-B07: The dirty count counts the modified files of a real repository", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git not installed")
+	}
+	dir := t.TempDir()
+	if out, err := exec.Command("git", "-C", dir, "init").CombinedOutput(); err != nil {
+		t.Fatalf("setup: %s", out)
+	}
+
+	if n := DirtyCount(dir); n != 0 {
+		t.Fatalf("a new empty repo has 0 dirty files, got %d", n)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "novo.txt"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if n := DirtyCount(dir); n != 1 {
+		t.Fatalf("with 1 new file, want 1, got %d", n)
+	}
+}
+
+// A `false` from HasUncommittedChanges had TWO meanings: "it is clean" and "could not ask".
+// Whoever decides from it needs the two apart.
+func TestUncommittedChangesTellsCleanFromUnknown(t *testing.T) {
+	t.Run("GTMTG-X02: Outside a repository the pending-change question is not known", func(t *testing.T) {})
+	dir := outsideAnyRepo(t)
+
+	changed, known := UncommittedChanges(dir, "qualquer.go")
+
+	if known {
+		t.Error("without a repository the question could not be asked — saying it was is claiming without reading")
+	}
+	if changed {
+		t.Error("without an answer there is no change to claim")
+	}
+}
+
+func TestUncommittedChangesKnowsWhenThereIsARepo(t *testing.T) {
+	t.Run("GTMTG-B04: A new file in a repository has pending changes, and the question was asked", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git not installed")
+	}
+	dir := t.TempDir()
+	if out, err := exec.Command("git", "-C", dir, "init").CombinedOutput(); err != nil {
+		t.Fatalf("setup: %s", out)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "a.go"), []byte("package a\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	changed, known := UncommittedChanges(dir, "a.go")
+
+	if !known {
+		t.Fatal("with a repository the question could be asked")
+	}
+	if !changed {
+		t.Error("a new, uncommitted file IS a pending change")
+	}
+}
+
+// Compatibility: the boolean wrapper still holds for whoever only wants the yes/no.
+func TestHasUncommittedChangesStillHolds(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git not installed")
+	}
+	dir := t.TempDir()
+	if out, err := exec.Command("git", "-C", dir, "init").CombinedOutput(); err != nil {
+		t.Fatalf("setup: %s", out)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "a.go"), []byte("package a\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if !HasUncommittedChanges(dir, "a.go") {
+		t.Error("a new file in the repo is a pending change")
+	}
+}
+
+func TestAtHead(t *testing.T) {
+	t.Run("GTMTG-B08: A file's content at the last commit", func(t *testing.T) {})
+	dir := t.TempDir()
+	run := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+	}
+	run("init", "-q")
+	if err := os.WriteFile(filepath.Join(dir, "a.md"), []byte("v1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run("add", ".")
+	run("commit", "-q", "-m", "one")
+	if err := os.WriteFile(filepath.Join(dir, "a.md"), []byte("v2\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if got, ok := AtHead(dir, "a.md"); !ok || got != "v1\n" {
+		t.Errorf("the committed version, got %q %v", got, ok)
+	}
+	if _, ok := AtHead(dir, "new.md"); ok {
+		t.Error("a file HEAD does not have has no committed version")
+	}
+	if _, ok := AtHead(t.TempDir(), "a.md"); ok {
+		t.Error("no repository, no committed version")
+	}
+}
+
+func TestStagedChanges(t *testing.T) {
+	t.Run("GTMTG-B09: The commit's own changes, from the index", func(t *testing.T) {})
+	dir := t.TempDir()
+	run := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+	}
+	write := func(p, s string) {
+		if err := os.WriteFile(filepath.Join(dir, p), []byte(s), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	run("init", "-q")
+	write("a.md", "v1\n")
+	write("b.md", "v1\n")
+	run("add", ".")
+	run("commit", "-q", "-m", "one")
+	write("a.md", "v2 not staged\n")
+	write("b.md", "v2\n")
+	write("c.md", "new\n")
+	run("add", "b.md", "c.md")
+	for f, want := range map[string]bool{"a.md": false, "b.md": true, "c.md": true} {
+		if got, known := StagedChanges(dir, f); got != want || !known {
+			t.Errorf("%s: want %v, got %v (known %v)", f, want, got, known)
+		}
+	}
+	if _, known := StagedChanges(t.TempDir(), "a.md"); known {
+		t.Error("outside a repository it cannot be told")
+	}
+}
+
+func TestDirtyFiles(t *testing.T) {
+	t.Run("GTMTG-B10: The files with uncommitted changes are read in one status, relative to the root", func(t *testing.T) {})
+	d := gitRepo(t)
+	os.MkdirAll(filepath.Join(d, "app", "src"), 0o755)
+	for _, f := range []string{"app/src/clean.ts", "app/src/edited.ts", "top.txt"} {
+		os.WriteFile(filepath.Join(d, f), []byte("1"), 0o644)
+	}
+	exec.Command("git", "-C", d, "add", "-A").Run()
+	exec.Command("git", "-C", d, "commit", "-q", "-m", "c").Run()
+	os.WriteFile(filepath.Join(d, "app/src/edited.ts"), []byte("2"), 0o644)
+	os.WriteFile(filepath.Join(d, "app/src/new.ts"), []byte("3"), 0o644)
+	os.WriteFile(filepath.Join(d, "top.txt"), []byte("2"), 0o644)
+	dirty, known := DirtyFiles(filepath.Join(d, "app"))
+	if !known || !dirty["src/edited.ts"] || !dirty["src/new.ts"] || dirty["src/clean.ts"] || len(dirty) != 2 {
+		t.Errorf("the edited and the new file, relative to the root, nothing outside it: %v %v", dirty, known)
+	}
+	if _, known := DirtyFiles(t.TempDir()); known {
+		t.Error("outside git the answer is not known")
+	}
+}
+
+func TestAllCommitDates_aMerge(t *testing.T) {
+	t.Run("GTMTG-B18: A merge dates the files it changed against every parent, and leaves those that came from one side unchanged", func(t *testing.T) {})
+	d := gitRepo(t)
+	git := func(date string, args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", d}, args...)...)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_DATE="+date+"T12:00:00", "GIT_COMMITTER_DATE="+date+"T12:00:00")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v %s", args, err, out)
+		}
+	}
+	os.WriteFile(filepath.Join(d, "keep.txt"), []byte("a"), 0o644)
+	commitOn(t, d, "2026-11-01", "base")
+	git("2026-11-01", "checkout", "-q", "-b", "branch")
+	os.WriteFile(filepath.Join(d, "came.txt"), []byte("1"), 0o644)
+	os.WriteFile(filepath.Join(d, "dated.txt"), []byte("updated_at: 2026-11-11"), 0o644)
+	commitOn(t, d, "2026-11-11", "branch")
+	git("2026-11-11", "checkout", "-q", "-")
+	os.WriteFile(filepath.Join(d, "keep.txt"), []byte("b"), 0o644)
+	commitOn(t, d, "2026-11-11", "main")
+	git("2026-11-12", "merge", "-q", "--no-ff", "--no-commit", "branch")
+	os.WriteFile(filepath.Join(d, "dated.txt"), []byte("updated_at: 2026-11-12"), 0o644)
+	commitOn(t, d, "2026-11-12", "merge")
+
+	got := AllCommitDates(d)
+	if got["dated.txt"] != "2026-11-12" || got["came.txt"] != "2026-11-11" {
+		t.Errorf("dated in the merge, and came unchanged from the branch: %v", got)
+	}
+}
+
+func TestAllCommitDatesUnder(t *testing.T) {
+	t.Run("GTMTG-B11: The bulk date reader under a folder gives paths relative to it", func(t *testing.T) {})
+	d := gitRepo(t)
+	os.MkdirAll(filepath.Join(d, "pkg"), 0o755)
+	os.WriteFile(filepath.Join(d, "a.txt"), []byte("1"), 0o644)
+	os.WriteFile(filepath.Join(d, "pkg", "b.txt"), []byte("1"), 0o644)
+	commitOn(t, d, "2026-01-10", "first")
+	if got := AllCommitDatesUnder(filepath.Join(d, "pkg")); !reflect.DeepEqual(got, map[string]string{"b.txt": "2026-01-10"}) {
+		t.Errorf("under pkg: %v", got)
+	}
+	if got := AllCommitDatesUnder(d); len(got) != 2 {
+		t.Errorf("at the root, every file: %v", got)
+	}
+}
+
+func TestWorktrees(t *testing.T) {
+	t.Run("GTMTG-B12: The worktrees of a repository are listed", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	repo := t.TempDir()
+	git := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", repo}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+	}
+	sub := filepath.Join(repo, "pkg")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	_ = os.WriteFile(filepath.Join(sub, "a.txt"), []byte("a"), 0o644)
+	git("init", "-q")
+	git("add", ".")
+	git("commit", "-q", "-m", "init")
+	wt := filepath.Join(t.TempDir(), "wt")
+	git("worktree", "add", "-q", "--detach", wt)
+	got := Worktrees(sub)
+	if len(got) != 2 || filepath.Base(got[0]) != "pkg" || filepath.Base(got[1]) != "pkg" || !strings.Contains(filepath.ToSlash(got[1]), "/wt/") {
+		t.Errorf("both trees, at the subfolder: %v", got)
+	}
+	outside := t.TempDir()
+	if got := Worktrees(outside); len(got) != 1 || got[0] != outside {
+		t.Errorf("outside a repository, the folder alone: %v", got)
+	}
+}
+
+func TestCommonDir(t *testing.T) {
+	t.Run("GTMTG-B13: The worktrees share one git folder", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	repo := t.TempDir()
+	git := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", repo}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+	}
+	_ = os.WriteFile(filepath.Join(repo, "a.txt"), []byte("a"), 0o644)
+	git("init", "-q")
+	git("add", ".")
+	git("commit", "-q", "-m", "init")
+	wt := filepath.Join(t.TempDir(), "wt")
+	git("worktree", "add", "-q", "--detach", wt)
+	a, okA := CommonDir(repo)
+	b, okB := CommonDir(wt)
+	ra, _ := filepath.EvalSymlinks(a)
+	rb, _ := filepath.EvalSymlinks(b)
+	if !okA || !okB || ra != rb || !filepath.IsAbs(a) {
+		t.Errorf("one shared folder: %q %q", a, b)
+	}
+	if _, ok := CommonDir(t.TempDir()); ok {
+		t.Error("outside a repository, none")
+	}
+}
+
+func TestHooksDir(t *testing.T) {
+	t.Run("GTMTG-B14: The hooks folder is found", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	repo := t.TempDir()
+	git := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", repo}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+	}
+	_ = os.WriteFile(filepath.Join(repo, "a.txt"), []byte("a"), 0o644)
+	git("init", "-q")
+	git("add", ".")
+	git("commit", "-q", "-m", "init")
+	wt := filepath.Join(t.TempDir(), "wt")
+	git("worktree", "add", "-q", "--detach", wt)
+	a, okA := HooksDir(repo)
+	b, okB := HooksDir(wt)
+	ra, _ := filepath.EvalSymlinks(a)
+	rb, _ := filepath.EvalSymlinks(b)
+	if !okA || !okB || !filepath.IsAbs(a) || ra != rb || filepath.Base(a) != "hooks" {
+		t.Errorf("the repository's hooks folder, from both: %q %q", a, b)
+	}
+	if _, ok := HooksDir(t.TempDir()); ok {
+		t.Error("outside a repository, none")
+	}
+}
+
+func TestCommitAt(t *testing.T) {
+	t.Run("GTMTG-B15: A run's moment names the commit it measured, and a file as that commit has it", func(t *testing.T) {})
+	dir := t.TempDir()
+	run := func(date string, args ...string) string {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null",
+			"GIT_AUTHOR_DATE="+date, "GIT_COMMITTER_DATE="+date)
+		out, err := c.CombinedOutput()
+		if err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+		return strings.TrimSpace(string(out))
+	}
+	run("2026-10-01T10:00:00Z", "init", "-q")
+	if err := os.WriteFile(filepath.Join(dir, "a.md"), []byte("v1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run("2026-10-01T10:00:00Z", "add", ".")
+	run("2026-10-01T10:00:00Z", "commit", "-q", "-m", "one")
+	first := run("2026-10-01T10:00:00Z", "rev-parse", "HEAD")
+	if err := os.WriteFile(filepath.Join(dir, "a.md"), []byte("v2\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run("2026-10-02T10:00:00Z", "commit", "-q", "-am", "two")
+	if sha, ok := CommitAt(dir, time.Date(2026, 10, 1, 18, 0, 0, 0, time.UTC)); !ok || sha != first {
+		t.Errorf("the commit a moment between them measured: %q %v", sha, ok)
+	}
+	if _, ok := CommitAt(dir, time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)); ok {
+		t.Error("no commit is that old")
+	}
+	if sha, ok := Commit(dir, first[:8]); !ok || sha != first {
+		t.Errorf("a short hash names its commit in full: %q", sha)
+	}
+	if when, ok := CommitTime(dir, first); !ok || !when.Equal(time.Date(2026, 10, 1, 10, 0, 0, 0, time.UTC)) {
+		t.Errorf("the commit's time: %v", when)
+	}
+	if b, ok := AtCommit(dir, first, "a.md"); !ok || string(b) != "v1\n" {
+		t.Errorf("the file as the first commit has it: %q", b)
+	}
+	if _, ok := AtCommit(dir, first, "b.md"); ok {
+		t.Error("a file the commit lacks has none")
+	}
+}
+
+func TestProjectFiles(t *testing.T) {
+	t.Run("GTMTG-B16: The project's files are tracked and new, never ignored", func(t *testing.T) {})
+	dir := t.TempDir()
+	run := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+	}
+	run("init", "-q")
+	for name, body := range map[string]string{"a.md": "a\n", ".gitignore": "out.log\n"} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	run("add", ".")
+	run("commit", "-q", "-m", "one")
+	for _, name := range []string{"b.md", "out.log"} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte("x\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	files, ok := ProjectFiles(dir)
+	if got := strings.Join(files, ","); !ok || !strings.Contains(got, "a.md") || !strings.Contains(got, "b.md") || strings.Contains(got, "out.log") {
+		t.Errorf("tracked and new, never ignored: %v %v", files, ok)
+	}
+	if _, ok := ProjectFiles(t.TempDir()); ok {
+		t.Error("a folder that is no repository has none")
+	}
+}
+
+func TestRenames(t *testing.T) {
+	t.Run("GTMTG-B17: The files git reads as moved since HEAD, staged or in the tree, by their old and new paths; none before a first commit", func(t *testing.T) {})
+	d := gitRepo(t)
+	if err := os.MkdirAll(filepath.Join(d, "src"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	os.WriteFile(filepath.Join(d, "src", "pay.ts"), []byte("export const pay = 1\nexport const fee = 2\n"), 0o644)
+	if Renames(d) != nil {
+		t.Error("before a first commit nothing was moved")
+	}
+	commitOn(t, d, "2026-01-10", "first")
+	if err := os.MkdirAll(filepath.Join(d, "pkg"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := exec.Command("git", "-C", d, "mv", "src/pay.ts", "pkg/pay.ts").Run(); err != nil {
+		t.Fatal(err)
+	}
+	if got := Renames(d); !reflect.DeepEqual(got, map[string]string{"src/pay.ts": "pkg/pay.ts"}) {
+		t.Errorf("the move is read, got %v", got)
+	}
+}

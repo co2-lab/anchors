@@ -1,0 +1,1223 @@
+// @anchors
+//   code: INMPA
+//   ref: SGINA
+
+package mapx
+
+import (
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/scan"
+)
+
+// A ingestão de sinais de teste no grafo (o Anchors consome o artefato do runner e o
+// amarra aos nós). Casa os caminhos dos relatórios aos nós por SUFIXO de caminho —
+// relatórios costumam ter caminhos absolutos ou relativos a subdirs, então casamos
+// pelo fim do caminho, o mais específico possível.
+
+// ChangedAfterRun stamps a file of a proof that changed after the run a late ingestion
+// measured: no revision ever equals it, so the proof reads as stale, naming the file.
+const ChangedAfterRun = "changed-after-run"
+
+// RunAsOf places a late ingestion's run: whether a file is the same as when the run measured
+// it, when the run happened, and the aliases that renamed the report's codes. Nil is a run
+// ingested as it ended — everything as the map holds it now.
+type RunAsOf struct {
+	Unchanged func(id string) bool
+	RanAt     string
+	Remapped  []string
+}
+
+// SetRunAsOf places the next ingestions' run (nil: as it ended).
+func (g *Graph) SetRunAsOf(r *RunAsOf) { g.runAsOf = r }
+
+// revAsOf is the revision a proof stamps for a file: its revision now, or ChangedAfterRun when
+// a late ingestion's run measured another content.
+func (g *Graph) revAsOf(id, now string) string {
+	if g.runAsOf == nil || g.runAsOf.Unchanged == nil {
+		return now
+	}
+	file := id
+	if spec, _, isRow := strings.Cut(id, "#out:"); isRow {
+		file = spec
+	}
+	if g.runAsOf.Unchanged(file) {
+		return now
+	}
+	return ChangedAfterRun
+}
+
+// markRun writes, on a signal a late ingestion stamped, when the run happened and the aliases
+// it was read with.
+func (g *Graph) markRun(s *TestSignal) {
+	if g.runAsOf == nil {
+		return
+	}
+	s.RanAt, s.Remapped = g.runAsOf.RanAt, g.runAsOf.Remapped
+}
+
+// IngestExecution grava, nos nós de TESTE, quantos casos passaram/falharam/pularam,
+// e nos nós de CÓDIGO/SPEC os códigos de cenário PROVADOS (que aparecem num caso que
+// passou). `byFile` mapeia arquivo-de-teste → (passed, failed, skipped). `proven` é o
+// conjunto global de códigos provados. `now` é carimbado por quem chama.
+type ExecByFile struct {
+	Passed, Failed, Skipped int
+	// Seconds is the file's run time in this report: the sum of its cases' times.
+	Seconds float64
+}
+
+// declaredByNode: para os nós que precisam de cobertura semântica (specs), quais
+// códigos de cenário ELES declaram (lido do arquivo pelo comando — o mapx não toca
+// disco). IngestExecution cruza esses declarados com os provados.
+func (g *Graph) IngestExecution(byFile map[string]ExecByFile, proven map[string]bool, declaredByNode map[string][]string, layer, now string) (matchedFiles, matchedCodes int) {
+	return g.IngestExecutionSuite(byFile, proven, nil, declaredByNode, layer, "", now)
+}
+
+// IngestExecutionSuite is IngestExecution with the SUITE named (the report the execution
+// came from). With a suite, each spec's proof is stored under its key and `ProvenCodes`
+// becomes the union of all of them — re-ingesting the SAME suite still erases what it
+// stopped proving, but one suite's ingestion no longer speaks for the others. An empty
+// suite keeps the previous behaviour: the report is the whole measurement.
+//
+// An old proof with no suite (ingested before this field existed) has no known owner;
+// the first suite ingestion touching the spec replaces it with the measured union.
+//
+// `seen` marks a PARTIAL run (`anchors test --changed`): the codes its cases named. A
+// full run is the whole measurement, and what it did not prove stops being proven — that
+// is how a deleted test loses its proof. A partial run measured only its cut: each spec
+// keeps its earlier proof for the codes this run did not see, and takes this run's result
+// for the codes it did. Before, a partial run of 4 test files erased the proof of every
+// spec outside the cut (reported from the reference app: MoneyDetailScreen lost 12 green scenarios to a
+// run that never executed its test). nil = full run.
+func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen map[string]bool, declaredByNode map[string][]string, layer, suite, now string) (matchedFiles, matchedCodes int) {
+	if layer == "" {
+		layer = "unit" // camada default quando não informada
+	}
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		// execução: casa nós de teste pelo caminho, ACUMULANDO por camada
+		if n.Kind == KindTest {
+			if ex, ok := matchReport(n.ID, byFile); ok {
+				ensureSignal(n)
+				if n.Signal.ByLayer == nil {
+					n.Signal.ByLayer = map[string]LayerExec{}
+				}
+				// substitui a camada (reingerir a mesma camada atualiza; outras
+				// camadas permanecem — é o merge).
+				n.Signal.ByLayer[layer] = LayerExec{Passed: ex.Passed, Failed: ex.Failed, Skipped: ex.Skipped}
+				n.Signal.Passed, n.Signal.Failed, n.Signal.Skipped = sumLayers(n.Signal.ByLayer)
+				// The file's run time in this suite, what `--budget` orders by. Kept per
+				// suite: in a monorepo each workspace's runner times its own files.
+				if ex.Seconds > 0 {
+					n.Signal.recordSeconds(suiteOrLayer(suite, layer), ex.Seconds)
+				}
+				n.Signal.AtRev = g.revAsOf(n.ID, n.Rev)
+				// Carimba também as revs do FECHO — o que este teste alcança descendo.
+				// É o que permite dizer depois "a evidência venceu porque o util que ele
+				// compõe mudou", e não só "o próprio arquivo de teste mudou".
+				n.Signal.ClosureRev = g.EvidenceClosure(n.ID)
+				for k, r := range n.Signal.ClosureRev {
+					n.Signal.ClosureRev[k] = g.revAsOf(k, r)
+				}
+				n.Signal.IngestedAt = now
+				g.markRun(n.Signal)
+				matchedFiles++
+			}
+		}
+		// cobertura semântica: dos cenários que ESTE nó declara, quais estão provados?
+		if declared, ok := declaredByNode[n.ID]; ok {
+			// A proven code counts for the node when its RULE is one the node declares: the
+			// report names scenarios, with their variant (`RDCH-B02#02`), and the node
+			// declares rules. The variant is kept — the rule is proven only when each of its
+			// scenarios is.
+			rules := make(map[string]bool, len(declared))
+			for _, code := range declared {
+				rules[scenarioRoot(code)] = true
+			}
+			// What the node no longer declares is proven by no suite: a scenario renamed or
+			// removed since a suite ran stays in that suite's proof, and a suite nobody runs
+			// again kept the node stale for good (reported from a project: an aggregate VR report
+			// proving `IVCHI-VR`, whose flow became `IVCHI-VR-S0N`).
+			dropUndeclared(n, rules)
+			var pc []string
+			for code := range proven {
+				if rules[scenarioRoot(code)] {
+					pc = append(pc, code)
+				}
+			}
+			sort.Strings(pc)
+			if seen != nil {
+				// PARTIAL: what this run did not see keeps its earlier proof.
+				var antes []string
+				if n.Signal != nil {
+					if suite == "" {
+						antes = n.Signal.ProvenCodes
+					} else {
+						antes = n.Signal.ProvenBySuite[suite]
+					}
+				}
+				tocou := false
+				for code := range seen {
+					if rules[scenarioRoot(code)] {
+						tocou = true
+						break
+					}
+				}
+				if !tocou {
+					continue // outside the cut: nothing measured here, nothing changes
+				}
+				for _, code := range antes {
+					if !seen[code] && !proven[code] {
+						pc = append(pc, code)
+					}
+				}
+				sort.Strings(pc)
+			}
+			// GRAVA MESMO VAZIO. "Nenhum cenário provado" é informação, não ausência
+			// dela — e a ingestão é a medição inteira, não um acréscimo à anterior.
+			//
+			// Com `len(pc) > 0` o nó guardava para sempre a última prova que teve.
+			// MEDIDO: ao corrigir o filtro que fazia a spec declarar a regra do
+			// vizinho, sete nós continuaram carregando `proven_codes` alheios; o
+			// `map build` e o `ingest` rodaram de novo e não limparam nada.
+			//
+			// O caso geral é pior que o resíduo: uma unidade perde o último teste
+			// verde (apagado, ou o código do cenário renomeado), e o mapa segue
+			// dizendo que a regra está provada. O `stale` não cobra a unidade,
+			// porque a prova velha responde por ela.
+			if suite == "" {
+				if len(pc) > 0 || (n.Signal != nil && len(n.Signal.ProvenCodes) > 0) {
+					ensureSignal(n)
+					n.Signal.ProvenCodes = pc
+					n.Signal.refreshStale(pc)
+					n.Signal.AtRev = g.revAsOf(n.ID, n.Rev)
+					n.Signal.IngestedAt = now
+					g.markRun(n.Signal)
+					matchedCodes += len(pc)
+				}
+				continue
+			}
+			var previous []string
+			if n.Signal != nil {
+				previous = n.Signal.ProvenBySuite[suite]
+			}
+			if len(pc) > 0 || len(previous) > 0 {
+				ensureSignal(n)
+				if n.Signal.ProvenBySuite == nil {
+					n.Signal.ProvenBySuite = map[string][]string{}
+				}
+				if n.Signal.ProvenRevBySuite == nil {
+					n.Signal.ProvenRevBySuite = map[string]string{}
+				}
+				if len(pc) > 0 {
+					n.Signal.ProvenBySuite[suite] = pc
+					n.Signal.ProvenRevBySuite[suite] = g.revAsOf(n.ID, n.Rev)
+				} else {
+					// The suite stopped proving anything here: it leaves the union, and
+					// leaves no empty entry behind in the versioned map.
+					delete(n.Signal.ProvenBySuite, suite)
+					delete(n.Signal.ProvenRevBySuite, suite)
+				}
+				n.Signal.ProvenCodes = unionProven(n.Signal.ProvenBySuite)
+				n.Signal.refreshStale(pc)
+				n.Signal.AtRev = unionRev(n.Signal, n.Rev)
+				n.Signal.IngestedAt = now
+				g.markRun(n.Signal)
+				matchedCodes += len(pc)
+			}
+		}
+	}
+	return
+}
+
+// ExternalSuitePrefix marks the suite of a report ingested from OUTSIDE the repository
+// (`anchors ingest --junit /tmp/report.xml`). See DropExternalProof.
+const ExternalSuitePrefix = "external/"
+
+// DropExternalProof removes, from the suites of reports ingested from outside the
+// repository, the proof of the scenarios a full run of an in-repo suite measured again
+// (`seen`), recomputes each node's union and freshness, and returns the suites it touched.
+//
+// Such a report is an ad-hoc run: nothing in the project writes it again, so its suite
+// never runs a second time. Since a partial run keeps the other suites' proof (see
+// IngestExecutionSuite), the entry stayed in the map for good — and once the spec changed,
+// its old rev kept the node STALE forever through `unionRev`, since the suite that
+// could refresh it does not exist. Measured in this repository: `external/report.xml`,
+// left by one manual `go test | go-junit-report > /tmp/report.xml`, sat on 20 nodes
+// after every later `anchors test`. The full run is the measurement the ad-hoc one stood
+// in for — but only for what it measured.
+//
+// Only the scenarios the run saw. Dropping every external suite map-wide erased what the
+// run never measures: on a project, `anchors test unit --all` dropped the visual suite's junit,
+// ingested from outside the repository, and 118 specs read their visual scenarios as
+// "test written and no run ingested". A scenario the run did not see keeps its external
+// proof, with the revision that proof measured.
+func (g *Graph) DropExternalProof(seen map[string]bool) (dropped []string) {
+	touched := map[string]bool{}
+	for i := range g.Nodes {
+		sig := g.Nodes[i].Signal
+		if sig == nil {
+			continue
+		}
+		changed := false
+		for s, codes := range sig.ProvenBySuite {
+			if !strings.HasPrefix(s, ExternalSuitePrefix) {
+				continue
+			}
+			var keep []string
+			for _, c := range codes {
+				if !seen[c] {
+					keep = append(keep, c)
+				}
+			}
+			if len(keep) == len(codes) {
+				continue
+			}
+			touched[s], changed = true, true
+			if len(keep) == 0 {
+				delete(sig.ProvenBySuite, s)
+				delete(sig.ProvenRevBySuite, s)
+			} else {
+				sig.ProvenBySuite[s] = keep
+			}
+		}
+		if changed {
+			sig.ProvenCodes = unionProven(sig.ProvenBySuite)
+			sig.refreshStale(nil)
+			sig.AtRev = unionRev(sig, g.Nodes[i].Rev)
+			if len(sig.ProvenBySuite) == 0 {
+				sig.ProvenBySuite, sig.ProvenRevBySuite = nil, nil
+			}
+		}
+	}
+	return sortedKeys(touched)
+}
+
+// DropExternalCoverage removes the coverage that reports of the same test layer from
+// outside the repository left on the code nodes a full run of the in-repo suite `run`
+// covered, recomputes their coverage from what remains, and returns the suites it touched.
+// A file the run did not cover keeps the external coverage — the same reason as
+// DropExternalProof —, and so does another layer's: an integration run covering a file
+// measured none of the lines its unit tests run. On a project, `anchors test integration --all`
+// dropped a unit lcov ingested from outside the repository, and pdfText fell from 100% of
+// its branches to 20%.
+func (g *Graph) DropExternalCoverage(run, layer string) (dropped []string) {
+	layer = coverageLayer(layer)
+	touched := map[string]bool{}
+	for i := range g.Nodes {
+		sig := g.Nodes[i].Signal
+		if sig == nil {
+			continue
+		}
+		if _, measured := sig.CoverageBySuite[run]; !measured {
+			continue
+		}
+		changed := false
+		for s, c := range sig.CoverageBySuite {
+			if strings.HasPrefix(s, ExternalSuitePrefix) && c.Layer == layer {
+				delete(sig.CoverageBySuite, s)
+				touched[s], changed = true, true
+			}
+		}
+		if changed {
+			c, t := unionCoverage(sig.CoverageBySuite, g.Nodes[i].Rev)
+			sig.CoveredLines, sig.TotalLines, sig.LineCoverage = c, t, 0
+			sig.BranchTotal, sig.BranchMissed = unionBranches(sig.CoverageBySuite, g.Nodes[i].Rev)
+			if t > 0 {
+				sig.LineCoverage = float64(c) / float64(t) * 100
+			}
+			sig.AtRev = oldestSuiteRev(sig.CoverageBySuite, g.Nodes[i].Rev)
+			if len(sig.CoverageBySuite) == 0 {
+				sig.CoverageBySuite = nil
+			}
+		}
+	}
+	return sortedKeys(touched)
+}
+
+// sortedKeys are a set's members, sorted.
+func sortedKeys(set map[string]bool) []string {
+	out := make([]string, 0, len(set))
+	for k := range set {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// coverageLayer is the layer a coverage entry records: empty for `unit`, the default, so a
+// map written before the layer was recorded reads as unit.
+func coverageLayer(layer string) string {
+	if layer == "unit" {
+		return ""
+	}
+	return layer
+}
+
+func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, layer, now string) (matched int) {
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		if n.Kind != KindCode {
+			continue
+		}
+		if cov, ok := matchReport(n.ID, byFile); ok {
+			ensureSignal(n)
+			if n.Signal.TotalLines > 0 {
+				n.Signal.PrevLineCoverage, n.Signal.PrevMeasured = n.Signal.LineCoverage, true
+			}
+			if n.Signal.CoverageBySuite == nil {
+				n.Signal.CoverageBySuite = map[string]SuiteCoverage{}
+			}
+			if !cov.Predates {
+				n.Signal.CoverageRev, n.Signal.CoverageOmitted = n.Rev, ""
+			}
+			var instrumented, covered []int
+			for line, hit := range cov.Lines {
+				instrumented = append(instrumented, line)
+				if hit {
+					covered = append(covered, line)
+				}
+			}
+			// A new measurement replaces the old ones (the user, 2026-11-02): a suite measured
+			// against another revision, or a report older than the file, says nothing of these
+			// lines, and kept beside a fresh one it held the node stale until that very suite
+			// ran again (reported from a project). A report older than the file is itself the old
+			// measurement: beside a fresh one — of any suite, its own included — it is dropped,
+			// and alone it is kept with no revision, which neither joins the union nor passes
+			// for fresh.
+			entry := SuiteCoverage{
+				Instrumented: encodeRanges(instrumented),
+				Covered:      encodeRanges(covered),
+				CoveredLines: cov.Covered,
+				TotalLines:   cov.Total,
+				BranchTotal:  len(cov.Branches),
+				BranchMissed: missedBranches(cov.Branches),
+				AtRev:        n.Rev,
+				Layer:        layer,
+			}
+			switch {
+			case cov.Predates && freshMeasurement(n.Signal.CoverageBySuite, n.Rev):
+				// the older report, beside a measurement of this text: nothing to keep
+			case cov.Predates:
+				entry.AtRev = ""
+				n.Signal.CoverageBySuite[suite] = entry
+			default:
+				for other, sc := range n.Signal.CoverageBySuite {
+					if sc.AtRev != n.Rev {
+						delete(n.Signal.CoverageBySuite, other)
+					}
+				}
+				n.Signal.CoverageBySuite[suite] = entry
+			}
+			c, t := unionCoverage(n.Signal.CoverageBySuite, n.Rev)
+			n.Signal.CoveredLines, n.Signal.TotalLines = c, t
+			n.Signal.LineCoverage = percent(c, t)
+			n.Signal.BranchTotal, n.Signal.BranchMissed = unionBranches(n.Signal.CoverageBySuite, n.Rev)
+			n.Signal.AtRev = oldestSuiteRev(n.Signal.CoverageBySuite, n.Rev)
+			n.Signal.IngestedAt = now
+			matched++
+		}
+	}
+	return
+}
+
+// freshMeasurement says whether a suite measured the current revision.
+func freshMeasurement(bySuite map[string]SuiteCoverage, currentRev string) bool {
+	for _, sc := range bySuite {
+		if sc.AtRev == currentRev {
+			return true
+		}
+	}
+	return false
+}
+
+// unionCoverage computes covered/total over the union of the suites' lines.
+//
+// A suite that reported only totals (LF/LH, no per-line detail) cannot join a line union.
+// When any suite lacks detail, the union falls back to the suite with the most covered
+// lines — an UNDER-estimate, never an over-estimate: summing counts would count a line
+// twice when two suites cover it.
+//
+// Only suites measured at the CURRENT rev take part. A suite recorded before the file was
+// edited speaks of another text: its line numbers no longer point at these lines, and
+// joining them mixes two numberings. Measured in the reference project: an edited handler,
+// unit fresh at 73/75, integration stale at 0/76 in the old numbering — the union read
+// 73/106 = 69% and failed the threshold on a file the fresh suite covered at 97%. The
+// stale suite stays stored (it is refreshed when it runs again) and still keeps the node
+// stale through `oldestSuiteRev`; it just says nothing about the current lines.
+func unionCoverage(bySuite map[string]SuiteCoverage, currentRev string) (covered, total int) {
+	fresh := map[string]SuiteCoverage{}
+	ran := false
+	for s, sc := range bySuite {
+		if sc.AtRev == currentRev {
+			fresh[s] = sc
+			ran = ran || sc.CoveredLines > 0
+		}
+	}
+	// A suite that ran NONE of the file's lines says nothing about which of them run: when
+	// another suite ran the file, it leaves the union. Two suites instrument a file their own
+	// way (another transformer counts other lines), and the lines of the suite that never ran
+	// it only grew the total — 61 of 61 lines covered by unit read as 60% beside an
+	// integration report with LH:0 for the file.
+	if ran {
+		for s, sc := range fresh {
+			if sc.CoveredLines == 0 {
+				delete(fresh, s)
+			}
+		}
+	}
+	bySuite = fresh
+	instr, cov := map[int]bool{}, map[int]bool{}
+	detailed := true
+	for _, sc := range bySuite {
+		if sc.Instrumented == "" && sc.TotalLines > 0 {
+			detailed = false
+		}
+		for _, l := range decodeRanges(sc.Instrumented) {
+			instr[l] = true
+		}
+		for _, l := range decodeRanges(sc.Covered) {
+			cov[l] = true
+		}
+	}
+	if detailed {
+		return len(cov), len(instr)
+	}
+	for _, sc := range bySuite {
+		if sc.CoveredLines > covered || (sc.CoveredLines == covered && sc.TotalLines > total) {
+			covered, total = sc.CoveredLines, sc.TotalLines
+		}
+	}
+	return covered, total
+}
+
+// missedBranches lists the branches never taken, ordered by line, then block, then branch.
+func missedBranches(branches map[string]bool) string {
+	var out []string
+	for id, taken := range branches {
+		if !taken {
+			out = append(out, id)
+		}
+	}
+	sortBranchIDs(out)
+	return strings.Join(out, " ")
+}
+
+// unionBranches is the branch coverage over the suites measured at the current rev: the
+// total the fullest suite lists, and the branches missed by EVERY suite that lists any —
+// a branch one suite took is taken. A suite measured at another rev numbers other lines,
+// and says nothing about these (see unionCoverage).
+func unionBranches(bySuite map[string]SuiteCoverage, currentRev string) (total int, missed string) {
+	var missedIn map[string]int
+	listing := 0
+	// As for lines: a suite that ran none of the file's lines leaves the union when another
+	// ran it. Counted, its branch ids — its own instrumentation — made the branches the
+	// other suite missed "taken somewhere".
+	ran := false
+	for _, sc := range bySuite {
+		ran = ran || (sc.AtRev == currentRev && sc.CoveredLines > 0)
+	}
+	for _, sc := range bySuite {
+		if sc.AtRev != currentRev || sc.BranchTotal == 0 || (ran && sc.CoveredLines == 0) {
+			continue
+		}
+		listing++
+		total = max(total, sc.BranchTotal)
+		if missedIn == nil {
+			missedIn = map[string]int{}
+		}
+		for _, id := range strings.Fields(sc.BranchMissed) {
+			missedIn[id]++
+		}
+	}
+	var out []string
+	for id, n := range missedIn {
+		if n == listing {
+			out = append(out, id)
+		}
+	}
+	sortBranchIDs(out)
+	return total, strings.Join(out, " ")
+}
+
+// sortBranchIDs orders `<line>:<block>:<branch>` ids numerically, part by part.
+func sortBranchIDs(ids []string) {
+	key := func(id string) [3]int {
+		var k [3]int
+		for i, p := range strings.SplitN(id, ":", 3) {
+			k[i], _ = strconv.Atoi(p)
+		}
+		return k
+	}
+	sort.Slice(ids, func(i, j int) bool {
+		a, b := key(ids[i]), key(ids[j])
+		for x := range a {
+			if a[x] != b[x] {
+				return a[x] < b[x]
+			}
+		}
+		return ids[i] < ids[j]
+	})
+}
+
+// oldestSuiteRev: the union is only as fresh as its stalest suite (see unionRev).
+func oldestSuiteRev(bySuite map[string]SuiteCoverage, current string) string {
+	suites := make([]string, 0, len(bySuite))
+	for s := range bySuite {
+		suites = append(suites, s)
+	}
+	sort.Strings(suites)
+	for _, s := range suites {
+		if rev := bySuite[s].AtRev; rev != current {
+			if rev == "" {
+				return "unknown"
+			}
+			return rev
+		}
+	}
+	return current
+}
+
+// encodeRanges writes sorted line numbers as compact ranges: `1-5,9,12-20`.
+func encodeRanges(lines []int) string {
+	if len(lines) == 0 {
+		return ""
+	}
+	sort.Ints(lines)
+	var b strings.Builder
+	start, prev := lines[0], lines[0]
+	flush := func() {
+		if b.Len() > 0 {
+			b.WriteByte(',')
+		}
+		if start == prev {
+			b.WriteString(strconv.Itoa(start))
+		} else {
+			b.WriteString(strconv.Itoa(start) + "-" + strconv.Itoa(prev))
+		}
+	}
+	for _, l := range lines[1:] {
+		if l == prev || l == prev+1 {
+			prev = l
+			continue
+		}
+		flush()
+		start, prev = l, l
+	}
+	flush()
+	return b.String()
+}
+
+// decodeRanges reads what encodeRanges wrote.
+func decodeRanges(s string) []int {
+	var out []int
+	for _, part := range strings.Split(s, ",") {
+		if part == "" {
+			continue
+		}
+		lo, hi, isRange := strings.Cut(part, "-")
+		a, err := strconv.Atoi(lo)
+		if err != nil {
+			continue
+		}
+		b := a
+		if isRange {
+			if b, err = strconv.Atoi(hi); err != nil {
+				continue
+			}
+		}
+		for l := a; l <= b; l++ {
+			out = append(out, l)
+		}
+	}
+	return out
+}
+
+// dropUndeclared removes, from a node's proof, the scenarios whose rule it no longer
+// declares — from each suite, and a suite left with none —, and recomputes what it proves and
+// the revision it was proven at.
+func dropUndeclared(n *Node, rules map[string]bool) {
+	s := n.Signal
+	if s == nil {
+		return
+	}
+	keep := func(codes []string) []string {
+		var out []string
+		for _, c := range codes {
+			if rules[scenarioRoot(c)] {
+				out = append(out, c)
+			}
+		}
+		return out
+	}
+	if len(s.ProvenBySuite) == 0 {
+		s.ProvenCodes = keep(s.ProvenCodes)
+		return
+	}
+	changed := false
+	for suite, codes := range s.ProvenBySuite {
+		kept := keep(codes)
+		switch {
+		case len(kept) == 0:
+			delete(s.ProvenBySuite, suite)
+			delete(s.ProvenRevBySuite, suite)
+			changed = true
+		case len(kept) != len(codes):
+			s.ProvenBySuite[suite] = kept
+			changed = true
+		}
+	}
+	if changed {
+		s.ProvenCodes = unionProven(s.ProvenBySuite)
+		s.AtRev = unionRev(s, n.Rev)
+	}
+}
+
+// unionProven: the codes proven by ANY suite, without repetition and in a stable order
+// (the map is versioned; map order would change the file on every ingestion).
+func unionProven(bySuite map[string][]string) []string {
+	visto := map[string]bool{}
+	var out []string
+	for _, codes := range bySuite {
+		for _, c := range codes {
+			if !visto[c] {
+				visto[c] = true
+				out = append(out, c)
+			}
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// unionRev is the rev the union of proofs can honestly claim.
+//
+// The union is only as fresh as its OLDEST contributor. If every suite that still proves
+// something measured the current rev, the union is current. If any of them measured an
+// earlier rev, that rev is returned, and `SignalStale` reports the node stale until that
+// suite runs again — which is the truth: part of what the map calls proven was measured
+// against a spec that no longer exists.
+//
+// An entry with no recorded rev (written before `ProvenRevBySuite` existed) has unknown
+// freshness, and unknown is not fresh: it returns a rev that can never match.
+//
+// A suite that measured an earlier rev holds the union back only for what it alone proves:
+// when every code it proves is proven again by a suite at the current rev, nothing of the
+// union rests on the old spec. Measured on a project: proofs ingested by hand under reports no
+// suite writes again (`out/fx.xml`, `t22.xml`…) kept 15 specs stale after the unit suite
+// proved every one of their codes at the current rev — no run could ever clear them.
+func unionRev(sig *TestSignal, current string) string {
+	suites := make([]string, 0, len(sig.ProvenBySuite))
+	for s := range sig.ProvenBySuite {
+		suites = append(suites, s)
+	}
+	sort.Strings(suites) // stable: the map is versioned
+	fresh := map[string]bool{}
+	for _, s := range suites {
+		if rev, ok := sig.ProvenRevBySuite[s]; ok && rev == current {
+			for _, c := range sig.ProvenBySuite[s] {
+				fresh[c] = true
+			}
+		}
+	}
+	for _, s := range suites {
+		rev, ok := sig.ProvenRevBySuite[s]
+		if ok && rev == current || reproven(sig.ProvenBySuite[s], fresh) {
+			continue
+		}
+		if !ok {
+			return "unknown"
+		}
+		return rev
+	}
+	return current
+}
+
+// reproven says whether every code is in the set proven at the current rev.
+func reproven(codes []string, fresh map[string]bool) bool {
+	if len(codes) == 0 || len(fresh) == 0 {
+		return false
+	}
+	for _, c := range codes {
+		if !fresh[c] {
+			return false
+		}
+	}
+	return true
+}
+
+// AdoptMissingSuites gives the signal the proofs of each suite `from` holds and it does not:
+// the suites of another measurement of the same file — the map at HEAD — that no run since
+// has replaced. A suite this signal already has was measured again, and stays as it is. It
+// says whether a suite was adopted.
+//
+// The map rebuild drops a changed file's whole signal, and a later run of ONE suite — the
+// unit tests, at the new content — starts a new signal with that suite alone: the e2e
+// proofs, still at the previous revision, were gone, and `keep-evidence` found nothing to
+// carry (reported from a project: 60 Maestro scenarios asked to run again for a VR-only edit).
+func (s *TestSignal) AdoptMissingSuites(from *TestSignal, current string) bool {
+	if s == nil || from == nil {
+		return false
+	}
+	adopted := false
+	for suite, codes := range from.ProvenBySuite {
+		if _, ok := s.ProvenBySuite[suite]; ok {
+			continue
+		}
+		if s.ProvenBySuite == nil {
+			s.ProvenBySuite = map[string][]string{}
+		}
+		if s.ProvenRevBySuite == nil {
+			s.ProvenRevBySuite = map[string]string{}
+		}
+		s.ProvenBySuite[suite] = append([]string(nil), codes...)
+		if rev, ok := from.ProvenRevBySuite[suite]; ok {
+			s.ProvenRevBySuite[suite] = rev
+		}
+		adopted = true
+	}
+	if adopted {
+		s.ProvenCodes = unionProven(s.ProvenBySuite)
+		s.AtRev = unionRev(s, current)
+	}
+	return adopted
+}
+
+// AdoptMissingMutation gives the signal the mutation `from` holds, when it holds none of
+// its own: the mutation of another measurement of the same file — the map at HEAD — that no
+// run since has replaced. A signal with a mutation of its own was measured again, and stays
+// as it is. It says whether the mutation was adopted.
+//
+// A coverage run at the new content starts a new signal, with no mutation: `keep-evidence`
+// adopted the suites HEAD held and not its mutation, and found nothing to carry (reported
+// from a project: 271 files left with no mutation after an edit of their imports alone).
+func (s *TestSignal) AdoptMissingMutation(from *TestSignal) bool {
+	if s == nil || from == nil || s.MutationAtRev != "" || len(s.MutationByScope) > 0 ||
+		(from.MutationAtRev == "" && len(from.MutationByScope) == 0) {
+		return false
+	}
+	s.MutantsKilled, s.MutantsSurvived, s.MutationScore = from.MutantsKilled, from.MutantsSurvived, from.MutationScore
+	s.MutantsNoCoverage, s.NoCoverageAt = from.MutantsNoCoverage, from.NoCoverageAt
+	s.MutantsIgnored, s.MutantsTimedOut, s.MutantsStatic = from.MutantsIgnored, from.MutantsTimedOut, from.MutantsStatic
+	s.MutationLow, s.MutationHigh = from.MutationLow, from.MutationHigh
+	s.MutationByScope = cloneScopes(from.MutationByScope)
+	s.MutationAtRev = from.MutationAtRev
+	return true
+}
+
+// IngestCoverage grava a cobertura de linha nos nós de CÓDIGO, casando por caminho.
+func (g *Graph) IngestCoverage(byFile map[string]FileCov, now string) (matched int) {
+	return g.IngestCoverageSuite(byFile, "", now)
+}
+
+// IngestCoverageSuite is IngestCoverage with the SUITE named (the lcov report it came
+// from). With a suite, each suite's measurement is kept on its own and the node's coverage
+// is the UNION: a line covered by the unit suite stays covered when the integration suite
+// is ingested after it. An empty suite keeps the previous behaviour — the report is the
+// whole measurement.
+func (g *Graph) IngestCoverageSuite(byFile map[string]FileCov, suite, now string) (matched int) {
+	return g.IngestCoverageLayer(byFile, suite, "", now)
+}
+
+// IngestCoverageLayer is IngestCoverageSuite with the test layer whose run measured it.
+func (g *Graph) IngestCoverageLayer(byFile map[string]FileCov, suite, layer, now string) (matched int) {
+	if suite != "" {
+		return g.ingestCoverageBySuite(byFile, suite, coverageLayer(layer), now)
+	}
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		if n.Kind != KindCode {
+			continue
+		}
+		if cov, ok := matchReport(n.ID, byFile); ok {
+			ensureSignal(n)
+			// preserva a cobertura anterior como baseline do delta (só quando já
+			// havia uma medição real, para não criar um baseline falso de 0).
+			if n.Signal.TotalLines > 0 {
+				n.Signal.PrevLineCoverage, n.Signal.PrevMeasured = n.Signal.LineCoverage, true
+			}
+			n.Signal.CoveredLines = cov.Covered
+			n.Signal.TotalLines = cov.Total
+			n.Signal.LineCoverage = percent(cov.Covered, cov.Total)
+			n.Signal.CoverageRev, n.Signal.CoverageOmitted = n.Rev, ""
+			n.Signal.BranchTotal, n.Signal.BranchMissed = len(cov.Branches), missedBranches(cov.Branches)
+			n.Signal.AtRev = n.Rev
+			n.Signal.IngestedAt = now
+			matched++
+		}
+	}
+	return
+}
+
+// IngestMutation amarra o sinal de MUTAÇÃO aos nós de código, no mesmo molde do lcov:
+// o projeto rodou a ferramenta dele, o Anchors só lê o relatório padrão e o pendura no
+// nó. Ver a doutrina em internal/testsig/mutation.go.
+func (g *Graph) IngestMutation(byFile map[string]FileMutation, now string) (matched int) {
+	return g.IngestMutationScoped(byFile, "", now, 0, 0)
+}
+
+// IngestMutationScoped grava o sinal de mutação num ESCOPO nomeado, além dos totais.
+//
+// O escopo diz QUE SUÍTE rodou contra os mutantes:
+//
+//	isolated — só o teste da própria unidade
+//	full     — os testes de todos os que a importam
+//
+// Sem ele, a segunda ingestão do mesmo arquivo apagava a primeira, e a informação
+// mais útil — a DIFERENÇA entre os dois — era impossível de calcular. Escopo vazio
+// mantém o comportamento anterior (grava só os totais), para quem já ingere hoje.
+//
+// Os totais continuam sendo os da ÚLTIMA ingestão: eles são o que os checks legados
+// leem, e mudá-los para uma média silenciaria a régua que o projeto já calibrou.
+func (g *Graph) IngestMutationScoped(byFile map[string]FileMutation, scope, now string, low, high float64) (matched int) {
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		if n.Kind != KindCode {
+			continue
+		}
+		if mu, ok := matchReport(n.ID, byFile); ok {
+			ensureSignal(n)
+			n.Signal.MutantsKilled = mu.Killed
+			n.Signal.MutantsSurvived = mu.Survived
+			n.Signal.MutantsNoCoverage = mu.NoCoverage
+			n.Signal.MutantsIgnored = mu.Ignored
+			n.Signal.MutantsTimedOut = mu.TimedOut
+			n.Signal.MutantsStatic = mu.Static
+			n.Signal.MutationScore = mu.Score
+			n.Signal.MutationLow, n.Signal.MutationHigh = low, high
+			n.Signal.NoCoverageAt = encodeRanges(mu.NoCoverageAt)
+			if scope != "" {
+				if n.Signal.MutationByScope == nil {
+					n.Signal.MutationByScope = map[string]MutationScope{}
+				}
+				n.Signal.MutationByScope[scope] = MutationScope{
+					AtRev:  n.Rev,
+					Killed: mu.Killed, Survived: mu.Survived,
+					NoCoverage: mu.NoCoverage, Ignored: mu.Ignored, Static: mu.Static,
+					Score: mu.Score,
+				}
+			}
+			n.Signal.AtRev = n.Rev
+			n.Signal.MutationAtRev = n.Rev
+			n.Signal.IngestedAt = now
+			matched++
+		}
+	}
+	return
+}
+
+// FileMutation é o resultado de mutação de um arquivo (desacopla o mapx do testsig).
+type FileMutation struct {
+	Killed   int
+	Survived int
+	// NoCoverage: mutantes que nenhum teste executou. Fora do score — quem cobra
+	// "não há teste aqui" é o gate de cobertura.
+	NoCoverage int
+	// Ignored: mutantes que a ferramenta descartou antes de rodar. Fora do score, e
+	// gravados a parte — sao eles que separam "100% porque tudo foi provado" de "100%
+	// porque nao havia o que provar".
+	Ignored int
+	// TimedOut: killed by the time limit, counted apart (see TestSignal.MutantsTimedOut).
+	TimedOut int
+	// Static: survivors out of the tool's reach (see TestSignal.MutantsStatic).
+	Static int
+	Score  float64
+	// NoCoverageAt: the lines of the mutants no test ran.
+	NoCoverageAt []int
+}
+
+// FileCov é a cobertura de um arquivo (desacopla o mapx do pacote testsig).
+type FileCov struct {
+	Covered, Total int
+	// Lines: per instrumented line, covered or not. Empty when the report gave only totals.
+	Lines map[int]bool
+	// Branches: per branch (`<line>:<block>:<branch>`), taken or not. Empty when the report
+	// lists no branch.
+	Branches map[string]bool
+	// Predates: the report was written BEFORE the file's current content — its line
+	// numbers describe another text. The entry is kept, with no rev, so it neither joins
+	// the union nor passes for fresh.
+	Predates bool
+}
+
+// SignalStale diz se o sinal de um nó envelheceu — o arquivo mudou de rev desde a
+// ingestão. Um sinal stale não deve ser confiado (o teste rodou numa versão antiga).
+func (n Node) SignalStale() bool {
+	return n.Signal != nil && n.Signal.AtRev != "" && n.Signal.AtRev != n.Rev
+}
+
+// MutationStale says whether the node's mutation result was measured against another
+// rev of the file. It reads the mutation's own rev, not the one every ingestion shares:
+// a coverage run after a code change does not make an old mutation score current. A map
+// written before the mutation kept its own rev falls back to the shared one.
+func (n Node) MutationStale() bool {
+	if n.Signal == nil {
+		return false
+	}
+	rev := n.Signal.MutationAtRev
+	if rev == "" {
+		rev = n.Signal.AtRev
+	}
+	return rev != "" && rev != n.Rev
+}
+
+func sumLayers(byLayer map[string]LayerExec) (p, f, s int) {
+	for _, le := range byLayer {
+		p += le.Passed
+		f += le.Failed
+		s += le.Skipped
+	}
+	return
+}
+
+func ensureSignal(n *Node) {
+	if n.Signal == nil {
+		n.Signal = &TestSignal{}
+	}
+}
+
+// percent is covered over total in percent — 0 when nothing was instrumented.
+//
+// The percentage used to be written only when the total was positive, so a report that
+// instrumented no line of the file left the PREVIOUS ingestion's percentage next to a
+// total of zero: the map read "0 lines, 80%".
+func percent(covered, total int) float64 {
+	if total <= 0 {
+		return 0
+	}
+	return float64(covered) / float64(total) * 100
+}
+
+// matchReport picks, among the report paths that match the node, the one it receives:
+// the exact path first, then the one closest in length to the node's (the most specific
+// suffix), then the first in lexical order.
+//
+// The ingestion loops used to take whichever matching path the MAP ITERATION reached
+// first, and Go randomises that order: a test file matched by two entries of the same
+// report (its own path and a shorter suffix of it) recorded different counts from run
+// to run.
+func matchReport[T any](nodeID string, byFile map[string]T) (T, bool) {
+	var best string
+	found := false
+	dist := func(p string) int {
+		d := len(filepath.ToSlash(p)) - len(filepath.ToSlash(nodeID))
+		if d < 0 {
+			d = -d
+		}
+		return d
+	}
+	for file := range byFile {
+		if !pathMatches(nodeID, file) {
+			continue
+		}
+		if !found || dist(file) < dist(best) || (dist(file) == dist(best) && file < best) {
+			best, found = file, true
+		}
+	}
+	if !found {
+		var zero T
+		return zero, false
+	}
+	return byFile[best], true
+}
+
+// pathMatches: o caminho do nó (relativo à raiz) casa o caminho do relatório? Casa
+// por sufixo normalizado — o relatório pode ter caminho absoluto ou com prefixo de
+// subdir; o nó é sempre relativo à raiz. Exige que o sufixo comece numa fronteira de
+// caminho (para "a/b.go" não casar "xa/b.go").
+func pathMatches(nodeID, reportPath string) bool {
+	a := filepath.ToSlash(nodeID)
+	b := filepath.ToSlash(reportPath)
+	if a == b {
+		return true
+	}
+	// o relatório termina com o caminho do nó?
+	if hasPathSuffix(b, a) {
+		return true
+	}
+	// ou o nó termina com o do relatório (relatório mais curto)?
+	if hasPathSuffix(a, b) {
+		return true
+	}
+	return false
+}
+
+func hasPathSuffix(full, suffix string) bool {
+	if len(suffix) > len(full) {
+		return false
+	}
+	if full == suffix {
+		return true
+	}
+	if full[len(full)-len(suffix):] != suffix {
+		return false
+	}
+	// a posição antes do sufixo deve ser um separador (fronteira de caminho)
+	return full[len(full)-len(suffix)-1] == '/'
+}
+
+// ResolveReportPaths decides, BEFORE ingestion, which node each path of the report
+// belongs to — and returns the path rewritten to the node's exact ID.
+//
+// Why it exists: matching is by SUFFIX, and monorepo runners write paths relative to
+// their own workspace (`src/components/atoms/SectionLabel.tsx`). With two workspaces
+// holding the same file, the suffix matches BOTH nodes and both received the signal — the
+// landing's coverage showed up on the mobile component of the same name, and the next
+// ingestion flipped it. MEASURED in the reference app (2026-09-23): 100 files in the lcov "matched" 101
+// nodes.
+//
+// Tie-break: the node sharing the longest directory prefix with the report ITSELF
+// (`reportRel`, relative to the root). The `unit.xml` under
+// `apps/landing-page/test-output/` belongs to the landing. If it still ties, the path is
+// left with NO owner and comes back in `ambiguous`: assigning it to one of the two on a
+// guess would assert a proof nobody measured.
+func (g *Graph) ResolveReportPaths(kind Kind, paths []string, reportRel string) (resolved map[string]string, ambiguous []string) {
+	resolved = map[string]string{}
+	hint := filepath.ToSlash(reportRel)
+	for _, p := range paths {
+		var cands []string
+		for _, n := range g.Nodes {
+			if n.Kind == kind && pathMatches(n.ID, p) {
+				cands = append(cands, n.ID)
+			}
+		}
+		switch len(cands) {
+		case 0:
+			resolved[p] = p // nothing matches: kept as it came (ingestion just ties nothing)
+		case 1:
+			resolved[p] = cands[0]
+		default:
+			best, bestLen, tie := "", -1, false
+			for _, c := range cands {
+				l := commonDirPrefix(c, hint)
+				switch {
+				case l > bestLen:
+					best, bestLen, tie = c, l, false
+				case l == bestLen:
+					tie = true
+				}
+			}
+			if tie {
+				ambiguous = append(ambiguous, p)
+				continue
+			}
+			resolved[p] = best
+		}
+	}
+	return
+}
+
+// commonDirPrefix conta quantos segmentos de diretório iniciais `a` e `b` compartilham.
+func commonDirPrefix(a, b string) int {
+	sa, sb := strings.Split(filepath.ToSlash(a), "/"), strings.Split(filepath.ToSlash(b), "/")
+	n := 0
+	for n < len(sa)-1 && n < len(sb)-1 && sa[n] == sb[n] {
+		n++
+	}
+	return n
+}
+
+// suiteOrLayer is the key a run time is kept under: the suite, or the layer when the
+// ingestion names no suite.
+func suiteOrLayer(suite, layer string) string {
+	if suite != "" {
+		return suite
+	}
+	return layer
+}
+
+// recordSeconds keeps a file's run time under a suite.
+func (s *TestSignal) recordSeconds(key string, seconds float64) {
+	if s.SecondsBySuite == nil {
+		s.SecondsBySuite = map[string]float64{}
+	}
+	s.SecondsBySuite[key] = seconds
+}
+
+// RecordRunSeconds keeps the time a run of `id` took under a suite, when the time comes
+// from Anchors timing the run itself (a mutation run of one file) rather than from a
+// report. An unknown node is ignored.
+func (g *Graph) RecordRunSeconds(id, key string, seconds float64) {
+	for i := range g.Nodes {
+		if g.Nodes[i].ID == id {
+			ensureSignal(&g.Nodes[i])
+			g.Nodes[i].Signal.recordSeconds(key, seconds)
+			return
+		}
+	}
+}
+
+// RefreshRevs sets each node's rev to the one the tree has now, given by path. A run that
+// just ended ran against the tree as it is, not against the map's photo of it: a spec
+// edited after the last `map build` still carries its old rev here, and a proof stamped
+// with it reads as stale once the map is rebuilt — the run proved the new text, and the
+// map said nobody had. A node the tree no longer has keeps its rev. A node whose evidence
+// revisions held carries its evidence, as a rebuild does (CarryUnchangedEvidence): moved
+// here, the next build saw no revision change and carried nothing (reported from a project: 113
+// tests stale after a `@used-by` line lost a code). (`RefreshRevs`)
+func (g *Graph) RefreshRevs(files []scan.File) (changed int) {
+	at := make(map[string]int, len(g.Nodes))
+	for i := range g.Nodes {
+		at[g.Nodes[i].ID] = i
+	}
+	moved := &Graph{}
+	var idx []int
+	var evs []scan.File
+	for _, f := range files {
+		i, ok := at[f.Path]
+		if !ok || f.Rev == "" || f.Rev == g.Nodes[i].Rev {
+			continue
+		}
+		n := g.Nodes[i]
+		n.setEvidence(f.Rev, f.Evidence)
+		moved.Nodes = append(moved.Nodes, n)
+		idx, evs = append(idx, i), append(evs, f)
+	}
+	CarryUnchangedEvidence(moved, g)
+	for k, i := range idx {
+		g.Nodes[i].setEvidence(evs[k].Rev, evs[k].Evidence)
+	}
+	return len(idx)
+}
+
+// NoCoverageLines are the lines of the mutants no test ran, as the signal keeps them.
+func (s *TestSignal) NoCoverageLines() []int {
+	if s == nil {
+		return nil
+	}
+	return decodeRanges(s.NoCoverageAt)
+}
+
+// scenarioRoot is the rule a scenario code belongs to: `RDCH-B02#02` → `RDCH-B02`.
+func scenarioRoot(code string) string {
+	if i := strings.IndexByte(code, '#'); i > 0 {
+		return code[:i]
+	}
+	return code
+}
+
+// MarkCoverageOmitted records, on each code file the suite covers (`covers`) that the
+// coverage report left out, that a whole run of the suite omitted it at its current
+// revision — unless another report already listed it at this revision. It returns how
+// many were marked.
+func (g *Graph) MarkCoverageOmitted(byFile map[string]FileCov, covers func(id string) bool) (marked int) {
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		if n.Kind != KindCode || n.Support || !covers(n.ID) {
+			continue
+		}
+		if _, ok := matchReport(n.ID, byFile); ok {
+			continue
+		}
+		if n.Signal != nil && n.Signal.CoverageRev == n.Rev {
+			continue
+		}
+		ensureSignal(n)
+		n.Signal.CoverageOmitted = n.Rev
+		marked++
+	}
+	return marked
+}

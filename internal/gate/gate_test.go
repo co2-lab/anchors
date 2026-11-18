@@ -1,0 +1,1693 @@
+// @anchors
+//   code: GTTSG
+//   ref: GTENG
+
+package gate
+
+import (
+	"fmt"
+	"github.com/co2-lab/anchors/internal/testkit"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/shell"
+)
+
+func TestApplies(t *testing.T) {
+	t.Run("GTENG-B01: A gate reaches only the kinds it declares", func(t *testing.T) {})
+
+	g := config.Gate{On: []string{"spec", "feature"}}
+	if !applies(g, mapx.Node{Kind: mapx.KindSpec}, "") {
+		t.Error("gate on=[spec,feature] deveria aplicar a spec")
+	}
+	if applies(g, mapx.Node{Kind: mapx.KindCode}, "") {
+		t.Error("gate on=[spec,feature] NÃO deveria aplicar a code")
+	}
+}
+
+func TestAppliesWithTags(t *testing.T) {
+	t.Run("GTENG-B02: A gate that names labels reaches only the nodes carrying one", func(t *testing.T) {})
+
+	g := config.Gate{On: []string{"code"}, Tags: []string{"screen"}}
+	// nó code com tag screen → aplica
+	if !applies(g, mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "screen"}}, "") {
+		t.Error("gate tags=[screen] deveria aplicar a code com tag screen")
+	}
+	// nó code SEM a tag → não aplica
+	if applies(g, mapx.Node{Kind: mapx.KindCode, Tags: []string{"backend"}}, "") {
+		t.Error("gate tags=[screen] NÃO deveria aplicar a code sem a tag")
+	}
+	// kind errado, mesmo com a tag → não aplica
+	if applies(g, mapx.Node{Kind: mapx.KindSpec, Tags: []string{"screen"}}, "") {
+		t.Error("gate on=[code] NÃO deveria aplicar a spec")
+	}
+}
+
+func TestAppliesComExcludeTags(t *testing.T) {
+	t.Run("GTENG-B03: One excluded label is enough to keep a node out", func(t *testing.T) {})
+
+	// O caso real: `mutation-score` cobrado de camadas que a ferramenta de mutação nem
+	// consegue rodar (declaração de infra, schema). Sem teste que as alcance, o Stryker sai
+	// com "No tests were found" e não há relatório para ingerir — o gate ficava Pending
+	// eterno pedindo uma medição impossível de produzir.
+	g := config.Gate{On: []string{"code"}, ExcludeTags: []string{"resource", "schema-model"}}
+
+	if applies(g, mapx.Node{Kind: mapx.KindCode, Tags: []string{"backend", "code", "resource"}}, "") {
+		t.Error("nó com tag excluída NÃO deveria entrar no gate")
+	}
+	if applies(g, mapx.Node{Kind: mapx.KindCode, Tags: []string{"backend", "code", "schema-model"}}, "") {
+		t.Error("basta UMA das tags excluídas para ficar de fora")
+	}
+	if !applies(g, mapx.Node{Kind: mapx.KindCode, Tags: []string{"backend", "code", "dao"}}, "") {
+		t.Error("nó sem tag excluída deveria seguir sendo cobrado")
+	}
+}
+
+// A ORDEM importa: a exclusão vence o filtro positivo. Camadas carregam rótulos
+// transversais (`backend`, `code`) junto com o próprio, então um gate que declare os dois
+// filtros ainda tem de deixar a exceção de fora — senão declará-la não teria efeito
+// nenhum justamente onde ela importa.
+func TestExclusaoVenceOFiltroPositivo(t *testing.T) {
+	t.Run("GTENG-B04: Exclusion wins over the positive label filter", func(t *testing.T) {})
+
+	g := config.Gate{On: []string{"code"}, Tags: []string{"backend"}, ExcludeTags: []string{"resource"}}
+	if applies(g, mapx.Node{Kind: mapx.KindCode, Tags: []string{"backend", "resource"}}, "") {
+		t.Error("exclude_tags deveria vencer o filtro positivo de tags")
+	}
+	if !applies(g, mapx.Node{Kind: mapx.KindCode, Tags: []string{"backend", "dao"}}, "") {
+		t.Error("o filtro positivo deveria continuar valendo para quem não é exceção")
+	}
+}
+
+func TestJudgmentGateEmitsJudge(t *testing.T) {
+	t.Run("GTENG-B11: A judgment gate asks for judgment when nothing has answered it", func(t *testing.T) {})
+
+	g := config.Gate{Name: "atomic", On: []string{"code"}, Measures: config.MeasuresJudgment, Guide: "guides/SCREEN_GUIDE.md"}
+	r := runOne(g, mapx.Node{ID: "Home.tsx", Kind: mapx.KindCode}, t.TempDir(), nil, nil)
+	if r.Verdict != Judge {
+		t.Fatalf("gate judgment deveria emitir Judge, veio %q", r.Verdict)
+	}
+}
+
+func TestAggregate_promotion(t *testing.T) {
+	// um fail bloqueante barra a promoção; um fail informativo não.
+	results := []Result{
+		{Gate: "lint", Target: "a", Verdict: Pass, Blocking: true},
+		{Gate: "spec-sections", Target: "b", Verdict: Fail, Blocking: true}, // barra
+		{Gate: "coverage", Target: "c", Verdict: Fail, Blocking: false},     // não barra
+	}
+	p := Aggregate(results)
+
+	if p.Passed {
+		t.Error("com um fail bloqueante, Passed deveria ser false")
+	}
+	if len(p.Failures) != 2 {
+		t.Errorf("esperava 2 failures (viram issues), got %d", len(p.Failures))
+	}
+	if len(p.Blocked) != 1 || p.Blocked[0].Gate != "spec-sections" {
+		t.Errorf("esperava 1 bloqueio (spec-sections), got %+v", p.Blocked)
+	}
+}
+
+func TestAggregate_allPass(t *testing.T) {
+	p := Aggregate([]Result{
+		{Gate: "lint", Verdict: Pass, Blocking: true},
+		{Gate: "coverage", Verdict: Pass, Blocking: false},
+	})
+	if !p.Passed {
+		t.Error("todos pass → Passed deveria ser true")
+	}
+	if len(p.Failures) != 0 {
+		t.Errorf("nenhum fail esperado, got %d", len(p.Failures))
+	}
+}
+
+func TestAggregate_informativeFailDoesNotBlock(t *testing.T) {
+	// só fail informativo: gera issue (Failures) mas NÃO barra (Passed=true).
+	p := Aggregate([]Result{{Gate: "coverage", Verdict: Fail, Blocking: false}})
+	if !p.Passed {
+		t.Error("fail informativo não deveria barrar a promoção")
+	}
+	if len(p.Failures) != 1 {
+		t.Error("fail informativo ainda gera issue (registro)")
+	}
+}
+
+func TestInternalCheckers(t *testing.T) {
+	cases := []struct {
+		checker string
+		content string
+		want    Verdict
+	}{
+		{"non-empty", "   \n  ", Fail},
+		{"non-empty", "algo", Pass},
+		{"spec-sections", "> **Código**: `LOGIX`\n### LOGIX-S01: ok", Pass},
+		{"spec-sections", "| Regra | Descrição |\n| `BADEX-X01` | não-interativo |", Pass}, // tabela conta
+		{"spec-sections", "| `BADEX-B01` | children |", Pass},                              // tabela sem backtick de coluna
+		{"spec-sections", "- **HRMCX-S01** rótulo do mês no topo", Pass},                   // bullet-negrito conta
+		{"spec-sections", "só um título\nsem estados", Fail},
+		{"spec-sections", "menção solta BADEX-X01 em prosa", Fail}, // prosa não conta
+		// O placeholder saiu daqui: quem o confronta é o `placeholder-preenchido`, com o
+		// vocabulário universal. Aqui a régua é a SEÇÃO catalogada.
+		{"spec-sections", "### LOGIX-S01\nUma regra escrita de verdade.", Pass}, // placeholder
+		{"has-code", "it('LOGIX-A01: ...')", Pass},
+		{"has-code", "sem identidade nenhuma", Fail},
+		{"header-valid", "// @anchors\n//   code: LGNNX\nconst x = 1", Pass},                  // dono (code)
+		{"header-valid", "// @anchors\n//   code: LGNCD\n//   ref: LGNNX\nconst x = 1", Pass}, // o código do arquivo e a referência à unidade
+		{"header-valid", "// @anchors\n//   ref: LGNNX\nconst x = 1", Fail},                   // a referência sozinha não nomeia o arquivo
+		{"header-valid", "<!-- @anchors\n  code: SPCRX\n-->\n# spec", Pass},                   // dialeto markdown
+		{"header-valid", "const x = 1 // nada aqui", Fail},                                    // sem bloco
+		{"header-valid", "// @anchors\n//   layer: screen\nconst x=1", Fail},                  // bloco sem code NEM ref
+	}
+	for _, c := range cases {
+		// O checker pode estar em qualquer um dos dois registros: os puros de conteúdo e
+		// os que recebem grafo+config. Procurar só o primeiro fazia o teste reprovar quando
+		// um checker passava a precisar de `cfg` — mudança de assinatura, não de
+		// comportamento, que é justamente o que este teste NÃO deveria acusar.
+		fn := internalCheckers[c.checker]
+		if fn == nil {
+			if withGraph := checkersWithGraph[c.checker]; withGraph != nil {
+				fn = func(content string, n mapx.Node) (Verdict, string) {
+					return withGraph(content, n, "", nil, testkit.AnyConfig())
+				}
+			}
+		}
+		if fn == nil {
+			t.Fatalf("checker %q não registrado", c.checker)
+		}
+		got, _ := fn(c.content, mapx.Node{})
+		if got != c.want {
+			t.Errorf("%s(%q) = %v, want %v", c.checker, c.content, got, c.want)
+		}
+	}
+}
+
+func TestHeaderConformeRecognizedLayer(t *testing.T) {
+	presentation := mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "presentation"}, Regime: "declarativo"}
+	regida := mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "business-logic"}}
+	fn := func(content string, n mapx.Node) (Verdict, string) {
+		return checkHeaderConforms(content, n, testkit.WithComments(nil))
+	}
+
+	// reconhecida com só `layer:` → PASSA
+	if v, _ := fn("// @anchors\n//   layer: presentation\n", presentation); v != Pass {
+		t.Error("presentation com layer deveria passar")
+	}
+	// reconhecida SEM identidade nenhuma → FALHA
+	if v, _ := fn("// @anchors\n//   updated_at: x\n", presentation); v != Fail {
+		t.Error("reconhecida sem layer/code/ref deveria falhar")
+	}
+	// regida com só `layer:` (sem code/ref) → FALHA (exige posse/referência)
+	if v, _ := fn("// @anchors\n//   layer: business-logic\n", regida); v != Fail {
+		t.Error("regida só com layer (sem code/ref) deveria falhar")
+	}
+	// regida com ref → PASSA
+	if v, _ := fn("// @anchors\n//   ref: BLBLX\n", regida); v != Pass {
+		t.Error("regida com ref deveria passar")
+	}
+}
+
+func TestHeaderConformeTestOfRecognizedLayer(t *testing.T) {
+	// um TESTE de arquivo de camada reconhecida é classificado kind:test (perde a tag
+	// da camada), mas declara layer:presentation no header → deve passar com layer.
+	testNode := mapx.Node{Kind: mapx.KindTest, Tags: []string{"test"}}
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"presentation": {Regime: "declarativo"}}})
+	fn := func(content string, n mapx.Node) (Verdict, string) { return checkHeaderConforms(content, n, cfg) }
+	if v, _ := fn("// @anchors\n//   layer: presentation\nimport x", testNode); v != Pass {
+		t.Error("teste de presentation (kind:test) com layer no header deveria passar")
+	}
+	// mas um teste normal (sem layer reconhecida) segue exigindo code/ref
+	if v, _ := fn("// @anchors\n//   updated_at: x\nimport x", testNode); v != Fail {
+		t.Error("teste sem layer reconhecida nem code/ref deveria falhar")
+	}
+}
+
+// `requires` filtra por CONTEÚDO do alvo: o gate que pergunta sobre uma marcação só
+// se aplica a quem a usou. Sem isso, um gate de julgamento `on: [spec]` enfileira uma
+// pergunta de IA para toda spec do projeto.
+func TestAppliesWithRequires(t *testing.T) {
+	t.Run("GTENG-B05: A gate demanding a mark reaches only the targets that carry it", func(t *testing.T) {})
+
+	root := t.TempDir()
+	comMarca := "com.spec.md"
+	semMarca := "sem.spec.md"
+	if err := os.WriteFile(filepath.Join(root, comMarca), []byte("| `X-A01` @no-test: gateway de repasse |\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, semMarca), []byte("| `X-A01` | tem teste próprio |\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := config.Gate{On: []string{"spec"}, Requires: "@no-test"}
+
+	if !applies(g, mapx.Node{ID: comMarca, Kind: mapx.KindSpec}, root) {
+		t.Error("spec COM @no-test deveria aplicar")
+	}
+	if applies(g, mapx.Node{ID: semMarca, Kind: mapx.KindSpec}, root) {
+		t.Error("spec SEM @no-test NÃO deveria aplicar")
+	}
+	// Sem `requires`, o silêncio não desliga nada.
+	semReq := config.Gate{On: []string{"spec"}}
+	if !applies(semReq, mapx.Node{ID: semMarca, Kind: mapx.KindSpec}, root) {
+		t.Error("gate sem requires deveria aplicar a qualquer spec do kind")
+	}
+}
+
+// Alvo ILEGÍVEL não aplica: melhor deixar de cobrar do que cobrar às cegas de um alvo
+// cujo conteúdo não se conhece.
+func TestAlvoIlegivelNaoAplica(t *testing.T) {
+	t.Run("GTENG-B06: An unreadable target does not apply", func(t *testing.T) {})
+
+	g := config.Gate{On: []string{"spec"}, Requires: "@no-test"}
+	if applies(g, mapx.Node{ID: "nao-existe.spec.md", Kind: mapx.KindSpec}, t.TempDir()) {
+		t.Error("alvo ilegível NÃO deveria aplicar")
+	}
+}
+
+// ── ROTEAMENTO E AGREGAÇÃO: o que o motor decide sozinho ─────────────────────
+
+// Nenhum alvo relevante: o gate NÃO RODA. Vale inclusive para escopo de projeto — um
+// commit só de README não dispara o typecheck do monorepo inteiro.
+func TestGateSemAlvoNaoRoda(t *testing.T) {
+	t.Run("GTENG-B07: A gate with no applicable target does not run at all", func(t *testing.T) {})
+
+	g := config.Gate{Name: "typecheck", ID: "typecheck", On: []string{"code"},
+		Scope: config.ScopeProject, Run: "exit 1"}
+	// O recorte só tem spec: o gate declara `code` e não encontra alvo.
+	res := RunWithConfig([]config.Gate{g},
+		[]mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec}}, t.TempDir(), nil, nil)
+	if len(res) != 0 {
+		t.Fatalf("sem alvo o gate não roda; vieram %d resultado(s): %+v", len(res), res)
+	}
+}
+
+// Ferramenta exigida e AUSENTE: Skip, nunca Fail. O gate não mediu — e "não medi" não é
+// "está limpo" nem "está sujo". Um Fail diria que o projeto violou algo, quando quem
+// falta é o binário.
+func TestFerramentaAusenteEhSkipNuncaFail(t *testing.T) {
+	t.Run("GTENG-B08: A gate whose required binary is absent steps aside", func(t *testing.T) {})
+
+	const inexistente = "binario-que-ninguem-instalou-jamais"
+	g := config.Gate{Name: "semgrep", ID: "semgrep", On: []string{"code"},
+		Run: inexistente, NeedsTool: inexistente}
+	res := RunWithConfig([]config.Gate{g},
+		[]mapx.Node{{ID: "a.ts", Kind: mapx.KindCode}}, t.TempDir(), nil, nil)
+
+	if len(res) != 1 {
+		t.Fatalf("esperava um veredito, vieram %d", len(res))
+	}
+	if res[0].Verdict != Skip {
+		t.Errorf("ferramenta ausente é Skip, nunca Fail; veio %v", res[0].Verdict)
+	}
+	if !strings.Contains(res[0].Detail, inexistente) {
+		t.Errorf("o laudo tem de NOMEAR o binário que falta: %s", res[0].Detail)
+	}
+}
+
+// DISPENSA POR ALVO: o gate roda, e só este nó é poupado. O veredito é Skip com o motivo
+// escrito — some do placar de reprovações sem sumir do relatório.
+func TestDispensaPorAlvoPoupaUmESoUm(t *testing.T) {
+	t.Run("GTENG-B09: A waiver by target spares one node and confronts the rest", func(t *testing.T) {})
+
+	root := t.TempDir()
+	for _, f := range []string{"poupado.md", "confrontado.md"} {
+		if err := os.WriteFile(filepath.Join(root, f), []byte("   \n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := config.Gate{Name: "não-vazio", ID: "non-empty", On: []string{"spec"}, Check: "non-empty"}
+	disp, erros := ParseWaiver("non-empty@POUPA=rascunho declarado do plano 0007")
+	if len(erros) > 0 {
+		t.Fatalf("dispensa malformada no fixture: %v", erros)
+	}
+
+	res := RunWithWaiver([]config.Gate{g}, []mapx.Node{
+		{ID: "poupado.md", Kind: mapx.KindSpec, Code: "POUPA"},
+		{ID: "confrontado.md", Kind: mapx.KindSpec, Code: "CONFR"},
+	}, root, nil, nil, false, disp)
+
+	if len(res) != 2 {
+		t.Fatalf("o gate tem de RODAR e produzir veredito para os dois; vieram %d", len(res))
+	}
+	porAlvo := map[string]Result{}
+	for _, r := range res {
+		porAlvo[r.Target] = r
+	}
+	if v := porAlvo["poupado.md"].Verdict; v != Skip {
+		t.Errorf("o alvo dispensado é Skip, veio %v", v)
+	}
+	if v := porAlvo["confrontado.md"].Verdict; v != Fail {
+		t.Errorf("o alvo NÃO dispensado continua confrontado e reprova; veio %v", v)
+	}
+
+	// The file's own code names the target too: a feature carries its unit's code and
+	// its own, and the author reads the second in its header.
+	proprio, _ := ParseWaiver("non-empty@POUPF=rascunho declarado do plano 0007")
+	res = RunWithWaiver([]config.Gate{g}, []mapx.Node{
+		{ID: "poupado.md", Kind: mapx.KindSpec, Code: "POUPA", FileCode: "POUPF"},
+	}, root, nil, nil, false, proprio)
+	if len(res) != 1 || res[0].Verdict != Skip {
+		t.Errorf("the file's own code names the target as the unit's does; got %+v", res)
+	}
+}
+
+// O gate AGREGADO roda UMA vez, e o alvo reportado é o próprio escopo. Atribuir a falha
+// a um dos arquivos seria mentira — o erro pode estar em qualquer um, ou na relação
+// entre eles.
+func TestGateAgregadoRodaUmaVezContraOEscopo(t *testing.T) {
+	t.Run("GTENG-B10: An aggregate gate runs once and reports against the scope", func(t *testing.T) {})
+
+	g := config.Gate{Name: "typecheck", ID: "typecheck", On: []string{"code"},
+		Scope: config.ScopeProject, Run: "true"}
+	alvos := []mapx.Node{
+		{ID: "a.ts", Kind: mapx.KindCode},
+		{ID: "b.ts", Kind: mapx.KindCode},
+		{ID: "c.ts", Kind: mapx.KindCode},
+	}
+	res := RunWithConfig([]config.Gate{g}, alvos, t.TempDir(), nil, nil)
+
+	if len(res) != 1 {
+		t.Fatalf("o agregado responde UMA vez sobre o conjunto; vieram %d", len(res))
+	}
+	for _, n := range alvos {
+		if res[0].Target == n.ID {
+			t.Fatalf("o alvo do agregado é o ESCOPO, nunca um dos arquivos; veio %q", res[0].Target)
+		}
+	}
+	if !strings.Contains(res[0].Target, config.ScopeProject) {
+		t.Errorf("o alvo tem de nomear o escopo; veio %q", res[0].Target)
+	}
+}
+
+// Sem esta consulta o gate PEDIA JULGAMENTO PARA SEMPRE: o `judge` gravava o veredito no
+// grafo e o `check` seguinte emitia Judge de novo, então o contador de pendências nunca
+// descia e o trabalho já feito era invisível.
+func TestJulgamentoJaRespondidoViraVeredito(t *testing.T) {
+	t.Run("GTENG-B12: A judgment gate reads the stamp an earlier judgement left", func(t *testing.T) {})
+
+	g := config.Gate{Name: "atomic", On: []string{"code"}, Measures: config.MeasuresJudgment}
+	alvo := mapx.Node{ID: "Home.tsx", Kind: mapx.KindCode, Rev: "r1"}
+
+	for _, c := range []struct {
+		carimbo string
+		quer    Verdict
+	}{
+		{"ok", Pass},
+		{"issue", Fail},
+	} {
+		graph := grafoComJulgamento(alvo, g.Name, c.carimbo)
+		r := runOne(g, alvo, t.TempDir(), graph, nil)
+		if r.Verdict != c.quer {
+			t.Errorf("o carimbo %q deveria virar %v, veio %v (%s)", c.carimbo, c.quer, r.Verdict, r.Detail)
+		}
+	}
+}
+
+// `dispensado` vira Skip, e NÃO Pass: o gate NÃO MEDIU — o alvo da pergunta não existe.
+// Pass afirmaria aprovação, que é a mentira que este veredito existe para evitar.
+func TestJulgamentoDispensadoEhSkipNuncaPass(t *testing.T) {
+	t.Run("GTENG-B13: A judgement recorded as waived becomes Skip and never Pass", func(t *testing.T) {})
+
+	g := config.Gate{Name: "atomic", On: []string{"code"}, Measures: config.MeasuresJudgment}
+	alvo := mapx.Node{ID: "Home.tsx", Kind: mapx.KindCode, Rev: "r1"}
+
+	// A forma nova e a ANTIGA: o valor antigo está em mapas já commitados, e ignorá-lo
+	// faria o gate repreguntar um julgamento que alguém respondeu.
+	for _, carimbo := range []string{"waived", "dispensado"} {
+		r := runOne(g, alvo, t.TempDir(), grafoComJulgamento(alvo, g.Name, carimbo), nil)
+		if r.Verdict != Skip {
+			t.Errorf("o carimbo %q tem de virar Skip, veio %v (%s)", carimbo, r.Verdict, r.Detail)
+		}
+	}
+}
+
+// grafoComJulgamento monta um mapa mínimo com UM julgamento vivo sobre o alvo.
+func grafoComJulgamento(alvo mapx.Node, gate, veredito string) *mapx.Graph {
+	vizinho := mapx.Node{ID: "Home.spec.md", Kind: mapx.KindSpec, Rev: "r0"}
+	return &mapx.Graph{
+		Nodes: []mapx.Node{alvo, vizinho},
+		Edges: []mapx.Edge{{
+			From: vizinho.ID, To: alvo.ID, Type: mapx.EdgeSpecifies,
+			Julgamentos: []mapx.Judgment{{
+				Gate: gate, Verdict: veredito,
+				ValidatedFromRev: vizinho.Rev, ValidatedToRev: alvo.Rev,
+			}},
+		}},
+	}
+}
+
+// Um gate que não declara NEM comando NEM check não tem como responder. Passar em
+// silêncio carimbaria verde sobre uma pergunta que ninguém sabe fazer.
+func TestGateSemComandoNemCheckEhIndeterminado(t *testing.T) {
+	t.Run("GTENG-B14: A gate declaring neither a command nor a check is undetermined", func(t *testing.T) {})
+
+	g := config.Gate{Name: "mudo", ID: "mudo", On: []string{"code"}}
+	r := runOne(g, mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, t.TempDir(), nil, nil)
+	if r.Verdict != Pending {
+		t.Fatalf("sem run nem check o veredito é indeterminado, veio %v", r.Verdict)
+	}
+	if r.Detail == "" {
+		t.Error("o laudo tem de NOMEAR a omissão, e não calar")
+	}
+}
+
+// A gate declared with run: executes the custom runner, even when its canonical definition
+// specifies check:. In the runner, check: takes precedence over run:. If mergeCanonical had
+// inherited check: from canonical, the internal checker would have executed instead of the
+// custom command.
+func TestGateDeclaredWithRunExecutesCommandEvenWhenCanonicalHasCheck(t *testing.T) {
+	t.Run("GTENG-B23: A gate declared with run executes the custom runner even when canonical specifies check", func(t *testing.T) {})
+
+	config.SetCanonicalGateResolver(func(name string) (config.Gate, bool) {
+		if name == "custom-gate" {
+			return config.Gate{
+				Name:  "custom-gate",
+				On:    []string{"code"},
+				Check: "mock-stamped",
+			}, true
+		}
+		return config.Gate{}, false
+	})
+	defer config.SetCanonicalGateResolver(nil)
+
+	tmp := t.TempDir()
+	yamlPath := filepath.Join(tmp, "anchors.yaml")
+	yamlContent := "version: 1\ngates:\n  - name: custom-gate\n    run: \"echo from-custom-run-command; exit 42\"\n"
+	if err := os.WriteFile(yamlPath, []byte(yamlContent), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := config.Load(yamlPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	targetPath := filepath.Join(tmp, "dummy.go")
+	if err := os.WriteFile(targetPath, []byte("package main\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	nodes := []mapx.Node{{ID: "dummy.go", Kind: mapx.KindCode}}
+	results := RunWithConfig(cfg.Gates, nodes, tmp, nil, cfg)
+	if len(results) == 0 {
+		t.Fatal("expected at least one gate result")
+	}
+
+	res := results[0]
+	if res.Verdict != Fail {
+		t.Fatalf("expected command execution to fail with exit 42, got: %v", res.Verdict)
+	}
+	if !strings.Contains(res.Detail, "from-custom-run-command") {
+		t.Fatalf("expected detail to contain output from custom run command ('from-custom-run-command'), got: %q", res.Detail)
+	}
+}
+
+// Each verdict level does what the gate's `severity` says: by default a blocking gate's
+// divergence and pending item bar the promotion, and a project can make a level inform.
+func TestSoADecisaoPorTomarImpedeAPromocao(t *testing.T) {
+	t.Run("GTENG-B15: Each verdict level does what the gate's severity says", func(t *testing.T) {})
+
+	root := t.TempDir()
+	comDecisao, semMedir, declarado := "com.spec.md", "sem.spec.md", "decl.spec.md"
+
+	orig := checkersWithGraph["open-questions-resolved"]
+	checkersWithGraph["open-questions-resolved"] = func(_ string, n mapx.Node, _ string,
+		_ *mapx.Graph, _ *config.Config) (Verdict, string) {
+		switch n.ID {
+		case comDecisao:
+			return Diverge, "há pergunta aberta " + OpenDecisionMarker
+		case declarado:
+			return Diverge, "dívida com prazo " + DeclaredMarker
+		}
+		return Pending, "não medi"
+	}
+	t.Cleanup(func() { checkersWithGraph["open-questions-resolved"] = orig })
+
+	for _, f := range []string{comDecisao, semMedir, declarado} {
+		if err := os.WriteFile(filepath.Join(root, f), []byte("texto\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	nodes := []mapx.Node{{ID: comDecisao, Kind: mapx.KindSpec}, {ID: semMedir, Kind: mapx.KindSpec}, {ID: declarado, Kind: mapx.KindSpec}}
+	run := func(g config.Gate) map[string]Result {
+		out := map[string]Result{}
+		for _, r := range RunWithConfig([]config.Gate{g}, nodes, root, nil, nil) {
+			out[r.Target] = r
+		}
+		return out
+	}
+	on := true
+	g := config.Gate{Name: "decisões", ID: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved", Blocking: &on}
+	got := run(g)
+	if got[semMedir].Blocks() || got[semMedir].Action != config.ActionInform {
+		t.Errorf("by default a blocking gate's pending item informs, got %+v", got[semMedir])
+	}
+	if got[comDecisao].Blocks() || got[comDecisao].Action != config.ActionInform {
+		t.Errorf("by default an open decision informs, as any divergence, got %+v", got[comDecisao])
+	}
+	if got[declarado].Blocks() || got[declarado].Action != config.ActionInform {
+		t.Errorf("a divergence the project declared informs and never bars, got %+v", got[declarado])
+	}
+	g.Severity = &config.Severity{Divergence: config.ActionBlock, Pending: config.ActionBlock}
+	got = run(g)
+	if !got[semMedir].Blocks() || !got[comDecisao].Blocks() || got[declarado].Blocks() {
+		t.Error("declared, the open decision and the pending item bar; a declared divergence still never bars")
+	}
+	g.Severity = &config.Severity{Pending: config.ActionIgnore}
+	if got = run(g); !got[semMedir].Ignored() {
+		t.Error("with pending: ignore the pending item is ignored")
+	}
+}
+
+// DÍVIDA ASSUMIDA é o Pending que tem dono e vencimento — e o único que vira trabalho
+// registrado. Os demais Pending são "não tive o que confrontar", que não é dívida de
+// ninguém.
+func TestSoOGateDeObrigacoesProduzDivida(t *testing.T) {
+	t.Run("GTENG-B16: Only the obligations gate produces assumed debt", func(t *testing.T) {})
+
+	root := t.TempDir()
+	alvo := "a.spec.md"
+	if err := os.WriteFile(filepath.Join(root, alvo), []byte("texto\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	laudo := "[migracao-de-schema] pendente — DÍVIDA ASSUMIDA: até a virada do trimestre"
+
+	devolvePending := func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string) {
+		return Diverge, laudo
+	}
+	origObr := checkersWithGraph["obligation-honored"]
+	origOutro := checkersWithGraph["docs-fresh"]
+	checkersWithGraph["obligation-honored"] = devolvePending
+	checkersWithGraph["docs-fresh"] = devolvePending
+	t.Cleanup(func() {
+		checkersWithGraph["obligation-honored"] = origObr
+		checkersWithGraph["docs-fresh"] = origOutro
+	})
+
+	obrig := runOne(config.Gate{Name: "obrigações", ID: "obligation-honored",
+		On: []string{"spec"}, Check: "obligation-honored"},
+		mapx.Node{ID: alvo, Kind: mapx.KindSpec}, root, nil, nil)
+	outro := runOne(config.Gate{Name: "docs", ID: "docs-fresh",
+		On: []string{"spec"}, Check: "docs-fresh"},
+		mapx.Node{ID: alvo, Kind: mapx.KindSpec}, root, nil, nil)
+
+	if !obrig.Divida {
+		t.Error("o gate de obrigações produz DÍVIDA ASSUMIDA")
+	}
+	if obrig.Prazo == "" {
+		t.Errorf("a dívida carrega o VENCIMENTO para o registro; veio vazio (laudo: %s)", obrig.Detail)
+	}
+	if outro.Divida {
+		t.Error("outro gate com o MESMO laudo não pode virar dívida — o que decide é o gate")
+	}
+}
+
+// A gramática do código de cenário segue o vocabulário do PROJETO, e o motor a
+// reconfigura antes de rodar qualquer coisa. Um gate lendo o vocabulário velho reporta
+// verde sobre o que nunca olhou.
+func TestOMotorReconfiguraAGramaticaAntesDeRodar(t *testing.T) {
+	t.Run("GTENG-B17: The engine reconfigures the code grammar before running anything", func(t *testing.T) {})
+
+	t.Cleanup(func() { SetRuleLetters(config.DefaultRuleLetters) })
+	SetRuleLetters(config.DefaultRuleLetters)
+
+	const letra = "Z"
+	if strings.Contains(config.DefaultRuleLetters, letra) {
+		t.Fatalf("o teste precisa de uma letra FORA do vocabulário canônico")
+	}
+	root := t.TempDir()
+	alvo := "a.spec.md"
+	conteudo := "| `ABCDX-" + letra + "01` | uma regra da letra do projeto |\n"
+	if err := os.WriteFile(filepath.Join(root, alvo), []byte(conteudo), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cfg := testkit.WithComments(&config.Config{RuleTypes: []config.RuleType{
+		{Letter: letra, Term: "algo que o projeto nomeia"},
+	}})
+	g := config.Gate{Name: "tem-código", ID: "has-code", On: []string{"spec"}, Check: "has-code"}
+
+	res := RunWithConfig([]config.Gate{g}, []mapx.Node{{ID: alvo, Kind: mapx.KindSpec}}, root, nil, cfg)
+	if len(res) != 1 {
+		t.Fatalf("esperava um veredito, vieram %d", len(res))
+	}
+	if res[0].Verdict != Pass {
+		t.Errorf("a letra declarada pelo projeto tem de estar viva quando o gate roda; "+
+			"veio %v — %s", res[0].Verdict, res[0].Detail)
+	}
+}
+
+// A porta simples: gates, nós e mapa, sem Estrutura. Os checkers relacionais leem a
+// ausência como "sem de-para declarado" — e não como erro.
+func TestPortaSimplesRodaSemEstrutura(t *testing.T) {
+	t.Run("GTENG-B18: The plain entry point runs with the map and no Structure", func(t *testing.T) {})
+
+	root := t.TempDir()
+	alvo := "a.spec.md"
+	if err := os.WriteFile(filepath.Join(root, alvo), []byte("texto de verdade\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := config.Gate{Name: "não-vazio", ID: "non-empty", On: []string{"spec"}, Check: "non-empty"}
+	res := Run([]config.Gate{g}, []mapx.Node{{ID: alvo, Kind: mapx.KindSpec}}, root, &mapx.Graph{})
+	if len(res) != 1 || res[0].Verdict != Pass {
+		t.Fatalf("a porta simples tem de rodar sem Estrutura; veio %+v", res)
+	}
+}
+
+// A porta que CARREGA A ESTRUTURA entrega-a ao checker relacional: os regimes e as
+// superfícies da unidade são declarados lá.
+func TestPortaComEstruturaEntregaAEstrutura(t *testing.T) {
+	t.Run("GTENG-B19: The entry point that carries the Structure hands it to the checkers", func(t *testing.T) {})
+
+	root := t.TempDir()
+	alvo := "a.spec.md"
+	if err := os.WriteFile(filepath.Join(root, alvo), []byte("texto\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	const nome = "espia-a-estrutura"
+	var recebeu bool
+	checkersWithGraph[nome] = func(_ string, _ mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
+		recebeu = cfg != nil
+		return Pass, ""
+	}
+	t.Cleanup(func() { delete(checkersWithGraph, nome) })
+
+	g := config.Gate{Name: nome, ID: nome, On: []string{"spec"}, Check: nome}
+	nos := []mapx.Node{{ID: alvo, Kind: mapx.KindSpec}}
+
+	RunWithConfig([]config.Gate{g}, nos, root, nil, testkit.WithComments(&config.Config{Lang: "en"}))
+	if !recebeu {
+		t.Error("a porta com Estrutura tem de entregá-la ao checker relacional")
+	}
+	recebeu = true
+	Run([]config.Gate{g}, nos, root, nil)
+	if recebeu {
+		t.Error("a porta simples não inventa Estrutura: o checker recebe a ausência")
+	}
+}
+
+// Só a porta que SABE se a varredura é o projeto inteiro pode honrar o escopo de full.
+// No full, quem sabe varrer sozinho roda UMA vez sem receber a lista, em vez de receber
+// os milhares de alvos em lotes.
+func TestPortaQueSabeAVarreduraHonraOEscopoDeFull(t *testing.T) {
+	t.Run("GTENG-B20: The entry point that knows the sweep kind honours the full-sweep scope", func(t *testing.T) {})
+
+	g := config.Gate{Name: "lint", ID: "lint", On: []string{"code"},
+		Scope: config.ScopeBatch, ScopeFull: config.ScopeProject, Run: "true"}
+	alvos := []mapx.Node{{ID: "a.ts", Kind: mapx.KindCode}, {ID: "b.ts", Kind: mapx.KindCode}}
+	root := t.TempDir()
+
+	recorte := RunFull([]config.Gate{g}, alvos, root, nil, nil, false)
+	completa := RunFull([]config.Gate{g}, alvos, root, nil, nil, true)
+
+	if len(recorte) != 1 || len(completa) != 1 {
+		t.Fatalf("o agregado responde uma vez em cada modo; vieram %d e %d", len(recorte), len(completa))
+	}
+	if recorte[0].Target == completa[0].Target {
+		t.Errorf("o escopo tem de MUDAR entre o recorte e o full; os dois vieram %q", recorte[0].Target)
+	}
+	if !strings.Contains(recorte[0].Target, config.ScopeBatch) {
+		t.Errorf("no recorte vale o `scope`; veio %q", recorte[0].Target)
+	}
+	if !strings.Contains(completa[0].Target, config.ScopeProject) {
+		t.Errorf("no full vale o `scope_full`; veio %q", completa[0].Target)
+	}
+}
+
+// A porta que honra a dispensa POR ALVO produz veredito para TODOS os nós — um deles
+// poupado. A dispensa não pode sair filtrando o gate da lista.
+// A vendored pipeline is out of the internal rulers — its unit and header live upstream —
+// and still in reach of an external command, which measures what the file does here.
+func TestAppliesUpstreamOnlyToExternalCommands(t *testing.T) {
+	t.Run("GTENG-B22: A vendored file is out of every internal ruler and still reached by an external command", func(t *testing.T) {})
+
+	vendored := mapx.Node{ID: ".github/workflows/anchors-claim.yml", Kind: mapx.KindCode, Upstream: true}
+	own := mapx.Node{ID: ".github/workflows/ci.yml", Kind: mapx.KindCode}
+	internal := config.Gate{Name: "unit-complete", On: []string{"code"}, Check: "unit-complete"}
+	external := config.Gate{Name: "no-secret-leaked", On: []string{"code"}, Run: "gitleaks"}
+
+	if applies(internal, vendored, t.TempDir()) {
+		t.Error("an internal ruler must not reach a vendored file")
+	}
+	if !applies(internal, own, t.TempDir()) {
+		t.Error("an internal ruler still reaches the project's own workflow")
+	}
+	if !applies(external, vendored, t.TempDir()) {
+		t.Error("an external command still reaches a vendored file")
+	}
+}
+
+// A guide read from a URL is no file of the project: neither an internal ruler nor an
+// external command has a file here to confront.
+func TestAppliesToNoExternalFile(t *testing.T) {
+	t.Run("GTENG-B36: An external file — a guide read from a URL — is out of every gate", func(t *testing.T) {})
+
+	external := mapx.Node{ID: "https://raw.example/std/{{branch|develop}}/GUIDE.md", Kind: mapx.KindGuide, External: true}
+	local := mapx.Node{ID: "guides/GUIDE.md", Kind: mapx.KindGuide}
+	header := config.Gate{Name: "header-valid", On: []string{"guide"}, Check: "header-valid"}
+	command := config.Gate{Name: "no-secret-leaked", On: []string{"guide"}, Run: "gitleaks"}
+
+	if applies(header, external, t.TempDir()) || applies(command, external, t.TempDir()) {
+		t.Error("no gate reaches an external file")
+	}
+	if !applies(header, local, t.TempDir()) {
+		t.Error("a local guide is still confronted")
+	}
+}
+
+func TestPortaComDispensaProduzVereditoParaTodos(t *testing.T) {
+	t.Run("GTENG-B21: The entry point that honours a waiver by target keeps the gate running", func(t *testing.T) {})
+
+	root := t.TempDir()
+	nomes := []string{"um.md", "dois.md", "tres.md"}
+	for _, f := range nomes {
+		if err := os.WriteFile(filepath.Join(root, f), []byte("   \n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	disp, _ := ParseWaiver("non-empty@AAAAA=rascunho declarado")
+	g := config.Gate{Name: "não-vazio", ID: "non-empty", On: []string{"spec"}, Check: "non-empty"}
+	res := RunWithWaiver([]config.Gate{g}, []mapx.Node{
+		{ID: nomes[0], Kind: mapx.KindSpec, Code: "AAAAA"},
+		{ID: nomes[1], Kind: mapx.KindSpec, Code: "BBBBB"},
+		{ID: nomes[2], Kind: mapx.KindSpec, Code: "CCCCC"},
+	}, root, nil, nil, false, disp)
+
+	if len(res) != len(nomes) {
+		t.Fatalf("o gate tem de produzir veredito para os %d nós; vieram %d", len(nomes), len(res))
+	}
+	var poupados int
+	for _, r := range res {
+		if r.Verdict == Skip {
+			poupados++
+		}
+	}
+	if poupados != 1 {
+		t.Errorf("exatamente um nó foi dispensado; vieram %d Skip", poupados)
+	}
+}
+
+// A dispensa por alvo é aplicada COM O GATE RODANDO, nunca removendo-o da lista.
+// Removê-lo apagaria a régua para o repositório inteiro, e um defeito noutro lugar
+// passaria de carona.
+func TestDispensaNaoRemoveOGateDaLista(t *testing.T) {
+	t.Run("GTENG-I01: A waiver by target never removes the gate from the list", func(t *testing.T) {})
+
+	root := t.TempDir()
+	for _, f := range []string{"dispensado.md", "quebrado.md"} {
+		if err := os.WriteFile(filepath.Join(root, f), []byte("   \n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	disp, _ := ParseWaiver("non-empty@DISPE=spec nova do plano 0007")
+	g := config.Gate{Name: "não-vazio", ID: "non-empty", On: []string{"spec"}, Check: "non-empty"}
+	res := RunWithWaiver([]config.Gate{g}, []mapx.Node{
+		{ID: "dispensado.md", Kind: mapx.KindSpec, Code: "DISPE"},
+		{ID: "quebrado.md", Kind: mapx.KindSpec, Code: "QBRDA"},
+	}, root, nil, nil, false, disp)
+
+	var achouReprovacao bool
+	for _, r := range res {
+		if r.Target == "quebrado.md" && r.Verdict == Fail {
+			achouReprovacao = true
+		}
+	}
+	if !achouReprovacao {
+		t.Fatalf("o defeito NÃO dispensado tem de ser acusado — é o mascaramento que a "+
+			"dispensa por alvo existe para impedir; vieram %+v", res)
+	}
+}
+
+// Skip, Pending e Fail são TRÊS respostas, e nunca colapsam em duas. Cada uma diz o que
+// as outras não dizem: não se aplica, não consegui medir, medi e reprovou.
+func TestSkipPendingEFailNaoColapsam(t *testing.T) {
+	t.Run("GTENG-I02: Stepping aside, not measuring and failing are three different answers", func(t *testing.T) {})
+
+	root := t.TempDir()
+	alvo := "vazio.md"
+	if err := os.WriteFile(filepath.Join(root, alvo), []byte("  \n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	nos := []mapx.Node{{ID: alvo, Kind: mapx.KindSpec}}
+
+	semFerramenta := RunWithConfig([]config.Gate{{Name: "ext", ID: "ext", On: []string{"spec"},
+		Run: "nada", NeedsTool: "binario-que-ninguem-instalou-jamais"}}, nos, root, nil, nil)
+	mediuEReprovou := RunWithConfig([]config.Gate{{Name: "não-vazio", ID: "non-empty",
+		On: []string{"spec"}, Check: "non-empty"}}, nos, root, nil, nil)
+	naoMediu := RunWithConfig([]config.Gate{{Name: "mudo", ID: "mudo", On: []string{"spec"}}},
+		nos, root, nil, nil)
+
+	if len(semFerramenta) != 1 || len(mediuEReprovou) != 1 || len(naoMediu) != 1 {
+		t.Fatal("cada gate deveria ter produzido um veredito")
+	}
+	tres := []Verdict{semFerramenta[0].Verdict, mediuEReprovou[0].Verdict, naoMediu[0].Verdict}
+	vistos := map[Verdict]bool{}
+	for _, v := range tres {
+		if vistos[v] {
+			t.Fatalf("os três casos colapsaram: %v", tres)
+		}
+		vistos[v] = true
+	}
+	if tres[0] != Skip || tres[1] != Fail || tres[2] != Pending {
+		t.Errorf("esperava Skip/Fail/Pending nessa ordem, veio %v", tres)
+	}
+}
+
+// O veredito do alvo dispensado é Skip COM O MOTIVO ESCRITO, nunca silêncio. Some do
+// placar de reprovações sem sumir do relatório — a diferença entre dispensar e esconder.
+func TestOAlvoDispensadoCarregaOMotivo(t *testing.T) {
+	t.Run("GTENG-I03: A waived target leaves the failure tally without leaving the report", func(t *testing.T) {})
+
+	const motivo = "rascunho declarado do plano 0007"
+	root := t.TempDir()
+	alvo := "poupado.md"
+	if err := os.WriteFile(filepath.Join(root, alvo), []byte("  \n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	disp, _ := ParseWaiver("non-empty@POUPA=" + motivo)
+	res := RunWithWaiver([]config.Gate{{Name: "não-vazio", ID: "non-empty",
+		On: []string{"spec"}, Check: "non-empty"}},
+		[]mapx.Node{{ID: alvo, Kind: mapx.KindSpec, Code: "POUPA"}},
+		root, nil, nil, false, disp)
+
+	if len(res) != 1 {
+		t.Fatalf("esperava um veredito, vieram %d", len(res))
+	}
+	if res[0].Verdict != Skip {
+		t.Fatalf("o dispensado é Skip, veio %v", res[0].Verdict)
+	}
+	if !strings.Contains(res[0].Detail, motivo) {
+		t.Errorf("o laudo tem de carregar o MOTIVO escrito, e não calar; veio %q", res[0].Detail)
+	}
+}
+
+// O alvo reportado pelo agregado é o ESCOPO. Culpar um de muitos arquivos por uma
+// resposta sobre o conjunto seria afirmação que o motor não sustenta.
+func TestAlvoDoAgregadoEhOEscopo(t *testing.T) {
+	t.Run("GTENG-I04: The reported target of an aggregate gate is the scope", func(t *testing.T) {})
+
+	g := config.Gate{Name: "lint", ID: "lint", On: []string{"code"},
+		Scope: config.ScopeBatch, Run: "true"}
+	alvos := []mapx.Node{
+		{ID: "a.ts", Kind: mapx.KindCode},
+		{ID: "b.ts", Kind: mapx.KindCode},
+	}
+	res := RunWithConfig([]config.Gate{g}, alvos, t.TempDir(), nil, nil)
+	if len(res) != 1 {
+		t.Fatalf("esperava um veredito agregado, vieram %d", len(res))
+	}
+	if !strings.Contains(res[0].Target, config.ScopeBatch) {
+		t.Errorf("o alvo tem de nomear o escopo; veio %q", res[0].Target)
+	}
+	for _, n := range alvos {
+		if strings.Contains(res[0].Target, n.ID) {
+			t.Errorf("o alvo não pode nomear um dos arquivos; veio %q", res[0].Target)
+		}
+	}
+}
+
+// A régua é do checker. Um motor que julgasse poria a medição dentro do roteador, e o
+// mesmo defeito teria dois donos.
+func TestOMotorNaoDecideSeOAlvoEstaCerto(t *testing.T) {
+	t.Run("GTENG-X01: The engine does not decide whether a target is correct", func(t *testing.T) {})
+
+	root := t.TempDir()
+	alvo := "absurdo.md"
+	// Conteúdo que qualquer revisor reprovaria; o checker aprova, e é ele quem manda.
+	if err := os.WriteFile(filepath.Join(root, alvo),
+		[]byte("esta spec diz exatamente o oposto do que a unidade faz\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	const nome = "aprova-sempre"
+	checkersWithGraph[nome] = func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string) {
+		return Pass, ""
+	}
+	t.Cleanup(func() { delete(checkersWithGraph, nome) })
+
+	res := RunWithConfig([]config.Gate{{Name: nome, ID: nome, On: []string{"spec"}, Check: nome}},
+		[]mapx.Node{{ID: alvo, Kind: mapx.KindSpec}}, root, nil, nil)
+	if len(res) != 1 || res[0].Verdict != Pass {
+		t.Fatalf("o veredito é o do CHECKER; veio %+v", res)
+	}
+}
+
+// O motor NÃO computa o veredito de um gate de julgamento. Tudo o que ele sabe é se
+// ALGUÉM já respondeu — e a resposta está no carimbo.
+func TestOMotorNaoComputaJulgamento(t *testing.T) {
+	t.Run("GTENG-X02: The engine does not compute the verdict of a judgment gate", func(t *testing.T) {})
+
+	g := config.Gate{Name: "atomic", On: []string{"code"}, Measures: config.MeasuresJudgment}
+	alvo := mapx.Node{ID: "Home.tsx", Kind: mapx.KindCode, Rev: "r1"}
+
+	// Um grafo COM arestas, mas SEM carimbo deste gate: não há resposta a ler, e o motor
+	// não inventa uma por conta própria.
+	graph := grafoComJulgamento(alvo, "outro-gate", "ok")
+	r := runOne(g, alvo, t.TempDir(), graph, nil)
+	if r.Verdict != Judge {
+		t.Fatalf("sem carimbo DESTE gate, o motor só pode pedir julgamento; veio %v (%s)",
+			r.Verdict, r.Detail)
+	}
+}
+
+// Ausência é CASO, não erro. Fabricar mapa, Estrutura ou dispensa faria a rodada
+// responder sobre um estado de projeto que não existe.
+func TestOMotorNaoInventaMapaEstruturaNemDispensa(t *testing.T) {
+	t.Run("GTENG-X03: The engine invents neither a map nor a Structure nor a waiver", func(t *testing.T) {})
+
+	root := t.TempDir()
+	alvo := "vazio.md"
+	if err := os.WriteFile(filepath.Join(root, alvo), []byte("  \n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	const nome = "espia-a-ausencia"
+	var viuGrafo, viuEstrutura bool
+	checkersWithGraph[nome] = func(_ string, _ mapx.Node, _ string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+		viuGrafo, viuEstrutura = g != nil, cfg != nil
+		return Pass, ""
+	}
+	t.Cleanup(func() { delete(checkersWithGraph, nome) })
+
+	// Sem mapa, sem Estrutura e sem dispensa: o checker recebe a ausência tal como é.
+	RunWithWaiver([]config.Gate{{Name: nome, ID: nome, On: []string{"spec"}, Check: nome}},
+		[]mapx.Node{{ID: alvo, Kind: mapx.KindSpec, Code: "AUSEN"}},
+		root, nil, nil, false, Waiver{})
+	if viuGrafo || viuEstrutura {
+		t.Errorf("o motor não pode fabricar o que não recebeu: grafo=%v estrutura=%v",
+			viuGrafo, viuEstrutura)
+	}
+
+	// E a dispensa vazia não dispensa ninguém: o alvo quebrado continua acusado.
+	res := RunWithWaiver([]config.Gate{{Name: "não-vazio", ID: "non-empty",
+		On: []string{"spec"}, Check: "non-empty"}},
+		[]mapx.Node{{ID: alvo, Kind: mapx.KindSpec, Code: "AUSEN"}},
+		root, nil, nil, false, Waiver{})
+	if len(res) != 1 || res[0].Verdict != Fail {
+		t.Errorf("dispensa vazia não pode poupar ninguém; veio %+v", res)
+	}
+}
+
+// The central contract of `needs_tool`: a missing tool STEPS ASIDE, it does not fail.
+//
+// The regression this test bars is the one that motivated the field — without it `sh`
+// exits 127 and the gate becomes Fail, saying "the project violated something" when what
+// is missing is the binary. A Fail here would fail every freshly created project that has
+// not yet installed the tool.
+func TestNeedsTool_missingToolIsSkipNotFail(t *testing.T) {
+	t.Run("GTENG-B08: A gate whose required binary is absent steps aside", func(t *testing.T) {})
+	t.Run("GTENG-I02: Stepping aside, not measuring and failing are three different answers", func(t *testing.T) {})
+	g := config.Gate{
+		Name: "gate-fantasma", On: []string{"code"},
+		Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+		// `false` would fail (exit 1) IF it got to run — that is what makes the test
+		// conclusive: only the Skip explains the green, not a command that happened to pass.
+		Run:       "false",
+		NeedsTool: "binario-que-nao-existe-em-lugar-nenhum-xyz",
+		Blocking:  config.Bool(true),
+	}
+	nodes := []mapx.Node{{ID: "a.ts", Kind: mapx.Kind("code")}}
+
+	res := RunFull([]config.Gate{g}, nodes, t.TempDir(), nil, testkit.WithComments(&config.Config{}), false)
+	if len(res) != 1 {
+		t.Fatalf("expected 1 verdict, got %d", len(res))
+	}
+	if res[0].Verdict != Skip {
+		t.Fatalf("a missing tool should give Skip, got %q (detail: %s)", res[0].Verdict, res[0].Detail)
+	}
+	if !strings.Contains(res[0].Detail, "binario-que-nao-existe") {
+		t.Errorf("the report must NAME the missing tool; got: %q", res[0].Detail)
+	}
+}
+
+// The counterpart: with the tool present the gate really runs. Without this case, a
+// `needs_tool` that always skipped would pass the test above and switch the gate off in
+// silence — the costliest failure possible, because it removes the measurement while
+// looking healthy.
+func TestNeedsTool_presentToolKeepsRunning(t *testing.T) {
+	t.Run("GTENG-B08: A gate whose required binary is absent steps aside", func(t *testing.T) {})
+	t.Run("GTENG-I02: Stepping aside, not measuring and failing are three different answers", func(t *testing.T) {})
+	g := config.Gate{
+		Name: "gate-real", On: []string{"code"},
+		Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+		Run: "false", // fails on purpose
+		// `sh` exists on any POSIX — the safest present tool to assume.
+		NeedsTool: "sh",
+		Blocking:  config.Bool(true),
+	}
+	nodes := []mapx.Node{{ID: "a.ts", Kind: mapx.Kind("code")}}
+
+	res := RunFull([]config.Gate{g}, nodes, t.TempDir(), nil, testkit.WithComments(&config.Config{}), false)
+	if len(res) != 1 {
+		t.Fatalf("expected 1 verdict, got %d", len(res))
+	}
+	if res[0].Verdict != Fail {
+		t.Fatalf("a present tool should let the gate RUN (and fail), got %q", res[0].Verdict)
+	}
+}
+
+// recordArgCount builds a gate command that records HOW MANY targets it received on each
+// run, one line per invocation. It is how "ran once over the project" is told apart from
+// "ran N times with the project chopped up".
+func recordArgCount(out string) string {
+	return "printf '%s\\n' \"$#\" >> " + out
+}
+
+func readLines(t *testing.T, p string) []string {
+	t.Helper()
+	b, err := os.ReadFile(p)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, l := range strings.Split(strings.TrimSpace(string(b)), "\n") {
+		if l != "" {
+			out = append(out, l)
+		}
+	}
+	return out
+}
+
+func codeNodes(n int) []mapx.Node {
+	out := make([]mapx.Node, 0, n)
+	for i := 0; i < n; i++ {
+		out = append(out, mapx.Node{ID: "src/arquivo" + string(rune('a'+i%26)) + string(rune('a'+i/26)) + ".ts", Kind: mapx.KindCode})
+	}
+	return out
+}
+
+// TestScopeFull_runsOnceWithNoTargets is the point of scope_full: on `--all` the slice is
+// the whole project, and passing the list stops making sense — the tool that can sweep on
+// its own must be called ONCE, with no target. Before this, the same gate ran in batches:
+// N invocations where one was enough (and, on Windows, N command-line overflows).
+func TestScopeFull_runsOnceWithNoTargets(t *testing.T) {
+	t.Run("GTENG-B20: The entry point that knows the sweep kind honours the full-sweep scope", func(t *testing.T) {})
+	root := t.TempDir()
+	out := filepath.ToSlash(filepath.Join(root, "invocacoes.txt"))
+
+	g := config.Gate{
+		Name:      "lint",
+		On:        []string{string(mapx.KindCode)},
+		Scope:     config.ScopeBatch,
+		ScopeFull: config.ScopeProject,
+		Run:       recordArgCount(out),
+	}
+
+	RunFull([]config.Gate{g}, codeNodes(300), root, nil, testkit.WithComments(&config.Config{}), true)
+
+	got := readLines(t, out)
+	if len(got) != 1 {
+		t.Fatalf("on a full sweep the gate should run ONCE; it ran %d times", len(got))
+	}
+	if got[0] != "0" {
+		t.Errorf("on a full sweep the gate receives no targets; it received %s", got[0])
+	}
+}
+
+// TestScopeFull_withoutItBatchesContinue — the opt-in must not change who did not ask for
+// it. A batch gate without `scope_full` keeps receiving the targets, because its script may
+// well exit 0 when it receives nothing: promoting it to project on its own would leave it
+// green without looking at any file.
+func TestScopeFull_withoutItBatchesContinue(t *testing.T) {
+	t.Run("GTENG-B20: The entry point that knows the sweep kind honours the full-sweep scope", func(t *testing.T) {})
+	root := t.TempDir()
+	out := filepath.ToSlash(filepath.Join(root, "invocacoes.txt"))
+
+	g := config.Gate{
+		Name:  "lint",
+		On:    []string{string(mapx.KindCode)},
+		Scope: config.ScopeBatch,
+		Run:   recordArgCount(out),
+	}
+
+	RunFull([]config.Gate{g}, codeNodes(300), root, nil, testkit.WithComments(&config.Config{}), true)
+
+	got := readLines(t, out)
+	if len(got) == 0 {
+		t.Fatal("the batch gate has to run")
+	}
+	total := 0
+	for _, l := range got {
+		if l == "0" {
+			t.Fatal("a batch gate without scope_full must not be called with no targets")
+		}
+		n, err := strconv.Atoi(l)
+		if err != nil {
+			t.Fatalf("unexpected line in the invocation record: %q", l)
+		}
+		total += n
+	}
+	if total != 300 {
+		t.Errorf("the batches cover %d targets; they should cover all 300", total)
+	}
+}
+
+// TestScopeFull_doesNotApplyIncrementally pins the other half of the rule: outside `--all`
+// the slice is small and specific, and it is exactly what the gate needs to receive.
+// Applying scope_full here would make a one-file commit sweep the whole project.
+func TestScopeFull_doesNotApplyIncrementally(t *testing.T) {
+	t.Run("GTENG-B20: The entry point that knows the sweep kind honours the full-sweep scope", func(t *testing.T) {})
+	root := t.TempDir()
+	out := filepath.ToSlash(filepath.Join(root, "invocacoes.txt"))
+
+	g := config.Gate{
+		Name:      "lint",
+		On:        []string{string(mapx.KindCode)},
+		Scope:     config.ScopeBatch,
+		ScopeFull: config.ScopeProject,
+		Run:       recordArgCount(out),
+	}
+
+	RunFull([]config.Gate{g}, codeNodes(3), root, nil, testkit.WithComments(&config.Config{}), false)
+
+	got := readLines(t, out)
+	if len(got) != 1 || got[0] != "3" {
+		t.Errorf("incrementally the gate receives the 3 targets of the slice; got %v", got)
+	}
+}
+
+func TestRunOne_NoSignalSkipsWithTheReason(t *testing.T) {
+	t.Run("GTENG-B24: A target declared with nothing to measure is skipped with its reason", func(t *testing.T) {})
+	root := t.TempDir()
+	for _, f := range []string{"a/guide.go", "a/code.go"} {
+		if err := os.MkdirAll(filepath.Join(root, "a"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, f), []byte("package a\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := config.Gate{Name: "line-coverage", Check: "line-coverage", NoSignal: map[string]string{"a/guide.go": "text constants only"}}
+	r := runOne(g, mapx.Node{ID: "a/guide.go", Kind: mapx.KindCode}, root, &mapx.Graph{}, nil)
+	if r.Verdict != Skip || !strings.Contains(r.Detail, "text constants only") {
+		t.Fatalf("the declared file must be skipped naming the reason, got %v (%s)", r.Verdict, r.Detail)
+	}
+	if r := runOne(g, mapx.Node{ID: "a/code.go", Kind: mapx.KindCode}, root, &mapx.Graph{}, nil); r.Verdict == Skip {
+		t.Fatalf("another file is still checked, got %v (%s)", r.Verdict, r.Detail)
+	}
+}
+
+func TestApplies_isTheRunnersReach(t *testing.T) {
+	t.Run("GTENG-B25: The gate's reach is offered to the runs that choose what to measure", func(t *testing.T) {})
+	g := config.Gate{On: []string{"code"}, ExcludeTags: []string{"resource"}}
+	for _, c := range []struct {
+		n    mapx.Node
+		want bool
+	}{
+		{mapx.Node{Kind: mapx.KindCode, Tags: []string{"logic"}}, true},
+		{mapx.Node{Kind: mapx.KindCode, Tags: []string{"resource"}}, false},
+		{mapx.Node{Kind: mapx.KindSpec}, false},
+	} {
+		if got := Applies(g, c.n, ""); got != c.want || got != applies(g, c.n, "") {
+			t.Errorf("%+v: want %v, got %v", c.n, c.want, got)
+		}
+	}
+}
+
+func TestReadFile_fromTheSource(t *testing.T) {
+	t.Run("GTENG-B26: The gates read files from the source set", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "a.md"), []byte("tree"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var asked string
+	restore := SetFileSource(func(rel string) ([]byte, error) {
+		asked = rel
+		return []byte("index"), nil
+	})
+	if b, err := readFile(root, "./a.md"); err != nil || string(b) != "index" || asked != "a.md" {
+		t.Errorf("the source answers, by the path relative to the root, got %q %v %q", b, err, asked)
+	}
+	inner := SetFileSource(nil)
+	if b, _ := readFile(root, "a.md"); string(b) != "tree" {
+		t.Errorf("a nil source reads the tree, got %q", b)
+	}
+	inner()
+	if b, _ := readFile(root, "a.md"); string(b) != "index" {
+		t.Errorf("restoring brings the previous source back, got %q", b)
+	}
+	restore()
+	if b, _ := readFile(root, "a.md"); string(b) != "tree" {
+		t.Errorf("with no source the tree is read, got %q", b)
+	}
+}
+
+func TestChangedSource_updatedAt(t *testing.T) {
+	t.Run("GTENG-B27: The gates ask whether a file changed through the source set", func(t *testing.T) {})
+	root := t.TempDir()
+	run := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", root}, args...)...)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t",
+			"GIT_CONFIG_GLOBAL=/dev/null", "GIT_AUTHOR_DATE=2026-01-02T12:00:00", "GIT_COMMITTER_DATE=2026-01-02T12:00:00")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+	}
+	src := "// @anchors\n//   updated_at: 2026-01-02\nx\n"
+	run("init", "-q")
+	if err := os.WriteFile(filepath.Join(root, "a.ts"), []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run("add", ".")
+	run("commit", "-q", "-m", "one")
+	if err := os.WriteFile(filepath.Join(root, "a.ts"), []byte(src+"edited\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n := mapx.Node{ID: "a.ts", Kind: mapx.KindCode}
+	if v, _ := checkUpdatedAt(src, n, root); v != Fail {
+		t.Errorf("asking the tree, an edit not dated today fails, got %v", v)
+	}
+	restore := SetChangedSource(func(string, string) (bool, bool) { return false, true })
+	if v, msg := checkUpdatedAt(src, n, root); v != Pass {
+		t.Errorf("a source that sees no change judges by the last commit, got %v: %s", v, msg)
+	}
+	restore()
+	if v, _ := checkUpdatedAt(src, n, root); v != Fail {
+		t.Errorf("restoring asks the tree again, got %v", v)
+	}
+}
+
+func TestRunWithWaiver_aBrokenGateFailsItsTarget(t *testing.T) {
+	t.Run("GTENG-B28: A gate that breaks fails its target and the check goes on", func(t *testing.T) {})
+	checkersWithGraph["test-breaks"] = func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string) {
+		var lines []string
+		return Pass, lines[3]
+	}
+	defer delete(checkersWithGraph, "test-breaks")
+	root := t.TempDir()
+	writeFile(t, root, "a.go", "package a\n")
+	nodes := []mapx.Node{{ID: "a.go", Kind: mapx.KindCode}}
+	gates := []config.Gate{
+		{Name: "broken", Check: "test-breaks", On: []string{"code"}},
+		{Name: "sound", Check: "test-breaks-not", On: []string{"code"}},
+		{Name: "broken-all", Check: "test-breaks", On: []string{"code"}, Scope: config.ScopeProject},
+	}
+	checkersWithGraph["test-breaks-not"] = func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string) { return Pass, "" }
+	defer delete(checkersWithGraph, "test-breaks-not")
+	results := RunWithWaiver(gates, nodes, root, &mapx.Graph{Nodes: nodes}, testkit.WithComments(&config.Config{}), false, Waiver{})
+	got := map[string]Result{}
+	for _, r := range results {
+		got[r.Gate] = r
+	}
+	for _, name := range []string{"broken", "broken-all"} {
+		if r := got[name]; r.Verdict != Fail || !strings.Contains(r.Detail, "index out of range") || !strings.Contains(r.Detail, "Anchors") {
+			t.Errorf("%s fails saying it broke, got %+v", name, r)
+		}
+	}
+	if got["sound"].Verdict != Pass {
+		t.Errorf("the other gate is still measured, got %+v", got["sound"])
+	}
+}
+
+// The --index invariant: under an index source, no gate reads the tree. Every registered
+// internal checker runs over the same project twice, the index holding the same content
+// both times — first with the tree full of other text, then with the tree equal to the
+// index. A checker whose verdict moves between the two read the tree.
+func TestIndexInvariant_noGateReadsTheTree(t *testing.T) {
+	t.Run("GTENG-I05: Under an index source no gate reads the tree", func(t *testing.T) {})
+	index := map[string]string{
+		"src/pay.spec.md": "<!-- @anchors\n  code: PAYMX\n  updated_at: 2026-09-01\n  layer: billing\n-->\n# Pay\n\n## Overview\n\nCharges.\n\n## Rules\n\n### PAYMX-B01 — charges the amount\n\n## Open Decisions\n\nnone\n",
+		"src/pay.feature": "# @anchors\n#   ref: PAYMX\nFeature: Pay\n\n  @PAYMX-B01 @unit-level\n  Scenario: charges the amount\n    Given an amount\n    When it is charged\n    Then it is charged\n",
+		"src/pay.test.ts": "// @anchors\n//   ref: PAYMX\nimport { pay } from './pay'\nit('PAYMX-B01: charges the amount', () => { expect(pay(1)).toBe(1) })\n",
+		"src/pay.ts":      "// @anchors\n//   ref: PAYMX\n//   layer: billing\nexport const pay = (n: number) => n // PAYMX-B01\n",
+	}
+	nodes := []mapx.Node{
+		{ID: "src/pay.spec.md", Kind: mapx.KindSpec, Code: "PAYMX", Rev: "s"},
+		{ID: "src/pay.feature", Kind: mapx.KindFeature, Code: "PAYMX", Rev: "f"},
+		{ID: "src/pay.test.ts", Kind: mapx.KindTest, Code: "PAYMX", Rev: "t"},
+		{ID: "src/pay.ts", Kind: mapx.KindCode, Code: "PAYMX", Rev: "c"},
+	}
+	g := &mapx.Graph{Nodes: nodes, Edges: []mapx.Edge{
+		{From: "src/pay.spec.md", To: "src/pay.feature", Type: mapx.EdgeCoveredBy},
+		{From: "src/pay.feature", To: "src/pay.test.ts", Type: mapx.EdgeTestedBy},
+		{From: "src/pay.spec.md", To: "src/pay.ts", Type: mapx.EdgeSpecifies},
+	}}
+	cfg := testkit.WithComments(&config.Config{Dialect: &config.Dialect{Family: "ts"}})
+	root := t.TempDir()
+	write := func(tree func(rel, content string) string) {
+		for rel, c := range index {
+			writeFile(t, root, rel, tree(rel, c))
+		}
+	}
+	defer SetFileSource(func(rel string) ([]byte, error) {
+		if c, ok := index[filepath.ToSlash(rel)]; ok {
+			return []byte(c), nil
+		}
+		return nil, os.ErrNotExist
+	})()
+	defer SetChangedSource(func(string, string) (bool, bool) { return false, true })()
+	names := map[string]bool{}
+	for n := range internalCheckers {
+		names[n] = true
+	}
+	for n := range checkersWithRoot {
+		names[n] = true
+	}
+	for n := range checkersWithGraph {
+		names[n] = true
+	}
+	run := func() map[string]string {
+		out := map[string]string{}
+		for name := range names {
+			for _, n := range nodes {
+				func() {
+					defer func() {
+						if p := recover(); p != nil {
+							out[name+" @ "+n.ID] = fmt.Sprint("panic: ", p)
+						}
+					}()
+					resetProjectTestsCache()
+					resetDocsCache()
+					v, d := runInternal(name, n, root, g, cfg)
+					out[name+" @ "+n.ID] = string(v) + " " + d
+				}()
+			}
+		}
+		return out
+	}
+	write(func(rel, _ string) string { return "something else entirely, on disk only\n" })
+	onGarbage := run()
+	write(func(_, c string) string { return c })
+	onIndex := run()
+	var readers []string
+	for k, v := range onIndex {
+		if onGarbage[k] != v {
+			readers = append(readers, k+"\n    tree≠index: "+onGarbage[k]+"\n    tree=index: "+v)
+		}
+	}
+	sort.Strings(readers)
+	for _, r := range readers {
+		t.Errorf("reads the tree under an index source: %s", r)
+	}
+	if len(onIndex) < 50 {
+		t.Fatalf("only %d confrontations ran — the walk over the checkers broke", len(onIndex))
+	}
+}
+
+// The question of `mock-detect-covers-dialect` asserts `derived.mock_detect` is declared;
+// asked where it is not, the evaluator judged a false premise (reported from a project).
+func TestRunOne_presupposedFieldMissingAsksNothing(t *testing.T) {
+	t.Run("GTENG-B29: A gate presupposing an undeclared field asks nothing", func(t *testing.T) {})
+	g := config.Gate{Name: "mock-detect-covers-dialect", Measures: config.MeasuresJudgment, Presupposes: []string{"derived.mock_detect"}}
+	n := mapx.Node{ID: "a_test.go", Kind: mapx.KindTest}
+	r := runOne(g, n, t.TempDir(), &mapx.Graph{}, testkit.WithComments(&config.Config{}))
+	if r.Verdict != Pending || !strings.Contains(r.Detail, "derived.mock_detect") || !strings.Contains(r.Detail, "opt_out") {
+		t.Errorf("undeclared: %v (%s), want Pending naming the field and the opt-out", r.Verdict, r.Detail)
+	}
+	waived := testkit.WithComments(&config.Config{Dialect: &config.Dialect{OptOut: []string{"mock_detect"}}})
+	if r := runOne(g, n, t.TempDir(), &mapx.Graph{}, waived); r.Verdict != Skip {
+		t.Errorf("waived: %v, want Skip", r.Verdict)
+	}
+	declared := testkit.WithComments(&config.Config{Derived: &config.Derived{MockDetect: `jest\.mock\('([^']+)'`}})
+	if r := runOne(g, n, t.TempDir(), &mapx.Graph{}, declared); r.Verdict != Judge {
+		t.Errorf("declared: %v, want the judgment asked", r.Verdict)
+	}
+	// A gate of the whole project presupposes the same way, once.
+	project := config.Gate{Name: "testid-queried-exists", Check: "testid-queried-exists", Scope: config.ScopeProject,
+		Presupposes: []string{"dialect.test_handles.exposed"}}
+	if r := runAggregate(project, nil, t.TempDir(), true, &mapx.Graph{}, testkit.WithComments(&config.Config{})); r.Verdict != Pending || !strings.Contains(r.Detail, "dialect.test_handles.exposed") {
+		t.Errorf("a project gate with its field undeclared: %v (%s), want Pending naming it", r.Verdict, r.Detail)
+	}
+	optOut := testkit.WithComments(&config.Config{Dialect: &config.Dialect{OptOut: []string{"exposed"}}})
+	if r := runAggregate(project, nil, t.TempDir(), true, &mapx.Graph{}, optOut); r.Verdict != Skip {
+		t.Errorf("a project gate waived: %v (%s), want Skip", r.Verdict, r.Detail)
+	}
+}
+
+func TestGitReadOncePerRun(t *testing.T) {
+	t.Run("GTENG-B30: Git is read once per run, and forgotten when the run writes files", func(t *testing.T) {})
+	spec := "<!-- @anchors\n  code: AAAAA\n  updated_at: 2024-03-05\n-->\n# A\n"
+	dir := fixRepo(t, "a.spec.md", spec)
+	ForgetRunState()
+	n := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
+	if v, msg := checkUpdatedAt(spec, n, dir); v != Pass {
+		t.Fatalf("the commit day: %v %s", v, msg)
+	}
+	today := strings.Replace(spec, "2024-03-05", gitmeta.Today(), 1)
+	if err := os.WriteFile(filepath.Join(dir, "a.spec.md"), []byte(today), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if v, _ := checkUpdatedAt(today, n, dir); v != Fail {
+		t.Errorf("within the run, git is not asked again: the file reads as committed, got %v", v)
+	}
+	ForgetRunState()
+	if v, msg := checkUpdatedAt(today, n, dir); v != Pass {
+		t.Errorf("forgotten, git is asked again and sees the edit: %v %s", v, msg)
+	}
+}
+
+func TestRunMemo_readsOnceAndAgainAfterATool(t *testing.T) {
+	t.Run("GTENG-B31: A run reads each file once, and again after a tool", func(t *testing.T) {})
+	root := t.TempDir()
+	write := func(body string) {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(root, "a.ts"), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("one")
+	cfg := &config.Config{}
+	end := startRun(cfg)
+	first, _ := readFile(root, "a.ts")
+	first[0] = 'X'
+	write("two")
+	if again, _ := readFile(root, "a.ts"); string(again) != "one" {
+		t.Errorf("the run reads the file once, and hands a copy: %q", again)
+	}
+	forgetReads()
+	if after, _ := readFile(root, "a.ts"); string(after) != "two" {
+		t.Errorf("after a tool, the file is read again: %q", after)
+	}
+	g := config.Gate{Name: "x", Presupposes: []string{"dialect.imports"}}
+	m1, _ := runPremises(g, cfg)
+	m2, _ := runPremises(g, cfg)
+	if len(m1) != 1 || len(m2) != 1 {
+		t.Errorf("the premises answer the same: %v %v", m1, m2)
+	}
+	end()
+	write("three")
+	if out, _ := readFile(root, "a.ts"); string(out) != "three" {
+		t.Errorf("outside a run, nothing is kept: %q", out)
+	}
+}
+
+func TestRun_sideBySideAndSequential(t *testing.T) {
+	t.Run("GTENG-B32: The gates run side by side, and one after another when asked", func(t *testing.T) {})
+	run := func(t *testing.T) []Result {
+		t.Helper()
+		root := t.TempDir()
+		tool := func(name, mine, other string) config.Gate {
+			return config.Gate{Name: name, On: []string{"code"}, Scope: config.ScopeProject,
+				Run: "touch " + mine + ".start; i=0; while [ $i -lt 40 ] && [ ! -e " + other + ".start ]; do sleep 0.05; i=$((i+1)); done; [ -e " + other + ".start ] && [ ! -e " + other + ".end ]; r=$?; sleep 0.2; touch " + mine + ".end; exit $r"}
+		}
+		gates := []config.Gate{
+			tool("tool-a", "a", "b"),
+			{Name: "alone", On: []string{"code"}, Scope: config.ScopeProject, Exclusive: true, Run: "[ -e a.end ] && [ -e b.end ]"},
+			{Name: "header-valid", ID: "header-valid", On: []string{"code"}},
+			tool("tool-b", "b", "a"),
+		}
+		return RunWithConfig(gates, []mapx.Node{{ID: "x.ts", Kind: mapx.KindCode}}, root, nil, nil)
+	}
+	res := run(t)
+	var order []string
+	for _, r := range res {
+		order = append(order, r.Gate+"="+string(r.Verdict))
+	}
+	if got := strings.Join(order, " "); !strings.HasPrefix(got, "tool-a=pass alone=pass header-valid=") || !strings.HasSuffix(got, " tool-b=pass") {
+		t.Errorf("side by side, in the order of the gates: %s", got)
+	}
+	SetSequential(true)
+	t.Cleanup(func() { SetSequential(false) })
+	for _, r := range run(t) {
+		if (r.Gate == "tool-a" || r.Gate == "tool-b") && r.Verdict == Pass {
+			t.Errorf("one after another, a tool never sees the other running: %+v", r)
+		}
+	}
+}
+
+func TestMatchesShape(t *testing.T) {
+	t.Run("GTENG-B33: A gate's shape is answered without reading the node", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "a.spec.md"), []byte("# A\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := config.Gate{Name: "x", On: []string{"spec"}, Requires: "@no-test"}
+	spec := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
+	feature := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
+	if !MatchesShape(g, spec) || applies(g, spec, root) {
+		t.Error("the spec has the shape, and lacks the mark")
+	}
+	if MatchesShape(g, feature) || applies(g, feature, root) {
+		t.Error("a feature is not of the gate's kinds")
+	}
+}
+
+// legacyRepo is a repository with old.ts committed before the cutoff and new.ts after it.
+func legacyRepo(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	git := func(date string, args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+		c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t",
+			"GIT_CONFIG_GLOBAL=/dev/null", "GIT_AUTHOR_DATE="+date, "GIT_COMMITTER_DATE="+date)
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+	}
+	git("2026-10-01T10:00:00Z", "init", "-q")
+	for _, f := range []struct{ name, date string }{{"old.ts", "2026-10-01T10:00:00Z"}, {"new.ts", "2026-10-25T10:00:00Z"}} {
+		if err := os.WriteFile(filepath.Join(dir, f.name), []byte("x\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		git(f.date, "add", f.name)
+		git(f.date, "commit", "-q", "-m", f.name)
+	}
+	ForgetRunState()
+	t.Cleanup(ForgetRunState)
+	return dir
+}
+
+func TestLegacyCutoff(t *testing.T) {
+	t.Run("GTENG-B34: A target older than the legacy cutoff answers with the legacy severity", func(t *testing.T) {})
+	root := legacyRepo(t)
+	g := config.Gate{Name: "x", On: []string{"code"}, Blocking: config.Bool(true), Run: "echo bad; exit 1",
+		Legacy: &config.LegacySeverity{Before: "2026-10-21", Severity: &config.Severity{Fail: config.ActionInform}}}
+	nodes := []mapx.Node{{ID: "old.ts", Kind: mapx.KindCode}, {ID: "new.ts", Kind: mapx.KindCode}}
+	action := map[string]string{}
+	for _, r := range RunWithConfig([]config.Gate{g}, nodes, root, nil, nil) {
+		action[r.Target] = r.Action
+	}
+	if action["old.ts"] != config.ActionInform || action["new.ts"] != config.ActionBlock {
+		t.Errorf("the old file's failure informs, the new one's blocks: %v", action)
+	}
+	if err := os.WriteFile(filepath.Join(root, "old.ts"), []byte("y\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	ForgetRunState()
+	for _, r := range RunWithConfig([]config.Gate{g}, nodes[:1], root, nil, nil) {
+		if r.Action != config.ActionBlock {
+			t.Errorf("an old file edited since is no legacy: %+v", r)
+		}
+	}
+}
+
+func TestLegacyDeadline(t *testing.T) {
+	t.Run("GTENG-B37: Past the legacy deadline, every target answers with the gate's own severity", func(t *testing.T) {})
+	root := legacyRepo(t)
+	old := today
+	t.Cleanup(func() { today = old })
+	g := config.Gate{Name: "x", On: []string{"code"}, Blocking: config.Bool(true), Run: "echo bad; exit 1",
+		Legacy: &config.LegacySeverity{Before: "2026-10-21", Until: "2026-12-01", Severity: &config.Severity{Fail: config.ActionInform}}}
+	nodes := []mapx.Node{{ID: "old.ts", Kind: mapx.KindCode}}
+	today = func() string { return "2026-11-30" }
+	ForgetRunState()
+	r := RunWithConfig([]config.Gate{g}, nodes, root, nil, nil)[0]
+	if r.Action != config.ActionInform || !strings.Contains(r.Detail, "2026-12-01") {
+		t.Errorf("before the deadline the legacy informs, and says until when: %+v", r)
+	}
+	today = func() string { return "2026-12-01" }
+	ForgetRunState()
+	if r := RunWithConfig([]config.Gate{g}, nodes, root, nil, nil)[0]; r.Action != config.ActionBlock {
+		t.Errorf("from the deadline on, the legacy file blocks as any other: %+v", r)
+	}
+}
+
+func TestToolCache(t *testing.T) {
+	t.Run("GTENG-B35: A tool is not run again over the same inputs", func(t *testing.T) {})
+	root := legacyRepo(t)
+	t.Setenv("CI", "")
+	if err := os.WriteFile(filepath.Join(root, "cfg.json"), []byte("{}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// The tool runs in the project's root: a relative path is the same under every shell.
+	count := filepath.Join(root, "count.log")
+	g := config.Gate{Name: "tool", On: []string{"code"}, Scope: config.ScopeProject,
+		Run: "echo run >> count.log", Cache: &config.ToolCache{Inputs: []string{"cfg.json"}}}
+	nodes := []mapx.Node{{ID: "new.ts", Kind: mapx.KindCode}}
+	runs := func() int {
+		b, _ := os.ReadFile(count)
+		return strings.Count(string(b), "run")
+	}
+	run := func(g config.Gate) Result {
+		ForgetRunState()
+		return RunWithConfig([]config.Gate{g}, nodes, root, nil, nil)[0]
+	}
+	run(g)
+	if r := run(g); runs() != 1 || r.Verdict != Pass || !strings.Contains(r.Detail, "cached") && !strings.Contains(r.Detail, "cache") {
+		t.Errorf("the same inputs replay the pass: %d %+v", runs(), r)
+	}
+	if err := os.WriteFile(filepath.Join(root, "cfg.json"), []byte("{\"a\":1}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if run(g); runs() != 2 {
+		t.Errorf("a changed input runs the tool: %d", runs())
+	}
+	failing := g
+	failing.Name, failing.Run = "failing", "echo run >> count.log; echo bad; exit 1"
+	run(failing)
+	if run(failing); runs() != 4 {
+		t.Errorf("a failure runs every time: %d", runs())
+	}
+	failing.Cache = &config.ToolCache{Inputs: []string{"cfg.json"}, Failures: true}
+	failing.Name = "failing-kept"
+	run(failing)
+	if r := run(failing); runs() != 5 || r.Verdict != Fail {
+		t.Errorf("a failure is kept where the gate opts in: %d %+v", runs(), r)
+	}
+	t.Setenv("CI", "true")
+	if run(g); runs() != 6 {
+		t.Errorf("a CI runs the tool: %d", runs())
+	}
+	t.Setenv("CI", "")
+	SetNoToolCache(true)
+	t.Cleanup(func() { SetNoToolCache(false) })
+	if run(g); runs() != 7 {
+		t.Errorf("--no-cache runs the tool: %d", runs())
+	}
+}
+
+// An awaited decision bars the promotion where the gate bars, counts apart from the divergences,
+// and informs where the project lowers it or declared it.
+func TestAwaitingVerdict(t *testing.T) {
+	t.Run("GTENG-B38: An awaited decision has its own level, bars where the gate bars, and counts apart", func(t *testing.T) {})
+	root := t.TempDir()
+	open, decl := "open.spec.md", "decl.spec.md"
+	orig := checkersWithGraph["open-questions-resolved"]
+	checkersWithGraph["open-questions-resolved"] = func(_ string, n mapx.Node, _ string, _ *mapx.Graph, _ *config.Config) (Verdict, string) {
+		if n.ID == decl {
+			return Awaiting, "rule ahead on purpose " + DeclaredMarker
+		}
+		return Awaiting, "a decision no one took " + OpenDecisionMarker
+	}
+	t.Cleanup(func() { checkersWithGraph["open-questions-resolved"] = orig })
+	for _, f := range []string{open, decl} {
+		if err := os.WriteFile(filepath.Join(root, f), []byte("x\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	nodes := []mapx.Node{{ID: open, Kind: mapx.KindSpec}, {ID: decl, Kind: mapx.KindSpec}}
+	on := true
+	g := config.Gate{Name: "decisions", ID: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved", Blocking: &on}
+	p := Aggregate(RunWithConfig([]config.Gate{g}, nodes, root, nil, nil))
+	if p.Passed || p.ByGate["decisions"].Awaiting != 2 || p.ByGate["decisions"].Diverge != 0 || len(p.Awaiting) != 2 {
+		t.Errorf("on a blocking gate the open decision bars and both count as awaiting, not divergence: %+v %+v", p.ByGate["decisions"], p.Passed)
+	}
+	for _, r := range p.Results {
+		if r.Target == decl && r.Blocks() {
+			t.Errorf("a rule declared ahead on purpose informs: %+v", r)
+		}
+		if r.Target == open && !r.Decisão {
+			t.Errorf("the open decision still becomes a decision issue: %+v", r)
+		}
+	}
+	g.Severity = &config.Severity{Awaiting: config.ActionInform}
+	if p := Aggregate(RunWithConfig([]config.Gate{g}, nodes, root, nil, nil)); !p.Passed || len(p.Awaiting) != 2 {
+		t.Errorf("lowered to inform, the awaited decisions are listed and do not bar: %+v", p.Passed)
+	}
+}

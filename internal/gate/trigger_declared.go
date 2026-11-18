@@ -1,0 +1,187 @@
+// @anchors
+//   code: TDGTR
+//   ref: TRDCT
+
+package gate
+
+import (
+	"regexp"
+	"sort"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/pack"
+)
+
+// trigger-declared: um gatilho de obrigação CITADO tem de existir.
+//
+// As obrigações de compliance são disparadas por gatilhos declarados no header
+// (`carries: personal-data`). A spec que instrui o autor a declarar um gatilho está
+// ensinando o vocabulário — e se ela ensina um nome que nenhum pack declara, o autor
+// obedece, escreve o header, e **nenhuma obrigação dispara**.
+//
+// Isso não falha em lugar nenhum. O header fica bem-formado, os gates de header passam, a
+// unidade parece coberta por LGPD, e a cobertura é zero. É a âncora que mente na sua forma
+// mais cara: o texto que ENSINA está errado, então todo autor que confiar nele produz o
+// mesmo defeito.
+//
+// Medido num projeto real: 47 specs de modelo mandavam declarar `carries: pii` e citavam a
+// obrigação `pii-purgavel`. Nenhum dos dois existia — o vocabulário canônico dos packs era
+// `carries: personal-data`, com as obrigações `lgpd-eliminacao` e `lgpd-portabilidade`. As
+// 47 vieram do mesmo boilerplate, copiado de spec em spec, e nada acusou.
+//
+// O gate confronta o que a spec CITA contra o que os packs e o `anchors.yaml` DECLARAM.
+// Não exige que a spec cite gatilho algum — cobra só quem cita.
+func checkTriggerDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindSpec {
+		return Skip, i18n.T("gate.trigger_declared.skip_not_spec")
+	}
+	citados := citedTriggers(content)
+	if len(citados) == 0 {
+		return Skip, i18n.T("gate.trigger_declared.skip_no_triggers")
+	}
+	declarados, obrigacoes, packErr := declaredVocabulary(root, cfg)
+	// A pack that does not load leaves part of the vocabulary out (TRDCT-E02): judging
+	// against the rest would charge a correct trigger as unknown, or read "no vocabulary"
+	// where the project declared one.
+	if packErr != nil {
+		return Pending, i18n.T("gate.trigger_declared.pending_pack_error", packErr)
+	}
+	if len(declarados) == 0 {
+		// Sem packs nem obrigações, não há vocabulário contra o que confrontar. Calar é o
+		// certo: acusar aqui seria cobrar de um projeto que não adotou compliance.
+		return Pending, i18n.T("gate.trigger_declared.pending_no_vocabulary")
+	}
+
+	var erros []string
+	for _, c := range citados {
+		if declarados[c.value] {
+			continue
+		}
+		erros = append(erros, i18n.T("gate.trigger_declared.not_a_trigger",
+			c.key, c.value, suggestion(c.value, declarados)))
+	}
+	for _, ob := range citedObligations(content) {
+		if !obrigacoes[ob] {
+			erros = append(erros, i18n.T("gate.trigger_declared.obligation_not_found", ob))
+		}
+	}
+	if len(erros) == 0 {
+		return Pass, ""
+	}
+	sort.Strings(erros)
+	return Fail, i18n.T("gate.trigger_declared.fail_unknown_vocabulary",
+		len(erros), strings.Join(erros, "; "))
+}
+
+type citedTrigger struct{ key, value string }
+
+// triggerRE casa a citação de um gatilho no texto: `carries: personal-data`,
+// `shared-with: third-party`. A crase é o sinal de que o autor está citando um SÍMBOLO —
+// prosa solta ("carrega dado pessoal") não é citação e não é cobrada.
+var triggerRE = regexp.MustCompile("`([a-z][a-z-]*): ([a-z][a-z0-9-]*)`")
+
+// triggerKeys são os predicados que abrem uma obrigação. Fechada de propósito: sem
+// isso o regex pegaria qualquer `chave: valor` entre crases (`layer: dao`, `code: ABCD`)
+// e o gate acusaria meio repositório.
+var triggerKeys = map[string]bool{
+	"carries": true, "processing": true, "renders": true, "shared-with": true,
+	"retains": true, "transfers": true,
+}
+
+func citedTriggers(content string) []citedTrigger {
+	visto := map[string]bool{}
+	var out []citedTrigger
+	for _, m := range triggerRE.FindAllStringSubmatch(content, -1) {
+		if !triggerKeys[m[1]] {
+			continue
+		}
+		k := m[1] + ":" + m[2]
+		if visto[k] {
+			continue
+		}
+		visto[k] = true
+		out = append(out, citedTrigger{key: m[1], value: m[2]})
+	}
+	return out
+}
+
+// obligationRE casa a citação de uma obrigação pelo nome. Exige a palavra "obrigação" perto
+// para não confundir com qualquer identificador entre crases.
+var obligationRE = regexp.MustCompile("(?i)obriga[çc][õo]?[eé]?s?[^`\\n]{0,40}`([a-z][a-z0-9-]{2,})`")
+
+func citedObligations(content string) []string {
+	visto := map[string]bool{}
+	var out []string
+	for _, m := range obligationRE.FindAllStringSubmatch(content, -1) {
+		if visto[m[1]] {
+			continue
+		}
+		visto[m[1]] = true
+		out = append(out, m[1])
+	}
+	return out
+}
+
+// declaredVocabulary reúne os gatilhos e os nomes de obrigação que o projeto de fato
+// tem — dos packs adotados e das obrigações escritas direto no `anchors.yaml`.
+func declaredVocabulary(root string, cfg *config.Config) (map[string]bool, map[string]bool, error) {
+	gatilhos, obrigacoes := map[string]bool{}, map[string]bool{}
+	if cfg == nil {
+		return gatilhos, obrigacoes, nil
+	}
+	registra := func(when, name string) {
+		if name != "" {
+			obrigacoes[name] = true
+		}
+		// `when` vem como "carries: personal-data" — guardamos só o VALOR, que é o que a
+		// spec cita depois dos dois-pontos.
+		if _, v, ok := strings.Cut(when, ":"); ok {
+			if v = strings.TrimSpace(v); v != "" {
+				gatilhos[v] = true
+			}
+		}
+	}
+	for _, ob := range cfg.Obligations {
+		registra(ob.When, ob.Name)
+	}
+	packs, _, err := pack.LoadAll(root, cfg.Packs, cfg.PackValues, cfg.Jurisdictions)
+	if err != nil {
+		return gatilhos, obrigacoes, err
+	}
+	for _, p := range packs {
+		for _, ob := range p.Obligations {
+			registra(ob.When, ob.Name)
+		}
+	}
+	return gatilhos, obrigacoes, nil
+}
+
+// suggestion aponta o gatilho declarado mais parecido — a correção costuma ser um sinônimo
+// (`pii` onde o canônico é `personal-data`), e dizer qual economiza a busca.
+func suggestion(errado string, declarados map[string]bool) string {
+	var melhor string
+	for d := range declarados {
+		if strings.Contains(d, errado) || strings.Contains(errado, d) {
+			// Ties go to the alphabetically first: map order made the suggestion
+			// change between runs of the same check.
+			if melhor == "" || len(d) < len(melhor) || (len(d) == len(melhor) && d < melhor) {
+				melhor = d
+			}
+		}
+	}
+	if melhor == "" {
+		var todos []string
+		for d := range declarados {
+			todos = append(todos, "`"+d+"`")
+		}
+		sort.Strings(todos)
+		if len(todos) > 4 {
+			todos = todos[:4]
+		}
+		return i18n.T("gate.trigger_declared.suggestion_declared", strings.Join(todos, ", "))
+	}
+	return i18n.T("gate.trigger_declared.suggestion_best", melhor)
+}

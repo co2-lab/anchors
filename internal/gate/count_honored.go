@@ -1,0 +1,241 @@
+// @anchors
+//   code: CHGCN
+//   ref: CNHNC
+
+package gate
+
+import (
+	"fmt"
+	"os"
+	"regexp"
+	"sort"
+	"strconv"
+	"strings"
+
+	"github.com/bmatcuk/doublestar/v4"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// count-honored: um NÚMERO que a spec afirma sobre o código precisa bater com o código.
+//
+// A "âncora que mente" tem uma variante numérica, e ela é a que envelhece sozinha: a spec
+// diz "os 50 modelos do produto", alguém adiciona o 51º, e a frase vira mentira sem que
+// ninguém a tenha editado. Medido num projeto real: um único arquivo de spec continha 7
+// afirmações numéricas, e adicionar UM modelo tornava 10 frases obsoletas de uma vez.
+//
+// Diferente das outras mentiras de âncora, esta não depende de descuido — depende só do
+// tempo. Toda contagem escrita em prosa é uma dívida com juros.
+//
+// O gate NÃO adivinha o que contar: "51 modelos", "51 cláusulas de autorização" e "46
+// modelos indexados" são três perguntas diferentes sobre os mesmos arquivos, e nenhuma
+// heurística acerta as três. A spec DECLARA como conferir, no mesmo padrão da Tabela de
+// Dependências (o que está entre crases vira contrato):
+//
+//	<!-- @anchors-count: 51 = amplify/data/models/*.ts -->
+//	<!-- @anchors-count: 51 cláusulas = amplify/data/models/*.ts /allow\.(owner|group)/ -->
+//
+// Sem padrão declarado, conta ARQUIVOS que casam o glob; com padrão, conta OCORRÊNCIAS
+// dele. Uma contagem não declarada é ignorada — o gate cobra o que foi prometido, não
+// todo número que aparece no texto (um "90 dias" de retenção não é contagem de código).
+func checkCountHonored(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindSpec {
+		return Skip, i18n.T("gate.count_honored.skip_not_spec")
+	}
+
+	decls := declaredCounts(content)
+	if len(decls) == 0 {
+		// Ausência não é falha: nem toda spec afirma número, e exigir a marcação de toda
+		// spec seria ritual. O gate cobra quem DECLAROU como conferir — e quem escreve uma
+		// contagem sem declarar assume que ela envelheça.
+		return Skip, i18n.T("gate.count_honored.skip_no_counts")
+	}
+
+	var erros []string
+	for _, d := range decls {
+		real, err := countOf(root, d)
+		if err != nil {
+			erros = append(erros, fmt.Sprintf("`%s`: %v", d.Glob, err))
+			continue
+		}
+		// A PROSA ao lado do marcador também afirma o número, e é ela que o leitor lê.
+		// Achado real: o marcador dizia 51 (certo), e uma frase três linhas abaixo dizia
+		// "50 cláusulas de autorização" — o gate ficava ✓ e a spec mentia para quem a
+		// abrisse. Conferir só a marcação é conferir a metade que ninguém lê.
+		if real == d.Expected && d.Label != "" {
+			if divergentes := divergentProse(content, d, real); len(divergentes) > 0 {
+				erros = append(erros, i18n.T("gate.count_honored.err_prose_divergent",
+					d.Label, real, strings.Join(divergentes, ", ")))
+			}
+			continue
+		}
+		if real != d.Expected {
+			rotulo := d.Label
+			if rotulo == "" {
+				rotulo = i18n.T("gate.count_honored.default_item_label")
+			}
+			suffix := ""
+			if d.Pattern != "" {
+				suffix = i18n.T("gate.count_honored.counting_regex_suffix", d.Pattern)
+			}
+			erros = append(erros, i18n.T("gate.count_honored.err_mismatch",
+				d.Expected, rotulo, real, d.Glob, suffix))
+		}
+	}
+	if len(erros) == 0 {
+		return Pass, ""
+	}
+	sort.Strings(erros)
+	return Fail, i18n.T("gate.count.stale", len(erros), strings.Join(erros, "; "))
+}
+
+// count declarada na spec.
+type count struct {
+	Expected int
+	Label    string // "modelos", "cláusulas" — só para a mensagem
+	Glob     string
+	Pattern  string // regex opcional: conta OCORRÊNCIAS em vez de arquivos
+}
+
+// countRE casa `@anchors-count: 51 modelos = <glob> /regex/`. O rótulo e o regex são
+// opcionais; o número e o glob, não.
+// O glob CONTÉM barras (`models/*.ts`), então não pode ser delimitado por `[^\s/]`. A
+// separação glob↔regex é feita pelo espaço antes da `/` de abertura: `<glob> /<regex>/`.
+var countRE = regexp.MustCompile(`@anchors-count:\s*(\d+)\s*([^=\n]*?)\s*=\s*(\S+)(?:\s+/(.+?)/)?\s*(?:-->)?\s*$`)
+
+func declaredCounts(content string) []count {
+	var out []count
+	for _, linha := range strings.Split(content, "\n") {
+		m := countRE.FindStringSubmatch(linha)
+		if m == nil {
+			continue
+		}
+		n, err := strconv.Atoi(m[1])
+		if err != nil {
+			continue
+		}
+		out = append(out, count{
+			Expected: n,
+			Label:    strings.TrimSpace(m[2]),
+			Glob:     strings.TrimSpace(m[3]),
+			Pattern:  m[4],
+		})
+	}
+	return out
+}
+
+// countOf resolve a contagem contra o disco: arquivos que casam o glob, ou ocorrências do
+// padrão dentro deles.
+func countOf(root string, d count) (int, error) {
+	// FILES only: a directory the glob also matches is not a file, and counting it made
+	// `models/*` say 2 for one model and one subfolder — while the pattern mode skipped
+	// the same directory, so the two modes disagreed on the same glob.
+	arquivos, err := doublestar.Glob(os.DirFS(root), d.Glob, doublestar.WithFilesOnly())
+	if err != nil {
+		return 0, fmt.Errorf("%s", i18n.T("gate.count_honored.err_invalid_glob", err))
+	}
+	if len(arquivos) == 0 {
+		// Zero arquivos quase nunca é "o código tem zero": é o glob apontando para o lugar
+		// errado. Dizer isso evita a conclusão errada — e a correção é o glob, não o número.
+		return 0, fmt.Errorf("%s", i18n.T("gate.count_honored.err_no_files_match"))
+	}
+	if d.Pattern == "" {
+		return len(arquivos), nil
+	}
+	re, err := regexp.Compile(d.Pattern)
+	if err != nil {
+		return 0, fmt.Errorf("%s", i18n.T("gate.count_honored.err_invalid_regex", err))
+	}
+	total := 0
+	for _, f := range arquivos {
+		b, rerr := readFile(root, f)
+		if rerr != nil {
+			// An unread file would undercount, and the gate would accuse the declared
+			// number of a divergence it never measured.
+			return 0, fmt.Errorf("%s", i18n.T("gate.count_honored.err_unreadable", f))
+		}
+		total += len(re.FindAllIndex(b, -1))
+	}
+	return total, nil
+}
+
+// divergentProse acha, no texto, afirmações "<N> <rótulo>" cujo número não bate com o
+// real. Só olha o MESMO rótulo que a marcação declara — é o que evita acusar o "90 dias"
+// de retenção que nada tem a ver com contagem de código.
+func divergentProse(content string, d count, real int) []string {
+	rot := regexp.QuoteMeta(d.Label)
+	// `\*{0,2}` aceita a forma em negrito (`**50 modelos**`), que é como o número
+	// costuma aparecer quando o autor quer destacá-lo.
+	// O QUALIFICADOR é o que separa a afirmação sobre o TOTAL de uma sobre um
+	// SUBCONJUNTO: "os 50 modelos" fala do todo; "nos 46 modelos INDEXADOS" e "em 16
+	// modelos DE DADO FINANCEIRO" falam de recortes, e acusá-los seria o ruído que faz
+	// desligar o gate (aconteceu: 2 falsos positivos na primeira execução).
+	//
+	// A regra: se vem palavra depois do rótulo antes da pontuação, é recorte — a menos
+	// que seja ligação ("de autorização", "do produto"), que não restringe nada.
+	re := regexp.MustCompile(`\*{0,2}(\d+)\*{0,2}\s+` + rot + `\b([^\n.,;:)]*)`)
+	// A própria linha de marcação contém "<N> <rótulo>" e não é prosa — lê-la faria o
+	// gate acusar a si mesmo sempre que o número estivesse desatualizado (e o teste pegou).
+	semMarcacao := countRE.ReplaceAllString(content, "")
+	vistos := map[string]bool{}
+	var out []string
+	for _, m := range re.FindAllStringSubmatch(semMarcacao, -1) {
+		n, err := strconv.Atoi(m[1])
+		if err != nil || n == real || vistos[m[1]] {
+			continue
+		}
+		if qualified(m[2]) {
+			continue // fala de um recorte, não do total
+		}
+		vistos[m[1]] = true
+		out = append(out, "**"+m[1]+"**")
+	}
+	sort.Strings(out)
+	return out
+}
+
+// qualified diz se a frase fala de um SUBCONJUNTO em vez do total.
+//
+// Distinguir isso é SEMÂNTICA, e o gate só resolve o caso inequívoco. Medido no texto
+// real: "50 cláusulas DE AUTORIZAÇÃO" fala do total, "16 modelos DE DADO FINANCEIRO" fala
+// de um recorte — as duas começam igual, e nenhum regex separa as duas sem entender o que
+// as palavras significam.
+//
+// Então a régua é conservadora: QUALQUER palavra depois do rótulo torna a frase suspeita
+// de recorte, e o gate se cala. Ele confronta apenas a forma nua ("os 50 modelos", "51
+// cláusulas."), que é onde a afirmação é inequivocamente sobre o total.
+//
+// O custo é perder achados; o custo de errar para o outro lado é acusar quem está certo,
+// e um gate que acusa a maioria é desligado no primeiro dia — levando junto os que
+// funcionam. (QUALITY: "antes de escrever um gate, meça o falso-positivo contra o
+// repositório real".)
+func qualified(resto string) bool {
+	// o negrito pode fechar DEPOIS do complemento (`**3 cláusulas de autorização**`),
+	// então os asteriscos não fazem parte do complemento.
+	r := strings.TrimSpace(strings.Trim(strings.TrimSpace(resto), "*"))
+	if r == "" {
+		return false // forma nua: fala do total
+	}
+	// A lista de complementos NÃO-RESTRITIVOS é fechada e curta: são os que ligam o
+	// rótulo ao seu domínio ("cláusulas de autorização", "modelos do produto") sem
+	// recortar nada. Qualquer outra coisa depois do rótulo — adjetivo, oração — é
+	// tratada como recorte, e o gate se cala.
+	//
+	// Ser fechada é o que a torna honesta: em vez de adivinhar semântica ("de dado
+	// financeiro" restringe, "de autorização" não), o projeto vê a lista e sabe o que o
+	// gate confronta. Errar para o lado do silêncio custa achado; errar para o outro
+	// acusa quem está certo, e um gate assim é desligado.
+	for _, lig := range nonRestrictiveComplements {
+		if strings.EqualFold(r, lig) {
+			return false
+		}
+	}
+	return true
+}
+
+// nonRestrictiveComplements: o que segue o rótulo sem recortar o conjunto.
+var nonRestrictiveComplements = []string{
+	"de autorização", "de autorizacao", "do produto", "do projeto", "no total",
+	"of authorization", "in total", "declarados", "no schema",
+}

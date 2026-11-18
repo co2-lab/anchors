@@ -1,0 +1,27 @@
+# language: en
+# @anchors
+#   code: RGFTB
+#   ref: OPRGP
+#   updated_at: 2026-11-06
+#   layer: feature
+
+@OPRGP
+Feature: OpsRegister — the operation commands reach the CLI through one registration point
+
+  @OPRGP-B01 @unit-level
+  Scenario: The root receives the seventeen operation commands
+    Given a bare root command
+    When the operations are registered
+    Then its commands are board, branch, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, pipeline, settings, suggest, synthesize and thaw
+
+  @OPRGP-I01 @unit-level
+  Scenario: Each operation command is registered exactly once
+    Given a bare root command
+    When the operations are registered
+    Then no name appears twice
+
+  @OPRGP-X01 @unit-level
+  Scenario: The registration adds commands and nothing else
+    Given a bare root command
+    When the operations are registered
+    Then the root gains no flag, no pre-run and no run of its own

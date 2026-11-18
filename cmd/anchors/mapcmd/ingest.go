@@ -1,0 +1,795 @@
+// @anchors
+//   code: INCMN
+//   ref: NGSTI
+
+package mapcmd
+
+import (
+	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/co2-lab/anchors/cmd/anchors/common"
+	"github.com/co2-lab/anchors/internal/config"
+
+	"github.com/co2-lab/anchors/internal/logscan"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
+	"github.com/co2-lab/anchors/internal/testsig"
+	"github.com/spf13/cobra"
+)
+
+// `anchors ingest` consome os artefatos que o RUNNER do projeto já gera (o Anchors
+// não roda o teste) e os amarra ao grafo: execução (JUnit → passou/falhou) e
+// cobertura de linha (lcov → % por arquivo). Daí deriva a cobertura por CENÁRIO
+// (cada código de cenário da spec tem um teste que PASSOU?). O sinal leva a rev do
+// nó — fica stale se o arquivo mudar depois (não confie em teste de versão antiga).
+// common.ViaAnchorsTest é ligado pelo `anchors test`/`anchors mutation` antes de ingerir.
+//
+// A distinção é o ponto: aqueles comandos rodam a suíte E ingerem numa operação só, então
+// o sinal corresponde à execução que acabou de acontecer. Quem chama `ingest` direto pode
+// estar ingerindo um relatório de uma hora atrás — e o mapa passa a afirmar uma cobertura
+// que já não vale.
+var ViaAnchorsTest bool
+
+// MutationTargets are the files a targeted mutation run (`anchors mutation --changed`,
+// `--target`) handed to the tool. One the report does not list was measured and gave no
+// mutant: it is recorded so, and `mutation-score` answers "nothing to mutate" instead of
+// asking forever for a run that has already happened. Empty on a full run, where a file
+// the report omits may simply be out of the tool's reach.
+var MutationTargets []string
+
+func newIngestCmd() *cobra.Command {
+	var root, mapPath, lcov, mutation, layer, scope, suite string
+	var junits []string
+	var late LateRun
+	var partial bool
+	var logs bool
+	cmd := &cobra.Command{
+		Use:   "ingest",
+		Short: "Ingest test signals (JUnit/lcov) the project generated and bind them to the map",
+		Long: `Consumes the test runner's artifacts and writes the signals into the map:
+
+  anchors ingest --junit results.xml      execution: which tests passed/failed
+  anchors ingest --lcov coverage.info     line coverage per code file
+  anchors ingest --mutation mutation.json  mutation: does the test PROVE the line, or only run it?
+  anchors ingest --mutation m.json --scope isolated   the unit's test only
+  anchors ingest --mutation m.json --scope full       with the dependents' tests
+  anchors ingest --junit r.xml --lcov c.info   several in one pass
+  anchors ingest --junit a.xml --junit b.xml   several suites, each its own
+  anchors ingest --junit old.xml --ran-at 2026-10-10T14:30:00 --alias PHA1=PHA1P
+                                          a report of an earlier run, read with today's codes
+
+A manual ingestion stamps each proof as its run found the files: the run is placed in time
+(--ran-at, the report's timestamp, or its file's modification time), and each file a proof
+stands on is confronted with its content at the commit of that time. A file changed since
+stales the proof; a code only renamed (--alias) does not.
+
+Anchors does NOT run the test — you run it (jest --coverage, go test -coverprofile,
+pytest-cov…) and hand over the report. From the execution, Anchors also derives coverage per
+SCENARIO: a scenario code (SPCRX-V01) is PROVEN if it appears in a case that passed.
+Run 'anchors coverage' afterwards to see the spec requirements with no green test.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(junits) == 0 && lcov == "" && mutation == "" && !logs {
+				return fmt.Errorf("provide --junit <file>, --lcov <file>, --mutation <file> and/or --logs")
+			}
+			absRoot, err := config.AbsRoot(root)
+			if err != nil {
+				return err
+			}
+			// Each JUnit report is a suite of its own, ingested in turn — the reports the
+			// flag names, every one of them; the coverage and mutation go with the first.
+			// One `--suite` cannot name several suites.
+			if len(junits) > 1 && suite != "" {
+				return fmt.Errorf("--suite names one suite, and %d --junit reports were given: ingest each with its own --suite", len(junits))
+			}
+			if len(junits) == 0 && (lcov != "" || mutation != "") {
+				junits = []string{""}
+			}
+			for i, junit := range junits {
+				l, m := lcov, mutation
+				if i > 0 {
+					l, m = "", ""
+				}
+				if err := IngestArtifactsLate(absRoot, mapPath, junit, l, m, layer, scope, suite, partial, late); err != nil {
+					return err
+				}
+			}
+			if logs {
+				return ingestLogs(absRoot, mapPath)
+			}
+			return nil
+		},
+	}
+	cmd.Flags().BoolVar(&logs, "logs", false,
+		"scan the logs declared in `logs.paths` and bind the failure occurrences to the specs that declare them")
+	cmd.Flags().StringVar(&root, "root", ".", "project root")
+	cmd.Flags().StringVar(&mapPath, "map", "", "path to the map")
+	cmd.Flags().StringVar(&late.RanAt, "ran-at", "", "when the run happened — a time (2026-10-10T14:30:00) or the commit it measured; default: the report's timestamp, else its file's modification time. Each file a proof stands on is stamped as that run found it")
+	cmd.Flags().StringArrayVar(&late.Aliases, "alias", nil, "a code renamed since the run, OLD=NEW (a unit's — PHA1=PHA1P — or a scenario's), repeatable: the report and the files are read with the new code")
+	cmd.Flags().StringVar(&late.AliasFile, "alias-file", "", "a file of aliases, one OLD=NEW per line")
+	cmd.Flags().StringArrayVar(&junits, "junit", nil, "JUnit XML file (execution result); repeat it for several suites, each ingested as its own")
+	cmd.Flags().StringVar(&lcov, "lcov", "", "lcov .info file (line coverage)")
+	cmd.Flags().StringVar(&mutation, "mutation", "", "mutation JSON report. The FORMAT belongs to the project: declare it in the mutation-score gate of anchors.yaml, key 'format' (default 'mutation-testing-elements' — Stryker/PIT/Infection/mutmut; 'gremlins' for Go)")
+	cmd.Flags().StringVar(&layer, "layer", "", "test layer of this suite (unit|integration|e2e…); default the layer of the suite in anchors.yaml whose junit/lcov is this report, or unit")
+	cmd.Flags().BoolVar(&partial, "partial", false, "the report is a PARTIAL run (only some tests): scenarios it did not run keep their earlier proof. `anchors test --changed` sets it")
+	cmd.Flags().StringVar(&suite, "suite", "", "name of this suite in the map (default: the JUnit path relative to the root). Proofs are kept per suite, so each workspace's report only speaks for itself")
+	cmd.Flags().StringVar(&scope, "scope", "", "scope of the suite that ran the mutants: `isolated` (only the unit's test) or `full` (with the dependents). Ingesting both allows reading the DIFFERENCE — how much the unit depends on third parties to prove itself")
+	return cmd
+}
+
+// IngestArtifacts é o miolo da ingestão, separado do comando para que `anchors test` e
+// `anchors mutation` possam ingerir o que acabaram de produzir sem reimplementar nada
+// nem invocar o próprio binário de novo. É o que fecha o par "rodar" / "ingerir" que
+// antes exigia um humano no meio.
+func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite string, partial bool) error {
+	return IngestArtifactsLate(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite, partial, LateRun{})
+}
+
+// IngestArtifactsLate is IngestArtifacts placing a manual ingestion's run:
+// the report is read through the aliases, and each file its proofs stand on is stamped as the
+// run measured it. A run `anchors test` just made is ingested as it ended.
+func IngestArtifactsLate(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite string, partial bool, late LateRun) error {
+	aliases, err := late.aliases()
+	if err != nil {
+		return err
+	}
+	if ViaAnchorsTest && (len(aliases) > 0 || late.RanAt != "") {
+		return fmt.Errorf("--alias and --ran-at place a late run; `anchors test` ingests the run it just made")
+	}
+	if err := warnIfManualIngest(absRoot); err != nil {
+		return err
+	}
+	if layer == "" {
+		layer = layerOfReports(absRoot, junit, lcov)
+	}
+	{
+		{
+			if mapPath == "" {
+				mapPath = filepath.Join(absRoot, mapx.DefaultPath)
+			}
+			// The ingestion changes only signals, and it reads the map UNDER the lock: a
+			// parallel ingest or check writing in between is in what is read here, and
+			// what they wrote is kept (`mapx.Lock`).
+			unlock, err := mapx.Lock(mapPath)
+			if err != nil {
+				return err
+			}
+			defer unlock()
+			g, err := mapx.Load(mapPath)
+			if err != nil {
+				return fmt.Errorf("load map: %w (run `anchors map build`)", err)
+			}
+			// O vocabulário de letras é do PROJETO: sem isto, um cenário de letra
+			// declarada (ex.: `-I01`) não é reconhecido no nome do caso JUnit, e o
+			// requisito aparece sem teste verde mesmo tendo um teste que passa.
+			// O formato do relatório de MUTAÇÃO é do PROJETO, declarado junto do gate
+			// (`gates: - name: mutation-score / format: gremlins`). Vazio = o canônico
+			// Mutation Testing Elements, que é o default para todo projeto existente.
+			mutationFormat := config.FormatMTE
+			// The project's configuration, kept for the execution ingest: the dialect says
+			// how a test file defines its tests (`caseFileResolver`).
+			var projectCfg *config.Config
+			if cfg, cerr := config.Load(filepath.Join(absRoot, config.DefaultFile)); cerr == nil {
+				projectCfg = cfg
+				testsig.SetRuleLetters(cfg.RuleLetters())
+				// The code length too, when the project DECLARES one: reading JUnit is
+				// permissive by default (4 and 5), and a `[6]` project's cases were never
+				// read. Undeclared, the permissive default stays.
+				if len(cfg.CodeLengths) > 0 {
+					testsig.SetCodeLenPattern(config.CodeLengthPattern())
+				}
+				mutationFormat = cfg.MutationFormat()
+				// A run that just ended ran against the tree as it is. A spec edited after
+				// the last `map build` still has its old rev in the map, and a proof
+				// stamped with it read as stale once the map was rebuilt: the run proved
+				// the new text, and scenario-coverage said "no execution ingested". A
+				// manual ingestion keeps the map's revs — its report may be older than
+				// the tree.
+				if ViaAnchorsTest {
+					// A file created after the last `map build` has no node, and its proof
+					// had nowhere to go: a new spec's rules were proven and dropped, and
+					// scenario-coverage blocked it. The missing files enter first — read
+					// alone, with their units (`mapx.AddFiles`); the map lock is already held.
+					if paths, perr := scan.GovernedPaths(absRoot, cfg); perr == nil {
+						read := func(ps []string) ([]scan.File, error) { return scan.ScanPaths(absRoot, cfg, ps) }
+						if added, aerr := g.AddFiles(paths, read, cfg, nil); aerr == nil && len(added) > 0 {
+							fmt.Printf("map: %d new file(s) added before the ingestion: %s\n", len(added), strings.Join(added, ", "))
+						}
+					}
+					if files, werr := scan.Walk(absRoot, cfg); werr == nil {
+						g.RefreshRevs(files)
+					}
+				}
+			}
+			now := time.Now().Format(time.RFC3339)
+
+			if junit != "" {
+				rep, err := readReport(junit, aliases)
+				if err != nil {
+					return fmt.Errorf("parse JUnit: %w", err)
+				}
+				// A manual ingestion is stamped with what its run measured, not with the
+				// tree it finds.
+				if !ViaAnchorsTest {
+					at, sha, err := late.runTime(absRoot, junit, rep)
+					if err != nil {
+						return err
+					}
+					lateCfg := projectCfg
+					if lateCfg == nil {
+						lateCfg = &config.Config{}
+					}
+					g.SetRunAsOf(&mapx.RunAsOf{
+						Unchanged: unchangedSince(absRoot, g, lateCfg, at, sha, aliases),
+						RanAt:     at.Format(time.RFC3339),
+						Remapped:  aliasNames(aliases),
+					})
+					defer g.SetRunAsOf(nil)
+				}
+				byFile := map[string]mapx.ExecByFile{}
+				fileOf := caseFileResolver(g, projectCfg, absRoot)
+				for _, c := range rep.Cases {
+					if c.File == "" {
+						// A reporter with no `file` attribute (Go's): the file is found from the
+						// case's class and its top-level test name, when exactly one test file
+						// of the project defines it.
+						c.File = fileOf(c.Class, c.Name)
+					}
+					if c.File == "" {
+						continue // sem arquivo, não dá para amarrar ao nó
+					}
+					e := byFile[c.File]
+					e.Seconds += c.Seconds
+					switch {
+					case c.Failed:
+						e.Failed++
+					case c.Skipped:
+						e.Skipped++
+					default:
+						e.Passed++
+					}
+					byFile[c.File] = e
+				}
+				proven := rep.PassedCodes()
+				// monta os cenários DECLARADOS por cada spec (lendo o arquivo — o
+				// mapx não toca disco), para o cruzamento de cobertura semântica.
+				declaredByNode := map[string][]string{}
+				for _, n := range g.Nodes {
+					// SPEC e FLAG: os dois declaram cenarios que um teste pode provar.
+					//
+					// A flag entrou depois, e sem ela os cenarios de flag (`-G`) nunca
+					// chegavam ao mapa: o teste nomeava o codigo, o relatorio o trazia, e o
+					// cruzamento o descartava por o no' nao ser spec. O `flag-covered`
+					// respondia "nenhuma execucao ingerida" com a suite verde na mao.
+					if n.Kind != mapx.KindSpec && n.Kind != mapx.KindFlag {
+						continue
+					}
+					if codes, err := common.CodesInFileOfUnit(filepath.Join(absRoot, n.ID), n.Code); err == nil && len(codes) > 0 {
+						declaredByNode[n.ID] = codes
+					}
+				}
+				byFile = resolveByFile(g, mapx.KindTest, byFile, absRoot, junit)
+				// The suite is the REPORT: in a monorepo each workspace ingests its own, and
+				// without the key one suite's proof erased the others' (see ProvenBySuite).
+				key := suite
+				if key == "" {
+					key = suiteKey(absRoot, junit)
+				}
+				var seen map[string]bool
+				if partial {
+					seen = rep.SeenCodes()
+				}
+				mf, mc := g.IngestExecutionSuite(byFile, proven, seen, declaredByNode, layer, key, now)
+				fmt.Printf("execution: %d case(s), %d test file(s) matched, %d scenario(s) proven\n",
+					len(rep.Cases), mf, mc)
+				if len(byFile) > 0 && mf == 0 {
+					fmt.Println("  warning: no test file matched — the report names no file the map knows: use a reporter that writes the 'file' attribute, or check that each case's class names its test's folder and that one test file there defines the top-level test")
+				}
+				dropExternal(g, key, layer, partial, rep.SeenCodes())
+			}
+
+			if lcov != "" {
+				rep, err := testsig.ParseLCOV(lcov)
+				if err != nil {
+					return fmt.Errorf("parse lcov: %w", err)
+				}
+				byFile := map[string]mapx.FileCov{}
+				for _, fc := range rep.Files {
+					byFile[fc.File] = mapx.FileCov{Covered: fc.CoveredLines, Total: fc.TotalLines, Lines: fc.Lines, Branches: fc.Branches}
+				}
+				byFile = resolveByFile(g, mapx.KindCode, byFile, absRoot, lcov)
+				markPredating(byFile, absRoot, lcov)
+				// The suite is the REPORT, as for JUnit: unit and integration each speak
+				// for the lines they measured, and neither erases the other.
+				key := suite
+				if key == "" {
+					key = suiteKey(absRoot, lcov)
+				}
+				m := g.IngestCoverageLayer(byFile, key, layer, now)
+				fmt.Printf("coverage: %d file(s) in the lcov, %d code node(s) matched\n", len(rep.Files), m)
+				// A whole run of the suite that declares this report: the files it covers and
+				// the report left out are recorded as omitted — the coverage gates tell that
+				// from "never measured". A partial run lists only what it ran.
+				if !partial {
+					if s, ok := suiteOfLcov(absRoot, lcov); ok {
+						if n := g.MarkCoverageOmitted(byFile, s.Covers); n > 0 {
+							fmt.Printf("coverage: %d file(s) the suite covers are not in its report (no instrumentable line, or outside what the tool collects)\n", n)
+						}
+					}
+				}
+				dropExternal(g, key, layer, partial, nil)
+			}
+
+			if mutation != "" {
+				rep, err := testsig.ParseMutationFormat(mutation, mutationFormat)
+				if err != nil {
+					return fmt.Errorf("parse mutation: %w", err)
+				}
+				byFile := map[string]mapx.FileMutation{}
+				sobreviventes := 0
+				for file, fm := range rep.Files {
+					byFile[file] = mapx.FileMutation{
+						Killed: fm.Killed, Survived: fm.Survived,
+						NoCoverage: fm.NoCoverage, Ignored: fm.Ignored, TimedOut: fm.TimedOut, Static: fm.Static, Score: fm.Score,
+						NoCoverageAt: fm.NoCoverageAt,
+					}
+					sobreviventes += fm.Survived
+				}
+				byFile = resolveByFile(g, mapx.KindCode, byFile, absRoot, mutation)
+				semMutante := 0
+				for _, t := range MutationTargets {
+					rel := filepath.ToSlash(t)
+					if r, err := filepath.Rel(absRoot, t); err == nil && filepath.IsAbs(t) {
+						rel = filepath.ToSlash(r)
+					}
+					if n := g.Node(rel); n != nil && n.Kind == mapx.KindCode {
+						if _, listed := byFile[rel]; !listed {
+							byFile[rel] = mapx.FileMutation{}
+							semMutante++
+						}
+					}
+				}
+				if semMutante > 0 {
+					fmt.Printf("mutation: %d targeted file(s) gave no mutant — measured, nothing to mutate\n", semMutante)
+				}
+				m := g.IngestMutationScoped(byFile, scope, now, rep.Low, rep.High)
+				fmt.Printf("mutation (%s): %d file(s) in the report, %d code node(s) matched, %d surviving mutant(s)\n",
+					mutationFormat, len(rep.Files), m, sobreviventes)
+				if sobreviventes > 0 {
+					fmt.Println("  each survivor is a change to the code that the tests did NOT notice.")
+				}
+			}
+
+			if err := mapx.Save(g, mapPath); err != nil {
+				return fmt.Errorf("save map: %w", err)
+			}
+			fmt.Println("signals written into the map. See them with `anchors coverage`.")
+			return nil
+		}
+	}
+}
+
+// caseFileResolver finds the test file of a JUnit case whose reporter emits no `file`.
+//
+// Go's reporters write the package import path as the class
+// (`github.com/acme/app/src/handlers`) and `TestX/subtest` as the name, and nothing
+// else: with no file, no case reached its node, and the ingest said "0 test file(s)
+// matched" over a green suite (reported from a project; this repository was the same).
+//
+// Read without knowing the language: the class names a project folder by path SUFFIX —
+// leading segments are dropped until one exists under the root, which takes a module
+// prefix off —, and the case's file is the one test file of that folder that DEFINES the
+// top-level test (the name before `/`), by the dialect's `definition`. A class that names
+// no folder, a name no file defines, or one two files define gives no file: guessing would
+// put one test's result on another's node.
+func caseFileResolver(g *mapx.Graph, cfg *config.Config, absRoot string) func(class, name string) string {
+	// Each test file is read by its own dialect's `definition`.
+	defs := map[string]*regexp.Regexp{}
+	defOf := func(id string) *regexp.Regexp {
+		if cfg == nil {
+			return nil
+		}
+		d := cfg.DialectAt(id).Definition
+		if re, ok := defs[d]; ok {
+			return re
+		}
+		var re *regexp.Regexp
+		if strings.TrimSpace(d) != "" {
+			re, _ = regexp.Compile(d)
+		}
+		defs[d] = re
+		return re
+	}
+	testsByDir := map[string][]string{}
+	for _, n := range g.Nodes {
+		if n.Kind == mapx.KindTest {
+			dir := path.Dir(n.ID)
+			testsByDir[dir] = append(testsByDir[dir], n.ID)
+		}
+	}
+	definedIn := map[string]map[string][]string{} // folder → defined name → files
+	return func(class, name string) string {
+		if class == "" || name == "" {
+			return ""
+		}
+		sep := "/"
+		if !strings.Contains(class, "/") {
+			sep = "."
+		}
+		segs := strings.Split(strings.Trim(class, sep), sep)
+		dir := ""
+		for i := range segs {
+			cand := path.Join(segs[i:]...)
+			if _, ok := testsByDir[cand]; ok {
+				dir = cand
+				break
+			}
+		}
+		// A package at the module's root names no folder below it (its class is the module
+		// path itself): the root's test files are the candidates, and the single-definer
+		// rule below still decides.
+		if _, ok := testsByDir["."]; dir == "" && ok {
+			dir = "."
+		}
+		if dir == "" {
+			return ""
+		}
+		names, ok := definedIn[dir]
+		if !ok {
+			names = map[string][]string{}
+			for _, id := range testsByDir[dir] {
+				b, err := os.ReadFile(filepath.Join(absRoot, filepath.FromSlash(id)))
+				if err != nil {
+					continue // @resilient: an unreadable test file defines nothing here; the map notices a missing file
+				}
+				def := defOf(id)
+				if def == nil {
+					continue
+				}
+				owner := def.SubexpIndex("owner")
+				for _, m := range def.FindAllStringSubmatch(string(b), -1) {
+					for i, v := range m[1:] {
+						if v != "" && i+1 != owner {
+							names[v] = append(names[v], id)
+							break
+						}
+					}
+				}
+			}
+			definedIn[dir] = names
+		}
+		top, _, _ := strings.Cut(name, "/")
+		if files := names[top]; len(files) == 1 {
+			return files[0]
+		}
+		return ""
+	}
+}
+
+// resolveByFile rewrites the report's keys to the exact ID of the owning node (see
+// mapx.ResolveReportPaths) and drops, with a warning, the ones that stay ambiguous — a
+// workspace-relative path matching nodes of two workspaces that the report's directory
+// does not break the tie for. Without this BOTH nodes received the signal.
+func resolveByFile[T any](g *mapx.Graph, kind mapx.Kind, byFile map[string]T, absRoot, report string) map[string]T {
+	paths := make([]string, 0, len(byFile))
+	for p := range byFile {
+		paths = append(paths, p)
+	}
+	resolved, ambiguous := g.ResolveReportPaths(kind, paths, relToRoot(absRoot, report))
+	// Two report paths can resolve to the SAME node (one workspace-relative, one from the
+	// root). Iterating the map directly let the last one win, in random order — the same
+	// report could write different numbers on two runs. The path that already IS the node
+	// ID wins; otherwise the first in sorted order, and the collision is reported.
+	sorted := make([]string, 0, len(byFile))
+	for p := range byFile {
+		sorted = append(sorted, p)
+	}
+	sort.Strings(sorted)
+	out := make(map[string]T, len(byFile))
+	from := map[string]string{}
+	var collisions []string
+	for _, p := range sorted {
+		id, ok := resolved[p]
+		if !ok {
+			continue
+		}
+		if prev, taken := from[id]; taken {
+			if p == id && prev != id {
+				out[id], from[id] = byFile[p], p
+			}
+			collisions = append(collisions, id)
+			continue
+		}
+		out[id], from[id] = byFile[p], p
+	}
+	if len(collisions) > 0 {
+		fmt.Printf("  warning: %d node(s) named by more than one path in %s — kept one, deterministically:\n", len(collisions), filepath.Base(report))
+		for _, c := range collisions {
+			fmt.Printf("    %s (from %s)\n", c, from[c])
+		}
+	}
+	if len(ambiguous) > 0 {
+		sort.Strings(ambiguous)
+		fmt.Printf("  warning: %d path(s) in %s match more than one node and the report's folder does not decide — left WITHOUT signal:\n", len(ambiguous), filepath.Base(report))
+		for _, a := range ambiguous {
+			fmt.Printf("    %s\n", a)
+		}
+		fmt.Println("  make the runner write paths from the repository root (lcov: projectRoot; jest-junit: filePathPrefix).")
+	}
+	return out
+}
+
+// suiteKey is the identity of a suite in the map, and it has to be the same on every
+// machine — otherwise each machine writes its own entry and none ever replaces another.
+//
+// A report INSIDE the repository is keyed by its path from the root. A report OUTSIDE it
+// (CI writing to `/tmp/junit.xml`) would become `../../../../tmp/junit.xml`, with a depth
+// that depends on where the runner checked the repository out. It is keyed by its file
+// name instead; two external reports with the same name then share an entry, which is the
+// behaviour before suites existed — and `--suite` names it explicitly when that matters.
+// SuiteKey is the key a report's signals are kept under in the map: the report's path
+// relative to the root. `--budget` reads the recorded run times under the same key.
+func SuiteKey(absRoot, report string) string { return suiteKey(absRoot, report) }
+
+func suiteKey(absRoot, report string) string {
+	rel := relToRoot(absRoot, report)
+	// Still absolute when no relative path exists — a report on another drive, on
+	// Windows: it is outside the repository too, and keying it by its full path would
+	// give the same suite a different key on every machine.
+	if rel == ".." || strings.HasPrefix(rel, "../") || filepath.IsAbs(filepath.FromSlash(rel)) || path.IsAbs(rel) {
+		return mapx.ExternalSuitePrefix + filepath.Base(report)
+	}
+	return rel
+}
+
+// dropExternal removes, after a FULL run of a suite inside the repository, what reports
+// from outside it left in the map for what this run measured again: the scenarios it saw
+// (`seen`, a JUnit run) or the files it covered in its own test layer (`seen` nil, an lcov
+// run) — see
+// mapx.DropExternalProof. A partial run measured only its cut, so it replaces nothing it did
+// not run; and an external report does not drop its own kind.
+func dropExternal(g *mapx.Graph, key, layer string, partial bool, seen map[string]bool) {
+	if partial || strings.HasPrefix(key, mapx.ExternalSuitePrefix) {
+		return
+	}
+	var dropped []string
+	if seen != nil {
+		dropped = g.DropExternalProof(seen)
+	} else {
+		dropped = g.DropExternalCoverage(key, layer)
+	}
+	if len(dropped) > 0 {
+		fmt.Printf("  dropped, from %d suite(s) ingested from outside the repository, what this run measured again: %s — the rest of their proof stays\n",
+			len(dropped), strings.Join(dropped, ", "))
+	}
+}
+
+// relToRoot returns the report's path relative to the project root, with `/`.
+func relToRoot(absRoot, report string) string {
+	rel := report
+	if abs, err := filepath.Abs(report); err == nil {
+		if r, err := filepath.Rel(absRoot, abs); err == nil {
+			rel = r
+		}
+	}
+	return filepath.ToSlash(rel)
+}
+
+// warnIfManualIngest reclama de uma ingestão feita fora do `anchors test`.
+//
+// AVISA por padrão e só BARRA quando o projeto declara `manual_ingest_blocks: true`. A
+// razão de não barrar sempre é que há usos legítimos — um CI que rodou a suíte noutro
+// job, uma ferramenta que o `tests:` não cobre —, e derrubá-los tiraria a saída de quem
+// tem razão.
+func warnIfManualIngest(absRoot string) error {
+	if ViaAnchorsTest {
+		return nil
+	}
+	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil {
+		return nil // sem config não há o que exigir
+	}
+	// Sem `tests:` declarado o `anchors test` não roda, e exigir que se use o que não
+	// existe seria mandar o projeto para um beco sem saída.
+	if len(cfg.Tests) == 0 && len(cfg.Mutation) == 0 {
+		return nil
+	}
+	if cfg.Workflow.IngestManualBarra() {
+		return fmt.Errorf("MANUAL ingestion refused — this project declares " +
+			"`manual_ingest_blocks: true`.\n" +
+			"  Use `anchors test` (or `anchors mutation`): it runs the suite AND ingests in a " +
+			"single operation, and that is what guarantees the signal in the map corresponds to the last " +
+			"run.\n" +
+			"  Ingesting by hand, you can run the suite, edit the code and ingest the " +
+			"old report — and the map starts asserting a coverage that no longer holds")
+	}
+	fmt.Fprintln(os.Stderr, "⚠ MANUAL ingestion: the signal may not correspond to the last run.")
+	fmt.Fprintln(os.Stderr, "  `anchors test` runs the suite and ingests in a single operation — that is what")
+	fmt.Fprintln(os.Stderr, "  guarantees the map reflects what has just run. To REFUSE manual")
+	fmt.Fprintln(os.Stderr, "  ingestion, declare `manual_ingest_blocks: true` under `workflow:`.")
+	return nil
+}
+
+// ingestLogs varre os logs do projeto e amarra as ocorrências às specs que as declaram.
+//
+// O Anchors VARRE — ele não pede o resultado pronto, ao contrário do que a primeira versão
+// deste eixo fazia. O que torna isso possível sem ditar formato é que o log carrega o
+// CÓDIGO da falha: `CRED-E01` é a mesma sequência de caracteres em JSON, em texto puro ou
+// em syslog, e procurar o código dispensa entender o formato.
+func ingestLogs(absRoot, mapPath string) error {
+	if mapPath == "" {
+		mapPath = filepath.Join(absRoot, mapx.DefaultPath)
+	}
+	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil {
+		return err
+	}
+	if cfg.Logs == nil || len(cfg.Logs.Paths) == 0 {
+		return fmt.Errorf("no log declared — add `logs.paths` to anchors.yaml with the globs of your log files")
+	}
+	unlock, err := mapx.Lock(mapPath)
+	if err != nil {
+		return err
+	}
+	defer unlock()
+	g, err := mapx.Load(mapPath)
+	if err != nil {
+		return err
+	}
+	res, err := logscan.Scan(absRoot, cfg, g)
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return nil
+	}
+
+	// A ocorrência vai para a SPEC que declara a regra — é dela a falha, e é nela que a
+	// conclusão sobre a causa vai ser escrita depois.
+	byRule := map[string]*mapx.Node{}
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		if n.Kind != mapx.KindSpec {
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(absRoot, n.ID))
+		if err != nil {
+			continue
+		}
+		for _, m := range logscan.SpecFailureCodes(string(b)) {
+			byRule[m] = n
+		}
+		n.Failures = nil
+	}
+	bound := 0
+	for _, o := range res.Occurrences {
+		n, ok := byRule[o.Rule]
+		if !ok {
+			continue
+		}
+		// A REV da spec no momento da ingestão: a ocorrência envelhece se a spec mudar,
+		// porque a falha observada era da versão anterior da regra.
+		o.Rev = n.Rev
+		n.Failures = append(n.Failures, o)
+		bound++
+	}
+	if err := mapx.Save(g, mapPath); err != nil {
+		return err
+	}
+
+	fmt.Printf("logs: %d file(s), %d line(s) — %d occurrence(s) bound to %d spec rule(s)\n",
+		res.Files, res.Lines, bound, len(res.Occurrences))
+	if len(res.Unknown) == 0 {
+		return nil
+	}
+	// O ACHADO da camada, e o que nenhuma observability dá: o log mostra um erro que a
+	// spec não previu. Ele não entra no mapa (amarrá-lo inventaria dono para uma falha
+	// órfã), mas some em silêncio se não for dito aqui.
+	fmt.Printf("\n⚠ %d failure code(s) in the log that NO spec declares:\n", len(res.Unknown))
+	codes := make([]string, 0, len(res.Unknown))
+	for c := range res.Unknown {
+		codes = append(codes, c)
+	}
+	sort.Strings(codes)
+	for _, c := range codes {
+		fmt.Printf("    %-12s %d occurrence(s)\n", c, res.Unknown[c])
+	}
+	fmt.Println("  Somebody is handling and logging a failure the spec never declared —")
+	fmt.Println("  or the code is a typo. Both are worth a look.")
+	return nil
+}
+
+// markPredating flags the files the lcov report is OLDER than.
+//
+// A node's rev is read at ingestion time, not when the report was written: an old
+// integration lcov ingested today was stamped with today's rev, and its lines — numbered
+// for the text before the edit — joined the union as if fresh. Measured in the reference
+// project: unit fresh at 73/75, integration from the day before at 0/76, union 73/106 =
+// 69%. The report's mtime against the file's is the evidence the report carries: a file
+// changed after the report was written is not the file the report measured.
+func markPredating(byFile map[string]mapx.FileCov, absRoot, report string) {
+	ri, err := os.Stat(report)
+	if err != nil {
+		return
+	}
+	for file, cov := range byFile {
+		p := file
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(absRoot, file)
+		}
+		fi, err := os.Stat(p)
+		if err != nil {
+			continue
+		}
+		if fi.ModTime().After(ri.ModTime()) {
+			cov.Predates = true
+			byFile[file] = cov
+		}
+	}
+}
+
+// suiteOfLcov is the declared test suite whose `lcov:` is this report.
+// layerOfReports is the layer of the suite that declares one of the reports (`junit:` or
+// `lcov:` in `tests:`) when the ingestion names none: a flow's report ingested by hand is the
+// e2e suite's, not `unit`'s. A report no suite declares gets none here, and is read as `unit`.
+func layerOfReports(absRoot, junit, lcov string) string {
+	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil {
+		return ""
+	}
+	for _, r := range []struct {
+		path string
+		of   func(config.Suite) string
+	}{{junit, func(s config.Suite) string { return s.JUnit }}, {lcov, func(s config.Suite) string { return s.Lcov }}} {
+		if r.path == "" {
+			continue
+		}
+		for _, s := range cfg.Tests {
+			if p := r.of(s); p != "" && sameReport(absRoot, p, r.path) && s.Layer != "" {
+				return s.Layer
+			}
+		}
+	}
+	return ""
+}
+
+// sameReport says whether two paths name the same report, relative to the root or not.
+func sameReport(absRoot, a, b string) bool {
+	abs := func(p string) string {
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(absRoot, p)
+		}
+		return filepath.Clean(p)
+	}
+	return abs(a) == abs(b)
+}
+
+func suiteOfLcov(absRoot, lcov string) (config.Suite, bool) {
+	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil {
+		return config.Suite{}, false
+	}
+	want := filepath.Clean(lcov)
+	if !filepath.IsAbs(want) {
+		want = filepath.Join(absRoot, want)
+	}
+	for _, s := range cfg.Tests {
+		if s.Lcov == "" {
+			continue
+		}
+		p := s.Lcov
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(absRoot, p)
+		}
+		if filepath.Clean(p) == filepath.Clean(want) {
+			return s, true
+		}
+	}
+	return config.Suite{}, false
+}

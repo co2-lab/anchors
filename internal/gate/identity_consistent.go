@@ -1,0 +1,198 @@
+// @anchors
+//   code: ICGDN
+//   ref: IDCND
+
+package gate
+
+import (
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+
+	"github.com/bmatcuk/doublestar/v4"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/migra"
+)
+
+// checkIdentityConsistent — o CÓDIGO da spec é a identidade da unidade. Este gate
+// confronta essa identidade contra as outras superfícies onde ela reaparece: o
+// testID exposto pelo código e o nome do baseline de regressão visual.
+//
+// POR QUE ELE EXISTE. Os demais gates de identidade verificam PRESENÇA (a spec tem
+// código? o cenário tem código?), nunca CONCORDÂNCIA entre superfícies. Uma unidade
+// pode declarar `code: BGET`, expor `testID=":bdge-screen"` e guardar o baseline como
+// `BDEDX-VR-*.png` — três identidades para a mesma coisa — e o pipeline fica verde,
+// porque cada gate olha a sua superfície isoladamente.
+//
+// O CUSTO REAL não é estético. O dicionário de códigos que o spellcheck consome é
+// GERADO do mapa; uma sigla que só existe no testID não está lá, o corretor a acusa,
+// e a correção natural (dicionarizar a sigla) CRISTALIZA a divergência — o sintoma
+// vira vocabulário e a causa some. Foi assim que `bdgc`/`bdge` entraram no dicionário
+// do app de referência, e é o que motivou este gate.
+//
+// O QUE NÃO É DIVERGÊNCIA, e este é o discernimento que o gate precisa ter: um
+// componente pode legitimamente usar o código de OUTRA unidade como prefixo, quando o
+// testID nomeia ONDE o elemento aparece. `SpendingMonthCard` (SMCD) expõe
+// `:home-spending-card` porque vive dentro da `HomeScreen` (HOME) — e é assim que o
+// teste de ponta a ponta o localiza, partindo da tela. Cobrar unificação aí seria
+// impor uma convenção que quebraria a navegação dos flows.
+//
+// A regra que separa os dois casos: um prefixo que é código de ALGUMA unidade do mapa
+// é identidade conhecida (reuso deliberado); um prefixo com forma de código que não
+// pertence a ninguém é identidade ÓRFÃ — não existe no mapa, logo não existe no
+// dicionário gerado, logo é exatamente o caso que empurra siglas para o vocabulário
+// manual. Só esse o gate cobra.
+func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindSpec {
+		return Skip, i18n.T("gate.identity_consistent.skip_not_spec")
+	}
+	if g == nil {
+		return pendingNoMap()
+	}
+	code := strings.ToUpper(strings.TrimSpace(n.Code))
+	if code == "" {
+		// Ausência de código é ofensa de `spec-tem-codigo`. Cobrar de novo aqui
+		// transformaria um achado em dois, e o segundo sem nada a acrescentar.
+		return Skip, i18n.T("gate.identity_consistent.skip_no_code")
+	}
+
+	exposed := exposedPatterns(cfg)
+	if len(exposed) == 0 {
+		// The testIDs are read by the project's patterns; the core knows no syntax of
+		// a handle, and assuming JSX would answer over code it never read.
+		return Pending, i18n.T("gate.testid.no_patterns", "dialect.test_handles.exposed")
+	}
+	conhecidos := mapCodes(g)
+	// A code the project renamed is still the same identity under its old name: a testID is
+	// a contract with the E2E runner and its flows, and renaming the code does not rename
+	// what they select by. The way from the old code to the new is `anchors.renames.yaml`.
+	renamed := migra.Renames(root)
+	isAlias := func(sigla string) bool {
+		cur, ok := renamed[strings.ToUpper(sigla)]
+		return ok && (strings.EqualFold(cur, code) || conhecidos[cur])
+	}
+	var orfas []string
+
+	// ── Superfície 1: o testID exposto pela unidade de código ────────────────
+	// A unidade se alcança pela aresta `specifies` (spec → código). Ler o irmão
+	// pelo nome do arquivo funcionaria no caso co-localizado e falharia em
+	// silêncio no resto — o grafo já sabe a resposta.
+	for _, e := range g.Neighbors(n.ID).Out {
+		if e.Type != mapx.EdgeSpecifies {
+			continue
+		}
+		b, err := readFile(root, e.To)
+		if err != nil {
+			continue
+		}
+		for _, sigla := range testIDAcronyms(string(b), e.To, exposed) {
+			if strings.EqualFold(sigla, code) || conhecidos[strings.ToUpper(sigla)] || isAlias(sigla) {
+				continue
+			}
+			orfas = append(orfas,
+				i18n.T("gate.identity_consistent.testid_item", sigla, filepath.Base(e.To)))
+		}
+	}
+
+	// ── Superfície 2: o baseline de regressão visual ─────────────────────────
+	// Convenção: `<Unidade>.<CODE>-VR-<variante>.png`, ao lado da unidade — a mesma
+	// que o gate `vr-baseline` usa para encontrá-las. Aqui NÃO vale a dispensa do
+	// código-de-outra-unidade: o baseline é a prova DESTA unidade, não um ponteiro
+	// para onde ela aparece.
+	base := strings.TrimSuffix(n.ID, ".spec.md")
+	// The spec's path is DATA, escaped before it becomes a pattern: a Next.js route
+	// directory `app/[slug]/` read as a character class matched no baseline, and the check
+	// passed without looking (IDCND-E02).
+	pngs, _ := doublestar.Glob(os.DirFS(root), mapx.GlobEscape(base)+".*-VR*.png")
+	for _, p := range pngs {
+		if sigla := baselineAcronym(filepath.Base(p)); sigla != "" && !strings.EqualFold(sigla, code) &&
+			!strings.EqualFold(renamed[strings.ToUpper(sigla)], code) {
+			orfas = append(orfas, i18n.T("gate.identity_consistent.baseline_item", sigla, filepath.Base(p)))
+		}
+	}
+
+	if len(orfas) == 0 {
+		return Pass, ""
+	}
+	sort.Strings(orfas)
+	orfas = dedupSorted(orfas)
+	return Fail, i18n.T("gate.identity_consistent.fail_inconsistent", code, strings.Join(orfas, "; "))
+}
+
+// mapCodes — todas as identidades declaradas no projeto. É o conjunto que
+// distingue reuso deliberado (prefixo que É código de alguém) de identidade órfã.
+func mapCodes(g *mapx.Graph) map[string]bool {
+	out := map[string]bool{}
+	for _, n := range g.Nodes {
+		if c := strings.ToUpper(strings.TrimSpace(n.Code)); c != "" {
+			out[c] = true
+		}
+	}
+	return out
+}
+
+// testIDAcronymRE captura o prefixo de um testID. O `:` de marcação é opcional: a
+// convenção é do projeto, e um projeto sem ela deve ser confrontado do mesmo jeito.
+var testIDAcronymRE = regexp.MustCompile(`^:?([A-Za-z]{4,5})-`)
+
+// testIDAcronyms devolve os prefixos com FORMA DE CÓDIGO (4-5 letras) dos testIDs que os
+// padrões `exposed` do projeto acham — inteiros ou cabeças de template. A forma é o
+// primeiro filtro; quem decide se a sigla é órfã é o chamador, confrontando-a com os
+// códigos do mapa.
+func testIDAcronyms(src, rel string, exposed config.Patterns) []string {
+	visto := map[string]bool{}
+	var out []string
+	for _, id := range handlesIn(src, rel, exposed) {
+		m := testIDAcronymRE.FindStringSubmatch(id)
+		if m == nil {
+			continue
+		}
+		s := strings.ToUpper(m[1])
+		if !visto[s] {
+			visto[s] = true
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+// baselineAcronym extrai o código de `<Unidade>.<CODE>-VR-<variante>.png`.
+//
+// The unit code is what comes before the FIRST hyphen. A baseline of one of the unit's
+// rules carries the rule's code, `<Unit>.SMCS-B04-VR-<variant>.png`, and reading
+// everything before `-VR` took `SMCS-B04` for the unit and accused it as another
+// identity. The workaround, `SMCS-VR-B04`, passed here and was read by
+// feature-test-match as a scenario `SMCS-VR` that no feature declares (reported from the
+// reference app, 2026-09-26).
+func baselineAcronym(nome string) string {
+	partes := strings.Split(nome, ".")
+	if len(partes) < 2 {
+		return ""
+	}
+	seg := partes[len(partes)-2] // o segmento imediatamente antes de ".png"
+	i := strings.Index(seg, "-VR")
+	if i <= 0 {
+		return ""
+	}
+	code := seg[:i]
+	if j := strings.Index(code, "-"); j > 0 {
+		code = code[:j]
+	}
+	return code
+}
+
+func dedupSorted(in []string) []string {
+	visto := map[string]bool{}
+	out := in[:0]
+	for _, s := range in {
+		if !visto[s] {
+			visto[s] = true
+			out = append(out, s)
+		}
+	}
+	return out
+}

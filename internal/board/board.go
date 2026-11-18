@@ -1,0 +1,455 @@
+// @anchors
+//   code: BRAPB
+//   ref: BRCRB
+
+// Package board reivindica trabalho no BOARD do repositório — as issues, no `mode: github`.
+//
+// POR QUE ISTO EXISTE. O `workflow.mode` é excludente por decisão declarada no
+// `config.go`: `local` põe a fila em `.anchors/tasks/`; `github` põe a fila nas issues. E
+// o comentário de lá é literal — *"no modo github, `.anchors/tasks/` não deve existir"*.
+//
+// O `anchors next` não seguia isso: ele chamava `queue.Claim` em qualquer modo. Medido no
+// app de referência, com `mode: github` declarado no `anchors.yaml`:
+//
+//	$ anchors next
+//	fila vazia — nada a fazer
+//
+// Havia OITENTA E QUATRO cards abertos no board, um por spec, cada um pedindo código,
+// feature, teste e documentação. A resposta estava certa sobre a fila local (vazia, porque
+// nada mudara desde o último `check`) e falsa sobre o projeto — e quem a leu concluiu que o
+// trabalho tinha acabado. O ciclo parou na metade: 117 specs, zero features.
+//
+// A REGRA DE PRIORIDADE é a do `anchors-claim.yml`, que já a implementava do lado do
+// pipeline. Ela não é arbitrária:
+//
+//  1. RETOMAR O PRÓPRIO vence a prioridade do board. Um card que este agente já
+//     reivindicou carrega o contexto da sessão dele — mandá-lo para outro joga fora o que
+//     já foi lido, e deixa dois agentes com metade do entendimento cada.
+//
+//  2. `ready-to-review` ANTES de `to-do`. Trabalho quase pronto vale mais que trabalho
+//     não começado: o primeiro vira entrega com uma revisão, o segundo precisa do ciclo
+//     inteiro.
+//
+//  3. `needs-user` NUNCA. É o card waiting esperando decisão de gente, e entregá-lo a um
+//     agente o faz decidir sozinho — que é exatamente o que o `escalate` existe para
+//     impedir.
+package board
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"os/exec"
+	"strconv"
+	"strings"
+)
+
+// Estados do ciclo.
+//
+// Eles se dividem em dois grupos, e a divisão é o que o claim usa:
+//
+//	PARADOS      ready-to-review, to-do — esperando alguém pegar
+//	EM CURSO     in-progress, in-review — alguém já está com eles
+//
+// `in-review` é trabalho em curso tanto quanto `in-progress`: a diferença entre os dois é
+// QUE trabalho está acontecendo, não SE está. Um card ali tem um revisor, e oferecê-lo ao
+// claim entrega o mesmo card a duas pessoas.
+const (
+	StateReadyToReview = "anchors:ready-to-review"
+	StateToDo          = "anchors:to-do"
+	StateInProgress    = "anchors:in-progress"
+	StateInReview      = "anchors:in-review"
+	StateNeedsUser     = "anchors:needs-user"
+	// A variante em português existe em projetos que a declararam antes de o nome
+	// canônico se firmar. Um card com ela é tão waiting quanto o outro.
+	StateNeedsUserPt = "anchors:precisa-do-usuario"
+)
+
+// OwnerMarker é o prefixo do comentário que declara a posse.
+//
+// A posse vive num COMENTÁRIO e não no `assignee` porque as perguntas são diferentes: o
+// `assignee` responde "qual pessoa é responsável", e o Anchors precisa de "qual AGENTE
+// está com o trabalho" — e dois agentes na mesma máquina têm o mesmo usuário do GitHub.
+//
+// E comentário tem `created_at`: "o último" é uma pergunta com resposta definida, o que a
+// lista de `assignees` não oferece (é um conjunto, sem ordem prometida pela API).
+const OwnerMarker = "anchors-owner:"
+
+// Client é o repositório e as labels que marcam trabalho do Anchors.
+type Client struct {
+	Repo   string
+	Labels []string
+	// UserIssues diz se ESTE agente atua nos cards escalonados (`needs-user`).
+	//
+	// O padrão do zero-value é `false`, e é o certo: um cliente construído sem declarar
+	// nada não pega escalonado. Quem pode decidir o produto declara que pode — e a
+	// declaração vive em `.anchors/settings.yaml`, local e fora do git.
+	//
+	// A razão é de autoridade, não de capacidade. Num projeto com vários devs, cada um
+	// roda o seu agente; um agente que pega um card escalonado e pergunta a quem o está
+	// rodando obtém uma resposta, e ela pode não ser a do dono do projeto. O escalonamento
+	// existe justamente para levar a pergunta a quem decide.
+	UserIssues bool
+
+	// run replaces `gh` in tests. Nil means the real `gh` (see `runGH`).
+	run func(args ...string) ([]byte, error)
+}
+
+// Card é o trabalho que o board entrega.
+type Card struct {
+	Number int
+	Title  string
+	Body   string
+	Labels []string
+	// Owner é o dono declarado no último comentário `anchors-owner:`, ou vazio.
+	Owner string
+	// State é a label de estado em que ele foi encontrado.
+	State string
+}
+
+type rawCard struct {
+	Number   int                     `json:"number"`
+	Title    string                  `json:"title"`
+	Body     string                  `json:"body"`
+	Labels   []struct{ Name string } `json:"labels"`
+	Comments []struct{ Body string } `json:"comments"`
+}
+
+func (c Client) gh(args ...string) ([]byte, error) {
+	// `gh api` has no `--repo`: the repository goes in the path or the query variables,
+	// and the flag makes gh refuse the call ("unknown flag: --repo"). Measured: every
+	// `anchors next` failed that way with the paginated board query of v0.1.160.
+	if len(args) == 0 || args[0] != "api" {
+		args = append(args, "--repo", c.Repo)
+	}
+	run := c.run
+	if run == nil {
+		run = runGH
+	}
+	out, err := run(args...)
+	if err != nil {
+		return out, fmt.Errorf("gh %s: %w", strings.Join(args, " "), err)
+	}
+	return out, nil
+}
+
+// list traz os cards abertos que têm a label do Anchors E a de estado pedida.
+//
+// As duas labels, porque `--label` repetido no `gh` é E e não OU: sem a do Anchors o
+// comando puxaria issue de produto, que não tem a forma que o ciclo espera.
+func (c Client) list(state string) ([]Card, error) {
+	if len(c.Labels) == 0 {
+		return nil, fmt.Errorf("workflow.labels empty: in github mode it is mandatory — " +
+			"without it the claim would pull any issue in the repository")
+	}
+	owner, name, ok := strings.Cut(c.Repo, "/")
+	if !ok {
+		return nil, fmt.Errorf("repository %q is not owner/name", c.Repo)
+	}
+	// THE BOARD IN PAGES OF 25, with each card's last 100 comments. `gh issue list --json
+	// ...,comments` asked GitHub's GraphQL for every comment of 100 cards per page, and
+	// with a hundred-odd open cards the page timed out: measured in the reference app, HTTP 504
+	// after ~11s on every `anchors next`, so no agent could claim. The owner is the LAST
+	// `anchors-owner:` comment, which the last 100 comments hold in any real card.
+	//
+	// GraphQL's `labels:` filter is OR, and the cycle needs AND (the Anchors label AND the
+	// state), so the query narrows by the first label and the rest is filtered here.
+	out, err := c.gh("api", "graphql", "--paginate",
+		"-f", "owner="+owner, "-f", "name="+name, "-f", "label="+c.Labels[0],
+		"-f", "query="+boardQuery,
+		"--jq", `.data.repository.issues.nodes[] | {number, title, body,`+
+			` labels: [.labels.nodes[] | {name}], comments: [.comments.nodes[] | {body}]}`)
+	if err != nil {
+		return nil, err
+	}
+	var raw []rawCard
+	dec := json.NewDecoder(strings.NewReader(string(out)))
+	for dec.More() {
+		var r rawCard
+		if err := dec.Decode(&r); err != nil {
+			return nil, fmt.Errorf("gh response is not the expected JSON: %w", err)
+		}
+		names := labelNames(r)
+		keep := state == "" || has(names, state)
+		for _, l := range c.Labels {
+			keep = keep && has(names, l)
+		}
+		if keep {
+			raw = append(raw, r)
+		}
+	}
+	var cards []Card
+	for _, r := range raw {
+		cards = append(cards, Card{
+			Number: r.Number, Title: r.Title, Body: r.Body,
+			Labels: labelNames(r), Owner: lastOwner(r), State: state,
+		})
+	}
+	return cards, nil
+}
+
+// boardQuery lists the open issues carrying one label, 25 per page — see `list`.
+const boardQuery = `query($owner: String!, $name: String!, $label: String!, $endCursor: String) {
+  repository(owner: $owner, name: $name) {
+    issues(first: 25, after: $endCursor, states: OPEN, labels: [$label]) {
+      pageInfo { hasNextPage endCursor }
+      nodes {
+        number title body
+        labels(first: 50) { nodes { name } }
+        comments(last: 100) { nodes { body } }
+      }
+    }
+  }
+}`
+
+func labelNames(r rawCard) []string {
+	var out []string
+	for _, l := range r.Labels {
+		out = append(out, l.Name)
+	}
+	return out
+}
+
+// lastOwner devolve o dono do ÚLTIMO comentário `anchors-owner:`.
+//
+// O último e não o primeiro: a posse muda de mão (um card rejeitado volta ao autor
+// original), e cada reivindicação fica registrada — nada é sobrescrito.
+func lastOwner(r rawCard) string {
+	owner := ""
+	for _, cm := range r.Comments {
+		b := strings.TrimSpace(cm.Body)
+		if strings.HasPrefix(b, OwnerMarker) {
+			owner = strings.TrimSpace(strings.TrimPrefix(b, OwnerMarker))
+		}
+	}
+	return owner
+}
+
+func has(labels []string, name string) bool {
+	for _, l := range labels {
+		if l == name {
+			return true
+		}
+	}
+	return false
+}
+
+// isEscalated diz se o card está esperando decisão de gente.
+func isEscalated(c Card) bool {
+	return has(c.Labels, StateNeedsUser) || has(c.Labels, StateNeedsUserPt)
+}
+
+// declines diz se este cliente deve deixar o card de lado.
+//
+// Um escalonado é recusado por quem NÃO declarou que decide o produto — e essa é a
+// diferença que o `UserIssues` introduz. Antes, ele era recusado por todos, e os cards
+// escalonados só saíam do board por intervenção manual.
+func (c Client) declines(card Card) bool {
+	return isEscalated(card) && !c.UserIssues
+}
+
+// Mine devolve o card que JÁ É deste agente, ou nil.
+//
+// Só LÊ. A atribuição é do pipeline (ver `Ask`), e este cliente nunca escreve
+// `anchors-owner` — é o que mantém a serialização que evita dois agentes no mesmo card.
+//
+// Only work UNDER WAY is resumed: `in-progress` (implementation half done) and
+// `in-review` (the review is still to be done — see `emCurso` and card #321). A card the
+// agent owns in `to-do` or `ready-to-review` is not returned: nothing of it is under way.
+// A `needs-user` card is declined as well: its work waits for a person's decision, and
+// handing it over would make the agent decide alone.
+func (c Client) Mine(agent string) (*Card, error) {
+	cards, err := c.list("")
+	if err != nil {
+		return nil, err
+	}
+	for _, card := range cards {
+		if card.Owner != agent || c.declines(card) {
+			continue
+		}
+		// TERMINAR O QUE ESTÁ COM ELE antes de pegar coisa nova. Um card `in-progress`
+		// está pela metade; um `in-review` que É DELE tem a revisão por fazer — nos dois
+		// casos o trabalho existe, e é dele.
+		//
+		// A condição que faz isso funcionar é o DONO, e ela já está no topo do laço: um
+		// card em revisão com outro agente nunca chega aqui, porque o `Owner` não casa.
+		if !emCurso(card) {
+			continue
+		}
+		card.State = liveState(card)
+		return &card, nil
+	}
+	return nil, nil
+}
+
+// liveState names the state `Mine` reports. Only the two states `emCurso` lets through can
+// reach it, so only those two are looked for (to-do and ready-to-review were listed here
+// too, and could never be answered).
+func liveState(c Card) string {
+	for _, s := range []string{StateInProgress, StateInReview} {
+		if has(c.Labels, s) {
+			return s
+		}
+	}
+	return ""
+}
+
+// emCurso diz se há trabalho acontecendo no card — e, no `Mine`, se ele é do agente.
+//
+// Os dois estados contam. `in-progress` é implementação pela metade; `in-review` é revisão
+// por fazer — e revisar É trabalho. Terminar o que está com o agente antes de pegar coisa
+// nova é o que impede o board de encher de trabalho pela metade.
+//
+// A separação que importa não é entre os dois estados, é quem é o DONO: um card em revisão
+// com OUTRO agente não é meu, e o `Mine` o descarta pelo `Owner` antes de chegar aqui.
+//
+// (A primeira correção desta rodada tirou o `in-review` da retomada, e estava errada: o
+// card #321 voltava porque o trabalho de revisão dele ainda não tinha sido feito, não
+// porque o estado fosse indevido.)
+func emCurso(c Card) bool {
+	return has(c.Labels, StateInProgress) || has(c.Labels, StateInReview)
+}
+
+// Ask PEDE trabalho ao pipeline, e não o reivindica direto.
+//
+// A DIFERENÇA É A CORRIDA, e o `BOOTSTRAP.md` §7.6 a descreve: comentários resolvem *quem
+// é o dono* e *em que ordem os claims chegaram*, mas **não resolvem a disputa** — dois
+// agentes podem comentar quase ao mesmo tempo, ambos lerem antes do outro escrever, e
+// ambos se acharem donos. A API do GitHub não oferece compare-and-swap.
+//
+// Então os agentes param de disputar: eles pedem, e quem atribui é o pipeline —
+// serializado por `concurrency: anchors-claim`, nunca duas instâncias juntas. "Este card
+// tem dono?" e "atribua a ele" viram uma operação sem ninguém no meio, e a colisão não
+// chega a existir.
+//
+// Por isso o `anchors-owner` é escrito SÓ pelo pipeline, e este cliente lê.
+func (c Client) Ask(agent string) error {
+	_, err := c.gh("workflow", "run", ClaimWorkflow, "-f", "agent="+agent)
+	if err != nil {
+		return fmt.Errorf("could not ask the pipeline for work: %w\n"+
+			"  (the claim is serialized by `concurrency` — that is what keeps two agents\n"+
+			"   from taking the same card, and why the CLI asks instead of claiming)", err)
+	}
+	return nil
+}
+
+// ClaimWorkflow é o pipeline que atribui trabalho. O nome vem do `initx`, que o semeia.
+const ClaimWorkflow = "anchors-claim.yml"
+
+// --- o REGISTRO DE ENTREGA no modo `github` ---
+//
+// O `changes/*.md` é o gatilho do review no modo LOCAL: o watcher vê o arquivo aparecer e
+// enfileira a task. No modo `github` esse mecanismo não existe — quem move o card para
+// `ready-to-review` é o pipeline, e quem revisa está lendo a ISSUE.
+//
+// Deixar o registro em arquivo ali produz o pior dos dois mundos, e foi medido: 73
+// registros no repositório do projeto de referência, nenhum revisado, enquanto as issues
+// correspondentes não tinham a informação. O revisor não sabia que o arquivo existia, e o
+// watcher — que o veria — não estava rodando, porque no modo `github` ele não é o
+// mecanismo.
+//
+// É a mesma regra que o `workflow.mode` já impõe em toda parte: os dois modos são
+// EXCLUDENTES, e o registro segue a fila. No local, arquivo; no github, comentário.
+
+// FindByCode acha a issue aberta de uma unidade, pelo código no título.
+//
+// Pelo TÍTULO e não pelo corpo: o `identify.yml` escreve `[GLCGL] Implementar spec — …`,
+// e o código entre colchetes é o que dá identidade ao card. O corpo também o traz, mas
+// buscar ali casaria qualquer card que MENCIONE a unidade — o de outra que depende dela,
+// por exemplo — e comentar no card errado é pior que não comentar.
+func (c Client) FindByCode(code string) (*Card, error) {
+	if strings.TrimSpace(code) == "" {
+		return nil, fmt.Errorf("empty code")
+	}
+	args := []string{"issue", "list", "--state", "open", "--limit", "200",
+		"--json", "number,title,body,labels"}
+	for _, l := range c.Labels {
+		args = append(args, "--label", l)
+	}
+	out, err := c.gh(args...)
+	if err != nil {
+		return nil, err
+	}
+	var brutos []rawCard
+	if err := json.Unmarshal(out, &brutos); err != nil {
+		return nil, fmt.Errorf("reading the issues: %w", err)
+	}
+	alvo := "[" + strings.ToUpper(code) + "]"
+	var achados []rawCard
+	for _, r := range brutos {
+		if strings.Contains(strings.ToUpper(r.Title), alvo) {
+			achados = append(achados, r)
+		}
+	}
+	switch len(achados) {
+	case 0:
+		return nil, fmt.Errorf("no open issue with `%s` in the title", alvo)
+	case 1:
+		r := achados[0]
+		return &Card{Number: r.Number, Title: r.Title, Body: r.Body, Labels: labelNames(r)}, nil
+	}
+	// TWO OPEN CARDS WITH THE SAME CODE, and the code alone cannot tell which one this
+	// work belongs to. Picking the first recorded a delivery on the wrong card in
+	// the reference app: `[RIMRD]` matched a review card for another PR before the card
+	// that asked for the work. The same rule as above applies — commenting on the wrong
+	// card is worse than not commenting — so the choice goes back to whoever knows it.
+	var lista []string
+	for _, r := range achados {
+		lista = append(lista, fmt.Sprintf("#%d %s", r.Number, r.Title))
+	}
+	return nil, fmt.Errorf("%d open issues have `%s` in the title — name the card with `--card <n>`:\n  %s",
+		len(achados), alvo, strings.Join(lista, "\n  "))
+}
+
+// FindOpenByNumber returns card #n, refusing one that is closed or is not an Anchors card:
+// a delivery recorded there would go to a card nobody reads, or to someone else's issue.
+func (c Client) FindOpenByNumber(n int) (*Card, error) {
+	out, err := c.gh("issue", "view", strconv.Itoa(n), "--json", "number,title,body,labels,state")
+	if err != nil {
+		return nil, err
+	}
+	var r struct {
+		rawCard
+		State string `json:"state"`
+	}
+	if err := json.Unmarshal(out, &r); err != nil {
+		return nil, fmt.Errorf("reading issue #%d: %w", n, err)
+	}
+	labels := labelNames(r.rawCard)
+	if r.State != "OPEN" {
+		return nil, fmt.Errorf("issue #%d is %s — a delivery goes on an OPEN card", n, strings.ToLower(r.State))
+	}
+	for _, l := range c.Labels {
+		if !has(labels, l) {
+			return nil, fmt.Errorf("issue #%d has no `%s` label — it is not an Anchors card", n, l)
+		}
+	}
+	return &Card{Number: r.Number, Title: r.Title, Body: r.Body, Labels: labels}, nil
+}
+
+// Comment posta um comentário numa issue.
+func (c Client) Comment(numero int, corpo string) error {
+	if strings.TrimSpace(corpo) == "" {
+		return fmt.Errorf("empty body")
+	}
+	// Pelo STDIN e não por `--body`: o registro de entrega tem quebras de linha, crases e
+	// acentos, e passá-lo como argumento de linha de comando o expõe ao shell e ao limite
+	// de tamanho de `ARG_MAX`.
+	// O TETO vale aqui também, e o stdin é a exceção: este comando PRECISA de entrada
+	// (o corpo do comentário vem por ela, para não passar pelo shell).
+	ctx, cancel := context.WithTimeout(context.Background(), ghTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "gh", "issue", "comment", strconv.Itoa(numero),
+		"--repo", c.Repo, "--body-file", "-")
+	cmd.Stdin = strings.NewReader(corpo)
+	out, err := cmd.CombinedOutput()
+	if ctx.Err() == context.DeadlineExceeded {
+		return fmt.Errorf("`gh` did not respond in %s while commenting on issue #%d — "+
+			"check `gh auth status`", ghTimeout, numero)
+	}
+	if err != nil {
+		return fmt.Errorf("commenting on issue #%d: %w: %s", numero, err, out)
+	}
+	return nil
+}

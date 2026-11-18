@@ -1,0 +1,119 @@
+# language: en
+# @anchors
+#   code: GVFTA
+#   ref: GVOPG
+#   updated_at: 2026-11-02
+#   layer: feature
+
+@GVOPG
+Feature: GovernanceOpportunities — the doctor suggests the canonical gates and settings a project has not adopted yet
+
+  @GVOPG-B01 @unit-level
+  Scenario: Tests and code without evidence freshness get the suggestion
+    Given a map with a code node and a test node, and only a tests-green gate declared
+    When the opportunities are checked
+    Then there is an informational sugestao-gate on evidence-fresh
+
+  @GVOPG-B02 @unit-level
+  Scenario: Code without the secret gate gets the suggestion
+    Given a map with a code node and no gate declared
+    When the opportunities are checked
+    Then there is an informational sugestao-gate on no-secret-leaked
+
+  @GVOPG-B03 @unit-level
+  Scenario: A secret gate that does not block is suboptimal
+    Given a map with a code node and no-secret-leaked declared with blocking false
+    When the opportunities are checked
+    Then there is a gate-subotimo on no-secret-leaked
+
+  @GVOPG-B04 @unit-level
+  Scenario: Code without dependency audit or duplication gates gets both suggestions
+    Given a map with a code node and no gate declared
+    When the opportunities are checked
+    Then there are sugestao-gate findings on dependency-vulnerable and on no-duplication
+
+  @GVOPG-B05 @unit-level
+  Scenario: Tests without JUnit output are a suboptimal configuration
+    Given a map with a test node and one test suite without JUnit output
+    When the opportunities are checked
+    Then there is a config-subotima on tests.junit
+
+  @GVOPG-B06 @unit-level
+  Scenario: A nil map or configuration gives nothing
+    Given a nil map, or a nil configuration
+    When the opportunities are checked
+    Then there is no finding
+
+  @GVOPG-B07 @unit-level
+  Scenario: The quick hints are the first two opportunities
+    Given a project with code and tests where five opportunities fire
+    When the quick hints are asked
+    Then they are the first two of the full list, and a list of one is returned whole
+
+  @GVOPG-I01 @unit-level
+  Scenario: Every opportunity is informational
+    Given a project where every opportunity fires
+    When the opportunities are checked
+    Then every finding has severity info
+
+  @GVOPG-X01 @unit-level
+  Scenario: What the project already adopted is not suggested
+    Given a map with code and tests, every suggested gate declared with the secret gate blocking, and a suite with JUnit output
+    When the opportunities are checked
+    Then there is no finding
+
+  @GVOPG-B08 @unit-level
+  Scenario: Every applicable undeclared catalog gate is suggested
+    Given a project with a feature layer and a catalog holding feature-test-match and scenario-letter-declared presupposing rule_types
+    When the governance opportunities are read
+    Then both are suggested as informational, with what they measure and how to declare them
+    And scenario-letter-declared's suggestion names rule_types
+
+  @GVOPG-B09 @unit-level
+  Scenario: A family's fallible patterns are suggested to a project that declared none, and declining silences it
+    Given a ts project with code that declared no fallible patterns, one that declined with an empty list, and one with its own
+    When the governance opportunities are read
+    Then only the first is offered the family's patterns, with the block to copy
+
+  @GVOPG-B10 @unit-level
+  Scenario: A project with a handle gate and no test handle patterns is offered the family's example
+    Given a ts project declaring testid-consistent and the attribute data-testid with no patterns, one with its own patterns, and one with no handle gate
+    When the governance opportunities are read
+    Then only the first is offered the example for data-testid, as YAML that reads back
+
+  @GVOPG-B11 @unit-level
+  Scenario: A project with a chain gate and no import patterns is offered the family's example
+    Given a ts project declaring used-by-declared with no import patterns, one with its own, and one with no chain gate
+    When the governance opportunities are read
+    Then only the first is offered the ts example, naming the gate, as YAML that reads back
+
+  @GVOPG-B12 @unit-level
+  Scenario: A project with nav-annotated and no navigation call is offered the family's example
+    Given a ts project declaring nav-annotated with no navigation call, one with its own, and one without the gate
+    When the governance opportunities are read
+    Then only the first is offered the ts example, as YAML that reads back
+
+  @GVOPG-B13 @unit-level
+  Scenario: Files whose comments are not declared are offered the families' examples
+    Given a map with Go, TS and Zig code and a spec, in a project declaring no comments, and one declaring them all
+    When the governance opportunities are read
+    Then the first names .go, .ts and .zig and offers the Go and TS entries as YAML that reads back
+    And the second is offered nothing
+
+  @GVOPG-B14 @unit-level
+  Scenario: A gate presupposing a lexicon field the project left empty is offered the family's example
+    Given a go project declaring env-declared with no env_read, one declaring it, and a cobol one
+    When the governance opportunities are read
+    Then only the first is offered the go env_read, named and as YAML that reads back
+
+  @GVOPG-B15 @unit-level
+  Scenario: Each dialect is offered its own family's example at its place
+    Given a project of a TS and a Go dialect, the Go one declaring no env_read, and a gate presupposing it
+    When the governance tips are read
+    Then only the Go dialect is told, at dialects.go
+
+  @GVOPG-B16 @unit-level
+  Scenario: A layer of another language is named with that family's example
+    Given a layer read by a TS dialect holding two Go files
+    When the governance tips are read
+    Then the layer is named with the two Go files and the Go example

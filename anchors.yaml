@@ -1,0 +1,952 @@
+# O idioma das mensagens. O Anchors suporta pt-BR, en e es.
+lang: en
+# anchors.yaml — o Anchors governando o próprio Anchors.
+#
+# Este arquivo é também um EXPERIMENTO de adoção: o Anchors nasceu para ser posto em
+# projeto que já existe, e nunca foi posto num. Cada atrito encontrado aqui é defeito de
+# produto, não do repositório — as anotações `# ATRITO:` marcam o que doeu.
+#
+# ATRITO 1 — `anchors init` sem TTY escreve `layers: {}` e imprime "✓ anchors.yaml escrito
+# (0 camadas)". Sucesso aparente com resultado inútil: quem roda em CI, script ou pipe fica
+# com um arquivo que carrega e não governa nada. Deveria falhar pedindo `--yes`/modo não
+# interativo, ou inferir do escaneamento que ele mesmo acabou de fazer (ele JÁ detectou
+# "código em: [cli/internal cli/cmd]" — e não usou; os caminhos daquele dia tinham o
+# prefixo `cli/`, que saiu quando o `go.mod` foi para a raiz).
+version: 8
+# The version floor: `mode: manual` (below) exists from 0.1.190 on. An older binary would
+# refuse to load this file; with the floor it asks to be updated instead.
+min_version: 0.1.190
+# THE WORKFLOW MODE: manual — the local mode without automatic issues. `anchors check`
+# reports and stamps the map, and nothing is written to `issues/` unless a command runs
+# with `--record-issues`. The check's output is the list to work from; a second copy of it
+# as files only has to be walked through again (see CONTRIBUTING.md).
+workflow:
+  mode: manual
+layers:
+  # ── A DOUTRINA ──────────────────────────────────────────────────────────────────
+  # Os documentos que definem o que o Anchors é. Não são "docs": são a fonte das
+  # regras que o CLI implementa, e por isso governam o código (ver `governs` abaixo).
+  #
+  # A lista e' EXPLICITA, e nao um `*.md` com exclusoes. O padrao aberto capturava todo
+  # markdown da raiz como REGUA, e o `guide-checklist` entao cobrava pontos de
+  # conformidade de quem nao rege nada: DECISIONS.md (registro de decisoes tomadas),
+  # CLI.md e USING.md (documentacao de uso), DOCS.md (explica um conceito), BOOTSTRAP.md
+  # (planejamento em construcao). Seis acusacoes que nao tinham conserto honesto — a
+  # unica saida seria inventar regras para documentos que nao governam nada.
+  #
+  # O comentario anterior dizia "os 11 documentos" e o padrao capturava 13: a intencao
+  # escrita ja divergia do que a Estrutura fazia. Nomear fecha a divergencia.
+  doutrina:
+    pattern: "{CONCEPT,PROPAGATION,QUALITY,SPEC,SPEC_TYPES,STRUCTURE,TRACEABILITY,WORKFLOW}.md"
+    kind: guide
+    tags: [doutrina, guide]
+
+  # Documentacao de USO e registro de processo — explicam e narram, nao regem. Ficam
+  # reconhecidos como doc para nao cairem em "nao regido", e fora do alcance dos gates
+  # que cobram regua (`guide-checklist`).
+  doc:
+    pattern: "{README,PLANNING,PROJECT_STRUCTURE,BOOTSTRAP,CLI,DECISIONS,DOCS,USING}.md"
+    kind: doc
+    tags: [doc]
+
+  # PRODUCT DOCTRINE — the rule that cuts across targets.
+  #
+  # Every spec has a TARGET, and co-location ties the unit to one directory. A rule that
+  # holds for several units belongs to none of them: it was either duplicated (and
+  # diverged at the first change) or lived in an arbitrary spec that the others
+  # referenced implicitly. Here it has a place, and the spec points at it with
+  # `@realizes`.
+  produto:
+    pattern: "product/*.doctrine.md"
+    kind: product
+    tags: [product, doutrina]
+
+  # FEATURE FLAGS. A flag multiplica os caminhos do codigo sem multiplicar a spec: `if
+  # flag("novo-checkout")` cria dois comportamentos e a spec descreve UM. Aqui cada flag
+  # declara os CENARIOS por valor, e a spec aponta com `@gated-by` a regra que so' vale
+  # sob um deles. O que o Anchors confronta e' o cenario declarado, nunca o valor real —
+  # que muda por usuario e por minuto, e ao qual ele nao tem (nem deve ter) acesso.
+  flags:
+    pattern: "flags/*.flag.md"
+    kind: flag
+    tags: [flag, feature-flag]
+
+  # ── O CLI ───────────────────────────────────────────────────────────────────────
+  # Comandos organizados por domínio, ponto de entrada do usuário — a INTERFACE
+  # do framework, no vocabulário do próprio Anchors.
+  comando:
+    pattern: "cmd/anchors/**/*.go"
+    kind: code
+    tags: [cli, comando]
+    exclude: ["**/*_test.go"]
+
+  # ── AS REGRAS ───────────────────────────────────────────────────────────────────
+  # Cada gate é uma REGRA do framework, com doutrina no cabeçalho do arquivo. É a
+  # camada mais densa em decisão por linha — e a que mais se paga em spec.
+  gate:
+    pattern: "internal/gate/*.go"
+    kind: code
+    tags: [regra, gate]
+    exclude: ["**/*_test.go"]
+
+  # ── O NÚCLEO ────────────────────────────────────────────────────────────────────
+  # A hierarquia abaixo é a REAL, medida por import (não suposta):
+  #   config → (nada)   scan → config   mapx → config+scan   gate → config+scan+mapx+…
+  config:
+    pattern: "internal/config/*.go"
+    kind: code
+    tags: [nucleo, config]
+    exclude: ["**/*_test.go"]
+
+  scan:
+    pattern: "internal/scan/*.go"
+    kind: code
+    tags: [nucleo, scan]
+    exclude: ["**/*_test.go"]
+
+  mapa:
+    pattern: "internal/mapx/*.go"
+    kind: code
+    tags: [nucleo, mapa]
+    exclude: ["**/*_test.go"]
+
+  # ── INFRA ───────────────────────────────────────────────────────────────────────
+  # The support packages: they materialise artifacts (issue, change, suggestion), read
+  # the environment (gitmeta, daemon), measure (similarity, testsig, health) or
+  # orchestrate (queue, recode, initx, pack, code, checklog).
+  #
+  # BEHAVIOURAL, not declarative. The layer was declared "originates no rule", and the
+  # classification of its 45 files (2026-09-26) found the opposite in all 14 packages:
+  # queue decides the atomic claim and the reclaim window, similarity the identical /
+  # borderline / divergent verdicts, initx which gates a project is born with, testsig
+  # how a mutation report is scored. Declarative, `anchors new spec` refused their spec
+  # and every unit gate skipped them — rules nobody could state, let alone prove.
+  infra:
+    pattern: "internal/{change,changelog,checklog,code,daemon,gitmeta,health,initx,issue,pack,progress,pushreview,queue,recode,runs,shell,similarity,suggestion,testlist,testsig}/*.go"
+    kind: code
+    tags: [infra]
+    regime: comportamental
+    exclude: ["**/*_test.go"]
+
+  # ── SUPPORT ─────────────────────────────────────────────────────────────────────
+  # Packages that were in no layer at all, so their files were not in the map and no
+  # spec could attach to them: the board, the flag grammar and flow model, the message
+  # catalogue, the log scanner, the settings, the doc compiler, the format migrations
+  # and the telemetry.
+  apoio:
+    pattern: "internal/{board,flagx,flowx,i18n,logscan,pathref,settings,doct,migra,telemetry}/*.go"
+    kind: code
+    tags: [apoio]
+    exclude: ["**/*_test.go"]
+
+  # ── A UNIDADE ────────────────────────────────────────────────────────────────────
+  teste:
+    pattern: "**/*_test.go"
+    kind: test
+    tags: [test]
+    # The gate steps' own tests: tools/ is the repository's tooling, no unit of the
+    # product, and its tests prove no scenario of a spec.
+    exclude: ["tools/**"]
+    # Test files that hold only helpers and fixtures shared by other tests: no Test
+    # function of their own, no scenario to prove. They stay in the map (a change to a
+    # helper still reaches the tests that use it); the gates that judge a test skip them.
+    support:
+      - "cmd/anchors/common/helpers_test.go"
+      - "cmd/anchors/flow/gh_script_test.go"
+      - "cmd/anchors/mapcmd/fixture_test.go"
+      - "cmd/anchors/quality/report_test.go"
+      - "cmd/anchors/quality/stamp_refresh_test.go"
+      - "internal/gate/rule_types_requires_test.go"
+
+  spec:
+    pattern: "**/*.spec.md"
+    kind: spec
+    tags: [spec]
+
+  feature:
+    pattern: "**/*.feature"
+    kind: feature
+    tags: [feature]
+
+  # Os guides que o próprio Anchors distribui (semeados no projeto do usuário).
+  guide-distribuido:
+    pattern: "guides/*.md"
+    kind: guide
+    tags: [guide]
+
+# ── FRONTEIRAS ────────────────────────────────────────────────────────────────────
+# Todas declaram o que HOJE NÃO ACONTECE (verificado por import), para que continue
+# assim. Fronteira que já está violada não é fronteira: é dívida com nome bonito.
+boundaries:
+  - layer: gate
+    forbid: "co2-lab/anchors/cmd"
+    because: "gate é biblioteca de regras — quem conhece CLI é o comando, não a regra. Um gate que importa cmd não é testável sem subir o cobra."
+
+  - layer: config
+    forbid: "co2-lab/anchors/internal/(mapx|scan|gate)"
+    because: "config é a base da pilha (não importa ninguém hoje). Depender de mapx/scan criaria ciclo: os três já importam config."
+
+  - layer: scan
+    forbid: "co2-lab/anchors/internal/(mapx|gate)"
+    because: "scan lê TEXTO e classifica em camadas; o mapa é construído A PARTIR dele. Inverter faria o scan precisar do mapa que ele alimenta."
+
+  - layer: mapa
+    forbid: "co2-lab/anchors/internal/gate"
+    because: "o mapa é o dado; o gate é quem o confronta. O gate importa mapx, nunca o contrário."
+
+  # A regra que o próprio projeto mais repete na doutrina: o CLI não parseia código.
+  - layer: scan
+    forbid: "go/(ast|parser|types)"
+    because: "STRUCTURE/D2: o Anchors é agnóstico de linguagem e nunca parseia código — lê texto e âncora em comentário. Um parser aqui amarraria o engine a Go."
+
+# ── GOVERNS ───────────────────────────────────────────────────────────────────────
+# A doutrina rege o código que a implementa. É a aresta que faz `anchors impact` num
+# documento responder "estes gates dependem desta decisão".
+governs:
+  # ATRITO 2 — escrevi este bloco como `guide:`/`tags:` (plural) e o `map build` aceitou em
+  # SILÊNCIO: 222 nós, 0 arestas, nenhum aviso. O formato real é `from`/`governs` com UMA
+  # tag. Chave desconhecida em YAML é ignorada, e quem adota não tem como saber que a
+  # declaração dele não fez nada — o mapa só fica pobre. Deveria avisar (chave não
+  # reconhecida em `governs[0]`) ou falhar.
+  - from: TRACEABILITY.md
+    governs: mapa
+  - from: TRACEABILITY.md
+    governs: scan
+  - from: QUALITY.md
+    governs: regra
+  - from: STRUCTURE.md
+    governs: config
+  - from: SPEC.md
+    governs: spec
+  - from: SPEC_TYPES.md
+    governs: spec
+  - from: PROPAGATION.md
+    governs: mapa
+  - from: CONCEPT.md
+    governs: nucleo
+  - from: WORKFLOW.md
+    governs: infra
+
+# ── GATES ─────────────────────────────────────────────────────────────────────────
+# ATRITO 3 — `anchors init` não semeia NENHUM gate, e `anchors check` morre com "nenhum
+# gate declarado". Quem adota sai do init com um arquivo que não permite rodar o comando
+# principal do framework: init → map build → check → erro. O init deveria semear ao menos
+# o conjunto mínimo (os que não exigem unidade), ou dizer o que falta.
+#
+# A ordem aqui é deliberada: primeiro os que medem a ESTRUTURA (valem desde o dia zero,
+# sem escrever spec nenhuma), depois os da unidade — que só passam a fazer sentido conforme
+# as specs nascem. Ligar tudo de uma vez num projeto existente produz centenas de issues
+# no primeiro dia e ninguém lê a lista.
+# ── A UNIDADE: ONDE CADA PEÇA NASCE ───────────────────────────────────────────────
+# ATRITO 5 — sem este bloco, a unidade NÃO EXISTE para o mapa. O `unitEdges` abre com
+# `if cfg.Derived == nil { return nil }`, então um projeto sem `derived:` nunca ganha
+# aresta `specifies`/`tested-by` — e os oito gates da unidade ficam declarados e cegos,
+# reportados como "sem nada para medir". O sintoma é perfeitamente enganoso: parece
+# faltar spec, e o que falta é a CONVENÇÃO que diz onde a spec mora.
+#
+# Pior: o `anchors init` só semeia este bloco quando DETECTA co-location — e detectar
+# depende de já existirem specs. Projeto que adota o Anchors antes de ter a primeira
+# spec (o caso normal, e o deste repositório) sai do init sem o bloco, escreve a spec
+# no lugar certo, e o mapa não a liga a nada. Não há mensagem sobre isso em lugar nenhum.
+#
+# O template de teste do init (`{{name}}.test.{{ext}}`) é do dialeto JS/TS; em Go o
+# teste é `{{name}}_test.go`. Herdá-lo aqui ligaria a spec a um arquivo que não existe.
+# O DIALETO da stack: como este projeto ESCREVE as construcoes que os gates precisam
+# reconhecer (funcao exportada, caso de teste, dublê). O Anchors nao supoe — sem a
+# declaracao, os gates que leem codigo ficam INDETERMINADOS e dizem que ficaram, em vez
+# de aprovar o que nao conferiram.
+dialect:
+  family: go
+  # What asserts in a test here: the testing package's failures, and the helpers that fail
+  # the test for it. How a test opens and where its block ends came from the Go family's
+  # example, written by `anchors migrate` (format 8): nothing is read that is not declared.
+  tests:
+    assertion: '\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b|\b(?:wantAll|wantNone|partialEqualsFull|refused)\(t\b'
+    pattern: \bt\.Run\(\s*(?:"(?P<title>(?:[^"\\\n]|\\.)*)"|`(?P<title2>[^`]*)`)
+    block_open: '[{(\[]\s*$'
+    block_close: ^\s*[}\])]
+    empty_body: \{\s*\}
+  # How a handled failure is RECORDED here, for `failure-logged`. A declared list replaces
+  # the family's, so the Go defaults are repeated. The last one is this project's own: a
+  # gate records a failure by returning `Fail` or `Pending` WITH its message, which the
+  # check prints and mirrors to `.anchors/check-all.txt` — a CLI that fails by return has
+  # no logger to call, and its verdict is the record. `Skip` is left out on purpose: it
+  # is counted, not shown.
+  # How a failure is HANDLED here. A declared list replaces the family's, so the Go
+  # defaults are repeated; the last one is Go's `throw new`: returning a freshly built
+  # error hands the failure to the caller as part of the flow.
+  handle_patterns:
+    - '\bif\b[^\n{]*\b(?:err|e)\s*!=\s*nil'
+    - '\brecover\(\)'
+    - '==\s*nil\s*\{'
+    - '\berrors\.(?:Is|As)\('
+    - '\breturn\b[^\n]*\b(?:fmt\.Errorf|errors\.New)\('
+  log_patterns:
+    - '\b(?:log|logger|slog)\.(?:Error|Warn|Fatal|Printf|Print)\b'
+    - '\bfmt\.Errorf\('
+    - '\breturn\s+(?:Fail|Pending|Diverge),\s'
+    # Outside the gates a failure is handled by giving it BACK to the caller, which prints
+    # it — `return err`, `return nil, err`. Propagating is not swallowing: the silence
+    # failure-logged exists to catch is a handled failure that returns nothing about it.
+    - '\breturn\b[^\n]*\b(?:err|e)\b'
+    # A command's last stop: the error printed on stderr before the exit code.
+    - '\bfmt\.Fprint(?:ln|f)?\(\s*os\.Stderr\b'
+  exported_func: (?m)^func\s+(?:\([^)]*\)\s+)?([A-Z]\w*)\s*\(
+  param_name: (\w+)\s+\*?\w
+  loop: \bfor\b
+  cursor: (?i)(nextToken|continuationToken|nextPageToken|cursor|offset)
+  set_promise: (?:^|_|[a-z0-9])(?:[Ll]ist|[Gg]etAll|get_all|[Ff]indAll|find_all|[Ff]etchAll|fetch_all|[Qq]ueryAll|query_all|[Aa]ll|[Tt]odos|[Ll]istar)(?:$|_|[A-Z]|\b)
+  set_slice: (?i)^(list|get|find|fetch|query|listar|buscar)_?(First|Recent|Latest|Top|Page|Some|Sample|Next|Primeiros|Recentes)
+  http_status: WriteHeader\(\s*(\d{3})\s*\)|\bJSON\(\s*(\d{3})\s*,|http\.Status(\w+)
+  http_status_dynamic: WriteHeader\(\s*[a-z]
+  env_read: os\.(?:Getenv|LookupEnv)\(\s*"([A-Za-z_][A-Za-z0-9_]*)"\s*\)
+  guard_patterns:
+    - \.filter\([^)]*{{param}}\b
+    - \b{{param}}\s*\.\s*filter\(
+    - if\s*\(?[^\n{:]*\b{{param}}\b[^\n{:]*\)?\s*[:{]?\s*(throw|return|raise|panic)
+    - \b{{param}}\b[^\n]*\?\?
+    - (throw|assert|raise|panic)[^\n]*\b{{param}}\b
+  signature_end: \{
+  limits:
+    - (?i)\b(?P<name>limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b[^=\n]*?=\s*(?P<value>\d+)
+    - (?i)\b(?P<name>limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b\s*[:=]\s*(?P<value>\d+)
+    - (?i)\b(?P<name>limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b\s*[:=]\s*(?P<param>\w+)
+    - (?i)\b(?P<name>limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b\s*:\s*(?P<type>(?i:number|int|integer|long|short|byte|float|double|decimal|uint\d*|int\d*|usize|i\d+|u\d+|bigint|size_t))\b
+  statement_end: '[;})]$'
+  comments:
+    - files: '**/*.go'
+      line: [//]
+      block: [[/*, '*/']]
+      strings: ['"', '''', '`']
+      multiline: ['`']
+  definition: (?m)^(?:func\s+\(\s*(?:\w+\s+)?\*?(?P<owner>\w+)(?:\[[^\]]*\])?\s*\)\s+(\w+)|func\s+(\w+)|type\s+(\w+))
+
+derived:
+  # A SPEC é a âncora: dela nascem o código e o teste (CONCEPT: "da spec nascem o
+  # código, a feature e o teste"). O inverso também é aceito pelo engine (`anchor: code`),
+  # e seria a leitura errada aqui — num repositório onde o código veio primeiro, ancorar
+  # nele congelaria a inversão que a doutrina existe para desfazer.
+  anchor: spec
+  # Como ESTE projeto escreve um simbolo publico. Sem a declaracao o `code-cataloged`
+  # PULA e diz que pulou — um medidor que nao sabe medir tem de calar, nao aprovar. O
+  # padrao embutido era de TS/JS (`export function NOME`), que em Go casa ZERO simbolos:
+  # o gate reportaria verde sendo `blocking`, carimbando o que nao conferiu.
+  #
+  # Em Go a exportacao e' a MAIUSCULA inicial, e nao uma palavra-chave.
+  export_detect: "^func\\s+([A-Z]\\w*)"
+  # O de-para do vocabulario de REGIME de teste. Um cenario da feature declara a tag,
+  # e o confronto a traduz para o regime canonico do framework antes de procurar a peca
+  # que o prova. Tag sem mapeamento nao e' confrontada — e um opt-out silencioso, que e'
+  # o que este bloco existe para evitar.
+  #
+  # Aqui ha UM regime, e a declaracao registra isso: os gates deste projeto se provam
+  # por teste de unidade em Go, no arquivo ao lado. Nao ha suite de integracao nem de
+  # ponta a ponta a mapear — declarar regimes que nao existem faria o confronto procurar
+  # arquivos que ninguem pretende escrever.
+  regimes:
+    unit-level: unit
+  surfaces:
+    unit: test
+  files:
+    spec: ["{{dir}}/{{name}}.spec.md"]
+    code: ["{{dir}}/{{name}}.go"]
+    feature: ["{{dir}}/{{name}}.feature"]
+    test: ["{{dir}}/{{name}}_test.go"]
+  # COORDINATING specs: one spec governs a set of files that hold no rule of their own
+  # apart from the set (platform shims, command wiring, guide texts, format steps). The
+  # override by CODE links the spec to every file of its set; the file-name convention
+  # above would link it to none.
+  overrides:
+    - code: GVGDG   # GovernanceGuides
+      files:
+        code:
+          - "cmd/anchors/governance/register.go"
+          - "cmd/anchors/governance/guide.go"
+          - "cmd/anchors/governance/guide_code.go"
+          - "cmd/anchors/governance/guide_feature.go"
+          - "cmd/anchors/governance/guide_flag.go"
+          - "cmd/anchors/governance/guide_flow.go"
+          - "cmd/anchors/governance/guide_guide.go"
+          - "cmd/anchors/governance/guide_header.go"
+          - "cmd/anchors/governance/guide_plan.go"
+          - "cmd/anchors/governance/guide_product.go"
+          - "cmd/anchors/governance/guide_project.go"
+          - "cmd/anchors/governance/guide_review.go"
+          - "cmd/anchors/governance/guide_spec.go"
+          - "cmd/anchors/governance/guide_tests.go"
+          - "cmd/anchors/governance/guide_work.go"
+        # declared explicitly; a kind an override leaves out falls back to the default template (GRBLG-B11)
+        feature: ["{{dir}}/{{name}}.feature"]
+        test: ["{{dir}}/{{name}}_test.go"]
+    - code: BDGRN   # BudgetRun
+      files:
+        code:
+          - "cmd/anchors/quality/budget.go"
+          - "cmd/anchors/quality/budget_unix.go"
+          - "cmd/anchors/quality/budget_windows.go"
+        feature: ["cmd/anchors/quality/budget.feature"]
+        test: ["cmd/anchors/quality/budget_test.go"]
+    - code: WTDMW   # WatchDaemon
+      files:
+        code:
+          - "cmd/anchors/flow/watch_unix.go"
+          - "cmd/anchors/flow/watch_windows.go"
+        feature: ["cmd/anchors/flow/watch_daemon.feature"]
+        test: ["cmd/anchors/flow/watch_daemon_test.go"]
+    - code: INWZN   # InitWizard
+      files:
+        code:
+          - "cmd/anchors/ops/init.go"
+          - "cmd/anchors/ops/init_discover.go"
+          - "cmd/anchors/ops/init_git.go"
+        feature:
+          - "cmd/anchors/ops/init_wizard.feature"
+        test:
+          - "cmd/anchors/ops/init_wizard_test.go"
+    - code: RPRTS   # Reports
+      files:
+        code:
+          - "cmd/anchors/quality/report.go"
+          - "cmd/anchors/quality/report_renderers.go"
+        feature:
+          - "cmd/anchors/quality/reports.feature"
+        test:
+          - "cmd/anchors/quality/reports_test.go"
+    - code: CMCLC   # CommonCLI
+      files:
+        code:
+          - "cmd/anchors/common/errors.go"
+          - "cmd/anchors/common/path.go"
+          - "cmd/anchors/common/version.go"
+        feature:
+          - "cmd/anchors/common/common_cli.feature"
+        test:
+          - "cmd/anchors/common/common_cli_test.go"
+    - code: BLGTN   # Obligations
+      files:
+        code:
+          - "internal/gate/obligations_report.go"
+          - "internal/gate/obligations_source.go"
+        feature:
+          - "internal/gate/obligations.feature"
+        test:
+          - "internal/gate/obligations_test.go"
+    - code: TICTS   # TestIDContract
+      files:
+        code:
+          - "internal/gate/testid_consistent.go"
+          - "internal/gate/testid_helpers.go"
+          - "internal/gate/testid_surfaces.go"
+        feature:
+          - "internal/gate/testid_contract.feature"
+        test:
+          - "internal/gate/testid_contract_test.go"
+    - code: INCTN   # InitCatalogs
+      files:
+        code:
+          - "internal/initx/language.go"
+          - "internal/initx/tbd_instruction.go"
+        feature:
+          - "internal/initx/init_catalogs.feature"
+        test:
+          - "internal/initx/init_catalogs_test.go"
+    - code: DMRND   # DaemonRuntime
+      files:
+        code:
+          - "internal/daemon/daemon_unix.go"
+          - "internal/daemon/daemon_windows.go"
+        feature: ["internal/daemon/daemon_runtime.feature"]
+        test: ["internal/daemon/daemon_runtime_test.go"]
+    - code: MGSTM   # MigrationSteps
+      files:
+        code:
+          - "internal/migra/format_2.go"
+          - "internal/migra/format_3.go"
+          - "internal/migra/format_4.go"
+          - "internal/migra/format_5.go"
+          - "internal/migra/format_6.go"
+        feature: ["{{dir}}/{{name}}.feature"]
+        test: ["{{dir}}/{{name}}_test.go"]
+
+# THE GATE STEPS ARE GO, not shell: `go run ./tools/gates <gate>`. A shell script reads the
+# platform — BSD sed has no `\s`, `2>&1` mixed a tool's noise into its findings, Windows
+# has no `sh` — and leaned on jq and python3; the Go program runs the same on the three
+# systems with the toolchain the project already needs, and is vetted and tested with it.
+# The external tools (gitleaks, osv-scanner, gremlins…) stay what they were.
+tests:
+  - layer: unit
+    run: "go run ./tools/gates test"
+    junit: ".anchors/junit.xml"
+    lcov: ".anchors/lcov.info"
+
+# MUTATION runs apart (`anchors mutation`), never in the pre-commit: it re-runs the suite
+# once per mutant, which takes minutes. It covers every package, and by default a run takes
+# only the files stale and below the floor (and the never measured); `--all` runs everything,
+# and `--budget 10m` fits as much as it can in the time, fastest first. `isolated`: each
+# package's mutants face only its own tests.
+mutation:
+  - layer: unit
+    # Every package, one gremlins run each, merged with full paths (see tools/gates).
+    run: "go run ./tools/gates mutation"
+    # One file at a time, for `anchors mutation --budget` (the script mutates only the
+    # files it is given, excluding their package siblings).
+    run_changed: "go run ./tools/gates mutation {{files}}"
+    report: ".anchors/mutation.json"
+    scope: isolated
+
+gates:
+  # SEGURANÇA — a leva que existe para o que não tem volta.
+  #
+  # Só o `secret-nao-vazado` nasce BLOQUEANTE, e o motivo é a assimetria: segredo vazado é
+  # o único achado desta lista sem conserto barato — rotacionar chave custa, e o histórico
+  # do git guarda a original. Os demais são informativos porque um achado deles é uma
+  # PERGUNTA sobre contexto, e bloquear no primeiro dia treina a equipe a ignorar.
+  - name: no-secret-leaked
+    on: [code, test, doc, spec, feature, guide, plan]
+    scope: batch
+    scope_full: project
+    run: "go run ./tools/gates secrets"
+    needs_tool: gitleaks
+    install_hint: "brew install gitleaks"
+    blocking: true
+    when: [pre-commit, pre-push, ci]
+    cost: fast
+    category: security
+    measures: "nenhum segredo entra no repositório (gitleaks; allowlist declarada em .gitleaks.toml)"
+
+  - name: dependency-vulnerable
+    on: [code]
+    scope: project
+    run: "go run ./tools/gates deps-vuln"
+    needs_tool: osv-scanner
+    install_hint: "brew install osv-scanner"
+    blocking: true
+    when: [pre-push, ci]
+    cost: fast
+    category: security
+    measures: "quantas CVEs conhecidas o go.mod carrega, por severidade (osv-scanner)"
+
+  - name: license-compatible
+    on: [code]
+    scope: project
+    run: "go run ./tools/gates licenses"
+    needs_tool: go-licenses
+    install_hint: "go install github.com/google/go-licenses@latest"
+    blocking: true
+    when: [pre-push, ci]
+    cost: fast
+    category: security
+    measures: "nenhuma dependência copyleft forte no binário (incompatível com a ELv2)"
+
+  - name: sbom-generated
+    on: [code]
+    scope: project
+    run: "go run ./tools/gates sbom"
+    needs_tool: syft
+    install_hint: "brew install syft"
+    blocking: true
+    when: [ci]
+    cost: slow
+    category: security
+    measures: "o inventário de componentes do binário, para quem audita o que distribuímos"
+
+  - name: insecure-pattern
+    on: [code]
+    scope: batch
+    scope_full: project
+    run: "go run ./tools/gates semgrep {{files}}"
+    needs_tool: semgrep
+    install_hint: "brew install semgrep"
+    blocking: true
+    when: [pre-push, ci]
+    cost: fast
+    category: security
+    measures: "padrões inseguros conhecidos em Go (semgrep p/gosec)"
+
+  # ESTRUTURA — medem o código como ele está, sem exigir spec.
+  - name: layer-boundary
+    blocking: true
+    measures: "as fronteiras entre camadas do CLI, verificadas por import real"
+
+  - name: code-cataloged
+    blocking: true
+
+  - name: code-reference-valid
+    blocking: true
+
+  # UNIDADE — agora cobertos pelas specs do framework
+  - name: unit-complete
+    blocking: true
+
+  - name: spec-has-code
+    blocking: true
+
+  - name: spec-complete
+    blocking: true
+
+  - name: feature-not-empty
+    blocking: true
+
+  # ── OS TRES QUE FECHAM O CIRCUITO CENARIO↔TESTE ─────────────────────────────────
+  # Sem eles a unidade fecha ESTRUTURALMENTE e ninguem confere se os cenarios tem prova:
+  # o `unit-complete` responde "as tres pecas existem", e nao "elas dizem a mesma
+  # coisa". Uma feature com onze cenarios e um teste que prova dois passa igual.
+  #
+  # O cenario esta implementado no teste ligado? Confronta por CODIGO (reprova se
+  # falta) e por DESCRICAO (avisa se divergiu). Pega o agente que pula um cenario,
+  # renomeia ou muda os passos sem mexer no teste.
+  #
+  # Este declara `on:`/`check:` e os dois vizinhos nao — e a diferenca nao e' estilo: o
+  # `feature-test-match` nao esta no catalogo canonico (`initx/default_gates.go`), entao
+  # nao ha de onde herdar. Declarar so o `name:` o faria ser aceito EM SILENCIO e nunca
+  # medir nada, que e' o ATRITO 4 registrado abaixo.
+  - name: feature-test-match
+    on: [feature]
+    check: feature-test-match
+    blocking: true
+    measures: "cada cenario da feature esta implementado no teste ligado (por codigo e por descricao)"
+
+  # O passo de resultado AFIRMA algo observável? Um `Then` que diz "o efeito X se
+  # verifica" é tautologia: não afirma resultado nenhum, passa nos gates, e dois
+  # cenários de regras diferentes ficam indistinguíveis.
+  - name: scenario-asserts
+    blocking: true
+
+  # Cada cenário da spec tem um teste que PASSOU — cobertura semântica, não de linha.
+  # É o único dos três que depende de sinal ingerido: sem `anchors ingest` dos
+  # resultados, ele fica indeterminado e diz que ficou.
+  - name: scenario-coverage
+    blocking: true
+
+  - name: docs-fresh
+    blocking: true
+
+  - name: sibling-guard
+    blocking: true
+
+  - name: no-duplication
+    blocking: true
+
+  - name: domain-declared
+    blocking: true
+
+  # The rule and what it uses (Validations, Presentation validations, Rule uses).
+  # Informational: the specs of this repository were written before the sections existed,
+  # and are brought up as they are touched.
+  - name: rule-uses-declared
+    check: rule-uses-declared
+    on: [spec]
+    blocking: false
+  - name: rule-uses-resolve
+    check: rule-uses-resolve
+    on: [spec]
+    blocking: false
+  - name: single-test-per-unit
+    check: single-test-per-unit
+    on: [code]
+    blocking: false
+  - name: rule-uses-implemented
+    check: rule-uses-implemented
+    on: [spec]
+    blocking: false
+  - name: contract-impact
+    check: contract-impact
+    on: [spec]
+    blocking: false
+  - name: presentation-exhaustive
+    check: presentation-exhaustive
+    on: [spec]
+    blocking: false
+  - name: presentation-conflict
+    check: presentation-conflict
+    on: [spec]
+    blocking: false
+  - name: presentation-copy-single-source
+    check: presentation-copy-single-source
+    on: [spec]
+    blocking: false
+  - name: presentation-observable
+    check: presentation-observable
+    on: [spec]
+    blocking: false
+  # A test's body is read by its layout; here a test opens with a LABEL
+  # (`t.Run("CODE: title", func(t *testing.T) {})`) and the function around it is what
+  # asserts, so an empty test stands for its block.
+  - name: test-has-assertion
+    check: test-has-assertion
+    on: [test]
+    blocking: false
+    labels: true
+  - name: test-exercises-unit
+    check: test-exercises-unit
+    on: [test]
+    blocking: false
+  - name: test-ref-matches-unit
+    check: test-ref-matches-unit
+    on: [test]
+    blocking: false
+  # Go's coverage profile has no branches, so the lcov here lists none and the gate has
+  # nothing to measure; it is declared for the projects whose tools report them.
+  - name: branch-coverage
+    check: branch-coverage
+    on: [code]
+    blocking: false
+    # The same files line-coverage has no signal on: no lcov entry at all.
+    no_signal:
+      "cmd/anchors/governance/guide_{changelog,code,feature,flag,flow,guide,header,plan,product,project,review,spec,tests,work}.go": "the ruler texts are constants: no statement to cover"
+      "cmd/anchors/common/version.go": "version variables set by the linker: no statement to cover"
+      "cmd/anchors/flow/watch_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/daemon/daemon_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "cmd/anchors/quality/budget_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/mapx/lock_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+  - name: examples-match
+    check: examples-match
+    on: [feature]
+    blocking: false
+    labels: true
+  - name: header-layer-declared
+    check: header-layer-declared
+    on: [spec, feature, code, test]
+    blocking: false
+
+  - name: open-questions-resolved
+    blocking: true
+
+  - name: rule-types
+    blocking: true
+
+  - name: spec-feature-match
+    blocking: true
+
+  - name: dependency-honored
+    blocking: true
+
+  - name: count-honored
+    blocking: false
+
+  - name: ref-resolves
+    blocking: true
+
+  # O EIXO VERTICAL — a doutrina de produto e quem a realiza.
+  - name: doctrine-realized
+    blocking: false
+
+  - name: spec-doctrine-exists
+    blocking: true
+
+  - name: doctrine-not-duplicated
+    blocking: true
+
+  # FROZEN PARTS: every freeze mark names a freeze the doctrine
+  # records, and every record marks something; a change to a frozen part is told — it
+  # informs, and never bars.
+  - name: freeze-consistent
+    blocking: true
+
+  - name: frozen-touched
+    blocking: false
+
+  # THE GUIDANCE LAYER: the canonical layer of README, CONTRIBUTING,
+  # AGENTS and CLAUDE. The agreement lives in CONTRIBUTING.md and the others point to it; an AI
+  # judges each against `anchors guide guidance` and this file. Both inform.
+  - name: guidance-linked
+    blocking: false
+
+  - name: guidance-honored
+    blocking: false
+
+  # THE PROGRESS FILE IS WRITTEN ONLY BY `anchors progress`. A hand edit breaks its sum, and the
+  # gate says so; the file is optional, so its absence is skipped.
+  - name: progress-intact
+    blocking: false
+
+  # THE WAY BACK OF EACH PAIR OF THE UNIT. `spec-feature-match` and `feature-test-match`
+  # walk the ORIGIN looking for the destination; these walk the destination asking whether
+  # the origin still exists — which is what catches what a revert leaves behind.
+  - name: feature-spec-match
+    blocking: true
+
+  - name: test-feature-match
+    blocking: true
+
+  # A REVISAO QUE MUDOU O SIGNIFICADO DE UMA PALAVRA, e nao disse a quem.
+  - name: revision-orphans
+    blocking: true
+
+  # O EIXO DAS FEATURE FLAGS — os cenarios que o valor da flag abre.
+  #
+  # Os quatro `on:` vem do canonico (`mergeCanonical`): os tres primeiros sobre o arquivo
+  # de flag, e o `flag-scenario-exists` sobre a spec, que e' quem cita.
+  - name: flag-scenario-grammar
+
+  - name: flag-scenarios-complete
+
+  - name: flag-scenario-exists
+
+  # The WAY BACK of `flag-scenario-exists`: that one confronts the spec citing a scenario
+  # that does not exist; this one, the scenario nobody cites.
+  - name: flag-scenario-governs
+    blocking: true
+
+  # INFORMATIVO: teste por cenario e' a regua certa e a mais cara de cumprir.
+  - name: flag-covered
+    blocking: true
+
+  # Declarado e SEM camada que o acione: este repositorio e' um FRAMEWORK, e das 841
+  # regras catalogadas a esmagadora maioria e' mecanica de gate, nao decisao de produto.
+  # Exigir `@realizes` de todas forcaria inventar doutrina guarda-chuva so' para calar o
+  # gate. Num projeto de produto, a camada de tela declara `requires_doctrine: true` e
+  # ele passa a cobrar.
+  - name: spec-realizes-doctrine
+    blocking: false
+
+  # A FALHA declarada, tratada e registrada. As specs declaram as regras `-E` (ou fecham
+  # `## Errors` com `none — <por quê>`), e o dialeto em `dialect:` diz como o Go trata e
+  # registra um erro. Bloqueantes desde que os tres ficaram limpos no repositorio inteiro.
+  - name: failure-handled
+    blocking: true
+
+  - name: failure-logged
+    blocking: true
+
+  - name: failure-declared
+    blocking: true
+
+  # A COBERTURA da documentacao, ao lado do `docs-fresh`: aquele confere se a pagina
+  # compilada reflete a spec, este se a spec chega a ALGUMA pagina. O segundo defeito e'
+  # o silencioso — os templates filtram por camada, e a spec que nenhum filtro seleciona
+  # compila para lugar nenhum enquanto todas as paginas seguem corretas.
+  - name: docs-covered
+    blocking: true
+
+  - name: guide-checklist
+    blocking: true
+
+  - name: test-traceable
+    blocking: true
+
+  # ── FERRAMENTA GO — `run:`, não `check:` ─────────────────────────────────────────
+  # O Anchors não reimplementa o que a ferramenta do stack já faz: ele CHAMA e lê o
+  # veredito. `scope: repo` roda o comando UMA vez por varredura, não por arquivo — sem
+  # isso, `go build` rodaria 125 vezes num check --all.
+  # ATRITO 4: os tres gates abaixo nasceram `blocking: true` e NUNCA rodaram. Dois
+  # defeitos empilhados, um mascarando o outro:
+  #
+  # 1. sem `on:`. O guard `len(alvos) == 0` (gate/gate.go) descarta o gate ANTES do
+  #    switch de escopo, entao `scope: project` nao salva. E o merge canonico nao tinha
+  #    de onde herdar: `build`/`vet`/`testes-passam` nao existem no catalogo do
+  #    `initx/default_gates.go` (ao contrario de `layer-boundary`, que herda `on: [code]`
+  #    e por isso sempre funcionou). Gate declarado com nome que o catalogo nao conhece
+  #    e sem `on:` proprio e aceito EM SILENCIO e nunca mede nada.
+  # 2. `./...` a partir da raiz. O modulo Go vivia em `cli/` e nao na raiz — quando o
+  #    `on:` foi corrigido os tres passaram a reprovar com "directory prefix . does not
+  #    contain main module", e a saida foi um `cd cli &&` em cada comando.
+  #
+  #    O `go.mod` FOI PARA A RAIZ (v0.1.78), porque o layout antigo quebrava o
+  #    `go install` de quem instalava o Anchors — e com ele o `cd` saiu: `./...` a
+  #    partir da raiz agora alcanca o modulo, que e o que o comando sempre quis dizer.
+  #
+  # Enquanto isso: nada — nem CI (so ha deploy-site e release-cli), nem o pre-commit —
+  # verificava que o Anchors compila ou que a suite passa.
+  - name: build
+    on: [code]
+    run: "go build ./..."
+    scope: project
+    blocking: true
+    measures: "o projeto compila"
+
+  # O CI confere o gofmt e o commit nao conferia: um teste editado depois do ultimo
+  # `gofmt` local entrou num commit, e so o passo de formatacao do CI acusou — depois do
+  # push, nas tres plataformas. Como gate, o pre-commit pega, onde o conserto e um comando.
+  - name: gofmt
+    on: [code, test]
+    run: "go run ./tools/gates format"
+    scope: project
+    blocking: true
+    measures: "todo arquivo Go esta na forma canonica do gofmt, como o CI exige"
+
+  - name: vet
+    on: [code]
+    run: "go vet ./..."
+    scope: project
+    blocking: true
+    measures: "o `go vet` não acusa nada (a régua que vem com a linguagem)"
+
+  - name: tests-green
+    on: [code]
+    run: "go test ./..."
+    scope: project
+    blocking: true
+    measures: "os 85 arquivos de teste passam"
+
+  # ── PROVA DE TESTE ──────────────────────────────────────────────────────────────
+  # `mutation-score` é o único gate que responde "o teste PROVA a linha?" — todos os
+  # outros respondem "a linha executou?" ou "a peça existe?". A medição vem do `anchors
+  # mutation` (gremlins sobre internal/gate) e a cobertura do `anchors test` (lcov).
+  #
+  # Bloqueantes desde que os dois ficaram limpos: um arquivo sem medição fica Pending e
+  # não barra; um arquivo medido abaixo do piso barra o commit que o deixou assim.
+  - name: mutation-score
+    blocking: true
+    format: gremlins
+    # Files gremlins finds no operator to mutate in: the report does not list them, and
+    # without this the gate waited for a score that never comes.
+    no_signal:
+      "cmd/anchors/governance/guide_{changelog,code,feature,guide,header}.go": "the ruler texts are constants: no operator to mutate"
+      "cmd/anchors/common/version.go": "version variables set by the linker: no operator to mutate"
+      "cmd/anchors/common/errors.go": "an exit code and an error type: no operator to mutate"
+      "cmd/anchors/*/register.go": "wires the commands into the root: no operator to mutate"
+      "cmd/anchors/flow/watch_unix.go": "sets one process attribute: no operator to mutate"
+      "cmd/anchors/flow/watch_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "cmd/anchors/quality/budget_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/mapx/lock_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/migra/format_{2,3,4,5}.go": "rename tables of a format migration: data, no operator to mutate"
+
+  - name: line-coverage
+    blocking: true
+    # Files the lcov has no line of: nothing to instrument here, or not compiled here.
+    no_signal:
+      "cmd/anchors/governance/guide_{changelog,code,feature,flag,flow,guide,header,plan,product,project,review,spec,tests,work}.go": "the ruler texts are constants: no statement to cover"
+      "cmd/anchors/common/version.go": "version variables set by the linker: no statement to cover"
+      "cmd/anchors/flow/watch_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/daemon/daemon_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "cmd/anchors/quality/budget_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/mapx/lock_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+
+  # ── THE PROJECT'S LANGUAGE POLICY ───────────────────────────────────────────────
+  #
+  # EVERYTHING in this repository is written in ENGLISH. Identifiers, comments, specs,
+  # features, tests, doctrine documents, commit messages. The single exception is the
+  # TRANSLATION CATALOG (`internal/i18n/locales/*.json`), which exists precisely to hold
+  # every language the product speaks — that is its job, and nowhere else's.
+  #
+  # Why the exception is the only one, and why "comments may stay in the team's language"
+  # was dropped: a mixed repository does not stay mixed in one place. The doctrine at the
+  # top of each gate is the RAW MATERIAL of its spec — write the doctrine in one language
+  # and the spec inherits it, then the feature mirrors the spec, then the test title
+  # mirrors the feature. Measured here, in one sitting: specs came out in Portuguese
+  # because the doctrine was, while the features came out in English, and the same unit
+  # ended up split across two languages. The mixture propagates through the very links
+  # the framework exists to keep tight.
+  #
+  # This gate defends the part a compiler can see: IDENTIFIERS. Comments and user-facing
+  # strings it deliberately does not read — the first because reading prose for language
+  # is guesswork, the second because the translation catalog already resolves it by the
+  # project's `lang:`. That they are out of the GATE's reach does not put them outside the
+  # POLICY; it means the policy holds them by review, and this comment is where a reviewer
+  # reads it.
+  - name: code-language
+    on: [code]
+    scope: project
+    run: "go run ./tools/gates language"
+    blocking: true
+    when: [pre-commit, pre-push, ci]
+    category: consistency
+    measures: "nenhum identificador em português — o código é em inglês (comentários não contam)"
+
+  # ── CABEÇALHO ───────────────────────────────────────────────────────────────────
+  # O header `@anchors` é onde a spec e a feature carregam a identidade. Código e teste
+  # tiram a deles da co-location, e o `on:` canônico (spec, feature) os deixa de fora.
+  # Bloqueante desde que as 454 specs e features passaram.
+  - name: header-valid
+    blocking: true

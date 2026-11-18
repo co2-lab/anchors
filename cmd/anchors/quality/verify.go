@@ -1,0 +1,301 @@
+// @anchors
+//   code: VRCMA
+//   ref: VPFVR
+
+package quality
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"os/exec"
+	"strings"
+
+	"github.com/co2-lab/anchors/cmd/anchors/common"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/spf13/cobra"
+)
+
+// `anchors verify` é o COMANDO ÚNICO da fase: uma invocação que roda tudo o que
+// aquele momento cobra — os gates do Anchors E as ferramentas de terceiro (tsc,
+// eslint, spellcheck), declaradas como gates externos no anchors.yaml.
+//
+// O que ele resolve. O pre-commit chamava `anchors check --changed <f>` num LOOP,
+// um processo por arquivo (~1,2s cada: 63 arquivos = ~76s), e as demais ferramentas
+// ficavam fora — penduradas em `pre-commit.d/` ou só no `yarn verify`, cada uma com
+// sua própria noção de quando rodar. O resultado era o pior dos dois mundos: lento
+// no commit e incompleto, com a régua espalhada por três lugares que ninguém
+// mantinha em sincronia.
+//
+// Aqui a fase é o argumento (`--phase pre-commit`) e o anchors.yaml é a única fonte
+// sobre o que cada gate mede, quanto custa e em que momento é cobrado.
+func newVerifyCmd() *cobra.Command {
+	var root, phase, category string
+	var commitMsg string
+	var changed []string
+	var staged, all, skipSlow, noRecord bool
+
+	cmd := &cobra.Command{
+		Use:   "verify",
+		Short: "Run EVERYTHING the phase requires: Anchors gates + external tools",
+		Long: `One invocation per PHASE, instead of one command per tool.
+
+Runs the gates declared in anchors.yaml that apply to the requested phase — including the
+external ones (` + "`run:`" + `), which delegate to tsc/eslint/spellcheck. The project declares
+AT WHICH MOMENT each gate is charged (` + "`when:`" + `), HOW MUCH it costs (` + "`cost:`" + `)
+and WHAT it measures (` + "`category:`" + `); this command only obeys.
+
+  anchors verify --phase pre-commit --staged   # what the hook calls
+  anchors verify --phase ci --all              # the full picture
+  anchors verify --category types              # only one family
+
+Scope of the external gates (` + "`scope:`" + `):
+  node     (default) one execution per file — the gate measures one isolated file
+  batch    ONE execution receiving the files in "$@" — eslint, prettier
+  project  ONE execution with no targets — tsc, knip, madge (they look at the whole project)
+
+A project/batch scoped gate only runs if THERE IS a relevant file in the cut: a
+README-only commit does not trigger the monorepo's typecheck.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// The files after the flags join `--changed` (`--changed a b c`).
+			if len(args) > 0 {
+				absRoot, err := config.AbsRoot(root)
+				if err != nil {
+					return err
+				}
+				extra, err := positionalFiles(absRoot, "verify", args)
+				if err != nil {
+					return err
+				}
+				changed = append(changed, extra...)
+			}
+			// THE PRE-COMMIT DATES WHAT IT IS ABOUT TO CHECK. The `updated-at-current` gate
+			// would block the commit over a header date that is a mechanical fact — the file
+			// changed today —, so the phase bumps the staged files first (`anchors touch
+			// --staged`) and the gate sees the right date. On unless `touch.pre_commit:
+			// false`. A failure here warns and does not block: the gate still does.
+			if absRoot, err := config.AbsRoot(root); err == nil {
+				cfg, cerr := common.LoadConfig(absRoot)
+				if cerr != nil {
+					return cerr
+				}
+				var bumped []touchDecision
+				if preCommitTouches(staged, phase, cfg) {
+					var skipped map[touchSkip][]string
+					var terr error
+					bumped, skipped, terr = touchRun(absRoot, true, false, gitmeta.Today(), nil, nil)
+					printPreCommitTouch(bumped, skipped, terr)
+				}
+				// The map the commit carries is the one a build of the commit makes. A
+				// failure warns and does not block: the map-freshness checks still do.
+				if staged && phase == "pre-commit" {
+					if msg, err := syncMapForCommit(absRoot, cfg, bumped); err != nil {
+						fmt.Printf("· map: not synced with the commit (%v)\n", err)
+					} else if msg != "" {
+						fmt.Println(msg)
+					}
+					// The pages of `docs/` the commit's specs leave out of date, compiled from
+					// them and staged; after the map, which they are compiled against. A failure
+					// warns and does not block: `docs-fresh` still does.
+					if msg, err := syncDocsForCommit(absRoot, cfg); err != nil {
+						fmt.Printf("· docs: not compiled for the commit (%v)\n", err)
+					} else if msg != "" {
+						fmt.Println(msg)
+					}
+					// A plan the commit moves takes its demand along. A failure warns and does
+					// not block: `anchors progress replan` does it by hand.
+					if msg, err := syncProgressForCommit(absRoot); err != nil {
+						fmt.Printf("· progress: plans not followed (%v)\n", err)
+					} else if msg != "" {
+						fmt.Println(msg)
+					}
+				}
+			}
+			if staged {
+				// The project root, not the raw flag: the default "." climbs to the
+				// directory that holds anchors.yaml, and the index is listed from there.
+				absRoot, err := config.AbsRoot(root)
+				if err != nil {
+					return err
+				}
+				lista, err := stagedFiles(absRoot)
+				if err != nil {
+					return err
+				}
+				if len(lista) == 0 {
+					fmt.Println(i18n.T("verify.nothing_staged"))
+					return nil
+				}
+				changed = append(changed, lista...)
+			}
+			if !all && len(changed) == 0 {
+				return errors.New(i18n.T("verify.flags_required"))
+			}
+
+			// `verify` é uma fachada: delega ao MESMO pipeline do `check`, para não
+			// existirem duas verdades sobre o que é passar. O que ele acrescenta é a
+			// fase (e a coleta do staged), não uma segunda régua.
+			return runSubcommand(subArgs(checkArgs(root, phase, commitMsg, category, changed, all, skipSlow, noRecord), staged))
+		},
+	}
+	cmd.Flags().StringVar(&root, "root", ".", "project root")
+	cmd.Flags().StringVar(&phase, "phase", "", "the phase to enforce (pre-commit|pre-push|ci|manual)")
+	cmd.Flags().StringVar(&commitMsg, "commit-msg", "",
+		"path to the commit message file (the `commit-msg` hook passes it)")
+	cmd.Flags().StringVar(&category, "category", "", "enforces only the gates of this nature (types|style|traceability…)")
+	cmd.Flags().StringSliceVar(&changed, "changed", nil, "file(s) to verify (repeatable, comma-separated, or listed after the flags)")
+	cmd.Flags().BoolVar(&staged, "staged", false, "uses the files staged in git (the pre-commit mode)")
+	cmd.Flags().BoolVar(&all, "all", false, "scan every node (the full picture; expensive)")
+	cmd.Flags().BoolVar(&skipSlow, "skip-slow", false, "skip gates declared `cost: slow`")
+	cmd.Flags().BoolVar(&noRecord, "no-record", false, "report only: neither stamps the map nor opens issues")
+	return cmd
+}
+
+// stagedFiles lista o que está no índice do git (ACMR — sem deleções, que não há
+// como verificar). É a mesma lista que o pre-commit usava, agora obtida pelo próprio
+// anchors: o hook deixa de precisar saber a sintaxe do git.
+//
+// `--relative` names the files from root and leaves out those outside it. git names them
+// from the repository's top otherwise, and a project below the top (a monorepo package)
+// handed check `sub/x.ts` for its `x.ts`, plus every staged file of the other packages.
+func stagedFiles(root string) ([]string, error) {
+	cmd := exec.Command("git", "diff", "--cached", "--relative", "--name-only", "--diff-filter=ACMR")
+	cmd.Dir = root
+	out, err := cmd.Output()
+	if err != nil {
+		// `--staged` é o modo do pre-commit: sem git não há índice, e o erro cru do git
+		// (`exit status 128`) não diz qual das duas faltas é.
+		if msg := gitmeta.Explain(gitmeta.Check(root), "listar os arquivos staged"); msg != "" {
+			return nil, errors.New(msg)
+		}
+		return nil, fmt.Errorf("listar arquivos staged: %w", err)
+	}
+	var lista []string
+	for _, l := range strings.Split(string(out), "\n") {
+		if l = strings.TrimSpace(l); l != "" {
+			lista = append(lista, l)
+		}
+	}
+	return lista, nil
+}
+
+// checkArgs monta a invocação do `check` que esta fase pede.
+//
+// Existe separada do RunE para ser TESTÁVEL: o que decide se um hook é usável
+// não é o veredito (esse o exit code carrega), é o que ele IMPRIME — e provar
+// isso pelo RunE exigiria um projeto em disco e um fork.
+func checkArgs(root, phase, commitMsg, category string, changed []string, all, skipSlow, noRecord bool) []string {
+	sub := []string{"check", "--root", root}
+	if all {
+		sub = append(sub, "--all")
+	} else {
+		for _, c := range changed {
+			sub = append(sub, "--changed", c)
+		}
+	}
+	if phase != "" {
+		sub = append(sub, "--phase", phase)
+	}
+	// A MENSAGEM DE COMMIT, quando o hook `commit-msg` a passa. Só ele a tem: o
+	// git não grava `.git/COMMIT_EDITMSG` antes do `pre-commit` — a mensagem
+	// ainda não existe ali, e o arquivo carrega a do commit ANTERIOR.
+	if commitMsg != "" {
+		sub = append(sub, "--commit-msg", commitMsg)
+	}
+	if category != "" {
+		sub = append(sub, "--category", category)
+	}
+	if skipSlow {
+		sub = append(sub, "--skip-slow")
+	}
+	if noRecord {
+		sub = append(sub, "--no-record")
+	}
+	// A fase automática nunca espera IA: gate de julgamento não pode barrar um
+	// commit nem enfileirar lixo repetido a cada volta.
+	if phase != "" && phase != "manual" {
+		sub = append(sub, "--deterministic")
+		// E ela não DESPEJA o relatório inteiro.
+		//
+		// O `pre-commit` e o `commit-msg` chamam este mesmo comando — de propósito,
+		// um reporta cedo e o outro barra — então a tabela de 42 gates saía DUAS
+		// vezes por commit, ~88 linhas, empurrando para fora da tela a única coisa
+		// que a pessoa precisava ler: o que reprovou, e o resultado do push logo
+		// abaixo. O relatório completo continua a um comando de distância, e o
+		// próprio check diz onde: `.anchors/check-changed.txt`.
+		//
+		// Na fase MANUAL não: ali a pessoa pediu o relatório.
+		sub = append(sub, "--only-issues")
+	}
+	return sub
+}
+
+// runSubcommand reexecuta o próprio binário. Reusar o pipeline do `check` por
+// processo (em vez de refatorar o RunE dele para uma função compartilhada) mantém
+// UMA implementação do que é verificar — e o custo é um fork, não N.
+func runSubcommand(args []string) error {
+	exe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	c := exec.Command(exe, args...)
+	c.Stdout, c.Stderr, c.Stdin = os.Stdout, os.Stderr, os.Stdin
+	return translateChildOutput(c.Run())
+}
+
+// translateChildOutput converte o resultado bruto de um subprocesso no erro que o
+// `main` sabe interpretar.
+//
+// Existe separada para ser TESTÁVEL: exercitar isto pelo `rodarSubcomando`
+// exigiria reexecutar o binário do anchors contra um projeto de verdade em
+// disco, e o que está sob teste é a tradução do código, não o comando.
+func translateChildOutput(err error) error {
+	// O código de saída do FILHO precisa atravessar a fronteira do processo.
+	//
+	// `c.Run()` devolve um `*exec.ExitError` genérico, e o `main` — que converte
+	// `errNaoRegido` em `ExitNaoRegido` — não o reconhece. Resultado: o `check`
+	// saía com 3 ("não tenho jurisdição"), o `verify` traduzia para 1, e o
+	// pre-commit barrava um commit só de configuração (package.json, yarn.lock),
+	// que é exatamente o caso que o código 3 existe para permitir.
+	var ee *exec.ExitError
+	if errors.As(err, &ee) && ee.ExitCode() == common.ExitNotGoverned {
+		return errNotGoverned{target: i18n.T("verify.staged_files")}
+	}
+	return err
+}
+
+// printPreCommitTouch says what the pre-commit dated — never a silent rewrite.
+func printPreCommitTouch(bumped []touchDecision, skipped map[touchSkip][]string, err error) {
+	if err != nil {
+		fmt.Printf("· touch: could not date the staged files (%v) — the updated-at gate still checks them\n", err)
+		return
+	}
+	if len(bumped) > 0 {
+		var nomes []string
+		for _, d := range bumped {
+			nomes = append(nomes, d.File)
+		}
+		fmt.Printf("· touch: dated %d staged file(s) today (updated_at): %s\n", len(bumped), strings.Join(nomes, ", "))
+	}
+	for _, f := range skipped[skipUnstaged] {
+		fmt.Printf("· touch: %s not dated — it has changes outside the index\n", f)
+	}
+}
+
+// preCommitTouches says whether this verify dates the staged files first: only the
+// pre-commit phase over the index, and only while the project has not turned it off.
+func preCommitTouches(staged bool, phase string, cfg *config.Config) bool {
+	return staged && phase == "pre-commit" && touchOnPreCommit(cfg)
+}
+
+// subArgs completes the check's arguments: a commit over the index is judged by what it
+// records, so the gates read the files as the index has them, and another session's
+// unstaged edit cannot bar it.
+func subArgs(sub []string, staged bool) []string {
+	if staged {
+		return append(sub, "--index")
+	}
+	return sub
+}

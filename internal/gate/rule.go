@@ -1,0 +1,282 @@
+// @anchors
+//   code: RLGTR
+//   ref: RLUEX
+
+package gate
+
+import (
+	"regexp"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/i18n"
+)
+
+// --- a REGRA dentro do gate ---
+//
+// Um gate não verifica uma coisa: `spec-completa` cobra duas (não haver placeholder, e
+// haver ao menos uma regra catalogada), `header-conforme` cobra várias. Até aqui o
+// veredito dizia apenas QUAL GATE reprovou, e isso tem duas consequências:
+//
+//   - quem dispensa um caso deliberado (a spec que nasce antes da feature) só podia
+//     dispensar o gate INTEIRO, e junto ia toda verificação que ele fazia bem;
+//   - dois defeitos diferentes no mesmo gate são indistinguíveis num relatório — o
+//     leitor precisa da mensagem para saber qual dos dois aconteceu, e mensagem muda.
+//
+// A regra tem ID: `<gate>/<regra>` — `spec-completa/sem-placeholder`. É o mesmo
+// princípio que a doutrina já aplica ao artefato (`WRKSP-B01`): um identificador estável
+// é o que permite falar de uma decisão sem descrevê-la de novo.
+
+// RuleID é o identificador estável de uma verificação dentro de um gate.
+//
+// O formato é `<gate>/<regra>`, e o `<gate>` faz parte de propósito: nomes de regra
+// curtos ("sem-placeholder", "tem-codigo") se repetiriam entre gates, e um ID que colide
+// não identifica nada.
+type RuleID string
+
+// Gate devolve a parte de gate do ID — o que vem antes da barra.
+func (r RuleID) Gate() string {
+	g, _, _ := strings.Cut(string(r), "/")
+	return g
+}
+
+// Rule devolve a parte de regra do ID. Vazio quando o gate não declarou regras (o
+// veredito é do gate como um todo), e aí o ID é só o nome do gate.
+func (r RuleID) Rule() string {
+	_, reg, _ := strings.Cut(string(r), "/")
+	return reg
+}
+
+// NewRuleID monta o ID. Um `regra` vazio devolve só o gate: é o caso de um gate que
+// faz uma verificação só, e para o qual dividir em regras não acrescentaria nada.
+func NewRuleID(gate, regra string) RuleID {
+	if regra == "" {
+		return RuleID(gate)
+	}
+	return RuleID(gate + "/" + regra)
+}
+
+// Waiver é o conjunto de regras que o usuário pediu para não confrontar nesta execução,
+// com o motivo de cada dispensa.
+//
+// O motivo é parte do dado, e não um comentário à parte: uma dispensa sem justificativa
+// escrita é indistinguível de alguém fugindo de um gate que achou defeito. Com o motivo,
+// o relatório diz o que foi pulado E por quê — e quem ler depois não precisa adivinhar.
+type Waiver struct {
+	// PorRegra mapeia o ID (`spec-completa/sem-placeholder`) ou o nome do gate inteiro
+	// (`unit-complete`) para o motivo.
+	PorRegra map[string]string
+	// MotivoPorAlvo guarda o motivo de CADA alvo, quando a dispensa nomeia vários.
+	//
+	// `PorRegra` guarda um motivo por regra, e duas dispensas da mesma regra faziam a
+	// segunda sobrescrever a primeira: o relatório mostrava o mesmo motivo para os dois
+	// alvos. Medido — `FRMTT` e `TSHRT` dispensados por razões diferentes apareciam
+	// ambos com a do segundo, e o registro deixava de dizer a verdade sobre um deles.
+	MotivoPorAlvo map[string]string
+	// Alvos restringe a dispensa a caminhos específicos, por ID de regra.
+	//
+	// Sem isso, dispensar `unit-complete` para commitar 4 specs novas apagava o gate
+	// para o REPOSITÓRIO INTEIRO — e uma unidade que quebrou por descuido noutro lugar
+	// passava junto, sem que nada acusasse. O mascaramento que a dispensa por regra
+	// existe para evitar, um nível acima.
+	//
+	// A forma é `regra@CODIGO=motivo`. Um ID sem `@` continua valendo para tudo: é a
+	// saída grossa, e há casos legítimos (um gate recém-declarado num projeto que ainda
+	// não o cumpre em lugar nenhum).
+	Alvos map[string][]string
+}
+
+// Waived diz se esta regra foi dispensada, e devolve o motivo.
+//
+// Aceita as duas granularidades: dispensar `spec-completa` cobre todas as regras dele,
+// e dispensar `spec-completa/sem-placeholder` cobre só aquela. A primeira é a saída
+// grossa para quem não conhece as regras; a segunda é a que preserva o resto do gate.
+func (d Waiver) Waived(id RuleID) (string, bool) {
+	motivo, ok := d.waivedRule(id)
+	if !ok {
+		return "", false
+	}
+	// Uma dispensa COM alvos não vale para o gate inteiro: ela precisa ser confrontada
+	// alvo a alvo, e quem pergunta sem dizer o alvo recebe "não dispensado". É o que
+	// impede o filtro de gates de remover o gate da lista e apagá-lo para todo o
+	// repositório.
+	if len(d.targetsOf(id)) > 0 {
+		return "", false
+	}
+	return motivo, true
+}
+
+// WaivedTarget diz se ESTA regra está dispensada para ESTE alvo.
+//
+// O alvo é o CÓDIGO do artefato (`WRKSP`), e SÓ ele. Caminho não é aceito, e a recusa é
+// deliberada:
+//
+//   - o caminho não é identidade. Ele muda quando alguém reorganiza pastas, e a dispensa
+//     deixa de valer em SILÊNCIO — o commit seguinte reprova sem que nada explique o quê
+//     mudou;
+//   - o caminho é ambíguo por natureza. Aceitá-lo convida a formas amplas ("dispensa
+//     tudo em packages/") que reconstroem o problema que a granularidade por alvo veio
+//     resolver;
+//   - e o que NÃO tem código não deveria estar sendo dispensado por aqui. Um artefato
+//     sem identidade é um problema anterior — o `codigo-catalogado` é quem cobra isso, e
+//     dar uma saída lateral esconderia a causa.
+func (d Waiver) WaivedTarget(id RuleID, codigo string) (string, bool) {
+	motivo, ok := d.waivedRule(id)
+	if !ok {
+		return "", false
+	}
+	alvos := d.targetsOf(id)
+	if len(alvos) == 0 {
+		return motivo, true
+	}
+	if codigo == "" {
+		return "", false // sem identidade não há como dispensar um alvo específico
+	}
+	for _, a := range alvos {
+		if a == codigo {
+			// O motivo DESTE alvo, quando declarado — e não o último da regra.
+			if m, ok := d.MotivoPorAlvo[string(id)+"@"+codigo]; ok {
+				return m, true
+			}
+			return motivo, true
+		}
+	}
+	return "", false
+}
+
+// waivedRule procura o motivo pelo ID exato e, depois, pelo gate inteiro.
+func (d Waiver) waivedRule(id RuleID) (string, bool) {
+	if len(d.PorRegra) == 0 {
+		return "", false
+	}
+	if motivo, ok := d.PorRegra[string(id)]; ok {
+		return motivo, true
+	}
+	if motivo, ok := d.PorRegra[id.Gate()]; ok {
+		return motivo, true
+	}
+	return "", false
+}
+
+// targetsOf devolve os caminhos a que a dispensa desta regra está restrita.
+func (d Waiver) targetsOf(id RuleID) []string {
+	if len(d.Alvos) == 0 {
+		return nil
+	}
+	if a, ok := d.Alvos[string(id)]; ok {
+		return a
+	}
+	return d.Alvos[id.Gate()]
+}
+
+// ParseWaiver lê a forma textual `regra=motivo,regra=motivo` — o que chega por flag ou
+// por variável de ambiente.
+//
+// Uma entrada sem `=` é recusada, e não aceita em silêncio com motivo vazio: o motivo é
+// a única coisa que separa dispensa deliberada de gate ignorado, e aceitá-lo ausente
+// esvaziaria a garantia.
+func ParseWaiver(bruto string) (Waiver, []string) {
+	d := Waiver{PorRegra: map[string]string{}, Alvos: map[string][]string{}, MotivoPorAlvo: map[string]string{}}
+	var erros []string
+	for _, parte := range strings.Split(bruto, ",") {
+		parte = strings.TrimSpace(parte)
+		if parte == "" {
+			continue
+		}
+		regra, motivo, ok := strings.Cut(parte, "=")
+		regra, motivo = strings.TrimSpace(regra), strings.TrimSpace(motivo)
+		// `regra@caminho` restringe a dispensa àquele alvo. O `@` vem antes do `=`, então
+		// o corte acima já separou o motivo — aqui sobra separar a regra do caminho.
+		var alvo string
+		if r, a, temAlvo := strings.Cut(regra, "@"); temAlvo {
+			regra, alvo = strings.TrimSpace(r), strings.TrimSpace(a)
+			if alvo == "" {
+				erros = append(erros, i18n.T("gate.waiver.no_code_after_at", parte))
+				continue
+			}
+			// CAMINHO é recusado explicitamente. A alternativa — aceitá-lo em silêncio e
+			// nunca casar — produziria uma dispensa que não dispensa, e o commit
+			// reprovaria sem explicação aparente. O erro nomeia o que fazer.
+			if strings.ContainsAny(alvo, "/\\.*") {
+				erros = append(erros, i18n.T("gate.waiver.target_is_path", parte))
+				continue
+			}
+		}
+		if !ok || motivo == "" {
+			erros = append(erros, i18n.T("gate.waiver.no_reason_eq", parte))
+			continue
+		}
+		if regra == "" {
+			erros = append(erros, i18n.T("gate.waiver.no_rule", parte))
+			continue
+		}
+		d.PorRegra[regra] = motivo
+		if alvo != "" {
+			d.Alvos[regra] = append(d.Alvos[regra], alvo)
+			d.MotivoPorAlvo[regra+"@"+alvo] = motivo
+		}
+	}
+	return d, erros
+}
+
+// markerInMessage casa `[skip-<regra>@<CODIGO>: motivo]` na mensagem de commit.
+//
+// O motivo vem depois de `:` e é obrigatório, como na forma por variável — uma dispensa
+// sem justificativa escrita é indistinguível de alguém fugindo de um gate.
+var markerInMessage = regexp.MustCompile(
+	`\[skip-([a-z0-9][a-z0-9/-]*)(?:@([A-Z0-9-]+))?\s*:\s*([^\]]+)\]`)
+
+// WaiverFromMessage lê as dispensas declaradas na MENSAGEM DE COMMIT.
+//
+// A forma é `[skip-unit-complete@WRKSP: spec nova do plano 0007]`, e ela é melhor que a
+// variável de ambiente por três razões que só aparecem no uso:
+//
+//   - a variável NÃO FICA NO HISTÓRICO. A dispensa some junto com o shell, e quem ler o
+//     commit meses depois vê um gate que não rodou, sem saber por quê nem quem decidiu;
+//   - a variável é fácil de deixar EXPORTADA por engano, e aí ela dispensa os commits
+//     seguintes sem que ninguém peça;
+//   - e ela exige lembrar o nome exato de uma variável, enquanto o marcador está no
+//     mesmo lugar onde já se escreve o porquê da mudança.
+//
+// A variável continua aceita: um hook de CI que não controla a mensagem precisa dela.
+func WaiverFromMessage(msg string) (Waiver, []string) {
+	d := Waiver{PorRegra: map[string]string{}, Alvos: map[string][]string{}, MotivoPorAlvo: map[string]string{}}
+	var erros []string
+	for _, m := range markerInMessage.FindAllStringSubmatch(msg, -1) {
+		regra, codigo, motivo := m[1], m[2], strings.TrimSpace(m[3])
+		if motivo == "" {
+			erros = append(erros, i18n.T("gate.waiver.no_reason_colon", m[0]))
+			continue
+		}
+		d.PorRegra[regra] = motivo
+		if codigo != "" {
+			d.Alvos[regra] = append(d.Alvos[regra], codigo)
+			d.MotivoPorAlvo[regra+"@"+codigo] = motivo
+		}
+	}
+	return d, erros
+}
+
+// Merge junta duas dispensas. A da mensagem de commit e a da variável de ambiente
+// convivem: um projeto pode ter um hook de CI que usa a variável e um autor que escreve
+// o marcador, e recusar a combinação obrigaria a escolher sem motivo.
+func (d Waiver) Merge(outra Waiver) Waiver {
+	if d.PorRegra == nil {
+		d.PorRegra = map[string]string{}
+	}
+	if d.Alvos == nil {
+		d.Alvos = map[string][]string{}
+	}
+	for k, v := range outra.PorRegra {
+		d.PorRegra[k] = v
+	}
+	for k, v := range outra.Alvos {
+		d.Alvos[k] = append(d.Alvos[k], v...)
+	}
+	if d.MotivoPorAlvo == nil {
+		d.MotivoPorAlvo = map[string]string{}
+	}
+	for k, v := range outra.MotivoPorAlvo {
+		d.MotivoPorAlvo[k] = v
+	}
+	return d
+}

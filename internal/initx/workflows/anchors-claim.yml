@@ -1,0 +1,733 @@
+# Anchors — pipeline de CLAIM (atribuição de trabalho)
+#
+# Existe para que a concorrência não exista. Se cada agente reivindicasse o card
+# diretamente, dois deles poderiam ler "sem dono" antes de qualquer um escrever, e ambos
+# se achariam donos — a API do GitHub não oferece compare-and-swap, então nenhum protocolo
+# em que os agentes DISPUTAM fecha essa janela.
+#
+# Aqui eles não disputam: PEDEM. Como este workflow é serializado, "há card livre?" e
+# "atribua a ele" acontecem sem ninguém no meio.
+#
+# O dono não é o `assignee`: aquele campo responde "qual PESSOA é responsável", e dois
+# agentes na mesma máquina têm o mesmo usuário do GitHub. O dono-agente vive num
+# comentário `anchors-owner: <maquina>/<sessao>` — comentários têm `created_at`, então a
+# ordem é contratual, e o histórico de quem passou pelo card fica registrado com data.
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
+name: anchors · atribuir trabalho
+# One title per agent, so `anchors next` can tell ITS run apart from every other agent's.
+# `gh workflow run` returns no run id: without this, the CLI could only guess which run
+# answered it, and the guess is what used to send the agent to dispatch a second claim.
+# The text must stay equal to `board.ClaimRunTitle`.
+run-name: "anchors · claim for ${{ inputs.agent }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: "identidade do agente: <maquina>/<sessao>"
+        required: true
+        type: string
+
+# A serialização é o mecanismo inteiro. Sem isto, duas execuções atribuiriam o mesmo card
+# a dois agentes — exatamente o que este pipeline existe para impedir.
+concurrency:
+  group: anchors-claim
+  cancel-in-progress: false
+
+# Só o que o GITHUB_TOKEN da própria Action já dá. Nada a configurar: o estado do
+# trabalho é uma LABEL, e escrever label é permissão nativa de `issues: write`.
+permissions:
+  contents: read
+  issues: write
+  # A `blocked-by-<n>` can name a PULL REQUEST (a card waiting for a PR to merge), and
+  # reading its state goes through the same `gh issue view`. Without this the token gets
+  # "Resource not accessible by integration", the check fails closed, and every card
+  # waiting on a PR is skipped as if still blocked — measured in the reference app: seven
+  # cards skipped, and the claim ended in "no free card".
+  pull-requests: read
+
+jobs:
+  atribuir:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Escolher um card livre e atribuí-lo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Sem `actions/checkout` (não precisamos do código), o `gh` não descobre o
+          # repositório pelo git local — `GH_REPO` é o que o diz.
+          GH_REPO: ${{ github.repository }}
+          AGENT: ${{ inputs.agent }}
+          LABEL: anchors
+        run: |
+          set -euo pipefail
+
+          # O PROJETO ESTÁ CONGELADO? — antes de tudo.
+          #
+          # Este é o freio que alcança o AGENTE. Os hooks de pre-commit e pre-push param
+          # quem já tem o repositório clonado; o ruleset para o push no servidor. Mas nada
+          # disso impede um agente de PEGAR trabalho — e um card atribuído durante o
+          # congelamento é trabalho que começa contra uma base que vai mudar.
+          #
+          # Lido pela API porque este pipeline não faz checkout de propósito: ele roda a
+          # cada pedido de trabalho, e clonar o repositório o tornaria o gargalo que a
+          # serialização já ameaça ser.
+          cfg=$(gh api "repos/$GH_REPO/contents/anchors.yaml" --jq '.content' 2>/dev/null \
+                | base64 -d 2>/dev/null || true)
+          if printf '%s' "$cfg" | grep -qE '^enabled:[[:space:]]*false[[:space:]]*$'; then
+            motivo=$(printf '%s' "$cfg" | sed -n 's/^freeze_reason:[[:space:]]*//p' | head -1)
+            echo "🛑 PROJETO CONGELADO — nenhum card será atribuído."
+            echo ""
+            if [ -n "$motivo" ]; then
+              echo "   Motivo: $motivo"
+            else
+              echo "   (nenhum motivo declarado no anchors.yaml)"
+            fi
+            echo ""
+            echo "   Procure a issue [congelado] no repositório para acompanhar."
+            echo "   Quem for CONSERTAR trabalha por fora do claim — o freio existe para"
+            echo "   impedir trabalho por inércia, não o conserto que o destrava."
+            # Sai com SUCESSO: o congelamento não é falha do pipeline, e um vermelho aqui
+            # se somaria ao ruído de quem já está investigando o problema de verdade.
+            exit 0
+          fi
+
+          # O CARD DO PRÓPRIO AGENTE VEM PRIMEIRO — antes da prioridade do board.
+          #
+          # Um agente por vez, um card por vez: dois cards abertos no mesmo agente
+          # significam um deles parado sem ninguém olhando. Mas a conclusão daqui era
+          # abortar com "nada a atribuir", e isso devolvia o agente de mãos vazias
+          # justamente quando ele TINHA trabalho — um card que ele pegou e que voltou a
+          # `to-do` (pelo stale, ou porque a sessão anterior parou no meio) continua sendo
+          # dele, com o contexto já construído.
+          #
+          # Retomar o próprio trabalho vence a prioridade do board: o `ready-to-review`
+          # mais adiantado é de outra pessoa, e mandar este agente para lá abandonaria o
+          # que ele já começou — que é exatamente o trabalho pela metade que a regra de
+          # prioridade existe para evitar.
+          # Só os estados DA ALÇADA DO AGENTE. A busca olhava apenas o dono, e o dono
+          # continua registrado depois que o trabalho termina — um card aprovado e movido
+          # para `ready-to-test` era retomado e REGREDIA para `in-progress`, desfazendo a
+          # aprovação. Medido no primeiro uso: o card #1 voltou de `ready-to-test` para
+          # `in-progress` no claim seguinte.
+          #
+          # De `ready-to-test` em diante quem move são os pipelines de entrega do projeto,
+          # e o agente não tem mais o que fazer ali.
+          #
+          # `in-review` FICA na lista, e é deliberado: revisar É trabalho, e um card em
+          # revisão CUJO DONO É ESTE AGENTE tem trabalho por fazer. Terminar o que está
+          # com ele antes de pegar coisa nova é a mesma regra que rege o `in-progress`.
+          #
+          # O que separa "meu" de "de outro" não é o estado — é o `anchors-owner` do
+          # último comentário, que o filtro abaixo já exige. Um card em revisão com outro
+          # agente nunca chega aqui.
+          # EM PÁGINAS DE 25, com os últimos 100 comentários de cada card. Pedir os
+          # comentários de 200 cards numa consulta só estourava o GraphQL: medido no
+          # app de referência, com 114 cards abertos, `502` em toda execução — nenhum card era
+          # entregue. É a mesma consulta que o `anchors next` usa desde a v0.1.160.
+          # O ESCALADO fica de fora também aqui, e não só na lista de candidatos: um card
+          # esperando decisão de gente não é "o meu trabalho em aberto". Medido no
+          # app de referência: o #651, estacionado com `needs-user` depois de o revisor reprovar o
+          # PR, voltava ao mesmo agente a cada `anchors next`, somando "## Revisão N".
+          meu=$(gh api graphql --paginate \
+            -f owner="${GH_REPO%%/*}" -f name="${GH_REPO#*/}" -f label="$LABEL" \
+            -f query='query($owner: String!, $name: String!, $label: String!, $endCursor: String) {
+              repository(owner: $owner, name: $name) {
+                issues(first: 25, after: $endCursor, states: OPEN, labels: [$label]) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes { number labels(first: 50) { nodes { name } } comments(last: 100) { nodes { body } } }
+                }
+              }
+            }' \
+            --jq ".data.repository.issues.nodes[]
+                   | select([.labels.nodes[].name] | any(. == \"anchors:to-do\" or . == \"anchors:in-progress\"
+                             or . == \"anchors:ready-to-review\" or . == \"anchors:in-review\"))
+                   | select([.labels.nodes[].name] | any(. == \"anchors:needs-user\" or . == \"anchors:precisa-do-usuario\" or . == \"anchors:bug\") | not)
+                   | select([.comments.nodes[].body | select(startswith(\"anchors-owner:\"))] | last == \"anchors-owner: $AGENT\")
+                   | .number" | head -1)
+
+          # Os candidatos vêm das LABELS de estado — o board não é consultado, e nem
+          # precisa existir. A PRIORIDADE É DA DIREITA PARA A ESQUERDA DO FLUXO: o
+          # trabalho mais adiantado vem primeiro. Terminar o que está quase pronto antes
+          # de começar coisa nova é o que impede o board de encher de trabalho pela
+          # metade — e trabalho pela metade não entrega nada, ocupa revisor, e envelhece
+          # até o contexto de quem o escreveu se perder.
+          : > /tmp/disponiveis.txt
+          # `--label` repetido é E, não OU: o card precisa ter a do Anchors E a de estado.
+          # O ESCALADO fica de fora — enquanto espera decisão humana, entregá-lo a um
+          # agente produziria a revisão que já se sabe que não vai convergir.
+          #
+          # `in-progress` ENTRA, entre os dois: é o card que alguém começou e o stale
+          # LIBEROU (`anchors-owner: (liberado)`). O stale não o devolve a `to-do` —
+          # mover presumiria onde o trabalho está —, e sem este estado na lista o card
+          # ficava fora da fila para sempre. Medido no app de referência: 15 cards liberados entre
+          # 16 e 20/09, parados em `in-progress` desde então. Só entra o que tem o
+          # `(liberado)` explícito (ver o `case` do dono): um `in-progress` sem dono
+          # declarado é de alguém que não passou pelo claim, e não é tomado.
+          : > /tmp/andamento.txt
+          : > /tmp/revisao.txt
+          # `in-review` entra pelo mesmo motivo, logo depois de `ready-to-review`: é uma
+          # revisão que alguém começou e o stale liberou — 4 no app de referência, parados desde
+          # 19/09 com os PRs abertos. A transição abaixo já a retoma sem regredir o estado.
+          for estado in "anchors:ready-to-review" "anchors:in-review" "anchors:in-progress" "anchors:to-do"; do
+            gh issue list --state open --label "$LABEL" --label "$estado" \
+              --limit 200 --json number,labels \
+              --jq '.[] | select([.labels[].name] | (index("anchors:needs-user") or index("anchors:precisa-do-usuario") or index("anchors:bug")) | not) | .number' \
+              > /tmp/estado.txt
+            cat /tmp/estado.txt >> /tmp/disponiveis.txt
+            if [ "$estado" = "anchors:in-progress" ] || [ "$estado" = "anchors:in-review" ]; then
+              cat /tmp/estado.txt >> /tmp/andamento.txt
+            fi
+            if [ "$estado" = "anchors:ready-to-review" ] || [ "$estado" = "anchors:in-review" ]; then
+              cat /tmp/estado.txt >> /tmp/revisao.txt
+            fi
+          done
+
+          # A ORDEM DE TRABALHO: um card cuja dependência não fechou não pode ser
+          # entregue. Aconteceu no primeiro uso real — recebi a spec de test harness
+          # (fase 3) com as fases 1 e 2 abertas, sem `package.json` sequer. Só não virou
+          # trabalho perdido porque fui LER o plano.
+          #
+          # O `needs` vem do MAPA (`anchors.graph.yaml`), lido via API em vez de baixado:
+          # este pipeline não faz checkout de propósito — ele roda a cada pedido de
+          # trabalho, e clonar o repositório a cada vez o tornaria o gargalo que a
+          # serialização já ameaça ser.
+          gh api "repos/$GH_REPO/contents/anchors.graph.yaml" \
+            --jq '.content' 2>/dev/null | base64 -d > /tmp/mapa.yaml || : > /tmp/mapa.yaml
+
+          # Os códigos CONCLUÍDOS: os cards que já saíram da alçada do agente. Um `needs`
+          # só está satisfeito quando o que ele aponta chegou até aqui.
+          : > /tmp/concluidos.txt
+          for e in "anchors:ready-to-test" "anchors:in-test" "anchors:ready-to-release" "anchors:production"; do
+            gh issue list --state all --label "$LABEL" --label "$e" --limit 200 \
+              --json title --jq '.[].title | capture("^\\[(?<c>[^]]+)\\]").c' >> /tmp/concluidos.txt 2>/dev/null || true
+          done
+          # Issue FECHADA também conta como concluída: fechar é o desfecho final, e exigir
+          # a label depois disso deixaria a dependência presa para sempre.
+          gh issue list --state closed --label "$LABEL" --limit 200 \
+            --json title --jq '.[].title | capture("^\\[(?<c>[^]]+)\\]").c' >> /tmp/concluidos.txt 2>/dev/null || true
+
+          # Entre os disponíveis, o LIVRE é o que ninguém tem E cujas dependências
+          # fecharam. A ordem de /tmp/disponiveis.txt é a prioridade (review antes de
+          # implementação).
+          livre=""
+          # Quem soltou o card antes desta atribuição. Preenchido só quando a varredura
+          # acha um card `(liberado)`; alimenta o aviso de papel acumulado.
+          liberou_antes=""
+          while read -r n; do
+            [ -n "$n" ] || continue
+
+            # ESPERA UM CARD DE DESBLOQUEIO que ainda não fechou?
+            #
+            # Um card em `needs-user` cuja decisão GEROU TRABALHO tem a label
+            # `anchors:desbloqueia-<n>` num card irmão. Enquanto esse irmão estiver aberto,
+            # o bloqueado não pode voltar à fila — mesmo que alguém remova o `needs-user`
+            # achando que decidir bastava.
+            #
+            # Sem esta guarda, o ciclo se repete: o agente pega o card, encontra o mesmo
+            # impasse, escala de novo. Medido: um card do projeto de referência esperava
+            # uma decisão sobre qual branch aplicar uma correção, e o `anchors next`
+            # continuava re-servindo o mesmo card ao mesmo agente.
+            # FAIL CLOSED: every guard below that asks the API skips the card when the
+            # API does not answer. The old form (`2>/dev/null || true`) read an error as
+            # "no blocker" and handed the card out — a rate limit or a 502 was enough to
+            # deliver blocked, escalated or already-done work. A skipped card costs one
+            # claim; a wrongly delivered one costs a whole implementation.
+            if ! bloqueio=$(gh issue list --repo "$GH_REPO" --state open \
+              --label "anchors:desbloqueia-$n" --limit 5 \
+              --json number --jq '.[0].number // empty'); then
+              echo "· #$n: could not check its unblock card (gh failed) — skipping, fail closed"
+              continue
+            fi
+            if [ -n "$bloqueio" ]; then
+              echo "· #$n espera a entrega do #$bloqueio (desbloqueio) — pulando"
+              continue
+            fi
+
+            # ESTE CARD ESTÁ BLOQUEADO POR OUTRO?
+            #
+            # A guarda acima olha do lado do DESTRAVADOR (`desbloqueia-<n>` num card
+            # irmão). Esta olha do lado do BLOQUEADO: `anchors:blocked-by-<m>` no próprio
+            # card diz "espero o #m", e é a label que o `escalate --for-user --blocks-card`
+            # aplica quando quem escalou julga que a decisão impede o trabalho.
+            #
+            # AS DUAS SÃO NECESSÁRIAS porque as perguntas são diferentes. A de cima exige
+            # que exista um card de TRABALHO derivado da decisão; esta vale quando a
+            # decisão ainda não gerou trabalho nenhum — o card espera a RESPOSTA, não a
+            # entrega de alguém.
+            #
+            # O QUE ISSO IMPEDE: um agente descobre um problema no card X, escala, e segue
+            # implementando sobre a premissa que ele mesmo declarou incerta. Ou pior — o X
+            # é liberado, outro agente o pega sem ler a escalada, e o PR decide por conta
+            # própria o que estava escalado. Medido no projeto de referência: dois cards
+            # relatam PR que "decidiu com base em premissa" e PR que "afirma que".
+            #
+            # Barra para TODOS, inclusive o dono atual: o bloqueio é sobre o trabalho, não
+            # sobre quem o faria.
+            segura=""
+            if ! bloqueadores=$(gh issue view "$n" --repo "$GH_REPO" --json labels \
+                        --jq '[.labels[].name | select(startswith("anchors:blocked-by-"))] | .[]'); then
+              echo "· #$n: could not read its blocked-by labels (gh failed) — skipping, fail closed"
+              continue
+            fi
+            for b in $bloqueadores; do
+              m=${b#anchors:blocked-by-}
+              [ -n "$m" ] || continue
+              # SÓ O QUE AINDA ESTÁ ABERTO segura. A label fica no card depois de a
+              # decisão sair — tirá-la é do `anchors decided` —, e tratar label como
+              # bloqueio sem conferir o estado deixaria o card parado para sempre.
+              # A state the API did not return is not "closed": it holds the card too.
+              if ! estado_m=$(gh issue view "$m" --repo "$GH_REPO" --json state --jq .state); then
+                segura="$m (state unreadable: gh failed)"
+                break
+              fi
+              if [ "$estado_m" = "OPEN" ]; then
+                segura="$m"
+                break
+              fi
+            done
+            if [ -n "$segura" ]; then
+              echo "· #$n está BLOQUEADO pelo #$segura — pulando"
+              continue
+            fi
+
+            # JÁ TEM PR ABERTO? Então alguém já fez este trabalho.
+            #
+            # O claim serializa quem PEGA o card, e isso não basta: o card é solto ao fim
+            # da implementação (`anchors-owner: (liberado)`) e volta à fila para REVISÃO —
+            # mas a branch e o PR do primeiro agente continuam de pé. O claim seguinte o
+            # entrega como se fosse trabalho novo.
+            #
+            # Medido: três agentes resolveram a issue #375 do app de referência em paralelo, sete
+            # minutos entre o primeiro PR e o terceiro. Os três chegaram à MESMA solução
+            # correta — o desperdício foi de coordenação, não de qualidade. Dois PRs
+            # completos foram fechados como duplicata.
+            #
+            # A busca é pelo NÚMERO do card no corpo do PR, que é onde o `anchors pr-body`
+            # escreve a linha de fechamento (`Closes #N`). Não é por branch: o nome dela é
+            # livre, e os três daquele caso tinham nomes diferentes.
+            #
+            # Only a real REFERENCE counts: a linking keyword (`Closes`/`Refs`/`Fixes`/
+            # `Resolves` and GitHub's variants, any case) before `#N`, or an issue URL
+            # `/issues/N`. The old pattern accepted any `#N` or `/N`, and a PR body that
+            # reported a mutation score of `4/4` hid card #4 from every claim (the reference app
+            # #679).
+            #
+            # Um PR já aberto NÃO significa que o card está pronto — significa que quem
+            # revisa deve pegar o PR, não reimplementar. O card volta à fila pelo caminho
+            # normal quando o PR mescla ou fecha.
+            #
+            # SÓ PARA TRABALHO DE IMPLEMENTAÇÃO. Um card em `ready-to-review`/`in-review` com
+            # PR aberto é exatamente o que se revisa — pulá-lo esvaziava a fila de revisão
+            # inteira. Medido no app de referência, 2026-09-24: o claim percorreu os 20 cards em
+            # `ready-to-review`, pulou 15 porque o PR estava aberto e 5 por bloqueio, e
+            # nenhum revisor recebeu revisão pelo `anchors next`.
+            if ! grep -qx "$n" /tmp/revisao.txt; then
+              if ! pr_aberto=$(gh pr list --state open --search "$n in:body" \
+                --json number,body --jq "[.[] | select(.body | test(\"\\\\b(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?):?[[:space:]]+#$n\\\\b|/issues/$n\\\\b\"; \"i\"))] | .[0].number // empty"); then
+                echo "· #$n: could not list the open PRs (gh failed) — skipping, fail closed"
+                continue
+              fi
+              if [ -n "$pr_aberto" ]; then
+                echo "· #$n já tem o PR #$pr_aberto aberto — pulando (revisar o PR, não reimplementar)"
+                continue
+              fi
+            fi
+
+            # BLOQUEADO por dependência? O código do card sai do título (`[XXXXX] ...`),
+            # e o `needs` dele, do mapa.
+            if ! cod=$(gh issue view "$n" --json title --jq '.title | capture("^\\[(?<c>[^]]+)\\]").c'); then
+              echo "· #$n: could not read its title (gh failed) — skipping, fail closed"
+              continue
+            fi
+            if [ -n "$cod" ] && [ -s /tmp/mapa.yaml ]; then
+              # As fases de um plano não são nós do mapa: elas vivem no markdown. Um
+              # `needs` que aponta para fase é resolvido pelos CARDS que pertencem a ela —
+              # se todos fecharam, a fase fechou.
+              # O mapa indenta os nós com 4 espaços e escreve `needs:` como LISTA em
+              # linhas separadas. Os padrões refletem isso — medi contra o arquivo real
+              # antes de confiar: a primeira versão usava `^- id:` e `^  code:`, não
+              # casava nada, e devolvia "sem dependência" para todo card.
+              deps=$(awk -v alvo="$cod" '
+                /^ *- id:/ { cod=""; emNeeds=0 }
+                /^ *code: / { cod=$2 }
+                /^ *needs:/ { emNeeds=1; next }
+                /^ *[a-z_]+:/ { emNeeds=0 }
+                emNeeds && /^ *- / && cod == alvo { print $2 }
+              ' /tmp/mapa.yaml | grep -E '^[A-Z0-9]{4,5}(-W[0-9]{2})?$' || true)
+              bloqueado=""
+              for d in $deps; do
+                # Uma dependência de FASE está satisfeita quando todo card daquela fase
+                # concluiu. Um card sem nenhum card na fase não bloqueia: não há trabalho
+                # declarado ali para esperar.
+                if echo "$d" | grep -qE -- '-W[0-9]{2}$'; then
+                  # `parent` vem DEPOIS de `code` no nó, então o código é guardado e
+                  # impresso quando o parent casa.
+                  pend=$(awk -v fase="$d" '
+                    /^ *- id:/ { cod="" }
+                    /^ *code: / { cod=$2 }
+                    /^ *parent: / && $2 == fase && cod != "" { print cod }
+                  ' /tmp/mapa.yaml | while read -r c; do
+                    grep -qxF "$c" /tmp/concluidos.txt || echo "$c"
+                  done)
+                  [ -n "$pend" ] && bloqueado="$d"
+                else
+                  grep -qxF "$d" /tmp/concluidos.txt || bloqueado="$d"
+                fi
+                [ -n "$bloqueado" ] && break
+              done
+              if [ -n "$bloqueado" ]; then
+                echo "· #$n ($cod) espera $bloqueado — pulando"
+                continue
+              fi
+            fi
+
+            dono=$(gh issue view "$n" --json comments \
+              --jq '[.comments[].body | select(startswith("anchors-owner:"))] | last // ""')
+            # O coringa no FIM é necessário: o pipeline de stale escreve o motivo depois
+            # do marcador (`anchors-owner: (liberado) — sem progresso desde …`), e sem ele
+            # o padrão exigiria que a linha TERMINASSE em "(liberado)" — nenhum card
+            # liberado voltaria à fila, e o board travaria em silêncio.
+            # Um `in-progress` só é tomado com o `(liberado)` EXPLÍCITO (ver a lista acima).
+            if [ -z "$dono" ] && grep -qx "$n" /tmp/andamento.txt; then
+              echo "· #$n está em andamento sem dono declarado — não é tomado"
+              continue
+            fi
+            # E só o que o STALE liberou ("sem progresso"): esse foi ABANDONADO. Quem solta
+            # à mão um card em andamento terminou a sua parte — o revisor que reprovou e
+            # devolveu a posse, por exemplo — e reentregá-lo como trabalho parado o
+            # devolvia ao mesmo agente em toda chamada do `anchors next`. Medido no
+            # app de referência: o revisor do #766 reprovou o PR, liberou a posse e recebeu o
+            # mesmo card de volta, preso num laço.
+            #
+            # BUT ONLY FROM WHOEVER RELEASED IT. The guard used to skip every hand-released
+            # card in flight, for everyone — and every release that is not the stale's is by
+            # hand: an escalation, `anchors decided`, a reviewer who left without a verdict.
+            # Measured in the reference app, 2026-09-24: 31 cards in `in-progress`/`in-review`, two
+            # with a live owner; the rest offered to no one, while five agents found "no free
+            # card". The loop of #766 was the SAME agent getting its card back, so that is
+            # what is refused; another agent takes the card.
+            #
+            # An APPROVED review released by the verdict waits for the merge: it is not work
+            # for anyone, and a second reviewer would redo a review that is done.
+            if grep -qx "$n" /tmp/andamento.txt; then
+              case "$dono" in
+                *"(liberado)"*"sem progresso"*) ;;
+                *"(liberado)"*"approved"*)
+                  echo "· #$n: review approved — it waits for the merge, not taken"
+                  continue ;;
+                *"(liberado)"*)
+                  soltou=$(gh issue view "$n" --json comments \
+                    --jq '[.comments[].body
+                           | select(startswith("anchors-owner:"))
+                           | sub("^anchors-owner:[ ]*"; "")
+                           | sub("[ ]*—.*$"; "")]
+                          | map(select(. != "(liberado)")) | last // ""')
+                  if [ "$soltou" = "$AGENT" ]; then
+                    echo "· #$n was released by hand by you — not handed back"
+                    continue
+                  fi ;;
+              esac
+            fi
+            case "$dono" in
+              ""|*"(liberado)"*)
+                livre="$n"
+                # QUEM LIBEROU o card é o penúltimo `anchors-owner:` — o último é o
+                # `(liberado)`. Guardado para o aviso lá embaixo: entregar o card de volta
+                # a quem acabou de soltá-lo é legítimo num time de um, mas precisa APARECER.
+                liberou_antes=$(gh issue view "$n" --json comments \
+                  --jq '[.comments[].body
+                         | select(startswith("anchors-owner:"))
+                         | sub("^anchors-owner:[ ]*"; "")
+                         | sub("[ ]*—.*$"; "")]
+                        | map(select(. != "(liberado)")) | last // ""')
+                # QUEM ESCREVEU NÃO REVISA. Um card em revisão que volta ao mesmo agente que
+                # o soltou é o autor revisando o próprio trabalho — e a revisão só vale
+                # porque um segundo par de olhos vê o que o primeiro não viu. A versão
+                # anterior entregava com um aviso (app de referência, pensada para um time de
+                # um); com dois agentes trabalhando, ela devolveu a revisão ao próprio autor
+                # seis vezes num dia, e cada uma parou o agente até alguém intervir. O card
+                # fica para OUTRO agente; um time de um revisa à mão.
+                #
+                # O AUTOR é quem era dono antes da entrega ("implementação concluída", que só
+                # o pipeline escreve), e não quem soltou por último: revisores também soltam o
+                # card (à mão, e o veredito desde a v0.1.173), e o último a soltar pode ser o
+                # revisor anterior — que passaria por autor, enquanto o autor de verdade
+                # receberia a própria revisão. Sem entrega registrada, vale quem soltou por último.
+                autor=$(gh issue view "$n" --json comments \
+                  --jq '[.comments[].body | split("\n")[0] | select(startswith("anchors-owner:"))] as $o
+                        | ([range(0; $o | length) | select($o[.] | test("implementação concluída"))] | last) as $i
+                        | if $i == null then ""
+                          else ([$o[0:$i][] | sub("^anchors-owner:[ ]*"; "") | sub("[ ]*—.*$"; "")
+                                 | select(. != "(liberado)")] | last // "") end')
+                autor="${autor:-$liberou_antes}"
+                if [ "$autor" = "$AGENT" ] && grep -qx "$n" /tmp/revisao.txt; then
+                  echo "· #$n: a revisão é do trabalho de $AGENT — fica para outro agente"
+                  livre=""
+                  liberou_antes=""
+                  continue
+                fi
+                break ;;
+            esac
+          done < /tmp/disponiveis.txt
+
+          # O próprio card vence o que a varredura achou: ele foi procurado primeiro e só
+          # não interrompeu o fluxo para que a mensagem final saiba distinguir "retomei o
+          # meu" de "peguei um novo".
+          retomado=""
+          if [ -n "$meu" ]; then
+            livre="$meu"; retomado="sim"
+          fi
+
+          if [ -z "$livre" ]; then
+            echo "nenhum card livre"
+            exit 0
+          fi
+
+          # A atribuição. O comentário é a posse; o assignee fica para a pessoa, no uso
+          # normal do GitHub.
+          gh issue comment "$livre" --body "anchors-owner: $AGENT"
+
+          # PAPEL ACUMULADO: este agente está pegando de volta o card que ele mesmo
+          # acabou de soltar.
+          #
+          # A régua do `guide review` diz que quem corrige não aprova o próprio conserto —
+          # e ela é CERTA: é o que faz um defeito atravessar duas cabeças diferentes. Mas
+          # ela pressupõe que exista uma segunda cabeça. Num time de um, não existe, e
+          # travar o card não a produz: só para o trabalho.
+          #
+          # Então avisa e entrega. A alternativa — recusar — travaria o board de quem
+          # opera sozinho, que é o caso normal de um projeto começando. E a alternativa
+          # silenciosa (entregar sem dizer nada) é pior que as duas: o card ficaria
+          # idêntico ao de uma revisão independente, e é justamente essa diferença que
+          # precisa aparecer para quem ler o histórico depois.
+          #
+          # Decidido em the reference app.
+          if [ -n "$liberou_antes" ] && [ "$liberou_antes" = "$AGENT" ]; then
+            printf '%s\n' \
+              '⚠ **Mesmo agente nos dois papéis.**' '' \
+              "Este card foi solto por \`$AGENT\` e acaba de voltar para o MESMO agente." '' \
+              'O `anchors guide review` diz que quem corrige não aprova o próprio conserto —' \
+              'a revisão vale porque um segundo par de olhos vê o que o primeiro não viu.' \
+              'Aqui não há segundo par: é a mesma cabeça relendo o próprio trabalho.' '' \
+              'Isso NÃO barra o fluxo — num time de um é o que vai acontecer sempre, e' \
+              'travar o card não produziria o revisor que falta. Mas fica registrado: quem' \
+              'ler este card depois precisa saber que a segunda revisão não foi' \
+              'independente.' '' \
+              'Se houver outro agente disponível, prefira passá-lo adiante.' \
+              > /tmp/papel-acumulado.md
+            gh issue comment "$livre" --body-file /tmp/papel-acumulado.md
+            echo "⚠ #$livre volta ao MESMO agente que o liberou ($AGENT) — avisado no card"
+          fi
+          # Cada `ready-to-x` tem seu `in-x`: quem sai de `to-do` vai implementar, quem
+          # sai de `ready-to-review` vai revisar. Mover para o estado errado faria o
+          # board descrever um trabalho que não é o que está acontecendo.
+          # `--jq index(...)` devolve VAZIO quando não acha (o gh engole o `null`), e
+          # testar vazio com grep se comporta de forma imprevisível — foi assim que um
+          # card em `to-do` foi movido para `in-review` na primeira execução real.
+          # Listar as labels e procurar a linha exata não tem essa ambiguidade.
+          labels_atuais=$(gh issue view "$livre" --json labels --jq '.labels[].name')
+          if echo "$labels_atuais" | grep -qx "anchors:ready-to-review"; then
+            de="anchors:ready-to-review"; para="anchors:in-review"
+          elif echo "$labels_atuais" | grep -qx "anchors:in-review"; then
+            # RETOMADA de um card que já estava em revisão: o estado não regride. Sem
+            # este ramo o card cairia no `else` e voltaria para `in-progress` — o board
+            # passaria a descrever implementação onde há revisão em curso.
+            de="anchors:in-review"; para="anchors:in-review"
+          elif echo "$labels_atuais" | grep -qx "anchors:in-progress"; then
+            de="anchors:in-progress"; para="anchors:in-progress"
+          else
+            de="anchors:to-do"; para="anchors:in-progress"
+          fi
+          # Remove TODOS os estados, e não só o `$de` detectado: o estado é a label, e um
+          # card que por qualquer motivo carregue dois estados manteria o outro colado
+          # aqui. A remoção parcial não apenas falha em limpar — ela PERPETUA o estado
+          # duplicado, porque cada transição seguinte também só remove um.
+          #
+          # A remoção e a adição vão em CHAMADAS SEPARADAS, e a remoção pula o estado de
+          # destino: numa retomada `de == para`, e o `gh issue edit` que remove e adiciona
+          # a MESMA label na mesma chamada aplica a remoção — o card ficava sem estado
+          # nenhum, só com a label do Anchors. Medido no primeiro uso real da retomada.
+          for e in anchors:to-do anchors:in-progress anchors:ready-to-review \
+                   anchors:in-review anchors:ready-to-test anchors:in-test \
+                   anchors:ready-to-release anchors:production; do
+            [ "$e" = "$para" ] && continue
+            gh issue edit "$livre" --remove-label "$e" >/dev/null 2>&1 || true
+          done
+          gh issue edit "$livre" --add-label "$para"
+
+          # QUEM VAI REVISAR recebe as instruções no próprio card.
+          #
+          # O gate de JULGAMENTO faz a pergunta que nenhum verificador mecânico responde —
+          # "o trecho REALIZA o que a regra descreve?" — e por isso ela fica pendente,
+          # esperando alguém que esteja lendo spec e código ao mesmo tempo. A revisão é
+          # exatamente esse momento: pedir o julgamento aqui aproveita a leitura que o
+          # revisor já vai fazer, e pedir noutro lugar significaria ler duas vezes.
+          if [ "$para" = "anchors:in-review" ]; then
+            # A indentação do heredoc é exigida pelo YAML (o bloco `run:` a
+            # define), e o `sed` a remove antes de escrever o arquivo — sem
+            # isso o markdown chega ao GitHub como bloco de código.
+            # AS VOLTAS DE REVISÃO são contadas e ANOTADAS no card, porque o desfecho
+            # "corrija você mesmo" abre a possibilidade de dois revisores corrigirem um ao
+            # outro para sempre — e cada volta PARECE progresso, então ninguém percebe.
+            #
+            # O número aparece SEMPRE, e não só no limite: quem pega a revisão precisa
+            # saber se é a primeira ou a sétima antes de começar. Uma sétima merece ler o
+            # histórico antes de opinar; uma primeira, não.
+            voltas=$(gh issue view "$livre" --json comments \
+              --jq '[.comments[].body | select(startswith("## Revisão"))] | length')
+            voltas=${voltas:-0}
+            proxima=$((voltas + 1))
+
+            # DEZ é o limite, e aí o card sai da alçada dos agentes.
+            #
+            # Não é bloqueio arbitrário: dez revisões sem convergir não é problema de
+            # código, é decisão que ninguém tomou. Continuar rodando produziria a décima
+            # primeira, e o custo já foi pago nove vezes.
+            #
+            # A label é um EIXO à parte do estado: o card fica onde está, e o que muda é
+            # quem pode destravá-lo. Fosse estado, ele sairia da coluna onde o trabalho
+            # realmente parou.
+            if [ "$voltas" -ge 10 ]; then
+              gh issue edit "$livre" --add-label "anchors:needs-user" >/dev/null 2>&1 || true
+              # `printf` em vez de heredoc: o bash exige o delimitador de fecho na COLUNA
+              # ZERO, e o YAML exige que tudo dentro de `run:` fique indentado. Os dois não
+              # podem ser satisfeitos ao mesmo tempo — medido: o script quebrou com
+              # "here-document delimited by end-of-file".
+              printf '%s\n' \
+                '🛑 **Este card precisa de uma decisão humana.**' '' \
+                "São $voltas revisões sem convergir, e isso deixou de ser problema de código:" \
+                'é uma decisão que ninguém tomou. A próxima revisão produziria a seguinte —' \
+                'o custo já foi pago nove vezes.' '' \
+                '**O que costuma estar por trás:** a spec não decide o que precisava decidir,' \
+                'e cada revisor lê o vazio de um jeito. Leia as revisões anteriores e procure' \
+                'o ponto em que elas discordam sobre o que a spec PEDE, não sobre o que o' \
+                'código faz.' '' \
+                '**Como destravar:** decida o ponto e escreva a decisão NA SPEC (uma regra' \
+                'nova, com código). Depois remova a label `anchors:needs-user` e o' \
+                'fluxo segue.' '' \
+                'Enquanto a label estiver aqui, o pipeline de claim não entrega este card.' \
+                > /tmp/escala.md
+              gh issue comment "$livre" --body-file /tmp/escala.md
+              echo "· #$livre ESCALADO ao usuário — $voltas revisões sem convergir"
+              exit 0
+            fi
+
+            if [ "$voltas" -ge 3 ]; then
+              printf '%s\n' \
+                '⚠ **A revisão não está convergindo.**' '' \
+                'Quando isso acontece, o problema costuma estar ANTES do código: a spec não' \
+                'decide o que precisava decidir, e cada revisor lê o vazio de um jeito.' '' \
+                'Antes de revisar de novo, leia as revisões anteriores e pergunte se o' \
+                'desacordo é sobre o CÓDIGO ou sobre o que a SPEC pede. Se for o segundo, o' \
+                'caminho é abrir uma decisão em aberto na spec — não mais uma rodada.' \
+                > /tmp/aviso.md
+              gh issue comment "$livre" --body-file /tmp/aviso.md
+            fi
+
+
+            # `printf` em vez de heredoc: o bash exige o delimitador de fecho na COLUNA
+            # ZERO, e o YAML exige que tudo dentro de `run:` fique indentado — os dois não
+            # podem ser satisfeitos ao mesmo tempo. Medido: o script quebrou em produção
+            # com "here-document delimited by end-of-file".
+            printf '%s\n' \
+              '## Revisão — o que fazer' \
+              '' \
+              'A régua completa é `anchors guide review` — leia antes de começar. O que segue' \
+              'é a ordem dos passos; o guia diz o que procurar em cada um.' \
+              '' \
+              '0. **Os checks EXISTEM?** `gh pr checks <n>`. Um check que não rodou não aparece' \
+              '   como falha — ele não aparece, e o PR fica com a cara de PR limpo. Se os do' \
+              '   Anchors não estão na lista, dispare antes de revisar:' \
+              '' \
+              '   ```' \
+              '   gh workflow run anchors-gates.yml --ref <branch-do-PR>' \
+              '   ```' \
+              '' \
+              '   Não aprove PR cujos checks nunca rodaram: você é a fronteira que sobra quando' \
+              '   a automação falha em silêncio.' \
+              '' \
+              '1. **Leia** a spec e o código que ela governa.' \
+              '2. **Rode os gates de julgamento** pendentes:' \
+              '' \
+              '   ```' \
+              '   anchors judge --pending' \
+              '   anchors judge <alvo> --gate <gate> --verdict pass|fail --reason "..."' \
+              '   ```' \
+              '' \
+              '   Eles fazem a pergunta que nenhum verificador mecânico responde: se o código REALIZA' \
+              '   o que a regra descreve. Você já vai estar lendo os dois.' \
+              '' \
+              '3. **Confronte cada regra** da spec contra o que o PR entrega, rodando o que dá para' \
+              '   rodar em vez de só ler.' \
+              '4. **Comente o resultado no PR**, começando com `## Revisão` — é por esse título' \
+              '   que o pipeline conta as voltas e avisa quando a revisão deixa de convergir.' \
+              '   Depois escolha o desfecho:' \
+              '' \
+              '   - **aceito** → comente no PR, numa linha só, `anchors-review: approved by <você>`.' \
+              '     NÃO mova o card: essa linha põe o status `anchors/review` verde, e quem move' \
+              '     o card para `ready-to-test` é o merge. Movê-lo à mão antes do merge esconde' \
+              '     o aviso de merge sem o desfecho da revisão.' \
+              '' \
+              '   - **defeito de EXECUÇÃO** (marcação no lugar errado, opção faltando, teste que' \
+              '     não cobre o caso) → **corrija você mesmo**, no mesmo PR, e passe o card para' \
+              '     `anchors:ready-to-review` liberando a posse. Outro agente revisa o conjunto.' \
+              '' \
+              '     Você já sabe qual é o certo: devolver faria outro descobrir o que você' \
+              '     acabou de descobrir. E quando há correção são DOIS reviews de qualquer' \
+              '     forma — a diferença é que aqui não há dois `claim` e uma releitura no meio.' \
+              '' \
+              '   - **defeito de ENTENDIMENTO** (a spec foi lida errado, a abordagem não serve)' \
+              '     → **devolva**: card para `anchors:to-do`, posse para quem implementou, e o' \
+              '     comentário dizendo o que a spec pede que o código não faz, com a linha' \
+              '     `anchors-review: rejected by <você>` — ela põe o status `anchors/review` vermelho.' \
+              '' \
+              '     Aqui corrigir seria pior que moroso: esconderia que o autor entendeu errado,' \
+              '     e o mesmo erro volta no próximo card que ele pegar.' \
+              '' \
+              '> **Quem corrige não aprova o próprio conserto.** Ao corrigir, você vira autor' \
+              '> daquele trecho — por isso o card volta para `ready-to-review` em vez de seguir' \
+              '> para `ready-to-test`. É a mesma regra que já vale para quem implementa.' \
+              '>' \
+              '> **Time de um:** a regra pressupõe uma segunda cabeça, e às vezes ela não existe.' \
+              '> Quando o card volta para o MESMO agente, o claim AVISA e entrega — travar não' \
+              '> produziria o revisor que falta, só pararia o trabalho. O aviso fica no card para' \
+              '> quem ler depois saber que a segunda revisão não foi independente.' \
+              '' \
+              '### Se o card voltou para `ready-to-review` enquanto você revisava' \
+              '' \
+              'O `stale` libera card sem sinal de vida, e revisar é justamente ler e pensar sem' \
+              'tocar no repositório — uma revisão longa (ou uma noite de sono) atravessa o prazo.' \
+              'Não é defeito: o pipeline não distingue "pensando" de "sumiu".' \
+              '' \
+              'Ele devolve o card a `ready-to-review`, e não a `to-do`: o PR está aberto e verde,' \
+              'a implementação terminou — só a revisão não aconteceu.' \
+              '' \
+              'A recuperação depende de UMA pergunta — o card ainda é seu?' \
+              '' \
+              '- **último `anchors-owner:` é você** (ou `(liberado)`) → retome: comente' \
+              '  `anchors-owner: <você>`, mova para `anchors:in-review` e siga de onde parou.' \
+              '- **outro agente pegou** → deixe pra lá. Ele já está com o contexto, e disputar o' \
+              '  card produziria dois revisores no mesmo trabalho. Peça outro com' \
+              '  `gh workflow run anchors-claim.yml -f agent=<você>`.' \
+              '' \
+              '> O GitHub recusa `approve` no próprio PR, e os agentes desta máquina usam a mesma' \
+              '> conta. Se o merge estiver bloqueado por isso, quem for admin usa' \
+              '> `gh pr merge <n> --merge --admin`; quem não for, roda `anchors doctor --fix` para' \
+              '> desligar a exigência (a revisão continua sendo cobrada pelo estado do card).' \
+              > /tmp/instrucao.md
+            # A CONTAGEM entra no topo da instrução: quem pega a sétima revisão precisa
+            # saber disso ANTES de começar a ler, para procurar o desacordo em vez de
+            # opinar do zero.
+            printf '## Revisão %s deste card — o que fazer\n' "$proxima" > /tmp/cabecalho.md
+            tail -n +2 /tmp/instrucao.md >> /tmp/cabecalho.md
+            gh issue comment "$livre" --body-file /tmp/cabecalho.md
+          fi
+
+          if [ -n "$retomado" ]; then
+            echo "card #$livre RETOMADO por $AGENT (já era dele): $de → $para"
+          else
+            echo "card #$livre atribuído a $AGENT: $de → $para"
+          fi

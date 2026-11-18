@@ -1,0 +1,490 @@
+// @anchors
+//   code: INCMA
+//   ref: INWZN
+
+package ops
+
+import (
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/i18n"
+
+	"github.com/charmbracelet/huh"
+	"github.com/co2-lab/anchors/cmd/anchors/governance"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/initx"
+	"github.com/spf13/cobra"
+)
+
+func newInitCmd() *cobra.Command {
+	var root string
+	var naoInterativo, aceitarDefaults bool
+	var f flagsInit
+	cmd := &cobra.Command{
+		Use:   "init",
+		Short: "Configure the project (anchors.yaml) through questions and answers",
+		Long: `Scans the project deterministically (without AI), proposes a
+Structure, and confirms/adjusts it with you through questions — arriving at a correct
+anchors.yaml. The bulk is inferred; the questions cover only the human decisions
+(co-location, layer granularity, and which guides govern which tags).`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Flags().Changed("preset") {
+				return errors.New(i18n.T("init.preset_removed"))
+			}
+			absRoot, err := config.AbsRoot(root)
+			if err != nil {
+				return err
+			}
+			// O modo não-interativo existe para o agente: sem ele, a guarda de TTY
+			// aborta e o fluxo em que o usuário pede a uma IA para iniciar o projeto
+			// (BOOTSTRAP.md §5) trava no comando central.
+			if naoInterativo {
+				return runInitNonInteractive(cmd, absRoot, &f, aceitarDefaults)
+			}
+			return runInit(absRoot)
+		},
+	}
+	cmd.Flags().StringVar(&root, "root", ".", "project root")
+	cmd.Flags().BoolVar(&naoInterativo, "non-interactive", false, "no TUI: with no answers, emit the questions as JSON; with answers in flags, apply them")
+	cmd.Flags().BoolVar(&aceitarDefaults, "defaults", false, "with --non-interactive and no answers: accept the defaults inferred from disk")
+	// --preset was removed: Anchors proposes no structure. Kept hidden so whoever still
+	// passes it learns why, instead of reading "unknown flag".
+	cmd.Flags().StringVar(&f.preset, "preset", "", "removed: init reads the project's own folders as layers")
+	_ = cmd.Flags().MarkHidden("preset")
+	cmd.Flags().BoolVar(&f.header, "header", true, "seed guides/HEADER_GUIDE.md")
+	cmd.Flags().BoolVar(&f.contributing, "contributing", true, "seed CONTRIBUTING.md when the project has none")
+	cmd.Flags().StringSliceVar(&f.artifacts, "artifacts", nil, "anchor kinds of the project (spec,feature,test,…)")
+	cmd.Flags().BoolVar(&f.gates, "gates", true, "seed the default gates (informational)")
+	cmd.Flags().BoolVar(&f.colocation, "colocation", false, "derived files next to the code")
+	cmd.Flags().StringSliceVar(&f.layers, "layers", nil, "code directories to treat as layers")
+	cmd.Flags().StringArrayVar(&f.governs, "governs", nil, "governs rule: GUIDE=tag1,tag2 (repeatable)")
+	cmd.Flags().StringVar(&f.workflow, "workflow", "", "where the work queue lives: local|manual|github (manual: like local, and no command writes an issue on its own)")
+	cmd.Flags().StringVar(&f.repo, "repo", "", "repository owner/name (required in github mode)")
+	cmd.Flags().StringSliceVar(&f.labels, "labels", nil, "labels that mark the Anchors cards (required in github mode)")
+	return cmd
+}
+
+// errNoTTY é a mensagem de quando o `init` interativo não tem terminal. Nomeia a
+// SAÍDA, e não só o problema: existe um modo não-interativo, e quem cai aqui (um agente,
+// um pipe, o CI) tem como prosseguir — sem esta indicação, o comando parece um beco.
+//
+// `contexto` diz o que já aconteceu antes da falha, porque isso muda o que o leitor
+// precisa saber: se o git foi tocado, se algo foi escrito.
+func errNoTTY(contexto string) error {
+	return fmt.Errorf("%s", i18n.T("init.no_tty", contexto))
+}
+
+// runInit orquestra: infere (puro) → pergunta (TUI) → aplica decisões (puro) →
+// salva. A lógica de decisão vive em initx (funções puras, testadas); esta função
+// só faz o I/O e a coleta de respostas.
+func runInit(root string) error {
+	outPath := filepath.Join(root, config.DefaultFile)
+
+	if _, err := os.Stat(outPath); err == nil {
+		var overwrite bool
+		if err := runPrompt(huh.NewConfirm().
+			Title(config.DefaultFile + " already exists. Overwrite?").
+			Value(&overwrite)); err != nil {
+			erroDePrompt = true
+		}
+		if !overwrite {
+			fmt.Println(i18n.T("init.aborted"))
+			return nil
+		}
+	}
+
+	// 0) GIT — antes de escanear. É o substrato: sem versionamento o carimbo de
+	// alteração, a cobertura de diff e o pre-commit ficam desligados, e nenhum deles
+	// falha ruidosamente. Vem primeiro para que tudo que o init escrever daqui em
+	// diante já nasça sob versionamento.
+	if !gitStep(root) {
+		return errNoTTY("Nothing was written, and git was not touched.")
+	}
+
+	fmt.Println(i18n.T("init.scanning"))
+	p, err := initx.Infer(root)
+	if err != nil {
+		return fmt.Errorf("inference: %w", err)
+	}
+	printFindings(p)
+
+	// 0.4) A FASE ANTERIOR — antes de perguntar qualquer coisa, reconhecer se a fase
+	// DESCOBRIR ainda não aconteceu. Sem PROJECT.md e sem código, as perguntas abaixo
+	// saem sem resposta boa; o que muda é só QUEM recebe a instrução (pessoa ou IA).
+	if !discoverStep(root, p) {
+		return errNoTTY("Nothing was written.")
+	}
+
+	cfg := p.Config
+	empty := len(p.CodeDirs) == 0 && !p.HasSpecMD && !p.HasFeature && !p.HasTest
+	if empty {
+		fmt.Println(i18n.T("init.empty_project"))
+	}
+
+	// 0.5) DIALETO — a língua decide como o teste é nomeado e como emite os relatórios
+	// que o ingest lê; a estrutura, não: as camadas candidatas são as pastas do próprio
+	// projeto, e o init não propõe layout nenhum.
+	if hint := initx.CoverageHint(p.Family); hint != "" {
+		fmt.Printf("Test signals (for `anchors ingest` to measure real coverage):\n  %s\n\n", hint)
+	}
+
+	var headerDest, headerRel, headerBody string
+	// 0.6) GUIA DE CABEÇALHO — semeia um HEADER_GUIDE.md no projeto (a régua do bloco
+	// @anchors, instanciada com o dialeto de comentário da stack e as features reais).
+	// É o padrão MANDATÓRIO de cabeçalho; o init o materializa para o projeto seguir.
+	if askConfirmDefault("Seed guides/HEADER_GUIDE.md (the @anchors header standard of the files)?", true) {
+		guideDir := p.GuideDir
+		if guideDir == "" {
+			guideDir = "guides"
+		}
+		// Written only after the guard below: an init that refuses must leave NOTHING —
+		// seeded here, the guide stayed behind every aborted run.
+		headerDest = filepath.Join(root, guideDir, "HEADER_GUIDE.md")
+		headerRel = filepath.Join(guideDir, "HEADER_GUIDE.md")
+		headerBody = initx.RenderHeaderGuide(p.Family, nil)
+	}
+
+	// 0.7) CONTRIBUTING — o guia de quem chega, lido da configuração que este init grava.
+	// Num projeto que já tem o seu, nada é tocado: o trecho que seria acrescentado é
+	// mostrado para quem quiser colá-lo.
+	seedContributing := askConfirmDefault("Seed "+initx.ContributingFile+" (how work flows here, from this configuration), with "+initx.AgentsFile+" and "+initx.ClaudeFile+" pointing to it?", true)
+
+	// 1) ARTEFATOS — SEMPRE perguntado. Pré-marca os detectados; num projeto vazio,
+	// o usuário marca o que PRETENDE usar. As layers de artefato são (re)construídas
+	// a partir da escolha, não da detecção.
+	chosenArtifacts := askMultiSelectPre(
+		"Which anchor kinds does your project use (or will use)?",
+		initx.ArtifactNames(), p.DetectedArtifacts())
+	initx.ApplyArtifactChoice(cfg, chosenArtifacts, map[string]string{
+		"guide": p.GuideDir,
+		"plan":  p.PlanDir,
+	}, p.TestPattern())
+
+	// 1.5) GATES PADRÃO — o ciclo nasce com os gates dos artefatos escolhidos
+	// (spec-completa, tests-green, scenario-coverage, …), todos INFORMATIVOS. É o que
+	// amarra os sinais de teste ao ciclo de vida sem o usuário escrever tudo à mão.
+	// `empty` é o projeto SEM código, spec, feature nem teste — e é ele que decide o
+	// estado de maturação: num projeto novo os gates nascem BLOQUEANTES, porque não há
+	// débito a acomodar e o primeiro desvio é o mais barato de impedir (ver DefaultGates).
+	if gates := initx.SeedFor(cfg, initx.DefaultGates(chosenArtifacts, empty), chosenArtifacts); len(gates) > 0 {
+		names := make([]string, len(gates))
+		for i, g := range gates {
+			names[i] = g.Name
+		}
+		if askConfirmDefault(
+			fmt.Sprintf("Seed %d default gate(s) (informative) for the chosen artifacts? [%s]",
+				len(gates), strings.Join(names, ", ")), true) {
+			cfg.Gates = gates
+			if chosenArtifacts["test"] {
+				fmt.Println(i18n.T("init.test_gates_note"))
+			}
+			fmt.Println(i18n.T("init.gate_scripts_note", initx.GateScriptExample(p.Family)))
+		}
+	}
+
+	// 2) CO-LOCATION — SEMPRE perguntado (texto adaptado a detectado vs. a decidir).
+	title := "How are the derivatives (spec/feature/test) organized?"
+	if p.Colocated {
+		title = "I detected the derivatives next to the code (co-location). Use that convention?"
+	}
+	useColocation := askConfirmDefault(title, p.Colocated)
+	initx.ApplyColocation(cfg, useColocation, chosenArtifacts, p.TestTemplate())
+	// Roots in several languages: a test layer per family, each naming its dialect.
+	p.ApplyDialects(cfg)
+
+	// 3) CAMADAS DE CÓDIGO — sempre perguntado se há dirs detectados; se vazio, avisa.
+	if names := initx.CodeLayerNames(cfg); len(names) > 0 {
+		fmt.Println(i18n.T("init.layers_note"))
+		keep := askMultiSelect("Which code directories to treat as layers?", names)
+		initx.PruneCodeLayers(cfg, keep)
+	} else if empty {
+		fmt.Println(i18n.T("init.no_code_yet"))
+	}
+
+	// 3.5) MODO DE TRABALHO — onde a fila mora. É decisão HUMANA e EXCLUDENTE
+	// (WORKFLOW.md §2): não se infere do remote, e não há fallback de um modo para o
+	// outro. Perguntada aqui, e não no começo, porque só faz sentido depois de o projeto
+	// ter forma — mas ANTES de salvar, porque muda o arquivo.
+	if askConfirmDefault("Will the work queue live in GitHub issues (instead of local)?", false) {
+		repo := askText("Which repository? (owner/name — never inferred from the remote)")
+		if repo != "" {
+			cfg.Workflow = &config.Workflow{
+				Mode:   config.ModeGitHub,
+				Repo:   repo,
+				Labels: []string{"anchors"},
+			}
+			fmt.Println(i18n.T("init.github_mode"))
+		} else {
+			fmt.Println(i18n.T("init.local_mode"))
+		}
+	} else if !askConfirmDefault("Should each `anchors check` write its findings as files in issues/? (no = manual mode: the check only reports)", true) {
+		cfg.Workflow = &config.Workflow{Mode: config.ModeManual}
+	}
+
+	// 4) GOVERNS — só se houver guides (a régua precisa existir para reger).
+	if len(p.GuideFiles) > 0 {
+		answers := askGovernAnswers(p.GuideFiles, initx.Tags(cfg))
+		cfg.Governs = initx.BuildGovernRules(answers)
+	}
+
+	// Nada é escrito se algum prompt não pôde rodar. Ver `erroDePrompt`: sem TTY, cada
+	// pergunta devolve vazio e o resultado é um config que carrega e não governa nada —
+	// escrito com um "✓" na frente. Falhar aqui, ANTES de gravar, é o que impede o
+	// arquivo inútil de existir e ser tomado por configuração válida.
+	// O guide de SPEC é semeado AQUI, não junto do header: naquele ponto as escolhas do
+	// usuário ainda não foram aplicadas ao cfg, e o guide sairia sem o dialeto do projeto
+	// (as letras de `rule_types`, o comprimento de `code_lengths`) — genérico, que é
+	// exatamente o que ele existe para não ser.
+	//
+	// Vai antes da guarda de TTY de propósito? NÃO: depois. Um init abortado não deve
+	// deixar arquivo — e o header guide agora também espera por ela.
+	if erroDePrompt {
+		return errNoTTY("Nothing was written: an `anchors.yaml` generated without the answers " +
+			"would come out with 0 layers and 0 gates, would load without error and would govern nothing.")
+	}
+	// The seeded guides are files of the project like any other: each with its header, under a
+	// code no file holds, and governing the layers it rules.
+	taken := initx.TakenCodes(root, cfg)
+	if headerDest != "" {
+		rel := filepath.ToSlash(headerRel)
+		headerBody = initx.WithGuideHeader(headerBody, rel, "HeaderGuide", taken)
+		initx.SeedGoverns(cfg, rel, initx.HeaderLayerTags(cfg))
+	}
+	specRel := ""
+	if p.GuideDir != "" {
+		specRel = path.Join(p.GuideDir, "SPEC_GUIDE.md")
+		initx.SeedGoverns(cfg, specRel, initx.SpecLayerTags(cfg))
+	}
+	if err := config.Save(cfg, outPath); err != nil {
+		return fmt.Errorf("save: %w", err)
+	}
+	if headerDest != "" {
+		if os.MkdirAll(filepath.Dir(headerDest), 0o755) == nil && os.WriteFile(headerDest, []byte(headerBody), 0o644) == nil {
+			fmt.Printf("Header guide seeded: %s\n", headerRel)
+		}
+	}
+	if p.GuideDir != "" {
+		destSpec := filepath.Join(root, p.GuideDir, "SPEC_GUIDE.md")
+		if os.MkdirAll(filepath.Dir(destSpec), 0o755) == nil &&
+			os.WriteFile(destSpec, []byte(initx.WithGuideHeader(governance.RenderSpecGuide(cfg, ""), specRel, "SpecGuide", taken)), 0o644) == nil {
+			fmt.Printf("Spec guide seeded: %s\n", filepath.Join(p.GuideDir, "SPEC_GUIDE.md"))
+		}
+	}
+	if seedContributing {
+		reportContributing(root, cfg, p.GuideDir)
+	}
+	fmt.Printf("\n✓ %s written (%d layers, %d governs rules)\n", config.DefaultFile, cfg.DeclaredLayers(), len(cfg.Governs))
+	fmt.Println("  review it and run: anchors map build")
+	return nil
+}
+
+// --- casca de prompt: só coleta respostas do usuário (huh) ---
+
+// erroDePrompt registra que algum prompt não conseguiu rodar (tipicamente: sem TTY —
+// pipe, CI, agente executando `anchors init` sem terminal interativo).
+//
+// Existe porque descartar esses erros produzia o pior resultado possível: cada prompt
+// devolvia a resposta vazia, o `init` seguia até o fim e imprimia "✓ anchors.yaml escrito
+// (0 camadas, 0 regras de governs)" — sucesso anunciado, arquivo inútil. E o efeito é em
+// cascata, porque as escolhas alimentam umas às outras: sem os artefatos escolhidos,
+// `ApplyArtifactChoice` não cria camada e `DefaultGates` devolve zero gate. O usuário
+// terminava com um config que carrega, não governa nada, e faz o `anchors check` morrer
+// com "nenhum gate declarado".
+//
+// Medido ao adotar o Anchors no próprio Anchors: o `init` detectou "código em:
+// [cli/internal cli/cmd]" na tela, e escreveu `layers: {}` — descartou a própria detecção.
+var erroDePrompt bool
+
+// errNoPromptTerminal is what runPrompt returns on Windows with no terminal to ask on.
+var errNoPromptTerminal = errors.New("no terminal to ask on")
+
+// errEndOfInput is what runPrompt returns when a prompt in line mode ran out of input.
+var errEndOfInput = errors.New("end of input: the prompt got no answer")
+
+// runPrompt runs one prompt, and turns end-of-input into an error.
+//
+// With TERM=dumb huh switches to line mode: it reads os.Stdin line by line and, when the
+// input ends, returns the field's DEFAULT with no error. So the `erroDePrompt` guard never
+// tripped, and `TERM=dumb anchors init </dev/null` accepted the git offer, then wrote an
+// anchors.yaml with 0 artifacts and 0 gates under a "✓ written". End-of-input is not an
+// answer, and is reported the way a missing TTY is.
+//
+// huh makes a fresh line reader per prompt, so a piped script loses every line after the
+// first prompt too: those prompts also hit end-of-input, and are refused the same way.
+func runPrompt(field huh.Field) error {
+	// The same test huh makes (NewForm) to pick line mode.
+	if os.Getenv("TERM") != "dumb" {
+		// With no terminal, huh fails to open /dev/tty on Unix and the prompt counts as
+		// unanswered. On Windows it opens the console instead and waits there forever —
+		// an `init` with no terminal hung until killed. Refused the same way, up front.
+		if runtime.GOOS == "windows" && !hasTTY() {
+			return errNoPromptTerminal
+		}
+		return field.Run()
+	}
+	in := &eofWatcher{r: os.Stdin}
+	err := huh.NewForm(huh.NewGroup(field)).WithShowHelp(false).WithInput(in).Run()
+	if err == nil && in.eof {
+		return errEndOfInput
+	}
+	return err
+}
+
+// eofWatcher records whether a read reached the end of the input.
+type eofWatcher struct {
+	r   io.Reader
+	eof bool
+}
+
+func (w *eofWatcher) Read(p []byte) (int, error) {
+	n, err := w.r.Read(p)
+	if errors.Is(err, io.EOF) {
+		w.eof = true
+	}
+	return n, err
+}
+
+// askText coleta uma resposta livre. Usado pelo `repo` do modo github, que não tem
+// conjunto de opções para escolher.
+func askText(title string) string {
+	var v string
+	if err := runPrompt(huh.NewInput().Title(title).Value(&v)); err != nil {
+		erroDePrompt = true
+	}
+	return strings.TrimSpace(v)
+}
+
+func askConfirmDefault(title string, def bool) bool {
+	v := def
+	if err := runPrompt(huh.NewConfirm().Title(title).Value(&v)); err != nil {
+		erroDePrompt = true
+	}
+	return v
+}
+
+// askMultiSelectPre pré-marca só os itens presentes em `pre` (os demais entram
+// desmarcados). Usado quando a inferência sugere um subconjunto, não tudo.
+func askMultiSelectPre(title string, items []string, pre map[string]bool) map[string]bool {
+	opts := make([]huh.Option[string], 0, len(items))
+	for _, it := range items {
+		opts = append(opts, huh.NewOption(it, it).Selected(pre[it]))
+	}
+	var picked []string
+	if err := runPrompt(huh.NewMultiSelect[string]().Title(title).Options(opts...).Value(&picked)); err != nil {
+		erroDePrompt = true
+	}
+	set := map[string]bool{}
+	for _, p := range picked {
+		set[p] = true
+	}
+	return set
+}
+
+// askMultiSelect devolve um set dos itens escolhidos (todos pré-selecionados).
+func askMultiSelect(title string, items []string) map[string]bool {
+	opts := make([]huh.Option[string], 0, len(items))
+	for _, it := range items {
+		opts = append(opts, huh.NewOption(it, it).Selected(true))
+	}
+	var picked []string
+	if err := runPrompt(huh.NewMultiSelect[string]().Title(title).Options(opts...).Value(&picked)); err != nil {
+		erroDePrompt = true
+	}
+	set := map[string]bool{}
+	for _, p := range picked {
+		set[p] = true
+	}
+	return set
+}
+
+// askGovernAnswers pergunta, para cada guide, qual tag ele rege. Devolve o mapa
+// guide→tag que BuildGovernRules (puro) transforma em regras.
+func askGovernAnswers(guides, tags []string) map[string]string {
+	options := append(append([]string{}, tags...), initx.NoneTag)
+	answers := map[string]string{}
+	for _, guide := range guides {
+		var tag string
+		if err := runPrompt(huh.NewSelect[string]().
+			Title(fmt.Sprintf("The guide %s governs which tag?", filepath.Base(guide))).
+			Options(huh.NewOptions(options...)...).
+			Value(&tag)); err != nil {
+			erroDePrompt = true
+		}
+		answers[guide] = tag
+	}
+	return answers
+}
+
+func printFindings(p *initx.Proposal) {
+	fmt.Println("\nFound:")
+	if p.HasSpecMD {
+		fmt.Println("  • specs (*.spec.md)")
+	}
+	if p.HasFeature {
+		fmt.Println("  • features (*.feature)")
+	}
+	if p.HasTest {
+		fmt.Printf("  • tests (%s)\n", p.TestPattern())
+	}
+	if p.Family != "" {
+		fmt.Printf("  • language: %s\n", p.Family)
+	}
+	if p.GuideDir != "" {
+		fmt.Printf("  • %d guides in %s/\n", len(p.GuideFiles), p.GuideDir)
+	}
+	if len(p.CodeDirs) > 0 {
+		fmt.Printf("  • code in: %v (extensions: %v)\n", p.CodeDirs, p.CodeExts)
+	}
+	if p.Colocated {
+		fmt.Println("  • co-location: derivatives next to the code")
+	}
+	fmt.Println()
+}
+
+// reportContributing seeds CONTRIBUTING.md when the project has none, and otherwise leaves
+// the project's own untouched and shows the section that would be added.
+func reportContributing(root string, cfg *config.Config, guideDir string) {
+	dest := filepath.Join(root, initx.ContributingFile)
+	if _, err := os.Stat(dest); err == nil {
+		fmt.Printf("%s already exists — left untouched. The section Anchors would add:\n\n%s\n",
+			initx.ContributingFile, initx.ContributingSection(cfg, guideDir))
+	} else if os.WriteFile(dest, []byte(initx.RenderContributing(cfg, guideDir)), 0o644) == nil {
+		fmt.Printf("Contributing guide seeded: %s\n", initx.ContributingFile)
+	}
+	for _, r := range seedAgentFiles(root) {
+		switch {
+		case r.written:
+			fmt.Printf("Agents' entry file seeded: %s\n", r.name)
+		case r.missing:
+			fmt.Printf("%s already exists — left untouched. Add this line so agents read the contributing guide:\n\n  %s\n\n", r.name, initx.AgentsPointer)
+		}
+	}
+}
+
+// agentFileResult is what seeding one agent entry file did.
+type agentFileResult struct {
+	name             string
+	written, missing bool // written: seeded; missing: it exists and does not point to the guide
+}
+
+// seedAgentFiles writes each agent entry file the project lacks; one it has is never touched,
+// and is reported when it does not mention the contributing guide.
+func seedAgentFiles(root string) []agentFileResult {
+	var out []agentFileResult
+	for _, f := range initx.AgentEntryFiles() {
+		dest := filepath.Join(root, f.Name)
+		if b, err := os.ReadFile(dest); err == nil {
+			out = append(out, agentFileResult{name: f.Name, missing: !strings.Contains(string(b), initx.ContributingFile)})
+			continue
+		}
+		out = append(out, agentFileResult{name: f.Name, written: os.WriteFile(dest, []byte(f.Content), 0o644) == nil})
+	}
+	return out
+}

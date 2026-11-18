@@ -1,0 +1,3710 @@
+// @anchors
+//   code: CNCNC
+//   ref: CNFGO
+
+package config
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"github.com/bmatcuk/doublestar/v4"
+	"io/fs"
+	"os"
+	"path"
+	"path/filepath"
+	"regexp"
+	"slices"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/co2-lab/anchors/internal/i18n"
+
+	"gopkg.in/yaml.v3"
+)
+
+// DefaultFile é o nome do arquivo de configuração geral do Anchors na raiz do projeto.
+const DefaultFile = "anchors.yaml"
+
+// Config é a configuração geral do projeto Anchors. A primeira seção é a Estrutura
+// de Projeto (o grafo virtual, STRUCTURE §2.1); gates, providers etc. crescem aqui
+// depois. Ver DECISIONS.md D1.
+type Config struct {
+	// Alterados são os arquivos que de fato MUDARAM nesta execução, quando o check roda
+	// com `--changed`. Não é configuração: não vem do YAML e não vai para ele.
+	//
+	// Existe porque `--changed X` seleciona o RAIO DE IMPACTO de X — todo nó que depende
+	// dele —, e isso é o comportamento certo para quase todo gate: quem quebrou por
+	// tabela tem de ser confrontado. Mas um gate que julga a MUDANÇA precisa separar
+	// "mudou" de "foi afetado por quem mudou", e a perspectiva sozinha não distingue os
+	// dois. Medido: o `plano-alterado-justificado` acusou 8 arquivos quando 1 mudara.
+	Alterados []string `yaml:"-"`
+
+	// Enabled: o INTERRUPTOR do projeto. `enabled: false` congela o Anchors inteiro —
+	// nenhum comando que escreve roda, e os que leem avisam antes de responder.
+	//
+	// É PONTEIRO de propósito. Um `bool` teria zero-value `false`, e todo projeto que
+	// nunca declarou o campo nasceria congelado — o modo de falha mais caro possível para
+	// quem está adotando. Nil (ausente) significa HABILITADO; só o `false` EXPLÍCITO
+	// congela.
+	//
+	// Existe porque o freio da plataforma (o ruleset que barra push e merge) não alcança
+	// a máquina de quem já clonou: ali o `check`, o `judge` e o `ingest` continuariam
+	// rodando e gravando no mapa. Congelar significa parar de PRODUZIR estado, não só de
+	// entregá-lo.
+	//
+	// Quem precisa mexer no repositório durante o congelamento continua podendo — por
+	// fora do Anchors, deliberadamente e com esforço. É a diferença entre "impossível" e
+	// "não acontece por inércia", e a segunda é a que se quer: um freio que ninguém pode
+	// contornar impede o próprio conserto.
+	Enabled *bool `yaml:"enabled,omitempty"`
+
+	// Lang: o idioma das mensagens que uma PESSOA lê.
+	//
+	// O produto é multi-idioma, e a lista de suportados é FECHADA (ver `internal/i18n`).
+	// Vazio cai no padrão — um projeto que não declarou nada é o caso comum, e recusar ali
+	// impediria adotar o Anchors sem antes escolher idioma.
+	//
+	// O que NÃO se traduz é o VOCABULÁRIO: nomes de gate, labels de board, flags. Eles são
+	// identificadores, e traduzi-los faria o `anchors.yaml` de um projeto deixar de
+	// funcionar num time de outro idioma — além de quebrar todo tutorial e toda resposta
+	// de fórum que os cite. Traduz-se o que se LÊ, não o que se ESCREVE na configuração.
+	Lang string `yaml:"lang,omitempty"`
+
+	// Telemetry desliga a telemetria PARA O PROJETO: `telemetry: off`.
+	//
+	// Vale para todos que trabalham nele, e é a declaração certa quando a decisão é do
+	// time — diferente da variável de ambiente, que é de uma máquina, e do
+	// `anchors telemetry off`, que é de quem roda.
+	//
+	// O AMBIENTE VENCE ESTE CAMPO, e não é arbitrário: quem roda num CI precisa desligar
+	// sem commitar, e commitar para desligar telemetria faria a decisão de uma pessoa
+	// virar mudança no repositório do time.
+	//
+	// Não há campo para o ENDEREÇO nem para a CREDENCIAL. O endereço é do produto; a
+	// credencial é do ambiente — uma chave neste arquivo iria para o repositório de quem
+	// usa, e o gate `secret-nao-vazado` a acusaria, com razão.
+	Telemetry string `yaml:"telemetry,omitempty"`
+
+	// FreezeReason: por que o projeto está congelado. Só faz sentido com `enabled: false`.
+	//
+	// Sem o motivo, o congelamento é indistinguível de configuração quebrada — e quem
+	// esbarra nele tenta contornar em vez de ler. O texto vai para a mensagem de TODO
+	// comando recusado.
+	FreezeReason string `yaml:"freeze_reason,omitempty"`
+
+	// MinVersion: a versão MÍNIMA do binário que este projeto aceita.
+	//
+	// Existe para o momento em que uma correção do Anchors precisa alcançar todo mundo
+	// antes que o trabalho continue — um formato de mapa que mudou, um gate que passou a
+	// pegar algo que passava batido, um defeito que produz dado errado em silêncio.
+	//
+	// É DECLARADO, e essa é a diferença que o torna útil. A conferência anterior comparava
+	// o binário com o `gerado_por` do mapa, e aquele campo é DERIVADO: o próximo
+	// `map build` de qualquer agente o reescreve com a versão dele, apagando a exigência
+	// sem que ninguém decida nada. Medido: o campo voltou a "dev" num projeto onde a
+	// release corrente era a v0.1.83.
+	//
+	// Aqui quem escreve é uma pessoa, no arquivo que o time versiona — e desfazer exige
+	// um commit que aparece no diff.
+	//
+	// O formato é o da release, sem o "v": `min_version: 0.1.84`.
+	MinVersion string `yaml:"min_version,omitempty"`
+
+	Version  int                 `yaml:"version"`
+	Comments map[string][]string `yaml:"comments,omitempty"` // override/extensão dos marcadores (D4)
+	Layers   map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
+	// Aliases are the short names a path of this file may open with (see Aliases).
+	Aliases Aliases `yaml:"aliases,omitempty"`
+	// Guidance turns the canonical guidance layer off with `guidance: false`; absent or true,
+	// every project has it (GuidanceLayer).
+	Guidance *bool `yaml:"guidance,omitempty"`
+	// Progress configures the progress file, anchors.progress.md.
+	Progress *ProgressConfig `yaml:"progress,omitempty"`
+	// rev is the revision of the file the configuration was loaded from (Rev).
+	rev     string
+	Derived *Derived `yaml:"derived,omitempty"` // co-location dos derivados
+	Docs    *Docs    `yaml:"docs,omitempty"`    // as documentações que o projeto DEVE ter
+	// Changelog says how `anchors changelog --write` writes the changelog: one file the
+	// new releases are added to the top of (`incremental`, the default), or one file per
+	// release (`per_version`), and the template that renders a release.
+	Changelog *Changelog `yaml:"changelog,omitempty"`
+	// PushReview asks each push to carry a review of its commits and the answers of the
+	// judgment gates they reach (see PushReview).
+	PushReview *PushReview `yaml:"push_review,omitempty"`
+	// ContainersDecl é o que roda SEPARADO — o nível 2 do C4. A Estrutura diz o que cada
+	// peça é; isto diz onde ela roda. Ver containers.go.
+	ContainersDecl []Container  `yaml:"containers,omitempty"`
+	Governs        []GovernRule `yaml:"governs,omitempty"` // dimensão vertical (arestas de alto grau)
+	Gates          []Gate       `yaml:"gates,omitempty"`   // os gates de qualidade (QUALITY §3-§5)
+	Recode         *Recode      `yaml:"recode,omitempty"`  // convenções de projeto p/ `anchors recode`
+	// Tests e Mutation declaram COMO este projeto produz sinal de teste: o comando é
+	// do projeto, a amarração ao mapa é do Anchors. Ver Suite.
+	// Severity is the project's default `severity` for its BLOCKING gates: each level a
+	// gate entry does not declare takes it from here. Unset, a blocking gate blocks its
+	// failures and informs the rest; an informative gate informs all three either way.
+	Severity *Severity `yaml:"severity,omitempty"`
+	// CoverageDirectives are the patterns (regular expressions) of the comments that steer a
+	// coverage tool — what it ignores or counts. A coverage measured on one content is moved to
+	// another that differs only in comments, line by line, unless such a comment changed.
+	// Unset, the directives of the common tools (DefaultCoverageDirectives); set, they replace
+	// them.
+	CoverageDirectives []string `yaml:"coverage_directives,omitempty"`
+	Tests              []Suite  `yaml:"tests,omitempty"`
+	Mutation           []Suite  `yaml:"mutation,omitempty"`
+	// ExternalSystems are the real systems the code talks to, and the suite layers that reach
+	// them: a code file that calls one is proven by a test that ran in such a suite.
+	ExternalSystems []ExternalSystem `yaml:"external_systems,omitempty"`
+	// TestBypass is how the code skips an effect while a test runs, and the suites whose
+	// proofs run the path it skips.
+	TestBypass *TestBypass `yaml:"test_bypass,omitempty"`
+	// RequiredStates are the states every spec of a layer registers — a screen's loading, error
+	// and empty —, by the spec's declared layer (`layer:` in its header). The names are the
+	// project's; Anchors proposes none (gate `states-required`).
+	RequiredStates map[string][]string `yaml:"required_states,omitempty"`
+	// Logs diz ONDE estão os logs — e só isso, porque só isso é preciso.
+	//
+	// O FORMATO não entra aqui, e a razão é o que torna a varredura possível sem ditar
+	// nada: se o tratamento registra o CÓDIGO da falha, ele é a mesma sequência de
+	// caracteres em JSON, em texto puro ou em syslog. O Anchors procura o código, não o
+	// formato.
+	//
+	// A exigência recai sobre quem loga, não sobre como loga: o gate `failure-logged` já
+	// cobra que o tratamento registre; o que este eixo acrescenta é que ele registre COM
+	// IDENTIDADE.
+	Logs *LogsConfig `yaml:"logs,omitempty"`
+	// RuleTypes declara o VOCABULÁRIO de tipos de regra do projeto: cada letra do
+	// código (`{CODE}-<letra><NN>`) é a inicial do TERMO que nomeia a seção da spec.
+	// Vazio → o engine usa as letras canônicas (ver DefaultRuleLetters).
+	RuleTypes []RuleType `yaml:"rule_types,omitempty"`
+	// CodeLengths: os comprimentos de código de identidade que ESTE projeto usa
+	// (`code_lengths: [4]`, `[5]`, ou `[4, 5]` durante uma migração). Vazio → o default
+	// do engine, que aceita 4 e 5. Ver CodeLengths para o porquê de ser do projeto.
+	CodeLengths []int `yaml:"code_lengths,omitempty"`
+	// SectionTitles: o léxico do projeto para as seções de spec, por chave do catálogo
+	// (`contract: "Modelo de Dado"`). Sem isto, o `anchors new` emite os títulos do
+	// framework e as specs nascem em dialeto diferente do dos vizinhos.
+	SectionTitles SectionTitles `yaml:"section_titles,omitempty"`
+	// FrozenPaths freeze whole folders: each a freeze — its code, or the reason itself in a
+	// project with no doctrine — and the globs it covers. The map marks every file a glob
+	// matches as frozen, as its own header's mark would.
+	FrozenPaths []FrozenPath `yaml:"frozen_paths,omitempty"`
+	// PlaceholderMarkers: the words that mark a value nobody filled in yet (`layer: TODO`),
+	// for the `placeholder-filled` gate. Empty → DefaultPlaceholderMarkers, the word the
+	// `anchors new` templates write. A project whose own generator leaves another word
+	// (`PENDENTE`) declares it here, or the gate does not see its skeletons.
+	PlaceholderMarkers []string `yaml:"placeholder_markers,omitempty"`
+	// RouteRegistry: onde o projeto REGISTRA suas rotas de navegação (globs). O Anchors
+	// não pode adivinhar — cada stack tem o seu lugar e a sua sintaxe. Sem isto, o gate
+	// `route-exists` fica Pendente em vez de afirmar que uma rota existe sem ter olhado.
+	RouteRegistryGlobs []string `yaml:"route_registry,omitempty" path:"glob"`
+	// DataStates: whether the data states a spec defines (`DS-<field>-<variant>` in the
+	// first cell of a table row) are requirements of their unit like its rules — each
+	// asking for its scenario, its passing test and its citation in the code. Off by
+	// default: a project whose data-state tables only document turns it on when it means
+	// them as requirements.
+	DataStates *DataStates `yaml:"data_states,omitempty"`
+	// Navigation is the app's navigation as the project declares it: the initial routes,
+	// from which every screen is reachable.
+	Navigation *Navigation `yaml:"navigation,omitempty"`
+	// DependencyKinds are the kinds of what the code reaches that is no import — `db`, `api`,
+	// `queue` —, flagged where it is called (`@dep[db]: transactions`). A kind not declared here
+	// is a finding of dep-honored.
+	DependencyKinds []string `yaml:"dependency_kinds,omitempty"`
+	// Monitor is how `anchors monitor` watches the project's long processes: its timing, the
+	// runners it recognizes beyond the built-in ones, the reports it reads and how many ended
+	// runs it keeps.
+	Monitor *Monitor `yaml:"monitor,omitempty"`
+	// Evidence says what has no side effect on the tests — the flags and the spec sections a
+	// change to which stales no proof.
+	Evidence *Evidence `yaml:"evidence,omitempty"`
+	// Obligations são as OBRIGAÇÕES TRANSVERSAIS do projeto: "todo nó que carrega o
+	// atributo P deve aparecer em Q". Ver Obligation.
+	Obligations []Obligation `yaml:"obligations,omitempty"`
+	// Dialect é o LÉXICO da linguagem do projeto — o que permite a um gate agnóstico
+	// reconhecer uma função/consulta no código concreto. Ver dialect.go.
+	Dialect *Dialect `yaml:"dialect,omitempty"`
+	// Dialects are the lexicons of a project that speaks more than one language, each declared
+	// once by name; each layer names its own (`Layer.Dialect`), and `dialect:` beside it holds
+	// only what is about no language (dialect_layers.go).
+	Dialects map[string]*Dialect `yaml:"dialects,omitempty"`
+	// BranchFlow is the project's branch flow: which branch merges into which, and which
+	// branches take no commit of their own. See branch_flow.go.
+	BranchFlow *BranchFlow `yaml:"branch_flow,omitempty"`
+	// Pipeline is what the pipeline's stages ask before they run. See pipeline.go.
+	Pipeline *Pipeline `yaml:"pipeline,omitempty"`
+	// Boundaries são as FRONTEIRAS entre camadas: o que cada uma não pode alcançar.
+	// Declarar `layers:` sem isto é desenhar a arquitetura sem defendê-la. Ver Boundary.
+	Boundaries []Boundary `yaml:"boundaries,omitempty"`
+	// Packs são conjuntos de obrigações DISTRIBUÍVEIS (LGPD, GDPR, PCI-DSS, WCAG…) que o
+	// projeto adota em vez de reescrever. Ver internal/pack.
+	//
+	// Sem eles, cada projeto declarava os mesmos deveres do zero, com vocabulário próprio
+	// — e não havia como responder "quais deveres se aplicam a mim". Um pack traz o dever
+	// e a norma que o origina; o PROJETO traz onde isso vive nele (`pack_values`).
+	Packs []string `yaml:"packs,omitempty" path:"read"`
+	// PackValues resolve os placeholders que os packs usam: `{{purge_handler}}` vira o
+	// caminho real deste projeto. É a divisão que impede o pack de adivinhar a estrutura
+	// alheia — o dever é universal, o endereço é local.
+	PackValues map[string]string `yaml:"pack_values,omitempty" path:"glob"`
+	// EnableAutoJudgment permite que a IA DECIDA sozinha as sugestões de julgamento, em vez de
+	// deixá-las aguardando aprovação humana.
+	//
+	// Desligado por default, e o default é a decisão importante: aprovar automaticamente
+	// significa que uma correção entra no projeto sem ninguém ter olhado. Isso é
+	// aceitável em algumas casas (repositório pessoal, projeto experimental) e
+	// inaceitável na maioria — e o silêncio tem de cair no lado seguro.
+	//
+	// Quando ligado, a decisão fica MARCADA como automática no arquivo da sugestão
+	// (`por: IA (auto_judgment)`). Apagar essa distinção faria "ninguém olhou isto"
+	// parecer "alguém aprovou", que é a informação mais cara de perder numa auditoria.
+	EnableAutoJudgment bool `yaml:"enable_auto_judgment,omitempty"`
+
+	// Jurisdictions são os mercados onde a aplicação opera (`br`, `eu`, `us-ca`). Filtram
+	// quais packs valem: um pack de jurisdição não declarada não é carregado, e o aviso
+	// aparece — declarar GDPR num app que só opera no Brasil costuma ser engano, e o
+	// silêncio esconderia isso.
+	Jurisdictions []string `yaml:"jurisdictions,omitempty"`
+
+	// Workflow — ONDE a fila de trabalho mora. Ver o tipo.
+	Workflow *Workflow `yaml:"workflow,omitempty"`
+
+	// Touch configures `anchors touch`, the command that bumps `updated_at` on changed
+	// files. See the type.
+	Touch *Touch `yaml:"touch,omitempty"`
+}
+
+// Touch is the project's side of `anchors touch`.
+//
+//	touch:
+//	  pre_commit: false     # default true: the pre-commit bumps the staged files first
+//	  exclude: [anchors.graph.yaml, "**/*.generated.*"]
+//
+// Exclude lists globs (doublestar, from the project root) that the command never bumps —
+// generated or vendored files, whose header nobody maintains by hand. They add to the
+// command's `--exclude` flags.
+type Touch struct {
+	Exclude []string `yaml:"exclude,omitempty" path:"glob"`
+	// PreCommit: the pre-commit phase (`anchors verify --phase pre-commit --staged`, what
+	// the installed hook calls) bumps the staged files BEFORE the gates run. On unless
+	// declared false. The date is a mechanical fact — the file changed today — and the
+	// `updated-at-current` gate would block the commit over exactly that; bumping it there
+	// turns the block into the fix. `false` is for projects that do not accept a hook
+	// rewriting files.
+	PreCommit *bool `yaml:"pre_commit,omitempty"`
+}
+
+// Workflow declara o modo de gestão do trabalho, e é EXCLUDENTE de propósito.
+//
+//	workflow:
+//	  mode: local     # a fila é .anchors/tasks/ (o watcher enfileira, `anchors next` puxa)
+//	  mode: manual    # como o local, mas nenhum comando grava issue sozinho em `issues/`
+//	  mode: github    # a fila são as issues/cards do repositório
+//
+// Um modo OU outro, nunca um com o outro de reserva. A alternativa — tentar o GitHub e
+// cair no local quando falha — parece robustez e é a pior escolha possível: passa a
+// existir a pergunta "de qual fila veio esta task?", que ninguém consegue responder depois
+// do fato, e dois agentes podem trabalhar no mesmo item achando que reivindicaram.
+//
+// É a mesma armadilha de um util de login que "às vezes loga, às vezes herda a sessão":
+// enquanto o comportamento é condicional e implícito, o sintoma aparece longe da causa.
+// Declarar o modo faz o próprio config responder, e faz as validações serem simples: no
+// modo github, `.anchors/tasks/` não deve existir; no modo local, nenhum comando toca a
+// rede.
+type Workflow struct {
+	// Mode: "local" | "manual" | "github". Vazio = local (o comportamento que sempre
+	// existiu, para não quebrar projeto que nunca declarou nada).
+	//
+	// MANUAL is the local mode without automatic issues. In local mode every `anchors check`
+	// writes a file in `issues/` per blocking failure, open decision and assumed debt, and
+	// `anchors judge --verdict fail` writes one per finding; a project that works from the
+	// check's output ends up with a second copy of the same list to walk through. In manual
+	// mode the check reports and stamps the map, and nothing lands in `issues/` unless the
+	// command is run with `--record-issues`.
+	Mode string `yaml:"mode"`
+
+	// Repo no formato "owner/nome". Só no modo github, e OBRIGATÓRIO nele: inferir do
+	// remote do git faria o Anchors escrever em outro repositório quando alguém trabalha
+	// num fork, e escrita em lugar errado é o erro que não se desfaz com um revert.
+	Repo string `yaml:"repo,omitempty"`
+
+	// Labels que marcam uma issue como trabalho DO ANCHORS. Sem isto, `anchors next`
+	// puxaria qualquer issue do repositório — inclusive as de produto, que não têm a
+	// forma que o ciclo espera. Vazio no modo github é erro de configuração, não default.
+	Labels []string `yaml:"labels,omitempty"`
+
+	// IntegrationBranch é ONDE O TRABALHO CHEGA: o branch cujo PR aciona o ciclo. O
+	// pipeline de identificação dispara na abertura de um PR que o tenha como base, e é
+	// nele que a revisão acontece.
+	//
+	// Configurável porque o fluxo de branch é do projeto. Num arranjo comum, o trabalho é
+	// feito e integrado em `develop`, promovido para `staging` quando termina, e chega a
+	// `main` só ao ir para produção. Nesse caso o branch de integração é `develop` — e
+	// cravar `main` faria o card nascer no fim, para trabalho que já terminou.
+	//
+	// Vazio resolve para `main`, o default do GitHub em repositório novo.
+	IntegrationBranch string `yaml:"integration_branch,omitempty"`
+
+	// ProtectedBranches são os branches em que nada entra sem PR.
+	//
+	// É uma lista SEPARADA do branch de integração porque os papéis diferem: no de
+	// integração o PR existe para o card ter objeto e a revisão acontecer; nos de
+	// promoção (`staging`, `main`) ele existe para que nada chegue à produção sem passar
+	// por uma porta. As duas coisas exigem PR, e só a primeira cria card.
+	//
+	// Vazio resolve para o branch de integração mais `main` — o mínimo que faz sentido.
+	ProtectedBranches []string `yaml:"protected_branches,omitempty"`
+	// RequiredApprovals: quantas aprovações o PR precisa para poder ser mesclado.
+	//
+	// O padrão é 1, e não 0: o fluxo do modo `github` pressupõe que OUTRO agente revise —
+	// "o agente que implementa não fecha o próprio trabalho" (BOOTSTRAP §7.9). Com zero,
+	// o merge acontece sem revisão e a etapa vira decoração.
+	//
+	// Declarável porque há projetos onde isso não cabe: um repositório de exemplo, ou um
+	// time que revisa fora do GitHub. Quem declara `0` está dizendo que sabe.
+	RequiredApprovals *int `yaml:"required_approvals,omitempty"`
+	// StalePipelineBlocks: um pipeline desatualizado BARRA o CI, em vez de só avisar.
+	//
+	// O padrão é `false`, e a razão é que barrar troca um problema por outro: o pipeline
+	// velho ainda faz o trabalho antigo, e derrubá-lo passa de "faz menos do que devia"
+	// para "não faz nada". Num time que descobre o aviso e age, avisar basta.
+	//
+	// Mas há projetos onde o aviso não é lido — CI com muitos jobs, equipe que não olha o
+	// resumo do run — e ali o silêncio é pior que a interrupção. Quem declara `true` está
+	// dizendo que prefere o CI vermelho a um pipeline que finge funcionar.
+	StalePipelineBlocks bool `yaml:"stale_pipeline_blocks,omitempty"`
+	// ManualIngestBlocks: `anchors ingest` chamado À MÃO é RECUSADO, em vez de só avisar.
+	//
+	// O `anchors test` roda a suíte e ingere numa operação só — é isso que garante que o
+	// sinal no mapa corresponde à última execução. Quem chama `ingest` direto quebra essa
+	// garantia sem perceber: dá para rodar a suíte, editar código, ingerir o relatório
+	// velho, e o mapa afirmar uma cobertura que já não vale.
+	//
+	// Medido: o `line-coverage` aprovava 1 nó quando havia 2 cobertos. O gate estava
+	// certo — ele reporta o que o mapa sabe —, e o sinal é que estava velho. Um gate
+	// verde sobre sinal velho afirma o que não mediu.
+	//
+	// O padrão AVISA porque há usos legítimos: um CI que já rodou a suíte noutro job, uma
+	// ferramenta que o `tests:` não cobre. Barrar todos por causa do caso comum tiraria a
+	// saída de quem tem razão. Quem declara `true` decidiu que, no projeto dele, ingestão
+	// fora do `anchors test` é sempre engano.
+	ManualIngestBlocks bool `yaml:"manual_ingest_blocks,omitempty"`
+}
+
+// IntegrationBranchOrDefault devolve onde o trabalho chega, com o default aplicado.
+//
+// Existe como método, e não como leitura direta do campo, para que o default viva num
+// lugar só: espalhá-lo pelos chamadores faria cada um decidir o seu, e um deles
+// discordaria.
+func (w *Workflow) IntegrationBranchOrDefault() string {
+	if w == nil || w.IntegrationBranch == "" {
+		return "main"
+	}
+	return w.IntegrationBranch
+}
+
+// RequiredApprovalsOrDefault devolve quantas aprovações o PR precisa, com o default (1) aplicado.
+//
+// Ponteiro no campo para distinguir "não declarou" (vale 1) de "declarou zero"
+// (deliberado). Com int simples, o zero-value seria indistinguível da ausência — e o
+// padrão nunca valeria.
+func (w *Workflow) RequiredApprovalsOrDefault() int {
+	if w == nil || w.RequiredApprovals == nil {
+		return 1
+	}
+	return *w.RequiredApprovals
+}
+
+// PipelineVelhoBarra diz se um pipeline desatualizado deve derrubar o CI.
+//
+// Bool simples, e não ponteiro como `RequiredApprovais`: aqui o zero-value É o padrão
+// desejado (avisar), então não há o que distinguir entre "não declarou" e "declarou
+// false" — as duas querem a mesma coisa.
+func (w *Workflow) PipelineVelhoBarra() bool {
+	return w != nil && w.StalePipelineBlocks
+}
+
+// IngestManualBarra diz se `anchors ingest` fora do `anchors test` deve ser recusado.
+func (w *Workflow) IngestManualBarra() bool {
+	return w != nil && w.ManualIngestBlocks
+}
+
+// ProtectedBranchesOrDefault devolve onde nada entra sem PR, com o default aplicado.
+func (w *Workflow) ProtectedBranchesOrDefault() []string {
+	if w == nil {
+		return []string{"main"}
+	}
+	if len(w.ProtectedBranches) > 0 {
+		return w.ProtectedBranches
+	}
+	base := w.IntegrationBranchOrDefault()
+	if base == "main" {
+		return []string{"main"}
+	}
+	// O branch de integração recebe o trabalho; a `main` recebe a produção. Os dois
+	// precisam de porta, e um projeto que declarou `develop` sem dizer mais nada
+	// certamente não quer push direto na main.
+	return []string{base, "main"}
+}
+
+// ModoGitHub diz se o projeto declarou a gestão no GitHub.
+// Frozen diz se o projeto está com o Anchors desligado (`enabled: false`).
+//
+// Nil-safe: uma config que não carregou não congela nada. O comando que a recebeu vazia
+// tem outro problema, e responder "congelado" ali mandaria quem investiga para o lado
+// errado.
+func (c *Config) Frozen() bool {
+	return c != nil && c.Enabled != nil && !*c.Enabled
+}
+
+// FreezeReasonText devolve o texto a mostrar quando um comando é recusado.
+//
+// O motivo é OBRIGATÓRIO na prática, e a mensagem o cobra quando falta: um congelamento
+// sem razão escrita é indistinguível de configuração quebrada, e quem esbarra nele tenta
+// contornar em vez de ler.
+func (c *Config) FreezeReasonText() string {
+	if !c.Frozen() {
+		return ""
+	}
+	if r := strings.TrimSpace(c.FreezeReason); r != "" {
+		return r
+	}
+	return i18n.T("freeze.no_reason")
+}
+
+func (c *Config) GitHubMode() bool {
+	return c != nil && c.Workflow != nil && c.Workflow.Mode == ModeGitHub
+}
+
+// ManualMode is the local mode in which no command writes an issue on its own (see Mode).
+func (c *Config) ManualMode() bool {
+	return c != nil && c.Workflow != nil && c.Workflow.Mode == ModeManual
+}
+
+const (
+	ModeLocal  = "local"
+	ModeManual = "manual"
+	ModeGitHub = "github"
+)
+
+// Boundary — uma fronteira de camada: "arquivos DESTA camada não podem conter ISTO".
+//
+// É o mecanismo por trás de toda regra arquitetural de import ("tela não fala com
+// repositório", "model não importa service") e também das proibições de padrão ("sem cor
+// literal", "sem relógio cru"). São a mesma forma, e por isso um só mecanismo: o projeto
+// declara O QUE não pode, o engine confronta ONDE.
+//
+// O engine não sabe o que é uma "tela" nem o que é um "repositório" — quem sabe é o
+// projeto, que já declarou suas camadas em `layers:`. Aqui ele só diz o que cada uma
+// não alcança.
+type Boundary struct {
+	// Layer é a camada a quem a regra se aplica (o nome em `layers:`). VAZIO = vale para
+	// todo código — é assim que se declara uma proibição global.
+	Layer string `yaml:"layer,omitempty"`
+	// Forbid é o padrão (regex) que não pode aparecer. Quem o escreve é o projeto: é aqui
+	// que mora o dialeto de import da linguagem, que o engine não tem por que conhecer.
+	Forbid string `yaml:"forbid"`
+	// Because é o PORQUÊ da regra — vai na mensagem do gate. Uma proibição sem motivo
+	// vira ritual: quem esbarra nela não sabe se está corrigindo um erro ou contornando
+	// uma regra arbitrária.
+	Because string `yaml:"because,omitempty"`
+	// Severity: "error" (default, reprova) ou "warn" (registra sem reprovar). É a
+	// maturação (QUALITY §7) POR REGRA — permite travar a fronteira nova sem desligar o
+	// gate por causa do backlog da fronteira antiga.
+	Severity string `yaml:"severity,omitempty"`
+	// InComments makes the pattern match inside comments too. By default it matches the code
+	// alone, with the comments the file's language declares blanked: a color in a JSDoc, an
+	// issue number `#712` in a remark, read as the hex color the rule forbids (measured on
+	// a project). A rule whose target is a comment — `@ts-ignore`, `eslint-disable` — says so here.
+	InComments bool `yaml:"in_comments,omitempty"`
+}
+
+// Obligation — uma obrigação TRANSVERSAL: o dever que um artefato contrai com um lugar
+// que ele NÃO conhece. É a classe de erro que nenhuma spec-por-unidade cobre, porque a
+// obrigação mora FORA da unidade: a spec de um modelo de dado não tem por que falar do
+// script de exclusão de conta, e quem escreveu o script não sabe que nasceu um modelo.
+//
+// Instâncias em qualquer projeto:
+//   - LGPD/GDPR: modelo que carrega dado pessoal → precisa estar no purge e no export
+//   - i18n:      string exibida ao usuário       → precisa estar no arquivo de traduções
+//   - a11y:      componente interativo           → precisa de rótulo acessível
+//   - auditoria: operação financeira             → precisa emitir trilha
+//
+// O ANCHORS não sabe o que é LGPD. Sabe que existem obrigações, e oferece como
+// declará-las e cobrá-las. QUAIS obrigações, e o vocabulário de atributos, é do PROJETO.
+//
+// Por que o gatilho é um ATRIBUTO e não uma camada: deduzir por camada produz
+// falso-positivo em massa. Medido num projeto real: 38 de 50 modelos não estavam no
+// script de purge, e a MAIORIA legitimamente (dado compartilhado, dado com TTL,
+// métrica agregada). Um gate que erra 76% das vezes é desligado no primeiro dia.
+type Obligation struct {
+	Name string `yaml:"name"` // identificador da obrigação (ex.: "pii-purgavel")
+	// When: o ATRIBUTO que dispara a obrigação, como aparece no header `@anchors` do
+	// nó (ex.: "carries: pii"). Vocabulário do projeto.
+	When string `yaml:"when"`
+	// MustAppearIn: os arquivos onde o nó DEVE aparecer (globs). É o dever.
+	MustAppearIn []string `yaml:"must_appear_in" path:"glob"`
+	// IdentifiedBy: como o nome do nó aparece no destino. O nome do artefato e a forma
+	// como ele é referenciado raramente coincidem (`MetadataEntry` vira
+	// `METADATA_ENTRIES_TABLE_NAME`). Valores: "as-is" (default), "screaming-snake",
+	// "snake", "kebab", ou um template com {{NAME}} (ex.: "{{NAME}}_TABLE_NAME").
+	IdentifiedBy string `yaml:"identified_by,omitempty"`
+	// IdentifiedAsForm SOBREPÕE o `identified_as` declarado no NÓ, para esta obrigação.
+	// Existe porque deveres diferentes procuram FORMAS diferentes do mesmo artefato: o
+	// dever de LGPD procura a env var (`METADATA_ENTRY_TABLE_NAME`) nos handlers; o de
+	// provisionamento procura o nome do modelo (`tables['MetadataEntry']`) na infra.
+	// Sem isso, um dos dois passa a procurar o token errado e acusa quem está correto.
+	IdentifiedAsForm string `yaml:"identified_as_form,omitempty"`
+	// Because: POR QUE a obrigação existe. Não é decorativo — entra na mensagem do
+	// gate. "Falta em Q" é ignorado; "LGPD: dado pessoal precisa ser apagável" é
+	// obedecido.
+	Because string `yaml:"because,omitempty"`
+}
+
+// SectionTitles renomeia as seções do catálogo para o LÉXICO do projeto, por chave
+// estável (`contract`, `domain`, `rules`…). A chave é do framework; o título é do
+// projeto.
+//
+// Existe porque o catálogo emitia títulos fixos ("Contrato", "Domínio", "Efeitos") e um
+// projeto real usava outros ("Modelo de Dado", "Comportamentos", "Notas de
+// Implementação"). Medido: das seções que o preset `schema` emitia, NENHUMA das três
+// centrais coincidia com as 50 specs vizinhas do mesmo projeto. O `anchors new` e os
+// vizinhos ensinavam formatos diferentes, e dois agentes escreveram specs em dialetos
+// opostos — cada um obedecendo a uma fonte, os dois passando nos gates.
+//
+// Título de seção é CONTEÚDO, não mecanismo: o Anchors não tem por que impô-lo, do mesmo
+// jeito que não impõe idioma nem nomes de vendor (ver `dialect`).
+type SectionTitles map[string]string
+
+// SectionTitle devolve o título que o projeto usa para uma chave do catálogo, ou o
+// padrão do framework quando ninguém renomeia.
+//
+// A precedência é CAMADA > projeto > framework, e a camada existe porque o dialeto quase
+// nunca é global. Medido num projeto real: "Modelo de Dado" e "Comportamentos" aparecem
+// em 50 specs de uma única camada e em 1 de todas as outras 588 — renomear no nível do
+// projeto teria trocado o título de 588 specs que estavam certas para consertar 50.
+func (c *Config) SectionTitle(chave, padrao, camada string) string {
+	if c == nil {
+		return padrao
+	}
+	if camada != "" {
+		if l, ok := c.Layers[camada]; ok {
+			if t := strings.TrimSpace(l.SectionTitles[chave]); t != "" {
+				return t
+			}
+		}
+	}
+	if t := strings.TrimSpace(c.SectionTitles[chave]); t != "" {
+		return t
+	}
+	return padrao
+}
+
+// SectionTitlesFor are every title the project gives a catalog section key — its own and
+// each layer's `section_titles` —, for a reader that cannot know which layer a spec is in.
+func (c *Config) SectionTitlesFor(chave string) []string {
+	if c == nil {
+		return nil
+	}
+	seen := map[string]bool{}
+	var out []string
+	add := func(t string) {
+		if t = strings.TrimSpace(t); t != "" && !seen[t] {
+			seen[t] = true
+			out = append(out, t)
+		}
+	}
+	add(c.SectionTitles[chave])
+	names := make([]string, 0, len(c.Layers))
+	for n := range c.Layers {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	for _, n := range names {
+		add(c.Layers[n].SectionTitles[chave])
+	}
+	return out
+}
+
+// DefaultPlaceholderMarkers is the vocabulary of the `anchors new` templates: the only
+// word they leave where a value belongs.
+var DefaultPlaceholderMarkers = []string{"TODO"}
+
+// Placeholders returns the project's placeholder vocabulary, or the templates' default.
+func (c *Config) Placeholders() []string {
+	if c != nil {
+		var out []string
+		for _, m := range c.PlaceholderMarkers {
+			if m = strings.TrimSpace(m); m != "" {
+				out = append(out, m)
+			}
+		}
+		if len(out) > 0 {
+			return out
+		}
+	}
+	return DefaultPlaceholderMarkers
+}
+
+// RuleType liga uma LETRA de código ao termo que a origina e às seções de spec que a
+// usam. O vocabulário é extensível por projeto; o que não pode é CONFLITO — duas seções
+// reivindicando a mesma letra, ou um código usando letra não declarada (essa regra fica
+// invisível para a rastreabilidade).
+type RuleType struct {
+	Letter   string   `yaml:"letter"`             // a letra (1 char, maiúsculo)
+	Term     string   `yaml:"term"`               // o termo que a origina (ex.: "State")
+	Sections []string `yaml:"sections,omitempty"` // títulos de seção que a usam
+	// SectionsRequireCode: as seções (deste subconjunto de `Sections`) em que uma tabela
+	// preenchida SEM código é achado.
+	//
+	// Nem toda seção declarada cataloga regra. Medido num projeto real: "Eventos /
+	// Callbacks" afirma comportamento ("`onPress` — Tap na linha") e precisa de
+	// código para o cenário citar; "Variantes" apenas ENUMERA o que existe
+	// (`individual`, `familia` e de onde vêm seus rótulos) e não afirma nada
+	// verificável. As duas estão declaradas sob letras, e só a primeira deve cobrar.
+	//
+	// Fica na config, e não numa heurística do gate, porque a distinção é semântica
+	// do PROJETO: o mesmo título pode enumerar num repositório e normatizar noutro.
+	SectionsRequireCode []string `yaml:"sections_require_code,omitempty"`
+
+	// Tags: as tags de CENÁRIO que declaram esta natureza (`@estado` para a letra S).
+	//
+	// A letra vive no código (`ABCDX-S01`) e a tag vive na linha acima do cenário. As
+	// duas dizem a mesma coisa, e nada as confrontava: medido num projeto real, 36
+	// cenários afirmavam `@comportamento` sob código `-S` (e vice-versa) — o texto
+	// dizia "renderiza em itálico", que é estado, e a tag dizia comportamento.
+	//
+	// Sem o mapa, o gate `cenario-tipo-alinhado` não tem como saber que `@estado`
+	// corresponde a S neste projeto: a tag é vocabulário do repositório, não do
+	// framework (um projeto em inglês escreveria `@state`).
+	Tags []string `yaml:"tags,omitempty"`
+}
+
+// TagLetters devolve TODAS as letras que declaram a tag de cenário, e se a tag é
+// conhecida. Tags fora do vocabulário não são erro: o projeto usa `@smoke`, `@P1`,
+// `@e2e-level` e outras que não falam de natureza de regra.
+//
+// São várias, e não uma, porque a mesma tag pode caber sob mais de uma natureza sem
+// ambiguidade. Medido num projeto real: `@estado-dado` marca tanto cenários de `S`
+// ("a tela exibe X quando o dado é Y") quanto de `V`, cuja seção "Validações Visuais"
+// cataloga aparência-por-prop — a seção classifica pelo que a spec normatiza, a tag
+// pelo que o cenário observa, e as duas leituras são verdadeiras ao mesmo tempo.
+//
+// Devolver só a primeira faria o gate acusar a segunda para sempre, e a saída seria
+// escolher entre duas classificações corretas.
+func (c *Config) TagLetters(tag string) ([]string, bool) {
+	if c == nil {
+		return nil, false
+	}
+	var out []string
+	for _, rt := range c.RuleTypes {
+		for _, t := range rt.Tags {
+			if normalizeTitle(t) == normalizeTitle(tag) {
+				out = append(out, strings.ToUpper(strings.TrimSpace(rt.Letter)))
+			}
+		}
+	}
+	return out, len(out) > 0
+}
+
+// RequiresCodeIn diz se a seção (pelo título) foi declarada como catalogadora de regra.
+func (r RuleType) RequiresCodeIn(titulo string) bool {
+	for _, s := range r.SectionsRequireCode {
+		if normalizeTitle(s) == normalizeTitle(titulo) {
+			return true
+		}
+	}
+	return false
+}
+
+// normalizeTitle compara títulos ignorando caixa e espaço de borda — o mesmo
+// critério que o gate `rule-types` usa para casar seção com letra.
+func normalizeTitle(s string) string {
+	return strings.ToLower(strings.TrimSpace(s))
+}
+
+// DefaultRuleLetters são as letras canônicas, usadas quando o projeto não declara
+// `rule_types`. Mantém compatibilidade com projetos anteriores ao registro.
+//
+// A LISTA TEM DE COBRIR o que o `anchors new` emite. Ela não cobria: o catálogo de seções
+// declara `invariants` com a letra `I` e `errors` com `E`, e nenhuma das duas estava aqui.
+// O framework emitia uma spec que ele mesmo recusava — bastava o usuário escolher
+// Invariantes no `anchors new` para a spec nascer com uma regra invisível para a
+// rastreabilidade (o `feature-test-match` não a enxerga, mesmo com feature e teste
+// escritos), e agora que o gate `rule-types` confronta as canônicas, também reprovando.
+//
+// Quem altera `Realizes` no catálogo de seções (`new_templates.go`) tem de conferir esta
+// lista: são as duas metades da mesma decisão, e elas divergiram sem que nada acusasse.
+//
+// `W` (Wave) é a FASE de um plano — o agrupamento que ordena o trabalho dentro dele. Ela
+// entrou como `F` (de *Fase*) junto com o `parent:`, e sem ela o gate `rule-types`
+// reprovava toda spec que declarasse `needs: CODE-F01`. Virou `W` no formato 5: o
+// vocabulário é inglês, e *Phase* daria `P`, que é a *Presentation validation* — ver
+// `PhaseLetter` em vocabulary.go, que registra a decisão.
+//
+// `Q` (Question) é a DECISÃO EM ABERTO. Ela não é uma regra — é a ausência de uma —, e
+// ainda assim precisa de identidade: sem código, a pergunta não vira issue rastreável,
+// não sobrevive a uma reescrita da spec, e não dá para dizer que a regra `X-B03` nasceu
+// da pergunta `X-Q01`. É a peça que faltava para a pergunta durar mais que a sessão.
+// `G` (Gate/Flag) e' o CENARIO DE FEATURE FLAG. Ele nao e' uma regra da unidade — e' uma
+// condicao sob a qual as regras dela valem —, e ainda assim precisa de identidade: sem
+// codigo, o cenario nao vira alvo de teste rastreavel, e nao da' para dizer que a regra
+// `CRED-V01` so' vale quando `CHKUT-G02`. E' a quarta letra a entrar; as tres metades da
+// decisao (esta lista, o catalogo de secoes, e a copia do `testsig`) foram atualizadas na
+// mesma mudanca, e os dois testes de guarda existem para cobrar exatamente isso.
+// `F` (Freeze) is a doctrine entry that keeps a part of the project as it is until someone
+// thaws it (`FreezeLetter`): no section realizes it, and the marks
+// that cite it — `frozen: QLDTQ-F01` — need it canonical.
+var DefaultRuleLetters = "SRVAXBNMDEIQWGPF"
+
+// CodeLengths são os comprimentos de código de identidade que o engine reconhece.
+//
+// Era FIXO — e trocar o número fixo de 4 para 5 (ou o contrário) só move o problema de
+// lugar: o engine passa a servir apenas os projetos que escolheram o mesmo tamanho. Medido:
+// o app de referência tem **4046 códigos de 4 caracteres** e zero de 5; com o engine em `{5}`, nenhum
+// deles é reconhecido — as unidades ficam invisíveis e os gates de identidade não têm o que
+// confrontar, sem que nada acuse a causa.
+//
+// O comprimento é do PROJETO, como o vocabulário de letras (`rule_types`) já é. Um projeto
+// que declara 4 continua válido; um que declara 5 também; e um que aceita os dois durante
+// uma migração — que é o caso real de quem já tem specs escritas — declara ambos.
+//
+// Default `[5]`: é o comprimento canônico do framework, e o
+// Anchors FORÇA 5 em si mesmo. Um projeto que usa outro tamanho declara
+// (`code_lengths: [4]`), e quem está migrando declara os dois (`[4, 5]`), que é o caso do
+// app de referência: 4046 códigos de 4 caracteres escritos, migrando para 5.
+//
+// O default é restritivo de propósito. Ele governa o projeto NOVO, que ainda não tem código
+// escrito e por isso pode nascer no formato canônico — e um default permissivo (`[4,5]`)
+// faria todo projeto novo aceitar dois formatos para sempre, sem nunca ter decidido qual
+// usa. Quem tem código legado declara e o engine obedece.
+var CodeLengths = []int{DefaultCodeLength}
+
+// DefaultCodeLength is the length the engine recognises when the project declares none.
+const DefaultCodeLength = 5
+
+// SetCodeLengths reconfigura os comprimentos aceitos. Chamada na porta de entrada (o Walk),
+// como o SetRuleLetters — os pacotes que leem código precisam concordar sobre o que É um
+// código, senão cada um reconhece um conjunto diferente e a cola se parte em silêncio.
+//
+// An empty list restores the default. It used to be ignored, and since the lengths are a
+// process global, a Load of a project that declares nothing kept the lengths of the
+// project loaded before it (`[4]`), so a long-running process read the second project's
+// 5-character codes as not being codes.
+func SetCodeLengths(ls []int) {
+	if len(ls) == 0 {
+		ls = []int{DefaultCodeLength}
+	}
+	// Written only when it changes: a gate that loads the configuration while others run
+	// beside it (a doctrine read inside a gate) sets the value they read, and setting the
+	// same value would still be a write under their reads.
+	if slices.Equal(CodeLengths, ls) {
+		return
+	}
+	CodeLengths = ls
+}
+
+// CodeLengthPattern devolve o trecho de regex que casa os comprimentos aceitos —
+// `{4}` para um só, `{4,5}` para uma faixa contígua, `{4}(?:[A-Z0-9]{2}|)` para o resto
+// (4 ou 6). It is a QUANTIFIER: the caller writes it right after one character class.
+//
+// Existe para que os 25 regexes espalhados pelo engine deixem de repetir o número: cada
+// cópia era um lugar a esquecer numa mudança, e foi exatamente o que aconteceu — a troca de
+// 4 para 5 pegou uns arquivos e não outros.
+func CodeLengthPattern() string {
+	ls := append([]int{}, CodeLengths...)
+	sort.Ints(ls)
+	if len(ls) == 1 {
+		return fmt.Sprintf("{%d}", ls[0])
+	}
+	if ls[len(ls)-1]-ls[0] == len(ls)-1 {
+		return fmt.Sprintf("{%d,%d}", ls[0], ls[len(ls)-1])
+	}
+	// Non-contiguous lengths: the pattern is appended to ONE character class, so it must
+	// repeat that class exactly the declared lengths. It used to be an alternation of
+	// whole codes (`(?:[A-Z0-9]{4}|[A-Z0-9]{6})`), which the class before it lengthened
+	// by one: `[4, 6]` accepted 5 and 7. Now the shortest length is the quantifier and
+	// each longer one adds its difference, longest first so a longer code is not cut.
+	partes := make([]string, 0, len(ls))
+	for i := len(ls) - 1; i > 0; i-- {
+		if d := ls[i] - ls[0]; d > 0 {
+			partes = append(partes, fmt.Sprintf("[A-Z0-9]{%d}", d))
+		}
+	}
+	return fmt.Sprintf("{%d}(?:%s|)", ls[0], strings.Join(partes, "|"))
+}
+
+// RuleLetters devolve a classe de letras válidas do projeto (para compor os regexes de
+// código de cenário). Cai nas canônicas se o projeto não declarar o vocabulário.
+func (c *Config) RuleLetters() string {
+	if c == nil || len(c.RuleTypes) == 0 {
+		return DefaultRuleLetters
+	}
+	var b strings.Builder
+	seen := map[string]bool{}
+	for _, rt := range c.RuleTypes {
+		l := strings.ToUpper(strings.TrimSpace(rt.Letter))
+		if len(l) != 1 || seen[l] {
+			continue
+		}
+		seen[l] = true
+		b.WriteString(l)
+	}
+	if b.Len() == 0 {
+		return DefaultRuleLetters
+	}
+	return b.String()
+}
+
+// Recode declara o DIALETO de projeto que o `anchors recode` usa além do genérico
+// (header/scenario-codes/refs). É opcional — sem ele, o recode só faz o genérico.
+type Recode struct {
+	// TestID: como o prefixo de testID DERIVA do código. Convenção ideal do projeto
+	// (o testID é a projeção do código na borda observável). Valores: "lower" (código
+	// em minúsculo: TCDT→tcdt), "kebab" (reservado), ou vazio (não deriva testID).
+	// Se o prefixo derivado não existir mas o arquivo tiver testIDs (prefixo divergente,
+	// de um recode manual anterior), o recode AVISA e NÃO os toca — não adivinha.
+	TestID string `yaml:"test_id,omitempty"`
+	// FilePatterns: globs de NOMES de arquivo que contêm o código, com a variável
+	// {{code}} (ex.: "**/{{code}}-*.yaml", "**/*.{{code}}-*.png"). O recode renomeia
+	// esses arquivos (git mv) ao aplicar, e atualiza as referências a eles.
+	FilePatterns []string `yaml:"file_patterns,omitempty" path:"glob"`
+}
+
+// Gate é um gate de qualidade declarado (QUALITY §4: "ligar um gate é declarativo").
+// Confronta os alvos que casam `on` contra um critério. Dois modos de execução:
+//   - EXTERNO: `run` é um comando (jest, eslint, tsc…); exit 0 = passou. O CLI o
+//     invoca e lê o exit code — não reimplementa a ferramenta.
+//   - INTERNO: `check` nomeia uma verificação embutida do CLI (ex.: "spec-sections",
+//     "scenario-covered") — o CLI a executa lendo texto.
+type Gate struct {
+	Name string `yaml:"name"` // identificador do gate
+	// ID é o identificador ESTÁVEL da regra que este gate verifica.
+	//
+	// Diferente de `Name`, que é o rótulo legível e pode ser renomeado, o ID é o que
+	// outros lugares citam: o relatório o imprime, e é por ele que se dispensa UMA
+	// verificação sem descartar as demais.
+	//
+	// Existe porque um gate cobra mais de uma coisa — `spec-completa` cobra "sem
+	// placeholder" E "tem regra catalogada" — e sem ID as duas eram indistinguíveis:
+	// quem quisesse dispensar a primeira perdia a segunda junto.
+	//
+	// Os gates CANÔNICOS têm ID fixo (ver o catálogo em initx). Um gate declarado pelo
+	// projeto precisa de um ID ÚNICO — a validação o cobra na carga, porque dois gates
+	// com o mesmo ID fazem toda citação apontar para dois lugares.
+	ID   string   `yaml:"id,omitempty"`
+	On   []string `yaml:"on"`             // kinds de nó que este gate confronta (spec, code, feature…)
+	Tags []string `yaml:"tags,omitempty"` // se presente, restringe aos nós com QUALQUER destas tags
+	// ExcludeTags: o filtro NEGATIVO que faltava. `tags` diz a quem o gate se aplica; não
+	// havia como dizer a quem ele NÃO se aplica, e a diferença aparece quando a exceção é
+	// uma camada inteira no meio de um universo grande — listar todas as outras tags no
+	// `tags` positivo é uma lista que envelhece a cada camada nova.
+	//
+	// O caso que motivou: `mutation-score` cobrado de camadas que a ferramenta de mutação
+	// nem consegue rodar (declaração de infra, schema) — nenhum teste as alcança, então o
+	// Stryker sai com "No tests were found" e não há relatório para ingerir. Sem sinal, o
+	// gate ficava Pending eterno pedindo uma medição impossível de produzir.
+	//
+	// Um nó com QUALQUER destas tags fica fora do gate. Vazio = sem exclusão, para que o
+	// silêncio nunca desligue gate existente.
+	ExcludeTags []string `yaml:"exclude_tags,omitempty"`
+	Run         string   `yaml:"run,omitempty"`   // comando externo (modo externo)
+	Check       string   `yaml:"check,omitempty"` // verificação interna nomeada (modo interno)
+	// Blocking: bloqueante vs. informativo (maturação, QUALITY §7).
+	//
+	// PONTEIRO de propósito. Como `bool`, o campo omitido e o `blocking: false`
+	// explícito chegavam idênticos ao parser — e o merge canônico não tinha como
+	// distinguir "não declarei" de "decidi que é informativo". A consequência seria
+	// grave na direção errada: um gate mantido informativo DE PROPÓSITO (porque a
+	// unidade ainda tem débito) seria promovido a bloqueante ao herdar do canônico, e
+	// passaria a barrar commits que o autor havia liberado conscientemente.
+	//
+	// Com `*bool`, `nil` é exatamente "a chave não veio no yaml" e o merge funciona
+	// como para todos os outros campos. Leia sempre por `IsBlocking()`.
+	Blocking *bool `yaml:"blocking,omitempty"`
+	// Duplicates: whether the gate also confronts the repeats of what it declares — a key
+	// its occurrence reader finds twice in one file.
+	// On unless `false`; a gate with no reader has nothing to count. Read by DuplicatesOn().
+	Duplicates *bool `yaml:"duplicates,omitempty"`
+	// Measures declara o TIPO de medidor (QUALITY §5.2). Vazio/qualquer descrição =
+	// determinístico (usa run/check). O valor especial "judgment" marca o GATE DE
+	// JULGAMENTO POR IA: o CLI não computa — enfileira o alvo para uma IA confrontar
+	// e reportar o veredito via `anchors judge`. Mesma dupla saída (carimbo + issue).
+	Measures string `yaml:"measures,omitempty"`
+	Guide    string `yaml:"guide,omitempty" path:"read"` // (judgment) o arquivo-régua que a IA deve ler
+	Ask      string `yaml:"ask,omitempty"`               // (judgment) a pergunta específica do gate para a IA
+	// StaleOnConfig: the judgment is about the project's configuration too, so a change to
+	// anchors.yaml asks it again, as a change to the target does (guidance-honored).
+	StaleOnConfig bool `yaml:"stale_on_config,omitempty"`
+
+	// Requires restringe o gate aos alvos cujo CONTEÚDO contém este texto.
+	//
+	// `on` filtra por KIND de nó e `tags` por tag declarada; nenhum dos dois alcança
+	// "só as specs que usaram tal marcação". O `no-test-prova-real` é o caso: ele
+	// pergunta se a dispensa `@no-test` aponta prova real, e sem filtro enfileirava
+	// julgamento de IA para TODA spec do projeto — 583 alvos para 16 que de fato
+	// dispensaram. O ⏳ mentia sobre o tamanho do trabalho, e o custo era real: cada
+	// alvo enfileirado é uma pergunta a responder.
+	//
+	// Vazio = sem restrição, para que o silêncio nunca desligue gate existente.
+	Requires string `yaml:"requires,omitempty"`
+
+	// Presupposes — the configuration fields this gate takes as declared, by their path in
+	// anchors.yaml (`derived.mock_detect`). A judgment gate's question can assert one ("The
+	// project declares `derived.mock_detect` — …"); asked where it is not declared, the
+	// evaluator gets a false premise (reported from a project). With a presupposed field
+	// missing the gate is Pending naming it — no question is queued —, and Skip when the
+	// project waived it in `dialect.opt_out`.
+	Presupposes []string `yaml:"presupposes,omitempty"`
+
+	// Review — the gate's targets are also marked TO REVIEW, apart from how the gate
+	// measures. A judgment answers a question with a verdict that stamps the map; a review
+	// is a second look at what an agent decided, and its product is FINDINGS — each one a
+	// failing test and then a fix, or dismissed with a reason —, recorded with who
+	// reviewed. The two live side by side on the same gate: an agent's judgment of its own
+	// marks still finds real bugs, and a reviewer's look is another thing (reported from
+	// a project). A target is to review until a review is recorded at its current
+	// revision; a change to it makes the review due again. It informs and never blocks.
+	Review *Review `yaml:"review,omitempty"`
+
+	// NeedsTool é o BINÁRIO externo sem o qual este gate não tem como medir nada.
+	//
+	// Sem ele, ferramenta ausente virava REPROVAÇÃO: o `sh` sai 127, o gate não produz
+	// laudo e o operador lê "violação" onde há problema de ambiente. Isso é pior que
+	// ruído — inverte o sentido do veredito, porque o vermelho passa a significar
+	// "não instalei" em vez de "achei". Um gate canônico com essa falha reprovaria
+	// todo projeto recém-criado, que é a razão de nenhum canônico usar `run:` hoje.
+	//
+	// Declarado, o motor confere o PATH antes de rodar e devolve Skip ("não se aplica")
+	// em vez de Fail. A ausência não some: o `doctor` a levanta como Warn, com o
+	// InstallHint. Vazio = sem exigência, para que o silêncio nunca desligue gate algum.
+	NeedsTool string `yaml:"needs_tool,omitempty"`
+
+	// InstallHint é o comando que instala o NeedsTool — mostrado pelo `doctor` junto do
+	// aviso. Existe para que o aviso termine em AÇÃO: "falta gitleaks" manda o leitor
+	// procurar; "falta gitleaks (brew install gitleaks)" resolve.
+	InstallHint string `yaml:"install_hint,omitempty"`
+
+	// MarkerPrefix, MarkerCount e MarkerScopes configuram o gate GENÉRICO
+	// `marker-parity` (ver internal/gate/marker_parity.go).
+	//
+	// Existem no `Gate` — e não num catálogo — porque o gate é genérico por desenho: um
+	// projeto declara VÁRIOS, cada um com o seu prefixo e o seu `id`. O que ele confronta
+	// (quais regras vivem em duas pontas) é decisão do projeto, e não cabe num catálogo
+	// universal. Um gate canônico responderia a mesma pergunta para todo mundo; este
+	// pergunta o que cada projeto declarou.
+	//
+	// Vazios = o gate se declara Pending e diz o que falta, em vez de aprovar em
+	// silêncio — um prefixo não declarado não pode passar por "nada a confrontar".
+	MarkerPrefix string   `yaml:"marker_prefix,omitempty"`
+	MarkerCount  int      `yaml:"marker_count,omitempty"`
+	MarkerScopes []string `yaml:"marker_scopes,omitempty"`
+
+	// Scope diz sobre QUANTO o gate roda de uma vez. O default histórico (e o único que
+	// existia) é por NÓ: o comando roda uma vez para cada alvo que casa `on`/`tags`.
+	// Isso está certo para o que mede um arquivo isolado, e errado para toda ferramenta
+	// de projeto: um `tsc` declarado assim rodaria 63 vezes num commit de 63 arquivos —
+	// e ainda daria a resposta errada, porque typecheck só faz sentido sobre o programa
+	// inteiro. Ver ScopeNode/ScopeBatch/ScopeProject.
+	Scope string `yaml:"scope,omitempty"`
+
+	// ScopeFull é o escopo a usar quando a varredura é o PROJETO INTEIRO (`check --all`).
+	// Existe porque `batch` responde a uma pergunta que, no full, deixa de fazer sentido:
+	// "eis o recorte, confronte-o". No full o recorte é tudo, e continuar passando a lista
+	// é só custo — no Windows, custo que estoura a linha de comando; em qualquer sistema,
+	// N invocações da ferramenta onde uma bastava.
+	//
+	// Vale só para quem SABE varrer sozinho. Um script que sai 0 quando não recebe
+	// argumento (padrão comum: `[ $# -eq 0 ] && exit 0`) declarado aqui como `project`
+	// passaria a certificar sem olhar nada — verde por omissão, o pior estado possível.
+	// Por isso é opt-in explícito, e não inferido do fato de a varredura ser completa.
+	ScopeFull string `yaml:"scope_full,omitempty"`
+
+	// When declara em que MOMENTOS o gate é cobrado (`pre-commit`, `pre-push`, `ci`,
+	// `manual`). Vazio = todas as fases — o silêncio não pode desligar gate que já existe.
+	// É o que permite ao hook pedir uma FASE em vez de listar gates: o gate caro declara
+	// `when: [ci]` e sai do commit sem sair do pipeline.
+	When []string `yaml:"when,omitempty"`
+
+	// Cost é a ordem de grandeza do gate (`fast`, `slow`). Eixo independente de `when`:
+	// responde "posso rodar isto num loop apertado?", enquanto `when` responde "isto é
+	// cobrado nesta fase?". Vazio = fast (é o que todo gate interno é).
+	Cost string `yaml:"cost,omitempty"`
+
+	// Exclusive: the project's tool runs alone — never beside another tool of the run. The
+	// tools run side by side; one that writes what another reads, or that takes the whole
+	// machine, says so here.
+	Exclusive bool `yaml:"exclusive,omitempty"`
+
+	// SkipOn desliga o gate numa PERSPECTIVA (`change`, `all`) — ver SkipsOn.
+	//
+	// Lista de EXCLUSÃO, e não de inclusão, para que o silêncio signifique "vale nas
+	// duas": um campo omitido nunca pode desligar verificação, senão todo gate escrito
+	// antes deste campo existir passaria a não rodar em lugar nenhum.
+	SkipOn []string `yaml:"skip_on,omitempty"`
+
+	// Category é a NATUREZA do que o gate mede (`traceability`, `types`, `style`,
+	// `test`, `security`…). Não decide execução — organiza o relatório e permite rodar
+	// uma família só (`--category types`). Vazio = sem categoria.
+	Category string `yaml:"category,omitempty"`
+
+	// Format declara o FORMATO do relatório que este gate ingere, quando a ferramenta
+	// do stack não emite o formato canônico.
+	//
+	// Hoje só o `mutation-score` o usa. O canônico da mutação é o Mutation Testing
+	// Elements (Stryker/PIT/Infection/mutmut) e continua sendo o DEFAULT — vazio
+	// significa MTE, para que nenhum projeto existente mude de comportamento.
+	//
+	// Existe porque em Go o canônico não está disponível na prática: o runner dominante
+	// (`gremlins`, 391★) emite formato próprio, não há conversor público, e o único
+	// runner Go com MTE nativo (`gomutants`) tem 6★ e nasceu em abr/2026. Sem esta
+	// chave, o conselho que o `doctor` dá a toda stack — "rode a ferramenta de mutação
+	// e ingira o relatório" — era, em Go, um beco: a ferramenta roda e o relatório não
+	// entra.
+	//
+	// A declaração fica AQUI, junto do gate, e não numa flag de linha de comando,
+	// porque o formato é propriedade da STACK do projeto — decidido uma vez, não
+	// relembrado a cada ingestão. Ver FormatMTE/FormatGremlins.
+	Format string `yaml:"format,omitempty"`
+
+	// EnforceSectionLanguage decide se o gate de seções reclama de TÍTULO EM OUTRO IDIOMA — uma
+	// seção escrita em idioma diferente do `lang:` do projeto.
+	//
+	// PADRÃO: RECLAMA. O ponteiro nulo vale `true`, e não `false`, porque o silêncio aqui
+	// produz o acervo MISTO — metade das specs com `## Visão Geral`, metade com
+	// `## Overview`, nenhum gate reclamando (os confrontos de seção aceitam todos os
+	// idiomas de propósito, para não quebrar acervo existente). O resultado é uma spec sem
+	// forma única, que é precisamente o que a régua chama de "defeito a reportar, não
+	// escolha a fazer".
+	//
+	// Existe para ser DESLIGADO em dois casos legítimos, e só neles:
+	//   - a migração em curso, que trocou o `lang:` e ainda não reescreveu o acervo;
+	//   - o projeto deliberadamente bilíngue (spec em inglês, interface em português).
+	// Desligar é decisão declarada no anchors.yaml, que é o ponto: quem desliga escreve
+	// por quê ao lado, e quem lê o arquivo vê a escolha.
+	//
+	// NÃO barra sozinho: o veredito é o do gate que o hospeda. Num `spec-complete`
+	// informativo, isto aparece como divergência; num bloqueante, barra como o resto.
+	EnforceSectionLanguage *bool `yaml:"enforce_section_language,omitempty"`
+
+	// Levels — for the `test-level-codes` gate: per test LEVEL (the tag a feature scenario
+	// carries, without @), which rule codes the level accepts. A scenario is tagged with
+	// its level and references rules of the spec by code; a level not declared here
+	// accepts every code. It lives on the gate that reads it, like `format`, and not in
+	// `derived`: derived links one file to another by pattern, and accepting or refusing
+	// codes is the gate's own configuration.
+	Levels map[string]TestLevel `yaml:"levels,omitempty"`
+
+	// TimeoutCeiling — for `mutation-score`: the share of a file's mutants that may be
+	// killed by the time limit before its score counts as measured under load. Zero means
+	// the default, DefaultTimeoutCeiling. A timeout counts as killed, and under load the
+	// tool times out mutants the test would not have caught: in the reference app a file
+	// read 94.87% with 65 of 78 mutants timed out, and 47.44% measured clean.
+	TimeoutCeiling float64 `yaml:"timeout_ceiling,omitempty"`
+
+	// MinCoverage — for `line-coverage`: the line coverage, in percent, a code file must
+	// reach. Zero means the default, DefaultMinCoverage. It was a constant, and a project
+	// whose bootstrap wiring cannot reach it had only `no_signal` to reach for — which says
+	// "nothing to measure", a false statement about a file that has lines (reported from
+	// a project).
+	MinCoverage float64 `yaml:"min_coverage,omitempty"`
+	// CoverageFloors — for `line-coverage`: a floor of its own for the files a glob
+	// matches, each with the reason (`why`). It is the honest exception: the file is still
+	// measured, against a floor the project wrote down and justified, where `no_signal`
+	// would stop measuring it. A floor with no reason is refused at load.
+	CoverageFloors map[string]CoverageFloor `yaml:"coverage_floors,omitempty" path:"glob,keys"`
+
+	// NoSignal — the targets this gate has nothing to measure on, each with the reason: a
+	// glob of the target's path → why. A coverage or mutation report never lists a file
+	// with no statement to instrument (text constants, a data table, code compiled only
+	// on another platform), and without the declaration the gate waited for a signal that
+	// never comes. The runner skips a matching target naming the reason. It is declared,
+	// not inferred: the project says which files have no signal and why.
+	NoSignal map[string]string `yaml:"no_signal,omitempty" path:"glob,keys"`
+
+	// Letters — for `rule-uses-declared`: the rule letters whose rules must say what they
+	// use. Empty asks about every rule but an open question's, a plan phase's and a flag
+	// scenario's. It lives on the gate that reads it: which rules read data is the
+	// project's vocabulary, as `rule_types` is.
+	Letters []string `yaml:"letters,omitempty"`
+
+	// FollowDependencies — for `env-declared`: the layers of code where a variable the code
+	// the unit depends on reads (`depends-on`, transitively, imports of types alone left out) is
+	// asked of the unit's spec too. Right where each deployed unit gets only the variables
+	// declared for it — a function per handler —; code that shares one environment, as an app,
+	// is left out. Measured on a project: on every layer, 421 specs were charged, the app's build
+	// variables and the runtime's own among them.
+	FollowDependencies []string `yaml:"follow_dependencies,omitempty"`
+	// Provided — for `env-declared`: the variables the platform gives every unit, as globs
+	// (`AWS_*`, `NODE_ENV`), never asked of a spec: no one declares them per unit.
+	Provided []string `yaml:"provided,omitempty"`
+
+	// Labels — for the gates that read a test's body (`test-has-assertion`,
+	// `examples-match`): a test whose body is empty is a LABEL naming what
+	// the block around it proves (`t.Run("CODE: title", func(t *testing.T) {})` at the top
+	// of a Go test function), and the block is what must assert. Off, an empty test is a
+	// test with no assertion: in most libraries `it("x", () => {})` is a stub that passes.
+	Labels bool `yaml:"labels,omitempty"`
+
+	// Invocations — for `test-ref-matches-unit`: the calls through which a test reaches a
+	// unit without importing it (a function invoked by name, a route called over HTTP),
+	// each a pattern whose first capture group names the unit reached. Anchors does not
+	// know what a lambda is; the project says how its tests call one.
+	Invocations []string `yaml:"invocations,omitempty"`
+
+	// MinPercent — for `branch-coverage`: the share of branches the tests must take, 0 to
+	// 100. Unset asks for every branch. A layer that needs another floor gets its own
+	// entry, scoped by `tags`.
+	MinPercent *float64 `yaml:"min_percent,omitempty"`
+
+	// Severity — what each level of this gate's verdict does: a FAIL (the gate measured and
+	// the target is wrong), a DIVERGENCE (it measured and found something short of wrong),
+	// a PENDING (it had something to confront and could not measure it). Each is `block`
+	// (bars the promotion and is a finding), `inform` (a finding that does not bar) or
+	// `ignore` (counted, not reported). Unset, a blocking gate blocks its failures and
+	// informs its divergences and pending items; an informative gate informs all three. A
+	// level is never stronger than a more serious one: pending ≤ divergence ≤ fail. The
+	// `awaiting` level — a choice registered on purpose, which a person decides — stands
+	// apart from that order: unset, it blocks on a blocking gate and informs on an
+	// informative one.
+	Severity *Severity `yaml:"severity,omitempty"`
+
+	// Legacy — the severity of the targets last changed before a cutoff: a file whose last
+	// commit is older than `before` answers with `legacy.severity`, never stronger than the
+	// gate's; a file changed since — committed after, uncommitted, new — answers with the
+	// gate's own. The verdict is the same; what it does is not (GTENG-B34).
+	Legacy *LegacySeverity `yaml:"legacy,omitempty"`
+
+	// Cache — the project's tool is not run again over the same inputs: the files it reads
+	// besides its targets (`inputs`, globs over the project's files), and whether a failure
+	// is replayed too and the CI uses it. Opt-in: with no inputs, the tool runs every time.
+	Cache *ToolCache `yaml:"cache,omitempty"`
+}
+
+// LegacySeverity is a gate's severity for the targets last changed before a date.
+type LegacySeverity struct {
+	Before   string    `yaml:"before"`
+	Severity *Severity `yaml:"severity"`
+	// Until is the deadline of the legacy: from that date on, no target is legacy and every
+	// one answers with the gate's own severity. Empty, the legacy has no end.
+	Until string `yaml:"until,omitempty"`
+}
+
+// ToolCache is how a gate's tool result is kept (see Gate.Cache).
+type ToolCache struct {
+	Inputs   []string `yaml:"inputs" path:"glob"`
+	Failures bool     `yaml:"failures,omitempty"`
+	CI       bool     `yaml:"ci,omitempty"`
+}
+
+// LegacyActionFor is what a verdict of this level does on a target last changed before the
+// gate's legacy cutoff: the legacy severity's state for it, else the gate's own.
+func (g Gate) LegacyActionFor(level string) string {
+	if g.Legacy == nil || g.Legacy.Severity == nil {
+		return g.ActionFor(level)
+	}
+	v := map[string]string{LevelFail: g.Legacy.Severity.Fail, LevelDivergence: g.Legacy.Severity.Divergence, LevelPending: g.Legacy.Severity.Pending, LevelAwaiting: g.Legacy.Severity.Awaiting}[level]
+	if v == "" {
+		return g.ActionFor(level)
+	}
+	return v
+}
+
+// checkLegacyAndCache refuses a legacy cutoff that is no date, a legacy severity stronger
+// than the gate's at any level, and a cache with no inputs or a glob that is none.
+func (g Gate) checkLegacyAndCache() error {
+	if l := g.Legacy; l != nil {
+		if _, err := time.Parse("2006-01-02", strings.TrimSpace(l.Before)); err != nil {
+			return fmt.Errorf("`gates[%s].legacy.before` must be a date (2026-10-21), got %q", g.Name, l.Before)
+		}
+		if l.Severity == nil {
+			return fmt.Errorf("`gates[%s].legacy` names no severity: say what a legacy target's verdict does", g.Name)
+		}
+		if u := strings.TrimSpace(l.Until); u != "" {
+			if _, err := time.Parse("2006-01-02", u); err != nil {
+				return fmt.Errorf("`gates[%s].legacy.until` must be a date (2026-12-31), got %q", g.Name, l.Until)
+			}
+			if u <= strings.TrimSpace(l.Before) {
+				return fmt.Errorf("`gates[%s].legacy.until` (%s) must come after `legacy.before` (%s): the deadline ends a legacy that began before it", g.Name, u, l.Before)
+			}
+		}
+		for _, lv := range []string{LevelFail, LevelDivergence, LevelPending, LevelAwaiting} {
+			a := g.LegacyActionFor(lv)
+			if actionRank(a) < 0 {
+				return fmt.Errorf("%s", i18n.T("config.gate.unknown_severity", g.Name, lv, a, ActionBlock, ActionInform, ActionIgnore))
+			}
+			if actionRank(a) > actionRank(g.ActionFor(lv)) {
+				return fmt.Errorf("`gates[%s].legacy.severity.%s` is %s, stronger than the gate's %s: the legacy only ever answers softer", g.Name, lv, a, g.ActionFor(lv))
+			}
+		}
+	}
+	if c := g.Cache; c != nil {
+		if len(c.Inputs) == 0 {
+			return fmt.Errorf("`gates[%s].cache` names no inputs: list what the tool reads besides its targets, or remove the cache", g.Name)
+		}
+		for _, glob := range c.Inputs {
+			if strings.TrimSpace(glob) == "" || !doublestar.ValidatePattern(glob) {
+				return fmt.Errorf("`gates[%s].cache.inputs` has an invalid glob: %q", g.Name, glob)
+			}
+		}
+	}
+	return nil
+}
+
+// Severity is the state of each verdict level of a gate (see Gate.Severity).
+type Severity struct {
+	Fail       string `yaml:"fail,omitempty"`
+	Divergence string `yaml:"divergence,omitempty"`
+	Pending    string `yaml:"pending,omitempty"`
+	// Awaiting is the state of a choice registered on purpose that waits for a person's
+	// decision — an open decision of a spec, a doctrine rule declared ahead of its
+	// implementation. No agent can clear one; counted as a divergence, it sat in the pile
+	// of what to fix (measured on a project: 12 of some 440).
+	Awaiting string `yaml:"awaiting,omitempty"`
+}
+
+// The states a verdict level takes, from the strongest.
+const (
+	ActionBlock  = "block"
+	ActionInform = "inform"
+	ActionIgnore = "ignore"
+)
+
+// The verdict levels, from the most serious.
+const (
+	LevelFail       = "fail"
+	LevelDivergence = "divergence"
+	LevelPending    = "pending"
+	LevelAwaiting   = "awaiting"
+)
+
+// actionRank orders the states: a higher rank is stronger.
+func actionRank(a string) int {
+	switch a {
+	case ActionBlock:
+		return 2
+	case ActionInform:
+		return 1
+	case ActionIgnore:
+		return 0
+	}
+	return -1
+}
+
+// applyProjectSeverity gives each blocking gate the project's default `severity` for the
+// levels its entry does not declare. The project default is checked on its own first: a
+// state it names must exist, and its levels keep their order.
+func (c *Config) applyProjectSeverity() error {
+	if c.Severity == nil {
+		return nil
+	}
+	probe := Gate{Name: "severity (the project default)", Blocking: Bool(true), Severity: c.Severity}
+	if err := probe.checkSeverity(); err != nil {
+		return err
+	}
+	for i := range c.Gates {
+		g := &c.Gates[i]
+		if !g.IsBlocking() {
+			continue
+		}
+		merged := Severity{}
+		if g.Severity != nil {
+			merged = *g.Severity
+		}
+		if merged.Fail == "" {
+			merged.Fail = c.Severity.Fail
+		}
+		if merged.Divergence == "" {
+			merged.Divergence = c.Severity.Divergence
+		}
+		if merged.Pending == "" {
+			merged.Pending = c.Severity.Pending
+		}
+		if merged.Awaiting == "" {
+			merged.Awaiting = c.Severity.Awaiting
+		}
+		g.Severity = &merged
+	}
+	return nil
+}
+
+// checkSeverity refuses an unknown state and a level stronger than a more serious one.
+func (g Gate) checkSeverity() error {
+	if g.Severity == nil {
+		return nil
+	}
+	for _, l := range [][2]string{{LevelFail, g.Severity.Fail}, {LevelDivergence, g.Severity.Divergence}, {LevelPending, g.Severity.Pending}, {LevelAwaiting, g.Severity.Awaiting}} {
+		if l[1] != "" && actionRank(l[1]) < 0 {
+			return fmt.Errorf("%s", i18n.T("config.gate.unknown_severity", g.Name, l[0], l[1], ActionBlock, ActionInform, ActionIgnore))
+		}
+	}
+	if actionRank(g.ActionFor(LevelDivergence)) > actionRank(g.ActionFor(LevelFail)) ||
+		actionRank(g.ActionFor(LevelPending)) > actionRank(g.ActionFor(LevelDivergence)) {
+		return fmt.Errorf("%s", i18n.T("config.gate.severity_order", g.Name,
+			g.ActionFor(LevelFail), g.ActionFor(LevelDivergence), g.ActionFor(LevelPending)))
+	}
+	return nil
+}
+
+// ActionFor is what a verdict of this level does on this gate: the level's declared state,
+// or, undeclared, a failure and an awaited decision block on a blocking gate and everything
+// else informs — a divergence and a pending item are reported, and bar only where the project
+// says so. A decision no one took bars where the gate bars: the one implementing would guess.
+func (g Gate) ActionFor(level string) string {
+	def := ActionInform
+	if g.IsBlocking() && (level == LevelFail || level == LevelAwaiting) {
+		def = ActionBlock
+	}
+	if g.Severity == nil {
+		return def
+	}
+	v := map[string]string{LevelFail: g.Severity.Fail, LevelDivergence: g.Severity.Divergence, LevelPending: g.Severity.Pending, LevelAwaiting: g.Severity.Awaiting}[level]
+	if v == "" {
+		return def
+	}
+	return v
+}
+
+// Review is a gate's review: what the reviewer is asked to look at.
+type Review struct {
+	// Ask is the reviewer's question; empty, the gate's own `ask` or `measures` says it.
+	Ask string `yaml:"ask,omitempty"`
+}
+
+// Describe is what the gate measures, in a sentence: its `measures`, or, for a judgment
+// gate — whose `measures` is the word `judgment` —, the first sentence of its question.
+func (g Gate) Describe() string {
+	if g.Measures != MeasuresJudgment || g.Ask == "" {
+		return g.Measures
+	}
+	s := g.Ask
+	if i := strings.Index(s, ". "); i > 0 {
+		s = s[:i+1]
+	}
+	return s
+}
+
+// ReviewAsk is the question a reviewer of this gate's targets answers.
+func (g Gate) ReviewAsk() string {
+	switch {
+	case g.Review == nil:
+		return ""
+	case g.Review.Ask != "":
+		return g.Review.Ask
+	case g.Ask != "":
+		return g.Ask
+	}
+	return g.Measures
+}
+
+// CoverageFloor is the line-coverage floor of the files a glob matches, and why it differs.
+type CoverageFloor struct {
+	Min float64 `yaml:"min"`
+	Why string  `yaml:"why"`
+}
+
+// DefaultMinCoverage is the line coverage a code file must reach when the gate declares
+// none: 70%.
+const DefaultMinCoverage = 70.0
+
+// CoverageFloorFor is the floor a target is held to: the first glob of `coverage_floors`
+// that matches it, in name order, with its reason; otherwise `min_coverage`, or the default.
+func (g Gate) CoverageFloorFor(target string) (min float64, glob, why string) {
+	globs := make([]string, 0, len(g.CoverageFloors))
+	for k := range g.CoverageFloors {
+		globs = append(globs, k)
+	}
+	sort.Strings(globs)
+	for _, k := range globs {
+		if ok, _ := doublestar.Match(k, target); ok {
+			return g.CoverageFloors[k].Min, k, g.CoverageFloors[k].Why
+		}
+	}
+	if g.MinCoverage > 0 {
+		return g.MinCoverage, "", ""
+	}
+	return DefaultMinCoverage, "", ""
+}
+
+// checkCoverageFloors refuses a floor out of 0–100 and one with no reason.
+func (g Gate) checkCoverageFloors() error {
+	if g.MinCoverage < 0 || g.MinCoverage > 100 {
+		return fmt.Errorf("%s", i18n.T("config.gate.coverage_out_of_range", g.Name, "min_coverage", g.MinCoverage))
+	}
+	for glob, f := range g.CoverageFloors {
+		if f.Min < 0 || f.Min > 100 {
+			return fmt.Errorf("%s", i18n.T("config.gate.coverage_out_of_range", g.Name, "coverage_floors."+glob, f.Min))
+		}
+		if strings.TrimSpace(f.Why) == "" {
+			return fmt.Errorf("%s", i18n.T("config.gate.coverage_floor_no_why", g.Name, glob))
+		}
+	}
+	return nil
+}
+
+// DefaultTimeoutCeiling is the share of timed-out mutants above which a mutation score is
+// read as measured under load: 20%. A clean run of this repository's gates had 0.4%.
+const DefaultTimeoutCeiling = 0.2
+
+// TimeoutCeilingOrDefault is the declared ceiling, or the default.
+func (g Gate) TimeoutCeilingOrDefault() float64 {
+	if g.TimeoutCeiling > 0 {
+		return g.TimeoutCeiling
+	}
+	return DefaultTimeoutCeiling
+}
+
+// FrozenPath is a freeze's scope by path: the freeze, and the globs of the files it covers.
+type FrozenPath struct {
+	Freeze string   `yaml:"freeze"`
+	Paths  []string `yaml:"paths" path:"glob"`
+}
+
+// FrozenPathOf is the freeze whose globs match the file, or empty: the first declared that
+// matches, so the answer is the same on every run.
+func (c *Config) FrozenPathOf(rel string) string {
+	if c == nil {
+		return ""
+	}
+	for _, f := range c.FrozenPaths {
+		for _, glob := range f.Paths {
+			if ok, _ := doublestar.Match(glob, rel); ok {
+				return strings.TrimSpace(f.Freeze)
+			}
+		}
+	}
+	return ""
+}
+
+// NoSignalFor says whether the target is declared as having nothing to measure for this
+// gate, and why. The globs are tried in sorted order, so the reason is the same on every
+// run when two of them match.
+func (g Gate) NoSignalFor(target string) (string, bool) {
+	globs := make([]string, 0, len(g.NoSignal))
+	for glob := range g.NoSignal {
+		globs = append(globs, glob)
+	}
+	sort.Strings(globs)
+	for _, glob := range globs {
+		if ok, _ := doublestar.Match(glob, target); ok {
+			return g.NoSignal[glob], true
+		}
+	}
+	return "", false
+}
+
+// ChecksSectionLanguage diz se o gate cobra o idioma dos títulos de seção.
+// Omitido = SIM: ver EnforceSectionLanguage para o porquê de o default cobrar.
+func (g Gate) ChecksSectionLanguage() bool {
+	return g.EnforceSectionLanguage == nil || *g.EnforceSectionLanguage
+}
+
+// Formatos de relatório de mutação aceitos por `Gate.Format`.
+const (
+	// FormatMTE é o canônico: Mutation Testing Elements, emitido por Stryker (JS/TS/
+	// C#/Scala), PIT (Java), Infection (PHP), mutmut (Python). É o default quando
+	// `format:` é omitido.
+	FormatMTE = "mutation-testing-elements"
+	// FormatGremlins é o formato próprio do github.com/go-gremlins/gremlins, o runner
+	// de mutação dominante em Go.
+	FormatGremlins = "gremlins"
+)
+
+// MutationFormat devolve o formato de relatório de mutação declarado no gate
+// `mutation-score`, ou o canônico (MTE) quando nada foi declarado.
+//
+// O silêncio resolve para o canônico DE PROPÓSITO: é a mesma regra dos outros campos
+// do gate — uma chave omitida nunca pode mudar o comportamento de um projeto que já
+// funcionava.
+func (c *Config) MutationFormat() string {
+	for _, g := range c.Gates {
+		if g.Check != "mutation-score" && g.Name != "mutation-score" {
+			continue
+		}
+		if f := strings.TrimSpace(strings.ToLower(g.Format)); f != "" {
+			return f
+		}
+	}
+	return FormatMTE
+}
+
+// MeasuresJudgment é o valor de Gate.Measures que marca um gate de julgamento por IA.
+const MeasuresJudgment = "judgment"
+
+// IsJudgment diz se este é um gate de julgamento por IA (não computável).
+// @no-rule: compares one declared field with a constant; nothing is decided here
+func (g Gate) IsJudgment() bool { return g.Measures == MeasuresJudgment }
+
+// IsBlocking devolve se o gate barra a promoção. O default é INFORMATIVO: um gate cuja
+// severidade ninguém declarou não pode barrar commit — a maturação (QUALITY §7) é
+// escolha explícita do projeto, não algo que o silêncio decide.
+func (g Gate) IsBlocking() bool { return g.Blocking != nil && *g.Blocking }
+
+// DuplicatesOn says whether the gate confronts the repeats of what it declares: on unless
+// the project wrote `duplicates: false`.
+func (g Gate) DuplicatesOn() bool { return g.Duplicates == nil || *g.Duplicates }
+
+// Bool devolve um ponteiro para o literal — açúcar para declarar gates.
+// @no-rule: syntax sugar that takes the address of a literal
+func Bool(b bool) *bool { return &b }
+
+// Os escopos de execução de um gate.
+const (
+	// ScopeNode: uma execução POR ALVO. Default — o comportamento que todos os gates
+	// tinham antes de `scope:` existir.
+	ScopeNode = "node"
+	// ScopeBatch: UMA execução recebendo os alvos que casaram como argumentos
+	// posicionais ("$@"). É o escopo do eslint/prettier — a ferramenta aceita lista de
+	// arquivos e o custo de subir o processo é pago uma vez só.
+	ScopeBatch = "batch"
+	// ScopeProject: UMA execução, sem alvos. É o escopo do tsc/knip/madge — a
+	// ferramenta olha o projeto inteiro e não sabe responder "sobre este arquivo".
+	// Roda se HOUVER ao menos um alvo relevante: senão, um commit só de README
+	// dispararia um typecheck do monorepo inteiro.
+	ScopeProject = "project"
+)
+
+// EffectiveScope devolve o escopo do gate, com o default explícito.
+func (g Gate) EffectiveScope() string {
+	switch g.Scope {
+	case ScopeBatch, ScopeProject:
+		return g.Scope
+	default:
+		return ScopeNode
+	}
+}
+
+// ScopeForScan devolve o escopo do gate para o tipo de varredura em curso: o
+// `scope_full` quando o recorte é o projeto inteiro e o gate declarou um, o `scope` de
+// sempre no resto. Só batch/project são aceitos como `scope_full` — `node` no full
+// significaria uma execução por arquivo do projeto, que é o oposto da intenção.
+func (g Gate) ScopeForScan(completa bool) string {
+	if !completa {
+		return g.EffectiveScope()
+	}
+	switch g.ScopeFull {
+	case ScopeBatch, ScopeProject:
+		return g.ScopeFull
+	default:
+		return g.EffectiveScope()
+	}
+}
+
+// As PERSPECTIVAS de execução — o eixo "sobre quanto do projeto se pergunta".
+//
+// Ortogonal a `Scope` (quantas execuções o gate faz) e a `When` (em que momento ele é
+// cobrado). Um gate `scope: node` roda uma vez por alvo nas DUAS perspectivas; o que
+// muda é o conjunto de alvos que o comando entrega.
+const (
+	// PerspectiveChange: `--changed` — só o caminho de impacto do que mudou.
+	PerspectiveChange = "change"
+	// PerspectiveAll: `--all` — a foto completa do projeto.
+	PerspectiveAll = "all"
+)
+
+// SkipsOn diz se o gate se declara inútil NESTA perspectiva.
+//
+// O default é participar das duas: `skip_on` é lista de EXCLUSÃO, e o silêncio não pode
+// desligar verificação — mesma regra do `When` vazio. Serve para o gate cuja resposta
+// só tem valor num dos lados: um detector de órfãos perguntado sobre um recorte de um
+// arquivo responde "órfão" para tudo que o recorte não alcança (`skip_on: [change]`);
+// um gate de custo proibitivo na varredura completa sai do `--all` sem sair do commit.
+func (g Gate) SkipsOn(perspective string) bool {
+	for _, p := range g.SkipOn {
+		if p == perspective {
+			return true
+		}
+	}
+	return false
+}
+
+// As fases em que um gate pode ser cobrado.
+const (
+	PhasePreCommit = "pre-commit"
+	PhasePrePush   = "pre-push"
+	PhaseCI        = "ci"
+	PhaseManual    = "manual"
+)
+
+// RunsIn diz se o gate é cobrado na fase dada. Gate sem `when:` roda em TODAS as
+// fases — o silêncio não pode desligar um gate que já existia.
+//
+// `manual` é a exceção deliberada: declarar `when: [manual]` tira o gate das fases
+// automáticas (é como se declara "isto é caro demais para o loop, rode sob demanda").
+//
+// That includes a check with NO phase: the unnamed phase admitted every gate, so a gate
+// declared for manual alone ran in every local `check --all` — a judgment gate kept for an
+// independent reviewer queued its questions on every run (reported from a project). A
+// gate declared only for manual runs only when `--phase manual` asks for it.
+func (g Gate) RunsIn(phase string) bool {
+	if len(g.When) == 0 {
+		return true
+	}
+	if phase == "" {
+		return !g.OnlyManual()
+	}
+	for _, w := range g.When {
+		if w == phase {
+			return true
+		}
+	}
+	return false
+}
+
+// OnlyManual says the gate is declared for the manual phase and no other: it runs on
+// demand, never in a check that did not ask for that phase.
+func (g Gate) OnlyManual() bool {
+	if len(g.When) == 0 {
+		return false
+	}
+	for _, w := range g.When {
+		if w != PhaseManual {
+			return false
+		}
+	}
+	return true
+}
+
+// Os custos declaráveis.
+const (
+	CostFast = "fast"
+	CostSlow = "slow"
+)
+
+// IsSlow diz se o gate foi declarado caro.
+// @no-rule: reads the declared cost, whose closed list CNFGO-B07 states
+func (g Gate) IsSlow() bool { return g.Cost == CostSlow }
+
+// IsExternal diz se o gate delega a uma ferramenta de terceiro (`run:`).
+// @no-rule: says whether a `run` command was declared; nothing is decided here
+func (g Gate) IsExternal() bool { return g.Run != "" }
+
+// Layer — uma camada declarada: como reconhecer seus arquivos, o kind do nó, e as
+// tags (rótulos de agrupamento transversais) pelas quais um guide pode regê-la.
+type Layer struct {
+	Pattern string `yaml:"pattern" path:"glob"` // glob que reconhece arquivos da camada
+	// Fallible: the layer reaches what can fail — a network, a database, a device: the
+	// hooks that read, the repositories, the services. A unit whose spec depends on a file
+	// of such a layer consumes a fallible source, and its spec declares how it fails.
+	Fallible bool `yaml:"fallible,omitempty"`
+	// MayBeEmpty: the layer has no file on purpose most of the time — plans under review
+	// that are moved on once decided — and the doctor does not report it empty.
+	MayBeEmpty bool     `yaml:"may_be_empty,omitempty"`
+	Kind       string   `yaml:"kind"`                          // spec|feature|test|code|doc|guide|plan
+	Tags       []string `yaml:"tags,omitempty"`                // rótulos p/ governs (ex.: frontend, mobile)
+	Regime     string   `yaml:"regime,omitempty"`              // comportamental|declarativo|misto
+	Exclude    []string `yaml:"exclude,omitempty" path:"glob"` // globs a excluir (derivados que casam o glob amplo)
+	// Support: globs, among the files of this layer, of files that SUPPORT the tests
+	// without being tests — sub-flows other flows call, suite aggregators, helper files.
+	// They stay in the map (a change to a helper still reaches every test that uses it),
+	// and the gates that judge a test as a test (tests-pass, test-feature-match,
+	// test-traceable) skip them: such a file has no execution of its own and proves no
+	// scenario. Measured in the reference app: ~190 pending in tests-pass and ~86 in
+	// test-feature-match came from its Maestro utils and suites.
+	Support []string `yaml:"support,omitempty" path:"glob"`
+	// Priority: desempate DECLARADO quando dois patterns casam o mesmo arquivo. Maior
+	// vence; ausente = 0. Sem isso, o Anchors desempata por comprimento do pattern —
+	// uma heurística que mede verbosidade, não precisão, e que já classificou errado
+	// (um pattern com muitas alternativas vencia outro que apontava para um subconjunto
+	// seu). Declare quando a heurística errar; o `check` avisa onde ela decidiu sozinha.
+	Priority int `yaml:"priority,omitempty"`
+	// Headless: the layer's files carry no `@anchors` header — the layer knows them by their
+	// pattern, and a header would be noise for every reader (a README). The header gates and
+	// the header fixer leave them.
+	Headless bool `yaml:"headless,omitempty"`
+	// Dialect names the dialect of `dialects:` the layer's files are written in. A project with
+	// several dialects names one on every layer of code or tests; with one, it is every layer's.
+	Dialect string `yaml:"dialect,omitempty"`
+	// RequiresSections are the spec sections the layer's code calls for, each with what
+	// triggers it — `section-required`.
+	RequiresSections []SectionRequirement `yaml:"requires_sections,omitempty"`
+	// canonical marks a layer Anchors added on its own (applyCanonicalLayers): it is never
+	// written back into a project's anchors.yaml.
+	canonical bool
+	// CodePrefix: prefixo de módulo (Camada 1 do código de identidade). Se a unidade
+	// cai nesta camada, o código começa por este prefixo + chars distintivos. É a
+	// ligação do gerador de identidade com a ESTRUTURA — o módulo do arquivo (auth,
+	// ir, family…) define seu prefixo, em vez de uma tabela hardcoded.
+	CodePrefix string `yaml:"code_prefix,omitempty"`
+	// OptionalUnitEdges: peças da unidade que ESTA camada dispensa, por aresta
+	// (`specifies` | `covered-by` | `tested-by`). É o opt-out HONESTO do gate
+	// `unit-complete`: fica declarado na Estrutura, à vista, em vez de escondido
+	// num Skip do gate. Ex.: uma camada provada só por teste de integração central
+	// declara `optional_unit_edges: [tested-by]`.
+	// A chave é `optional_unit_edges`: `lang` traduz o que se LÊ, e uma chave de YAML é
+	// identificador, não prosa.
+	OptionalUnitEdges []string `yaml:"optional_unit_edges,omitempty"`
+	// RequiresDoctrine: as regras das specs DESTA camada têm de declarar `@realizes`,
+	// apontando a doutrina de produto que concretizam.
+	//
+	// Opcional por padrão, e a razão é medida. Neste repositório, das 841 regras
+	// catalogadas a esmagadora maioria é LOCAL à unidade: `SBGRD-B01` ("artefato que não
+	// é código sai sem veredito") não pertence a produto nenhum — é mecânica de um gate.
+	// Exigir de todas forçaria inventar doutrina guarda-chuva só para calar o gate, que é
+	// o vício que o `placeholder-filled` existe para pegar.
+	//
+	// Numa aplicação de PRODUTO a proporção se inverte: quase toda regra de tela serve a
+	// uma decisão de produto, e a que não serve é suspeita. Quem sabe qual é o caso não é
+	// o Anchors — é a Estrutura, camada por camada.
+	RequiresDoctrine bool `yaml:"requires_doctrine,omitempty"`
+	// Work: passos EXTRA que esta camada exige, por artefato (spec|code|feature|test).
+	// O `anchors work` já compõe um procedimento universal a partir da Estrutura; isto
+	// acrescenta o que só o projeto sabe ("rode o seed antes", "o teste desta camada é
+	// de integração e exige AWS"). Opcional — sem isso, vale só o universal.
+	Work map[string][]string `yaml:"work,omitempty"`
+	// SectionTitles: o léxico de seções DESTA camada, por chave do catálogo. Vence o
+	// `section_titles` do projeto. É o nível certo para a maioria dos dialetos — eles
+	// costumam ser da camada (um modelo de dado fala "Modelo de Dado"; uma tela, não).
+	SectionTitles SectionTitles `yaml:"section_titles,omitempty"`
+}
+
+// Derived — a superfície da unidade (STRUCTURE.md §2.2): onde as peças derivadas de um
+// "anchor" (spec/feature/test) DEVEM morar. Por default é co-location (partilham o stem
+// {{dir}}/{{name}}); `overrides` declara padrões de localização por camada-âncora quando
+// a peça NÃO é co-localizada (ex.: testes centralizados num backend). A ligação material
+// segue por CÓDIGO (TRACEABILITY) — isto é só a superfície de descoberta/validação.
+// Variáveis nos templates: {{dir}} (dir da âncora), {{name}} (basename sem ext), {{ext}}
+// (extensão da âncora), {{module}} (o dir-pai — útil quando o basename é genérico, ex.
+// `handler` em functions/<module>/handler.ts → o módulo é <module>).
+type Derived struct {
+	// Anchor é o KIND que ancora a unidade. É `spec`, e a doutrina não admite outro: "a
+	// spec é a ORIGEM DA VERDADE de uma unidade… da spec nascem o código, a feature e o
+	// teste" (`anchors guide spec`).
+	//
+	// Até a v0.1 isto era `code`, e o efeito era o oposto do declarado: a spec aparecia
+	// como DERIVADA do código, e um projeto com 200 arquivos e zero specs tinha 200 nós
+	// ancorados — o mapa afirmava unidade onde não havia origem.
+	//
+	// Com `spec`, um projeto sem spec não tem aresta de co-location. É o comportamento
+	// correto: sem spec não há unidade, e o mapa dizer isso é honesto. O `doctor` já
+	// reporta o código sem spec como órfão.
+	Anchor string `yaml:"anchor"` // a camada-âncora (canônico: "spec")
+	// Files: camada-derivada → padrão de caminho. `code`, `feature` e `test` são as três
+	// pontas da unidade, e cada uma diz onde aquela peça mora.
+	//
+	// A chave `patterns` é RESERVADA e não é uma camada: ela declara o CONJUNTO de
+	// arquivos que a spec governa, e substitui `code` quando presente. Ver ChavePatterns.
+	Files     map[string]Padroes `yaml:"files,omitempty" path:"write"`
+	Overrides []DerivedOverride  `yaml:"overrides,omitempty"` // padrões por camada-âncora (não co-localizado)
+	// Regimes — o de-para do vocabulário de REGIME de teste do PROJETO para o regime
+	// CANÔNICO do framework (unit|integration|e2e|vr). Chave = a tag do projeto (sem @,
+	// ex.: "unit-level"); valor = o regime canônico. Um cenário de feature declara sua
+	// tag de regime; o gate de correspondência a traduz p/ o canônico e confronta contra
+	// a SUPERFÍCIE do regime. Tag sem mapeamento = não confrontada (opt-out). STRUCTURE §2.3.
+	Regimes map[string]string `yaml:"regimes,omitempty"`
+	// Surfaces — a superfície de cada regime canônico: qual chave de `Files`/`Overrides`
+	// localiza a peça de teste daquele regime (unit→"test", e2e→"e2e", vr→"vr"…). Regime
+	// sem superfície mapeada = não confrontado por arquivo (verificado fora do grafo).
+	Surfaces map[string]string `yaml:"surfaces,omitempty"`
+	// TestHandle — como ESTE projeto marca um elemento para ser alcançado de fora
+	// (pelo teste, pelo flow de ponta a ponta). O nome do atributo é do ecossistema,
+	// não do framework: React Native usa `testID`, a web `data-testid`, Android
+	// `contentDescription`. Um backend não marca nada e deixa vazio.
+	//
+	// É o que torna os gates de inventário de handle OPT-IN por natureza: sem esta
+	// declaração eles não têm o que procurar e pulam (Skip, não Fail) — mesmo que o
+	// projeto os liste em `gates`. Declarar o atributo é o ato de dizer "aqui a
+	// ancoragem de teste é contrato, cobre-a de mim".
+	TestHandle string `yaml:"test_handle,omitempty"`
+
+	// MockContract — como ESTE projeto amarra um dublê de teste ao módulo que ele
+	// substitui.
+	//
+	// O problema que isto ataca: um teste que mocka o vizinho continua VERDE depois que
+	// o vizinho muda. O mock virou uma cópia congelada de um contrato que já não existe,
+	// e o verde passa a certificar a versão antiga — pior que a ausência de teste,
+	// porque ninguém procura defeito onde há prova.
+	//
+	// A defesa é fazer o dublê DERIVAR do original em vez de repeti-lo. Como isso se
+	// escreve é do ecossistema, não do framework: em TypeScript, anotar a fábrica com
+	// `Partial<typeof Real>` faz o compilador conferir nome, assinatura e retorno; em
+	// Python é `autospec=True`; em Go, satisfazer a interface. O projeto declara a forma
+	// que vale nele, com `{{module}}` onde entra o módulo dublado:
+	//
+	//	mock_contract: "Partial<typeof {{module}}>"
+	//
+	// Vazio = o gate `mock-tipado` não tem forma a cobrar e PULA (Skip, não Fail),
+	// mesmo que o projeto o declare em `gates`. Declarar é o ato de dizer "aqui o dublê
+	// é contrato, cobre-o de mim".
+	//
+	// COBRE APENAS drift de FORMA no nível do MÓDULO (que chaves existem). Não alcança a
+	// forma do VALOR devolvido — medido: 202 testes reprovaram por dublar um hook do
+	// React Query com dois campos onde o real devolve ~15, e `Partial<typeof X>` não
+	// distingue "dublê parcial deliberado" de "dublê defasado". Para esse resto existe
+	// o CARIMBO (`MockStamp`), que é agnóstico de linguagem.
+	MockContract string `yaml:"mock_contract,omitempty"`
+	// MockFactory matches a double's call (its line and the next ones) when it passes a
+	// FACTORY: only those have a hand-written contract to bind (`mock-typed`); an automock
+	// mirrors the module. Empty: every double is charged.
+	MockFactory string `yaml:"mock_factory,omitempty"`
+	// MockTyped matches the beginning of a double's call when a type binds its factory,
+	// besides the contract's form — a TS return annotation, `(): Partial<…> =>`.
+	MockTyped string `yaml:"mock_typed,omitempty"`
+
+	// MockStamp — o CARIMBO DE CONTRATO: a marca que um dublê carrega do trecho de
+	// código que ele substitui, para o gate recalcular e detectar quando ele mudou.
+	//
+	// Existe porque `MockContract` depende de a linguagem ter tipos estruturais, e a
+	// maior parte não tem (Python com dict, JS puro, Ruby). O carimbo é hash de TEXTO:
+	// funciona em qualquer linguagem e pega qualquer mudança — assinatura, corpo, tipo,
+	// constante — porque não interpreta o código, só o lê.
+	//
+	// O formato é `<âncora>|<qtd>|<hash>`, e cada parte resolve um problema medido:
+	//
+	//	âncora  a LINHA INTEIRA que abre o trecho (`export function useX(`), não o
+	//	        número dela. Número é POSIÇÃO: um comentário no topo do arquivo
+	//	        deslocaria tudo abaixo e quebraria o carimbo de quem não mudou nada
+	//	        (medido: +1 linha na linha 5 invalidava a função da linha 70). Âncora
+	//	        por conteúdo é imune a deslocamento e, quando SOME, acusa explicitamente
+	//	        — renome vira erro, não silêncio.
+	//	qtd     quantas linhas a partir da âncora entram no hash. FIXA e escrita no
+	//	        carimbo: o alcance fica à vista de quem lê, e o gate não precisa
+	//	        adivinhar onde o bloco termina — o que exigiria um parser por linguagem
+	//	        e mataria o agnosticismo.
+	//	hash    do trecho. É o que muda quando o contrato muda.
+	//
+	// O gate RECALCULA — não valida formato. Um carimbo bem-formatado que ninguém
+	// confronta é teatro: quem edita o teste o regeneraria para casar com o próprio
+	// mock, e ele passaria a certificar a si mesmo em vez do módulo. Recalcular é
+	// barato (ler N linhas a partir de uma âncora não pede parser) e é o que torna o
+	// mecanismo à prova de quem o escreve.
+	//
+	// Vazio = o gate `mock-carimbado` pula. Quem o habilita é `MockDetect`: sem saber
+	// RECONHECER um dublê, não há o que carimbar — uma flag separada seria uma segunda
+	// chave para a mesma decisão, e duas chaves divergem.
+
+	// RuleMarkingPolicy declara que ESTE projeto EXIGE a marcação regra↔código: cada regra da
+	// spec aparece como comentário no trecho que a realiza (`// ABCDX-B01: …`).
+	//
+	// Existe porque a prática não pode ser cobrada por default. O `regra-implementada`
+	// nasceu num projeto com 3.114 regras não marcadas: exigi-las de saída reprovaria
+	// 98% das unidades no primeiro dia, e um gate assim é desligado — levando junto os
+	// que funcionam. Por isso a unidade que nunca marcou NADA cai numa pendência de
+	// migração, que nomeia a dívida sem barrar.
+	//
+	// O problema é que essa pendência NUNCA VENCE. Medido: uma spec afirmava "mantém o
+	// cartão selecionado" enquanto o código era um CRUD sem seleção nenhuma — o gate viu
+	// (a regra `SBNKX-B01` não estava no código), caiu no ramo de migração e devolveu
+	// pendência. Pendência não barra e ninguém a revisita: o defeito atravessou 44 gates.
+	//
+	// Declarar `rule_marking: required` é o ato de dizer "aqui a migração acabou": a
+	// pendência vira reprovação, e a unidade que não marcou passa a ser cobrada como
+	// qualquer outra. Projeto NOVO deve nascer com isto ligado — não há dívida a
+	// acomodar, e o primeiro código é escrito depois da regra existir.
+	RuleMarkingPolicy string `yaml:"rule_marking_policy,omitempty"`
+
+	// MockDetect — como ESTE projeto ESCREVE um dublê de teste. Regex com um grupo de
+	// captura: o módulo dublado.
+	//
+	// É a chave que faltava para o carimbo ser de fato agnóstico. O hash de texto não
+	// depende de linguagem, mas RECONHECER o dublê depende: `jest.mock('x', () => …)`
+	// é dialeto de jest/vitest, e nada nele casa `unittest.mock.patch('x')` do Python,
+	// `allow(X).to receive(...)` do Ruby ou `Mockito.mock(X.class)` do Java. Em Go nem
+	// há chamada a detectar — o dublê é uma interface satisfeita.
+	//
+	// Sem esta declaração o gate PULA. É deliberado, e a alternativa é pior: embutir o
+	// padrão jest/vitest como default faria o gate rodar num projeto Python, encontrar
+	// zero dublês e reportar VERDE sobre o que não conferiu — a pior falha possível num
+	// medidor, e ainda com viés de ecossistema escondido no silêncio.
+	//
+	// Declarar o regex É habilitar o gate: presença significa "aqui o dublê é contrato,
+	// cobre-o de mim". Não há flag separada porque duas chaves para uma decisão
+	// divergem — uma ligada sem a outra vira comportamento indefinido.
+	//
+	// Exemplos:
+	//
+	//	mock_detect: "(?:jest|vi)\\.mock\\(['\"]([^'\"]+)"        # TS/JS
+	//	mock_detect: "(?:mock\\.)?patch\\(['\"]([^'\"]+)"          # Python
+	//	mock_detect: "Mockito\\.mock\\(([A-Za-z0-9_.]+)\\.class"   # Java
+	//
+	// Um regex MAL FORMADO para o dialeto do projeto falha em silêncio (casa nada, o
+	// gate passa). Quem cobre esse ponto cego é o gate de julgamento
+	// `mock-detect-cobre-o-dialeto`, que lê os testes e diz se o padrão declarado
+	// alcança o que o projeto realmente escreve.
+	MockDetect string `yaml:"mock_detect,omitempty"`
+
+	// ExportDetect — como ESTE projeto ESCREVE um símbolo público. Regex com um grupo
+	// de captura: o nome do símbolo.
+	//
+	// Mesma razão do `MockDetect`, e a mesma falha para corrigir. O `code-cataloged`
+	// trazia embutido `export (function|const|class|…) NOME` — sintaxe de TS/JS. Num
+	// projeto Python, Go ou Ruby ele casava ZERO símbolos e reportava VERDE, sendo
+	// `blocking: true`: carimbava aprovação sobre o que não tinha conferido.
+	//
+	// Sem esta declaração o gate PULA, e diz que pulou. Um medidor que não sabe medir
+	// precisa calar — não aprovar.
+	//
+	//	export_detect: "^\\s*export\\s+(?:async\\s+)?(?:function|const|let|var|class|interface|type|enum)\\s+([A-Za-z_$][\\w$]*)"   # TS/JS
+	//	export_detect: "^func\\s+([A-Z]\\w*)"                      # Go (maiúscula = público)
+	//	export_detect: "^(?:def|class)\\s+([a-zA-Z]\\w*)"          # Python
+	ExportDetect string `yaml:"export_detect,omitempty"`
+
+	// RoutePattern — como ESTE projeto REGISTRA uma rota. Regex com um grupo de
+	// captura contendo o nome ou caminho da rota.
+	// Se omitido, usa o padrão default (React Navigation / CDK).
+	RoutePattern string `yaml:"route_pattern,omitempty"`
+
+	// ValueAnchor — o comentário que ANCORA um valor de conjunto fechado à regra que o
+	// justifica. Dois grupos de captura: a chave da regra e o valor esperado.
+	//
+	//	// @code-reference-[WINDOW-001]-[15m]
+	//	'15m',
+	//
+	// O SEGUNDO grupo é o que separa citar de provar. Uma âncora que só aponta a regra
+	// apodrece em silêncio: alguém troca `'15m'` por `'5m'` e o comentário segue
+	// parecendo correto. Com o valor escrito nela, o gate confronta o que a âncora
+	// AFIRMA contra o que a linha DIZ — e isso não depende de linguagem, porque compara
+	// duas partes do próprio comentário com a linha que ele anota.
+	//
+	// Por que por VALOR e não pelo símbolo: uma dispensa sobre `export const JANELAS`
+	// libera os quatro valores de uma vez, e cada valor de um conjunto fechado é uma
+	// decisão de domínio separada. MEDIDO: as telas do app de referência declaravam
+	// `5m·15m·30m·1h·1d` enquanto o contrato aceitava `15m·1h·6h·24h` — três valores
+	// que não existiam, e o backend caindo no padrão `1h` em silêncio.
+	ValueAnchor string `yaml:"value_anchor,omitempty"`
+}
+
+// PadroesDe devolve os padrões declarados, seja pelo nome novo (`patterns`) ou pelo
+// antigo (`files`).
+func (d *Derived) PadroesDe() map[string]Padroes {
+	if d == nil {
+		return nil
+	}
+	return resolvePatterns(d.Files)
+}
+
+// PatternKey é a chave RESERVADA dentro de `files`: o conjunto de arquivos que a spec
+// governa, quando ela não segue a co-location.
+//
+// `files.code` responde "onde mora o código desta spec?" com um template, e isso cobre a
+// unidade normal — uma tela, um handler. A spec de CONFIGURAÇÃO não tem um arquivo, tem
+// um CONJUNTO: `TypeScriptConfig` descreve seis `tsconfig.json` espalhados. Não é um
+// template que falha; é outra pergunta.
+//
+// Fica DENTRO de `files` e não ao lado porque é a MESMA decisão — onde estão os derivados
+// — expressa de outra forma. Ao lado, seriam dois lugares para responder uma pergunta só.
+const PatternKey = "patterns"
+
+// resolvePatterns troca `code` pelo conteúdo de `patterns`, quando declarado.
+//
+// O resto de `files` sobrevive: uma spec de configuração pode ter `patterns` para o
+// código e continuar querendo o `feature`/`test` da co-location. Descartar o mapa inteiro
+// obrigaria a repetir o que não mudou, e repetição em config é onde a divergência começa.
+func resolvePatterns(files map[string]Padroes) map[string]Padroes {
+	ps, tem := files[PatternKey]
+	if !tem || len(ps) == 0 {
+		return files
+	}
+	out := map[string]Padroes{}
+	for k, v := range files {
+		if k == PatternKey {
+			continue // não é camada: não pode virar um derivado chamado "patterns"
+		}
+		out[k] = v
+	}
+	out["code"] = ps
+	return out
+}
+
+// DerivedOverride — para âncoras cuja tag casa `When`, os templates em `Files`
+// SOBRESCREVEM os do default (só as camadas presentes; as demais herdam o default).
+type DerivedOverride struct {
+	// When é a CAMADA da âncora a que este override se aplica (ex.: `handler`). Todas as
+	// specs daquela camada passam a usar os padrões declarados aqui.
+	When string `yaml:"when"`
+	// Code é o CÓDIGO de UMA spec (ex.: `TSCTY`). É a granularidade menor: `when` cobre
+	// uma camada inteira, e há casos em que só uma unidade difere.
+	//
+	// A spec de CONFIGURAÇÃO é o caso: `TypeScriptConfig` governa seis `tsconfig.json`
+	// espalhados, `Workspace` governa o `pnpm-workspace.yaml` e quatro `package.json`. As
+	// duas são da mesma camada e descrevem conjuntos DIFERENTES — um override por camada
+	// faria cada uma governar os arquivos da outra, e o mapa afirmaria o que não é.
+	//
+	// `code` vence `when` quando os dois casam: o mais específico ganha, que é a
+	// precedência que o resto do framework já usa (camada > projeto > framework).
+	Code string `yaml:"code,omitempty"`
+	// Files: camada-derivada → template de região (aceita {{module}}).
+	Files map[string]Padroes `yaml:"files,omitempty" path:"write"`
+}
+
+// PadroesDe devolve os padrões declarados, seja pelo nome novo ou pelo antigo.
+//
+// Existe para que nenhum consumidor precise saber que houve renomeação: espalhar o
+// `if Patterns != nil else Files` por cada leitor garantiria que um deles ficasse de fora
+// numa mudança futura, e o efeito seria um padrão silenciosamente ignorado.
+func (o DerivedOverride) PadroesDe() map[string]Padroes {
+	return resolvePatterns(o.Files)
+}
+
+// GovernRule — uma aresta vertical declarada: a régua `from` rege os nós de TODAS
+// as layers que carregam a tag `governs`. É sempre por TAG (nunca por nome de
+// layer) — um só mecanismo, sem ambiguidade. O escopo vem dos patterns das layers
+// marcadas com a tag, então não há glob duplicado aqui (DRY).
+//
+// `from` é o caminho do arquivo-régua (ex.: guides/SCREEN_GUIDE.md).
+type GovernRule struct {
+	From    string `yaml:"from" path:"read"` // caminho do arquivo-régua (o guide)
+	Governs string `yaml:"governs"`          // a tag que ele rege (casa layers com essa tag)
+}
+
+// canonicalGate resolve a declaração canônica de um gate pelo nome. É INJETADO por
+// `initx` (via SetCanonicalGateResolver) porque o catálogo vive lá junto da semente do
+// `init` — e `config` não pode importar `initx` sem criar ciclo.
+//
+// Nil quando ninguém registrou: aí o merge é no-op e o comportamento é o de antes.
+var canonicalGate func(name string) (Gate, bool)
+
+// SetCanonicalGateResolver registra a fonte das declarações canônicas de gate.
+func SetCanonicalGateResolver(f func(name string) (Gate, bool)) { canonicalGate = f }
+
+// HeaderLinePrefix is how a line of the `@anchors` header begins, in any comment dialect:
+// `//`, `#`, `--` (SQL, Lua, Haskell), `<!--` and a block comment's ` * `. It is ONE
+// definition: the header was read by nineteen copies of this prefix, and the gate's lacked
+// `--` while the map's had it — a valid `-- ref: X` header failed `header-valid` as having
+// no identity (reported from a project).
+const HeaderLinePrefix = `^\s*(?://|#|--|<!--|\*|;+)?\s*`
+
+// gateCatalog lists every canonical gate; injected by the package that owns the catalog,
+// for the same reason as canonicalGate.
+var gateCatalog func() []Gate
+
+// SetGateCatalog registers the list of canonical gates, and returns the one it replaces.
+func SetGateCatalog(f func() []Gate) (previous func() []Gate) {
+	previous, gateCatalog = gateCatalog, f
+	return previous
+}
+
+// Relates says whether a gate has to do with the layers this project declares: a layer of
+// a kind the gate measures and, for a gate scoped by tags, a layer carrying one of them.
+// It is the one test of "related" — init seeds by it, and the doctor and the check name
+// by it the catalog gates a project is missing.
+func (c *Config) Relates(g Gate) bool {
+	if c == nil {
+		return false
+	}
+	for _, l := range c.Layers {
+		if !slices.Contains(g.On, l.Kind) {
+			continue
+		}
+		// A canonical layer is Anchors' own, not one the project declared: only the gates
+		// written for it — tagged with its tag — relate to it.
+		if l.canonical && len(g.Tags) == 0 {
+			continue
+		}
+		if len(g.Tags) == 0 {
+			return true
+		}
+		for _, t := range g.Tags {
+			if slices.Contains(l.Tags, t) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// declaresGate says whether the project declares the gate, by its name or by the checker
+// it runs: a project that names `scenario-coverage` differently still has it.
+func (c *Config) declaresGate(g Gate) bool {
+	for _, d := range c.Gates {
+		if d.Name == g.Name || (g.Check != "" && d.Check == g.Check) {
+			return true
+		}
+	}
+	return false
+}
+
+// Premises splits what a gate presupposes that the project does not declare: `missing`,
+// a field still to declare — the gate is pending and asks nothing —, and `waived`, a field
+// the project's `dialect.opt_out` says does not exist here — the gate does not apply.
+func (c *Config) Premises(g Gate) (missing, waived []string) {
+	for _, p := range g.Presupposes {
+		if c != nil && len(c.Dialects) > 0 && strings.HasPrefix(p, "dialect.") {
+			applies, miss, all := c.presupposedInDialects(p)
+			switch {
+			case all:
+				waived = append(waived, p)
+			case !applies:
+				missing = append(missing, miss...)
+			}
+			continue
+		}
+		if c.Declares(p) {
+			continue
+		}
+		field := p[strings.LastIndex(p, ".")+1:]
+		if c != nil && c.DialectFor().WaivedField(field) {
+			waived = append(waived, p)
+			continue
+		}
+		missing = append(missing, p)
+	}
+	return missing, waived
+}
+
+// ApplicableUndeclared are the catalog gates that relate to the project's layers and that
+// the project does not declare, in catalog order. Each still says what it presupposes, so
+// whoever lists them can name the field a gate needs before it measures anything.
+//
+// A gate whose premise the project WAIVED (`dialect.opt_out`) is not one: the project said
+// that field does not exist here, and the gate would only skip.
+func (c *Config) ApplicableUndeclared() []Gate {
+	if c == nil || gateCatalog == nil {
+		return nil
+	}
+	var out []Gate
+	for _, g := range gateCatalog() {
+		if _, waived := c.Premises(g); len(waived) > 0 {
+			continue
+		}
+		if c.Relates(g) && !c.declaresGate(g) {
+			out = append(out, g)
+		}
+	}
+	return out
+}
+
+// Load lê o anchors.yaml da raiz do projeto.
+func Load(path string) (*Config, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var c Config
+	// KnownFields(true): chave desconhecida no anchors.yaml é ERRO, não silêncio.
+	//
+	// Com o Unmarshal padrão, uma chave que o Config não conhece é simplesmente ignorada —
+	// e o efeito é o pior possível para quem está adotando: a declaração não faz nada e
+	// nada avisa. Medido ao pôr o Anchors no próprio Anchors: escrevi o bloco `governs`
+	// com `guide:`/`tags:` (plural) em vez de `from:`/`governs:`, o `map build` respondeu
+	// "222 nós, 0 arestas" e segui adiante achando que o projeto não tinha relações. A
+	// declaração inteira tinha sido descartada.
+	//
+	// O modo de falha é traiçoeiro porque o arquivo PARECE certo: carrega sem erro, o
+	// comando roda, o resultado é só mais pobre. Quem não conhece o formato de memória não
+	// tem como distinguir "declarei errado" de "meu projeto realmente não tem isso".
+	//
+	// Erro com o nome da chave e a linha é barato de consertar; um mapa vazio sem
+	// explicação custa uma sessão de investigação — foi o que custou aqui.
+	//
+	// O CUSTO da rigidez é o oposto: um campo que o Anchors ganha (`docs:`, na v0.1.58)
+	// quebra todo projeto cujo binário é anterior a ele. E a mensagem do yaml —
+	// "field docs not found in type config.Config" — descreve o sintoma em vocabulário
+	// de implementação, e manda o autor procurar o erro de digitação que não existe.
+	//
+	// A saída não é afrouxar (o modo de falha acima é pior), é NOMEAR a outra hipótese.
+	dec := yaml.NewDecoder(bytes.NewReader(data))
+	dec.KnownFields(true)
+	if err := dec.Decode(&c); err != nil {
+		return nil, fmt.Errorf("%s: %w%s%s", filepath.Base(path), err, versionHint(err, data), syntaxHint(err, data))
+	}
+	// The aliases are translated here, before anything reads a path: the validations below
+	// see the path the alias stands for, and so does every consumer.
+	if err := c.ExpandPaths(filepath.Dir(path)); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	for i := range c.Gates {
+		c.Gates[i] = mergeCanonical(c.Gates[i])
+	}
+	// O IDIOMA vale a partir da CARGA, e não de cada comando.
+	//
+	// Ligá-lo aqui é o que faz toda mensagem sair no idioma certo sem que cada comando
+	// precise lembrar — e um comando novo nasce traduzido por construção.
+	//
+	// Um idioma fora da lista é ERRO de carga, não aviso: o projeto declarou algo que o
+	// Anchors não sabe entregar, e seguir em inglês em silêncio faria a pessoa achar que
+	// a tradução não existe quando o que há é um código errado (`pt` em vez de `pt-BR`).
+	//
+	// It is set BEFORE the validations below: set after them, the gate-ID and workflow
+	// refusals came out in whatever language the process held, so a `lang: en` project
+	// got some load errors in English and others in Portuguese.
+	if err := i18n.Set(c.Lang); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	c.applyCanonicalLayers()
+	sum := sha256.Sum256(bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n")))
+	c.rev = hex.EncodeToString(sum[:])[:12]
+	if err := c.validarIDsDeGate(); err != nil {
+		return nil, err
+	}
+	if err := c.validarWorkflow(); err != nil {
+		return nil, err
+	}
+	if err := c.validarMinVersion(); err != nil {
+		return nil, err
+	}
+	if err := validateBranchFlow(c.BranchFlow); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := validatePipeline(c.Pipeline); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := c.validarDialetos(); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := c.validarPadroes(); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := validateExternalSystems(c.ExternalSystems); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := validateTestBypass(c.TestBypass); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := validatePushReview(c.PushReview); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := c.applyProjectSeverity(); err != nil {
+		return nil, err
+	}
+	if err := c.validarEnumsDeGate(); err != nil {
+		return nil, err
+	}
+	for _, l := range c.CodeLengths {
+		// 2 é o mínimo que ainda distingue unidades; acima de 8 o código deixa de ser
+		// legível de relance, que é a razão de ele ser curto. Fora disso é typo.
+		if l < 2 || l > 8 {
+			return nil, fmt.Errorf("%s", i18n.T("config.code_lengths.out_of_range", l))
+		}
+	}
+	SetCodeLengths(c.CodeLengths)
+	// O GERADOR de código também segue o projeto. Sem isto, `anchors code Login` respondia
+	// `LGNOI` (5 slots, o canônico) num projeto que declara 4 e tem 659 códigos de 4 — o CLI
+	// sugeria identidade que o próprio engine do projeto não reconhece.
+	//
+	// Injetado em vez de importado (mesmo padrão do SetCanonicalGateResolver): `config` fica
+	// sem depender de `code`, e quem liga é o main.
+	if setSlots != nil {
+		setSlots(CodeLengths)
+	}
+	return &c, nil
+}
+
+// yamlLineRE is the line a YAML syntax error names.
+var yamlLineRE = regexp.MustCompile(`yaml: line (\d+):`)
+
+// syntaxHint is what a configuration that is not valid YAML is told: the file exists and is
+// fixed at its line — never recreated with `anchors init`, which would write a new
+// configuration over the one written by hand. When the line, or the one before it, holds a
+// single quote, the commonest cause is named: inside a single-quoted string a quote is
+// written twice. An unknown key or a wrong type is no syntax error, and gets nothing here.
+func syntaxHint(err error, data []byte) string {
+	var te *yaml.TypeError
+	if errors.As(err, &te) {
+		return ""
+	}
+	m := yamlLineRE.FindStringSubmatch(err.Error())
+	if m == nil {
+		return ""
+	}
+	hint := "\n  The file exists and is not valid YAML: fix it at that line. Do not run `anchors init` — it would write a new configuration over yours."
+	n, _ := strconv.Atoi(m[1])
+	lines := strings.Split(string(data), "\n")
+	for i := n - 2; i < n && i < len(lines); i++ {
+		if i >= 0 && strings.Contains(lines[i], "'") {
+			hint += "\n  Inside a single-quoted YAML string, a quote is written twice: 'it''s'."
+			break
+		}
+	}
+	return hint
+}
+
+// InitHint is the advice that follows a failed load: `anchors init` only when the file is
+// missing. A file that exists and does not load is fixed where it is, and the load error
+// already says how.
+func InitHint(err error) string {
+	if errors.Is(err, fs.ErrNotExist) {
+		return " (run `anchors init` to create it)"
+	}
+	return ""
+}
+
+// setSlots é o gancho do gerador de código. Registrado por SetSlotsHook no main.
+var setSlots func([]int)
+
+// SetSlotsHook registra a função que ajusta o comprimento GERADO ao do projeto.
+func SetSlotsHook(f func([]int)) { setSlots = f }
+
+// validarEnumsDeGate cobra os VALORES dos campos enumerados de gate.
+//
+// `KnownFields` pega chave inexistente; não pega valor inexistente em chave válida. E o
+// segundo caso é igualmente silencioso: declarei `scope: repo` (o certo é `project`), o
+// YAML carregou sem reclamar, e três gates entraram como "sem nada para medir". Levei três
+// tentativas para achar — procurando no `on:`, no mapa, no catálogo — porque nada apontava
+// para o valor.
+//
+// Enum errado é sempre gate DESLIGADO em silêncio: um `scope` que não casa nenhum dos três
+// cai no default por nó; um `when` com typo tira o gate da fase que o autor queria cobrar;
+// um `cost` inválido faz o gate ser tratado como rápido e entrar num loop apertado que
+// deveria evitar. Nos três, o efeito é proteção que o arquivo afirma e não existe.
+// validarIDsDeGate cobra ID único em cada gate — na CARGA, não no uso.
+//
+// O ID é o que outros lugares citam: o relatório o imprime, e é por ele que se dispensa
+// uma regra. Dois gates com o mesmo ID fazem toda citação apontar para dois lugares, e
+// uma dispensa desligar o que ninguém pediu.
+//
+// A ausência é tolerada por compatibilidade — um projeto que já funcionava não pode
+// quebrar por um campo novo —, e aí o nome do gate serve de ID. Mas a COLISÃO nunca é
+// tolerada: ela é sempre erro, e falhar na carga é o que impede o achado errado.
+func (c *Config) validarIDsDeGate() error {
+	vistos := map[string]string{} // id → nome do primeiro gate que o usou
+	for _, g := range c.Gates {
+		id := g.ID
+		if id == "" {
+			id = g.Name // sem ID declarado, o nome identifica
+		}
+		if anterior, ok := vistos[id]; ok {
+			return fmt.Errorf("%s", i18n.T("config.gate.duplicate_id", g.Name, id, anterior))
+		}
+		vistos[id] = g.Name
+	}
+	return nil
+}
+
+func (c *Config) validarEnumsDeGate() error {
+	escopos := map[string]bool{ScopeNode: true, ScopeBatch: true, ScopeProject: true}
+	custos := map[string]bool{CostFast: true, CostSlow: true}
+	fases := map[string]bool{
+		PhasePreCommit: true, PhasePrePush: true, PhaseCI: true, PhaseManual: true,
+	}
+	for _, g := range c.Gates {
+		if g.Scope != "" && !escopos[g.Scope] {
+			return fmt.Errorf("%s", i18n.T("config.gate.unknown_scope",
+				g.Name, g.Scope, ScopeNode, ScopeBatch, ScopeProject))
+		}
+		// `scope_full` and `skip_on` are enums too, and were not checked: ScopeForScan
+		// reads any other `scope_full` as "none declared", and SkipsOn never matches a
+		// misspelled perspective (`skip_on: [chnage]`), so the file asserted a full-scan
+		// scope or a skipped perspective that did not exist.
+		if g.ScopeFull != "" && g.ScopeFull != ScopeBatch && g.ScopeFull != ScopeProject {
+			return fmt.Errorf("%s", i18n.T("config.gate.unknown_scope_full",
+				g.Name, g.ScopeFull, ScopeBatch, ScopeProject))
+		}
+		if g.Cost != "" && !custos[g.Cost] {
+			return fmt.Errorf("%s", i18n.T("config.gate.unknown_cost", g.Name, g.Cost, CostFast, CostSlow))
+		}
+		for _, f := range g.When {
+			if !fases[f] {
+				return fmt.Errorf("%s", i18n.T("config.gate.unknown_phase",
+					g.Name, f, PhasePreCommit, PhasePrePush, PhaseCI, PhaseManual))
+			}
+		}
+		if err := g.checkSeverity(); err != nil {
+			return err
+		}
+		if err := g.checkLegacyAndCache(); err != nil {
+			return err
+		}
+		if err := g.checkCoverageFloors(); err != nil {
+			return err
+		}
+		for _, p := range g.SkipOn {
+			if p != PerspectiveChange && p != PerspectiveAll {
+				return fmt.Errorf("%s", i18n.T("config.gate.unknown_perspective",
+					g.Name, p, PerspectiveChange, PerspectiveAll))
+			}
+		}
+	}
+	return nil
+}
+
+// validarWorkflow cobra a coerência do bloco `workflow` na CARGA, não no uso.
+//
+// Um modo mal declarado tem de falhar no primeiro comando que lê a config, com a linha do
+// que falta. Deixar para o momento do `anchors next` significaria descobrir a configuração
+// quebrada no meio de um trabalho, e — pior — depois de o agente já ter feito alterações
+// achando que sabia de onde vinha a task.
+func (c *Config) validarWorkflow() error {
+	if c.Workflow == nil {
+		return nil
+	}
+	w := c.Workflow
+	switch w.Mode {
+	case "", ModeLocal, ModeManual:
+		// O modo local (e o manual) não usa Repo nem Labels. Declará-los aqui não é inofensivo: quem lê
+		// o arquivo conclui que a integração está ativa, e ela não está.
+		if w.Repo != "" || len(w.Labels) > 0 {
+			return fmt.Errorf("%s", i18n.T("config.workflow.github_fields_outside_github"))
+		}
+		return nil
+	case ModeGitHub:
+		if w.Repo == "" {
+			return fmt.Errorf("%s", i18n.T("config.workflow.github_needs_repo"))
+		}
+		if !strings.Contains(w.Repo, "/") {
+			return fmt.Errorf("%s", i18n.T("config.workflow.repo_not_owner_name", w.Repo))
+		}
+		if len(w.Labels) == 0 {
+			return fmt.Errorf("%s", i18n.T("config.workflow.github_needs_label"))
+		}
+		return nil
+	default:
+		return fmt.Errorf("%s", i18n.T("config.workflow.unknown_mode", w.Mode))
+	}
+}
+
+// validarPadroes refuses a declared pattern (`dialect.*`, `derived.*`) that does not
+// compile, naming the field.
+//
+// The gates compile these patterns where they use them, and several treated a failed
+// compile as "not declared": `sibling-guard` skipped with "fewer than 3 exported
+// functions", `pagination-honored` accused a function that drains its cursor, and
+// `code-cataloged` said the project had not declared the `export_detect` it had
+// declared. Each verdict named a false cause, and the broken pattern went unseen. A
+// pattern that cannot compile is a configuration error, and the one place that sees the
+// whole configuration is here: refusing it at load says what is wrong, where, before any
+// gate answers for it.
+//
+// `{{param}}` (guard patterns) stands for a parameter name and is replaced before the
+// compile, as the gate does.
+func (c *Config) validarPadroes() error {
+	check := func(field, p string) error {
+		if p == "" {
+			return nil
+		}
+		if _, err := regexp.Compile(strings.ReplaceAll(p, "{{param}}", "x")); err != nil {
+			return fmt.Errorf("`%s` does not compile: %w", field, err)
+		}
+		return nil
+	}
+	type namedDialect struct {
+		prefix string
+		d      *Dialect
+	}
+	dialects := []namedDialect{{"dialect", c.Dialect}}
+	for _, name := range c.DialectNames() {
+		if name != "" {
+			dialects = append(dialects, namedDialect{"dialects." + name, c.Dialects[name]})
+		}
+	}
+	for _, nd := range dialects {
+		d, prefix := nd.d, nd.prefix
+		if d == nil {
+			continue
+		}
+		for field, p := range map[string]string{
+			"exported_func": d.ExportedFunc, "param_name": d.ParamName, "loop": d.Loop,
+			"collection_query": d.CollectionQuery, "cursor": d.Cursor, "set_promise": d.SetPromise,
+			"set_slice": d.SetSlice, "http_status": d.HTTPStatus, "http_status_dynamic": d.HTTPStatusDynamic,
+			"definition": d.Definition, "type_import_pattern": d.TypeImportPattern,
+			"statement_end": d.StatementEnd, "signature_end": d.SignatureEnd,
+		} {
+			if err := check(prefix+"."+field, p); err != nil {
+				return err
+			}
+		}
+		if t := d.Tests; t != nil {
+			if t.Pattern != "" && t.Script != "" {
+				return fmt.Errorf("`%s.tests` declares both a pattern and a script; declare one", prefix)
+			}
+			if err := check(prefix+".tests.pattern", t.Pattern); err != nil {
+				return err
+			}
+			if err := check(prefix+".tests.assertion", t.Assertion); err != nil {
+				return err
+			}
+		}
+		for _, l := range []struct {
+			field    string
+			patterns Patterns
+			groups   []string
+		}{
+			{prefix + ".imports", d.Imports, []string{"path"}},
+			{prefix + ".import_names", d.ImportNames, []string{"name", "default"}},
+			{prefix + ".declarations", d.Declarations, []string{"name", "default"}},
+			{prefix + ".limits", d.Limits, []string{"value", "param", "type"}},
+		} {
+			if err := l.patterns.Validate(l.field, l.groups); err != nil {
+				return err
+			}
+		}
+		for i, cs := range d.Comments {
+			if err := cs.validate(fmt.Sprintf("%s.comments[%d]", prefix, i)); err != nil {
+				return err
+			}
+		}
+		if r := d.ImportResolve; r != nil {
+			for i, sc := range r.Scoped {
+				if !doublestar.ValidatePattern(sc.Files) || strings.TrimSpace(sc.Files) == "" || len(sc.Aliases) == 0 {
+					return fmt.Errorf("%s.import_resolve.scoped[%d]: an entry names the importers it holds for in `files` (a glob) and declares its `aliases`", prefix, i)
+				}
+			}
+		}
+		if th := d.TestHandles; th != nil {
+			if err := th.validate(); err != nil {
+				return err
+			}
+		}
+		for field, ps := range map[string][]string{
+			"guard_patterns": d.GuardPatterns, "handle_patterns": d.HandlePatterns, "log_patterns": d.LogPatterns,
+		} {
+			for i, p := range ps {
+				if err := check(fmt.Sprintf("%s.%s[%d]", prefix, field, i), p); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	if d := c.Derived; d != nil {
+		for field, p := range map[string]string{
+			"mock_detect": d.MockDetect, "export_detect": d.ExportDetect,
+			"mock_factory": d.MockFactory, "mock_typed": d.MockTyped,
+			"route_pattern": d.RoutePattern, "value_anchor": d.ValueAnchor,
+		} {
+			if err := check("derived."+field, p); err != nil {
+				return err
+			}
+		}
+	}
+	if cl := c.Changelog; cl != nil {
+		known := false
+		for _, m := range ChangelogModes {
+			known = known || cl.Mode == "" || cl.Mode == m
+		}
+		if !known {
+			return fmt.Errorf("`changelog.mode` must be one of %s, got %q", strings.Join(ChangelogModes, ", "), cl.Mode)
+		}
+	}
+	for i, p := range c.CoverageDirectives {
+		if _, err := regexp.Compile(p); err != nil || strings.TrimSpace(p) == "" {
+			return fmt.Errorf("`coverage_directives[%d]` is not a valid regular expression: %q", i, p)
+		}
+	}
+	for section, suites := range map[string][]Suite{"tests": c.Tests, "mutation": c.Mutation} {
+		for i, su := range suites {
+			for _, f := range []struct {
+				name  string
+				globs []string
+			}{{"paths", su.Paths}, {"exclude", su.Exclude}} {
+				for j, p := range f.globs {
+					if !doublestar.ValidatePattern(p) {
+						return fmt.Errorf("`%s[%d].%s[%d]` is not a valid glob: %q", section, i, f.name, j, p)
+					}
+				}
+			}
+		}
+	}
+	for name, l := range c.Layers {
+		for i, p := range l.Support {
+			if !doublestar.ValidatePattern(p) {
+				return fmt.Errorf("`layers.%s.support[%d]` is not a valid glob: %q", name, i, p)
+			}
+		}
+		for i, r := range l.RequiresSections {
+			if err := r.validate(fmt.Sprintf("layers.%s.requires_sections[%d]", name, i), c.Layers); err != nil {
+				return err
+			}
+		}
+	}
+	if c.Docs != nil {
+		for _, glob := range c.Docs.Keep {
+			if strings.TrimSpace(glob) == "" || !doublestar.ValidatePattern(glob) {
+				return fmt.Errorf("`docs.keep` has an invalid glob: %q", glob)
+			}
+		}
+	}
+	for i, f := range c.FrozenPaths {
+		if strings.TrimSpace(f.Freeze) == "" {
+			return fmt.Errorf("`frozen_paths[%d].freeze` is empty: name the freeze's code, or its reason", i)
+		}
+		if len(f.Paths) == 0 {
+			return fmt.Errorf("`frozen_paths[%d]` (%s) has no paths: list the globs it freezes", i, f.Freeze)
+		}
+		for _, glob := range f.Paths {
+			if strings.TrimSpace(glob) == "" || !doublestar.ValidatePattern(glob) {
+				return fmt.Errorf("`frozen_paths[%d].paths` has an invalid glob: %q", i, glob)
+			}
+		}
+	}
+	for _, g := range c.Gates {
+		if g.TimeoutCeiling < 0 || g.TimeoutCeiling > 1 {
+			return fmt.Errorf("`gates[%s].timeout_ceiling` must be a share between 0 and 1, got %v", g.Name, g.TimeoutCeiling)
+		}
+		for glob, reason := range g.NoSignal {
+			if !doublestar.ValidatePattern(glob) {
+				return fmt.Errorf("`gates[%s].no_signal` has an invalid glob: %q", g.Name, glob)
+			}
+			if strings.TrimSpace(reason) == "" {
+				return fmt.Errorf("`gates[%s].no_signal[%q]` has no reason: say why the target has nothing to measure", g.Name, glob)
+			}
+		}
+		for i, l := range g.Letters {
+			if t := strings.ToUpper(strings.TrimSpace(l)); len(t) != 1 || t < "A" || t > "Z" {
+				return fmt.Errorf("`gates[%s].letters[%d]` is %q — a rule letter is one letter, A to Z", g.Name, i, l)
+			}
+		}
+		if g.MinPercent != nil && (*g.MinPercent < 0 || *g.MinPercent > 100) {
+			return fmt.Errorf("`gates[%s].min_percent` must be between 0 and 100, got %v", g.Name, *g.MinPercent)
+		}
+		for i, p := range g.Invocations {
+			if err := check(fmt.Sprintf("gates[%s].invocations[%d]", g.Name, i), p); err != nil {
+				return err
+			}
+			if regexp.MustCompile(p).NumSubexp() == 0 {
+				return fmt.Errorf("`gates[%s].invocations[%d]` has no capture group: the first one names the unit the call reaches", g.Name, i)
+			}
+		}
+		for level, l := range g.Levels {
+			for field, ps := range map[string][]string{"allow": l.Allow, "exclude": l.Exclude} {
+				for i, p := range ps {
+					if err := check(fmt.Sprintf("gates[%s].levels.%s.%s[%d]", g.Name, level, field, i), p); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// mergeCanonical completa os campos OMITIDOS de um gate canônico a partir da declaração
+// do framework. O yaml do projeto sempre vence onde declara — o merge só preenche buraco.
+//
+// Existe porque um gate canônico declarado no projeto precisava REPETIR a redação inteira
+// (`check`, `measures`, `ask`, `guide`…). A redação passava a viver em dois lugares e
+// divergia no primeiro ajuste: o framework corrigia a pergunta de um gate de julgamento e
+// os projetos seguiam perguntando a versão velha, sem ninguém perceber. Com o merge,
+// `- name: no-test-prova-real` basta.
+//
+// `Run` and `Check` are treated as a MUTUALLY EXCLUSIVE PAIR: the gate runner handles
+// `check:` with precedence over `run:`. If the merge inherited one when the other was
+// declared, the project's intent would be silenced by the canonical default (e.g. in
+// `tests-green`, the canonical gate declares `check: tests-pass`; if the project overrides
+// it with `run: "go test ./..."`, inheriting `check` would cause the runner to execute
+// the internal check rather than the custom test command). Declaring either in the project
+// prevents inheritance of both.
+//
+// `Blocking` entra no merge como os demais porque é `*bool`: `nil` é "a chave não veio",
+// distinto do `blocking: false` explícito. Fosse `bool`, herdá-lo promoveria a bloqueante
+// um gate que o projeto manteve informativo DE PROPÓSITO — barrando commits liberados
+// conscientemente. É o campo que motivou o ponteiro.
+func mergeCanonical(g Gate) Gate {
+	if canonicalGate == nil || g.Name == "" {
+		return g
+	}
+	base, ok := canonicalGate(g.Name)
+	if !ok {
+		return g
+	}
+	if len(g.On) == 0 {
+		g.On = base.On
+	}
+	if len(g.Tags) == 0 {
+		g.Tags = base.Tags
+	}
+	if g.Run == "" && g.Check == "" {
+		g.Run = base.Run
+		g.Check = base.Check
+	}
+	if g.Measures == "" {
+		g.Measures = base.Measures
+	}
+	if g.Guide == "" {
+		g.Guide = base.Guide
+	}
+	if g.Requires == "" {
+		g.Requires = base.Requires
+	}
+	if g.Ask == "" {
+		g.Ask = base.Ask
+	}
+	// A judgment that is about the configuration stays so where the project declares it.
+	if base.StaleOnConfig {
+		g.StaleOnConfig = true
+	}
+	// The premise travels with the question: a project inheriting the canonical `ask`
+	// inherits what the question presupposes.
+	if len(g.Presupposes) == 0 {
+		g.Presupposes = base.Presupposes
+	}
+	if g.Review == nil {
+		g.Review = base.Review
+	}
+	// A ferramenta exigida vem do canônico junto com o `run:` que a usa — os dois
+	// descrevem o MESMO comando, e herdar um sem o outro produziria o pior estado
+	// possível: o gate roda o comando canônico e reprova com "command not found",
+	// que é exatamente o que `needs_tool` existe para impedir.
+	if g.NeedsTool == "" {
+		g.NeedsTool = base.NeedsTool
+	}
+	if g.InstallHint == "" {
+		g.InstallHint = base.InstallHint
+	}
+	if g.Scope == "" {
+		g.Scope = base.Scope
+	}
+	// ScopeFull acompanha o Scope: são um par (o recorte no incremental, o projeto
+	// inteiro no `--all`). Herdar só o primeiro faria o gate canônico varrer em lotes
+	// no full — N invocações onde uma bastava, e no Windows a linha de comando estoura.
+	if g.ScopeFull == "" {
+		g.ScopeFull = base.ScopeFull
+	}
+	if len(g.When) == 0 {
+		g.When = base.When
+	}
+	if g.Cost == "" {
+		g.Cost = base.Cost
+	}
+	if g.Category == "" {
+		g.Category = base.Category
+	}
+	if len(g.SkipOn) == 0 {
+		g.SkipOn = base.SkipOn
+	}
+	if g.Blocking == nil {
+		g.Blocking = base.Blocking
+	}
+	if g.Duplicates == nil {
+		g.Duplicates = base.Duplicates
+	}
+	return g
+}
+
+// Declares says whether the configuration declares the field at a dotted path of
+// anchors.yaml (`derived.mock_detect`): present, and not empty.
+func (c *Config) Declares(path string) bool {
+	if c == nil {
+		return false
+	}
+	b, err := yaml.Marshal(c)
+	if err != nil {
+		return false
+	}
+	var node any
+	if yaml.Unmarshal(b, &node) != nil {
+		return false
+	}
+	for _, seg := range strings.Split(path, ".") {
+		m, ok := node.(map[string]any)
+		if !ok {
+			return false
+		}
+		if node, ok = m[seg]; !ok {
+			return false
+		}
+	}
+	switch v := node.(type) {
+	case nil:
+		return false
+	case string:
+		return strings.TrimSpace(v) != ""
+	case []any:
+		return len(v) > 0
+	case map[string]any:
+		return len(v) > 0
+	}
+	return true
+}
+
+// Save escreve o anchors.yaml.
+func Save(c *Config, path string) error {
+	// A canonical layer is Anchors' default, not the project's declaration: it is never
+	// written into the file.
+	out := *c
+	out.Layers = make(map[string]Layer, len(c.Layers))
+	for name, l := range c.Layers {
+		if !l.canonical {
+			out.Layers[name] = l
+		}
+	}
+	data, err := yaml.Marshal(&out)
+	if err != nil {
+		return err
+	}
+	// The header is read by people, so it is written in the language the file declares
+	// (English when none, or when the declared one has no catalog); it used to be fixed
+	// Portuguese text in every project's file.
+	header := i18n.TIn(c.Lang, "config.save.header")
+	if header == "" {
+		header = i18n.TIn(i18n.Default, "config.save.header")
+	}
+	data = append([]byte(header), data...)
+	return os.WriteFile(path, data, 0o644)
+}
+
+// RouteRegistry devolve os globs onde o projeto registra rotas de navegação.
+func (c *Config) RouteRegistry() []string {
+	if c == nil {
+		return nil
+	}
+	return c.RouteRegistryGlobs
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUÍTES — como o PROJETO produz sinal de teste
+// ─────────────────────────────────────────────────────────────────────────────
+
+// LogsConfig declara onde os logs estão e como reconhecer uma ocorrência de falha neles.
+type LogsConfig struct {
+	// Paths são os globs dos arquivos de log a varrer (`logs/*.jsonl`, `/var/log/app/*`).
+	//
+	// O Anchors nunca adivinha: sem caminho declarado, ele não varre nada. Sair procurando
+	// arquivo que pareça log seria a heurística que lê o que não devia — e log costuma
+	// carregar justamente o que não pode vazar.
+	Paths []string `yaml:"paths,omitempty" path:"glob"`
+	// Delimiters cercam o código no log: `#[CRED-E01]` por padrão.
+	//
+	// É o que separa a falha do que apenas se PARECE com ela, e a escolha é medida contra
+	// linhas de ruído reais:
+	//
+	//	código nu     5 falsos positivos   id de build, chave de cache, SKU, trace id
+	//	[CRED-E01]    2 falsos positivos   markdown em prosa, índice de array
+	//	#[CRED-E01]   0 falsos positivos
+	//
+	// Os três pegam as falhas reais igual — o que muda é o que capturam A MAIS. E o custo
+	// de escrever `#[` em vez de `[` é o mesmo para quem loga.
+	//
+	// Um par vazio (`delimiters: ["", ""]`) volta ao código nu, para o log legado que
+	// ninguém vai reescrever — com o custo acima, e por isso o gate exige, aí, que a linha
+	// diga que está reportando falha.
+	Delimiters []string `yaml:"delimiters,omitempty"`
+	// Aliases mapeiam um padrão de texto para um código de falha, para o log que já existe
+	// e ninguém vai reescrever: `CRED-E01: "INSUFFICIENT_BALANCE"`.
+	//
+	// É a ponte do legado, e tem o problema de toda heurística: casa o que não é, e não
+	// casa o que é. Por isso o `match` (o código carimbado) é o alvo, e isto é a ponte.
+	Aliases map[string]string `yaml:"aliases,omitempty"`
+	// Timestamp extrai a data de uma linha, no grupo 1. Opcional: sem ele, a ocorrência
+	// entra sem janela, e o gate que compara "ocorreu e parou" contra "ocorre agora" não
+	// tem o que comparar.
+	Timestamp string `yaml:"timestamp,omitempty"`
+}
+
+// Suite é um comando do projeto que produz um relatório de teste, mais o caminho do
+// relatório que ele deixa. O Anchors não sabe rodar teste — não conhece jest, pytest
+// nem go test, e não deve conhecer: a stack é do projeto. Mas ele sabe AMARRAR o
+// relatório ao mapa, e é aí que o par se separava.
+//
+// Antes disto, produzir sinal era dois passos manuais: rode a ferramenta, depois
+// lembre o caminho do relatório e chame `anchors ingest`. O modo de falha é
+// silencioso e comum — quem roda e esquece de ingerir vê o gate continuar acusando
+// "sem sinal ingerido", como se a rodada não tivesse acontecido. Medido num projeto
+// real: 1008 das 1011 pendências do `check --all` eram sinal ausente, não qualidade
+// ruim.
+//
+// A assimetria era só do lado do sinal: um `gate` já declara seu `run:` e o Anchors o
+// executa sem saber o que é eslint. Suite dá ao sinal a mesma cidadania.
+type Suite struct {
+	// Workspace é ONDE a suíte roda (backend, mobile, landing…). Em monorepo é o
+	// segundo eixo, e ele é independente da camada: `unit` existe no backend E no
+	// mobile, então "rode a unit" e "rode o backend" são perguntas diferentes —
+	// colapsar os dois num campo só obrigaria a inventar camadas falsas ("mobile" como
+	// se fosse um nível de teste) e tornaria impossível pedir a unit de todos.
+	//
+	// Vazio é legítimo: projeto de pacote único não tem esse eixo, e aí `--workspace`
+	// não filtra nada. O vocabulário é do projeto, como o da camada.
+	Workspace string `yaml:"workspace,omitempty"`
+	// Layer é o vocabulário do PROJETO (unit, integration, e2e, contract, smoke…). É
+	// por ele que `anchors test unit e2e` filtra, e é ele que vai para o `--layer` da
+	// ingestão — o Anchors não valida a lista, porque não é dono dela.
+	Layer string `yaml:"layer"`
+	// Run é o comando do modo COMPLETO (o projeto inteiro), executado via `sh -c` na
+	// raiz. `{{target}}`, se presente, recebe o alvo passado em `--target`.
+	Run string `yaml:"run"`
+	// RunChanged é o comando do modo INCREMENTAL, usado por `--changed`. `{{files}}`
+	// recebe os arquivos do caminho de impacto que o Anchors calculou.
+	//
+	// É um campo à parte, e não o mesmo `run:` com um placeholder opcional, porque em
+	// quase todo runner as duas coisas são invocações DIFERENTES, não a mesma com uma
+	// lista no fim: jest quer `--findRelatedTests`, go test quer a lista de pacotes,
+	// pytest quer os caminhos. Espremer as duas num campo só obrigaria o projeto a
+	// escrever um comando que funciona nos dois modos, e não existe um.
+	//
+	// Ausente: `--changed` recusa a suíte em vez de rodar a completa. Rodar tudo quando
+	// se pediu o incremental é caro e, pior, mente sobre o que rodou.
+	RunChanged string `yaml:"run_changed,omitempty"`
+	// Paths — globs of the files this suite runs, relative to the root. A file outside
+	// them is never handed to the suite: not by the state selection, not by `--budget`,
+	// not by `--changed`. Empty means every file, right for a project with one suite per
+	// kind. In a monorepo each workspace's suite declares its own: without it the mobile
+	// mutation suite was handed the landing page's files (reported from the reference app).
+	// The files reach `run_changed:` as ABSOLUTE paths, with forward slashes.
+	Paths []string `yaml:"paths,omitempty" path:"glob"`
+	// Exclude — globs of files the suite does not run even when `paths:` cover them. Two
+	// suites of one workspace often share a root and part it by a runner's own selection
+	// (`jest --selectProjects unit`), which Anchors cannot read: measured on a project, a new
+	// integration test under `packages/backend/**` was handed to the unit suite, which ran
+	// nothing of it, and every run failed "reported a result for none".
+	Exclude []string `yaml:"exclude,omitempty" path:"glob"`
+	// JUnit e Lcov são os relatórios que a suíte DEIXA, ingeridos ao final se o
+	// comando passar. Vazios: o Anchors roda e não ingere nada — o que ainda é útil
+	// (um comando só) mas mantém o gate reclamando, e é melhor dizer isso do que
+	// fingir que ingeriu.
+	JUnit string `yaml:"junit,omitempty" path:"write"`
+	Lcov  string `yaml:"lcov,omitempty" path:"write"`
+	// Report é o relatório de MUTAÇÃO (formato Mutation Testing Elements) e só vale
+	// nas suítes de `mutation:`.
+	Report string `yaml:"report,omitempty" path:"write"`
+	// Scope diz se os mutantes rodaram contra o teste da própria unidade (`isolated`)
+	// ou também contra o dos dependentes (`full`). Importa: com os dois ingeridos, o
+	// gate julga pelo ISOLADO, que é bem mais duro.
+	Scope string `yaml:"scope,omitempty"`
+	// RetryOnLoad turns on, for this suite, the single retry of a test that failed on time
+	// while the machine was loaded; off when absent.
+	RetryOnLoad *RetryOnLoad `yaml:"retry_on_load,omitempty"`
+	// TimeoutPattern is what tells a failure as a timeout, over its message and the line of
+	// the test where it failed; empty, the built-in patterns.
+	TimeoutPattern string `yaml:"timeout_pattern,omitempty"`
+}
+
+// RetryOnLoad is how a suite retries a test that failed on time under load.
+type RetryOnLoad struct {
+	// Load is the threshold, as a multiple of the CPUs: "2x" (the default).
+	Load string `yaml:"load,omitempty"`
+	// Max is how many retries a test gets: 1 by default.
+	Max int `yaml:"max,omitempty"`
+	// Run is the command of the retry, with the failed files in {{files}}; empty, the
+	// suite's run_changed.
+	Run string `yaml:"run,omitempty"`
+}
+
+// Factor is the load threshold as a multiple of the CPUs. A value that is not a positive
+// number followed by x is an error naming it.
+func (r RetryOnLoad) Factor() (float64, error) {
+	v := strings.TrimSpace(r.Load)
+	if v == "" {
+		return 2, nil
+	}
+	f, err := strconv.ParseFloat(strings.TrimSuffix(strings.ToLower(v), "x"), 64)
+	if err != nil || f <= 0 || !strings.HasSuffix(strings.ToLower(v), "x") {
+		return 0, fmt.Errorf("retry_on_load.load: %q is not a multiple of the CPUs, like 2x", r.Load)
+	}
+	return f, nil
+}
+
+// Retries is how many retries a test gets: Max, or 1.
+func (r RetryOnLoad) Retries() int {
+	if r.Max > 0 {
+		return r.Max
+	}
+	return 1
+}
+
+// SelecionaSuites filtra pelos DOIS eixos e devolve o que sobra na ordem em que foi
+// DECLARADO — não na ordem em que o usuário digitou. Quem escreveu o arquivo decidiu
+// que unit vem antes de e2e, e isso costuma ser dependência real; respeitar a digitação
+// faria o mesmo pedido se comportar diferente conforme quem digita.
+//
+// Os eixos se COMBINAM (interseção): `camadas=[unit] workspaces=[backend]` é "a unit do
+// backend". Cada eixo vazio significa "todos" — é o que faz `anchors test unit` valer
+// para todos os workspaces, e `--workspace backend` para todas as camadas dele.
+//
+// As ausências saem já rotuladas ("camada \"smoke\"", "workspace \"web\"") e juntas: quem
+// errou o nome precisa ver de uma vez o que existe, não descobrir por tentativa.
+func SelecionaSuites(suites []Suite, camadas, workspaces, escopos []string) (sel []Suite, ausentes []string) {
+	normaliza := func(vs []string) map[string]bool {
+		m := map[string]bool{}
+		for _, v := range vs {
+			if k := strings.ToLower(strings.TrimSpace(v)); k != "" {
+				m[k] = true
+			}
+		}
+		return m
+	}
+	pedidaC, pedidaW, pedidaE := normaliza(camadas), normaliza(workspaces), normaliza(escopos)
+
+	for _, s := range suites {
+		c, w, e := strings.ToLower(s.Layer), strings.ToLower(s.Workspace), strings.ToLower(s.Scope)
+		if len(pedidaC) > 0 && !pedidaC[c] {
+			continue
+		}
+		if len(pedidaW) > 0 && !pedidaW[w] {
+			continue
+		}
+		if len(pedidaE) > 0 && !pedidaE[e] {
+			continue
+		}
+		sel = append(sel, s)
+	}
+	// A ausência é aferida contra o que EXISTE no arquivo, não contra o que sobreviveu
+	// à interseção: pedir `unit --workspace mobile` num projeto que tem os dois, mas
+	// não a unit do mobile, não é nome errado — é combinação vazia, e dizer "camada
+	// unit não existe" mandaria corrigir o que está certo.
+	existeC, existeW, existeE := map[string]bool{}, map[string]bool{}, map[string]bool{}
+	for _, s := range suites {
+		existeC[strings.ToLower(s.Layer)] = true
+		existeW[strings.ToLower(s.Workspace)] = true
+		existeE[strings.ToLower(s.Scope)] = true
+	}
+	for _, c := range camadas {
+		if k := strings.ToLower(strings.TrimSpace(c)); k != "" && !existeC[k] {
+			ausentes = append(ausentes, i18n.T("config.suite.missing_layer", strconvQuote(c)))
+		}
+	}
+	for _, w := range workspaces {
+		if k := strings.ToLower(strings.TrimSpace(w)); k != "" && !existeW[k] {
+			ausentes = append(ausentes, i18n.T("config.suite.missing_workspace", strconvQuote(w)))
+		}
+	}
+	for _, e := range escopos {
+		if k := strings.ToLower(strings.TrimSpace(e)); k != "" && !existeE[k] {
+			ausentes = append(ausentes, i18n.T("config.suite.missing_scope", strconvQuote(e)))
+		}
+	}
+	return sel, ausentes
+}
+
+func strconvQuote(s string) string { return `"` + s + `"` }
+
+// DeclaredLayers e WorkspacesDeclarados listam o vocabulário do projeto, sem
+// repetir, na ordem de declaração — é o que se mostra a quem pediu um nome que não
+// existe, e a ordem do arquivo é como a pessoa vai reencontrá-los lá.
+func DeclaredLayers(suites []Suite) []string {
+	return distintos(suites, func(s Suite) string { return s.Layer })
+}
+
+func DeclaredWorkspaces(suites []Suite) []string {
+	return distintos(suites, func(s Suite) string { return s.Workspace })
+}
+
+// DeclaredScopes é o terceiro eixo, e ele só existe na mutação: a MESMA unidade
+// medida contra o teste dela (`isolated`) e contra o de quem a importa (`full`). Não é
+// camada nem workspace — é a mesma suíte, com abrangência diferente, e o gate julga
+// pelo isolado quando os dois existem.
+func DeclaredScopes(suites []Suite) []string {
+	return distintos(suites, func(s Suite) string { return s.Scope })
+}
+
+func distintos(suites []Suite, campo func(Suite) string) []string {
+	visto := map[string]bool{}
+	out := []string{}
+	for _, s := range suites {
+		v := campo(s)
+		if v == "" || visto[strings.ToLower(v)] {
+			continue
+		}
+		visto[strings.ToLower(v)] = true
+		out = append(out, v)
+	}
+	return out
+}
+
+// unknownFieldRE casa a mensagem do yaml.v3 para chave que o Config não conhece.
+var unknownFieldRE = regexp.MustCompile(`field (\w+) not found in type`)
+
+// versionHint acrescenta a hipótese que a mensagem do yaml não cobre.
+//
+// "field docs not found in type config.Config" descreve o sintoma em vocabulário de
+// implementação — `config.Config` é um tipo Go, e quem lê o `anchors.yaml` não o conhece.
+// A mensagem manda procurar um erro de digitação, e há duas causas possíveis:
+//
+//   - a chave está errada mesmo (o caso que o KnownFields existe para pegar)
+//   - a chave é NOVA e este binário é antigo — o `anchors.yaml` foi escrito por uma
+//     versão que a conhece, e a instalada não
+//
+// A segunda acontece toda vez que o Anchors ganha um campo, e é invisível para quem a
+// sofre: o arquivo está certo, e a ferramenta diz que não está.
+func versionHint(err error, data []byte) string {
+	m := unknownFieldRE.FindStringSubmatch(err.Error())
+	if m == nil {
+		return ""
+	}
+	chave := m[1]
+
+	// O ARQUIVO ESTÁ ATRASADO — e esta hipótese é DECIDÍVEL, não adivinhada.
+	//
+	// A versão anterior listava duas causas ("está escrita errada" ou "o binário é
+	// antigo") e faltava justamente a que mais acontece: o ARQUIVO é que é velho. Medido
+	// num PR do projeto de referência — o branch trazia `trinca_opcional` (formato 1), o
+	// CI rodava o binário novo, e a mensagem mandava ATUALIZAR O BINÁRIO. O conselho era
+	// o inverso do conserto, e quem o seguisse ficaria voltando versão até desistir.
+	//
+	// O `version:` do arquivo responde sozinho: se ele é anterior ao formato atual, a
+	// chave desconhecida é uma que a migração converteria. Não há o que adivinhar.
+	// As DUAS condições, e as duas são necessárias: o arquivo está atrasado E esta chave
+	// específica é uma das que a migração converte.
+	//
+	// Só o formato não basta. Um `anchors.yaml` em formato 1 com um typo de verdade
+	// (`layerz:`) receberia "rode `anchors migrate`" — o comando roda, não conserta o
+	// typo, e quem lê perde a confiança na mensagem seguinte.
+	if fileFormat(data) < FormatoAtualDeConfig && RenamedKey != nil && RenamedKey(chave) {
+		return fmt.Sprintf("\n  The FILE is in the old format, and the key `%s` was renamed.\n"+
+			"  Migrate — it runs once and leaves the project ready to commit:\n\n"+
+			"      anchors migrate\n\n"+
+			"  (the binary is right: it is `anchors.yaml` that needs updating)", chave)
+	}
+
+	return fmt.Sprintf("\n  Two possible causes, and the second is not your mistake:\n"+
+		"    • the key `%s` is misspelled (check it against the anchors.yaml reference — the `anchors-yaml` page of the Anchors docs)\n"+
+		"    • the key is NEW and this binary is OLD — the `anchors.yaml` was written by\n"+
+		"      a version that knows it. Update: `go install github.com/co2-lab/anchors/cmd/anchors@latest`",
+		chave)
+}
+
+// RenamedKey diz se uma chave desconhecida é uma que a MIGRAÇÃO converte.
+//
+// Injetada pelo `main` a partir do `migra`: o `config` não pode importá-lo (o `migra`
+// precisaria dos tipos daqui, e seria ciclo). Nil significa "sem registro de migração" — e
+// aí a mensagem cai na versão genérica, que é o comportamento correto para quem não tem a
+// tabela.
+var RenamedKey func(string) bool
+
+// FormatoAtualDeConfig é a versão de formato que este binário escreve no `anchors.yaml`.
+//
+// Espelha o `mapx.FormatoAtual` e vive aqui para evitar o ciclo de import (o `mapx` usa
+// tipos do `config`). Os dois sobem juntos: uma migração que muda o mapa e a config é um
+// passo só.
+const FormatoAtualDeConfig = 6
+
+// fileVersionRE lê o `version:` de topo sem passar pelo parser — que é justamente
+// quem acabou de recusar o arquivo.
+//
+// A trailing comment is part of the line, not of the value: `version: 4  # current` read
+// as "no version" made a current file look like format 1 and advised a migration.
+var fileVersionRE = regexp.MustCompile(`(?m)^version:[ \t]*([0-9]+)[ \t]*(?:#[^\r\n]*)?\r?$`)
+
+// fileFormat devolve o formato declarado, ou 1 quando não há `version:`.
+//
+// Os primeiros arquivos do produto não declaravam o campo, e tratá-los como formato 1 é o
+// que permite reconhecê-los como migráveis em vez de indecifráveis.
+func fileFormat(data []byte) int {
+	m := fileVersionRE.FindSubmatch(data)
+	if m == nil {
+		return 1
+	}
+	var v int
+	if _, err := fmt.Sscanf(string(m[1]), "%d", &v); err != nil {
+		return 1
+	}
+	return v
+}
+
+// TestLevel is what one test level accepts among the rule codes (see Gate.Levels).
+// Both lists are regular expressions matched against the whole scenario code
+// (`SMCS-B04`, `SMCS-VR`).
+type TestLevel struct {
+	// Allow, when not empty, is the only codes the level accepts.
+	Allow []string `yaml:"allow,omitempty"`
+	// Exclude is the codes the level refuses, even when Allow accepts them.
+	Exclude []string `yaml:"exclude,omitempty"`
+}
+
+// Accepts reports whether the level accepts the code: it matches one of Allow (when Allow
+// is declared) and none of Exclude. A pattern that does not compile matches nothing;
+// loading the configuration already refuses one.
+func (l TestLevel) Accepts(code string) bool {
+	matches := func(ps []string) bool {
+		for _, p := range ps {
+			if re, err := regexp.Compile(p); err == nil && re.MatchString(code) {
+				return true
+			}
+		}
+		return false
+	}
+	if len(l.Allow) > 0 && !matches(l.Allow) {
+		return false
+	}
+	return !matches(l.Exclude)
+}
+
+// Covers says whether the suite runs this file (a path relative to the root): any file
+// when it declares no `paths:`, otherwise a file one of its globs matches — and, either
+// way, none an `exclude:` glob matches.
+func (s Suite) Covers(rel string) bool {
+	rel = filepath.ToSlash(rel)
+	for _, p := range s.Exclude {
+		if ok, _ := doublestar.Match(p, rel); ok {
+			return false
+		}
+	}
+	if len(s.Paths) == 0 {
+		return true
+	}
+	for _, p := range s.Paths {
+		if ok, _ := doublestar.Match(p, rel); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// Changelog is how the project's changelog is written.
+type Changelog struct {
+	// Mode is `incremental` (one file, new releases added to its top — the default) or
+	// `per_version` (one file per release, in a directory).
+	Mode string `yaml:"mode,omitempty"`
+	// Path is the file (incremental, default CHANGELOG.md) or the directory (per_version,
+	// default changelog/), relative to the root.
+	Path string `yaml:"path,omitempty" path:"write"`
+	// Template is a text/template file that renders one release, relative to the root;
+	// empty uses the built-in one. It receives the release and a `t` function that
+	// translates the section headings to the project's language.
+	Template string `yaml:"template,omitempty" path:"read"`
+}
+
+// ChangelogModes are the ways a changelog can be written.
+var ChangelogModes = []string{"incremental", "per_version"}
+
+// ModeOrDefault is the declared mode, or `incremental`.
+func (c *Changelog) ModeOrDefault() string {
+	if c == nil || c.Mode == "" {
+		return "incremental"
+	}
+	return c.Mode
+}
+
+// PathOrDefault is the declared path, or the mode's default.
+func (c *Changelog) PathOrDefault() string {
+	if c != nil && c.Path != "" {
+		return c.Path
+	}
+	if c.ModeOrDefault() == "per_version" {
+		return "changelog"
+	}
+	return "CHANGELOG.md"
+}
+
+// DataStates is the project's choice about its data states (see Config.DataStates).
+type DataStates struct {
+	// Required makes every data state the spec defines a requirement of its unit.
+	Required bool `yaml:"required"`
+}
+
+// DataStatesRequired says whether the project made its data states requirements.
+func (c *Config) DataStatesRequired() bool {
+	return c != nil && c.DataStates != nil && c.DataStates.Required
+}
+
+// Evidence is what the project says of its tests' evidence (see Config.Evidence).
+type Evidence struct {
+	NoSideEffect *NoSideEffect `yaml:"no_side_effect,omitempty"`
+}
+
+// NoSideEffect names, as the project writes them, what changes nothing a test observes: the
+// flags — a line carrying one ties no test's proof to what it names — and the titles of the
+// spec sections a change to which proves nothing. A list given replaces its default.
+type NoSideEffect struct {
+	Flags    []string `yaml:"flags,omitempty"`
+	Sections []string `yaml:"sections,omitempty"`
+}
+
+// DefaultNoSideEffectFlags: a navigation leads elsewhere, it is not what a screen does — a
+// test that asserts it is tied to its Out row —; and an import of types runs nothing.
+var DefaultNoSideEffectFlags = []string{"@navigates", "@dep[type]"}
+
+// NoSideEffectFlags are the flags with no side effect on the tests: the project's, or the
+// default ones.
+func (c *Config) NoSideEffectFlags() []string {
+	if c != nil && c.Evidence != nil && c.Evidence.NoSideEffect != nil && c.Evidence.NoSideEffect.Flags != nil {
+		return c.Evidence.NoSideEffect.Flags
+	}
+	return DefaultNoSideEffectFlags
+}
+
+// NoSideEffectSections are the titles of the spec sections with no side effect the project
+// declares; nil when it declares none, and the defaults — navigation and change history —
+// hold.
+func (c *Config) NoSideEffectSections() []string {
+	if c != nil && c.Evidence != nil && c.Evidence.NoSideEffect != nil {
+		return c.Evidence.NoSideEffect.Sections
+	}
+	return nil
+}
+
+// Monitor is the monitor's configuration (see Config.Monitor). Durations are Go's
+// (`30s`, `5m`); an empty one takes the default, and the command's flags override them all.
+type Monitor struct {
+	Every     string `yaml:"every,omitempty"`
+	Heartbeat string `yaml:"heartbeat,omitempty"`
+	Progress  string `yaml:"progress,omitempty"`
+	Stall     string `yaml:"stall,omitempty"`
+	// Summary turns on the monitor's summary of anchors.progress.md, off by default: said
+	// when it changes, with what it was. SummaryEvery repeats it unchanged at that interval.
+	Summary      bool   `yaml:"summary,omitempty"`
+	SummaryEvery string `yaml:"summary_every,omitempty"`
+	// Level is how much the monitor says: all (the default), or action — only what calls for
+	// a reaction.
+	Level string `yaml:"level,omitempty"`
+	// Idle is how long a task in progress may go without activity from its holder before the
+	// monitor says so (default 10m); off turns it off.
+	Idle string `yaml:"idle,omitempty"`
+	// Runners are the project's kinds of long process: the monitor knows no tool by itself,
+	// only Anchors' own commands (ExampleRunners are the examples).
+	Runners []MonitorRunner `yaml:"runners,omitempty"`
+	// Reports are globs of test reports (JUnit) whose landing is an event, beside the ones the
+	// suites declare.
+	Reports []string `yaml:"reports,omitempty" path:"glob"`
+	// Keep and KeepDays bound the records of ended runs: the latest Keep, within KeepDays.
+	Keep     int `yaml:"keep,omitempty"`
+	KeepDays int `yaml:"keep_days,omitempty"`
+}
+
+// MonitorRunner is a kind of long process: the pattern of its command line, how long it may
+// stay quiet, and the patterns of its output that say it passed, failed or advanced.
+type MonitorRunner struct {
+	Name     string `yaml:"name"`
+	Kind     string `yaml:"kind,omitempty"`
+	Match    string `yaml:"match"`
+	Stall    string `yaml:"stall,omitempty"`
+	Pass     string `yaml:"pass,omitempty"`
+	Fail     string `yaml:"fail,omitempty"`
+	Progress string `yaml:"progress,omitempty"`
+}
+
+// ExampleRunners are the examples of `monitor.runners` for the common test, end-to-end and
+// mutation tools — jest, vitest, go test, pytest, maestro, playwright, stryker, gremlins —:
+// what `anchors migrate` writes for the suites a project runs with them. None is applied by
+// itself: the monitor knows only the project's runners and Anchors' own commands.
+func ExampleRunners() []MonitorRunner {
+	return []MonitorRunner{
+		{Name: "jest", Kind: "unit", Match: `(^|[\s/])jest(\s|$)`, Stall: "10m",
+			Pass: `(?m)^Tests:\s+(\d+ \w+, )*\d+ passed`, Fail: `(?m)^Tests:\s+(\d+ \w+, )*\d+ failed`, Progress: `(?m)^(PASS|FAIL) `},
+		{Name: "vitest", Kind: "unit", Match: `(^|[\s/])vitest(\s|$)`, Stall: "10m",
+			Pass: `(?m)^\s*Tests\s+.*\d+ passed`, Fail: `(?m)^\s*Tests\s+.*\d+ failed`},
+		{Name: "go test", Kind: "unit", Match: `(^|[\s/])go test(\s|$)|\.test(\s|$)`, Stall: "10m",
+			Pass: `(?m)^ok\s`, Fail: `(?m)^(FAIL|--- FAIL)`, Progress: `(?m)^(ok|FAIL)\s`},
+		{Name: "pytest", Kind: "unit", Match: `(^|[\s/])pytest(\s|$)|-m pytest`, Stall: "10m",
+			Pass: `(?m)^=+ .*\d+ passed`, Fail: `(?m)^=+ .*\d+ failed`},
+		{Name: "maestro", Kind: "e2e", Match: `(^|[\s/])maestro (test|--device)`, Stall: "6m",
+			Pass: `Flows? Passed`, Fail: `\[Failed\]|Flows? Failed`, Progress: `(?m)^\s*\[(Passed|Failed)\]`},
+		{Name: "playwright", Kind: "e2e", Match: `playwright test`, Stall: "6m",
+			Pass: `(?m)^\s*\d+ passed`, Fail: `(?m)^\s*\d+ failed`},
+		{Name: "stryker", Kind: "mutation", Match: `(^|[\s/])stryker(\s|$)`, Stall: "15m", Pass: `Final mutation score`},
+		{Name: "gremlins", Kind: "mutation", Match: `(^|[\s/])gremlins(\s|$)`, Stall: "15m"},
+	}
+}
+
+// Navigation is the project's navigation (see Config.Navigation).
+type Navigation struct {
+	// Entry are the routes the app opens on — the roots of reachability.
+	Entry []string `yaml:"entry,omitempty"`
+}
+
+// THE CANONICAL LAYERS — the ones Anchors knows without the project declaring them.
+//
+// Anchors proposes no code structure: every code layer is the project's. A canonical layer is
+// not about where code lives — it is about what every project under Anchors has whatever its
+// layout. The first is the GUIDANCE: the files at the root that tell
+// whoever arrives, person or agent, how the project is worked on.
+
+// GuidanceLayer is the canonical layer of the project's guidance files.
+const GuidanceLayer = "guidance"
+
+// GuidancePattern are the guidance files: the readme, the contributing guide, and the files
+// coding agents read first.
+const GuidancePattern = "{README,CONTRIBUTING,AGENTS,CLAUDE}.md"
+
+// guidancePriority wins over any layer whose pattern also matches these four files at the
+// root: they are the guidance wherever else the project's patterns reach.
+const guidancePriority = 1000
+
+// CanonicalGuidance is the guidance layer as Anchors adds it.
+func CanonicalGuidance() Layer {
+	return Layer{Pattern: GuidancePattern, Kind: "doc", Regime: "declarativo", Tags: []string{GuidanceLayer},
+		Priority: guidancePriority, Headless: true, canonical: true}
+}
+
+// applyCanonicalLayers adds the canonical layers the project neither declares nor turns off:
+// a layer of the same name declared by the project replaces it, and `guidance: false` leaves
+// it out.
+func (c *Config) applyCanonicalLayers() {
+	if c.Guidance != nil && !*c.Guidance {
+		return
+	}
+	if _, declared := c.Layers[GuidanceLayer]; declared {
+		return
+	}
+	if c.Layers == nil {
+		c.Layers = map[string]Layer{}
+	}
+	c.Layers[GuidanceLayer] = CanonicalGuidance()
+}
+
+// SectionRequirement is a spec section a layer's code calls for: its title, as the project
+// writes it, and the one trigger that calls for it.
+type SectionRequirement struct {
+	Section string         `yaml:"section"`
+	When    SectionTrigger `yaml:"when"`
+}
+
+// SectionTrigger is what in the unit's code calls for a section — one of them, each read
+// from what the core already measures:
+//   - Exposes: `test_handles`, the code exposes a handle (`dialect.test_handles.exposed`);
+//   - DependsOnLayer: the code depends on a node of one of these layers;
+//   - Flag: the code carries this flag (`@navigates`);
+//   - CodeMatches: the code, its comments left out, matches this pattern of the project's.
+type SectionTrigger struct {
+	Exposes        string   `yaml:"exposes,omitempty"`
+	DependsOnLayer []string `yaml:"depends_on_layer,omitempty"`
+	// Kinds narrows DependsOnLayer to the kinds of dependency that count: `value` — the
+	// default, the code reads what the layer gives — and `type`, an import of its types
+	// only (`@dep[type]`). It is no trigger of its own.
+	Kinds       []string `yaml:"kinds,omitempty"`
+	Flag        string   `yaml:"flag,omitempty"`
+	CodeMatches string   `yaml:"code_matches,omitempty"`
+}
+
+// validate refuses an entry with no section, with no trigger or two, or with a trigger
+// that cannot be read, naming it.
+func (r SectionRequirement) validate(field string, layers map[string]Layer) error {
+	if strings.TrimSpace(r.Section) == "" {
+		return fmt.Errorf("`%s`: name the `section` the code calls for", field)
+	}
+	n := 0
+	for _, set := range []bool{r.When.Exposes != "", len(r.When.DependsOnLayer) > 0, r.When.Flag != "", r.When.CodeMatches != ""} {
+		if set {
+			n++
+		}
+	}
+	if n != 1 {
+		return fmt.Errorf("`%s.when`: declare exactly one trigger — exposes, depends_on_layer, flag or code_matches", field)
+	}
+	switch {
+	case r.When.Exposes != "" && r.When.Exposes != "test_handles":
+		return fmt.Errorf("`%s.when.exposes`: the only thing measured as exposed is `test_handles`, got %q", field, r.When.Exposes)
+	case r.When.Flag != "" && !strings.HasPrefix(r.When.Flag, "@"):
+		return fmt.Errorf("`%s.when.flag`: a flag starts with `@`, got %q", field, r.When.Flag)
+	case r.When.CodeMatches != "":
+		if _, err := regexp.Compile(r.When.CodeMatches); err != nil {
+			return fmt.Errorf("`%s.when.code_matches` does not compile: %w", field, err)
+		}
+	}
+	if len(r.When.Kinds) > 0 && len(r.When.DependsOnLayer) == 0 {
+		return fmt.Errorf("`%s.when.kinds` narrows `depends_on_layer`, which the entry does not declare", field)
+	}
+	for _, k := range r.When.Kinds {
+		if k != "value" && k != "type" {
+			return fmt.Errorf("`%s.when.kinds`: a dependency is `value` or `type`, got %q", field, k)
+		}
+	}
+	for _, l := range r.When.DependsOnLayer {
+		if _, ok := layers[l]; !ok {
+			return fmt.Errorf("`%s.when.depends_on_layer` names %q, which is no layer of the project", field, l)
+		}
+	}
+	return nil
+}
+
+// LayerHeadless says whether the files of the layer carry no `@anchors` header.
+func (c *Config) LayerHeadless(layer string) bool {
+	if c == nil {
+		return false
+	}
+	return c.Layers[layer].Headless
+}
+
+// UnitName is the name of the unit a file belongs to: its basename without what a layer adds
+// to the unit's name — the part after `{{name}}` in a `derived.files` template or an
+// override's, `{{ext}}`
+// standing for any extension (`_test.go`, `.test.{{ext}}`) —, nor Anchors' own suffixes
+// (`.spec.md`, `.feature`); with none of them, without its last extension. The longest suffix
+// that fits wins. The core knows no language's way to name a test: the templates say it.
+func (c *Config) UnitName(rel string) string {
+	base := path.Base(strings.ReplaceAll(rel, "\\", "/"))
+	best := -1
+	for _, re := range c.unitSuffixes() {
+		if loc := re.FindStringIndex(base); loc != nil && loc[0] > 0 && (best < 0 || loc[0] < best) {
+			best = loc[0]
+		}
+	}
+	if best > 0 {
+		return base[:best]
+	}
+	if i := strings.LastIndex(base, "."); i > 0 {
+		return base[:i]
+	}
+	return base
+}
+
+// unitSuffixes are the suffixes a layer adds to a unit's name, as patterns anchored at the end.
+func (c *Config) unitSuffixes() []*regexp.Regexp {
+	suffixes := []string{".spec.md", ".feature"}
+	if c != nil && c.Derived != nil {
+		all := []map[string]Padroes{c.Derived.PadroesDe()}
+		for _, ov := range c.Derived.Overrides {
+			all = append(all, ov.PadroesDe())
+		}
+		for _, files := range all {
+			for _, tpls := range files {
+				for _, t := range tpls {
+					if i := strings.LastIndex(t, "{{name}}"); i >= 0 {
+						if suf := t[i+len("{{name}}"):]; suf != "" && !strings.Contains(suf, "/") {
+							suffixes = append(suffixes, suf)
+						}
+					}
+				}
+			}
+		}
+	}
+	out := make([]*regexp.Regexp, 0, len(suffixes))
+	for _, suf := range suffixes {
+		parts := strings.Split(suf, "{{ext}}")
+		for i := range parts {
+			parts[i] = regexp.QuoteMeta(parts[i])
+		}
+		if re, err := regexp.Compile(strings.Join(parts, `[^./]+`) + `$`); err == nil {
+			out = append(out, re)
+		}
+	}
+	return out
+}
+
+// PiecePaths are the paths the project's `derived.files` give a unit's piece (`test`,
+// `feature`, `spec`…): every pattern of the piece, the overrides of the unit's layer first,
+// rendered for the unit at rel — `{{dir}}` its folder, `{{name}}` its unit name, `{{module}}`
+// the folder's name, `{{ext}}` its extension, or its layer's for a spec. Where the project
+// says a piece lives, never a guess of a language's convention.
+func (c *Config) PiecePaths(rel, layer, piece string) []string {
+	if c == nil || c.Derived == nil {
+		return nil
+	}
+	rel = strings.ReplaceAll(rel, "\\", "/")
+	dir := path.Dir(rel)
+	var tpls []string
+	for _, ov := range c.Derived.Overrides {
+		if ov.When == layer {
+			tpls = append(tpls, ov.PadroesDe()[piece]...)
+		}
+	}
+	tpls = append(tpls, c.Derived.PadroesDe()[piece]...)
+	ext := strings.TrimPrefix(path.Ext(rel), ".")
+	if ext == "" || ext == "md" || ext == "feature" {
+		ext = ""
+		if exts := c.LayerExtensions(layer); len(exts) > 0 {
+			ext = strings.TrimPrefix(exts[0], ".")
+		}
+	}
+	r := strings.NewReplacer("{{dir}}", dir, "{{name}}", c.UnitName(rel), "{{module}}", path.Base(dir), "{{ext}}", ext)
+	var out []string
+	seen := map[string]bool{}
+	for _, t := range tpls {
+		if strings.Contains(t, "{{ext}}") && ext == "" {
+			continue
+		}
+		if p := path.Clean(r.Replace(t)); !seen[p] && p != rel {
+			seen[p] = true
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+// LayerExtensions are the extensions the layer's pattern ends with — `*.go`, `*.{ts,tsx}` —,
+// or none.
+func (c *Config) LayerExtensions(layer string) []string {
+	if c == nil {
+		return nil
+	}
+	m := layerExtRE.FindStringSubmatch(c.Layers[layer].Pattern)
+	if m == nil {
+		return nil
+	}
+	var out []string
+	for _, e := range strings.Split(strings.Trim(m[1], "{}"), ",") {
+		if e = strings.TrimSpace(e); e != "" {
+			out = append(out, "."+e)
+		}
+	}
+	return out
+}
+
+var layerExtRE = regexp.MustCompile(`\*\.(\{[^}/]*\}|[^./{}*]+)$`)
+
+// CodeExtensions are the extensions the code layers' patterns name — `*.ts`, `*.{ts,tsx}` —,
+// layer by layer in name order, each once: where a unit's code may be, by what the project
+// declares and not by a list of languages.
+func (c *Config) CodeExtensions() []string {
+	if c == nil {
+		return nil
+	}
+	names := make([]string, 0, len(c.Layers))
+	for n, l := range c.Layers {
+		if l.Kind == "code" {
+			names = append(names, n)
+		}
+	}
+	sort.Strings(names)
+	var out []string
+	seen := map[string]bool{}
+	for _, n := range names {
+		for _, e := range c.LayerExtensions(n) {
+			if !seen[e] {
+				seen[e] = true
+				out = append(out, e)
+			}
+		}
+	}
+	return out
+}
+
+// IsCanonicalLayer says whether the layer is one Anchors added on its own, not one the
+// project declared.
+func (c *Config) IsCanonicalLayer(name string) bool {
+	if c == nil {
+		return false
+	}
+	return c.Layers[name].canonical
+}
+
+// DeclaredLayers counts the layers the project declares — the canonical ones left out.
+func (c *Config) DeclaredLayers() int {
+	if c == nil {
+		return 0
+	}
+	n := 0
+	for _, l := range c.Layers {
+		if !l.canonical {
+			n++
+		}
+	}
+	return n
+}
+
+// Rev is the revision of the anchors.yaml the configuration was loaded from — empty for one
+// built in memory. A judgment about the configuration is measured against it.
+func (c *Config) Rev() string {
+	if c == nil {
+		return ""
+	}
+	return c.rev
+}
+
+// WithCanonicalLayers is a copy of the configuration with the canonical layers it neither
+// declares nor turns off: what a configuration built in memory — the one init writes — will
+// have once loaded.
+func (c *Config) WithCanonicalLayers() *Config {
+	if c == nil {
+		return nil
+	}
+	out := *c
+	out.Layers = make(map[string]Layer, len(c.Layers)+1)
+	for k, v := range c.Layers {
+		out.Layers[k] = v
+	}
+	out.applyCanonicalLayers()
+	return &out
+}
+
+// ProgressConfig is the `progress:` block: what the tasks' weights measure.
+type ProgressConfig struct {
+	// Unit names the weight of a task — points, hours, files —; empty is `points`.
+	Unit string `yaml:"unit,omitempty"`
+}
+
+// ProgressUnit is the unit of the tasks' weights the project names, or empty.
+func (c *Config) ProgressUnit() string {
+	if c == nil || c.Progress == nil {
+		return ""
+	}
+	return strings.TrimSpace(c.Progress.Unit)
+}
+
+// DefaultCoverageDirectives are the comments of the common coverage tools that change what they
+// count: istanbul and c8/v8 (JavaScript), coverage.py (`pragma: no cover`), gcov/lcov
+// (`LCOV_EXCL`), and Go's and Rust's tarpaulin/llvm markers.
+var DefaultCoverageDirectives = []string{
+	`istanbul\s+ignore`, `\bc8\s+ignore`, `\bv8\s+ignore`, `pragma:\s*no\s*(cover|branch)`,
+	`LCOV_EXCL`, `GCOVR_EXCL`, `coverage:\s*ignore`, `tarpaulin`, `cov:\s*ignore`,
+}
+
+// CoverageDirectivesOrDefault are the project's coverage directives, or the defaults.
+func (c *Config) CoverageDirectivesOrDefault() []string {
+	if c == nil || len(c.CoverageDirectives) == 0 {
+		return DefaultCoverageDirectives
+	}
+	return c.CoverageDirectives
+}

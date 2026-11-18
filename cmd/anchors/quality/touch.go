@@ -1,0 +1,469 @@
+// @anchors
+//   code: TCCMT
+//   ref: HDTHD
+
+package quality
+
+import (
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+
+	"github.com/bmatcuk/doublestar/v4"
+	"github.com/spf13/cobra"
+
+	"github.com/co2-lab/anchors/cmd/anchors/common"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
+)
+
+// --- anchors touch: bump `updated_at` on the files that changed ---
+//
+// The `updated-at-current` gate charges every touched file whose header date is not the
+// day of the change. Keeping it meant rewriting `updated_at:` by hand, or a one-off script:
+// measured in the reference app, one `anchors stamp --refresh` rewrote the stamps of 111 tests and each
+// header had to be bumped after. `check --fix` bumps too, but only inside the full check,
+// with no scope and no filter.
+//
+// It does not lie about what changed. A file whose only difference from HEAD is its own
+// `updated_at` is not bumped again, and a file with no difference at all is not touched —
+// the date says when the CONTENT changed, and bumping it for nothing would make it say
+// something false.
+
+// updatedAtLineRE finds the date of an `@anchors` header, in any comment dialect
+// (`//`, `#`, `<!-- -->`): the field is plain text inside the block.
+var updatedAtLineRE = regexp.MustCompile(`updated_at:\s*(\d{4}-\d{2}-\d{2})`)
+
+// touchSkip is why a changed file was not bumped.
+type touchSkip string
+
+const (
+	skipNoHeader   touchSkip = "no @anchors header with updated_at"
+	skipDateOnly   touchSkip = "only its updated_at differs from HEAD"
+	skipUnchanged  touchSkip = "no change from HEAD"
+	skipAlready    touchSkip = "already dated"
+	skipExcluded   touchSkip = "excluded"
+	skipUnstaged   touchSkip = "has changes outside the index — stage them or use --changed"
+	skipUnreadable touchSkip = "could not be read"
+)
+
+// touchDecision is what `anchors touch` does with one file.
+type touchDecision struct {
+	File    string
+	Bump    bool
+	From    string // the date it had
+	Skip    touchSkip
+	Content string // the new content, when Bump
+	Old     string // the content before the bump: its revision is the one the map measured
+}
+
+// decideTouch decides one file: `current` is its content now (worktree, or index with
+// --staged), `base` its content at HEAD (`hasBase` false for a new file), `date` the day
+// to write.
+func decideTouch(file, current, base string, hasBase bool, date string, cs *config.Comments) touchDecision {
+	d := touchDecision{File: file}
+	start, end, ok := headerSpan(current, cs)
+	var m []int
+	if ok {
+		if mm := updatedAtLineRE.FindStringSubmatchIndex(current[start:end]); mm != nil {
+			m = make([]int, len(mm))
+			for i, v := range mm {
+				m[i] = v + start
+			}
+		}
+	}
+	if m == nil {
+		d.Skip = skipNoHeader
+		return d
+	}
+	d.From = current[m[2]:m[3]]
+	if hasBase {
+		if current == base {
+			d.Skip = skipUnchanged
+			return d
+		}
+		// Blank the date on both sides: equal means the header date is all that changed.
+		if blankDate(current) == blankDate(base) {
+			d.Skip = skipDateOnly
+			return d
+		}
+	}
+	if d.From == date {
+		d.Skip = skipAlready
+		return d
+	}
+	d.Bump = true
+	d.Content = current[:m[2]] + date + current[m[3]:]
+	return d
+}
+
+func blankDate(s string) string {
+	return updatedAtLineRE.ReplaceAllString(s, "updated_at: ")
+}
+
+func newTouchCmd() *cobra.Command {
+	var root, date string
+	var staged, dryRun bool
+	var exclude []string
+	cmd := &cobra.Command{
+		Use:   "touch [files or folders...]",
+		Short: "Bump `updated_at` in the @anchors header of the files that changed",
+		Long: `Writes the day's date into the ` + "`updated_at`" + ` of the @anchors header of every
+file that changed — the date the ` + "`updated-at-current`" + ` gate charges.
+
+  anchors touch                 files changed in the worktree vs HEAD (new files too)
+  anchors touch a.ts docs/      only those, among the changed files
+  anchors touch --staged        files in the index vs HEAD, re-staged after (for a pre-commit)
+  anchors touch --dry-run       says what it would bump
+  anchors touch --exclude 'docs/**' --date 2026-09-25
+
+It does not lie: a file whose only difference from HEAD is its own updated_at, or that
+did not change, is not bumped. Only files with an @anchors header carrying updated_at are
+touched, in any comment dialect. The project's ` + "`touch.exclude`" + ` globs (anchors.yaml) add to
+--exclude. With --staged, a file that also has changes outside the index is skipped:
+re-staging it would put those changes in the commit.
+
+The installed pre-commit already runs it on the staged files before the gates
+(` + "`touch.pre_commit`" + ` in anchors.yaml, on by default; ` + "`false`" + ` turns it off).
+
+After a ` + "`stamp --refresh`" + `, order does not matter: a ` + "`@contract`" + ` stamp never covers the header.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			absRoot, err := config.AbsRoot(root)
+			if err != nil {
+				return err
+			}
+			if date == "" {
+				date = gitmeta.Today()
+			}
+			// Named files narrow the touch to them: several agents share one tree, and a date
+			// bumped on another's file ages the evidence of that file.
+			var only []string
+			if len(args) > 0 {
+				if only, err = touchPaths(absRoot, args); err != nil {
+					return err
+				}
+			}
+			bumped, skipped, err := touchRun(absRoot, staged, dryRun, date, exclude, only)
+			if err != nil {
+				return err
+			}
+			if !dryRun {
+				rebaseTouched(absRoot, bumped)
+			}
+			verb := "bumped"
+			if dryRun {
+				verb = "would bump"
+			}
+			for _, d := range bumped {
+				fmt.Printf("  %s %s  (%s → %s)\n", verb, d.File, d.From, date)
+			}
+			for _, why := range []touchSkip{skipDateOnly, skipUnchanged, skipAlready, skipExcluded, skipUnstaged, skipUnreadable, skipNoHeader} {
+				for _, f := range skipped[why] {
+					fmt.Printf("  skipped %s — %s\n", f, why)
+				}
+			}
+			fmt.Printf("\n%s %d file(s) to %s.\n", verb, len(bumped), date)
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&root, "root", ".", "project root")
+	cmd.Flags().BoolVar(&staged, "staged", false, "the files in the index (vs HEAD), re-staged after rewriting")
+	cmd.Flags().StringVar(&date, "date", "", "the date to write (YYYY-MM-DD; default: today)")
+	cmd.Flags().StringArrayVar(&exclude, "exclude", nil, "glob of files never to bump (repeatable; adds to `touch.exclude`)")
+	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "say what would be bumped, without writing")
+	cmd.Flags().Bool("changed", true, "the files changed in the worktree vs HEAD (the default)")
+	return common.TakesFiles(cmd)
+}
+
+// rebaseTouched carries, in the map, each bumped file's evidence from the content it had to
+// the content with the new date: a date proves nothing new nor undoes anything proven. The
+// commit hook's map sync does the same for what it bumps; a touch run on its own did not,
+// and the next check found the closure of every test reaching the file advanced — 50 VR
+// flows stale over a date crossing midnight (reported from a project). No map, nothing to carry.
+func rebaseTouched(absRoot string, bumped []touchDecision) {
+	if len(bumped) == 0 {
+		return
+	}
+	mapPath := filepath.Join(absRoot, mapx.DefaultPath)
+	if _, err := os.Stat(mapPath); err != nil {
+		return
+	}
+	_ = mapx.Update(mapPath, func(g *mapx.Graph) error {
+		for _, d := range bumped {
+			g.RebaseRev(d.File, scan.ShortHash([]byte(d.Old)), scan.ShortHash([]byte(d.Content)))
+		}
+		return nil
+	})
+}
+
+// touchCandidates lists the files to consider: changed vs HEAD in the worktree (plus the
+// untracked ones), or in the index with --staged. Deleted files are not candidates.
+//
+// Every path is the project root's, and only the project's files are listed: `--relative`
+// makes `git diff` name them from the root (it names them from the repository's top
+// otherwise) and drops the ones outside it. Without it, a project in a subdirectory of the
+// repository (a monorepo package) read `sub/x.ts` as `<root>/sub/x.ts` and the touch failed
+// on a file that does not exist.
+func touchCandidates(root string, staged bool) ([]string, error) {
+	var lists [][]string
+	if staged {
+		out, err := exec.Command("git", "-C", root, "diff", "--cached", "--relative", "--name-only", "--diff-filter=ACMR").Output()
+		if err != nil {
+			return nil, fmt.Errorf("git diff --cached: %w", err)
+		}
+		lists = append(lists, strings.Fields(string(out)))
+	} else {
+		out, err := exec.Command("git", "-C", root, "diff", "HEAD", "--relative", "--name-only", "--diff-filter=ACMR").Output()
+		if err != nil {
+			return nil, fmt.Errorf("git diff HEAD: %w", err)
+		}
+		lists = append(lists, strings.Fields(string(out)))
+		out, err = exec.Command("git", "-C", root, "ls-files", "--others", "--exclude-standard").Output()
+		if err != nil {
+			return nil, fmt.Errorf("git ls-files: %w", err)
+		}
+		lists = append(lists, strings.Fields(string(out)))
+	}
+	seen := map[string]bool{}
+	var files []string
+	for _, l := range lists {
+		for _, f := range l {
+			if !seen[f] {
+				seen[f] = true
+				files = append(files, f)
+			}
+		}
+	}
+	sort.Strings(files)
+	return files, nil
+}
+
+// touchCurrent is the content to date: the worktree file, or the staged blob.
+func touchCurrent(root, f string, staged bool) (string, bool) {
+	if staged {
+		return gitShow(root, ":"+f)
+	}
+	b, err := os.ReadFile(filepath.Join(root, f))
+	if err != nil {
+		return "", false
+	}
+	return string(b), true
+}
+
+// gitShow reads a blob at `<rev>:<path>`, the path relative to root. git reads the path
+// of `<rev>:<path>` from the repository's top unless it starts with `./`, so the spec is
+// rewritten to `<rev>:./<path>` — the same file whether root is the top or below it.
+func gitShow(root, spec string) (string, bool) {
+	if rev, path, ok := strings.Cut(spec, ":"); ok {
+		spec = rev + ":./" + path
+	}
+	out, err := exec.Command("git", "-C", root, "show", spec).Output()
+	if err != nil {
+		return "", false
+	}
+	return string(out), true
+}
+
+// hasUnstaged says whether the worktree copy differs from the index copy.
+func hasUnstaged(root, f string) bool {
+	return exec.Command("git", "-C", root, "diff", "--quiet", "--", f).Run() != nil
+}
+
+func excludedBy(f string, globs []string) bool {
+	for _, g := range globs {
+		if ok, _ := doublestar.Match(g, f); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// touchRun bumps the changed files (worktree, or index with staged) and says what it did.
+// The project's `touch.exclude` adds to exclude. Shared by `anchors touch` and the
+// pre-commit phase of `anchors verify`.
+func touchRun(absRoot string, staged, dryRun bool, date string, exclude, only []string) ([]touchDecision, map[touchSkip][]string, error) {
+	cfg, err := common.LoadConfig(absRoot)
+	if err != nil {
+		return nil, nil, err
+	}
+	if cfg != nil && cfg.Touch != nil {
+		exclude = append(append([]string{}, exclude...), cfg.Touch.Exclude...)
+	}
+	files, err := touchCandidates(absRoot, staged)
+	if err != nil {
+		return nil, nil, err
+	}
+	if only != nil {
+		files = named(absRoot, within(files, only), only)
+	}
+	var bumped []touchDecision
+	skipped := map[touchSkip][]string{}
+	for _, f := range files {
+		if excludedBy(f, exclude) {
+			skipped[skipExcluded] = append(skipped[skipExcluded], f)
+			continue
+		}
+		current, ok := touchCurrent(absRoot, f, staged)
+		if !ok {
+			skipped[skipUnreadable] = append(skipped[skipUnreadable], f)
+			continue
+		}
+		if staged && hasUnstaged(absRoot, f) {
+			if updatedAtLineRE.MatchString(current) {
+				skipped[skipUnstaged] = append(skipped[skipUnstaged], f)
+			}
+			continue
+		}
+		base, hasBase := gitShow(absRoot, "HEAD:"+f)
+		d := decideTouch(f, current, base, hasBase, date, cfg.CommentsFor(f))
+		d.Old = current
+		if !d.Bump {
+			if d.Skip != skipNoHeader || only != nil {
+				skipped[d.Skip] = append(skipped[d.Skip], f)
+			}
+			continue
+		}
+		bumped = append(bumped, d)
+		if dryRun {
+			continue
+		}
+		if err := os.WriteFile(filepath.Join(absRoot, f), []byte(d.Content), 0o644); err != nil {
+			return bumped, skipped, err
+		}
+		if staged {
+			if out, err := exec.Command("git", "-C", absRoot, "add", "--", f).CombinedOutput(); err != nil {
+				return bumped, skipped, fmt.Errorf("re-stage %s: %v %s", f, err, out)
+			}
+			if err := restageRealIndex(absRoot, f); err != nil {
+				return bumped, skipped, err
+			}
+		}
+	}
+	return bumped, skipped, nil
+}
+
+// restageRealIndex keeps the REAL index in step during a partial commit.
+//
+// `git commit -- <paths>` runs the hook against a temporary index (`next-index-<pid>.lock`,
+// in GIT_INDEX_FILE), and prepares the real one separately in `index.lock` of the same
+// directory, from the worktree as it was BEFORE the hook. The hook's `git add` reached
+// only the temporary index: the commit came out dated, and the real index kept the old
+// date — `MM` in `git status`, and a later `git add` could revert the date (reported from
+// the reference app, where every commit names its paths so another session's changes never mix in).
+// Staging the file in that `index.lock` too makes the real index end equal to HEAD.
+//
+// Outside a partial commit it does nothing: a plain commit's hook stages in the real index
+// already, and `commit -a` stages in `index.lock`, which becomes the index.
+func restageRealIndex(root, f string) error {
+	idx := os.Getenv("GIT_INDEX_FILE")
+	if !strings.HasPrefix(filepath.Base(idx), "next-index-") {
+		return nil
+	}
+	real := filepath.Join(filepath.Dir(idx), "index.lock")
+	if _, err := os.Stat(real); err != nil {
+		fmt.Printf("· touch: partial commit, and the real index was not found — after the commit, "+
+			"`git restore --staged %s` puts the index back in step with HEAD\n", f)
+		return nil
+	}
+	c := exec.Command("git", "-C", root, "add", "--", f)
+	c.Env = append(os.Environ(), "GIT_INDEX_FILE="+real)
+	if out, err := c.CombinedOutput(); err != nil {
+		return fmt.Errorf("re-stage %s in the real index: %v %s", f, err, out)
+	}
+	return nil
+}
+
+// touchOnPreCommit says whether the pre-commit phase bumps the staged files first: on
+// unless the project declares `touch.pre_commit: false`.
+func touchOnPreCommit(cfg *config.Config) bool {
+	return cfg == nil || cfg.Touch == nil || cfg.Touch.PreCommit == nil || *cfg.Touch.PreCommit
+}
+
+// headerSearchLines bounds where the @anchors header may start: it sits at the top.
+const touchHeaderSearchLines = 10
+
+// headerSpan is the byte range of the @anchors header block, as the map reads it
+// (scan.HeaderRange): only a date INSIDE it is the header's.
+//
+// Searching the whole file dated text that only looks like a header. Measured on the
+// Anchors repository itself: a test fixture — the string "// @anchors … updated_at:
+// 2026-09-01" in a Go constant — was rewritten by the pre-commit, and the commit went in
+// with the test broken.
+func headerSpan(content string, cs *config.Comments) (start, end int, ok bool) {
+	lines := strings.SplitAfter(content, "\n")
+	plain := make([]string, len(lines))
+	for i, l := range lines {
+		plain[i] = strings.TrimSuffix(l, "\n")
+	}
+	from, to, found := scan.HeaderRange(plain, cs)
+	if !found {
+		return 0, 0, false
+	}
+	for i := 0; i < to; i++ {
+		if i < from {
+			start += len(lines[i])
+		}
+		end += len(lines[i])
+	}
+	return start, end, true
+}
+
+// touchPaths turns the paths named on the command line — relative to where the command
+// runs, or absolute — into the project root's, with forward slashes. A path outside the
+// project is an error: nothing there is the project's to date.
+func touchPaths(absRoot string, args []string) ([]string, error) {
+	out := make([]string, 0, len(args))
+	for _, a := range args {
+		abs, err := filepath.Abs(a)
+		if err != nil {
+			return nil, err
+		}
+		rel, err := filepath.Rel(absRoot, abs)
+		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return nil, fmt.Errorf("%s is outside the project (%s)", a, absRoot)
+		}
+		out = append(out, filepath.ToSlash(rel))
+	}
+	return out, nil
+}
+
+// within keeps the files that are one of the paths, or under one of them.
+func within(files, paths []string) []string {
+	var out []string
+	for _, f := range files {
+		for _, p := range paths {
+			if p == "." || f == p || strings.HasPrefix(f, strings.TrimSuffix(p, "/")+"/") {
+				out = append(out, f)
+				break
+			}
+		}
+	}
+	return out
+}
+
+// named adds to the changed files among the named paths the named files that are not
+// among them: each one asked for by name gets a verdict — "no change from HEAD", "could
+// not be read" — instead of vanishing from the list. A named folder brings only its
+// changed files.
+func named(absRoot string, files, paths []string) []string {
+	seen := make(map[string]bool, len(files))
+	for _, f := range files {
+		seen[f] = true
+	}
+	for _, p := range paths {
+		if fi, err := os.Stat(filepath.Join(absRoot, filepath.FromSlash(p))); err == nil && fi.IsDir() {
+			continue
+		}
+		if !seen[p] {
+			seen[p] = true
+			files = append(files, p)
+		}
+	}
+	return files
+}

@@ -1,0 +1,1229 @@
+// @anchors
+//   code: DGIDF
+//   ref: DFGTD
+
+package initx
+
+import "github.com/co2-lab/anchors/internal/config"
+
+// dependOnIngestedSignal são os gates que só têm o que medir depois de `anchors ingest`
+// receber um relatório de teste, cobertura ou mutação. Bloquear com base num sinal que
+// ainda não existe barraria o commit por ausência de dado — não por defeito.
+//
+// Ficam informativos mesmo em projeto novo, e o usuário os promove quando a suíte
+// estiver rodando no CI.
+var dependOnIngestedSignal = map[string]bool{
+	"tests-green": true, "line-coverage": true, "coverage-delta": true, "branch-coverage": true,
+	"mutation-score": true, "scenario-coverage": true, "sbom-generated": true,
+	"dependency-vulnerable": true, "no-duplication": true,
+	"license-compatible": true, "circular": true, "deadcode": true, "spellcheck": true,
+}
+
+// DefaultGates devolve os gates que um projeto deve NASCER com, conforme os artefatos
+// que ele usa. É o que amarra os sinais de teste ao ciclo de vida: se o projeto tem
+// testes, o ciclo já nasce cobrando execução + cobertura, em vez de o usuário escrever
+// tudo à mão.
+//
+// `projetoNovo` decide o estado de maturação, e a distinção é o ponto:
+//
+//   - projeto EXISTENTE → informativo (QUALITY §7). A doutrina é explícita: "impor o
+//     gate como bloqueante imediatamente pararia o projeto", porque um projeto real
+//     quase nunca cumpre, no dia um, o limiar que quer atingir.
+//   - projeto NOVO → BLOQUEANTE. Ali a premissa se inverte: não há débito a acomodar,
+//     e o gate não para nada — ele impede o PRIMEIRO desvio, que é quando corrigir
+//     custa menos. Nascer informativo adiaria uma cobrança que nunca vai ser mais
+//     barata do que agora.
+//
+// A exceção são os gates que dependem de sinal ingerido: sem relatório, eles barrariam
+// por ausência de dado, não por defeito.
+//
+// `chosen` são os artefatos escolhidos no init (spec/feature/test/guide/plan/code).
+func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
+	var gates []config.Gate
+
+	if chosen["spec"] {
+		gates = append(gates,
+			config.Gate{
+				Name: "spec-complete", ID: "spec-complete", On: []string{"spec"}, Check: "spec-sections",
+				Blocking: config.Bool(false), Measures: "the spec has at least one state/rule, with no placeholder",
+			},
+			config.Gate{
+				Name: "spec-has-code", ID: "spec-has-code", On: []string{"spec"}, Check: "has-code",
+				Blocking: config.Bool(false), Measures: "the spec carries a scenario code (identity)",
+			},
+			// The `@anchors` header is where a spec and a feature carry their identity, and
+			// the header guide `init` writes says so and names this gate. It was not in the
+			// catalog, so `init` never seeded it and a bare `- name: header-valid` got no
+			// `on:` and measured nothing. Code and tests are left out: they take their
+			// identity from co-location, not from a header.
+			config.Gate{
+				// EVERY file Anchors governs carries the header, as the seeded header guide
+				// says: on spec and feature alone, code and test went unchecked, and every
+				// gate that reads a code file's `ref:` or `layer:` was left with nothing.
+				Name: "header-valid", ID: "header-valid", On: []string{"spec", "feature", "code", "test", "guide", "doc", "plan", "product", "flag"}, Check: "header-valid",
+				Blocking: config.Bool(false), Measures: "the @anchors header carries the artifact's identity",
+			},
+			// A spec sozinha atravessa TODOS os gates relacionais — eles falham ABERTO
+			// (sem teste ligado, não há o que confrontar) e o pipeline conclui "pode
+			// promover" sobre trabalho que não existe. Este gate pergunta o oposto: as
+			// peças EXISTEM? Nasce informativo porque quase todo projeto tem débito.
+			config.Gate{
+				Name: "unit-complete", ID: "unit-complete", On: []string{"spec"}, Check: "unit-complete",
+				Blocking: config.Bool(false), Measures: "the spec has code, feature and test that realise it",
+			},
+			// A metade que o determinístico NÃO alcança.
+			//
+			// O `unit-complete` confere que a referência do `@no-test` RESOLVE: existe
+			// um teste que menciona aquele código. Isso é binário e ele decide sozinho.
+			//
+			// O que sobra é julgamento — aquele teste prova mesmo ESTE comportamento? A
+			// busca do gate determinístico é TEXTUAL de propósito: casar `it('CODE: …')`
+			// amarraria o Anchors ao dialeto de um framework de teste, e um projeto Go ou
+			// Python perderia a dispensa. O preço dessa neutralidade é uma folga — um
+			// código citado só em comentário resolve a referência sem provar nada.
+			//
+			// Sem este gate a folga vira rigor APARENTE: a referência resolve, o pipeline
+			// fica verde, e a prova não existe. Determinístico prova que a referência
+			// RESOLVE; julgamento prova que ela VALE.
+			config.Gate{
+				Name: "no-test-proof-real", ID: "no-test-proof-real", On: []string{"spec"},
+				// Só as specs que DISPENSARAM o teste têm o que julgar. Sem o filtro, o
+				// gate enfileirava uma pergunta de IA para toda spec do projeto — 583
+				// alvos onde 16 dispensaram — e o contador de pendências passava a medir
+				// o tamanho do projeto em vez do tamanho do trabalho.
+				Requires: "@no-test",
+				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
+				Ask: "This spec waives its own test with `@no-test` and points at a scenario " +
+					"code as the proof elsewhere. Find the test that mentions that code and " +
+					"answer: does it EXERCISE the behaviour this spec describes, or does it only " +
+					"cite the code? Fail it if the mention is in a comment, if the test exercises " +
+					"another behaviour, or if the proof is so indirect that a break in this unit " +
+					"would not bring it down. The question is about what the test RUNS, not about " +
+					"what its name promises.",
+			},
+			// O PAR do `regra-implementada`, e a divisão entre eles é de NATUREZA, não de
+			// rigor:
+			//
+			//   determinístico  o código de referência ESTÁ no trecho? — barato, roda a
+			//                   cada commit, e é falsificável por construção (basta
+			//                   escrever o comentário).
+			//   julgamento      o trecho marcado FAZ o que a regra diz? — caro, roda em
+			//                   revisão, e é o único que pega o comentário mentiroso.
+			//
+			// Um sozinho não basta. Só o determinístico certifica quem marcou sem
+			// implementar; só o julgamento seria caro demais para cada commit. Rodando em
+			// momentos diferentes, eles se complementam.
+			config.Gate{
+				Name: "rule-fulfilled", ID: "rule-fulfilled", On: []string{"spec"},
+				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
+				Ask: "Each rule of this spec is marked in the code by a comment carrying its " +
+					"code (`// ABCDX-B01: …`). Read the rule and the snippet it marks and answer: " +
+					"does the snippet DO what the rule describes? Fail it when the comment sits " +
+					"on code that does something else, when the rule describes a case the snippet " +
+					"does not handle, or when the mark is in a generic place (top of the file, an " +
+					"import) instead of the snippet that decides. The question is about what the " +
+					"code RUNS, not about what the comment claims. When failing it, PROPOSE the " +
+					"fix as a patch." +
+					tbdInstruction("the code"),
+				// The marks were put by the agents who wrote the code: their own judgment of
+				// them still finds real bugs, and it is a different thing from a second look.
+				// So the gate is judged AND marked to review (reported from a project).
+				Review: &config.Review{Ask: "Look again at what an agent decided: does each " +
+					"marked snippet do what its rule says, and does the rule cover what the " +
+					"code does? Record each finding — what, where (file:line), why — to become " +
+					"a failing test and a fix, or dismiss it with the reason."},
+			},
+			// The pair of `rule-fulfilled` on the other side: that one asks whether the CODE
+			// does what the rule says; this one whether the TEST asserts it. Measured on a project:
+			// a rule said the tap records the item in the notification log, and the
+			// test carrying its tag asserted `markAuditSeen` — the tag matched, the test was
+			// green, and no ruler read the two side by side.
+			config.Gate{
+				Name: "rule-test-coherent", ID: "rule-test-coherent", On: []string{"spec"},
+				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
+				Ask: "Each rule of this spec is proven by tests that carry its code (a tag, a " +
+					"title, a comment). For each rule, read its text and what those tests ASSERT — " +
+					"the targets of their expect/assert, the functions, tables, fields and values " +
+					"they check — and answer: does what the tests assert agree with what the rule " +
+					"says? Fail it when the rule names one thing and the test asserts another (the " +
+					"rule records the item in one place, the test expects a call that writes " +
+					"another), when the test asserts the opposite of the rule, or when the rule " +
+					"names variants and the tests carrying it prove only some. Agreement in other " +
+					"words is a pass. For each contradiction, name the rule, the test (file:line) " +
+					"and both sides, and say which one is wrong if the spec or the code tells." +
+					tbdInstruction("the test"),
+			},
+			// O vocabulário de letras do código é do PROJETO (`rule_types`), mas o gate
+			// que impede conflito e letra não declarada é universal: uma letra fora do
+			// vocabulário torna a regra INVISÍVEL à rastreabilidade — ela aparece na
+			// spec, na feature e no teste, e nenhum gate a enxerga.
+			// O INVERSO do `regra-implementada`: aquele parte da spec e pergunta "esta
+			// regra tem código?"; este parte do código e pergunta "este símbolo tem
+			// regra?". Sem os dois, a divergência escapa por um dos lados — medido: uma
+			// spec catalogava 2 regras para 7 funções exportadas e ninguém perguntou
+			// pelas 5 restantes. A dispensa por símbolo (`@no-rule: <razão>`) cobre o
+			// caso legítimo: nem toda exportação carrega decisão de negócio.
+			config.Gate{
+				Name: "code-cataloged", ID: "code-cataloged", On: []string{"spec"}, Check: "code-cataloged",
+				Blocking: config.Bool(false),
+				Measures: "every exported symbol has a rule in the spec or a written waiver",
+			},
+			config.Gate{
+				Name: "rule-types", ID: "rule-types", On: []string{"spec"}, Check: "rule-types",
+				Blocking: config.Bool(false), Measures: "every code letter is declared in the vocabulary, with no conflict",
+			},
+			// A spec declares no dependency: it precedes the code, and the files a unit imports
+			// are declared where the import is (`@dep:`, DOOSD). The gate names a table left to
+			// migrate.
+			config.Gate{
+				Name: "dependency-honored", ID: "dependency-honored", On: []string{"spec"}, Check: "dependency-honored",
+				Blocking: config.Bool(false), Measures: "the spec declares no dependency table — the code declares its dependencies by `@dep:`",
+			},
+			// O padrão mais repetido de uma auditoria de 51 divergências spec×código
+			// (app de referência, 2026-08): oito handlers declaravam um Contrato de Saída que o
+			// código não cumpria, e o status omitido era quase sempre o de SEGURANÇA
+			// (403 de ownership, 409 de conflito) — quem escreve a tabela pensa no
+			// caminho felizardo. O inverso também conta: status declarado que nenhum
+			// caminho emite é código morto no cliente, e some sem ninguém notar.
+			// Os três achados MAIS GRAVES da mesma auditoria tinham forma idêntica:
+			// dois lados definiam a mesma coisa, cada um tinha teste, e cada teste
+			// confrontava a PRÓPRIA cópia. A unidade ficava completa e os gates verdes
+			// porque nenhum perguntava se a PROVA alcança o outro lado. Este gate
+			// cobra: regra que afirma "espelha"/"fonte única" com um arquivo citado
+			// exige que o código IMPORTE aquele arquivo.
+			config.Gate{
+				Name: "proof-crosses-boundary", ID: "proof-crosses-boundary", On: []string{"spec"}, Check: "proof-crosses-boundary",
+				Presupposes: []string{"dialect.imports"},
+				Blocking:    config.Bool(false), Measures: "a rule asserting a relation with another unit has the code importing that unit",
+			},
+			config.Gate{
+				Name: "contract-status-declared", ID: "contract-status-declared", On: []string{"spec"}, Check: "contract-status-declared",
+				Presupposes: []string{"dialect.http_status"},
+				Blocking:    config.Bool(false), Measures: "the Output Contract statuses are the ones the handler returns — and only those",
+			},
+			// O dever que um artefato contrai com um lugar que ele NÃO conhece (LGPD,
+			// i18n, a11y, auditoria). Só age se o projeto declarar `obligations:` — sem
+			// declaração, o gate é inerte. Nasce ligado para que a categoria exista.
+			config.Gate{
+				Name: "obligation-honored", ID: "obligation-honored", On: []string{"spec"}, Check: "obligation-honored",
+				Blocking: config.Bool(false), Measures: "the artifact fulfils the cross-cutting obligations it takes on",
+			},
+		)
+	}
+	// FUNÇÕES IRMÃS: quando a maioria guarda um parâmetro e uma não, a que não guarda é
+	// quase sempre esquecimento. Detectável sem entender o domínio — é assimetria.
+	if chosen["test"] || chosen["spec"] {
+		gates = append(gates, config.Gate{
+			Name: "sibling-guard", ID: "sibling-guard", On: []string{"code"}, Check: "sibling-guard",
+			Presupposes: []string{"dialect.exported_func", "dialect.param_name", "dialect.guard_patterns"},
+			Blocking:    config.Bool(false), Measures: "sibling functions handle the same parameter consistently",
+		})
+	}
+	// PLANO: um plano semeia specs, e semear numa camada que não tem spec faz quem
+	// executa gastar uma rodada descobrindo a contradição. A origem é checável.
+	if chosen["plan"] {
+		gates = append(gates, config.Gate{
+			Name: "plan-seeds-valid", ID: "plan-seeds-valid", On: []string{"plan"}, Check: "plan-seeds-valid",
+			Blocking: config.Bool(false), Measures: "the plan only seeds specs in a layer that has specs",
+		})
+		// A FONTE que o plano nomeia tem de ter dono declarado.
+		//
+		// Medido no app de referência: o plano 0008 dizia "Fonte: **GA4**" e declarava
+		// `needs:` só do 0005. O adaptador vinha do 0002, e a dependência existia SÓ
+		// NA PROSA — até o 0002 remover o adaptador numa revisão. Os dois planos
+		// seguiram internamente coerentes, e a contradição só apareceu ao começar o
+		// 0008. Nenhum gate pegava: o `dependency-honored` confronta o `needs:`
+		// declarado, e aqui o defeito é o `needs:` que FALTA.
+		gates = append(gates, config.Gate{
+			Name: "plan-source-declared", ID: "plan-source-declared", On: []string{"plan"},
+			Check: "plan-source-declared", Blocking: config.Bool(false),
+			Measures: "the source the plan names has the adapter's plan in `needs:`",
+		})
+	}
+	// Each gate below is seeded by the artifacts it RUNS ON, not by `plan`. They used to
+	// sit inside the `plan` block, so a project that chose spec, feature and test without
+	// plans was born without ~20 gates over its own specs (docs, doctrine, flags, failure,
+	// the way back of the unit) — and `anchors init` never offered them.
+	if chosen["spec"] {
+		// A DOC COMPILADA envelhece em silêncio. O conteúdo mora na spec; o `docs/*.md`
+		// é derivado dela por template, e quem altera uma regra e esquece de recompilar
+		// deixa a documentação afirmando a versão ANTIGA — com conteúdo real, e por isso
+		// convincente. Uma doc obviamente incompleta manda procurar a fonte; uma doc
+		// desatualizada não manda procurar nada.
+		//
+		// INFORMATIVO por decisão: o desvio é resolvido por um `anchors docs build`, e o
+		// pipeline roda o build no merge. Reprovar o autor por trabalho que a máquina faz
+		// sozinha gastaria a atenção da revisão com o que ela menos precisa.
+		gates = append(gates, config.Gate{
+			Name: "docs-fresh", ID: "docs-fresh", On: []string{"spec"},
+			Check: "docs-fresh", Blocking: config.Bool(false),
+			Measures: "the compiled `docs/*.md` reflects the spec it came from",
+		})
+	}
+	if chosen["plan"] {
+		// O EIXO VERTICAL — a doutrina de produto e quem a realiza.
+		//
+		// Quatro perguntas distintas, cada uma pegando um silencio que as outras nao
+		// veem. As tres de referencia reprovam (a referencia quebrada parece
+		// rastreabilidade e nao resolve para nada); a de realizacao INFORMA, porque uma
+		// regra decidida hoje para ser implementada no proximo ciclo e' trabalho
+		// legitimo, nao defeito.
+		gates = append(gates, config.Gate{
+			Name: "plan-doctrine-exists", ID: "plan-doctrine-exists", On: []string{"plan"},
+			Check: "plan-doctrine-exists", Blocking: config.Bool(false),
+			Measures: "the product doctrine the plan seeds exists",
+		})
+	}
+	if chosen["spec"] {
+		gates = append(gates, config.Gate{
+			Name: "doctrine-realized", ID: "doctrine-realized", On: []string{"product"},
+			Check: "doctrine-realized", Blocking: config.Bool(false),
+			Measures: "every product rule is realised by some spec",
+		})
+		gates = append(gates, config.Gate{
+			Name: "spec-doctrine-exists", ID: "spec-doctrine-exists", On: []string{"spec"},
+			Check: "spec-doctrine-exists", Blocking: config.Bool(false),
+			Measures: "the doctrine the spec references with `@realizes` exists",
+		})
+
+		// O EIXO DAS FEATURE FLAGS. Uma flag multiplica os caminhos do codigo sem
+		// multiplicar a spec, e os tres custos (revisao, teste, remocao) sao silencios que
+		// nenhum outro gate enxerga.
+		// THE WAY BACK OF EACH PAIR OF THE UNIT.
+		//
+		// `spec-feature-match` and `feature-test-match` walk the ORIGIN looking for the
+		// destination. These walk the destination asking whether the origin still exists —
+		// and that is what catches what a revert leaves behind: a scenario with no rule, a
+		// test proving a reverted rule. Measured: the real case passed with an EMPTY message.
+		//
+		// Informational at birth: every historical revert left leftovers, and a large batch
+		// of identical findings becomes noise people learn to scroll past.
+		//
+		// Each needs both ends of its pair: with no spec there is no rule for a scenario to
+		// match, and with no feature there is no scenario for a test to match.
+		if chosen["feature"] {
+			gates = append(gates, config.Gate{
+				Name: "feature-spec-match", ID: "feature-spec-match", On: []string{"feature"},
+				Check: "feature-spec-match", Blocking: config.Bool(false),
+				Measures: "every scenario of the feature matches a rule the spec declares",
+			})
+		}
+	}
+	if chosen["test"] && chosen["feature"] {
+		gates = append(gates, config.Gate{
+			Name: "test-feature-match", ID: "test-feature-match", On: []string{"test"},
+			Check: "test-feature-match", Blocking: config.Bool(false),
+			Measures: "every code the test proves matches a declared scenario",
+		})
+	}
+	if chosen["spec"] {
+
+		// A REVISAO QUE MUDOU O SIGNIFICADO DE UMA PALAVRA, e nao disse a quem.
+		//
+		// A BLOCKING-class gate (DFGTD-B12, decided by the user): a new project is born with
+		// it blocking. `false` here is the maturation state of an EXISTING project, like
+		// every structural gate: its old revisions carry no `Checked:`, so each is born a
+		// finding, and the project measures that queue before promoting the gate.
+		gates = append(gates, config.Gate{
+			Name: "revision-orphans", ID: "revision-orphans", On: []string{"spec"},
+			Check: "revision-orphans", Blocking: config.Bool(false),
+			Measures: "the revision names the sibling rules that speak of the same subject",
+		})
+		// The flag gates follow the project's age: an existing project's flags were written
+		// before the grammar was asked of them, and blocking every one on day one stopped the
+		// work for a debt that is matured, not a defect that leaks.
+		gates = append(gates, config.Gate{
+			Name: "flag-scenario-grammar", ID: "flag-scenario-grammar", On: []string{"flag"},
+			Check: "flag-scenario-grammar", Blocking: config.Bool(projetoNovo),
+			Measures: "each scenario's condition is written in the grammar",
+		})
+		gates = append(gates, config.Gate{
+			Name: "flag-scenarios-complete", ID: "flag-scenarios-complete", On: []string{"flag"},
+			Check: "flag-scenarios-complete", Blocking: config.Bool(projetoNovo),
+			Measures: "the flag declares the ABSENT case",
+		})
+		gates = append(gates, config.Gate{
+			Name: "flag-scenario-exists", ID: "flag-scenario-exists", On: []string{"spec"},
+			Check: "flag-scenario-exists", Blocking: config.Bool(projetoNovo),
+			Measures: "the scenario the spec cites with `@gated-by` exists",
+		})
+		// The WAY BACK of the previous one: that one confronts the spec citing a scenario
+		// that does not exist; this one, the scenario nobody cites. Informational because
+		// the flag is born BEFORE the specs that cite it — demanding both ends in the same
+		// commit is not how the work happens.
+		gates = append(gates, config.Gate{
+			Name: "flag-scenario-governs", ID: "flag-scenario-governs", On: []string{"flag"},
+			Check: "flag-scenario-governs", Blocking: config.Bool(false),
+			Measures: "every flag scenario governs at least one rule",
+		})
+		// INFORMATIVO: teste por cenario e' a regra certa e a mais cara de cumprir. O
+		// cenario escrito hoje e testado no commit seguinte e' trabalho normal, nao defeito.
+		gates = append(gates, config.Gate{
+			Name: "flag-covered", ID: "flag-covered", On: []string{"flag"},
+			Check: "flag-covered", Blocking: config.Bool(false),
+			Measures: "each flag scenario has at least one green test",
+		})
+		gates = append(gates, config.Gate{
+			Name: "doctrine-not-duplicated", ID: "doctrine-not-duplicated", On: []string{"spec"},
+			Check: "doctrine-not-duplicated", Blocking: config.Bool(false),
+			Measures: "the spec references the doctrine instead of copying its text",
+		})
+
+		// A EXIGENCIA POR CAMADA: opcional por padrao, e quem decide e' a Estrutura.
+		// Sem camada declarando `requires_doctrine`, este gate e' Skip em tudo — o que
+		// e' o certo para um framework, e o oposto do certo para um produto.
+		gates = append(gates, config.Gate{
+			Name: "spec-realizes-doctrine", ID: "spec-realizes-doctrine", On: []string{"spec"},
+			Check: "spec-realizes-doctrine", Blocking: config.Bool(false),
+			Measures: "the spec's rules declare the product doctrine they realise",
+		})
+
+		// A FALHA declarada, tratada e registrada — a camada estatica do conceito.
+		//
+		// A spec ja' catalogava como a unidade falha (a secao `-E`), e NADA confrontava
+		// isso: as regras atravessavam o pipeline inteiro sem que se perguntasse se eram
+		// tratadas, se logavam, ou se aconteciam.
+		//
+		// `failure-logged` e' o que sustenta as camadas seguintes: um tratamento que
+		// engole a falha sem registrar nada e' o silencio perfeito — ela acontece, nada
+		// sabe, e nenhuma ferramenta a jusante tem o que ler.
+		gates = append(gates, config.Gate{
+			Name: "failure-handled", ID: "failure-handled", On: []string{"spec"},
+			Check: "failure-handled", Blocking: config.Bool(false), Presupposes: []string{"dialect.handle_patterns"},
+			Measures: "the declared failure has a path that handles it in the code",
+		})
+		gates = append(gates, config.Gate{
+			Name: "failure-logged", ID: "failure-logged", On: []string{"spec"},
+			Check: "failure-logged", Blocking: config.Bool(false), Presupposes: []string{"dialect.handle_patterns", "dialect.log_patterns"},
+			Measures: "the failure handling RECORDS the occurrence",
+		})
+		gates = append(gates, config.Gate{
+			Name: "failure-declared", ID: "failure-declared", On: []string{"spec"},
+			Check: "failure-declared", Blocking: config.Bool(false),
+			Measures: "the handling that exists in the code answers some declared failure",
+		})
+
+		// A COBERTURA, que o gate acima nao tem como ver: ele confere as paginas que
+		// EXISTEM, e o defeito silencioso e' a spec que nao chega a pagina nenhuma.
+		// Os templates filtram por camada, entao uma spec que nenhum filtro seleciona
+		// compila para lugar nenhum — e todas as paginas seguem corretas.
+		gates = append(gates, config.Gate{
+			Name: "docs-covered", ID: "docs-covered", On: []string{"spec"},
+			Check: "docs-covered", Blocking: config.Bool(false),
+			Measures: "every spec reaches some documentation page",
+		})
+		// A DOCUMENTAÇÃO AGREGADA que a unidade alimenta. O `docs.required` declara qual
+		// documento é contrato e qual camada ou unidade o dispara; até aqui a declaração
+		// era resolvida (`RequiredFor`) e nunca CONFRONTADA.
+		//
+		// Medido no projeto de referência: um PR entregou uma lambda nova — spec, código,
+		// feature e teste — sem tocar o OpenAPI nem o esquema de dados, os dois declarados
+		// com `trigger: [lambdas]`. Todos os checks ficaram verdes. Só apareceu porque
+		// dois agentes colidiram no mesmo card e havia com que comparar.
+		//
+		// BLOQUEANTE, diferente do `docs-fresh` ao lado, e a diferença é o que a máquina
+		// consegue fazer sozinha: um `docs/*.md` desatualizado se conserta com um
+		// `docs build`, e reprovar o autor por isso gasta a atenção da revisão. Um
+		// contrato que não descreve a rota nova NÃO se conserta sozinho — alguém precisa
+		// escrever o que a rota faz.
+		// ESCOPO `batch`: um veredito por DOCUMENTO, e não por unidade.
+		//
+		// A primeira versão rodava por nó, e cada spec cujo contrato não a mencionava
+		// virava um card. No projeto de referência isso produziu 37 cards de uma vez — e
+		// todos escreviam nos MESMOS dois arquivos.
+		//
+		// O efeito foi uma fila que não anda: cada PR mergeado invalidava os outros,
+		// porque o ponto de inserção mudava. Medido: de 6 PRs, 2 passavam e 4 conflitavam.
+		//
+		// O defeito era do gate, que fatiou por unidade um trabalho que é por documento.
+		gates = append(gates, config.Gate{
+			Name: "doc-required", ID: "doc-required", On: []string{"spec"},
+			Check: "doc-required", Blocking: config.Bool(true),
+			Scope:    config.ScopeBatch,
+			Measures: "the contracted documents exist and mention the units that trigger them",
+		})
+		// A SPEC BASTA POR SI. O corpo dela vira documentação palavra por palavra, e
+		// quem lê o `docs/` não tem o repositório aberto: uma frase que só APONTA para um
+		// plano manda essa pessoa a um arquivo que ela não vai abrir — que é exatamente o
+		// que o mecanismo de documentação existe para eliminar.
+		//
+		// A referência COM o trecho citado junto não é acusada: ali o leitor tem o
+		// argumento em mãos. O que o gate marca é o andaime que anuncia e não entrega.
+		//
+		// Casa ESTRUTURA, não vocabulário: os caminhos que o mapa conhece e a forma
+		// `{CODIGO}-R000N`. Um gate que procurasse "plano" ou "ver" passaria em silêncio
+		// no projeto escrito noutra língua — e silêncio é pior que ausência, porque a
+		// spec pareceria protegida.
+		gates = append(gates, config.Gate{
+			Name: "doc-self-contained", ID: "doc-self-contained", On: []string{"spec"},
+			Check: "doc-self-contained", Blocking: config.Bool(false),
+			Measures: "the spec carries the text it cites, instead of pointing at another file",
+		})
+	}
+	if chosen["plan"] {
+		// O PLANO REVISADO avisa quem o lê. Sem isso, quem abre um plano antigo segue uma
+		// decisão que foi revista — e o plano parece coerente, porque ele É o registro
+		// coerente do que se decidiu na época.
+		gates = append(gates, config.Gate{
+			Name: "plan-revised", ID: "plan-revised", On: []string{"plan"},
+			Check: "plan-revised", Blocking: config.Bool(projetoNovo),
+			Measures: "a plan revised by another tells whoever reads it",
+		})
+	}
+	if chosen["plan"] || chosen["spec"] {
+		// Runs on whichever of plan and spec were chosen, like `parent-valid`: a project
+		// without plans still changes specs, and each change owes its revision.
+		var on []string
+		for _, k := range []string{"plan", "spec"} {
+			if chosen[k] {
+				on = append(on, k)
+			}
+		}
+		// O PLANO ALTERADO diz por que mudou. Quem implementa é quem descobre o erro do
+		// plano, e corrigi-lo em silêncio faz o projeto caminhar para um destino que
+		// ninguém escolheu — deriva que nenhum gate de ESTADO vê, porque o plano
+		// corrigido fica válido.
+		//
+		// `skip_on: [all]` não é detalhe: em `--all` não existe "alterado", e cobrar
+		// revisão de todo plano acusaria quem acertou de primeira.
+		gates = append(gates, config.Gate{
+			Name: "plan-change-justified", ID: "plan-change-justified",
+			On: on, Check: "plan-change-justified",
+			Blocking: config.Bool(projetoNovo), SkipOn: []string{"all"},
+			Measures: "the changed plan/spec records the revision that says why it changed",
+		})
+	}
+	if chosen["plan"] {
+		// A ORDEM dentro do plano. Um plano sem fases catalogadas passa (elas são
+		// opcionais); o gate só cobra a coerência de quem as declarou.
+		gates = append(gates, config.Gate{
+			Name: "phase-ordered", ID: "phase-ordered", On: []string{"plan"}, Check: "phase-ordered",
+			Blocking: config.Bool(projetoNovo),
+			Measures: "the plan's phases do not depend on what comes after them",
+		})
+	}
+	// PERTENCIMENTO vale para qualquer artefato com header, não só para spec: uma fase
+	// pertence a um plano, e um plano pode pertencer a outro. Mas SÓ ENTRA se o projeto
+	// tem algum desses artefatos — um projeto vazio não semeia gate nenhum, e um gate que
+	// nasce sem nada para medir é a impressão de defesa que não existe.
+	if chosen["spec"] || chosen["plan"] || chosen["code"] {
+		var onde []string
+		for _, k := range []string{"spec", "plan", "code"} {
+			if chosen[k] {
+				onde = append(onde, k)
+			}
+		}
+		gates = append(gates, config.Gate{
+			Name: "parent-valid", ID: "parent-valid", On: onde,
+			Check: "parent-valid", Blocking: config.Bool(projetoNovo),
+			Measures: "the declared `parent:` points at something that exists, with no cycle",
+		})
+	}
+	if chosen["spec"] {
+		gates = append(gates, config.Gate{
+			Name: "phase-exists", ID: "phase-exists", On: []string{"spec"}, Check: "phase-exists",
+			Blocking: config.Bool(projetoNovo),
+			Measures: "the spec's `needs:` points at a phase some plan catalogues",
+		})
+	}
+	if chosen["feature"] {
+		gates = append(gates, config.Gate{
+			Name: "feature-not-empty", ID: "feature-not-empty", On: []string{"feature"}, Check: "non-empty",
+			Blocking: config.Bool(false), Measures: "the feature is not an empty skeleton",
+		})
+		// scenario-asserts vai além do 'não está vazio': o passo de RESULTADO precisa
+		// afirmar um resultado. "Então o efeito XXXXX-B01 se verifica" satisfaz todos os
+		// outros gates e não diz nada — a definição do que 'se verifica' migra para o
+		// teste, que passa a ser escrito sem saber qual era o desfecho. Medido: 151 de 442
+		// features de um projeto real, e foi a razão estrutural pela qual uma regra ficou
+		// sem caso discriminante.
+		gates = append(gates, config.Gate{
+			Name: "scenario-asserts", ID: "scenario-asserts", On: []string{"feature"}, Check: "scenario-asserts",
+			Blocking: config.Bool(false), Measures: "the outcome step asserts an observable outcome",
+		})
+	}
+	// Os gates de TESTE — o que amarra os sinais ingeridos ao ciclo. Só fazem sentido
+	// se o projeto tem testes E specs (a cobertura por cenário cruza os dois).
+	if chosen["test"] {
+		gates = append(gates,
+			// Um teste que existe, passa e cobre o comportamento certo — mas não cita
+			// código — é INVISÍVEL para os gates relacionais: o `feature-test-match`
+			// reporta os cenários como não implementados, e quem for consertar escreve um
+			// segundo teste do mesmo comportamento. Medido duas vezes num projeto real
+			// (códigos invertidos em 3 telas; store com 5 casos sem código nenhum).
+			config.Gate{
+				Name: "test-traceable", ID: "test-traceable", On: []string{"test"}, Check: "test-traceable",
+				Blocking: config.Bool(false),
+				Measures: "the test cites the code of what it proves (visible to the relational gates)",
+			},
+			config.Gate{
+				Name: "tests-green", ID: "tests-green", On: []string{"test"}, Check: "tests-pass",
+				Blocking: config.Bool(false), Measures: "this file's tests pass (from the ingested result)",
+			},
+			// O PAR que ataca PROVA FALSA, e não ausência de prova: um dublê que não
+			// deriva do módulo real segue verde depois que o módulo muda. `tests-green`
+			// diz que passou, `feature-test-match` que o cenário casa, `unit-complete`
+			// que o teste existe — os três respondem "sim" sobre um teste que mente.
+			//
+			// São camadas, não alternativas. O `mock-carimbado` é o AGNÓSTICO: hash de
+			// texto, pega assinatura, corpo, tipo e constante em qualquer linguagem, e é
+			// o único que alcança a forma do VALOR devolvido. O `mock-tipado` só age
+			// onde a linguagem tem tipos estruturais, mas ali sai de graça — o
+			// compilador já confere, sem carimbo a manter.
+			// O PONTO CEGO do `mock-carimbado`: o `mock_detect` é um regex escrito à
+			// mão, e um padrão SINTATICAMENTE válido mas errado para o dialeto do
+			// projeto casa nada — o gate varre zero dublês e passa em silêncio. É a
+			// falha mais perigosa da família, porque o verde vem de não ter olhado.
+			//
+			// Nenhuma checagem determinística cobre isto: para saber se o padrão alcança
+			// o que o projeto escreve é preciso LER os testes e reconhecer a forma de
+			// dublê do ecossistema. Daí ser julgamento — e daí a sugestão vir como
+			// patch: quem julga já leu o suficiente para propor o `mock_detect` correto.
+			config.Gate{
+				Name: "mock-detect-covers-dialect", ID: "mock-detect-covers-dialect", On: []string{"test"},
+				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
+				// The question asserts the pattern is declared; asked where it is not, the
+				// evaluator judged a premise the project never held.
+				Presupposes: []string{"derived.mock_detect"},
+				Ask: "The project declares `derived.mock_detect` — the regex that recognises a " +
+					"test double in this ecosystem. Read this test file and answer: does the " +
+					"declared pattern reach EVERY form of double it uses? Fail it if there is a " +
+					"double the regex does not match (another function, another dialect, a " +
+					"decorator instead of a call, a whole-module double vs a member double). A " +
+					"regex that matches nothing makes the `mock-stamped` gate report green " +
+					"without having checked anything. When failing it, PROPOSE the corrected " +
+					"pattern as a patch of `anchors.yaml`." +
+					tbdInstruction("the test"),
+			},
+			config.Gate{
+				Name: "mock-stamped", ID: "mock-stamped", On: []string{"test"}, Check: "mock-stamped",
+				Blocking: config.Bool(false), Presupposes: []string{"derived.mock_detect"},
+				Measures: "the double's stamp matches the real snippet (recomputed, not just validated)",
+			},
+			config.Gate{
+				Name: "mock-typed", ID: "mock-typed", On: []string{"test"}, Check: "mock-typed",
+				Blocking: config.Bool(false), Presupposes: []string{"derived.mock_detect", "derived.mock_contract"},
+				Measures: "the test double derives from the real module (not a frozen copy of the contract)",
+			},
+			config.Gate{
+				Name: "line-coverage", ID: "line-coverage", On: []string{"code"}, Check: "line-coverage",
+				Blocking: config.Bool(false), Measures: "line coverage >= threshold (from the ingested lcov)",
+			},
+			config.Gate{
+				Name: "coverage-delta", ID: "coverage-delta", On: []string{"code"}, Check: "coverage-delta",
+				Blocking: config.Bool(false), Measures: "line coverage did not drop vs. the previous ingestion",
+			},
+			config.Gate{
+				Name: "branch-coverage", ID: "branch-coverage", On: []string{"code"}, Check: "branch-coverage",
+				Blocking: config.Bool(false), Measures: "the tests take the branches the lcov lists (BRDA), and none is likely dead",
+			},
+			// mutation-score nasce com o projeto porque é o ÚNICO gate que responde "o
+			// teste prova a linha?" — todos os outros respondem "a linha executou?" ou
+			// "a peça existe?". Medido: um arquivo com 16 testes verdes e cobertura
+			// cheia onde apagar uma guarda do código não derrubava teste nenhum.
+			//
+			// Nasce informativo e fica Pending até o projeto ingerir o sinal — o Anchors
+			// não pode EXIGIR a ferramenta (depende do stack), mas também não deve
+			// esconder o que se perde sem ela: o doctor alerta, e o projeto decide
+			// quando virar blocking.
+			config.Gate{
+				Name: "mutation-score", ID: "mutation-score", On: []string{"code"}, Check: "mutation-score",
+				Blocking: config.Bool(false), Measures: "the test PROVES the line: killed mutants >= threshold (from the ingested mutation report)",
+			},
+		)
+		// pagination-honored é da mesma família: pega o que NENHUM teste pega, porque o
+		// teste roda com 3 registros e a produção com 3 mil. Medido no app de referência: 11 arquivos,
+		// entre eles uma listagem de importação de extrato que perde silenciosamente as
+		// transações além do 1º MB — o usuário importa o arquivo e parte some sem erro.
+		gates = append(gates, config.Gate{
+			Name: "pagination-honored", ID: "pagination-honored", On: []string{"code"}, Check: "pagination-honored",
+			Presupposes: []string{"dialect.set_promise", "dialect.set_slice", "dialect.limits"},
+			Blocking:    config.Bool(false), Measures: "a function promising the whole set does not silently return the first page",
+		})
+	}
+	// layer-boundary confronta `boundaries:` — o que cada camada NÃO alcança. Nasce com
+	// TODO projeto que declarou camadas, porque declarar `layers:` sem defendê-las é
+	// desenhar a arquitetura e deixá-la como documentação. Fica Pendente (dizendo o que
+	// declarar) até o projeto escrever suas fronteiras.
+	//
+	// A lacuna era visível: um projeto real mantinha 366 linhas de shell com 15 regras
+	// arquiteturais escritas à mão — todas da mesma forma, reimplementadas porque o
+	// framework não oferecia o mecanismo. E o script tinha um escopo implícito no caminho
+	// do grep (só varria o mobile) que ninguém via ao ler a regra.
+	// Condicionado a `code`: um projeto que não rastreia código não tem camada a defender
+	// (e o teste de que projeto sem artefato não semeia gate algum pegou isso).
+	if chosen["code"] {
+		gates = append(gates, config.Gate{
+			Name: "layer-boundary", ID: "layer-boundary", On: []string{"code"}, Check: "layer-boundary",
+			Blocking: config.Bool(false), Measures: "the layer does not reach what is not its own (`boundaries:`)",
+		})
+	}
+
+	// open-questions-resolved é o mais barato dos gates e pega a classe mais cara: a
+	// AMBIGUIDADE que ninguém resolveu. A spec não decide; quem implementa escolhe;
+	// a escolha nunca chega a quem tinha a resposta. Nenhum outro gate pega, porque todas
+	// as peças existem e se referenciam — o defeito é uma decisão que ninguém tomou.
+	// Só cobra quem ABRIU a seção, então não vira ritual em spec simples.
+	if chosen["spec"] {
+		// domain-declared: a spec diz o que a unidade ACEITA, e QUEM garante que o
+		// inválido não chega. Medido: 71% das specs de um projeto real catalogavam efeitos
+		// e só 14% declaravam entrada — e todo defeito de borda de três rodadas de review
+		// morava no que ninguém declarou. `constraints` não substitui: dizer "não valido"
+		// empurra o dever para fora e CRIA órfão; a coluna do dono obriga a nomear alguém.
+		// count-honored: a mentira que envelhece SOZINHA. "Os 50 modelos do produto" vira
+		// falso quando alguém adiciona o 51º — ninguém precisa errar. Medido: um arquivo
+		// de spec com 7 afirmações numéricas, onde adicionar UM modelo tornava 10 frases
+		// obsoletas. A spec declara COMO conferir; o engine não adivinha o que contar.
+		gates = append(gates, config.Gate{
+			Name: "count-honored", ID: "count-honored", On: []string{"spec"}, Check: "count-honored",
+			Blocking: config.Bool(false), Measures: "the number the spec asserts matches the code",
+		})
+
+		gates = append(gates, config.Gate{
+			Name: "domain-declared", ID: "domain-declared", On: []string{"spec"}, Check: "domain-declared",
+			Blocking: config.Bool(false), Measures: "the spec declares what it accepts and who guards the boundary",
+		})
+
+		// The rule and what it uses (Validations, Presentation validations, Rule uses).
+		// Informational: every spec written before these sections existed would fail.
+		gates = append(gates, config.Gate{
+			Name: "rule-uses-declared", ID: "rule-uses-declared", On: []string{"spec"}, Check: "rule-uses-declared",
+			Blocking: config.Bool(false), Measures: "every rule says what it uses — the fields, codes and dependencies it reads",
+		})
+		gates = append(gates, config.Gate{
+			Name: "rule-uses-implemented", ID: "rule-uses-implemented", On: []string{"spec"}, Check: "rule-uses-implemented",
+			Blocking: config.Bool(false), Measures: "the fields a rule says it uses appear in the code the spec governs",
+		})
+		gates = append(gates, config.Gate{
+			Name: "contract-impact", ID: "contract-impact", On: []string{"spec"}, Check: "contract-impact",
+			Blocking: config.Bool(false), Measures: "a field changed since the last commit names the rules that use it, and their tests",
+		})
+		gates = append(gates, config.Gate{
+			Name: "rule-uses-resolve", ID: "rule-uses-resolve", On: []string{"spec"}, Check: "rule-uses-resolve",
+			Blocking: config.Bool(false), Measures: "what a rule says it uses exists in the spec — a declared field, a dependency row",
+		})
+
+		for _, pg := range []struct{ name, measures string }{
+			{"presentation-exhaustive", "every value of a prop or state the presentation reads has an appearance decided"},
+			{"presentation-conflict", "one prop and one condition do not lead to two appearances"},
+			{"presentation-copy-single-source", "the text a presentation shows is a message code, not copy repeated in the rule"},
+			{"presentation-observable", "what a presentation changes is an element a test can point at"},
+		} {
+			gates = append(gates, config.Gate{
+				Name: pg.name, ID: pg.name, On: []string{"spec"}, Check: pg.name,
+				Blocking: config.Bool(false), Measures: pg.measures,
+			})
+		}
+
+		gates = append(gates, config.Gate{
+			Name: "single-test-per-unit", ID: "single-test-per-unit", On: []string{"code"}, Check: "single-test-per-unit",
+			Blocking: config.Bool(false), Measures: "a unit has one test file per test layer, or declares the split with a reason",
+		})
+
+		for _, tg := range []struct{ name, measures string }{
+			{"test-has-assertion", "every test asserts something in its body — the project says what an assertion is"},
+			{"test-exercises-unit", "a test reaches the unit it tests, and does not define a copy of it"},
+			{"test-ref-matches-unit", "a test reaches the unit its `ref:` names — by import, a name it defines, or a declared invocation"},
+		} {
+			g := config.Gate{
+				Name: tg.name, ID: tg.name, On: []string{"test"}, Check: tg.name,
+				Blocking: config.Bool(false), Measures: tg.measures,
+			}
+			// What a test asserts, and what a unit defines, are the language's: the gate
+			// reads them only through the dialect.
+			if tg.name == "test-has-assertion" {
+				g.Presupposes = []string{"dialect.tests"}
+			} else {
+				g.Presupposes = []string{"dialect.definition", "dialect.imports"}
+			}
+			gates = append(gates, g)
+		}
+
+		gates = append(gates, config.Gate{
+			Name: "header-layer-declared", ID: "header-layer-declared", On: []string{"spec", "feature", "code", "test"}, Check: "header-layer-declared",
+			Blocking: config.Bool(false), Measures: "the layer a header declares is one the Estrutura has",
+		})
+
+		gates = append(gates, config.Gate{
+			Name: "examples-match", ID: "examples-match", On: []string{"feature"}, Check: "examples-match",
+			Blocking: config.Bool(false), Measures: "every row of an outline's Examples is run by a test citing the scenario",
+		})
+
+		gates = append(gates, config.Gate{
+			Name: "external-proven", ID: "external-proven", On: []string{"code"}, Check: "external-proven",
+			Blocking: config.Bool(false), Measures: "a file that calls a declared external system has a test that passed in a suite reaching it",
+		})
+
+		gates = append(gates, config.Gate{
+			Name: "recording-current", ID: "recording-current", On: []string{"test"}, Check: "recording-current",
+			Blocking: config.Bool(false), Measures: "a response recorded from a real system (`@recorded:`) is of the version the project speaks, and within its max_age",
+		})
+
+		gates = append(gates, config.Gate{
+			Name: "bypass-proven", ID: "bypass-proven", On: []string{"code"}, Check: "bypass-proven",
+			Blocking: config.Bool(false), Measures: "a path the code skips while a test runs (`test_bypass:`) is run by a suite that reaches it",
+		})
+
+		gates = append(gates, config.Gate{
+			Name: "states-required", ID: "states-required", On: []string{"spec"}, Check: "states-required",
+			Blocking: config.Bool(false), Measures: "every spec of a layer registers the states the project requires of it (`required_states:`)",
+		})
+
+		gates = append(gates, config.Gate{
+			Name: "reads-written", ID: "reads-written", On: []string{"code"}, Check: "reads-written",
+			Blocking: config.Bool(false), Measures: "every data a header reads (`reads:`) is written by some file's header (`writes:`)",
+		})
+
+		gates = append(gates, config.Gate{
+			Name: "variants-proven", ID: "variants-proven", On: []string{"spec"}, Check: "variants-proven",
+			Blocking: config.Bool(false), Measures: "a rule that names its variants (`@variants:`) has a scenario for each one",
+		})
+
+		gates = append(gates, config.Gate{
+			Name: "open-questions-resolved", ID: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved",
+			Blocking: config.Bool(false), Measures: "the spec has no open question — implementing is not guessing",
+		})
+	}
+	// spec-feature-match fecha a ponta que faltava na unidade: feature→test já era
+	// confrontado, spec→feature não. Um requisito declarado e sem cenário atravessa o
+	// pipeline com TODOS os gates verdes — a spec tem código, a feature existe, a feature
+	// bate com o teste. Medido: 43 specs de um projeto real.
+	// code-reference-valid pega a ÂNCORA QUE MENTE numa forma que nenhum outro gate via:
+	// a spec cita o requisito de uma unidade que não existe. A citação parece
+	// rastreabilidade e aponta para o vazio — e um leitor futuro a toma como registro do
+	// que foi feito. Medido: uma spec afirmava "índices que o schema criou" citando 4
+	// códigos inexistentes, com todos os gates verdes.
+	// ref-resolves: o `ref:` aponta para a spec CERTA. `header-valid` confere que o
+	// campo existe; ninguém conferia que ele RESOLVE. Um ref errado parece rastreabilidade
+	// e atribui a unidade à spec errada, com todo gate relacional confrontando o par
+	// errado. Medido: 49 arquivos de modelo apontando para a identidade de antes de uma
+	// desfusão que ninguém propagou, e mais um teste citando duas specs fantasma.
+	// Condicionado a `spec`: sem spec no projeto não há `code:` para o `ref:` resolver.
+	if chosen["spec"] {
+		gates = append(gates, config.Gate{
+			Name: "ref-resolves", ID: "ref-resolves", On: []string{"code", "feature", "test"}, Check: "ref-resolves",
+			Blocking: config.Bool(false), Measures: "the `ref:` points at the sibling spec's `code:`",
+		})
+	}
+
+	if chosen["spec"] {
+		gates = append(gates, config.Gate{
+			Name: "code-reference-valid", ID: "code-reference-valid", On: []string{"spec"}, Check: "code-reference-valid",
+			Blocking: config.Bool(false), Measures: "every code the spec cites exists in the project",
+		})
+		// A name a comment or a spec marks as a symbol (`@@name`, `#name`, `$name`) is in the
+		// project's code: a comment citing an option the code stopped passing passed every
+		// gate (measured on a project).
+		gates = append(gates, config.Gate{
+			Name: "symbol-exists", ID: "symbol-exists", On: []string{"code", "spec"}, Check: "symbol-exists",
+			Blocking: config.Bool(false), Measures: "every name a comment or spec marks as a symbol (`@@name`, `#name`, `$name`) is in the project's code",
+		})
+		// A spec uses no other unit's content: what two units share lives in the product,
+		// which each realizes. A navigation names a screen — a reference, not a citation.
+		gates = append(gates, config.Gate{
+			Name: "cross-unit-citation", ID: "cross-unit-citation", On: []string{"spec"}, Check: "cross-unit-citation",
+			Blocking: config.Bool(false), Measures: "the spec cites no rule of another unit — a shared rule lives in the product",
+		})
+	}
+
+	if chosen["spec"] && chosen["feature"] {
+		gates = append(gates, config.Gate{
+			Name: "spec-feature-match", ID: "spec-feature-match", On: []string{"spec"}, Check: "spec-feature-match",
+			Blocking: config.Bool(false), Measures: "every requirement declared in the spec has a scenario in the feature",
+		})
+		if chosen["spec"] {
+			gates = append(gates, config.Gate{
+				Name: "scenario-coverage", ID: "scenario-coverage", On: []string{"spec"}, Check: "scenario-coverage",
+				Blocking: config.Bool(false), Measures: "each scenario of the spec has a passing test (semantic coverage)",
+			})
+		}
+	}
+	// --- SEGURANÇA E PROCEDÊNCIA (ferramenta externa, agnósticos de linguagem) ---
+	//
+	// São os primeiros canônicos com `run:`, e só são seguros como canônicos porque
+	// declaram `needs_tool`: sem a ferramenta o motor devolve Skip e o `doctor` avisa,
+	// em vez de reprovar um projeto recém-criado por algo que ninguém escreveu errado.
+	//
+	// Agnósticos por construção — nenhum dos três sabe o que é TypeScript, Go ou Rust:
+	// gitleaks lê o git, osv-scanner reconhece os lockfiles de 15+ ecossistemas e syft
+	// detecta sozinho o que há no projeto. Um gate de licença ficaria de fora aqui: as
+	// ferramentas de licença são todas atadas a um gerenciador de pacotes.
+	//
+	// `on: [code]` porque é o kind que todo projeto tem, qualquer que seja a unidade
+	// escolhida — e o escopo é o projeto, então o `on` só decide SE roda, não sobre o quê.
+	if chosen["code"] {
+		gates = append(gates,
+			// Segredo vazado é o único achado sem volta: rotacionar a chave é caro e o
+			// histórico do git guarda a original. Por isso é o único da leva que nasce
+			// bloqueante — os outros dois informam.
+			config.Gate{
+				Name: "no-secret-leaked", ID: "no-secret-leaked", On: []string{"code"},
+				Scope: config.ScopeBatch, ScopeFull: config.ScopeProject,
+				Run:       "gitleaks git --no-banner --redact -v",
+				NeedsTool: "gitleaks", InstallHint: "brew install gitleaks",
+				Blocking: config.Bool(true), When: []string{"pre-commit", "ci"}, Cost: "fast",
+				Category: "security",
+				Measures: "no secret (key, token, credential) enters the history",
+			},
+			// Informativo: a CVE nova aparece sem ninguém mexer no código, então bloquear
+			// pararia um merge por algo que o autor não causou nem pode resolver na hora.
+			config.Gate{
+				Name: "dependency-vulnerable", ID: "dependency-vulnerable", On: []string{"code"},
+				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+				Run:       "osv-scanner scan source -r .",
+				NeedsTool: "osv-scanner", InstallHint: "brew install osv-scanner",
+				Blocking: config.Bool(false), When: []string{"ci"}, Cost: "slow",
+				Category: "security",
+				Measures: "the project's dependencies have no known vulnerability (OSV)",
+			},
+			// Cópia-e-cola é dívida que NENHUM outro gate vê: o typecheck passa, o lint passa,
+			// os testes passam — cada cópia está correta. O defeito só aparece quando uma delas
+			// muda e as outras não, e aí a divergência é silenciosa: a tela continua
+			// funcionando, só faz a coisa um pouco diferente da irmã.
+			//
+			// Medido no projeto que originou o gate: duas telas tinham o MESMO bloco de scroll
+			// infinito copiado linha por linha — mesma conta, mesmo limiar, mesmo guard. A
+			// terceira cópia teria divergido sem ninguém notar. O jscpd achou em 5ms o que
+			// nenhum dos 60 gates existentes viu.
+			//
+			// Informativo, e é deliberado: nem toda duplicata é dívida. Duas implementações
+			// parecidas de coisas que EVOLUEM SEPARADO devem mesmo ficar separadas — unificar
+			// por semelhança acidental acopla o que o domínio quer solto. O gate mostra; quem
+			// conhece o domínio decide.
+			//
+			// A calibragem vive no `.jscpd.json` do projeto, que é o mecanismo OFICIAL da
+			// ferramenta (`minLines`, `ignore`, `threshold`, e os marcadores
+			// `jscpd:ignore-start` no código). Melhor um mecanismo que a ferramenta mantém do
+			// que um nosso, que teríamos de sustentar e explicar — e que envelheceria sozinho.
+			//
+			// O check é NATIVO e lê o RELATÓRIO do jscpd, não o código de saída: sem
+			// `threshold` o jscpd sai 0 com qualquer duplicação, e o gate aprovava o que não
+			// media (medido no app de referência: 35 clones, exit 0, anunciado "limpo"). O
+			// relatório dá um veredito POR ARQUIVO, com o outro lado de cada clone, e o
+			// `--changed` passa a cobrar só os clones que a mudança toca.
+			//
+			// A calibragem NÃO é detalhe: medido no projeto que originou o gate, o default
+			// (5 linhas) dava 487 achados, dos quais 375 eram teste × teste — setup e mocks
+			// repetidos, semelhança de forma e não de intenção. Em 20 linhas sobram 37, e o
+			// que sobra é dívida de verdade: 249 linhas entre dois `seal.ts`, e o par
+			// Edit/New de uma mesma entidade. Um gate que nasce com 487 achados não é
+			// medição, é ruído — e ruído treina a equipe a ignorar o gate (levando os outros
+			// junto).
+			config.Gate{
+				Name: "no-duplication", ID: "no-duplication", On: []string{"code"},
+				Check:     "duplication",
+				NeedsTool: "npx", InstallHint: "install Node.js (npx ships with it)",
+				Blocking: config.Bool(false), When: []string{"ci"}, Cost: "slow",
+				Category: "quality",
+				Measures: "no code block appears copied in two places",
+			},
+			// Procedência: responde "o que exatamente foi entregue" — a pergunta que só
+			// se faz depois do incidente, quando reconstruir a resposta já é impossível.
+			config.Gate{
+				Name: "sbom-generated", ID: "sbom-generated", On: []string{"code"},
+				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+				Run:       "syft scan dir:. -o cyclonedx-json=sbom.json -q",
+				NeedsTool: "syft", InstallHint: "brew install syft",
+				Blocking: config.Bool(false), When: []string{"ci"}, Cost: "slow",
+				Category: "provenance",
+				Measures: "the inventory of shipped components (SBOM) is generated and versionable",
+			},
+			// Ortografia: erros de grafia no código, testes e documentação minam a
+			// confiança e quebram buscas. Agnóstico: typos (binário nativo ultra-rápido)
+			// ou cspell (Node). Ver `guides/GATES_ECOSYSTEM_GUIDE.md`.
+			config.Gate{
+				Name: "spellcheck", ID: "spellcheck", On: []string{"code", "test", "spec"},
+				Scope: config.ScopeBatch, ScopeFull: config.ScopeProject,
+				Run:       "typos",
+				NeedsTool: "typos", InstallHint: "brew install typos",
+				Blocking: config.Bool(false), When: []string{"pre-commit", "ci"}, Cost: "fast",
+				Category: "style",
+				Measures: "no spelling mistake in the text or the identifiers",
+			},
+			// Conformidade de licenças: garante que nenhuma dependência de produção traga
+			// licenças com copyleft forte (AGPL, SSPL, etc.) incompatíveis com o projeto.
+			// O comando varia conforme o gerenciador de pacotes do ecossistema.
+			config.Gate{
+				Name: "license-compatible", ID: "license-compatible", On: []string{"code"},
+				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+				Blocking: config.Bool(false), When: []string{"ci"}, Cost: "fast",
+				Category: "legal",
+				Measures: "no dependency with strong copyleft or an incompatible licence",
+			},
+			// Dependência circular: pergunta de arquitetura de projeto (o ciclo é do grafo,
+			// não de um arquivo isolado). Ferramenta varia por dialeto (madge, go vet, etc).
+			config.Gate{
+				Name: "circular", ID: "circular", On: []string{"code"},
+				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+				Blocking: config.Bool(false), When: []string{"pre-push", "ci"}, Cost: "slow",
+				Category: "architecture",
+				Measures: "there is no import cycle between modules",
+			},
+			// Código morto: exportações, símbolos e arquivos órfãos sem consumidor.
+			// Ferramenta varia por dialeto (knip, deadcode, vulture, cargo-udeps).
+			config.Gate{
+				Name: "deadcode", ID: "deadcode", On: []string{"code"},
+				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+				Blocking: config.Bool(false), When: []string{"ci"}, Cost: "slow",
+				Category: "maintenance",
+				Measures: "there is no orphan export, symbol or file in the project",
+			},
+		)
+	}
+
+	// O guide, se houver, deve destilar seus pontos de conformidade (determinístico).
+	if chosen["guide"] {
+		gates = append(gates, config.Gate{
+			Name: "guide-checklist", ID: "guide-checklist", On: []string{"guide"}, Check: "guide-has-checklist",
+			Blocking: config.Bool(false), Measures: "the guide has the conformance-points section (CKn)",
+		})
+	}
+	gates = append(gates, catalogChecks(chosen, projetoNovo)...)
+	if projetoNovo {
+		for i := range gates {
+			if !dependOnIngestedSignal[gates[i].Name] {
+				gates[i].Blocking = config.Bool(true)
+			}
+		}
+	}
+	return gates
+}
+
+// SeedFor is what init seeds of the default gates: the gates related to the project —
+// a declared layer of a kind they measure (with their tags, when tag-scoped), or a kind the
+// project chose and has no layer of yet, as a new project's code — whose presupposed
+// fields the configuration declares. A gate over a field nobody declared would be born
+// pending everywhere; the doctor names it instead, with the field (reported from
+// a project).
+func SeedFor(cfg *config.Config, gates []config.Gate, chosen map[string]bool) []config.Gate {
+	// The configuration init writes is measured as it will be loaded: with the canonical
+	// layers, whose gates relate to them.
+	cfg = cfg.WithCanonicalLayers()
+	var out []config.Gate
+	for _, g := range gates {
+		related := cfg.Relates(g)
+		if !related && len(g.Tags) == 0 {
+			for _, k := range g.On {
+				if chosen[k] {
+					related = true
+				}
+			}
+		}
+		if !related {
+			continue
+		}
+		if missing, _ := cfg.Premises(g); len(missing) == 0 {
+			out = append(out, g)
+		}
+	}
+	return out
+}
+
+// catalogChecks are the checkers that measure a kind of the unit and had no canonical
+// gate: init never seeded them, and a project whose layers they cover never learned they
+// existed (reported from a project: eight of them missing over spec, feature, code and
+// test). Each says the kind it measures, and what it presupposes when it needs a field to
+// measure anything — so init seeds it only where that field is declared, and the doctor
+// names the field where it is not.
+//
+// The UI-only ones are scoped by tag (`screen`, `component`): they relate only to a
+// project whose layers carry those tags. Two checkers stay out: `test-level-codes` is
+// declared on its own gate entry (`levels`), and `trigger-declared` reads obligations or
+// packs — both opt-in by design.
+func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
+	var out []config.Gate
+	add := func(kind string, g config.Gate) {
+		if !chosen[kind] {
+			return
+		}
+		g.ID = g.Name
+		if g.Check == "" {
+			g.Check = g.Name
+		}
+		if g.Blocking == nil {
+			g.Blocking = config.Bool(false)
+		}
+		out = append(out, g)
+	}
+	ui := []string{"screen", "component"}
+	add("test", config.Gate{Name: "evidence-fresh", On: []string{"test"},
+		Measures: "the test's last green run still holds: neither the test nor any file in its closure changed since it ran"})
+	if chosen["test"] {
+		add("feature", config.Gate{Name: "feature-test-match", On: []string{"feature"},
+			Measures: "every scenario of the feature is implemented in the linked test, by code and by description"})
+	}
+	add("feature", config.Gate{Name: "scenario-identity", On: []string{"feature"},
+		Measures: "each scenario code identifies one scenario: no code repeated and no body copied under another title"})
+	add("feature", config.Gate{Name: "scenario-letter-declared", On: []string{"feature"},
+		Measures: "every scenario code's letter is a rule letter — the project's `rule_types`, or the canonical ones"})
+	add("feature", config.Gate{Name: "scenario-type-aligned", On: []string{"feature"},
+		Presupposes: []string{"rule_types"},
+		Measures:    "a scenario's nature tag agrees with the letter of its code"})
+	add("feature", config.Gate{Name: "vr-baseline", On: []string{"feature"}, Tags: ui,
+		Measures: "every visual-regression scenario has its baseline image"})
+	// The four questions of visual regression, asked of a screen's or a component's code:
+	// each state has a VR scenario, each VR scenario a VR test and an image, and neither a
+	// scenario nor a test outlives its state. An agent set up a project with screens and
+	// wrote no visual test, every gate green.
+	add("code", config.Gate{Name: "vr-states-covered", On: []string{"code"}, Tags: ui,
+		Measures: "every state the visual unit's spec registers has a visual-regression scenario in the feature, unless exempted with `@no-vr: <reason>`"})
+	add("code", config.Gate{Name: "vr-scenarios-tested", On: []string{"code"}, Tags: ui,
+		Measures: "every visual-regression scenario of the unit has a VR test and a baseline image"})
+	add("code", config.Gate{Name: "vr-scenarios-of-states", On: []string{"code"}, Tags: ui,
+		Measures: "every visual-regression scenario of the unit is of a state its spec registers"})
+	add("code", config.Gate{Name: "vr-tests-of-scenarios", On: []string{"code"}, Tags: ui,
+		Measures: "every VR test of the unit is of a visual-regression scenario its feature declares"})
+	// What changes a screen is proven through what it shows: a validation leads to a state,
+	// an error shows a message, and the capture of the state or the message proves them.
+	add("code", config.Gate{Name: "validation-transitions", On: []string{"code"}, Tags: ui,
+		Measures: "every validation of a visual unit is the trigger of a state transition, or says `@no-state: <reason>`"})
+	add("code", config.Gate{Name: "error-message-declared", On: []string{"code"}, Tags: ui,
+		Measures: "every error of a visual unit names the message it shows, or says `@no-message: <reason>`"})
+	// The proof that an API keeps the OpenAPI compiled from its specs: a contract test of
+	// the unit, named by `{CODE}-CT`, that loads the document. The tool is the project's.
+	add("code", config.Gate{Name: "contract-tested", On: []string{"code"}, Tags: []string{"interface"},
+		Measures: "every API unit has a contract scenario and a contract test that validates it against the project's OpenAPI document"})
+	add("code", config.Gate{Name: "api-contracts-resolve", On: []string{"code"}, Tags: []string{"interface"},
+		Measures: "every contract an API unit's body and responses cite is a spec with a Domain, and no response leaves its contract unsaid"})
+	add("code", config.Gate{Name: "api-errors-declared", On: []string{"code"}, Tags: []string{"interface"},
+		Measures: "every error response of an API unit carries its error code and message, under a status its Responses declare"})
+	add("code", config.Gate{Name: "error-codes-honored", On: []string{"code"}, Tags: []string{"interface"},
+		Measures: "every error code an API unit's spec declares is one its code emits"})
+	// The dependency chain: every import of a
+	// governed file flagged with the code it uses, and every imported symbol with who uses it.
+	add("code", config.Gate{Name: "dep-declared", On: []string{"code", "test"}, Presupposes: []string{"dialect.imports"},
+		Measures: "every import of a governed file carries `@dep:` with the code of the file it uses, or `@no-dep: <reason>`"})
+	add("code", config.Gate{Name: "dep-honored", On: []string{"code", "test"}, Presupposes: []string{"dialect.imports"},
+		Measures: "every `@dep:` flag names the code of the file its import resolves to"})
+	add("code", config.Gate{Name: "used-by-declared", On: []string{"code", "test"}, Presupposes: []string{"dialect.imports", "dialect.import_names", "dialect.declarations"},
+		Measures: "every symbol another file imports carries `@used-by:` with exactly the codes of who imports it"})
+	// The navigation chain: every navigation call flagged with the screen it leads to, and
+	// the screens' In and Out tables confronted with the flags and with one another.
+	add("code", config.Gate{Name: "nav-annotated", On: []string{"code"}, Presupposes: []string{"dialect.navigation_call"},
+		Measures: "every navigation call — back and reset included — carries `@navigates:` naming the screen it leads to, or `@no-nav: <reason>`"})
+	add("spec", config.Gate{Name: "nav-matches-spec", On: []string{"spec"},
+		Measures: "a screen's Out table and its code's `@navigates:` flags name the same screens"})
+	add("spec", config.Gate{Name: "nav-symmetric", On: []string{"spec"},
+		Measures: "a screen's Out leads to another exactly when that one's In comes from it"})
+	add("spec", config.Gate{Name: "nav-reachable", On: []string{"spec"},
+		Measures: "every screen is reachable from the app's entry routes (`navigation.entry`)"})
+	add("spec", config.Gate{Name: "env-declared", On: []string{"spec"}, Presupposes: []string{"dialect.env_read"},
+		Measures: "the environment variables a unit's code reads are the ones its spec declares, and only those"})
+	add("spec", config.Gate{Name: "placeholder-filled", On: []string{"spec", "feature"},
+		Measures: "no generator placeholder remains in a value position: header field, table cell, rule or title line"})
+	if chosen["code"] {
+		add("spec", config.Gate{Name: "rule-implemented", On: []string{"spec"},
+			Measures: "every rule the spec catalogs is marked in its code target, unless waived on its line with `@no-mark: <reason>`"})
+	}
+	add("spec", config.Gate{Name: "identity-consistent", On: []string{"spec"}, Presupposes: []string{"dialect.test_handles.exposed"},
+		Measures: "the spec's code is the only identity across its surfaces: testID prefixes and visual baselines"})
+	add("spec", config.Gate{Name: "testid-consistent", On: []string{"spec"}, Presupposes: []string{"dialect.test_handles.exposed"},
+		Measures: "the spec's testID inventory, the IDs the code exposes, and the tests that query them agree"})
+	add("spec", config.Gate{Name: "section-required", On: []string{"spec"},
+		Measures: "every spec section its unit's layer calls for, when the code triggers it, exists in the spec"})
+	add("spec", config.Gate{Name: "route-declared", On: []string{"spec"}, Tags: []string{"screen"},
+		Measures: "a screen spec declares its route and names its neighbour screens"})
+	add("spec", config.Gate{Name: "route-exists", On: []string{"spec"}, Tags: []string{"screen"}, Presupposes: []string{"route_registry", "derived.route_pattern"},
+		Measures: "the route the spec declares is registered where the app registers its routes"})
+	add("test", config.Gate{Name: "testid-queried-exists", On: []string{"test"}, Scope: config.ScopeProject,
+		Presupposes: []string{"dialect.test_handles.exposed", "dialect.test_handles.queried"},
+		Measures:    "every handle an end-to-end flow queries is exposed somewhere in the code"})
+	add("code", config.Gate{Name: "region-pair-honored", On: []string{"code", "test"},
+		Measures: "every `#region [CODE]` closes, and closes with its own code"})
+	add("code", config.Gate{Name: "value-anchored", On: []string{"code"}, Presupposes: []string{"derived.value_anchor"},
+		Measures: "each declared value anchor matches the code below it, its spec rule's value, and every other declaration of the same key"})
+	add("code", config.Gate{Name: "updated-at-atual", On: []string{"spec", "feature", "code", "test"},
+		Measures: "the header's `updated_at` is the day of the file's last commit"})
+	// Frozen parts: the marks confronted with the doctrine's
+	// records, and a change to a frozen part told — it informs, and never bars.
+	add("spec", config.Gate{Name: "freeze-consistent", On: []string{"spec", "product", "feature", "code", "test"}, Scope: config.ScopeProject,
+		Measures: "every freeze mark names a freeze the doctrine records, and every recorded freeze marks something"})
+	add("spec", config.Gate{Name: "frozen-touched", On: []string{"spec", "product", "feature", "code", "test"},
+		Measures: "a change to a frozen part is told, with the freeze's reason; it informs and never bars"})
+	// The guidance layer is canonical: its gates are offered to
+	// every project that chose any artifact, whatever the artifacts.
+	if len(chosen) == 0 {
+		return out
+	}
+	out = append(out,
+		config.Gate{Name: "progress-intact", ID: "progress-intact", Check: "progress-intact", On: []string{"spec", "plan", "code", "doc"},
+			Scope: config.ScopeProject, Blocking: config.Bool(false),
+			Measures: "anchors.progress.md is the file `anchors progress` wrote: it parses and its sum matches — no hand edit"},
+		config.Gate{Name: "guidance-linked", ID: "guidance-linked", Check: "guidance-linked", On: []string{"doc"},
+			Tags: []string{config.GuidanceLayer}, Blocking: config.Bool(false),
+			Measures: "CONTRIBUTING.md holds the working agreement, and README.md, AGENTS.md and CLAUDE.md point to it"},
+		config.Gate{Name: "guidance-honored", ID: "guidance-honored", On: []string{"doc"},
+			Tags: []string{config.GuidanceLayer}, Blocking: config.Bool(false), StaleOnConfig: true,
+			Measures: config.MeasuresJudgment,
+			Ask: "This file is part of the project's guidance — what tells whoever arrives, person or coding " +
+				"agent, how the project is worked on. Read it against `anchors guide guidance` and against the " +
+				"project's anchors.yaml, and answer: does any passage CONTRADICT them? Fail it for an instruction " +
+				"to skip a gate, the hooks or the tests (`--no-verify`, 'tests can come later'); an order of work " +
+				"other than spec → feature → test → code; a layer named that anchors.yaml does not declare, or a " +
+				"folder layout proposed as the structure; a gate called blocking that the configuration does not " +
+				"block, or a blocking one presented as optional; long work left unwatched as the way to do it. Do " +
+				"NOT judge style, length or completeness: a short file that says nothing wrong passes. When failing " +
+				"it, quote each passage and PROPOSE the text that replaces it."},
+	)
+	add("plan", config.Gate{Name: "progress-honest", On: []string{"plan"},
+		Measures: "the plan's progress file tells the truth about the disk"})
+	return out
+}
+
+// CanonicalGate devolve a declaração canônica de um gate pelo nome, se existir.
+//
+// Mesma fonte do `init` — a lista acima, com TODOS os artefatos ligados — para que a
+// redação de um gate exista em UM lugar só. Um catálogo escrito à parte divergiria da
+// semente no primeiro ajuste, que é exatamente o problema que este acessor resolve.
+func CanonicalGate(name string) (config.Gate, bool) {
+	for _, g := range canonicalCatalog() {
+		if g.Name == name {
+			return g, true
+		}
+	}
+	return config.Gate{}, false
+}
+
+// canonicalCatalog materializa a lista completa (todos os artefatos). Os gates são
+// nomeados de forma única, então ligar tudo não gera colisão — só a união.
+func canonicalCatalog() []config.Gate {
+	// `false`: aqui só importa QUAIS gates existem, não o estado de maturação deles.
+	return DefaultGates(map[string]bool{
+		"spec": true, "feature": true, "test": true,
+		"code": true, "guide": true, "plan": true,
+	}, false)
+}
+
+// init registra o catálogo canônico no pacote `config`, que o usa para completar os
+// campos omitidos de um gate canônico declarado num anchors.yaml (ver mergeCanonical).
+//
+// A injeção é no `init` do pacote — e não numa chamada explícita de cada comando —
+// porque o merge tem de valer para TODO `config.Load`, inclusive os que rodam antes de
+// qualquer setup. Um comando que esquecesse de registrar leria a config sem o merge e se
+// comportaria diferente dos outros, que é o tipo de divergência silenciosa que o merge
+// existe para eliminar.
+func init() {
+	config.SetCanonicalGateResolver(CanonicalGate)
+	config.SetGateCatalog(canonicalCatalog)
+}
+
+// init liga a lista de nomes de gate ao pacote `config`, para o teste que confronta o
+// de-para do vocabulário antigo contra os gates que existem de verdade.
+//
+// Por injeção e não por import: `config` não pode importar `initx` (seria ciclo), e sem
+// a lista o teste do de-para não teria contra o que confrontar — um destino errado
+// passaria despercebido.
+func init() {
+	config.RegisterGateNames(func() []string {
+		// The FULL catalog: registering only the spec/feature/test gates left out every
+		// gate seeded for code, plans and guides (no-secret-leaked, plan-revised,
+		// guide-checklist…), so a migration rename pointing at one of them read as a
+		// rename to a gate that does not exist.
+		todos := canonicalCatalog()
+		out := make([]string, 0, len(todos))
+		for _, g := range todos {
+			out = append(out, g.Name)
+		}
+		return out
+	})
+}

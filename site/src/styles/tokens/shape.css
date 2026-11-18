@@ -1,0 +1,15 @@
+:root {
+  /* Quase reto. O unico arredondamento livre e o da tag pill. */
+  --radius-none: 0;
+  --radius-sm: 2px;   /* botao, campo, chip */
+  --radius-md: 4px;   /* painel, card, janela de terminal */
+  --radius-pill: 999px;
+
+  --border-width: 1px;
+  --border-width-strong: 2px;
+
+  /* Nada flutua: sombra so onde ha sobreposicao real. */
+  --shadow-none: none;
+  --shadow-overlay: 0 12px 32px rgba(16, 14, 13, 0.14);
+  --shadow-terminal: 0 24px 64px rgba(16, 14, 13, 0.32);
+}

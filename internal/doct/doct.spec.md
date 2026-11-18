@@ -1,0 +1,118 @@
+<!-- @anchors
+  code: DTCDC
+  updated_at: 2026-11-14
+  layer: apoio
+-->
+# DocTemplateCompiler — compiles documentation pages from templates that reference the specs' content
+
+> **Code**: `DTCDC`
+
+## Overview
+
+Useful documentation shows the content, not a list of links; but the content already lives in
+the specs, and copying it into a handwritten page creates a duplicate that goes stale in
+silence. Markdown has no native include, so without a build the only way out would be to
+duplicate by hand. This unit is that build: specs are the source, templates in `doct/` are the
+frame that REFERENCES parts of specs, and the pages in `docs/` are the compiled result that
+nobody edits. The duplication exists only in the compiled page, where it does not hurt: it is
+generated, and the freshness check says when it is out of date.
+
+It loads the specs the MAP knows (the map knows each file's identity), taking each spec's layer
+from the spec's own header before the map's, because the map files every spec under one layer
+while the real layer of the unit is declared in its header. It gives templates functions to
+select specs by layer or code, list the layers, cut a section, split a spec into its rules, and
+the link, size, scenario and container functions of its sibling units.
+
+It protects work: a page without the generated marker is handwritten and is never overwritten.
+It errs loudly: a selection that matches nothing, a broken template or a spec the map lists but
+the disk lacks fails the build, because each would otherwise produce a green build with a hole
+nobody looks for. And it answers two questions without writing anything: which compiled pages
+are out of date (by a stamp of the inputs written into each page), and which specs no template
+reaches at all.
+
+## Effects
+
+### Compilation
+
+| Effect | Description |
+| --- | --- |
+| `DTCDC-B01` | A template that references a spec's section gets that section's text in the compiled page, not a link to the spec. |
+| `DTCDC-B02` | Every compiled page opens with the generated marker, naming the template's path from the project root and carrying a stamp of the page's inputs. |
+| `DTCDC-B03` | A page that already exists without the generated marker is never overwritten: it is left as is and reported as skipped. |
+| `DTCDC-B04` | A dry run compiles every template and writes nothing. |
+| `DTCDC-B05` | Templates in subfolders of `doct/` are compiled to the same relative path under `docs/`. |
+
+### Specs and template functions
+
+| Effect | Description |
+| --- | --- |
+| `DTCDC-B06` | A spec's layer is the `layer:` line of its own header when it has one, and the map's layer otherwise. |
+| `DTCDC-B07` | The layers offered to templates are the distinct layers that have specs, sorted. |
+| `DTCDC-B08` | A section is the text under a second-level heading of that exact name, without the heading, up to the next second-level heading; deeper headings inside it do not end it, and a missing section is empty. |
+| `DTCDC-B09` | A rule written as a heading — a rule code, a dash and a title — has its body up to the next rule or second-level heading. |
+| `DTCDC-B11` | A section asked by a title the section catalog knows, and absent under that exact title, is the same section under its title in another language of the catalog (`Visão Geral` finds `Overview`); a title outside the catalog finds only itself. |
+| `DTCDC-B12` | A spec's rules are read in the three catalogued forms — heading, table row, bold bullet — with the map's rule definition; only the spec's own codes, each at its first definition, so a Rule uses row does not repeat a rule; a table row's title is the cell after the code and its body the cells after that, and only a heading rule is marked as having a heading of its own. |
+| `DTCDC-B10` | A rule's title carries no HTML comment, even one written on the heading line, while the title's words stay. |
+
+### Freshness
+
+| Effect | Description |
+| --- | --- |
+| `DTCDC-B22` | A compiled page is stale when it is missing, or when its stamp differs from the stamp of today's template and specs; a page whose stamp matches is fresh without being recompiled. |
+| `DTCDC-B23` | The stamp covers the template and every loaded spec, so editing either makes the page stale. |
+| `DTCDC-B24` | A build removes each page of `docs/` whose generated marker names a template of `doct/` that is gone — renamed or deleted —, and a folder left empty by it, and says which; a page with no marker, from a template that exists, or that the project keeps (`docs.keep`), stays; a dry run only says which it would remove. (`removeOrphans`, `Result.Removed`) |
+| `DTCDC-B25` | A page whose project `@anchors` header — an HTML comment, or `#` lines in a YAML — opens it above the marker is a compiled page: it is judged out of date, compiled, pruned and staged by what follows the header, and the header is kept as it is above the compiled content. A page with a header and no marker is handwritten. (`splitHeader`, `withHeaderOf`) |
+| `DTCDC-B13` | A spec header's `updated_at:` line, within the first ten lines, is not part of the stamp; the same line further down is content and is. |
+| `DTCDC-B14` | A page without the generated marker is never reported stale. |
+| `DTCDC-B17` | A page whose generated marker carries no stamp (compiled by an earlier version) is compared by its body below the marker line: stale when the body differs from today's compilation, fresh when it is the same. |
+| `DTCDC-B18` | A layer the project has — the Estrutura declares it, or the map has a file in it — and no spec declares selects nothing instead of failing, and `layerFiles` counts its files in the map, so the architecture page says the layer has no spec instead of the build aborting; a container whose layers have no spec lists them with their files. |
+| `DTCDC-B19` | A compiler built with a source reads the specs, the features, the compiled pages and the templates of the staleness shortcut through it — the git index, when a commit is checked —, and one built without reads the tree. (`NewWith`) |
+| `DTCDC-B20` | A compiler built with a source compiles each template as the source holds it, and a template the source does not hold is not compiled: under the index, a template another session is editing is compiled as the commit records it. (`templates`, `compile`) |
+| `DTCDC-B21` | `Compiled` returns the pages that are out of date, compiled, without writing them; a page up to date is not compiled, and a page written by hand is never among them. (`Compiled`) |
+
+### Coverage and markers
+
+| Effect | Description |
+| --- | --- |
+| `DTCDC-B15` | The uncovered specs are those no template selected while every template was compiled, sorted by path. |
+| `DTCDC-B16` | `IsGenerated`, `IsHandwritten`: A page is recognised as generated by the generated marker on its first line, and as declared handwritten by the handwritten marker; a page with neither is neither. |
+
+## Domain
+
+| Input | Accepts | Outside the domain | Who guarantees |
+| --- | --- | --- | --- |
+| the map | the spec nodes of a built map | a spec node whose file is not on disk | this unit: construction fails, see `DTCDC-E04` |
+| the templates | Go text templates under `doct/` ending in `.tmpl` | a template that does not parse or execute | this unit: the build fails, see `DTCDC-E03` |
+| a selection filter | empty, `layer=<name>` or `code=<code>` | no `=`, another field, or a value that matches nothing and is no layer of the project | this unit: the selection fails, see `DTCDC-E01` |
+| the compiled folder | pages under `docs/`, generated or handwritten | — | this unit: handwritten pages are skipped |
+
+## Invariants
+
+| Rule | Always holds | How it is proven |
+| --- | --- | --- |
+| `DTCDC-I01` | Right after a build, no page is stale. | builds a project with templates at the root and in a subfolder, then asks which pages are stale and gets none |
+
+## Constraints
+
+| Rule | Boundary | Why |
+| --- | --- | --- |
+| `DTCDC-X01` | Asking which pages are stale never writes a page. | The check runs in hooks and CI; a check that fixed what it should point at would pass on its second run and leave the defect to whoever cloned the repository. |
+| `DTCDC-X02` | The specs are those the map lists; a spec file on disk that the map does not know is not loaded. | The map is what knows each file's identity and layer; a walk of its own would reimplement both and diverge at the first change of the structure. |
+
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `DTCDC-E01` | A selection filter has no `=`, names a field other than `layer` or `code`, or matches no spec and names no layer of the project. | An error saying how to write the filter, the existing layers, or the missing code. | A filter that matched nothing would compile a page missing exactly the section someone wanted, and nobody looks for what they do not know is missing. |
+| `DTCDC-E02` | A template's selection fails during the build. | The build fails and the page is not written. | A half page written before the failure would pass for complete. |
+| `DTCDC-E03` | A template does not parse or does not execute. | The build fails naming the template. | A syntax error must not become half a document. |
+| `DTCDC-E04` | `New`: A spec the map lists is not on disk. | Creating the compiler fails, telling to rebuild the map. | The spec would leave the documentation without a word while the build stayed green. |
+| `DTCDC-E05` | The project has no `doct/` folder. | The build fails telling to create the templates first; the staleness and coverage questions answer with nothing. | Without templates there is nothing to compile, and nothing compiled to be stale or to cover. |
+| `DTCDC-E06` | A template asks for one spec by a code no spec has. | An error naming the code. | Returning nothing would render a hole exactly where someone wanted to highlight a unit. |
+
+## Open Decisions
+
+| Code | Question | Who decides | Becomes |
+| --- | --- | --- | --- |
+
+none

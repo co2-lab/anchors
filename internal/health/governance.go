@@ -1,0 +1,521 @@
+// @anchors
+//   code: GVING
+//   ref: GVOPG
+
+package health
+
+import (
+	"fmt"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"gopkg.in/yaml.v3"
+	"path"
+	"sort"
+	"strings"
+)
+
+// checkGovernanceOpportunities identifica oportunidades de governança e configurações
+// subótimas com base nos artefatos existentes no grafo e na configuração do projeto.
+//
+// O doctor e o check usam este mecanismo para apontar gates canônicos e boas práticas
+// que nasceram depois da criação do projeto ou que ainda não foram adotados.
+func checkGovernanceOpportunities(g *mapx.Graph, cfg *config.Config) []Finding {
+	if cfg == nil || g == nil {
+		return nil
+	}
+
+	var out []Finding
+	hasKind := map[mapx.Kind]bool{}
+	for _, n := range g.Nodes {
+		hasKind[n.Kind] = true
+	}
+
+	gateMap := map[string]config.Gate{}
+	for _, gt := range cfg.Gates {
+		gateMap[gt.Name] = gt
+	}
+
+	for _, v := range dialectViews(cfg) {
+		out = append(out, v.rename(fallibleOpportunity(v.cfg, hasKind))...)
+	}
+
+	// 0a. comments: the files of the map whose comments the project does not declare — their
+	// header and flags cannot be read, and each gate that needs them says so. The examples
+	// of every family cover the ones they know; an extension none knows is named alone.
+	if missing := filesWithoutComments(g, cfg); len(missing) > 0 {
+		var known []config.Comments
+		var unknown []string
+		for _, ext := range missing {
+			if ex := exampleCommentsFor("x" + ext); ex != nil {
+				known = appendComments(known, *ex)
+			} else {
+				unknown = append(unknown, ext)
+			}
+		}
+		block := ""
+		if len(known) > 0 {
+			block = dialectBlockYAML(map[string]any{"comments": known})
+		}
+		out = append(out, Finding{
+			Check:    "sugestao-comments",
+			Severity: Info,
+			Subject:  "comments",
+			Detail:   i18n.T("health.opportunity.comments", strings.Join(missing, ", "), strings.Join(unknown, ", "), block),
+		})
+	}
+
+	// 0a''. a layer of another language: its files are of a family its dialect's is not —
+	// a Go service in a project whose one dialect is TS —, and that dialect's lexicon reads
+	// nothing of them (DLPLY-D02).
+	out = append(out, foreignLayers(g, cfg)...)
+
+	for _, v := range dialectViews(cfg) {
+		out = append(out, v.rename(lexiconOpportunities(v.cfg, gateMap))...)
+	}
+
+	// 1. evidence-fresh: projeto tem testes e código, mas não monitora frescor (teste stale)
+	if hasKind[mapx.KindTest] && hasKind[mapx.KindCode] {
+		if _, ok := gateMap["evidence-fresh"]; !ok {
+			out = append(out, Finding{
+				Check:    "sugestao-gate",
+				Severity: Info,
+				Subject:  "evidence-fresh",
+				Detail:   i18n.T("health.opportunity.evidence_fresh"),
+			})
+		}
+	}
+
+	// 2. no-secret-leaked: projeto tem código, mas não checa segredos
+	if hasKind[mapx.KindCode] {
+		if gt, ok := gateMap["no-secret-leaked"]; !ok {
+			out = append(out, Finding{
+				Check:    "sugestao-gate",
+				Severity: Info,
+				Subject:  "no-secret-leaked",
+				Detail:   i18n.T("health.opportunity.no_secret_leaked"),
+			})
+		} else if !gt.IsBlocking() {
+			// Gate configurado como subótimo: segredo no git não tem volta simples
+			out = append(out, Finding{
+				Check:    "gate-subotimo",
+				Severity: Info,
+				Subject:  "no-secret-leaked",
+				Detail:   i18n.T("health.opportunity.no_secret_blocking"),
+			})
+		}
+	}
+
+	// 3. dependency-vulnerable: projeto tem código, mas não audita CVEs de dependências
+	if hasKind[mapx.KindCode] {
+		if _, ok := gateMap["dependency-vulnerable"]; !ok {
+			out = append(out, Finding{
+				Check:    "sugestao-gate",
+				Severity: Info,
+				Subject:  "dependency-vulnerable",
+				Detail:   i18n.T("health.opportunity.dependency_vulnerable"),
+			})
+		}
+	}
+
+	// 4. no-duplication: projeto tem código, mas não mede copy-paste
+	if hasKind[mapx.KindCode] {
+		if _, ok := gateMap["no-duplication"]; !ok {
+			out = append(out, Finding{
+				Check:    "sugestao-gate",
+				Severity: Info,
+				Subject:  "no-duplication",
+				Detail:   i18n.T("health.opportunity.no_duplication"),
+			})
+		}
+	}
+
+	// 5. Configuração subótima de testes: tem nós de teste mas não tem junit configurado
+	if hasKind[mapx.KindTest] {
+		hasJunit := false
+		for _, t := range cfg.Tests {
+			if t.JUnit != "" {
+				hasJunit = true
+				break
+			}
+		}
+		if !hasJunit {
+			out = append(out, Finding{
+				Check:    "config-subotima",
+				Severity: Info,
+				Subject:  "tests.junit",
+				Detail:   i18n.T("health.opportunity.tests_junit"),
+			})
+		}
+	}
+
+	// 6. Every other catalog gate that relates to a declared layer and is not declared: the
+	// four above were the only ones named, and a project whose layers eight more checks
+	// cover never learned they existed (reported from a project). Each says what it
+	// measures and, when it needs a field first, which.
+	named := map[string]bool{}
+	for _, f := range out {
+		named[f.Subject] = true
+	}
+	for _, gt := range cfg.ApplicableUndeclared() {
+		if named[gt.Name] {
+			continue
+		}
+		detail := i18n.T("health.opportunity.catalog", strings.TrimRight(gt.Describe(), ". "), gt.Name)
+		if len(gt.Presupposes) > 0 {
+			detail += i18n.T("health.opportunity.catalog_presupposes", strings.Join(gt.Presupposes, ", "))
+		}
+		out = append(out, Finding{Check: "sugestao-gate", Severity: Info, Subject: gt.Name, Detail: detail})
+	}
+
+	return out
+}
+
+// QuickGovernanceHints devolve uma lista condensada das oportunidades de governança mais
+// relevantes para exibição rápida e não obstrutiva (por exemplo, no rodapé do `check`).
+//
+// A catalog suggestion whose gate presupposes a field the project has not declared is left
+// to the doctor: in the footer it would nudge a gate that, declared, only waits.
+func QuickGovernanceHints(g *mapx.Graph, cfg *config.Config) []Finding {
+	waits := map[string]bool{}
+	for _, gt := range cfg.ApplicableUndeclared() {
+		if missing, _ := cfg.Premises(gt); len(missing) > 0 {
+			waits[gt.Name] = true
+		}
+	}
+	var findings []Finding
+	for _, f := range checkGovernanceOpportunities(g, cfg) {
+		if f.Check == "sugestao-gate" && waits[f.Subject] {
+			continue
+		}
+		findings = append(findings, f)
+	}
+	if len(findings) > 2 {
+		return findings[:2]
+	}
+	return findings
+}
+
+// fallibleYAML is the family's fallible patterns as the `dialect:` block to copy.
+// testHandlesYAML writes the example as the `dialect:` block it goes in.
+func testHandlesYAML(th *config.TestHandles) string {
+	return dialectBlockYAML(map[string]any{"test_handles": th})
+}
+
+// dialectBlockYAML writes fields of the dialect as the block to copy under `dialect:`,
+// indented as the tips show it. yaml quotes each pattern as it must be quoted.
+func dialectBlockYAML(fields map[string]any) string {
+	b, err := yaml.Marshal(fields)
+	if err != nil {
+		return ""
+	}
+	var out strings.Builder
+	for _, l := range strings.Split(strings.TrimRight(string(b), "\n"), "\n") {
+		out.WriteString("\n    " + l)
+	}
+	return out.String()
+}
+
+func fallibleYAML(ps []config.FalliblePattern) string {
+	var b strings.Builder
+	b.WriteString("\n    fallible_patterns:")
+	for _, p := range ps {
+		fmt.Fprintf(&b, "\n      - call: '%s'", p.Call)
+		if p.Handled != "" {
+			fmt.Fprintf(&b, "\n        handled: '%s'", p.Handled)
+		}
+	}
+	return b.String()
+}
+
+// lexiconMissing are the lexicon fields some declared gate presupposes, the project left
+// empty and its family's example has, by their name under `dialect`, with the example's value.
+func lexiconMissing(cfg *config.Config) map[string]any {
+	if cfg.Dialect == nil {
+		return nil
+	}
+	ex := config.FamilyLexicon(cfg.Dialect.Family)
+	if ex == nil {
+		return nil
+	}
+	example, declared := fieldsOf(ex), fieldsOf(cfg.Dialect)
+	out := map[string]any{}
+	for _, g := range cfg.Gates {
+		for _, p := range g.Presupposes {
+			name, ok := strings.CutPrefix(p, "dialect.")
+			if !ok {
+				continue
+			}
+			if v, has := example[name]; has {
+				if _, set := declared[name]; !set {
+					out[name] = v
+				}
+			}
+		}
+	}
+	return out
+}
+
+// fieldsOf are a dialect's fields that are set, by their name in the yaml.
+func fieldsOf(d *config.Dialect) map[string]any {
+	b, err := yaml.Marshal(d)
+	out := map[string]any{}
+	if err == nil {
+		_ = yaml.Unmarshal(b, &out)
+	}
+	return out
+}
+
+// filesWithoutComments are the extensions of the map's code, test and support files whose
+// comments the project declares in no entry, sorted.
+func filesWithoutComments(g *mapx.Graph, cfg *config.Config) []string {
+	seen := map[string]bool{}
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindCode && n.Kind != mapx.KindTest {
+			continue
+		}
+		if cfg.CommentsFor(n.ID) == nil {
+			ext := path.Ext(n.ID)
+			if ext == "" {
+				ext = path.Base(n.ID)
+			}
+			seen[ext] = true
+		}
+	}
+	out := make([]string, 0, len(seen))
+	for e := range seen {
+		out = append(out, e)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// exampleCommentsFor is the entry of the families' examples that covers the file, or nil.
+func exampleCommentsFor(rel string) *config.Comments {
+	return (&config.Config{Dialect: &config.Dialect{Comments: config.AllComments()}}).CommentsFor(rel)
+}
+
+// appendComments adds the entry unless it is in the list already.
+func appendComments(list []config.Comments, c config.Comments) []config.Comments {
+	for _, x := range list {
+		if x.Files == c.Files {
+			return list
+		}
+	}
+	return append(list, c)
+}
+
+// dialectView is one dialect of the project seen as a project of that dialect alone, for the
+// tips that compare a dialect with its family's example; `prefix` is where it is declared.
+type dialectView struct {
+	cfg    *config.Config
+	prefix string
+}
+
+// dialectViews are the project's dialects: its one `dialect:`, or each of `dialects:`.
+func dialectViews(cfg *config.Config) []dialectView {
+	if len(cfg.Dialects) == 0 {
+		return []dialectView{{cfg, "dialect"}}
+	}
+	var out []dialectView
+	for _, name := range cfg.DialectNames() {
+		view := &config.Config{Dialect: cfg.Dialects[name], Gates: cfg.Gates, Derived: cfg.Derived, Layers: cfg.Layers}
+		out = append(out, dialectView{view, "dialects." + name})
+	}
+	return out
+}
+
+// rename writes the tips of a dialect of `dialects:` at its place: `dialect.x` and
+// `dialect:` become `dialects.<name>.x` and `dialects.<name>:` in every language, the keys
+// of the file being no words of a language.
+func (v dialectView) rename(fs []Finding) []Finding {
+	if v.prefix == "dialect" {
+		return fs
+	}
+	for i := range fs {
+		fs[i].Detail = strings.NewReplacer("`dialect.", "`"+v.prefix+".", "`dialect:`", "`"+v.prefix+":`").Replace(fs[i].Detail)
+		fs[i].Subject = v.prefix + "." + fs[i].Subject
+	}
+	return fs
+}
+
+// fallibleOpportunity: the family knows what can fail here, and the dialect declared
+// nothing — the failure gates do not see a fetch that nobody handles. Declining is writing
+// `fallible_patterns: []`, which silences this tip.
+func fallibleOpportunity(cfg *config.Config, hasKind map[mapx.Kind]bool) []Finding {
+	var out []Finding
+	if hasKind[mapx.KindCode] && cfg.Dialect != nil && cfg.Dialect.FalliblePatterns == nil {
+		if fam := config.FamilyFalliblePatterns(cfg.Dialect.Family); len(fam) > 0 {
+			out = append(out, Finding{
+				Check:    "sugestao-fallible",
+				Severity: Info,
+				Subject:  "fallible_patterns",
+				Detail:   i18n.T("health.opportunity.fallible_patterns", cfg.Dialect.Family, len(fam), fallibleYAML(fam)),
+			})
+		}
+	}
+
+	return out
+}
+
+// lexiconOpportunities: the tips of a dialect's lexicon, test handles, chain patterns and
+// navigation call, against its family's example.
+func lexiconOpportunities(cfg *config.Config, gateMap map[string]config.Gate) []Finding {
+	var out []Finding
+	// 0a'. the lexicon: a declared gate presupposes a field of the language's lexicon the
+	// project left empty — the gate is pending, since the core reads no syntax of its own.
+	// The family's example shows each one, to adapt.
+	if lex := lexiconMissing(cfg); len(lex) > 0 {
+		names := make([]string, 0, len(lex))
+		for k := range lex {
+			names = append(names, "`dialect."+k+"`")
+		}
+		sort.Strings(names)
+		out = append(out, Finding{
+			Check:    "sugestao-lexicon",
+			Severity: Info,
+			Subject:  "lexicon",
+			Detail:   i18n.T("health.opportunity.lexicon", cfg.Dialect.Family, strings.Join(names, ", "), dialectBlockYAML(lex)),
+		})
+	}
+
+	// 0b. test handles: a handle gate is declared and the project says nothing of how its
+	// code exposes a handle — the gate is pending, since the core reads no syntax of its
+	// own. The family's example shows how to write it, for the attribute the project marks
+	// its elements with.
+	if cfg.Dialect == nil || cfg.Dialect.TestHandles == nil {
+		for _, name := range []string{"testid-consistent", "testid-queried-exists", "identity-consistent"} {
+			if _, ok := gateMap[name]; !ok {
+				continue
+			}
+			family, attr := "", "testID"
+			if cfg.Dialect != nil {
+				family = cfg.Dialect.Family
+			}
+			if cfg.Derived != nil && strings.TrimSpace(cfg.Derived.TestHandle) != "" {
+				attr = strings.TrimSpace(cfg.Derived.TestHandle)
+			}
+			example := config.FamilyTestHandles(family, attr)
+			if example == nil {
+				example = config.FamilyTestHandles("ts", attr)
+			}
+			out = append(out, Finding{
+				Check:    "sugestao-test-handles",
+				Severity: Info,
+				Subject:  "test_handles",
+				Detail:   i18n.T("health.opportunity.test_handles", name, testHandlesYAML(example)),
+			})
+			break
+		}
+	}
+
+	// 0c. chain patterns: a chain gate is declared and the project says nothing of how its
+	// imports are written — the gates are pending. The family's example shows how.
+	if cfg.Dialect == nil || len(cfg.Dialect.Imports) == 0 {
+		var chain []string
+		for _, name := range []string{"dep-declared", "dep-honored", "used-by-declared"} {
+			if _, ok := gateMap[name]; ok {
+				chain = append(chain, name)
+			}
+		}
+		family := ""
+		if cfg.Dialect != nil {
+			family = cfg.Dialect.Family
+		}
+		if ex := config.FamilyChain(family); len(chain) > 0 && ex != nil {
+			block := map[string]any{"imports": ex.Imports}
+			if len(ex.ImportNames) > 0 {
+				block["import_names"] = ex.ImportNames
+			}
+			if len(ex.Declarations) > 0 {
+				block["declarations"] = ex.Declarations
+			}
+			if ex.TypeImportPattern != "" {
+				block["type_import_pattern"] = ex.TypeImportPattern
+			}
+			if ex.ImportResolve != nil && (cfg.Dialect == nil || cfg.Dialect.ImportResolve == nil) {
+				block["import_resolve"] = ex.ImportResolve
+			}
+			out = append(out, Finding{
+				Check:    "sugestao-chain-patterns",
+				Severity: Info,
+				Subject:  "chain_patterns",
+				Detail:   i18n.T("health.opportunity.chain_patterns", strings.Join(chain, ", "), dialectBlockYAML(block)),
+			})
+		}
+	}
+
+	// 0d. navigation call: nav-annotated is declared and the project says nothing of how a
+	// navigation call is written — the gate is pending. The family's example shows how.
+	if _, ok := gateMap["nav-annotated"]; ok && (cfg.Dialect == nil || strings.TrimSpace(cfg.Dialect.NavigationCall) == "") {
+		family := ""
+		if cfg.Dialect != nil {
+			family = cfg.Dialect.Family
+		}
+		if ex := config.FamilyNavigationCall(family); ex != "" {
+			out = append(out, Finding{
+				Check:    "sugestao-navigation-call",
+				Severity: Info,
+				Subject:  "navigation_call",
+				Detail:   i18n.T("health.opportunity.navigation_call", dialectBlockYAML(map[string]any{"navigation_call": ex})),
+			})
+		}
+	}
+
+	return out
+}
+
+// foreignLayers are the layers of code or tests holding files of a family their dialect's is
+// not, each with the example of the family of its files to declare under `dialects:` and name
+// on the layer. A dialect with no family tells nothing to compare.
+func foreignLayers(g *mapx.Graph, cfg *config.Config) []Finding {
+	type key struct{ layer, fam string }
+	count := map[key]int{}
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindCode && n.Kind != mapx.KindTest {
+			continue
+		}
+		fam := config.FamilyOfFile(n.ID)
+		have := strings.ToLower(cfg.DialectOfLayer(n.Layer).Family)
+		if fam == "" || have == "" || fam == have {
+			continue
+		}
+		count[key{n.Layer, fam}]++
+	}
+	keys := make([]key, 0, len(count))
+	for k := range count {
+		keys = append(keys, k)
+	}
+	sort.Slice(keys, func(i, j int) bool {
+		if keys[i].layer != keys[j].layer {
+			return keys[i].layer < keys[j].layer
+		}
+		return keys[i].fam < keys[j].fam
+	})
+	var out []Finding
+	for _, k := range keys {
+		example := ""
+		if ex := config.FamilyLexicon(k.fam); ex != nil {
+			ex.Family = k.fam
+			example = dialectBlockYAML(map[string]any{k.fam: fieldsOf(ex)})
+		}
+		out = append(out, Finding{
+			Check:    "sugestao-dialeto-camada",
+			Severity: Info,
+			Subject:  k.layer,
+			Detail: i18n.T("health.opportunity.foreign_layer", k.layer, count[k], k.fam,
+				cfg.DialectPathAt(firstOf(g, k.layer)), cfg.DialectOfLayer(k.layer).Family, k.fam, example),
+		})
+	}
+	return out
+}
+
+// firstOf is a file of the layer, to name where its dialect is declared.
+func firstOf(g *mapx.Graph, layer string) string {
+	for _, n := range g.Nodes {
+		if n.Layer == layer {
+			return n.ID
+		}
+	}
+	return ""
+}

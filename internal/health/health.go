@@ -1,0 +1,628 @@
+// @anchors
+//   code: HLINH
+//   ref: DCTRO
+
+// Package health é o validador de saúde do ecossistema (QUALITY §5.2) — a visão
+// GLOBAL. Diferente dos gates (que confrontam nó contra critério, incremental), o
+// health varre o mapa + a config + o disco e caça as pontas SISTÊMICAS: integridade
+// do mapa, órfãos, camadas frouxas, cobertura de gates. Ele APRESENTA e REGISTRA,
+// mas NÃO bloqueia (roda sob demanda, fora do caminho de merge; "detecta e
+// apresenta, não arbitra", CONCEPT §2).
+package health
+
+import (
+	"os"
+	"os/exec"
+	"path"
+	"path/filepath"
+	"slices"
+	"sort"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// Severity de um achado.
+type Severity string
+
+const (
+	Warn Severity = "warn" // ponta aberta / débito — precisa de atenção
+	Info Severity = "info" // observação — não é problema
+)
+
+// Finding é um achado sistêmico do doctor.
+type Finding struct {
+	Check    string // qual verificação (ex.: "aresta-morta", "orfao-identidade")
+	Severity Severity
+	Subject  string // o nó/aresta/camada afetado
+	Detail   string
+}
+
+// Report é o resultado da varredura.
+type Report struct {
+	Findings []Finding
+	Nodes    int
+	Edges    int
+	Layers   int
+}
+
+// Warnings devolve só os achados de atenção.
+func (r Report) Warnings() []Finding {
+	var w []Finding
+	for _, f := range r.Findings {
+		if f.Severity == Warn {
+			w = append(w, f)
+		}
+	}
+	return w
+}
+
+// Diagnose roda todas as verificações sistêmicas. root é a raiz (para checar o
+// disco). Puro em relação a (graph, cfg); toca o disco só para read/stat.
+func Diagnose(g *mapx.Graph, cfg *config.Config, root string) Report {
+	r := Report{Nodes: len(g.Nodes), Edges: len(g.Edges), Layers: cfg.DeclaredLayers()}
+	r.Findings = append(r.Findings, checkMapFidelity(g, root)...)
+	r.Findings = append(r.Findings, checkOrphans(g)...)
+	r.Findings = append(r.Findings, checkDuplicateCodes(g, cfg)...)
+	r.Findings = append(r.Findings, checkLooseLayers(g, cfg)...)
+	r.Findings = append(r.Findings, checkCommitMsgHook(root)...)
+	r.Findings = append(r.Findings, checkGateCoverage(g, cfg)...)
+	r.Findings = append(r.Findings, checkSkipOnValid(cfg)...)
+	r.Findings = append(r.Findings, checkMissingTools(cfg)...)
+	r.Findings = append(r.Findings, checkPresupposedFields(cfg)...)
+	r.Findings = append(r.Findings, checkGitMissing(cfg, root)...)
+	r.Findings = append(r.Findings, checkGitHubEnv(cfg, root)...)
+	r.Findings = append(r.Findings, checkPlanNeeds(g)...)
+	r.Findings = append(r.Findings, checkMissingSignals(g)...)
+	r.Findings = append(r.Findings, checkPendingDecisions(g, root, cfg)...)
+	r.Findings = append(r.Findings, checkGovernanceOpportunities(g, cfg)...)
+	r.Findings = append(r.Findings, checkSpecSections(g, cfg, root)...)
+	sortFindings(r.Findings)
+	return r
+}
+
+// --- identidade DUPLICADA (colisão de código de cenário, TRACEABILITY §3) ---
+//
+// O código de cenário deve ser ÚNICO por unidade. Quando duas unidades em pastas
+// diferentes carregam o MESMO código, é uma colisão: a rastreabilidade cruza fios e
+// a propagação gera arestas espúrias (uma spec "propaga" para o teste de outra
+// unidade só porque compartilham o código). Este check pega a colisão na raiz — é a
+// contrapartida de "identidade-ausente".
+func checkDuplicateCodes(g *mapx.Graph, cfg *config.Config) []Finding {
+	// Só kinds que são DONOS de identidade contam. doc/guide/plan apenas REFERENCIAM
+	// códigos (documentam, planejam) — não são donos, então não colidem.
+	owns := func(k mapx.Kind) bool {
+		switch k {
+		case mapx.KindSpec, mapx.KindFeature, mapx.KindTest, mapx.KindCode:
+			return true
+		}
+		return false
+	}
+	// O dono de um código é a UNIDADE, não o diretório. Unidade = o stem co-locado
+	// (dir/nome sem os sufixos .spec.md/.feature/.test.*). Assim a mesma unidade
+	// espalhada em lib/+screens/ (irmãs, stems iguais) não conta como colisão; só
+	// stems REALMENTE distintos compartilhando um código é que colidem.
+	unitsByCode := map[string]map[string]bool{}
+	for _, n := range g.Nodes {
+		if n.Code == "" || !owns(n.Kind) {
+			continue
+		}
+		// opt-out honesto: o arquivo declarou @anchors-shared-code — seus códigos
+		// pertencem a outra unidade de propósito, não são posse. Não conta.
+		if n.SharedCode {
+			continue
+		}
+		if unitsByCode[n.Code] == nil {
+			unitsByCode[n.Code] = map[string]bool{}
+		}
+		unitsByCode[n.Code][unitStem(n.ID, cfg)] = true
+	}
+	var out []Finding
+	for code, units := range unitsByCode {
+		if len(units) < 2 {
+			continue // um só dono (uma unidade, mesmo em pastas irmãs) — ok
+		}
+		owners := make([]string, 0, len(units))
+		for u := range units {
+			owners = append(owners, u)
+		}
+		sort.Strings(owners)
+		// Só a colisão CROSS-DOMAIN é reportada — dois donos em features/domínios
+		// DIFERENTES cruzam a rastreabilidade e geram propagação espúria (Warn).
+		// Unidades da MESMA feature (a tela + sua lib de domínio) compartilhando
+		// código é DELIBERADO e legítimo: não é achado — um "alerta" que nunca exige
+		// ação é ruído, então não o emitimos.
+		if !crossDomain(owners) {
+			continue
+		}
+		out = append(out, Finding{
+			"identidade-duplicada", Warn, code,
+			i18n.T("health.duplicate_identity", strings.Join(owners, ", ")),
+		})
+	}
+	return out
+}
+
+// crossDomain: os donos pertencem a features/domínios DIFERENTES? Usa o segmento de
+// feature (features/<x>) como domínio; se todos compartilham o mesmo, é intra-feature.
+func crossDomain(owners []string) bool {
+	domain := func(p string) string {
+		parts := strings.Split(p, "/")
+		for i, s := range parts {
+			if s == "features" && i+1 < len(parts) {
+				return "features/" + parts[i+1]
+			}
+		}
+		return parts[0] // fora de features/: o topo (apps, packages, …) já separa
+	}
+	first := domain(owners[0])
+	for _, o := range owners[1:] {
+		if domain(o) != first {
+			return true
+		}
+	}
+	return false
+}
+
+// unitStem is the identity of a file's UNIT: its folder and its unit's name
+// (`config.UnitName`), so Login.spec.md, Login.feature, Login.test.tsx and Login.tsx collapse
+// into ".../Login" when the layers' templates say a test is `{{name}}.test.{{ext}}`. Joined with
+// a forward slash: it is compared with the map's ids and cut by "/" (crossDomain).
+func unitStem(id string, cfg *config.Config) string {
+	return path.Join(path.Dir(filepath.ToSlash(id)), cfg.UnitName(id))
+}
+
+// --- integridade do mapa: arestas mortas / nós fantasma (TRACEABILITY §6) ---
+
+func checkMapFidelity(g *mapx.Graph, root string) []Finding {
+	var out []Finding
+	exists := func(id string) bool {
+		_, err := os.Stat(filepath.Join(root, id))
+		return err == nil
+	}
+	// nós cujo arquivo sumiu
+	nodeIDs := map[string]bool{}
+	for _, n := range g.Nodes {
+		nodeIDs[n.ID] = true
+		if !exists(n.ID) {
+			out = append(out, Finding{"no-fantasma", Warn, n.ID, i18n.T("health.ghost_node")})
+		}
+	}
+	// arestas apontando para nó inexistente (aresta morta)
+	for _, e := range g.Edges {
+		if !nodeIDs[e.From] || !nodeIDs[e.To] {
+			out = append(out, Finding{"aresta-morta", Warn, e.From + " → " + e.To, i18n.T("health.dead_edge")})
+		}
+	}
+	return out
+}
+
+// --- órfãos (TRACEABILITY §6) ---
+
+func checkOrphans(g *mapx.Graph) []Finding {
+	var out []Finding
+
+	// índice: um nó é `from` de alguma aresta? (usado para detectar spec sem realização)
+	hasOutgoing := map[string]bool{}
+	for _, e := range g.Edges {
+		hasOutgoing[e.From] = true
+	}
+
+	for _, n := range g.Nodes {
+		switch n.Kind {
+		// NB: código SEM spec NÃO é órfão — é o caso normal. Utils, constantes, hooks,
+		// lib pura não precisam de spec; specs são para as unidades que as merecem
+		// (telas, componentes). Marcar todo código sem spec como débito seria ruído.
+		// A direção que importa é a INVERSA (abaixo): uma SPEC sem código é que é um
+		// requisito sem encarnação.
+		case mapx.KindSpec:
+			// spec sem código realizado — requisito sem encarnação
+			if !hasOutgoing[n.ID] {
+				out = append(out, Finding{"spec-sem-realizacao", Warn, n.ID, i18n.T("health.spec_without_implementation")})
+			}
+			// identidade ausente (o órfão invisível): spec sem código de cenário
+			if n.Code == "" {
+				out = append(out, Finding{"identidade-ausente", Warn, n.ID, i18n.T("health.missing_identity")})
+			}
+		}
+	}
+	return out
+}
+
+// managedHook is the line every hook `anchors install-hooks` writes carries.
+const managedHook = "managed-by: anchors install-hooks"
+
+// checkCommitMsgHook reports a pre-commit Anchors installed with no commit-msg of its own:
+// the pre-commit then bars a failure at once, and a waiver in the commit message
+// (`[skip-<gate>@<CODE>: why]`) has no hook to read it. Hooks installed before commit-msg
+// existed stayed so (reported from a project: a waiver never worked there).
+func checkCommitMsgHook(root string) []Finding {
+	dir, ok := gitmeta.HooksDir(root)
+	if !ok {
+		return nil
+	}
+	pre, err := os.ReadFile(filepath.Join(dir, "pre-commit"))
+	if err != nil || !strings.Contains(string(pre), managedHook) {
+		return nil
+	}
+	if msg, err := os.ReadFile(filepath.Join(dir, "commit-msg")); err == nil && strings.Contains(string(msg), managedHook) {
+		return nil
+	}
+	return []Finding{{"hooks-desatualizados", Warn, filepath.ToSlash(filepath.Join(dir, "commit-msg")), i18n.T("health.commit_msg_missing")}}
+}
+
+// --- pilares frouxos: camada declarada sem arquivos; guide que não rege nada ---
+
+func checkLooseLayers(g *mapx.Graph, cfg *config.Config) []Finding {
+	var out []Finding
+	// contagem de nós por kind e por "é regido"
+	kindCount := map[mapx.Kind]int{}
+	for _, n := range g.Nodes {
+		kindCount[n.Kind]++
+	}
+	// camada declarada na config mas sem nenhum nó do seu kind
+	for name, l := range cfg.Layers {
+		if kindCount[mapx.Kind(l.Kind)] == 0 && !l.MayBeEmpty {
+			out = append(out, Finding{"camada-vazia", Warn, name, i18n.T("health.empty_layer")})
+		}
+	}
+	// guide que não aparece como `from` de nenhuma aresta governs (não rege nada)
+	governsFrom := map[string]bool{}
+	for _, e := range g.Edges {
+		if e.Type == mapx.EdgeGoverns {
+			governsFrom[e.From] = true
+		}
+	}
+	for _, n := range g.Nodes {
+		if n.Kind == mapx.KindGuide && !governsFrom[n.ID] {
+			// um guide que não rege ninguém NÃO é guide — é doc parado. É débito de
+			// Estrutura (Warn): ou falta a regra `governs` (o guide rege algo que não
+			// foi declarado), ou o arquivo deveria ser kind `doc`.
+			out = append(out, Finding{"guide-sem-governo", Warn, n.ID, i18n.T("health.ungoverned_guide")})
+		}
+	}
+	return out
+}
+
+// --- cobertura de gates: kinds sem nenhum gate declarado (meta-gate, §5.1) ---
+
+func checkGateCoverage(g *mapx.Graph, cfg *config.Config) []Finding {
+	var out []Finding
+	// kinds presentes no projeto
+	present := map[string]bool{}
+	for _, n := range g.Nodes {
+		present[string(n.Kind)] = true
+	}
+	// kinds cobertos por algum gate
+	covered := map[string]bool{}
+	for _, gt := range cfg.Gates {
+		for _, k := range gt.On {
+			covered[k] = true
+		}
+	}
+	var kinds []string
+	for k := range present {
+		kinds = append(kinds, k)
+	}
+	sort.Strings(kinds)
+	for _, k := range kinds {
+		// código e doc podem legitimamente não ter gate próprio; specs/features/testes sim
+		if !covered[k] && (k == "spec" || k == "feature" || k == "test") {
+			out = append(out, Finding{"kind-sem-gate", Warn, k, i18n.T("health.kind_without_gate")})
+		}
+	}
+	return out
+}
+
+// checkMissingSignals acusa os sinais de verificação que o projeto NÃO ingere.
+//
+// A distinção que este check materializa: o Anchors pode EXIGIR que a spec decida e que
+// a peça exista — isso é dele. Não pode exigir que o projeto tenha uma ferramenta de
+// mutação ou um reporter JUnit: depende de stack, de linguagem, de tempo de CI. Exigir
+// seria o framework decidindo pelo projeto.
+//
+// Mas não exigir não é o mesmo que ficar calado. Sem esses sinais, uma família inteira
+// de gates fica Pending — passa por verde no relatório e certifica trabalho que ninguém
+// mediu. O doctor é o lugar certo para o alerta: apresenta o risco, nomeia o que se
+// perde, e deixa a decisão com o projeto.
+//
+// A escala de severidade segue o que se perde:
+//   - execução (JUnit): Warn — sem ele nem se sabe se o teste passou.
+//   - cobertura (lcov): Warn — sem ela não se sabe se a linha rodou.
+//   - mutação: Info — o mais caro de adotar; a ausência é aceitável, a ignorância não.
+func checkMissingSignals(g *mapx.Graph) []Finding {
+	var códigos, testes int
+	var comExec, comCov, comMut int
+	// ingerido: a JUnit report WAS ingested — its proven scenarios are on the specs —
+	// whatever it matched of the test files.
+	ingerido := false
+	for _, n := range g.Nodes {
+		if n.Signal != nil && len(n.Signal.ProvenBySuite) > 0 {
+			ingerido = true
+		}
+		switch n.Kind {
+		case mapx.KindCode:
+			códigos++
+			if n.Signal != nil && n.Signal.TotalLines > 0 {
+				comCov++
+			}
+			if n.Signal != nil && (n.Signal.MutantsKilled > 0 || n.Signal.MutantsSurvived > 0) {
+				comMut++
+			}
+		case mapx.KindTest:
+			testes++
+			if n.Signal != nil && (n.Signal.Passed > 0 || n.Signal.Failed > 0 || n.Signal.Skipped > 0) {
+				comExec++
+			}
+		}
+	}
+
+	var out []Finding
+	// "Nothing ingested" and "ingested, nothing matched" have different fixes: the first is
+	// to run the ingest, the second is the report's shape. Saying the first for the second
+	// sent a project to ingest again, and again, the report it had just ingested (reported
+	// from a project).
+	if testes > 0 && comExec == 0 {
+		key := "health.missing_signal.junit"
+		if ingerido {
+			key = "health.missing_signal.junit_unmatched"
+		}
+		out = append(out, Finding{"sinal-ausente", Warn, "execução (JUnit)", i18n.T(key, testes)})
+	}
+	if códigos > 0 && comCov == 0 {
+		out = append(out, Finding{"sinal-ausente", Warn, "cobertura (lcov)",
+			i18n.T("health.missing_signal.lcov", códigos)})
+	}
+	if códigos > 0 && comMut == 0 {
+		out = append(out, Finding{"sinal-ausente", Info, "mutação",
+			i18n.T("health.missing_signal.mutation")})
+	} else if comMut > 0 && comMut < códigos {
+		out = append(out, Finding{"sinal-ausente", Info, "mutação (parcial)",
+			i18n.T("health.missing_signal.mutation_partial", comMut, códigos)})
+	}
+	return out
+}
+
+func sortFindings(fs []Finding) {
+	sort.Slice(fs, func(i, j int) bool {
+		if fs[i].Check != fs[j].Check {
+			return fs[i].Check < fs[j].Check
+		}
+		return fs[i].Subject < fs[j].Subject
+	})
+}
+
+// checkSkipOnValid acusa perspectiva desconhecida em `skip_on`.
+//
+// Vale porque o campo é uma lista de EXCLUSÃO por nome: um typo (`chnage`) não casa
+// perspectiva nenhuma, o gate segue rodando nas duas, e o autor acredita tê-lo
+// desligado numa delas. O erro é silencioso justamente do lado perigoso — quem escreveu
+// `skip_on` queria menos execução e recebeu mais, sem nenhum sinal.
+func checkSkipOnValid(cfg *config.Config) []Finding {
+	if cfg == nil {
+		return nil
+	}
+	validas := map[string]bool{
+		config.PerspectiveChange: true,
+		config.PerspectiveAll:    true,
+	}
+	var out []Finding
+	for _, gt := range cfg.Gates {
+		for _, p := range gt.SkipOn {
+			if !validas[p] {
+				out = append(out, Finding{"skip-on-invalido", Warn, gt.Name,
+					i18n.T("health.invalid_skip_on", p)})
+			}
+		}
+	}
+	return out
+}
+
+// --- ferramenta AUSENTE (gate declarado que não tem como rodar) ---
+//
+// Um gate com `needs_tool` cuja ferramenta não está no PATH é PULADO pelo motor
+// (Skip, nunca Fail — ver gate.ferramentaAusente). Isso protege o veredito, mas abre
+// um risco novo: gate que não roda é indistinguível de gate que passou, para quem só
+// olha o verde. O projeto ficaria descoberto exatamente na medida em que ninguém
+// notasse.
+//
+// É aqui que a ausência tem de aparecer, e não a cada varredura: o doctor é lido uma
+// vez e resolvido, enquanto um aviso no `check` viraria ruído a cada commit — e ruído
+// recorrente treina a equipe a ignorar, que é o oposto do que este aviso quer.
+//
+// Warn, não Info: a cobertura que o projeto DECLARA ter não é a que ele tem.
+func checkMissingTools(cfg *config.Config) []Finding {
+	if cfg == nil {
+		return nil
+	}
+	var out []Finding
+	for _, gt := range cfg.Gates {
+		if gt.NeedsTool == "" {
+			continue
+		}
+		if _, err := exec.LookPath(gt.NeedsTool); err == nil {
+			continue
+		}
+		msg := i18n.T("health.missing_tool", gt.NeedsTool, gt.Name)
+		if gt.InstallHint != "" {
+			msg += " — " + gt.InstallHint
+		}
+		out = append(out, Finding{"ferramenta-ausente", Warn, gt.Name, msg})
+	}
+	return out
+}
+
+// checkPresupposedFields names the gates declared over a configuration field the project
+// does not declare (`presupposes`), and has not waived in `dialect.opt_out`.
+//
+// The gate itself answers Pending on every target, which the check counts; what nobody saw
+// is WHICH field, once, for the whole project — a project with 43 tests learned only from
+// a person asking why (reported from a project). Warn, like a missing tool: the gate the
+// project declares measures nothing until the field is declared or waived.
+func checkPresupposedFields(cfg *config.Config) []Finding {
+	if cfg == nil {
+		return nil
+	}
+	var out []Finding
+	for _, gt := range cfg.Gates {
+		missing, _ := cfg.Premises(gt)
+		if len(missing) > 0 {
+			out = append(out, Finding{"premissa-ausente", Warn, gt.Name, i18n.T("health.presupposed_missing", gt.Name, strings.Join(missing, ", "))})
+		}
+	}
+	return out
+}
+
+// --- git AUSENTE (o substrato que não avisa quando falta) ---
+//
+// Git não é conforto do Anchors: é de onde vêm o carimbo de alteração das âncoras
+// (gitmeta), a cobertura de diff, o pre-commit e — no modo `github` — o repositório da
+// fila de trabalho. Nada disso falha ruidosamente quando o git falta; simplesmente não
+// acontece — e o que o usuário perde não é sinalizado por nenhum erro.
+//
+// É o mesmo motivo de `checkFerramentasAusentes`: o doctor existe para avisar COM
+// ANTECEDÊNCIA, antes de o usuário descobrir o buraco no meio de um trabalho e
+// investigar a camada errada.
+//
+// Os dois casos são achados DIFERENTES porque o conserto é diferente: sem o binário,
+// instalar; sem o repositório, iniciar. Uma mensagem que colapse os dois manda o
+// usuário procurar o problema onde ele não está.
+func checkGitMissing(cfg *config.Config, root string) []Finding {
+	return gitMissing(cfg, root, gitNoPath())
+}
+
+// gitNoPath é uma variável, e não uma chamada direta, para que o teste alcance o caso
+// "git não instalado" numa máquina que TEM git. Sem isso a distinção que separa
+// "instalar" de "iniciar" ficaria sem cobertura justamente na metade mais rara — a que
+// ninguém reproduz por acidente.
+var gitNoPath = func() bool {
+	_, err := exec.LookPath("git")
+	return err == nil
+}
+
+func gitMissing(cfg *config.Config, root string, instalado bool) []Finding {
+	if !instalado {
+		return []Finding{{"git-ausente", Warn, "git", i18n.T("health.git_missing")}}
+	}
+	if hasRepo(root) {
+		return nil
+	}
+	det := i18n.T("health.git_no_repo")
+	// No modo `github` isso deixa de ser débito e vira impedimento: a fila de trabalho
+	// mora nas issues de um repositório, e sem repo não há de onde puxar.
+	if cfg.GitHubMode() {
+		det = i18n.T("health.git_github_no_repo")
+	}
+	return []Finding{{"git-ausente", Warn, "repositório", det}}
+}
+
+// hasRepo sobe a árvore procurando `.git` (arquivo ou diretório: worktree e submódulo
+// usam um ponteiro `gitdir:`). Não roda `git` — a resposta é sobre o DISCO, e serve
+// igual quando o binário não existe.
+func hasRepo(root string) bool {
+	dir := root
+	for {
+		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
+			return true
+		}
+		pai := filepath.Dir(dir)
+		if pai == dir {
+			return false
+		}
+		dir = pai
+	}
+}
+
+// --- `needs` quebrado e CICLO entre planos (BOOTSTRAP.md §7) ---
+//
+// O `needs:` de um plano declara ORDEM DE TRABALHO: "não comece antes daquele terminar".
+// É o que permite escrever a sequência inteira de planos de uma vez e liberar aos poucos
+// — o arquivo existe, mas o card só nasce quando o pré-requisito fecha.
+//
+// Duas formas de quebrar, e as duas são silenciosas sem este check:
+//
+//   - apontar para um plano que NÃO EXISTE: a dependência simplesmente não é respeitada,
+//     e o trabalho começa fora de ordem sem nada acusar;
+//   - CICLO (A precisa de B, B precisa de A): nenhum dos dois pode começar, nunca, e o
+//     board fica com dois cards que ninguém pega sem que se saiba por quê.
+func checkPlanNeeds(g *mapx.Graph) []Finding {
+	planos := map[string]bool{}
+	for _, n := range g.Nodes {
+		if n.Kind == mapx.KindPlan {
+			planos[n.ID] = true
+		}
+	}
+	if len(planos) == 0 {
+		return nil
+	}
+
+	// As arestas `needs` que o mapa conseguiu ligar.
+	depende := map[string][]string{}
+	for _, e := range g.Edges {
+		if e.Type == mapx.EdgeNeeds {
+			depende[e.From] = append(depende[e.From], e.To)
+		}
+	}
+
+	var out []Finding
+
+	// `needs` para plano inexistente: o mapa DESCARTA essas arestas (não liga a nada),
+	// então a ausência é invisível no grafo — e o efeito é a dependência simplesmente
+	// não valer, com o trabalho começando fora de ordem sem nada acusar.
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindPlan {
+			continue
+		}
+		for _, alvo := range n.Needs {
+			if !planos[alvo] {
+				out = append(out, Finding{"needs-quebrado", Warn, n.ID,
+					i18n.T("health.needs_broken", alvo)})
+			}
+		}
+	}
+
+	// Ciclo: uma busca em profundidade por nó, marcando o caminho em curso.
+	estado := map[string]int{} // 0=novo, 1=no caminho, 2=fechado
+	var caminho []string
+	var visita func(string) bool
+	visita = func(p string) bool {
+		estado[p] = 1
+		caminho = append(caminho, p)
+		for _, alvo := range depende[p] {
+			if estado[alvo] == 1 {
+				// Only the cycle: the path from where the walk STARTED can carry plans that
+				// merely lead into it (`x → a ⇄ b` read "x → a → b → a"), and x is not stuck.
+				ciclo := caminho[slices.Index(caminho, alvo):]
+				out = append(out, Finding{"needs-ciclo", Warn, p,
+					i18n.T("health.needs_cycle", strings.Join(ciclo, " → ")+" → "+alvo)})
+				return true
+			}
+			if estado[alvo] == 0 && visita(alvo) {
+				return true
+			}
+		}
+		caminho = caminho[:len(caminho)-1]
+		estado[p] = 2
+		return false
+	}
+	// In path order, not map order: ranging over the map picked the starting plan at
+	// random, and with two cycles, or a plan leading into one, the finding changed
+	// between two runs over the same map.
+	ordem := make([]string, 0, len(planos))
+	for p := range planos {
+		ordem = append(ordem, p)
+	}
+	sort.Strings(ordem)
+	for _, p := range ordem {
+		if estado[p] == 0 {
+			caminho = nil
+			if visita(p) {
+				break // um ciclo relatado basta: o segundo seria o mesmo problema
+			}
+		}
+	}
+	return out
+}

@@ -1,0 +1,181 @@
+# Anchors — pipeline de CARDS ÓRFÃOS
+#
+# Um agente pode reivindicar um card e desaparecer: a sessão termina, a máquina desliga.
+# O card fica com dono, e por isso ninguém o pega — mas o dono não existe mais. Sem este
+# pipeline, o trabalho para ali e nada acusa a causa.
+#
+# A liberação é um comentário novo, nunca uma edição: `anchors-owner: (liberado)` passa a
+# ser o último, e o card volta à fila. O HISTÓRICO PERMANECE — dá para ver quem tinha
+# pegado, quando, e que foi liberado por inatividade e não por decisão de alguém.
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
+name: anchors · liberar cards parados
+
+on:
+  schedule:
+    # De hora em hora. A frequência define a LATÊNCIA da detecção, não o critério:
+    # quem decide se um card está parado são `HORAS_ESPERA` e `HORAS_ANDAMENTO`, abaixo.
+    #
+    # Uma hora atende as duas janelas sem desperdício: na de 24h é ruído, e na de 2h
+    # dá no máximo 50% de atraso sobre uma janela que já é curta de propósito —
+    # liberar cedo um card que estava parado em espera não custa nada.
+    #
+    # O `schedule` do GitHub Actions não é pontual — sob carga o disparo atrasa, e
+    # agendamentos muito frequentes podem ser DESCARTADOS. Apertar o cron compra
+    # latência que o GitHub não garante entregar; o caminho confiável é o agente
+    # disparar este workflow (`workflow_dispatch`) quando não acha card livre — aí a
+    # verificação acontece exatamente quando alguém precisa de trabalho, que é o caso
+    # que a janela de 2h existe para resolver.
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: anchors-stale
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  liberar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Liberar cards sem progresso
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Sem `actions/checkout` (não precisamos do código), o `gh` não descobre o
+          # repositório pelo git local — `GH_REPO` é o que o diz.
+          GH_REPO: ${{ github.repository }}
+          LABEL: anchors
+          # DOIS RELÓGIOS, porque são dois problemas diferentes.
+          #
+          # ESPERA (`to-do`, `ready-to-*`): o card está parado POR DEFINIÇÃO — ele
+          # aguarda alguém pegar. Ter dono ali é RESÍDUO: alguém reivindicou e não
+          # trabalhou, e enquanto o nome estiver lá o `next` pode pular o card. Errar
+          # para menos não custa nada — o card já estava disponível.
+          HORAS_ESPERA: "2"
+          # ANDAMENTO (`in-progress`, `in-review`, `in-test`): há trabalho ACONTECENDO.
+          # Liberar cedo demais rouba o card de quem está trabalhando devagar, e o novo
+          # dono recomeça sobre algo meio feito. O sinal de vida (`updatedAt`) só aparece
+          # quando alguém comenta, move label ou referencia commit — um dev pode passar
+          # um dia inteiro no card sem tocar no issue.
+          HORAS_ANDAMENTO: "24"
+          # RETRABALHO: um card REPROVADO volta para `to-do` com o autor como dono
+          # (`anchors-pr-checks`). Ele já conhece o trabalho e o que a revisão pediu, então
+          # a vez dele é curta: se não pedir trabalho em 1h, o card vai para qualquer agente.
+          HORAS_RETRABALHO: "1"
+        run: |
+          set -euo pipefail
+
+          limite_espera=$(date -u -d "-${HORAS_ESPERA} hours" +%Y-%m-%dT%H:%M:%SZ)
+          limite_andamento=$(date -u -d "-${HORAS_ANDAMENTO} hours" +%Y-%m-%dT%H:%M:%SZ)
+          limite_retrabalho=$(date -u -d "-${HORAS_RETRABALHO} hours" +%Y-%m-%dT%H:%M:%SZ)
+
+          # Um card é candidato quando tem dono (último `anchors-owner` não liberado) e
+          # não recebe atualização desde o limite DO GRUPO DELE. `updatedAt` cobre commit
+          # referenciado, comentário e mudança de label — qualquer sinal de vida conta.
+          #
+          # `--label "$LABEL"` não é detalhe: o board é compartilhado, e sem o filtro
+          # este pipeline "liberaria" cards de outros fluxos — mexendo em trabalho que
+          # não é do Anchors e cujo dono não se registra por `anchors-owner`.
+          #
+          # OS DOIS GRUPOS, e por que o relógio difere:
+          #
+          #   ESPERA (`to-do`, `ready-to-*`) — o card aguarda alguém pegar. Dono ali é
+          #   resíduo, e o `next` pode pular um card que está livre na prática. 2h.
+          #
+          #   ANDAMENTO (`in-progress`, `in-review`, `in-test`) — há trabalho em curso.
+          #   Liberar cedo rouba o card de quem o faz devagar. 24h.
+          #
+          # `ready-to-*` era EXCLUÍDO de tudo, e a razão escrita valia contra MOVER o
+          # card ("o stale joga trabalho PRONTO de volta em `to-do`") — não contra
+          # liberar o dono. Desde que o stale parou de mover, a exclusão passou a
+          # prender: um card pronto com dono morto ficava fora do alcance do `next`.
+          # A LISTA VEM SEM COMENTÁRIOS. Pedir `comments` de 200 cards numa consulta só
+          # estourava o GraphQL do GitHub: medido no app de referência, 60 execuções seguidas em
+          # `502`/`504`, e nenhum card liberado em dois dias e meio. A lista agora escolhe
+          # pelo que é barato (labels e `updatedAt`), e o dono de cada candidato vem pela
+          # API REST, um card por vez.
+          gh issue list --state open --label "$LABEL" --limit 200 \
+            --json number,updatedAt,labels \
+            --jq "[.[]
+                  | select(
+                      (([.labels[].name] | any(. == \"anchors:in-progress\" or . == \"anchors:in-review\" or . == \"anchors:in-test\"))
+                       and .updatedAt < \"$limite_andamento\")
+                      or
+                      (([.labels[].name] | any(. == \"anchors:in-progress\" or . == \"anchors:in-review\" or . == \"anchors:in-test\") | not)
+                       and ([.labels[].name] | any(. == \"anchors:to-do\" or startswith(\"anchors:ready-to-\")))
+                       and .updatedAt < \"$limite_retrabalho\")
+                    )
+                  | \"\\(.number) \\([.labels[].name | select(test(\"^anchors:(to-do|ready-to-[a-z]+|in-progress|in-review|in-test)$\"))] | first // \"\") \\(.updatedAt)\"]
+                  | .[]" |
+          while read -r n estado_atual atualizado; do
+            [ -n "$n" ] || continue
+            # O DONO é o último `anchors-owner:`, lido pela REST (a primeira linha de cada
+            # comentário). Falha da API PULA o card: liberar sem saber de quem ele é
+            # seria agir sobre um palpite.
+            if ! linhas=$(gh api "repos/$GH_REPO/issues/$n/comments" --paginate \
+                --jq '.[] | .body | split("\n")[0] | select(startswith("anchors-owner:") or startswith("↩ PR #"))'); then
+              echo "· #$n: não consegui ler o dono (gh falhou) — pulando"
+              continue
+            fi
+            donos=$(printf '%s\n' "$linhas" | grep '^anchors-owner:' || true)
+            dono=$(printf '%s\n' "$donos" | tail -1)
+            # Sem dono, ou JÁ LIBERADO, não há o que liberar. O marcador é o PREFIXO: o
+            # próprio stale escreve o motivo depois dele, e comparar pelo fim da linha
+            # tomava cada card já liberado por um card com dono — e o liberava de novo
+            # a cada hora.
+            case "$dono" in
+              ""|"anchors-owner: (liberado)"*) continue ;;
+            esac
+
+            # RETRABALHO: o dono atual foi dado por uma reprovação — depois da última linha
+            # de dono vem o aviso "↩ PR #N rejected" do `anchors-pr-checks`.
+            retrabalho=""
+            if printf '%s\n' "$linhas" | awk '/^anchors-owner:/ { depois = "" } /^↩ PR #/ { depois = $0 } END { exit !(depois ~ /rejected/) }'; then
+              retrabalho="sim"
+            fi
+
+            # O relógio que valeu, para o registro dizer POR QUE este card foi alcançado.
+            case "$estado_atual" in
+              anchors:in-progress|anchors:in-review|anchors:in-test)
+                janela="${HORAS_ANDAMENTO}h (trabalho em andamento)" ;;
+              *)
+                if [ -n "$retrabalho" ]; then
+                  janela="${HORAS_RETRABALHO}h (retrabalho de um PR reprovado — a vez do autor)"
+                else
+                  # A lista trouxe o card em espera pelo limite MAIS CURTO (o do retrabalho).
+                  # Um card comum só sai com o limite dele.
+                  if [[ "$atualizado" > "$limite_espera" ]]; then
+                    continue
+                  fi
+                  janela="${HORAS_ESPERA}h (card em espera — o dono era resíduo)"
+                fi ;;
+            esac
+
+            # O STALE LIBERA O DONO. NÃO MOVE O CARD.
+            #
+            # A versão anterior decidia um destino pela label anterior: `in-review` voltava
+            # para `ready-to-review`, e todo o resto para `to-do`. O raciocínio do primeiro
+            # caso estava certo e escrito no próprio código — "mandar para `to-do` faria o
+            # próximo agente REIMPLEMENTAR o que já existe".
+            #
+            # O SEGUNDO CASO PRESUMIA o que não conferia. A justificativa dizia "aqui o
+            # trabalho NÃO terminou: não há PR, ou os checks não passaram" — mas nada
+            # olhava se havia PR. Quando havia, e verde, a presunção estava errada e o
+            # efeito era exatamente o que o comentário condenava três linhas acima.
+            #
+            # Mover é uma decisão a mais, tomada sem os dados que a justificariam. Liberar
+            # o dono BASTA: o `claim` serve por estado E por dono liberado, e um card em
+            # `in-progress` sem dono é legível — alguém começou e sumiu. O board passa a
+            # dizer isso em vez de apagar a passagem.
+            #
+            # O QUE SE PERDE: o card não volta para a fila de quem filtra por `to-do`. É o
+            # preço de não mentir sobre onde o trabalho está, e o `claim` não precisa disso.
+            gh issue comment "$n" --body "anchors-owner: (liberado) — sem progresso há mais de ${janela}; dono anterior: ${dono#anchors-owner: }; o card fica em \`${estado_atual#anchors:}\`, e o próximo \`anchors next\` pode pegá-lo"
+
+            echo "liberado: #$n (era de ${dono#anchors-owner: }) — fica em ${estado_atual#anchors:}, janela ${janela}"
+          done

@@ -1,0 +1,52 @@
+<!-- @anchors
+  code: KPEVD
+  updated_at: 2026-11-02
+  layer: comando
+-->
+# KeepEvidence — a change that proves nothing new keeps the files' evidence
+
+> **Code**: `KPEVD`
+
+## Overview
+
+A file's evidence is tied to the revision it was measured at, and any edit ages it. An edit may
+touch only what Anchors reads — a `@realizes` on a rule line, `#region` markers, a comment citing a
+code — and rerunning every suite for it is waste. In the reference app a doctrine commit added
+`@realizes` to 134 specs and every one lost its proofs. Anchors cannot tell such an edit from a
+behaviour change in every language; the one who made the change can, and this command is how
+they say it, with the reason recorded.
+
+## Domain
+
+| Input | Accepts | Outside the domain | Who guarantees |
+| --- | --- | --- | --- |
+| the files | paths of files in the map | a file the map does not have, or that cannot be read | this unit: the command fails naming it |
+| the reason | any non-blank text | none, or blank | this unit: the command fails |
+| the map | the project's map, and the one at HEAD when there is one | no map | this unit: the command fails pointing at `map build` |
+
+## Effects
+
+| Effect | Description |
+| --- | --- |
+| `KPEVD-B01` | Each file's evidence moves to its current content, with the reason recorded on its node (never as a signal: a file with nothing measured stays unmeasured), and the command says what it carried; with `--lines` the coverage and mutation go along. (`KeepEvidence` does the moving.) |
+| `KPEVD-B02` | When the map was rebuilt after the change and no longer holds the file's evidence, it is taken from the map at HEAD; with no commit or no committed map there is nothing to recover. |
+| `KPEVD-B03` | A file whose evidence is already at its content, or that has none, is said to have nothing to keep, and is left as it was. |
+| `KPEVD-B04` | The `@contract` stamps of the doubles pointing at the files kept are refreshed and listed, under the same declaration. |
+| `KPEVD-B05` | When the file's signal lacks suites the map at HEAD holds for it — the rebuild dropped the signal and only some suites ran again at the new content —, those suites come back from HEAD and are carried with the rest; a suite run again keeps its new measurement. A suite that ran again and proved nothing here also comes back: the command is the author's declaration that the change proves nothing new. |
+| `KPEVD-B06` | The scenarios a rebuild marked stale because their rule changed are kept too, and said, even when the evidence itself is already at the current content. |
+| `KPEVD-B07` | The node takes the evidence revisions of the content kept, with its revision: a later change that proves nothing — a header's date — carries what was kept, as it carries any evidence. |
+| `KPEVD-B08` | When the file's signal holds no mutation and the map at HEAD holds one for it — a coverage run at the new content started a new signal —, that mutation comes back from HEAD and is carried with the rest under `--lines`; a mutation measured again at the new content stays its own. |
+| `KPEVD-B09` | A file git moved since HEAD is found in HEAD's map at its old path: its evidence comes back from there as a file's at its own path does. |
+
+## Errors
+
+| Error | When | What the user sees |
+| --- | --- | --- |
+| `KPEVD-E01` | The reason is missing or blank, a file is not in the map or cannot be read, or there is no map | the command fails saying which, and the map is not written |
+
+## Open Decisions
+
+| Code | Question | Who decides | Becomes |
+| --- | --- | --- | --- |
+
+none

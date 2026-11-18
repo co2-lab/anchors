@@ -1,0 +1,472 @@
+// @anchors
+//   code: OQGPN
+//   ref: OPQSP
+
+package gate
+
+import (
+	"regexp"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// OpenDecisionMarker distingue, no laudo, o Pending que BARRA (há decisão por tomar) do
+// que é dívida de migração (a spec nasceu antes da prática). Os dois são `Pending`, e só
+// o primeiro impede a promoção e vira issue.
+//
+// É um marcador ESTÁVEL, não prosa: o gate que o consulta não pode depender da redação —
+// nem do idioma — do texto que ele mesmo escreveu.
+const OpenDecisionMarker = "[decisao-em-aberto]"
+
+// open-questions-resolved: uma spec com pergunta em aberto NÃO está pronta para implementar.
+//
+// A classe de defeito é a AMBIGUIDADE NÃO RESOLVIDA, e ela é a mais barata de evitar e a
+// mais cara de descobrir tarde. O caminho é sempre o mesmo: a spec não decide algo que o
+// código precisa; quem implementa escolhe uma leitura defensável e segue; a escolha nunca
+// é confrontada com quem tinha a resposta; o produto sai com a leitura errada. Nenhum gate
+// pega, porque todas as peças existem e se referenciam — o defeito é uma decisão que
+// ninguém tomou.
+//
+// O que este gate acrescenta ao "não chute, registre e reporte" que o `anchors work` já
+// diz: um LUGAR declarado para o registro. Sem lugar, "registrar" vira comentário no PR
+// que morre no merge. Com lugar, a pergunta é um item de trabalho visível, e a spec só
+// fica implementável quando a seção esvazia.
+//
+// O ciclo pretendido:
+//  1. quem escreve a spec percebe o que não sabe → escreve em `## Decisões em aberto`;
+//  2. o gate acusa enquanto houver item → a spec não passa por pronta;
+//  3. a pergunta é levada a quem decide (a seção é o lugar onde ela está visível);
+//  4. a resposta VIRA REGRA (com código) e o item some da seção.
+//
+// A pergunta não é apagada: ela é PROMOVIDA a regra. Item que some sem regra nova é
+// pergunta varrida para debaixo do tapete — por isso o gate pede que o item aponte para
+// onde a resposta vai morar.
+//
+// Fechar a seção com "nenhuma" é o opt-out honesto (CONCEPT §5.1): afirma que se olhou e
+// não há dúvida, em vez de omitir a seção e deixar a questão sem ter sido feita.
+func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindSpec {
+		return Skip, i18n.T("gate.open_questions.skip_not_spec")
+	}
+
+	// A CAMADA do nó não está no grafo, então a resolução do título cai em projeto >
+	// framework. Passar o cfg é o que importa: sem ele, o gate ignoraria o
+	// `section_titles` que o projeto declarou e voltaria a afirmar ausência sobre uma
+	// seção que existe com outro nome.
+	corpo, achou := openDecisionsSectionCfg(content, cfg, "")
+	if !achou {
+		// A seção é DECLARADA no catálogo (`Default: true` em todo preset), e o esqueleto
+		// que o `anchors new` emite já a traz fechada com `nenhuma`. Então "não tem a
+		// seção" quer dizer uma de duas coisas, e elas não se confundem:
+		//
+		//   • a spec nasceu ANTES da prática — dívida, não defeito. Medido no repositório
+		//     que originou o gate: 586 specs sem a seção, e o preset gerando-a hoje.
+		//   • alguém a apagou — e aí o gate precisa dizer, porque apagar é exatamente o
+		//     movimento que a mensagem de falha chama de "varrer para debaixo do tapete".
+		//
+		// Nenhum sinal técnico separa as duas, então o veredito é `Pending`: nomeia a
+		// dívida sem acusar. `Skip` seria pior — afirma "não tive o que confrontar", e o
+		// leitor entende "não se aplica"; um gate BLOQUEANTE com ✓0 ✗0 ~586 parece
+		// vigilante e não vigia nada.
+		//
+		// A divergence: it informs, unless the project declares `severity: {divergence:
+		// block}` — the section is mandatory, and a project that wants its absence to bar
+		// says so.
+		return Diverge, i18n.T("gate.open_questions.pending_no_section")
+	}
+
+	itens := openItems(corpo)
+	if len(itens) == 0 {
+		return Pass, ""
+	}
+
+	// SEM CÓDIGO a pergunta não tem identidade, e sem identidade ela não sobrevive: não
+	// vira issue rastreável, não resiste a uma reescrita da spec, e não dá para dizer
+	// depois que a regra `X-B03` nasceu da pergunta `X-Q01`. O achado é próprio e vem
+	// ANTES da contagem — uma pergunta anônima é um problema diferente de uma pergunta
+	// em aberto, e confundir os dois esconde o primeiro.
+	var anonimos []string
+	for _, it := range itens {
+		if itemCode(it) == "" {
+			anonimos = append(anonimos, "«"+summarize(it)+"»")
+		}
+	}
+	if len(anonimos) > 0 {
+		return Diverge, i18n.T("gate.open_questions.pending_anonymous", len(anonimos), strings.Join(anonimos, ", "))
+	}
+
+	var nums []string
+	for i, it := range itens {
+		if i >= 3 {
+			nums = append(nums, i18n.T("gate.open_questions.more_items", len(itens)-3))
+			break
+		}
+		// CÓDIGO e assunto juntos: o código identifica (e não muda quando alguém
+		// reescreve a frase), o texto diz do que se trata. Só o código faria o relatório
+		// exigir abrir a spec para saber o que se perguntou.
+		item := itemCode(it) + " «" + summarize(it) + "»"
+		if who := whoDecides(it); who != "" {
+			item += " (" + i18n.T("gate.open_questions.who_decides", who) + ")"
+		}
+		nums = append(nums, item)
+	}
+	// PENDING, não FAIL. A distinção é o ponto do gate, e errá-la o inverte:
+	//
+	// `Fail` é o veredito de quem fez algo ERRADO. Item em aberto não é erro — é a spec
+	// dizendo a verdade sobre o que ainda não sabe, que é exatamente o comportamento que
+	// este gate existe para produzir. Medido num E2E real: uma spec registrou 3 decisões
+	// pendentes legítimas, levou ✗, e o agente leu como punição à honestidade. O caminho
+	// mais curto para o verde passava a ser APAGAR a seção — o oposto do que o gate quer,
+	// e nada distinguiria a spec que não tem dúvida da que escondeu as suas.
+	//
+	// `Pending` é o terceiro estado (QUALITY): nomeia o que falta e o risco, sem fingir
+	// aprovação nem acusar quem declarou — quem escreveu não é penalizado por ter olhado.
+	//
+	// Mas pendência não basta para IMPEDIR: `Pending` sozinho nunca barrou, e por um
+	// tempo este comentário afirmou que barrava. A consequência apareceu num E2E: três
+	// specs fecharam com "✓ pode promover" carregando decisões que ninguém tomou, e a
+	// fila enfileirou `code` para elas.
+	//
+	// O que barra é `Result.Impede`, marcado para este gate: "há decisão por tomar" é
+	// diferente de "não tive o que confrontar", e só o primeiro impede a promoção. Culpa
+	// e prontidão são eixos distintos — declarar o que não se sabe não é defeito, e ainda
+	// assim não deixa a spec pronta.
+	// O MARCADOR `[decisao-em-aberto]` é o que o `gate.go` consulta para saber que este
+	// Pending BARRA e vira issue. Antes ele casava a prosa ("que a spec ainda NÃO tomou"),
+	// e isso é uma bomba-relógio: no dia em que o laudo for traduzido — ou só reescrito —
+	// o gate para de barrar e de abrir issue, em silêncio, e ninguém liga uma coisa à
+	// outra.
+	//
+	// Marcador e não campo novo porque a assinatura do check é `(Verdict, string)` e é
+	// compartilhada por dezenas de gates; mudá-la para um caso obrigaria a tocar todos.
+	return Awaiting, i18n.T("gate.open_questions.pending_decisions", len(itens), strings.Join(nums, ", "))
+}
+
+// whoDecides is the third cell of an open decision's row — "Who decides", after the code and
+// the question —, or empty for an item that is no table row or leaves it blank. It is what the
+// one who reads the awaited decision needs: whom to take it to.
+func whoDecides(item string) string {
+	t := strings.TrimSpace(item)
+	if !strings.HasPrefix(t, "|") {
+		return ""
+	}
+	cells := strings.Split(strings.Trim(t, "|"), "|")
+	if len(cells) < 3 {
+		return ""
+	}
+	who := strings.Trim(strings.TrimSpace(cells[2]), "`*")
+	if who == "—" || who == "-" {
+		return ""
+	}
+	return who
+}
+
+// seçãoDecisõesEmAberto extrai o corpo da seção.
+//
+// O TÍTULO VEM DA CONFIG (`section_titles.open`), e não de uma lista de idiomas cravada
+// aqui. A lista existia — português e inglês —, e uma spec em qualquer outro idioma caía
+// no ramo "a spec não declara a seção" TENDO a seção, com perguntas dentro: o gate
+// afirmava ausência onde havia conteúdo, que é a falha mais cara que ele podia ter.
+//
+// O mecanismo já existia e este gate não o usava: `TituloDaSecao` resolve camada >
+// projeto > framework, e foi criado justamente porque título de seção é CONTEÚDO do
+// projeto, não mecanismo do Anchors — que não impõe léxico nem idioma (ver `dialect`).
+//
+// A lista de variantes continua como ÚLTIMO recurso, para o projeto que não declarou
+// nada: tirá-la quebraria as specs que já existem, e o padrão do framework é português.
+var decisionsRE = regexp.MustCompile(`(?im)^#{1,4}\s*(decis(ões|oes|ão|ao)\s+em\s+aberto|em\s+aberto|quest(ões|oes)\s+em\s+aberto|open\s+questions|open\s+decisions|pend(ências|encias)\s+de\s+decis(ão|ao))\b[^\n]*\n`)
+
+// declaredTitleRE monta o casador para o título que o PROJETO declarou.
+func declaredTitleRE(titulo string) *regexp.Regexp {
+	return regexp.MustCompile(`(?im)^#{1,4}\s*` + regexp.QuoteMeta(titulo) + `\b[^\n]*\n`)
+}
+
+func openDecisionsSection(content string) (string, bool) {
+	return openDecisionsSectionCfg(content, nil, "")
+}
+
+func openDecisionsSectionCfg(content string, cfg *config.Config, camada string) (string, bool) {
+	// O título declarado VENCE: um projeto que chama a seção de "Pendências de produto"
+	// não pode ser cobrado pelo nome que o framework usaria.
+	if t := cfg.SectionTitle("open", "", camada); t != "" {
+		if loc := declaredTitleRE(t).FindStringIndex(content); loc != nil {
+			return bodyFrom(content, loc[1]), true
+		}
+	}
+	loc := decisionsRE.FindStringIndex(content)
+	if loc == nil {
+		return "", false
+	}
+	return bodyFrom(content, loc[1]), true
+}
+
+// bodyFrom devolve o corpo da seção que começa em `ini`, até o próximo cabeçalho de
+// mesmo nível ou acima.
+func bodyFrom(content string, ini int) string {
+	resto := content[ini:]
+	// a seção vai até o próximo cabeçalho de mesmo nível ou acima
+	if fim := regexp.MustCompile(`(?m)^#{1,4}\s`).FindStringIndex(resto); fim != nil {
+		resto = resto[:fim[0]]
+	}
+	return resto
+}
+
+// closedRE reconhece o fechamento honesto: a afirmação de que se olhou e não há dúvida.
+var closedRE = regexp.MustCompile(`(?i)^\s*[-*]?\s*(nenhuma|nenhum|none|n/?a|sem\s+pend[êe]ncias?|vazio|—|-)\s*\.?\s*$`)
+
+// itemRE: um item é uma linha de lista ou de tabela. Prosa solta explicando a seção não
+// conta — senão o texto de abertura viraria uma pendência fantasma.
+var itemRE = regexp.MustCompile(`(?m)^\s*(?:[-*+]\s+|\d+[.)]\s+|\|)`)
+
+func openItems(corpo string) []string {
+	var itens []string
+	linhas := strings.Split(corpo, "\n")
+	for i, linha := range linhas {
+		if strings.TrimSpace(linha) == "" || closedRE.MatchString(linha) {
+			continue
+		}
+		if !itemRE.MatchString(linha) {
+			continue
+		}
+		// linha separadora de tabela (`|---|---|`) não é item
+		if regexp.MustCompile(`^\s*\|[\s:|-]+\|?\s*$`).MatchString(linha) {
+			continue
+		}
+		// cabeçalho de tabela também não
+		if regexp.MustCompile(`(?i)^\s*\|\s*(c[óo]digo|id|pergunta|d[úu]vida|quest(ão|ao)|item|decis(ão|ao))\b`).MatchString(linha) {
+			continue
+		}
+		// item RESOLVIDO fica no histórico sem bloquear: marcado com [x] ou riscado.
+		// A resposta vira regra, mas o rastro de que a pergunta existiu tem valor.
+		if regexp.MustCompile(`(?i)^\s*[-*+]\s*\[x\]|~~`).MatchString(linha) {
+			continue
+		}
+		// DE-PARA também é histórico: a linha cita a pergunta E a regra que nasceu dela.
+		//
+		// Uma tabela é a forma mais legível de mostrar de onde a regra veio, e o `[x]`
+		// obriga a bullet. Medido no app de referência: escrevi o histórico da spec do DataStore
+		// como `| era | virou |` e o gate contou as duas linhas de dados como perguntas
+		// ABERTAS — na seção que abre com `nenhuma.` e cuja tabela diz que elas viraram
+		// regra.
+		//
+		// A defesa por NOME de coluna (`código|pergunta|decisão`) não alcança: `| era |
+		// virou |` não casa nenhum, então o cabeçalho entrava como item e as linhas
+		// também.
+		//
+		// O reconhecimento é por CONTEÚDO: uma linha que cita um código de pergunta e um
+		// código de regra é de-para por construção — a pergunta que virou regra não é
+		// pergunta aberta.
+		//
+		// E o efeito de errar aqui não é cosmético: o veredito fica `Pending`, o `check`
+		// só fecha issue em `Pass`, e o card `needs-user` fica aberto para sempre com o
+		// claim pulando o trabalho.
+		if isQuestionAlreadyRule(linha) {
+			continue
+		}
+		// CABEÇALHO DE TABELA com nome de coluna IMPREVISTO.
+		//
+		// A defesa acima cobre os títulos previstos (`código|pergunta|decisão`…), e
+		// `| era | virou |` não casa nenhum — entrava como item. Medido no app de referência: a
+		// tabela de histórico da spec do DataStore produziu 3 achados, e o cabeçalho era
+		// um deles.
+		//
+		// O reconhecimento é pela FORMA: um cabeçalho é seguido pelo separador
+		// (`|---|---|`) na linha de baixo, e é isso que o distingue de uma linha de dados
+		// com nome de coluna estranho.
+		//
+		// Não basta "linha de tabela sem código": uma pergunta ANÔNIMA numa tabela é
+		// exatamente o achado que o gate cobra (ver `TestOpenQuestions_cobraCodigoNaPergunta`),
+		// e pulá-la esconderia o defeito que ele existe para acusar.
+		if isTableHeader(i, linhas) {
+			continue
+		}
+		itens = append(itens, strings.TrimSpace(linha))
+	}
+	return itens
+}
+
+// itemCode extrai o código de identidade da pergunta (`{CODE}-Q01`), ou vazio.
+//
+// A letra `Q` é a canônica da decisão em aberto, mas o projeto pode declarar outra em
+// `rule_types` — daí aceitar qualquer letra do vocabulário: o gate cobra IDENTIDADE, não
+// uma letra específica, e recusar `X-D01` num projeto que chama a seção de "Dúvidas"
+// seria impor léxico, que a doutrina não faz.
+func itemCode(item string) string {
+	// SÓ A PRIMEIRA CÉLULA. A linha da tabela carrega outro código na coluna "Vira" — a
+	// regra que a resposta vai virar —, e ele NÃO é a identidade da pergunta: são coisas
+	// opostas (o que se pergunta e o que a resposta produzirá). Ler a linha inteira daria
+	// por identificada toda pergunta que declarou seu destino, que é justamente a que já
+	// está mais bem escrita.
+	primeira := item
+	if strings.HasPrefix(strings.TrimSpace(item), "|") {
+		partes := strings.SplitN(strings.TrimSpace(item), "|", 3)
+		if len(partes) >= 2 {
+			primeira = partes[1]
+		}
+	}
+	return anyCodeRE.FindString(primeira)
+}
+
+// summarize corta o item para caber na mensagem do gate sem perder o assunto.
+func summarize(s string) string {
+	// Numa linha de tabela o ASSUNTO é a célula seguinte ao código — a primeira passou a
+	// ser a identidade. Sem isto o resumo devolve o próprio código, e a mensagem fica
+	// "PARCX-Q01 «PARCX-Q01»": o leitor precisa abrir a spec para saber o que se
+	// perguntou, que é exatamente o que a mensagem existe para evitar.
+	if strings.HasPrefix(strings.TrimSpace(s), "|") {
+		celulas := strings.Split(strings.Trim(strings.TrimSpace(s), "|"), "|")
+		for _, c := range celulas {
+			c = strings.TrimSpace(c)
+			// Pula a célula que É o código; a primeira com texto de verdade é o assunto.
+			if c == "" || anyCodeRE.MatchString(c) {
+				continue
+			}
+			s = c
+			break
+		}
+	}
+	s = strings.TrimLeft(s, "-*+|0123456789.) \t")
+	s = strings.TrimSpace(strings.SplitN(s, "|", 2)[0])
+	if len([]rune(s)) > 60 {
+		return string([]rune(s)[:57]) + "…"
+	}
+	return s
+}
+
+// OpenDecisions conta as decisões que a spec ainda não tomou. É o que o `doctor` usa
+// para reportar a pendência como ponta sistêmica, no mesmo estatuto de `sinal-ausente`.
+//
+// Recebe a CONFIG porque o título da seção é do projeto: contar zero numa spec cuja seção
+// se chama outra coisa diria "não há decisão pendente" sobre uma spec cheia delas — o
+// silêncio que este gate existe para eliminar.
+func OpenDecisions(content string, cfg *config.Config, camada string) int {
+	corpo, achou := openDecisionsSectionCfg(content, cfg, camada)
+	if !achou {
+		return 0
+	}
+	return len(openItems(corpo))
+}
+
+// questionToRuleRE casa o par (código de pergunta, código de regra) numa linha.
+//
+// As letras vêm da config (`rule_types`), menos o `Q`, que é a da pergunta: um projeto que
+// declare `Q` como tipo de regra faria o de-para casar duas perguntas, e o gate deixaria
+// de ver uma pergunta aberta citada ao lado de outra.
+func questionToRuleRE() *regexp.Regexp {
+	// As letras CANÔNICAS, menos duas:
+	//
+	//   `Q`  é a da PERGUNTA — deixá-la faria o de-para casar duas perguntas, e uma
+	//        pergunta aberta citada ao lado de outra sumiria.
+	//   `R`  é a da REVISÃO, e a coluna "Vira" de uma pergunta ABERTA já traz uma
+	//        (`| PARCX-Q01 | ...? | Produto | PARCX-R04 |` significa "quando decidirem,
+	//        vira a revisão R04"). Casá-la trataria a pergunta em aberto como já
+	//        respondida — o oposto do que o gate faz. Medido: quebrou
+	//        `TestOpenQuestions_cobraCodigoNaPergunta`.
+	//   `W`  é a da FASE (era `F` até o formato 5), pelo mesmo motivo, e este custou uma pergunta SILENCIADA: a
+	//        `THMEX-Q01` do app de referência dizia "vira uma revisão THMEX-R0001, ou uma spec de
+	//        decisão no DSSYD-F01", e o `F01` fez a linha parecer de-para. O gate passou
+	//        `✓1` com a pergunta em aberto — exatamente o falso NEGATIVO que a correção
+	//        do de-para existia para não criar.
+	//
+	// A lição das três: a coluna "Vira" cita o que a resposta VAI produzir, e isso nunca
+	// é uma regra — é revisão, fase, ou outra spec. Só a regra JÁ EXISTENTE fecha a
+	// pergunta.
+	//
+	// O de-para de verdade cita a REGRA que nasceu (`-B07`, `-I02`), não a revisão que
+	// vai registrá-la.
+	//
+	// O default (e não o vocabulário do projeto) porque o `openItems` não recebe a
+	// config. É frouxo na direção segura: um projeto com letra própria (`X`) tem seu
+	// de-para contado como pergunta aberta — o gate reprova de mais, e reprovar de mais
+	// é visível. Casar de mais é que seria silencioso.
+	letras := strings.NewReplacer("Q", "", "R", "", config.PhaseLetter, "").Replace(config.DefaultRuleLetters)
+	if letras == "" {
+		letras = "BIE"
+	}
+	cod := "[A-Z0-9]" + config.CodeLengthPattern()
+	return regexp.MustCompile(cod + `-Q\d+\b[\s\S]*?` + cod + `-[` + letras + `]\d+\b`)
+}
+
+// isQuestionAlreadyRule diz se a linha registra uma pergunta que JÁ virou regra.
+//
+// The rule code must stand where an ANSWER is written, not anywhere on the line: on a table
+// row, in a cell after the question's own text (the "Vira"/"Virou" side); on a list item,
+// after an arrow or a word of resolution. A code the QUESTION cites as context — "is the
+// Loading state (`BGETB-S01`) only a spinner?" — read as the answer, and the open question
+// left the report in silence (reported from a project: 6 of 10 specs).
+func isQuestionAlreadyRule(linha string) bool {
+	re := questionToRuleRE()
+	if !re.MatchString(linha) {
+		return false
+	}
+	rule := ruleOfQuestionRE()
+	if regexp.MustCompile(`(?i)(?:→|->|=>|\bvirou\b|\bbecame\b|\bresolv\w*|\brespondid\w*|\banswered\b)[^|\n]*?` + rule.String()).MatchString(linha) {
+		return true
+	}
+	if t := strings.TrimSpace(linha); strings.HasPrefix(t, "|") {
+		cells := cellsOf(t)
+		qi := -1
+		for i, c := range cells {
+			if questionCodeRE().MatchString(c) {
+				qi = i
+				break
+			}
+		}
+		if qi < 0 {
+			return false
+		}
+		// the question's text: its code's own cell when it holds more than the code, or the
+		// first cell after it that does
+		ask := -1
+		for i := qi; i < len(cells); i++ {
+			if c := strings.TrimSpace(cells[i]); c != "" && !onlyCodesRE.MatchString(c) {
+				ask = i
+				break
+			}
+		}
+		if ask < 0 {
+			return false
+		}
+		for _, c := range cells[ask+1:] {
+			if rule.MatchString(c) {
+				return true
+			}
+		}
+		return false
+	}
+	return false
+}
+
+// ruleOfQuestionRE is a rule code of the letters a question can become (see
+// questionToRuleRE).
+func ruleOfQuestionRE() *regexp.Regexp {
+	letras := strings.NewReplacer("Q", "", "R", "", config.PhaseLetter, "").Replace(config.DefaultRuleLetters)
+	if letras == "" {
+		letras = "BIE"
+	}
+	return regexp.MustCompile(`[A-Z0-9]` + config.CodeLengthPattern() + `-[` + letras + `]\d+\b`)
+}
+
+// questionCodeRE is a question code (`CODE-Q01`).
+func questionCodeRE() *regexp.Regexp {
+	return regexp.MustCompile(`[A-Z0-9]` + config.CodeLengthPattern() + `-Q\d+\b`)
+}
+
+var onlyCodesRE = regexp.MustCompile("^[`*\\s]*[A-Z0-9]+-[A-Z]+\\d+[`*\\s]*$")
+
+// isTableHeader diz se a linha é o cabeçalho de uma tabela markdown.
+//
+// A prova é a linha SEGUINTE ser o separador (`|---|---|`): é a única marca que distingue
+// um cabeçalho de uma linha de dados, e ela não depende de os nomes das colunas serem
+// previsíveis — que foi o que falhou com `| era | virou |`.
+func isTableHeader(i int, linhas []string) bool {
+	if !strings.HasPrefix(strings.TrimSpace(linhas[i]), "|") || i+1 >= len(linhas) {
+		return false
+	}
+	return tableSeparatorRE.MatchString(linhas[i+1])
+}
+
+var tableSeparatorRE = regexp.MustCompile(`^\s*\|[\s:|-]+\|?\s*$`)

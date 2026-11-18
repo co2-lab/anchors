@@ -1,0 +1,41 @@
+# GDPR — General Data Protection Regulation (União Europeia)
+#
+# Repare no gatilho: `carries: personal-data`, o MESMO da LGPD. Não é coincidência —
+# é o ponto do desenho. As duas normas protegem o mesmo fato (o dado identifica uma
+# pessoa) e diferem no que EXIGEM, não no que reconhecem. Um app que opera nos dois
+# mercados declara o dado uma vez; adotar o segundo pack não toca em spec nenhuma.
+name: gdpr
+domain: privacy
+jurisdiction: eu
+authority: "Regulation (EU) 2016/679 (GDPR)"
+
+requires:
+  - erasure_handler
+  - export_handler
+  - processing_record   # onde o registro de operações de tratamento é mantido
+
+obligations:
+  # Art. 17 — right to erasure ("right to be forgotten").
+  - name: gdpr-erasure
+    article: "Art. 17"
+    when: "carries: personal-data"
+    must_appear_in: ["{{erasure_handler}}"]
+    because: "right to erasure — the data subject can require deletion without undue delay"
+
+  # Art. 20 — right to data portability. Exige formato estruturado e legível por
+  # máquina; o gate confronta o ALCANCE (o dado chega ao export), não o formato — este
+  # é decisão do projeto, e um gate que julgasse formato seria adivinhação.
+  - name: gdpr-portability
+    article: "Art. 20"
+    when: "carries: personal-data"
+    must_appear_in: ["{{export_handler}}"]
+    because: "right to data portability — structured, commonly used, machine-readable format"
+
+  # Art. 30 — records of processing activities. O que distingue o GDPR da LGPD na
+  # prática: a UE exige o REGISTRO das operações de tratamento, não só a capacidade de
+  # apagar. Por isso este dever tem gatilho próprio e alvo próprio.
+  - name: gdpr-processing-record
+    article: "Art. 30"
+    when: "processing: automated"
+    must_appear_in: ["{{processing_record}}"]
+    because: "records of processing activities must document the purpose, categories and retention of each automated processing"

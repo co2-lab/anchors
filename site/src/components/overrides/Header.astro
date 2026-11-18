@@ -1,0 +1,134 @@
+---
+// Override do Header do Starlight — inclui Search, SocialIcons, ThemeSelect e LanguageSelect inline.
+import config from 'virtual:starlight/user-config';
+import Search from 'virtual:starlight/components/Search';
+import SiteTitle from 'virtual:starlight/components/SiteTitle';
+import SocialIcons from 'virtual:starlight/components/SocialIcons';
+import ThemeSelect from 'virtual:starlight/components/ThemeSelect';
+
+const shouldRenderSearch =
+	config.pagefind || config.components.Search !== '@astrojs/starlight/components/Search.astro';
+
+const locales = Object.entries(config.locales ?? {});
+const currentLocale = Astro.locals.starlightRoute.locale ?? 'root';
+
+// Troca só o segmento de locale no início do path: `/pt/docs/x` <-> `/docs/x`.
+// O locale raiz é o inglês e não tem prefixo (defaultLocale: 'root').
+function localizedPathname(locale: string): string {
+	const path = Astro.url.pathname;
+	const nonRootLocales = Object.keys(config.locales ?? {}).filter((l) => l !== 'root');
+	const regex = new RegExp(`^/(${nonRootLocales.join('|')})(/|$)`);
+	const withoutLocale = path.replace(regex, '/');
+	const cleanWithout = withoutLocale.startsWith('/') ? withoutLocale : `/${withoutLocale}`;
+	if (locale === 'root') {
+		return cleanWithout;
+	}
+	return `/${locale}${cleanWithout.replace(/\/$/, '')}/`;
+}
+---
+
+<div class="header">
+	<div class="title-wrapper sl-flex">
+		<SiteTitle />
+	</div>
+	<div class="sl-flex print:hidden">
+		{shouldRenderSearch && <Search />}
+	</div>
+	<div class="sl-flex print:hidden right-group">
+		<div class="sl-hidden sm:sl-flex social-icons">
+			<SocialIcons />
+		</div>
+		<ThemeSelect />
+		{locales.length > 1 && (
+			<span class="lang-list">
+				{locales.map(([code], i) => {
+					const label = code === 'root' ? 'EN' : code.toUpperCase();
+					return (
+						<>
+							{i > 0 && ' · '}
+							<a href={localizedPathname(code)} class={code === currentLocale ? 'active' : ''}>
+								{label}
+							</a>
+						</>
+					);
+				})}
+			</span>
+		)}
+	</div>
+</div>
+
+<style>
+	.header {
+		display: flex;
+		gap: var(--sl-nav-gap);
+		justify-content: space-between;
+		align-items: center;
+		height: 100%;
+	}
+	.title-wrapper {
+		overflow: clip;
+		padding: 0.25rem;
+		margin: -0.25rem;
+		min-width: 0;
+	}
+	.right-group,
+	.social-icons {
+		gap: 0.75rem;
+		align-items: center;
+	}
+	.social-icons::after {
+		content: '';
+		height: 1.5rem;
+		border-inline-end: 1px solid var(--sl-color-hairline);
+	}
+	.lang-list {
+		font-size: var(--text-xs);
+		color: var(--text-faint);
+		font-family: var(--font-mono);
+		white-space: nowrap;
+		display: inline-flex;
+		align-items: center;
+	}
+	.lang-list a {
+		color: var(--text-faint);
+		text-decoration: none;
+		border-bottom: none;
+		padding: 0.1rem 0.2rem;
+		border-radius: var(--radius-sm);
+	}
+	.lang-list a:hover {
+		color: var(--text-primary);
+	}
+	.lang-list a.active {
+		color: var(--text-accent);
+		font-weight: 700;
+	}
+
+	@media (min-width: 50rem) {
+		:global(:root[data-has-sidebar]) {
+			--__sidebar-pad: calc(2 * var(--sl-nav-pad-x));
+		}
+		:global(:root:not([data-has-toc])) {
+			--__toc-width: 0rem;
+		}
+		.header {
+			--__sidebar-width: max(0rem, var(--sl-content-inline-start, 0rem) - var(--sl-nav-pad-x));
+			--__main-column-fr: calc(
+				(
+						100% + var(--__sidebar-pad, 0rem) - var(--__toc-width, var(--sl-sidebar-width)) -
+							(2 * var(--__toc-width, var(--sl-nav-pad-x))) - var(--sl-content-inline-start, 0rem) -
+							var(--sl-content-width)
+					) / 2
+			);
+			display: grid;
+			grid-template-columns:
+				minmax(
+					calc(var(--__sidebar-width) + max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))),
+					auto
+				)
+				1fr
+				auto;
+			align-content: center;
+		}
+	}
+</style>

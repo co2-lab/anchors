@@ -1,0 +1,217 @@
+# language: en
+# @anchors
+#   code: FTFTF
+#   ref: FTMFT
+#   updated_at: 2026-10-03
+#   layer: feature
+
+@FTMFT
+Feature: FeatureTestMatch — scenarios in feature must be implemented in test by code and description
+
+  @FTMFT-B01 @unit-level
+  Scenario: Non-feature artifacts skip confrontation
+    Given an artifact that is not of kind feature
+    When the gate confronts the artifact
+    Then it returns Skip, restricting scope strictly to feature files
+
+  @FTMFT-B02 @unit-level
+  Scenario: A nil graph returns pending without approving
+    Given an execution context with no built graph
+    When the gate confronts the artifact
+    Then it returns Pending, because linked tests cannot be resolved without a map
+
+  @FTMFT-B03 @unit-level
+  Scenario: A feature declaring no scenarios skips confrontation
+    Given a feature file containing no scenarios with requirement codes
+    When the gate confronts the artifact
+    Then it returns Skip, because there are no scenarios to confront
+
+  @FTMFT-B04 @unit-level
+  Scenario: A feature with no linked tests returns pending
+    Given a feature with scenarios and no outgoing tested-by edges in the map
+    When the gate confronts the artifact
+    Then it returns Pending, waiting for test files to be linked
+
+  @FTMFT-B05 @unit-level
+  Scenario: Scenarios belonging to non-test surfaces are skipped
+    Given a feature containing scenarios tagged exclusively for e2e or vr surfaces
+    When the gate confronts the artifact
+    Then it returns Pass, skipping scenarios evaluated on other surfaces
+
+  @FTMFT-B06 @unit-level
+  Scenario: A scenario code completely absent from tests fails
+    Given a feature scenario whose code does not appear in any linked test body
+    When the gate confronts the artifact
+    Then it returns Fail, treating the missing code as a blocking defect
+
+  @FTMFT-B07 @unit-level
+  Scenario: A scenario code appearing only in comments fails
+    Given a linked test containing the scenario code only within comment lines
+    When the gate confronts the artifact
+    Then it returns Fail, because comments do not constitute executable implementation
+
+  @FTMFT-B08 @unit-level
+  Scenario: Tests implementing scenario codes with exact titles pass
+    Given linked tests implementing all feature codes with exact matching titles
+    When the gate confronts the artifact
+    Then it returns Pass, confirming full implementation and title correspondence
+
+  @FTMFT-B09 @unit-level
+  Scenario: Tests with matching codes but drifting descriptions issue a warning
+    Given linked tests implementing feature codes with divergent description text
+    When the gate confronts the artifact
+    Then it returns a divergence, issuing an informative warning without blocking
+
+  @FTMFT-B10 @unit-level
+  Scenario: Test titles containing quotes are parsed without truncation
+    Given a test title with nested quotation marks
+    When the gate confronts the artifact
+    Then it extracts the entire title without premature truncation
+
+  @FTMFT-B11 @unit-level
+  Scenario: Sibling scenario codes in composite test titles are extracted
+    Given a test title listing multiple sibling scenario codes separated by slashes
+    When the gate confronts the artifact
+    Then it correctly attributes the test title to each cited code
+
+  @FTMFT-B12 @unit-level
+  Scenario: Shared test titles verify scenario presence through test body
+    Given multiple scenarios sharing a single compound test title
+    When the gate confronts the artifact
+    Then it evaluates descriptive correspondence against the test body content
+
+  @FTMFT-B13 @unit-level
+  Scenario: Test comments contribute to descriptive match but not code presence
+    Given a test with scenario vocabulary present in preceding comments
+    When the gate confronts the artifact
+    Then it accepts the descriptive alignment while requiring the code in test statements
+
+  @FTMFT-B14 @unit-level
+  Scenario: Scenario codes match with exact word boundaries
+    Given a scenario code that forms a prefix of another code
+    When the gate confronts the artifact
+    Then it matches only the exact identifier without false substring collisions
+
+  @FTMFT-B15 @unit-level
+  Scenario: Go t.Run declarations are recognized as valid test titles
+    Given a Go test file using t.Run declarations with scenario codes
+    When the gate confronts the artifact
+    Then it recognizes the subtest title and validates correspondence
+
+  @FTMFT-B16 @unit-level
+  Scenario: Script comment markers are stripped when verifying code presence
+    Given a test file with hash comment markers
+    When the gate confronts the artifact
+    Then comment lines are stripped prior to checking code presence
+
+  @FTMFT-B17 @unit-level
+  Scenario: RootCode returns the root requirement code without scenario sub-index
+    Given a scenario code carrying a numeric sub-index
+    When RootCode processes the identifier
+    Then it strips the sub-index suffix and returns the base requirement code
+
+  @FTMFT-I01 @unit-level
+  Scenario: Missing scenario code is always a failure
+    Given a feature scenario missing from linked test code
+    When the gate confronts the artifact
+    Then it produces a Fail verdict, enforcing that missing code is never tolerated
+
+  @FTMFT-I02 @unit-level
+  Scenario: Descriptive divergence is always an informative warning
+    Given a scenario with matching code and differing description
+    When the gate confronts the artifact
+    Then it produces a Diverge verdict, ensuring text variation does not block delivery
+
+  @FTMFT-I03 @unit-level
+  Scenario: Code presence ignores comments while description matching reads them
+    Given a test file with comments
+    When the gate confronts the artifact
+    Then it uses stripped content for code presence and commented content for description
+
+  @FTMFT-X01 @unit-level
+  Scenario: Static analysis does not run tests or inspect execution results
+    Given a linked test file
+    When the gate confronts the artifact
+    Then it inspects source text statically without invoking execution runners
+
+  @FTMFT-X02 @unit-level
+  Scenario: Non-unit surfaces are left to their respective gates
+    Given scenarios mapped to e2e or vr surfaces
+    When the gate confronts the artifact
+    Then it bypasses them, delegating enforcement to surface-specific checkers
+
+  @FTMFT-X03 @unit-level
+  Scenario: Minor description drift is a divergence, not a failure
+    Given minor phrasing variations between scenario and test
+    When the gate confronts the artifact
+    Then it reports a divergence instead of failing the check, and the gate's severity says whether it blocks
+
+  @FTMFT-B18 @unit-level
+  Scenario: An unmapped regime tag does not exempt a scenario
+    Given a scenario tagged with a regime the project does not map
+    When the feature is confronted with its test
+    Then the scenario is still charged against the test
+
+  @FTMFT-E01 @unit-level
+  Scenario: A linked test gone from disk implements nothing while the others still count
+    Given a feature linked to a present test that implements one scenario
+    And linked to a second test that no longer exists on disk
+    When the gate confronts it
+    Then it returns Fail charging only the scenario the missing test would have implemented
+
+  @FTMFT-B19 @unit-level
+  Scenario: Comment markers inside strings or glued to a name keep the line
+    Given code lines with "--label", a URL and an i-- decrement before a symbol
+    When the comments are stripped
+    Then each symbol after them is still in the code, and a real trailing comment is removed
+
+  @FTMFT-B20 @unit-level
+  Scenario: The drift verdict is written in the project's language
+    Given a feature whose scenarios a linked test cites with unrelated titles
+    When the gate confronts them in an English and in a Portuguese project
+    Then the drift message names the verdict "divergent" in English and "divergente" in Portuguese
+
+  @FTMFT-B21 @unit-level
+  Scenario: A parametrised, focused or skipped test is read by its own title
+    Given a test declared with it.each over a table that cites a code, followed by a plain test citing the same code
+    When the title of the code's test is read through the ts family's pattern, and when a project script lists a title of its own
+    Then the it.each title is the one read, the script's title is the one confronted, and with no source the body is confronted
+
+  @FTMFT-E02 @unit-level
+  Scenario: A failing tests source fails the gate naming the error
+    Given a project whose tests script answers outside the contract
+    When a feature is confronted with its tests
+    Then the gate fails naming the violation
+
+  @FTMFT-B22 @unit-level
+  Scenario: A support file linked to a feature is not confronted as its test
+    Given a feature whose only linked file is a support file that cites its codes
+    When the feature is confronted with its tests
+    Then it has no test to confront, as if nothing were linked
+
+  @FTMFT-B23 @unit-level
+  Scenario: A scenario suffix gives each case of a rule its own identity
+    Given a feature with two scenarios of the same rule tagged with the suffixes 01 and 02
+    And a tag line carrying a second code with its own suffix
+    When the scenarios are read
+    Then each scenario carries its code with its suffix, the second code included
+    And a scenario tagged with no suffix is read by its plain code
+
+  @FTMFT-B24 @unit-level
+  Scenario: Every test that cites the code is compared, not only the first
+    Given a scenario whose first test matches, a second test naming a variation, and a third talking about something else
+    When the feature is confronted
+    Then only the third is named as a test that cites the code and talks about something else
+
+  @FTMFT-B25 @unit-level
+  Scenario: A test title that says the scenario's title and more matches it
+    Given scenarios and tests titled with the scenario's title followed by detail, with a table-driven placeholder, and with the same words in another order
+    When the gate confronts the feature
+    Then the first two match, and the last one diverges
+
+  @FTMFT-B26 @unit-level
+  Scenario: A VR code carries its state, and each state's scenario is its own code
+    Given a feature with scenarios tagged @BUTTN-VR-S01 and @BUTTN-VR-S02
+    When its scenarios are read, and scenario-identity confronts it
+    Then the codes are BUTTN-VR-S01 and BUTTN-VR-S02, and scenario-identity passes
+

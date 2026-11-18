@@ -1,0 +1,153 @@
+<!-- @anchors
+  code: GTENG
+  updated_at: 2026-11-15
+  layer: gate
+-->
+# GateEngine — which gates reach which node, and what the run concludes
+
+> **Code**: `GTENG`
+
+> **GTENG-R0001:** routing learned about VENDORED files. A pipeline Anchors seeded and still
+> owns (it carries the template marker) had every internal ruler charging it a unit and a
+> code — measured in the reference app, where the project was asked to own, and to specify, files
+> `anchors doctor --fix` replaces whole. Decided by the user: those files are upstream-owned.
+>
+> **Revises:** `B15`
+> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B10`, `B11`, `B12`, `B13`, `B14`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `B22`, `B23`, `B24`, `B25`, `B26`, `B27`, `B28`, `B29`, `B30`, `B31`, `B32`, `B33`, `B34`, `B35`, `B36`, `B37`, `B38`, `I01`, `I02`, `I03`, `I04`, `I05`, `X01`, `X02`, `X03`, `E01`, `E02`
+
+## Overview
+
+This is the ENGINE. It answers two questions and nothing else: **which gates apply to
+which node**, and **what a run over a set of nodes concludes**. Every ruler belongs to
+somebody else — the checker measures, the registry routes the name, the rule unit names
+the verification and reads the waiver. What the engine owns is routing and aggregation,
+and both have measured failure modes of their own.
+
+**Routing.** A gate reaches a node when the node's kind is in what the gate declares, AND
+the node carries none of the excluded labels, AND — when the gate names labels — the node
+carries at least one of them, AND — when the gate demands a mark in the content — the
+target's text contains it. The ORDER inside that conjunction is the decision, not the
+implementation: **exclusion comes BEFORE the positive filter**. Layers carry transversal
+labels alongside their own, so a node that matches both a named label and an excluded one
+must stay OUT. If the positive filter won, declaring the exception would have no effect
+exactly where it matters.
+
+The content filter exists for a measured reason of its own: without it, a judgment gate
+declared over specs queues an AI question for EVERY spec in the project, and the pending
+counter stops measuring the work and starts measuring the size of the repository. And an
+UNREADABLE target does not apply: better to stop charging than to charge blind against a
+target whose content nobody knows.
+
+**Aggregation, and the four verdicts that are not two.** A run concludes with a
+promotion decision, and the engine's job is to keep four distinct states from collapsing
+into pass/fail:
+
+- a gate whose required BINARY is missing steps aside — never fails. The gate did not
+  measure, and "I did not measure" is neither "clean" nor "dirty". Failing would say the
+  project violated something when what is missing is the tool.
+- a JUDGMENT gate does not compute at all. It asks whether somebody already answered, by
+  reading the stamp a judgement run left in the map. Without that lookup the gate asked
+  forever: the verdict was written, the next run asked again, the pending counter never
+  came down, and work already done was invisible.
+- a pending item that says "there is a decision STILL TO TAKE" bars promotion; a pending
+  item that says "I had nothing to confront" does not. Measured in a real repository:
+  treating them alike failed 411 nodes at once, and 410 of them were gates with no signal
+  ingested.
+- a debt that is ASSUMED — a known duty with a declared moment to be paid — becomes
+  recorded work; the other pending items become no issue at all.
+
+**What separates this unit from its neighbours.** The registry knows which function
+answers a name; this one never looks inside a checker. The rule unit knows how a
+verification is named and whether it was waived; this one only ASKS it, per target, and
+turns the answer into a verdict that carries the written reason. And the waiver by target
+is applied HERE rather than by filtering the gate out of the list, because a waiver
+restricted to codes must leave the gate RUNNING to confront everybody else.
+
+## Domain
+
+| Input | Accepts | Outside the domain | Who guarantees |
+| --- | --- | --- | --- |
+| the declared gates | what the Structure declares, or nothing | — (no gate is a case, not an error) | the Structure: what is not declared is not run |
+| the nodes | any slice of the map, from one node to the whole project | — | the caller, which decides the slice |
+| the project root | a path, used to read target content and to invoke external tooling | — | the caller |
+| the map | a built graph, or none | — (an absent map is a case: relational checkers answer undetermined) | this unit: it passes what it has, and never fabricates a graph |
+| the Structure | a loaded configuration, or none | — | this unit: the relational checkers treat absence as "no mapping declared" |
+| the waiver | what arrived by flag, environment or commit message, or nothing | — | the rule unit, which parsed and validated it |
+| the sweep kind | whether the slice is the WHOLE project or an incremental cut | — | the caller, and only it knows which it asked for |
+
+## Effects
+
+| Effect | Description |
+| --- | --- |
+| `GTENG-B01` | A gate reaches a node only when the node's kind is among the kinds the gate declares. |
+| `GTENG-B02` | A gate that names labels reaches only the nodes carrying at least one of them. |
+| `GTENG-B03` | A gate that excludes labels never reaches a node carrying one, and ONE excluded label is enough. |
+| `GTENG-B04` | Exclusion wins over the positive label filter, because layers carry transversal labels and the exception must hold exactly where it matters. |
+| `GTENG-B05` | A gate demanding a mark in the content reaches only the targets whose text carries it — otherwise the pending counter measures the size of the project, not the work. |
+| `GTENG-B25` | The same answer — kinds, labels, exclusions, required mark — is offered to the runs that choose what to measure for a gate, so a run never measures a node the gate would not confront. (`Applies`) |
+| `GTENG-B26` | The gates read the project's files through the source set with `SetFileSource` — the git index in the commit hook —, and from the tree when none is set; the function it returns restores the previous source. |
+| `GTENG-B27` | Whether a file has changes not yet committed is asked through the source set with `SetChangedSource` — the staged changes in the commit hook —, and of the tree when none is set; `updated-at-current` reads it, so a file edited and not staged is judged by its last commit. |
+| `GTENG-B28` | A gate that breaks while measuring fails on that target, saying it broke and that the defect is Anchors'; the other gates and targets are still measured. (`runOne`, `runAggregate`, `recoverGate`) |
+| `GTENG-B29` | A gate whose `presupposes` names a configuration field the project does not declare is Pending on every target — and once, for a gate of the whole project or batch —, naming the field and the opt-out, and a judgment gate queues no question; when every missing field is in `dialect.opt_out` it is Skip; with all declared it runs as usual. (`presupposedMissing`) |
+| `GTENG-B30` | What the gates ask git — the files with uncommitted changes, each file's last commit day — is read once for the whole project and kept for a run, at most two minutes; a run that writes files (`check --fix`) forgets it, and the next question reads git again. (`ForgetRunState`, `lastCommitDate`) |
+| `GTENG-B31` | Within a run, a gate's premises are asked of the configuration once, and each project file is read once — from the source the run reads, the tree or the index —, each reader getting its own copy; what was read is read again after a tool the project runs, which may have written it, and nothing is kept once the run ends. (`startRun`, `runPremises`, `readOnce`, `forgetReads`) |
+| `GTENG-B32` | The gates of a run are confronted side by side: those Anchors answers itself on every core, the project's tools a few at a time beside them, and a tool declared `exclusive` alone, after the other tools; the results come back in the order of the gates, each gate's in the order of its targets, and a gate that breaks fails alone. `check --sequential` confronts one gate after another, in their order. (`RunWithWaiver`, `runTools`, `SetSequential`) |
+| `GTENG-B33` | A gate's shape — the kinds it is `on:`, the tags it asks and excludes, a vendored file kept from an internal ruler — is answered apart from its `requires`, which reads the node's content: what a gate could reach in the map is known without reading a file. (`MatchesShape`) |
+| `GTENG-B34` | A target whose last commit is older than its gate's `legacy.before`, with no uncommitted change, answers with the legacy severity: the verdict is the same, its action the legacy's; a target changed since — committed after, uncommitted, never committed — or a scope answers with the gate's own. (`markSeverityAt`, `legacyTarget`) |
+| `GTENG-B35` | A gate declaring `cache.inputs` keeps its tool's verdict under a key of the gate as declared, each target's content, each input's content among the project's files, and the version of Anchors, and replays it — marked as kept, with when it was measured — while the key comes again: a pass always, a failure only with `cache.failures`, and in a CI only with `cache.ci`. A tool that did not run (a batch failing with no output) is kept nowhere, and `check --no-cache` runs every tool. (`cachedTool`, `toolKey`, `SetNoToolCache`) |
+| `GTENG-B36` | An external file — a guide `governs:` reads from a URL (PTRFS) — is out of every gate, internal or external: the project neither writes nor versions it, and there is no file here to confront. It still governs, as a local guide does. |
+| `GTENG-B37` | From its gate's `legacy.until` on, no target is legacy: every one answers with the gate's own severity; before it, a legacy target's verdict that the legacy softened says until when, and what it will do after. (`legacyTarget`, `markSeverityAt`) |
+| `GTENG-B38` | A verdict `awaiting` — a choice registered on purpose, waiting for a person's decision — takes the gate's `awaiting` state: it bars where that state is `block`, unless the finding is declared (`[declared]`), and is counted apart from the divergences, each awaited decision listed in the profile; an open decision still becomes a decision issue. (`Awaiting`, `Profile.Awaiting`) |
+| `GTENG-B06` | An UNREADABLE target does not apply: better to stop charging than to charge blind. |
+| `GTENG-B07` | A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check. |
+| `GTENG-B08` | A gate whose required binary is absent steps aside and never fails — the gate did not measure, and the missing piece is the tool. |
+| `GTENG-B09` | A waiver naming THIS target — by its unit's code or by the file's own `code:` — spares only this node, with the written reason in the verdict, and the gate keeps confronting the others. |
+| `GTENG-B10` | An aggregate-scope gate runs ONCE and reports a single verdict against the scope itself, not against one of the files. |
+| `GTENG-B11` | A judgment gate emits a request for judgment when nothing has answered it yet. |
+| `GTENG-B12` | A judgment gate reads the stamp left by an earlier judgement and turns it into the verdict, so work already done stops being invisible. |
+| `GTENG-B13` | A judgement recorded as waived becomes Skip and never Pass, because the gate did not measure and Pass would assert an approval nobody gave. |
+| `GTENG-B14` | A gate declaring neither a command nor a check answers undetermined, naming the omission. |
+| `GTENG-B15` | Each verdict level does what the gate's `severity` says — `block` bars the promotion, `inform` reports without barring, `ignore` only counts —; unset, a blocking gate blocks its failures and its awaited decisions and informs its divergences and pending items, and an informative gate informs. A divergence the project declared (`[declared]`: a debt with its deadline, a rule `@TBD`), or one its own threshold accepts (`[advisory]`: a mutation score above the floor), informs and never bars. "Nothing to confront" is not a level: it is Skip. (`markSeverity`, `Result.Blocks`, `Result.Ignored`) |
+| `GTENG-B16` | Only the obligations gate produces ASSUMED DEBT, and only that pending item carries a deadline into the record. |
+| `GTENG-B17` | The engine reconfigures the code grammar from the project's vocabulary before running anything. |
+| `GTENG-B18` | `Run` is the entry point that confronts the gates with the map alone, delegating with no Structure — the relational checkers then read absence as "no mapping declared". |
+| `GTENG-B19` | `RunWithConfig` is the same entry point carrying the Structure, which the relational checkers need to read the regimes and the surfaces of the unit. |
+| `GTENG-B20` | `RunFull` is the one that also knows whether the sweep is the WHOLE project, which is the only thing that lets a gate able to sweep on its own run ONCE instead of receiving thousands of targets in batches. |
+| `GTENG-B21` | `RunWithWaiver` is the one that honours a waiver BY TARGET, which cannot be served by filtering the gate out of the list. |
+| `GTENG-B22` | A vendored file — a pipeline Anchors seeded that still carries its template marker — is out of every internal ruler, whose unit, header and identity live upstream; an external command still reaches it, because what the file does in this repository is the project's concern. |
+| `GTENG-B23` | A gate declared with `run:` executes the custom runner, even when the canonical declaration specifies `check:`. |
+| `GTENG-B24` | A target the gate's `no_signal` declares is skipped, naming the declared reason, and the gate's check does not run on it. |
+
+## Invariants
+
+| Rule | Always holds | How it is proven |
+| --- | --- | --- |
+| `GTENG-I01` | A waiver by target is applied while the gate RUNS, never by removing the gate from the list. Removing it would erase the ruler for the whole repository, and a defect elsewhere would pass along. | waives one target, runs over two nodes, verifies the other is still confronted |
+| `GTENG-I02` | Skip, Pending and Fail are three different answers and never collapse into two. Each says something the others do not: the gate does not apply, the gate could not measure, the gate measured and the target failed. | runs a gate with a missing tool and one that measured and failed, and verifies the verdicts differ |
+| `GTENG-I03` | The verdict of a waived target is Skip WITH the reason written, never silence. It leaves the failure tally without leaving the report — that is the difference between waiving and hiding. | waives a target and verifies the verdict carries the declared reason |
+| `GTENG-I04` | The reported target of an aggregate gate is the SCOPE, never one of the files. Blaming one of many files for a verdict about the set would be a statement the engine cannot support. | runs an aggregate gate over several nodes and verifies the reported target |
+| `GTENG-I05` | Under an index source (`--index`), no internal gate reads the tree: every project file a gate reads comes through `readFile`, so a commit is judged by what it records whatever the tree holds. | runs every registered internal checker over one project twice, the index the same both times — with the tree full of other text, then equal to the index — and fails naming each checker whose verdict moved |
+
+## Constraints
+
+| Rule | Boundary | Why |
+| --- | --- | --- |
+| `GTENG-X01` | Does not decide WHETHER a target is correct. | The ruler belongs to the checker or to the external tool. An engine that judged would put the measurement inside the router, and the same defect would have two owners. |
+| `GTENG-X02` | Does not compute the verdict of a judgment gate. | The question is judgment, and the CLI cannot answer it. All the engine knows is whether SOMEBODY already answered — and that answer lives in a stamp in the map, carrying the revisions of both ends so it ages when the target changes. |
+| `GTENG-X03` | Does not invent a map, a configuration or a waiver when it receives none. | Absence is a case, not an error. Fabricating one would make the run answer about a project state that does not exist, and the verdict would be about nothing. |
+
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `GTENG-E01` | REF[GTENG-B06]: a target that cannot be read is answered by B06: the gate does not apply to it | — | — |
+| `GTENG-E02` | REF[GTENG-B08]: a required binary missing from the PATH is answered by B08: the gate steps aside | — | — |
+
+## Open Decisions
+
+| Code | Question | Who decides | Becomes |
+| --- | --- | --- | --- |
+
+none

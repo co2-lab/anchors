@@ -1,0 +1,81 @@
+# language: en
+# @anchors
+#   code: MSFMA
+#   ref: MPSYN
+#   updated_at: 2026-11-16
+#   layer: feature
+
+@MPSYN
+Feature: MapSyncForCommit — the commit carries the map a build of the commit makes
+
+  @MPSYN-B01 @unit-level
+  Scenario: The committed map is the one a build of the commit makes
+    Given a committed map, a spec edited and staged, another file edited but not staged, and an untracked file
+    When the hook dates the staged files, syncs the map, and the commit is made
+    Then a full build of the committed files makes exactly the committed map
+
+  @MPSYN-B02 @unit-level
+  Scenario: A dated file keeps its proofs
+    Given the spec had a proof at its revision before the hook dated it
+    When the map is synced
+    Then the spec's proof is at its new revision
+
+  @MPSYN-B03 @unit-level
+  Scenario: The index, not the tree
+    Given an unstaged edit and an untracked file
+    When the map is synced
+    Then the edited file has its staged revision and the untracked one has no node
+
+  @MPSYN-B04 @unit-level
+  Scenario: An untracked map is left alone
+    Given a project whose map git does not track
+    When the map is synced
+    Then nothing is written nor staged
+
+  @MPSYN-E01 @unit-level
+  Scenario: A map that cannot be written gives the error back
+    Given a tracked map whose path has become a directory
+    When the map is synced
+    Then the error comes back and nothing is staged
+
+  @MPSYN-B05 @unit-level
+  Scenario: A file the commit does not change keeps the proofs HEAD had
+    Given a proven spec edited and not staged by another session, and a map build that dropped its proof
+    When a commit of another file is synced
+    Then the committed map carries the spec's proof from HEAD
+
+  @MPSYN-B06 @unit-level
+  Scenario: With the tree ahead of the commit, the map on disk stays the tree's
+    Given a tree with unstaged edits and a measurement of one of them in the map on disk
+    When the commit is synced
+    Then the staged map is the commit's, the map on disk keeps the measurement, and with a clean tree both are the same
+
+  @MPSYN-B07 @unit-level
+  Scenario: What was measured after the last commit survives the next one
+    Given a map on disk with coverage measured after HEAD for an unchanged file and for a new file, and the new file staged
+    When the pre-commit syncs the map
+    Then both keep what was measured, in the committed map and in the map on disk
+
+  @MPSYN-B08 @unit-level
+  Scenario: A file the commit leaves as HEAD has it takes HEAD's measurement over one carried from the tree's edit
+    Given a proven spec whose rule another session edited without staging, and a rebuild that marked its scenario stale
+    When a commit carries only another file
+    Then the committed map has HEAD's proof of the spec, with nothing stale
+
+  @MPSYN-B09 @unit-level
+  Scenario: A file the commit moves keeps its proof
+    Given a proven spec moved with git mv
+    When the commit's map is written
+    Then the old path is gone and the spec keeps its proof, fresh, at the new one
+
+  @MPSYN-B10 @unit-level
+  Scenario: A file edited in the tree with comments alone keeps on disk its revisions and its measurement
+    Given a file edited in the tree with a comment line, not staged, measured in the map on disk, and another file staged
+    When the hook writes the map for the commit
+    Then the commit's map is staged apart, and the map on disk keeps the edited file's revision, line revision and fresh coverage
+
+  @MPSYN-B11 @unit-level
+  Scenario: A plan the commit moves takes its demand along, and the progress file is staged when nothing else of it is unstaged
+    Given a committed plan plans/review/videos.md developed by a demand of the committed progress file
+    When the plan is moved with git mv to plans/videos.md and the hook syncs the progress
+    Then the demand points at plans/videos.md, the hook says so, and the progress file is staged

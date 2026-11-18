@@ -1,0 +1,119 @@
+# language: en
+# @anchors
+#   code: EVFTV
+#   ref: EVFRA
+#   updated_at: 2026-11-10
+#   layer: feature
+
+@EVFRA
+Feature: EvidenceFreshness — a test's evidence expires when anything it exercises changes, not only its own file
+
+  @EVFRA-B01 @unit-level
+  Scenario: A test that was never ingested has no verdict
+    Given a suite script node with no signal
+    When the freshness of its evidence is judged
+    Then there is no verdict
+
+  @EVFRA-B02 @unit-level
+  Scenario: The test's own change expires its evidence
+    Given a suite script ingested at revision t1 whose file is now at revision t2
+    When the freshness of its evidence is judged
+    Then the verdict marks the evidence stale by its own change
+
+  @EVFRA-B03 @unit-level
+  Scenario: A composed script that changed is named as the culprit
+    Given a suite script ingested with login.yaml at u1 and launchApp.yaml at l1 in its closure
+    And login.yaml is now at u2 while the suite script itself did not change
+    When the freshness of its evidence is judged
+    Then the verdict names login.yaml as the only culprit and does not mark the test's own change
+
+  @EVFRA-B04 @unit-level
+  Scenario: Nothing moved means no verdict
+    Given a suite script ingested with its closure, and no node changed revision since
+    When the freshness of its evidence is judged
+    Then there is no verdict
+
+  @EVFRA-B05 @unit-level
+  Scenario: A signal with no recorded closure is judged by its own file only
+    Given a suite script ingested with no closure, and login.yaml changed since
+    When the freshness of its evidence is judged
+    Then there is no verdict, until the suite script's own file changes
+
+  @EVFRA-B06 @unit-level
+  Scenario: The closure descends transitively with current revisions
+    Given a suite script that composes login.yaml at u1, which composes launchApp.yaml at l1
+    When the closure of the suite script is computed
+    Then it holds login.yaml at u1 and launchApp.yaml at l1
+
+  @EVFRA-B07 @unit-level
+  Scenario: A no-propagation node is in the closure but not walked through
+    Given login.yaml is marked no-propagation
+    When the closure of the suite script is computed
+    Then login.yaml is in the closure and launchApp.yaml is not
+
+  @EVFRA-B08 @unit-level
+  Scenario: A recorded node that left the graph is not a culprit
+    Given a suite script whose recorded closure names a file that is no longer in the graph
+    When the freshness of its evidence is judged
+    Then there is no verdict
+
+  @EVFRA-I01 @unit-level
+  Scenario: The closure never contains the test itself
+    Given a suite script inside a composition chain
+    When its closure is computed
+    Then the suite script is not in it
+
+  @EVFRA-X01 @unit-level
+  Scenario: The closure never climbs to the spec above the test
+    Given a spec with an edge to the suite script
+    When the closure of the suite script is computed
+    Then the spec is not in it
+
+  @EVFRA-B09 @unit-level
+  Scenario: A capture's target enters the closure and is not descended
+    Given a VR flow that captures Button.tsx, which depends on Icon.tsx
+    When the flow's evidence closure is taken
+    Then Button.tsx is in it and Icon.tsx is not
+
+  @EVFRA-B10 @unit-level
+  Scenario: A component whose capture diverged stales the captures of who uses it
+    Given a screen capture ingested at 10:00, composing a component whose capture failed at 11:00
+    When the screen capture's freshness is asked
+    Then it is stale, naming the component; with the component's capture failing at 09:00, or passing, it is fresh
+
+  @EVFRA-B11 @unit-level
+  Scenario: A flow that asserts a navigation goes stale when its Out row changes or goes, and a flow that passes through does not
+    Given the Arena's Out table with rows A03 and A04, a flow asserting A03, and a flow that only passes through the Arena
+    When row A04 changes, then row A03 changes, then row A03 is removed
+    Then the A03 flow stays fresh, then goes stale naming its row, then goes stale again; the other flow stays fresh
+
+  @EVFRA-B12 @unit-level
+  Scenario: A test's closure is what it asserts, not the wiring
+    Given a flow capturing a screen, depending on a login util that reaches the navigator, the screen importing a hook and navigating to another
+    When the flow's closure is read
+    Then it holds the flow's util and the util it composes, the screen and what it imports, and neither the navigator nor the other screen
+    And a unit test of the screen holds what the screen runs, and neither the navigator it imports for types nor the screen it navigates to
+
+  @EVFRA-B13 @unit-level
+  Scenario: A stored closure is read through today's rule
+    Given a proof stamped when its closure held the navigator, and a file no rule reaches
+    When the navigator changes, and then that file
+    Then the navigator stales nothing, and the file stales the proof as before
+
+  @EVFRA-B14 @unit-level
+  Scenario: A test's closure stops at the files it replaces with a double
+    Given a test of a payment module that doubles the client the module imports, and a proof stamped when its closure held the client
+    When its closure is walked, the client changes, and then the module
+    Then the closure holds the module and what it runs but neither the client nor what the client reaches; the client stales nothing, and the module stales the proof
+
+  @EVFRA-B15 @unit-level
+  Scenario: A revision changed in place is the one the next judgment reads
+    Given a proof judged fresh
+    When the code it reaches changes its revision in place on the same graph
+    Then the next judgment names the code as the culprit
+
+  @EVFRA-B16 @unit-level
+  Scenario: A reader's proof holds the writer of its data, and not what the writer uses
+    Given a test of a reader tied to the writer of its data, the writer depending on a helper
+    When the test's evidence closure is taken
+    Then it holds the writer and not the helper

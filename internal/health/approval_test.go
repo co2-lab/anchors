@@ -1,0 +1,259 @@
+// @anchors
+//   code: APTSP
+//   ref: APRCP
+
+package health
+
+import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/testkit"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+)
+
+// GitHub REFUSES to let the author approve their own PR — a platform rule, with no toggle.
+// Since agents on one machine share the account, `required_approvals: 1` stops the whole
+// flow: the card reaches `ready-to-review`, the reviewer confronts and approves… and cannot.
+//
+// The doctor must SAY so before someone discovers it in the middle of a merge.
+func TestApprovalReachable_nothingToReachIsSilent(t *testing.T) {
+	t.Run("APRCP-B03: Zero required approvals or no configuration reports nothing", func(t *testing.T) {})
+	// With ZERO required there is nothing to be unreachable.
+	zero := 0
+	cfg := &config.Config{Workflow: &config.Workflow{
+		Mode: config.ModeGitHub, Repo: "acme/x", RequiredApprovals: &zero,
+	}}
+	if fs := checkApprovalReachable(cfg); len(fs) != 0 {
+		t.Errorf("zero required must not give a finding: %+v", fs)
+	}
+
+	if fs := checkApprovalReachable(nil); len(fs) != 0 {
+		t.Errorf("a nil config must not give a finding: %+v", fs)
+	}
+}
+
+// The message must NAME both ways out. A warning that says "it is stuck" without saying
+// what to do hands the problem over instead of solving it.
+func TestApprovalReachable_messageNamesBothWaysOut(t *testing.T) {
+	t.Run("APRCP-B06: The warning names both ways out", func(t *testing.T) {})
+	um := 1
+	cfg := &config.Config{Workflow: &config.Workflow{
+		Mode: config.ModeGitHub, Repo: "acme/x", RequiredApprovals: &um,
+	}}
+	// The fake `gh`: a writer with no escape, so the finding is produced — offline. The
+	// test used to ask the real GitHub about a repository that does not exist.
+	fakeGH(t, ghUser, ghWriter)
+	fs := checkApprovalReachable(cfg)
+	if len(fs) == 0 {
+		t.Fatal("a writer with no escape must produce the finding")
+	}
+	d := fs[0].Detail
+	for _, want := range []string{"required_approvals: 0", "doctor --fix"} {
+		if !strings.Contains(d, want) {
+			t.Errorf("the message should mention %q: %s", want, d)
+		}
+	}
+	if !strings.Contains(d, "conta de serviço") && !strings.Contains(d, "service account") {
+		t.Errorf("the message should mention a service account: %s", d)
+	}
+}
+
+// ghAnswer is one scripted answer of the fake `gh`: when the joined arguments match the
+// shell glob `match`, it prints `out` and exits with `code`.
+type ghAnswer struct {
+	match, out string
+	code       int
+}
+
+// fakeGH puts on the PATH a `gh` that answers by rule, records every call's arguments
+// and whatever arrives on stdin. Nothing reaches the network: a call no rule matches
+// exits 1, which every caller here reads as "could not ask".
+func fakeGH(t *testing.T, answers ...ghAnswer) (calls, stdin func() string) {
+	t.Helper()
+	dir := t.TempDir()
+	log, in := filepath.Join(dir, "calls.txt"), filepath.Join(dir, "stdin.txt")
+	s := "#!/bin/sh\necho \"$*\" >> '" + log + "'\ncase \"$*\" in\n"
+	for _, a := range answers {
+		s += a.match + ")\n"
+		if a.out != "" {
+			s += "printf '%s\\n' '" + a.out + "'\n"
+		}
+		s += "[ -t 0 ] || /bin/cat >> '" + in + "'\nexit " + strconv.Itoa(a.code) + " ;;\n"
+	}
+	s += "esac\necho 'no rule' >&2\nexit 1\n"
+	testkit.FakeBin(t, dir, "gh", s)
+	t.Setenv("PATH", dir)
+	read := func(p string) func() string {
+		return func() string { b, _ := os.ReadFile(p); return string(b) }
+	}
+	return read(log), read(in)
+}
+
+var (
+	ghUser       = ghAnswer{match: "'api user --jq .login'", out: "bot"}
+	ghAdmin      = ghAnswer{match: "'api repos/acme/x/collaborators/bot/permission --jq .permission'", out: "admin"}
+	ghWriter     = ghAnswer{match: "'api repos/acme/x/collaborators/bot/permission --jq .permission'", out: "write"}
+	ghNoEnforce  = ghAnswer{match: "'api repos/acme/x/branches/main/protection --jq .enforce_admins.enabled'", out: "false"}
+	ghEnforce    = ghAnswer{match: "'api repos/acme/x/branches/main/protection --jq .enforce_admins.enabled'", out: "true"}
+	ghProtFailed = ghAnswer{match: "'api repos/acme/x/branches/main/protection --jq .enforce_admins.enabled'", code: 1}
+)
+
+func TestCanBypassProtection(t *testing.T) {
+	t.Run("APRCP-B01: Only an administrator whose protection spares administrators can bypass it", func(t *testing.T) {})
+	t.Run("APRCP-B02: Each refusal of the bypass names its reason", func(t *testing.T) {})
+	for name, tc := range map[string]struct {
+		answers []ghAnswer
+		ok      bool
+		reason  string
+	}{
+		"admin, admins not enforced": {[]ghAnswer{ghUser, ghAdmin, ghNoEnforce}, true, ""},
+		"admin, admins enforced":     {[]ghAnswer{ghUser, ghAdmin, ghEnforce}, false, "health.approval_enforce_admins"},
+		"not admin":                  {[]ghAnswer{ghUser, ghWriter}, false, "health.approval_not_admin"},
+		"permission unreadable":      {[]ghAnswer{ghUser}, false, "health.approval_not_admin"},
+		"user unreadable":            {nil, false, "health.approval_user_failed"},
+		"protection unreadable":      {[]ghAnswer{ghUser, ghAdmin, ghProtFailed}, false, "health.approval_read_failed"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			fakeGH(t, tc.answers...)
+			ok, reason := CanBypassProtection("acme/x", "main")
+			want := ""
+			if tc.reason != "" {
+				want = i18n.T(tc.reason)
+			}
+			if ok != tc.ok || reason != want {
+				t.Fatalf("CanBypassProtection = %v, %q; want %v, %q", ok, reason, tc.ok, want)
+			}
+		})
+	}
+
+	t.Run("gh missing", func(t *testing.T) {
+		t.Setenv("PATH", t.TempDir())
+		ok, reason := CanBypassProtection("acme/x", "main")
+		if ok || reason != i18n.T("health.approval_gh_missing") {
+			t.Fatalf("CanBypassProtection = %v, %q; want the gh-missing reason", ok, reason)
+		}
+	})
+}
+
+func TestCheckApprovalReachable_withFakeGH(t *testing.T) {
+	t.Run("APRCP-B05: A required approval the account cannot bypass gives one warning on the repository", func(t *testing.T) {})
+	t.Run("APRCP-B04: Without the platform CLI the reachability check stays silent", func(t *testing.T) {})
+	um := 1
+	cfg := &config.Config{Workflow: &config.Workflow{
+		Mode: config.ModeGitHub, Repo: "acme/x", RequiredApprovals: &um,
+	}}
+
+	// Admin with an escape: the flow works, nothing to report.
+	fakeGH(t, ghUser, ghAdmin, ghNoEnforce)
+	if fs := checkApprovalReachable(cfg); len(fs) != 0 {
+		t.Fatalf("an admin with an escape must not be warned: %+v", fs)
+	}
+
+	// No escape: one warning, on the repository, naming the requirement.
+	fakeGH(t, ghUser, ghWriter)
+	fs := checkApprovalReachable(cfg)
+	want := Finding{"aprovacao-inalcancavel", Warn, "acme/x", i18n.T("health.approval_unreachable", 1)}
+	if len(fs) != 1 || fs[0] != want {
+		t.Fatalf("checkApprovalReachable = %+v, want [%+v]", fs, want)
+	}
+
+	// Without gh at all the doctor already complains elsewhere.
+	t.Setenv("PATH", t.TempDir())
+	if fs := checkApprovalReachable(cfg); len(fs) != 0 {
+		t.Fatalf("without gh there must be no duplicate finding: %+v", fs)
+	}
+}
+
+func TestDisableApprovalRequirement(t *testing.T) {
+	t.Run("APRCP-B07: Turning the requirement off sends a protection with zero approvals", func(t *testing.T) {})
+	t.Run("APRCP-E01: A refused protection update names the branch and carries the platform output", func(t *testing.T) {})
+	calls, stdin := fakeGH(t, ghAnswer{match: "'api --method PUT repos/acme/x/branches/main/protection --input -'"})
+	if err := DisableApprovalRequirement("acme/x", "main"); err != nil {
+		t.Fatal(err)
+	}
+	if got := calls(); got != "api --method PUT repos/acme/x/branches/main/protection --input -\n" {
+		t.Fatalf("gh calls = %q", got)
+	}
+	var body struct {
+		EnforceAdmins bool `json:"enforce_admins"`
+		Reviews       struct {
+			Count int `json:"required_approving_review_count"`
+		} `json:"required_pull_request_reviews"`
+	}
+	if err := json.Unmarshal([]byte(stdin()), &body); err != nil {
+		t.Fatalf("the protection body must be JSON on stdin: %v (%q)", err, stdin())
+	}
+	if body.EnforceAdmins || body.Reviews.Count != 0 {
+		t.Fatalf("the body must zero the approvals and not enforce admins: %+v", body)
+	}
+
+	fakeGH(t) // every call fails with "no rule"
+	err := DisableApprovalRequirement("acme/x", "main")
+	if err == nil || err.Error() != "main: no rule" {
+		t.Fatalf("a failed PUT must name the branch and carry gh's output, got %v", err)
+	}
+}
+
+// The warning appears exactly when the bypass is refused: both read the same answers.
+func TestApprovalReachable_agreesWithTheBypass(t *testing.T) {
+	t.Run("APRCP-I01: The warning appears exactly when the bypass is refused", func(t *testing.T) {})
+	um := 1
+	cfg := &config.Config{Workflow: &config.Workflow{
+		Mode: config.ModeGitHub, Repo: "acme/x", RequiredApprovals: &um,
+	}}
+	for name, answers := range map[string][]ghAnswer{
+		"admin with an escape": {ghUser, ghAdmin, ghNoEnforce},
+		"admin, enforced":      {ghUser, ghAdmin, ghEnforce},
+		"writer":               {ghUser, ghWriter},
+	} {
+		fakeGH(t, answers...)
+		ok, _ := CanBypassProtection("acme/x", "main")
+		warned := len(checkApprovalReachable(cfg)) == 1
+		if ok == warned {
+			t.Errorf("%s: bypass=%v but warned=%v — they must be opposite", name, ok, warned)
+		}
+	}
+}
+
+// Diagnosing never changes the repository's protection: that is the fix's job, on request.
+func TestApprovalReachable_onlyReads(t *testing.T) {
+	t.Run("APRCP-X01: The reachability check never changes the branch protection", func(t *testing.T) {})
+	um := 1
+	cfg := &config.Config{Workflow: &config.Workflow{
+		Mode: config.ModeGitHub, Repo: "acme/x", RequiredApprovals: &um,
+	}}
+	calls, _ := fakeGH(t, ghUser, ghWriter, ghAnswer{match: "*PUT*"})
+	if fs := checkApprovalReachable(cfg); len(fs) != 1 {
+		t.Fatalf("setup: a writer must be warned, got %+v", fs)
+	}
+	if strings.Contains(calls(), "PUT") || strings.Contains(calls(), "--method") {
+		t.Fatalf("the check must only read the platform, calls were:\n%s", calls())
+	}
+}
+
+func TestCurrentApproval(t *testing.T) {
+	q := "'api repos/acme/x/branches/main/protection --jq .required_pull_request_reviews.required_approving_review_count'"
+	for name, tc := range map[string]struct {
+		answers []ghAnswer
+		want    int
+	}{
+		"two required":    {[]ghAnswer{{match: q, out: "2"}}, 2},
+		"zero required":   {[]ghAnswer{{match: q, out: "0"}}, 0},
+		"not a number":    {[]ghAnswer{{match: q, out: "null-ish"}}, -1},
+		"protection gone": {nil, -1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			fakeGH(t, tc.answers...)
+			if got := currentApproval("acme/x", "main"); got != tc.want {
+				t.Fatalf("currentApproval = %d, want %d", got, tc.want)
+			}
+		})
+	}
+}

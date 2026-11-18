@@ -1,0 +1,175 @@
+// @anchors
+//   code: HGTHD
+//   ref: HDGDH
+
+package initx
+
+import (
+	"os"
+	"reflect"
+	"regexp"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+)
+
+func TestRenderHeaderGuideDialect(t *testing.T) {
+	t.Run("HDGDH-B01: The comment dialect follows the language family", func(t *testing.T) {})
+	hash := map[string]bool{"python": true, "ruby": true}
+	for _, f := range []string{"python", "ruby", "go", "ts", "java", ""} {
+		out := RenderHeaderGuide(f, nil)
+		want, other := "// @anchors", "# @anchors"
+		if hash[f] {
+			want, other = other, want
+		}
+		if !strings.Contains(out, want) || strings.Contains(out, "\n"+other) {
+			t.Errorf("family %q: the examples should use %q", f, want)
+		}
+	}
+}
+
+func TestRenderHeaderGuideModules(t *testing.T) {
+	t.Run("HDGDH-B02: The grouping example names the first module, or auth", func(t *testing.T) {})
+	t.Run("HDGDH-B03: The module list appears only when there are modules", func(t *testing.T) {})
+	ts := "ts"
+
+	with := RenderHeaderGuide(ts, []string{"billing", "auth"})
+	if !strings.Contains(with, "@feature: billing\n") {
+		t.Error("the grouping example should name the first module")
+	}
+	if !strings.Contains(with, "In this project: billing, auth.") {
+		t.Error("the project's real modules should be listed")
+	}
+
+	without := RenderHeaderGuide(ts, nil)
+	if !strings.Contains(without, "@feature: auth\n") {
+		t.Error("with no modules the example should be auth")
+	}
+	if strings.Contains(without, "In this project:") {
+		t.Error("with no modules there is no module list")
+	}
+}
+
+func TestRenderHeaderGuideAlwaysHasEssentials(t *testing.T) {
+	t.Run("HDGDH-B04: The essentials are always present", func(t *testing.T) {})
+	t.Run("HDGDH-B05: The compliance-points section is always present with five points", func(t *testing.T) {})
+	// even with no family, the guide mentions the minimum: code + the gate
+	out := RenderHeaderGuide("", nil)
+	for _, want := range []string{"code:", "updated_at:", "header-valid", "anchors guide header"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the header guide should mention %q", want)
+		}
+	}
+	title := i18n.TIn(i18n.Current(), "section.title.compliance_points")
+	if !strings.Contains(out, "\n## "+title+"\n") {
+		t.Errorf("the guide should have the section %q", title)
+	}
+	for _, ck := range []string{"CK1", "CK2", "CK3", "CK4", "CK5"} {
+		if !strings.Contains(out, "**"+ck+"**") {
+			t.Errorf("the compliance section should list %s", ck)
+		}
+	}
+}
+
+func TestRenderHeaderGuideTitle(t *testing.T) {
+	t.Run("HDGDH-B06: The title falls back to project", func(t *testing.T) {})
+	if !strings.HasPrefix(RenderHeaderGuide("go", nil), "# Header guide — go project\n") {
+		t.Error("the guide should be titled after the family")
+	}
+	if !strings.HasPrefix(RenderHeaderGuide("", nil), "# Header guide — project\n") {
+		t.Error("no family should give the title \"project\"")
+	}
+}
+
+func TestRenderHeaderGuideWritesNothing(t *testing.T) {
+	t.Run("HDGDH-X01: Rendering writes nothing to disk", func(t *testing.T) {})
+	dir := t.TempDir()
+	t.Chdir(dir)
+	if out := RenderHeaderGuide("", []string{"auth"}); out == "" {
+		t.Fatal("the guide should come back as text")
+	}
+	if entries, _ := os.ReadDir(dir); len(entries) != 0 {
+		t.Errorf("rendering wrote to disk: %v", entries)
+	}
+}
+
+// The guide `anchors init` SEEDS must pass the gate init itself declares — in any language.
+//
+// The coupling: `RenderHeaderGuide` writes the compliance section translated by the project's
+// `lang:`, and `guide-checklist` (internal/gate) looks for it by title. While the gate's regex
+// knew only the Portuguese form, a `lang: en` project was born failing a file init had just
+// written — the framework charging for what it does not itself generate, and the worst first
+// impression possible.
+//
+// This test duplicates the gate's ruler on purpose (the regex below mirrors
+// `checklistHeadingRE`): putting the confrontation HERE, on the PRODUCER's side, is what makes
+// the break show up for whoever touches the guide — and the sibling test in internal/gate does
+// the same for whoever touches the gate. The two ends of the coupling, each with its alarm.
+func TestSeededGuideHasTheChecklistInEveryLanguage(t *testing.T) {
+	t.Run("HDGDH-I01: The seeded guide passes the checklist heading in every language", func(t *testing.T) {})
+	// Mirrors checklistHeadingRE: the section is recognised in any language of the catalog.
+	titles := i18n.AllTranslations("section.title.compliance_points")
+	if len(titles) == 0 {
+		t.Fatal("no titles in the catalog for `section.title.compliance_points` — the gate would have nothing to match")
+	}
+	escaped := make([]string, 0, len(titles))
+	for _, x := range titles {
+		escaped = append(escaped, regexp.QuoteMeta(x))
+	}
+	sectionRE := regexp.MustCompile(`(?mi)^##+\s+(?:` + strings.Join(escaped, "|") + `)\b`)
+	itemRE := regexp.MustCompile(`(?m)\bCK\d+\b`)
+
+	original := i18n.Current()
+	t.Cleanup(func() { _ = i18n.Set(original) })
+
+	for _, lang := range i18n.SupportedLangs {
+		if err := i18n.Set(lang); err != nil {
+			t.Fatalf("language %s: %v", lang, err)
+		}
+		g := RenderHeaderGuide("", nil)
+		if !sectionRE.MatchString(g) {
+			t.Errorf("lang=%s: the seeded guide lacks the compliance section `guide-checklist` requires", lang)
+		}
+		// The section alone is not enough: without at least one CK point, the judgment gate
+		// falls back to heuristics — which is exactly what the checklist exists to prevent.
+		if !itemRE.MatchString(g) {
+			t.Errorf("lang=%s: the section exists but has no CK point — nothing to confront item by item", lang)
+		}
+	}
+}
+
+func TestWithGuideHeader_aFreeCode(t *testing.T) {
+	t.Run("HDGDH-B07: A seeded guide carries its @anchors header, under a code made from its name that no file of the project holds", func(t *testing.T) {})
+	taken := map[string]bool{}
+	first := WithGuideHeader("# Header guide\n", "guides/HEADER_GUIDE.md", "HeaderGuide", taken)
+	if !strings.HasPrefix(first, "<!-- @anchors\n  code: ") || !strings.Contains(first, "-->\n\n# Header guide\n") || len(taken) != 1 {
+		t.Fatalf("the header opens the guide, its code taken: %q %v", first, taken)
+	}
+	second := WithGuideHeader("x", "guides/HEADER_GUIDE.md", "HeaderGuide", taken)
+	if second[:30] == first[:30] || len(taken) != 2 {
+		t.Errorf("a code already taken is not given again: %q / %q", first[:30], second[:30])
+	}
+}
+
+func TestSeedGoverns_whatTheGuideRules(t *testing.T) {
+	t.Run("HDGDH-B08: A seeded guide the configuration reads as a guide governs the layers it rules — the header guide those carrying a header, the spec guide the specs —, each rule once; one read as no guide governs nothing", func(t *testing.T) {})
+	cfg := &config.Config{Layers: map[string]config.Layer{
+		"guide":    {Pattern: "guides/*.md", Kind: "guide"},
+		"spec":     {Pattern: "**/*.spec.md", Kind: "spec", Tags: []string{"spec"}},
+		"web-code": {Pattern: "apps/**/*.ts", Kind: "code", Tags: []string{"web-code"}},
+		"readme":   {Pattern: "README.md", Kind: "doc", Headless: true},
+	}}
+	if got := HeaderLayerTags(cfg); !reflect.DeepEqual(got, []string{"spec", "web-code"}) {
+		t.Errorf("the layers carrying a header, got %v", got)
+	}
+	SeedGoverns(cfg, "guides/HEADER_GUIDE.md", HeaderLayerTags(cfg))
+	SeedGoverns(cfg, "guides/HEADER_GUIDE.md", HeaderLayerTags(cfg))
+	SeedGoverns(cfg, "guides/SPEC_GUIDE.md", SpecLayerTags(cfg))
+	SeedGoverns(cfg, "docs/NOT_A_GUIDE.md", []string{"spec"})
+	want := []config.GovernRule{{From: "guides/HEADER_GUIDE.md", Governs: "spec"}, {From: "guides/HEADER_GUIDE.md", Governs: "web-code"}, {From: "guides/SPEC_GUIDE.md", Governs: "spec"}}
+	if !reflect.DeepEqual(cfg.Governs, want) {
+		t.Errorf("each rule once, and none for a file read as no guide, got %+v", cfg.Governs)
+	}
+}

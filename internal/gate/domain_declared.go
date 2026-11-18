@@ -1,0 +1,185 @@
+// @anchors
+//   code: DDGDM
+//   ref: DMDCD
+
+package gate
+
+import (
+	"regexp"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// domain-declared: a seção `## Domínio` declara o que a unidade ACEITA — e quem garante
+// que o inválido não chega.
+//
+// A lacuna medida: num projeto real, 71% das specs tinham seção de regras/efeitos e
+// apenas 14% diziam o que a unidade aceita. O framework inteiro é construído sobre
+// catalogar EFEITOS, e todo defeito de borda encontrado em três rodadas de review
+// adversarial morava no que ninguém tinha declarado.
+//
+// Por que `constraints` não bastava — e essa é a distinção que dá o gate:
+//
+//	`## Restrições` diz o que a unidade NÃO FAZ  → empurra o dever para FORA
+//	`## Domínio`    diz o que a unidade ACEITA   → nomeia QUEM fica com ele
+//
+// Escrever mais restrições não fecha nada: CRIA órfãos, porque cada "não é meu" precisa
+// de alguém do outro lado. Aconteceu, medido: três specs escreveram "não valido a chave"
+// — a da regra, a do repositório, e o modelo nem mencionou. Cada uma correta. O dever
+// ficou órfão, e o resultado foi perda silenciosa de dado do usuário, com todos os gates
+// verdes.
+//
+// O QUE ESTE GATE NÃO FAZ: julgar se o domínio declarado está CERTO. Saber que `__proto__`
+// é um valor perigoso para uma chave de objeto é conhecimento de domínio e de linguagem —
+// não é confrontável por regex, e fingir que é produziria falso-positivo em massa ou uma
+// lista de casos especiais que envelhece. O gate cobra a DECLARAÇÃO e o DONO; a qualidade
+// do que foi declarado é trabalho do review.
+func checkDomainDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindSpec {
+		return Skip, i18n.T("gate.domain.skip_not_spec")
+	}
+
+	corpo, achou := sectionDomain(content)
+	if !achou {
+		// A DISPENSA É DECLARADA, não silenciosa.
+		//
+		// Antes, a ausência da seção era `Skip` — e o efeito, medido: 85 specs num
+		// projeto real, ZERO confrontadas. Um gate `blocking: true` que não protegia
+		// nada, porque só cobrava quem tinha ABERTO a seção, e ninguém abriu.
+		//
+		// A razão anterior tinha mérito: "exigir a seção de toda spec transformaria
+		// instrumento em ritual, e unidade sem entrada externa não tem domínio a
+		// declarar". Verdade — mas a saída certa é a que o resto do vocabulário já usa
+		// (`@no-rule`, `@no-scenario`, `@no-test`): DISPENSA COM RAZÃO, que registra que
+		// alguém olhou. O silêncio não distingue "não tem entrada externa" de "ninguém
+		// pensou no assunto".
+		//
+		// Este gate já fazia essa distinção logo abaixo, sobre a seção vazia: "uma seção
+		// vazia AFIRMA que se olhou e não se achou nada a declarar, que é diferente de
+		// não ter olhado". Reconhecia a diferença e não a aplicava ao caso principal.
+		//
+		// O CUSTO do silêncio, medido: o `QueryScope` define o conjunto fechado de
+		// janelas e recebe entrada de fora — caso central deste gate. Não abriu a seção,
+		// o gate calou, e duas telas declararam `5m`, `30m` e `1d`, que o contrato não
+		// aceita. O backend caía no padrão `1h` sem ninguém ver.
+		if noDomainRE.MatchString(content) {
+			return Skip, i18n.T("gate.domain.skip")
+		}
+		return Fail, i18n.T("gate.domain.missing")
+	}
+
+	linhas := domainLines(corpo)
+	if len(linhas) == 0 {
+		return Fail, i18n.T("gate.domain.empty")
+	}
+
+	var semDono []string
+	for _, l := range linhas {
+		if dono := entryOwner(l); dono == "" {
+			semDono = append(semDono, firstCell(l))
+		}
+	}
+	if len(semDono) == 0 {
+		return Pass, ""
+	}
+	return Fail, i18n.T("gate.domain.unowned", len(semDono), strings.Join(semDono, ", "))
+}
+
+// dominioRE reconhece o título da seção, com as variações que aparecem na prática.
+var dominioRE = regexp.MustCompile(`(?im)^#{1,4}\s*(dom[ií]nio|domain|entradas?\s+aceitas?|fronteira\s+de\s+entrada)\b[^\n]*\n`)
+
+func sectionDomain(content string) (string, bool) {
+	loc := dominioRE.FindStringIndex(content)
+	if loc == nil {
+		return "", false
+	}
+	resto := content[loc[1]:]
+	if fim := regexp.MustCompile(`(?m)^#{1,4}\s`).FindStringIndex(resto); fim != nil {
+		resto = resto[:fim[0]]
+	}
+	return resto, true
+}
+
+// domainLines extrai as linhas de DADOS da tabela — nem cabeçalho, nem separador,
+// nem a prosa explicativa que costuma acompanhar a seção.
+func domainLines(corpo string) []string {
+	var out []string
+	for _, l := range strings.Split(corpo, "\n") {
+		t := strings.TrimSpace(l)
+		if !strings.HasPrefix(t, "|") {
+			continue
+		}
+		if separadorRE.MatchString(t) || cabecalhoDominioRE.MatchString(t) {
+			continue
+		}
+		// linha ainda no molde (só TODOs) não conta como declaração
+		if todoOnlyRE.MatchString(t) {
+			continue
+		}
+		out = append(out, t)
+	}
+	return out
+}
+
+var (
+	separadorRE        = regexp.MustCompile(`^\|[\s:|-]+\|?$`)
+	cabecalhoDominioRE = regexp.MustCompile(`(?i)^\|\s*(entrada|input|par[âa]metro|campo|valor)\b`)
+	todoOnlyRE         = regexp.MustCompile(`(?i)^(\|\s*TODO[^|]*)+\|?\s*$`)
+)
+
+// entryOwner devolve a última célula (a coluna `Quem garante`), vazia se ela não
+// nomeia ninguém. "não é meu" e variações NÃO contam como dono — é justamente a resposta
+// que cria o órfão.
+func entryOwner(linha string) string {
+	cels := strings.Split(strings.Trim(linha, "|"), "|")
+	if len(cels) < 4 {
+		return "" // a tabela precisa das 4 colunas para ter dono
+	}
+	dono := strings.TrimSpace(cels[len(cels)-1])
+	if dono == "" || strings.HasPrefix(dono, "TODO") {
+		return ""
+	}
+	if notOwnerRE.MatchString(dono) {
+		return ""
+	}
+	return dono
+}
+
+// notOwnerRE reconhece a NÃO-RESPOSTA — a frase que parece preencher a coluna e não
+// nomeia ninguém.
+//
+// Não pode ancorar no fim da linha (`$`): o autor escreve "não valido (MTVRX-X04)", com a
+// referência à restrição ao lado, e a âncora deixaria passar. Testado contra o caso real
+// que motivou o gate — foi exatamente assim que o dever ficou órfão em três specs, cada
+// uma "declarando" que não validava. A não-resposta com citação continua sendo
+// não-resposta: citar a própria restrição é dizer "não é meu" com fonte.
+// Duas famílias, porque a borda é diferente em cada uma:
+//   - TRAÇO puro: a célula inteira é `-` ou `—`. Ancorada no fim (`$`), porque `\b` não
+//     casa depois de um traço (não é caractere de palavra) e deixaria passar.
+//   - FRASE: "não valido", "ninguém", "fora de escopo" — SEM âncora no fim, porque o
+//     autor escreve "não valido (MTVRX-X04)", com a referência à restrição ao lado. Foi
+//     exatamente assim que o dever ficou órfão em três specs reais; citar a própria
+//     restrição é dizer "não é meu" com fonte, e continua sendo não-resposta.
+var notOwnerRE = regexp.MustCompile(`(?i)(^\s*[-—]+\s*$)|(^\s*(n/?a|ningu[ée]m|nobody|none|nenhum|` +
+	`n[ãa]o\s+(é|eh|e)\s+(meu|daqui|desta)|n[ãa]o\s+valid\w*|n[ãa]o\s+se\s+aplica|` +
+	`fora\s+de\s+escopo|delegado|outra\s+camada)\b)`)
+
+func firstCell(linha string) string {
+	cels := strings.Split(strings.Trim(linha, "|"), "|")
+	if len(cels) == 0 {
+		return "?"
+	}
+	c := strings.TrimSpace(cels[0])
+	if len(c) > 40 {
+		c = c[:37] + "…"
+	}
+	return "`" + c + "`"
+}
+
+// noDomainRE — a dispensa da seção, com razão obrigatória. Mesmo padrão do `@no-rule`
+// e do `@no-scenario`: marcador nu não dispensa, porque vira um jeito silencioso de
+// calar o gate e some o rastro de que houve decisão.
+var noDomainRE = regexp.MustCompile(`@no-domain[^\S\n]*:[^\S\n]*\S+`)

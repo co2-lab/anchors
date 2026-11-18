@@ -1,0 +1,157 @@
+name: Release CLI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  # A RELEASE ONLY OF A COMMIT THE CI PASSED. A tag was the only gate before: the process
+  # (tag only on a green main) kept releases sound, and nothing enforced it. This job waits
+  # for the CI run of the tagged commit and refuses the release unless it concluded green —
+  # a commit with no CI run, or a red one, publishes nothing.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for i in $(seq 1 60); do
+            c=$(gh run list -R "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --workflow CI \
+                --json status,conclusion --jq '.[0] | "\(.status) \(.conclusion)"')
+            echo "CI of $GITHUB_SHA: ${c:-none}"
+            case "$c" in
+              "completed success") exit 0 ;;
+              completed*) echo "the CI of the tagged commit did not pass"; exit 1 ;;
+              "") [ "$i" -ge 3 ] && { echo "no CI run for the tagged commit"; exit 1; } ;;
+            esac
+            sleep 30
+          done
+          echo "the CI of the tagged commit did not finish in 30 minutes"; exit 1
+
+  goreleaser:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      # A MESMA TAG pode disparar este workflow mais de uma vez.
+      #
+      # Medido na v0.1.29: a tag foi refeita duas vezes (a mensagem saía corrompida — o
+      # `git tag` trata `#` como comentário e comia os cabeçalhos, e a correção é
+      # `--cleanup=verbatim`). Cada `git push --tags` disparou um release, e o terceiro
+      # tentou subir artefatos que o segundo já havia publicado:
+      #
+      #   422 Validation Failed [{Resource:ReleaseAsset Field:name Code:already_exists}]
+      #   ⨯ release failed after 1m14s
+      #
+      # A release ficou PUBLICADA e CORRETA (13 assets, o binário do commit certo) e o
+      # workflow ficou VERMELHO. É o pior par possível: quem olha o Actions conclui que o
+      # release falhou e refaz a tag — o que reproduz o mesmo erro.
+      #
+      # `--clean` limpa o `dist/` LOCAL; ele não sabe nada sobre o que já está no GitHub.
+      # Quem resolve é o `release.mode: replace` no `.goreleaser.yaml`, que substitui o
+      # asset de mesmo nome em vez de recusar por já existir.
+      # A release's own notes — what it changes in a project, what `anchors migrate` writes
+      # and what is left to do by hand — live in `release-notes/<tag>.md`, and open the
+      # release above the changelog of commits. A tag with no file has the changelog alone.
+      - id: notes
+        run: |
+          if [ -f "release-notes/${GITHUB_REF_NAME}.md" ]; then
+            echo "args=--release-header release-notes/${GITHUB_REF_NAME}.md" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean ${{ steps.notes.outputs.args }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          WINGET_GITHUB_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
+
+  # ── Winget ─────────────────────────────────────────────────────────────────
+  # Job SEPARADO, e não uma seção do goreleaser: publicar no Winget exige sincronizar o
+  # fork com o upstream da Microsoft, e o goreleaser faz isso por `merge-upstream` — uma
+  # API que PAT fine-grained não acessa (medido na v0.1.0: 403, e a release inteira caiu
+  # junto, levando o Scoop que ainda não tinha rodado).
+  #
+  # A `winget-releaser` é a ferramenta especializada nisso, e já é a que publica o Polvo.
+  # `needs: goreleaser` porque ela lê os binários DA release — que precisa existir antes.
+  publicar-winget:
+    name: Publicar no Winget
+    needs: goreleaser
+    runs-on: ubuntu-latest
+
+    # O token ambiente não é usado por este job (a action recebe o PAT explicitamente),
+    # então não há motivo para ele carregar permissão nenhuma sobre este repositório.
+    permissions: {}
+    steps:
+      # O PACOTE JÁ EXISTE no winget-pkgs?
+      #
+      # A action ATUALIZA um pacote publicado — ela recusa com "Package does not exist"
+      # enquanto o primeiro envio (um PR manual que a Microsoft revisa) não entrar. É ovo
+      # e galinha do primeiro lançamento, e não defeito nosso.
+      #
+      # Verificar ANTES em vez de `continue-on-error`: aquele engoliria também a falha
+      # REAL — um PAT expirado, o upstream fora do ar — e a release passaria a mentir que
+      # publicou. Aqui a distinção fica explícita: "ainda não dá" pula com aviso, e
+      # qualquer outro erro derruba o job, como deve.
+      - id: existe
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # O manifesto vive num caminho derivado do identificador:
+          # manifests/<inicial>/<Publisher>/<Package>/
+          caminho="manifests/c/co2lab/Anchors"
+          if gh api "repos/microsoft/winget-pkgs/contents/$caminho" --jq '.[0].name' >/dev/null 2>&1; then
+            echo "publicado=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publicado=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::O pacote ainda não está no winget-pkgs — o primeiro envio é um PR manual que a Microsoft revisa. Publicação no Winget PULADA (as demais plataformas seguem)."
+          fi
+
+      # SHA fixo, não `@v2`: a action recebe um PAT CLÁSSICO, que tem poder amplo sobre
+      # os repositórios da organização. Uma tag é móvel — quem controlasse a action
+      # poderia trocar o código sob esse token sem que nada aqui mudasse.
+      #
+      # A SECOND ATTEMPT, a minute later. The submission to winget-pkgs fails now and then
+      # after the manifests are written, with an empty `Error:` — v0.1.370 and v0.1.371 both
+      # failed once and passed on a re-run of the job. The first attempt does not fail the
+      # job; the second decides it, so a real failure (an expired PAT, the upstream down)
+      # still fails it, twice.
+      - id: tentativa1
+        if: steps.existe.outputs.publicado == 'true'
+        continue-on-error: true
+        uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
+        with:
+          identifier: co2lab.Anchors
+          # PAT CLÁSSICO: o fine-grained não serve para operações de fork.
+          token: ${{ secrets.WINGET_GITHUB_TOKEN }}
+          release-tag: ${{ github.ref_name }}
+          fork-user: co2-lab
+          installers-regex: '_windows_\w+\.zip$'
+      - if: steps.existe.outputs.publicado == 'true' && steps.tentativa1.outcome == 'failure'
+        run: |
+          echo "::warning::A primeira submissão ao Winget falhou — nova tentativa em 60 s."
+          sleep 60
+      - if: steps.existe.outputs.publicado == 'true' && steps.tentativa1.outcome == 'failure'
+        uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
+        with:
+          identifier: co2lab.Anchors
+          token: ${{ secrets.WINGET_GITHUB_TOKEN }}
+          release-tag: ${{ github.ref_name }}
+          fork-user: co2-lab
+          installers-regex: '_windows_\w+\.zip$'

@@ -1,0 +1,1795 @@
+<!doctype html>
+<!-- anchors:template — gerado pelo `anchors`. Enquanto este comentário existir, o
+     `anchors doctor --fix` mantém o arquivo atualizado. Ao editar, REMOVA esta linha:
+     é o que diz ao Anchors que a página passou a ser sua. -->
+<meta charset="utf-8">
+<title>Board — Anchors</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- ANTES do estilo, de propósito: aplicar o tema no fim do script faz a página pintar
+     no tema do sistema e trocar depois — o flash branco que quem escolheu escuro leva a
+     cada carregamento. Este trecho roda antes do primeiro pixel. -->
+<script>
+  try {
+    const t = localStorage.getItem("anchors:tema");
+    if (t) document.documentElement.setAttribute("data-tema", t);
+  } catch (e) { /* localStorage bloqueado: segue no tema do sistema */ }
+</script>
+<style>
+  :root {
+    --bg: #f6f8fa; --fg: #1f2328; --card: #fff; --linha: #d1d9e0; --fraco: #59636e;
+    --todo: #8b949e; --fazendo: #0969da; --pronto: #1a7f37; --alerta: #9a6700; --bloqueio: #cf222e;
+    /* ESPERANDO uma pessoa (laranja) × JÁ RESPONDIDO (amarelo, o `--alerta` acima).
+       Duas cores porque são dois estados de atenção diferentes: o laranja pede ação
+       agora; o amarelo é registro de que houve uma decisão, e não pede nada. */
+    --espera: #bc4c00;
+    /* A FASE: roxo acinzentado, fora da paleta de ESTADO. Ela não está em coluna
+       nenhuma — é estrutura do plano, não trabalho em curso. */
+    --fase: #8250df;
+    /* O vermelho da identidade (#ec3013) e o quase-preto da wordmark, do kit oficial. */
+    --marca: #ec3013; --wordmark: #201e1d;
+  }
+  /* O escuro vale em dois casos, e cada um precisa da sua regra:
+     — o sistema pede escuro E ninguém escolheu claro à mão (o `:not` é o que faz a
+       escolha manual vencer a preferência do sistema);
+     — alguém escolheu escuro à mão, com o sistema em claro. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-tema="claro"]) {
+      --bg: #0d1117; --fg: #e6edf3; --card: #151b23; --linha: #3d444d; --fraco: #9198a1;
+      --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922; --bloqueio: #f85149;
+      --espera: #f0883e;
+      --fase: #a371f7;
+      /* No escuro o vermelho da marca é clareado: #ec3013 sobre #0d1117 não alcança
+         contraste de leitura, e a wordmark preta desapareceria. */
+      --marca: #ff5c3d; --wordmark: #e6edf3;
+    }
+  }
+  :root[data-tema="escuro"] {
+    --bg: #0d1117; --fg: #e6edf3; --card: #151b23; --linha: #3d444d; --fraco: #9198a1;
+    --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922; --bloqueio: #f85149;
+      --espera: #f0883e;
+      --fase: #a371f7;
+    --marca: #ff5c3d; --wordmark: #e6edf3;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 1.5rem; background: var(--bg); color: var(--fg);
+         font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: center; gap: 1rem; margin-bottom: .6rem;
+           flex-wrap: wrap; }
+  .marca { display: flex; align-items: center; gap: .5rem; text-decoration: none;
+           padding-right: 1rem; border-right: 1px solid var(--linha); }
+  .marca:hover { opacity: .8; }
+  /* Archivo 800 com letter-spacing negativo é a wordmark do kit. A pilha de fallback
+     importa: a fonte não é embutida (uma URL externa quebraria num Pages privado), e sem
+     alternativa próxima a marca cairia numa serifada. */
+  .marca .nome { font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+                 font-weight: 800; font-size: 1.1rem; letter-spacing: -.04em;
+                 color: var(--wordmark); }
+  .titulo-bloco { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+  h1 { font-size: 1.1rem; margin: 0; font-weight: 500; color: var(--fraco); }
+  .quando { color: var(--fraco); font-size: .8rem; }
+  .tagline { color: var(--fraco); font-size: .85rem; margin: 0 0 .35rem; max-width: 46rem;
+             line-height: 1.6; }
+  .tagline strong { color: var(--fg); font-weight: 600; }
+  .tagline em { font-style: normal; color: var(--fg); }
+  .doc { font-size: .78rem; color: var(--fazendo); text-decoration: none;
+         border: 1px solid var(--fazendo); border-radius: 6px; padding: .3rem .6rem; }
+  .doc:hover { background: var(--fazendo); color: #fff; }
+  .prioridade { color: var(--fraco); font-size: .8rem; margin-bottom: 1rem; }
+  .abas { display: flex; gap: .25rem; margin: .75rem 0 1rem;
+          border-bottom: 1px solid var(--linha); }
+  .abas button { border: none; border-bottom: 2px solid transparent; border-radius: 0;
+                 background: none; padding: .5rem .9rem; font-size: .85rem; }
+  .abas button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--marca);
+                                       font-weight: 500; }
+  .abas button:hover { color: var(--fg); }
+  /* A ÁRVORE. `ul`/`li` de verdade, e não divs indentados: um leitor de tela anuncia
+     "lista de 3 itens, nível 2", que é exatamente a informação que a indentação dá
+     visualmente. */
+  .arv, .arv ul { list-style: none; margin: 0; padding: 0; }
+  .arv ul { margin-left: 1.1rem; padding-left: .9rem; border-left: 1px solid var(--linha); }
+  .arv li { margin: .3rem 0; }
+  /* O summary é a LINHA: o triângulo mora dentro dela, não ao lado. */
+  .arv summary { list-style: none; display: flex; align-items: center; gap: .4rem; }
+  .arv summary::-webkit-details-marker { display: none; }
+  .arv summary > .no { flex: 1; min-width: 0; }
+  /* O TRIÂNGULO é um alvo de clique de verdade — 1.6rem, e não os 0.6rem de antes, que na
+     tela viravam quase um ponto. A recomendação de 24px de alvo tátil existe para isto:
+     um controle que exige mira não é usado, é evitado. */
+  .arv .tri { flex: none; width: 1.6rem; height: 1.6rem; display: flex;
+              align-items: center; justify-content: center; border-radius: 5px;
+              cursor: pointer; user-select: none; }
+  .arv .tri::before { content: "▸"; font-size: .95rem; color: var(--fraco);
+                      transition: transform .15s; display: block; line-height: 1; }
+  .arv .tri:hover { background: var(--linha); }
+  .arv .tri:hover::before { color: var(--fg); }
+  .arv details[open] > summary .tri::before { transform: rotate(90deg); }
+  /* A FOLHA reserva o mesmo espaço do triângulo, senão o texto dos nós com e sem filho
+     fica desalinhado e a árvore parece torta. */
+  .arv li.folha { padding-left: 2rem; }
+  /* O `display` explícito no `> ul` VENCE o ocultamento nativo do `<details>`, que só age
+     enquanto o conteúdo não tem display próprio. Sem o par de regras abaixo, recolher
+     virava um triângulo que girava e nada mais — os filhos continuavam na tela.
+     Medido: `details.open === false` com o `<ul>` a 251px de altura. */
+  .arv details > ul { margin-left: 1.9rem; }
+  .arv details:not([open]) > ul { display: none; }
+  .filtro { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+            margin-bottom: 1rem; }
+  .filtro-rotulo { font-size: .78rem; color: var(--fraco); }
+  .chips { display: flex; gap: .35rem; flex-wrap: wrap; }
+  .modo { display: flex; gap: .4rem; margin: 0 0 .7rem; }
+  /* A COLUNA QUE PAROU DE DRENAR. Amarelo a partir de 3 dias, laranja a partir de 7 —
+     a mesma gramática de atenção do resto do board: amarelo informa, laranja pede ação. */
+  .parada { margin-left: .35rem; font-size: .66rem; font-weight: 600; color: var(--alerta);
+            border: 1px solid var(--alerta); border-radius: 999px; padding: 0 .3rem; }
+  .chip { font-size: .72rem; padding: .2rem .55rem; border-radius: 999px;
+          border: 1px solid var(--linha); background: var(--card); color: var(--fraco); }
+  .chip[aria-pressed="true"] { border-color: var(--fazendo); color: var(--fazendo);
+                               background: var(--bg); }
+  /* O chip do agente carrega o NOME em monoespaçada, como o `◆ dono` do card: é o mesmo
+     identificador, e a mesma tipografia é o que liga um ao outro sem legenda. */
+  .chip.agente { font-family: ui-monospace, monospace; }
+  .chip .qtd-ag { margin-left: .3rem; opacity: .75; }
+  .sem-agente { font-size: .75rem; color: var(--fraco); font-style: italic; }
+  .apos { font-size: .68rem; color: var(--fraco); font-family: ui-monospace, monospace;
+          flex: none; padding: .1rem .4rem; border-radius: 4px; background: var(--bg); }
+  .controles { display: flex; gap: .5rem; margin-bottom: .75rem; align-items: center;
+               flex-wrap: wrap; }
+  .sep { width: 1px; height: 1.1rem; background: var(--linha); margin: 0 .15rem; }
+  .controles button { font-size: .72rem; padding: .25rem .55rem; }
+  .no { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem;
+        background: var(--card); border: 1px solid var(--linha); border-radius: 6px;
+        width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+  .no:hover { border-color: var(--fazendo); }
+  .no.fase { background: var(--bg); border-style: dashed; cursor: default; }
+  .no.fase:hover { border-color: var(--linha); }
+  .no .cod { font-family: ui-monospace, monospace; font-size: .7rem; font-weight: 600;
+             color: var(--fazendo); flex: none; }
+  .no.fase .cod { color: var(--marca); }
+  .no .nome { font-size: .82rem; overflow: hidden; text-overflow: ellipsis;
+              white-space: nowrap; }
+  .no .est { margin-left: auto; font-size: .68rem; color: var(--fraco); flex: none;
+             padding: .1rem .4rem; border: 1px solid var(--linha); border-radius: 4px; }
+  /* PRONTO PARA PEGAR: o item cujas dependências fecharam. É a resposta que a árvore
+     existe para dar, e ela precisa saltar aos olhos — sem isso o leitor teria de
+     percorrer a hierarquia conferindo estado por estado. */
+  .no.livre { border-color: var(--pronto); }
+  .no.livre .cod { color: var(--pronto); }
+  .no.bloqueado { opacity: .55; }
+  .legenda { display: flex; gap: 1.2rem; flex-wrap: wrap; font-size: .72rem;
+             color: var(--fraco); margin-bottom: 1rem; }
+  .legenda span { display: flex; align-items: center; gap: .35rem; }
+  .amostra { width: .7rem; height: .7rem; border-radius: 3px; border: 1px solid var(--linha); }
+  .colunas { display: flex; gap: .75rem; overflow-x: auto; padding-bottom: 1rem; }
+  .coluna { flex: 0 0 15rem; background: var(--card); border: 1px solid var(--linha);
+            border-radius: 8px; padding: .75rem; }
+  .titulo { display: flex; align-items: center; gap: .4rem; font-weight: 600;
+            font-size: .8rem; text-transform: uppercase; letter-spacing: .02em;
+            margin-bottom: .25rem; }
+  .bola { width: .6rem; height: .6rem; border-radius: 50%; flex: none; }
+  .qtd { margin-left: auto; color: var(--fraco); font-weight: 400; }
+  .oquee { color: var(--fraco); font-size: .75rem; margin-bottom: .75rem; }
+  .card { display: block; width: 100%; text-align: left; font: inherit;
+          background: var(--bg); border: 1px solid var(--linha);
+          border-radius: 6px; padding: .6rem; margin-bottom: .5rem; text-decoration: none;
+          color: inherit; cursor: pointer; }
+  .card:hover { border-color: var(--fazendo); }
+  /* O CÓDIGO e o NÚMERO na mesma linha: o código diz QUAL unidade, o número diz qual
+     issue. Os dois são endereços, e só um deles serve para falar com outra pessoa —
+     "resolvi o INDTN" não abre nada; "#303" abre.
+     O número estava SÓ na modal, e por isso era invisível na leitura do board: quem
+     queria citar um card no chat ou no terminal tinha de abrir a modal para descobrir
+     o endereço dele. */
+  .card-topo { display: flex; align-items: baseline; gap: .4rem; }
+  .codigo { font-family: ui-monospace, SFMono-Regular, monospace; font-size: .72rem;
+            color: var(--fazendo); font-weight: 600; }
+  .num { margin-left: auto; font-family: ui-monospace, SFMono-Regular, monospace;
+         font-size: .7rem; color: var(--fraco); flex-shrink: 0; }
+  /* O CARD ESCALADO, marcado NA COLUNA e não só na faixa.
+     A faixa lista o que espera uma pessoa; a coluna é onde se olha para saber o que está
+     acontecendo com um card específico. Sem marca aqui, um card parado esperando decisão
+     é visualmente idêntico ao card ao lado que está sendo trabalhado — e quem varre a
+     coluna não tem por que desconfiar dele. */
+  /* LARANJA para o que ESPERA uma pessoa; AMARELO para o que já foi RESPONDIDO.
+     São dois estados de atenção diferentes, e pintá-los igual é o que fazia a fila de
+     pendências parecer maior do que era — quem varre o board perde a que importa no meio
+     das que já foram resolvidas. O laranja pede ação; o amarelo é registro. */
+  .card.escalado { border-color: var(--espera); border-left-width: 3px; }
+  .card.escalado.respondido { border-color: var(--alerta); }
+  .selo { display: inline-flex; align-items: center; gap: .25rem; margin-top: .4rem;
+          font-size: .68rem; font-weight: 500; color: var(--espera);
+          border: 1px solid var(--espera); border-radius: 999px; padding: .08rem .45rem; }
+  .selo.respondido { color: var(--alerta); border-color: var(--alerta); }
+  /* AS DUAS FILAS do usuário, visualmente distintas: a de decisão pede julgamento de
+     produto, a de enquadramento pede só "isto é meu?" — e tratá-las igual faz a segunda
+     custar como a primeira para quem lê. */
+  .fila-t { font-size: .82rem; font-weight: 600; margin: .9rem 0 .2rem; }
+  .fila-t.enquadrar { color: var(--fraco); }
+  /* BLOQUEADO é mais forte que ESPERANDO, e a cor diz isso: o card escalado espera uma
+     resposta e pode ter trabalho paralelo; o bloqueado não pode ser trabalhado por
+     ninguém. O selo é clicável — vai para o card que segura, que é onde a resposta vai. */
+  .selo.bloqueado { color: var(--bloqueio); border-color: var(--bloqueio); cursor: pointer; }
+  .card.bloqueado { border-color: var(--bloqueio); border-left-width: 3px; }
+  .card h3 { font-size: .82rem; margin: .2rem 0 0; font-weight: 500; }
+  /* A DEPENDÊNCIA no card responde "por que isto ainda não posso pegar?" sem abrir nada.
+     A indentação sozinha mostra que há profundidade, mas não diz de quê ela vem. */
+  .dep { font-size: .68rem; color: var(--fraco); margin-top: .35rem; line-height: 1.4;
+         padding-left: .1rem; }
+  .dono { display: inline-block; margin-top: .4rem; font-size: .7rem; color: var(--fraco);
+          font-family: ui-monospace, monospace; }
+  .vazia { color: var(--fraco); font-size: .75rem; font-style: italic; padding: .5rem 0; }
+  .erro { background: var(--card); border: 1px solid var(--alerta); border-radius: 8px;
+          padding: 1rem; }
+  .botoes { margin-left: auto; display: flex; gap: .5rem; }
+  button { font: inherit; font-size: .78rem; color: var(--fraco); background: var(--card);
+           border: 1px solid var(--linha); border-radius: 6px; padding: .3rem .6rem;
+           cursor: pointer; }
+  button:hover { border-color: var(--fazendo); color: var(--fg); }
+  /* Ligado tem cor: um botão de alternância que não muda de aparência obriga a ler o
+     texto para saber em que estado está. */
+  button[aria-pressed="true"] { color: var(--fazendo); border-color: var(--fazendo); }
+  dialog { max-width: 40rem; width: calc(100vw - 2rem); border: 1px solid var(--linha);
+           border-radius: 12px; background: var(--card); color: var(--fg); padding: 0;
+           overflow: hidden; }
+  dialog::backdrop { background: rgba(0,0,0,.55); backdrop-filter: blur(2px); }
+  /* O CABEÇALHO recebe um fundo próprio: sem ele o código, o título e as tags viravam
+     três blocos soltos no branco, e a hierarquia sumia. */
+  .d-topo { background: var(--bg); border-bottom: 1px solid var(--linha);
+            padding: 1.25rem 1.5rem 1rem; position: relative; }
+  .fechar { position: absolute; top: .9rem; right: .9rem; width: 1.75rem; height: 1.75rem;
+            padding: 0; line-height: 1; border-radius: 6px; font-size: .9rem; }
+  /* O código é a IDENTIDADE do artefato: em caixa própria, com a cor da marca, ele para
+     de competir com o `#8` do GitHub — que é só o número da issue. */
+  .d-codigo { display: inline-block; font-family: ui-monospace, SFMono-Regular, monospace;
+              font-size: .72rem; font-weight: 700; letter-spacing: .04em;
+              color: var(--marca); border: 1px solid var(--marca); border-radius: 4px;
+              padding: .1rem .4rem; margin-bottom: .6rem; }
+  dialog h2 { font-size: 1.1rem; line-height: 1.35; margin: 0 0 .9rem;
+              padding-right: 2rem; font-weight: 600; letter-spacing: -.01em; }
+  .d-meta { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+  /* Tags menores e sem borda: quatro pílulas grandes pesavam mais que o título. */
+  .tag { font-size: .7rem; padding: .12rem .5rem; border-radius: 4px;
+         background: var(--card); border: 1px solid var(--linha); color: var(--fraco); }
+  .tag.estado { color: var(--fazendo); border-color: var(--fazendo); font-weight: 500; }
+  .tag.dono { font-family: ui-monospace, monospace; }
+  .d-conteudo { padding: 1.25rem 1.5rem; }
+  .d-corpo { font-size: .85rem; line-height: 1.65; max-height: 40vh; overflow-y: auto;
+             white-space: pre-wrap; word-wrap: break-word; color: var(--fraco); }
+  .d-posse { font-size: .72rem; color: var(--fraco); margin-top: 1rem;
+             padding-top: .8rem; border-top: 1px solid var(--linha); }
+  .d-posse strong { display: block; margin-bottom: .3rem; color: var(--fg);
+                    font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; }
+  .d-posse div { font-family: ui-monospace, monospace; padding: .1rem 0; }
+  /* O RODAPÉ da modal, com fundo: o botão precisava de um chão. Solto no branco e sem
+     padding vertical, ele parecia texto selecionado. */
+  .d-acoes { display: flex; gap: .5rem; align-items: center; padding: .9rem 1.5rem;
+             background: var(--bg); border-top: 1px solid var(--linha); }
+  .ir { background: var(--fazendo); color: #fff; border: 1px solid var(--fazendo);
+        border-radius: 6px; padding: .45rem .9rem; font-size: .8rem; font-weight: 500;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .35rem; }
+  .ir:hover { filter: brightness(1.1); color: #fff; }
+  .d-numero { margin-left: auto; font-size: .75rem; color: var(--fraco);
+              font-family: ui-monospace, monospace; }
+  /* A FAIXA DE ESCALONADOS, acima do board e fora dele.
+     `needs-user` não é uma etapa do trabalho — é o trabalho PARADO esperando uma decisão
+     que nenhum agente pode tomar. Não tinha coluna no board, e a consequência era pior
+     que a ausência de destaque: o card simplesmente DESAPARECIA da página. Ficava aberto
+     no GitHub, bloqueando o que dependia dele, e o board mostrava um projeto fluindo.
+     Fora do board de propósito: as colunas são o fluxo, e um card escalonado saiu do
+     fluxo. Pôr uma nona coluna diria que é mais uma etapa, e a leitura da esteira
+     ("da direita para a esquerda") passaria a incluir algo que não se pega. */
+  /* A FAIXA é laranja: ela existe para o que espera VOCÊ. O bloco de já-respondidas
+     dentro dela vira amarelo — mesma faixa, atenção menor. */
+  .bloqueio { border: 1px solid var(--espera); border-left: 4px solid var(--espera);
+              border-radius: 8px; padding: .9rem 1.1rem; margin: 0 0 1.25rem; }
+  .bloqueio h2 { margin: 0 0 .2rem; font-size: .82rem; text-transform: uppercase;
+                 letter-spacing: .06em; color: var(--espera); }
+  .bloqueio .porque { margin: 0 0 .7rem; font-size: .8rem; color: var(--fraco);
+                      line-height: 1.55; }
+  .bloqueio ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+  .bloqueio li { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
+  .bloqueio a { color: var(--fg); text-decoration: none; font-size: .85rem;
+                font-weight: 500; }
+  .bloqueio a:hover { text-decoration: underline; color: var(--alerta); }
+  .bloqueio .num { margin-left: 0; }
+  /* Quem BLOQUEIA o quê: uma decisão parada que não trava nada é diferente de uma que
+     trava seis cards, e o número muda a urgência de responder. */
+  .trava { font-size: .7rem; color: var(--fraco); }
+  /* O GANTT. Duas metades separadas por uma linha vertical: à esquerda o que aconteceu
+     (com data), à direita o que falta (com ordem).
+     Grid e não SVG: as barras são retângulos posicionados, o texto precisa fluir e ser
+     selecionável, e um SVG exigiria calcular largura de fonte à mão. */
+  /* O CABEÇALHO DE GRUPO no modo árvore: plano e fase viram linha sem barra, e é o que
+     explica a indentação das issues abaixo. Sem ele o recuo ficaria órfão. */
+  .g-rot.grupo { font-weight: 600; color: var(--fg); }
+  .g-rot.item { color: var(--fraco); }
+  /* A FASE NÃO É TRABALHO: é uma seção do documento do plano, sem issue e sem unidade.
+     Nenhum agente a pega porque não há o que pegar — e desenhá-la como os cards sugere
+     que ela espera alguém.
+
+     O rótulo em itálico e apagado diz "estrutura, não trabalho" sem precisar de legenda:
+     é a mesma convenção tipográfica de um subtítulo num índice. */
+  .g-rot.fase { font-style: italic; font-weight: 500; color: var(--fraco); opacity: .85; }
+  .gantt { display: grid; grid-template-columns: minmax(9rem, auto) 1fr; gap: 0;
+           font-size: .8rem; position: relative; }
+  .g-rot { padding: .3rem .6rem .3rem 0; white-space: nowrap; overflow: hidden;
+           text-overflow: ellipsis; border-bottom: 1px solid var(--linha); }
+  /* o recuo vem INLINE, calculado pelo nível na hierarquia — uma regra fixa aqui
+     sobrescreveria a indentação do modo árvore */
+  .g-faixa { position: relative; border-bottom: 1px solid var(--linha);
+             border-left: 1px solid var(--linha); min-height: 1.9rem; }
+  .g-barra { position: absolute; top: .35rem; height: 1.15rem; border-radius: 3px;
+             display: flex; align-items: center; padding: 0 .4rem; font-size: .68rem;
+             overflow: hidden; white-space: nowrap; }
+  /* ENTREGUE: preenchido. É fato consumado, e a cor sólida é o que o diz sem legenda. */
+  .g-barra.feito { background: var(--pronto); color: #fff; }
+  /* EM CURSO: a cor do trabalho ativo. */
+  .g-barra.fazendo { background: var(--fazendo); color: #fff; }
+  /* FUTURO: contorno, não preenchimento — e o tracejado diz que a posição é ORDEM, não
+     data. Uma barra sólida à direita da linha prometeria um prazo que ninguém calculou. */
+  .g-barra.futuro { background: transparent; border: 1px dashed var(--todo);
+                    color: var(--fraco); }
+  /* A BARRA DO PAI é HÍBRIDA: ela abrange os filhos, e um pai cujo primeiro filho já
+     entregou tem início REAL enquanto ainda se estende ao futuro.
+
+     O gradiente corta em `--feito`, a posição da linha do agora dentro da própria barra:
+     sólido até ali (o que já aconteceu), listrado depois (o que falta). Pintar de uma cor
+     só obrigaria a escolher entre apagar o trabalho feito e prometer o que não foi. */
+  .g-barra.abrange {
+    background: linear-gradient(to right,
+      var(--fazendo) 0, var(--fazendo) var(--feito, 0%),
+      transparent var(--feito, 0%));
+    border: 1px solid var(--fazendo); color: #fff; font-weight: 600;
+  }
+  /* A BARRA DA FASE: hachura DIAGONAL, e a textura é o que a distingue à distância.
+     O plano tem barra sólida porque é trabalho; a fase só resume o intervalo dos filhos,
+     e a hachura diz "isto é a soma deles, não uma entrega própria".
+
+     Roxo acinzentado, fora da paleta de estado (cinza=fila, azul=curso, verde=pronto):
+     a fase não tem estado, e usar uma cor de estado a poria numa coluna onde ela não está. */
+  .g-barra.abrange.fase {
+    background: repeating-linear-gradient(45deg,
+      var(--fase) 0 3px, transparent 3px 7px);
+    border: 1px dashed var(--fase); color: var(--fraco); font-weight: 500;
+  }
+  /* sem a listra do futuro: a fase inteira já é textura, e sobrepor duas some com as duas */
+  .g-barra.abrange.fase::after { content: none; }
+  /* o trecho FUTURO ganha a listra que a folha futura já usa, para a leitura ser a mesma */
+  .g-barra.abrange::after {
+    content: ""; position: absolute; inset: 0 0 0 var(--feito, 0%);
+    background: repeating-linear-gradient(135deg,
+      var(--todo) 0 1px, transparent 1px 5px); opacity: .5;
+  }
+  /* A LINHA DO AGORA, e é ela que divide as duas metades do desenho. */
+  .g-hoje { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--marca);
+            z-index: 2; pointer-events: none; }
+  .g-hoje::after { content: "agora"; position: absolute; top: -1.1rem; left: -1.2rem;
+                   font-size: .62rem; color: var(--marca); font-weight: 600; }
+  .g-eixo { grid-column: 2; position: relative; height: 1.4rem; font-size: .65rem;
+            color: var(--fraco); border-bottom: 1px solid var(--linha); }
+  .g-marca { position: absolute; top: .2rem; transform: translateX(-50%); }
+  .g-vazio { grid-column: 1 / -1; padding: 2rem 0; color: var(--fraco); text-align: center; }
+  footer { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--linha);
+           color: var(--fraco); font-size: .8rem; max-width: 46rem; }
+  .pitch { margin: 0 0 .75rem; line-height: 1.6; }
+  .pitch strong { color: var(--fg); }
+  .pitch em { font-style: normal; color: var(--fg); }
+  .links { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .links a { color: var(--fazendo); text-decoration: none; }
+  .links a:hover { text-decoration: underline; }
+</style>
+<header>
+  <!-- A marca ANTES do título: o board é a vitrine do Anchors em todo projeto que o
+       adota, e quem abre este endereço muitas vezes nunca ouviu o nome.
+       O SVG é o do kit oficial (`anchors-mark-red.svg`), inline: uma URL externa
+       quebraria num Pages privado atrás de login. `currentColor` no traço deixa a marca
+       herdar o tema — no escuro o vermelho da identidade some sobre o fundo. -->
+  <a class="marca" href="https://anchors.co2lab.io" target="_blank" rel="noopener"
+     aria-label="Anchors">
+    <svg viewBox="0 0 100 104" width="28" height="29" aria-hidden="true">
+      <g fill="none" stroke="var(--marca)" stroke-width="12" stroke-linecap="round"
+         stroke-linejoin="round">
+        <path d="M 69.4 60 L 56.5 24 Q 50 6 43.5 24 L 22 84 Q 16 96 28 96 L 72 96 Q 84 96 78 84 L 72.6 69"/>
+        <path d="M 29 64 L 71 64"/>
+      </g>
+    </svg>
+    <span class="nome">ANCHORS</span>
+  </a>
+  <div class="titulo-bloco">
+    <h1>Board</h1>
+    <span class="quando" id="quando"></span>
+  </div>
+  <div class="botoes">
+    <button id="tema" type="button" title="tema"></button>
+    <button id="auto" type="button" aria-pressed="true"></button>
+    <button id="cd" type="button" aria-pressed="false"></button>
+    <a class="doc" href="https://anchors.co2lab.io/pt/" target="_blank" rel="noopener">Documentação ↗</a>
+  </div>
+</header>
+<p class="tagline">
+  A <strong>spec é a âncora</strong>, o código deriva dela, e os gates confrontam os dois.
+  Este board é a fotografia das <em>issues</em> deste repositório — sem banco, sem servidor,
+  sem GitHub Projects.
+</p>
+<nav class="abas" role="tablist">
+  <button role="tab" id="aba-board" aria-selected="true" aria-controls="v-board">Board</button>
+  <button role="tab" id="aba-arvore" aria-selected="false" aria-controls="v-arvore">Árvore</button>
+  <button role="tab" id="aba-roadmap" aria-selected="false" aria-controls="v-roadmap">Roadmap</button>
+</nav>
+
+<!-- O FILTRO fica FORA das abas, de propósito: ele vale para as duas, e duplicá-lo faria
+     o leitor escolher de novo ao trocar de aba — ou pior, ver resultados diferentes sem
+     entender por quê. -->
+<div class="filtro" id="filtro" hidden>
+  <span class="filtro-rotulo">Filtrar:</span>
+  <div class="chips" id="chips"></div>
+  <button type="button" id="limpar-filtro" hidden>limpar</button>
+</div>
+
+<!-- QUEM ESTÁ TRABALHANDO AGORA. Um chip por agente com card aberto tocado nos últimos 30
+     minutos; clicar mostra só os cards dele. Fica ao lado do filtro de label, fora das
+     abas, pelo mesmo motivo: vale para o board e para a árvore. -->
+<div class="filtro" id="agentes" hidden>
+  <span class="filtro-rotulo">Agentes ativos (30 min):</span>
+  <div class="chips" id="agentes-chips"></div>
+</div>
+
+<!-- A FAIXA DE ESCALONADOS fica FORA das abas e ACIMA do board: ela não é um recorte
+     do fluxo, é o que está travado esperando uma pessoa. Dentro de uma aba, quem abre a
+     Árvore deixaria de ver. -->
+<section class="bloqueio" id="bloqueio" hidden aria-labelledby="bloqueio-t"></section>
+
+<section id="v-board" role="tabpanel" aria-labelledby="aba-board">
+<p class="prioridade">
+  A prioridade é da <strong>direita para a esquerda</strong>: termine o que está mais
+  adiantado antes de pegar coisa nova.
+</p>
+<div class="colunas" id="colunas"></div>
+</section>
+
+<!-- A ÁRVORE em aba separada, e não indentada dentro do board.
+     São duas perguntas diferentes: o board responde "em que estado está o trabalho?" e
+     a árvore responde "o que depende do quê?". Misturá-las degrada as duas — a coluna
+     fica estreita para hierarquia, e a hierarquia não cabe em oito colunas. -->
+<section id="v-arvore" role="tabpanel" aria-labelledby="aba-arvore" hidden>
+  <p class="prioridade">
+    A ordem de trabalho declarada: um item só pode ser pego quando tudo de que ele
+    <strong>depende</strong> estiver concluído.
+  </p>
+  <div id="arvore"></div>
+</section>
+
+<!-- O ROADMAP. O que foi entregue tem data REAL; o que falta tem ORDEM, não data. -->
+<section id="v-roadmap" role="tabpanel" aria-labelledby="aba-roadmap" hidden>
+<!-- DUAS LEITURAS da mesma coisa, e elas respondem a perguntas diferentes:
+     a ÁRVORE mostra o que depende de quê (a estrutura do plano);
+     a LINHA mostra o que foi entregue ao longo do tempo (a história).
+     Quem planeja quer a primeira; quem presta contas, a segunda. -->
+<div class="modo" role="group" aria-label="como mostrar o roadmap">
+  <button class="chip" type="button" data-modo="arvore" aria-pressed="true">Árvore</button>
+  <button class="chip" type="button" data-modo="linha" aria-pressed="false">Linha do tempo</button>
+</div>
+<p class="prioridade" id="roadmap-legenda"></p>
+<div class="gantt" id="gantt"></div>
+</section>
+
+<!-- `<dialog>` nativo: o navegador já dá o fechamento por Esc, o foco preso dentro e o
+     fundo inerte. Reimplementar isso em JS é como se erra acessibilidade sem perceber. -->
+<footer>
+  <!-- O rodapé NÃO repete a marca: ela subiu para o header. Aqui fica só o que o leitor
+       procura depois de já saber o que é — o pitch de uma linha e para onde ir. -->
+  <p class="pitch">
+    <strong>Anchors</strong> — framework de continuidade para desenvolvimento assistido
+    por IA. Publicado por um pipeline a cada mudança nas issues.
+  </p>
+  <div class="links">
+    <a href="https://anchors.co2lab.io" target="_blank" rel="noopener">Site</a>
+    <a href="https://anchors.co2lab.io/pt/" target="_blank" rel="noopener">Documentação</a>
+    <a href="https://github.com/co2-lab/anchors" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</footer>
+
+<dialog id="detalhe"><div id="detalhe-corpo"></div></dialog>
+
+<script>
+// A ordem é a do FLUXO, e a leitura é da direita para a esquerda — o mais adiantado
+// primeiro. É a mesma regra que o pipeline de claim aplica ao escolher trabalho.
+// A quinta coluna (`READY TO TEST`) é o FIM DA ALÇADA DO ANCHORS: dali em diante quem
+// move são os pipelines de entrega do projeto. É onde a linha de corte cai — as colunas
+// de CD ficam ocultas por padrão, porque um board com quatro colunas sempre vazias ensina
+// a ignorar o board.
+//
+// `cd: true` marca quem some. Não é "não existe": o Anchors continua LENDO essas colunas,
+// e o botão as traz de volta.
+const COLUNAS = [
+  ["anchors:to-do",            "TO DO",            "trabalho disponível, sem dono",     "var(--todo)",    false],
+  ["anchors:in-progress",      "IN PROGRESS",      "um agente está implementando",      "var(--fazendo)", false],
+  ["anchors:ready-to-review",  "READY TO REVIEW",  "PR verde, esperando revisor",       "var(--todo)",    false],
+  ["anchors:in-review",        "IN REVIEW",        "um agente está revisando",          "var(--fazendo)", false],
+  ["anchors:ready-to-test",    "READY TO TEST",    "aceito — fim da alçada do Anchors", "var(--pronto)",  false],
+  ["anchors:in-test",          "IN TEST",          "em teste",                          "var(--pronto)",  true],
+  ["anchors:ready-to-release", "READY TO RELEASE", "teste passou",                      "var(--pronto)",  true],
+  ["anchors:production",       "PRODUCTION",       "no ar",                             "var(--pronto)",  true],
+];
+
+// As duas preferências ficam no navegador de quem lê: o board é publicado uma vez e lido
+// por várias pessoas, e a escolha de uma não pode virar a de todas.
+const pref = {
+  get auto()  { return localStorage.getItem("anchors:auto") !== "0"; },
+  set auto(v) { localStorage.setItem("anchors:auto", v ? "1" : "0"); },
+  get cd()    { return localStorage.getItem("anchors:cd") === "1"; },
+  set cd(v)   { localStorage.setItem("anchors:cd", v ? "1" : "0"); },
+  // TRÊS estados, e não dois: "seguir o sistema" é o padrão e precisa ser recuperável.
+  // Um toggle de dois estados obriga quem trocou por curiosidade a adivinhar qual dos
+  // dois era o do sistema — e a escolha passa a valer para sempre.
+  get tema()  { return localStorage.getItem("anchors:tema") || "auto"; },
+  set tema(v) { v === "auto" ? localStorage.removeItem("anchors:tema")
+                             : localStorage.setItem("anchors:tema", v); },
+};
+
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+let ULTIMO = { items: [] };
+let NIVEIS = {};
+
+// --- a ÁRVORE, derivada do `needs` ---
+//
+// A hierarquia não é declarada no GitHub: ela SAI da ordem de trabalho. `needs` diz "isto
+// vem depois daquilo", e a profundidade de um item é quantos passos ele está da raiz.
+//
+// Foi a escolha entre isto e as sub-issues nativas do GitHub. Sub-issue é uma relação
+// pai/filho ÚNICA — e um item pode depender de VÁRIAS coisas (a spec de teste precisa da
+// árvore E da régua de tipos). Uma hierarquia rígida obrigaria a escolher um pai e perder
+// os outros; o grafo representa os dois.
+//
+// O nível é o CAMINHO MAIS LONGO até a raiz, e não o mais curto: um item que depende de
+// F01 e F03 pertence visualmente depois de F03 — usar o mais curto o desenharia como se
+// estivesse pronto antes de estar.
+function calculaNiveis(d) {
+  const porCodigo = {};
+  for (const i of d.items || []) if (i.code) porCodigo[i.code] = i;
+  // As fases são nós do grafo mesmo sem card próprio: elas agrupam, e sem elas os itens
+  // que dependem de uma fase ficariam todos no mesmo nível.
+  const fases = {};
+  for (const f of d.phases || []) fases[f.code] = f;
+
+  const nivel = {};
+  const visitando = new Set();
+  function profundidade(cod) {
+    if (nivel[cod] !== undefined) return nivel[cod];
+    // CICLO: `needs` circular não deve travar a página. O gate `fase-ordenada` já o
+    // reprova no repositório; aqui a defesa é só para não pendurar o navegador.
+    if (visitando.has(cod)) return 0;
+    visitando.add(cod);
+    // O `needs` pode vir do ITEM (um card) ou da FASE — e a fase também depende de fase,
+    // que é o que forma a cadeia F03 → F02 → F01. Sem olhar os dois, tudo cai no nível 1.
+    const dono = porCodigo[cod] || fases[cod];
+    const pais = (dono?.needs || []).filter((n) => porCodigo[n] || fases[n]);
+    const n = pais.length === 0 ? 0 : 1 + Math.max(...pais.map(profundidade));
+    visitando.delete(cod);
+    nivel[cod] = n;
+    return n;
+  }
+  // As FASES primeiro: elas formam a espinha da cadeia, e um item só sabe seu nível
+  // depois que a fase de que depende souber o dela.
+  for (const cod of Object.keys(fases)) profundidade(cod);
+  for (const cod of Object.keys(porCodigo)) profundidade(cod);
+  return { nivel, phases: fases, porCodigo };
+}
+
+// O ÚLTIMO DADO CARREGADO. O seletor de modo do roadmap redesenha sem buscar de novo: os
+// dois modos leem o MESMO JSON, e uma requisição por clique de botão seria desperdício —
+// além de piscar a tela por um dado que não mudou.
+let ultimoDado = null;
+
+function desenha(d) {
+  ultimoDado = d;
+    ULTIMO = d;
+    document.getElementById("quando").textContent =
+      d.repo + " · foto de " + new Date(d.takenAt).toLocaleString();
+    const visiveis = COLUNAS.filter(([, , , , cd]) => pref.cd || !cd);
+    NIVEIS = calculaNiveis(d);
+    rotulasFiltro(d);
+    rotulasAgentes(d);
+    document.getElementById("colunas").innerHTML = visiveis.map(([id, nome, oquee, cor]) => {
+      // `!i.closed`: o JSON passou a trazer os cards ENTREGUES também — o roadmap precisa
+      // deles para as datas reais. As colunas continuam sendo o trabalho EM CURSO, e um
+      // card fechado mantém a última label de state: sem este filtro ele reapareceria na
+      // coluna onde parou, como se ainda estivesse lá.
+      const cards = (d.items || []).filter((i) => !i.closed && i.state === id && passaNoFiltro(i));
+      // A IDADE DO MAIS VELHO da coluna. Uma fila não denuncia acúmulo pelo TAMANHO —
+      // dez cards em `to-do` é saudável, dez em `ready-to-test` há duas semanas não é.
+      //
+      // MEDIDO no projeto de referência: quatro cards presos em `ready-to-test` desde 29 de
+      // agosto, 17 dias. Ninguém os via: é o fim da alçada do Anchors (o que vem depois é
+      // dos pipelines de entrega do projeto), e o `stale` não os recicla de propósito —
+      // reciclar jogaria trabalho PRONTO de volta para `to-do`.
+      //
+      // Não reciclar é a decisão certa. O que faltava era DIZER que a coluna parou de
+      // drenar: o número sozinho não distingue fila que anda de fila que engasgou.
+      const velho = cards.reduce((m, c) =>
+        !c.updated ? m : (!m || c.updated < m ? c.updated : m), "");
+      const diasParado = velho
+        ? Math.floor((Date.now() - new Date(velho).getTime()) / 864e5) : 0;
+      return `<section class="coluna">
+        <div class="titulo"><span class="bola" style="background:${cor}"></span>
+          ${esc(nome)}<span class="qtd">${cards.length}</span>${
+            diasParado >= 3
+              ? `<span class="parada" title="o card mais antigo desta coluna não se move há ${
+                   diasParado} dia(s)">◷ ${diasParado}d</span>`
+              : ""}</div>
+        <div class="oquee">${esc(oquee)}</div>
+        ${cards.length === 0 ? '<div class="vazia">vazia</div>' : cards.map((c) => `
+          <button class="card${c.escalated ? " escalado" : ""}${
+              c.escalated && c.waiting === false ? " respondido" : ""}${
+              c.blockedBy ? " bloqueado" : ""}" type="button" data-number="${c.number}">
+            <div class="card-topo">
+              ${c.code ? `<span class="codigo">${esc(c.code)}</span>` : ""}
+              ${c.number ? `<span class="num">#${esc(c.number)}</span>` : ""}
+            </div>
+            <h3>${esc(c.title.replace(/^\[[^\]]+\]\s*/, ""))}</h3>
+            ${c.escalated
+              ? (c.waiting === false
+                  ? `<span class="selo respondido">✓ você já respondeu</span>`
+                  : `<span class="selo">⚠ esperando você</span>`)
+              : ""}
+            ${/* QUEM SEGURA, com o número. O `needs-user` sozinho diz que o card parou;
+                  não diz por qual decisão. Sem o número, destravar exige reler card por
+                  card para descobrir quem esperava o quê — medido: 23 decisões abertas
+                  eram sete perguntas, e o vínculo existia só na cabeça de quem escalou.
+
+                  O selo é clicável: o card que segura é onde a resposta vai. */""}
+            ${c.blockedBy
+              ? `<span class="selo bloqueado" data-vai-para="${esc(c.blockedBy)}"
+                   title="o trabalho deste card está parado até a decisão do #${esc(c.blockedBy)} sair">🔒 bloqueado por #${esc(c.blockedBy)}</span>`
+              : ""}
+            ${(c.needs || []).length ? `<div class="dep" title="depende de">↳ ${
+              c.needs.map((n) => esc(NIVEIS.phases?.[n]?.title || n)).join(" · ")}</div>` : ""}
+            ${c.owner ? `<span class="dono">◆ ${esc(c.owner)}</span>` : ""}
+          </button>`).join("")}
+      </section>`;
+    }).join("");
+    desenhaBloqueio(d);
+    desenhaArvore(d);
+    desenhaRoadmap(d);
+}
+
+// A FAIXA DE ESCALONADOS. `anchors:needs-user` é o único estado que NÃO é uma etapa do
+// trabalho: é trabalho parado esperando uma decisão que nenhum agente pode tomar.
+//
+// Ele não tem coluna no board, e a consequência era pior que falta de destaque — o card
+// desaparecia da página inteira. Ficava aberto no GitHub, bloqueando o que dependia dele,
+// e o board mostrava um projeto fluindo.
+//
+// A faixa NÃO passa pelo filtro (`passaNoFiltro`) de propósito: filtrar é escolher onde
+// olhar dentro do fluxo, e uma decisão pendente não deixa de bloquear porque o leitor
+// está olhando outra fase.
+function desenhaBloqueio(d) {
+  const el = document.getElementById("bloqueio");
+  if (!el) return;
+  // O CAMPO `escalado`, e não o `estado` — e a diferença é o que fazia o card sumir.
+  //
+  // `needs-user` ACUMULA com o estado do trabalho: um card em revisão que precisa de uma
+  // decisão fica com as DUAS labels. O `estado` do JSON é a primeira label `anchors:`, e
+  // aí o card virava `in-review` e desaparecia desta faixa — ficava visível só na coluna,
+  // indistinguível de um card que está sendo revisado normalmente.
+  //
+  // Medido: o card #311 do projeto de referência esperava uma decisão do usuário e não
+  // aparecia aqui. Ele estava no board, na coluna IN REVIEW, sem nada indicando que
+  // ninguém ia tocá-lo até alguém responder.
+  // O CARD FECHADO NÃO ESPERA NINGUÉM, e é metade do defeito de contagem.
+  //
+  // O board lê `--state all` porque o roadmap precisa do que já foi entregue. Esta faixa
+  // não: um card fechado que um dia teve `needs-user` carrega a label para sempre — ela
+  // não é removida no fechamento.
+  //
+  // MEDIDO no projeto de referência: o contador dizia 14 pendências e a lista mostrava 3.
+  // Os outros 11 eram cards FECHADOS, contados por uma label que registrava o passado.
+  const abertos = (d.items || []).filter((i) => !i.closed);
+  const presos = abertos.filter((i) => i.escalated || i.state === "anchors:needs-user");
+  // UM BUG NÃO É DECISÃO. `anchors:bug` diz que o pipeline ou a ferramenta está errado e
+  // que ninguém da fila pode consertar — não há o que escolher. Contá-lo em "Esperando
+  // você" foi o que aconteceu antes da label existir: seis "decisões" em duas horas, todas
+  // bugs, e quem abria a faixa procurava uma escolha que não havia.
+  const bugs = abertos.filter((i) => i.bug);
+
+  // POR QUEM cada card espera. Um `needs-user` cuja decisão já saiu e virou trabalho tem um
+  // card irmão com `anchors:desbloqueia-<n>` — e enquanto ele não fechar, remover a label
+  // não adianta: o claim continua pulando.
+  //
+  // Sem esta linha, os dois casos se parecem na tela: o card que espera VOCÊ decidir e o
+  // que espera um trabalho já decidido. O primeiro pede sua atenção agora; o segundo, não.
+  const esperaPor = {};
+  for (const i of d.items || []) {
+    if (i.unblocks) esperaPor[i.unblocks] = i.number;
+  }
+  if (presos.length === 0 && bugs.length === 0) {
+    el.hidden = true;
+    el.innerHTML = "";
+    return;
+  }
+  // Quantos cards cada decisão trava. Uma pergunta parada que não bloqueia nada é
+  // diferente de uma que bloqueia seis, e o número é o que ordena a resposta.
+  const trava = (c) => (d.items || []).filter((i) =>
+    i.state !== "anchors:needs-user" && (i.needs || []).includes(c.code)).length;
+
+  // PENDENTE agora × RESPONDIDO um dia — e misturar os dois é o que torna a faixa inútil.
+  //
+  // `needs-user` registra que o card ESPEROU uma pessoa. Não diz se ainda espera: a label
+  // fica depois que a decisão sai, até o `anchors decided` ou o pipeline de desbloqueio a
+  // removerem — e o pipeline só conhece `desbloqueia-<n>`, não o `under-<n>` que o
+  // `escalate` usa.
+  //
+  // MEDIDO: o #311 aparecia como pendência em `ready-to-test`. O trabalho tinha entrado
+  // pelo PR #402 e os dois achados que o travavam (#441, #442) estavam FECHADOS. Quem olha
+  // uma lista onde parte já foi resolvida perde a que importa no meio.
+  //
+  // O campo `esperando` vem do pipeline, que conta os cards ABERTOS sob este. Quando ele
+  // não existe (board gerado por versão anterior), o comportamento é o de antes: tudo
+  // pendente, que é o lado seguro de errar.
+  // A FAIXA LISTA SÓ O QUE ESPERA. O já-respondido sai daqui — ele não pede nada, e uma
+  // lista que mistura os dois faz o leitor conferir item por item para achar o que importa.
+  //
+  // Ele NÃO desaparece do board: o card continua na sua coluna, em AMARELO, com o selo
+  // "✓ você já respondeu". Quem escalou vê que a resposta veio, no lugar onde o trabalho
+  // está — e não numa faixa de alerta, que é para o que pede ação.
+  const pendentes = presos.filter((c) => c.waiting !== false);
+
+  const linha = (c, n) => `<li>
+        <span class="num">#${esc(c.number)}</span>
+        <a href="${esc(c.url)}" target="_blank" rel="noopener">${
+          esc(c.title.replace(/^\[[^\]]+\]\s*/, ""))}</a>
+        ${c.state && c.state !== "anchors:to-do" && c.state !== "anchors:needs-user"
+          ? `<span class="trava">parado em ${esc(c.state.replace("anchors:", ""))}</span>` : ""}
+        ${esperaPor[c.number]
+          ? `<span class="trava">decidido — espera a entrega do #${esc(esperaPor[c.number])}</span>`
+          : n > 0 ? `<span class="trava">trava ${n} card${n > 1 ? "s" : ""}</span>` : ""}
+      </li>`;
+
+  const ordena = (lista) => lista
+    .map((c) => ({ c, n: trava(c) }))
+    .sort((a, b) => b.n - a.n || Number(a.c.number) - Number(b.c.number))
+    .map(({ c, n }) => linha(c, n)).join("");
+
+  if (pendentes.length === 0 && bugs.length === 0) {
+    el.hidden = true;
+    el.innerHTML = "";
+    return;
+  }
+
+  // DUAS FILAS, e os pesos são diferentes.
+  //
+  // `needs-user` pede DECISÃO: existe mais de uma resposta defensável, e escolher entre
+  // elas muda o que o produto faz. `needs-framing` pede ENQUADRAMENTO: quem escalou não
+  // soube dizer se muda a direção, e a saída é barata — se não muda, trocar a label por
+  // `to-do` devolve o card à fila sem ninguém decidir o mérito.
+  //
+  // Misturá-las faz a barata custar como a cara: quem abre a lista gasta o esforço de
+  // decidir antes de descobrir que só precisava devolver o card.
+  const decidir = pendentes.filter((p) => !p.framing);
+  const enquadrar = pendentes.filter((p) => p.framing);
+
+  el.innerHTML = `${pendentes.length ? `
+    <h2 id="bloqueio-t">Esperando você · ${pendentes.length}</h2>
+    ${decidir.length ? `
+      <h3 class="fila-t">🛑 Decidir · ${decidir.length}</h3>
+      <p class="porque">Est${decidir.length === 1 ? "a issue pede uma decisão" : "as issues pedem uma decisão"}
+        que nenhum agente pode tomar por você. Enquanto não houver resposta na issue, o que
+        depende ${decidir.length === 1 ? "dela" : "delas"} não anda — e o board abaixo segue
+        mostrando o resto do trabalho como se nada estivesse travado.</p>
+      <ul>${ordena(decidir)}</ul>` : ""}
+    ${enquadrar.length ? `
+      <h3 class="fila-t enquadrar">❓ Só dizer se é seu · ${enquadrar.length}</h3>
+      <p class="porque">Aqui a dúvida é o <strong>enquadramento</strong>, não o mérito: quem
+        escalou não soube dizer se a mudança muda a DIREÇÃO do projeto, e preferiu declarar
+        a dúvida a afirmar um impacto que não mediu. Se não muda, troque
+        <code>anchors:needs-framing</code> por <code>anchors:to-do</code> e o card volta à
+        fila — não gaste o esforço de decidir.</p>
+      <ul>${ordena(enquadrar)}</ul>` : ""}` : ""}
+    ${bugs.length ? `
+      <h2 class="bugs-t">🐞 Bugs · ${bugs.length}</h2>
+      <p class="porque">Defeitos no pipeline ou na ferramenta, e <strong>não</strong>
+        decisões: o estado atual está errado e não há o que escolher. Nenhum agente da fila
+        os pega, porque o conserto mora onde eles não editam (os workflows semeados, o próprio
+        Anchors). Consertado, feche a issue — os cards com <code>anchors:blocked-by-&lt;n&gt;</code>
+        voltam à fila.</p>
+      <ul>${ordena(bugs)}</ul>` : ""}`;
+  el.hidden = false;
+}
+
+function carrega() {
+  // A contagem REINICIA a cada busca — inclusive nas que não vêm do temporizador (o
+  // botão, o retorno à aba). Sem isto os dois relógios divergem, e o botão anunciaria
+  // uma busca que já aconteceu.
+  faltam = 5;
+  return fetch("board.json?" + Date.now())
+    .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+    .then(desenha)
+    .catch((e) => {
+    // O ERRO é dito, e não engolido: um board em branco é indistinguível de um board
+    // vazio, e o leitor concluiria que não há trabalho.
+      document.getElementById("colunas").innerHTML =
+        `<div class="erro"><strong>Não deu para ler o board.</strong><br>
+         O <code>board.json</code> não foi encontrado (${esc(e)}). Ele é publicado pelo
+         pipeline <code>anchors · publicar o board</code> — verifique se ele rodou.</div>`;
+    });
+}
+
+// --- o refresh, e o que ele NÃO faz ---
+//
+// Recarregar a PÁGINA a cada 5s descartaria a rolagem e o foco de quem está lendo. Só o
+// JSON é buscado, e só o conteúdo das colunas é reescrito.
+//
+// E ele PARA quando a aba não está visível: um board aberto num monitor esquecido faria
+// 17 mil requisições por dia sem ninguém olhando. Ao voltar, busca na hora — quem
+// retoma a aba quer o estado de agora, não o de cinco segundos adiante.
+let timer = null, tique = null, faltam = 5;
+function agenda() {
+  clearInterval(timer);
+  clearInterval(tique);
+  faltam = 5;
+  if (!pref.auto) { rotula(); return; }
+  timer = setInterval(() => { if (!document.hidden) carrega(); }, 5000);
+  // A CONTAGEM é o sinal de vida do board. Ela conta em segundo separado do `timer`
+  // para não empurrar a busca: quem atrasa é o navegador com a aba em segundo plano, e
+  // somar erro de temporizador faria a contagem divergir do que de fato acontece.
+  tique = setInterval(() => {
+    if (document.hidden) return;
+    faltam = faltam > 1 ? faltam - 1 : 5;
+    rotula();
+  }, 1000);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && pref.auto) carrega(); });
+
+const TEMAS = { auto: ["◐", "tema: sistema"], claro: ["☀", "tema: claro"], escuro: ["☾", "tema: escuro"] };
+const btnTema = document.getElementById("tema");
+function aplicaTema() {
+  const t = pref.tema;
+  // `auto` REMOVE o atributo em vez de escrever "auto": é a ausência dele que devolve a
+  // decisão ao `prefers-color-scheme`.
+  if (t === "auto") document.documentElement.removeAttribute("data-tema");
+  else document.documentElement.setAttribute("data-tema", t);
+  const [icone, rotulo] = TEMAS[t] || TEMAS.auto;
+  btnTema.textContent = icone;
+  btnTema.title = rotulo;
+  btnTema.setAttribute("aria-label", rotulo);
+}
+btnTema.onclick = () => {
+  pref.tema = { auto: "claro", claro: "escuro", escuro: "auto" }[pref.tema] || "claro";
+  aplicaTema();
+};
+
+const btnAuto = document.getElementById("auto");
+const btnCd = document.getElementById("cd");
+function rotula() {
+  btnAuto.textContent = pref.auto ? `⟳ atualizando em ${faltam}s` : "⏸ atualização pausada";
+  btnAuto.setAttribute("aria-pressed", String(pref.auto));
+  btnCd.textContent = pref.cd ? "ocultar colunas de entrega" : "mostrar colunas de entrega";
+  btnCd.setAttribute("aria-pressed", String(pref.cd));
+}
+btnAuto.onclick = () => { pref.auto = !pref.auto; agenda(); if (pref.auto) carrega(); };
+btnCd.onclick = () => { pref.cd = !pref.cd; rotula(); carrega(); };
+
+// --- o FILTRO por label ---
+//
+// As labels de ESTADO (`anchors:*`) ficam de fora: o estado já é a coluna do board e o
+// selo da árvore, e oferecê-lo aqui daria duas maneiras de fazer a mesma coisa — com o
+// agravante de poder contradizê-las (filtrar `to-do` esvaziaria as outras sete colunas).
+//
+// O que sobra é o que o TIME acrescentou: `bug`, `urgente`, a label de uma squad. É por
+// isso que se filtra um board.
+const filtroAtivo = new Set();
+// O filtro por ESTADO vale só na ÁRVORE. No board o estado É a coluna: filtrar `to-do`
+// esvaziaria as outras sete, e o resultado seria uma coluna só — que é a lista que a
+// árvore já dá melhor. Na árvore o estado é um selo, e filtrar por ele responde "o que
+// está em andamento nesta hierarquia?" sem destruir a estrutura.
+const estadoAtivo = new Set();
+
+function rotulasFiltro(d) {
+  const cont = document.getElementById("filtro");
+  const chips = document.getElementById("chips");
+  const todas = new Set();
+  for (const i of d.items || []) {
+    for (const l of i.labels || []) if (!l.startsWith("anchors:")) todas.add(l);
+  }
+  if (todas.size === 0) { cont.hidden = true; return; }
+  cont.hidden = false;
+  // Recria só quando o CONJUNTO muda: reescrever a cada 5s perderia o foco de quem está
+  // navegando pelos chips com o teclado.
+  const assinatura = [...todas].sort().join("|");
+  if (chips.dataset.assinatura !== assinatura) {
+    chips.dataset.assinatura = assinatura;
+    chips.innerHTML = [...todas].sort().map((l) =>
+      `<button class="chip" type="button" data-label="${esc(l)}"
+               aria-pressed="${filtroAtivo.has(l)}">${esc(l)}</button>`).join("");
+  }
+  for (const b of chips.querySelectorAll(".chip")) {
+    b.setAttribute("aria-pressed", String(filtroAtivo.has(b.dataset.label)));
+  }
+  document.getElementById("limpar-filtro").hidden = filtroAtivo.size === 0;
+}
+
+// O TRIÂNGULO tem `tabindex`, então precisa responder ao teclado — um controle
+// alcançável por Tab que não reage a Enter é pior que um não alcançável: ele promete
+// interação e não cumpre.
+document.getElementById("arvore").addEventListener("keydown", (ev) => {
+  const tri = ev.target.closest(".tri");
+  if (!tri || (ev.key !== "Enter" && ev.key !== " ")) return;
+  ev.preventDefault();
+  const d = tri.closest("details");
+  if (d) d.open = !d.open;
+});
+
+document.getElementById("chips").addEventListener("click", (ev) => {
+  const b = ev.target.closest(".chip");
+  if (!b) return;
+  const l = b.dataset.label;
+  filtroAtivo.has(l) ? filtroAtivo.delete(l) : filtroAtivo.add(l);
+  desenha(ULTIMO);
+});
+document.getElementById("limpar-filtro").onclick = () => { filtroAtivo.clear(); desenha(ULTIMO); };
+
+// OU, e não E: marcar `bug` e `urgente` mostra os dois, que é o que quem clica espera.
+// Exigir as duas na mesma issue esvaziaria a tela na segunda seleção.
+// OU entre estados, como no filtro de label: marcar `to-do` e `in-progress` mostra os
+// dois. E vazio significa TODOS — não "nenhum".
+function passaNoEstado(i) {
+  return estadoAtivo.size === 0 || estadoAtivo.has(i.state);
+}
+
+// O AGENTE é E com a label, e não OU: "os cards do fulano" marcado junto com `bug` quer
+// dizer "os bugs do fulano". Somar os dois devolveria o board quase inteiro.
+function passaNoFiltro(i) {
+  if (agenteAtivo && i.owner !== agenteAtivo) return false;
+  if (filtroAtivo.size === 0) return true;
+  return (i.labels || []).some((l) => filtroAtivo.has(l));
+}
+
+// --- o filtro por AGENTE ---
+//
+// "Quem está trabalhando agora?" é a pergunta de quem abre o board com nove agentes no
+// projeto, e as colunas não a respondem: o `◆ dono` está em cada card, espalhado por oito
+// colunas, e um dono que largou o card há dois dias parece igual a um que comentou agora.
+//
+// ATIVO = dono ATUAL de ao menos um card ABERTO que foi tocado nos últimos 30 minutos.
+//
+//   · DONO ATUAL: o `owner` do JSON, que é o último `anchors-owner:` do card. O liberado
+//     (`(liberado)`) chega VAZIO — o pipeline já o apaga — e vazio não é agente. Um card
+//     liberado há cinco minutos foi tocado agora, e contá-lo poria na lista quem acabou de
+//     ir embora.
+//
+//   · TOCADO: o `updated` do card. Ele cobre o comentário de posse sem precisar de outro
+//     campo: comentar numa issue avança o `updatedAt` dela. MEDIDO neste repositório, em
+//     sete cards: o `updatedAt` é o `createdAt` do último comentário, ou um segundo depois.
+//
+//   · 30 MINUTOS contados da FOTO, e não do relógio de quem lê. O board publicado pode ter
+//     horas; medir pelo agora esvaziaria a lista de uma foto velha, e ela passaria a dizer
+//     "ninguém trabalha" quando o que diz é "ninguém trabalhava há 30 min da foto". O
+//     `board serve` é vivo (`live: true`) — lá a foto é agora.
+const JANELA_ATIVO_MS = 30 * 60 * 1000;
+
+// O agente escolhido, ou "" para todos. Vive no HASH da URL (`#agente=nome`): sobrevive ao
+// recarregar e vai junto quando alguém cola o link — "olha o que o fulano pegou" é um link.
+let agenteAtivo = "";
+
+function referenciaDaAtividade(d) {
+  const foto = Date.parse((d && (d.takenAt || d.generated)) || "");
+  // Sem carimbo legível, o agora é o único relógio que sobra — e errar para o agora é
+  // mostrar menos agentes, não inventar um.
+  if ((d && d.live) || Number.isNaN(foto)) return Date.now();
+  return foto;
+}
+
+// PURA: recebe o dado e o instante de referência, devolve [{nome, cards}] em ordem de
+// nome. `cards` conta TODOS os cards abertos do agente, não só os tocados na janela — é o
+// que aparece na tela quando se clica no chip.
+function agentesAtivos(d, ref) {
+  const corte = ref - JANELA_ATIVO_MS;
+  const por = {};
+  for (const i of d.items || []) {
+    if (i.closed || !i.owner) continue;
+    const a = (por[i.owner] ||= { nome: i.owner, cards: 0, ativo: false });
+    a.cards++;
+    const t = Date.parse(i.updated || "");
+    if (!Number.isNaN(t) && t >= corte) a.ativo = true;
+  }
+  return Object.values(por).filter((a) => a.ativo)
+    .map(({ nome, cards }) => ({ nome, cards }))
+    .sort((a, b) => a.nome.localeCompare(b.nome));
+}
+
+function leAgenteDoHash() {
+  try {
+    const m = /(?:^#|&)agente=([^&]*)/.exec(window.location.hash || "");
+    return m ? decodeURIComponent(m[1]) : "";
+  } catch (e) { return ""; }
+}
+
+function gravaAgenteNoHash(nome) {
+  try {
+    // `replaceState`, e não `location.hash =`: cada clique num chip viraria uma entrada do
+    // histórico, e o "voltar" do navegador passaria a desfazer filtro em vez de sair.
+    history.replaceState(null, "", nome
+      ? "#agente=" + encodeURIComponent(nome)
+      : window.location.pathname + window.location.search);
+  } catch (e) { /* sem history (arquivo local, sandbox): o filtro vale só até recarregar */ }
+}
+
+function rotulasAgentes(d) {
+  const cont = document.getElementById("agentes");
+  const chips = document.getElementById("agentes-chips");
+  const ativos = agentesAtivos(d, referenciaDaAtividade(d));
+  // O ESCOLHIDO FICA NA LISTA mesmo depois de sair da janela. Sem isto o filtro continuaria
+  // valendo sem chip nenhum para desmarcá-lo — o board mostraria meia dúzia de cards e
+  // nada na tela diria por quê.
+  if (agenteAtivo && !ativos.some((a) => a.nome === agenteAtivo)) {
+    const cards = (d.items || []).filter((i) => !i.closed && i.owner === agenteAtivo).length;
+    ativos.push({ nome: agenteAtivo, cards });
+    ativos.sort((a, b) => a.nome.localeCompare(b.nome));
+  }
+  cont.hidden = false;
+  // Recria só quando o CONJUNTO muda — o mesmo cuidado do filtro de label com o foco de
+  // quem navega pelos chips com o teclado.
+  const assinatura = ativos.map((a) => a.nome + ":" + a.cards).join("|");
+  if (chips.dataset.assinatura !== assinatura) {
+    chips.dataset.assinatura = assinatura;
+    chips.innerHTML = ativos.length === 0
+      ? '<span class="sem-agente">nenhum agente ativo nos últimos 30 min</span>'
+      : `<button class="chip" type="button" data-agente="">todos</button>` +
+        ativos.map((a) => `<button class="chip agente" type="button" data-agente="${esc(a.nome)}"
+             title="${a.cards} card(s) aberto(s) de ${esc(a.nome)}">◆ ${esc(a.nome)}<span
+             class="qtd-ag">${a.cards}</span></button>`).join("");
+  }
+  for (const b of chips.querySelectorAll(".chip")) {
+    b.setAttribute("aria-pressed", String(b.dataset.agente === agenteAtivo));
+  }
+}
+
+document.getElementById("agentes-chips").addEventListener("click", (ev) => {
+  const b = ev.target.closest(".chip");
+  if (!b) return;
+  // CLICAR DE NOVO no escolhido desmarca: é o mesmo gesto do filtro de label, e o chip
+  // "todos" é o caminho explícito para o mesmo lugar.
+  const nome = b.dataset.agente || "";
+  agenteAtivo = nome === agenteAtivo ? "" : nome;
+  gravaAgenteNoHash(agenteAtivo);
+  desenha(ULTIMO);
+});
+// O hash também muda por fora — um link colado na mesma aba, o "voltar".
+window.addEventListener("hashchange", () => {
+  agenteAtivo = leAgenteDoHash();
+  desenha(ULTIMO);
+});
+agenteAtivo = leAgenteDoHash();
+
+// --- a ÁRVORE ---
+//
+// A raiz são os itens SEM dependência; abaixo de cada nó vêm os que dependem dele. A
+// relação é a mesma do board (o `needs`), desenhada pelo lado oposto: lá o nível era
+// indentação numa coluna, aqui é a estrutura.
+//
+// Um item com VÁRIAS dependências aparece sob CADA UMA. É deliberado: ele está bloqueado
+// pelas duas, e escondê-lo sob uma só faria a outra parecer irrelevante. A duplicação
+// mostra a verdade — a mesma coisa depende de dois lugares.
+function desenhaArvore(d) {
+  const alvo = document.getElementById("arvore");
+  // As FASES sobrevivem ao filtro: elas são a estrutura, e removê-las deixaria os itens
+  // filtrados órfãos na raiz — a árvore viraria uma lista, que é justamente o que a outra
+  // aba já faz.
+  const itens = (d.items || []).filter((i) => i.code && passaNoFiltro(i) && passaNoEstado(i));
+  const fases = d.phases || [];
+  if (!itens.length && !fases.length) {
+    alvo.innerHTML = '<p class="vazia">Nada a mostrar.</p>';
+    return;
+  }
+
+  // Todos os nós: cards e fases juntos. A fase não tem card, e sem ela a árvore ficaria
+  // com buracos onde deveria haver o agrupamento.
+  const nos = {};
+  for (const f of fases) nos[f.code] = { ...f, tipo: "fase" };
+  for (const i of itens) nos[i.code] = { ...i, tipo: "card" };
+
+  // O conjunto COMPLETO (antes do filtro) existe só para o progresso das phases: ele mede
+  // a fase, não o recorte que o leitor escolheu ver.
+  const nosCompletos = { ...nos };
+  const todosOsFilhos = {};
+  for (const i of d.items || []) if (i.code) nosCompletos[i.code] = { ...i, tipo: "card" };
+  for (const cod of Object.keys(nosCompletos)) {
+    const n = nosCompletos[cod];
+    let pai = n.parent || "";
+    if (!pai && n.tipo === "fase") pai = cod.split("-")[0];
+    if (pai) (todosOsFilhos[pai] ||= []).push(cod);
+  }
+
+  // A ÁRVORE LÊ `parent`, e não infere pertencimento a partir de `needs`.
+  //
+  // São relações diferentes: `needs` é ORDEM ("vem depois de"), `parent` é PERTENCIMENTO
+  // ("está dentro de"). A fase 2 vem depois da fase 1 e NÃO está dentro dela — as duas
+  // pertencem ao mesmo plano. Inferir uma da outra desenhava as quatro fases de um plano
+  // encaixadas como escada.
+  //
+  // A fase sem `parent` declarado cai no plano homônimo: `FNDTN-W01` pertence a `FNDTN`,
+  // e o código já diz isso. É a única inferência que sobra, e ela é segura porque o
+  // código da fase é DERIVADO do plano.
+  const filhos = {};
+  const raizes = [];
+  for (const cod of Object.keys(nos)) {
+    const n = nos[cod];
+    let pai = n.parent || "";
+    if (!pai && n.tipo === "fase") {
+      const plano = cod.split("-")[0];
+      if (nos[plano]) pai = plano;
+    }
+    if (!pai || !nos[pai]) { raizes.push(cod); continue; }
+    (filhos[pai] ||= []).push(cod);
+  }
+
+  // Uma fase está concluída quando os CARDS dela estão. A fase seguinte não conta: ela é
+  // o que vem depois, não parte desta — e incluí-la faria a fase 1 só fechar quando o
+  // plano inteiro terminasse.
+  const concluido = (n) => n.tipo === "fase"
+    ? (filhos[n.code] || []).filter((f) => nos[f].tipo === "card")
+        .every((f) => concluido(nos[f]))
+    : ["anchors:ready-to-test", "anchors:in-test", "anchors:ready-to-release",
+       "anchors:production"].includes(n.state);
+
+  // LIVRE = todas as dependências concluídas. É a resposta que a árvore existe para dar.
+  const livre = (n) => (n.needs || []).filter((x) => nos[x]).every((x) => concluido(nos[x]));
+
+  // Uma fase só aparece se ela ou algum descendente tiver card visível. Sem isto, filtrar
+  // por `bug` deixaria a árvore inteira de fases vazias na tela — a casca da hierarquia
+  // sem nada dentro.
+  function temConteudo(cod, vistos = new Set()) {
+    if (vistos.has(cod)) return false;
+    const n = nos[cod];
+    if (!n) return false;
+    if (n.tipo === "card") return true;
+    return (filhos[cod] || []).some((k) => temConteudo(k, new Set([...vistos, cod])));
+  }
+
+  function no(cod, vistos) {
+    // CICLO: `needs` circular não pode pendurar o navegador. O gate `fase-ordenada` já o
+    // reprova no repositório; aqui a defesa é só para a página sobreviver a um.
+    if (vistos.has(cod)) return "";
+    const n = nos[cod];
+    // As FASES vêm primeiro e em ordem de sequência (F01, F02, …), e os cards depois:
+    // a fase é a estrutura do plano, e misturá-la com o trabalho na ordem alfabética
+    // esconderia a sequência que ela existe para mostrar.
+    const kids = (filhos[cod] || []).filter((k) => temConteudo(k)).sort((a, b) => {
+      const fa = nos[a].tipo === "fase", fb = nos[b].tipo === "fase";
+      if (fa !== fb) return fa ? -1 : 1;
+      return a.localeCompare(b);
+    });
+    const cls = n.tipo === "fase" ? "fase"
+      : concluido(n) ? "" : livre(n) ? "livre" : "bloqueado";
+    // O progresso da fase conta só os CARDS, não as fases-filhas: a fase seguinte não é
+    // trabalho desta. Contando-a, `F03` mostrava "1/2" tendo um único card, e o 1 era a
+    // fase `F04` vazia — um progresso que media a estrutura em vez do trabalho.
+    // O PROGRESSO conta TODOS os cards da fase, não os que sobraram do filtro. Filtrar
+    // por `in-progress` faria "0/1" onde há "1/4" concluídos — o filtro mudaria o
+    // progresso, e o número deixaria de responder "quanto falta desta fase?".
+    const todosDaFase = (todosOsFilhos[cod] || []).filter((k) => nosCompletos[k]?.tipo === "card");
+    const cards = kids.filter((k) => nos[k].tipo === "card");
+    const est = n.tipo === "fase"
+      ? (todosDaFase.length
+          ? `${todosDaFase.filter((k) => concluido(nosCompletos[k])).length}/${todosDaFase.length}`
+          : "sem card")
+      : (n.state || "").replace("anchors:", "");
+    // A ORDEM aparece como texto, já que deixou de ser aninhamento: "depois de F01" diz o
+    // que a escada dizia, sem mentir que uma fase está dentro da outra.
+    const depois = (n.needs || []).filter((x) => nos[x] && nos[x].tipo === "fase");
+    const corpo = `<span class="cod">${esc(cod)}</span>
+        <span class="nome">${esc((n.title || "").replace(/^\[[^\]]+\]\s*/, ""))}</span>
+        ${depois.length ? `<span class="apos">depois de ${
+          depois.map(esc).join(", ")}</span>` : ""}
+        <span class="est">${esc(est)}</span>`;
+    const linha = `<button class="no ${cls}" type="button" ${
+      n.number ? `data-number="${n.number}"` : "disabled"}>${corpo}</button>`;
+    if (!kids.length) return `<li class="folha">${linha}</li>`;
+    // `<details>` NATIVO: o navegador já dá o teclado (Enter/Espaço), a semântica de
+    // expandido/recolhido para leitor de tela, e o Ctrl+F que abre o nó ao achar texto
+    // dentro dele. Reimplementar isso com um botão e `display:none` perde as três.
+    //
+    // Um nó CONCLUÍDO nasce recolhido: o que já terminou não é o que se procura numa
+    // árvore de dependências, e mantê-lo aberto empurra para baixo o trabalho que
+    // importa. Os demais nascem abertos — esconder o que está bloqueado esconderia
+    // justamente a explicação de por que algo não pode ser pego.
+    const aberto = concluido(n) ? "" : " open";
+    // A LINHA INTEIRA fica dentro do `<summary>`, com o triângulo como primeiro filho.
+    //
+    // Antes o summary era só o triângulo, posicionado ABSOLUTO ao lado — e isso produziu
+    // três defeitos de uma vez: o triângulo aparecia fora do item, o conteúdo sumia ao
+    // recolher (o `<ul>` estava fora do summary mas o layout dependia dele), e os nós com
+    // filho não abriam a modal.
+    //
+    // Dentro do summary, o `<details>` nativo faria a linha inteira recolher. O
+    // `preventDefault` no clique do nó é o que devolve o significado certo a cada target: o
+    // triângulo recolhe, o resto abre os detalhes.
+    return `<li><details${aberto}>
+      <summary>
+        <span class="tri" role="button" tabindex="0"
+              aria-label="recolher ou expandir ${esc(cod)}"></span>
+        ${linha}
+      </summary>
+      <ul>${kids.map((k) => no(k, new Set([...vistos, cod]))).join("")}</ul>
+    </details></li>`;
+  }
+
+  // O estado de cada nó é PRESERVADO entre os refreshes de 5s: sem isto, recolher um
+  // ramo para enxergar o resto seria desfeito cinco segundos depois.
+  const abertosAntes = new Set(
+    [...alvo.querySelectorAll("details[open] > .linha .cod")].map((e) => e.textContent));
+  const fechadosAntes = new Set(
+    [...alvo.querySelectorAll("details:not([open]) > .linha .cod")].map((e) => e.textContent));
+
+  // Só os estados PRESENTES viram chip — oferecer os oito sempre daria botões que não
+  // filtram nada. Mas a conta é sobre TODOS os items, e não sobre os que sobraram do
+  // filtro: com o recorte, o chip do estado escolhido seria o único a existir, e não
+  // haveria como somar outro nem desmarcar o que se marcou.
+  const presentes = COLUNAS.filter(([id]) =>
+    (d.items || []).some((i) => !i.closed && i.code && passaNoFiltro(i) && i.state === id));
+
+  alvo.innerHTML = `
+    <div class="controles">
+      <button type="button" id="expandir">expandir tudo</button>
+      <button type="button" id="recolher">recolher tudo</button>
+      ${presentes.length > 1 ? `<span class="sep"></span>${presentes.map(([id, nome]) =>
+        `<button class="chip est-chip" type="button" data-state="${esc(id)}"
+                 aria-pressed="${estadoAtivo.has(id)}">${esc(nome.toLowerCase())}</button>`
+      ).join("")}${estadoAtivo.size ? '<button type="button" id="limpar-estado">limpar</button>' : ""}` : ""}
+    </div>
+    <div class="legenda">
+      <span><i class="amostra" style="border-color:var(--pronto)"></i> pronto para pegar</span>
+      <span><i class="amostra" style="opacity:.55"></i> bloqueado por dependência</span>
+      <span><i class="amostra" style="border-style:dashed;border-color:var(--marca)"></i> fase do plano</span>
+    </div>
+    <ul class="arv">${raizes.sort().filter((r) => temConteudo(r)).map((r) => no(r, new Set())).join("")}</ul>`;
+
+  // Restaura o que o leitor tinha aberto ou fechado. Um nó NOVO (que não estava na foto
+  // anterior) mantém o padrão — o leitor nunca decidiu nada sobre ele.
+  for (const d of alvo.querySelectorAll("details")) {
+    const cod = d.querySelector(":scope > .linha .cod")?.textContent;
+    if (abertosAntes.has(cod)) d.open = true;
+    else if (fechadosAntes.has(cod)) d.open = false;
+  }
+
+  for (const b of alvo.querySelectorAll(".est-chip")) {
+    b.onclick = () => {
+      const e = b.dataset.state;
+      estadoAtivo.has(e) ? estadoAtivo.delete(e) : estadoAtivo.add(e);
+      desenhaArvore(ULTIMO);
+    };
+  }
+  const limpar = alvo.querySelector("#limpar-estado");
+  if (limpar) limpar.onclick = () => { estadoAtivo.clear(); desenhaArvore(ULTIMO); };
+
+  alvo.querySelector("#expandir").onclick = () => {
+    for (const d of alvo.querySelectorAll("details")) d.open = true;
+  };
+  alvo.querySelector("#recolher").onclick = () => {
+    for (const d of alvo.querySelectorAll("details")) d.open = false;
+  };
+}
+
+// --- o roadmap ---
+//
+// A ABA EXISTIA E NÃO DESENHAVA NADA. O CSS, o painel e a prosa foram escritos; o
+// renderizador ficou para depois, e "depois" durou até alguém abrir a aba e ver o vazio.
+//
+// O QUE ELE MOSTRA, e o que deliberadamente NÃO mostra:
+//
+//   · à ESQUERDA da linha do agora, o que foi entregue — com as datas REAIS (`criado`,
+//     `fechado`). É fato, e a barra sólida o diz.
+//
+//   · à DIREITA, o que falta — posicionado pela ORDEM (o `needs:` do mapa), nunca por
+//     prazo. O Anchors sabe o que vem antes do quê; não sabe quando. A barra tracejada é
+//     o que impede a leitura de promessa: uma barra sólida à direita prometeria uma data
+//     que ninguém calculou.
+//
+// A escolha de "ordem, sem datas" para o futuro é do projeto, e está no desenho do CSS
+// desde que ele foi escrito.
+// COMO O LEITOR QUER VER. Guardado, porque a escolha é de quem lê e não muda entre visitas.
+// O padrão é a ÁRVORE: a pergunta mais comum do roadmap é "o que depende de quê", e a linha
+// do tempo responde outra — "o que foi entregue quando".
+function modoRoadmap() {
+  return localStorage.getItem("anchors:roadmap") === "linha" ? "linha" : "arvore";
+}
+
+function desenhaRoadmap(d) {
+  // O MODO NÃO TROCA DE PAINEL: a linha do tempo é a mesma nos dois, e só a coluna da
+  // esquerda muda de ordem e indentação. Trocar de desenho inteiro faria o leitor perder
+  // a referência temporal ao alternar — que é justamente o que ele está usando.
+  const modo = modoRoadmap();
+  for (const b of document.querySelectorAll("[data-modo]")) {
+    b.setAttribute("aria-pressed", String(b.dataset.modo === modo));
+  }
+  const leg = document.getElementById("roadmap-legenda");
+  if (leg) {
+    const comum = `À <strong>esquerda</strong> da linha, o que foi entregue — com as datas
+      reais. À <strong>direita</strong>, o que falta, posicionado pela <em>dependência</em>
+      e não por prazo: o Anchors sabe a ORDEM, e não inventa <em>quando</em>.`;
+    leg.innerHTML = comum + (modo === "arvore"
+      ? ` As issues vêm agrupadas por <strong>plano → fase</strong>, na hierarquia do mapa.`
+      : ` As issues vêm em <strong>ordem de ocorrência</strong>, uma por linha.`);
+  }
+  desenhaRoadmapLinha(d);
+}
+
+// ORDENA AS LINHAS pela hierarquia do mapa, e acrescenta o nível de indentação.
+//
+// A linha do tempo não muda: cada issue continua onde a data (ou a ordem) a põe. O que esta
+// função decide é em que SEQUÊNCIA as linhas aparecem e quanto cada rótulo recua — de modo
+// que as issues de uma fase fiquem juntas, sob o nome dela.
+//
+// O NÓ DE GRUPO (plano, fase) entra como linha própria, sem barra: ele é o cabeçalho do
+// bloco. Sem isso a indentação ficaria órfã — recuo sem nada que o explique.
+// A HIERARQUIA do mapa: quem é pai de quem. Uma função só, porque os dois modos precisam
+// dela — a árvore para ordenar e indentar, a lista para dar ao pai a barra que o cobre.
+function hierarquia(linhas, d) {
+  const CODIGO = /^[A-Z]{5}$/;
+  const daLinha = {};
+  for (const l of linhas) if (CODIGO.test(l.i.code || "")) daLinha[l.i.code] = l;
+
+  const nos = {};
+  for (const f of d.phases || []) nos[f.code] = { ...f, tipo: "fase" };
+  for (const c of Object.keys(daLinha)) nos[c] = { ...daLinha[c].i, tipo: "card" };
+
+  const filhos = {};
+  const raizes = [];
+  for (const cod of Object.keys(nos)) {
+    let pai = nos[cod].parent || "";
+    if (!pai && nos[cod].tipo === "fase") {
+      const plano = cod.split("-")[0];
+      if (nos[plano]) pai = plano;
+    }
+    if (!pai || !nos[pai]) { raizes.push(cod); continue; }
+    (filhos[pai] ||= []).push(cod);
+  }
+
+  // OS ACHADOS DE GATE entram pela outra porta: eles não têm código de unidade — o que
+  // está entre colchetes no título é o nome do GATE —, mas o pipeline resolve o caminho
+  // que eles acusam e grava o `parent` da unidade.
+  //
+  // MEDIDO: 201 dos 304 cards do projeto de referência eram achados, TODOS na raiz — uma
+  // lista de desfiliados maior que a árvore inteira. Com o `parent` resolvido, 143 deles
+  // aparecem sob a unidade que acusam, que é onde quem lê os procura.
+  //
+  // A chave é o NÚMERO, não o código: dois achados do mesmo gate sobre unidades diferentes
+  // têm o mesmo `codigo` (`doc-required`), e chavear por ele faria 37 virarem um.
+  const achados = {};
+  for (const l of linhas) {
+    if (CODIGO.test(l.i.code || "")) continue;
+    const pai = l.i.parent || "";
+    if (!pai || !nos[pai]) continue;
+    const chave = "#" + l.i.number;
+    achados[chave] = l;
+    nos[chave] = { ...l.i, code: chave, tipo: "achado" };
+    (filhos[pai] ||= []).push(chave);
+  }
+  return { nos, filhos, raizes, daLinha: { ...daLinha, ...achados } };
+}
+
+// abrangeFilhos dá a cada PAI a barra que cobre os filhos, nos DOIS modos.
+//
+// Um plano é um cabeçalho: ele começa quando o primeiro filho começou e termina quando o
+// último termina. Sem isto ele aparece com a barra do PRÓPRIO card — uma barra fina, sem
+// relação com o trabalho que descreve, e caindo na ordenação onde a data do card o põe.
+//
+// MEDIDO: os 14 planos abertos do projeto de referência caíam empilhados nas posições
+// 228–242 da lista, todos na mesma faixa de "futuro", longe das issues que descrevem.
+function abrangeFilhos(linhas, d, PASSADO) {
+  const { filhos, daLinha } = hierarquia(linhas, d);
+
+  function extensao(cod, vistos = new Set()) {
+    if (vistos.has(cod)) return null;            // ciclo de `parent` não trava
+    vistos.add(cod);
+    const l = daLinha[cod];
+    let ini = l ? l.esq : null;
+    let fim = l ? l.esq + l.larg : null;
+    for (const k of filhos[cod] || []) {
+      const e = extensao(k, vistos);
+      if (!e) continue;
+      ini = ini === null ? e.ini : Math.min(ini, e.ini);
+      fim = fim === null ? e.fim : Math.max(fim, e.fim);
+    }
+    return ini === null ? null : { ini, fim };
+  }
+
+  for (const cod of Object.keys(filhos)) {
+    const l = daLinha[cod];
+    if (!l) continue;                            // fase sem card próprio: nada a alargar
+    const e = extensao(cod, new Set());
+    if (!e) continue;
+    l.esq = e.ini;
+    l.larg = Math.max(1.5, e.fim - e.ini);
+    l.classe = "abrange";
+    // ONDE O REALIZADO TERMINA, em % da própria barra — o CSS pinta sólido até ali.
+    l.feitoAte = Math.max(0, Math.min(100,
+      (PASSADO - e.ini) / Math.max(0.01, e.fim - e.ini) * 100));
+  }
+}
+
+function ordenaPorHierarquia(linhas, d, PASSADO) {
+  // A MESMA hierarquia que o `abrangeFilhos` usa. Havia duas cópias desta montagem, e a
+  // consequência apareceu na hora: os achados afiliados entraram numa e não na outra — a
+  // árvore continuou mostrando 201 desfiliados enquanto a abrangência já os via.
+  const { nos, filhos, raizes, daLinha } = hierarquia(linhas, d);
+
+  // O PAI É HÍBRIDO, e tratá-lo como uma coisa só era o defeito.
+  //
+  // Um plano cujo primeiro card já entregou TEM início real — a data está lá. E se ainda
+  // restam cards por fazer, ele também se estende ao futuro. As duas coisas ao mesmo tempo:
+  // desenhá-lo só como "futuro" apaga meses de trabalho já feito, e só como "feito" promete
+  // uma entrega que não aconteceu.
+  //
+  // A barra do pai ABRANGE os filhos: começa onde o primeiro começou, termina onde o último
+  // termina. O trecho REALIZADO é sólido; o que passa da linha do agora é tracejado — a
+  // mesma gramática das barras de folha, aplicada ao intervalo.
+  function extensao(cod, vistos = new Set()) {
+    if (vistos.has(cod)) return null;
+    vistos.add(cod);
+    const meus = filhos[cod] || [];
+    const proprio = daLinha[cod];
+    let ini = proprio ? proprio.esq : null;
+    let fim = proprio ? proprio.esq + proprio.larg : null;
+    for (const k of meus) {
+      const e = extensao(k, vistos);
+      if (!e) continue;
+      ini = ini === null ? e.ini : Math.min(ini, e.ini);
+      fim = fim === null ? e.fim : Math.max(fim, e.fim);
+    }
+    return ini === null ? null : { ini, fim };
+  }
+
+  // IRMÃOS EM ORDEM TEMPORAL, dentro de cada nível.
+  //
+  // Ordenar por CÓDIGO é arbitrário: `ALFDL` antes de `INSTN` não diz nada sobre o
+  // trabalho — é ordem alfabética num roadmap, onde o leitor lê da esquerda para a direita
+  // esperando que o de cima tenha vindo antes.
+  //
+  // O critério é o mesmo do modo lista: onde a barra COMEÇA. O desempate por LARGURA põe o
+  // que abrange mais antes do que abrange menos (o pai antes do filho, quando coincidem), e
+  // o número do card decide o resto — duas issues criadas no mesmo instante não têm outra
+  // diferença.
+  //
+  // O nó SEM barra (fase sem card próprio) herda o início do primeiro filho, senão ele
+  // afundaria para o começo da lista por comparar com zero.
+  function inicio(cod, vistos = new Set()) {
+    if (vistos.has(cod)) return Infinity;
+    vistos.add(cod);
+    const l = daLinha[cod];
+    if (l) return l.esq;
+    let m = Infinity;
+    for (const k of filhos[cod] || []) m = Math.min(m, inicio(k, vistos));
+    return m;
+  }
+  const porTempo = (a, b) => {
+    const ia = inicio(a), ib = inicio(b);
+    if (ia !== ib) return ia - ib;
+    const la = daLinha[a], lb = daLinha[b];
+    const wa = la ? la.larg : 0, wb = lb ? lb.larg : 0;
+    if (wa !== wb) return wb - wa;
+    return Number(la?.i.number || 0) - Number(lb?.i.number || 0);
+  };
+
+  const saida = [];
+  const usados = new Set();
+  function desce(cod, nivel, vistos) {
+    if (vistos.has(cod)) return;                 // ciclo de `parent` não trava
+    vistos.add(cod);
+    const meus = (filhos[cod] || []).sort(porTempo);
+    const l = daLinha[cod];
+
+    if (meus.length) {
+      // CABEÇALHO com a barra que abrange os filhos. O card próprio do nó, quando existe,
+      // entra na conta como mais um extremo — um plano cuja spec fechou antes do primeiro
+      // card começa nela, e é a verdade.
+      const e = extensao(cod, new Set());
+      const base = l ? { ...l } : { i: nos[cod] };
+      // A FASE NÃO É TRABALHO, e o desenho precisa dizer isso.
+      //
+      // Um `## FNDTN-W01 — o CI` é uma SEÇÃO dentro do arquivo do plano, não um artefato:
+      // não tem issue, não tem unidade, e nenhum agente a pega porque não há o que pegar.
+      // Medido: as 86 fases do projeto de referência, todas sem card.
+      //
+      // O plano, ao contrário, É trabalho — `plans/0014-alertas-incidentes.md` é um arquivo
+      // regido, com card próprio e unidade a cumprir. Desenhar os dois igual sugere que a
+      // fase espera alguém, e ninguém virá.
+      //
+      // A distinção é `l`: o nó SEM card é o que não existe como issue.
+      const ehFase = !l;
+      if (e) {
+        saida.push({ ...base, esq: e.ini, larg: Math.max(1.5, e.fim - e.ini),
+                     classe: ehFase ? "abrange fase" : "abrange", nivel, grupo: true, fase: ehFase,
+                     // ONDE O REALIZADO TERMINA, em % da própria barra. É o que o CSS usa
+                     // para pintar sólido até ali e tracejado depois — sem isso o pai
+                     // híbrido teria de escolher uma das duas naturezas.
+                     feitoAte: Math.max(0, Math.min(100,
+                       (PASSADO - e.ini) / Math.max(0.01, e.fim - e.ini) * 100)) });
+      } else {
+        saida.push({ ...base, esq: 0, larg: 0, classe: "grupo", nivel, grupo: true,
+                     fase: ehFase });
+      }
+      if (l) usados.add(l);
+    } else if (l) {
+      saida.push({ ...l, nivel, grupo: false });
+      usados.add(l);
+    }
+    for (const k of meus) desce(k, nivel + 1, vistos);
+  }
+  for (const r of raizes.sort(porTempo)) desce(r, 0, new Set());
+
+  // O QUE SOBROU vai para o fim, na ordem de ocorrência: são os achados de gate, que não
+  // pertencem à hierarquia de planos (eles pendem do card que os originou). Descartá-los
+  // esconderia do roadmap metade do que foi entregue.
+  const resto = linhas.filter((l) => !usados.has(l))
+    .sort((a, b) => a.esq - b.esq || Number(a.i.number) - Number(b.i.number))
+    .map((l) => ({ ...l, nivel: 0, grupo: false }));
+
+  linhas.length = 0;
+  linhas.push(...saida, ...resto);
+}
+
+function desenhaRoadmapLinha(d) {
+  const el = document.getElementById("gantt");
+  if (!el) return;
+  const itens = (d.items || []).filter((i) => i.created);
+  if (itens.length === 0) {
+    el.innerHTML = `<p class="g-vazio">Nada para desenhar ainda — o roadmap nasce do
+      primeiro card com data.</p>`;
+    return;
+  }
+
+  // FECHADO é o critério, e não "chegou em `ready-to-test`".
+  //
+  // A tentação é dar por entregue quem já mergeou o trabalho. Mas `ready-to-test` é uma
+  // coluna de ESPERA — o card está lá até alguém testar e promover —, e pintá-lo como feito
+  // esconde o que o roadmap existe para mostrar.
+  //
+  // MEDIDO: o card #8 (`TSHRT`) está em `ready-to-test` DESDE AGOSTO, com os dois achados
+  // sob ele fechados. Ele não está entregue: está parado numa coluna que ninguém drena. A
+  // barra à direita da linha do agora é a verdade — e é como o problema fica visível.
+  const feitos = itens.filter((i) => i.closed).sort((a, b) => a.closed < b.closed ? -1 : 1);
+  const abertos = itens.filter((i) => !i.closed);
+
+  // A ESCALA do passado é temporal e real: do primeiro card ao agora.
+  const t0 = feitos.length ? new Date(feitos[0].created).getTime()
+                           : new Date(itens[0].created).getTime();
+  const agora = Date.now();
+  const vao = Math.max(agora - t0, 864e5); // nunca zero: um projeto de um dia ainda desenha
+
+  // METADE E METADE: o passado ocupa 55% da largura, o futuro os 45% restantes. A divisão
+  // é arbitrária DE PROPÓSITO — o futuro não tem escala temporal, e fingir uma (esticá-lo
+  // proporcionalmente ao passado) seria inventar duração.
+  const PASSADO = 55;
+  const posPassado = (iso) => PASSADO * (new Date(iso).getTime() - t0) / vao;
+
+  // A ORDEM do que falta vem do `needs:`: um item cujo pré-requisito ainda não fechou vem
+  // depois dele. Sem prazo — só sequência.
+  const porCodigo = {};
+  for (const i of itens) if (i.code) porCodigo[i.code] = i;
+  const profundidade = (i, visto) => {
+    visto = visto || new Set();
+    if (visto.has(i.number)) return 0;       // ciclo no `needs:` não trava o desenho
+    visto.add(i.number);
+    const pais = (i.needs || []).map((c) => porCodigo[c]).filter((p) => p && !p.closed);
+    if (pais.length === 0) return 0;
+    return 1 + Math.max(...pais.map((p) => profundidade(p, visto)));
+  };
+  const niveis = abertos.map((i) => profundidade(i));
+  const maxNivel = Math.max(1, ...niveis);
+
+  const linhas = [];
+  for (const i of feitos) {
+    const ini = posPassado(i.created);
+    const fim = Math.max(posPassado(i.closed), ini + 1.5);
+    linhas.push({ i, esq: ini, larg: fim - ini, classe: "feito" });
+  }
+  abertos.forEach((i, k) => {
+    const nivel = niveis[k];
+    const emCurso = i.state && i.state !== "anchors:to-do";
+    // o que já começou nasce na linha do agora; o resto, escalonado pela ordem
+    const esq = emCurso ? PASSADO - 3 : PASSADO + (100 - PASSADO) * (nivel / (maxNivel + 1));
+    linhas.push({ i, esq, larg: Math.max(6, (100 - PASSADO) / (maxNivel + 2)),
+                  classe: emCurso ? "fazendo" : "futuro" });
+  });
+
+  // A ORDEM E A INDENTAÇÃO DAS LINHAS é o que o modo troca. A linha do tempo é a MESMA
+  // nos dois — as barras, o eixo, a marca do agora —, e só o lado esquerdo muda:
+  //
+  //   LISTA   as issues em ordem de ocorrência, uma por linha
+  //   ÁRVORE  as issues agrupadas por plano → fase, na hierarquia do mapa
+  //
+  // A pergunta que a barra responde ("quando isto foi entregue?") não muda; o que muda é
+  // como o leitor ACHA a issue de que precisa.
+  // A ABRANGÊNCIA DO PAI vale nos DOIS modos: um plano é um cabeçalho que cobre os
+  // filhos, e isso é verdade independentemente de como a lista está ordenada. Calculá-la
+  // só na árvore fazia o plano aparecer na lista com a barra do próprio card — uma barra
+  // fina no meio do nada, sem relação com o trabalho que ele descreve.
+  abrangeFilhos(linhas, d, PASSADO);
+
+  if (modoRoadmap() === "arvore") {
+    ordenaPorHierarquia(linhas, d, PASSADO);
+  } else {
+    // ORDEM DE OCORRÊNCIA — com o PAI antes dos seus, e não perdido no meio.
+    //
+    // Um plano é um cabeçalho, não um item de trabalho: ele abrange os filhos e não
+    // disputa posição com eles. Ordenado só pela data, os 14 planos abertos do projeto de
+    // referência caíam empilhados nas posições 228–242 — todos na mesma faixa de "futuro",
+    // longe das issues que descrevem.
+    //
+    // O critério é o INÍCIO: o pai começa quando o primeiro filho começou, então ele
+    // naturalmente precede os seus. O desempate por LARGURA põe o que abrange mais antes
+    // do que abrange menos — plano, depois fase, depois card.
+    linhas.sort((a, b) =>
+      a.esq - b.esq ||
+      (b.larg || 0) - (a.larg || 0) ||
+      Number(a.i.number) - Number(b.i.number));
+  }
+
+  const rot = (c) => esc((c.code ? c.code + " · " : "") +
+                         c.title.replace(/^\[[^\]]+\]\s*/, "")).slice(0, 80);
+  const quando = (c) => c.closed
+    ? new Date(c.closed).toLocaleDateString()
+    : (c.state || "").replace("anchors:", "") || "a fazer";
+
+  el.innerHTML =
+    `<div class="g-rot"></div><div class="g-eixo">
+       <span class="g-marca" style="left:0">${new Date(t0).toLocaleDateString()}</span>
+       <span class="g-marca" style="left:${PASSADO}%">agora</span>
+       <span class="g-marca" style="left:98%">ordem →</span>
+     </div>` +
+    linhas.map(({ i, esq, larg, classe, nivel, grupo, feitoAte, fase }) => `
+      <div class="g-rot ${grupo ? "grupo" : "item"}${fase ? " fase" : ""}${i.number ? " abrivel" : ""}"
+           ${i.number ? `data-number="${esc(i.number)}"` : ""}
+           style="padding-left:${((nivel || 0) * 0.9 + (grupo ? 0 : 1.1)).toFixed(2)}rem"
+           title="${rot(i)}">${rot(i)}</div>
+      <div class="g-faixa">${larg > 0 ? `
+        <${i.number ? "a" : "span"} class="g-barra ${classe}"${
+             i.number && i.url ? ` href="${esc(i.url)}" target="_blank" rel="noopener"` : ""}
+           style="left:${esq.toFixed(1)}%;width:${larg.toFixed(1)}%${
+             classe === "abrange" ? `;--feito:${(feitoAte || 0).toFixed(1)}%` : ""}"
+           title="${i.number ? `#${esc(i.number)} — ` : ""}${quando(i)}">${
+             i.number ? `#${esc(i.number)}` : ""}</${i.number ? "a" : "span"}>` : ""}
+      </div>`).join("") +
+    `<div class="g-hoje" style="left:calc(minmax(9rem,auto) + ${PASSADO}%)"></div>`;
+
+  // A LINHA DO AGORA é posicionada em JS porque ela atravessa a coluna das faixas, e o
+  // `calc` com `minmax` do grid não resolve no CSS.
+  const faixa = el.querySelector(".g-faixa");
+  const linha = el.querySelector(".g-hoje");
+  // AS DUAS CONFERÊNCIAS. A `.g-hoje` faltando derruba a função inteira — e ela some
+  // quando o desenho não produziu barra nenhuma.
+  //
+  // `offsetWidth` ZERO quando o painel está escondido: o modo árvore esconde o gantt, e um
+  // elemento oculto não tem largura. Posicionar a linha em 0px a empilharia na margem
+  // esquerda, e ela ficaria lá quando o leitor voltasse para a linha do tempo — por isso o
+  // reposicionamento acontece de novo a cada desenho.
+  if (faixa && linha && faixa.offsetWidth > 0) {
+    linha.style.left = (faixa.offsetLeft + faixa.offsetWidth * PASSADO / 100) + "px";
+  }
+}
+
+// --- as abas ---
+const ABAS = [["aba-board", "v-board"], ["aba-arvore", "v-arvore"], ["aba-roadmap", "v-roadmap"]];
+// O CLIQUE do seletor de modo. Guarda a escolha e redesenha — o dado já está em memória.
+for (const b of document.querySelectorAll("[data-modo]")) {
+  b.addEventListener("click", () => {
+    localStorage.setItem("anchors:roadmap", b.dataset.modo);
+    if (ultimoDado) desenhaRoadmap(ultimoDado);
+  });
+}
+
+function mostraAba(id) {
+  for (const [aba, painel] of ABAS) {
+    const sel = aba === id;
+    document.getElementById(aba).setAttribute("aria-selected", String(sel));
+    document.getElementById(painel).hidden = !sel;
+  }
+  localStorage.setItem("anchors:aba", id);
+}
+for (const [aba] of ABAS) document.getElementById(aba).onclick = () => mostraAba(aba);
+mostraAba(localStorage.getItem("anchors:aba") || "aba-board");
+
+// --- a modal ---
+//
+// O clique no card abre os detalhes em vez de navegar. O motivo é o contexto: sair para o
+// GitHub descarta o board, e voltar custa uma navegação e a rolagem perdida — quando na
+// maioria das vezes a pergunta ("de quem é? o que pede?") se responde aqui.
+//
+// Ir para a issue continua a um clique, e agora é ESCOLHA: quem precisa comentar ou fechar
+// vai; quem só queria ver, não paga o pedágio.
+const dlg = document.getElementById("detalhe");
+const dlgCorpo = document.getElementById("detalhe-corpo");
+
+// DELEGADO no container: as colunas são reescritas a cada 5s, e um listener por card
+// morreria no primeiro refresh.
+// O ROADMAP entra aqui, e a ausência dele era um defeito de coerência: nas outras abas
+// o clique abre os detalhes (dono, histórico de posse, o que o card pede), e no roadmap
+// não abria NADA — o rótulo não tinha listener, e a barra era um link que saía para o
+// GitHub. Quem queria ver de quem é um card não tinha como, justamente na aba que mostra
+// o trabalho no tempo.
+for (const cont of ["colunas", "arvore", "v-roadmap"]) {
+document.getElementById(cont).addEventListener("click", (ev) => {
+  // O TRIÂNGULO recolhe, e só ele. `preventDefault` no resto do summary é o que impede o
+  // `<details>` nativo de recolher quando o clique era para abrir os detalhes.
+  const tri = ev.target.closest(".tri");
+  if (tri) {
+    ev.preventDefault();
+    const d = tri.closest("details");
+    if (d) d.open = !d.open;
+    return;
+  }
+  if (ev.target.closest("summary")) ev.preventDefault();
+
+  // O SELO DE BLOQUEIO vai para quem SEGURA, não para o card clicado.
+  //
+  // Sem isto o clique cairia no `.card` que o contém e abriria o próprio bloqueado — que
+  // é o que o leitor já está vendo. A pergunta que ele tem ao ler "bloqueado por #123" é
+  // o que o #123 pede, e é lá que a resposta vai.
+  const segurado = ev.target.closest("[data-vai-para]");
+  if (segurado) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const dono = (ULTIMO.items || []).find((i) => String(i.number) === segurado.dataset.vaiPara);
+    if (dono) abre(dono);
+    return;
+  }
+
+  const alvo = ev.target.closest(".card, .no[data-number], .g-rot[data-number]");
+  if (!alvo) return;
+  const c = (ULTIMO.items || []).find((i) => String(i.number) === alvo.dataset.number);
+  if (c) abre(c);
+});
+}
+
+// "atualizado 29/08/2026, 17:55:14" ocupa uma tag inteira para dizer pouco. O que
+// importa num board é a IDADE do card — "há 2h" responde de relance.
+function quando(iso) {
+  const seg = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (seg < 60) return "agora";
+  if (seg < 3600) return `há ${Math.floor(seg / 60)}min`;
+  if (seg < 86400) return `há ${Math.floor(seg / 3600)}h`;
+  return `há ${Math.floor(seg / 86400)}d`;
+}
+
+function abre(c) {
+  const estado = (c.state || "").replace("anchors:", "");
+  dlgCorpo.innerHTML = `
+    <div class="d-topo">
+      <button class="fechar" type="button" aria-label="fechar">✕</button>
+      ${c.code ? `<div class="d-codigo">${esc(c.code)}</div>` : ""}
+      <h2>${esc(c.title.replace(/^\[[^\]]+\]\s*/, ""))}</h2>
+      <div class="d-meta">
+        <span class="tag estado">${esc(estado)}</span>
+        ${c.owner ? `<span class="tag dono">◆ ${esc(c.owner)}</span>`
+                 : '<span class="tag">sem dono</span>'}
+        ${c.comments ? `<span class="tag">${esc(c.comments)} comentário(s)</span>` : ""}
+        <span class="tag">${esc(quando(c.updated))}</span>
+      </div>
+    </div>
+    <div class="d-conteudo">
+      ${c.body ? `<div class="d-corpo">${esc(c.body)}</div>`
+                : '<div class="d-corpo">Sem descrição.</div>'}
+      ${(c.ownership || []).length ? `<div class="d-posse"><strong>Histórico de posse</strong>
+        ${c.ownership.map((p) => `<div>${esc(p)}</div>`).join("")}</div>` : ""}
+    </div>
+    <div class="d-acoes">
+      <a class="ir" href="${esc(c.url)}" target="_blank" rel="noopener">abrir no GitHub ↗</a>
+      <span class="d-numero">#${esc(c.number)}</span>
+    </div>`;
+  dlg.showModal();
+}
+
+// DELEGADO: o botão de fechar é reescrito a cada abertura, e um `onclick` preso ao
+// elemento antigo morreria na segunda vez.
+dlg.addEventListener("click", (ev) => { if (ev.target.closest(".fechar")) dlg.close(); });
+// Clique no fundo fecha: `showModal` faz o ::backdrop ser o PRÓPRIO dialog, então o alvo
+// ser o dialog significa que o clique caiu fora do conteúdo.
+dlg.addEventListener("click", (ev) => { if (ev.target === dlg) dlg.close(); });
+
+aplicaTema();
+rotula();
+agenda();
+carrega();
+</script>

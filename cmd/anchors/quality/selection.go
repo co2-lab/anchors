@@ -1,0 +1,493 @@
+// @anchors
+//   code: SLCMS
+//   ref: SLCTN
+
+package quality
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/co2-lab/anchors/cmd/anchors/mapcmd"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gate"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// fileState is where a file stands for a suite, read from the signal the map keeps.
+//
+// Two questions, each with two answers, make the four boxes a run chooses from:
+//
+//	                 fresh            stale
+//	passing          freshPassing     stalePassing
+//	below minimum    freshBelow       staleBelow
+//
+// "Fresh" means measured at the current version — of the file and, for a test, of what
+// it exercises. "Passing" means a test file with no failing case, or a code file whose
+// mutation score is at the floor or above. A file never measured is `unmeasured`.
+type fileState int
+
+const (
+	unmeasured fileState = iota
+	freshPassing
+	stalePassing
+	freshBelow
+	staleBelow
+	// frozen is a file a freeze covers: kept as it is by decision, no run takes it until
+	// someone thaws it.
+	frozen
+)
+
+// runSelection is which states a run takes. By default only what is stale AND below the
+// minimum runs, with what was never measured: everything else is known, and a light run
+// skips it. Each flag opens one side of the square.
+type runSelection struct {
+	IncludeFresh   bool // also fresh files below the minimum (and, with IncludePassing, fresh passing ones)
+	IncludePassing bool // also stale files at the minimum or above (and, with IncludeFresh, fresh passing ones)
+	SkipUnmeasured bool // leave out the files never measured
+}
+
+// wants says whether the run takes a file in this state.
+func (s runSelection) wants(st fileState) bool {
+	switch st {
+	case unmeasured:
+		return !s.SkipUnmeasured
+	case staleBelow:
+		return true
+	case freshBelow:
+		return s.IncludeFresh
+	case stalePassing:
+		return s.IncludePassing
+	default: // freshPassing
+		return s.IncludeFresh && s.IncludePassing
+	}
+}
+
+// testState reads a test file's state. Stale is the test file changed since its result,
+// or something it exercises did (the evidence closure). A file whose cases were all
+// skipped is not passing: nothing proved anything.
+func testState(g *mapx.Graph, n mapx.Node, layer string) fileState {
+	s := n.Signal
+	if s == nil {
+		return unmeasured
+	}
+	passed, failed, skipped := s.Passed, s.Failed, s.Skipped
+	if le, ok := s.ByLayer[layer]; ok {
+		// The suite's own layer, when the file was run by several: a unit failure is not
+		// an integration one.
+		passed, failed, skipped = le.Passed, le.Failed, le.Skipped
+	}
+	if passed+failed+skipped == 0 {
+		return unmeasured
+	}
+	stale := n.SignalStale() || g.EvidenceStaleFor(n.ID) != nil
+	passing := failed == 0 && passed > 0
+	return square(stale, passing)
+}
+
+// ownedBy says whether a test file is one this suite runs. A suite that timed the file
+// owns it; before any time was recorded, the suite whose layer ran it does. A file no
+// suite ever ran is offered to every suite — in a monorepo, once, until a run times it.
+//
+// A time counts only under a report a declared suite writes (`declared`, the keys of the
+// project's `tests:`; nil counts every report). A report ingested by hand — `ingest --junit
+// out/fx.xml` — names no suite: measured on a project, four tests timed only under such reports
+// belonged to no suite, every selection left them out without counting them, and `anchors
+// test` read "318 fresh and passing" while the commit hook refused their stale proofs.
+func ownedBy(n mapx.Node, key, layer string, declared map[string]bool) bool {
+	s := n.Signal
+	if s == nil {
+		return true
+	}
+	if _, ok := s.SecondsBySuite[key]; ok {
+		return true
+	}
+	for k := range s.SecondsBySuite {
+		if declared == nil || declared[k] {
+			return false
+		}
+	}
+	if len(s.ByLayer) > 0 {
+		_, ok := s.ByLayer[layer]
+		return ok
+	}
+	return true
+}
+
+// mutationState reads a code file's mutation state. A measurement taken under load (more
+// timed-out mutants than the ceiling allows) is not a measurement to keep, so it counts
+// as stale, whatever its revision.
+func mutationState(n mapx.Node, ceiling float64) fileState {
+	s := n.Signal
+	if s == nil || s.MutantsKilled+s.MutantsSurvived+s.MutantsNoCoverage+s.MutantsIgnored+s.MutantsStatic == 0 {
+		return unmeasured
+	}
+	ran := s.MutantsKilled + s.MutantsSurvived
+	underLoad := ran > 0 && float64(s.MutantsTimedOut)/float64(ran) > ceiling
+	stale := n.MutationStale() || underLoad
+	floor := s.MutationLow
+	if floor <= 0 {
+		floor = 70
+	}
+	passing := ran == 0 || s.MutationScore >= floor
+	return square(stale, passing)
+}
+
+// currentRevs reads the map as a build would leave it now: each node at the revision of its
+// file as it is, and a file edited since the last build without the result of its old
+// version — `map build` drops it. A test edited and not yet built read as the version that
+// passed, "stale but passing", and the default run left out the edit it never ran. An edit
+// that changed nothing a proof reads keeps its evidence, as the build does.
+func currentRevs(g *mapx.Graph, root string, cfg *config.Config) {
+	for i := range g.Nodes {
+		id := g.Nodes[i].ID
+		b, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(id)))
+		if err != nil {
+			continue
+		}
+		if moved, carried := g.AdvanceTo(id, b, cfg); moved && !carried {
+			g.Nodes[i].Signal, g.Nodes[i].EvidenceKept = nil, nil
+		}
+	}
+}
+
+// declaredSuiteKeys are the keys of the reports the project's test suites write, as the
+// ingestion keys a time; nil when the project declares none.
+func declaredSuiteKeys(cfg *config.Config, root string) map[string]bool {
+	if cfg == nil || len(cfg.Tests) == 0 {
+		return nil
+	}
+	keys := map[string]bool{}
+	for _, s := range cfg.Tests {
+		if strings.TrimSpace(s.JUnit) != "" {
+			keys[mapcmd.SuiteKey(root, absPath(root, s.JUnit))] = true
+		}
+	}
+	return keys
+}
+
+func square(stale, passing bool) fileState {
+	switch {
+	case !stale && passing:
+		return freshPassing
+	case stale && passing:
+		return stalePassing
+	case !stale:
+		return freshBelow
+	default:
+		return staleBelow
+	}
+}
+
+// selectFiles picks, for a suite, the files a run takes and counts the ones it leaves out
+// by state. Support files and targets the matching gate declares with nothing to measure
+// (`no_signal`) are never candidates.
+func selectFiles(g *mapx.Graph, cfg *config.Config, root string, mutation bool, key string, suite config.Suite, sel runSelection) (run []string, left map[fileState]int) {
+	layer := suite.Layer
+	kind, check := mapx.KindTest, "tests-pass"
+	if mutation {
+		kind, check = mapx.KindCode, "mutation-score"
+	}
+	gateOf := config.Gate{}
+	declared := false
+	ceiling := config.DefaultTimeoutCeiling
+	if cfg != nil {
+		for _, gt := range cfg.Gates {
+			if gt.Check == check {
+				gateOf, declared = gt, true
+				ceiling = gt.TimeoutCeilingOrDefault()
+				break
+			}
+		}
+	}
+	declaredKeys := declaredSuiteKeys(cfg, root)
+	left = map[fileState]int{}
+	for _, n := range g.Nodes {
+		if n.Kind != kind || n.Support || !suite.Covers(n.ID) {
+			continue
+		}
+		if _, none := gateOf.NoSignalFor(n.ID); none {
+			continue
+		}
+		if n.Frozen != "" {
+			if mutation || ownedBy(n, key, layer, declaredKeys) {
+				left[frozen]++
+			}
+			continue
+		}
+		// A file the gate does not confront is not measured for it: the gate reads no score
+		// there, so a run would spend its slot and the budget for nothing. In the reference
+		// app a budgeted mutation run picked 37 `resource.ts` files the gate excludes by
+		// tag (`exclude_tags: [resource, …]`), each skipped by the script one by one.
+		// A gate entry that names no kind (`on:`) says nothing about its targets, and would
+		// empty the run; only a gate that declares them filters.
+		if declared && len(gateOf.On) > 0 && !gate.Applies(gateOf, n, root) {
+			continue
+		}
+		var st fileState
+		if mutation {
+			// A mutation signal does not say which suite measured it: every code file is a
+			// candidate of each mutation suite.
+			st = mutationState(n, ceiling)
+		} else {
+			if !ownedBy(n, key, layer, declaredKeys) {
+				continue
+			}
+			st = testState(g, n, layer)
+		}
+		// A test whose result is stale proves nothing, whatever it was: `evidence-fresh`
+		// refuses it. Measured on a project: the default left out 578 stale files that had passed
+		// once, the run read green, and the gate stayed red. A mutation score is a measure,
+		// not a proof, and keeps the square.
+		if sel.wants(st) || (!mutation && st == stalePassing) {
+			run = append(run, n.ID)
+		} else {
+			left[st]++
+		}
+	}
+	sort.Strings(run)
+	return run, left
+}
+
+// describeLeftOut says what a selective run did not take, and the flag that takes it.
+func describeLeftOut(left map[fileState]int) string {
+	var parts []string
+	for _, c := range []struct {
+		st   fileState
+		what string
+		flag string
+	}{
+		{freshPassing, "fresh and passing", "--include-fresh --include-passing"},
+		{stalePassing, "stale but passing", "--include-passing"},
+		{freshBelow, "fresh and below the minimum", "--include-fresh"},
+		{unmeasured, "never measured", "drop --skip-unmeasured"},
+		{frozen, "frozen", "`anchors freeze show`; thaw to run them"},
+	} {
+		if n := left[c.st]; n > 0 {
+			parts = append(parts, fmt.Sprintf("%d %s (%s)", n, c.what, c.flag))
+		}
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return "left out: " + strings.Join(parts, "; ")
+}
+
+// runSelective is the default run: for each suite, the files the selection takes — stale
+// and below the minimum, and never measured, unless the flags open more of the square —
+// through the suite's `run_changed:`, each batch ingested as a partial run. With a
+// budget, fastest first until it is spent. A suite with no `run_changed:` cannot run a
+// subset: it runs whole, and says so. With a budget such a suite is refused, as any
+// budget run refuses it, before anything runs.
+func runSelective(cs suiteCommand, suites []config.Suite, cfg *config.Config, absRoot, target string, budget time.Duration, picked runSelection) error {
+	mutation := cs.secao == "mutation"
+	var subset, whole []config.Suite
+	for _, s := range suites {
+		if strings.TrimSpace(s.RunChanged) == "" {
+			if budget > 0 {
+				return fmt.Errorf("layer %q: %w", s.Layer, budgetRunnable(cs, s))
+			}
+			whole = append(whole, s)
+		} else {
+			subset = append(subset, s)
+		}
+	}
+	var only []map[string]bool
+	var files [][]string
+	if len(subset) > 0 {
+		g, err := mapx.Load(filepath.Join(absRoot, mapx.DefaultPath))
+		if err != nil {
+			return fmt.Errorf("load map: %w (run `anchors map build`, or `--all` to run the suites whole)", err)
+		}
+		currentRevs(g, absRoot, cfg)
+		for _, s := range subset {
+			if budget > 0 {
+				if err := budgetRunnable(cs, s); err != nil {
+					return fmt.Errorf("layer %q: %w", s.Layer, err)
+				}
+			}
+			report := s.JUnit
+			if mutation {
+				report = s.Report
+			}
+			key := mapcmd.SuiteKey(absRoot, absPath(absRoot, report))
+			run, left := selectFiles(g, cfg, absRoot, mutation, key, s, picked)
+			if !mutation {
+				run = withImpactedTests(run, g, cfg, absRoot, key, s)
+			}
+			fmt.Printf("[%s%s] selected %d file(s) to run", workspaceLabel(s), s.Layer, len(run))
+			if d := describeLeftOut(left); d != "" {
+				fmt.Printf("; %s", d)
+			}
+			fmt.Println()
+			set := make(map[string]bool, len(run))
+			for _, id := range run {
+				set[id] = true
+			}
+			only = append(only, set)
+			files = append(files, run)
+		}
+		fmt.Println()
+	}
+	for _, s := range whole {
+		fmt.Printf("[%s%s] declares no `run_changed:`: it cannot run a subset, and runs whole\n\n", workspaceLabel(s), s.Layer)
+	}
+	if budget > 0 {
+		return budgetSuites(cs, subset, only, absRoot, target, time.Now().Add(budget))
+	}
+	for i, s := range subset {
+		if len(files[i]) == 0 {
+			fmt.Printf("[%s%s] nothing to run: every file is left out by its state (`--all` runs them)\n\n", workspaceLabel(s), s.Layer)
+			continue
+		}
+		if err := runFiles(cs, s, absRoot, target, files[i]); err != nil {
+			return err
+		}
+		if !mutation {
+			if err := reportUnproven(cfg, absRoot, s, files[i]); err != nil {
+				return err
+			}
+		}
+	}
+	if len(whole) > 0 {
+		return runSuites(cs, whole, absRoot, target, nil)
+	}
+	return nil
+}
+
+// runFiles runs a suite's `run_changed:` over the files, in as few batches as the
+// command-line ceiling allows, and ingests each as a partial run. It stops at the first
+// batch that fails, as a whole run stops at the first failing suite.
+func runFiles(cs suiteCommand, s config.Suite, absRoot, target string, ids []string) error {
+	for _, batch := range argvBatches(s, absFiles(absRoot, ids), suiteArgvLimit()) {
+		linha, err := pickCommand(s, batch, target)
+		if err != nil {
+			return fmt.Errorf("layer %q: %w", s.Layer, err)
+		}
+		fmt.Printf("━━━ %s [%s%s] %d file(s) ━━━\n%s\n\n", cs.nome, workspaceLabel(s), s.Layer, len(batch), linha)
+		start := time.Now()
+		sampler := sampleLoad()
+		errRun := execAtRoot(linha, absRoot)
+		peak, measured := sampler.Stop()
+		if err := ingestIfRecent(absRoot, absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), absPath(absRoot, s.Report), s, start, true); err != nil {
+			return fmt.Errorf("layer %q: ingest report: %w", s.Layer, err)
+		}
+		if errRun != nil && s.Report == "" {
+			passes, err := retryOnLoad(s, absRoot, target, absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), peak, measured)
+			if err != nil {
+				return err
+			}
+			if passes {
+				errRun = nil
+			}
+		}
+		if errRun != nil {
+			return fmt.Errorf("layer %q failed: %w", s.Layer, errRun)
+		}
+	}
+	return nil
+}
+
+// argvBatches splits the files so each batch's command line stays under the ceiling. A
+// single file longer than the ceiling still goes alone: refusing it would leave it never
+// run.
+func argvBatches(s config.Suite, files []string, ceiling int) [][]string {
+	base := len(strings.ReplaceAll(s.RunChanged, "{{files}}", ""))
+	var out [][]string
+	var cur []string
+	size := base
+	for _, f := range files {
+		if len(cur) > 0 && size+len(f)+1 > ceiling {
+			out = append(out, cur)
+			cur, size = nil, base
+		}
+		cur = append(cur, f)
+		size += len(f) + 1
+	}
+	if len(cur) > 0 {
+		out = append(out, cur)
+	}
+	return out
+}
+
+// withImpactedTests adds to a test run the test files of the rules a changed contract field
+// reaches (`gate.ImpactedTests`) that this suite runs: their own file did not move, and
+// the input of the rule they prove did.
+func withImpactedTests(run []string, g *mapx.Graph, cfg *config.Config, root, key string, suite config.Suite) []string {
+	byID := map[string]mapx.Node{}
+	for _, n := range g.Nodes {
+		byID[n.ID] = n
+	}
+	declaredKeys := declaredSuiteKeys(cfg, root)
+	var added []string
+	for _, t := range gate.ImpactedTests(root, g, cfg) {
+		n, ok := byID[t]
+		if !ok || n.Support || !suite.Covers(t) || !ownedBy(n, key, suite.Layer, declaredKeys) || slices.Contains(run, t) {
+			continue
+		}
+		run = append(run, t)
+		added = append(added, t)
+	}
+	if len(added) > 0 {
+		sort.Strings(run)
+		fmt.Printf("[%s%s] %d test file(s) added: a contract field their rules use changed — %s\n",
+			workspaceLabel(suite), suite.Layer, len(added), strings.Join(added, ", "))
+	}
+	return run
+}
+
+// reportUnproven says which files the suite was handed and came back with no fresh result: a
+// suite whose `paths:` cover files its runner does not run — a flow of another tool beside its
+// tests — hands them over and proves nothing, and the run read as if they had run. Measured on
+// a project: 34 Maestro flows went to `jest --findRelatedTests`, which found no test in them.
+//
+// When NONE of the files came back with a result, the run proved nothing, and that is a
+// failure, not a quiet success: measured on a project, a root in the wrong case handed jest paths it
+// did not know, it answered "No tests found" with exit 0, and five suites read as run.
+func reportUnproven(cfg *config.Config, absRoot string, s config.Suite, ids []string) error {
+	if strings.TrimSpace(s.JUnit) == "" {
+		return nil // a suite that declares no report cannot be told to have run nothing
+	}
+	g, err := mapx.Load(filepath.Join(absRoot, mapx.DefaultPath))
+	if err != nil {
+		return nil
+	}
+	currentRevs(g, absRoot, cfg)
+	byID := map[string]mapx.Node{}
+	for _, n := range g.Nodes {
+		byID[n.ID] = n
+	}
+	var none []string
+	for _, id := range ids {
+		n, ok := byID[id]
+		if !ok {
+			continue
+		}
+		if st := testState(g, n, s.Layer); st == unmeasured || st == stalePassing || st == staleBelow {
+			none = append(none, id)
+		}
+	}
+	if len(none) == 0 {
+		return nil
+	}
+	if len(none) == len(ids) {
+		return fmt.Errorf("layer %q: the suite was handed %d file(s) and reported a result for none — it ran no test of them (a path it does not know as its own? the first was %s; a file another suite runs is left out with the suite's `exclude:`)",
+			s.Layer, len(ids), absFiles(absRoot, ids[:1])[0])
+	}
+	shown := none
+	if len(shown) > 10 {
+		shown = shown[:10]
+	}
+	fmt.Printf("⚠ [%s%s] %d file(s) handed to the suite came back with no result — it does not run them, and they stay unproven: %s",
+		workspaceLabel(s), s.Layer, len(none), strings.Join(shown, ", "))
+	if len(none) > len(shown) {
+		fmt.Printf(" (+%d)", len(none)-len(shown))
+	}
+	fmt.Print("\n  Narrow the suite's `paths:` (or `exclude:` what it does not run) to the files its runner runs, and declare the suite that runs the others.\n\n")
+	return nil
+}

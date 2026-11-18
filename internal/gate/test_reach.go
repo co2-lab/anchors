@@ -1,0 +1,265 @@
+// @anchors
+//   code: TRGTS
+//   ref: TSRCH
+
+package gate
+
+import (
+	"path"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// DOES THE TEST REACH THE UNIT IT SAYS IT TESTS?
+//
+// A test can carry every code, match every title and assert — over a copy. The unit's
+// function pasted into the test file and exercised there; a test that imports a neighbour
+// instead of its unit; an end-to-end test whose `ref:` names one handler and invokes
+// another. The gates that read titles see nothing wrong, and the unit can change freely.
+//
+// Two gates ask it, on the same routine:
+//
+//	test-exercises-unit    the unit the derivation pairs with the test (`TestedUnits`)
+//	test-ref-matches-unit  the unit the test's `ref:` names
+//
+// They are separate because the project decides per gate what blocks: a copied function
+// is a defect anywhere, a `ref:` reached by a call Anchors cannot see is not.
+//
+// Reaching is read without knowing the language. The test reaches a unit when:
+//   - an import line of the test names the unit's module (its file name, or its directory);
+//   - the test names something the unit DEFINES, which the dialect's `definition` says how
+//     to find (a function, a type, a class), and does not define it itself;
+//   - (for the `ref:`) a call the project declares on the gate entry, `invocations`, names
+//     the unit — how a test reaches a lambda, a route, a job.
+//
+// And the test COPIES the unit when it defines a name the unit defines: the test is then
+// exercising its own version.
+
+// minDefinedName is the shortest defined name read as the unit's own: a one- or two-letter
+// name (`T`, `ok`) is anyone's.
+const minDefinedName = 3
+
+// definedName is one definition: the name a reader writes to use it, and whether it is a
+// MEMBER of a type.
+type definedName struct {
+	bare   string
+	member bool
+}
+
+// definedNames are the names the text defines, by the dialect's `definition`, keyed by
+// identity: the first non-empty capture group of each match, qualified by the group named
+// `owner` when the dialect captures one (Go's method receiver: `GormPinger.Ping`).
+//
+// A MEMBER is a definition that belongs to a type — one with an owner, or one indented
+// under its type (a Python method). A test that implements an interface with a fake of its
+// own defines a member with the unit's method name (`fakePinger.Ping` beside
+// `GormPinger.Ping`); that is the test's type, not a copy of the unit (reported from
+// a project). An owner tells the two apart, so a Go method is a copy only when the test
+// defines it for the SAME type; an indented member with no owner is never read as a copy.
+func definedNames(text string, def *regexp.Regexp) map[string]definedName {
+	out := map[string]definedName{}
+	ownerIdx := def.SubexpIndex("owner")
+	for _, loc := range def.FindAllStringSubmatchIndex(text, -1) {
+		owner, name := "", ""
+		for g := 1; g*2 < len(loc); g++ {
+			if loc[2*g] < 0 {
+				continue
+			}
+			v := text[loc[2*g]:loc[2*g+1]]
+			if g == ownerIdx {
+				owner = v
+			} else if name == "" && v != "" {
+				name = v
+			}
+		}
+		if len(name) < minDefinedName {
+			continue
+		}
+		indented := loc[0] < len(text) && (text[loc[0]] == ' ' || text[loc[0]] == '\t')
+		key := name
+		if owner != "" {
+			key = owner + "." + name
+		}
+		out[key] = definedName{bare: name, member: owner != "" || indented}
+	}
+	return out
+}
+
+// reach is how a test reaches a unit, and what it copies of it.
+type reach struct {
+	Reached bool
+	Copied  []string
+}
+
+// reachOf reads whether `test` reaches the unit at `unit` (a path relative to root), by
+// import, by a name the unit defines, or by one of the declared invocations.
+//
+// Each side is read with its own dialect's `definition`: the test's names by the test's, the
+// unit's by the unit's.
+func reachOf(test, testPath, unit, root string, cfg *config.Config, invocations []*regexp.Regexp) reach {
+	var r reach
+	if importsModule(test, testPath, unit, cfg) || invokes(test, unit, invocations) {
+		r.Reached = true
+	}
+	def := definitionOf(cfg, testPath)
+	if def == nil {
+		return r
+	}
+	unitDef := definitionOf(cfg, unit)
+	if unitDef == nil {
+		unitDef = def
+	}
+	b, err := readFile(root, unit)
+	if err != nil {
+		return r // @resilient: an unreadable unit defines nothing this reading can name; the map notices a missing file
+	}
+	own := definedNames(test, def)
+	for key, d := range definedNames(string(b), unitDef) {
+		// A copy is the same definition again: the same name with the same owner. An
+		// indented member with no owner can be anyone's type, and is not read as one.
+		if t, ok := own[key]; ok && !(t.member && !strings.Contains(key, ".")) {
+			r.Copied = append(r.Copied, key)
+			continue
+		}
+		if !r.Reached && regexp.MustCompile(`\b`+regexp.QuoteMeta(d.bare)+`\b`).MatchString(test) {
+			r.Reached = true
+		}
+	}
+	sort.Strings(r.Copied)
+	return r
+}
+
+// importsModule says whether an import line of the test names the unit's module: its file
+// name without extension, or its directory as a path (`internal/gate`), which is how a
+// package-per-directory language imports it.
+func importsModule(test, testPath, unit string, cfg *config.Config) bool {
+	lines := importLines(test, testPath, cfg)
+	if importsUnit(lines, unit) {
+		return true
+	}
+	dir := path.Dir(filepath.ToSlash(unit))
+	if dir == "." || dir == "" {
+		return false
+	}
+	for _, l := range lines {
+		if strings.Contains(l, dir) {
+			return true
+		}
+	}
+	return false
+}
+
+// invokes says whether a declared invocation in the test names the unit: its first
+// non-empty capture is the unit's file name without extension, or one of its directories.
+func invokes(test, unit string, invocations []*regexp.Regexp) bool {
+	if len(invocations) == 0 {
+		return false
+	}
+	u := filepath.ToSlash(unit)
+	names := map[string]bool{strings.TrimSuffix(path.Base(u), path.Ext(u)): true}
+	for _, seg := range strings.Split(path.Dir(u), "/") {
+		if seg != "." && seg != "" {
+			names[seg] = true
+		}
+	}
+	for _, re := range invocations {
+		for _, m := range re.FindAllStringSubmatch(test, -1) {
+			for _, g := range m[1:] {
+				if g != "" {
+					if names[g] {
+						return true
+					}
+					break
+				}
+			}
+		}
+	}
+	return false
+}
+
+// definitionOf is the `definition` of the file's dialect, compiled; nil when it has none.
+func definitionOf(cfg *config.Config, rel string) *regexp.Regexp {
+	if cfg == nil {
+		return nil
+	}
+	d := cfg.DialectAt(rel)
+	if strings.TrimSpace(d.Definition) == "" {
+		return nil
+	}
+	re, err := regexp.Compile(d.Definition)
+	if err != nil {
+		return nil // @resilient: the configuration's load refuses a pattern that does not compile
+	}
+	return re
+}
+
+// ── test-exercises-unit ────────────────────────────────────────────────────
+
+// noUnitImportRE is the waiver of a test that does not reach its unit the way this gate
+// reads, with its reason: `@no-unit-import: <why>`.
+var noUnitImportRE = regexp.MustCompile(`@no-unit-import[^\S\n]*:[^\S\n]*\S+`)
+
+func checkTestExercisesUnit(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindTest || n.Support {
+		return Skip, i18n.T("gate.test_reach.skip_not_test")
+	}
+	units := testedUnits(g, cfg)[n.ID]
+	if len(units) == 0 {
+		return Skip, i18n.T("gate.test_exercises_unit.skip_no_unit")
+	}
+	if noUnitImportRE.MatchString(content) {
+		return Pass, "" // declared: the test reaches its unit another way, and says why
+	}
+	if definitionOf(cfg, n.ID) == nil {
+		return Skip, i18n.T("gate.test_reach.skip_no_definition")
+	}
+	var problems []string
+	for _, u := range units {
+		r := reachOf(content, n.ID, u, root, cfg, nil)
+		if len(r.Copied) > 0 {
+			problems = append(problems, i18n.T("gate.test_exercises_unit.copied", u, strings.Join(r.Copied, ", ")))
+		}
+		if !r.Reached {
+			problems = append(problems, i18n.T("gate.test_exercises_unit.not_reached", u))
+		}
+	}
+	if len(problems) > 0 {
+		return Fail, strings.Join(problems, "; ")
+	}
+	return Pass, ""
+}
+
+// ── test-ref-matches-unit ──────────────────────────────────────────────────
+
+func checkTestRefMatchesUnit(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindTest || n.Support {
+		return Skip, i18n.T("gate.test_reach.skip_not_test")
+	}
+	m := refHeaderRE().FindStringSubmatch(content)
+	if m == nil {
+		return Skip, i18n.T("gate.test_ref_matches_unit.skip_no_ref")
+	}
+	units := unitFiles(g, m[1])
+	if len(units) == 0 {
+		return Skip, i18n.T("gate.test_ref_matches_unit.skip_no_code", m[1])
+	}
+	var invocations []*regexp.Regexp
+	for _, p := range gateEntry(cfg, "test-ref-matches-unit").Invocations {
+		if re, err := regexp.Compile(p); err == nil {
+			invocations = append(invocations, re)
+		}
+	}
+	for _, u := range units {
+		if reachOf(content, n.ID, u, root, cfg, invocations).Reached {
+			return Pass, ""
+		}
+	}
+	sort.Strings(units)
+	return Fail, i18n.T("gate.test_ref_matches_unit.fail", m[1], strings.Join(units, ", "))
+}

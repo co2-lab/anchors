@@ -1,0 +1,594 @@
+// @anchors
+//   code: UCTNT
+//   ref: UNTCP
+
+package gate
+
+import (
+	"github.com/co2-lab/anchors/internal/testkit"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// grafo mínimo: spec → código (specifies), spec → feature (covered-by),
+// feature → teste (tested-by). O teste se alcança em DOIS saltos a partir da spec.
+func unitGraph(withCode, withFeature, withTest bool) *mapx.Graph {
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{
+			{ID: "x.spec.md", Kind: mapx.KindSpec},
+			{ID: "x.ts", Kind: mapx.KindCode},
+			{ID: "x.feature", Kind: mapx.KindFeature},
+			{ID: "x.test.ts", Kind: mapx.KindTest},
+		},
+	}
+	if withCode {
+		g.Edges = append(g.Edges, mapx.Edge{From: "x.spec.md", To: "x.ts", Type: mapx.EdgeSpecifies})
+	}
+	if withFeature {
+		g.Edges = append(g.Edges, mapx.Edge{From: "x.spec.md", To: "x.feature", Type: mapx.EdgeCoveredBy})
+	}
+	if withTest {
+		g.Edges = append(g.Edges, mapx.Edge{From: "x.feature", To: "x.test.ts", Type: mapx.EdgeTestedBy})
+	}
+	return g
+}
+
+func specNode() mapx.Node { return mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec} }
+
+// raizComProva escreve o teste `x.test.ts` mencionando `codigo`, para que a referência
+// verificável do `@no-test` RESOLVA. Sem isso, todo teste que usa `@no-test` reprovaria
+// pela referência órfã — que é justamente o que o gate passou a cobrar.
+func raizComProva(t *testing.T, codigo string) string {
+	t.Helper()
+	root := t.TempDir()
+	conteudo := "it('" + codigo + ": prova o comportamento', () => {})\n"
+	if err := os.WriteFile(filepath.Join(root, "x.test.ts"), []byte(conteudo), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return root
+}
+
+func TestUnitComplete_unitWholePassa(t *testing.T) {
+	t.Run("UNTCP-B04: A spec with the three pieces linked passes", func(t *testing.T) {})
+	g := unitGraph(true, true, true)
+	if v, msg := checkUnitComplete("", specNode(), "", g, testkit.WithComments(&config.Config{})); v != Pass {
+		t.Errorf("unidade completa deveria passar: %v (%s)", v, msg)
+	}
+}
+
+func TestUnitComplete_testeAlcancadoEmDoisSaltos(t *testing.T) {
+	t.Run("UNTCP-I01: The test is reached in two hops, through the feature", func(t *testing.T) {})
+	// A regressão que eu mesmo introduzi: procurar `tested-by` DIRETO na spec acusa
+	// falta de teste em todo projeto, porque a aresta nasce na FEATURE.
+	g := unitGraph(true, true, true)
+	v, msg := checkUnitComplete("", specNode(), "", g, testkit.WithComments(&config.Config{}))
+	if v != Pass {
+		t.Fatalf("teste ligado à feature deveria contar p/ a spec: %v (%s)", v, msg)
+	}
+}
+
+func TestUnitComplete_semTesteReprova(t *testing.T) {
+	g := unitGraph(true, true, false)
+	v, msg := checkUnitComplete("", specNode(), "", g, testkit.WithComments(&config.Config{}))
+	if v != Fail {
+		t.Fatalf("sem teste deveria reprovar, got %v", v)
+	}
+	if !strings.Contains(msg, "test") && !strings.Contains(msg, "teste") {
+		t.Errorf("mensagem deveria citar o que falta: %q", msg)
+	}
+}
+
+func TestUnitComplete_specSozinhaReprovaCitandoAsTresPecas(t *testing.T) {
+	t.Run("UNTCP-B05: A spec missing a piece is failed, and the verdict names which", func(t *testing.T) {})
+	// o caso que motivou o gate: spec sem nada atravessava TODOS os gates.
+	g := unitGraph(false, false, false)
+	v, msg := checkUnitComplete("", specNode(), "", g, testkit.WithComments(&config.Config{}))
+	if v != Fail {
+		t.Fatalf("spec sozinha deveria reprovar, got %v", v)
+	}
+	for _, peca := range []string{"code", "feature", "test"} {
+		if !strings.Contains(msg, peca) {
+			t.Errorf("mensagem deveria citar %q: %q", peca, msg)
+		}
+	}
+}
+
+func TestUnitComplete_camadaReconhecidaPula(t *testing.T) {
+	t.Run("UNTCP-B02: A recognised layer leaves without a verdict", func(t *testing.T) {})
+	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"dao"}, Regime: "declarativo"}
+	g := unitGraph(false, false, false)
+	if v, _ := checkUnitComplete("", n, "", g, testkit.WithComments(&config.Config{})); v != Skip {
+		t.Errorf("camada reconhecida não tem unidade a cobrar, esperava Skip, got %v", v)
+	}
+}
+
+func TestUnitComplete_optionalUnitEdgesDispensaPeca(t *testing.T) {
+	t.Run("UNTCP-B06: The layer may waive a piece for every spec in it", func(t *testing.T) {})
+	// opt-out HONESTO: declarado na Estrutura, não escondido num Skip.
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{
+		"repository": {OptionalUnitEdges: []string{"tested-by"}},
+	}})
+	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"repository"}}
+	g := unitGraph(true, true, false) // sem teste
+	if v, msg := checkUnitComplete("", n, "", g, cfg); v != Pass {
+		t.Errorf("camada que dispensa tested-by deveria passar: %v (%s)", v, msg)
+	}
+}
+
+func TestUnitComplete_naoSpecPula(t *testing.T) {
+	t.Run("UNTCP-B01: An artifact that is not a spec leaves without a verdict", func(t *testing.T) {})
+	n := mapx.Node{ID: "x.ts", Kind: mapx.KindCode}
+	if v, _ := checkUnitComplete("", n, "", unitGraph(false, false, false), testkit.WithComments(&config.Config{})); v != Skip {
+		t.Errorf("a unidade é cobrada da spec, esperava Skip p/ código, got %v", v)
+	}
+}
+
+func TestUnitComplete_noTestDispensaPorUnidade(t *testing.T) {
+	t.Run("UNTCP-B07: The unit may waive a piece in its own spec, with a written reason", func(t *testing.T) {})
+	// A dispensa por CAMADA isenta em bloco; esta é da UNIDADE e fica escrita nela.
+	// Serve para o caso real: dentro de `services` convivem o gateway de 9 linhas
+	// que só repassa a chamada e o módulo de 150 com regra — isentar os dois junto
+	// apagaria a cobrança justamente onde ela vale.
+	g := unitGraph(true, true, false) // sem teste
+	root := raizComProva(t, "AAAAX-B01")
+	spec := "@no-test: gateway de 1 linha sobre apiCall; provado por `AAAAX-B01`\n"
+	if v, msg := checkUnitComplete(spec, specNode(), root, g, testkit.WithComments(&config.Config{})); v != Pass {
+		t.Errorf("`@no-test` com razão dispensa o teste daquela unidade: %v (%s)", v, msg)
+	}
+}
+
+func TestUnitComplete_dispensaExigeRazao(t *testing.T) {
+	// Marcador NU não dispensa — senão `@no-test` viraria um jeito silencioso de
+	// calar o gate, que é o oposto do opt-out honesto.
+	g := unitGraph(true, true, false)
+	for _, nu := range []string{"@no-test\n", "@no-test:\n", "@no-test:   \n"} {
+		if v, _ := checkUnitComplete(nu, specNode(), "", g, testkit.WithComments(&config.Config{})); v != Fail {
+			t.Errorf("marcador sem razão (%q) NÃO pode dispensar: %v", nu, v)
+		}
+	}
+}
+
+func TestUnitComplete_noFeatureArrastaOTeste(t *testing.T) {
+	// Sem feature não há cenário a provar: cobrar o teste seria exigir a prova de
+	// algo que ninguém especificou.
+	g := unitGraph(true, false, false)
+	spec := "@no-feature: wiring de infraestrutura, sem regra observável\n"
+	if v, msg := checkUnitComplete(spec, specNode(), "", g, testkit.WithComments(&config.Config{})); v != Pass {
+		t.Errorf("`@no-feature` dispensa feature E teste: %v (%s)", v, msg)
+	}
+}
+
+func TestUnitComplete_dispensaNaoApagaOCodigo(t *testing.T) {
+	t.Run("UNTCP-I04: A waiver covers only the piece it declares", func(t *testing.T) {})
+	// O CÓDIGO nunca é dispensável: uma spec sem o arquivo que ela descreve é a
+	// própria situação que este gate existe para pegar.
+	g := unitGraph(false, true, true)
+	spec := "@no-test: qualquer razão\n@no-feature: qualquer razão\n"
+	if v, _ := checkUnitComplete(spec, specNode(), "", g, testkit.WithComments(&config.Config{})); v != Fail {
+		t.Errorf("a dispensa não pode apagar a exigência do código: %v", v)
+	}
+}
+
+func TestUnitComplete_noTestComCenarioNaFeatureEhContradicao(t *testing.T) {
+	t.Run("UNTCP-I02: Waiving the test while the feature carries a scenario is a contradiction", func(t *testing.T) {})
+	// `@no-test` diz "não há o que provar"; um cenário diz "prova-se assim". As duas
+	// afirmações não convivem — e sem esta checagem a contradição fica MUDA: a
+	// dispensa satisfaz o unit-complete e o feature-test-match só cobra quando há
+	// teste a confrontar. Resultado: cenário escrito que ninguém prova, tudo verde.
+	root := raizComProva(t, "AAAAX-B01")
+	if err := os.WriteFile(filepath.Join(root, "x.feature"),
+		[]byte("Funcionalidade: X\n\n  Cenário: faz algo\n    Dado a\n    Quando b\n    Então c\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := unitGraph(true, true, false)
+	spec := "@no-test: gateway de uma linha, provado por `AAAAX-B01`\n"
+
+	v, msg := checkUnitComplete(spec, specNode(), root, g, testkit.WithComments(&config.Config{}))
+	if v != Fail {
+		t.Fatalf("dispensa + cenário é contradição e deve reprovar: %v", v)
+	}
+	if !strings.Contains(msg, "@no-test") || (!strings.Contains(msg, "cenário") && !strings.Contains(msg, "scenario")) {
+		t.Errorf("a mensagem deve nomear a contradição: %s", msg)
+	}
+}
+
+func TestUnitComplete_noTestSemCenarioPassa(t *testing.T) {
+	// Feature com cabeçalho e NENHUM cenário (esqueleto) não contradiz a dispensa —
+	// não há afirmação de comportamento a provar.
+	root := raizComProva(t, "AAAAX-B01")
+	if err := os.WriteFile(filepath.Join(root, "x.feature"),
+		[]byte("Funcionalidade: X\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := unitGraph(true, true, false)
+	spec := "@no-test: gateway de uma linha, provado por `AAAAX-B01`\n"
+	if v, msg := checkUnitComplete(spec, specNode(), root, g, testkit.WithComments(&config.Config{})); v != Pass {
+		t.Errorf("feature sem cenário não contradiz a dispensa: %v (%s)", v, msg)
+	}
+}
+
+// A referência do `@no-test` tem de RESOLVER: um código que nenhum teste menciona é
+// uma promessa vazia. Pior que a ausência — ela passa a impressão de que a prova foi
+// conferida por alguém.
+func TestUnitComplete_noTestComReferenciaOrfaReprova(t *testing.T) {
+	t.Run("UNTCP-I03: Waiving the test demands saying where the proof is, and the place must exist", func(t *testing.T) {})
+	root := raizComProva(t, "AAAAX-B01") // o teste prova B01…
+	g := unitGraph(true, true, false)
+	spec := "@no-test: provado por `AAAAX-B99`\n" // …mas a spec alega B99
+
+	v, msg := checkUnitComplete(spec, specNode(), root, g, testkit.WithComments(&config.Config{}))
+	if v != Fail {
+		t.Fatalf("referência que não resolve deve reprovar: %v", v)
+	}
+	if !strings.Contains(msg, "AAAAX-B99") {
+		t.Errorf("a mensagem deve nomear o código órfão: %s", msg)
+	}
+}
+
+// Razão em PROSA, sem código, não basta: é exatamente o "provado na integração" que
+// ninguém consegue conferir. É a regra que este gate passou a cobrar.
+func TestUnitComplete_noTestSemReferenciaReprova(t *testing.T) {
+	root := raizComProva(t, "AAAAX-B01")
+	g := unitGraph(true, true, false)
+	spec := "@no-test: gateway de uma linha, provado no teste de integração central\n"
+
+	if v, _ := checkUnitComplete(spec, specNode(), root, g, testkit.WithComments(&config.Config{})); v != Fail {
+		t.Errorf("prosa sem código não é referência verificável: %v", v)
+	}
+}
+
+// `@no-feature` NÃO precisa de referência: ele afirma que não há comportamento
+// observável, e não existe prova a apontar. Exigir o endereço de algo que a spec acabou
+// de dizer que não existe seria incoerente — e travaria todo gateway sem regra.
+func TestUnitComplete_noFeatureNaoExigeReferencia(t *testing.T) {
+	g := unitGraph(true, false, false)
+	spec := "@no-feature: wiring de infraestrutura, sem regra observável\n"
+
+	if v, msg := checkUnitComplete(spec, specNode(), t.TempDir(), g, testkit.WithComments(&config.Config{})); v != Pass {
+		t.Errorf("`@no-feature` dispensa sem exigir referência: %v (%s)", v, msg)
+	}
+}
+
+// `@TBD` (TO BE DEVELOPED) e `@no-test` dizem coisas DIFERENTES, e a diferença é o tempo.
+//
+// A spec nasce ANTES do código — é o fluxo normal do Anchors, já que a spec é a âncora.
+// Sem o `@TBD`, quem escreve uma spec nova tem duas saídas e ambas são ruins: barrar o
+// commit de todo trabalho em andamento, ou declarar `@no-test` mentindo — e aí a cobrança
+// some PARA SEMPRE justamente na unidade que mais vai precisar dela.
+func TestTBDDispensaSoOQueFoiDeclarado(t *testing.T) {
+	casos := []struct {
+		marca   string
+		quer    []string
+		naoQuer []string
+	}{
+		{"@TBD: code", []string{string(mapx.EdgeSpecifies)},
+			[]string{string(mapx.EdgeTestedBy), string(mapx.EdgeCoveredBy)}},
+		{"@TBD: code,test", []string{string(mapx.EdgeSpecifies), string(mapx.EdgeTestedBy)},
+			[]string{string(mapx.EdgeCoveredBy)}},
+		{"@TBD: code, feature, test",
+			[]string{string(mapx.EdgeSpecifies), string(mapx.EdgeCoveredBy), string(mapx.EdgeTestedBy)},
+			nil},
+	}
+	for _, c := range casos {
+		got := piecesToDevelop("# Spec\n\n> " + c.marca + " — em andamento\n")
+		for _, q := range c.quer {
+			if !got[q] {
+				t.Errorf("%q deveria dispensar %q", c.marca, q)
+			}
+		}
+		for _, n := range c.naoQuer {
+			if got[n] {
+				t.Errorf("%q NÃO pode dispensar %q — o alvo é obrigatório justamente para "+
+					"que a marca não vire interruptor geral do gate", c.marca, n)
+			}
+		}
+	}
+}
+
+// Sem `@TBD` nenhum, nada é dispensado — o marcador é opt-in.
+func TestSemTBDNadaEhDispensado(t *testing.T) {
+	if len(piecesToDevelop("# Spec sem marca nenhuma\n")) != 0 {
+		t.Error("sem `@TBD` o gate cobra tudo, como sempre cobrou")
+	}
+	// E `@TBD` sem alvo não dispensa nada: "está em andamento" sem dizer o quê seria
+	// um interruptor geral, que é o oposto do que este marcador é.
+	if len(piecesToDevelop("# Spec\n\n> @TBD\n")) != 0 {
+		t.Error("`@TBD` sem alvo não pode dispensar nada")
+	}
+}
+
+// O `@TBD` ENTRE CRASES é citação, não declaração.
+//
+// Uma revisão que explica a remoção da dispensa cita o marcador — "a dispensa
+// `@TBD: code,feature,test` do cabeçalho SAIU" — e sem a guarda a citação a REATIVA. A
+// spec passaria a declarar uma ausência que o texto ao lado diz ter deixado de existir.
+//
+// Medido ao remover o `@TBD` de três specs com as unidades completas: o gate continuou
+// lendo a dispensa, agora do texto da própria revisão que a removia — e o `unit-complete`
+// voltou a INDETERMINADO, que é o pior resultado (nem passa nem acusa, e parece cobertura).
+func TestPiecesToDevelop_citacaoEntreCrasesNaoDispensa(t *testing.T) {
+	casos := []struct {
+		nome     string
+		corpo    string
+		dispensa bool
+	}{
+		{"declaração ativa", "> **@TBD: code,test** — em andamento", true},
+		{"no início da linha", "@TBD: code", true},
+		{"citação numa revisão", "> a dispensa `@TBD: code,feature,test` do cabeçalho SAIU", false},
+		{"citação em prosa", "removi o `@TBD: test` porque a peça existe", false},
+	}
+	for _, c := range casos {
+		t.Run(c.nome, func(t *testing.T) {
+			got := len(piecesToDevelop(c.corpo)) > 0
+			if got != c.dispensa {
+				t.Errorf("dispensa=%v, queria %v para:\n%s", got, c.dispensa, c.corpo)
+			}
+		})
+	}
+}
+
+// E a declaração ativa continua nomeando as peças certas — a guarda não pode comer o
+// grupo de captura.
+func TestPiecesToDevelop_aDeclaracaoAtivaNomeiaAsPecas(t *testing.T) {
+	pecas := piecesToDevelop("> **@TBD: code,feature** — a spec nasce primeiro")
+	if len(pecas) != 2 {
+		t.Fatalf("peças = %v, queria code e feature", pecas)
+	}
+}
+
+// O REGIME DECLARADO vence o fallback por NOME, e a camada da spec é a do header.
+//
+// Duas coisas se somavam para dispensar unidades que têm regra:
+//
+//  1. `infra` está entre os nomes canônicos de camada declarativa (DAO, adaptador), e o
+//     fallback os reconhece por nome quando o projeto não declara regime;
+//  2. o nó de uma SPEC tem `layer: spec` — ela casa `**/*.spec.md` —, então o `Regime`
+//     copiado para o nó é o da camada `spec`, e o que o projeto declarou para `infra`
+//     nunca chegava.
+//
+// Medido: `packages/infra/` do projeto de referência é CDK COM regra — três unidades, 19
+// regras e invariantes somados, 61 testes, toda mutação detectada — e o `unit-complete`
+// respondia INDETERMINADO nas três. Nem passa nem acusa, e parece cobertura.
+func TestIsRecognizedLayerCfg_oRegimeDeclaradoVence(t *testing.T) {
+	spec := mapx.Node{Kind: mapx.KindSpec, Layer: "spec", Tags: []string{"spec"}}
+	header := "<!-- @anchors\n  layer: infra\n-->\n"
+
+	semDeclaracao := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{"infra": {}}})
+	comRegra := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{
+		"infra": {Regime: "comportamental"},
+	}})
+	comDispensa := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{
+		"infra": {Regime: "declarativo"},
+	}})
+
+	// Sem regime declarado, NENHUM nome dispensa: `infra` é só um nome, e só o regime que o
+	// projeto declara decide (GDLYG-D04).
+	if isRecognizedLayerCfg(spec, header, semDeclaracao) {
+		t.Error("sem regime declarado, o nome `infra` não pode dispensar a unidade")
+	}
+	// Declarado comportamental, a unidade é COBRADA.
+	if isRecognizedLayerCfg(spec, header, comRegra) {
+		t.Error("o projeto declarou `comportamental` e o gate dispensou pelo NOME da camada")
+	}
+	// Declarado declarativo, a dispensa continua.
+	if !isRecognizedLayerCfg(spec, header, comDispensa) {
+		t.Error("o projeto declarou `declarativo` e o gate cobrou")
+	}
+}
+
+// `@no-code` — a unidade cuja implementação É configuração.
+//
+// O comentário do gate citava este marcador desde sempre e ele nunca existiu. A lacuna só
+// apareceu quando o gate passou a confrontar de verdade: a `ContinuousIntegration` do
+// projeto de referência É os workflows do GitHub Actions, e não tem módulo a escrever. As
+// saídas eram deixar o gate reprovando para sempre, ou fingir um módulo que "valida a
+// configuração" e só saberia dizer que ela existe.
+func TestSpecWaivers_noCode(t *testing.T) {
+	// A razão é obrigatória: um marcador nu seria um jeito silencioso de calar o gate.
+	if len(specWaivers("@no-code")) != 0 {
+		t.Error("`@no-code` sem razão dispensou — a razão é o que separa decisão de esquecimento")
+	}
+
+	w := specWaivers("@no-code: a unidade É a configuração do pipeline")
+	// Sem módulo não há o que a feature exercitar nem o que o teste provar.
+	for _, e := range []mapx.EdgeType{mapx.EdgeSpecifies, mapx.EdgeCoveredBy, mapx.EdgeTestedBy} {
+		if !w[string(e)] {
+			t.Errorf("`@no-code` não dispensou %s — sem módulo, as três caem juntas", e)
+		}
+	}
+}
+
+// SEM MAPA o veredito é INDETERMINADO, nunca aprovação. As peças são arestas, e sem o
+// grafo não há o que olhar — aprovar aqui seria afirmar o que não se mediu, que é o
+// defeito que este gate existe para fechar, cometido por ele próprio.
+func TestUnitComplete_semMapaEhIndeterminado(t *testing.T) {
+	t.Run("UNTCP-B03: Without a map the verdict is undetermined", func(t *testing.T) {})
+	if v, msg := checkUnitComplete("", specNode(), "", nil, testkit.WithComments(&config.Config{})); v != Pending {
+		t.Errorf("sem mapa o gate tem de ficar indeterminado, não aprovar: %v (%s)", v, msg)
+	}
+}
+
+// O gate responde "as peças EXISTEM?", não "elas casam?". Casar é trabalho dos gates
+// relacionais — e este existe justamente porque eles falham ABERTO quando a peça falta.
+// Fazer os dois aqui duplicaria a régua em dois lugares que divergiriam.
+func TestUnitComplete_naoConfrontaSeAsPecasCasam(t *testing.T) {
+	t.Run("UNTCP-X01: The gate does not confront whether the pieces MATCH one another", func(t *testing.T) {})
+	// As três peças ligadas, e nada afirmado sobre o CONTEÚDO de nenhuma delas.
+	g := unitGraph(true, true, true)
+	if v, msg := checkUnitComplete("", specNode(), "", g, testkit.WithComments(&config.Config{})); v != Pass {
+		t.Errorf("o gate foi além da existência das peças: %v (%s)", v, msg)
+	}
+}
+
+// A régua aqui é a EXISTÊNCIA. Uma feature sem cenário e um teste vazio satisfazem este
+// gate, e é correto: quem confronta o conteúdo é outro gate, e confundir os dois faria
+// este reprovar por um critério que não sabe medir.
+func TestUnitComplete_naoJulgaAQualidadeDasPecas(t *testing.T) {
+	t.Run("UNTCP-X02: The gate does not judge the QUALITY of any piece", func(t *testing.T) {})
+	g := unitGraph(true, true, true)
+	if v, msg := checkUnitComplete("", specNode(), "", g, testkit.WithComments(&config.Config{})); v != Pass {
+		t.Errorf("o gate julgou a qualidade das peças, e a régua é a existência: %v (%s)", v, msg)
+	}
+}
+
+// `@TBD` and `@no-*` say DIFFERENT things, and the difference decides the verdict.
+//
+// `@no-<piece>: <reason>` asserts "this unit WILL NEVER HAVE that piece" — a permanent
+// waiver, and the gate passes. `@TBD: code,test` asserts "I have not written it yet" —
+// debt, and the gate stays Pending, visible until someone pays it.
+//
+// Until they were separated both shared a bucket and became Pass: a spec with
+// `@TBD: code,feature,test` came out GREEN, indistinguishable from a complete unit —
+// erasing from the radar exactly the work that remains.
+func TestUnitComplete_tbdIsDebtNotWaiver(t *testing.T) {
+	t.Run("UNTCP-B08: A piece declared TO BE DEVELOPED leaves the verdict undetermined", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec}}}
+	n := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
+
+	tbd := "<!-- @anchors\n  @TBD: code,feature,test — o handler vem na fase 2\n-->\n# X\n"
+	v, msg := checkUnitComplete(tbd, n, t.TempDir(), g, testkit.WithComments(nil))
+	if v != Diverge {
+		t.Errorf("@TBD devia ser Pending (divida), veio %v (%s)", v, msg)
+	}
+
+	naoVaiTer := "<!-- @anchors\n  @no-code: e configuracao pura\n  @no-feature: sem comportamento observavel\n" +
+		"  @no-test: provado por `OUTRO-B01`\n-->\n# X\n"
+	if v, msg := checkUnitComplete(naoVaiTer, n, t.TempDir(), g, testkit.WithComments(nil)); v != Pass {
+		t.Errorf("@no-* devia ser Pass (dispensa), veio %v (%s)", v, msg)
+	}
+
+	if v, _ := checkUnitComplete("# X\n", n, t.TempDir(), g, testkit.WithComments(nil)); v != Fail {
+		t.Errorf("sem declaracao nenhuma devia ser Fail, veio %v", v)
+	}
+}
+
+// A per-rule waiver lives in the rule's TABLE ROW; reading it as the unit's waived code,
+// feature and test for the whole unit (reference app: 293 of 308 unit failures).
+func TestSpecWaivers_tableRowIsTheRulesNotTheUnits(t *testing.T) {
+	t.Run("UNTCP-B09: a per-rule waiver in a table row does not waive the unit", func(t *testing.T) {})
+	spec := "| Rule | What |\n| --- | --- |\n" +
+		"| `CMTC-X01` | NÃO faz aviso de duplicata — @no-code: satisfeita pela AUSÊNCIA |\n" +
+		"| `CMTC-B02` | @no-test: provado pelo tsc |\n"
+	if w := specWaivers(spec); len(w) != 0 {
+		t.Errorf("per-rule waivers in table rows were read as unit waivers: %v", w)
+	}
+	heading := "### AERXX-S01: Alerta simples (só OK) — @no-code: estado sem lógica\n" +
+		"- **SMCSX-V02**: Mês no topo @no-code: satisfeita pela delegação\n"
+	if w := specWaivers(heading); len(w) != 0 {
+		t.Errorf("per-rule waivers on a rule's heading/bullet were read as unit waivers: %v", w)
+	}
+	unit := spec + "\n@no-code: a unidade é a configuração do pipeline\n"
+	if w := specWaivers(unit); len(w) == 0 {
+		t.Error("a unit-level waiver outside the table stopped counting")
+	}
+}
+
+func TestUnitComplete_Errors(t *testing.T) {
+	t.Run("UNTCP-E01: A test missing from disk does not orphan a reference another test resolves", func(t *testing.T) {
+		root := raizComProva(t, "AAAAX-B01")
+		if err := os.WriteFile(filepath.Join(root, "x.feature"), []byte("Feature: X\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		g := unitGraph(true, true, false)
+		g.Nodes = append([]mapx.Node{{ID: "gone.test.ts", Kind: mapx.KindTest}}, g.Nodes...)
+		spec := "@no-test: one-line gateway, proven by `AAAAX-B01`\n"
+		if v, msg := checkUnitComplete(spec, specNode(), root, g, testkit.WithComments(&config.Config{})); v != Pass {
+			t.Fatalf("the test on disk must still resolve the reference, got %v: %s", v, msg)
+		}
+	})
+
+	t.Run("UNTCP-E02: A feature missing from disk does not hide the scenario of the covered feature", func(t *testing.T) {
+		root := raizComProva(t, "AAAAX-B01")
+		if err := os.WriteFile(filepath.Join(root, "x.feature"),
+			[]byte("Feature: X\n\n  Scenario: does something\n    Given a\n    When b\n    Then c\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		g := unitGraph(true, true, false)
+		g.Nodes = append(g.Nodes, mapx.Node{ID: "a-gone.feature", Kind: mapx.KindFeature})
+		g.Edges = append(g.Edges, mapx.Edge{From: "x.spec.md", To: "a-gone.feature", Type: mapx.EdgeCoveredBy})
+		spec := "@no-test: one-line gateway, proven by `AAAAX-B01`\n"
+		v, msg := checkUnitComplete(spec, specNode(), root, g, testkit.WithComments(&config.Config{}))
+		if v != Fail || !strings.Contains(msg, "x.feature") {
+			t.Fatalf("the scenario of the feature on disk must contradict the waiver, got %v: %s", v, msg)
+		}
+	})
+}
+
+func TestOptionalPieces_resolvesTheLayerOfTheTarget(t *testing.T) {
+	cfg := testkit.WithComments(&config.Config{Layers: map[string]config.Layer{
+		"dao":    {Pattern: "models/**/*.ts", Kind: "code", OptionalUnitEdges: []string{"tested-by"}},
+		"lib":    {Pattern: "screens/**/*.ts", Kind: "code"},
+		"screen": {Pattern: "screens/**/*.tsx", Kind: "code", OptionalUnitEdges: []string{"covered-by"}},
+	}})
+	keys := func(m map[string]bool) string {
+		var out []string
+		for k := range m {
+			out = append(out, k)
+		}
+		sort.Strings(out)
+		return strings.Join(out, ",")
+	}
+
+	t.Run("UNTCP-B06: The layer may waive a piece as a block, reached by the specifies edge", func(t *testing.T) {
+		spec := mapx.Node{ID: "docs/user.spec.md", Kind: mapx.KindSpec}
+		g := &mapx.Graph{
+			Nodes: []mapx.Node{spec,
+				{ID: "src/user.ts", Kind: mapx.KindCode, Tags: []string{"dao"}},
+				{ID: "src/other.ts", Kind: mapx.KindCode, Tags: []string{"dao"}},
+				{ID: "src/plain.ts", Kind: mapx.KindCode}},
+			Edges: []mapx.Edge{{From: spec.ID, To: "src/user.ts", Type: mapx.EdgeSpecifies}},
+		}
+		if got := keys(optionalPieces(spec, cfg, g)); got != "tested-by" {
+			t.Errorf("the target's layer waives the test: %q", got)
+		}
+		g.Edges[0].Type = mapx.EdgeCoveredBy
+		if got := keys(optionalPieces(spec, cfg, g)); got != "" {
+			t.Errorf("only a specifies edge names the target: %q", got)
+		}
+		g.Edges[0] = mapx.Edge{From: spec.ID, To: "src/plain.ts", Type: mapx.EdgeSpecifies}
+		if got := keys(optionalPieces(spec, cfg, g)); got != "" {
+			t.Errorf("a target in no waiving layer waives nothing: %q", got)
+		}
+	})
+
+	t.Run("UNTCP-B06: Before the code exists, the layer is resolved by the target's path", func(t *testing.T) {
+		if got := keys(optionalPieces(mapx.Node{ID: "models/user.spec.md", Kind: mapx.KindSpec}, cfg, nil)); got != "tested-by" {
+			t.Errorf("models/user.ts is a dao: %q", got)
+		}
+		// screens/home.ts falls in `lib`, which waives nothing; the search goes on to .tsx
+		if got := keys(optionalPieces(mapx.Node{ID: "screens/home.spec.md", Kind: mapx.KindSpec}, cfg, nil)); got != "covered-by" {
+			t.Errorf("screens/home.tsx is a screen: %q", got)
+		}
+		if got := keys(optionalPieces(mapx.Node{ID: "models/user.md", Kind: mapx.KindSpec}, cfg, nil)); got != "" {
+			t.Errorf("a file that is not a spec has no target path: %q", got)
+		}
+	})
+}
+
+func TestReferenceInBlock_findsTheCodeAmongOtherQuotes(t *testing.T) {
+	t.Run("UNTCP-I03: Waiving the test requires saying where the proof is", func(t *testing.T) {
+		code, ok := referenceInBlock("@no-test: proven by the `handler` test, scenario `SGHBX-B01`")
+		if !ok || code != "SGHBX-B01" {
+			t.Errorf("the code is found after a quote that is not one: %q %v", code, ok)
+		}
+	})
+}
+
+func TestLinkedFeatureScenarios_countsEveryScenario(t *testing.T) {
+	root := t.TempDir()
+	feature := "Feature: x\n\n  Scenario: one\n    Given a\n\n  Scenario: two\n    Given b\n"
+	if err := os.WriteFile(filepath.Join(root, "x.feature"), []byte(feature), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}
+	g := &mapx.Graph{Edges: []mapx.Edge{{From: n.ID, To: "x.feature", Type: mapx.EdgeCoveredBy}}}
+	if count, path := linkedFeatureScenarios(n, root, g); count != 2 || path != "x.feature" {
+		t.Errorf("got %d scenarios in %q", count, path)
+	}
+}

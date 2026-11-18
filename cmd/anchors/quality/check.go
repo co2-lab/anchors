@@ -1,0 +1,2326 @@
+// @anchors
+//   code: CHCMA
+//   ref: CGPCH
+
+package quality
+
+import (
+	"errors"
+	"fmt"
+	"io/fs"
+	"os"
+	"os/exec"
+	"path"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/pathref"
+
+	"github.com/co2-lab/anchors/cmd/anchors/common"
+	"github.com/co2-lab/anchors/cmd/anchors/mapcmd"
+	"github.com/co2-lab/anchors/internal/checklog"
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gate"
+	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/health"
+	"github.com/co2-lab/anchors/internal/issue"
+	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/progress"
+	"github.com/co2-lab/anchors/internal/queue"
+	"github.com/co2-lab/anchors/internal/scan"
+	"github.com/spf13/cobra"
+)
+
+func newCheckCmd() *cobra.Command {
+	var root, mapPath, phase, category string
+	var changed []string
+	var all, noRecord, recordIssues, fix, deterministic, skipSlow, onlyIssues, showDrift, showSkips, showTiming, fromIndex, sequential, noCache bool
+	var skipRegras string
+	var msgPath string
+	cmd := &cobra.Command{
+		Use:   "check",
+		Short: "Run the quality gates (the pipeline)",
+		Long: `Confronts the nodes against the quality gates declared in anchors.yaml
+and reports the verdict profile (QUALITY §5-§6).
+
+By default it is INCREMENTAL: it runs over the impact path of a changed file
+(--changed <file>). With --all, it sweeps every node (expensive; the full picture).
+
+Each gate that fails generates an issue; a blocking gate that fails bars
+promotion. Informative gates enter the profile but do not bar (maturation, §7).
+
+--deterministic SKIPS the AI judgment gates (measures: judgment) and runs only
+the computable ones. It is the PRE-COMMIT mode: a judge gate cannot bar a commit
+(there is no waiting for the AI) nor should it queue judgment on every commit (repeated
+garbage). Without that mode, judge becomes invisible (it neither bars nor records).`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			absRoot, err := config.AbsRoot(root)
+			if err != nil {
+				return err
+			}
+			// The files after the flags join `--changed` (`--changed a b c`).
+			extra, err := positionalFiles(absRoot, "check", args)
+			if err != nil {
+				return err
+			}
+			changed = append(changed, extra...)
+			cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			if err != nil {
+				return fmt.Errorf("load config: %w", err)
+			}
+			// A judgment gate's guide read from a URL that answers nothing fails the check
+			// here, before any gate runs, rather than pointing the reviewer nowhere.
+			if _, _, err := judgmentGuides(absRoot, cfg); err != nil {
+				return err
+			}
+			// `--index`: the gates read the project's files as the git index has them —
+			// what the commit records —, not as the tree does.
+			if fromIndex {
+				read, err := scan.IndexReader(absRoot)
+				if err != nil {
+					return fmt.Errorf("--index: read the git index: %w", err)
+				}
+				defer gate.SetFileSource(read)()
+				defer gate.SetChangedSource(gitmeta.StagedChanges)()
+			}
+			// `--index` with no scope judges the commit being made: the staged files, the
+			// same set `verify --staged` hands over. Without it the check asked for a scope
+			// and judged nothing, which read as a clean result beside a hook that blocked.
+			if fromIndex && !all && len(changed) == 0 {
+				staged, err := stagedFiles(absRoot)
+				if err != nil {
+					return err
+				}
+				if len(staged) == 0 {
+					fmt.Println(i18n.T("verify.nothing_staged"))
+					return nil
+				}
+				changed = staged
+			}
+			// No modo github o achado de gate vira CARD, não arquivo: o `issues/` é a fila do
+			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os
+			// gates encontraram.
+			// ...but only CI opens and closes those CARDS (or `--record-issues`). A local
+			// check runs on work in progress — before the `docs build`, halfway through a
+			// merge — and every blocking failure it saw became an issue on the board. Measured
+			// in the reference app: two `[docs-fresh]` cards opened by an agent's local check for a
+			// state that existed only on its machine; the next local check closed one under
+			// a person's account, the state lock reverted that as a manual close, and the
+			// claim handed the spurious card back to the agent in a loop.
+			// `config.Load` refuses a github mode with no label, so the first label is there.
+			if cfg.GitHubMode() {
+				issue.UseGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
+			}
+			issuesOn := issuesOnFor(cfg, recordIssues, os.Getenv("GITHUB_ACTIONS") == "true")
+			if len(cfg.Gates) == 0 {
+				return fmt.Errorf("no gate declared in anchors.yaml (`gates:` section)")
+			}
+			// --deterministic: remove os gates de julgamento por IA do conjunto.
+			if deterministic {
+				kept := cfg.Gates[:0:0]
+				for _, gt := range cfg.Gates {
+					if !gt.IsJudgment() {
+						kept = append(kept, gt)
+					}
+				}
+				cfg.Gates = kept
+				if len(cfg.Gates) == 0 {
+					fmt.Println(i18n.T("check.no_deterministic_gate"))
+					return nil
+				}
+			}
+			// Categorização (fase/custo/natureza): filtra QUAIS gates são cobrados agora.
+			perspective := config.PerspectiveChange
+			if all {
+				perspective = config.PerspectiveAll
+			}
+			// A dispensa vem da flag OU do ambiente — o hook do git passa por variável,
+			// porque `git commit` não repassa flags ao pre-commit.
+			bruto := skipRegras
+			if bruto == "" {
+				bruto = os.Getenv("ANCHORS_SKIP_RULES")
+			}
+			dispensa, erros := gate.ParseWaiver(bruto)
+			// A MENSAGEM DE COMMIT também dispensa: `[skip-unit-complete@WRKSP: motivo]`.
+			//
+			// O caminho vem por `--commit-msg`, e não de `.git/COMMIT_EDITMSG`: MEDIDO, o
+			// git NÃO grava esse arquivo antes do `pre-commit` — nem com `-m`. Lê-lo ali
+			// devolve a mensagem do commit ANTERIOR, e a dispensa passa a valer para o
+			// commit errado, em silêncio. É o hook `commit-msg` que recebe o arquivo, e é
+			// ele quem passa este caminho.
+			if msgPath != "" {
+				if msg, err := os.ReadFile(msgPath); err == nil {
+					daMsg, errosMsg := gate.WaiverFromMessage(string(msg))
+					dispensa = dispensa.Merge(daMsg)
+					erros = append(erros, errosMsg...)
+				}
+			}
+			if len(erros) > 0 {
+				return fmt.Errorf("invalid --skip-rule:\n  %s\n\nThe reason is mandatory: a "+
+					"waiver without a written justification is indistinguishable from someone dodging a "+
+					"gate that found a defect", strings.Join(erros, "\n  "))
+			}
+			// WHAT THE PROJECT DECLARES, kept apart from what this run measures. The catalog
+			// line and the governance tips ask "is this gate declared?", and a gate this run
+			// leaves out — `when: [manual]`, `skip_on`, another phase — is still declared:
+			// read from the filtered list, they named it as missing.
+			declared := *cfg
+			declared.Gates = append([]config.Gate(nil), cfg.Gates...)
+			cfg.Gates = filterGates(cfg.Gates, phase, category, skipSlow, perspective, dispensa)
+			if len(cfg.Gates) == 0 {
+				fmt.Println(i18n.T("check.no_gate_for_slice", phase, category))
+				return nil
+			}
+			if mapPath == "" {
+				mapPath = filepath.Join(absRoot, mapx.DefaultPath)
+			}
+			g, err := mapx.Load(mapPath)
+			if err != nil {
+				return fmt.Errorf("load map: %w (run `anchors map build`)", err)
+			}
+			// `--index` judges the commit with the commit's map: the one staged — the hook
+			// stages it apart when the tree is ahead, and the map on disk then speaks of the
+			// tree, other sessions' untracked files included. And whatever map it is, a node
+			// whose file the index does not have is not the commit's: it leaves the map with
+			// its edges, so no gate is asked about a file that is not there.
+			if fromIndex {
+				if staged := stagedMap(absRoot, mapPath); staged != nil {
+					g = staged
+				}
+				if err := dropAbsentFromIndex(absRoot, g); err != nil {
+					return fmt.Errorf("--index: read the git index: %w", err)
+				}
+			}
+
+			// BINÁRIO MAIS VELHO QUE O MAPA. Ele não falha — grava o formato que conhece,
+			// e desfaz o que a versão nova escreveu. Medido: um build local anterior a um
+			// rename de campo revertia 26 linhas a cada `check`, e o mapa ficava oscilando
+			// entre dois formatos, com conflito a cada PR.
+			//
+			// O aviso não barra: o binário velho ainda faz o trabalho da versão dele, e
+			// derrubar o CI trocaria "faz menos do que devia" por "não faz nada" — a mesma
+			// razão do `doctor --check-pipelines`.
+			if staleBinaryWarning(g.GeradoPor, common.Version) != "" {
+				fmt.Fprintln(os.Stderr, staleBinaryWarning(g.GeradoPor, common.Version))
+			}
+
+			// Os arquivos que de fato MUDARAM, distintos do raio de impacto que o
+			// `selectNodes` devolve. Um gate que julga a mudança precisa dos primeiros;
+			// os demais, do raio. Ver Config.Alterados.
+			cfg.Alterados = normalizeChanged(changed, absRoot)
+			nodes, scope, err := selectNodes(g, cfg, all, changed, absRoot)
+			if err != nil {
+				return err
+			}
+
+			// --fix: aplica os reparos automáticos (self-healer) ANTES de confrontar,
+			// para que o check seguinte já reflita o conserto.
+			if fix {
+				fixes := gate.FixWithConfig(cfg.Gates, nodes, absRoot, g, cfg)
+				// The fixes wrote files: what the gates remember of git is no longer true.
+				gate.ForgetRunState()
+				n := 0
+				for _, fr := range fixes {
+					if fr.Fixed {
+						fmt.Println(i18n.T("check.fix_applied", fr.Gate, fr.Target, fr.Detail))
+						n++
+					}
+				}
+				fmt.Println(i18n.T("check.fixes_count", n))
+				// The repairs write comments — a header line, a date, a dependency or used-by
+				// flag —, and prove nothing new: each fixed file's evidence goes with it to its
+				// new content, as `keep-evidence` would carry it. Without this, the next map
+				// build dropped the proof of every file the chain's fixer flagged (measured on
+				// a peer: 141 files, the whole suite to run again for comments).
+				if kept := keepFixedEvidence(absRoot, mapPath, fixes, cfg); kept > 0 {
+					fmt.Println(i18n.T("check.fix_evidence_kept", kept))
+				}
+				fmt.Println()
+			}
+
+			// Espelha a saída num arquivo para que ela possa ser RELIDA sem
+			// re-executar. Abre AQUI, e não no topo: o que vem antes é erro de
+			// invocação (config ausente, mapa ilegível), que não é relatório —
+			// gravá-lo sobrescreveria uma foto boa com uma mensagem de erro.
+			head, assunto, _ := gitmeta.Head(absRoot)
+			espelho := checklog.Open(absRoot, all, checklog.Header(
+				"anchors "+strings.Join(os.Args[1:], " "),
+				head, assunto, gitmeta.DirtyCount(absRoot), time.Now(),
+			))
+			defer espelho.Close()
+
+			warnIfMapStale(absRoot, mapPath, cfg, g)
+			fmt.Println(i18n.T("check.header", scope, len(nodes), len(cfg.Gates)))
+			fmt.Println()
+
+			// `all` chega até os gates: é o que permite ao gate que sabe varrer sozinho
+			// (`scope_full`) rodar UMA vez sem receber a lista, em vez de receber o projeto
+			// inteiro em lotes.
+			// The gates run side by side; `--sequential` confronts one after another.
+			gate.SetSequential(sequential)
+			gate.SetNoToolCache(noCache)
+			results := gate.RunWithWaiver(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
+			profile := gate.Aggregate(results)
+			printProfile(profile, onlyIssues, showDrift, showSkips)
+			reportTiming(showTiming, profile)
+			warnGatesWithoutTarget(cfg.Gates, profile, g, all)
+			printReviewsDue(cfg, g, absRoot, nodes)
+
+			// THE JUDGMENT BRIEF IS A REPORT, NOT A RECORD — which is why it comes BEFORE
+			// `!noRecord`.
+			//
+			// It used to live inside the record block, and the effect was measured: the
+			// reference app's pipeline runs `check --all --no-record` (on purpose — recording
+			// from there would open a card on every push), which is EXACTLY the mode in which
+			// the reviewer needs the list. The one place the brief mattered was the one
+			// place it did not print.
+			//
+			// Enqueueing is a write and stays under `!noRecord`; telling the reviewer what
+			// is left to judge writes nothing.
+			if len(profile.Judged) > 0 && cfg.GitHubMode() {
+				guides, asks, _ := judgmentGuides(absRoot, cfg)
+				printJudgmentBrief(profile.Judged, guides, asks)
+			}
+
+			// THE LOOP: check → stamp → issue. It stops "reporting" and starts
+			// "recording": it writes the verdict per edge into the map (unblocks stale)
+			// and opens a violation issue per blocking fail (outlives the session).
+			// Honest opt-out: --no-record only reports, it does not record.
+			pendentes := 0
+			if !noRecord {
+				if err := recordCheck(absRoot, mapPath, g, profile, issuesOn, all); err != nil {
+					fmt.Fprintf(os.Stderr, "warning: failed to record (stamp/issue): %v\n", err)
+				}
+				// gates de JULGAMENTO: enfileira uma task `judge` por alvo pendente,
+				// para uma IA confrontar e reportar com `anchors judge`.
+				if n := enqueueJudgments(absRoot, cfg, profile, all); n > 0 {
+					fmt.Println(i18n.T("check.awaiting_ai_judgment", n))
+				}
+				// PENDENTES é o que está NA FILA, não o que acabou de ser enfileirado.
+				//
+				// `enqueueJudgments` conta só as tasks CRIADAS agora — na segunda
+				// execução ela devolve 0 porque a task já existia. Barrar por esse número
+				// deixaria passar exatamente o caso que importa: rodar o check, não
+				// julgar, e commitar. Medido no projeto de referência.
+				pendentes = queuedJudgments(absRoot)
+			}
+			// THE LOCAL BACKLOG, on the full sweep only — see local_backlog.go.
+			if all && !cfg.GitHubMode() {
+				printLocalBacklog(readLocalBacklog(absRoot))
+			}
+
+			if c := espelho.Path(); c != "" {
+				rel, err := filepath.Rel(absRoot, c)
+				if err != nil {
+					rel = c
+				}
+				fmt.Println()
+				fmt.Println(i18n.T("check.output_mirrored", filepath.ToSlash(rel)))
+			}
+
+			// JULGAMENTO PENDENTE BARRA O COMMIT, e só o commit — não o `--all`.
+			//
+			// A task de julgamento é trabalho DO COMMIT ATUAL, não da fila do projeto:
+			// quem mexeu no arquivo é quem tem o contexto para responder. Deixá-la
+			// passar empurra para outro alguém uma pergunta que só quem editou sabe
+			// responder — e ela some no meio das outras.
+			//
+			// Por isso ela não vira card: é resolvida ANTES de o trabalho sair da
+			// máquina, e o `.anchors/` fica no `.gitignore`. O PR nasce sem pendência.
+			//
+			// Barra em `--changed` (a perspectiva do pre-commit) e não em `--all`: o
+			// `--all` é a foto do projeto inteiro, e derrubá-lo por um julgamento que
+			// ninguém acabou de criar tornaria impossível medir um projeto que já tem
+			// pendência acumulada.
+			if pendentes > 0 && !all {
+				fmt.Println()
+				fmt.Println(i18n.T("check.blocked_by_judgment", pendentes))
+				espelho.Close()
+				return common.ExitCode{Code: 1}
+			}
+
+			// O MAPA ESTÁ VELHO? — e esta pergunta é diferente de "o arquivo está no mapa".
+			//
+			// O hook já barrava o arquivo REGIDO fora do mapa (o arquivo novo). O que
+			// passava era o arquivo que ESTÁ no mapa com a `rev` de uma versão anterior:
+			// o `map build` rodou, e o trabalho continuou depois dele.
+			//
+			// MEDIDO no projeto de referência: das 12 reprovações do pipeline `gates`,
+			// SETE foram isto — a maior causa isolada. Nas sete o agente tinha commitado
+			// o mapa; ninguém esqueceu de gerá-lo, todos geraram cedo demais.
+			//
+			// AVISO e não barreira, e a distinção importa. O mapa velho não invalida o
+			// trabalho — invalida a FOTO que os gates confrontam. Barrar o commit aqui
+			// impediria alguém de salvar trabalho em andamento, que é justamente quando
+			// o mapa fica velho. O que faltava era DIZER, na máquina, o que o CI só diz
+			// seis minutos depois.
+			// Asked only where it is said: a full scan says nothing of it, and the walk of the
+			// whole tree it costs was spent for nothing (15 s on a project).
+			if stale := staleUnlessAll(all, absRoot, g, cfg); len(stale) > 0 {
+				fmt.Fprintln(os.Stderr)
+				fmt.Fprintln(os.Stderr, i18n.T("check.map_stale", len(stale)))
+				for i, v := range stale {
+					if i == 3 {
+						fmt.Fprintln(os.Stderr, i18n.T("check.map_stale_more", len(stale)-3))
+						break
+					}
+					fmt.Fprintln(os.Stderr, "    "+v)
+				}
+			}
+
+			// DICAS DE GOVERNANÇA (informativo, QUALITY §5.2).
+			// Apresenta oportunidades de evolução do projeto (gates canônicos ausentes ou
+			// configurações subótimas) sem quebrar commits ou inflar warnings.
+			if opps := health.QuickGovernanceHints(g, &declared); len(opps) > 0 && all {
+				fmt.Println()
+				for _, op := range opps {
+					fmt.Printf("ℹ %s (%s): %s\n", i18n.T("check.governance_tip"), op.Subject, op.Detail)
+				}
+				fmt.Printf("  %s\n", i18n.T("check.doctor_learn_more"))
+			}
+			if all {
+				printCatalogUndeclared(&declared)
+			}
+
+			if !profile.Passed {
+				// Closed here, before the exit code goes back to main: the mirror must
+				// keep the end of the report exactly when it matters most — a failure.
+				espelho.Close()
+				return common.ExitCode{Code: 1} // barra: há fail bloqueante
+			}
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&root, "root", ".", "project root")
+	cmd.Flags().StringVar(&mapPath, "map", "", "path to the map")
+	cmd.Flags().BoolVar(&fromIndex, "index", false, "the gates read the files as the git index has them — what the commit records (the pre-commit mode)")
+	cmd.Flags().StringSliceVar(&changed, "changed", nil, "changed file(s) — repeatable, comma-separated, or listed after the flags; the gates run ONCE over the union of the impact paths")
+	cmd.Flags().BoolVar(&all, "all", false, "scan every node (the full picture; expensive)")
+	cmd.Flags().BoolVar(&noRecord, "no-record", false, "report only: neither stamps the map nor opens issues")
+	cmd.Flags().BoolVar(&recordIssues, "record-issues", false, "github mode: open/close board issues from a local run too (by default only CI does); manual mode: write the issues to issues/ (by default none is written)")
+	cmd.Flags().BoolVar(&fix, "fix", false, "self-healer: applies the automatic repairs (e.g. fixes updated_at) before confronting")
+	cmd.Flags().BoolVar(&deterministic, "deterministic", false, "runs only the computable gates (skips the AI-judgment ones) — the pre-commit mode")
+	cmd.Flags().StringVar(&phase, "phase", "", "enforces only the gates of this phase (pre-commit|pre-push|ci|manual)")
+	cmd.Flags().StringVar(&category, "category", "", "enforces only the gates of this nature (types|style|traceability…)")
+	cmd.Flags().BoolVar(&skipSlow, "skip-slow", false, "skip gates declared `cost: slow`")
+	cmd.Flags().StringVar(&skipRegras, "skip-rule", "",
+		"waives rules in this run: `id=reason[,id=reason]`. The reason is mandatory")
+	cmd.Flags().StringVar(&msgPath, "commit-msg", "",
+		"path to the commit message file, from which to read the `[skip-<gate>@<CODE>: reason]` markers")
+	cmd.Flags().BoolVar(&onlyIssues, "only-issues", false, "omits from the table the gates that passed everything and left no pending item (the total remains in the footer)")
+	cmd.Flags().BoolVar(&showDrift, "show-drift", false, "lists ALL the pending items (⚠) with the address of each one; without the flag, only the table counter")
+	cmd.Flags().BoolVar(&showSkips, "show-skips", false, "lists ALL the indeterminate (~) by gate and reason, with the address of each one: what does not apply, told from what could not be confronted")
+	cmd.Flags().BoolVar(&noCache, "no-cache", false, "runs every project tool, even one whose gate keeps its verdict over the same inputs (`cache:`)")
+	cmd.Flags().BoolVar(&sequential, "sequential", false, "confronts one gate after another instead of side by side — slower; to rule the parallel run out when a result looks wrong")
+	cmd.Flags().BoolVar(&showTiming, "timing", false, "measures how long each gate took, and names the slowest targets — to find what makes a scan expensive")
+	return cmd
+}
+
+// printCatalogUndeclared says, in one line, which catalog gates cover the project's
+// declared layers without being declared — the doctor says what each measures.
+//
+// Only the gates that would MEASURE once declared: a gate whose premise is not declared
+// yet would only be pending, and a nudge to declare it reads as a gate missing from a
+// project it may not fit (testID gates suggested to a project with no UI). The doctor
+// lists those too, with the field each needs.
+func printCatalogUndeclared(cfg *config.Config) {
+	var gs []config.Gate
+	for _, g := range cfg.ApplicableUndeclared() {
+		if missing, _ := cfg.Premises(g); len(missing) == 0 {
+			gs = append(gs, g)
+		}
+	}
+	if len(gs) == 0 {
+		return
+	}
+	names := make([]string, 0, len(gs))
+	for i, g := range gs {
+		if i == 6 {
+			names = append(names, "…")
+			break
+		}
+		names = append(names, g.Name)
+	}
+	fmt.Println()
+	fmt.Println(i18n.T("check.catalog_undeclared", len(gs), strings.Join(names, ", ")))
+}
+
+// printReviewsDue says how many targets of this check's scope are to review, apart from
+// the gates' verdicts: a review informs and never blocks, so it is a line of its own and
+// never one of the table's counts.
+func printReviewsDue(cfg *config.Config, g *mapx.Graph, root string, nodes []mapx.Node) {
+	inScope := make(map[string]bool, len(nodes))
+	for _, n := range nodes {
+		inScope[n.ID] = true
+	}
+	due := 0
+	for _, d := range gate.ReviewsDue(cfg, g, root, "") {
+		if inScope[d.Target] {
+			due++
+		}
+	}
+	if due > 0 {
+		fmt.Println()
+		fmt.Println(i18n.T("check.reviews_due", due))
+	}
+}
+
+// filterGates aplica a CATEGORIZAÇÃO: fase, natureza, custo e perspectiva. Cada eixo é
+// independente — `when` diz em que momento o gate é cobrado, `cost` diz se cabe num
+// loop apertado, `category` diz o que ele mede, `skip_on` diz sobre QUANTO do projeto a
+// resposta dele tem valor.
+//
+// Todos os filtros são permissivos por omissão: gate sem `when`/`cost`/`category`/
+// `skip_on` continua rodando como antes. É o que torna a categorização adotável aos
+// poucos — declarar um eixo num gate não muda o comportamento dos outros 30.
+func filterGates(gates []config.Gate, phase, category string, skipSlow bool, perspective string, dispensa gate.Waiver) []config.Gate {
+	out := gates[:0:0]
+	for _, g := range gates {
+		if !g.RunsIn(phase) {
+			continue
+		}
+		if category != "" && g.Category != category {
+			continue
+		}
+		if skipSlow && g.IsSlow() {
+			continue
+		}
+		// A perspectiva NÃO é escolha do usuário: vem de COMO o check foi chamado
+		// (`--all` ou `--changed`). O gate declara em qual delas ele se abstém.
+		if g.SkipsOn(perspective) {
+			continue
+		}
+		// DISPENSA por ID: o usuário declarou, com motivo, que esta regra não deve ser
+		// confrontada nesta execução. Diferente de `skip_on`, que é decisão do gate sobre
+		// perspectiva, esta é decisão de quem chama sobre uma regra específica — e é o que
+		// permite commitar a primeira spec de uma unidade (a feature ainda é um card) sem
+		// desligar os gates que verificam outra coisa.
+		if motivo, ok := dispensa.Waived(gate.RuleID(gateCmdID(g))); ok {
+			fmt.Println(i18n.T("check.waived_rule", gateCmdID(g), motivo))
+			continue
+		}
+		out = append(out, g)
+	}
+	return out
+}
+
+// enqueueJudgments cria uma task `judge` por alvo que um gate de julgamento marcou
+// como pendente (verdict Judge). A task carrega o gate e o guide, para o worker (a
+// IA) saber o que ler e confrontar. Reusa a fila. Idempotente pelo dedup da fila.
+func enqueueJudgments(root string, cfg *config.Config, p gate.Profile, varreduraCompleta bool) int {
+	// índice gate → (guide, ask) para enriquecer a task; the guides were read at the
+	// check's start, so an error cannot come back here.
+	guideOf, askOf, _ := judgmentGuides(root, cfg)
+	knownJudgmentGates = knownJudgmentGates[:0]
+	for _, g := range cfg.Gates {
+		if g.IsJudgment() {
+			knownJudgmentGates = append(knownJudgmentGates, g.Name)
+		}
+	}
+	// NO MODO `github` A FILA É O BOARD, e o julgamento não foge disso.
+	//
+	// É a terceira porta do mesmo defeito: o `next` a tinha (v0.1.55), o `deliver` a
+	// tinha (v0.1.61), e o `check` continuava enfileirando julgamento em
+	// `.anchors/tasks/`. O efeito é o mesmo — a fila local renasce a cada `check`,
+	// sozinha, e o `doctor` a acusa como resíduo de uma migração que nunca terminou.
+	//
+	// Medido no projeto de referência: 76 tasks de julgamento pendentes, TODAS criadas
+	// no mesmo dia pelos `check` de uma sessão, num projeto declarado `mode: github`.
+	// Ninguém as puxaria: o `next` naquele modo lê o board.
+	//
+	// O julgamento que REPROVA já vira issue pelo caminho normal (o `check` a abre).
+	// O que fica de fora é o julgamento PENDENTE — e registrá-lo numa fila que ninguém
+	// lê é pior que não registrar, porque parece registro.
+	if cfg.GitHubMode() {
+		// The brief was already printed, before the record block: in `github` mode the
+		// queue is the board, and judgment is no exception.
+		return 0
+	}
+	n := 0
+	for _, r := range p.Judged {
+		// The reason carries the command that closes the task: the verb is the review
+		// stage, whose prompt ends in `anchors judge --gate review`, and a task of another
+		// judgment gate closes only with ITS gate.
+		reason := i18n.T("check.judge_task.reason", r.Gate, r.Target, r.Gate)
+		if gd := guideOf[r.Gate]; gd != "" {
+			reason += i18n.T("check.judge_task.guide", gd)
+		}
+		if ask := askOf[r.Gate]; ask != "" {
+			reason += i18n.T("check.judge_task.ask", strings.TrimSpace(ask))
+		}
+		t := queue.Task{
+			ID:            judgeTaskID(r.Gate, r.Target),
+			Changed:       r.Target,
+			Kind:          queue.KindJudgment,
+			Origin:        "check",
+			SuggestedNext: judgeTaskVerb,
+			Reason:        reason,
+			CreatedAt:     time.Now().Format(time.RFC3339),
+		}
+		if created, _ := queue.Enqueue(root, t); created {
+			n++
+		}
+	}
+	// A limpeza SÓ vale na varredura completa.
+	//
+	// `dropStaleJudgments` conclui "não foi enfileirado agora, então é obsoleto". Isso é
+	// verdade quando o check olhou TODOS os nós; em `--changed` ele olhou um arquivo, e
+	// todos os outros alvos do mesmo gate parecem obsoletos por não terem sido olhados.
+	//
+	// Medido no app de referência: dois `check --changed` seguidos em testes diferentes deixaram
+	// UMA task na fila. O primeiro julgamento foi apagado pelo segundo check — e o
+	// `judge --pending` respondia "nenhum alvo aguardando" com cinco pendentes no
+	// `check --all`. Quem confia na fila para saber o que julgar perde trabalho em
+	// silêncio, que é o oposto do que esta função existe para fazer.
+	if varreduraCompleta {
+		dropStaleJudgments(root, cfg, p)
+	}
+	return n
+}
+
+// dropStaleJudgments tira da fila as tasks de julgamento cujo alvo o gate
+// NÃO enfileirou nesta rodada.
+//
+// A fila é persistente e o conjunto de alvos aplicáveis não é: um gate que passa a
+// declarar `requires`, um alvo que perde a marcação que o tornava aplicável, uma spec
+// renomeada — em todos os casos a task velha sobrevive e a fila passa a mentir. Foi o
+// que aconteceu no app de referência: o `no-test-prova-real` ganhou o filtro, o check passou a
+// reportar 16 alvos, e `judge --pending` seguia listando 583 porque as tasks de dias
+// antes continuavam ali.
+//
+// Só mexe em task de julgamento vinda do check (`kind: judgment`, `origin: check`), e
+// só do gate que rodou nesta rodada — não toca trabalho de outra origem nem de gate
+// que não foi cobrado agora.
+func dropStaleJudgments(root string, cfg *config.Config, p gate.Profile) {
+	rodou := map[string]bool{}
+	for _, g := range cfg.Gates {
+		if g.IsJudgment() {
+			rodou[g.Name] = true
+		}
+	}
+	vivos := map[string]bool{} // "gate\x00alvo" que o check acabou de enfileirar
+	for _, r := range p.Judged {
+		vivos[r.Gate+"\x00"+r.Target] = true
+	}
+	tasks, err := queue.List(root)
+	if err != nil {
+		return
+	}
+	for _, t := range tasks {
+		if t.Kind != "judgment" || t.Origin != "check" {
+			continue
+		}
+		gateName := gateDaTaskJudge(t.ID, t.Changed)
+		if gateName == "" || !rodou[gateName] {
+			continue
+		}
+		if vivos[gateName+"\x00"+t.Changed] {
+			continue
+		}
+		_ = queue.Drop(root, t.ID)
+	}
+}
+
+// judgeTaskID is the ID of the judge task of a gate over a target:
+// `judge-<gate>-<slug-of-the-target>`.
+func judgeTaskID(gateName, target string) string {
+	return "judge-" + gateName + "-" + strings.ReplaceAll(relSlug(target), "/", "-")
+}
+
+// gateDaTaskJudge extrai o nome do gate do ID `judge-<gate>-<slug-do-alvo>`.
+//
+// O ID é montado com `-` como separador e o nome do gate também os contém
+// (`no-test-prova-real`), então não dá para partir pelo separador. It was read by the
+// first known gate that PREFIXED the rest of the ID, and a gate whose name prefixes
+// another's took the other's tasks: with `review` and `review-deep` declared,
+// `judge-review-deep-src-x` read as `review`, and the full sweep dropped the live
+// review-deep judgment as stale. The ID is rebuilt instead, from each declared judgment
+// gate and the task's own target, and only the exact match is the gate.
+func gateDaTaskJudge(id, changed string) string {
+	for _, g := range knownJudgmentGates {
+		if id == judgeTaskID(g, changed) {
+			return g
+		}
+	}
+	return ""
+}
+
+// knownJudgmentGates é preenchido por enqueueJudgments a cada rodada — o
+// nome do gate vem da config, não de uma lista fixa.
+var knownJudgmentGates []string
+
+// relSlug reduz um caminho a algo usável em ID de task.
+func relSlug(p string) string { return strings.TrimSuffix(p, filepath.Ext(p)) }
+
+// recordCheck fecha o loop: carimba as arestas confrontadas no mapa (persistindo o
+// veredito, o que destrava a detecção de stale) e abre uma issue de violation por
+// fail bloqueante. É a passagem de "reporta" para "registra" (QUALITY §5).
+func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn, full bool) error {
+	now := time.Now()
+	day := now.Format("2006-01-02")
+
+	// 1) CARIMBO — converte os vereditos por nó (do gate) para o mapa e grava.
+	gv := p.NodeVerdicts()
+	verdicts := make([]mapx.NodeVerdict, len(gv))
+	for i, v := range gv {
+		verdicts[i] = mapx.NodeVerdict{ID: v.ID, Failed: v.Failed}
+	}
+	// A DATA, e não o instante. `changed_at` responde "quando esta relação foi
+	// confrontada" — uma pergunta de auditoria — e não entra na regra de staleness, que
+	// compara `rev` (ver PROPAGATION.md §3). Com precisão de segundo, cada `anchors
+	// check` reescrevia as 26 linhas de carimbo do mapa: conflito em todo PR onde duas
+	// pessoas rodaram o check, e um diff que muda sozinho sem dizer nada.
+	//
+	// Com a data, o mapa só muda quando o VEREDITO ou a `rev` mudam — que é quando há o
+	// que registrar.
+	//
+	// The check confronted a copy it read minutes ago, and cannot hold the map's lock for
+	// the whole run. It stamps its copy, and carries to the map as it is on disk now only
+	// the stamps it changed — an ingest or a judge that wrote in between is kept, and a
+	// stamp another process changed meanwhile keeps theirs.
+	before := g.EdgeStamps()
+	stamped := g.StampEdges(verdicts, now.Format(time.DateOnly))
+	if err := mapx.WithLock(mapPath, func() error {
+		fresh, err := mapx.Load(mapPath)
+		if errors.Is(err, fs.ErrNotExist) {
+			return mapx.Save(g, mapPath) // no map on disk: nothing to merge into
+		}
+		if err != nil {
+			return err
+		}
+		fresh.ApplyStampChanges(g, before)
+		return mapx.Save(fresh, mapPath)
+	}); err != nil {
+		return fmt.Errorf("save stamped map: %w", err)
+	}
+	if !issuesOn {
+		if cfg, err := config.Load(filepath.Join(root, config.DefaultFile)); err == nil && cfg.ManualMode() {
+			fmt.Println("record: map stamped; no issue written (mode: manual — use --record-issues to write them)")
+		} else {
+			fmt.Println("record: map stamped; board issues are left to CI (local check — use --record-issues to write them)")
+		}
+		return nil
+	}
+
+	// 2) ISSUES — o loop completo, abre E fecha:
+	//   • fail bloqueante → ABRE uma violation (se ainda não existe).
+	//   • pass de um (gate, alvo) que tinha issue → RESOLVE (move para done/).
+	// A chave estável (gate+alvo+kind) é o que liga o pass de hoje à issue de ontem.
+	opened, resolved := 0, 0
+	adiadas := 0
+	// The violations this run REPRODUCED — on a full check, every open violation outside
+	// this set is closed at the end (see `issue.ReconcileViolations`).
+	vivas := map[string]bool{}
+	for _, r := range p.Results {
+		if r.Verdict == gate.Skip {
+			continue // gate não se aplica — não mexe na issue
+		}
+		iss := issue.Issue{
+			Kind: issue.Violation, Target: r.Target, Gate: r.Gate,
+			Detail: r.Detail, Date: day,
+		}
+		// DÍVIDA ASSUMIDA vira issue em `future/`. Enquanto era só `Pending`, ela ficava
+		// como uma linha no cabeçalho de um arquivo — visível para quem o abrisse, sem
+		// estado, sem como ser paga, sem como vencer. O gate dizia que quem declara
+		// afirma três coisas ("conhece o dever, ele vale, e QUANDO será pago"), e o
+		// "quando" era prosa livre que nada confrontava.
+		//
+		// Materializada como issue, ela ganha o ciclo de vida que já existe: mover para
+		// `todo/` quando chega a hora, e o próprio confronto a fecha quando o dever é
+		// cumprido. `future/` e não `todo/` porque quem lê `todo/` pergunta "o que faço
+		// AGORA" — afogar essa lista com o que só vence depois é o caminho mais curto
+		// para ninguém mais olhar nenhuma das duas.
+		if r.Verdict == gate.Diverge || r.Verdict == gate.Awaiting {
+			// DECISÃO EM ABERTO vira issue em `todo/`, e não em `future/`: ela só é
+			// resolvida se alguém a VIR e a levar a quem decide. `future/` é o que vence
+			// depois — a pergunta não vence, ela trava quem for implementar.
+			//
+			// É a issue que o usuário fecha: respondendo direto nela, ou pedindo à IA que
+			// liste as perguntas abertas. Quando a resposta virar regra e o item sair da
+			// spec, o `Pass` do próximo confronto a resolve sozinho, pelo mesmo caminho
+			// que já fecha as violações.
+			if r.Decisão {
+				issDec := iss
+				issDec.Kind = issue.Decision
+				// DO USUÁRIO: a resposta não está no código, e o agente não a tem. Deixá-la
+				// como dele faria o agente retentá-la para sempre — ou, pior, decidir por
+				// conta própria, que é exatamente o que este gate existe para evitar.
+				issDec.Dono = issue.DonoUsuário
+				created, at, err := issue.Open(root, issDec)
+				if err != nil {
+					return fmt.Errorf("open decision issue: %w", err)
+				}
+				if created {
+					opened++
+				} else if at != issue.Todo {
+					fmt.Println(i18n.T("check.record_decision_exists", r.Target, at))
+				}
+				continue
+			}
+			if !r.Divida {
+				continue // indeterminado, não é dívida de ninguém
+			}
+			iss.Prazo = r.Prazo
+			created, at, err := issue.OpenAt(root, iss, issue.Future)
+			if err != nil {
+				return fmt.Errorf("open debt issue: %w", err)
+			}
+			switch {
+			case created:
+				adiadas++
+			case at == issue.Todo || at == issue.Doing:
+				// Alguém puxou a dívida para o trabalho de agora. Dizer isso importa: a
+				// declaração no header continua dizendo "depois", e o repositório já diz
+				// "agora" — quem lê só o header não saberia.
+				fmt.Println(i18n.T("check.record_debt_exists", r.Gate, r.Target, at))
+			}
+			continue
+		}
+		switch r.Verdict {
+		case gate.Fail:
+			if r.Blocks() { // só fail BLOQUEANTE vira issue (informativo não barra nem registra)
+				vivas[iss.Key()] = true
+				created, at, err := issue.Open(root, iss)
+				if err != nil {
+					return fmt.Errorf("open issue: %w", err)
+				}
+				if created {
+					opened++
+				} else if at != issue.Todo {
+					fmt.Println(i18n.T("check.record_issue_exists", r.Gate, r.Target, at))
+				}
+			}
+		case gate.Pass:
+			// passou: se havia issue aberta para este (gate, alvo), fecha-a.
+			//
+			// O KIND faz parte da chave, e o `iss` acima nasce como `violation`. Um gate
+			// que abre issue de outro kind precisa fechá-la pelo kind com que abriu — sem
+			// isto a issue de decisão nunca fechava: o gate voltava a ✓ e a pergunta
+			// continuava em `todo/` para sempre, que é pior que não ter aberto.
+			if d := iss; d.Gate == "open-questions-resolved" {
+				d.Kind = issue.Decision
+				if ok, err := issue.Resolve(root, d.Key()); err != nil {
+					return fmt.Errorf("resolve decision issue: %w", err)
+				} else if ok {
+					resolved++
+					fmt.Println(i18n.T("check.record_decision_resolved", r.Target))
+				}
+			}
+			ok, err := issue.Resolve(root, iss.Key())
+			if err != nil {
+				return fmt.Errorf("resolve issue: %w", err)
+			}
+			if ok {
+				resolved++
+				fmt.Println(i18n.T("check.record_issue_resolved", r.Gate, r.Target, issue.Dir))
+			}
+		}
+	}
+
+	// THE FULL SWEEP CLOSES WHAT IT DID NOT REPRODUCE. An open violation that this check —
+	// which confronted everything — did not find again is not current: fixed and confirmed
+	// without recording, a gate that now skips it, a target gone, or a gate renamed.
+	if full {
+		fechadas, err := issue.ReconcileViolations(root, vivas)
+		if err != nil {
+			return fmt.Errorf("reconcile issues: %w", err)
+		}
+		if len(fechadas) > 0 {
+			resolved += len(fechadas)
+			fmt.Println(i18n.T("check.record_reconciled", len(fechadas), issue.Dir))
+		}
+	}
+
+	fmt.Println()
+	fmt.Println(i18n.T("check.record_summary", stamped, opened, resolved, issue.Dir))
+	if adiadas > 0 {
+		fmt.Println(i18n.T("check.record_debt_future", adiadas, issue.Dir))
+	}
+	return nil
+}
+
+// errNotGoverned sinaliza o caminho não-regido. Carrega o alvo para a mensagem, e é
+// reconhecida em main() (as common.ErrNotGoverned) para virar common.ExitNotGoverned em
+// vez do exit 1 genérico.
+//
+// The exit code is a CODE, not text to grep, because the pre-commit must tell this from a
+// real failure. There is one constant, in common: this package kept a second copy, and two
+// copies of an exit code only agree until someone changes one of them.
+//
+// own marks Anchors' own files — the map, the progress file —: written by its commands, kept
+// by them, never confronted by the gates; said as such, not as files the Structure misses.
+type errNotGoverned struct {
+	target string
+	own    bool
+}
+
+func (e errNotGoverned) Error() string {
+	if e.own {
+		return i18n.T("own_file", e.target)
+	}
+	return i18n.T("not_governed", e.target)
+}
+
+func (e errNotGoverned) As(target any) bool {
+	if nr, ok := target.(*common.ErrNotGoverned); ok {
+		*nr = common.ErrNotGoverned{Path: e.target}
+		return true
+	}
+	return false
+}
+
+// selectNodes decide o conjunto de nós a confrontar: todos (--all) ou o caminho
+// de impacto de um arquivo alterado (--changed, incremental).
+func selectNodes(g *mapx.Graph, cfg *config.Config, all bool, changed []string, root string) (nodes []mapx.Node, scope string, err error) {
+	if all {
+		return g.Nodes, "--all", nil
+	}
+	if len(changed) == 0 {
+		return nil, "", fmt.Errorf("provide --changed <file> (incremental) or --all (everything)")
+	}
+
+	// UNIÃO dos caminhos de impacto de todos os arquivos, resolvida numa passagem só.
+	// Antes o `--changed` aceitava um arquivo, e quem tinha muitos (o pre-commit) era
+	// obrigado a chamar o binário N vezes — recarregando config e mapa a cada volta,
+	// ~1,2s por arquivo. Pior que lento: os gates relacionais (feature-test-match,
+	// unit-complete) confrontam a UNIDADE, então rodavam repetidos sobre o mesmo
+	// conjunto, uma vez por peça dela.
+	vistos := map[string]bool{}
+	var ordem []string
+	var naoRegidos, own int
+	for _, c := range changed {
+		ids, err := impactOf(g, cfg, c, root)
+		if err != nil {
+			var nr errNotGoverned
+			if errors.As(err, &nr) {
+				// Não-regido não contamina o lote: o Anchors só não tem jurisdição sobre
+				// ele. Com TODOS não-regidos, o erro sobe (o chamador decide o exit 3).
+				naoRegidos++
+				if ng, ok := err.(errNotGoverned); ok && ng.own {
+					own++
+				}
+				continue
+			}
+			return nil, "", err
+		}
+		for _, id := range ids {
+			if !vistos[id] {
+				vistos[id] = true
+				ordem = append(ordem, id)
+			}
+		}
+	}
+	if len(ordem) == 0 && naoRegidos == len(changed) {
+		// Todos fora da jurisdição. A mensagem nomeia UM alvo e conta o resto: juntar
+		// os caminhos numa string só produzia um erro ilegível de 8 KB num commit de 80
+		// arquivos, e ainda dava a impressão de existir um arquivo com aquele nome.
+		alvo := changed[0]
+		if len(changed) > 1 {
+			alvo = fmt.Sprintf("%s (and %d more)", changed[0], len(changed)-1)
+		}
+		return nil, "", errNotGoverned{target: alvo, own: own == len(changed)}
+	}
+	for _, n := range g.Nodes {
+		if vistos[n.ID] {
+			nodes = append(nodes, n)
+		}
+	}
+	if len(changed) == 1 {
+		return nodes, "--changed " + changed[0], nil
+	}
+	return nodes, fmt.Sprintf("--changed (%d files)", len(changed)), nil
+}
+
+// impactOf resolve UM arquivo alterado nos ids de nó que ele arrasta (o alvo, o que
+// propaga a partir dele, o que o valida, e as peças da mesma unidade).
+func impactOf(g *mapx.Graph, cfg *config.Config, changed, root string) ([]string, error) {
+	target := common.RelTo(root, changed)
+	// Anchors' own files: the map and the progress file are written by its commands and
+	// confronted by them, never by a gate over a change. Committing them alone answered
+	// "not governed by the Structure" (reported from a project: every commit after an `anchors
+	// progress` change). The progress file is still read here: one edited by hand is said —
+	// a warning, as `progress-intact` informs.
+	if p := filepath.ToSlash(target); p == filepath.ToSlash(mapx.DefaultPath) || p == scan.ProgressFile {
+		if p == scan.ProgressFile {
+			if _, err := progress.Load(root); err != nil {
+				fmt.Printf("⚠ %s: %v\n", p, err)
+			}
+		}
+		return nil, errNotGoverned{target: target, own: true}
+	}
+	if !common.NodeExists(g, target) {
+		if _, statErr := os.Stat(filepath.Join(root, target)); statErr != nil {
+			return nil, fmt.Errorf("%q exists neither on disk nor in the map — check the path", target)
+		}
+		// O arquivo EXISTE e não está no mapa. Duas situações COMPLETAMENTE distintas
+		// se escondiam aqui sob uma mensagem só, e o pre-commit tratava ambas como
+		// benignas — deixando passar exatamente o que o Anchors existe para barrar:
+		// um arquivo REGIDO novo (hook, tela, service) commitado sem spec/feature/teste.
+		// A distinção é a Estrutura: se o caminho casa uma camada do `layers:`, ele é
+		// regido; senão, é um arquivo qualquer do repo (package.json, lockfile, CI).
+		//
+		// O IGNORE vem ANTES da classificação, e a ordem importa: `issues/` e `changes/`
+		// casam a camada `doc` (`**/*.md`), mas o scanner NUNCA os indexa — são a saída
+		// do próprio Anchors, não material a trabalhar. Classificar sem consultar o
+		// ignore criava um impasse sem saída: o arquivo era dito "regido", não estava no
+		// mapa, e `map build` não o acrescentava nunca — o commit ficava barrado para
+		// sempre. Medido ao commitar as issues que o próprio `check` tinha resolvido.
+		// `SkipDir` (e não `SkipFile`) porque é lá que mora `registroDoAnchors` — a
+		// decisão é sobre o DIRETÓRIO-RAIZ do caminho (`issues/…`, `changes/…`).
+		ig := scan.LoadIgnoreFor(root, cfg)
+		if raiz, _, achou := strings.Cut(filepath.ToSlash(target), "/"); achou && ig.SkipDir(raiz, raiz) {
+			return nil, errNotGoverned{target: target}
+		}
+		if ig.SkipFile(target) {
+			return nil, errNotGoverned{target: target}
+		}
+		// O `-progress.md` é o MESMO impasse que o comentário acima descreve, por outra
+		// porta: ele casa a camada `plan` (`plans/*.md`) e o scanner NUNCA o indexa — de
+		// propósito, porque um arquivo que existe para mudar não pode ser confrontado por
+		// gates que cobram justificativa de mudança (ver `scan.IsProgressFile`).
+		//
+		// Sem esta linha o resultado era o descrito ali: o arquivo dito "regido", ausente
+		// do mapa, e `map build` não o acrescentando nunca. Medido no app de referência ao
+		// commitar os 17 progressos que o `anchors new progress` acabara de criar — o
+		// commit ficava barrado para sempre, pelo próprio mecanismo que separou os dois.
+		if scan.IsProgressFile(target) {
+			return nil, errNotGoverned{target: target}
+		}
+		if layer, _ := scan.Classify(target, cfg); layer == "" {
+			return nil, errNotGoverned{target: target}
+		}
+		return nil, fmt.Errorf("%q is GOVERNED (a `layers:` layer) but is not in the map — "+
+			"run `anchors map build` first (it is the step that registers the new file). "+
+			"While it stays out of the map, NO gate confronts it: the unit is not "+
+			"enforced and the pipeline certifies work that was never verified", target)
+	}
+	imp := g.AnalyzeImpact(target)
+	// o alvo + o que propaga a partir dele (os filhos a refazer). A validação
+	// (subir) é confronto contra os pais — entra como alvos também, para os gates
+	// que se aplicam a eles rodarem.
+	ids := map[string]bool{target: true}
+	for _, n := range imp.Propagate {
+		ids[n] = true
+	}
+	for _, n := range imp.Validate {
+		ids[n] = true
+	}
+	// As PEÇAS DA MESMA UNIDADE entram junto, sempre. O impacto é calculado por arestas, e
+	// spec/feature/teste/código de uma unidade nem sempre estão todos ligados por elas —
+	// então `--changed <alvo>.ts` deixava de fora a `.feature` e o `.test.ts` irmãos.
+	//
+	// A consequência é um verde que não significa nada: medido, o `--changed` do código
+	// não dispara `feature-test-match`, `feature-nao-vazia` nem `teste-nao-vazio`, e um
+	// worker que siga o comando prescrito pelo `anchors work` declara "todos os
+	// bloqueantes ✗0" sem jamais ter rodado o bloqueante mais importante da sua etapa.
+	for _, peca := range unitPieces(root, target, cfg) {
+		if common.NodeExists(g, peca) {
+			ids[peca] = true
+		}
+	}
+	// THE TESTS THAT STAMP THIS FILE enter too: a double stamped against the old version
+	// of a module is stale the moment the module changes, and the `mock-stamped` gate only
+	// sees it when the TEST is checked. Without them the drift reached whoever touched the
+	// test next, far from the change; with them, the commit that changes the module lists
+	// every double to update.
+	for _, t := range gate.TestsStamping(g, root, target) {
+		ids[t] = true
+	}
+	out := make([]string, 0, len(ids))
+	for id := range ids {
+		out = append(out, id)
+	}
+	return out, nil
+}
+
+// nameWidth é a coluna do nome do gate: o maior nome presente, com um piso.
+//
+// Era `%-20s` fixo, e cinco gates passam disso (`handler-ddb-inline-passivo` tem
+// 26). O nome mais longo empurrava a coluna do veredito e desalinhava a tabela
+// inteira — numa lista de 49 linhas, o desalinhamento é o que faz o olho perder
+// a coluna que importa.
+func nameWidth(nomes []string) int {
+	w := 18
+	for _, n := range nomes {
+		if len([]rune(n)) > w {
+			w = len([]rune(n))
+		}
+	}
+	return w
+}
+
+// larguras dos contadores: uma por COLUNA, pelo maior número daquela coluna.
+//
+// Uma largura única para todas desperdiça espaço onde ele não é preciso: numa
+// varredura real o `~` chega a 582 e o `✗` fica em 0 ou 1, e a largura comum
+// obrigaria a coluna dos fails a reservar três casas para nada. Cada coluna com
+// a sua mantém os números alinhados à direita — que é o que permite compará-los
+// a olho — sem esticar a tabela.
+type counterWidths struct{ pass, fail, drift, pend, skip, judge, frozen, awaiting int }
+
+func places(n int) int { return len(fmt.Sprint(n)) }
+
+func computeWidths(p gate.Profile) counterWidths {
+	// `drift` nasce em 0 — e continua 0 se nenhum gate tiver drift, que é o
+	// sinal para a coluna inteira não existir. Os outros têm piso 1: eles sempre
+	// aparecem, e `%*d` com largura 0 imprimiria colado no símbolo.
+	w := counterWidths{pass: 1, fail: 1, drift: 0, skip: 1, judge: 1}
+	max := func(atual, n int) int {
+		if c := places(n); c > atual {
+			return c
+		}
+		return atual
+	}
+	for nome, s := range p.ByGate {
+		d := driftCount(p, nome)
+		pd := pendingCount(p, nome)
+		w.pass = max(w.pass, s.Pass)
+		w.fail = max(w.fail, s.Fail)
+		// `max` não serve para o drift: `casas(0)` é 1, e a coluna ganharia
+		// largura mesmo sem drift nenhum — que é justamente o sinal de que ela
+		// não deve existir. Só um drift REAL abre a coluna.
+		if d > 0 {
+			w.drift = max(w.drift, d)
+		}
+		if pd > 0 {
+			w.pend = max(w.pend, pd)
+		}
+		w.skip = max(w.skip, s.Skip+s.Pending-pd)
+		w.judge = max(w.judge, s.Judge)
+		// The frozen column exists only when a frozen part was met, as the ⚠ one.
+		if s.Frozen > 0 {
+			w.frozen = max(w.frozen, s.Frozen)
+		}
+		// The ⏸ column too: only an awaited decision opens it.
+		if s.Awaiting > 0 {
+			w.awaiting = max(w.awaiting, s.Awaiting)
+		}
+	}
+	return w
+}
+
+// driftColumn devolve a célula do ⚠. A decisão é da TABELA, não da linha:
+//
+//   - se algum gate tem drift, a coluna existe em TODAS as linhas — vazia vira
+//     branco do mesmo tamanho. Omiti-la só nas linhas sem drift empurraria o `~`
+//     para a esquerda nelas, e a mesma coluna passaria a existir em dois lugares.
+//   - se NENHUM tem, a coluna não existe em lugar nenhum. Reservá-la aí deixaria
+//     um buraco no meio de todas as linhas sem nada que o justificasse — e o
+//     caso é o comum, não a exceção: no `--changed` a tabela costuma sair
+//     inteira sem drift.
+//
+// `largura == 0` é o sinal de "a tabela não tem drift nenhum".
+func driftColumn(drift, largura int) string { return statColumn("⚠", drift, largura) }
+
+// statColumn is a counter cell of the table for a symbol that exists only when some gate
+// has it (the ⚠ of divergences, the ? of pending items); see driftColumn.
+func statColumn(symbol string, n, largura int) string {
+	if largura == 0 {
+		return ""
+	}
+	if n == 0 {
+		// `len("⚠")` são 3 BYTES, mas o símbolo ocupa 1 coluna no terminal.
+		// Usar `len` aqui reservava dois espaços a mais e desalinhava justamente
+		// as linhas que o branco existia para alinhar.
+		return strings.Repeat(" ", largura+1)
+	}
+	return fmt.Sprintf("%s%*d", symbol, largura, n)
+}
+
+// separador some junto com a coluna: sem isso, a tabela sem drift ficaria com
+// dois espaços a mais entre `✗` e `~`.
+func driftSeparator(largura int) string {
+	if largura == 0 {
+		return ""
+	}
+	return "  "
+}
+
+// cleanGate: passou em tudo que olhou e não deixou nada pendente. É o gate que
+// não pede nada de ninguém — o candidato a sumir sob `--only-issues`.
+func cleanGate(s gate.GateSummary, drift int) bool {
+	return s.Fail == 0 && drift == 0 && s.Diverge == 0 && s.Skip+s.Pending == 0 && s.Judge == 0 && s.Awaiting == 0
+}
+
+// printDrift lista as pendências agrupadas por GATE e, dentro dele, por MOTIVO.
+//
+// A lista crua tratava 2.430 pendências como 2.430 problemas, e elas não são:
+// medido no app de referência, 832 delas têm o motivo IDÊNTICO ("sem sinal de mutação
+// ingerido") e são um problema só — ninguém rodou a ingestão. Repetir o mesmo
+// parágrafo 832 vezes esconde essa leitura em vez de revelá-la.
+//
+// Onde o motivo se repete, ele é escrito UMA vez e os alvos vêm compactados numa
+// linha; onde cada motivo é único (`feature-test-match`, em que a divergência é
+// específica de cada unidade), a lista continua alvo a alvo. O agrupamento não
+// pode custar o endereço — ele é a parte acionável.
+func printDrift(drifts []gate.Result) {
+	if len(drifts) == 0 {
+		return
+	}
+	// Agrupa preservando a ordem de aparição: gate → motivo → alvos.
+	type grupo struct {
+		motivo string
+		alvos  []string
+	}
+	ordemGates := []string{}
+	porGate := map[string][]*grupo{}
+	total := map[string]int{}
+	for _, r := range drifts {
+		if _, visto := porGate[r.Gate]; !visto {
+			ordemGates = append(ordemGates, r.Gate)
+		}
+		total[r.Gate]++
+		var g *grupo
+		for _, cand := range porGate[r.Gate] {
+			if cand.motivo == r.Detail {
+				g = cand
+				break
+			}
+		}
+		if g == nil {
+			g = &grupo{motivo: r.Detail}
+			porGate[r.Gate] = append(porGate[r.Gate], g)
+		}
+		g.alvos = append(g.alvos, r.Target)
+	}
+
+	fmt.Println()
+	fmt.Println(i18n.T("check.drift_summary", len(drifts), len(ordemGates)))
+	for _, nome := range ordemGates {
+		fmt.Printf("\n  %s — %d\n", nome, total[nome])
+		for _, g := range porGate[nome] {
+			if len(g.alvos) == 1 {
+				fmt.Printf("    ⚠ %s\n", g.alvos[0])
+				if g.motivo != "" {
+					fmt.Print(indent(g.motivo, "        "))
+				}
+				continue
+			}
+			// Motivo repetido: escrito UMA vez, e os alvos listados um por LINHA.
+			//
+			// Juntá-los com vírgula economizava altura e custava legibilidade: no
+			// projeto que originou isto, 583 alvos viraram uma linha de 36 MIL
+			// caracteres — o endereço estava lá e ninguém conseguia lê-lo, nem
+			// grepar por um arquivo específico. Uma linha por alvo é o formato que
+			// as ferramentas de texto esperam.
+			if g.motivo != "" {
+				fmt.Print(indent(g.motivo, "    "))
+			}
+			fmt.Println(i18n.T("check.drift_targets_count", len(g.alvos)))
+			for _, alvo := range g.alvos {
+				fmt.Printf("        %s\n", alvo)
+			}
+		}
+	}
+}
+
+// printLegenda explica os símbolos da tabela — e SÓ os que ela usou. Uma legenda
+// fixa listaria `⚠` e `⏳` em varreduras que não os têm, e explicar coluna
+// ausente é ruído que ensina a pular a legenda inteira.
+//
+// A distinção que ela precisa carregar é entre `✗` e `~`: falha é o gate tendo
+// confrontado e divergido; indeterminado é ele não ter tido o que confrontar.
+// Sem isso, `~582` parece um débito de 582 itens, quando é o contrário — é a
+// medida de quanto daquele gate não se aplica ali.
+func printLegenda(p gate.Profile, w counterWidths) {
+	temJudge := false
+	for _, s := range p.ByGate {
+		if s.Judge > 0 {
+			temJudge = true
+			break
+		}
+	}
+	partes := []string{
+		"✓  " + i18n.T("check.legend.pass"),
+		"✗  " + i18n.T("check.legend.fail"),
+	}
+	if w.drift > 0 {
+		partes = append(partes, "⚠  "+i18n.T("check.legend.warn"))
+	}
+	if w.pend > 0 {
+		partes = append(partes, "?  "+i18n.T("check.legend.pending"))
+	}
+	if w.awaiting > 0 {
+		partes = append(partes, "⏸  "+i18n.T("check.legend.awaiting"))
+	}
+	partes = append(partes, "~  "+i18n.T("check.legend.skip"))
+	if w.frozen > 0 {
+		partes = append(partes, "❄  "+i18n.T("check.legend.frozen"))
+	}
+	if temJudge {
+		partes = append(partes, "⏳ "+i18n.T("check.legend.judge"))
+	}
+	// Uma por linha. Em coluna única os cinco símbolos ficam empilhados e
+	// comparáveis; na mesma linha a legenda passa de 100 colunas e quebra sozinha
+	// num terminal estreito — o oposto do que ela serve.
+	fmt.Println()
+	for _, l := range partes {
+		fmt.Printf("  %s\n", l)
+	}
+}
+
+// warnGatesWithoutTarget relata os gates DECLARADOS que não apareceram na tabela.
+//
+// A tabela é montada de `profile.GateNames()`, que só conhece gate AVALIADO. Um gate
+// declarado cujo `on:` não casa nenhum nó do mapa nunca é avaliado, então desaparece por
+// completo — e o rodapé ainda diz "✓ pode promover, todos os gates passaram".
+//
+// Para quem está adotando o framework, isso lê como "está tudo certo". Medido ao pôr o
+// Anchors no próprio Anchors: declarei 8 gates, o cabeçalho anunciou "8 gates", a tabela
+// mostrou 2 e o rodapé deu ✓. Os 6 ausentes eram os de unidade, e o projeto tem 0 spec e 0
+// feature — a informação útil ("declarei regra para artefato que não existe aqui") era
+// exatamente a que não aparecia.
+//
+// Não é falha: é declaração sem alvo, e o conserto é do projeto (criar o artefato ou
+// remover o gate). Por isso avisa, não barra.
+func warnGatesWithoutTarget(declarados []config.Gate, p gate.Profile, g *mapx.Graph, all bool) {
+	avaliados := map[string]bool{}
+	for _, n := range p.GateNames() {
+		avaliados[n] = true
+	}
+	// A partial scan confronts its cut, not the map: a gate with no target in it may have
+	// many in the map — a gate whose `requires` asks a mark no changed spec carries (reported
+	// from a project: no-test-proof-real, "nothing to measure" in a commit that touched no
+	// `@no-test` spec). There, a gate is said only when no node of the map has its kinds and
+	// tags.
+	if !all && g != nil {
+		for _, gt := range declarados {
+			for _, n := range g.Nodes {
+				if gate.MatchesShape(gt, n) {
+					avaliados[gt.Name] = true
+					break
+				}
+			}
+		}
+	}
+	// Each gate says what a node must match: its kinds and, when it has them, its tags — a
+	// gate of the catalog inherits them when the declaration names none, and the tags were
+	// the filter no node passed (reported from a project: route-exists asks `screen`).
+	var semAlvo []string
+	for _, gt := range declarados {
+		if gt.Name != "" && !avaliados[gt.Name] {
+			line := gt.Name + "  on: [" + strings.Join(gt.On, ", ") + "]"
+			if len(gt.Tags) > 0 {
+				line += "  tags: [" + strings.Join(gt.Tags, ", ") + "]"
+			}
+			semAlvo = append(semAlvo, line)
+		}
+	}
+	if len(semAlvo) == 0 {
+		return
+	}
+	fmt.Println()
+	fmt.Println(i18n.T("check.unused_gates_header", len(semAlvo)))
+	for _, n := range semAlvo {
+		fmt.Printf("    %s\n", n)
+	}
+	fmt.Println(i18n.T("check.unused_gates_note"))
+}
+
+// reportTiming decides WHETHER the measurement prints, and is the only door to
+// `printTiming`.
+//
+// The decision lives in its own function, not inline in `RunE`, for a measured reason:
+// `RunE` needs a whole project to run, so a test of the inline condition can only
+// RECREATE it ("if false, do not call") instead of exercising it. And a recreated
+// condition proves nothing about the production one — confirmed by mutation: calling
+// `printTiming` unconditionally here passed every test.
+//
+// The `timing-metrics` flag governs exactly this line: `off` and ABSENT do not print,
+// `on` prints. Measuring is opt-in, and an inverted default would raise no error at all —
+// it would just spend everyone's time, forever, in silence.
+func reportTiming(show bool, p gate.Profile) {
+	if !show {
+		return
+	}
+	printTiming(p)
+}
+
+// judgmentGuides indexes gate → (guide, question) for the brief.
+//
+// The same reading `enqueueJudgments` does to enrich a task: the gate declares both, and
+// whoever judges needs both — the guide says where the ruler is, the question says what
+// to confront.
+//
+// A guide read from a URL is named by the URL that answered — its `{{branch}}` resolved —,
+// and one that answers nothing is an error.
+func judgmentGuides(root string, cfg *config.Config) (map[string]string, map[string]string, error) {
+	guideOf := map[string]string{}
+	askOf := map[string]string{}
+	if cfg == nil {
+		return guideOf, askOf, nil
+	}
+	for _, g := range cfg.Gates {
+		if g.IsJudgment() {
+			guide := g.Guide
+			if pathref.IsURL(guide) {
+				u, _, err := pathref.Resolve(root, guide)
+				if err != nil {
+					return nil, nil, fmt.Errorf("gate %s, guide: %w", g.Name, err)
+				}
+				guide = u
+			}
+			guideOf[g.Name] = guide
+			askOf[g.Name] = g.Ask
+		}
+	}
+	return guideOf, askOf, nil
+}
+
+// printJudgmentBrief hands the REVIEWER the list of what is left to judge.
+//
+// Who judges in CI is the PR's reviewer, not the machine: judgment needs an AI
+// credential, answers slowly, and — what settles it — is JUDGMENT, exactly the work review
+// exists to do. The pipeline must not take it over.
+//
+// What the pipeline must do is DIRECT. The earlier version printed only the count ("3
+// targets awaiting judgment"), and a count is not an address: the reviewer knew there was
+// work and not which, where, or what to ask. In practice the item was not judged —
+// measured in the reference app, 59 of 85 specs never received a verdict, with CI running
+// on every PR.
+//
+// The list carries the three things that were missing: the TARGET (which file), the
+// QUESTION (the `ask` the gate declares) and the GUIDE (where the ruler is). With them,
+// judgment becomes an item of the review checklist — which is where `REV-CK5` charges it.
+func printJudgmentBrief(judged []gate.Result, guideOf, askOf map[string]string) {
+	// A target may await several gates, and a gate several targets. Grouping by GATE is
+	// what lets the question be asked once for the targets that share it — which is how
+	// someone actually reviews.
+	byGate := map[string][]string{}
+	var order []string
+	for _, r := range judged {
+		if _, seen := byGate[r.Gate]; !seen {
+			order = append(order, r.Gate)
+		}
+		byGate[r.Gate] = append(byGate[r.Gate], r.Target)
+	}
+	sort.Strings(order)
+
+	fmt.Println()
+	fmt.Println(i18n.T("check.judgment_brief_header", len(judged), len(order)))
+	fmt.Println(i18n.T("check.judgment_brief_who"))
+	for _, g := range order {
+		targets := byGate[g]
+		sort.Strings(targets)
+		fmt.Println()
+		fmt.Printf(i18n.T("check.judgment_brief_gate"), g, len(targets))
+		fmt.Println()
+		if gd := guideOf[g]; gd != "" {
+			fmt.Printf(i18n.T("check.judgment_brief_guide"), gd)
+			fmt.Println()
+		}
+		if ask := askOf[g]; ask != "" {
+			fmt.Printf(i18n.T("check.judgment_brief_ask"), strings.TrimSpace(ask))
+			fmt.Println()
+		}
+		// UP TO TEN, and the rest counted. A list of sixty paths drowns the question
+		// that comes before it, and whoever reviews opens the first handful anyway.
+		for i, a := range targets {
+			if i == 10 {
+				fmt.Printf(i18n.T("check.judgment_brief_more"), len(targets)-10)
+				fmt.Println()
+				break
+			}
+			fmt.Printf("      %s\n", a)
+		}
+	}
+	fmt.Println()
+	fmt.Println(i18n.T("check.judgment_brief_footer"))
+}
+
+// printTiming mostra ONDE a varredura gastou o tempo — por gate, e depois os alvos
+// individuais mais caros.
+//
+// O custo do `check --all` e' invisivel no relatorio normal: ele leva minutos num
+// projeto real, e nada diz onde. Sem a medida, otimizar e' adivinhar qual gate cobrar —
+// e a suspeita natural (o gate com mais alvos) costuma estar errada, porque um `run:`
+// externo que sobe um compilador custa mais em UMA execucao do que um checker interno
+// em centenas.
+//
+// Os ALVOS entram porque o gate caro nem sempre e' caro por igual: um unico arquivo
+// patologico (uma spec gigante, um teste que o `run:` recompila) aparece aqui com nome
+// e endereco, e e' acionavel de um jeito que a media por gate nao e'.
+func printTiming(p gate.Profile) {
+	type linha struct {
+		nome  string
+		total time.Duration
+		pior  time.Duration
+		alvos int
+	}
+	var linhas []linha
+	var total time.Duration
+	for nome, s := range p.ByGate {
+		n := s.Pass + s.Fail + s.Skip + s.Pending + s.Judge
+		linhas = append(linhas, linha{nome, s.Duracao, s.Pior, n})
+		total += s.Duracao
+	}
+	if len(linhas) == 0 {
+		return
+	}
+	// Empate desempatado pelo NOME, e nao deixado ao acaso do mapa: duas execucoes da
+	// mesma varredura tem de imprimir a mesma ordem, senao comparar dois relatorios
+	// vira ruido.
+	sort.Slice(linhas, func(i, j int) bool {
+		if linhas[i].total != linhas[j].total {
+			return linhas[i].total > linhas[j].total
+		}
+		return linhas[i].nome < linhas[j].nome
+	})
+
+	largura := 0
+	for _, l := range linhas {
+		if len(l.nome) > largura {
+			largura = len(l.nome)
+		}
+	}
+
+	// A CONTAGEM e' montada como texto ANTES de medir, e a largura sai do rotulo mais
+	// longo que de fato aparece.
+	//
+	// Formatar os dois casos em sequencias diferentes (`%5d targets` de um lado, `1
+	// target` literal do outro) desalinhava a coluna de duas maneiras ao mesmo tempo: o
+	// numero sem padding no caso singular, e o rotulo com uma letra a menos. E a largura
+	// nao pode ser constante porque o rotulo e' traduzido — `alvos`, `targets` e
+	// `objetivos` nao tem o mesmo tamanho.
+	// O NUMERO e' alinhado dentro da propria string traduzida (`%*d`), e nao concatenado
+	// por fora: a ordem entre numero e rotulo pertence a traducao, e monta-la aqui
+	// assumiria que o numero vem primeiro — verdade nas tres linguas de hoje, e nao uma
+	// garantia da proxima.
+	larguraNum := 1
+	for _, l := range linhas {
+		if n := len(strconv.Itoa(l.alvos)); n > larguraNum {
+			larguraNum = n
+		}
+	}
+	rotulo := make([]string, len(linhas))
+	larguraAlvos := 0
+	for i, l := range linhas {
+		if l.alvos == 1 {
+			rotulo[i] = i18n.T("check.timing_targets_count_one", larguraNum, l.alvos)
+		} else {
+			rotulo[i] = i18n.T("check.timing_targets_count", larguraNum, l.alvos)
+		}
+		if len(rotulo[i]) > larguraAlvos {
+			larguraAlvos = len(rotulo[i])
+		}
+	}
+
+	fmt.Println()
+	fmt.Println(i18n.T("check.timing_header", arredonda(total)))
+	for i, l := range linhas {
+		// `pior` so' aparece onde ha' o que comparar. Com um alvo unico ela repete o
+		// total na coluna ao lado, e duas colunas com o mesmo numero nao distinguem
+		// nada — so' fazem o olho procurar uma diferenca que nao existe.
+		if l.alvos == 1 {
+			// Sem padding na coluna de alvos: nada vem DEPOIS dela nesta linha, e o
+			// preenchimento viraria espaco solto no fim.
+			fmt.Println(i18n.T("check.timing_item_single", largura, l.nome, arredonda(l.total), rotulo[i]))
+			continue
+		}
+		fmt.Println(i18n.T("check.timing_item", largura, l.nome, arredonda(l.total), larguraAlvos, rotulo[i], arredonda(l.pior)))
+	}
+
+	// Os alvos individuais mais caros, atravessando todos os gates.
+	piores := append([]gate.Result(nil), p.Results...)
+	sort.Slice(piores, func(i, j int) bool {
+		if piores[i].Duracao != piores[j].Duracao {
+			return piores[i].Duracao > piores[j].Duracao
+		}
+		if piores[i].Gate != piores[j].Gate {
+			return piores[i].Gate < piores[j].Gate
+		}
+		return piores[i].Target < piores[j].Target
+	})
+	if len(piores) > 0 && piores[0].Duracao > 0 {
+		fmt.Println()
+		fmt.Println(i18n.T("check.timing_targets"))
+		for i, r := range piores {
+			// Zero nao e' informacao: um alvo que nem registrou tempo nao ajuda ninguem
+			// a otimizar, e listar dez deles empurraria os reais para fora da tela.
+			if i == 10 || r.Duracao == 0 {
+				break
+			}
+			fmt.Println(i18n.T("check.timing_target_item", arredonda(r.Duracao), r.Gate, r.Target))
+		}
+	}
+	fmt.Println(i18n.T("check.timing_note"))
+}
+
+// arredonda corta a precisao ao que o leitor usa para DECIDIR. `1.234567ms` e
+// `1.23ms` levam a mesma acao, e o digito a mais so' atrapalha a comparacao entre
+// linhas — que e' para o que esta tabela existe.
+func arredonda(d time.Duration) string {
+	switch {
+	case d >= time.Second:
+		return d.Round(10 * time.Millisecond).String()
+	case d >= time.Millisecond:
+		return d.Round(100 * time.Microsecond).String()
+	}
+	return d.Round(time.Microsecond).String()
+}
+
+func printProfile(p gate.Profile, onlyIssues, showDrift, showSkips bool) {
+	nomes := p.GateNames()
+	wn := nameWidth(nomes)
+	w := computeWidths(p)
+	limpos := 0
+
+	// perfil por gate
+	for _, name := range nomes {
+		s := p.ByGate[name]
+		tag := i18n.T("check.tag.informative")
+		if s.Blocking {
+			tag = i18n.T("check.tag.blocking")
+		}
+		if s.Judge > 0 {
+			tag = i18n.T("check.tag.judgment")
+			fmt.Printf("  %-*s  %-11s  "+i18n.T("check.judge_pending_table")+"\n", wn, name, tag, w.judge, s.Judge)
+			continue
+		}
+		// O `~` fundia TRÊS coisas: "não se aplica", "não havia o que confrontar" e
+		// DRIFT REAL rebaixado a aviso (ex.: o código do cenário casa mas a descrição
+		// do teste divergiu). Somar tudo num número faz o drift parecer benigno — e é
+		// o oposto: é a única categoria acionável do balde. Separamos em ⚠.
+		drift := driftCount(p, name)
+		pend := pendingCount(p, name)
+		if onlyIssues && cleanGate(s, drift+pend) {
+			limpos++
+			continue
+		}
+		// A coluna do ⚠ é reservada SEMPRE, mesmo vazia. Omiti-la nas linhas sem
+		// drift empurrava o `~` para a esquerda só nelas, e a coluna passava a
+		// existir em dois lugares na mesma tabela — que é o pior caso: o olho
+		// desce a lista comparando números que não estão na mesma vertical.
+		fmt.Printf("  %-*s  %-11s  ✓%*d  ✗%*d%s%s%s%s%s%s  ~%*d%s%s\n", wn, name, tag,
+			w.pass, s.Pass, w.fail, s.Fail,
+			driftSeparator(w.drift), driftColumn(drift, w.drift),
+			driftSeparator(w.pend), statColumn("?", pend, w.pend),
+			driftSeparator(w.awaiting), statColumn("⏸", s.Awaiting, w.awaiting),
+			w.skip, s.Skip+s.Pending-pend,
+			driftSeparator(w.frozen), statColumn("❄", s.Frozen, w.frozen))
+	}
+	// O gate omitido continua tendo rodado, e o número diz isso. Sem esta linha o
+	// `--only-issues` pareceria uma varredura menor, e não a mesma varredura com a
+	// listagem enxuta.
+	if limpos > 0 {
+		fmt.Println()
+		fmt.Println(i18n.T("check.only_issues_omitted", limpos))
+	}
+	printLegenda(p, w)
+
+	// DRIFT detalhado: só sob `--show-drift`, e aí SEM TETO.
+	//
+	// Truncar a lista devolvia o problema que ela existe para resolver: quem pede
+	// os endereços quer agir sobre eles, e "… e mais 2405" deixa 2405 sem
+	// endereço. Ou a lista é completa, ou o contador da tabela já bastava.
+	//
+	// Por isso o padrão é o contador: numa varredura grande são milhares de
+	// linhas, e despejá-las sem ninguém ter pedido enterraria as issues logo
+	// abaixo. A tabela continua anunciando `⚠407`, e a flag é o caminho do número
+	// para os endereços.
+	if showDrift {
+		printDrift(driftResults(p))
+		printPending(pendingResults(p))
+	}
+
+	// Motivo dos `~` (skip/pending). O contador sozinho não diz nada — quem lê fica em
+	// dúvida se `~1` é problema dele. No modo incremental (poucos nós) o motivo cabe na
+	// tela e é acionável ("o código ainda não existe"), então mostramos.
+	if showSkips {
+		printSkips(p)
+	} else if reasons := skipReasons(p); len(reasons) > 0 && len(p.Results) <= maxResultsForSkipDetail {
+		fmt.Println()
+		fmt.Println(i18n.T("check.undetermined_summary", len(reasons)))
+		for _, r := range reasons {
+			fmt.Printf("  ~ %s @ %s\n", r.Gate, r.Target)
+			if r.Detail != "" {
+				fmt.Print(indent(r.Detail, "      "))
+			}
+		}
+	}
+
+	// THE HEADER COUNTS EVERYTHING THE CHECK FOUND, by kind. It said "N issue(s) —
+	// divergences recorded:" over the failures alone: it read as N issues PLUS the
+	// divergences, and the divergences (⚠, which do not block) were not in the number at
+	// all. Nor is every failure an issue (in manual mode none is written).
+	// Every finding that bars the promotion is listed, whatever its level; the divergences
+	// and pending items that only inform are counted, and `--show-drift` lists them.
+	drifts, pendings := len(driftResults(p)), len(pendingResults(p))
+	if len(p.Failures) > 0 || drifts > 0 || pendings > 0 {
+		var listed []gate.Result
+		listed = append(listed, p.Failures...)
+		for _, r := range p.Results {
+			if (r.Verdict == gate.Diverge || r.Verdict == gate.Pending) && r.Blocks() {
+				listed = append(listed, r)
+			}
+		}
+		bloqueiam := 0
+		for _, r := range listed {
+			if r.Blocks() {
+				bloqueiam++
+			}
+		}
+		dica := i18n.T("check.drift_hint_flag")
+		if showDrift {
+			dica = i18n.T("check.drift_hint_above")
+		}
+		fmt.Println()
+		fmt.Println(i18n.T("check.findings_summary", len(p.Failures), bloqueiam, len(listed)-bloqueiam, drifts, pendings, dica))
+		for _, r := range listed {
+			mark := i18n.T("check.tag.informative")
+			if r.Blocks() {
+				mark = i18n.T("check.tag.blocks_mark")
+			}
+			symbol := map[gate.Verdict]string{gate.Fail: "✗", gate.Diverge: "⚠", gate.Pending: "?"}[r.Verdict]
+			fmt.Printf("  %s [%s] %s @ %s\n", symbol, mark, r.Gate, r.Target)
+			if r.Detail != "" {
+				fmt.Print(indent(r.Detail, "      "))
+			}
+		}
+		// What a gate measures, and the ways out of its failure, are one command away.
+		if len(listed) > 0 {
+			fmt.Println(i18n.T("check.gate_guide_hint", listed[0].Gate))
+		}
+	}
+	printAwaiting(p.Awaiting)
+
+	fmt.Println()
+	// O ACHADO INFORMATIVO precisa sobreviver ao veredito.
+	//
+	// A última linha é a que se lê, e "✓ pode promover" apagava tudo que veio antes.
+	// Medido em três rodadas de um E2E: um gate informativo diagnosticou um defeito real
+	// (uma função que truncava a consulta e quebrava a regra que a consome), o autor leu
+	// o verde, e registrou por escrito que o arquivo estava correto — contra o gate que
+	// ele mesmo citou pelo nome. O sinal existia e sumiu no meio.
+	//
+	// Informativo não barra, e não deve barrar: é a maturação (QUALITY §7). Mas "não
+	// barra" é diferente de "não aconteceu", e o veredito precisa dizer as duas coisas.
+	if n := len(p.Awaiting); n > 0 {
+		fmt.Println(i18n.T("check.awaiting_note", n))
+	}
+	informativos := 0
+	// DRIFT é `Pending` COM motivo: o gate olhou, algo divergiu, e ele não barra. Contá-lo
+	// aqui é o que evita a linha "sem achado em aberto" aparecer sobre uma spec que declara
+	// 3 decisões que ninguém tomou — o veredito diria o contrário do que o gate viu.
+	drift := 0
+	// naoConfrontado são os Skip PUROS — o gate rodou e o nó não lhe dizia nada. Ficavam
+	// fora de toda contagem, então um projeto onde NADA foi medido lia "sem achado em
+	// aberto" no rodapé. Contá-los à parte é o que separa "conforme" de "não medido".
+	naoConfrontado := 0
+	for _, r := range p.Results {
+		if r.Verdict == gate.Fail && !r.Blocks() && !r.Ignored() {
+			informativos++
+		}
+		if r.Verdict == gate.Diverge && !r.Ignored() {
+			drift++
+		}
+		if r.Verdict == gate.Skip {
+			naoConfrontado++
+		}
+	}
+	if p.Passed {
+		switch {
+		case informativos > 0:
+			fmt.Println(i18n.T("check.promote_with_info", informativos))
+			if drift > 0 {
+				fmt.Println(i18n.T("check.promote_drift_note", drift))
+			}
+			fmt.Println(i18n.T("check.promote_info_note"))
+		case drift > 0:
+			fmt.Println(i18n.T("check.promote_with_drift", drift))
+			fmt.Println(i18n.T("check.pending_note"))
+		case naoConfrontado > 0:
+			// `Skip` PURO: o gate rodou, o nó não se aplicava, e nada foi medido. Não é
+			// achado nem pendência — é COBERTURA AUSENTE, e o veredito não pode chamar
+			// isso de "sem achado em aberto".
+			//
+			// Medido ao adotar o Anchors no próprio Anchors: 222 nós, dois gates com ~67 e
+			// ~85, e o rodapé dizia "todos os gates passaram, sem achado em aberto". 152
+			// confrontos não aconteceram, e a última linha — a que se lê — afirmava o
+			// oposto. Para quem está adotando, é a diferença entre "meu projeto está
+			// conforme" e "eu ainda não declarei o que fazia isto ser medido".
+			fmt.Println(i18n.T("check.promote_with_unmatched", naoConfrontado))
+			fmt.Println(i18n.T("check.promote_unmatched_note"))
+		default:
+			fmt.Println(i18n.T("check.can_promote_all_clean"))
+		}
+	} else {
+		msg := i18n.T("check.blocked_by_gates", len(p.Blocked))
+		if informativos > 0 {
+			msg += i18n.T("check.blocked_extra_info", informativos)
+		}
+		fmt.Println(msg)
+	}
+
+	rememberMaturation(p, onlyIssues)
+}
+
+// rememberMaturation avisa sobre gate informativo que já está LIMPO.
+//
+// A maturação (QUALITY §7) tem uma metade que o Anchors não cobrava: um gate nasce
+// informativo porque o projeto ainda não cumpre o limiar, e quando passa a cumprir,
+// ninguém volta ao anchors.yaml para promovê-lo. O gate fica medindo sem defender — e o
+// projeto acha que está protegido por algo que não barra nada.
+//
+// A promoção continua sendo decisão humana; o que muda é que ela deixa de depender de
+// alguém lembrar sozinho. E o lembrete aparece AQUI, onde a pessoa acabou de ler os
+// vereditos — um aviso que exige rodar outro comando é um aviso que ninguém vê.
+func rememberMaturation(p gate.Profile, onlyIssues bool) {
+	prom := gate.PromotableGates(p)
+	if len(prom) == 0 {
+		return
+	}
+	// Com `--only-issues` a pessoa pediu para NÃO ver o que está limpo. Nomear os gates
+	// aqui contradiria a flag — mas omiti-los por completo esconderia a maturação
+	// pendente, que é justamente o que ela precisa saber. Então: conta, não lista.
+	if onlyIssues {
+		fmt.Println()
+		fmt.Println(i18n.T("check.maturation_reminder", len(prom)))
+		return
+	}
+	fmt.Println()
+	fmt.Println(i18n.T("check.maturation_promotable", len(prom)))
+	for i, g := range prom {
+		if i == 6 {
+			fmt.Println(i18n.T("check.maturation_more", len(prom)-6))
+			break
+		}
+		fmt.Println(i18n.T("check.maturation_item", g.Gate, g.Passou))
+	}
+	fmt.Println(i18n.T("check.maturation_note"))
+}
+
+// indent prefixa cada linha de s com pad — para o detalhe do gate (que pode ensinar
+// o formato esperado em várias linhas) sair legível sob a issue.
+func indent(s, pad string) string {
+	var b strings.Builder
+	for _, line := range strings.Split(strings.TrimRight(breakOccurrences(s), "\n"), "\n") {
+		b.WriteString(pad)
+		b.WriteString(line)
+		b.WriteByte('\n')
+	}
+	return b.String()
+}
+
+// breakOccurrences põe cada ocorrência do detalhe na sua própria linha.
+//
+// Dez gates montam a mensagem com `strings.Join(achados, "; ")`, e cinco
+// violações no mesmo arquivo saíam numa linha de 800 caracteres: o leitor não
+// distingue onde uma acaba e a outra começa, e a repetição do texto da regra
+// (idêntico nas cinco) afoga o único dado que varia, que é o número da linha.
+//
+// A quebra é no separador que os gates JÁ usam, então nenhum deles precisa
+// mudar. Basta UM separador para quebrar: duas ocorrências já se confundem numa
+// linha só, e é o caso mais comum.
+func breakOccurrences(s string) string {
+	s = strings.ReplaceAll(s, "; ", ";\n")
+
+	// Listas longas separadas por vírgula também quebram — 17 gates montam a
+	// mensagem com `strings.Join(lista, ", ")` SEM cortar, e uma lista grande vira
+	// uma linha que ninguém lê nem grepa.
+	//
+	// O que separa LISTA de PROSA não é o tamanho da linha: é o que vem entre as
+	// vírgulas. Item de lista é um token — um caminho, um código, um símbolo — e
+	// não tem espaço interno; oração tem. A primeira versão usava "linha longa com
+	// 3+ vírgulas" e picou a própria mensagem deste gate ("a spec existe,\n o
+	// código existe,\n os dois se referenciam") — a frase que o comentário citava
+	// como o caso a NÃO quebrar.
+	var out []string
+	for _, linha := range strings.Split(s, "\n") {
+		if isTokenList(linha) {
+			linha = strings.ReplaceAll(linha, ", ", ",\n")
+		}
+		out = append(out, linha)
+	}
+	return strings.Join(out, "\n")
+}
+
+// listBreakThreshold — abaixo disto a linha cabe na tela e não vale quebrar, seja
+// ela lista ou não. Escolhido para caber num terminal de 120 colunas com a
+// indentação do detalhe (6 a 8 espaços).
+const listBreakThreshold = 110
+
+// isTokenList: a linha é uma enumeração de itens sem espaço interno?
+//
+// `a.spec.md, b.spec.md, c.spec.md` é lista; `a spec existe, o código existe, e
+// os dois se referenciam` é prosa. A distinção é o espaço DENTRO do item: nome de
+// arquivo, código de regra e símbolo não têm; oração tem. Exige maioria dos itens
+// sem espaço para tolerar o último ("… e mais 3") e o texto que abre a lista.
+func isTokenList(linha string) bool {
+	if len([]rune(linha)) <= listBreakThreshold {
+		return false
+	}
+	partes := strings.Split(linha, ", ")
+	if len(partes) < 4 {
+		return false
+	}
+	tokens := 0
+	for _, p := range partes {
+		if !strings.Contains(strings.TrimSpace(p), " ") {
+			tokens++
+		}
+	}
+	return tokens*2 > len(partes)
+}
+
+// printSkips lists every indeterminate (`~`) of the scan, by gate and then by reason — the
+// first line of the gate's own message —, each reason with its count and the addresses it
+// covers. A reason is what the gate said when it had nothing to confront: "the code does
+// not exist yet", "the unit exposes no handle". Without it, telling "does not apply" from
+// "should have been measured" meant reading the gate's source. A Skip with no message is
+// listed under its own heading, so no indeterminate goes unlisted.
+func printSkips(p gate.Profile) {
+	byGate := map[string]map[string][]string{}
+	total := 0
+	for _, r := range p.Results {
+		if r.Verdict != gate.Skip {
+			continue
+		}
+		reason := strings.TrimSpace(strings.SplitN(r.Detail, "\n", 2)[0])
+		if reason == "" {
+			reason = i18n.T("check.skips_no_reason")
+		}
+		if byGate[r.Gate] == nil {
+			byGate[r.Gate] = map[string][]string{}
+		}
+		byGate[r.Gate][reason] = append(byGate[r.Gate][reason], r.Target)
+		total++
+	}
+	fmt.Println()
+	fmt.Println(i18n.T("check.skips_summary", total))
+	gates := make([]string, 0, len(byGate))
+	for g := range byGate {
+		gates = append(gates, g)
+	}
+	sort.Strings(gates)
+	for _, g := range gates {
+		reasons := make([]string, 0, len(byGate[g]))
+		for r := range byGate[g] {
+			reasons = append(reasons, r)
+		}
+		sort.Slice(reasons, func(i, j int) bool {
+			if a, b := len(byGate[g][reasons[i]]), len(byGate[g][reasons[j]]); a != b {
+				return a > b
+			}
+			return reasons[i] < reasons[j]
+		})
+		fmt.Printf("  ~ %s\n", g)
+		for _, r := range reasons {
+			targets := byGate[g][r]
+			sort.Strings(targets)
+			fmt.Printf("      %d × %s\n", len(targets), r)
+			for _, t := range targets {
+				fmt.Printf("          %s\n", t)
+			}
+		}
+	}
+}
+
+// maxResultsForSkipDetail — acima disso (varredura --all) a lista de motivos vira
+// ruído; o contador basta. No incremental o motivo é o que o usuário precisa.
+const maxResultsForSkipDetail = 40
+
+// printAwaiting lists the choices registered on purpose that wait for a person's decision, each
+// with what it blocks or informs and its detail — who decides is in it. They are few, and the
+// point of the list is to be read: no agent clears one, and counted among the divergences they
+// sat in the pile of what to fix.
+func printAwaiting(items []gate.Result) {
+	if len(items) == 0 {
+		return
+	}
+	fmt.Println()
+	fmt.Println(i18n.T("check.awaiting_header", len(items)))
+	for _, r := range items {
+		mark := i18n.T("check.tag.informative")
+		if r.Blocks() {
+			mark = i18n.T("check.tag.blocks_mark")
+		}
+		fmt.Printf("  ⏸ [%s] %s @ %s\n", mark, r.Gate, r.Target)
+		if r.Detail != "" {
+			fmt.Print(indent(firstLines(r.Detail, 2), "      "))
+		}
+	}
+}
+
+// firstLines is the text up to its n-th line.
+func firstLines(s string, n int) string {
+	lines := strings.SplitAfter(s, "\n")
+	if len(lines) > n {
+		lines = lines[:n]
+	}
+	return strings.Join(lines, "")
+}
+
+// driftResults devolve os DRIFTs: `Pending` COM motivo — o gate olhou, algo
+// divergiu, e ele não barrou.
+//
+// Eles saíam do mesmo balde que os `~` e por isso desapareciam no `--all`, junto
+// com o corte de ruído: a tabela anunciava `⚠407` e o detalhe abaixo não trazia
+// nenhum. Contar uma categoria como acionável e depois escondê-la é pior que não
+// a separar — o número vira uma acusação sem endereço.
+func driftResults(p gate.Profile) []gate.Result {
+	var out []gate.Result
+	for _, r := range p.Results {
+		if r.Verdict == gate.Diverge && !r.Ignored() {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+// pendingResults are the pending items with a reason — the gate had something to confront
+// and could not measure it —, not ignored. A pending item with no reason is a `~`.
+func pendingResults(p gate.Profile) []gate.Result {
+	var out []gate.Result
+	for _, r := range p.Results {
+		if r.Verdict == gate.Pending && r.Detail != "" && !r.Ignored() {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+// printPending lists the pending items as printDrift lists the divergences, under their
+// own heading.
+func printPending(pendings []gate.Result) {
+	if len(pendings) == 0 {
+		return
+	}
+	fmt.Println()
+	fmt.Println(i18n.T("check.pending_summary", len(pendings)))
+	for _, r := range pendings {
+		fmt.Printf("  ? %s @ %s\n", r.Gate, r.Target)
+		if r.Detail != "" {
+			fmt.Print(indent(r.Detail, "      "))
+		}
+	}
+}
+
+// skipReasons devolve os resultados indeterminados (skip/pending) QUE TÊM motivo
+// escrito. Skip silencioso (gate simplesmente não se aplica àquele kind) não vira
+// linha — só polui.
+func skipReasons(p gate.Profile) []gate.Result {
+	var out []gate.Result
+	for _, r := range p.Results {
+		// `Pending` COM motivo é DRIFT, e tem bloco próprio (`driftResults`).
+		// Deixá-lo aqui o faria herdar o corte de ruído do `~` e sumir no --all.
+		if r.Verdict == gate.Skip && r.Detail != "" {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+// warnIfMapStale avisa quando o MAPA é mais velho que os arquivos que ele descreve.
+// Sem isso, um arquivo criado/alterado depois do último `map build` é INVISÍVEL ao
+// check — e o verde passa a não significar nada (o gate não roda sobre o que não está
+// no mapa). É a diferença entre "passou" e "não foi olhado".
+//
+// A conferência é sobre CONTEÚDO — quais arquivos governados o mapa não conhece —, e
+// não sobre mtime.
+//
+// A primeira versão comparava o mtime do `anchors.graph.yaml` com o dos arquivos-fonte.
+// Barato, e errado em CI: o `checkout` escreve TODO o repositório no instante do clone,
+// então cada arquivo fica microssegundos mais novo que o mapa e o aviso disparava em toda
+// execução. Medido no primeiro run do pipeline de gates — 26 arquivos "mudaram" num
+// repositório onde nada mudara, e o log do mesmo job dizia, duas linhas acima, que o mapa
+// correspondia ao repositório.
+//
+// Ruído assim custa mais do que parece: um aviso que aparece em todo PR verde ensina a
+// ignorá-lo, e aí ele não serve quando for verdadeiro.
+//
+// Arquivo governado que não está no mapa é INVISÍVEL ao check, e é isso que o aviso
+// existe para dizer — a diferença entre "passou" e "não foi olhado".
+// staleUnlessAll are the map's nodes whose file changed since it was built, asked only of a
+// scan that is not the full one.
+func staleUnlessAll(all bool, root string, g *mapx.Graph, cfg *config.Config) []string {
+	if all {
+		return nil
+	}
+	return mapcmd.StaleMapNodes(root, g, cfg)
+}
+
+func warnIfMapStale(root, mapPath string, cfg *config.Config, g *mapx.Graph) {
+	if g == nil {
+		return
+	}
+	files, err := scan.Walk(root, cfg)
+	if err != nil {
+		return
+	}
+	noMapa := make(map[string]bool, len(g.Nodes))
+	for _, n := range g.Nodes {
+		noMapa[filepath.ToSlash(n.ID)] = true
+	}
+	newer := 0
+	var sample string
+	for _, f := range files {
+		if noMapa[filepath.ToSlash(f.Path)] {
+			continue
+		}
+		newer++
+		if sample == "" {
+			sample = f.Path
+		}
+	}
+	if newer == 0 {
+		return
+	}
+	extra := ""
+	if newer > 1 {
+		extra = fmt.Sprintf(" (and %d more)", newer-1)
+	}
+	// A mensagem diz o que foi MEDIDO: "não está no mapa", e não "mudou". Dizer "mudou"
+	// mandaria quem lê procurar uma alteração que pode não existir — o caso comum é
+	// arquivo NOVO, que nunca esteve lá.
+	fmt.Printf("⚠ STALE map: %d governed file(s) are not in the map — e.g.: %s%s\n"+
+		"  The gates only see what is in the map; run `anchors map build` before trusting this result.\n\n",
+		newer, sample, extra)
+}
+
+// driftCount conta, dentro do balde `~` de um gate, os resultados que são DRIFT REAL
+// (indeterminados COM motivo escrito) — em oposição aos que apenas não se aplicam.
+// Um Pending com detalhe é o gate dizendo "olhei e algo divergiu, mas não vou barrar";
+// somá-lo aos "não se aplica" esconde a única parte acionável do número.
+func driftCount(p gate.Profile, gateName string) int {
+	n := 0
+	for _, r := range p.Results {
+		if r.Gate != gateName {
+			continue
+		}
+		// DRIFT é PENDING com motivo: o gate OLHOU e algo divergiu, mas não barra.
+		// Skip com motivo é o oposto — o gate não se aplica ("não é uma tela"), e
+		// contá-lo como drift inflaria o número com ruído benigno.
+		if r.Verdict == gate.Diverge && !r.Ignored() {
+			n++
+		}
+	}
+	return n
+}
+
+// pendingCount counts a gate's pending items with a reason, not ignored — the `?` column.
+func pendingCount(p gate.Profile, gateName string) int {
+	n := 0
+	for _, r := range p.Results {
+		if r.Gate == gateName && r.Verdict == gate.Pending && r.Detail != "" && !r.Ignored() {
+			n++
+		}
+	}
+	return n
+}
+
+// unitPieces devolve os caminhos das outras peças da unidade de um alvo — spec,
+// feature, teste e código. É a vizinhança que a IDENTIDADE define, e não a que as arestas
+// registram: as duas costumam coincidir, mas a segunda depende de o mapa já ter ligado as
+// pontas, e o `check` precisa funcionar antes disso.
+//
+// The names were TypeScript's only (`.test.ts`, `.ts`, `.tsx`): a Go test, `foo_test.go`,
+// reduced to the stem `foo_test` and reached no piece, and `foo.go` never brought in its
+// test — `check --changed` of a Go unit ran without its feature, spec or test. The stem
+// now also drops the `_test` suffix, and the candidates carry the target's own extension
+// in its code and test forms, besides the fixed Go and TypeScript names a spec target
+// (whose extension says nothing about the code) needs. A candidate only enters when the
+// map holds it, so a name that does not exist costs nothing. The derivation is the unit's
+// layer's — a spec's header `layer:` —, as the map's: by the spec's own, an override of its
+// unit's layer was never read (reported from a project: a handler's `_test.go`).
+func unitPieces(root, target string, cfg *config.Config) []string {
+	layer := scan.LayerOfUnit(root, target, cfg)
+	var cands []string
+	for _, piece := range []string{"spec", "feature", "test"} {
+		cands = append(cands, cfg.PiecePaths(target, layer, piece)...)
+	}
+	stem := path.Join(path.Dir(target), cfg.UnitName(target))
+	for _, ext := range cfg.CodeExtensions() {
+		cands = append(cands, stem+ext)
+	}
+	cands = append(cands, stem+".spec.md", stem+".feature")
+	seen := map[string]bool{target: true}
+	var out []string
+	for _, cand := range cands {
+		if !seen[cand] {
+			seen[cand] = true
+			out = append(out, cand)
+		}
+	}
+	return out
+}
+
+// gateCmdID devolve o ID de um gate (ou o nome, quando o ID falta). Duplica a lógica
+// de `internal/gate` de propósito: exportá-la só para isto acoplaria os dois pacotes por
+// uma função de três linhas.
+func gateCmdID(g config.Gate) string {
+	if g.ID != "" {
+		return g.ID
+	}
+	return g.Name
+}
+
+// normalizeChanged põe os caminhos na mesma forma que os IDs do mapa (relativos à raiz),
+// para que a comparação não dependa de como o chamador escreveu o caminho — o pre-commit
+// passa relativo, e quem roda à mão costuma passar absoluto.
+func normalizeChanged(changed []string, root string) []string {
+	out := make([]string, 0, len(changed))
+	for _, c := range changed {
+		p := c
+		if filepath.IsAbs(p) {
+			if rel, err := filepath.Rel(root, p); err == nil {
+				p = rel
+			}
+		}
+		out = append(out, filepath.ToSlash(filepath.Clean(p)))
+	}
+	return out
+}
+
+// queuedJudgments conta os julgamentos que AGUARDAM resposta.
+func queuedJudgments(root string) int {
+	tasks, err := queue.List(root)
+	if err != nil {
+		return 0
+	}
+	n := 0
+	for _, t := range tasks {
+		if isJudgeTask(t) {
+			n++
+		}
+	}
+	return n
+}
+
+// judgeTaskVerb is the stage a judge task suggests. It was `judge`, which is a command
+// but not a stage: `anchors next` handed the task out with "suggestion: judge", and
+// `anchors work judge` refused it as an unknown artifact — the one task of the queue
+// with no route. The review stage is the one that confronts delivered work and closes
+// with `anchors judge`; the gate and its question travel in the task's reason.
+const judgeTaskVerb = "review"
+
+// isJudgeTask says whether a queued task is a judgment awaiting its verdict: by its kind,
+// now that the verb is a stage other tasks share, or by the legacy `judge` verb of a queue
+// written before.
+func isJudgeTask(t queue.Task) bool {
+	return t.Kind == "judgment" || t.SuggestedNext == "judge"
+}
+
+// staleBinaryWarning compara quem gravou o mapa com quem está rodando.
+//
+// Compara por IGUALDADE, e não por ordem: "dev" não é ordenável contra "0.1.9", e os dois
+// builds locais que produziram o defeito se chamavam "dev" — ordenar não teria pego
+// nenhum deles. Diferente já é o suficiente para avisar; QUAL é mais novo, quem lê decide.
+func staleBinaryWarning(gravouMapa, rodando string) string {
+	if gravouMapa == "" || gravouMapa == rodando {
+		return ""
+	}
+	return i18n.T("map.version_mismatch", gravouMapa, rodando)
+}
+
+// issuesOnFor says whether this check writes issues.
+//
+//	local   always — `issues/` is the local record of the findings
+//	github  only in CI, or with --record-issues: a local run would file cards for a state
+//	        that exists only on one machine
+//	manual  only with --record-issues: the check reports and stamps the map, and nothing
+//	        lands in `issues/` on its own (`config.Workflow.Mode`)
+func issuesOnFor(cfg *config.Config, recordIssues, inCI bool) bool {
+	switch {
+	case cfg != nil && cfg.ManualMode():
+		return recordIssues
+	case cfg != nil && cfg.GitHubMode() && len(cfg.Workflow.Labels) > 0:
+		return recordIssues || inCI
+	}
+	return true
+}
+
+// stagedMap is the map the index holds, or nil when the index has none (a map git does
+// not track) or it cannot be read.
+func stagedMap(absRoot, mapPath string) *mapx.Graph {
+	rel, err := filepath.Rel(absRoot, mapPath)
+	if err != nil {
+		return nil
+	}
+	out, err := exec.Command("git", "-C", absRoot, "show", ":./"+filepath.ToSlash(rel)).Output()
+	if err != nil {
+		return nil
+	}
+	g, err := mapx.LoadBytes(out, "index:"+filepath.ToSlash(rel))
+	if err != nil {
+		return nil
+	}
+	return g
+}
+
+// dropAbsentFromIndex removes from the map every node whose file the index does not have
+// — untracked, or removed from the index — and the edges that touch one.
+func dropAbsentFromIndex(absRoot string, g *mapx.Graph) error {
+	out, err := exec.Command("git", "-C", absRoot, "ls-files", "--cached", "-z").Output()
+	if err != nil {
+		return err
+	}
+	inIndex := map[string]bool{}
+	for _, p := range strings.Split(string(out), "\x00") {
+		if p != "" {
+			inIndex[filepath.ToSlash(p)] = true
+		}
+	}
+	gone := map[string]bool{}
+	kept := g.Nodes[:0]
+	for _, n := range g.Nodes {
+		if inIndex[n.ID] {
+			kept = append(kept, n)
+			continue
+		}
+		gone[n.ID] = true
+	}
+	if len(gone) == 0 {
+		return nil
+	}
+	g.Nodes = kept
+	edges := g.Edges[:0]
+	for _, e := range g.Edges {
+		if !gone[e.From] && !gone[e.To] {
+			edges = append(edges, e)
+		}
+	}
+	g.Edges = edges
+	return nil
+}
+
+// keepFixedEvidence carries, in the map, the evidence of each file the repairs changed to
+// its new content; the line-level signals only when no line moved. It returns how many
+// files kept their evidence.
+func keepFixedEvidence(absRoot, mapPath string, fixes []gate.FixResult, cfg *config.Config) int {
+	moved := map[string]bool{}
+	var files []string
+	for _, f := range fixes {
+		if !f.Fixed {
+			continue
+		}
+		if _, seen := moved[f.Target]; !seen {
+			files = append(files, f.Target)
+		}
+		moved[f.Target] = moved[f.Target] || f.LinesMoved
+	}
+	if len(files) == 0 {
+		return 0
+	}
+	kept := 0
+	today := gitmeta.Today()
+	_ = mapx.Update(mapPath, func(g *mapx.Graph) error {
+		for _, rel := range files {
+			b, err := os.ReadFile(filepath.Join(absRoot, filepath.FromSlash(rel)))
+			if err != nil || g.Node(rel) == nil {
+				continue
+			}
+			carried := g.KeepFixedEvidence(rel, scan.ShortHash(b), i18n.T("check.fix_evidence_reason"), today, !moved[rel])
+			g.TakeContent(rel, b, cfg)
+			if len(carried) > 0 {
+				kept++
+			}
+		}
+		return nil
+	})
+	return kept
+}

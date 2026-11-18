@@ -1,0 +1,310 @@
+// @anchors
+//   code: RIGRL
+//   ref: RLIMR
+
+package gate
+
+import (
+	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// regra-implementada: a spec cataloga regras; o código tem de mostrar que as realizou.
+//
+// É o confronto que faltava, e ele é o inverso do `code-reference-valid`: aquele confere
+// que os códigos CITADOS pelo código existem na spec; este confere que a spec não ficou
+// falando sozinha. Sem ele, uma spec pode declarar cinco regras novas e o código não
+// ganhar linha nenhuma — com todos os gates verdes, porque a spec existe, o código existe,
+// e os dois se referenciam pelo header.
+//
+// Medido num E2E real: uma spec de handler ganhou `MRHMX-B04..B08` (5 regras, 98 linhas) e
+// o handler correspondente tinha ZERO ocorrências de `metadata|migrat`. A metade
+// "recorrência" da feature era código morto declarado como pronto, e nenhum dos 26 gates
+// perguntou. O defeito só apareceu quando um revisor leu spec e código na mesma passada.
+//
+// # A régua: cada regra, contra o que a SPEC declarou sobre ela
+//
+// Exigir todas as regras marcadas seria falso por construção — medido contra 592 unidades,
+// daria 3.121 achados, e nem as bem-feitas passariam: das 8 que marcam o código, NENHUMA
+// marca 100% (76% a 93%). A razão é boa, não descuido: restrição (`X01` — "a unidade NÃO
+// faz Y") é satisfeita pela AUSÊNCIA de código, e ausência não tem onde receber comentário.
+//
+// Mas "ao menos uma" também não serve: separa quem implementou de quem não implementou, e
+// não diz nada sobre as outras quinze regras da spec. É heurística, e heurística sobre
+// intenção sempre erra o caso que não está sendo olhado.
+//
+// A saída é não adivinhar: quem escreve a spec DECLARA, regra a regra, se ela tem código.
+// O padrão é o do `@no-scenario` (CONCEPT §5.1) — a dispensa vai na linha do que ela
+// dispensa, com razão escrita:
+//
+//	| `MTVRX-B01` | resolve a versão vigente do ciclo |
+//	| `MTVRX-X01` | NÃO faz I/O @no-mark: satisfeita pela ausência de import |
+//
+// O gate deixa de estimar e passa a confrontar uma afirmação. E o `anchors work` diz o que
+// fazer quando a afirmação não se sustenta na hora de implementar: **abrir issue**, porque
+// aí a spec está errada sobre a própria unidade — não é detalhe de formatação, e apagar a
+// regra ou inventar um comentário para calar o gate esconde o defeito em vez de tratá-lo.
+func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindSpec {
+		return Skip, i18n.T("gate.rule_implemented.skip_not_spec")
+	}
+	unidade := specCode(content)
+	if unidade == "" {
+		return Skip, i18n.T("gate.rule_implemented.skip_no_code_header")
+	}
+	regras := declaredRules(content, unidade)
+	if len(regras) == 0 {
+		return Skip, i18n.T("gate.rule_implemented.skip_no_rules")
+	}
+	alvo, achou := specTargetOnDisk(root, n.ID, cfg)
+	if !achou {
+		// Sem código, quem acusa é o `unit-complete` — este gate confronta o código que
+		// existe, e duplicar a cobrança produziria dois gates apontando o mesmo dedo.
+		return Skip, i18n.T("gate.rule_implemented.skip_target_missing")
+	}
+	cod, err := readFile(root, alvo)
+	if err != nil {
+		return Pending, i18n.T("gate.rule_implemented.pending_read_target", alvo)
+	}
+	texto := string(cod)
+
+	// Regra a regra: cada uma que a spec NÃO dispensou precisa aparecer no código.
+	//
+	// É aqui que a heurística vira confronto. Antes o gate perguntava "citou alguma?" —
+	// o que separa "não implementou" de "implementou", mas não diz NADA sobre as outras
+	// 15 regras da spec. Com a dispensa declarada, a pergunta passa a ser respondível uma
+	// a uma: quem escreveu a spec sabe se a regra tem código, e diz.
+	var faltando []string
+	for _, r := range regras {
+		if strings.Contains(texto, r) {
+			continue
+		}
+		if waived(content, unidade, r) {
+			continue
+		}
+		faltando = append(faltando, r)
+	}
+	if len(faltando) == 0 {
+		return Pass, ""
+	}
+	// DÍVIDA DE MIGRAÇÃO: a unidade não declarou NENHUMA regra — nem marcando o código,
+	// nem dispensando. Isso é a marca de quem nasceu antes da prática existir, não de
+	// quem errou.
+	//
+	// Medido no repositório que originou o gate: 3.114 regras em 590 unidades nessa
+	// situação. Acusá-las como defeito faria o gate reprovar 98% do projeto no primeiro
+	// dia — e um gate assim é desligado, levando junto os que funcionam.
+	//
+	// Pendente, e não Pass: o veredito NOMEIA a dívida (aparece no `check` como
+	// pendência, entra no relatório) sem fingir que está tudo certo. Conforme cada
+	// unidade for tocada e declarar suas regras, ela sai deste ramo e passa a ser
+	// confrontada de verdade.
+	// A pendência de migração só vale enquanto o projeto NÃO declarou que a prática é
+	// obrigatória. Declarado `rule_marking: required`, a migração acabou: a unidade que
+	// não marcou nada é cobrada como qualquer outra.
+	//
+	// Sem esta saída a pendência nunca vence — e pendência que não vence é
+	// indistinguível de "ninguém olhou". Medido: uma spec descrevia uma unidade que o
+	// código não implementava, o gate viu a regra ausente, caiu aqui e devolveu
+	// pendência. O defeito atravessou os 44 gates.
+	if len(faltando) == len(regras) && !hasAnyDeclaration(content, unidade, texto, regras) &&
+		requiresMarking(cfg) {
+		sort.Strings(faltando)
+		return Fail, i18n.T("gate.rule_implemented.marking_required", len(regras), unidade)
+	}
+
+	if len(faltando) == len(regras) && !hasAnyDeclaration(content, unidade, texto, regras) {
+		return Diverge, i18n.T("gate.rule_implemented.pending_migration", len(regras), unidade)
+	}
+	sort.Strings(faltando)
+	mostra := faltando
+	if len(mostra) > 6 {
+		mostra = mostra[:6]
+	}
+	return Fail, i18n.T("gate.rule_implemented.missing", len(faltando), alvo, strings.Join(mostra, ", "),
+		suffixRest(len(faltando)-len(mostra)))
+}
+
+// noCodeRE: a dispensa DECLARADA de que uma regra apareça no código. Vai na linha da
+// regra, e exige razão escrita — marcador nu não dispensa nada.
+//
+//	| `MTVRX-X01` | NÃO faz I/O @no-mark: satisfeita pela ausência de import |
+//
+// O padrão é o do `@no-scenario` (CONCEPT §5.1): a dispensa fica À VISTA, na linha do que
+// ela dispensa, versionada pelo git e legível para quem abrir a spec depois. Escondê-la
+// num Skip do gate seria a mesma decisão sem a mesma prestação de contas.
+// A razão tem de ser TEXTO, não o fechamento da célula: `@no-mark: |` num markdown de
+// tabela satisfaria um `\S+` ingênuo e dispensaria a regra sem dizer nada. Marcador nu não
+// dispensa — é o que separa prestar contas de calar o gate.
+//
+// DUAS GRANULARIDADES, e o alvo entre colchetes é o que as separa:
+//
+//	@no-mark:[TSCTY-I01] verificado rodando o compilador, não há linha que o realize
+//	@no-mark:[WRKSP-B02, WRKSP-B04] satisfeitas pela AUSÊNCIA de dependência
+//	@no-mark: esta spec inteira descreve configuração, e nada nela recebe marcação
+//
+// COM alvo, dispensa só as regras nomeadas. SEM alvo, na linha de uma regra, dispensa só
+// ela; numa linha que não declara regra, equivale a `[all]`: vale para a spec inteira — é
+// a saída de quem tem uma unidade em que NADA se marca, e nomear todas seria repetir a
+// mesma razão N vezes.
+//
+// A escolha entre as duas é a diferença entre "estas duas não têm onde ser marcadas" e
+// "esta unidade não é marcável". A segunda é mais forte, e por isso a razão importa mais:
+// ela dispensa o gate inteiro para aquele arquivo.
+//
+// `@no-code` continua aceito e continua significando o que sempre significou. O nome novo
+// existe porque o antigo mente NESTE caso: o código EXISTE — um `tsconfig.json` decide
+// como tudo compila —, e o que falta é a MARCAÇÃO.
+var noMarkRE = regexp.MustCompile(
+	`@no-(?:mark|code)[^\S\n]*(?:\[([^\]]*)\])?[^\S\n]*:[^\S\n]*(?:\[([^\]]*)\])?[^\S\n]*([^\s|]\S*)`)
+
+// waived diz se a LINHA que declara a regra carrega a dispensa.
+//
+// A dispensa é da linha, não do arquivo: um `@no-mark` solto no topo da spec dispensaria
+// tudo de uma vez, que é o oposto de prestar contas.
+//
+// Com ALVO declarado, ele manda: `@no-mark:[X-I01]` numa linha que fala de `X-B02` vale
+// para `X-I01`, e não para a regra onde está escrito. É o que permite agrupar várias numa
+// declaração só sem que o gate confunda quem está dispensando.
+//
+// SEM alvo, vale para a regra que a própria linha declara (a linha de uma tabela, de uma
+// lista ou um título que abre com o código); numa linha que não declara regra — um
+// parágrafo, uma citação —, vale para a spec inteira (`[all]`), a unidade em que nada se
+// marca. Medido num projeto: um `@no-mark:` sem alvo numa única linha de tabela dispensava as
+// outras centenas de regras da spec, sem que ninguém o lesse assim.
+func waived(content, unidade, regra string) bool {
+	for _, linha := range strings.Split(content, "\n") {
+		m := noMarkRE.FindStringSubmatch(linha)
+		if m == nil {
+			continue
+		}
+		// O alvo casa em m[1] (antes dos dois-pontos) ou m[2] (depois): as duas formas
+		// são naturais de escrever, e recusar uma seria pegadinha de sintaxe.
+		alvos := strings.TrimSpace(m[1] + m[2])
+		if strings.EqualFold(alvos, "all") {
+			return true
+		}
+		if alvos == "" {
+			if declarada := ruleOnLine(linha, unidade); declarada != "" {
+				if declarada == regra {
+					return true
+				}
+				continue // sem alvo na linha de uma regra = só ela
+			}
+			return true // sem alvo fora de uma regra = todas
+		}
+		for _, a := range strings.Split(alvos, ",") {
+			if strings.TrimSpace(a) == regra {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// ruleOnLine é a regra que a linha DECLARA — a que a abre, como `declaredRules` a lê —,
+// de qualquer unidade, ou o estado de dados que ela define; vazio numa linha que não
+// declara nenhuma.
+func ruleOnLine(linha, unidade string) string {
+	re := regexp.MustCompile(`^\s*(?:\|\s*|-\s*|#{2,4}\s+)` + "`?" + `([A-Z0-9]` + config.CodeLengthPattern() + `-[A-Z]\d{2})\b`)
+	if m := re.FindStringSubmatch(linha); m != nil {
+		return m[1]
+	}
+	return definedDataState(linha, unidade)
+}
+
+// codeRE lê a identidade declarada no header da spec.
+// Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
+// projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
+// default e a declaração do projeto não teria efeito.
+func codeRE() *regexp.Regexp {
+	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
+}
+
+func specCode(content string) string {
+	if m := codeRE().FindStringSubmatch(content); m != nil {
+		return m[1]
+	}
+	return ""
+}
+
+// declaredRules devolve as regras que a spec CATALOGA — as que abrem linha, em tabela,
+// lista ou título. Uma citação no meio de um parágrafo é referência, não declaração, e
+// contá-la faria o gate cobrar do código regras que pertencem a outra unidade.
+func declaredRules(content, unidade string) []string {
+	re := regexp.MustCompile(`(?m)^\s*(?:\|\s*|-\s*|#{2,4}\s+)` + "`?" + `(` + unidade + `-[A-Z]\d{2})\b` + "`?")
+	visto := map[string]bool{}
+	var out []string
+	for _, linha := range strings.Split(content, "\n") {
+		if retiredLine(linha) {
+			continue
+		}
+		m := re.FindStringSubmatch(linha)
+		if m != nil && !visto[m[1]] {
+			visto[m[1]] = true
+			out = append(out, m[1])
+		}
+	}
+	// The data states, when the project made them requirements: the code that handles a
+	// variant cites it, as it cites a rule.
+	if dataStatesRequired {
+		for _, linha := range strings.Split(content, "\n") {
+			if waivedByNoScenario(linha) {
+				continue
+			}
+			if ds := definedDataState(linha, unidade); ds != "" && !visto[ds] {
+				visto[ds] = true
+				out = append(out, ds)
+			}
+		}
+	}
+	return out
+}
+
+// specTargetOnDisk finds the code file the spec describes by its name, in the extensions the
+// project's code layers declare.
+func specTargetOnDisk(root, specID string, cfg *config.Config) (string, bool) {
+	base := strings.TrimSuffix(specID, ".spec.md")
+	if base == specID {
+		return "", false
+	}
+	for _, ext := range cfg.CodeExtensions() {
+		if _, err := os.Stat(filepath.Join(root, base+ext)); err == nil {
+			return base + ext, true
+		}
+	}
+	return "", false
+}
+
+func suffixRest(n int) string {
+	if n <= 0 {
+		return ""
+	}
+	return i18n.T("gate.rule_implemented.and_more", n)
+}
+
+// hasAnyDeclaration diz se a unidade JÁ ENTROU na prática — se alguma regra foi marcada
+// no código ou dispensada na spec. É o que separa a dívida de migração (ninguém declarou
+// nada, porque a prática não existia) do defeito (declarou umas, esqueceu outras).
+func hasAnyDeclaration(spec, unidade, codigo string, regras []string) bool {
+	for _, r := range regras {
+		if strings.Contains(codigo, r) || waived(spec, unidade, r) {
+			return true
+		}
+	}
+	return false
+}
+
+// requiresMarking diz se o projeto declarou que a marcação regra↔código é obrigatória.
+// Vazio = migração em curso (a pendência vale); "required" = a migração acabou.
+func requiresMarking(cfg *config.Config) bool {
+	return cfg != nil && cfg.Derived != nil &&
+		strings.EqualFold(strings.TrimSpace(cfg.Derived.RuleMarkingPolicy), "required")
+}

@@ -1,0 +1,296 @@
+// @anchors
+//   code: PCTPR
+//   ref: LDCML
+
+package flow
+
+import (
+	"encoding/json"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/progress"
+)
+
+// progressProject is a project naming its unit, with a plan of two phases.
+func progressProject(t *testing.T, unit string) string {
+	t.Helper()
+	root := t.TempDir()
+	yaml := "version: 8\nlayers: {}\n"
+	if unit != "" {
+		yaml += "progress:\n  unit: " + unit + "\n"
+	}
+	if err := os.WriteFile(filepath.Join(root, "anchors.yaml"), []byte(yaml), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "plans"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	plan := "<!-- @anchors\n  code: CHKPL\n-->\n# Checkout\n\n## CHKPL-W01 — Foundation\n\n## CHKPL-W02 — Payment\n"
+	if err := os.WriteFile(filepath.Join(root, "plans", "0012.md"), []byte(plan), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return root
+}
+
+// prog runs `anchors progress` with the args, in the project.
+func prog(t *testing.T, root string, args ...string) (string, error) {
+	t.Helper()
+	var out strings.Builder
+	c := newProgressTrackCmd()
+	c.SetArgs(append(args, "--root", root))
+	c.SetOut(&out)
+	c.SetErr(io.Discard)
+	err := c.Execute()
+	return out.String(), err
+}
+
+func mustProg(t *testing.T, root string, args ...string) string {
+	t.Helper()
+	out, err := prog(t, root, args...)
+	if err != nil {
+		t.Fatalf("progress %v: %v", args, err)
+	}
+	return out
+}
+
+func TestProgressCmd_adds(t *testing.T) {
+	t.Run("LDCML-B01: Demands, stages and tasks are added", func(t *testing.T) {})
+	root := progressProject(t, "hours")
+	if out := mustProg(t, root, "add", "demand", "Bug triage"); !strings.Contains(out, "demand D01 — Bug triage") {
+		t.Errorf("%q", out)
+	}
+	if out := mustProg(t, root, "add", "demand", "--plan", "plans/0012.md"); !strings.Contains(out, "demand D02 — the plan plans/0012.md") {
+		t.Errorf("%q", out)
+	}
+	mustProg(t, root, "add", "stage", "D01", "Triage")
+	if out := mustProg(t, root, "add", "task", "D01.S1", "flaky login", "--weight", "2"); !strings.Contains(out, "task D01.T1 — flaky login") {
+		t.Errorf("%q", out)
+	}
+	f, _ := progress.Load(root)
+	if d := f.Demand("D02"); d == nil || d.Title != "Checkout" || len(d.Stages) != 2 {
+		t.Errorf("the plan's demand: %+v", d)
+	}
+}
+
+func TestProgressCmd_moves(t *testing.T) {
+	t.Run("LDCML-B02: Tasks move by command", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "A")
+	mustProg(t, root, "add", "task", "D01", "x", "--weight", "3")
+	mustProg(t, root, "start", "D01.T1", "--by", "a1")
+	if _, err := prog(t, root, "start", "D01.T1", "--by", "a2"); err == nil || !strings.Contains(err.Error(), "held by a1") {
+		t.Errorf("another agent: %v", err)
+	}
+	mustProg(t, root, "start", "D01.T1", "--by", "a2", "--take")
+	mustProg(t, root, "done", "D01.T1", "--by", "a2")
+	f, _ := progress.Load(root)
+	if task := f.Task("D01.T1"); task.State != progress.Done || task.By != "a2" || task.At == "" {
+		t.Errorf("done: %+v", task)
+	}
+	mustProg(t, root, "reopen", "D01.T1")
+	mustProg(t, root, "cancel", "D01.T1", "--reason", "dropped")
+	mustProg(t, root, "weigh", "D01.T1", "5")
+	f, _ = progress.Load(root)
+	if task := f.Task("D01.T1"); task.State != progress.Cancelled || task.Reason != "dropped" || task.Weight != 5 {
+		t.Errorf("after: %+v", task)
+	}
+}
+
+func TestProgressCmd_summary(t *testing.T) {
+	t.Run("LDCML-B03: The summary shows demands and stages", func(t *testing.T) {})
+	root := progressProject(t, "hours")
+	if out := mustProg(t, root, "summary"); !strings.Contains(out, "nothing in progress") {
+		t.Errorf("empty: %q", out)
+	}
+	mustProg(t, root, "add", "demand", "--plan", "plans/0012.md")
+	mustProg(t, root, "add", "task", "D01.S1", "cart", "--weight", "3")
+	mustProg(t, root, "add", "task", "D01.S2", "provider", "--weight", "5", "--estimate")
+	mustProg(t, root, "done", "D01.T1", "--by", "a")
+	out := mustProg(t, root, "summary")
+	for _, want := range []string{
+		"Progress — 37% (3/8 hours)",
+		"  D01 Checkout (plans/0012.md) — 37% (3/8) · 1 open, 1 weight(s) still estimates",
+		"      D01.S1 CHKPL-W01 — Foundation — 100% (3/3) · 0 open",
+		"      D01.S2 CHKPL-W02 — Payment — 0% (0/5) · 1 open",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "cart") || strings.Contains(out, "provider") {
+		t.Errorf("no task in the summary:\n%s", out)
+	}
+	var rows []progress.Row
+	if err := json.Unmarshal([]byte(mustProg(t, root, "summary", "--json")), &rows); err != nil || len(rows) != 3 {
+		t.Errorf("json rows: %v %+v", err, rows)
+	}
+}
+
+func TestProgressCmd_show(t *testing.T) {
+	t.Run("LDCML-B04: Show prints the tasks", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "A")
+	mustProg(t, root, "add", "task", "D01", "alpha", "--weight", "1")
+	mustProg(t, root, "add", "demand", "B")
+	mustProg(t, root, "add", "task", "D02", "beta", "--weight", "1")
+	mustProg(t, root, "start", "D01.T1", "--by", "a")
+	all := mustProg(t, root, "show")
+	// D01 is in motion, and shows its tasks; D02 is settled (none started), its line alone.
+	if !strings.Contains(all, "D01.T1 — alpha · 1") || !strings.Contains(all, "## D02 — B") || strings.Contains(all, "beta") || strings.Contains(all, "anchors:progress") {
+		t.Errorf("all:\n%s", all)
+	}
+	if one := mustProg(t, root, "show", "D02"); strings.Contains(one, "alpha") || !strings.Contains(one, "beta") {
+		t.Errorf("one demand:\n%s", one)
+	}
+}
+
+func TestProgressCmd_unit(t *testing.T) {
+	t.Run("LDCML-B05: The unit is the project's", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "A")
+	if b, _ := os.ReadFile(progress.Path(root)); !strings.Contains(string(b), "(0/0 points)") {
+		t.Errorf("%s", b)
+	}
+}
+
+func TestProgressCmd_refused(t *testing.T) {
+	t.Run("LDCML-E01: A refused change writes nothing", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "A")
+	before, _ := os.ReadFile(progress.Path(root))
+	if _, err := prog(t, root, "done", "D01.T9"); err == nil || !strings.Contains(err.Error(), "no task D01.T9") {
+		t.Errorf("unknown task: %v", err)
+	}
+	if _, err := prog(t, root, "add", "demand"); err == nil || !strings.Contains(err.Error(), "needs a title, or --plan") {
+		t.Errorf("no title: %v", err)
+	}
+	if after, _ := os.ReadFile(progress.Path(root)); string(after) != string(before) {
+		t.Error("a refused change writes nothing")
+	}
+}
+
+func TestProgressCmd_rename(t *testing.T) {
+	t.Run("LDCML-B06: A stage is renamed by command", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "Checkout")
+	mustProg(t, root, "add", "stage", "D01", "Sob demanda")
+	mustProg(t, root, "add", "task", "D01.S1", "x", "--weight", "2")
+	if out := mustProg(t, root, "rename", "D01.S1", "Não planejadas"); !strings.Contains(out, "✎ D01.S1 — Não planejadas") {
+		t.Errorf("said: %s", out)
+	}
+	mustProg(t, root, "start", "D01.T1", "--by", "a") // in motion: its stages show
+	if out := mustProg(t, root, "summary"); !strings.Contains(out, "D01.S1 Não planejadas — 0% (0/2)") {
+		t.Errorf("the new title, the same id and task: %s", out)
+	}
+}
+
+func TestProgressCmd_unplanned(t *testing.T) {
+	t.Run("LDCML-B07: Unplanned work is marked and shown", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "Checkout")
+	mustProg(t, root, "add", "stage", "D01", "Payment")
+	mustProg(t, root, "add", "task", "D01.S1", "refunds", "--weight", "8")
+	mustProg(t, root, "add", "task", "D01.S1", "fix the date parser", "--weight", "2", "--unplanned")
+	if out := mustProg(t, root, "unplanned", "D01.T1"); !strings.Contains(out, "◇ D01.T1 unplanned") {
+		t.Errorf("said: %s", out)
+	}
+	if out := mustProg(t, root, "unplanned", "D01.T1", "--undo"); !strings.Contains(out, "◇ D01.T1 planned") {
+		t.Errorf("said: %s", out)
+	}
+	mustProg(t, root, "start", "D01.T1", "--by", "a") // in motion: its stages show
+	out := mustProg(t, root, "summary")
+	if !strings.Contains(out, "D01 Checkout — 0% (0/10) · 2 open, 1 in progress · 2 of 10 points unplanned") || !strings.Contains(out, "D01.S1 Payment — 0% (0/10) · 2 open, 1 in progress · 2 of 10 points unplanned") {
+		t.Errorf("the unplanned weight of the demand and the stage:\n%s", out)
+	}
+	if show := mustProg(t, root, "show"); !strings.Contains(show, "fix the date parser · 2 (unplanned)") || strings.Contains(show, "refunds · 8 (unplanned)") {
+		t.Errorf("show marks the task:\n%s", show)
+	}
+}
+
+func TestProgressCmd_moveAndDrop(t *testing.T) {
+	t.Run("LDCML-B08: Found work moves into the stage it arose in", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "Checkout")
+	mustProg(t, root, "add", "stage", "D01", "Payment")
+	mustProg(t, root, "add", "task", "D01.S1", "refunds", "--weight", "8")
+	mustProg(t, root, "add", "stage", "D01", "Não planejadas")
+	mustProg(t, root, "add", "task", "D01.S2", "fix the parser", "--weight", "2", "--unplanned")
+	if out := mustProg(t, root, "move", "D01.T2", "D01.S1"); !strings.Contains(out, "→ D01.T2 now in D01.S1") {
+		t.Errorf("said: %s", out)
+	}
+	if out := mustProg(t, root, "drop", "D01.S2"); !strings.Contains(out, "✗ stage D01.S2 removed") {
+		t.Errorf("said: %s", out)
+	}
+	mustProg(t, root, "start", "D01.T1", "--by", "a") // in motion: its stages show
+	out := mustProg(t, root, "summary")
+	if !strings.Contains(out, "D01.S1 Payment — 0% (0/10) · 2 open, 1 in progress · 2 of 10 points unplanned") || strings.Contains(out, "Não planejadas") {
+		t.Errorf("the found work inside its stage, the separate one gone:\n%s", out)
+	}
+}
+
+func TestProgressCmd_frozenPlanOutOfTheTotal(t *testing.T) {
+	t.Run("LDCML-B09: The summary leaves a frozen plan out of the total", func(t *testing.T) {})
+	root := progressProject(t, "hours")
+	frozen := "<!-- @anchors\n  code: LATRP\n  frozen: the provider is not chosen\n-->\n# Later\n"
+	if err := os.WriteFile(filepath.Join(root, "plans", "later.md"), []byte(frozen), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	mustProg(t, root, "add", "demand", "--plan", "plans/0012.md")
+	mustProg(t, root, "add", "task", "D01.S1", "cart", "--weight", "3")
+	mustProg(t, root, "done", "D01.T1", "--by", "a")
+	mustProg(t, root, "add", "demand", "Later", "--plan", "plans/later.md")
+	mustProg(t, root, "add", "task", "D02", "provider", "--weight", "5")
+	out := mustProg(t, root, "summary")
+	if !strings.Contains(out, "Progress — 100% (3/3 hours)") || !strings.Contains(out, "❄ frozen (the provider is not chosen), out of the total") {
+		t.Errorf("the frozen plan is out of the total:\n%s", out)
+	}
+}
+
+func TestProgressCmd_settledDemandIsOneLine(t *testing.T) {
+	t.Run("LDCML-B10: A settled demand is one line", func(t *testing.T) {})
+	root := progressProject(t, "")
+	mustProg(t, root, "add", "demand", "Shipped")
+	mustProg(t, root, "add", "stage", "D01", "Done stage")
+	mustProg(t, root, "add", "task", "D01.S1", "built", "--weight", "1")
+	mustProg(t, root, "done", "D01.T1", "--by", "a")
+	mustProg(t, root, "add", "demand", "Later")
+	mustProg(t, root, "add", "stage", "D02", "Idle stage")
+	mustProg(t, root, "add", "task", "D02.S1", "waiting", "--weight", "1")
+	mustProg(t, root, "add", "demand", "Now")
+	mustProg(t, root, "add", "stage", "D03", "Busy stage")
+	mustProg(t, root, "add", "task", "D03.S1", "working", "--weight", "1")
+	mustProg(t, root, "start", "D03.T1", "--by", "a")
+	sum := mustProg(t, root, "summary")
+	if !strings.Contains(sum, "D01 Shipped") || !strings.Contains(sum, "D02 Later") || strings.Contains(sum, "Done stage") || strings.Contains(sum, "Idle stage") || !strings.Contains(sum, "Busy stage") {
+		t.Errorf("the summary:\n%s", sum)
+	}
+	show := mustProg(t, root, "show")
+	if strings.Contains(show, "built") || strings.Contains(show, "waiting") || !strings.Contains(show, "working") || !strings.Contains(show, "## D02 — Later") {
+		t.Errorf("show of the file:\n%s", show)
+	}
+	if one := mustProg(t, root, "show", "D02"); !strings.Contains(one, "waiting") {
+		t.Errorf("show of a settled demand details it:\n%s", one)
+	}
+}
+
+func TestProgressCmd_replan(t *testing.T) {
+	t.Run("LDCML-B11: replan points a demand at another plan file", func(t *testing.T) {})
+	root := progressProject(t, "hours")
+	mustProg(t, root, "add", "demand", "Videos")
+	if err := os.MkdirAll(filepath.Join(root, "plans"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "plans", "videos.md"), []byte("# Videos\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if out := mustProg(t, root, "replan", "D01", "plans/videos.md"); !strings.Contains(out, "D01 plan: plans/videos.md") {
+		t.Errorf("replan says the new plan: %s", out)
+	}
+	if _, err := prog(t, root, "replan", "D01", "plans/ghost.md"); err == nil || !strings.Contains(err.Error(), "no plan file plans/ghost.md") {
+		t.Errorf("a plan that is no file is refused: %v", err)
+	}
+}

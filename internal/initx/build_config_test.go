@@ -1,0 +1,297 @@
+// @anchors
+//   code: BCTBL
+//   ref: BLCNB
+
+package initx
+
+import (
+	"reflect"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+)
+
+func TestBuildConfigCodeLayerPerDir(t *testing.T) {
+	t.Run("BLCNB-B01: Each detected code directory becomes a code layer named after its last segment", func(t *testing.T) {})
+	t.Run("BLCNB-B03: A proposed code layer excludes specs, features and test files", func(t *testing.T) {})
+	p := &Proposal{CodeDirs: []string{"apps/mobile", "packages/backend"}, CodeExts: []string{".ts"}}
+	c := p.buildConfig()
+	if len(c.Layers) != 2 {
+		t.Fatalf("expected one layer per code dir, got %v", c.Layers)
+	}
+	for name, dir := range map[string]string{"mobile-code": "apps/mobile", "backend-code": "packages/backend"} {
+		l, ok := c.Layers[name]
+		if !ok {
+			t.Errorf("layer %q missing", name)
+			continue
+		}
+		if l.Kind != "code" || !reflect.DeepEqual(l.Tags, []string{name}) {
+			t.Errorf("layer %q should be a code layer tagged with its name, got %+v", name, l)
+		}
+		if l.Pattern != dir+"/**/*.ts" {
+			t.Errorf("layer %q pattern = %q", name, l.Pattern)
+		}
+		if !reflect.DeepEqual(l.Exclude, []string{"**/*.spec.md", "**/*.feature", "**/*.test.*"}) {
+			t.Errorf("layer %q exclude = %v", name, l.Exclude)
+		}
+	}
+}
+
+func TestBuildConfigPatternOfSeveralExts(t *testing.T) {
+	t.Run("BLCNB-B02: With several detected extensions the pattern lists them as a set", func(t *testing.T) {})
+	p := &Proposal{CodeDirs: []string{"a/b"}, CodeExts: []string{".ts", ".tsx"}}
+	if got := p.buildConfig().Layers["b-code"].Pattern; got != "a/b/**/*.{ts,tsx}" {
+		t.Errorf("pattern = %q, want a/b/**/*.{ts,tsx}", got)
+	}
+	// A folder with another code folder beneath it covers only its own files: a
+	// recursive pattern put every handler in two layers.
+	p = &Proposal{CodeDirs: []string{"src/handlers", "src", "."}, CodeExts: []string{".go"}}
+	ls := p.buildConfig().Layers
+	for name, want := range map[string]string{"handlers-code": "src/handlers/**/*.go", "src-code": "src/*.go", "root-code": "*.go"} {
+		if got := ls[name].Pattern; got != want {
+			t.Errorf("%s pattern = %q, want %q", name, got, want)
+		}
+	}
+}
+
+func TestBuildConfigNamesFoldersSharingASegmentByPath(t *testing.T) {
+	t.Run("BLCNB-B01: Folders sharing the last segment are named by their whole path, and the root is root-code", func(t *testing.T) {})
+	p := &Proposal{CodeDirs: []string{"src/handlers", "lib/handlers", "."}, CodeExts: []string{".go"}}
+	ls := p.buildConfig().Layers
+	for _, name := range []string{"src-handlers-code", "lib-handlers-code", "root-code"} {
+		if _, ok := ls[name]; !ok {
+			t.Errorf("layer %q missing, got %v", name, keysOf(ls))
+		}
+	}
+	if len(ls) != 3 {
+		t.Errorf("one layer per folder, got %v", keysOf(ls))
+	}
+}
+
+func TestBuildConfigExcludesTestsByConvention(t *testing.T) {
+	t.Run("BLCNB-B03: A code layer excludes the test files by the project's convention", func(t *testing.T) {})
+	goTests := &Proposal{CodeDirs: []string{"pkg"}, CodeExts: []string{".go"}, TestConventions: []TestConvention{{Suffix: "_test.go", Ext: "go", Family: "go"}}}
+	if got := goTests.buildConfig().Layers["pkg-code"].Exclude; !reflect.DeepEqual(got, []string{"**/*.spec.md", "**/*.feature", "**/*_test.go"}) {
+		t.Errorf("Go tests: exclude = %v", got)
+	}
+	py := &Proposal{CodeDirs: []string{"app"}, CodeExts: []string{".py"}, Family: "python"}
+	if got := py.buildConfig().Layers["app-code"].Exclude; !reflect.DeepEqual(got, []string{"**/*.spec.md", "**/*.feature", "**/test_*.py"}) {
+		t.Errorf("Python with no test: exclude = %v", got)
+	}
+}
+
+func TestBuildConfigTestTemplateByConvention(t *testing.T) {
+	t.Run("BLCNB-B06: The colocated test template follows the project's test convention", func(t *testing.T) {})
+	p := &Proposal{Colocated: true, HasTest: true, TestConventions: []TestConvention{{Suffix: "_test.go", Ext: "go", Family: "go"}}}
+	if got := p.buildConfig().Derived.Files["test"]; !reflect.DeepEqual(got, config.Padroes{"{{dir}}/{{name}}_test.go"}) {
+		t.Errorf("template = %v, want {{dir}}/{{name}}_test.go", got)
+	}
+	p = &Proposal{Colocated: true, HasTest: true}
+	if got := p.buildConfig().Derived.Files["test"]; !reflect.DeepEqual(got, config.Padroes{"{{dir}}/{{name}}.test.{{ext}}"}) {
+		t.Errorf("template = %v, want the generic form", got)
+	}
+}
+
+func TestBuildConfigDialectFamily(t *testing.T) {
+	t.Run("BLCNB-B07: The proposal's dialect is the family inference found", func(t *testing.T) {})
+	if c := (&Proposal{Family: "go"}).buildConfig(); c.Dialect == nil || c.Dialect.Family != "go" {
+		t.Errorf("dialect = %+v, want family go", c.Dialect)
+	}
+	if c := (&Proposal{}).buildConfig(); c.Dialect != nil {
+		t.Errorf("no family proposes no dialect, got %+v", c.Dialect)
+	}
+}
+
+func TestTestPatternByConvention(t *testing.T) {
+	t.Run("BLCNB-B08: The test layer's pattern is the project's test convention", func(t *testing.T) {})
+	two := &Proposal{TestConventions: []TestConvention{{Suffix: ".spec.ts", Ext: "ts"}, {Suffix: ".test.ts", Ext: "ts"}}}
+	for _, c := range []struct {
+		p    *Proposal
+		want string
+	}{
+		{two, "{**/*.spec.ts,**/*.test.ts}"},
+		{&Proposal{Family: "go"}, "**/*_test.go"},
+		{&Proposal{}, "**/*.test.*"},
+	} {
+		if got := c.p.TestPattern(); got != c.want {
+			t.Errorf("TestPattern = %q, want %q", got, c.want)
+		}
+	}
+}
+
+func keysOf[V any](m map[string]V) []string {
+	var out []string
+	for k := range m {
+		out = append(out, k)
+	}
+	return out
+}
+
+func TestBuildConfigColocation(t *testing.T) {
+	t.Run("BLCNB-B04: Colocation is proposed only when detected, with templates only for the detected kinds", func(t *testing.T) {})
+	p := &Proposal{Colocated: true, HasFeature: true}
+	c := p.buildConfig()
+	if c.Derived == nil || c.Derived.Anchor != "spec" {
+		t.Fatalf("detected colocation should propose derived anchored on the spec, got %+v", c.Derived)
+	}
+	if !reflect.DeepEqual(c.Derived.Files, map[string]config.Padroes{"feature": {"{{dir}}/{{name}}.feature"}}) {
+		t.Errorf("only the detected feature should get a template, got %v", c.Derived.Files)
+	}
+	p = &Proposal{Colocated: false, HasFeature: true, HasTest: true}
+	if c := p.buildConfig(); c.Derived != nil {
+		t.Errorf("no colocation detected proposes no derived, got %+v", c.Derived)
+	}
+}
+
+func TestBuildConfigTestHandle(t *testing.T) {
+	t.Run("BLCNB-B05: The test handle is proposed only when inference found one", func(t *testing.T) {})
+	p := &Proposal{TestHandle: "testID"}
+	c := p.buildConfig()
+	if c.Derived == nil || c.Derived.TestHandle != "testID" || len(c.Derived.Files) != 0 {
+		t.Errorf("a found handle is proposed even without colocation, got %+v", c.Derived)
+	}
+	if c := (&Proposal{}).buildConfig(); c.Derived != nil {
+		t.Errorf("no handle found proposes no default handle, got %+v", c.Derived)
+	}
+	p = &Proposal{Colocated: true, HasTest: true, TestHandle: "data-testid"}
+	c = p.buildConfig()
+	if c.Derived.TestHandle != "data-testid" || len(c.Derived.Files) != 1 {
+		t.Errorf("with colocation the handle joins the colocation templates, got %+v", c.Derived)
+	}
+}
+
+func TestBuildConfigProposesNoArtifactLayerNorGoverns(t *testing.T) {
+	t.Run("BLCNB-X01: The proposal creates no artifact layer and no governs rule", func(t *testing.T) {})
+	p := &Proposal{
+		CodeDirs: []string{"src/app"}, CodeExts: []string{".go"},
+		HasSpecMD: true, HasFeature: true, HasTest: true, GuideDir: "guides", PlanDir: "plans",
+		GuideFiles: []string{"guides/A.md"},
+	}
+	c := p.buildConfig()
+	if !reflect.DeepEqual(CodeLayerNames(c), []string{"app-code"}) || len(c.Layers) != 1 {
+		t.Errorf("only the code layer should be proposed, got %v", c.Layers)
+	}
+	if len(c.Governs) != 0 {
+		t.Errorf("governs should start empty, got %+v", c.Governs)
+	}
+}
+
+// The spec is the ANCHOR of colocation, never one of its own derivatives. Detected
+// specs used to be listed among the templates, so the proposal derived the spec from itself.
+func TestBuildConfigColocationNeverDerivesTheSpec(t *testing.T) {
+	t.Run("BLCNB-B04: Colocation is proposed only when detected, with templates only for the detected kinds", func(t *testing.T) {})
+	p := &Proposal{Colocated: true, HasSpecMD: true, HasFeature: true, HasTest: true}
+	c := p.buildConfig()
+	if c.Derived == nil || c.Derived.Anchor != "spec" {
+		t.Fatalf("detected colocation should be anchored on the spec, got %+v", c.Derived)
+	}
+	if _, derived := c.Derived.Files["spec"]; derived {
+		t.Errorf("the spec is the anchor and must not be among the templates, got %v", c.Derived.Files)
+	}
+	if len(c.Derived.Files) != 2 {
+		t.Errorf("feature and test are the derivatives, got %v", c.Derived.Files)
+	}
+}
+
+func TestBuildConfigSeedsTheFamilysFalliblePatterns(t *testing.T) {
+	t.Run("BLCNB-B09: A new project's dialect carries what its family knows can fail", func(t *testing.T) {})
+	c := (&Proposal{Family: "ts"}).buildConfig()
+	if c.Dialect == nil || len(c.Dialect.FalliblePatterns) == 0 || !reflect.DeepEqual(c.Dialect.FalliblePatterns, config.FamilyFalliblePatterns("ts")) {
+		t.Errorf("the ts project starts with the family's fallible patterns: %+v", c.Dialect)
+	}
+	if c := (&Proposal{}).buildConfig(); c.Dialect != nil {
+		t.Errorf("no family, no dialect: %+v", c.Dialect)
+	}
+}
+
+func TestBuildConfigSeedsTheFamilysTestHandles(t *testing.T) {
+	t.Run("BLCNB-B10: A new project's dialect carries the family's example of its test handle patterns", func(t *testing.T) {})
+	c := (&Proposal{Family: "ts", TestHandle: "testID"}).buildConfig()
+	if c.Dialect == nil || !reflect.DeepEqual(c.Dialect.TestHandles, config.FamilyTestHandles("ts", "testID")) {
+		t.Errorf("the ts project marking with testID starts with the family's example: %+v", c.Dialect)
+	}
+	if c := (&Proposal{Family: "ts"}).buildConfig(); c.Dialect == nil || c.Dialect.TestHandles != nil {
+		t.Errorf("no attribute found, no patterns: %+v", c.Dialect)
+	}
+}
+
+func TestBuildConfigSeedsTheFamilysChain(t *testing.T) {
+	t.Run("BLCNB-B11: A new project's dialect carries the family's example of the chain patterns", func(t *testing.T) {})
+	ex := config.FamilyChain("ts")
+	c := (&Proposal{Family: "ts"}).buildConfig()
+	if c.Dialect == nil || !reflect.DeepEqual(c.Dialect.Imports, ex.Imports) || !reflect.DeepEqual(c.Dialect.ImportNames, ex.ImportNames) ||
+		!reflect.DeepEqual(c.Dialect.Declarations, ex.Declarations) || !reflect.DeepEqual(c.Dialect.ImportResolve, ex.ImportResolve) {
+		t.Errorf("the ts project starts with the example: %+v", c.Dialect)
+	}
+	if c := (&Proposal{Family: "kotlin"}).buildConfig(); c.Dialect == nil || len(c.Dialect.Imports) != 0 {
+		t.Errorf("a family with no example starts with no import patterns: %+v", c.Dialect)
+	}
+}
+
+func TestBuildConfigSeedsTheFamilysNavigationCall(t *testing.T) {
+	t.Run("BLCNB-B12: A new project's dialect carries the family's example of a navigation call", func(t *testing.T) {})
+	if c := (&Proposal{Family: "ts"}).buildConfig(); c.Dialect == nil || c.Dialect.NavigationCall != config.FamilyNavigationCall("ts") {
+		t.Errorf("the ts project starts with the example: %+v", c.Dialect)
+	}
+	if c := (&Proposal{Family: "go"}).buildConfig(); c.Dialect == nil || c.Dialect.NavigationCall != "" {
+		t.Errorf("a family with none starts with none: %+v", c.Dialect)
+	}
+}
+
+func TestBuildConfigSeedsTheFamilysLexiconAndComments(t *testing.T) {
+	t.Run("BLCNB-B13: A new project's dialect carries the family's lexicon and the comments of its files", func(t *testing.T) {})
+	ex := config.FamilyLexicon("go")
+	c := (&Proposal{Family: "go", CodeExts: []string{".go", ".py"}}).buildConfig()
+	if c.Dialect == nil || c.Dialect.Family != "go" || c.Dialect.ExportedFunc != ex.ExportedFunc ||
+		!reflect.DeepEqual(c.Dialect.Tests, ex.Tests) || c.Dialect.StatementEnd != ex.StatementEnd {
+		t.Fatalf("the go project starts with the family's lexicon: %+v", c.Dialect)
+	}
+	var globs []string
+	for _, e := range c.Dialect.Comments {
+		globs = append(globs, e.Files)
+	}
+	if strings.Join(globs, " ") != "**/*.go **/*.py **/*.{yaml,yml,toml,sh,bash,zsh}" {
+		t.Errorf("the comments of its files and of the family's scripts, got %v", globs)
+	}
+	if c := (&Proposal{CodeExts: []string{".rb"}}).buildConfig(); c.Dialect == nil || c.Dialect.ExportedFunc != "" || len(c.Dialect.Comments) != 1 {
+		t.Errorf("no family: the comments of its files alone, got %+v", c.Dialect)
+	}
+}
+
+func TestBuildConfig_aDialectPerFamily(t *testing.T) {
+	t.Run("BLCNB-B14: Code roots in several languages are proposed one dialect per family, each code layer naming its own and reading its family's extensions", func(t *testing.T) {})
+	p := &Proposal{
+		CodeDirs: []string{"apps/web", "services/api"}, CodeExts: []string{".ts", ".go"},
+		DirFamily: map[string]string{"apps/web": "ts", "services/api": "go"}, Family: "ts",
+		HasTest: true, Colocated: true,
+		TestConventions: []TestConvention{{Suffix: ".test.ts", Ext: "ts", Family: "ts"}, {Suffix: "_test.go", Ext: "go", Family: "go"}},
+	}
+	c := p.buildConfig()
+	if len(c.Dialects) != 2 || c.Dialects["go"].Family != "go" || c.Dialects["ts"].ExportedFunc == "" {
+		t.Fatalf("one dialect per family, with its example: %+v", c.Dialects)
+	}
+	if c.Dialect == nil || c.Dialect.SetPromise == "" || c.Dialects["go"].SetPromise != "" || c.Dialects["ts"].SetSlice != "" {
+		t.Errorf("the naming conventions are the project's, in `dialect:`, never a dialect's: %+v", c.Dialect)
+	}
+	for name, l := range c.Layers {
+		want := map[string]string{"web-code": "ts", "api-code": "go"}[name]
+		if l.Kind == "code" && (l.Dialect != want || (want == "go") != strings.HasSuffix(l.Pattern, ".go")) {
+			t.Errorf("%s: dialect %q pattern %q, want %q and its family's extensions", name, l.Dialect, l.Pattern, want)
+		}
+	}
+	t.Run("BLCNB-B15: In a project of several dialects each family gets its own test layer, by its convention, naming its dialect", func(t *testing.T) {})
+	c.Layers["test"] = config.Layer{Pattern: p.TestPattern(), Kind: "test", Tags: []string{"test"}}
+	c.Derived.Files["test"] = config.Padroes{p.TestTemplate()}
+	p.ApplyDialects(c)
+	if _, kept := c.Layers["test"]; kept || c.Layers["test-go"].Pattern != "**/*_test.go" || c.Layers["test-go"].Dialect != "go" || c.Layers["test-ts"].Dialect != "ts" {
+		t.Errorf("a test layer per family: %+v", c.Layers)
+	}
+	if c.Derived.Files["test-go"][0] != "{{dir}}/{{name}}_test.go" || c.Derived.Files["test"] != nil {
+		t.Errorf("the colocation's test template per family: %+v", c.Derived.Files)
+	}
+	one := (&Proposal{CodeDirs: []string{"src"}, CodeExts: []string{".go"}, DirFamily: map[string]string{"src": "go"}, Family: "go"}).buildConfig()
+	if one.Dialects != nil || one.Dialect == nil || one.Layers["src-code"].Dialect != "" {
+		t.Errorf("one family: the one `dialect:` block, as before: %+v", one.Layers)
+	}
+}

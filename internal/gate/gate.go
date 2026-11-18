@@ -1,0 +1,706 @@
+// @anchors
+//   code: GTGTG
+//   ref: GTENG
+
+// Package gate executa os gates de qualidade sobre um conjunto de nós — o pipeline
+// (QUALITY §5). Cada gate confronta os alvos que casam seu `on` e devolve um
+// veredito. A dupla saída (issue + bloqueio) é derivada do veredito + do campo
+// blocking (QUALITY §2, §7). O `check` orquestra; este pacote é a mecânica pura +
+// a invocação de comandos externos.
+package gate
+
+import (
+	"fmt"
+	"os/exec"
+	"regexp"
+	"runtime"
+	"slices"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// Verdict é o resultado de rodar um gate contra um alvo.
+type Verdict string
+
+const (
+	Pass    Verdict = "pass"    // passou
+	Fail    Verdict = "fail"    // reprovou → issue (bloqueia se o gate é blocking)
+	Skip    Verdict = "skip"    // não se aplica a este alvo
+	Pending Verdict = "pending" // had something to confront and could not measure it
+	Diverge Verdict = "diverge" // measured and found something short of wrong
+	Judge   Verdict = "judge"   // gate de JULGAMENTO POR IA: aguarda veredito de uma IA
+	// Awaiting is a choice registered on purpose that waits for a person's decision — an open
+	// decision of a spec, a doctrine rule declared ahead of its implementation: measured and
+	// found, and no agent can clear it. It counts apart from the divergences, with its own
+	// severity level (`awaiting`).
+	Awaiting Verdict = "awaiting"
+)
+
+// Result é o veredito de um gate sobre UM alvo.
+type Result struct {
+	Gate string // nome do gate
+	// Regra identifica QUAL verificação dentro do gate produziu este veredito.
+	//
+	// Um gate cobra mais de uma coisa (`spec-completa` cobra "sem placeholder" E "tem
+	// regra catalogada"), e sem este campo dois defeitos diferentes eram indistinguíveis
+	// — o leitor tinha de inferir pela mensagem, que muda. É também o que permite
+	// dispensar UMA verificação sem descartar o resto do gate.
+	//
+	// Vazio quando o gate faz uma verificação só, e aí o nome do gate já a identifica.
+	Regra    string
+	Target   string // nó confrontado (ID)
+	Verdict  Verdict
+	Blocking bool // se este gate bloqueia (da config)
+	// Action is what this verdict does, from the gate's `severity` for its level: `block`,
+	// `inform` or `ignore`. Empty on a result built outside a gate run; `Blocks` then reads
+	// `Blocking` alone.
+	Action string
+	Detail string // mensagem (por que falhou, etc.)
+	// Divida marca o Pending que é DÍVIDA ASSUMIDA — um dever conhecido, ainda válido,
+	// com um momento declarado para ser pago (`obligation_pending: <nome> — <quando>`).
+	//
+	// É um campo, e não uma inferência sobre o texto de Detail, porque a distinção
+	// decide o DESTINO do achado: dívida vira issue em `future/` (trabalho adiado, que
+	// vence), e os demais Pending não viram issue alguma. Deduzir isso de uma frase é
+	// exatamente o tipo de acoplamento a texto que envelhece na primeira reescrita da
+	// mensagem.
+	Divida bool
+	// Decisão marca o Pending que é DECISÃO EM ABERTO — a spec declarou que não decidiu
+	// algo de que o código precisa.
+	//
+	// Campo próprio, e não um caso de `Divida`: dívida tem dono e vencimento ("sei o que
+	// devo e quando pago"), e a decisão em aberto é o oposto — não se sabe a resposta,
+	// não se sabe quando, e depende de outra pessoa. Os destinos também diferem: dívida
+	// vai para `future/` (o que vence depois), e a pergunta vai para `todo/`, porque só
+	// é resolvida se alguém a VIR e a levar a quem decide.
+	Decisão bool
+	// Prazo é só o "quando" de cada dívida — o que vem depois de "DÍVIDA ASSUMIDA:".
+	// Separado de Detail porque quem lê a issue quer saber QUANDO ela vence sem
+	// reprocessar o laudo inteiro do gate.
+	Prazo string
+	// Impede marks a divergence or pending item whose level's state is `block`
+	// (`markSeverity`). "Nothing to confront" is not pending — it is Skip.
+	Impede bool
+	// Duracao e' o tempo de parede desta confrontacao — o gate contra ESTE alvo, ou
+	// contra o conjunto quando o escopo e' agregado.
+	//
+	// Existe porque o custo do `check --all` e' invisivel no relatorio: ele leva minutos
+	// num projeto real, e nada diz ONDE. Sem a medida, otimizar e' adivinhar qual gate
+	// cobrar — e a suspeita natural (o gate com mais alvos) costuma estar errada, porque
+	// um `run:` externo que sobe um compilador custa mais em UMA execucao do que um
+	// checker interno em centenas.
+	Duracao time.Duration
+}
+
+// applies: o gate se aplica a um nó se o kind está no `on` do gate, E o nó não carrega
+// nenhuma tag de `exclude_tags`, E (se o gate declara tags) carrega ao menos uma delas,
+// E (se declara `requires`) o conteúdo do alvo contém aquele texto. Sem nada disso → só
+// o kind conta.
+// Applies says whether the gate confronts the node — its kinds, its tags and exclude_tags,
+// what it requires. It is the one answer to "is this node the gate's target", shared with
+// the runs that choose what to measure for a gate (`anchors test`, `anchors mutation`).
+func Applies(g config.Gate, n mapx.Node, root string) bool { return applies(g, n, root) }
+
+func applies(g config.Gate, n mapx.Node, root string) bool {
+	if !MatchesShape(g, n) {
+		return false
+	}
+	if g.Requires == "" {
+		return true
+	}
+	// `requires` filtra por CONTEÚDO: o gate que pergunta sobre uma marcação só se
+	// aplica a quem a usou. Sem isto, um gate de julgamento declarado `on: [spec]`
+	// enfileira uma pergunta de IA para toda spec do projeto — e o contador de
+	// pendências passa a medir o tamanho do projeto, não o do trabalho.
+	//
+	// Arquivo ilegível NÃO aplica: melhor deixar de cobrar do que cobrar às cegas de
+	// um alvo cujo conteúdo não se conhece.
+	b, err := readFile(root, n.ID)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(b), g.Requires)
+}
+
+// MatchesShape says whether a node is of the gate's kinds and tags — what it applies to before
+// its `requires` reads the node's content.
+func MatchesShape(g config.Gate, n mapx.Node) bool {
+	if !slices.Contains(g.On, string(n.Kind)) {
+		return false
+	}
+	// A VENDORED file is out of every internal ruler. Its unit, header and identity live
+	// upstream, in the Anchors project that seeded it: charging them here asks the project
+	// to write a spec for a file it does not own, and the only way to comply is fiction.
+	// An external command (`run:` — secrets, vulnerable patterns) still reaches it: what the
+	// file DOES in this repository is the project's concern, whoever wrote it.
+	if n.Upstream && g.Run == "" {
+		return false
+	}
+	// An EXTERNAL file — a guide read from a URL — is no file of this project: no gate,
+	// internal or external, has a file here to confront.
+	if n.External {
+		return false
+	}
+	// A exclusão vem ANTES do filtro positivo, e a ordem é a decisão: um nó excluído fica
+	// fora mesmo que também case uma tag do `tags`. Camadas costumam carregar rótulos
+	// transversais (`backend`, `code`) junto com o seu próprio, então a exceção precisa
+	// vencer — senão declarar a exclusão não teria efeito nenhum onde ela importa.
+	for _, t := range g.ExcludeTags {
+		if slices.Contains(n.Tags, t) {
+			return false
+		}
+	}
+	if len(g.Tags) > 0 {
+		achou := false
+		for _, t := range g.Tags {
+			if slices.Contains(n.Tags, t) {
+				achou = true
+				break
+			}
+		}
+		if !achou {
+			return false
+		}
+	}
+	return true
+}
+
+// Run roda todos os gates aplicáveis contra os nós dados. root é a raiz do projeto
+// (para comandos externos e leitura de arquivos internos). Devolve um Result por
+// (gate, alvo aplicável).
+// Run confronta os gates. `graph` é o mapa (arestas + nós) — passado aos checkers
+// RELACIONAIS (que confrontam um nó contra seus vizinhos, ex.: feature↔test). Pode ser
+// nil quando não há mapa carregado; checkers relacionais devem tratar nil como Pending.
+func Run(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph) []Result {
+	return RunWithConfig(gates, nodes, root, graph, nil)
+}
+
+// RunWithConfig é o Run que também recebe a config completa — necessária aos checkers
+// relacionais que consultam a Estrutura (de-para de regimes, superfícies da unidade).
+// `Run` delega a ela com cfg nil (checkers relacionais tratam nil como sem-de-para).
+func RunWithConfig(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) []Result {
+	return RunFull(gates, nodes, root, graph, cfg, false)
+}
+
+// RunFull é o Run que também sabe se a varredura é o PROJETO INTEIRO (`check --all`).
+// Só isso permite honrar o `scope_full` do gate: no full, quem sabe varrer sozinho roda
+// UMA vez sem receber a lista, em vez de receber os milhares de alvos em lotes. Os demais
+// chamadores seguem por RunWithConfig, que passa `completa: false` — o comportamento de
+// sempre para recorte incremental.
+func RunFull(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool) []Result {
+	return RunWithWaiver(gates, nodes, root, graph, cfg, completa, Waiver{})
+}
+
+// RunWithWaiver é o Run que honra dispensa POR ALVO.
+//
+// A dispensa por regra era aplicada FILTRANDO o gate da lista, e isso bastava enquanto
+// ela valia para tudo. Uma dispensa restrita a caminhos não pode sair por ali: o gate
+// precisa RODAR e confrontar os outros alvos — senão dispensar 4 specs novas apagaria o
+// gate para o repositório inteiro, e uma unidade quebrada por descuido passaria junto.
+func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Waiver) []Result {
+	// A gramática do código de cenário segue o vocabulário do projeto (`rule_types`).
+	SetRuleLetters(cfg.RuleLetters())
+	SetProjectSectionTitles(cfg)
+	dataStatesRequired = cfg.DataStatesRequired()
+	// What a freeze covers answers `frozen`, and its rules leave every question asked of a
+	// rule (frozen.go).
+	setFreezes(graph)
+	// What a run asks again and again — a gate's premises, a project file — is answered
+	// once for the run.
+	defer startRun(cfg)()
+	// Each gate is a job of its own, its results in the order of its targets; the run puts
+	// them back in the order of the gates, whatever order they finished in.
+	out := make([][]Result, len(gates))
+	job := func(i int) {
+		g := gates[i]
+		defer func() {
+			// A gate that breaks fails alone: the run and the other gates go on.
+			if p := recover(); p != nil {
+				out[i] = append(out[i], Result{Gate: g.Name, Regra: idDoGate(g), Target: "(" + string(g.ScopeForScan(completa)) + ")",
+					Verdict: Fail, Blocking: g.IsBlocking(), Detail: i18n.T("gate.panicked", fmt.Sprint(p))})
+			}
+		}()
+		out[i] = runGate(g, nodes, root, graph, cfg, completa, disp)
+	}
+	tool := func(g config.Gate) bool { return g.Check == "" && g.Run != "" }
+	if Sequential() {
+		for i, g := range gates {
+			job(i)
+			// A tool the project runs may write files: what the run read before it is
+			// read again after.
+			if tool(g) {
+				forgetReads()
+			}
+		}
+	} else {
+		// The project's tools run side by side, a few at a time — each is a process that may
+		// use several cores of its own —, and a tool declared `exclusive` runs alone, after
+		// the others; beside them, the gates Anchors answers itself, which only read, run on
+		// every core.
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			runTools(gates, tool, job)
+		}()
+		work := make(chan int)
+		workers := runtime.GOMAXPROCS(0)
+		for w := 0; w < workers; w++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for i := range work {
+					job(i)
+				}
+			}()
+		}
+		for i, g := range gates {
+			if !tool(g) {
+				work <- i
+			}
+		}
+		close(work)
+		wg.Wait()
+	}
+	var results []Result
+	for _, r := range out {
+		results = append(results, r...)
+	}
+	return results
+}
+
+// runTools runs the run's tools: those that may run beside another, a few at a time, then each
+// exclusive one alone. What the run read is read again after each tool, which may have
+// written it.
+func runTools(gates []config.Gate, tool func(config.Gate) bool, job func(int)) {
+	slots := make(chan struct{}, toolSlots())
+	var wg sync.WaitGroup
+	var exclusive []int
+	for i, g := range gates {
+		if !tool(g) {
+			continue
+		}
+		if g.Exclusive {
+			exclusive = append(exclusive, i)
+			continue
+		}
+		wg.Add(1)
+		slots <- struct{}{}
+		go func(i int) {
+			defer wg.Done()
+			defer func() { <-slots }()
+			job(i)
+			forgetReads()
+		}(i)
+	}
+	wg.Wait()
+	for _, i := range exclusive {
+		job(i)
+		forgetReads()
+	}
+}
+
+// toolSlots is how many of the project's tools run at once: half the cores, at least two —
+// a tool is a process of its own, and often uses more than one.
+func toolSlots() int {
+	if n := runtime.GOMAXPROCS(0) / 2; n > 2 {
+		return n
+	}
+	return 2
+}
+
+// sequential forces a run to confront one gate after another (`check --sequential`).
+var sequential atomic.Bool
+
+// SetSequential makes the runs confront one gate after another — the way to rule the
+// parallel run out when something looks wrong.
+func SetSequential(on bool) { sequential.Store(on) }
+
+// Sequential says whether the runs confront one gate after another.
+func Sequential() bool { return sequential.Load() }
+
+// runGate confronts one gate with the targets it applies to, in their order.
+func runGate(g config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Waiver) []Result {
+	var results []Result
+	// Os alvos deste gate — o mesmo filtro `on`/`tags` para qualquer escopo.
+	var alvos []mapx.Node
+	for _, n := range nodes {
+		if applies(g, n, root) {
+			alvos = append(alvos, n)
+		}
+	}
+	if len(alvos) == 0 {
+		// Nenhum alvo relevante: o gate não roda. Vale inclusive para `scope: project`
+		// — um commit só de README não dispara o typecheck do monorepo inteiro.
+		return nil
+	}
+	// Ferramenta exigida e ausente: Skip, nunca Fail. O gate não mediu — e "não medi"
+	// não é "está limpo" nem "está sujo". Um Fail aqui diria que o projeto violou algo,
+	// quando quem falta é o binário. O aviso não se perde: o `doctor` levanta a ausência
+	// (health.checkFerramentasAusentes), que é onde ela pode ser lida uma vez e resolvida,
+	// em vez de repetida a cada alvo de cada varredura.
+	if faltando, ok := missingTool(g); ok {
+		return []Result{{
+			Gate: g.Name, Target: "(" + string(g.ScopeForScan(completa)) + ")",
+			Verdict: Skip, Blocking: g.IsBlocking(),
+			Detail: i18n.T("gate.missing_tool", faltando),
+		}}
+	}
+	switch g.ScopeForScan(completa) {
+	case config.ScopeBatch, config.ScopeProject:
+		if alvos = withoutFrozen(g, alvos); len(alvos) == 0 {
+			return nil
+		}
+		inicio := time.Now()
+		agregado := runAggregate(g, alvos, root, completa, graph, cfg)
+		agregado.Duracao = time.Since(inicio)
+		results = append(results, agregado)
+	default:
+		for _, n := range alvos {
+			if r, ok := frozenResult(g, n); ok {
+				results = append(results, r)
+				continue
+			}
+			// DISPENSA POR ALVO: o gate roda, e só este nó é poupado. O veredito é
+			// `Skip` com o motivo escrito — some do placar de reprovações sem sumir
+			// do relatório, que é a diferença entre dispensar e esconder.
+			// The target may be named by the unit's code or by the file's own: a feature's
+			// author reads its `code:` in its header, and refusing it cost a project a retry.
+			motivo, ok := disp.WaivedTarget(RuleID(idDoGate(g)), n.Code)
+			if !ok && n.FileCode != "" && n.FileCode != n.Code {
+				motivo, ok = disp.WaivedTarget(RuleID(idDoGate(g)), n.FileCode)
+			}
+			if ok {
+				results = append(results, Result{
+					Gate: g.Name, Regra: idDoGate(g), Target: n.ID,
+					Verdict: Skip, Blocking: g.IsBlocking(),
+					Detail: i18n.T("gate.waived", motivo),
+				})
+				continue
+			}
+			inicio := time.Now()
+			um := runOne(g, n, root, graph, cfg)
+			um.Duracao = time.Since(inicio)
+			results = append(results, um)
+		}
+	}
+	return results
+}
+
+// runAggregate executa UMA vez um gate de escopo batch/project. O veredito é único:
+// a ferramenta olhou o conjunto e respondeu sobre ele.
+//
+// O alvo reportado é o próprio gate (não um arquivo): atribuir a falha do `tsc` a um
+// dos 63 arquivos seria mentira — o erro pode estar em qualquer um, ou na relação
+// entre eles. O laudo (stdout da ferramenta) é que nomeia arquivo e linha.
+func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, graph *mapx.Graph, cfg *config.Config) (r Result) {
+	escopo := g.ScopeForScan(completa)
+	r = Result{Gate: g.Name, Regra: idDoGate(g), Target: "(" + escopo + ")", Blocking: g.IsBlocking()}
+	defer markSeverity(g, &r)
+	defer recoverGate(&r)
+	// A gate of the whole project presupposes its fields as one of each target does: with
+	// one undeclared it measures nothing, and says so; waived, it has nothing to measure.
+	if v, msg, ok := presupposedMissing(g, cfg); ok {
+		r.Verdict, r.Detail = v, msg
+		return r
+	}
+	// Um gate agregado pode ser INTERNO: a pergunta é sobre o conjunto, mas quem
+	// responde é o próprio CLI, não uma ferramenta de fora. É o caso de
+	// `testid-consultado-existe`, que confronta as duas pontas do projeto de uma vez —
+	// exigir `run:` dele obrigaria a empacotar lógica de Go num script externo só para
+	// caber na assinatura.
+	//
+	// O alvo não é um nó (o escopo é o conjunto), então passamos um nó VAZIO: os
+	// checkers agregados leem `root`/`cfg`, nunca o conteúdo de um arquivo — e é por
+	// isso que este caminho não tenta lê-lo, ao contrário do `runInternal`.
+	if g.Check != "" {
+		r.Verdict, r.Detail = runInternalAggregate(g, root, graph, cfg)
+		return r
+	}
+	if g.Run == "" {
+		r.Verdict, r.Detail = Pending, i18n.T("gate.scope_requires_run_or_check", escopo)
+		return r
+	}
+	var args []string
+	if escopo == config.ScopeBatch {
+		// batch: a ferramenta recebe os arquivos que casaram ("$@").
+		args = make([]string, 0, len(alvos))
+		for _, n := range alvos {
+			args = append(args, n.ID)
+		}
+	}
+	// project: sem argumentos — a ferramenta já sabe o que olhar.
+	targets := make([]string, 0, len(alvos))
+	for _, n := range alvos {
+		targets = append(targets, n.ID)
+	}
+	r.Verdict, r.Detail = cachedTool(g, escopo, targets, root, func() (Verdict, string, bool) {
+		return runExternal(g.Run, args, root)
+	})
+	return r
+}
+
+// presupposedMissing answers for a gate whose presupposed fields are not all declared:
+// Pending naming the missing ones, or Skip when every missing one is waived in
+// `dialect.opt_out`. A judgment gate answered here queues no question — its question would
+// state a premise the project does not hold.
+func presupposedMissing(g config.Gate, cfg *config.Config) (Verdict, string, bool) {
+	missing, waived := runPremises(g, cfg)
+	switch {
+	case len(missing) > 0:
+		return Pending, i18n.T("gate.presupposed_missing", strings.Join(missing, ", ")), true
+	case len(waived) > 0:
+		return Skip, i18n.T("gate.presupposed_waived", strings.Join(waived, ", ")), true
+	}
+	return "", "", false
+}
+
+// runOne executa um gate contra um alvo — despacha para interno ou externo.
+func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) (r Result) {
+	r = Result{Gate: g.Name, Regra: idDoGate(g), Target: n.ID, Blocking: g.IsBlocking()}
+	defer markSeverityAt(g, root, &r)
+	defer recoverGate(&r)
+	// The project declared that this gate has nothing to measure on this target, and why.
+	if reason, ok := g.NoSignalFor(n.ID); ok {
+		r.Verdict, r.Detail = Skip, i18n.T("gate.no_signal", reason)
+		return r
+	}
+	if v, msg, ok := presupposedMissing(g, cfg); ok {
+		r.Verdict, r.Detail = v, msg
+		return r
+	}
+	switch {
+	case g.IsJudgment():
+		// gate de julgamento por IA: o CLI NÃO computa. Ele só sabe se ALGUÉM já
+		// respondeu — e essa resposta está no carimbo que o `anchors judge` deixou.
+		//
+		// Sem esta consulta o gate pedia julgamento para sempre: o `judge` gravava o
+		// veredito no grafo e o `check` seguinte emitia Judge de novo, então o contador
+		// de pendências nunca descia e o trabalho já feito era invisível. O carimbo leva
+		// as revs das pontas, então um veredito envelhece se o alvo mudar depois — e
+		// nesse caso volta a ser pergunta, que é o comportamento certo.
+		if graph != nil {
+			if v, ok := graph.JudgedBy(n.ID, g.Name, g.StaleOnConfig); ok {
+				switch v {
+				case "issue":
+					r.Verdict = Fail
+					r.Detail = i18n.T("gate.judged_ai_failed")
+				case "ok":
+					r.Verdict = Pass
+					r.Detail = i18n.T("gate.judged_ai_passed")
+				// `dispensado` é o valor ANTIGO, e continua sendo lido: ele está em
+				// mapas já commitados, e ignorá-lo faria o gate reperguntar um
+				// julgamento que alguém respondeu — com o carimbo ali, visível no
+				// arquivo, sem nada os ligando.
+				case "waived", "dispensado":
+					// `Skip`, e não `Pass`: o gate NÃO MEDIU — o alvo da pergunta não
+					// existe (a spec o declara `@TBD`). `Pass` afirmaria aprovação, que é
+					// a mentira que o veredito `dispensado` existe para evitar; `Pending`
+					// o classificaria como divergência, que também não é o caso.
+					//
+					// `Skip` é a categoria certa e já existe: "não se aplica a este alvo".
+					r.Verdict = Skip
+					r.Detail = i18n.T("gate.judged_ai_waived")
+				default:
+					r.Verdict = Pending
+					r.Detail = i18n.T("gate.judged_ai_verdict", v)
+				}
+				return r
+			}
+		}
+		r.Verdict = Judge
+		r.Detail = i18n.T("gate.awaits_ai_judgment")
+		if g.Guide != "" {
+			r.Detail += " (guide: " + g.Guide + ")"
+		}
+	case g.Check != "":
+		r.Verdict, r.Detail = runInternal(g.Check, n, root, graph, cfg)
+		r.Verdict, r.Detail = confrontDuplicates(g, n, root, graph, cfg, r.Verdict, r.Detail)
+		// DÍVIDA ASSUMIDA é o Pending que tem dono e vencimento — e o único que vira
+		// trabalho registrado (issue em `future/`). Só o gate de obrigações a produz; os
+		// demais Pending são "não tive o que confrontar", que não é dívida de ninguém.
+		if r.Verdict == Diverge && g.Check == "obligation-honored" {
+			r.Divida = true
+			r.Prazo = declaredDeadlines(r.Detail)
+		}
+		// Decisão em aberto IMPEDE: a spec declara que não decidiu algo que o código vai
+		// precisar, e quem implementar vai adivinhar. Dívida assumida NÃO impede — ela
+		// diz "sei o que devo e quando pago", que é o oposto de não saber.
+		// Só a pendência que diz "há decisão POR TOMAR" impede a promoção. A que diz "a
+		// seção nem existe" é dívida de migração — 586 specs do repositório nasceram antes
+		// da prática, e barrá-las reprovaria o projeto inteiro por algo que ninguém
+		// escreveu errado.
+		//
+		// A distinção sai do próprio gate, pelo MARCADOR que ele põe no laudo. Antes era
+		// por prosa ("que a spec ainda NÃO tomou"), e isso quebraria na tradução do
+		// laudo — sem erro, sem aviso: o gate simplesmente pararia de barrar.
+		if r.Verdict == Awaiting && g.Check == "open-questions-resolved" &&
+			strings.Contains(r.Detail, OpenDecisionMarker) {
+			r.Impede = true
+			// E vira ISSUE. A mesma distinção decide as duas coisas: "há decisão por
+			// tomar" é achado que precisa sobreviver à sessão; "a spec nasceu antes da
+			// prática" é dívida de migração, e abrir issue para as 586 specs que nunca
+			// tiveram a seção afogaria `todo/` com o que ninguém escreveu errado.
+			r.Decisão = true
+		}
+	case g.Run != "":
+		r.Verdict, r.Detail = cachedTool(g, "file", []string{n.ID}, root, func() (Verdict, string, bool) {
+			return runExternal(g.Run, []string{n.ID}, root)
+		})
+	default:
+		r.Verdict, r.Detail = Pending, i18n.T("gate.no_run_or_check")
+	}
+	return r
+}
+
+// deadlineRE captura o "quando" de cada dívida na mensagem do gate de obrigações, que as
+// concatena com ";". O nome da obrigação vem entre colchetes no início de cada trecho.
+var deadlineRE = regexp.MustCompile(`\[([a-z0-9-]+)\][^;]*?DÍVIDA ASSUMIDA: ([^;]+)`)
+
+// declaredDeadlines extrai, do laudo do gate, apenas os vencimentos — um por obrigação.
+func declaredDeadlines(detail string) string {
+	var out []string
+	for _, m := range deadlineRE.FindAllStringSubmatch(detail, -1) {
+		out = append(out, "`"+m[1]+"` — "+strings.TrimSpace(m[2]))
+	}
+	if len(out) == 0 {
+		return ""
+	}
+	return strings.Join(out, "\n- ")
+}
+
+// missingTool diz se o gate exige um binário que não está no PATH.
+//
+// `exec.LookPath` é a mesma resolução que o `sh` faria ao rodar o comando, então a
+// resposta aqui e o comportamento real do gate não podem divergir.
+func missingTool(g config.Gate) (string, bool) {
+	if g.NeedsTool == "" {
+		return "", false
+	}
+	if _, err := exec.LookPath(g.NeedsTool); err != nil {
+		return g.NeedsTool, true
+	}
+	return "", false
+}
+
+// idDoGate devolve o ID declarado, ou o nome quando ele falta.
+//
+// A ausência é tolerada por compatibilidade — um projeto que já funcionava não pode
+// quebrar por um campo novo —, e o nome do gate é um identificador razoável enquanto o ID
+// não foi declarado. A validação da carga garante que, de um jeito ou de outro, ele é
+// único.
+func idDoGate(g config.Gate) string {
+	if g.ID != "" {
+		return g.ID
+	}
+	return g.Name
+}
+
+// pendingNoMap devolve o veredito Pending traduzido quando o grafo relacional não foi carregado.
+func pendingNoMap() (Verdict, string) {
+	return Pending, i18n.T("gate.no_map_loaded")
+}
+
+// recoverGate turns a gate that panicked into that gate's failure on that target: one
+// broken gate — informative, even — took the whole check down, and with it every commit.
+func recoverGate(r *Result) {
+	if p := recover(); p != nil {
+		r.Verdict, r.Detail = Fail, i18n.T("gate.panicked", fmt.Sprint(p))
+	}
+}
+
+// DeclaredMarker marks, in a verdict's detail, a divergence the project declared on
+// purpose — a debt with its deadline (`obligation_pending`), a rule `@TBD` —: it is
+// reported and never bars.
+const DeclaredMarker = "[declared]"
+
+// AdvisoryMarker marks, in a verdict's detail, a divergence the project's own threshold
+// accepts — a mutation score above the floor and below the desirable —: it is reported and
+// never bars. A project that wants it to bar raises the threshold, and below it the verdict
+// is a failure.
+const AdvisoryMarker = "[advisory]"
+
+// markSeverity gives the result the state its level has on the gate (`severity`): a
+// blocking gate that had something to confront and could not measure it — a test never
+// run, a signal of another version — does not certify the promotion unless the project
+// says so.
+func markSeverity(g config.Gate, r *Result) { markSeverityAt(g, "", r) }
+
+// markSeverityAt is markSeverity knowing the project's root: a gate's legacy cutoff reads when
+// the target last changed, in git.
+func markSeverityAt(g config.Gate, root string, r *Result) {
+	level := ""
+	switch r.Verdict {
+	case Fail:
+		level = config.LevelFail
+	case Diverge:
+		level = config.LevelDivergence
+	case Pending:
+		level = config.LevelPending
+	case Awaiting:
+		level = config.LevelAwaiting
+	default:
+		return
+	}
+	r.Action = g.ActionFor(level)
+	// A target last changed before the gate's legacy cutoff answers with the legacy
+	// severity — never stronger —; one changed since answers with the gate's own.
+	if root != "" && legacyTarget(g, root, r.Target) {
+		r.Action = g.LegacyActionFor(level)
+		if u := strings.TrimSpace(g.Legacy.Until); u != "" && r.Action != g.ActionFor(level) {
+			r.Detail = strings.TrimSpace(r.Detail + " " + i18n.T("gate.legacy_until", u, g.ActionFor(level)))
+		}
+	}
+	// A finding the project DECLARED — a debt with its deadline, a rule marked `@TBD` —, or
+	// one its own threshold accepts, is known: it informs, and never bars the promotion.
+	if r.Action == config.ActionBlock && (strings.Contains(r.Detail, DeclaredMarker) || strings.Contains(r.Detail, AdvisoryMarker)) {
+		r.Action = config.ActionInform
+	}
+	if r.Action == config.ActionBlock && r.Verdict != Fail {
+		r.Impede = true
+	}
+}
+
+// Blocks says whether the result bars the promotion: its level's state is `block`. A result
+// built outside a gate run carries no state, and blocks as a blocking gate's failure or its
+// impeding pending item.
+func (r Result) Blocks() bool {
+	switch r.Action {
+	case config.ActionBlock:
+		return true
+	case config.ActionInform, config.ActionIgnore:
+		return false
+	}
+	return r.Blocking && (r.Verdict == Fail || ((r.Verdict == Pending || r.Verdict == Diverge || r.Verdict == Awaiting) && r.Impede))
+}
+
+// Ignored says whether the result is counted and not reported: its level's state is `ignore`.
+func (r Result) Ignored() bool { return r.Action == config.ActionIgnore }
+
+// today is the date the legacy deadline is read against; a variable so the tests set it.
+var today = func() string { return time.Now().Format("2006-01-02") }
+
+// legacyTarget says whether a target is legacy for the gate: a file whose last commit is older
+// than the gate's `legacy.before`, with no uncommitted change, while the gate's `legacy.until`
+// has not come. A file never committed, changed since, or no file at all (a scope) is not;
+// outside git nothing is.
+func legacyTarget(g config.Gate, root, target string) bool {
+	if g.Legacy == nil || target == "" || strings.HasPrefix(target, "(") {
+		return false
+	}
+	// Past the deadline the legacy is over: every target answers with the gate's own.
+	if u := strings.TrimSpace(g.Legacy.Until); u != "" && today() >= u {
+		return false
+	}
+	if dirty, known := gitState(root).dirtyFiles(); !known || dirty[target] {
+		return false
+	}
+	date, ok := lastCommitDate(root, target)
+	return ok && date < strings.TrimSpace(g.Legacy.Before)
+}

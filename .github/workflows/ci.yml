@@ -1,0 +1,246 @@
+# CI de PR — o que é incondicionalmente verdadeiro sobre este projeto Go.
+#
+# Existe porque não existia, e a ausência tinha consequência medida. Até aqui os únicos
+# workflows eram `deploy-site` (push em main) e `release-cli` (tags): NADA rodava em PR.
+# Descoberto ao aplicar o Passo zero do `anchors guide review` no PR #2 — o guia manda
+# conferir se os checks existem antes de confiar neles, e a resposta foi "no checks
+# reported".
+#
+# O que a ausência custou: os PRs #2 e #4 introduziram um defeito cada (um regex com o
+# tamanho do código hardcoded onde devia vir da config; um `switch` que classificava
+# `dispensado` como divergência). Os dois só foram pegos por leitura humana no review.
+# Nenhum era invisível ao `go test` — o primeiro precisava de um teste que não existia, e
+# é justamente o tipo de coisa que um CI cobrando a suíte torna barato de escrever.
+#
+# O ANCHORS SE APLICA A SI MESMO — e demorou para chegar aqui.
+#
+# A versão anterior deste arquivo dizia: *"não roda `anchors check` sobre o próprio
+# Anchors. O produto ainda não está totalmente instrumentado, e cobrá-lo de si mesmo
+# produziria reprovação que ninguém pode consertar."* Era verdade quando foi escrito, e
+# deixou de ser: medido antes desta mudança, `anchors check --all` dá ZERO reprovações.
+#
+# O QUE A AUSÊNCIA CUSTOU, e é o que motivou revisitar a decisão. Ao migrar o vocabulário
+# para inglês, dois defeitos passaram sem nada acusar:
+#
+#   • o filtro do gate "o mapa está em dia?" ignorava `gerado_por`, o nome ANTIGO. Depois
+#     da renomeação ele deixou de filtrar qualquer coisa, e TRÊS PRs de um projeto que usa
+#     o Anchors reprovaram de uma vez — todos no mesmo check, todos em 9s.
+#
+#   • o passo de migração convertia `id:` e `check:` e esquecia `name:`, que é justamente
+#     o campo que o `anchors.yaml` DESTE repositório usa. A migração rodou aqui e não
+#     converteu nada.
+#
+# Os dois são exatamente o tipo de coisa que um gate pega e uma leitura não. E os dois
+# foram descobertos por acidente, num projeto terceiro, depois de já estarem publicados.
+#
+# FERRAMENTA AUSENTE PULA, NÃO REPROVA (`needs_tool`), então rodar o check aqui é seguro
+# mesmo sem instalar gitleaks, osv-scanner e companhia. O que estiver instalado mede de
+# verdade; o resto aparece como pulado, à vista, em vez de silenciosamente ausente.
+name: CI
+
+on:
+  pull_request:
+  # `push` em main também: um merge com `--admin` contorna o check do PR por desenho (é o
+  # escape para não podermos aprovar o próprio PR), e sem isto a main poderia receber
+  # código que nada confrontou. Aqui o resultado é histórico — não barra nada —, mas
+  # aparece, e aparecer é a diferença entre saber e não saber.
+  push:
+    branches: [main]
+  # À MÃO: um PR cujo evento se perdeu, ou uma conferência que alguém quer refazer sem
+  # empurrar commit vazio. Pipeline sem escape manual transforma percalço em trabalho
+  # parado sem remédio.
+  #
+  # A frase acima é o comentário do `anchors-gates.yml` — o template que este produto
+  # INSTALA nos projetos. Ele tem o escape desde sempre; o CI do próprio Anchors não
+  # tinha, e isso custou: um `push --force` que amendou um commit não disparou os checks,
+  # o PR ficou com "no checks reported", e não havia como acordá-lo. Um commit vazio
+  # também não disparou.
+  #
+  # É a mesma família dos outros achados desta semana: o produto prega e não pratica.
+  workflow_dispatch:
+
+# Um PR que recebe vários pushes seguidos não precisa da suíte de cada um: só o último
+# estado importa. Sem isto, correções em sequência empilham execuções que já nasceram
+# obsoletas.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Só leitura. Este workflow não comenta, não move card, não publica nada.
+permissions:
+  contents: read
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # `go-version-file` e não uma versão fixa: a régua é o `go.mod`, e duas fontes
+      # discordando sobre a versão do Go é o tipo de divergência que aparece como erro de
+      # compilação sem relação aparente com o PR.
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      # A ORDEM É DELIBERADA, do mais barato ao mais caro, e cada passo falha o job:
+      # descobrir que não compila depois de esperar a suíte inteira é tempo jogado fora.
+      - name: Compila
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      # Os TESTES também compilam para Windows? O binário compilava e os testes não
+      # (`syscall.Kill` num teste do watcher) — e ninguém via, porque nada rodava lá. É o
+      # guarda barato: não roda nada, só compila, e pega o erro antes do job de Windows.
+      - name: Os testes compilam para Windows
+        run: GOOS=windows go vet ./...
+
+      # `gofmt -l` lista os arquivos fora do padrão e sai com 0 — ele NÃO falha sozinho.
+      # Um `run: gofmt -l .` passaria sempre, verde, sem conferir nada: é a família de
+      # defeito que este projeto já mediu três vezes (check verde que não fez o trabalho).
+      # Por isso o teste explícito da saída.
+      - name: Formatação
+        run: |
+          fora=$(gofmt -l .)
+          if [ -n "$fora" ]; then
+            echo "✗ arquivos fora do gofmt:"
+            echo "$fora"
+            echo ""
+            echo "  rode: gofmt -w ."
+            exit 1
+          fi
+          echo "✓ formatação canônica"
+
+      # `-race` porque a suíte tem código concorrente (watcher, workflow) e uma corrida só
+      # aparece sob carga — no CI, que roda em máquina diferente da de quem escreveu, é
+      # onde ela tem mais chance de se manifestar.
+      # O RELATORIO sai daqui, e nao de uma segunda execucao: rodar a suite duas vezes
+      # dobraria o tempo do job para medir exatamente a mesma coisa. O `tee` deixa a saida
+      # visivel no log (um teste que falha tem de aparecer onde a pessoa ja' olha) e o
+      # `PIPESTATUS` preserva o codigo de saida do `go test` — sem ele, o `tee` bem
+      # sucedido mascararia a suite vermelha, que e' a familia de defeito que este arquivo
+      # ja' documenta tres vezes: check verde que nao fez o trabalho.
+      - name: Testes
+        run: |
+          set -o pipefail
+          go test -race -v ./... 2>&1 | tee /tmp/go-test.out
+          exit ${PIPESTATUS[0]}
+
+      # O ANCHORS SOBRE O ANCHORS.
+      #
+      # Instalado a partir da árvore do PR, e não da release: o que este workflow precisa
+      # confrontar é o binário QUE ESTE PR PRODUZ. Usar a release publicada mediria a
+      # versão anterior — e um PR que quebra um gate passaria, porque o gate quebrado
+      # ainda não teria sido publicado.
+      - name: Instala o anchors desta árvore
+        run: go install ./cmd/anchors
+
+      # O MAPA é versionado e chega pronto no push. Conferir que ele está em dia vem
+      # ANTES de confrontar os gates: um mapa velho faz os gates medirem uma foto que não
+      # é a deste PR, e reportar verde sobre o que não mediram é pior que reprovar.
+      #
+      # A comparação ignora os campos que mudam sozinhos — `generated_by` (a versão do
+      # binário), `version` (o formato do mapa) e `updated_at` (a data do último commit).
+      # É a mesma lista do `anchors-gates.yml` que o produto instala nos projetos, e ela
+      # já errou uma vez: ficou com o nome antigo depois de uma renomeação e passou a não
+      # filtrar nada.
+      - name: O mapa está em dia?
+        run: |
+          cp anchors.graph.yaml /tmp/mapa-commitado.yaml
+          anchors map build >/dev/null 2>&1 || true
+          filtra() { grep -vE '^ *(generated_by|gerado_por|version|updated_at):' "$1"; }
+          if ! diff <(filtra /tmp/mapa-commitado.yaml) <(filtra anchors.graph.yaml); then
+            echo ""
+            echo "✗ o mapa commitado difere do que o \`map build\` produz."
+            echo "  Rode \`anchors map build\` e commite — os gates deste PR estariam"
+            echo "  medindo uma foto que não é a dele."
+            exit 1
+          fi
+          echo "✓ mapa em dia"
+
+      # A EVIDENCIA DE EXECUCAO entra no mapa AQUI, e a ordem e' o que torna isso possivel.
+      #
+      # Depois do passo acima porque o `ingest` ESCREVE no mapa: os sinais sobrevivem a um
+      # `map build`, entao ingerir antes faria o mapa divergir do commitado e o passo de
+      # frescor reprovaria — medido, 1124 linhas de diferenca. O mapa versionado nunca
+      # carregou sinal, e e' deliberado: evidencia e' de uma EXECUCAO, nao do repositorio.
+      #
+      # Antes dos gates porque e' o que eles leem. Sem isto, `scenario-coverage` e
+      # `flag-covered` respondem "nenhuma execucao ingerida" com a suite verde na mao —
+      # medido neste repositorio: 51 specs assim antes desta mudanca, e 51 verdes depois.
+      #
+      # `go-junit-report` porque o `go test` nao emite JUnit. A ferramenta e' do ECOSSISTEMA
+      # Go, nao do Anchors: ele nao roda teste e nao conhece runner — recebe o relatorio.
+      #
+      # O CODIGO DO CENARIO vive no NOME do caso, e em Go isso e' um subteste
+      # (`t.Run("CDCTC-B02: ...")`) porque o identificador da funcao nao aceita o `-`.
+      - name: A evidência de execução entra no mapa
+        run: |
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          go-junit-report < /tmp/go-test.out > /tmp/junit.xml
+          anchors ingest --junit /tmp/junit.xml
+
+      # `--all` e não `--changed`: um PR pode QUEBRAR um arquivo que ele não tocou —
+      # renomear um símbolo, mudar uma regra que outra unidade cita. O raio de impacto do
+      # `--changed` é calculado sobre o mapa, que pode estar velho justamente por causa
+      # deste PR.
+      #
+      # `--deterministic` pula os gates de julgamento por IA: eles pedem credencial e
+      # respondem devagar, e o veredito deles vive carimbado no mapa. O que sobra aqui é
+      # o que uma máquina decide sozinha.
+      - name: Os gates do Anchors, sobre o Anchors
+        run: anchors check --all --deterministic
+
+      # O CHECK GRAVA o que reprova em `issues/` — é o modo local, e este repositório não
+      # declara `workflow:`. No CI isso é ruído: a máquina é descartada, e um arquivo
+      # escrito aqui não chega a lugar nenhum.
+      #
+      # Falhar se sobrou algo seria redundante (o passo acima já falhou), mas listar é
+      # útil: um `issues/` não-vazio depois de um check que passou significaria que algo
+      # foi registrado sem reprovar — e isso é o tipo de divergência que vale ver.
+      - name: O check deixou issue para trás?
+        if: always()
+        run: |
+          if [ -d issues ] && [ -n "$(find issues -type f 2>/dev/null)" ]; then
+            echo "issues registradas por este check:"
+            find issues -type f | sed "s/^/  /"
+          fi
+
+  # O ANCHORS EM CADA SISTEMA QUE ELE PUBLICA.
+  #
+  # O release gera binários para Linux, macOS e Windows (`.goreleaser.yaml`), e até aqui
+  # só o Linux era testado: os outros dois saíam sem que nada os tivesse executado. O
+  # levantamento de portabilidade achou o que isso escondia — no Windows os testes nem
+  # compilavam, fins de linha CRLF faziam o `migrate` duplicar o `version:`, e o watcher
+  # gravava caminhos com `\`.
+  #
+  # BLOQUEANTE desde que ficou limpo. Nasceu informativo, pela mesma regra dos gates: a
+  # primeira rodada no Windows reprovou 176 testes e travou um pacote por dez minutos, e
+  # barrar ali deixaria todo PR vermelho por uma dívida que ele não criou. Cinco rodadas
+  # depois, os três sistemas passam — e daqui em diante um PR que quebra o Windows ou o
+  # macOS não passa.
+  portability:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Compila
+        run: go build ./...
+      - name: Vet
+        run: go vet ./...
+      # Sem `-race` e sem `tee /tmp`: o `-race` exige cgo no Windows, e `/tmp` não existe
+      # lá. A pergunta deste job é "roda neste sistema?", não "tem corrida?" — essa o job
+      # do Linux já responde.
+      - name: Testes
+        run: go test ./...
+

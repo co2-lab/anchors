@@ -1,0 +1,137 @@
+---
+// A climbing route: the bolts below mark the way already climbed, the last one holds the rope in a fall, and the next one above shows where to go.
+// Card text stays in English on purpose, as on the evidence board: names and codes are what a
+// project shows.
+interface Props {
+	label: string;
+}
+const { label } = Astro.props;
+---
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" role="img" aria-label={label} class="landing-figure">
+  <defs>
+    <filter id="cl-shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <radialGradient id="cl-bolt" cx="35%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#e6e2df"/>
+      <stop offset="0.5" stop-color="#a8a09b"/>
+      <stop offset="1" stop-color="#45403d"/>
+    </radialGradient>
+  </defs>
+
+  {/* the wall */}
+  <rect x="0" y="0" width="960" height="400" rx="10" fill="#201e1d"/>
+  <g fill="#2e2b29">
+    <path d="M0 40 L120 10 L260 60 L180 140 L40 120 Z"/>
+    <path d="M300 0 L470 30 L430 120 L310 90 Z"/>
+    <path d="M520 20 L700 0 L760 80 L620 120 L540 90 Z"/>
+    <path d="M800 30 L960 10 L960 150 L860 170 Z"/>
+    <path d="M0 200 L130 170 L220 240 L90 300 L0 280 Z"/>
+    <path d="M250 300 L420 260 L470 340 L330 400 L240 380 Z"/>
+    <path d="M640 230 L800 200 L860 300 L700 330 Z"/>
+    <path d="M880 260 L960 240 L960 400 L860 400 Z"/>
+  </g>
+  <g fill="none" stroke="#161413" stroke-width="2" opacity="0.7">
+    <path d="M180 140 L300 200 L250 300"/>
+    <path d="M430 120 L520 180 L640 230"/>
+    <path d="M760 80 L800 200"/>
+    <path d="M90 300 L60 400"/>
+  </g>
+  {/* holds */}
+  <g fill="#5e5854">
+    <ellipse cx="150" cy="330" rx="9" ry="5"/>
+    <ellipse cx="250" cy="250" rx="8" ry="5"/>
+    <ellipse cx="150" cy="190" rx="9" ry="6"/>
+    <ellipse cx="260" cy="140" rx="7" ry="5"/>
+    <ellipse cx="380" cy="128" rx="8" ry="5"/>
+    <ellipse cx="470" cy="190" rx="7" ry="4"/>
+    <ellipse cx="575" cy="152" rx="8" ry="5"/>
+    <ellipse cx="612" cy="154" rx="7" ry="4"/>
+    <ellipse cx="642" cy="68" rx="8" ry="5"/>
+    <ellipse cx="740" cy="90" rx="8" ry="5"/>
+  </g>
+
+
+  {/* clipped bolts with their quickdraws */}
+  <g id="cl-bolts">
+    <circle cx="130" cy="300" r="7" fill="url(#cl-bolt)"/>
+    <rect x="126" y="306" width="8" height="18" rx="4" class="cl-draw"/>
+    <circle cx="222" cy="228" r="7" fill="url(#cl-bolt)"/>
+    <rect x="218" y="234" width="8" height="18" rx="4" class="cl-draw"/>
+    <circle cx="172" cy="156" r="7" fill="url(#cl-bolt)"/>
+    <rect x="168" y="162" width="8" height="18" rx="4" class="cl-draw"/>
+    <circle cx="300" cy="112" r="7" fill="url(#cl-bolt)"/>
+    <rect x="296" y="118" width="8" height="18" rx="4" class="cl-draw"/>
+    <circle cx="436" cy="158" r="7" fill="url(#cl-bolt)"/>
+    <rect x="432" y="164" width="8" height="18" rx="4" class="cl-draw"/>
+    <circle cx="540" cy="120" r="8" fill="url(#cl-bolt)"/>
+    <rect x="536" y="126" width="8" height="18" rx="4" class="cl-draw"/>
+  </g>
+
+  {/* the rope: from the belayer, through each quickdraw, to the climber */}
+  <path class="cl-rope" d="M64 372 C75 364 104 342 130 322 C156 302 215 274 222 250 C229 226 159 197 172 178 C185 159 256 134 300 134 C344 134 396 179 436 180 C476 181 513 152 540 142 C567 132 588 122 598 118"/>
+
+  {/* the fall the last bolt stops */}
+  <path d="M600 126 Q616 180 576 206" fill="none" stroke="#f4613f" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <path d="M569 198 L575 208 L584 199" fill="none" stroke="#f4613f" stroke-width="1.5"/>
+
+  {/* next bolt above: where to go */}
+  <circle cx="700" cy="58" r="7" fill="url(#cl-bolt)"/>
+  <circle cx="700" cy="58" r="16" fill="none" stroke="#ec3013" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <path d="M618 76 Q650 50 684 58" fill="none" stroke="#ec3013" stroke-width="1.2" stroke-dasharray="3 4"/>
+  {/* the top anchor */}
+  <g>
+    <circle cx="860" cy="50" r="7" fill="url(#cl-bolt)"/>
+    <circle cx="884" cy="50" r="7" fill="url(#cl-bolt)"/>
+    <path d="M860 57 Q872 76 884 57" fill="none" stroke="#cdc7c2" stroke-width="2"/>
+    <text x="842" y="92" class="cl-m cl-hint">top anchor</text>
+  </g>
+
+  {/* the climber */}
+  <g filter="url(#cl-shadow)">
+    <circle cx="614" cy="80" r="10" fill="#ec3013"/>
+    <path class="cl-body" d="M609 93 L598 118"/>
+    <path class="cl-body" d="M607 98 L626 84 L640 70"/>
+    <path class="cl-body" d="M603 106 L586 98 L578 86"/>
+    <path class="cl-body" d="M598 118 L616 136 L612 152"/>
+    <path class="cl-body" d="M598 118 L582 134 L575 150"/>
+    <rect x="591" y="113" width="14" height="8" rx="2" fill="#a8210b"/>
+  </g>
+
+  {/* the belayer */}
+  <g opacity="0.85">
+    <circle cx="44" cy="350" r="8" fill="#cdc7c2"/>
+    <path class="cl-body" d="M44 360 L46 392" style="stroke:#cdc7c2;stroke-width:5"/>
+    <path class="cl-body" d="M45 370 L62 372" style="stroke:#cdc7c2;stroke-width:5"/>
+  </g>
+
+  {/* callouts, numbered like the cards below */}
+  <g filter="url(#cl-shadow)">
+    <rect x="730" y="110" width="196" height="40" rx="2" fill="#ec3013"/>
+    <text x="740" y="126" class="cl-m cl-tag">01 · points where to go</text>
+    <text x="740" y="140" class="cl-m cl-sub">the plan and the spec, ahead</text>
+  </g>
+  <g filter="url(#cl-shadow)">
+    <rect x="640" y="210" width="196" height="40" rx="2" fill="#ec3013"/>
+    <text x="650" y="226" class="cl-m cl-tag">02 · holds the rope</text>
+    <text x="650" y="240" class="cl-m cl-sub">a gate stops the fall at one fix</text>
+  </g>
+  <g filter="url(#cl-shadow)">
+    <rect x="290" y="300" width="214" height="40" rx="2" fill="#ec3013"/>
+    <text x="300" y="316" class="cl-m cl-tag">03 · marks where you've been</text>
+    <text x="300" y="330" class="cl-m cl-sub">the map keeps what is already proven</text>
+  </g>
+  <path d="M300 300 L232 254" stroke="#ec3013" stroke-width="1.2"/>
+  <path d="M640 226 L590 204" stroke="#ec3013" stroke-width="1.2"/>
+</svg>
+
+<style>
+	.cl-m { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+	.cl-rope { fill: none; stroke: #ec3013; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+	.cl-draw { fill: none; stroke: #cdc7c2; stroke-width: 2; }
+	.cl-body { fill: none; stroke: #f2efec; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+	.cl-tag { font-size: 10px; fill: #faf8f6; font-weight: 700; }
+	.cl-sub { font-size: 9px; fill: #fde3dc; }
+	.cl-hint { font-size: 9px; fill: #a8a09b; }
+</style>

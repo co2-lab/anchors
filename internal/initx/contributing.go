@@ -1,0 +1,250 @@
+// @anchors
+//   code: CNINC
+//   ref: CNGDC
+
+package initx
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/progress"
+)
+
+// THE CONTRIBUTING GUIDE IS THE PROJECT'S OWN CONFIGURATION, READ ALOUD.
+//
+// A contributor — a person or an agent — arrives at a project under Anchors and does not
+// know that the spec comes first, which command gives the next task, or which gate bars a
+// commit. All of that is already decided in anchors.yaml, in a form a reader does not
+// read. The seeded guide says it in prose, from the configuration init just wrote, so it
+// names this project's layers and this project's blocking gates, not an example's.
+//
+// It proposes no structure: the layers it lists are the ones the project declared, and the
+// layer kinds it names are illustration, never a layout to move files into.
+
+// ContributingFile is the guide's name at the project root.
+const ContributingFile = "CONTRIBUTING.md"
+
+// RenderContributing is the whole guide for a project that has none.
+func RenderContributing(cfg *config.Config, guideDir string) string {
+	var b strings.Builder
+	b.WriteString("# Contributing\n\n")
+	b.WriteString("This project is kept coherent by [Anchors](https://github.com/co2-lab/anchors). The\n")
+	b.WriteString("section below says how work flows here; it was seeded by `anchors init` from\n")
+	b.WriteString("`anchors.yaml`, and the configuration stays the source of truth.\n\n")
+	b.WriteString(ContributingSection(cfg, guideDir))
+	return b.String()
+}
+
+// ContributingSection is the part about working with Anchors: what init would add to a
+// guide the project already has.
+func ContributingSection(cfg *config.Config, guideDir string) string {
+	var b strings.Builder
+	b.WriteString("## Working with Anchors\n\n")
+
+	b.WriteString("### The order of the work\n\n")
+	b.WriteString("The spec is the anchor: a change starts in the spec (`*.spec.md`), which states the\n")
+	b.WriteString("rules; the feature (`*.feature`) turns each rule into scenarios; the tests prove the\n")
+	b.WriteString("scenarios; the code realises them. A bug fixed without a rule and a scenario is a bug\n")
+	b.WriteString("the next change can bring back — write the rule, then the scenario, then the test.\n\n")
+	if a := artifactLines(cfg); len(a) > 0 {
+		b.WriteString("Where each piece lives here:\n\n")
+		for _, l := range a {
+			b.WriteString(l + "\n")
+		}
+		b.WriteString("\n")
+	}
+
+	b.WriteString("### Layers\n\n")
+	b.WriteString("Anchors does not care how the folders are arranged, only that the layers are kept\n")
+	b.WriteString("apart and that each file respects the layer it is in. Layers are the project's own\n")
+	b.WriteString("decision — for example: entry points, use cases, domain, repositories,\n")
+	b.WriteString("infrastructure, presentation. Those names are illustration, not a layout to fit.\n\n")
+	if ls := codeLayerLines(cfg); len(ls) > 0 {
+		b.WriteString("The code layers this project declares:\n\n")
+		for _, l := range ls {
+			b.WriteString(l + "\n")
+		}
+		b.WriteString("\n")
+	} else {
+		b.WriteString("No code layer is declared yet: declare each one in `anchors.yaml` once the code exists.\n\n")
+	}
+
+	b.WriteString("### Day to day\n\n")
+	b.WriteString("- `anchors status` — where the project stands, and the next step.\n")
+	if cfg != nil && cfg.Workflow != nil && cfg.Workflow.Mode == config.ModeGitHub {
+		fmt.Fprintf(&b, "- `anchors next` — claim the next task; the queue lives in the issues of `%s`.\n", cfg.Workflow.Repo)
+	} else {
+		b.WriteString("- `anchors next` — claim the next task from the local queue (`.anchors/tasks/`).\n")
+	}
+	b.WriteString("- `anchors work <stage> --for <target>` — the prompt of one task: what to read, where each piece goes, how to verify.\n")
+	b.WriteString("- `anchors check --changed <file>` — run the gates over what a change reaches.\n")
+	b.WriteString("- `anchors test` — run the test suites and ingest their results into the map.\n")
+	b.WriteString("- `anchors touch` — bump `updated_at` in the headers of the files that changed.\n")
+	b.WriteString("- `anchors install-hooks` — once per clone: the pre-commit runs the gates over what is staged.\n")
+	b.WriteString("- `anchors progress` — the only writer of `anchors.progress.md`. " + progress.UnplannedAdvice + "\n\n")
+
+	b.WriteString("### Long commands and agents: watch them\n\n")
+	b.WriteString("**Strongly recommended:** never leave a long command or an agent working unwatched. A\n")
+	b.WriteString("suite that hangs, a build that dies or an agent stuck on a prompt looks like work in\n")
+	b.WriteString("progress until someone notices — usually much later.\n\n")
+	b.WriteString("- Launch every long command — a test suite, a mutation run, a build, a script, an agent's\n")
+	b.WriteString("  task — through `anchors monitor run -- <command>`, in the background: its process, its\n")
+	b.WriteString("  output and its exit are recorded in `.anchors/runs/`. Anchors' own long commands\n")
+	b.WriteString("  (`anchors test`, `mutation`, `check`, `verify`) record themselves.\n")
+	b.WriteString("- Keep `anchors monitor` running while they work (`--until-done` to stop when they end):\n")
+	b.WriteString("  one line when a run starts, stalls, dies or ends, and a heartbeat with what is running.\n")
+	b.WriteString("  React to each line instead of waiting blind.\n")
+	b.WriteString("- Working with a coding agent: `anchors install-hooks --agent` records the long commands\n")
+	b.WriteString("  it sends to the background, so the monitor sees them too.\n")
+	b.WriteString("- An agent that watches the monitor runs it with `--level action`: only what calls for a\n")
+	b.WriteString("  reaction goes out, and each line it sends wakes a turn. No `| grep` of your own.\n")
+	b.WriteString("- With `--summary` (or `monitor.summary: true`) the monitor also posts the progress summary\n")
+	b.WriteString("  when it changes — the `▸ Progress` line and the indented ones under it —, after a line\n")
+	b.WriteString("  addressed to the agent. **Agent: copy that summary to the user verbatim, in a code block,\n")
+	b.WriteString("  the total line included — without the line meant for you.**\n\n")
+
+	b.WriteString("### What blocks and what informs\n\n")
+	blocking, informing := gateSplit(cfg)
+	if len(blocking) > 0 {
+		b.WriteString("A failure of these gates bars the commit: " + quoteAll(blocking) + ".\n")
+	} else {
+		b.WriteString("No gate bars a commit yet: every gate only informs.\n")
+	}
+	if len(informing) > 0 {
+		b.WriteString("These only inform: " + quoteAll(informing) + ".\n")
+	}
+	b.WriteString("Never commit with `--no-verify`: the hooks are where this agreement is enforced. A gate\n")
+	b.WriteString("that fails is fixed, or waived in the commit message with its reason\n")
+	b.WriteString("(`[skip-<rule>@<CODE>: why]`).\n")
+	b.WriteString("A divergence (⚠) and a pending item (?) inform unless `severity` in `anchors.yaml`\n")
+	b.WriteString("says otherwise; `anchors check --show-drift` lists them.\n\n")
+
+	b.WriteString("### Guides\n\n")
+	b.WriteString("`anchors guide` prints the guides for writing each piece.")
+	if guideDir != "" {
+		fmt.Fprintf(&b, " The project's own guides are in `%s/`.", guideDir)
+	}
+	b.WriteString("\n")
+	return b.String()
+}
+
+// artifactLines are the unit's patterns, one line per declared artifact layer, and the
+// colocation templates when the project declares colocation.
+func artifactLines(cfg *config.Config) []string {
+	if cfg == nil {
+		return nil
+	}
+	var out []string
+	for _, kind := range []string{"spec", "feature", "test"} {
+		for _, name := range sortedLayerNames(cfg) {
+			if l := cfg.Layers[name]; l.Kind == kind {
+				out = append(out, fmt.Sprintf("- %s: `%s`", kind, l.Pattern))
+			}
+		}
+	}
+	if d := cfg.Derived; d != nil && len(d.Files) > 0 {
+		kinds := make([]string, 0, len(d.Files))
+		for k := range d.Files {
+			kinds = append(kinds, k)
+		}
+		sort.Strings(kinds)
+		var parts []string
+		for _, k := range kinds {
+			parts = append(parts, fmt.Sprintf("the %s at `%s`", k, strings.Join(d.Files[k], "`, `")))
+		}
+		out = append(out, "- beside its spec: "+strings.Join(parts, "; "))
+	}
+	return out
+}
+
+// codeLayerLines are the declared code layers, one line each, by name.
+func codeLayerLines(cfg *config.Config) []string {
+	if cfg == nil {
+		return nil
+	}
+	var out []string
+	for _, name := range sortedLayerNames(cfg) {
+		if l := cfg.Layers[name]; l.Kind == "code" {
+			out = append(out, fmt.Sprintf("- `%s` — `%s`", name, l.Pattern))
+		}
+	}
+	return out
+}
+
+// gateSplit names the gates whose failure blocks, and the rest.
+func gateSplit(cfg *config.Config) (blocking, informing []string) {
+	if cfg == nil {
+		return nil, nil
+	}
+	for _, g := range cfg.Gates {
+		if g.ActionFor(config.LevelFail) == config.ActionBlock {
+			blocking = append(blocking, g.Name)
+		} else {
+			informing = append(informing, g.Name)
+		}
+	}
+	return blocking, informing
+}
+
+func sortedLayerNames(cfg *config.Config) []string {
+	names := make([]string, 0, len(cfg.Layers))
+	for n := range cfg.Layers {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	return names
+}
+
+func quoteAll(names []string) string {
+	q := make([]string, len(names))
+	for i, n := range names {
+		q[i] = "`" + n + "`"
+	}
+	return strings.Join(q, ", ")
+}
+
+// The agents' entry files. An agent reads its own file before anything else, and the way
+// work flows here is in CONTRIBUTING.md: each entry file sends it there, so the rules live in
+// one place.
+const (
+	// AgentsFile is read by most coding agents.
+	AgentsFile = "AGENTS.md"
+	// ClaudeFile is read by Claude Code, which imports AGENTS.md from it.
+	ClaudeFile = "CLAUDE.md"
+)
+
+// AgentsPointer is the line an agent's entry file needs: read the contributing guide first.
+const AgentsPointer = "Read `" + ContributingFile + "` before any change: it says how work flows here — the order spec → feature → test → code, the layers, the commands, the gates that bar a commit, and how to watch long commands with `anchors monitor`."
+
+// RenderAgents is the AGENTS.md for a project that has none.
+func RenderAgents() string {
+	return "# Agents\n\n" +
+		"This project is kept coherent by [Anchors](https://github.com/co2-lab/anchors).\n\n" +
+		AgentsPointer + "\n\n" +
+		"- `anchors guide` — the rules for writing each piece; `anchors work <stage> --for <target>`\n" +
+		"  — the prompt of one task; `anchors next` — the next task.\n" +
+		"- Launch every long command in the background through `anchors monitor run -- <command>`,\n" +
+		"  and keep `anchors monitor` running while it works. When it posts the progress summary\n" +
+		"  (`▸ Progress` and the lines under it), copy it to the user verbatim, in a code block.\n" +
+		"- " + progress.UnplannedAdvice + "\n" +
+		"- Never commit with `--no-verify`: a gate that fails is fixed, or waived in the commit\n" +
+		"  message with its reason (`[skip-<rule>@<CODE>: why]`).\n"
+}
+
+// RenderClaude is the CLAUDE.md for a project that has none: it imports AGENTS.md, so both
+// agents read the same text.
+func RenderClaude() string {
+	return "# Claude Code\n\n" + AgentsPointer + "\n\n@" + AgentsFile + "\n"
+}
+
+// AgentEntryFiles are the agents' entry files init seeds beside the contributing guide, each
+// with its content.
+func AgentEntryFiles() []struct{ Name, Content string } {
+	return []struct{ Name, Content string }{
+		{AgentsFile, RenderAgents()},
+		{ClaudeFile, RenderClaude()},
+	}
+}

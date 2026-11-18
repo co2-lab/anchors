@@ -1,0 +1,696 @@
+// @anchors
+//   code: MDMPM
+//   ref: GRMDG
+
+// Package mapx modela e persiste o mapa de dependências — o anchors.graph.yaml.
+//
+// O mapa é a materialização do grafo (CONCEPT §3) e o artefato-dono da
+// Rastreabilidade (TRACEABILITY §4). É a projeção da Estrutura (o grafo virtual,
+// STRUCTURE §2.1) sobre os arquivos reais: a Estrutura diz que TIPO depende de que
+// tipo; o mapa diz QUAL arquivo depende de qual, com versão e carimbo por aresta.
+package mapx
+
+// Kind é o tipo de um nó — os valores literais canônicos de CONCEPT §3.
+type Kind string
+
+const (
+	KindSpec    Kind = "spec"
+	KindFeature Kind = "feature"
+	KindTest    Kind = "test"
+	KindCode    Kind = "code"
+	KindDoc     Kind = "doc"
+	KindGuide   Kind = "guide"
+	KindPlan    Kind = "plan"
+	// KindProduct — a DOUTRINA DE PRODUTO: a regra que atravessa alvos.
+	//
+	// Toda spec tem um alvo, e a co-locacao amarra a unidade ao mesmo diretorio. E' a
+	// forca do modelo e tambem o seu limite: uma regra de negocio que vale para tres
+	// telas nao pertence a nenhuma das tres. Sem lugar para ela, so' havia duplicar (e
+	// divergir na primeira mudanca) ou eleger uma dona arbitraria.
+	//
+	// Vive em `product/<nome>.doctrine.md`, fora da arvore de alvos, no precedente do
+	// `plans/`. A spec aponta para a regra de produto que realiza — nunca o contrario:
+	// um artefato de produto que listasse seus realizadores viraria indice, e indice
+	// envelhece a cada spec nova.
+	KindProduct Kind = "product"
+
+	// KindFlag — a FEATURE FLAG: os caminhos que o valor da flag abre.
+	//
+	// Uma flag multiplica os caminhos do codigo sem multiplicar a spec. `if
+	// flag("novo-checkout")` cria dois comportamentos, e a spec descreve UM — ou, pior,
+	// descreve os dois misturados numa frase que nao diz qual vale quando.
+	//
+	// Vive em `flags/<nome>.flag.md`, fora da arvore de alvos, no mesmo precedente do
+	// `product/`. Dentro dela, cada CENARIO e' uma regra de letra `G` com condicao
+	// propria — e e' o cenario, nunca o valor real, que o Anchors confronta: o valor
+	// muda por usuario e por minuto, e o framework nao tem (nem deve ter) acesso a ele.
+	KindFlag Kind = "flag"
+)
+
+// EdgeType é o tipo semântico da aresta (CONCEPT §3). O tipo carrega a força
+// (blocking vs. informativa) e a pergunta de confronto.
+type EdgeType string
+
+const (
+	EdgeGoverns    EdgeType = "governs"    // o pai rege o filho (bloqueante)
+	EdgeSpecifies  EdgeType = "specifies"  // spec descreve o código (bloqueante)
+	EdgeCoveredBy  EdgeType = "covered-by" // feature cobre a spec (bloqueante)
+	EdgeTestedBy   EdgeType = "tested-by"  // teste exercita a feature (bloqueante)
+	EdgeReferences EdgeType = "references" // só rastreabilidade (informativa)
+	// EdgeDependsOn — a aresta de REÚSO entre camadas (SPEC_TYPES §5, TRACEABILITY
+	// §"arestas declared"): a spec consumidora depende de outra camada (tela→hook/store,
+	// usecase→repository). É por ela que a Propagação desce pelas camadas de dados.
+	EdgeDependsOn EdgeType = "depends-on"
+	// EdgeReadsFrom — a file that reads a data to the file that writes it, both declared in
+	// their headers (`reads:`, `writes:`): a reader's proof holds against the writer's shape,
+	// so a change to the writer stales the reader's evidence. The data is the edge's Method.
+	EdgeReadsFrom EdgeType = "reads-from"
+	// EdgeSeeds — o PLANO semeia a spec. É a aresta que liga a decisão de fazer ao
+	// artefato que a realiza, e sem ela o plano fica órfão do grafo: `anchors impact`
+	// respondia "nenhum filho depende dele" sobre um plano que nomeia 11 specs, e
+	// mudar o plano não propagava para nada.
+	//
+	// Informativa, não bloqueante: um plano cita specs que ainda VÃO nascer, e cobrar a
+	// existência delas transformaria todo plano em erro até a última fase terminar.
+	EdgeSeeds EdgeType = "seeds"
+
+	// EdgeNeeds — este PLANO precisa que outro TERMINE antes de começar (`needs:` no
+	// header). Diferente de `depends-on`, que diz "consumo este arquivo": aqui a
+	// pergunta é de ORDEM DE TRABALHO, não de reúso.
+	//
+	// Existe porque vários agentes puxam de uma fila comum. Sem ela, alguém pega o card
+	// de uma feature antes de a fundação existir, e descobre isso ao tentar criar o
+	// primeiro arquivo — depois de já ter reivindicado o trabalho.
+	EdgeNeeds EdgeType = "needs"
+
+	// EdgeRealizes — a regra da SPEC concretiza uma regra da DOUTRINA DE PRODUTO.
+	//
+	// E' 1 para MUITOS: uma regra de produto e' realizada por varias specs, e e'
+	// justamente isso que o conceito existe para permitir. Por isso nenhum gate daqui
+	// pode cobrar PARIDADE de contagem, ao contrario do `unit-complete`, que conta
+	// 1:1:1 — a pergunta certa e' "ha' ao menos um realizador?".
+	//
+	// A direcao e' da spec para o produto porque a spec e' quem SABE que esta' realizando
+	// uma regra transversal. O caminho inverso exigiria que o artefato de produto
+	// mantivesse a lista de quem o realiza, e essa lista estaria errada na proxima spec
+	// que alguem escrevesse sem lembrar de atualiza-la.
+	EdgeRealizes EdgeType = "realizes"
+
+	// EdgeGatedBy — a regra da SPEC so' vale sob um CENARIO de feature flag.
+	//
+	// A direcao repete a do `realizes`, e pela mesma razao: quem sabe que depende da
+	// flag e' a spec. Um arquivo de flag que listasse seus dependentes viraria indice, e
+	// indice envelhece a cada spec nova que alguem escreve sem lembrar de atualiza-lo.
+	//
+	// Tambem e' 1 para MUITOS: um cenario governa quantas regras forem necessarias, e uma
+	// regra pode depender de mais de um cenario (duas flags que se cruzam). Nenhum gate
+	// daqui cobra paridade de contagem.
+	EdgeGatedBy EdgeType = "gated-by"
+
+	// EdgeCaptures — a VISUAL-REGRESSION test captures a unit: its main code file and its
+	// baseline images. A capture flow reaches the screen through the running app, not an
+	// import, so without it the capture's evidence never went stale when the screen
+	// changed. The evidence closure takes its target and does NOT descend past it: a
+	// component a screen uses has its own capture (see captures.go).
+	EdgeCaptures EdgeType = "captures"
+
+	// EdgeComposes — a spec's unit is made of another unit: the components a screen's
+	// Parts Used section names. It carries no change down — a component has its own
+	// capture —, and is what lets a component whose capture DIVERGED ask the captures of the
+	// units made of it again (see EvidenceStaleFor).
+	EdgeComposes EdgeType = "composes"
+
+	// EdgeNavigatesTo — a screen leads to another: the `@navigates:` flag on a navigation
+	// call names the screen, and the edge carries the rule that triggers it (`Method`). The
+	// map of the app's navigation is these edges.
+	EdgeNavigatesTo EdgeType = "navigates-to"
+)
+
+// SuiteCoverage is one suite's measurement of one file: which lines it instrumented,
+// which it covered, and the file's rev when it measured. Lines are stored as ranges
+// (`1-5,9,12-20`), because the map is versioned and a list of every line would bloat it.
+type SuiteCoverage struct {
+	Instrumented string `yaml:"instrumented,omitempty"`
+	Covered      string `yaml:"covered,omitempty"`
+	// Totals, for a report that gave no per-line detail (LF/LH only): the union cannot be
+	// computed line by line then, and the suite's own counts are what exists.
+	CoveredLines int `yaml:"covered_lines,omitempty"`
+	TotalLines   int `yaml:"total_lines,omitempty"`
+	// BranchTotal is how many branches the suite's report listed for the file, and
+	// BranchMissed the ones it never took, as `<line>:<block>:<branch>` separated by
+	// spaces. Only the missed are kept: a branch the suite lists and does not name as
+	// missed was taken.
+	BranchTotal  int    `yaml:"branch_total,omitempty"`
+	BranchMissed string `yaml:"branch_missed,omitempty"`
+	AtRev        string `yaml:"at_rev,omitempty"`
+	// Layer is the test layer whose run measured it (`--layer`); empty is `unit`, the
+	// default. A run of one layer replaces no external coverage of another (see
+	// DropExternalCoverage).
+	Layer string `yaml:"layer,omitempty"`
+}
+
+// Origin — como a aresta entrou no mapa (TRACEABILITY §4).
+type Origin string
+
+const (
+	OriginConvention Origin = "convention" // co-location de nomes
+	OriginDeclared   Origin = "declared"   // declarada na spec/no mapa
+	OriginInferred   Origin = "inferred"   // inferida (imports/símbolos)
+)
+
+// Node — um arquivo que participa do grafo.
+type Node struct {
+	ID        string `yaml:"id"` // caminho relativo à raiz do projeto
+	Kind      Kind   `yaml:"kind"`
+	Rev       string `yaml:"rev"`                  // revisão do conteúdo (hash) — a "versão do arquivo"
+	UpdatedAt string `yaml:"updated_at,omitempty"` // carimbo de alteração (ISO8601)
+	Code      string `yaml:"code,omitempty"`       // código de cenário/identidade, se houver
+	// FileCode is the file's OWN code — its header's `code:` —, apart from Code, which is
+	// the code of the unit the file belongs to. A spec, or a file with no unit around it,
+	// owns its unit and both are the same; a file that `ref:`s a unit (its code, feature,
+	// test) has a code of its own, which names the file in the dependency chain.
+	FileCode string `yaml:"file_code,omitempty"`
+	// Layer é a camada que este arquivo casou na Estrutura (`layers:` do anchors.yaml).
+	//
+	// Existe porque a config resolve decisões POR CAMADA — `section_titles` é a primeira,
+	// e o léxico de seções quase nunca é global (medido: "Modelo de Dado" em 50 specs de
+	// uma camada e em 1 das outras 588). Quem lê o grafo depois do scan — o `doctor`, um
+	// relatório — não tinha como resolver isso e caía no nível do projeto, contando zero
+	// numa spec cuja seção se chama outra coisa naquela camada.
+	Layer string `yaml:"layer,omitempty"`
+	// CodeDeclarado distingue identidade DECLARADA (o `code:` do header @anchors, ou a
+	// tabela/cabeçalho de regra numa spec) de identidade INFERIDA (o primeiro código que
+	// apareceu no texto, quando não havia declaração).
+	//
+	// Sem a distinção, um fixture de teste que usa `AAAAX-B01` como string de exemplo entra
+	// no mapa como DONO de `AAAA` — indistinguível de uma unidade real. Medido no próprio
+	// Anchors: 29 códigos "em uso", todos vindos de fixture e de exemplo em documentação,
+	// zero de unidade (o projeto tem 0 specs). Um comando que confira identidade sobre esse
+	// conjunto produz 29 falsos positivos e nenhum achado.
+	//
+	// Quem PROMETE identidade declara; o resto é citação, e citação não se confere.
+	// A chave é `code_declared`, em inglês, como TODA chave de YAML do produto. O `lang`
+	// traduz o que se LÊ, nunca o que se ESCREVE na configuração — e uma chave é
+	// identificador, não prosa.
+	CodeDeclarado bool     `yaml:"code_declared,omitempty"`
+	Tags          []string `yaml:"tags,omitempty"` // tags da camada do nó (p/ gates escopados por tag)
+	// Regime da camada do nó (comportamental|declarativo|misto), copiado da Estrutura
+	// (config.Layer.Regime). `declarativo` = camada RECONHECIDA (não origina regra): o
+	// gate header-valid aceita `layer:` como identidade mínima, sem exigir code/ref.
+	// Vazio quando a camada não declara regime (fallback aos nomes canônicos reconhecidos).
+	Regime string `yaml:"regime,omitempty"`
+	// NoPropagation: o filho declarou `@noPropagation` — ele NÃO depende do pai, então
+	// a onda de propagação (descida) NÃO passa por ele. Opt-out honesto, tag no filho.
+	NoPropagation bool `yaml:"no_propagation,omitempty"`
+	// SharedCode: o arquivo declarou `@anchors-shared-code` — seus códigos de cenário
+	// pertencem a outra unidade de propósito; não contam como colisão de identidade.
+	SharedCode bool `yaml:"shared_code,omitempty"`
+
+	// Needs — os planos que precisam TERMINAR antes deste começar (`needs:` no header).
+	// Guardado no NÓ, e não só como aresta, porque um `needs` para plano inexistente não
+	// vira aresta nenhuma — e é justamente esse caso que o doctor precisa reportar.
+	Needs []string `yaml:"needs,omitempty"`
+	// Parent — o CÓDIGO do artefato que CONTÉM este (`parent:` no header).
+	//
+	// Distinto de `Needs`, que é ordem: a fase 2 vem DEPOIS da fase 1 e não está DENTRO
+	// dela. Com só uma das duas relações, quem monta a árvore precisa inferir a outra — e
+	// inferir pertencimento a partir de ordem encaixa as fases de um plano numa escada.
+	Parent string `yaml:"parent,omitempty"`
+	// Upstream — the file is a vendored copy Anchors seeded and still owns (a pipeline
+	// under `.github/workflows/` carrying the template marker). Its rules and its spec live
+	// upstream: the node carries no local code, and the internal gates do not charge it a
+	// unit the project could never honestly write.
+	Upstream bool `yaml:"upstream,omitempty"`
+	// External — the file lives at a URL, outside the project: a guide `governs:` reads from
+	// another repository. It governs as a local guide does; no gate confronts it, since the
+	// project neither writes nor versions it.
+	External bool `yaml:"external,omitempty"`
+	// Support: a file of a test layer that serves the tests without being one (the layer's
+	// `support:` list). It stays in the map for impact; the gates that judge a test skip it.
+	Support bool `yaml:"support,omitempty"`
+	// Revises — os planos que ESTE revisa (`revises:` no header).
+	Revises []string `yaml:"revises,omitempty"`
+	// Signal — sinais de qualidade INGERIDOS do runner (o Anchors não roda o teste;
+	// consome o artefato que o projeto já gera). Preenchido por `anchors ingest`.
+	Signal *TestSignal `yaml:"signal,omitempty"`
+	// Reviews — the reviews recorded on this node, one per gate: at which revision, by
+	// whom, and whether they found something. A review holds while the node keeps that
+	// revision; recorded by `anchors review`, kept across rebuilds as history.
+	Reviews []Review `yaml:"reviews,omitempty"`
+	// Failures — as OCORRÊNCIAS de falha observadas em produção, por regra `-E`.
+	//
+	// Ingeridas, nunca lidas: o Anchors não tem acesso ao log de ninguém, e parsear
+	// formato alheio seria a heurística que envelhece a cada troca de logger. Você extrai
+	// do seu log (com um `jq`, um `grep`, uma query no observability) e entrega o arquivo
+	// — o mesmo desenho do `ingest` de teste, que também não roda o runner.
+	//
+	// É o que fecha o circuito entre a falha DECLARADA na spec e a falha que de fato
+	// acontece. Sem isso, os dois lados existem e ninguém os confronta: a `-E` diz que
+	// pode falhar, o log diz que falhou, e nada liga uma coisa à outra.
+	Failures []FailureSignal `yaml:"failures,omitempty"`
+	// EvidenceKept: the latest declarations that the file's evidence still held after a
+	// change (`anchors keep-evidence`), with the reason — what a reviewer reads to trust it.
+	// On the node, not in the signal: a signal means something was measured, and a file
+	// with nothing measured must not look measured because someone kept its stamps.
+	EvidenceKept []EvidenceKeep `yaml:"evidence_kept,omitempty"`
+	// ParkedProofs: the proofs of each suite a rebuild set aside when the file changed, each
+	// with the revision it proved. Content that returns to that revision gets them back:
+	// a temporary version of a spec cost it the proof of a suite that did not run meanwhile
+	// (reported from a project). On the node, not in the signal: set aside, they prove nothing now.
+	ParkedProofs []ParkedProof `yaml:"parked_proofs,omitempty"`
+	// OutRows: a screen spec's navigation rows, by rule, each with a revision of the row
+	// alone (scan.File.OutRows).
+	OutRows map[string]string `yaml:"out_rows,omitempty"`
+	// Frozen is the freeze that covers the whole node — its own header's, its unit's spec's,
+	// its doctrine document's —, by code or, with no doctrine, by reason
+	// (frozen.go).
+	Frozen string `yaml:"frozen,omitempty"`
+	// Judgments are the AI verdicts given on a node that has no edge to carry them — a
+	// guidance file, standing alone: kept on the node, at its rev.
+	Judgments []Judgment `yaml:"judgments,omitempty"`
+	// FrozenRules are the node's rules a freeze covers — marked on the rule or a heading
+	// above it, or realizing a frozen doctrine rule —, each with the freeze's value.
+	FrozenRules map[string]string `yaml:"frozen_rules,omitempty"`
+	// Freezes are a doctrine document's freeze entries, each code with its reason.
+	Freezes map[string]string `yaml:"freezes,omitempty"`
+	// EvidenceRev, LineRev, RuleRevs and RestRev are the revisions the file's proofs are
+	// measured against (scan.Evidence): its content without what proves nothing. A rebuild
+	// carries a file's evidence across an edit that left them as they were.
+	// EvidenceRev is empty when it equals Rev, and
+	// LineRev when it equals Rev too — the file has nothing to leave out.
+	EvidenceRev string            `yaml:"evidence_rev,omitempty"`
+	LineRev     string            `yaml:"line_rev,omitempty"`
+	RuleRevs    map[string]string `yaml:"rule_revs,omitempty,flow"`
+	RestRev     string            `yaml:"rest_rev,omitempty"`
+	// KeptLines are the numbers of the lines EvidenceRev reads (scan.Evidence.Kept), as ranges,
+	// recorded when LineRev is: two contents with the same EvidenceRev hold the same lines of
+	// code in the same order, and a coverage measured on one is moved to the other line by line.
+	// Empty with a LineRev, the map was written before they were recorded, and nothing is moved.
+	KeptLines string `yaml:"kept_lines,omitempty"`
+	// CoverageDirectives is the hash of the comments that steer a coverage tool
+	// (scan.Evidence.Directives): a coverage is not moved across a change of them.
+	CoverageDirectives string `yaml:"coverage_directives,omitempty"`
+	// Asserts: the navigation rows a test asserts — the Out rows of the rules it cites, as
+	// OutRowKey. Its evidence is stamped with each row's revision and goes stale when that
+	// row changes; a test that only passes through the screen cites no row of it.
+	Asserts []string `yaml:"asserts,omitempty"`
+	// Resources: what the file reaches that is no file of the project — `db:transactions`,
+	// `api:stripe.charges` —, from its `@dep[<kind>]:` flags.
+	Resources []string `yaml:"resources,omitempty"`
+	// Doubles: the code files a test replaces with a double (`derived.mock_detect`, each
+	// specifier resolved to the one file it names). The test proves its code against the
+	// double, never against these: its evidence stops at them, and the real module's drift is
+	// the double's stamp's to catch (`mock-stamped`).
+	Doubles []string `yaml:"doubles,omitempty"`
+}
+
+// FailureSignal é a ocorrência observada de UMA falha declarada.
+//
+// Amarrada à SPEC e não ao código, porque a regra `-E` é dela: o código implementa o
+// tratamento, mas quem declara a falha — e quem recebe a conclusão sobre ela — é a spec.
+type FailureSignal struct {
+	// Rule é o código da falha (`CRED-E01`), e é a ponte com a declaração.
+	Rule string `yaml:"rule"`
+	// Count é quantas vezes a falha ocorreu na janela observada.
+	Count int `yaml:"count"`
+	// First e Last delimitam a janela. Uma falha que ocorreu muito e PAROU diz algo
+	// diferente de uma que ocorre agora — e o `last` é o que distingue as duas.
+	First string `yaml:"first,omitempty"`
+	Last  string `yaml:"last,omitempty"`
+	// Rev é a revisão da spec no momento da ingestão. A ocorrência ENVELHECE quando a
+	// spec muda: a falha observada era da versão anterior da regra, e tratá-la como
+	// atual afirmaria sobre o que não foi medido.
+	Rev string `yaml:"rev,omitempty"`
+}
+
+// ParkedProof is one suite's proof of a revision the file no longer has.
+type ParkedProof struct {
+	Suite string   `yaml:"suite"`
+	Rev   string   `yaml:"rev"`
+	Codes []string `yaml:"codes"`
+}
+
+// TestSignal são os sinais de qualidade de teste amarrados a um nó (código ou teste).
+// Ingeridos de artefatos padrão (JUnit para execução, lcov para cobertura). Levam a
+// rev do nó no momento da ingestão — ficam STALE se o arquivo mudar depois.
+type TestSignal struct {
+	// Execução (de JUnit): quantos casos passaram/falharam sobre este nó de teste.
+	// Os totais são a soma de TODAS as camadas (ByLayer) — mantidos para os checks
+	// que não se importam com camada.
+	Passed  int `yaml:"passed,omitempty"`
+	Failed  int `yaml:"failed,omitempty"`
+	Skipped int `yaml:"skipped,omitempty"`
+	// ByLayer: execução por CAMADA de teste (unit/integration/e2e…), para o app de referência e
+	// afins que rodam suites separadas. A chave é o --layer da ingestão. Permite o
+	// relatório mergeado rotulado por camada, e a regra "crítico exige e2e".
+	ByLayer map[string]LayerExec `yaml:"by_layer,omitempty"`
+	// Cobertura de linha (de lcov): % de linhas cobertas deste nó de código.
+	CoveredLines int     `yaml:"covered_lines,omitempty"`
+	TotalLines   int     `yaml:"total_lines,omitempty"`
+	LineCoverage float64 `yaml:"line_coverage,omitempty"` // 0..100
+	// PrevLineCoverage: a cobertura de linha da ingestão ANTERIOR — o baseline para o
+	// delta ("a cobertura caiu?"). Preservado ao ingerir por cima. -1 = sem baseline.
+	PrevLineCoverage float64 `yaml:"prev_line_coverage,omitempty"`
+	// PrevMeasured: there is a baseline — an earlier ingestion measured the file —, even at
+	// 0%, which PrevLineCoverage alone cannot tell from no baseline.
+	PrevMeasured bool `yaml:"prev_measured,omitempty"`
+	// CoverageBySuite: line coverage PER SUITE (key = the lcov report), and the fields
+	// above are the union — a line counts as covered if ANY suite covered it.
+	//
+	// It exists for the same reason as `ProvenBySuite`: in a monorepo each suite is
+	// ingested on its own, and with a single set of numbers the integration suite,
+	// ingested after the unit one, OVERWROTE the unit coverage of the same file. Some
+	// directories are only exercised by integration, so the two measure different lines.
+	CoverageBySuite map[string]SuiteCoverage `yaml:"coverage_by_suite,omitempty"`
+	// CoverageRev is the file's revision when a coverage report last LISTED it — with lines
+	// or with none (`LF:0`): a file listed with no instrumentable line was measured and has
+	// nothing to cover.
+	CoverageRev string `yaml:"coverage_rev,omitempty"`
+	// CoverageOmitted is the file's revision when a whole run of a suite that covers it
+	// left it out of its coverage report. A tool may omit a file with no instrumentable line
+	// (istanbul, a file of types alone) — or the file may be outside what the tool collects.
+	CoverageOmitted string `yaml:"coverage_omitted,omitempty"`
+	// Branch coverage (lcov `BRDA`), the union over the suites measured at the current
+	// rev: how many branches the file has, and the ones NO suite took (`<line>:<block>:
+	// <branch>`, separated by spaces). Zero total when no report lists branches.
+	BranchTotal  int    `yaml:"branch_total,omitempty"`
+	BranchMissed string `yaml:"branch_missed,omitempty"`
+	// MUTAÇÃO (do formato Mutation Testing Elements, schemaVersion 1.x): quantos
+	// mutantes o teste MATOU. É a única medida objetiva de "o teste prova algo": um
+	// mutante SOBREVIVENTE é uma alteração no código que os testes não perceberam —
+	// logo, uma linha que ninguém prova. Complementa a cobertura de linha, que só diz
+	// que a linha EXECUTOU, não que alguém verificou o resultado.
+	//
+	// Ingerido de artefato padrão, como JUnit e lcov: o Anchors não roda mutação e não
+	// conhece ferramenta. Stryker (JS), PIT (Java), Infection (PHP) e mutmut (Python)
+	// emitem o mesmo schema.
+	MutantsKilled   int     `yaml:"mutants_killed,omitempty"`
+	MutantsSurvived int     `yaml:"mutants_survived,omitempty"`
+	MutationScore   float64 `yaml:"mutation_score,omitempty"` // 0..100
+	// MutantsNoCoverage são os que NENHUM teste executou. Fora do score: "existe teste
+	// que execute esta linha?" é pergunta do gate de COBERTURA. Ficam gravados porque a
+	// informação é útil — só não é deste gate.
+	MutantsNoCoverage int `yaml:"mutants_no_coverage,omitempty"`
+	// NoCoverageAt: the lines of those mutants, as ranges, measured at `MutationAtRev`.
+	// A branch never taken on a line where no test ran a mutant either is likely dead.
+	NoCoverageAt string `yaml:"no_coverage_at,omitempty"`
+	// MutantsIgnored são os que a ferramenta descartou antes de rodar (`ignoreStatic`,
+	// `disable`). Ficam FORA do score — não houve experimento —, e existem no sinal para
+	// separar dois 100% que significam coisas diferentes: "tudo foi provado" e "não havia
+	// o que provar". Um arquivo de tabela de constantes cai no segundo.
+	MutantsIgnored int `yaml:"mutants_ignored,omitempty"`
+	// MutantsTimedOut: of the killed, how many were killed by the time limit. A share
+	// above the gate's `timeout_ceiling` means the run was measured under load.
+	MutantsTimedOut int `yaml:"mutants_timed_out,omitempty"`
+	// MutantsStatic: survivors the tool marks static — they run only when the module loads,
+	// and a run per test switches them on after the import, so the mutation never takes
+	// effect. Out of the score: no test could kill them. Recorded so they do not vanish.
+	MutantsStatic int `yaml:"mutants_static,omitempty"`
+	// SecondsBySuite: how long this file took in each suite's last run of it — a test file
+	// from its JUnit cases, a code file from Anchors timing its mutation run. It is what
+	// `--budget` orders by, fastest first.
+	SecondsBySuite map[string]float64 `yaml:"seconds_by_suite,omitempty"`
+	// MutationByScope: o mesmo arquivo medido em dois ESCOPOS de suíte.
+	//
+	//   isolated — só o teste da própria unidade
+	//   full     — os testes de todos os que a importam
+	//
+	// Os dois números juntos dizem o que nenhum diz sozinho. Medido em dois
+	// projetos reais: um átomo de UI marcou 8% isolado e 77% completo, e uma função
+	// pura de negócio marcou 27% e 77%. Nos dois, a maior parte dos mutantes só
+	// morre nos DEPENDENTES — ou seja, o teste da unidade executa o código e quase
+	// não verifica o resultado; quem prova são os outros.
+	//
+	// A diferença (`full - isolated`) mede o quanto a unidade depende de terceiros
+	// para se provar. Num módulo bem testado ela tende a zero.
+	MutationByScope map[string]MutationScope `yaml:"mutation_by_scope,omitempty"`
+	// Os limiares que a FERRAMENTA DO PROJETO declarou, ingeridos junto com a medida.
+	// `thresholds` e campo obrigatorio do schema Mutation Testing Elements (com `high`
+	// e `low` obrigatorios dentro), entao lê-los daqui e tao agnostico quanto ler o
+	// status dos mutantes — e evita que o mesmo numero exista em dois lugares.
+	//
+	//   MutationLow  — o minimo ACEITAVEL. Abaixo, o gate reprova.
+	//   MutationHigh — o DESEJAVEL. Entre os dois, passa e aparece no relatorio.
+	//
+	// Zero = a ferramenta nao declarou; o gate cai no default do engine.
+	MutationLow  float64 `yaml:"mutation_low,omitempty"`
+	MutationHigh float64 `yaml:"mutation_high,omitempty"`
+	// Códigos de cenário PROVADOS: os que aparecem em um caso de teste que PASSOU.
+	// É a cobertura semântica (qual requisito da spec tem teste verde).
+	ProvenCodes []string `yaml:"proven_codes,omitempty"`
+	// ProvenBySuite: the proven codes PER SUITE (key = the JUnit report, relative to the
+	// root), and `ProvenCodes` is the union. It exists for the same reason as the test
+	// nodes' `ByLayer`: in a monorepo each suite is ingested alone, and with a single field
+	// the mobile ingestion wrote EMPTY on the backend's specs — which were not in that
+	// report, not specs that had lost their proof. MEASURED in the reference app (2026-09-23): 131
+	// backend specs zeroed by the same ingestion that proved 390 mobile ones.
+	ProvenBySuite map[string][]string `yaml:"proven_by_suite,omitempty"`
+	// ProvenRevBySuite: the node's rev when EACH suite last measured it.
+	//
+	// One `AtRev` for the whole node is not enough once proofs come from several suites:
+	// suite A proves B01 at rev1, the spec changes, suite B runs at rev2 — and a single
+	// stamp said the whole union was measured at rev2, B01 included. Measured with a probe:
+	// `proven=[B01 B02] at_rev=rev2 stale=false`, with B01 never measured at rev2.
+	ProvenRevBySuite map[string]string `yaml:"proven_rev_by_suite,omitempty"`
+	// AtRev: a rev do nó quando o sinal foi ingerido (para detectar staleness).
+	AtRev string `yaml:"at_rev,omitempty"`
+	// MutationAtRev is the node's rev when its MUTATION was measured. `AtRev` is shared by
+	// every ingestion of the node, and a line-coverage ingestion after a code change moved
+	// it to the new rev: the old mutation score then read as fresh, and a default
+	// `anchors mutation` left the changed file out. Empty on a map written before this
+	// field: `MutationStale` falls back to `AtRev`.
+	MutationAtRev string `yaml:"mutation_at_rev,omitempty"`
+	// ClosureRev: a rev de cada nó do FECHO deste teste no momento da ingestão — o que ele
+	// alcança descendo pelas arestas de saída (utils que compõe, unidade que importa).
+	//
+	// Sem isto, o frescor só enxergava o próprio arquivo de teste, e o custo foi medido:
+	// `utils/login.yaml` é composto por 290 roteiros; ao tocá-lo, a evidência dos 290 devia
+	// vencer, e nenhum sinal deles muda — o teste não mudou, mudou o que ele executa.
+	ClosureRev map[string]string `yaml:"closure_rev,omitempty"`
+	// StaleCodes are the proven scenarios whose rule changed since they were proven, when
+	// nothing else of the spec did: the rest of
+	// the spec's proofs still stand, and these read as stale until a run proves them again or
+	// the author keeps the evidence.
+	StaleCodes []string `yaml:"stale_codes,omitempty"`
+	IngestedAt string   `yaml:"ingested_at,omitempty"`
+	// RanAt is when the run a late ingestion measured happened, apart from when it was
+	// ingested; empty for a run ingested as it ended.
+	RanAt string `yaml:"ran_at,omitempty"`
+	// Remapped are the code aliases (`OLD=NEW`) that renamed the report's codes before it was
+	// read.
+	Remapped []string `yaml:"remapped,omitempty"`
+}
+
+// LayerExec é o resultado de execução de UMA camada de teste sobre um nó.
+// MutationScope é o resultado de mutação de UM escopo de suíte sobre um nó.
+type MutationScope struct {
+	Killed     int     `yaml:"killed,omitempty"`
+	Survived   int     `yaml:"survived,omitempty"`
+	NoCoverage int     `yaml:"no_coverage,omitempty"`
+	Ignored    int     `yaml:"ignored,omitempty"`
+	Static     int     `yaml:"static,omitempty"`
+	Score      float64 `yaml:"score,omitempty"` // 0..100
+	// AtRev é a rev do nó quando ESTE escopo foi medido — e ele é por escopo, não do
+	// sinal inteiro, porque os dois são ingeridos em momentos diferentes.
+	//
+	// MEDIDO em 23/08: com um carimbo só, reingerir o `full` renovava o carimbo do
+	// sinal e o `isolated` de uma medição anterior pegava carona como se fosse atual.
+	// O gate julga PELO ISOLADO, então o veredito saía de um número velho — no caso,
+	// medido contra código que nem existia mais.
+	AtRev string `yaml:"at_rev,omitempty"`
+}
+
+// Stale diz se ESTE escopo foi medido contra outra versão do arquivo. Sem AtRev
+// (sinal antigo, gravado antes deste campo existir) não dá para afirmar que está
+// velho — e acusar staleness sem base faria o gate pedir remedição do que talvez
+// esteja correto.
+func (m MutationScope) Stale(rev string) bool {
+	return m.AtRev != "" && m.AtRev != rev
+}
+
+type LayerExec struct {
+	Passed  int `yaml:"passed,omitempty"`
+	Failed  int `yaml:"failed,omitempty"`
+	Skipped int `yaml:"skipped,omitempty"`
+}
+
+// Stamp — o carimbo de validação de uma aresta. Conjunto COMPLETO (fonte-única
+// aqui, TRACEABILITY §4): a Propagação lê estes campos para calcular staleness.
+type Stamp struct {
+	ValidatedFromRev string `yaml:"validated_from_rev,omitempty"`
+	ValidatedToRev   string `yaml:"validated_to_rev,omitempty"`
+	// ChangedAt: DESDE QUANDO esta relação está como está — a data em que a rev de uma
+	// ponta ou o veredito mudaram pela última vez.
+	//
+	// Não é "quando foi validado": o confronto acontece muitas vezes por dia, e registrar
+	// cada um fazia o mapa mudar sozinho sem dizer nada. Confrontar de novo e achar o
+	// mesmo resultado não é fato novo; a MUDANÇA é.
+	ChangedAt string `yaml:"changed_at,omitempty"`
+	Verdict   string `yaml:"verdict,omitempty"` // ok | issue | pending
+
+	// Gate: qual gate produziu este veredito. Vazio no carimbo do `check` (que
+	// confronta muitos gates de uma vez e resume o pior veredito); preenchido pelo
+	// `anchors judge`, que julga UM gate sobre UM alvo.
+	Gate string `yaml:"gate,omitempty"`
+}
+
+// Judgment é o veredito de UM gate de julgamento sobre esta aresta.
+//
+// Campo SEPARADO do `Stamp`, e a separação é necessária: o `check` reescreve o Stamp
+// inteiro a cada rodada (ele resume o pior veredito de todos os gates daquele nó),
+// então um veredito de IA guardado ali era apagado no primeiro check seguinte — e o
+// julgamento voltava a ser perguntado como se ninguém tivesse lido.
+//
+// Guarda as revs das pontas pelo mesmo motivo do Stamp: o veredito envelhece se o
+// alvo mudar, e aí volta a ser pergunta.
+// Review is one review of a node for a gate.
+type Review struct {
+	Gate string `yaml:"gate"`
+	// Rev is the node's revision the review looked at.
+	Rev string `yaml:"rev"`
+	// By is who reviewed, as they said it (`human:ana`, `agent:<vendor>/<model>`): the
+	// record keeps it and does not grade it.
+	By string `yaml:"by"`
+	At string `yaml:"at"`
+	// Findings says the review found something, which went to an issue.
+	Findings bool `yaml:"findings,omitempty"`
+}
+
+type Judgment struct {
+	Gate             string `yaml:"gate"`
+	Verdict          string `yaml:"verdict"` // ok | issue
+	ValidatedFromRev string `yaml:"validated_from_rev,omitempty"`
+	ValidatedToRev   string `yaml:"validated_to_rev,omitempty"`
+	ChangedAt        string `yaml:"changed_at,omitempty"`
+	// ConfigRev is the revision of anchors.yaml when the judgment was given: a gate whose
+	// question is about the configuration too (`stale_on_config`) asks again when it moves.
+	ConfigRev string `yaml:"config_rev,omitempty"`
+}
+
+// Edge — uma relação dirigida (identidade ou dependência).
+type Edge struct {
+	From string `yaml:"from"`
+	To   string `yaml:"to"`
+	// Julgamentos: um por gate de julgamento que já respondeu sobre esta aresta.
+	// Preservado entre rodadas do `check` — ver o tipo Julgamento.
+	Julgamentos []Judgment `yaml:"judgments,omitempty"`
+	Type        EdgeType   `yaml:"type"`
+	Origin      Origin     `yaml:"origin"`
+	// Method — metadado da aresta `depends-on`: o método/símbolo consumido do alvo
+	// (SPEC_TYPES §5). Vazio nas demais arestas. Habilita impacto fino ("mudou signIn
+	// → só as telas que usam signIn").
+	Method string `yaml:"method,omitempty"`
+	// NoSideEffect: the flag this edge comes from has no side effect on the tests — a
+	// navigation, an import of types —, and a test's evidence does not follow it
+	// (`evidence.no_side_effect.flags`).
+	NoSideEffect bool `yaml:"no_side_effect,omitempty"`
+	// Kind — of a `depends-on` edge: `type` when every flag behind it is `@dep[type]`, an
+	// import of the target's types only, nothing of which runs with the importer; empty for
+	// a dependency on the target's values. A value import and a type import of the same
+	// target make a value edge.
+	Kind string `yaml:"kind,omitempty"`
+	// Dep — o código local (DEPn) da linha da Tabela de Dependências que originou esta
+	// aresta. Vazio nas demais arestas. Liga a aresta de volta à célula do data contract.
+	Dep   string `yaml:"dep,omitempty"`
+	Stamp *Stamp `yaml:"stamp,omitempty"`
+}
+
+// Graph — o mapa material inteiro. É o anchors.graph.yaml.
+type Graph struct {
+	Version int `yaml:"version"`
+	// GeradoPor: a versão do binário que escreveu este mapa. Ver mapx.GeradoPor —
+	// é o que permite ao `check` acusar um binário mais VELHO que o mapa, que
+	// silenciosamente desfaz o que a versão nova escreveu.
+	GeradoPor string `yaml:"generated_by,omitempty"`
+	// ConfigRev is the revision of the anchors.yaml the map was built with — what a judgment
+	// about the configuration is measured against.
+	ConfigRev string `yaml:"config_rev,omitempty"`
+	Nodes     []Node `yaml:"nodes"`
+	Edges     []Edge `yaml:"edges"`
+	// runAsOf places a late ingestion's run (SetRunAsOf); never written.
+	runAsOf *RunAsOf
+	// Flow é o grafo dos FLUXOS DE TRABALHO, no mesmo arquivo e em chave SEPARADA.
+	//
+	// Mesmo arquivo porque é um grafo só de conteúdos distintos, e dois arquivos
+	// obrigariam quem lê a saber de antemão em qual olhar. Chave separada porque os dois
+	// não podem se misturar: o mapa liga ARTEFATOS, e é sobre ele que o `impact` e a
+	// Propagação caminham — um estado de processo ("MEDIDO", "dois ataques gastos") não é
+	// artefato de ninguém, e atravessá-lo faria o `impact` responder que mudar um arquivo
+	// afeta uma decisão.
+	//
+	// Está NA STRUCT, e não fora dela, por uma razão mecânica que este arquivo já
+	// documenta em `Load`: "os campos que ele reconhece carregam, os que não reconhece
+	// somem, e a próxima gravação escreve o que sobrou". O `Save` serializa a struct
+	// inteira — um fluxo que não fosse campo seria apagado no `map build` seguinte, sem
+	// nada acusar.
+	//
+	// Quem o PREENCHE é o `flow build`; o `map build` apenas o preserva. Ver internal/flowx.
+	Flow *FlowGraph `yaml:"flow,omitempty"`
+}
+
+// FlowGraph — os fluxos de trabalho dentro do mapa, em chave própria.
+//
+// O tipo vive aqui (e não em `flowx`) para que `mapx` não dependa de `flowx`: a dependência
+// tem de apontar de quem constrói o fluxo para quem guarda o arquivo, nunca ao contrário.
+// A LÓGICA de fluxo (travessia, próximas saídas, validação) fica toda em `flowx`.
+type FlowGraph struct {
+	States      []FlowState      `yaml:"states"`
+	Transitions []FlowTransition `yaml:"transitions"`
+}
+
+// FlowState é um ESTADO do fluxo — um ponto onde o trabalho pode estar.
+type FlowState struct {
+	Code     string `yaml:"code"`
+	Title    string `yaml:"title"`
+	Flow     string `yaml:"flow"`
+	Terminal bool   `yaml:"terminal,omitempty"`
+	// Fits é o código da AÇÃO que este passo encaixa — a peça do quebra-cabeça.
+	//
+	// O passo diz qual peça usa; a peça declara os próprios resultados. Sem isto, cada
+	// fluxo repetiria a descrição do `map build`, e as cópias divergiriam na primeira
+	// mudança — o defeito que a doutrina de produto existe para acabar, aqui no processo.
+	Fits string `yaml:"fits,omitempty"`
+	// Suggests é a REAÇÃO que este resultado sugere — a terceira categoria.
+	//
+	// Nem todo resultado gera trabalho sozinho (a reação automática) nem encerra o
+	// assunto: muitos SUGEREM o que fazer, e a escolha é de quem trabalha. Hoje isso vive
+	// na prosa da mensagem do gate, onde depende de alguém ler e lembrar.
+	//
+	// É sugestão e não transição de propósito: apresentá-la como saída comum faria o
+	// fluxo mentir sobre quem manda.
+	Suggests string `yaml:"suggests,omitempty"`
+}
+
+// FlowTransition é a saída de um estado para outro, com a condição que a torna válida.
+type FlowTransition struct {
+	From string `yaml:"from"`
+	To   string `yaml:"to"`
+	// On é o RESULTADO da ação que dispara esta transição (`ACHCK-O02`).
+	//
+	// Vazio numa transição direta entre passos. Preenchido, é o que liga a peça ao
+	// encaixe: o resultado que a ação declarou, e para onde o fluxo o manda.
+	On   string `yaml:"on,omitempty"`
+	When string `yaml:"when,omitempty"`
+	Flow string `yaml:"flow"`
+}
+
+// Stale devolve true se a aresta está desatualizada dado o estado atual dos nós.
+// Regra de staleness (PROPAGATION §3): stale quando qualquer ponta avançou de rev
+// desde o último confronto, ou quando nunca foi validada.
+func (g *Graph) Stale(e Edge) bool {
+	if e.Stamp == nil {
+		return true // nunca validada
+	}
+	from := g.nodeRev(e.From)
+	to := g.nodeRev(e.To)
+	return from != e.Stamp.ValidatedFromRev || to != e.Stamp.ValidatedToRev
+}
+
+func (g *Graph) nodeRev(id string) string {
+	for _, n := range g.Nodes {
+		if n.ID == id {
+			return n.Rev
+		}
+	}
+	return ""
+}

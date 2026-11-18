@@ -1,0 +1,173 @@
+---
+// The evidence board: the pieces of one unit pinned to a board and tied by the identity codes,
+// with one string a gate pulled and that did not hold. Card text stays in English on purpose —
+// file names and codes are what the project itself shows. `uid` keeps the SVG ids unique when
+// the board appears more than once on a page.
+interface Props {
+	uid: string;
+	label: string;
+}
+const { uid, label } = Astro.props;
+---
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-label={label} class="evidence-board">
+  <defs>
+    <pattern id={`cork-${uid}`} width="14" height="14" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" fill="#201e1d"/>
+      <circle cx="3" cy="4" r="0.9" fill="#2e2b29"/>
+      <circle cx="10" cy="10" r="0.7" fill="#2a2725"/>
+      <circle cx="11" cy="2" r="0.5" fill="#2e2b29"/>
+    </pattern>
+    <filter id={`shadow-${uid}`} x="-10%" y="-10%" width="130%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <radialGradient id={`pin-${uid}`} cx="35%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#f8907a"/>
+      <stop offset="0.45" stop-color="#ec3013"/>
+      <stop offset="1" stop-color="#7a1a08"/>
+    </radialGradient>
+  </defs>
+
+  {/* the board */}
+  <rect x="0" y="0" width="640" height="420" rx="10" fill="#2e2b29"/>
+  <rect x="8" y="8" width="624" height="404" rx="6" fill={`url(#cork-${uid})`}/>
+
+  {/* CARDS (paper, slightly askew) */}
+  {/* guide / doctrine */}
+  <g transform="rotate(-2 320 62)" filter={`url(#shadow-${uid})`}>
+    <rect x="245" y="22" width="150" height="90" rx="2" fill="#f2efec"/>
+    <text x="257" y="52" class="eb-t eb-kind">GUIDE · DOCTRINE</text>
+    <text x="257" y="68" class="eb-m eb-name" style="font-size:12px">AUTH_GUIDE.md</text>
+    <text x="257" y="86" class="eb-m eb-row"><tspan class="eb-code">AUTH-D01</tspan> session expires</text>
+    <text x="257" y="100" class="eb-m eb-row">governs the unit</text>
+  </g>
+
+  {/* spec: the centre of the unit */}
+  <g transform="rotate(1 320 206)" filter={`url(#shadow-${uid})`}>
+    <rect x="232" y="150" width="176" height="120" rx="2" fill="#faf8f6"/>
+    <rect x="232" y="150" width="176" height="4" fill="#ec3013"/>
+    <text x="244" y="180" class="eb-t eb-kind">SPEC · SOURCE OF TRUTH</text>
+    <text x="244" y="197" class="eb-m eb-name">Login.spec.md</text>
+    <text x="244" y="216" class="eb-m eb-row"><tspan class="eb-code">AUTH-B01</tspan> sign in by e-mail</text>
+    <text x="244" y="231" class="eb-m eb-row"><tspan class="eb-code">AUTH-B02</tspan> lock after 5 tries</text>
+    <text x="244" y="246" class="eb-m eb-row"><tspan class="eb-code">AUTH-S01</tspan> error is visible</text>
+    <text x="244" y="261" class="eb-m eb-row" style="fill:#837b76">updated_at 2026-11-17</text>
+  </g>
+
+  {/* feature */}
+  <g transform="rotate(-4 112 105)" filter={`url(#shadow-${uid})`}>
+    <rect x="30" y="60" width="165" height="90" rx="2" fill="#f2efec"/>
+    <text x="42" y="82" class="eb-t eb-kind">FEATURE</text>
+    <text x="42" y="99" class="eb-m eb-name" style="font-size:12px">login.feature</text>
+    <text x="42" y="118" class="eb-m eb-row"><tspan class="eb-code">@AUTH-B01</tspan> Scenario: …</text>
+    <text x="42" y="133" class="eb-m eb-row"><tspan class="eb-code">@AUTH-B02</tspan> Scenario: …</text>
+  </g>
+
+  {/* code */}
+  <g transform="rotate(3 532 97)" filter={`url(#shadow-${uid})`}>
+    <rect x="455" y="52" width="155" height="92" rx="2" fill="#f2efec"/>
+    <text x="467" y="74" class="eb-t eb-kind">CODE</text>
+    <text x="467" y="91" class="eb-m eb-name" style="font-size:12px">Login.tsx</text>
+    <text x="467" y="110" class="eb-m eb-row" style="fill:#837b76">// <tspan class="eb-code">AUTH-B01</tspan></text>
+    <text x="467" y="124" class="eb-m eb-row">await signIn(email)</text>
+    <text x="467" y="137" class="eb-m eb-row" style="fill:#837b76">// <tspan class="eb-code">AUTH-B02</tspan></text>
+  </g>
+
+  {/* test */}
+  <g transform="rotate(2 122 332)" filter={`url(#shadow-${uid})`}>
+    <rect x="40" y="285" width="168" height="95" rx="2" fill="#f2efec"/>
+    <text x="52" y="307" class="eb-t eb-kind">TEST</text>
+    <text x="52" y="324" class="eb-m eb-name" style="font-size:12px">Login.test.tsx</text>
+    <text x="52" y="344" class="eb-m eb-row"><tspan style="fill:#3f8f4a;font-weight:700">✓</tspan> <tspan class="eb-code">AUTH-B01</tspan> signs in</text>
+    <text x="52" y="360" class="eb-m eb-row"><tspan style="fill:#ec3013;font-weight:700">✗</tspan> <tspan class="eb-code">AUTH-B02</tspan> no test</text>
+  </g>
+
+  {/* visual capture (polaroid) */}
+  <g transform="rotate(-3 533 318)" filter={`url(#shadow-${uid})`}>
+    <rect x="468" y="240" width="130" height="152" rx="2" fill="#faf8f6"/>
+    <rect x="478" y="252" width="110" height="104" fill="#161413"/>
+    {/* a phone screen in the photo */}
+    <rect x="510" y="260" width="46" height="88" rx="6" fill="#2e2b29" stroke="#5e5854"/>
+    <rect x="516" y="276" width="34" height="5" rx="1" fill="#837b76"/>
+    <rect x="516" y="286" width="34" height="7" rx="1" fill="#45403d"/>
+    <rect x="516" y="297" width="34" height="7" rx="1" fill="#45403d"/>
+    <rect x="516" y="309" width="34" height="5" rx="1" fill="#ec3013"/>
+    <rect x="516" y="322" width="34" height="9" rx="2" fill="#cdc7c2"/>
+    <text x="478" y="374" class="eb-m eb-row"><tspan class="eb-code">AUTH-S01</tspan> · VR</text>
+    <text x="478" y="386" class="eb-m eb-row" style="fill:#837b76;font-size:8.5px">login.flow.yaml</text>
+  </g>
+
+  {/* STRINGS: the identity codes tying the pieces */}
+  <path class="eb-string" d="M320 160 Q322 135 320 108"/>             {/* spec ↔ guide */}
+  <path class="eb-string" d="M320 160 Q250 120 192 108"/>             {/* spec ↔ feature */}
+  <path class="eb-string" d="M320 160 Q400 120 459 104"/>             {/* spec ↔ code */}
+  <path class="eb-string" d="M62 146 Q80 230 122 295"/>             {/* feature ↔ test */}
+  <path class="eb-string" d="M588 146 Q575 200 533 250"/>             {/* code ↔ capture */}
+  <path class="eb-string" d="M408 214 Q470 250 533 250"/>            {/* spec ↔ capture */}
+  {/* the string a gate pulled and that did not hold: spec AUTH-B02 → test */}
+  <path class="eb-string" d="M246 266 Q225 268 205 272" stroke-dasharray="5 4" opacity="0.9"/>
+  <path class="eb-string" d="M205 272 q-6 10 -2 20" stroke-dasharray="5 4" opacity="0.6"/>
+
+  {/* code tags on the strings */}
+  <g>
+    <rect x="222" y="128" width="54" height="15" rx="2" fill="#a8210b"/>
+    <text x="227" y="139" class="eb-m eb-tag">AUTH-B01</text>
+  </g>
+  <g>
+    <rect x="378" y="134" width="54" height="15" rx="2" fill="#a8210b"/>
+    <text x="383" y="145" class="eb-m eb-tag">AUTH-B01</text>
+  </g>
+  <g>
+    <rect x="436" y="246" width="54" height="15" rx="2" fill="#a8210b"/>
+    <text x="441" y="257" class="eb-m eb-tag">AUTH-S01</text>
+  </g>
+  <g>
+    <rect x="326" y="124" width="54" height="15" rx="2" fill="#a8210b"/>
+    <text x="331" y="135" class="eb-m eb-tag">AUTH-D01</text>
+  </g>
+  {/* the gate's verdict on the loose string */}
+  <g transform="rotate(-6 236 300)">
+    <rect x="214" y="288" width="128" height="34" rx="2" fill="#ec3013" filter={`url(#shadow-${uid})`}/>
+    <text x="222" y="302" class="eb-m eb-tag">✗ feature-test-match</text>
+    <text x="222" y="315" class="eb-m eb-tag" style="font-weight:400">AUTH-B02 · nothing holds it</text>
+  </g>
+
+  {/* PINS */}
+  <g>
+    <circle cx="320" cy="34" r="6" fill={`url(#pin-${uid})`}/>
+    <circle cx="320" cy="160" r="7" fill={`url(#pin-${uid})`}/>
+    <circle cx="112" cy="70" r="6" fill={`url(#pin-${uid})`}/>
+    <circle cx="532" cy="58" r="6" fill={`url(#pin-${uid})`}/>
+    <circle cx="122" cy="295" r="6" fill={`url(#pin-${uid})`}/>
+    <circle cx="533" cy="250" r="6" fill={`url(#pin-${uid})`}/>
+    <circle cx="320" cy="108" r="5" fill={`url(#pin-${uid})`}/>
+    <circle cx="192" cy="108" r="5" fill={`url(#pin-${uid})`}/>
+    <circle cx="459" cy="104" r="5" fill={`url(#pin-${uid})`}/>
+    <circle cx="62" cy="146" r="5" fill={`url(#pin-${uid})`}/>
+    <circle cx="588" cy="146" r="5" fill={`url(#pin-${uid})`}/>
+    <circle cx="408" cy="214" r="5" fill={`url(#pin-${uid})`}/>
+    <circle cx="246" cy="266" r="5" fill={`url(#pin-${uid})`}/>
+  </g>
+
+  {/* label taped to the board */}
+  <g transform="rotate(-1.5 330 392)">
+    <rect x="246" y="382" width="112" height="22" fill="#cdc7c2" opacity="0.92"/>
+    <text x="254" y="397" class="eb-m eb-row" style="fill:#161413;font-size:9px">anchors.graph.yaml</text>
+  </g>
+</svg>
+
+<style>
+	.evidence-board {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+	.eb-t { font-family: Archivo, "Helvetica Neue", Arial, sans-serif; }
+	.eb-m { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+	.eb-kind { font-size: 9px; letter-spacing: 0.12em; fill: #ec3013; font-weight: 700; }
+	.eb-name { font-size: 13px; fill: #161413; font-weight: 700; }
+	.eb-row { font-size: 9.5px; fill: #45403d; }
+	.eb-code { fill: #a8210b; font-weight: 700; }
+	.eb-string { fill: none; stroke: #ec3013; stroke-width: 1.6; stroke-linecap: round; }
+	.eb-tag { font-size: 8.5px; fill: #faf8f6; font-weight: 700; }
+</style>

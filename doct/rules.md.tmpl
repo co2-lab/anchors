@@ -1,0 +1,14 @@
+{{/* THE RULES of the whole system — an index across the layers */}}
+# Rules
+
+Every rule of the system, from every unit. Each one leads to its text on its layer's page.
+
+To see a whole layer at once — with each unit's overview and its scenarios — open its page
+in `layers/`.
+{{range $l := layers}}
+## {{$l}}
+{{range $s := specs (printf "layer=%s" $l)}}
+### [{{$s.Code}} — {{$s.Titulo}}]({{layerPage $l}}#{{anchor (printf "%s — %s" $s.Code $s.Titulo)}})
+{{range rules $s}}
+- [{{.Code}} — {{.Titulo}}]({{ruleLink $l $s .}})
+{{end}}{{end}}{{end}}

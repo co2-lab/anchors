@@ -1,0 +1,578 @@
+// @anchors
+//   code: SFMTS
+//   ref: SFMSP
+
+package gate
+
+import (
+	"github.com/co2-lab/anchors/internal/testkit"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// monta spec+feature em disco e o grafo que as liga, como o `check` faz de verdade.
+func rodaSpecFeature(t *testing.T, spec, feature string) (Verdict, string) {
+	t.Helper()
+	dir := t.TempDir()
+	if feature != "" {
+		if err := os.WriteFile(filepath.Join(dir, "x.feature"), []byte(feature), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &mapx.Graph{}
+	if feature != "" {
+		g.Edges = []mapx.Edge{{From: "x.spec.md", To: "x.feature", Type: "covered-by"}}
+	}
+	return checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, dir, g, testkit.WithComments(nil))
+}
+
+// O caso real que motivou o gate: uma spec do app de referência declarava OCHIX-X02 e a feature irmã não
+// tinha cenário nenhum com essa tag. Todos os 12 gates ficavam VERDES — a spec tem código,
+// a feature existe, a feature bate com o teste. O requisito não era de ninguém.
+func TestSpecFeatureMatchRequisitoSemCenario(t *testing.T) {
+	t.Run("SFMSP-B01: A requirement no scenario tags is failed and named", func(t *testing.T) {})
+	spec := `# Spec
+
+## Regras
+### OCHIX-B01 — lista as ocorrências
+### OCHIX-X02 — não busca dado, recebe por prop
+`
+	feature := "@OCHIX\nFuncionalidade: histórico\n\n  @OCHIX-B01 @nivel-unit\n  Cenário: lista\n"
+
+	v, d := rodaSpecFeature(t, spec, feature)
+	if v != Fail {
+		t.Fatalf("requisito sem cenário deveria reprovar, foi %s (%s)", v, d)
+	}
+	if !strings.Contains(d, "OCHIX-X02") {
+		t.Errorf("não nomeou o requisito descoberto: %s", d)
+	}
+	if strings.Contains(d, "OCHIX-B01") {
+		t.Errorf("acusou um requisito que TEM cenário: %s", d)
+	}
+}
+
+func TestSpecFeatureMatchTudoCoberto(t *testing.T) {
+	t.Run("SFMSP-B03: With every requirement tagged the gate passes", func(t *testing.T) {})
+	spec := "# Spec\n\n### AAAAX-B01 — x\n### AAAAX-B02 — y\n"
+	feature := "@AAAAX\nFuncionalidade: x\n\n  @AAAAX-B01 @nivel-unit\n  Cenário: a\n\n  @AAAAX-B02 @nivel-unit\n  Cenário: b\n"
+	if v, d := rodaSpecFeature(t, spec, feature); v != Pass {
+		t.Fatalf("tudo coberto deveria passar, foi %s (%s)", v, d)
+	}
+}
+
+// DEFINIR ≠ CITAR. Uma spec cita códigos de outras unidades o tempo todo (Tabela de
+// Dependências, notas, referências cruzadas) e não contrai obrigação por isso. Sem essa
+// distinção o gate viraria um gerador de ruído e seria desligado.
+func TestSpecFeatureMatchCitacaoNaoObriga(t *testing.T) {
+	t.Run("SFMSP-B04: A code merely cited contracts no obligation", func(t *testing.T) {})
+	spec := `# Spec
+
+### AAAAX-B01 — o único requisito desta spec
+
+## Notas
+Esta unidade é consumida pela tela que implementa ` + "`BBBBX-S01`" + ` e depende do
+comportamento ` + "`CCCCX-B09`" + ` descrito noutra spec.
+
+## Dependências
+| Cód | Arquivo | Método | Camada |
+| --- | --- | --- | --- |
+| DEP1 | x/y.ts | ` + "`faz`" + ` | logic |
+`
+	feature := "@AAAAX\nFuncionalidade: x\n\n  @AAAAX-B01 @nivel-unit\n  Cenário: a\n"
+	v, d := rodaSpecFeature(t, spec, feature)
+	if v != Pass {
+		t.Fatalf("códigos CITADOS não são obrigação desta spec, foi %s (%s)", v, d)
+	}
+}
+
+// Opt-out honesto por REQUISITO (CONCEPT §5.1): vale com razão, não vale nu.
+func TestSpecFeatureMatchDispensaExigeRazao(t *testing.T) {
+	t.Run("SFMSP-B05: A per-requirement waiver with a written reason waives", func(t *testing.T) {})
+	feature := "@AAAAX\nFuncionalidade: x\n\n  @AAAAX-B01 @nivel-unit\n  Cenário: a\n"
+
+	comRazão := "# Spec\n\n### AAAAX-B01 — x\n### AAAAX-X02 — limite de camada @no-scenario: restrição estrutural, provada por check-arch e não por cenário\n"
+	if v, d := rodaSpecFeature(t, comRazão, feature); v != Pass {
+		t.Errorf("dispensa COM razão deveria passar, foi %s (%s)", v, d)
+	}
+
+	nu := "# Spec\n\n### AAAAX-B01 — x\n### AAAAX-X02 — limite @no-scenario:\n"
+	if v, _ := rodaSpecFeature(t, nu, feature); v != Fail {
+		t.Errorf("marcador NU deveria continuar reprovando, foi %s", v)
+	}
+}
+
+// `@no-feature` na spec ARRASTA a dispensa para todos os requisitos: sem feature, nenhum
+// deles pode ter cenário. Sem este arrasto o autor precisa repetir `@no-scenario` em cada
+// linha da tabela para dizer o que a spec já disse uma vez — e as marcações podem divergir.
+func TestSpecFeatureMatchNoFeatureArrastaTodosOsRequisitos(t *testing.T) {
+	t.Run("SFMSP-B07: A whole-spec waiver drags the waiver to every requirement", func(t *testing.T) {})
+	// Feature vazia (só cabeçalho) + requisitos SEM `@no-scenario`: sem o arrasto isto
+	// reprovaria acusando os dois requisitos como descobertos.
+	spec := "# Spec\n\n@no-feature: gateway que só repassa — nada observável por cenário\n\n### AAAAX-B01 — x\n### AAAAX-B02 — y\n"
+	feature := "@AAAAX\nFuncionalidade: x\n"
+
+	if v, d := rodaSpecFeature(t, spec, feature); v != Skip {
+		t.Errorf("`@no-feature` dispensa o cenário de todo requisito, foi %s (%s)", v, d)
+	}
+}
+
+// O arrasto NÃO pode virar um jeito silencioso de calar o gate: sem a tag, os mesmos
+// requisitos descobertos continuam reprovando. É o par negativo do teste acima — sem ele,
+// um `Skip` incondicional passaria despercebido.
+func TestSpecFeatureMatchSemNoFeatureContinuaCobrando(t *testing.T) {
+	t.Run("SFMSP-B08: Without the whole-spec waiver the same requirements keep failing", func(t *testing.T) {})
+	spec := "# Spec\n\n### AAAAX-B01 — x\n### AAAAX-B02 — y\n"
+	feature := "@AAAAX\nFuncionalidade: x\n"
+
+	if v, _ := rodaSpecFeature(t, spec, feature); v != Fail {
+		t.Errorf("sem a dispensa o requisito descoberto deve reprovar, foi %s", v)
+	}
+}
+
+// A dispensa exige RAZÃO, igual ao `@no-scenario`: um `@no-feature` nu não arrasta nada,
+// senão o marcador vira um interruptor para desligar o gate sem prestar contas.
+func TestSpecFeatureMatchNoFeatureNuNaoArrasta(t *testing.T) {
+	t.Run("SFMSP-B09: A bare whole-spec waiver drags nothing", func(t *testing.T) {})
+	spec := "# Spec\n\n@no-feature:\n\n### AAAAX-B01 — x\n"
+	feature := "@AAAAX\nFuncionalidade: x\n"
+
+	if v, _ := rodaSpecFeature(t, spec, feature); v != Fail {
+		t.Errorf("marcador NU não deveria dispensar, foi %s", v)
+	}
+}
+
+// Cada gate acusa UMA coisa: a ausência da feature é do unit-complete. Acusar aqui
+// também faria o mesmo defeito aparecer duas vezes no relatório.
+func TestSpecFeatureMatchSemFeatureEhDoOutroGate(t *testing.T) {
+	t.Run("SFMSP-B10: A spec with no feature returns Skip", func(t *testing.T) {})
+	spec := "# Spec\n\n### AAAAX-B01 — x\n"
+	if v, d := rodaSpecFeature(t, spec, ""); v != Skip {
+		t.Fatalf("spec sem feature deveria ser Skip (é do unit-complete), foi %s (%s)", v, d)
+	}
+}
+
+// Uma spec pode ser coberta por MAIS DE UMA feature; o requisito só precisa estar em alguma.
+func TestSpecFeatureMatchUneVariasFeatures(t *testing.T) {
+	t.Run("SFMSP-B11: Requirements are looked for across every linked feature", func(t *testing.T) {})
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "a.feature"), []byte("@AAAAX-B01 @nivel-unit\n  Cenário: a\n"), 0o644)
+	os.WriteFile(filepath.Join(dir, "b.feature"), []byte("@AAAAX-B02 @nivel-e2e\n  Cenário: b\n"), 0o644)
+	g := &mapx.Graph{Edges: []mapx.Edge{
+		{From: "x.spec.md", To: "a.feature", Type: "covered-by"},
+		{From: "x.spec.md", To: "b.feature", Type: "covered-by"},
+	}}
+	spec := "# Spec\n\n### AAAAX-B01 — x\n### AAAAX-B02 — y\n"
+	v, d := checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, dir, g, testkit.WithComments(nil))
+	if v != Pass {
+		t.Fatalf("requisitos cobertos por features DIFERENTES deveriam passar, foi %s (%s)", v, d)
+	}
+}
+
+// Bug PREEXISTENTE, achado ao escrever este gate: o parser de cenários só reconhecia
+// `Cenário|Scenario` com um ` Outline` opcional. Em português o Scenario Outline é
+// `Esquema do Cenário` — uma expressão própria, não "Cenário + sufixo". Resultado: 108
+// cenários de um projeto real eram INVISÍVEIS para o `feature-test-match`, que é
+// BLOQUEANTE e reportava verde sobre o que não enxergava.
+func TestParseFeatureReconheceEsquemaEmQualquerIdioma(t *testing.T) {
+	casos := map[string]string{
+		"pt — Cenário":               "@AAAAX-B01 @nivel-unit\n  Cenário: faz algo\n",
+		"pt — Esquema do Cenário":    "@AAAAX-B01 @nivel-unit\n  Esquema do Cenário: faz algo\n",
+		"en — Scenario":              "@AAAAX-B01 @nivel-unit\n  Scenario: does something\n",
+		"en — Scenario Outline":      "@AAAAX-B01 @nivel-unit\n  Scenario Outline: does something\n",
+		"es — Escenario":             "@AAAAX-B01 @nivel-unit\n  Escenario: hace algo\n",
+		"es — Esquema del escenario": "@AAAAX-B01 @nivel-unit\n  Esquema del escenario: hace algo\n",
+		"de — Szenariogrundriss":     "@AAAAX-B01 @nivel-unit\n  Szenariogrundriss: macht etwas\n",
+		"fr — Plan du scénario":      "@AAAAX-B01 @nivel-unit\n  Plan du scénario: fait quelque chose\n",
+	}
+	for nome, feature := range casos {
+		t.Run(nome, func(t *testing.T) {
+			got := parseFeatureScenarios(feature)
+			if len(got) != 1 {
+				t.Fatalf("cenário invisível para o parser — o gate reportaria verde sobre ele: %+v", got)
+			}
+			if got[0].Code != "AAAAX-B01" {
+				t.Errorf("código errado: %+v", got[0])
+			}
+		})
+	}
+}
+
+// A forma de Esquema precisa ser tentada ANTES da de Cenário: em vários idiomas ela
+// CONTÉM a palavra "cenário" (`Esquema do Cenário`), e a alternativa curta casaria o
+// prefixo e engoliria o título errado.
+func TestParseFeatureEsquemaNaoEhEngolidoPeloPrefixo(t *testing.T) {
+	got := parseFeatureScenarios("@AAAAX-B01 @nivel-unit\n  Esquema do Cenário: variante define a cor\n")
+	if len(got) != 1 {
+		t.Fatalf("não reconheceu: %+v", got)
+	}
+	if got[0].Title != "variante define a cor" {
+		t.Fatalf("título capturado errado (%q) — a alternativa curta casou o prefixo", got[0].Title)
+	}
+}
+
+// O laudo carrega SÓ o descoberto. Acusar quem tem cenário faria o leitor conferir
+// linha a linha o que o gate já sabia.
+func TestSpecFeatureMatchLaudoSoTrazODescoberto(t *testing.T) {
+	t.Run("SFMSP-B02: A requirement that has a scenario is not accused", func(t *testing.T) {})
+	spec := "# Spec\n\n### AAAAX-B01 — coberto\n### AAAAX-X02 — descoberto\n"
+	feature := "@AAAAX\nFuncionalidade: x\n\n  @AAAAX-B01 @nivel-unit\n  Cenário: a\n"
+
+	v, d := rodaSpecFeature(t, spec, feature)
+	if v != Fail {
+		t.Fatalf("esperava Fail, veio %s (%s)", v, d)
+	}
+	if !strings.Contains(d, "AAAAX-X02") {
+		t.Errorf("o descoberto tem de aparecer no laudo: %s", d)
+	}
+	if strings.Contains(d, "AAAAX-B01") {
+		t.Errorf("o COBERTO nao pode aparecer no laudo: %s", d)
+	}
+}
+
+// O marcador NU por requisito nao dispensa: a dispensa exige razao escrita.
+func TestSpecFeatureMatchNoScenarioNuNaoDispensa(t *testing.T) {
+	t.Run("SFMSP-B06: A bare per-requirement waiver does not waive", func(t *testing.T) {})
+	spec := "# Spec\n\n### AAAAX-B01 — x\n### AAAAX-X02 — limite @no-scenario:\n"
+	feature := "@AAAAX\nFuncionalidade: x\n\n  @AAAAX-B01 @nivel-unit\n  Cenário: a\n"
+
+	v, d := rodaSpecFeature(t, spec, feature)
+	if v != Fail {
+		t.Fatalf("marcador nu nao dispensa; veio %s (%s)", v, d)
+	}
+	if !strings.Contains(d, "AAAAX-X02") {
+		t.Errorf("o requisito de dispensa nua continua descoberto: %s", d)
+	}
+}
+
+// O gate e de SPEC: sobre codigo, teste ou feature ele nao tem jurisdicao.
+func TestSpecFeatureMatchSoValeParaSpec(t *testing.T) {
+	t.Run("SFMSP-B12: An artifact that is not a spec returns Skip", func(t *testing.T) {})
+	spec := "# Spec\n\n### AAAAX-B01 — x\n### AAAAX-X02 — descoberto\n"
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "x.feature"), []byte("@AAAAX\nFuncionalidade: x\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := &mapx.Graph{Edges: []mapx.Edge{{From: "x.spec.md", To: "x.feature", Type: "covered-by"}}}
+
+	for _, kind := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
+		v, d := checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: kind}, dir, g, testkit.WithComments(nil))
+		if v != Skip {
+			t.Errorf("sobre %s o gate nao tem jurisdicao; veio %s (%s)", kind, v, d)
+		}
+	}
+}
+
+// As DUAS dispensas exigem razao escrita: o marcador nu e um interruptor sem prestacao
+// de contas, e silencio sem porque e o que o gate existe para acabar.
+func TestSpecFeatureMatchTodaDispensaExigeRazao(t *testing.T) {
+	t.Run("SFMSP-I01: Every waiver requires a written reason", func(t *testing.T) {})
+	feature := "@AAAAX\nFuncionalidade: x\n"
+
+	nuPorRequisito := "# Spec\n\n### AAAAX-B01 — x\n### AAAAX-X02 — limite @no-scenario:\n"
+	nuFeature := "@AAAAX\nFuncionalidade: x\n\n  @AAAAX-B01 @nivel-unit\n  Cenário: a\n"
+	if v, d := rodaSpecFeature(t, nuPorRequisito, nuFeature); v != Fail {
+		t.Errorf("`@no-scenario` nu nao pode dispensar; veio %s (%s)", v, d)
+	}
+
+	nuDaSpec := "# Spec\n\n@no-feature:\n\n### AAAAX-B01 — x\n"
+	if v, d := rodaSpecFeature(t, nuDaSpec, feature); v != Fail {
+		t.Errorf("`@no-feature` nu nao pode arrastar; veio %s (%s)", v, d)
+	}
+
+	// e o par positivo: COM razao, as duas dispensam — senao o teste acima passaria
+	// mesmo que o gate reprovasse tudo.
+	comRazao := "# Spec\n\n### AAAAX-B01 — x\n### AAAAX-X02 — limite @no-scenario: provado por check-arch, nao por cenario\n"
+	coberta := "@AAAAX\nFuncionalidade: x\n\n  @AAAAX-B01 @nivel-unit\n  Cenário: a\n"
+	if v, d := rodaSpecFeature(t, comRazao, coberta); v != Pass {
+		t.Errorf("com razao escrita a dispensa vale; veio %s (%s)", v, d)
+	}
+}
+
+// Cada gate acusa UMA coisa: a feature ausente e do unit-complete. Aqui e Skip, e
+// o par positivo garante que o Skip nao e incondicional.
+func TestSpecFeatureMatchCadaGateAcusaUmaCoisa(t *testing.T) {
+	t.Run("SFMSP-I02: Each gate accuses one thing", func(t *testing.T) {})
+	spec := "# Spec\n\n### AAAAX-B01 — x\n"
+
+	if v, d := rodaSpecFeature(t, spec, ""); v != Skip {
+		t.Fatalf("feature ausente e do unit-complete; veio %s (%s)", v, d)
+	}
+	// COM feature e sem cenario, o mesmo requisito reprova — o Skip acima e da
+	// ausencia da feature, nao um Skip incondicional.
+	if v, d := rodaSpecFeature(t, spec, "@AAAAX\nFuncionalidade: x\n"); v != Fail {
+		t.Fatalf("com feature o requisito descoberto reprova; veio %s (%s)", v, d)
+	}
+}
+
+// A regua e a TAG, que e deterministica. Se o cenario prova mesmo o requisito e
+// julgamento — e quem olha a forma da asserção e o `scenario-asserts`.
+func TestSpecFeatureMatchNaoJulgaSeOCenarioProva(t *testing.T) {
+	t.Run("SFMSP-X01: The gate does not judge whether the scenario proves the requirement", func(t *testing.T) {})
+	spec := "# Spec\n\n### AAAAX-B01 — soma dois valores\n"
+	// cenario com a tag e sem nenhum Then: nao prova nada, mas a tag esta la
+	feature := "@AAAAX\nFuncionalidade: x\n\n  @AAAAX-B01 @nivel-unit\n  Cenário: nao asserta coisa alguma\n"
+
+	if v, d := rodaSpecFeature(t, spec, feature); v != Pass {
+		t.Errorf("a forma da assercao e regua de outro gate; veio %s (%s)", v, d)
+	}
+}
+
+// Codigo CITADO nao gera acusacao: um gate que grita lobo e desligado, e isso custa
+// mais do que o defeito que ele pegava.
+func TestSpecFeatureMatchCitacaoNaoGeraAcusacao(t *testing.T) {
+	t.Run("SFMSP-X02: A cited code produces no accusation", func(t *testing.T) {})
+	spec := `# Spec
+
+### AAAAX-B01 — o unico requisito desta spec
+
+## Notas
+Consome ` + "`BBBBX-S01`" + `, ` + "`CCCCX-B09`" + ` e ` + "`DDDDX-X03`" + ` de outras unidades.
+`
+	feature := "@AAAAX\nFuncionalidade: x\n\n  @AAAAX-B01 @nivel-unit\n  Cenário: a\n"
+
+	v, d := rodaSpecFeature(t, spec, feature)
+	if v != Pass {
+		t.Fatalf("citacao nao obriga; veio %s (%s)", v, d)
+	}
+	for _, citado := range []string{"BBBBX-S01", "CCCCX-B09", "DDDDX-X03"} {
+		if strings.Contains(d, citado) {
+			t.Errorf("o codigo CITADO %s nao podia aparecer no laudo: %s", citado, d)
+		}
+	}
+}
+
+// A aresta feature→teste ja tem vigia (`feature-test-match`). Este gate existe pela
+// aresta ANTERIOR, que nao tinha nenhum — e por isso nao olha teste.
+func TestSpecFeatureMatchNaoConfrontaFeatureContraTeste(t *testing.T) {
+	t.Run("SFMSP-X03: The gate does not confront feature against test", func(t *testing.T) {})
+	spec := "# Spec\n\n### AAAAX-B01 — x\n### AAAAX-B02 — y\n"
+	feature := "@AAAAX\nFuncionalidade: x\n\n  @AAAAX-B01 @nivel-unit\n  Cenário: a\n\n  @AAAAX-B02 @nivel-unit\n  Cenário: b\n"
+
+	// nenhum teste amarra cenario nenhum — o grafo nem tem no de teste.
+	if v, d := rodaSpecFeature(t, spec, feature); v != Pass {
+		t.Errorf("feature→teste e de outro gate; veio %s (%s)", v, d)
+	}
+}
+
+// O projeto declara `code_lengths: [4]` DEPOIS de o pacote inicializar. Com o regex em
+// `var`, compilado no init com o default `[5]`, a spec de código de 4 caracteres devolvia
+// ZERO requisitos — medido no app de referência: `spec-feature-match` e `scenario-coverage` ficaram
+// indeterminados nas 691 specs, bloqueantes e cegos.
+func TestDefinedRequirementsRespeitaCodeLengthsDoProjeto(t *testing.T) {
+	config.SetCodeLengths([]int{4})
+	defer config.SetCodeLengths([]int{5})
+	got := definedRequirements("| `DDTD-B01` | mesma descrição |\n### DDTD-R02 — regra\n")
+	if len(got) != 2 || got[0] != "DDTD-B01" || got[1] != "DDTD-R02" {
+		t.Fatalf("com code_lengths [4] esperava [DDTD-B01 DDTD-R02], veio %v", got)
+	}
+	if !definesRuleRE().MatchString("| `DDTD-B01` | x |") {
+		t.Error("rule-types: definesRuleRE ignorou code_lengths [4]")
+	}
+	if n := len(titleCodeRE().FindAllString("it('DDTD-B01 / DDTD-B02: x')", -1)); n != 2 {
+		t.Errorf("feature-test-match: titleCodeRE achou %d códigos, esperava 2", n)
+	}
+}
+
+func TestSpecFeatureMatch_Errors(t *testing.T) {
+	t.Run("SFMSP-E01: Without a built map the confrontation is pending", func(t *testing.T) {
+		v, msg := checkSpecFeatureMatch("# Spec\n\n### AAAAX-B01 — x\n", mapx.Node{Kind: mapx.KindSpec, ID: "x.spec.md"}, t.TempDir(), nil, testkit.WithComments(nil))
+		if v != Pending || !strings.Contains(msg, "map") {
+			t.Fatalf("expected Pending with the no-map message, got %v (%s)", v, msg)
+		}
+	})
+
+	t.Run("SFMSP-E02: A feature missing from disk does not hide the scenarios of the other features", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.WriteFile(filepath.Join(dir, "valid.feature"), []byte("@AAAAX\nFeature: x\n  @AAAAX-B01 @unit\n  Scenario: a\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		g := &mapx.Graph{Edges: []mapx.Edge{
+			{From: "x.spec.md", To: "missing.feature", Type: "covered-by"},
+			{From: "x.spec.md", To: "valid.feature", Type: "covered-by"},
+		}}
+		spec := "# Spec\n\n### AAAAX-B01 — x\n"
+		v, msg := checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, dir, g, testkit.WithComments(nil))
+		if v != Pass {
+			t.Fatalf("the missing feature is left out and the present one still covers AAAAX-B01, got %v (%s)", v, msg)
+		}
+	})
+}
+
+// A rule catalogued under one letter while its behaviour is stated under another is an
+// ALIAS: `REF[CODE]: reason`. It has no scenario of its own — the target's scenario is the
+// proof — and it must point at a real rule, with a reason.
+func TestSpecFeatureMatchRuleAlias(t *testing.T) {
+	feature := "@AAAAX\nFeature: x\n\n  @AAAAX-B01 @unit-level\n  Scenario: a\n"
+	spec := func(alias string) string {
+		return "# Spec\n\n| Rule | Description |\n| --- | --- |\n| `AAAAX-B01` | a missing file is skipped |\n\n" +
+			"## Errors\n\n| Code | Condition | Result | Why |\n| --- | --- | --- | --- |\n| `AAAAX-E01` | " + alias + " | — | — |\n"
+	}
+
+	t.Run("SFMSP-B13: A rule alias needs no scenario of its own", func(t *testing.T) {
+		if v, d := rodaSpecFeature(t, spec("REF[AAAAX-B01]: the missing file is the failure B01 already answers"), feature); v != Pass {
+			t.Fatalf("an alias of a covered rule is covered, got %s (%s)", v, d)
+		}
+		// Without the alias the same row is an uncovered requirement.
+		if v, d := rodaSpecFeature(t, spec("a missing file is skipped"), feature); v != Fail || !strings.Contains(d, "AAAAX-E01") {
+			t.Fatalf("a plain -E row with no scenario is charged, got %s (%s)", v, d)
+		}
+	})
+
+	t.Run("SFMSP-B14: An alias that stands for no rule fails", func(t *testing.T) {
+		for name, alias := range map[string]string{
+			"unknown target": "REF[AAAAX-B09]: points at nothing",
+			"no reason":      "REF[AAAAX-B01]:",
+			"bare":           "REF[AAAAX-B01]",
+		} {
+			if v, d := rodaSpecFeature(t, spec(alias), feature); v != Fail || !strings.Contains(d, "AAAAX-E01") {
+				t.Errorf("%s: the alias must fail naming it, got %s (%s)", name, v, d)
+			}
+		}
+		chain := spec("REF[AAAAX-E02]: chained") + "| `AAAAX-E02` | REF[AAAAX-B01]: the real one | — | — |\n"
+		if v, d := rodaSpecFeature(t, chain, feature); v != Fail || !strings.Contains(d, "AAAAX-E02") {
+			t.Errorf("an alias of an alias must fail, got %s (%s)", v, d)
+		}
+		// Quoted inside a rule's statement, `REF[...]` is prose, not an alias.
+		prose := "# Spec\n\n| Rule | Description |\n| --- | --- |\n| `AAAAX-B01` | an alias is written as REF[AAAAX-B09]: reason |\n"
+		if v, d := rodaSpecFeature(t, prose, feature); v != Pass {
+			t.Errorf("REF quoted in a statement must not be read as an alias, got %s (%s)", v, d)
+		}
+		// Checked even with no feature: the alias would otherwise drop the rule unseen.
+		if v, d := rodaSpecFeature(t, spec("REF[AAAAX-B09]: nothing"), ""); v != Fail {
+			t.Errorf("a dangling alias fails even before the feature is looked for, got %s (%s)", v, d)
+		}
+	})
+}
+
+// An alias follows the declared code length: a 7-character code is aliased like any other.
+func TestSpecFeatureMatchAliasFollowsTheCodeLength(t *testing.T) {
+	t.Run("SFMSP-B13: A rule alias needs no scenario of its own", func(t *testing.T) {})
+	prev := config.CodeLengths
+	config.SetCodeLengths([]int{7})
+	SetRuleLetters(config.DefaultRuleLetters) // what RunWithConfig does once the config is loaded
+	defer func() { config.SetCodeLengths(prev); SetRuleLetters(config.DefaultRuleLetters) }()
+	spec := "# Spec\n\n| Rule | Description |\n| --- | --- |\n| `ABCDEFG-B01` | a missing file is skipped |\n\n" +
+		"## Errors\n\n| Code | Condition | Result | Why |\n| --- | --- | --- | --- |\n| `ABCDEFG-E01` | REF[ABCDEFG-B01]: B01 answers it | — | — |\n"
+	feature := "@ABCDEFG\nFeature: x\n\n  @ABCDEFG-B01 @unit-level\n  Scenario: a\n"
+	if v, d := rodaSpecFeature(t, spec, feature); v != Pass {
+		t.Fatalf("an alias of a 7-character code must be recognised, got %s (%s)", v, d)
+	}
+}
+
+// A requirement catalogued without a suffix is covered by scenarios WITH a suffix: `#01`/`#02`
+// give each case an identity, they do not create a new requirement. Without this, numbering
+// scenarios would suddenly make spec-feature-match accuse every requirement with more than
+// one case — measured in the reference app: 78 specs failed as soon as 269 scenarios got a
+// suffix.
+func TestSpecFeatureMatch_acceptsASuffixOnTheScenario(t *testing.T) {
+	t.Run("SFMSP-B15: Scenarios tagged with a suffix cover the requirement", func(t *testing.T) {})
+	root := t.TempDir()
+	spec := "business-logic/dedup.spec.md"
+	feat := "business-logic/dedup.feature"
+	writeFile(t, root, spec, "# Dedup\n\n## Rules\n\n| Regra | Descrição |\n| --- | --- |\n| `DDTDX-B01` | duplicata automática |\n")
+	writeFile(t, root, feat, `# language: pt
+Funcionalidade: Dedup
+
+  @comportamento @DDTDX-B01#01 @nivel-unit @P1
+  Cenário: Duplicata automática quando descrição e valor idênticos
+    Dado x
+    Então y
+
+  @comportamento @DDTDX-B01#02 @nivel-unit @P1
+  Cenário: Duplicata automática quando só a data difere
+    Dado x
+    Então y
+`)
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{{ID: spec, Kind: mapx.KindSpec}, {ID: feat, Kind: mapx.KindFeature}},
+		Edges: []mapx.Edge{{From: spec, To: feat, Type: "covered-by"}},
+	}
+	n := mapx.Node{ID: spec, Kind: mapx.KindSpec}
+	content, err := os.ReadFile(filepath.Join(root, spec))
+	if err != nil {
+		t.Fatal(err)
+	}
+	v, detail := checkSpecFeatureMatch(string(content), n, root, g, regimeCfg())
+	if v == Fail {
+		t.Errorf("a scenario suffix should not fail the root requirement: %s", detail)
+	}
+}
+
+// An open decision has a code — open-questions-resolved asks for it — and is no
+// requirement: it gets its scenario when it becomes a rule.
+func TestSpecFeatureMatchOpenDecisionIsNoRequirement(t *testing.T) {
+	t.Run("SFMSP-B16: A code in the open-decisions section is no requirement", func(t *testing.T) {})
+	spec := "# Spec\n\n## Rules\n### GOALG-B01 — lists the goals\n\n## Decisões em aberto\n\n" +
+		"| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n| `GOALG-Q01` | archive or delete? | product | rule |\n"
+	feature := "@GOALG\nFeature: goals\n\n  @GOALG-B01 @nivel-unit\n  Scenario: lists\n"
+	if v, d := rodaSpecFeature(t, spec, feature); v != Pass {
+		t.Errorf("the open question asks for no scenario: %v %s", v, d)
+	}
+	if got := definedRequirements(spec); len(got) != 1 || got[0] != "GOALG-B01" {
+		t.Errorf("the requirements are the rules alone, for every gate that reads them: %v", got)
+	}
+}
+
+// With `data_states.required`, a data state the spec defines is a requirement of its unit;
+// without it, the table only documents.
+func TestSpecFeatureMatchDataStatesAreRequirementsWhenRequired(t *testing.T) {
+	t.Run("SFMSP-B17: With data_states.required, a data state the spec defines is a requirement", func(t *testing.T) {})
+	spec := "<!-- @anchors\n  code: HOMEH\n-->\n# Home\n\n## Rules\n### HOMEH-B01 — shows the summary\n\n## Data States\n\n" +
+		"| State | When | Shows |\n| --- | --- | --- |\n| `DS-hero-income` | income > 0 | the income |\n" +
+		"| `HOMEH-DS-hero-empty` | income = 0 | the empty hero |\n| `DS-hero-hidden` @no-scenario: never reached in the app | — | — |\n" +
+		"| `GOALG-DS-progress` | cited | from the goals unit |\n"
+	defer func() { dataStatesRequired = false }()
+	dataStatesRequired = false
+	if got := definedRequirements(spec); len(got) != 1 {
+		t.Errorf("off: the data states only document: %v", got)
+	}
+	dataStatesRequired = true
+	got := strings.Join(definedRequirements(spec), ",")
+	if got != "HOMEH-B01,HOMEH-DS-hero-income,HOMEH-DS-hero-empty" {
+		t.Errorf("on: the unit's data states, bare or prefixed, are requirements; a waived one and another unit's are not: %s", got)
+	}
+	feature := "@HOMEH\nFeature: home\n\n  @HOMEH-B01 @HOMEH-DS-hero-income @nivel-unit\n  Scenario: summary\n"
+	if v, d := rodaSpecFeature(t, spec, feature); v != Fail || !strings.Contains(d, "HOMEH-DS-hero-empty") || strings.Contains(d, "hero-income") {
+		t.Errorf("the data state with no scenario is named: %v %s", v, d)
+	}
+}
+
+// A retired rule stays as a tombstone so old revisions resolve, and no gate asks anything of it.
+func TestRetiredRuleIsATombstone(t *testing.T) {
+	t.Run("SFMSP-B18: A rule marked @retired is no requirement, no rule of the code, and uses nothing", func(t *testing.T) {})
+	spec := "<!-- @anchors\n  code: CRCHH\n-->\n# Create\n\n### CRCHH-R0001 — first\n\n**Revises:** `CRCHH-V01`.\n\n" +
+		"## Validations\n\n| Rule | Field | Condition | Behavior |\n| --- | --- | --- | --- |\n" +
+		"| `CRCHH-V01` | @retired: CRCHH-R0004 — the game changed | — | — |\n| `CRCHH-V02` | `move` | missing | refuses |\n"
+	if got := strings.Join(definedRequirements(spec), ","); got != "CRCHH-V02" {
+		t.Errorf("only the live rule is a requirement: %s", got)
+	}
+	if got := strings.Join(declaredRules(spec, "CRCHH"), ","); got != "CRCHH-V02" {
+		t.Errorf("only the live rule is asked of the code: %s", got)
+	}
+	for _, u := range ruleUsesOf(spec, nil, "") {
+		if u.Rule == "CRCHH-V01" {
+			t.Errorf("a retired rule uses nothing: %+v", u)
+		}
+	}
+	if v, msg := checkRevisionOrphans(spec, mapx.Node{ID: "h.spec.md", Kind: mapx.KindSpec, Code: "CRCHH"}, "", nil, testkit.WithComments(nil)); v == Fail && strings.Contains(msg, "V01") {
+		t.Errorf("an old revision naming the retired rule still resolves: %v %s", v, msg)
+	}
+}
+
+func TestSpecRequirements_underTheProjectsChoice(t *testing.T) {
+	t.Run("SFMSP-B19: The requirements are given to a report under the project's data-states choice", func(t *testing.T) {})
+	content := "<!-- @anchors\n  code: ABCDX\n-->\n## ABCDX-B01 — saves\n\n## Data States\n\n| State | When |\n| --- | --- |\n| `DS-saving` | in flight |\n"
+	with := SpecRequirements(content, &config.Config{DataStates: &config.DataStates{Required: true}})
+	without := SpecRequirements(content, &config.Config{})
+	if len(with) <= len(without) || len(without) != 1 || without[0] != "ABCDX-B01" {
+		t.Errorf("the data state counts only when required: with %v, without %v", with, without)
+	}
+	if dataStatesRequired {
+		t.Error("the choice in force is restored")
+	}
+}

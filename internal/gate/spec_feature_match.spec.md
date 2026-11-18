@@ -1,0 +1,97 @@
+<!-- @anchors
+  code: SFMSP
+  updated_at: 2026-10-19
+  layer: gate
+-->
+# SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario
+
+> **Code**: `SFMSP`
+
+## Overview
+
+Confronts the edge of the unit that had no watcher: **the spec declares a requirement —
+is there any scenario that exercises it?**
+
+`feature-test-match` confronts feature→test; `unit-complete` confronts that the PIECES
+exist. Nobody confronted spec→feature — and that is where a silent hole lives: the spec
+declares a constraint rule, the feature has no scenario carrying its tag, and the requirement
+crosses the whole pipeline with nothing verifying it. **Every gate stays green**: the spec
+has a code, the feature exists, the feature matches the test. The requirement simply
+belongs to nobody.
+
+Measured in a real project: **11 of 287 specs with a feature had a requirement with no
+scenario.**
+
+The ruler is the same as the other relational gates — CODE, not prose: every
+`{CODE}-{letter}{NN}` the spec DEFINES must appear as a scenario tag in the feature.
+**Defining is different from citing:** a spec that mentions another unit's code (in a
+Dependency Table, for instance) contracts no obligation. Without that distinction the
+gate would be a noise generator and would be switched off.
+
+Honest opt-out (CONCEPT §5.1): the per-requirement waiver marker (`no-scenario`, prefixed with `@`) on the requirement's line, followed by a colon and the reason, waives
+that specific requirement, with the reason written. It serves what is genuinely not
+observable by scenario — and leaves the trace that it was a decision, not forgetfulness.
+
+## Domain
+
+| Input | Accepts | Outside the domain | Who guarantees |
+| --- | --- | --- | --- |
+| the confronted artifact | any map node | — (the gate does not choose the target) | the gate engine, routing by the declared `on:` — a node that is not a spec leaves without a verdict |
+| the spec's content | any text, with or without requirements | — (a spec that defines nothing is a case, not an error) | this unit: with no defined requirement the confrontation is skipped |
+| the defined requirement | a code at the start of a line, a list item, a section title, or in a table's FIRST cell | a code cited in prose or in a Dependency Table, which contracts nothing | this unit, by the same "defines" grammar the `rule-types` gate uses |
+| the linked features | the features reached by the `covered-by` edge, one or more | — (no feature is the ruler of `unit-complete`) | this unit: with no feature it skips, so the same defect is not reported twice |
+| the waiver | the per-requirement marker (`no-scenario`) or the whole-spec one (`no-feature`), each prefixed with `@`, followed by a colon and a written reason | a bare marker with nothing after it | this unit: a waiver with no why does not waive |
+| the map | a built graph, or none | — | this unit: with no graph the verdict is Pending, never Pass |
+
+## Effects
+
+| Effect | Description |
+| --- | --- |
+| `SFMSP-B01` | A requirement the spec defines and no scenario tags FAILS, and the verdict names it. |
+| `SFMSP-B02` | A requirement that HAS a scenario is not accused: the verdict carries the uncovered ones only. |
+| `SFMSP-B03` | With every defined requirement tagged by some scenario, the gate passes. |
+| `SFMSP-B04` | A code merely CITED — in prose or in the Dependency Table — contracts no obligation, because a spec cites other units' codes all the time. |
+| `SFMSP-B05` | The per-requirement marker (`no-scenario`) with a written reason waives that one requirement. |
+| `SFMSP-B06` | A bare per-requirement marker, with nothing after the colon, does not waive — the waiver requires a reason. |
+| `SFMSP-B07` | The whole-spec marker (`no-feature`) with a reason DRAGS the waiver to every requirement: the spec has no feature, so no requirement of it can have a scenario. |
+| `SFMSP-B08` | Without that tag the same uncovered requirements keep failing — the drag cannot become a silent way of muting the gate. |
+| `SFMSP-B09` | A bare whole-spec marker drags nothing, or the marker would be a switch that turns the gate off without accounting for it. |
+| `SFMSP-B10` | A spec with NO feature returns Skip: that absence is the ruler of `unit-complete`. |
+| `SFMSP-B11` | A spec covered by SEVERAL features has its requirements looked for across all of them — the requirement only needs to be in some. |
+| `SFMSP-B12` | An artifact that is not a spec returns Skip: the gate has no jurisdiction over code, test or feature. |
+| `SFMSP-B13` | A rule written as an ALIAS of another rule of the same spec — `REF[CODE-B05]: <reason>` on its line — needs no scenario of its own: the target's scenario is the proof. It is how a rule is catalogued under one letter (a failure, `-E`) while its behaviour is already stated under another, without writing the decision twice. |
+| `SFMSP-B14` | An alias that stands for no rule FAILS, naming it: a target this spec does not define, a target that is itself an alias, or no reason after the colon. It is checked before the feature is looked for, because a dangling alias would drop the rule from every scenario check unseen. |
+| `SFMSP-B15` | A requirement is covered by scenarios whose tag carries it with a `#nn` suffix: the suffix identifies each case of the requirement, not a new requirement. |
+| `SFMSP-B16` | A code defined in the open-decisions section (`## Open Decisions`, `## Decisões em Aberto`…) is no requirement — for this gate and for every one that reads the spec's requirements (`scenario-coverage`, `reverse-match`, `rule-uses`): an open question gets its scenario once it becomes a rule. |
+| `SFMSP-B17` | With `data_states.required`, a data state the spec defines — `DS-<field>-<variant>`, bare or with the unit's code, opening a table row, a list item or a heading — is a requirement of the unit, for every gate that reads the spec's requirements (`spec-feature-match`, `scenario-coverage`), with the same no-scenario waiver as a rule; another unit's data state is a citation. Off, the data-state tables only document. |
+| `SFMSP-B18` | A rule whose line carries the retired marker (`@retired` with a colon, the revision and the reason) is a tombstone: it stays defined, so the old revisions that name it still resolve, and no gate asks anything of it — it is no requirement (`spec-feature-match`, `scenario-coverage`), no rule of the code (`rule-implemented`), uses nothing (`rule-uses-*`) and is no failure to handle. A rule's code is read whole: `CODE-R0001`, a revision, is not the rule `CODE-R00`. (`retiredLine`) |
+| `SFMSP-B19` | The requirements a spec defines are given to whoever reports its coverage under the project's data-states choice, and the choice in force before is restored — the same reading this gate and `scenario-coverage` make. (`SpecRequirements`) |
+
+## Invariants
+
+| Rule | Always holds | How it is proven |
+| --- | --- | --- |
+| `SFMSP-I01` | Every waiver requires a written REASON — both the per-requirement marker and the whole-spec one. A bare marker is a switch with no accounting, and silence without a why is what the gate exists to end. | confronts both bare markers and verifies each still fails |
+| `SFMSP-I02` | Each gate accuses ONE thing. The missing feature belongs to `unit-complete` and the missing test to `feature-test-match`; accusing them here would print the same defect twice in the report. | confronts a spec with no feature and verifies it skips instead of failing |
+
+## Constraints
+
+| Rule | Boundary | Why |
+| --- | --- | --- |
+| `SFMSP-X01` | Does not judge whether the scenario PROVES the requirement. | The ruler is the tag, which is deterministic. Whether the Given/When/Then really exercises the behaviour is judgement, and `scenario-asserts` is the ruler that looks at the shape of the assertion. Holding both here would put the same rule in two places that would diverge. |
+| `SFMSP-X02` | Does not charge a code the spec merely CITES. | A spec names other units' codes in Dependency Tables, notes and cross-references, and contracts nothing by doing so. Charging them would produce an accusation per citation — and a gate that cries wolf gets switched off, which costs more than the defect it was catching. |
+| `SFMSP-X03` | Does not confront feature→test. | That edge already has a watcher, `feature-test-match`. This gate exists precisely because the edge BEFORE it had none. |
+
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `SFMSP-E01` | No map has been built, so the gate receives no graph. | `Pending` with the no-map message. | The features that cover a spec are found through the map's `covered-by` edges: without them there is nothing to confront, and `Pending` says "not measured" where `Pass` or `Fail` would claim a coverage nobody checked. |
+| `SFMSP-E02` | A feature the map links to the spec is no longer on disk. | That feature covers nothing; the other linked features are still read, and a requirement one of them tags is covered. | The map can be older than the tree (a feature deleted or renamed since the last build): a missing file has no scenario, and one stale edge must not make the requirements the other features tag look uncovered. <!-- @resilient: a stale map edge is expected between builds, and the next map build removes it --> |
+
+## Open Decisions
+
+| Code | Question | Who decides | Becomes |
+| --- | --- | --- | --- |
+
+none

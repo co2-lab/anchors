@@ -1,0 +1,36 @@
+# PCI-DSS v4.0 — Payment Card Industry Data Security Standard
+#
+# Não é lei: é contrato com as bandeiras. Vale em qualquer jurisdição onde se processe
+# cartão — por isso `jurisdiction: global`, e por isso o pack não é filtrado por mercado.
+#
+# A diferença de natureza em relação à privacidade: aqui o dever mais forte é uma
+# PROIBIÇÃO (não armazenar), não uma capacidade (saber apagar). O Anchors expressa
+# proibição por `boundaries:`, não por `obligations:` — então este pack cobre o que é
+# obrigação de ALCANCE, e o README do pack aponta a fronteira que o complementa.
+name: pci-dss
+domain: payment
+jurisdiction: global
+authority: "PCI DSS v4.0"
+
+requires:
+  - audit_log          # onde a trilha de auditoria é emitida
+  - key_management     # onde as chaves de criptografia são geridas
+
+obligations:
+  # Req. 3.5 — o PAN precisa ser ilegível onde quer que esteja armazenado. O gate
+  # confronta o ALCANCE: quem declara guardar dado de cartão tem de passar pelo módulo
+  # de chaves. Se a criptografia é boa, isso é julgamento — e o pack não finge medir.
+  - name: pci-pan-protegido
+    article: "Req. 3.5"
+    when: "carries: cardholder-data"
+    must_appear_in: ["{{key_management}}"]
+    because: "o PAN precisa ser ilegível onde é armazenado — o dado de cartão não passa por caminho que não gerencie chave"
+
+  # Req. 10.2 — toda ação sobre dado de cartão deixa trilha. É o dever que a maioria
+  # dos times descobre tarde, na auditoria: o código funciona, o dado está protegido, e
+  # não há como provar QUEM acessou o quê.
+  - name: pci-trilha-auditoria
+    article: "Req. 10.2"
+    when: "carries: cardholder-data"
+    must_appear_in: ["{{audit_log}}"]
+    because: "todo acesso a dado de portador de cartão precisa deixar trilha de auditoria — sem ela não há como provar quem acessou o quê"

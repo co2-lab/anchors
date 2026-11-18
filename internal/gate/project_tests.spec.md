@@ -1,0 +1,50 @@
+<!-- @anchors
+  code: PRJTS
+  updated_at: 2026-11-02
+  layer: gate
+-->
+# ProjectTests — the gates read the project's tests through the source the project declares
+
+> **Code**: `PRJTS`
+
+## Overview
+
+The gates that read a test's title — `feature-test-match`, `test-traceable`, `scenario-coverage` and
+`flag-covered` — get the project's tests from here. How a test is written belongs to the project's
+test library, not to the engine: the project declares it in `dialect.tests` (a pattern or a script, see
+the `testlist` package), or its dialect family does. The gates used to carry Jest's and Go's call
+syntax themselves, and a project on any other library had no title read at all.
+
+## Domain
+
+| Input | Accepts | Outside the domain | Who guarantees |
+| --- | --- | --- | --- |
+| the configuration | a project configuration, or nil | — | this unit: nil declares no source |
+| the map | the scan's map, or nil | — | this unit: with no map there are no test files to read |
+
+## Effects
+
+| Effect | Description |
+| --- | --- |
+| `PRJTS-B01` | The source is the project's own `dialect.tests`, or its family's when it declares none; with neither, nothing is declared and the gates fall back to what they can do without titles. |
+| `PRJTS-B02` | A pattern reads the map's test files, and only those. |
+| `PRJTS-B03` | The tests are read once per scan: the same root, map and configuration reuse the reading, and a new map reads again. |
+| `PRJTS-B04` | The tests of a set of files come in the order the files are given, and in each file in the order of their lines; tests of other files are left out. |
+| `PRJTS-B05` | An error of the source is returned with the declaration, never taken for a project without tests. |
+| `PRJTS-B06` | Support files are not read as tests, and are dropped from any list of test paths the gates confront. |
+| `PRJTS-B07` | Under `--index` a test's line is a line of the content the gates read: a pattern scans the files through the current source, and what a script lists of a file whose tree holds something else than the source is left out. (`projectTests`, `sameAsSource`) |
+| `PRJTS-B08` | The project's tests are offered to the commands as the gates read them, with whether the project declares how its tests are written. (`ProjectTests`) |
+| `PRJTS-B09` | In a project of several dialects each test file is read by its own dialect's `tests` source — its pattern, or its script given only its files —, and the tests found are united; a file whose dialect declares no source is left unread. With one dialect its source reads every test file, as before. |
+
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `PRJTS-E01` | REF[PRJTS-B05]: the source fails or answers outside its contract | — | — |
+
+## Open Decisions
+
+| Code | Question | Who decides | Becomes |
+| --- | --- | --- | --- |
+
+none

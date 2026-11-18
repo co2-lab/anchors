@@ -1,0 +1,25 @@
+name: Feature request
+description: Something Anchors does not do and should — a gate, an option, a command.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repository is **public**: describe the need in Anchors' terms, never with your project's code, names or data.
+        Anchors keeps gates generic — a mechanism configured in anchors.yaml, not a gate made for one project.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you cannot do or cannot see today, and where it hurt.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you propose
+      description: The behaviour you would like. A sketch of the anchors.yaml or the command helps.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
