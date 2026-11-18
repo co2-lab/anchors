@@ -90,7 +90,7 @@ const qrSpec = `<!-- @anchors
 func buildOpenAPI(t *testing.T, specs map[string]string) (string, error) {
 	t.Helper()
 	root, g := projetoDeTeste(t, specs)
-	escreveTemplate(t, root, "openapi.yaml.tmpl", `{{ openapi "BaaS Proxy" "1.2.0" "https://api.example.com" }}`)
+	escreveTemplate(t, root, "openapi.yaml.tmpl", `{{ openapi "Example API" "1.2.0" "https://api.example.com" }}`)
 	c, err := New(root, g)
 	if err != nil {
 		t.Fatal(err)
@@ -123,7 +123,7 @@ func TestOpenAPI_anOperationFromAnAPISpec(t *testing.T) {
 		t.Fatalf("the document is YAML: %v\n%s", err, out)
 	}
 	for _, want := range []string{
-		"openapi: 3.1.0", "title: BaaS Proxy", "version: 1.2.0", "url: https://api.example.com",
+		"openapi: 3.1.0", "title: Example API", "version: 1.2.0", "url: https://api.example.com",
 		"/v1/qrcodes:", "post:", "operationId: generateQrCode", "summary: Generate a QR Code charge",
 		"Creates a PIX QR Code charge", "name: x-marketplace-id", "in: header", "format: uuid",
 		"$ref: '#/components/schemas/QrBody'", "\"201\":", "4XX:", "\"204\":", "\"404\":",
@@ -164,7 +164,7 @@ func TestOpenAPI_aCompiledYAMLIsKeptFresh(t *testing.T) {
 	t.Run("OPNAP-B05: A compiled YAML is recognised as generated and its freshness checked", func(t *testing.T) {})
 	root, g := projetoDeTeste(t, map[string]string{"src/generateQrCode.spec.md": apiSpec,
 		"src/models/qrBody.spec.md": bodySpec, "src/models/qrCode.spec.md": qrSpec})
-	escreveTemplate(t, root, "openapi.yaml.tmpl", `{{ openapi "BaaS Proxy" "1.2.0" }}`)
+	escreveTemplate(t, root, "openapi.yaml.tmpl", `{{ openapi "Example API" "1.2.0" }}`)
 	c, err := New(root, g)
 	if err != nil {
 		t.Fatal(err)

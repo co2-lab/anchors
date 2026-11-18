@@ -11,9 +11,9 @@ import (
 	"testing"
 )
 
-// mifFlow is the flow of a project with a work branch, a review branch, a production branch
+// releaseFlow is the flow of a project with a work branch, a review branch, a production branch
 // and hotfixes taken from production.
-func mifFlow() *BranchFlow {
+func releaseFlow() *BranchFlow {
 	return &BranchFlow{
 		Merges: map[string][]string{
 			"review":     {"develop", "hotfix/*"},
@@ -27,7 +27,7 @@ func mifFlow() *BranchFlow {
 func TestBranchFlow_aMergeIsAllowedByItsPair(t *testing.T) {
 	t.Run("BFSBR-B01: A merge is allowed when the base's entry names its head", func(t *testing.T) {})
 	t.Run("BFSBR-B02: A base no entry names takes any head, unless it is protected", func(t *testing.T) {})
-	f := mifFlow()
+	f := releaseFlow()
 	for _, c := range []struct {
 		head, base string
 		ok         bool
@@ -75,7 +75,7 @@ func TestBranchFlow_patterns(t *testing.T) {
 	if ok, _ := f.MergeAllowed("develop", "release/1"); !ok {
 		t.Error("a pattern entry rules the bases it matches")
 	}
-	if !mifFlow().IsProtected("production") || mifFlow().IsProtected("develop") {
+	if !releaseFlow().IsProtected("production") || releaseFlow().IsProtected("develop") {
 		t.Error("the protected branches are those named")
 	}
 }

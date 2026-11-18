@@ -20,7 +20,7 @@ func loadPipeline(t *testing.T, body string) (*Config, error) {
 	return Load(p)
 }
 
-const mifPipeline = `  unguarded:
+const releasePipeline = `  unguarded:
     build-android.yml: only builds an artifact
   stages:
     review-release:
@@ -39,7 +39,7 @@ const mifPipeline = `  unguarded:
 
 func TestPipeline_stagesAndTheirRequirements(t *testing.T) {
 	t.Run("PCSPP-B01: A stage declares its branches, its requirements and the command that runs or validates it", func(t *testing.T) {})
-	c, err := loadPipeline(t, mifPipeline)
+	c, err := loadPipeline(t, releasePipeline)
 	if err != nil {
 		t.Fatal(err)
 	}
