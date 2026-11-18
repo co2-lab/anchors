@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:ab3c1cb6893e5827 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:34d1e78ea0bb7f96 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -7051,6 +7051,16 @@ in `layers/`.
 - [VRPRS-E01 — A rule follows the variants of a rule that names none of its own.](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant)
 
 - [VRPRS-E02 — No map is built.](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant)
+
+### [VRFRA — VersionForward — a change to a product's version moves it forward](layers/gate.md#vrfra--versionforward--a-change-to-a-products-version-moves-it-forward)
+
+- [VRFRA-B01 — The gate passes when, for every product with a source, the version is the one HEAD holds or above it by the product's scheme.](layers/gate.md#vrfra--versionforward--a-change-to-a-products-version-moves-it-forward)
+
+- [VRFRA-B02 — The gate fails naming the product when its version goes back, when it changes to a version of the same rank (`1.0.0+a` to `1.0.0+b`), when the scheme cannot read it, or when the sources disagree or cannot be read now.](layers/gate.md#vrfra--versionforward--a-change-to-a-products-version-moves-it-forward)
+
+- [VRFRA-B03 — A version HEAD did not hold — the source is new, or held none there — passes: there is nothing before it to move forward from.](layers/gate.md#vrfra--versionforward--a-change-to-a-products-version-moves-it-forward)
+
+- [VRFRA-B04 — With no product holding a source, the gate is skipped, saying there is no written version to confront.](layers/gate.md#vrfra--versionforward--a-change-to-a-products-version-moves-it-forward)
 
 ### [VRBSV — VRBaseline — ensures visual regression scenarios have captured reference baseline images](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images)
 

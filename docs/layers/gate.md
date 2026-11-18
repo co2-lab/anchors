@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:ad4c791296d1cbe5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:e880fb1a9c1b2613 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 97 units and 1484 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 98 units and 1488 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -5033,6 +5033,39 @@ nothing until a rule declares them.
 - **VRPRS-E01** — A rule follows the variants of a rule that names none of its own.
 
 - **VRPRS-E02** — No map is built.
+
+
+## VRFRA — VersionForward — a change to a product's version moves it forward
+
+A product declares in `versioning:` (VRSNN) the files that hold its version. This gate reads the
+version those sources hold now against the version they held at HEAD, by the product's scheme
+(VRSNE). A commit that leaves the version alone passes: a branch keeps one version over many
+commits. A commit that changes it must leave it readable, agreed between the sources and above the
+one before: never lower, never a different spelling of the same rank.
+
+Whether the version was already released elsewhere is not a question of the commit, which cannot see
+the other branches nor what reached a store: the pipeline's stage asks that.
+
+It is a question of the project's sources, never of one file: declared with `scope: project`, it
+gives one verdict.
+
+```yaml
+gates:
+  - name: version-forward
+    check: version-forward
+    scope: project
+    on: [code]
+    blocking: true
+```
+
+
+- **VRFRA-B01** — The gate passes when, for every product with a source, the version is the one HEAD holds or above it by the product's scheme.
+
+- **VRFRA-B02** — The gate fails naming the product when its version goes back, when it changes to a version of the same rank (`1.0.0+a` to `1.0.0+b`), when the scheme cannot read it, or when the sources disagree or cannot be read now.
+
+- **VRFRA-B03** — A version HEAD did not hold — the source is new, or held none there — passes: there is nothing before it to move forward from.
+
+- **VRFRA-B04** — With no product holding a source, the gate is skipped, saying there is no written version to confront.
 
 
 ## VRBSV — VRBaseline — ensures visual regression scenarios have captured reference baseline images

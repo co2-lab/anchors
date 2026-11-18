@@ -206,6 +206,8 @@ var checkersComGate = map[string]func(g config.Gate, root string, graph *mapx.Gr
 	// The stages the workflows call against the ones the configuration declares: a question
 	// of the project, never of one file.
 	"pipeline-wired": checkPipelineWired,
+	// A product's version against the one at HEAD: a question of the project's sources.
+	"version-forward": checkVersionForward,
 }
 
 // runInternalAggregate executa um checker interno de escopo batch/project.

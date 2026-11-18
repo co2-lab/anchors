@@ -292,6 +292,10 @@
         "slug": "docs/gates/pipeline-wired"
       },
       {
+        "label": "version-forward",
+        "slug": "docs/gates/version-forward"
+      },
+      {
         "label": "obligation-honored",
         "slug": "docs/gates/obligation-honored"
       },

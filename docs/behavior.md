@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:b6518017c582bb57 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:0c55bde5456ee575 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -6393,6 +6393,14 @@ is what the test proves.
 - [A rule following a rule that names no variants fails](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant) `VRPRS-E01`
 
 - [Without a map the gate is pending](layers/gate.md#vrprs--variantsproven--a-rule-that-names-its-variants-is-proven-once-per-variant) `VRPRS-E02`
+
+- [A version kept or raised passes](layers/gate.md#vrfra--versionforward--a-change-to-a-products-version-moves-it-forward) `VRFRA-B01`
+
+- [A version that goes back, moves sideways, cannot be read or disagrees fails naming the product](layers/gate.md#vrfra--versionforward--a-change-to-a-products-version-moves-it-forward) `VRFRA-B02`
+
+- [A version HEAD did not hold passes](layers/gate.md#vrfra--versionforward--a-change-to-a-products-version-moves-it-forward) `VRFRA-B03`
+
+- [No product with a source skips the gate](layers/gate.md#vrfra--versionforward--a-change-to-a-products-version-moves-it-forward) `VRFRA-B04`
 
 - [Artifacts that are not feature files leave with verdict Skip](layers/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B01`
 
