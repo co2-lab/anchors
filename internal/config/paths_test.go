@@ -120,6 +120,8 @@ var notAPath = map[string]string{
 	"TestsSource.pattern": "a regular expression over a test file's lines",
 	"TestLevel.exclude":   "regular expressions over rule codes",
 	"Requirement.from":    "a branch pattern",
+	"Product.pattern":     "a regular expression over a version",
+	"VersionSource.path":  "a path into a JSON or YAML document, not a file",
 }
 
 func TestPaths_everyFieldNamedForAPathIsTagged(t *testing.T) {

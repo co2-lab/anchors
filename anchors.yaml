@@ -16,6 +16,13 @@ version: 8
 # The version floor: `mode: manual` (below) exists from 0.1.190 on. An older binary would
 # refuse to load this file; with the floor it asks to be updated instead.
 min_version: 0.1.190
+# THE VERSION OF THE CLI: only in its tags (`v0.2.1`), with no file holding it — the release
+# builds it into the binary. Each release raises the patch; `anchors version` shows the next.
+versioning:
+  cli:
+    scheme: semver
+    tag: "v{version}"
+    next: { strategy: increment, part: patch }
 # THE WORKFLOW MODE: manual — the local mode without automatic issues. `anchors check`
 # reports and stamps the map, and nothing is written to `issues/` unless a command runs
 # with `--record-issues`. The check's output is the list to work from; a second copy of it
@@ -122,7 +129,7 @@ layers:
   # how a mutation report is scored. Declarative, `anchors new spec` refused their spec
   # and every unit gate skipped them — rules nobody could state, let alone prove.
   infra:
-    pattern: "internal/{change,changelog,checklog,code,daemon,gitmeta,health,initx,issue,pack,progress,pushreview,queue,recode,runs,shell,similarity,suggestion,testlist,testsig}/*.go"
+    pattern: "internal/{change,changelog,checklog,code,daemon,gitmeta,health,initx,issue,pack,progress,pushreview,queue,recode,runs,shell,similarity,suggestion,testlist,testsig,version}/*.go"
     kind: code
     tags: [infra]
     regime: comportamental
@@ -261,7 +268,7 @@ dialect:
   # the test for it. How a test opens and where its block ends came from the Go family's
   # example, written by `anchors migrate` (format 8): nothing is read that is not declared.
   tests:
-    assertion: '\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b|\b(?:wantAll|wantNone|partialEqualsFull|refused)\(t\b'
+    assertion: '\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b|\b(?:wantAll|wantNone|partialEqualsFull|refused|refuses|ascending|fails)\(t\b'
     pattern: \bt\.Run\(\s*(?:"(?P<title>(?:[^"\\\n]|\\.)*)"|`(?P<title2>[^`]*)`)
     block_open: '[{(\[]\s*$'
     block_close: ^\s*[}\])]

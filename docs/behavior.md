@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:f55613083115a46d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:b6518017c582bb57 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2330,6 +2330,28 @@ is what the test proves.
 
 - [A card that cannot be opened fails with the host's message](layers/comando.md#sycms--synthesizecommand--two-pull-requests-in-content-conflict-become-one-card-that-asks-for-the-best-of-each-and-every-end-points-at-it) `SYCMS-E01`
 
+- [The command shows the sources, the release, the branch's rule and the next version](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B01`
+
+- [The latest release is the highest version of the product, not the last name](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B02`
+
+- [JSON prints the state with the commits classified](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B03`
+
+- [Bump writes the strategy's version into every source, and only the version](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B04`
+
+- [Bump raises a part, or writes the version given](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B05`
+
+- [Bump to the version the sources hold writes nothing](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B06`
+
+- [A single product needs no name, and the current branch decides](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B07`
+
+- [No block, an unknown product, or several products without a name](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-E01`
+
+- [A detached HEAD needs a branch named](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-E02`
+
+- [Sources that disagree or a tag the scheme cannot read stop the command](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-E03`
+
+- [Bump refuses a version that does not move forward, and writes nothing](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-E04`
+
 - [A changed rule reaches its tests](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-B01`
 
 - [A changed region reaches its tests, and a change outside reaches the closure](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-B02`
@@ -3509,6 +3531,28 @@ is what the test proves.
 - [The project declares its bypasses and the layers that run the skipped path](layers/config.md#tbysa-b01--the-project-declares-its-bypasses-and-the-layers-that-run-the-skipped-path) `TBYSA-B01`
 
 - [A bypass declaration that cannot hold refuses the configuration](layers/config.md#tbysa-e01--a-bypass-declaration-that-cannot-hold-refuses-the-configuration) `TBYSA-E01`
+
+- [The versioning block loads its products, and a configuration without it versions nothing](layers/config.md#vrsnn-b01--the-versioning-block-loads-its-products-and-a-configuration-without-it-versions-nothing) `VRSNN-B01`
+
+- [Next is a strategy's name or a map, and manual when none is written](layers/config.md#vrsnn-b02--next-is-a-strategys-name-or-a-map-and-manual-when-none-is-written) `VRSNN-B02`
+
+- [A branch takes the first rule it matches, in the order written, else the default](layers/config.md#vrsnn-b03--a-branch-takes-the-first-rule-it-matches-in-the-order-written-else-the-default) `VRSNN-B03`
+
+- [The tag is v{version} by default, and a tag is read back only with the product's text around it](layers/config.md#vrsnn-b04--the-tag-is-vversion-by-default-and-a-tag-is-read-back-only-with-the-products-text-around-it) `VRSNN-B04`
+
+- [A source is read at its path or in its group, and the sources must agree](layers/config.md#vrsnn-b05--a-source-is-read-at-its-path-or-in-its-group-and-the-sources-must-agree) `VRSNN-B05`
+
+- [A source is rewritten in place, keeping every byte around the version](layers/config.md#vrsnn-b06--a-source-is-rewritten-in-place-keeping-every-byte-around-the-version) `VRSNN-B06`
+
+- [A product whose scheme does not build refuses the configuration](layers/config.md#vrsnn-e01--a-product-whose-scheme-does-not-build-refuses-the-configuration) `VRSNN-E01`
+
+- [A source that names no place refuses the configuration](layers/config.md#vrsnn-e02--a-source-that-names-no-place-refuses-the-configuration) `VRSNN-E02`
+
+- [A tag without its version, or with it twice, refuses the configuration](layers/config.md#vrsnn-e03--a-tag-without-its-version-or-with-it-twice-refuses-the-configuration) `VRSNN-E03`
+
+- [A rule that cannot decide refuses the configuration](layers/config.md#vrsnn-e04--a-rule-that-cannot-decide-refuses-the-configuration) `VRSNN-E04`
+
+- [A version not found is an error naming the file](layers/config.md#vrsnn-e05--a-version-not-found-is-an-error-naming-the-file) `VRSNN-E05`
 
 - [With no source registered, the default gate names are absent, not a failure](layers/config.md#gtvcg-b01--with-no-source-registered-the-default-gate-names-are-absent-not-a-failure) `GTVCG-B01`
 
@@ -7787,6 +7831,42 @@ is what the test proves.
 - [The tests that passed on a retry are kept](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion) `TFSTM-B04`
 
 - [An unreadable test file counts for nothing](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion) `TFSTM-B05`
+
+- [Semver versions are ordered as SemVer 2.0 says](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B01`
+
+- [A calver version is read in the widths its format gives](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B02`
+
+- [A number version is a non-negative integer](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B03`
+
+- [A pattern version is ordered by its groups](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B04`
+
+- [Semver raises a part and resets the ones after it, and a pre-release is the release it precedes](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B05`
+
+- [Calver takes the date from today and its counter goes up only on the same date](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B06`
+
+- [A pattern raises the group it names and resets the later ones](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B07`
+
+- [Manual is the version the sources hold](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B08`
+
+- [Increment raises the latest release, and stays there with no commit since it](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B09`
+
+- [Semantic raises the release by the largest change since it](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B10`
+
+- [Semantic with initial bumps the minor for a breaking change, and types give a type its level](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B11`
+
+- [Before any release, the sources hold the version, or the scheme gives its first one](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B12`
+
+- [A Version footer forces the next version, the newest one winning](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B13`
+
+- [None gives no version, whatever the footers say](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B14`
+
+- [A scheme that reads nothing is refused](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-E01`
+
+- [A version the scheme cannot read is an error, never smaller nor equal](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-E02`
+
+- [A next version below the latest release is refused](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-E03`
+
+- [A strategy that would have to guess is refused](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-E04`
 
 ## mapa
 

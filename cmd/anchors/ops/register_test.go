@@ -24,7 +24,7 @@ func TestRegisterAddsEachOpsCommandOnce(t *testing.T) {
 		names = append(names, c.Name())
 	}
 	sort.Strings(names)
-	want := "board,branch,changelog,code,commit-msg,docs,freeze,generated-paths,init,install-hooks,migrate,new,pipeline,settings,suggest,synthesize,thaw"
+	want := "board,branch,changelog,code,commit-msg,docs,freeze,generated-paths,init,install-hooks,migrate,new,pipeline,settings,suggest,synthesize,thaw,version"
 	if got := strings.Join(names, ","); got != want {
 		t.Errorf("registered = %s\nwant       = %s", got, want)
 	}

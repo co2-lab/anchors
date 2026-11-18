@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:826ed25ee7a1a358 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:ab3c1cb6893e5827 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2574,6 +2574,30 @@ in `layers/`.
 
 - [SYCMS-E01 — The card cannot be opened on the host.](layers/comando.md#sycms--synthesizecommand--two-pull-requests-in-content-conflict-become-one-card-that-asks-for-the-best-of-each-and-every-end-points-at-it)
 
+### [VRSNI — VersionCommand — a product's version, its latest release and the next version its branch asks for](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-B01 — The command shows the version each source holds, the latest release and its tag, the branch with the strategy it resolves to and the rule that decided (`default`, or the pattern), the next version with its reason, and how many commits came since the release. (`printVersionState`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-B02 — The latest release is the highest version, by the product's scheme, among the product's tags reachable from HEAD: not git's order of names, and never another product's tag. (`latestRelease`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-B03 — `--json` prints the product, scheme, branch, rule, strategy, current and released versions, the sources, the next version with its reason and whether a footer forced it, and each commit since the release with its type, whether it breaks, and its footers. (`describeCommit`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-B04 — `bump` with no argument writes the version the branch's strategy computes into every source, changing only the version's bytes, and names the files. (`bumpVersion`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-B05 — `bump <part>` raises that part of the version the sources hold; `bump <version>` writes that version.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-B06 — `bump` to the version the sources already hold says so and writes nothing.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-B07 — A project with a single product names none, and the current branch decides when `--branch` is not given.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-E01 — No `versioning:` block, a `--product` the block does not hold, or several products and no `--product`.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-E02 — A detached HEAD, or no repository, and no `--branch`.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-E03 — Sources that disagree or cannot be read (VRSNN-E05), a tag of the product its scheme cannot read, or a strategy that cannot decide (VRSNE-E04).](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-E04 — `bump` to a version the scheme cannot read, below what the sources hold, not above the latest release, on a product with no source, or on a branch that never versions.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
 ### [AFTSF — AffectedTests — which tests to run for what changed, by rule and region where the project declares them](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them)
 
 - [AFTSF-B01 — A spec whose rule's definition changed — added and removed rules included — reaches the tests whose title carries that rule's code; a change to the rest of the spec reaches none. (`affectedBy`, `changedRuleCodes`)](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them)
@@ -3851,6 +3875,30 @@ in `layers/`.
 - [TBYSA-B01 — The project declares the patterns of its bypasses and the suite layers that run the skipped path. (`TestBypass`, `PatternREs`)](layers/config.md#tbysa--testbypass--how-the-code-skips-an-effect-while-a-test-runs-and-the-suites-that-run-it)
 
 - [TBYSA-E01 — No pattern, an empty or invalid pattern, or no `proven_by` layer.](layers/config.md#tbysa--testbypass--how-the-code-skips-an-effect-while-a-test-runs-and-the-suites-that-run-it)
+
+### [VRSNN — Versioning — the products a project versions, where each writes its version, and how each branch moves it](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-B01 — `versioning:` loads its products, each with its scheme, sources, tag, default strategy and branch rules; a configuration without it loads as before and versions nothing.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-B02 — `next:` is a strategy's name (`next: none`) or a map of it and its options; a product that writes no `next:` resolves to `manual`. (`Resolved`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-B03 — A branch resolves to the rule of the first pattern of `branches:` it matches, in the order written, and to the product's `next:` when none matches; the resolution names the pattern that decided. (`NextFor`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-B04 — The tag is `v{version}` when the product names none; a tag is read back as a version of the product only when it has the tag's text around the version. (`TagFor`, `VersionOfTag`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-B05 — A source's version is read at its path in a JSON or YAML document, or in its regex's group; two or more sources must hold the same version, and a disagreement names each file and its version. (`ReadSources`, `Agreed`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-B06 — A source is rewritten with a new version and nothing else of the file changes: the bytes around the version — quotes, spacing, the other keys — are kept as they are. (`Rewrite`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E01 — A product whose scheme does not build (VRSNE-E01), or that is empty.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E02 — A source with no `file`, with both or neither of `path:` and `regex:`, or with a regex that does not compile or does not have exactly one group.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E03 — A tag without `{version}`, or with it twice.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E04 — A strategy that does not exist, a part the scheme lacks, `semantic` off semver, a level of `types:` that is not one, `manual` on a product with no source, an option of another strategy, a key `next:` or a branch rule does not know, a branch pattern that is neither a glob nor `re:`.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E05 — A source file missing or unreadable, not JSON nor YAML for a `path:`, without a scalar at the path, matched by no regex, or holding its version in a form that cannot be rewritten in place.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 ### [GTVCG — GateVocabulary — the list of default gate names, injected into the configuration layer](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
@@ -8589,6 +8637,44 @@ in `layers/`.
 - [TFSTM-B05 — A test file the stack points at that cannot be read counts for nothing: the case is told by its failure alone — a missing file never turns a failure into a retry.](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion)
 
 - [TFSTM-B04 — The tests that passed only on a retry are kept, each with when and under what load; added entries join the earlier ones, the latest 500 kept; a missing or unreadable record is empty. (`Retried`, `AddRetried`, `LoadRetried`, `RetriedFile`)](layers/infra.md#tfstm--timeoutfailure--telling-a-test-that-ran-out-of-time-from-one-that-failed-its-assertion)
+
+### [VRSNE — Version — a product's version read, ordered and moved, and the next one decided](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B01 — Two semver versions are ordered as SemVer 2.0 says: major, minor and patch as numbers, a pre-release below its release, its identifiers numeric below alphanumeric, and build metadata ignored. (`Compare`)](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B02 — A calver version is read field by field as its format says, each field as a number in the width the format gives it (`0M` two digits, `MM` with no leading zero), and ordered left to right.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B03 — A `number` version is a non-negative integer, ordered as one.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B04 — A `pattern` version is ordered by its capture groups, as numbers, left to right.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B05 — Semver raises `major`, `minor` or `patch` and resets the parts after it; a pre-release is already the release it precedes, so `1.1.0-rc.1` raised in its minor or its patch is `1.1.0`. (`Increment`)](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B06 — Calver writes the date fields from today, and its `MICRO` counter goes up while the date is the same and starts at 0 on a new date.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B07 — A pattern raises the group its index or its name points to, resets the later groups to 0, and keeps the text around the groups.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B08 — `manual` is the version the sources hold. (`Next`)](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B09 — `increment` raises the part of the latest release; with no commit since the release, the version stays the release.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B10 — `semantic` raises the latest release by the largest change of the commits since it — a breaking change the major, a `feat` the minor, a `fix` the patch —, and says what asked for it (`2 feat, 1 fix`); with nothing that bumps, the version stays the release. A commit's type and its `!` are read from its subject. (`CommitType`)](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B11 — `semantic` with `initial: true` bumps the minor for a breaking change below 1.0.0, and `types:` gives a commit type its level (`perf: patch`, `feat: none`) among `major`, `minor`, `patch` and `none`. (`ValidLevel`)](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B12 — Before any release, `increment` and `semantic` start from what the sources hold, or, with no source, from the scheme's first version: `1.0.0` (`0.1.0` with `initial: true`) or `1`.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B13 — A `Version:` footer on a commit since the latest release forces the next version, the newest one winning, and the result names the commit.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B14 — `none` gives no version and says the branch never versions; a footer does not change it.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-E01 — A scheme that is not one of the four, a calver format with an unknown field or a `MICRO` before the end, a pattern that does not compile or has no group.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-E02 — A version the scheme cannot read: the sources', the release's, the computed one or a forced one.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-E03 — The next version — forced or computed — is below the latest release.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-E04 — A part the scheme does not have; `semantic` on a scheme that is not semver; `manual` with no source; `increment` or `semantic` with no release, no source and no first version for the scheme; a calver with no counter raised on the date it already holds; an unknown strategy.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
 
 ## mapa
 

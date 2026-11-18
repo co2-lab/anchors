@@ -248,6 +248,10 @@
     "slug": "docs/cli/commands/verify"
   },
   {
+    "label": "anchors version",
+    "slug": "docs/cli/commands/version"
+  },
+  {
     "label": "anchors watch",
     "slug": "docs/cli/commands/watch"
   },

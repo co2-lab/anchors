@@ -38,12 +38,13 @@ anchors backfill-labels [flags]
 | `--dry-run` |  | show what it would do, without touching anything |
 | `--root` | `.` | project root |
 
-## Changelog, pull requests e pipeline — família
+## Versões, changelog, pull requests e pipeline — família
 
 Comandos da mesma família — o que distingue cada um:
 
 | Comando | O que faz |
 | --- | --- |
+| [`anchors version`](/pt/docs/cli/commands/version/) | Show a product's version, its latest release and the next version its branch asks for |
 | [`anchors changelog`](/pt/docs/cli/commands/changelog/) | Build the technical changelog from the commits, release by release |
 | [`anchors commit-msg`](/pt/docs/cli/commands/commit-msg/) | Confront the commit message with the format the changelog will read |
 | [`anchors pr-body`](/pt/docs/cli/commands/pr-body/) | Write the lines linking this work's cards, in the platform's syntax |

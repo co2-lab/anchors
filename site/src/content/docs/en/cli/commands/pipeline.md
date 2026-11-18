@@ -95,12 +95,13 @@ anchors pipeline run <stage> [flags]
 | `--root` | `.` | project root |
 | `--sha` |  | the commit the stage runs on (default $GITHUB_SHA) |
 
-## Changelog, pull requests and pipeline — family
+## Versions, changelog, pull requests and pipeline — family
 
 Commands of the same family — what tells each apart:
 
 | Command | What it does |
 | --- | --- |
+| [`anchors version`](/docs/cli/commands/version/) | Show a product's version, its latest release and the next version its branch asks for |
 | [`anchors changelog`](/docs/cli/commands/changelog/) | Build the technical changelog from the commits, release by release |
 | [`anchors commit-msg`](/docs/cli/commands/commit-msg/) | Confront the commit message with the format the changelog will read |
 | [`anchors pr-body`](/docs/cli/commands/pr-body/) | Write the lines linking this work's cards, in the platform's syntax |

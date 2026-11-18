@@ -237,6 +237,8 @@ type Config struct {
 	BranchFlow *BranchFlow `yaml:"branch_flow,omitempty"`
 	// Pipeline is what the pipeline's stages ask before they run. See pipeline.go.
 	Pipeline *Pipeline `yaml:"pipeline,omitempty"`
+	// Versioning is how each product writes, orders and moves its version. See versioning.go.
+	Versioning Versioning `yaml:"versioning,omitempty"`
 	// Boundaries são as FRONTEIRAS entre camadas: o que cada uma não pode alcançar.
 	// Declarar `layers:` sem isto é desenhar a arquitetura sem defendê-la. Ver Boundary.
 	Boundaries []Boundary `yaml:"boundaries,omitempty"`
@@ -2241,6 +2243,9 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := validatePipeline(c.Pipeline); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	if err := validateVersioning(c.Versioning); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := c.validarDialetos(); err != nil {

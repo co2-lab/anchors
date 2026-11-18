@@ -49,7 +49,7 @@ var families = []family{
 	{"setup", "Setup and artifacts", "Configuração e artefatos", []string{"init", "new", "code", "guide", "docs", "install-hooks", "migrate", "settings", "touch"}},
 	{"queue", "The work queue", "A fila de trabalho", []string{"next", "queue", "work", "done", "drop", "reclaim", "deliver", "decided", "discard", "unblock", "escalate", "report-bug", "synthesize", "watch", "monitor", "flow", "board", "progress"}},
 	{"freeze", "Freezing the project", "Congelar o projeto", []string{"freeze", "thaw"}},
-	{"release", "Changelog, pull requests and pipeline", "Changelog, pull requests e pipeline", []string{"changelog", "commit-msg", "pr-body", "backfill-labels", "report", "branch", "pipeline"}},
+	{"release", "Versions, changelog, pull requests and pipeline", "Versões, changelog, pull requests e pipeline", []string{"version", "changelog", "commit-msg", "pr-body", "backfill-labels", "report", "branch", "pipeline"}},
 }
 
 // texts are the page's own words in each language; the command's help is the CLI's.
