@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRPRG
-  updated_at: 2026-10-08
+  updated_at: 2026-11-19
   layer: mapa
 -->
 # GraphPersistence — saving and loading the map file without churn and without partial reads
@@ -40,6 +40,7 @@ understood.
 | `GRPRG-B03` | When the only difference between the new content and the file on disk is the line naming the binary that wrote it, the file is left untouched. |
 | `GRPRG-B04` | When anything else changed, the file is rewritten, carrying the release of the binary that is running. |
 | `GRPRG-B08` | A release LATER than the one the file names rewrites it even when nothing else changed, so the stale-binary warning can be cleared with `anchors map build`; an earlier release, or one that is not a release (`dev`), does not. |
+| `GRPRG-B09` | The map is written a node and an edge at a time, each one marshalled in its place under its list's key, and the bytes are those the whole graph marshals to. The file on disk is read once and compared as bytes. A project's 30 MB map, marshalled whole, allocated 3.5 GB: yaml.v3's emitter keeps every event of a document until it ends. (`marshalGraph`, `sameIgnoringGeneratedBy`) |
 | `GRPRG-B05` | Loading a map whose format this binary cannot read returns the format refusal and no graph. |
 | `GRPRG-B06` | A map read from its bytes — the one git keeps at a commit — is read like one from disk, with the same format check, and a refusal names where it came from. (`LoadBytes`) |
 | `GRPRG-B07` | A node's signal that holds nothing is loaded as no signal: a signal means something was measured. |

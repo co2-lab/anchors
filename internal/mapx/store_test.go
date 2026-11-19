@@ -12,6 +12,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 // THE `generated_by` FIELD MUST NOT CAUSE THE OSCILLATION IT EXISTS TO REVEAL.
@@ -198,4 +200,35 @@ func TestLoad_emptySignalIsNoSignal(t *testing.T) {
 	if g.Nodes[0].Signal != nil || g.Nodes[1].Signal == nil || g.Nodes[1].Signal.Passed != 2 {
 		t.Errorf("the empty signal is dropped and the measured one kept, got %+v %+v", g.Nodes[0].Signal, g.Nodes[1].Signal)
 	}
+}
+
+// A project's 30 MB map allocated 3.5 GB to be saved: yaml.v3's emitter keeps every event of
+// a document until it ends. Written an item at a time, the bytes must not move.
+func TestSaveWritesTheWholeGraphsBytes(t *testing.T) {
+	t.Run("GRPRG-B09: The map is written a node and an edge at a time, in the very bytes the whole graph marshals to", func(t *testing.T) {
+		nodes := []Node{
+			{ID: "a.go", Kind: KindCode, Rev: "r1", Code: "ABCDE"},
+			{ID: "docs/b.md", Kind: KindDoc, Rev: "r2", UpdatedAt: "2026-11-19"},
+			{ID: "c: d.spec.md", Kind: KindSpec, Rev: "'quoted'"},
+		}
+		edges := []Edge{{From: "a.go", To: "docs/b.md", Type: "governs"}, {From: "x", To: "y", Type: "specifies", Julgamentos: []Judgment{{}}}}
+		for name, g := range map[string]*Graph{
+			"full":        {Version: FormatoAtual, GeradoPor: "0.2.7", ConfigRev: "abc", Nodes: nodes, Edges: edges, Flow: &FlowGraph{States: []FlowState{{}}}},
+			"no lists":    {Version: FormatoAtual},
+			"nodes only":  {Version: FormatoAtual, Nodes: nodes},
+			"no metadata": {Version: FormatoAtual, Nodes: nodes[:1], Edges: edges[:1]},
+		} {
+			whole, err := yaml.Marshal(g)
+			if err != nil {
+				t.Fatal(err)
+			}
+			parts, err := marshalGraph(g)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(parts) != string(whole) {
+				t.Errorf("%s:\n%s\nwant\n%s", name, parts, whole)
+			}
+		}
+	})
 }

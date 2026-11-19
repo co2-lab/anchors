@@ -5,6 +5,8 @@
 package mapx
 
 import (
+	"bytes"
+	"fmt"
 	"os"
 	"reflect"
 	"regexp"
@@ -38,7 +40,7 @@ func Save(g *Graph, path string) error {
 	// formato em que ele já está.
 	g.Version = FormatoAtual
 	g.GeradoPor = GeneratedBy
-	data, err := yaml.Marshal(g)
+	data, err := marshalGraph(g)
 	if err != nil {
 		return err
 	}
@@ -61,10 +63,94 @@ func Save(g *Graph, path string) error {
 	// be cleared: `map build` wrote nothing, so the warning stayed. An older release never
 	// restamps, and neither does `dev`, which no release orders against — so the field
 	// still cannot oscillate.
-	if equalIgnoringGeneratedBy(path, completo) && !newerRelease(GeneratedBy, generatedByOnDisk(path)) {
+	//
+	// The file on disk is read once, and compared as bytes: a project's map of 30 MB was
+	// read twice and copied into strings four times on every save.
+	if atual, err := os.ReadFile(path); err == nil && sameIgnoringGeneratedBy(atual, completo) &&
+		!newerRelease(GeneratedBy, generatedByIn(atual)) {
 		return nil
 	}
 	return os.WriteFile(path, completo, 0o644)
+}
+
+// marshalGraph writes the graph as yaml.Marshal writes it, a node and an edge at a time.
+// yaml.v3's emitter keeps every event of a document until the document ends, so a map
+// marshalled whole held gigabytes: a project's 30 MB map allocated 3.5 GB to be saved,
+// and `anchors test` held 3.2 GB after its runner ended. Each item is marshalled in the
+// same place of the document — the list under its key —, so the bytes are the same.
+func marshalGraph(g *Graph) ([]byte, error) {
+	var out bytes.Buffer
+	head, err := yaml.Marshal(struct {
+		Version   int    `yaml:"version"`
+		GeradoPor string `yaml:"generated_by,omitempty"`
+		ConfigRev string `yaml:"config_rev,omitempty"`
+	}{g.Version, g.GeradoPor, g.ConfigRev})
+	if err != nil {
+		return nil, err
+	}
+	out.Write(head)
+	if err := marshalList(&out, "nodes", len(g.Nodes), func(i int) any {
+		return struct {
+			L []Node `yaml:"nodes"`
+		}{g.Nodes[i : i+1]}
+	}); err != nil {
+		return nil, err
+	}
+	if err := marshalList(&out, "edges", len(g.Edges), func(i int) any {
+		return struct {
+			L []Edge `yaml:"edges"`
+		}{g.Edges[i : i+1]}
+	}); err != nil {
+		return nil, err
+	}
+	if g.Flow != nil {
+		flow, err := yaml.Marshal(struct {
+			Flow *FlowGraph `yaml:"flow,omitempty"`
+		}{g.Flow})
+		if err != nil {
+			return nil, err
+		}
+		out.Write(flow)
+	}
+	return out.Bytes(), nil
+}
+
+// marshalList writes `key:` and then each item, marshalled alone under the same key, with
+// the key's line dropped; an empty list is written as yaml.Marshal writes it.
+func marshalList(out *bytes.Buffer, key string, n int, one func(int) any) error {
+	if n == 0 {
+		out.WriteString(key + ": []\n")
+		return nil
+	}
+	out.WriteString(key + ":\n")
+	prefix := []byte(key + ":\n")
+	for i := 0; i < n; i++ {
+		b, err := yaml.Marshal(one(i))
+		if err != nil {
+			return err
+		}
+		if !bytes.HasPrefix(b, prefix) {
+			return fmt.Errorf("map: %s[%d] did not marshal as a list item", key, i)
+		}
+		out.Write(b[len(prefix):])
+	}
+	return nil
+}
+
+// sameIgnoringGeneratedBy says whether two maps are the same but for who generated them.
+// The field is a line of the head, before the first list.
+func sameIgnoringGeneratedBy(a, b []byte) bool {
+	ha, ra := splitHead(a)
+	hb, rb := splitHead(b)
+	return bytes.Equal(ra, rb) && bytes.Equal(generatedByLineRE.ReplaceAll(ha, nil), generatedByLineRE.ReplaceAll(hb, nil))
+}
+
+// splitHead parts a map at its first list: the head holds the scalar fields.
+func splitHead(b []byte) ([]byte, []byte) {
+	if i := bytes.Index(b, []byte("\nnodes:")); i >= 0 {
+		return b[:i+1], b[i+1:]
+	}
+	return b, nil
 }
 
 // Load lê um grafo existente do disco.
@@ -98,15 +184,6 @@ func LoadBytes(data []byte, name string) (*Graph, error) {
 	return &g, nil
 }
 
-// equalIgnoringGeneratedBy diz se o mapa em disco é o mesmo, desconsiderando quem o gerou.
-func equalIgnoringGeneratedBy(path string, novo []byte) bool {
-	atual, err := os.ReadFile(path)
-	if err != nil {
-		return false // não existe ainda: há o que escrever
-	}
-	return withoutGeneratedBy(atual) == withoutGeneratedBy(novo)
-}
-
 var generatedByLineRE = regexp.MustCompile(`(?m)^generated_by:.*\n`)
 
 // generatedByOnDisk is the release the map on disk says wrote it; empty when there is none.
@@ -115,7 +192,13 @@ func generatedByOnDisk(path string) string {
 	if err != nil {
 		return ""
 	}
-	m := generatedByLineRE.Find(b)
+	return generatedByIn(b)
+}
+
+// generatedByIn is the release a map's bytes say wrote it; empty when they say none.
+func generatedByIn(b []byte) string {
+	head, _ := splitHead(b)
+	m := generatedByLineRE.Find(head)
 	if m == nil {
 		return ""
 	}
@@ -127,10 +210,6 @@ func generatedByOnDisk(path string) string {
 func newerRelease(running, stored string) bool {
 	o, err := config.VersionOrder(running, stored)
 	return err == nil && o > 0
-}
-
-func withoutGeneratedBy(b []byte) string {
-	return generatedByLineRE.ReplaceAllString(string(b), "")
 }
 
 // dropEmptySignals turns a signal that holds nothing into no signal. A signal means

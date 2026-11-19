@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:31a8ff512a7853ec — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:c47b1f50fc4554bb — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -8443,6 +8443,8 @@ is what the test proves.
 - [A map read from bytes is read like one from disk](layers/mapa.md#grprg-b06--a-map-read-from-bytes-is-read-like-one-from-disk) `GRPRG-B06`
 
 - [An empty signal loads as no signal](layers/mapa.md#grprg-b07--an-empty-signal-loads-as-no-signal) `GRPRG-B07`
+
+- [The map is written a node and an edge at a time, in the very bytes the whole graph marshals to](layers/mapa.md#grprg-b09--the-map-is-written-a-node-and-an-edge-at-a-time-in-the-very-bytes-the-whole-graph-marshals-to) `GRPRG-B09`
 
 - [With code as the anchor a code file tests through its own name](layers/mapa.md#tsunt-b01--with-code-as-the-anchor-a-code-file-tests-through-its-own-name) `TSUNT-B01`
 

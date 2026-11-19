@@ -2,7 +2,7 @@
 # @anchors
 #   code: STFTF
 #   ref: GRPRG
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @GRPRG
@@ -85,3 +85,9 @@ Feature: GraphPersistence — saving and loading the map file without churn and 
     Given a map with a node whose signal is empty and one whose signal was measured
     When it is loaded
     Then the first has no signal and the second keeps its own
+
+  @GRPRG-B09 @unit-level
+  Scenario: The map is written a node and an edge at a time, in the very bytes the whole graph marshals to
+    Given graphs with nodes, edges, judgments and flow, with no lists, with nodes only, and with no metadata
+    When each is marshalled an item at a time and as a whole
+    Then the bytes are the same
