@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:9c88e86238bc735b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:a57f1191c9c77cbe — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -1686,7 +1686,7 @@ in `layers/`.
 
 - [NGSTI-B25 — `--alias OLD=NEW` (repeatable) and `--alias-file` read the report and each file's content at the run's commit with a code renamed since — a unit's, and each of its scenarios, or one scenario's —, in one pass, a whole code at a time: a file whose only change is the rename keeps its proof fresh, and the signal records the aliases. (`remap`, `readReport`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
-- [NGSTI-B26 — A partial run's coverage is taken for the files its runner was handed — the impact path `anchors test --changed` gives `{{files}}` — and every other file in its report is left as it was, the count said. The tests related to a file are every test that can reach it, so its measurement is whole; another file was measured by a few of its tests, or reported at 0% unloaded (jest's `collectCoverageFrom`). A partial ingestion by hand, with no targets, takes the whole report. (`CoverageTargets`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+- [NGSTI-B26 — A partial run's coverage is taken for the files its runner was handed — the impact path `anchors test --changed` gives `{{files}}` — and every other file in its report is left as it was, the count said. The tests related to a file are every test that can reach it, so its measurement is whole; another file was measured by a few of its tests, or reported at 0% unloaded (jest's `collectCoverageFrom`). The budget, selection and retry runs hand their batches the same way. A partial ingestion by hand, with no targets, takes the whole report. (`CoverageTargets`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B19 — A JUnit case with no `file` finds its test file from its class and name: the class names a test folder of the map by path suffix (segments split by `/`, or by `.` when it has none, dropped from the front until one exists; the root's folder when none does), and the case's file is the one test file there whose dialect `definition` defines the case's top-level test, the name before `/`; no folder, no file, or two files give the case no file. (`caseFileResolver`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
@@ -2721,6 +2721,8 @@ in `layers/`.
 - [BDGRN-B07 — A suite with no `run_changed:` or no report, or a budget together with `--changed`, is refused before anything runs.](layers/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent)
 
 - [BDGRN-B08 — The plan holds only the files the suite's `paths:` cover.](layers/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent)
+
+- [BDGRN-B09 — A budget batch's coverage is taken for no code file: a batch runs some test files, and measures every code file in part. The whole measurements are left as they were, and the run says how many. The same holds for the tests a run repeats under load; a selection's batch takes the coverage of the code files it names, whose related tests all ran. (NGSTI-B26)](layers/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent)
 
 - [BDGRN-E01 — REF[BDGRN-B07]: a suite the budget cannot run in batches](layers/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent)
 

@@ -167,7 +167,11 @@ func runSuiteWithBudget(cs suiteCommand, s config.Suite, absRoot, target string,
 			out.Left += len(batch)
 			break
 		}
-		if err := ingestIfRecent(absRoot, absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), absPath(absRoot, s.Report), s, start, true); err != nil {
+		// A batch of test files measures every code file in part: none takes its coverage.
+		mapcmd.CoverageTargets = absFiles(absRoot, batch)
+		errIngest := ingestIfRecent(absRoot, absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), absPath(absRoot, s.Report), s, start, true)
+		mapcmd.CoverageTargets = nil
+		if err := errIngest; err != nil {
 			return out, fmt.Errorf("ingest report: %w", err)
 		}
 		if oneAtATime && errRun == nil {

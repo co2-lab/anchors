@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:583a8316cb40fddb — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:00de73295fcc8d89 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2467,6 +2467,8 @@ is what the test proves.
 - [The plan holds only the suite's own files](layers/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B08`
 
 - [A budget without a map is refused saying to build it](layers/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-E02`
+
+- [A budget batch's coverage is taken for no code file, the whole measurements left as they were](layers/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B09`
 
 - [The full sweep confronts every node of the map](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B01`
 

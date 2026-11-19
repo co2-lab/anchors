@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BDGRN
-  updated_at: 2026-10-08
+  updated_at: 2026-11-19
   layer: comando
 -->
 # BudgetRun — run a suite's files fastest first until a time budget is spent
@@ -39,6 +39,7 @@ their run is what times them.
 | `BDGRN-B06` | A batch that fails does not stop the budget: the next batches run, and the command fails at the end naming the suites with a failed batch. |
 | `BDGRN-B07` | A suite with no `run_changed:` or no report, or a budget together with `--changed`, is refused before anything runs. |
 | `BDGRN-B08` | The plan holds only the files the suite's `paths:` cover. |
+| `BDGRN-B09` | A budget batch's coverage is taken for no code file: a batch runs some test files, and measures every code file in part. The whole measurements are left as they were, and the run says how many. The same holds for the tests a run repeats under load; a selection's batch takes the coverage of the code files it names, whose related tests all ran. (NGSTI-B26) |
 
 ## Errors
 

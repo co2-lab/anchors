@@ -374,7 +374,11 @@ func runFiles(cs suiteCommand, s config.Suite, absRoot, target string, ids []str
 		sampler := sampleLoad()
 		errRun := execAtRoot(linha, absRoot)
 		peak, measured := sampler.Stop()
-		if err := ingestIfRecent(absRoot, absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), absPath(absRoot, s.Report), s, start, true); err != nil {
+		// A code file in the batch had every related test run: its coverage is whole.
+		mapcmd.CoverageTargets = batch
+		errIngest := ingestIfRecent(absRoot, absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), absPath(absRoot, s.Report), s, start, true)
+		mapcmd.CoverageTargets = nil
+		if err := errIngest; err != nil {
 			return fmt.Errorf("layer %q: ingest report: %w", s.Layer, err)
 		}
 		if errRun != nil && s.Report == "" {

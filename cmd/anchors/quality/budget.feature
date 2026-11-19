@@ -2,7 +2,7 @@
 # @anchors
 #   code: BDFTB
 #   ref: BDGRN
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @BDGRN
@@ -61,3 +61,9 @@ Feature: BudgetRun — run a suite's files fastest first until a time budget is 
     Given a project whose map was never built
     When a suite runs with a budget
     Then it is refused saying to run anchors map build, and no command ran
+
+  @BDGRN-B09 @unit-level
+  Scenario: A budget batch's coverage is taken for no code file, the whole measurements left as they were
+    Given a.go measured whole at 4 of 4 lines, and a budget run whose batch of a_test.go reports a.go at 0 of 4
+    When the budget runs
+    Then a.go keeps 4 of 4, and the run says it left one file as it was

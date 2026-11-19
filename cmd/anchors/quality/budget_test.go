@@ -313,3 +313,35 @@ func TestBudgetPlan_SuitePaths(t *testing.T) {
 		t.Fatalf("only the mobile file, got %v %v", timed, untimed)
 	}
 }
+
+// A budget batch runs some test files: the coverage it writes measures every code file in
+// part, and must not replace a whole measurement.
+func TestBudgetLeavesTheCoverageItMeasuresInPart(t *testing.T) {
+	t.Run("BDGRN-B09: A budget batch's coverage is taken for no code file, the whole measurements left as they were", func(t *testing.T) {
+		g := &mapx.Graph{Nodes: []mapx.Node{
+			timedNode("a_test.go", mapx.KindTest, map[string]float64{"out/junit.xml": 0.5}),
+			{ID: "a.go", Kind: mapx.KindCode, Rev: "r", Signal: &mapx.TestSignal{CoveredLines: 4, TotalLines: 4, LineCoverage: 100, AtRev: "r", CoverageRev: "r"}},
+		}}
+		dir := budgetProject(t, "tests", "sh both.sh {{files}}", g)
+		cfg := filepath.Join(dir, "anchors.yaml")
+		b, _ := os.ReadFile(cfg)
+		os.WriteFile(cfg, []byte(strings.Replace(string(b), `    junit: "out/junit.xml"`, "    junit: \"out/junit.xml\"\n    lcov: \"out/lcov.info\"", 1)), 0o644)
+		os.WriteFile(filepath.Join(dir, "both.sh"), []byte(budgetRunner+"printf 'TN:\\nSF:a.go\\nDA:1,0\\nDA:2,0\\nDA:3,0\\nDA:4,0\\nLF:4\\nLH:0\\nend_of_record\\n' > out/lcov.info\n"), 0o755)
+		out, err := runQ(t, newTestCmd(), "--root", dir, "--budget", "60s")
+		if err != nil {
+			t.Fatalf("%v\n%s", err, out)
+		}
+		m, err := mapx.Load(filepath.Join(dir, mapx.DefaultPath))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, n := range m.Nodes {
+			if n.ID == "a.go" && (n.Signal == nil || n.Signal.CoveredLines != 4) {
+				t.Errorf("the whole measurement stays: %+v\n%s", n.Signal, out)
+			}
+		}
+		if !strings.Contains(out, "1 file(s) outside the run's impact path left as they were") {
+			t.Errorf("the run says it left the file:\n%s", out)
+		}
+	})
+}

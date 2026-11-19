@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/co2-lab/anchors/cmd/anchors/mapcmd"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/runs"
 	"github.com/co2-lab/anchors/internal/testsig"
@@ -152,7 +153,11 @@ func retryOnLoad(s config.Suite, absRoot, target, junit, lcov string, peak float
 			attempt, s.RetryOnLoad.Retries(), workspaceLabel(s), s.Layer, len(timed), load, line)
 		start := time.Now()
 		errRetry := execAtRoot(line, absRoot)
-		if err := ingestIfRecent(absRoot, junit, lcov, "", s, start, true); err != nil {
+		// The retry reruns some tests: no code file is measured whole by it.
+		mapcmd.CoverageTargets = files
+		errIngest := ingestIfRecent(absRoot, junit, lcov, "", s, start, true)
+		mapcmd.CoverageTargets = nil
+		if err := errIngest; err != nil {
 			return false, fmt.Errorf("layer %q: ingest the retry's report: %w", s.Layer, err)
 		}
 		again, err := testsig.ParseJUnit(junit)
