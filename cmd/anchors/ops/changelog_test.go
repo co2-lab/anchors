@@ -298,3 +298,27 @@ func TestChangelog_product(t *testing.T) {
 		}
 	})
 }
+
+func TestChangelog_intents(t *testing.T) {
+	t.Run("CLGCM-B12: An output whose source is intents renders the intents waiting as the candidate, and a release from those archived under released/<version>/", func(t *testing.T) {
+		cfg := strings.Replace(productChangelog, "        - path: notes\n          mode: per_version\n          template: notes.tmpl\n", "        - path: NOTES.md\n          source: intents\n", 1)
+		cfg = strings.Replace(cfg, "version: 8\n", "version: 8\nchangelog:\n  intents: { types: [feat, fix] }\n", 1)
+		cfg = strings.Replace(cfg, "next: semantic", "next: intents", 1)
+		root := historyRepo(t, "file:anchors.yaml="+cfg, "file:app/version.json={\"version\": \"1.0.0\"}",
+			"file:.anchors/changes/released/1.0.0/a.md=---\nproduct: app\nbump: minor\ntype: feat\n---\nThe first screen.\n",
+			"file:.anchors/changes/b.md=---\nproduct: app\nbump: patch\ntype: fix\n---\nA crash on login.\n",
+			"feat: one", "tag:app-v1.0.0", "fix: two")
+		if _, _, err := changelogRun(t, "--root", root, "--branch", "production", "--write", "--all", "--unreleased"); err != nil {
+			t.Fatal(err)
+		}
+		got := readFile(t, root, "NOTES.md")
+		for _, want := range []string{changelog.Marker("") + "\n## 1.0.1 — Unreleased\n\n### Fixes\n\n- A crash on login.", changelog.Marker("1.0.0") + "\n## 1.0.0 — ", "### Features\n\n- The first screen."} {
+			if !strings.Contains(got, want) {
+				t.Errorf("missing %q in\n%s", want, got)
+			}
+		}
+		if strings.Contains(readFile(t, root, "CHANGELOG.md"), "A crash on login") {
+			t.Errorf("the commits' output does not read intents")
+		}
+	})
+}

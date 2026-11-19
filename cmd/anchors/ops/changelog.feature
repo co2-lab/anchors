@@ -97,3 +97,9 @@ Feature: anchors changelog — the technical changelog, printed or written
     Given app tagged app-v1.0.0, a tag v9.0.0, and an output whose template is missing
     When the changelog is printed from v9.0.0, and written
     Then the first fails saying no tag of app, the second naming the output's template field
+
+  @CLGCM-B12 @unit-level
+  Scenario: An output whose source is intents renders the intents waiting as the candidate, and a release from those archived under released/<version>/
+    Given app on intents released as app-v1.0.0, an intent archived for 1.0.0 and a fix waiting
+    When every release and the unreleased one are written on production
+    Then NOTES.md holds 1.0.1 unreleased with the fix and 1.0.0 with the archived feature, and CHANGELOG.md holds no intent

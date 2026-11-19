@@ -55,3 +55,15 @@ Feature: ChangelogValid — a product's changelog outputs hold what they claim, 
     Given a product with no changelog outputs
     When the gate runs
     Then it is skipped, saying no product declares changelog.outputs
+
+  @CHVLA-B09 @unit-level
+  Scenario: An intent naming no declared product, a bump or type it may not, saying nothing, too long, or added before its product's latest release fails
+    Given intents for web, with bump huge and type chore and no text, one of 40 characters over 30, one with no front matter, and one added before app-v1.2.0
+    When the gate runs
+    Then it fails naming each file, and a valid intent is not named
+
+  @CHVLA-B10 @unit-level
+  Scenario: The block of the version the sources hold, not released yet, needs no tag
+    Given a block 1.2.0 on top while the sources hold 1.2.0, then 1.1.0
+    When the gate runs
+    Then it passes, and then fails saying 1.2.0 has no tag

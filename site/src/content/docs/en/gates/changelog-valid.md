@@ -25,6 +25,10 @@ What does not depend on taste holds for every output:
 - every tag of the product reachable from HEAD has its block, and every block a tag;
 - the block of a release does not change.
 
+The block of the version the sources hold, not released yet, needs no tag: a release pull request
+writes it before the tag exists. The change intents waiting for a release (INTNA) are confronted
+too.
+
 The rest is the output's `format:`. An output that declares none is held to nothing more.
 
 A release's block that must change, a fix to its text, goes through the commit message's waiver of

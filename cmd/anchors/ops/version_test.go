@@ -251,3 +251,32 @@ func TestVersion_range(t *testing.T) {
 		}
 	})
 }
+
+func TestVersion_intents(t *testing.T) {
+	t.Run("VRSNI-B09: With the intents strategy, the next version is the latest release raised by the largest bump of the product's intents", func(t *testing.T) {
+		cfg := strings.Replace(appVersioning, "next: semantic", "next: intents", 1)
+		root := historyRepo(t, "file:anchors.yaml="+cfg, "file:app/version.json={\"version\": \"1.1.0\"}",
+			"file:.anchors/changes/a.md=---\nproduct: app\nbump: patch\ntype: fix\n---\nA crash.\n",
+			"file:.anchors/changes/b.md=---\nproduct: app\nbump: minor\ntype: feat\n---\nSharing.\n",
+			"file:.anchors/changes/c.md=---\nproduct: api\nbump: major\ntype: feat\n---\nOther product.\n",
+			"chore: start", "tag:app-v1.0.0")
+		out, err := versionRun(t, "--root", root, "--branch", "main")
+		if err != nil || !strings.Contains(out, "next       1.1.0      intents: minor, the largest bump of 2 intent(s) since 1.0.0") {
+			t.Errorf("%v\n%s", err, out)
+		}
+		writeIn(t, root, ".anchors/changes/d.md", "no front matter")
+		if _, err := versionRun(t, "--root", root, "--branch", "main"); err == nil || !strings.Contains(err.Error(), "d.md") {
+			t.Errorf("an intent that does not parse: %v", err)
+		}
+	})
+}
+
+func writeIn(t *testing.T, root, rel, body string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(filepath.Join(root, rel)), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}

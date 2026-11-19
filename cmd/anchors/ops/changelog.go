@@ -73,20 +73,22 @@ on a branch the changelog is written on (` + "`changelog: true`" + `).`,
 			}
 			outputs := []*config.Changelog{cl}
 			labels := []string{"changelog.template"}
+			fromIntents := []bool{false}
+			var pr *productRels
 			var rels []changelog.Release
 			if cfg != nil && len(cfg.Versioning) > 0 {
-				pr, err := productReleases(absRoot, cfg.Versioning, product, branch, from, to, all, unreleased)
-				if err != nil {
+				if pr, err = productReleases(absRoot, cfg, product, branch, from, to, all, unreleased); err != nil {
 					return err
 				}
 				if write && !pr.product.WritesChangelog(pr.branch) {
 					return fmt.Errorf("the changelog of %s is not written on %s: mark the branch changelog: true", pr.name, or(pr.branch, "a detached HEAD"))
 				}
 				if pc := pr.product.Changelog; pc != nil && len(pc.Outputs) > 0 {
-					outputs, labels = outputs[:0], labels[:0]
+					outputs, labels, fromIntents = outputs[:0], labels[:0], fromIntents[:0]
 					for i := range pc.Outputs {
 						outputs = append(outputs, &pc.Outputs[i].Changelog)
 						labels = append(labels, fmt.Sprintf("versioning.%s.changelog.outputs[%d].template", pr.name, i))
+						fromIntents = append(fromIntents, pc.Outputs[i].FromIntents())
 					}
 				}
 				rels = pr.releases
@@ -94,7 +96,12 @@ on a branch the changelog is written on (` + "`changelog: true`" + `).`,
 				return err
 			}
 			for i, out := range outputs {
-				blocks, err := renderBlocks(absRoot, out, labels[i], rels)
+				var blocks []changelog.Block
+				if fromIntents[i] {
+					blocks, err = renderIntentBlocks(absRoot, cfg, pr.name, out, labels[i], rels)
+				} else {
+					blocks, err = renderBlocks(absRoot, out, labels[i], rels)
+				}
 				if err != nil {
 					return err
 				}
@@ -149,6 +156,64 @@ func renderBlocks(absRoot string, cl *config.Changelog, label string, rels []cha
 	return blocks, nil
 }
 
+// renderIntentBlocks renders the releases from the change intents: what is not released yet
+// from the intents waiting, a release from those archived under released/<version>/. A
+// release whose intents were deleted renders nothing: its block is the one the file holds.
+func renderIntentBlocks(absRoot string, cfg *config.Config, product string, cl *config.Changelog, label string, rels []changelog.Release) ([]changelog.Block, error) {
+	tmpl := changelog.DefaultIntentsTemplate
+	if cl != nil && cl.Template != "" {
+		b, err := pathref.Read(absRoot, cl.Template)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", label, err)
+		}
+		tmpl = string(b)
+	}
+	var types []string
+	if cfg.Changelog != nil {
+		types = cfg.Changelog.Intents.TypesOrDefault()
+	} else {
+		types = (*config.Intents)(nil).TypesOrDefault()
+	}
+	dir := filepath.Join(absRoot, filepath.FromSlash(intentsDir(cfg)))
+	var blocks []changelog.Block
+	for _, r := range rels {
+		from := dir
+		if r.Version != "" {
+			from = filepath.Join(dir, "released", r.Version)
+		}
+		all, errs := changelog.ReadIntents(from)
+		if len(errs) > 0 {
+			return nil, fmt.Errorf("intents: %w", errs[0])
+		}
+		var mine []changelog.Intent
+		for _, in := range all {
+			if in.Product == product {
+				mine = append(mine, in)
+			}
+		}
+		if len(mine) == 0 {
+			continue
+		}
+		ir := changelog.GroupIntents(r.Version, r.Date, mine, types)
+		ir.Candidate = r.Candidate
+		text, err := changelog.RenderIntents(tmpl, ir, typeHeading)
+		if err != nil {
+			return nil, err
+		}
+		blocks = append(blocks, changelog.Block{Version: r.Version, Text: text})
+	}
+	return blocks, nil
+}
+
+// typeHeading translates a heading key, and an intent type with no translation reads as
+// the type itself.
+func typeHeading(k string) string {
+	if s := i18n.T(k); s != k || !strings.HasPrefix(k, "changelog.type.") {
+		return s
+	}
+	return strings.TrimPrefix(k, "changelog.type.")
+}
+
 func printBlocks(cmd *cobra.Command, blocks []changelog.Block) {
 	for i, b := range blocks {
 		if i > 0 {
@@ -170,8 +235,8 @@ type productRels struct {
 
 // productReleases reads a product's releases between its own tags, in its scheme's order,
 // for the branch: the releases where it releases, else the candidate alone.
-func productReleases(absRoot string, v config.Versioning, name, branch, from, to string, all, unreleased bool) (*productRels, error) {
-	name, p, err := v.Pick(name, "--product")
+func productReleases(absRoot string, cfg *config.Config, name, branch, from, to string, all, unreleased bool) (*productRels, error) {
+	name, p, err := cfg.Versioning.Pick(name, "--product")
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +309,7 @@ func productReleases(absRoot string, v config.Versioning, name, branch, from, to
 		if rev == "HEAD" {
 			rev = ""
 		}
-		st, err := stateAt(absRoot, v, name, "--product", branch, rev)
+		st, err := stateAt(absRoot, cfg, name, "--product", branch, rev)
 		if err != nil {
 			if !releasing {
 				return nil, err

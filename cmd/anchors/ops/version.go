@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -144,7 +145,7 @@ func versionState(root, name, branch string) (*versionStateT, error) {
 			return nil, errors.New("no current branch (a detached HEAD, or no repository): name it with --branch")
 		}
 	}
-	return stateAt(absRoot, cfg.Versioning, name, "--product", branch, "")
+	return stateAt(absRoot, cfg, name, "--product", branch, "")
 }
 
 // readAt reads a file as the commit rev has it, or from the working tree when rev is empty.
@@ -163,8 +164,8 @@ func readAt(root, rev string) func(string) ([]byte, error) {
 
 // stateAt reads a product's state as the commit rev has it — the working tree and HEAD when
 // rev is empty —, for the branch whose strategy decides; `how` says where a product is named.
-func stateAt(absRoot string, v config.Versioning, name, how, branch, rev string) (*versionStateT, error) {
-	name, p, err := v.Pick(name, how)
+func stateAt(absRoot string, cfg *config.Config, name, how, branch, rev string) (*versionStateT, error) {
+	name, p, err := cfg.Versioning.Pick(name, how)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +200,19 @@ func stateAt(absRoot string, v config.Versioning, name, how, branch, rev string)
 		st.Rule = "default"
 	}
 	st.Range, st.RangeRule = p.RangeFor(branch)
-	res, err := version.Next(version.Input{Scheme: s, Strategy: strategy, Current: st.Current, Released: st.Released, Commits: commits, Today: time.Now()})
+	in := version.Input{Scheme: s, Strategy: strategy, Current: st.Current, Released: st.Released, Commits: commits, Today: time.Now()}
+	if strategy.Name == version.Intents {
+		intents, err := intentsAt(absRoot, cfg, rev)
+		if err != nil {
+			return nil, err
+		}
+		for _, it := range intents {
+			if it.Product == name {
+				in.Bumps = append(in.Bumps, it.Bump)
+			}
+		}
+	}
+	res, err := version.Next(in)
 	if err != nil {
 		return nil, fmt.Errorf("%s on %s (%s): %w", name, branch, strategy.Name, err)
 	}
@@ -374,4 +387,47 @@ func bumpVersion(w io.Writer, st *versionStateT, want string) error {
 		fmt.Fprintf(w, "  %s\n", src.File)
 	}
 	return nil
+}
+
+// intentsDir is the directory of the project's change intents.
+func intentsDir(cfg *config.Config) string {
+	if cfg.Changelog == nil {
+		return (*config.Intents)(nil).PathOrDefault()
+	}
+	return cfg.Changelog.Intents.PathOrDefault()
+}
+
+// intentsAt reads the change intents waiting for a release — the files of the intents'
+// directory, not those archived under it — as the commit rev has them, or the working tree
+// when rev is empty. An intent that does not parse is an error: read as absent, its change
+// would ship without moving the version.
+func intentsAt(absRoot string, cfg *config.Config, rev string) ([]changelog.Intent, error) {
+	dir := intentsDir(cfg)
+	if rev == "" {
+		in, errs := changelog.ReadIntents(filepath.Join(absRoot, filepath.FromSlash(dir)))
+		if len(errs) > 0 {
+			return nil, fmt.Errorf("intents: %w", errs[0])
+		}
+		return in, nil
+	}
+	out, err := exec.Command("git", "-C", absRoot, "ls-tree", "--name-only", rev, dir+"/").Output()
+	if err != nil {
+		return nil, fmt.Errorf("intents at %s: %w", short(rev), err)
+	}
+	var intents []changelog.Intent
+	for _, f := range strings.Fields(string(out)) {
+		if !strings.HasSuffix(f, ".md") {
+			continue
+		}
+		b, ok := gitmeta.AtCommit(absRoot, rev, f)
+		if !ok {
+			continue
+		}
+		in, err := changelog.ParseIntent(path.Base(f), b)
+		if err != nil {
+			return nil, fmt.Errorf("intents: %w", err)
+		}
+		intents = append(intents, in)
+	}
+	return intents, nil
 }

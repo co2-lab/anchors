@@ -79,3 +79,9 @@ Feature: VersionCommand — a product's version, its latest release and the next
     Given hotfix/* on increment patch with range from_base, and app released as app-v1.2.0
     When anchors version runs on hotfix/login, then bump minor and bump
     Then it shows the range from_base by hotfix/*, bump minor fails saying 1.3.0 is outside 1.2.x, and bump writes 1.2.1
+
+  @VRSNI-B09 @unit-level
+  Scenario: With the intents strategy, the next version is the latest release raised by the largest bump of the product's intents
+    Given app released as app-v1.0.0 on intents, with a patch and a minor intent, and a major one for api
+    When anchors version runs, then with an intent that does not parse
+    Then the next is 1.1.0 by 2 intents, and then the command fails naming d.md

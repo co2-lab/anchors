@@ -21,6 +21,10 @@ What does not depend on taste holds for every output:
 - every tag of the product reachable from HEAD has its block, and every block a tag;
 - the block of a release does not change.
 
+The block of the version the sources hold, not released yet, needs no tag: a release pull request
+writes it before the tag exists. The change intents waiting for a release (INTNA) are confronted
+too.
+
 The rest is the output's `format:`. An output that declares none is held to nothing more.
 
 A release's block that must change, a fix to its text, goes through the commit message's waiver of
@@ -43,6 +47,7 @@ gates:
 | an incremental output | a file with markers, possibly edited by hand | a file missing while the product has tags | this unit: fail (`CHVLA-B03`) |
 | a `per_version` output | a directory of files named by `format.file` (`{version}.md` by default), and `unreleased.md` | another name | this unit: fail (`CHVLA-B07`) |
 | the tags | the product's tags, reachable from HEAD for the blocks owed, anywhere for the blocks' own tags | — | git |
+| the intents | the files of `changelog.intents`, when declared or present | — | this unit (`CHVLA-B09`) |
 | the file at HEAD | the output as the last commit holds it | none at HEAD | this unit: nothing to compare a release's block with |
 
 ## Effects
@@ -57,6 +62,8 @@ gates:
 | `CHVLA-B06` | With `format.required: changed`, an output unchanged since the product's latest release tag fails while the sources hold a version not released yet: the notes of the previous release would ship with the next one. A released version, or a product with no source, asks nothing. (`changedSinceRelease`) |
 | `CHVLA-B07` | A `per_version` output has one file per tag, each named by `format.file`, and `unreleased.md` at most; another name, a tag with no file and a file with no tag fail. |
 | `CHVLA-B08` | With no product declaring an output, the gate is skipped, saying so. |
+| `CHVLA-B09` | An intent that does not parse, names a product `versioning:` does not declare, a bump that is neither a part of its scheme nor `none`, or a type not declared, says nothing, exceeds `changelog.intents.max_chars`, or was added in a commit its product's latest release already holds — a release that forgot to consume it — fails, naming the file. Intents declared and none written pass. (`confrontIntents`, `addedBefore`) |
+| `CHVLA-B10` | The block of the version the sources hold, while no tag records it, needs no tag; the block of a release is the one that must not change. (`sourcesVersion`) |
 
 ## Errors
 

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:15ffc17b45df48b1 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:531b96d93bcd4724 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1838,6 +1838,8 @@ is what the test proves.
 
 - [--from that is no tag of the product, or a template of an output that cannot be read, fails naming it](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-E04`
 
+- [An output whose source is intents renders the intents waiting as the candidate, and a release from those archived under released/<version>/](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B12`
+
 - [A free canonical code is the suggestion](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B01`
 
 - [A taken canonical is adjusted to a free code naming its owner](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B02`
@@ -2379,6 +2381,8 @@ is what the test proves.
 - [Bump refuses a version that does not move forward, and writes nothing](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-E04`
 
 - [A branch's range shows with its rule, and bump refuses a version outside it](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B08`
+
+- [With the intents strategy, the next version is the latest release raised by the largest bump of the product's intents](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B09`
 
 - [fresh holds for a version above every release — the tags and what released: lists — and refuses one released or below](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B01`
 
@@ -3622,6 +3626,10 @@ is what the test proves.
 
 - [An output with no path, an unknown mode, or a format that reads nothing refuses the configuration](layers/config.md#vrsnn-e08--an-output-with-no-path-an-unknown-mode-or-a-format-that-reads-nothing-refuses-the-configuration) `VRSNN-E08`
 
+- [changelog.intents loads with its defaults, an output reads intents or commits, and intents is a strategy](layers/config.md#vrsnn-b12--changelogintents-loads-with-its-defaults-an-output-reads-intents-or-commits-and-intents-is-a-strategy) `VRSNN-B12`
+
+- [Intents consumed another way, a negative limit, or intents declared on an output refuse the configuration](layers/config.md#vrsnn-e09--intents-consumed-another-way-a-negative-limit-or-intents-declared-on-an-output-refuse-the-configuration) `VRSNN-E09`
+
 - [With no source registered, the default gate names are absent, not a failure](layers/config.md#gtvcg-b01--with-no-source-registered-the-default-gate-names-are-absent-not-a-failure) `GTVCG-B01`
 
 - [With a source registered, the default gate names are the ones it gives](layers/config.md#gtvcg-b02--with-a-source-registered-the-default-gate-names-are-the-ones-it-gives) `GTVCG-B02`
@@ -3721,6 +3729,10 @@ is what the test proves.
 - [A per_version output has a file per tag named by format.file, plus an unreleased one at most](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B07`
 
 - [No product with an output skips the gate](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B08`
+
+- [An intent naming no declared product, a bump or type it may not, saying nothing, too long, or added before its product's latest release fails](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B09`
+
+- [The block of the version the sources hold, not released yet, needs no tag](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B10`
 
 - [An artifact that is not a spec leaves without a verdict](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B01`
 
@@ -6622,6 +6634,14 @@ is what the test proves.
 
 - [A written file's blocks are read by their markers, in order, each with the text up to the next](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B15`
 
+- [An intent reads its product, bump and type from the front matter, and its text after it](layers/infra.md#intna--intents--the-change-intents-read-from-their-files-and-rendered-as-a-release) `INTNA-B01`
+
+- [An intent with no front matter, one not closed, or a key it does not know is an error naming the file](layers/infra.md#intna--intents--the-change-intents-read-from-their-files-and-rendered-as-a-release) `INTNA-E01`
+
+- [A directory's intents are read sorted by name, each one that does not parse is an error of its own, and no directory holds none](layers/infra.md#intna--intents--the-change-intents-read-from-their-files-and-rendered-as-a-release) `INTNA-B02`
+
+- [Intents are grouped by type in the order declared, another type after them, and rendered with a heading per type](layers/infra.md#intna--intents--the-change-intents-read-from-their-files-and-rendered-as-a-release) `INTNA-B03`
+
 - [Each scope is mirrored to its own file](layers/infra.md#chlgc--checklog--the-checks-output-mirrored-to-a-file-so-it-can-be-reread-without-re-running) `CHLGC-B01`
 
 - [The header comes first and the output is copied after it](layers/infra.md#chlgc--checklog--the-checks-output-mirrored-to-a-file-so-it-can-be-reread-without-re-running) `CHLGC-B02`
@@ -7965,6 +7985,8 @@ is what the test proves.
 - [A next version below the latest release is refused](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-E03`
 
 - [A strategy that would have to guess is refused](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-E04`
+
+- [intents raises the latest release by the largest bump of the intents waiting; none or no intent releases nothing](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B15`
 
 ## mapa
 

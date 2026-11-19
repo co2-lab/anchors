@@ -28,8 +28,8 @@ type passedBy func(stage string) (sha, of, why string)
 // versionHolds answers a `version:` requirement on sha, for the branch the stage runs on.
 // passed is nil where no stage has run yet — a pull request —, and same_as_passed is then
 // not asked.
-func versionHolds(root string, v config.Versioning, r *config.VersionRequirement, branch, sha string, passed passedBy) (bool, string) {
-	st, err := stateAt(root, v, r.Product, "product:", branch, sha)
+func versionHolds(root string, cfg *config.Config, r *config.VersionRequirement, branch, sha string, passed passedBy) (bool, string) {
+	st, err := stateAt(root, cfg, r.Product, "product:", branch, sha)
 	if err != nil {
 		return false, err.Error()
 	}

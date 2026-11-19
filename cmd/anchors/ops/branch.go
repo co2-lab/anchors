@@ -220,7 +220,7 @@ func checkStages(root string, cfg *config.Config, base, sha string) (string, err
 				if sha == "" {
 					return b.String(), errHeadSHA
 				}
-				ok, why = versionHolds(root, cfg.Versioning, &vr, base, sha, nil)
+				ok, why = versionHolds(root, cfg, &vr, base, sha, nil)
 			default:
 				continue
 			}

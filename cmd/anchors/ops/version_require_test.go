@@ -94,13 +94,13 @@ func headOf(t *testing.T, root string) string {
 	return strings.TrimSpace(string(out))
 }
 
-func versioningOf(t *testing.T, root string) config.Versioning {
+func configOf(t *testing.T, root string) *config.Config {
 	t.Helper()
 	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
 	if err != nil {
 		t.Fatal(err)
 	}
-	return cfg.Versioning
+	return cfg
 }
 
 func appVersion(v string) map[string]string {
@@ -124,17 +124,17 @@ func TestVersionRequirement_fresh(t *testing.T) {
 		root := releasedRepo(t)
 		fresh := &config.VersionRequirement{Fresh: true}
 		sha := commitFiles(t, root, "fix: a crash", nil)
-		ok, why := versionHolds(root, versioningOf(t, root), fresh, "review", sha, nil)
+		ok, why := versionHolds(root, configOf(t, root), fresh, "review", sha, nil)
 		holdsSays(t, "kept 1.0.0", ok, why, false, "1.0.0 is released (tag app-v1.0.0)", "bump to a greater version")
 		sha = commitFiles(t, root, "chore: 1.1.0", map[string]string{"app/version.json": `{"version": "1.1.0"}`,
 			"policy.json": `{"versions": {"1.0.0": {"target": "production"}, "1.1.0": {"target": "production"}}}`})
-		ok, why = versionHolds(root, versioningOf(t, root), fresh, "review", sha, nil)
+		ok, why = versionHolds(root, configOf(t, root), fresh, "review", sha, nil)
 		holdsSays(t, "listed as released, with no tag", ok, why, false, "1.1.0 is released (policy.json versions, where target = production)")
 		sha = commitFiles(t, root, "chore: 1.1.0 in review", map[string]string{"policy.json": `{"versions": {"1.0.0": {"target": "production"}, "1.1.0": {"target": "review"}}}`})
-		ok, why = versionHolds(root, versioningOf(t, root), fresh, "review", sha, nil)
+		ok, why = versionHolds(root, configOf(t, root), fresh, "review", sha, nil)
 		holdsSays(t, "in review, resubmitted", ok, why, true, "1.1.0 is above every release (1.0.0, tag app-v1.0.0)")
 		below := commitFiles(t, root, "chore: back", appVersion("0.9.0"))
-		ok, why = versionHolds(root, versioningOf(t, root), fresh, "review", below, nil)
+		ok, why = versionHolds(root, configOf(t, root), fresh, "review", below, nil)
 		holdsSays(t, "below", ok, why, false, "0.9.0 is below 1.0.0")
 	})
 	t.Run("VRQRA-B07: The version is read at the sha, not in the working tree", func(t *testing.T) {
@@ -143,7 +143,7 @@ func TestVersionRequirement_fresh(t *testing.T) {
 		if err := os.WriteFile(filepath.Join(root, "app/version.json"), []byte(`{"version": "1.0.0"}`), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		ok, why := versionHolds(root, versioningOf(t, root), &config.VersionRequirement{Fresh: true}, "review", sha, nil)
+		ok, why := versionHolds(root, configOf(t, root), &config.VersionRequirement{Fresh: true}, "review", sha, nil)
 		holdsSays(t, "at the sha", ok, why, true, "1.1.0")
 	})
 }
@@ -153,14 +153,14 @@ func TestVersionRequirement_listed(t *testing.T) {
 		root := releasedRepo(t)
 		review := &config.VersionRequirement{Listed: &config.Listing{Where: map[string]string{"target": "review"}}}
 		sha := commitFiles(t, root, "chore: 1.0.1", appVersion("1.0.1"))
-		ok, why := versionHolds(root, versioningOf(t, root), review, "review", sha, nil)
+		ok, why := versionHolds(root, configOf(t, root), review, "review", sha, nil)
 		holdsSays(t, "not listed", ok, why, false, "1.0.1 is not in policy.json versions, where target = review")
 		sha = commitFiles(t, root, "chore: list 1.0.1", map[string]string{"policy.json": `{"versions": {"1.0.0": {"target": "production"}, "1.0.1": {"target": "review"}}}`})
-		ok, why = versionHolds(root, versioningOf(t, root), review, "review", sha, nil)
+		ok, why = versionHolds(root, configOf(t, root), review, "review", sha, nil)
 		holdsSays(t, "listed", ok, why, true, "1.0.1 is in policy.json versions, where target = review")
 		other := &config.VersionRequirement{Listed: &config.Listing{File: "envs.yaml", Where: map[string]string{"env": "qa"}}}
 		sha = commitFiles(t, root, "chore: envs", map[string]string{"envs.yaml": "1.0.1:\n  env: qa\n"})
-		ok, why = versionHolds(root, versioningOf(t, root), other, "review", sha, nil)
+		ok, why = versionHolds(root, configOf(t, root), other, "review", sha, nil)
 		holdsSays(t, "a file of its own", ok, why, true, "1.0.1 is in envs.yaml, where env = qa")
 	})
 }
@@ -173,14 +173,14 @@ func TestVersionRequirement_sameAsPassed(t *testing.T) {
 		other := commitFiles(t, root, "chore: 1.0.2", appVersion("1.0.2"))
 		req := &config.VersionRequirement{SameAsPassed: "review-release"}
 		by := func(string) (string, string, string) { return passedWith, "the head of #9", "" }
-		ok, why := versionHolds(root, versioningOf(t, root), req, "production", same, by)
+		ok, why := versionHolds(root, configOf(t, root), req, "production", same, by)
 		holdsSays(t, "same", ok, why, true, "1.0.1, the version the head of #9 passed review-release with")
-		ok, why = versionHolds(root, versioningOf(t, root), req, "production", other, by)
+		ok, why = versionHolds(root, configOf(t, root), req, "production", other, by)
 		holdsSays(t, "other", ok, why, false, "this commit carries 1.0.2, and the head of #9 passed review-release with 1.0.1")
 		none := func(string) (string, string, string) {
 			return "", "", "this commit has not passed review-release (no record)"
 		}
-		ok, why = versionHolds(root, versioningOf(t, root), req, "production", same, none)
+		ok, why = versionHolds(root, configOf(t, root), req, "production", same, none)
 		holdsSays(t, "nothing passed", ok, why, false, "has not passed review-release")
 	})
 }
@@ -191,17 +191,17 @@ func TestVersionRequirement_expected(t *testing.T) {
 		req := &config.VersionRequirement{Expected: true}
 		commitFiles(t, root, "feat: a new screen", nil)
 		sha := commitFiles(t, root, "chore: 1.0.1", appVersion("1.0.1"))
-		ok, why := versionHolds(root, versioningOf(t, root), req, "review", sha, nil)
+		ok, why := versionHolds(root, configOf(t, root), req, "review", sha, nil)
 		holdsSays(t, "semantic", ok, why, false, "review: semantic asks for 1.1.0 (semantic: ", "the source says 1.0.1")
 		sha = commitFiles(t, root, "chore: 1.1.0", appVersion("1.1.0"))
-		ok, why = versionHolds(root, versioningOf(t, root), req, "review", sha, nil)
+		ok, why = versionHolds(root, configOf(t, root), req, "review", sha, nil)
 		holdsSays(t, "as asked", ok, why, true, "1.1.0, as semantic asks")
-		ok, why = versionHolds(root, versioningOf(t, root), req, "feat/x", sha, nil)
+		ok, why = versionHolds(root, configOf(t, root), req, "feat/x", sha, nil)
 		holdsSays(t, "none", ok, why, false, "feat/x never versions (feat/*: next: none)")
-		ok, why = versionHolds(root, versioningOf(t, root), req, "maint/1", sha, nil)
+		ok, why = versionHolds(root, configOf(t, root), req, "maint/1", sha, nil)
 		holdsSays(t, "manual, fresh", ok, why, true, "1.1.0 is above every release")
 		kept := commitFiles(t, root, "chore: back to 1.0.0", appVersion("1.0.0"))
-		ok, why = versionHolds(root, versioningOf(t, root), req, "maint/1", kept, nil)
+		ok, why = versionHolds(root, configOf(t, root), req, "maint/1", kept, nil)
 		holdsSays(t, "manual, released", ok, why, false, "1.0.0 is released")
 	})
 	t.Run("VRQRA-B05: A branch's range bounds the version whatever is asked: from_base keeps the release the branch was cut from", func(t *testing.T) {
@@ -209,10 +209,10 @@ func TestVersionRequirement_expected(t *testing.T) {
 		gitIn(t, root, "checkout", "-q", "-b", "hotfix/login", "production")
 		req := &config.VersionRequirement{Expected: true}
 		sha := commitFiles(t, root, "fix: login", appVersion("1.1.0"))
-		ok, why := versionHolds(root, versioningOf(t, root), req, "hotfix/login", sha, nil)
+		ok, why := versionHolds(root, configOf(t, root), req, "hotfix/login", sha, nil)
 		holdsSays(t, "outside", ok, why, false, "1.1.0 is outside 1.0.x (from_base: 1.0.0) (hotfix/*)")
 		sha = commitFiles(t, root, "chore: 1.0.1", appVersion("1.0.1"))
-		ok, why = versionHolds(root, versioningOf(t, root), req, "hotfix/login", sha, nil)
+		ok, why = versionHolds(root, configOf(t, root), req, "hotfix/login", sha, nil)
 		holdsSays(t, "inside", ok, why, true, "1.0.1 is inside 1.0.x", "1.0.1, as increment asks")
 	})
 }
@@ -236,7 +236,7 @@ func TestContainsRequirement(t *testing.T) {
 		ok, why := containsHolds(root, "nope", headOf(t, root))
 		holdsSays(t, "no branch", ok, why, false, "no origin/nope")
 		sha := commitFiles(t, root, "chore: broken", map[string]string{"app/version.json": `{"name": "x"}`})
-		ok, why = versionHolds(root, versioningOf(t, root), &config.VersionRequirement{Fresh: true}, "review", sha, nil)
+		ok, why = versionHolds(root, configOf(t, root), &config.VersionRequirement{Fresh: true}, "review", sha, nil)
 		holdsSays(t, "no version", ok, why, false, "app/version.json")
 	})
 }

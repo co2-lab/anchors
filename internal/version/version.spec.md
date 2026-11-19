@@ -67,6 +67,7 @@ there would let anything through.
 | `VRSNE-B12` | Before any release, `increment` and `semantic` start from what the sources hold, or, with no source, from the scheme's first version: `1.0.0` (`0.1.0` with `initial: true`) or `1`. |
 | `VRSNE-B13` | A `Version:` footer on a commit since the latest release forces the next version, the newest one winning, and the result names the commit. |
 | `VRSNE-B14` | `none` gives no version and says the branch never versions; a footer does not change it. |
+| `VRSNE-B15` | `intents` raises the latest release by the largest bump among the intents waiting — the first of the scheme's parts any of them names —, saying how many intents moved it; with none, or only `none`, there is nothing to release; before the first release, it takes what the sources hold. (`largestBump`) |
 
 ## Errors
 

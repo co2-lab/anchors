@@ -249,3 +249,28 @@ func TestErrors(t *testing.T) {
 		fails(t, Input{Scheme: semver, Strategy: Strategy{Name: "latest"}, Released: "1.0.0"}, `"latest"`)
 	})
 }
+
+func TestIntentsStrategy(t *testing.T) {
+	semver, _ := NewScheme(SemVer, "", "")
+	t.Run("VRSNE-B15: intents raises the latest release by the largest bump of the intents waiting; none or no intent releases nothing", func(t *testing.T) {
+		in := func(bumps ...string) Input {
+			return Input{Scheme: semver, Strategy: Strategy{Name: Intents}, Released: "1.2.3", Bumps: bumps}
+		}
+		if r := next(t, in("patch", "minor", "none")); r.Version != "1.3.0" || !strings.Contains(r.Reason, "minor, the largest bump of 2 intent(s) since 1.2.3") {
+			t.Errorf("minor: %+v", r)
+		}
+		if r := next(t, in("patch", "major")); r.Version != "2.0.0" {
+			t.Errorf("major: %+v", r)
+		}
+		if r := next(t, in("none")); r.Version != "1.2.3" || !strings.Contains(r.Reason, "nothing to release") {
+			t.Errorf("none: %+v", r)
+		}
+		num, _ := NewScheme(Number, "", "")
+		if r := next(t, Input{Scheme: num, Strategy: Strategy{Name: Intents}, Released: "41", Bumps: []string{"number"}}); r.Version != "42" {
+			t.Errorf("number: %+v", r)
+		}
+		if r := next(t, Input{Scheme: semver, Strategy: Strategy{Name: Intents}, Current: "0.1.0"}); r.Version != "0.1.0" || !strings.Contains(r.Reason, "no release yet") {
+			t.Errorf("first: %+v", r)
+		}
+	})
+}

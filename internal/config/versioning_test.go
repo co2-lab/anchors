@@ -379,11 +379,57 @@ func TestVersioning_changelog(t *testing.T) {
 			"{ path: n, mode: per_version, format: { file: notes.md } }": "format.file",
 			"{ path: c.md, format: { required: fresh } }":                `format.required "fresh"`,
 			"{ path: c.md, format: { max_chars: -1 } }":                  "max_chars",
-			"{ path: c.md, source: intents }":                            "source",
+			"{ path: c.md, source: tickets }":                            `source "tickets"`,
 		} {
 			_, err := loadVersioning(t, "  app:\n    scheme: number\n    next: none\n    changelog:\n      outputs: ["+out+"]\n")
 			if err == nil || !strings.Contains(err.Error(), says) {
 				t.Errorf("%s: %v, want %q", out, err, says)
+			}
+		}
+	})
+}
+
+func TestVersioning_intents(t *testing.T) {
+	t.Run("VRSNN-B12: changelog.intents loads with its defaults, an output reads intents or commits, and intents is a strategy", func(t *testing.T) {
+		p := filepath.Join(t.TempDir(), "anchors.yaml")
+		os.WriteFile(p, []byte(`version: 8
+changelog:
+  intents: { types: [feat, fix, perf], max_chars: 300, consume: archive }
+versioning:
+  app:
+    scheme: semver
+    next: intents
+    changelog:
+      outputs:
+        - { path: notes.md, source: intents }
+        - { path: CHANGELOG.md }
+`), 0o644)
+		c, err := Load(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		in := c.Changelog.Intents
+		if in.PathOrDefault() != ".anchors/changes" || len(in.TypesOrDefault()) != 3 || in.MaxChars != 300 || in.Consume != "archive" {
+			t.Errorf("intents: %+v", in)
+		}
+		if (*Intents)(nil).PathOrDefault() != ".anchors/changes" || strings.Join((*Intents)(nil).TypesOrDefault(), ",") != "feat,fix" {
+			t.Errorf("defaults")
+		}
+		o := c.Versioning["app"].Changelog.Outputs
+		if !o[0].FromIntents() || o[1].FromIntents() || c.Versioning["app"].Next.Resolved().Name != "intents" {
+			t.Errorf("outputs: %+v", o)
+		}
+	})
+	t.Run("VRSNN-E09: Intents consumed another way, a negative limit, or intents declared on an output refuse the configuration", func(t *testing.T) {
+		for body, says := range map[string]string{
+			"changelog:\n  intents: { consume: keep }\n": "consume",
+			"changelog:\n  intents: { max_chars: -2 }\n": "max_chars",
+			"versioning:\n  app:\n    scheme: number\n    next: none\n    changelog:\n      outputs: [{ path: n.md, intents: { path: x } }]\n": "not an output's",
+		} {
+			p := filepath.Join(t.TempDir(), "anchors.yaml")
+			os.WriteFile(p, []byte("version: 8\n"+body), 0o644)
+			if _, err := Load(p); err == nil || !strings.Contains(err.Error(), says) {
+				t.Errorf("%s: %v, want %q", body, err, says)
 			}
 		}
 	})

@@ -53,6 +53,8 @@ the project's. A project with no `versioning:` block sees no change.
 | `branches` | a map of branch pattern (BFSBR-B03) → `next:`, `range:` | any other key, a pattern that is neither a glob nor `re:` | this unit (`VRSNN-E04`) |
 | a branch rule's `changelog`, `release` | `true` or `false` | — | the strict load |
 | `changelog.outputs` | a list of `path`, `mode` (`incremental`, `per_version`), `template`, `format` (`heading`, `file`, `max_chars`, `required_sections`, `required`) | no path, another mode or key, a heading or file with no `{version}`, `file` off `per_version`, `required` other than `changed`, a negative limit | this unit (`VRSNN-E08`) |
+| `changelog.intents` (the project's `changelog:` block) | `path`, `types`, `max_chars`, `consume` (`delete`, `archive`) | another consume, a negative limit | `VRSNN-E09` |
+| an output's `source` | `commits`, `intents` | anything else | this unit (`VRSNN-E08`) |
 | `range` | `from_base`, or numbers and an `x` (`1.0.x`, `2.x`) | anything else | this unit (`VRSNN-E06`) |
 | a listing | `file` (JSON or YAML), `keys` (a dot path to a map; empty: the document), `where` (dot path → text) | `released:` with no file, any other key | this unit (`VRSNN-E06`) |
 | a listing's file | a document with a map at `keys` | a file missing, unreadable, or without a map there | this unit (`VRSNN-E07`) |
@@ -73,6 +75,7 @@ the project's. A project with no `versioning:` block sees no change.
 | `VRSNN-B09` | A listing is the keys of its map whose entries hold every field of `where`, compared as text; a requirement's listing with no file takes the file and the map of `released:`, keeping its own fields. A listing writes itself as `file keys, where field = value`. (`Listing.Versions`, `ListingOf`, `Listing.String`) |
 | `VRSNN-B10` | A product is the one named, or the only one; several and no name is an error that lists them and says where the name is written. (`Pick`) |
 | `VRSNN-B11` | A product's changelog outputs load with their format; a branch releases when its rule says `release: true`, and the changelog is written on it when its rule says `changelog: true` — a product whose rules name no such branch releases, and writes, on every branch —; the branch a changelog reads by default is the first rule that releases. A heading pattern reads the version and the date of a line. (`Releases`, `WritesChangelog`, `ReleaseBranch`, `HeadingRE`) |
+| `VRSNN-B12` | `changelog.intents` loads its directory (`.anchors/changes` by default), its types (`feat` and `fix` by default), its limit and how a release consumes them; an output reads the intents when its `source` says so, and `intents` is a strategy. (`PathOrDefault`, `TypesOrDefault`, `FromIntents`) |
 
 ## Errors
 
@@ -86,3 +89,4 @@ the project's. A project with no `versioning:` block sees no change.
 | `VRSNN-E06` | A range that is neither `from_base` nor numbers and an `x`, or `released:` with no file or with a key it does not know. | The configuration does not load, naming the branch or `released`. | A bound that reads nothing would let every version through. |
 | `VRSNN-E07` | A listing's file missing or unreadable, not JSON nor YAML, or without a map at `keys`. | An error naming the file and the path. | A listing not found is not an empty one: read as empty, every version would be fresh and none listed. |
 | `VRSNN-E08` | An output with no path, a mode other than `incremental` or `per_version`, a key it does not know, a heading or file with no `{version}` or a heading that does not compile, a `file` on an incremental output, a `required` other than `changed`, or a negative `max_chars`. | The configuration does not load, naming the output and the field. | A format that reads nothing would hold the changelog to nothing. |
+| `VRSNN-E09` | Intents consumed other than by `delete` or `archive`, a negative `max_chars`, or `intents` declared on an output. | The configuration does not load, naming the field. | Intents an output owns would be read by one output and consumed by none. |

@@ -45,6 +45,7 @@ cli (semver)
 | `VRSNI-B06` | `bump` to the version the sources already hold says so and writes nothing. |
 | `VRSNI-B07` | A project with a single product names none, and the current branch decides when `--branch` is not given. |
 | `VRSNI-B08` | A branch with a range (VRSNN-B08) shows it with the rule that set it, and `bump` refuses a version outside it, writing nothing. (`inRange`) |
+| `VRSNI-B09` | With the `intents` strategy, the next version reads the product's intents waiting — in the working tree, or at the commit a stage confronts —, and an intent that does not parse stops the command naming the file. (`intentsAt`) |
 
 ## Errors
 

@@ -115,3 +115,9 @@ Feature: Version — a product's version read, ordered and moved, and the next o
     Given increment of a part semver lacks, semantic under number, manual with no source, increment of a pattern with no release and no source, a calver with no counter raised on its own date, and a strategy named latest
     When the next version is decided
     Then each fails, naming the strategy and what it lacks
+
+  @VRSNE-B15 @unit-level
+  Scenario: intents raises the latest release by the largest bump of the intents waiting; none or no intent releases nothing
+    Given the release 1.2.3 and the intents patch, minor and none; then patch and major; then none alone; a number at 41; and no release with the sources at 0.1.0
+    When the intents strategy computes
+    Then 1.3.0 by 2 intents, 2.0.0, nothing to release, 42, and 0.1.0 as no release yet

@@ -118,6 +118,18 @@ Feature: Versioning — the products a project versions, where each writes its v
 
   @VRSNN-E08 @unit-level
   Scenario: An output with no path, an unknown mode, or a format that reads nothing refuses the configuration
-    Given outputs with no path, mode weekly, a heading or file without {version}, a heading that does not compile, file on incremental, required fresh, max_chars -1, and a key source
+    Given outputs with no path, mode weekly, a heading or file without {version}, a heading that does not compile, file on incremental, required fresh, max_chars -1, and a source tickets
+    When the configuration is loaded
+    Then it does not load, naming the field
+
+  @VRSNN-B12 @unit-level
+  Scenario: changelog.intents loads with its defaults, an output reads intents or commits, and intents is a strategy
+    Given changelog.intents with three types, 300 characters and consume archive, and app on intents with an output from intents and one from commits
+    When the configuration is loaded
+    Then the intents hold them over the defaults, only the first output reads intents, and app's strategy is intents
+
+  @VRSNN-E09 @unit-level
+  Scenario: Intents consumed another way, a negative limit, or intents declared on an output refuse the configuration
+    Given consume keep, max_chars -2, and an output with intents
     When the configuration is loaded
     Then it does not load, naming the field

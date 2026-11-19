@@ -54,7 +54,41 @@ type ProductChangelog struct {
 // template, as the `changelog:` block has them, and the format `changelog-valid` holds it to.
 type ChangelogOutput struct {
 	Changelog `yaml:",inline"`
-	Format    *ChangelogFormat `yaml:"format,omitempty"`
+	// Source is what the releases are read from: `commits` (the default) or `intents`.
+	Source string           `yaml:"source,omitempty"`
+	Format *ChangelogFormat `yaml:"format,omitempty"`
+}
+
+// FromIntents says whether the output is written from the change intents.
+func (o ChangelogOutput) FromIntents() bool { return o.Source == "intents" }
+
+// Intents is where the change intents live and what they may say.
+type Intents struct {
+	// Path is the directory of the intent files (`*.md`). Empty: .anchors/changes.
+	Path string `yaml:"path,omitempty" path:"write"`
+	// Types are the types an intent may declare. Empty: feat and fix.
+	Types []string `yaml:"types,omitempty"`
+	// MaxChars bounds an intent's text.
+	MaxChars int `yaml:"max_chars,omitempty"`
+	// Consume is what a release does with its intents: `delete` them (the default), or
+	// `archive` them under released/<version>/, where the changelog reads them again.
+	Consume string `yaml:"consume,omitempty"`
+}
+
+// PathOrDefault is the intents' directory.
+func (i *Intents) PathOrDefault() string {
+	if i == nil || i.Path == "" {
+		return ".anchors/changes"
+	}
+	return i.Path
+}
+
+// TypesOrDefault are the types an intent may declare.
+func (i *Intents) TypesOrDefault() []string {
+	if i == nil || len(i.Types) == 0 {
+		return []string{"feat", "fix"}
+	}
+	return i.Types
 }
 
 // ChangelogFormat is what an output must look like, beyond the markers, the order and the
@@ -462,6 +496,12 @@ func validateOutput(o ChangelogOutput) error {
 	if o.Path == "" {
 		return fmt.Errorf("path is required")
 	}
+	if o.Intents != nil {
+		return fmt.Errorf("intents are the project's (changelog.intents), not an output's")
+	}
+	if o.Source != "" && o.Source != "commits" && o.Source != "intents" {
+		return fmt.Errorf("source %q: write commits or intents", o.Source)
+	}
 	if o.Mode != "" && o.Mode != "incremental" && o.Mode != "per_version" {
 		return fmt.Errorf("mode %q: write incremental or per_version", o.Mode)
 	}
@@ -506,7 +546,7 @@ func validateNext(n *Next, s version.Scheme, field string, hasSource bool) error
 		if !hasSource {
 			return fmt.Errorf("%s: manual reads the version from the sources, and the product declares none", field)
 		}
-	case version.None:
+	case version.None, version.Intents:
 	case version.Increment:
 		if !s.ValidPart(st.Part) {
 			return fmt.Errorf("%s: %s has no part %q (%s)", field, s.Kind, st.Part, strings.Join(s.Parts(), ", "))
@@ -521,7 +561,7 @@ func validateNext(n *Next, s version.Scheme, field string, hasSource bool) error
 			}
 		}
 	default:
-		return fmt.Errorf("%s: strategy %q: write manual, increment, semantic or none", field, st.Name)
+		return fmt.Errorf("%s: strategy %q: write manual, increment, semantic, intents or none", field, st.Name)
 	}
 	if st.Name != version.Increment && st.Part != "" {
 		return fmt.Errorf("%s: part is an option of increment, not of %s", field, st.Name)

@@ -373,6 +373,7 @@ const (
 	Increment = "increment"
 	Semantic  = "semantic"
 	None      = "none"
+	Intents   = "intents"
 )
 
 // Strategy is how a branch decides its next version.
@@ -391,6 +392,9 @@ type Input struct {
 	Released string             // the latest released version; empty before the first release
 	Commits  []changelog.Commit // since the latest release, oldest first
 	Today    time.Time
+	// Bumps are the bumps of the change intents waiting for the next release: a part of the
+	// scheme, or none.
+	Bumps []string
 }
 
 // Result is the next version and why.
@@ -479,8 +483,53 @@ func compute(in Input, released *V) (Result, error) {
 			return Result{}, err
 		}
 		return Result{Version: next, Reason: fmt.Sprintf("semantic: %s since %s", why, in.Released)}, nil
+	case Intents:
+		if released == nil {
+			return firstRelease(in, "intents")
+		}
+		part, n := largestBump(in.Scheme, in.Bumps)
+		if n == 0 {
+			return Result{Version: in.Released, Reason: "intents: nothing to release since " + in.Released}, nil
+		}
+		next, err := in.Scheme.Increment(*released, part, in.Today)
+		if err != nil {
+			return Result{}, err
+		}
+		return Result{Version: next, Reason: fmt.Sprintf("intents: %s, the largest bump of %d intent(s) since %s", or(part, in.Scheme.Kind), n, in.Released)}, nil
 	}
-	return Result{}, fmt.Errorf("strategy %q: write manual, increment, semantic or none", in.Strategy.Name)
+	return Result{}, fmt.Errorf("strategy %q: write manual, increment, semantic, intents or none", in.Strategy.Name)
+}
+
+// largestBump is the part that moves the version furthest among the bumps — the first of
+// the scheme's parts any of them names —, and how many bumps are not `none`.
+func largestBump(s Scheme, bumps []string) (string, int) {
+	n := 0
+	best := -1
+	parts := s.Parts()
+	for _, b := range bumps {
+		if b == "none" || b == "" && len(parts) > 1 {
+			continue
+		}
+		n++
+		for i, p := range parts {
+			if p == b || (b == s.Kind && p == "") {
+				if best < 0 || i < best {
+					best = i
+				}
+			}
+		}
+	}
+	if best < 0 {
+		return "", n
+	}
+	return parts[best], n
+}
+
+func or(v, fallback string) string {
+	if v != "" {
+		return v
+	}
+	return fallback
 }
 
 // firstRelease is the version before any release: what the sources hold, or, with no

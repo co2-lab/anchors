@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:666c18970b89e86a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:dce43e4642118131 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2018,6 +2018,8 @@ in `layers/`.
 
 - [CLGCM-B11 — `--write` writes every output of the product with its path, mode and template, and refuses on a branch the changelog is not written on. (`renderBlocks`)](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
+- [CLGCM-B12 — An output whose `source` is `intents` renders what is not released yet from the intents waiting, under the candidate, and a release from the intents archived under `released/<version>/`; a release whose intents were deleted renders nothing, its block being the one the file holds. The commits' outputs read no intent. (`renderIntentBlocks`, `typeHeading`)](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
+
 - [CLGCM-E01 — `--from` names no tag reachable from `--to`.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
 - [CLGCM-E02 — `changelog.template` names a file that cannot be read, or a URL that answers nothing (PTRFS-E01).](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
@@ -2619,6 +2621,8 @@ in `layers/`.
 - [VRSNI-B07 — A project with a single product names none, and the current branch decides when `--branch` is not given.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
 
 - [VRSNI-B08 — A branch with a range (VRSNN-B08) shows it with the rule that set it, and `bump` refuses a version outside it, writing nothing. (`inRange`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-B09 — With the `intents` strategy, the next version reads the product's intents waiting — in the working tree, or at the commit a stage confronts —, and an intent that does not parse stops the command naming the file. (`intentsAt`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
 
 - [VRSNI-E01 — No `versioning:` block, a `--product` the block does not hold, or several products and no `--product`.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
 
@@ -3956,6 +3960,8 @@ in `layers/`.
 
 - [VRSNN-B11 — A product's changelog outputs load with their format; a branch releases when its rule says `release: true`, and the changelog is written on it when its rule says `changelog: true` — a product whose rules name no such branch releases, and writes, on every branch —; the branch a changelog reads by default is the first rule that releases. A heading pattern reads the version and the date of a line. (`Releases`, `WritesChangelog`, `ReleaseBranch`, `HeadingRE`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
+- [VRSNN-B12 — `changelog.intents` loads its directory (`.anchors/changes` by default), its types (`feat` and `fix` by default), its limit and how a release consumes them; an output reads the intents when its `source` says so, and `intents` is a strategy. (`PathOrDefault`, `TypesOrDefault`, `FromIntents`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
 - [VRSNN-E01 — A product whose scheme does not build (VRSNE-E01), or that is empty.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E02 — A source with no `file`, with both or neither of `path:` and `regex:`, or with a regex that does not compile or does not have exactly one group.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
@@ -3971,6 +3977,8 @@ in `layers/`.
 - [VRSNN-E07 — A listing's file missing or unreadable, not JSON nor YAML, or without a map at `keys`.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E08 — An output with no path, a mode other than `incremental` or `per_version`, a key it does not know, a heading or file with no `{version}` or a heading that does not compile, a `file` on an incremental output, a `required` other than `changed`, or a negative `max_chars`.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E09 — Intents consumed other than by `delete` or `archive`, a negative `max_chars`, or `intents` declared on an output.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 ### [GTVCG — GateVocabulary — the list of default gate names, injected into the configuration layer](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
@@ -4087,6 +4095,10 @@ in `layers/`.
 - [CHVLA-B07 — A `per_version` output has one file per tag, each named by `format.file`, and `unreleased.md` at most; another name, a tag with no file and a file with no tag fail.](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
 
 - [CHVLA-B08 — With no product declaring an output, the gate is skipped, saying so.](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
+- [CHVLA-B09 — An intent that does not parse, names a product `versioning:` does not declare, a bump that is neither a part of its scheme nor `none`, or a type not declared, says nothing, exceeds `changelog.intents.max_chars`, or was added in a commit its product's latest release already holds — a release that forgot to consume it — fails, naming the file. Intents declared and none written pass. (`confrontIntents`, `addedBefore`)](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
+- [CHVLA-B10 — The block of the version the sources hold, while no tag records it, needs no tag; the block of a release is the one that must not change. (`sourcesVersion`)](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
 
 ### [CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code)
 
@@ -7296,6 +7308,16 @@ in `layers/`.
 
 - [CHNGL-E02 — A git command fails (not a repository, an unknown ref).](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 
+### [INTNA — Intents — the change intents, read from their files and rendered as a release](layers/infra.md#intna--intents--the-change-intents-read-from-their-files-and-rendered-as-a-release)
+
+- [INTNA-B01 — An intent reads its product, bump and type from the front matter, and its text after it, trimmed; CRLF reads as LF. (`ParseIntent`)](layers/infra.md#intna--intents--the-change-intents-read-from-their-files-and-rendered-as-a-release)
+
+- [INTNA-B02 — A directory's intents are read sorted by file name; a file that does not parse is an error of its own and the others are still read; a directory that does not exist holds none. (`ReadIntents`)](layers/infra.md#intna--intents--the-change-intents-read-from-their-files-and-rendered-as-a-release)
+
+- [INTNA-B03 — Intents are grouped by type, the declared types first in their order, another type after them, and empty types left out; the built-in template writes the release's heading — version and date, or the candidate and "unreleased" — and one section per type, its heading translated (`changelog.type.<type>`). A template that does not parse is an error. (`GroupIntents`, `RenderIntents`)](layers/infra.md#intna--intents--the-change-intents-read-from-their-files-and-rendered-as-a-release)
+
+- [INTNA-E01 — An intent with no front matter, one not closed by `---`, a key it does not know, or YAML that does not parse.](layers/infra.md#intna--intents--the-change-intents-read-from-their-files-and-rendered-as-a-release)
+
 ### [CHLGC — CheckLog — the check's output mirrored to a file, so it can be reread without re-running](layers/infra.md#chlgc--checklog--the-checks-output-mirrored-to-a-file-so-it-can-be-reread-without-re-running)
 
 - [CHLGC-B01 — The full check is mirrored to `.anchors/check-all.txt` and the changed-files check to `.anchors/check-changed.txt`. (`ScopeName`)](layers/infra.md#chlgc--checklog--the-checks-output-mirrored-to-a-file-so-it-can-be-reread-without-re-running)
@@ -8773,6 +8795,8 @@ in `layers/`.
 - [VRSNE-B13 — A `Version:` footer on a commit since the latest release forces the next version, the newest one winning, and the result names the commit.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
 
 - [VRSNE-B14 — `none` gives no version and says the branch never versions; a footer does not change it.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B15 — `intents` raises the latest release by the largest bump among the intents waiting — the first of the scheme's parts any of them names —, saying how many intents moved it; with none, or only `none`, there is nothing to release; before the first release, it takes what the sources hold. (`largestBump`)](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
 
 - [VRSNE-E01 — A scheme that is not one of the four, a calver format with an unknown field or a `MICRO` before the end, a pattern that does not compile or has no group.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
 

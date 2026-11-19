@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:c4c6a3c93f61af1b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:702765e9b9224e21 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 99 units and 1497 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 99 units and 1499 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -101,6 +101,10 @@ What does not depend on taste holds for every output:
 - every tag of the product reachable from HEAD has its block, and every block a tag;
 - the block of a release does not change.
 
+The block of the version the sources hold, not released yet, needs no tag: a release pull request
+writes it before the tag exists. The change intents waiting for a release (INTNA) are confronted
+too.
+
 The rest is the output's `format:`. An output that declares none is held to nothing more.
 
 A release's block that must change, a fix to its text, goes through the commit message's waiver of
@@ -131,6 +135,10 @@ gates:
 - **CHVLA-B07** — A `per_version` output has one file per tag, each named by `format.file`, and `unreleased.md` at most; another name, a tag with no file and a file with no tag fail.
 
 - **CHVLA-B08** — With no product declaring an output, the gate is skipped, saying so.
+
+- **CHVLA-B09** — An intent that does not parse, names a product `versioning:` does not declare, a bump that is neither a part of its scheme nor `none`, or a type not declared, says nothing, exceeds `changelog.intents.max_chars`, or was added in a commit its product's latest release already holds — a release that forgot to consume it — fails, naming the file. Intents declared and none written pass. (`confrontIntents`, `addedBefore`)
+
+- **CHVLA-B10** — The block of the version the sources hold, while no tag records it, needs no tag; the block of a release is the one that must not change. (`sourcesVersion`)
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code

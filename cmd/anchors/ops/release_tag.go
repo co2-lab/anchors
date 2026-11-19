@@ -47,7 +47,7 @@ func notFound(err error) bool { return err != nil && strings.Contains(err.Error(
 // the same version released twice, and fails.
 func releaseOf(t stageTarget) (string, error) {
 	name := t.stage.Release
-	st, err := stateAt(t.root, t.cfg.Versioning, name, "release:", t.branch, t.sha)
+	st, err := stateAt(t.root, t.cfg, name, "release:", t.branch, t.sha)
 	if err != nil {
 		return "", err
 	}

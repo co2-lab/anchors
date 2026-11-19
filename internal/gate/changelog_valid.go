@@ -36,16 +36,20 @@ func checkChangelogValid(_ config.Gate, root string, _ *mapx.Graph, cfg *config.
 		}
 	}
 	sort.Strings(names)
-	if len(names) == 0 {
+	intentFails, hasIntents := confrontIntents(root, cfg)
+	if len(names) == 0 && !hasIntents {
 		return Skip, i18n.T("gate.changelog_valid.no_output")
 	}
-	var fails []string
+	fails := intentFails
 	for _, name := range names {
 		p := cfg.Versioning[name]
 		rel, err := productTags(root, p)
 		if err != nil {
 			fails = append(fails, name+": "+err.Error())
 			continue
+		}
+		if cur := sourcesVersion(root, p); cur != "" && rel.any[cur] == "" {
+			rel.pending = cur
 		}
 		for _, o := range p.Changelog.Outputs {
 			fails = append(fails, confrontOutput(root, p, o, rel)...)
@@ -57,6 +61,69 @@ func checkChangelogValid(_ config.Gate, root string, _ *mapx.Graph, cfg *config.
 	return Pass, i18n.T("gate.changelog_valid.pass", len(names))
 }
 
+// confrontIntents holds each change intent waiting for a release to what it may say, and
+// says whether the project has intents to confront: declared, or a directory of them.
+func confrontIntents(root string, cfg *config.Config) ([]string, bool) {
+	var in *config.Intents
+	if cfg.Changelog != nil {
+		in = cfg.Changelog.Intents
+	}
+	dir := in.PathOrDefault()
+	abs := filepath.Join(root, filepath.FromSlash(dir))
+	if _, err := os.Stat(abs); err != nil {
+		return nil, in != nil
+	}
+	intents, errs := changelog.ReadIntents(abs)
+	var fails []string
+	for _, err := range errs {
+		fails = append(fails, dir+"/"+err.Error())
+	}
+	types := in.TypesOrDefault()
+	latest := map[string]string{}
+	for _, it := range intents {
+		where := dir + "/" + it.File
+		p, ok := cfg.Versioning[it.Product]
+		if !ok {
+			fails = append(fails, i18n.T("gate.changelog_valid.intent_product", where, it.Product))
+			continue
+		}
+		s, _ := p.SchemeOf()
+		if it.Bump != "none" && (it.Bump == "" || !s.ValidPart(it.Bump)) {
+			fails = append(fails, i18n.T("gate.changelog_valid.intent_bump", where, it.Bump, strings.Join(append(s.Parts(), "none"), ", ")))
+		}
+		if !containsFile(types, it.Type) {
+			fails = append(fails, i18n.T("gate.changelog_valid.intent_type", where, it.Type, strings.Join(types, ", ")))
+		}
+		if it.Text == "" {
+			fails = append(fails, i18n.T("gate.changelog_valid.intent_empty", where))
+		} else if n := utf8.RuneCountInString(it.Text); in != nil && in.MaxChars > 0 && n > in.MaxChars {
+			fails = append(fails, i18n.T("gate.changelog_valid.too_long", where, n, in.MaxChars))
+		}
+		tag, seen := latest[it.Product]
+		if !seen {
+			if rel, err := productTags(root, p); err == nil {
+				tag = rel.latest
+			}
+			latest[it.Product] = tag
+		}
+		if tag != "" && addedBefore(root, dir+"/"+it.File, tag) {
+			fails = append(fails, i18n.T("gate.changelog_valid.intent_stale", where, tag))
+		}
+	}
+	return fails, true
+}
+
+// addedBefore says whether the commit that added a file is in the release a tag records: an
+// intent that release should have consumed.
+func addedBefore(root, file, tag string) bool {
+	out, err := exec.Command("git", "-C", root, "log", "--diff-filter=A", "--format=%H", "--", file).Output()
+	lines := strings.Fields(string(out))
+	if err != nil || len(lines) == 0 {
+		return false
+	}
+	return exec.Command("git", "-C", root, "merge-base", "--is-ancestor", lines[len(lines)-1], tag).Run() == nil
+}
+
 // releases are a product's tags: those reachable from HEAD, every one the repository has,
 // and the date of each.
 type releases struct {
@@ -65,6 +132,7 @@ type releases struct {
 	any       map[string]string // version → tag
 	latest    string            // the tag of the highest reachable version
 	date      map[string]string // version → YYYY-MM-DD
+	pending   string            // the version the sources hold, when no tag records it yet
 }
 
 func productTags(root string, p *config.Product) (*releases, error) {
@@ -213,7 +281,7 @@ func confrontBlock(root string, b fileBlock, f *config.ChangelogFormat, rel *rel
 		if _, err := rel.scheme.Parse(b.Version); err != nil {
 			return []string{where + ": " + err.Error()}
 		}
-		if _, ok := rel.any[b.Version]; !ok {
+		if _, ok := rel.any[b.Version]; !ok && b.Version != rel.pending {
 			fails = append(fails, i18n.T("gate.changelog_valid.no_tag", where))
 		}
 	}
@@ -255,7 +323,7 @@ func confrontBlock(root string, b fileBlock, f *config.ChangelogFormat, rel *rel
 	if n := utf8.RuneCountInString(strings.TrimSpace(text)); f.MaxChars > 0 && n > f.MaxChars {
 		fails = append(fails, i18n.T("gate.changelog_valid.too_long", where, n, f.MaxChars))
 	}
-	if b.Version != "unreleased" {
+	if _, tagged := rel.any[b.Version]; tagged {
 		if before, ok := blockAtHead(root, b); ok && strings.TrimSpace(before) != strings.TrimSpace(text) {
 			fails = append(fails, i18n.T("gate.changelog_valid.rewritten", where))
 		}
@@ -284,24 +352,28 @@ func blockAtHead(root string, b fileBlock) (string, bool) {
 // version the sources hold is not released yet: notes left as the previous release wrote
 // them would ship with the next one.
 func changedSinceRelease(root string, p *config.Product, o config.ChangelogOutput, rel *releases) string {
-	if len(p.Source) == 0 || rel.latest == "" {
+	if rel.latest == "" || rel.pending == "" {
+		return ""
+	}
+	cur := rel.pending
+	if exec.Command("git", "-C", root, "diff", "--quiet", rel.latest, "--", o.Path).Run() == nil {
+		return i18n.T("gate.changelog_valid.unchanged", cur, rel.latest)
+	}
+	return ""
+}
+
+// sourcesVersion is the version a product's sources agree on in the tree; empty with no
+// source, or when they cannot be read — version-forward confronts that.
+func sourcesVersion(root string, p *config.Product) string {
+	if len(p.Source) == 0 {
 		return ""
 	}
 	svs, err := p.ReadSources(func(f string) ([]byte, error) { return os.ReadFile(filepath.Join(root, filepath.FromSlash(f))) })
 	if err != nil {
 		return ""
 	}
-	cur, err := config.Agreed(svs)
-	if err != nil {
-		return ""
-	}
-	if _, released := rel.any[cur]; released {
-		return ""
-	}
-	if exec.Command("git", "-C", root, "diff", "--quiet", rel.latest, "--", o.Path).Run() == nil {
-		return i18n.T("gate.changelog_valid.unchanged", cur, rel.latest)
-	}
-	return ""
+	cur, _ := config.Agreed(svs)
+	return cur
 }
 
 func sortVersions(vs []string, s version.Scheme) {

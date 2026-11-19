@@ -363,7 +363,7 @@ func (e *stageEval) holds(r config.Requirement) (bool, string) {
 		}
 		return true, fmt.Sprintf("%s passed %s", of, r.Passed)
 	case r.Version != nil:
-		return versionHolds(t.root, t.cfg.Versioning, r.Version, t.branch, t.sha, e.passedBy)
+		return versionHolds(t.root, t.cfg, r.Version, t.branch, t.sha, e.passedBy)
 	case r.Contains != "":
 		return containsHolds(t.root, r.Contains, t.sha)
 	case r.From != "":

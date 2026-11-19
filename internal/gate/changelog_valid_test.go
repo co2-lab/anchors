@@ -161,3 +161,50 @@ func TestChangelogValid_perVersion(t *testing.T) {
 		}
 	})
 }
+
+func TestChangelogValid_intents(t *testing.T) {
+	t.Run("CHVLA-B09: An intent naming no declared product, a bump or type it may not, saying nothing, too long, or added before its product's latest release fails", func(t *testing.T) {
+		intent := func(product, bump, typ, text string) string {
+			return "---\nproduct: " + product + "\nbump: " + bump + "\ntype: " + typ + "\n---\n" + text + "\n"
+		}
+		root := changelogRepo(t, map[string]string{"CHANGELOG.md": goodFile()})
+		writeFile(t, root, ".anchors/changes/ok.md", intent("app", "minor", "feat", "Sharing."))
+		writeFile(t, root, ".anchors/changes/web.md", intent("web", "minor", "feat", "x"))
+		writeFile(t, root, ".anchors/changes/bump.md", intent("app", "huge", "chore", ""))
+		writeFile(t, root, ".anchors/changes/long.md", intent("app", "none", "fix", strings.Repeat("y", 40)))
+		writeFile(t, root, ".anchors/changes/broken.md", "no front matter")
+		cfg := appWithOutput(incremental(nil))
+		cfg.Changelog = &config.Changelog{Intents: &config.Intents{MaxChars: 30}}
+		v, msg := checkChangelogValid(config.Gate{}, root, nil, cfg)
+		failsSaying(t, "intents", v, msg, `web.md: the product "web"`, `bump.md: bump "huge"`, `bump.md: type "chore"`, "bump.md: the intent says nothing", "long.md: 40 characters", "broken.md")
+		if strings.Contains(msg, "ok.md") {
+			t.Errorf("a valid intent: %s", msg)
+		}
+		stale := changelogRepo(t, map[string]string{"CHANGELOG.md": goodFile()})
+		writeFile(t, stale, ".anchors/changes/old.md", intent("app", "patch", "fix", "Old."))
+		for _, args := range [][]string{{"add", "."}, {"commit", "-q", "-m", "docs: intent"}, {"tag", "app-v1.2.0"}} {
+			c := exec.Command("git", append([]string{"-C", stale}, args...)...)
+			c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+			if out, err := c.CombinedOutput(); err != nil {
+				t.Fatalf("%v %s", err, out)
+			}
+		}
+		v, msg = checkChangelogValid(config.Gate{}, stale, nil, appWithOutput(incremental(nil)))
+		failsSaying(t, "stale", v, msg, "old.md: added before app-v1.2.0")
+		if v, msg := checkChangelogValid(config.Gate{}, t.TempDir(), nil, &config.Config{Changelog: &config.Changelog{Intents: &config.Intents{}}}); v != Pass {
+			t.Errorf("intents declared and none written: %s %s", v, msg)
+		}
+	})
+	t.Run("CHVLA-B10: The block of the version the sources hold, not released yet, needs no tag", func(t *testing.T) {
+		file := goodChangelog + block("1.2.0", "- next") + "\n" + block("1.1.0", "- two") + "\n" + block("1.0.0", "- one")
+		root := changelogRepo(t, map[string]string{"CHANGELOG.md": file, "v.txt": "1.2.0"})
+		cfg := appWithOutput(incremental(nil))
+		cfg.Versioning["app"].Source = []config.VersionSource{{File: "v.txt", Regex: `(.+)`}}
+		if v, msg := checkChangelogValid(config.Gate{}, root, nil, cfg); v != Pass {
+			t.Errorf("pending: %s %s", v, msg)
+		}
+		writeFile(t, root, "v.txt", "1.1.0")
+		v, msg := checkChangelogValid(config.Gate{}, root, nil, cfg)
+		failsSaying(t, "not pending", v, msg, "CHANGELOG.md 1.2.0: no tag")
+	})
+}

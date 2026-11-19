@@ -2573,6 +2573,14 @@ func (c *Config) validarPadroes() error {
 		if !known {
 			return fmt.Errorf("`changelog.mode` must be one of %s, got %q", strings.Join(ChangelogModes, ", "), cl.Mode)
 		}
+		if in := cl.Intents; in != nil {
+			if in.Consume != "" && in.Consume != "delete" && in.Consume != "archive" {
+				return fmt.Errorf("`changelog.intents.consume` %q: write delete or archive", in.Consume)
+			}
+			if in.MaxChars < 0 {
+				return fmt.Errorf("`changelog.intents.max_chars` %d: a limit is positive", in.MaxChars)
+			}
+		}
 	}
 	for i, p := range c.CoverageDirectives {
 		if _, err := regexp.Compile(p); err != nil || strings.TrimSpace(p) == "" {
@@ -3239,6 +3247,9 @@ type Changelog struct {
 	// empty uses the built-in one. It receives the release and a `t` function that
 	// translates the section headings to the project's language.
 	Template string `yaml:"template,omitempty" path:"read"`
+	// Intents are the change intents: one file per change, written by whoever made it, that
+	// say what the change is to the people a changelog is for.
+	Intents *Intents `yaml:"intents,omitempty"`
 }
 
 // ChangelogModes are the ways a changelog can be written.
