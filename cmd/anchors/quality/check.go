@@ -80,6 +80,9 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// `--index`: the gates read the project's files as the git index has them —
 			// what the commit records —, not as the tree does.
 			if fromIndex {
+				// The commit hook jumps the load queue: a commit never waits behind another
+				// worktree's heavy run.
+				skipLoadQueue()
 				read, err := scan.IndexReader(absRoot)
 				if err != nil {
 					return fmt.Errorf("--index: read the git index: %w", err)

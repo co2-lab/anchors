@@ -59,6 +59,10 @@ Scope of the external gates (` + "`scope:`" + `):
 A project/batch scoped gate only runs if THERE IS a relevant file in the cut: a
 README-only commit does not trigger the monorepo's typecheck.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// The commit hook jumps the load queue, and so do the commands it runs.
+			if phase == "pre-commit" {
+				skipLoadQueue()
+			}
 			// The files after the flags join `--changed` (`--changed a b c`).
 			if len(args) > 0 {
 				absRoot, err := config.AbsRoot(root)

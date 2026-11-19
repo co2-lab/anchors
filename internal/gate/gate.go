@@ -11,6 +11,7 @@ package gate
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
@@ -22,6 +23,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/load"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -441,9 +443,30 @@ func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, 
 		targets = append(targets, n.ID)
 	}
 	r.Verdict, r.Detail = cachedTool(g, escopo, targets, root, func() (Verdict, string, bool) {
+		defer admitTool(root, cfg, g.Name, targets)()
 		return runExternal(g.Run, args, root)
 	})
 	return r
+}
+
+// admitTool waits for the project's load queue to admit a tool over the whole project or a
+// batch — a typecheck, a linter — and returns what releases it. With no `load:`, in the
+// commit hook, or when the queue cannot be read, the tool runs at once.
+func admitTool(root string, cfg *config.Config, gate string, targets []string) func() {
+	if cfg == nil || !load.Enabled(cfg.Load) {
+		return func() {}
+	}
+	level := cfg.Load.LevelFor("gate", targets)
+	cpu, mem, _ := cfg.Load.LevelCost(level)
+	release, err := load.Acquire(load.Request{
+		Project: root, Task: "gate " + gate, Level: level,
+		Cost: load.Cost{CPU: cpu, Memory: mem}, WaitLimit: cfg.Load.WaitLimitFor("gate"),
+		Notify: func(s string) { fmt.Fprintln(os.Stderr, s) },
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "load: the queue could not be read (%v): %s runs at once\n", err, gate)
+	}
+	return release
 }
 
 // presupposedMissing answers for a gate whose presupposed fields are not all declared:

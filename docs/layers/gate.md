@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:6d781dcb74181d3e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:b289e429dcf5cf96 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 99 units and 1502 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 99 units and 1503 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1676,6 +1676,8 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 - **GTENG-B37** — From its gate's `legacy.until` on, no target is legacy: every one answers with the gate's own severity; before it, a legacy target's verdict that the legacy softened says until when, and what it will do after. (`legacyTarget`, `markSeverityAt`)
 
 - **GTENG-B38** — A verdict `awaiting` — a choice registered on purpose, waiting for a person's decision — takes the gate's `awaiting` state: it bars where that state is `block`, unless the finding is declared (`[declared]`), and is counted apart from the divergences, each awaited decision listed in the profile; an open decision still becomes a decision issue. (`Awaiting`, `Profile.Awaiting`)
+
+- **GTENG-B39** — A tool over the whole project or a batch waits for the load queue (LDQUS) and holds a lease, at the level of the `gate` task, while it runs; with no `load:`, in the commit hook, or with a queue that cannot be read, it runs at once. (`admitTool`)
 
 - **GTENG-B06** — An UNREADABLE target does not apply: better to stop charging than to charge blind.
 

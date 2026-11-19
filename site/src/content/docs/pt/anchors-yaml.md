@@ -558,6 +558,39 @@ tag e uma tag para cada bloco, o bloco de um release sem mudar, e o `format:` da
 
 ---
 
+## `load` — quanto cada execução custa, para as pesadas esperarem umas pelas outras
+
+```yaml
+load:
+  levels:                            # opcional: light, medium e heavy têm padrão
+    heavy: { cpu: 6, memory: 8GB }
+  wait_limit: 5m
+  ci: false                          # o CI pula a fila, a não ser com true
+  tasks:
+    mutation:
+      default: medium
+      wait_limit: 20m
+      scopes:                        # vale o primeiro padrão que os arquivos da execução casam
+        "packages/backend/**": heavy
+        "apps/mobile/**": medium
+    test: { default: medium }
+    gate: { default: light }
+```
+
+As execuções pesadas — as suítes de teste e de mutação, as ferramentas sobre o projeto inteiro ou
+um lote — esperam numa fila compartilhada por todos os worktrees e projetos da máquina. Cada uma diz
+quanto custa, em CPUs e memória, o mesmo em qualquer máquina, e começa quando isso cabe no que a
+máquina tem livre: as CPUs e a memória dela, menos uma folga deixada para quem usa a máquina. Uma
+execução leve passa enquanto uma pesada ocupa a maior parte da máquina; uma execução que esperou
+além do limite segura as novas até caber. O hook de commit fura a fila. `anchors load` mostra quem
+ocupa a máquina e quem espera.
+
+Os custos padrão são light 1 CPU / 512 MB, medium 2 CPU / 2 GB, heavy 4 CPU / 6 GB.
+`$ANCHORS_LOAD_CAPACITY=cpu=8,memory=16GB` define a capacidade de uma máquina, e
+`$ANCHORS_LOAD=off` desliga a fila.
+
+---
+
 ## `enabled` — o botão de pânico
 
 ```yaml

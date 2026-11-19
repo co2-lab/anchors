@@ -43,7 +43,7 @@ type family struct {
 
 var families = []family{
 	{"verify", "Confronting the project", "Confronto do projeto", []string{"check", "verify", "coverage", "stale", "affected-tests", "impact", "dependencies", "failures"}},
-	{"health", "Project health", "Saúde do projeto", []string{"doctor", "audit", "status", "task-status", "compliance", "governs"}},
+	{"health", "Project health", "Saúde do projeto", []string{"doctor", "audit", "status", "task-status", "compliance", "governs", "load"}},
 	{"map", "The map and its signals", "O mapa e seus sinais", []string{"map", "ingest", "test", "mutation", "keep-evidence", "stamp", "recode", "renumber", "generated-paths", "merge-progress"}},
 	{"judgment", "Judgment and review", "Julgamento e review", []string{"judge", "review", "push-review", "suggest"}},
 	{"setup", "Setup and artifacts", "Configuração e artefatos", []string{"init", "new", "code", "guide", "docs", "install-hooks", "migrate", "settings", "touch"}},

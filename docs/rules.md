@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:e961ba281f492cc9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:4b5fa0833630e876 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2358,6 +2358,10 @@ in `layers/`.
 
 - [INHKN-E03 — REF[INHKN-B03]: a pre-commit the user wrote is the failure this command handles, by refusing and pointing at `--force`](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote)
 
+### [LDCMS — LoadCommand — what the machine lends its runs, and who holds it](layers/comando.md#ldcms--loadcommand--what-the-machine-lends-its-runs-and-who-holds-it)
+
+- [LDCMS-B01 — The command shows the capacity and what is in use, each run holding the machine — project, task, level, cost, for how long, pid — and each run waiting, oldest first, marking those that waited past their limit; an idle machine shows a dash for each. (`printLoad`)](layers/comando.md#ldcms--loadcommand--what-the-machine-lends-its-runs-and-who-holds-it)
+
 ### [MGCMM — MigrateCommand — the command the format error promises, bringing the map and the config up to this binary's format](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
 
 - [MGCMM-B01 — One run brings both the map and the config to the binary's current format, each reported as migrated from its old format.](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format)
@@ -3085,6 +3089,10 @@ in `layers/`.
 - [KPEVD-B09 — A file git moved since HEAD is found in HEAD's map at its old path: its evidence comes back from there as a file's at its own path does.](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
 
 - [KPEVD-E01 — The reason is missing or blank, a file is not in the map or cannot be read, or there is no map](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
+
+### [LDQRS — SuiteLoad — a suite's run waits for the load queue, and the commit hook jumps it](layers/comando.md#ldqrs--suiteload--a-suites-run-waits-for-the-load-queue-and-the-commit-hook-jumps-it)
+
+- [LDQRS-B01 — A suite's run holds a lease at the level its files' scope costs — a whole run placed by its workspace, files outside every scope at the task's default — from before the run until after its ingestion; with no `load:`, with the queue off (the commit hook), or with a queue that cannot be read, the run starts at once. (`admitRun`, `skipLoadQueue`)](layers/comando.md#ldqrs--suiteload--a-suites-run-waits-for-the-load-queue-and-the-commit-hook-jumps-it)
 
 ### [LCBCL — LocalBacklog — what is still open locally after a full check, said in two lines](layers/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines)
 
@@ -3883,6 +3891,12 @@ in `layers/`.
 - [EXSSA-B01 — Each system declares its name, the pattern of a call to it, the suite layers that reach it, the API version the project speaks, and the days a recording lives. (`ExternalSystem`, `CallsRE`, `MaxAgeDays`)](layers/config.md#exssa--externalsystems--the-real-systems-the-code-talks-to-and-the-suites-that-reach-them)
 
 - [EXSSA-E01 — A system with no name or a repeated one, an empty or invalid `calls`, no `proven_by`, or a `max_age` that is not a number of days.](layers/config.md#exssa--externalsystems--the-real-systems-the-code-talks-to-and-the-suites-that-reach-them)
+
+### [LDCFS — Workload — what each kind of run costs, so heavy runs wait for one another](layers/config.md#ldcfs--workload--what-each-kind-of-run-costs-so-heavy-runs-wait-for-one-another)
+
+- [LDCFS-B01 — `load:` declares levels over the defaults (light 1 CPU / 512 MB, medium 2 CPU / 2 GB, heavy 4 CPU / 6 GB); a run of a task takes the level of the first scope one of its files matches, else the task's default, else medium; it may wait the task's limit, else the project's, else 5 minutes; and CI admits through the queue only with `ci: true`. (`LevelCost`, `LevelFor`, `WaitLimitFor`, `ParseBytes`)](layers/config.md#ldcfs--workload--what-each-kind-of-run-costs-so-heavy-runs-wait-for-one-another)
+
+- [LDCFS-E01 — A level with no CPU or an unreadable memory, a task the queue does not admit, a level no one declares, a scope pattern that is no glob, a duration that is not one, or a key the block does not know.](layers/config.md#ldcfs--workload--what-each-kind-of-run-costs-so-heavy-runs-wait-for-one-another)
 
 ### [MNVRM — MinVersion — whether the running binary meets the minimum version the project declares](layers/config.md#mnvrm--minversion--whether-the-running-binary-meets-the-minimum-version-the-project-declares)
 
@@ -5139,6 +5153,8 @@ in `layers/`.
 - [GTENG-B37 — From its gate's `legacy.until` on, no target is legacy: every one answers with the gate's own severity; before it, a legacy target's verdict that the legacy softened says until when, and what it will do after. (`legacyTarget`, `markSeverityAt`)](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B38 — A verdict `awaiting` — a choice registered on purpose, waiting for a person's decision — takes the gate's `awaiting` state: it bars where that state is `block`, unless the finding is declared (`[declared]`), and is counted apart from the divergences, each awaited decision listed in the profile; an open decision still becomes a decision issue. (`Awaiting`, `Profile.Awaiting`)](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
+- [GTENG-B39 — A tool over the whole project or a batch waits for the load queue (LDQUS) and holds a lease, at the level of the `gate` task, while it runs; with no `load:`, in the commit hook, or with a queue that cannot be read, it runs at once. (`admitTool`)](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B06 — An UNREADABLE target does not apply: better to stop charging than to charge blind.](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
@@ -8257,6 +8273,20 @@ in `layers/`.
 - [ISLFS-E01 — The state folder cannot be created when an issue is opened.](layers/infra.md#islfs--issuelifecycle--a-divergence-recorded-so-it-survives-the-session-with-its-state-as-a-folder)
 
 - [ISLFS-E02 — The issue to reassign does not exist in the given state.](layers/infra.md#islfs--issuelifecycle--a-divergence-recorded-so-it-survives-the-session-with-its-state-as-a-folder)
+
+### [LDQUS — LoadQueue — the machine's runs admitted by what they cost](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost)
+
+- [LDQUS-B01 — A run starts when its cost fits in CPU and in memory beside the leases; with nothing running it starts whatever its cost, so a run costlier than the machine runs alone; an unread memory does not bound the queue. (`Admit`, `Used`)](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost)
+
+- [LDQUS-B02 — A run that waited past its limit stops the admission of every run that came after it, and starts once it fits; within its limit it holds no one.](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost)
+
+- [LDQUS-B03 — The queue admits a project that declares `load:`, unless `$ANCHORS_LOAD` turns it off or the run is in CI and `load.ci` is not set. (`Enabled`)](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost)
+
+- [LDQUS-B04 — The capacity is the machine's CPUs and physical memory minus the reserve, or what `$ANCHORS_LOAD_CAPACITY` says; sizes are written in the largest unit they reach. (`MachineCapacity`, `ParseCapacity`, `Size`, `totalMemory`)](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost)
+
+- [LDQUS-B05 — Runs share the machine's leases through one file under a lock: a run that does not fit is recorded as waiting and says, then every 30 seconds, what holds the machine; a released lease admits it. (`Acquire`, `Read`, `Sorted`, `Dir`)](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost)
+
+- [LDQUS-B06 — A lease or a waiter whose process died is dropped at the next read under the lock.](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost)
 
 ### [OBPCB — ObligationPack — distributable sets of obligations from a norm, resolved against the project](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project)
 

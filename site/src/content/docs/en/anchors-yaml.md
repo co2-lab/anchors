@@ -553,6 +553,38 @@ tag for every block, the block of a release unchanged, and the output's `format:
 
 ---
 
+## `load` — what each run costs, so heavy runs wait for one another
+
+```yaml
+load:
+  levels:                            # optional: light, medium and heavy have defaults
+    heavy: { cpu: 6, memory: 8GB }
+  wait_limit: 5m
+  ci: false                          # CI skips the queue unless this is true
+  tasks:
+    mutation:
+      default: medium
+      wait_limit: 20m
+      scopes:                        # the first pattern a run's files match wins
+        "packages/backend/**": heavy
+        "apps/mobile/**": medium
+    test: { default: medium }
+    gate: { default: light }
+```
+
+The heavy runs — the test and mutation suites, the tools over the whole project or a batch — wait
+in a queue shared by every worktree and project on the machine. Each states what it costs, in CPUs
+and memory, the same on every machine, and starts when that fits in what the machine has free: its
+CPUs and memory, minus a reserve left to whoever uses it. A light run passes while a heavy one holds
+most of the machine; a run that waited past its limit stops new runs until it fits. The commit hook
+jumps the queue. `anchors load` shows who holds the machine and who waits.
+
+The default costs are light 1 CPU / 512 MB, medium 2 CPU / 2 GB, heavy 4 CPU / 6 GB.
+`$ANCHORS_LOAD_CAPACITY=cpu=8,memory=16GB` sets a machine's capacity, and `$ANCHORS_LOAD=off`
+turns the queue off.
+
+---
+
 ## `enabled` — the panic button
 
 ```yaml

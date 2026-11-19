@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTENG
-  updated_at: 2026-11-15
+  updated_at: 2026-11-19
   layer: gate
 -->
 # GateEngine — which gates reach which node, and what the run concludes
@@ -13,7 +13,7 @@
 > `anchors doctor --fix` replaces whole. Decided by the user: those files are upstream-owned.
 >
 > **Revises:** `B15`
-> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B10`, `B11`, `B12`, `B13`, `B14`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `B22`, `B23`, `B24`, `B25`, `B26`, `B27`, `B28`, `B29`, `B30`, `B31`, `B32`, `B33`, `B34`, `B35`, `B36`, `B37`, `B38`, `I01`, `I02`, `I03`, `I04`, `I05`, `X01`, `X02`, `X03`, `E01`, `E02`
+> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B10`, `B11`, `B12`, `B13`, `B14`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `B22`, `B23`, `B24`, `B25`, `B26`, `B27`, `B28`, `B29`, `B30`, `B31`, `B32`, `B33`, `B34`, `B35`, `B36`, `B37`, `B38`, `B39`, `I01`, `I02`, `I03`, `I04`, `I05`, `X01`, `X02`, `X03`, `E01`, `E02`
 
 ## Overview
 
@@ -98,6 +98,7 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-B36` | An external file — a guide `governs:` reads from a URL (PTRFS) — is out of every gate, internal or external: the project neither writes nor versions it, and there is no file here to confront. It still governs, as a local guide does. |
 | `GTENG-B37` | From its gate's `legacy.until` on, no target is legacy: every one answers with the gate's own severity; before it, a legacy target's verdict that the legacy softened says until when, and what it will do after. (`legacyTarget`, `markSeverityAt`) |
 | `GTENG-B38` | A verdict `awaiting` — a choice registered on purpose, waiting for a person's decision — takes the gate's `awaiting` state: it bars where that state is `block`, unless the finding is declared (`[declared]`), and is counted apart from the divergences, each awaited decision listed in the profile; an open decision still becomes a decision issue. (`Awaiting`, `Profile.Awaiting`) |
+| `GTENG-B39` | A tool over the whole project or a batch waits for the load queue (LDQUS) and holds a lease, at the level of the `gate` task, while it runs; with no `load:`, in the commit hook, or with a queue that cannot be read, it runs at once. (`admitTool`) |
 | `GTENG-B06` | An UNREADABLE target does not apply: better to stop charging than to charge blind. |
 | `GTENG-B07` | A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check. |
 | `GTENG-B08` | A gate whose required binary is absent steps aside and never fails — the gate did not measure, and the missing piece is the tool. |

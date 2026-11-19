@@ -160,9 +160,15 @@ func runSuiteWithBudget(cs suiteCommand, s config.Suite, absRoot, target string,
 		}
 		fmt.Printf("━━━ %s [%s%s] budget batch of %d, %s left ━━━\n%s\n\n", cs.nome, workspaceLabel(s), s.Layer,
 			len(batch), remaining.Round(time.Second), linha)
+		task := "test"
+		if cs.secao == "mutation" {
+			task = "mutation"
+		}
+		release := admitRun(absRoot, task, s, absFiles(absRoot, batch))
 		start := time.Now()
 		errRun, cut := execUntil(linha, absRoot, deadline)
 		if cut {
+			release()
 			out.Cut = true
 			out.Left += len(batch)
 			break
@@ -170,6 +176,7 @@ func runSuiteWithBudget(cs suiteCommand, s config.Suite, absRoot, target string,
 		// A batch of test files measures every code file in part: none takes its coverage.
 		mapcmd.CoverageTargets = absFiles(absRoot, batch)
 		errIngest := ingestIfRecent(absRoot, absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), absPath(absRoot, s.Report), s, start, true)
+		release()
 		mapcmd.CoverageTargets = nil
 		if err := errIngest; err != nil {
 			return out, fmt.Errorf("ingest report: %w", err)

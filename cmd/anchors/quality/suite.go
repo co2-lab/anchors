@@ -357,6 +357,11 @@ func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, a
 					s.Layer, len(linha), teto)
 			}
 
+			task := "test"
+			if cs.secao == "mutation" {
+				task = "mutation"
+			}
+			release := admitRun(absRoot, task, s, batch)
 			inicio := time.Now()
 			sampler := sampleLoad()
 			errRun := execAtRoot(linha, absRoot)
@@ -383,6 +388,7 @@ func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, a
 				mapcmd.CoverageTargets = batch
 			}
 			errIngest := ingestIfRecent(absRoot, junit, lcov, mutation, s, inicio, len(alvos) > 0)
+			release()
 			mapcmd.MutationTargets, mapcmd.CoverageTargets = nil, nil
 			if err := errIngest; err != nil {
 				return fmt.Errorf("layer %q: ingest report: %w", s.Layer, err)

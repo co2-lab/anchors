@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTG
 #   ref: GTENG
-#   updated_at: 2026-11-15
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @GTENG
@@ -308,3 +308,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a blocking gate whose open decision and declared rule both await a decision
     When the gate runs, and again with awaiting lowered to inform
     Then the open decision bars, the declared rule informs, both count as awaiting and not divergence, and lowered both are listed without barring
+
+  @GTENG-B39 @unit-level
+  Scenario: A tool over the whole project or a batch holds a lease of the load queue while it runs, at the gate task's level, and none with no load:
+    Given a typecheck over the whole project that prints the leases file, and the gate task declared heavy
+    When the gate runs with load: and without it
+    Then the tool sees its own lease, released after, and without load: there is none

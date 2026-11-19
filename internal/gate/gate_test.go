@@ -17,6 +17,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/load"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/shell"
 )
@@ -1693,4 +1694,29 @@ func TestAwaitingVerdict(t *testing.T) {
 	if p := Aggregate(RunWithConfig([]config.Gate{g}, nodes, root, nil, nil)); !p.Passed || len(p.Awaiting) != 2 {
 		t.Errorf("lowered to inform, the awaited decisions are listed and do not bar: %+v", p.Passed)
 	}
+}
+
+func TestRun_aToolWaitsForTheLoadQueue(t *testing.T) {
+	t.Run("GTENG-B39: A tool over the whole project or a batch holds a lease of the load queue while it runs, at the gate task's level, and none with no load:", func(t *testing.T) {
+		dir := t.TempDir()
+		t.Setenv("ANCHORS_LOAD_DIR", dir)
+		t.Setenv("ANCHORS_LOAD", "")
+		t.Setenv("CI", "")
+		t.Setenv("GITHUB_ACTIONS", "")
+		gates := []config.Gate{{Name: "typecheck", On: []string{"code"}, Scope: config.ScopeProject, Run: "cat \"" + filepath.Join(dir, "leases.json") + "\"; exit 1"}}
+		nodes := []mapx.Node{{ID: "x.ts", Kind: mapx.KindCode}}
+		cfg := &config.Config{Load: &config.Workload{Tasks: map[string]config.LoadTask{"gate": {Default: "heavy"}}}}
+		res := RunWithConfig(gates, nodes, t.TempDir(), nil, cfg)
+		if len(res) != 1 || !strings.Contains(res[0].Detail, `"task": "gate typecheck"`) || !strings.Contains(res[0].Detail, `"level": "heavy"`) {
+			t.Errorf("the tool runs holding its lease: %+v", res)
+		}
+		if st, _ := load.Read(); len(st.Leases) != 0 {
+			t.Errorf("released after: %+v", st)
+		}
+		os.Remove(filepath.Join(dir, "leases.json"))
+		res = RunWithConfig(gates, nodes, t.TempDir(), nil, &config.Config{})
+		if strings.Contains(res[0].Detail, "gate typecheck") {
+			t.Errorf("no load: holds no lease: %+v", res)
+		}
+	})
 }

@@ -44,5 +44,6 @@ Comandos da mesma família — o que distingue cada um:
 | [`anchors task-status`](/pt/docs/cli/commands/task-status/) | The round's report: what is delivered, what remains, and what comes next |
 | **`anchors compliance`** | The state of each regulatory duty: how many nodes subject, how many comply |
 | [`anchors governs`](/pt/docs/cli/commands/governs/) | Show who each guide governs (and how many) — sizes the audit per guide |
+| [`anchors load`](/pt/docs/cli/commands/load/) | Show what the machine lends its runs, the runs holding it and the runs waiting (`load:`) |
 
 <!-- cli-reference:end -->

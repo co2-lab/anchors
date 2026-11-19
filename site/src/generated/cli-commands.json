@@ -128,6 +128,10 @@
     "slug": "docs/cli/commands/keep-evidence"
   },
   {
+    "label": "anchors load",
+    "slug": "docs/cli/commands/load"
+  },
+  {
     "label": "anchors map",
     "slug": "docs/cli/commands/map"
   },

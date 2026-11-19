@@ -370,6 +370,11 @@ func runFiles(cs suiteCommand, s config.Suite, absRoot, target string, ids []str
 			return fmt.Errorf("layer %q: %w", s.Layer, err)
 		}
 		fmt.Printf("━━━ %s [%s%s] %d file(s) ━━━\n%s\n\n", cs.nome, workspaceLabel(s), s.Layer, len(batch), linha)
+		task := "test"
+		if cs.secao == "mutation" {
+			task = "mutation"
+		}
+		release := admitRun(absRoot, task, s, batch)
 		start := time.Now()
 		sampler := sampleLoad()
 		errRun := execAtRoot(linha, absRoot)
@@ -377,6 +382,7 @@ func runFiles(cs suiteCommand, s config.Suite, absRoot, target string, ids []str
 		// A code file in the batch had every related test run: its coverage is whole.
 		mapcmd.CoverageTargets = batch
 		errIngest := ingestIfRecent(absRoot, absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), absPath(absRoot, s.Report), s, start, true)
+		release()
 		mapcmd.CoverageTargets = nil
 		if err := errIngest; err != nil {
 			return fmt.Errorf("layer %q: ingest report: %w", s.Layer, err)

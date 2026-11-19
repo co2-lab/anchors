@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:191f3c2d9955a8ec — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:c18ed86b60a40202 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2140,6 +2140,8 @@ is what the test proves.
 
 - [In a worktree the pre-commit defers to the commit-msg](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B19`
 
+- [anchors load shows the capacity, what is in use, the runs holding the machine and the runs waiting, and which waited past their limit](layers/comando.md#ldcms--loadcommand--what-the-machine-lends-its-runs-and-who-holds-it) `LDCMS-B01`
+
 - [Both the map and the config reach the current format](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B01`
 
 - [A missing file is reported and the other still migrates](layers/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B02`
@@ -2821,6 +2823,8 @@ is what the test proves.
 - [A mutation a later run did not replace comes back from HEAD and is carried with the rest](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B08`
 
 - [A moved file's evidence comes from HEAD at its old path](layers/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B09`
+
+- [A suite's run holds a lease at the level its files' scope costs, released after; with no load: or with the queue off it holds none](layers/comando.md#ldqrs--suiteload--a-suites-run-waits-for-the-load-queue-and-the-commit-hook-jumps-it) `LDQRS-B01`
 
 - [The issues in todo and doing are counted, with the user-owned ones apart](layers/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines) `LCBCL-B01`
 
@@ -3557,6 +3561,10 @@ is what the test proves.
 - [A system declares its calls, the layers that reach it, its version and a recording's age](layers/config.md#exssa-b01--a-system-declares-its-calls-the-layers-that-reach-it-its-version-and-a-recordings-age) `EXSSA-B01`
 
 - [A system that cannot hold refuses the configuration](layers/config.md#exssa-e01--a-system-that-cannot-hold-refuses-the-configuration) `EXSSA-E01`
+
+- [load: declares levels over the defaults, tasks by scope in the order written, wait limits and CI](layers/config.md#ldcfs-b01--load-declares-levels-over-the-defaults-tasks-by-scope-in-the-order-written-wait-limits-and-ci) `LDCFS-B01`
+
+- [A level with no CPU or an unreadable size, a task the queue does not know, an undeclared level, a bad pattern or duration refuse the configuration](layers/config.md#ldcfs-e01--a-level-with-no-cpu-or-an-unreadable-size-a-task-the-queue-does-not-know-an-undeclared-level-a-bad-pattern-or-duration-refuse-the-configuration) `LDCFS-E01`
 
 - [Versions are ordered part by part as numbers](layers/config.md#mnvrm-b01--versions-are-ordered-part-by-part-as-numbers) `MNVRM-B01`
 
@@ -4703,6 +4711,8 @@ is what the test proves.
 - [Past the legacy deadline, every target answers with the gate's own severity](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B37`
 
 - [An awaited decision has its own level, bars where the gate bars, and counts apart](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B38`
+
+- [A tool over the whole project or a batch holds a lease of the load queue while it runs, at the gate task's level, and none with no load:](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B39`
 
 - [The guidance points to the agreement](layers/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B01`
 
@@ -7499,6 +7509,18 @@ is what the test proves.
 - [An issue that cannot be written is reported](layers/infra.md#islfs--issuelifecycle--a-divergence-recorded-so-it-survives-the-session-with-its-state-as-a-folder) `ISLFS-E01`
 
 - [Reassigning a missing issue is reported](layers/infra.md#islfs--issuelifecycle--a-divergence-recorded-so-it-survives-the-session-with-its-state-as-a-folder) `ISLFS-E02`
+
+- [A run starts when its cost fits in CPU and memory beside the leases; nothing running admits any cost](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost) `LDQUS-B01`
+
+- [A run that waited past its limit stops the admission of every run that came after it, until it fits](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost) `LDQUS-B02`
+
+- [The queue admits a project that declares load:, unless $ANCHORS_LOAD turns it off or the run is in CI and load.ci is not set](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost) `LDQUS-B03`
+
+- [The capacity is the machine's CPUs and memory minus a reserve, or what $ANCHORS_LOAD_CAPACITY says](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost) `LDQUS-B04`
+
+- [Runs share the machine's leases: a run that does not fit waits, saying for what, until a lease is released](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost) `LDQUS-B05`
+
+- [A lease whose process died is reclaimed](layers/infra.md#ldqus--loadqueue--the-machines-runs-admitted-by-what-they-cost) `LDQUS-B06`
 
 - [A pack file gives its metadata and its obligations](layers/infra.md#obpcb--obligationpack--distributable-sets-of-obligations-from-a-norm-resolved-against-the-project) `OBPCB-B01`
 
