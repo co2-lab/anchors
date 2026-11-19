@@ -2,7 +2,7 @@
 # @anchors
 #   code: SYMXF
 #   ref: SYMXS
-#   updated_at: 2026-11-12
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @SYMXS
@@ -43,3 +43,9 @@ Feature: SymbolExists — a name marked as a symbol is in the project's code
     Given a code comment with a mark and no built map
     When the gate confronts it
     Then it is pending
+
+  @SYMXS-B05 @unit-level
+  Scenario: Each file's names are kept between runs by its revision; a new revision, a file with uncommitted changes or another configuration reads the file again
+    Given a committed a.ts at revision r1 whose kept names were edited to "kept"
+    When the names are read at r1, at r2, with a.ts changed in the tree, with another comment syntax, and outside git
+    Then r1 reads "kept", r2 and the changed file read the file, another syntax and outside git start empty

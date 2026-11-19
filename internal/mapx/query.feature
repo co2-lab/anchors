@@ -2,7 +2,7 @@
 # @anchors
 #   code: QRFTQ
 #   ref: GRQRG
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @GRQRG
@@ -73,3 +73,9 @@ Feature: GraphQueries — read-only questions over the loaded map
     Given a spec PAYMT that specifies pay.go and is covered by pay.feature, which tests pay_test.go, and a spec SHARE that also specifies pay.go
     When the unit codes are asked
     Then pay.go has PAYMT and SHARE, pay_test.go has PAYMT, and a node no spec reaches has none
+
+  @GRQRG-B10 @unit-level
+  Scenario: Neighbors reads through an index of the edges, and follows the slice when it is replaced, grows, is reordered in place or has an edge's end renamed
+    Given the query graph
+    When its neighbours are asked first, after sorting its edges in place, after adding one, after renaming a node, and after replacing the slice
+    Then each time every node's edges in and out are those a scan of every edge finds

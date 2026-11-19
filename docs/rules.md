@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:781905c375a42d5f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:9c88e86238bc735b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -6844,6 +6844,8 @@ in `layers/`.
 
 - [SYMXS-B04 — An artifact with no mark, or of another kind, is skipped.](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
 
+- [SYMXS-B05 — Each code and test file's names are kept between runs, by the file's revision in the map, in the repository's common git folder (shared by its worktrees, written through a rename). A new revision, a file with changes not committed, or another comment syntax reads the file again; outside git nothing is kept. Reading and scanning every file again took 15 s of a project's commit of 8 files. (`loadSymbolStore`, `saveSymbolStore`, `symbolConfigKey`, `uniqueIdents`)](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
+
 - [SYMXS-E01 — The project declares no comments for the code file.](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
 
 - [SYMXS-E02 — No map is built.](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code)
@@ -9189,6 +9191,8 @@ in `layers/`.
 - [GRQRG-B08 — Nodes caught in a cycle are not dropped: they are appended after the rest, in alphabetical order.](layers/mapa.md#grqrg--graphqueries--read-only-questions-over-the-loaded-map-who-governs-what-neighbours-orphans-counts-and-a-parents-first-order)
 
 - [GRQRG-B09 — A node's unit codes (`UnitCodesOf`) are the codes of the specs that specify it or are covered by it, and, through a feature that tests it, that feature's spec; every one, sorted; none when no spec reaches it.](layers/mapa.md#grqrg--graphqueries--read-only-questions-over-the-loaded-map-who-governs-what-neighbours-orphans-counts-and-a-parents-first-order)
+
+- [GRQRG-B10 — A node's neighbours are found through an index of where each node's edges are in the slice, built once for the slice and read afresh at each call: a new or grown slice builds it again, a reorder in place is found when an indexed position no longer holds one of the node's edges, and a rename of a node drops it. Scanning every edge on each call made a gate that walks the screens quadratic — 4.6 s of one target on a project's 15 thousand edges. (`Neighbors`, `neighborIndex`, `at`, `dropNeighborIndex`)](layers/mapa.md#grqrg--graphqueries--read-only-questions-over-the-loaded-map-who-governs-what-neighbours-orphans-counts-and-a-parents-first-order)
 
 - [GRQRG-I01 — The parents-first order does not depend on the order the nodes are stored in: ties are always broken alphabetically.](layers/mapa.md#grqrg--graphqueries--read-only-questions-over-the-loaded-map-who-governs-what-neighbours-orphans-counts-and-a-parents-first-order)
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRQRG
-  updated_at: 2026-10-08
+  updated_at: 2026-11-19
   layer: mapa
 -->
 # GraphQueries — read-only questions over the loaded map: who governs what, neighbours, orphans, counts and a parents-first order
@@ -43,6 +43,7 @@ Every answer here is computed from the graph in memory. Nothing is written and n
 | `GRQRG-B07` | Edges of any other type impose no precedence: nodes linked only by them keep the alphabetical order. |
 | `GRQRG-B08` | Nodes caught in a cycle are not dropped: they are appended after the rest, in alphabetical order. |
 | `GRQRG-B09` | A node's unit codes (`UnitCodesOf`) are the codes of the specs that specify it or are covered by it, and, through a feature that tests it, that feature's spec; every one, sorted; none when no spec reaches it. |
+| `GRQRG-B10` | A node's neighbours are found through an index of where each node's edges are in the slice, built once for the slice and read afresh at each call: a new or grown slice builds it again, a reorder in place is found when an indexed position no longer holds one of the node's edges, and a rename of a node drops it. Scanning every edge on each call made a gate that walks the screens quadratic — 4.6 s of one target on a project's 15 thousand edges. (`Neighbors`, `neighborIndex`, `at`, `dropNeighborIndex`) |
 
 ## Invariants
 

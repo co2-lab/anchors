@@ -5,11 +5,14 @@
 package gate
 
 import (
+	"os"
+	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 const symbolReader = "// @anchors\n//   ref: ITEFH\n\nconst cfg = { readerOptions: { verbosity: 0 } };\n" +
@@ -93,4 +96,60 @@ func TestSymbolExists_errors(t *testing.T) {
 	if v, _ := checkSymbolExists(symbolReader, mapx.Node{ID: "reader.ts", Kind: mapx.KindCode}, t.TempDir(), nil, symbolConfig()); v != Pending {
 		t.Errorf("no map: %v", v)
 	}
+}
+
+// Reading and scanning every code file again took 15 s of a project's commit of 8 files.
+func TestSymbolExists_keptBetweenRuns(t *testing.T) {
+	t.Run("SYMXS-B05: Each file's names are kept between runs by its revision; a new revision, a file with uncommitted changes or another configuration reads the file again", func(t *testing.T) {
+		root := t.TempDir()
+		git := func(args ...string) {
+			t.Helper()
+			c := exec.Command("git", append([]string{"-C", root}, args...)...)
+			c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+			if out, err := c.CombinedOutput(); err != nil {
+				t.Skipf("git: %v %s", err, out)
+			}
+		}
+		git("init", "-q")
+		writeFile(t, root, "a.ts", "export const alpha = 1\n")
+		git("add", ".")
+		git("commit", "-q", "-m", "a")
+		cfg := symbolConfig()
+		graph := func(rev string) *mapx.Graph {
+			return &mapx.Graph{Nodes: []mapx.Node{{ID: "a.ts", Kind: mapx.KindCode, Rev: rev}}}
+		}
+		if !projectSymbols(graph("r1"), root, cfg)["alpha"] {
+			t.Fatal("first run reads the file")
+		}
+		store := loadSymbolStore(root, cfg)
+		if store.Files["a.ts"].Rev != "r1" {
+			t.Fatalf("the run keeps the file's names by its revision: %+v", store.Files)
+		}
+		store.Files["a.ts"] = symbolEntry{Rev: "r1", Idents: []string{"kept"}}
+		saveSymbolStore(root, store)
+		if got := projectSymbols(graph("r1"), root, cfg); !got["kept"] || got["alpha"] {
+			t.Errorf("the same revision reads what was kept: %v", got)
+		}
+		if got := projectSymbols(graph("r2"), root, cfg); !got["alpha"] {
+			t.Errorf("a new revision reads the file again: %v", got)
+		}
+		store = loadSymbolStore(root, cfg)
+		store.Files["a.ts"] = symbolEntry{Rev: "r2", Idents: []string{"kept"}}
+		saveSymbolStore(root, store)
+		writeFile(t, root, "a.ts", "export const beta = 2\n")
+		ForgetRunState()
+		if got := projectSymbols(graph("r2"), root, cfg); !got["beta"] || got["kept"] {
+			t.Errorf("a file with uncommitted changes is read again: %v", got)
+		}
+		other := &config.Config{Dialect: &config.Dialect{Comments: config.FamilyComments("python")}}
+		if got := loadSymbolStore(root, other); len(got.Files) != 0 {
+			t.Errorf("another comment syntax starts empty: %+v", got.Files)
+		}
+		if got := loadSymbolStore(root, cfg); len(got.Files) == 0 {
+			t.Errorf("the same configuration finds what was kept")
+		}
+		if s := loadSymbolStore(t.TempDir(), cfg); len(s.Files) != 0 {
+			t.Errorf("outside git nothing is kept: %+v", s)
+		}
+	})
 }

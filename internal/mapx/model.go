@@ -609,6 +609,8 @@ type Graph struct {
 	Edges     []Edge `yaml:"edges"`
 	// runAsOf places a late ingestion's run (SetRunAsOf); never written.
 	runAsOf *RunAsOf
+	// edges indexes where each node's edges are (Neighbors); never written.
+	edges *edgeIndex
 	// Flow é o grafo dos FLUXOS DE TRABALHO, no mesmo arquivo e em chave SEPARADA.
 	//
 	// Mesmo arquivo porque é um grafo só de conteúdos distintos, e dois arquivos

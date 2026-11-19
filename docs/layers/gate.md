@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:0f0a2d77bed585cf — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:9f4bbf67abf6a317 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 99 units and 1500 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 99 units and 1501 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -4487,6 +4487,8 @@ name of a dependency the project does not use is cited on purpose, and says so w
 - **SYMXS-B03** — A line carrying `@no-symbol-check: <reason>` is not confronted.
 
 - **SYMXS-B04** — An artifact with no mark, or of another kind, is skipped.
+
+- **SYMXS-B05** — Each code and test file's names are kept between runs, by the file's revision in the map, in the repository's common git folder (shared by its worktrees, written through a rename). A new revision, a file with changes not committed, or another comment syntax reads the file again; outside git nothing is kept. Reading and scanning every file again took 15 s of a project's commit of 8 files. (`loadSymbolStore`, `saveSymbolStore`, `symbolConfigKey`, `uniqueIdents`)
 
 - **SYMXS-E01** — The project declares no comments for the code file.
 

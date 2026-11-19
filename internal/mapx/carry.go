@@ -311,6 +311,7 @@ func (g *Graph) renameNode(from, to string) {
 			}
 		}
 	}
+	g.dropNeighborIndex()
 	for i := range g.Edges {
 		if g.Edges[i].From == from {
 			g.Edges[i].From = to

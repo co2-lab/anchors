@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:b94dec4a32b4d47c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:583a8316cb40fddb — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -6214,6 +6214,8 @@ is what the test proves.
 
 - [Without a map the gate is pending](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code) `SYMXS-E02`
 
+- [Each file's names are kept between runs by its revision; a new revision, a file with uncommitted changes or another configuration reads the file again](layers/gate.md#symxs--symbolexists--a-name-marked-as-a-symbol-is-in-the-projects-code) `SYMXS-B05`
+
 - [A test with no assertion fails, named by its line and title](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B01`
 
 - [The body is the block the test's line opens](layers/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B02`
@@ -8359,6 +8361,8 @@ is what the test proves.
 - [Queries leave the graph as it was](layers/mapa.md#grqrg-x01--queries-leave-the-graph-as-it-was) `GRQRG-X01`
 
 - [A node's unit codes come from its identity edges](layers/mapa.md#grqrg-b09--a-nodes-unit-codes-come-from-its-identity-edges) `GRQRG-B09`
+
+- [Neighbors reads through an index of the edges, and follows the slice when it is replaced, grows, is reordered in place or has an edge's end renamed](layers/mapa.md#grqrg-b10--neighbors-reads-through-an-index-of-the-edges-and-follows-the-slice-when-it-is-replaced-grows-is-reordered-in-place-or-has-an-edges-end-renamed) `GRQRG-B10`
 
 - [A review holds only at the revision it looked at](layers/mapa.md#mprvm-b01--a-review-holds-only-at-the-revision-it-looked-at) `MPRVM-B01`
 

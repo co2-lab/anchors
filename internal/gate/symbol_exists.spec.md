@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SYMXS
-  updated_at: 2026-11-18
+  updated_at: 2026-11-19
   layer: gate
 -->
 # SymbolExists — a name marked as a symbol is in the project's code
@@ -38,6 +38,7 @@ name of a dependency the project does not use is cited on purpose, and says so w
 | `SYMXS-B02` | A code file is read in its comments only, a spec outside its fenced blocks; a mark glued to a word, a path or a link, a name followed by a dash, an editor's folding directive (`#region`, `#endregion`), a color (`#` and 3, 4, 6 or 8 hex digits) and the `#` that opens a comment are not marks. (`citedSymbols`, `markedAt`, `commentText`, `withoutFences`) |
 | `SYMXS-B03` | A line carrying `@no-symbol-check: <reason>` is not confronted. |
 | `SYMXS-B04` | An artifact with no mark, or of another kind, is skipped. |
+| `SYMXS-B05` | Each code and test file's names are kept between runs, by the file's revision in the map, in the repository's common git folder (shared by its worktrees, written through a rename). A new revision, a file with changes not committed, or another comment syntax reads the file again; outside git nothing is kept. Reading and scanning every file again took 15 s of a project's commit of 8 files. (`loadSymbolStore`, `saveSymbolStore`, `symbolConfigKey`, `uniqueIdents`) |
 
 ## Errors
 

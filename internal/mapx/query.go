@@ -4,7 +4,10 @@
 
 package mapx
 
-import "sort"
+import (
+	"sort"
+	"sync"
+)
 
 // Consultas puras sobre o grafo — insumo do `map show`. Não tocam disco; operam só
 // sobre o Graph carregado.
@@ -44,19 +47,79 @@ func (g *Graph) GovernanceSummary() map[string]int {
 }
 
 // Neighbors devolve a vizinhança direta de um nó (um passo em cada direção).
+//
+// The edges are found through an index of the edges' positions, built once for the slice:
+// scanning every edge on each call made a gate that walks the screens quadratic — 4.6 s of
+// one target on a project's 15 thousand edges. The edges themselves are read from the slice
+// at each call, so an edit to an edge's other fields shows.
 func (g *Graph) Neighbors(id string) Neighborhood {
 	n := Neighborhood{Node: id}
-	for _, e := range g.Edges {
-		if e.To == id {
-			n.In = append(n.In, e)
-		}
-		if e.From == id {
-			n.Out = append(n.Out, e)
-		}
+	in, out, ok := g.neighborIndex(false).at(g, id)
+	if !ok {
+		// The slice was reordered in place (a sort keeps its length and its address): an
+		// indexed position no longer holds an edge of this node, and the index is built again.
+		in, out, _ = g.neighborIndex(true).at(g, id)
 	}
+	n.In, n.Out = in, out
 	sortEdges(n.In)
 	sortEdges(n.Out)
 	return n
+}
+
+// edgeIndex is where each node's edges are in the graph's slice of edges.
+type edgeIndex struct {
+	first   *Edge // the slice it was built for: a new slice builds it again
+	n       int
+	in, out map[string][]int
+}
+
+var edgeIndexMu sync.Mutex
+
+// neighborIndex is the index of the current slice of edges, built when the slice changed
+// or when asked to be.
+func (g *Graph) neighborIndex(rebuild bool) *edgeIndex {
+	edgeIndexMu.Lock()
+	defer edgeIndexMu.Unlock()
+	var first *Edge
+	if len(g.Edges) > 0 {
+		first = &g.Edges[0]
+	}
+	if idx := g.edges; !rebuild && idx != nil && idx.n == len(g.Edges) && idx.first == first {
+		return idx
+	}
+	idx := &edgeIndex{first: first, n: len(g.Edges), in: map[string][]int{}, out: map[string][]int{}}
+	for i, e := range g.Edges {
+		idx.in[e.To] = append(idx.in[e.To], i)
+		idx.out[e.From] = append(idx.out[e.From], i)
+	}
+	g.edges = idx
+	return idx
+}
+
+// at reads a node's edges through the index, and says whether every indexed position still
+// holds one of them. A reorder keeps how many edges each node has, so positions that all hold
+// the node's edges are all of them.
+func (idx *edgeIndex) at(g *Graph, id string) (in, out []Edge, ok bool) {
+	for _, i := range idx.in[id] {
+		if i >= len(g.Edges) || g.Edges[i].To != id {
+			return nil, nil, false
+		}
+		in = append(in, g.Edges[i])
+	}
+	for _, i := range idx.out[id] {
+		if i >= len(g.Edges) || g.Edges[i].From != id {
+			return nil, nil, false
+		}
+		out = append(out, g.Edges[i])
+	}
+	return in, out, true
+}
+
+// dropNeighborIndex forgets the index: an edge's ends were changed in place.
+func (g *Graph) dropNeighborIndex() {
+	edgeIndexMu.Lock()
+	g.edges = nil
+	edgeIndexMu.Unlock()
 }
 
 // Orphans devolve os nós sem NENHUMA aresta (ilhas) — desconectados do organismo.

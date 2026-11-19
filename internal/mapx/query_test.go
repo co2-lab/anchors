@@ -6,6 +6,7 @@ package mapx
 
 import (
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -202,6 +203,7 @@ func TestQueriesLeaveTheGraphUntouched(t *testing.T) {
 	g.Orphans()
 	g.Statistics()
 	g.TopoOrder()
+	g.edges = nil // the index Neighbors keeps is memory of the slice, not the graph
 	if !reflect.DeepEqual(g, before) {
 		t.Errorf("a query changed the graph:\nbefore %+v\nafter  %+v", before, g)
 	}
@@ -231,4 +233,49 @@ func TestUnitCodesOf(t *testing.T) {
 	if got := g.UnitCodesOf("lone.go"); len(got) != 0 {
 		t.Errorf("lone.go: %v", got)
 	}
+}
+
+func TestNeighborsFollowsTheEdges(t *testing.T) {
+	t.Run("GRQRG-B10: Neighbors reads through an index of the edges, and follows the slice when it is replaced, grows, is reordered in place or has an edge's end renamed", func(t *testing.T) {
+		g := queryGraph()
+		names := func(es []Edge) string {
+			var out []string
+			for _, e := range es {
+				out = append(out, e.From+">"+e.To)
+			}
+			sort.Strings(out)
+			return strings.Join(out, ",")
+		}
+		scan := func(id string) (string, string) {
+			var in, out []Edge
+			for _, e := range g.Edges {
+				if e.To == id {
+					in = append(in, e)
+				}
+				if e.From == id {
+					out = append(out, e)
+				}
+			}
+			return names(in), names(out)
+		}
+		check := func(label string) {
+			t.Helper()
+			for _, n := range g.Nodes {
+				got := g.Neighbors(n.ID)
+				wantIn, wantOut := scan(n.ID)
+				if names(got.In) != wantIn || names(got.Out) != wantOut {
+					t.Errorf("%s, %s: in %s out %s, want in %s out %s", label, n.ID, names(got.In), names(got.Out), wantIn, wantOut)
+				}
+			}
+		}
+		check("first")
+		sort.Slice(g.Edges, func(i, j int) bool { return g.Edges[i].To > g.Edges[j].To })
+		check("reordered in place")
+		g.Edges = append(g.Edges, Edge{From: "x", To: "spec", Type: EdgeType("governs")})
+		check("grown")
+		g.renameNode("spec", "spec2")
+		check("renamed")
+		g.Edges = append([]Edge(nil), g.Edges[1:]...)
+		check("replaced")
+	})
 }
