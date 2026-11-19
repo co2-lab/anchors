@@ -607,6 +607,7 @@
   "gate.evidence_fresh.fail_stale": "o placar deste teste mediu um código que já mudou — rode-o de novo.",
   "gate.evidence_fresh.own_file_changed": "  o próprio arquivo de teste mudou (medido em %s)\n",
   "gate.evidence_fresh.closure_advanced": "  %d dependência(s) do fecho avançaram de rev:\n",
+  "gate.evidence_fresh.unstaged": "  a execução mediu a cópia de trabalho, e o commit leva a versão em stage de %s: rodar o teste de novo não resolve — coloque a mudança em stage (git add) ou guarde-a (stash), e então rode o teste\n",
   "gate.evidence_fresh.and_others": "    … e %d outra(s)\n",
   "gate.evidence_fresh.pending_unbound": "o placar foi medido, mas contra código nenhum: o teste importa %s e a prova dele não alcança nenhum — os imports não levam `@dep`, e nenhuma mudança no código a venceria (`anchors check --fix` escreve as flags)",
   "gate.marker_parity.pending_no_prefix": "gate `marker-parity` sem `marker_prefix:` — sem o prefixo não há o que procurar. Declare-o no gate, junto de `marker_scopes:`",

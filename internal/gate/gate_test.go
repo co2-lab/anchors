@@ -1481,9 +1481,12 @@ func TestRun_sideBySideAndSequential(t *testing.T) {
 	run := func(t *testing.T) []Result {
 		t.Helper()
 		root := t.TempDir()
+		// Each tool waits up to 5 s for the other to start: a whole check runs this suite
+		// beside its gates, and starting a process there took more than 2 s. The wait ends
+		// as soon as the other starts, so an unloaded run is as fast as before.
 		tool := func(name, mine, other string) config.Gate {
 			return config.Gate{Name: name, On: []string{"code"}, Scope: config.ScopeProject,
-				Run: "touch " + mine + ".start; i=0; while [ $i -lt 40 ] && [ ! -e " + other + ".start ]; do sleep 0.05; i=$((i+1)); done; [ -e " + other + ".start ] && [ ! -e " + other + ".end ]; r=$?; sleep 0.2; touch " + mine + ".end; exit $r"}
+				Run: "touch " + mine + ".start; i=0; while [ $i -lt 100 ] && [ ! -e " + other + ".start ]; do sleep 0.05; i=$((i+1)); done; [ -e " + other + ".start ] && [ ! -e " + other + ".end ]; r=$?; sleep 0.2; touch " + mine + ".end; exit $r"}
 		}
 		gates := []config.Gate{
 			tool("tool-a", "a", "b"),

@@ -37,7 +37,7 @@ import (
 // Bloqueante porque o conserto é conhecido, local e barato: rode o teste. Não há
 // julgamento de domínio a fazer — diferente de uma letra não declarada, onde as duas
 // saídas (adotar ou remapear) são legítimas e a escolha é de quem conhece o produto.
-func checkEvidenceFresh(content string, n mapx.Node, _ string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkEvidenceFresh(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindTest || g == nil {
 		return Skip, ""
 	}
@@ -71,6 +71,22 @@ func checkEvidenceFresh(content string, n mapx.Node, _ string, g *mapx.Graph, cf
 			}
 			fmt.Fprintf(&b, "    %s\n", c)
 		}
+	}
+	// In the commit hook the gate judges the staged version, and a test run measures the
+	// tree: a file changed outside the index makes the two disagree, and running the test
+	// again does not help (reported from a project: three rounds to understand). It is
+	// named, with what does.
+	var outside []string
+	if ev.Own && unstaged(root, n.ID) {
+		outside = append(outside, n.ID)
+	}
+	for _, c := range ev.Culprit {
+		if unstaged(root, c) {
+			outside = append(outside, c)
+		}
+	}
+	if len(outside) > 0 {
+		fmt.Fprintf(&b, i18n.T("gate.evidence_fresh.unstaged"), strings.Join(outside, ", "))
 	}
 	return Fail, strings.TrimRight(b.String(), "\n")
 }

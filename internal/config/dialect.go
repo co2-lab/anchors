@@ -380,8 +380,10 @@ var dialectFamilies = map[string]Dialect{
 		// Jest, Vitest and Mocha: `it`/`test`/`describe`, also modified by `.only`,
 		// `.skip`, or `.each(table)` with the table's parentheses nested one level.
 		// A test opens with `it`, `test` or `describe` — also `.only`, `.skip` or
-		// `.each(table)` —, its title quoted by `'`, `"` or a backtick.
-		Tests: &TestsSource{Pattern: `\b(?:it|test|describe)(?:\.each\s*\((?:[^()]|\([^()]*\))*\)|\.only|\.skip)?\s*\(\s*(?:'(?P<title>(?:[^'\\\n]|\\.)*)'|"(?P<title2>(?:[^"\\\n]|\\.)*)"|` + "`(?P<title3>[^`]*)`)",
+		// `.each(table)`, the table maybe typed (`.each<Kind>(table)`) —, its title quoted by
+		// `'`, `"` or a backtick. The type was not read, and a typed table's rows read as
+		// never run (reported from a project).
+		Tests: &TestsSource{Pattern: `\b(?:it|test|describe)(?:\.each\s*(?:<(?:[^<>()]|<[^<>()]*>)*>\s*)?\((?:[^()]|\([^()]*\))*\)|\.only|\.skip)?\s*\(\s*(?:'(?P<title>(?:[^'\\\n]|\\.)*)'|"(?P<title2>(?:[^"\\\n]|\\.)*)"|` + "`(?P<title3>[^`]*)`)",
 			BlockOpen: `[{(\[]\s*$`, BlockClose: `^\s*[}\])]`, EmptyBody: `\{\s*\}`,
 			Placeholder: `%[#a-zA-Z%]|\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_.]*`,
 			Assertion:   `\bexpect(?:\.\w+)?\s*\(|\bassert(?:\.\w+)?\s*\(`},

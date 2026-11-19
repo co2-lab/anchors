@@ -139,3 +139,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a commit of a.txt on 2026-01-10, its kept answer edited by hand, then a new commit
     When the dates are read each time
     Then the first read keeps its answer, the same HEAD reads the edited one, and the new HEAD reads 2026-03-05
+
+  @GTMTG-B12 @unit-level
+  Scenario: A run's changes outside the index are listed by one git call: a file staged and changed again is in it, one fully staged is not
+    Given a.md staged at v2, and b.md staged at v2 and then changed to v3 in the tree
+    When a run asks about each
+    Then b.md has changes outside the index and a.md does not, and outside a repository it cannot be told

@@ -5,6 +5,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/testkit"
 	"strings"
 	"testing"
@@ -201,4 +202,29 @@ func TestEvidenceFresh_aScoreBoundToNoCodeIsPending(t *testing.T) {
 	if v, msg := checkEvidenceFresh("- launchApp\n", flow, "", g, chain("code", "test")); v != Pass {
 		t.Errorf("a test that imports no code of the project is not asked: %v %s", v, msg)
 	}
+}
+
+// In the commit hook the gate judges the staged version, and the run measured the tree: a file
+// changed outside the index makes running the test again useless (reported from a project:
+// three rounds to understand).
+func TestEvidenceFreshNamesWhatTheIndexDoesNotTake(t *testing.T) {
+	t.Run("EVFRV-B12: In the commit hook, a stale test whose own file or culprit has changes outside the index names them and says to stage or stash them", func(t *testing.T) {
+		i18n.Set(i18n.Default)
+		g := grafoEv()
+		g.Nodes[0].Signal = &mapx.TestSignal{Passed: 1, AtRev: "t1", ClosureRev: map[string]string{"utils/login.yaml": "u1"}}
+		g.Nodes[0].Rev, g.Nodes[1].Rev = "t2", "u2"
+		_, msg := checkEvidenceFresh("", g.Nodes[0], "", g, testkit.WithComments(nil))
+		if strings.Contains(msg, "staged version") {
+			t.Errorf("outside the commit hook nothing is said of the index: %s", msg)
+		}
+		restore := SetUnstagedSource(func(_, rel string) (bool, bool) { return rel == "utils/login.yaml", true })
+		_, msg = checkEvidenceFresh("", g.Nodes[0], "", g, testkit.WithComments(nil))
+		restore()
+		if !strings.Contains(msg, "the commit takes the staged version of utils/login.yaml") || !strings.Contains(msg, "git add") || !strings.Contains(msg, "stash") {
+			t.Errorf("the file outside the index is named, with what to do: %s", msg)
+		}
+		if strings.Contains(msg, "version of "+g.Nodes[0].ID+",") {
+			t.Errorf("a file fully staged is not named: %s", msg)
+		}
+	})
 }

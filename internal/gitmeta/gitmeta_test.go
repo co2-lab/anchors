@@ -620,3 +620,40 @@ func TestAllCommitDates_keptPerHead(t *testing.T) {
 		}
 	})
 }
+
+func TestUnstagedChangesOnce(t *testing.T) {
+	t.Run("GTMTG-B12: A run's changes outside the index are listed by one git call: a file staged and changed again is in it, one fully staged is not", func(t *testing.T) {
+		dir := t.TempDir()
+		run := func(args ...string) {
+			t.Helper()
+			c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+			c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+			if out, err := c.CombinedOutput(); err != nil {
+				t.Skipf("git: %v %s", err, out)
+			}
+		}
+		write := func(p, s string) {
+			if err := os.WriteFile(filepath.Join(dir, p), []byte(s), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		run("init", "-q")
+		write("a.md", "v1\n")
+		write("b.md", "v1\n")
+		run("add", ".")
+		run("commit", "-q", "-m", "one")
+		write("a.md", "v2\n")
+		write("b.md", "v2\n")
+		run("add", "a.md", "b.md")
+		write("b.md", "v3 not staged\n")
+		outside := UnstagedChangesOnce()
+		for f, want := range map[string]bool{"a.md": false, "b.md": true} {
+			if got, known := outside(dir, f); got != want || !known {
+				t.Errorf("%s: want %v, got %v (known %v)", f, want, got, known)
+			}
+		}
+		if _, known := UnstagedChangesOnce()(t.TempDir(), "a.md"); known {
+			t.Error("outside a repository it cannot be told")
+		}
+	})
+}

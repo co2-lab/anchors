@@ -2,7 +2,7 @@
 # @anchors
 #   code: EFFVD
 #   ref: EVFRV
-#   updated_at: 2026-10-19
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @EVFRV
@@ -117,3 +117,9 @@ Feature: EvidenceFresh — the score of this test holds against TODAY's code
     Given a test with a score that imports a module, a client it doubles and types, and whose closure reaches no code
     When the gate confronts it in a project whose dep-declared confronts tests, and in one where it confronts code alone
     Then the first is pending naming the module alone, and the second passes; a closure that reaches the code passes, and a flow importing no code is not asked
+
+  @EVFRV-B12 @unit-level
+  Scenario: In the commit hook, a stale test whose own file or culprit has changes outside the index names them and says to stage or stash them
+    Given a stale test whose culprit utils/login.yaml has changes outside the index
+    When the gate runs outside the commit hook, and in it
+    Then outside it nothing is said of the index, and in it utils/login.yaml is named with git add and stash

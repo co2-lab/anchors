@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:00de73295fcc8d89 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:191f3c2d9955a8ec — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -4332,6 +4332,8 @@ is what the test proves.
 
 - [A score bound to no code is pending where the chain confronts tests](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B11`
 
+- [In the commit hook, a stale test whose own file or culprit has changes outside the index names them and says to stage or stash them](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B12`
+
 - [A row the tests do not run fails](layers/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B01`
 
 - [A value is a whole token with its case](layers/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B02`
@@ -6843,6 +6845,8 @@ is what the test proves.
 - [A run's staged changes are listed by one git call and answered from the list, in a folder inside the repository too](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B10`
 
 - [The commit dates are read once per HEAD and kept in the common git folder; a new commit reads them again](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B11`
+
+- [A run's changes outside the index are listed by one git call: a file staged and changed again is in it, one fully staged is not](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B12`
 
 - [Only an administrator whose protection spares administrators can bypass it](layers/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B01`
 

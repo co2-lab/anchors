@@ -607,6 +607,7 @@
   "gate.evidence_fresh.fail_stale": "el marcador de este test midió código que ya cambió — ejecútelo de nuevo.",
   "gate.evidence_fresh.own_file_changed": "  el propio archivo de test cambió (medido en %s)\n",
   "gate.evidence_fresh.closure_advanced": "  %d dependencia(s) del cierre avanzaron de rev:\n",
+  "gate.evidence_fresh.unstaged": "  la ejecución midió la copia de trabajo, y el commit lleva la versión en stage de %s: correr el test de nuevo no ayuda — pase el cambio a stage (git add) o guárdelo (stash), y luego corra el test\n",
   "gate.evidence_fresh.and_others": "    … y %d otra(s)\n",
   "gate.evidence_fresh.pending_unbound": "el marcador fue medido, pero contra ningún código: la prueba importa %s y su prueba no alcanza ninguno — los imports no llevan `@dep`, y ningún cambio en el código la vencería (`anchors check --fix` escribe los flags)",
   "gate.marker_parity.pending_no_prefix": "gate `marker-parity` sin `marker_prefix:` — sin el prefijo no hay qué buscar. Declárelo en el gate, junto con `marker_scopes:`",

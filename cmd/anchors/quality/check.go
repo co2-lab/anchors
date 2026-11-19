@@ -86,6 +86,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 				}
 				defer gate.SetFileSource(read)()
 				defer gate.SetChangedSource(gitmeta.StagedChangesOnce())()
+				defer gate.SetUnstagedSource(gitmeta.UnstagedChangesOnce())()
 			}
 			// `--index` with no scope judges the commit being made: the staged files, the
 			// same set `verify --staged` hands over. Without it the check asked for a scope

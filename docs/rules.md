@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:a57f1191c9c77cbe — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:e961ba281f492cc9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3836,7 +3836,7 @@ in `layers/`.
 
 - [DLCTI-B19 — The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
-- [DLCTI-B14 — The Go and TS families' examples say how a test is written, its title in a `title` group — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` —, and a project's own `tests` is read as declared.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
+- [DLCTI-B14 — The Go and TS families' examples say how a test is written, its title in a `title` group — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)`, the table maybe typed (`.each<Kind>(table)`) —, and a project's own `tests` is read as declared.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
 - [DLCTI-B15 — The TS family recognises a `catch` as handling a failure with or without its binding: `catch (e) {` and `catch {`.](layers/config.md#dlcti--dialect--the-lexicon-of-the-projects-language-between-an-agnostic-gate-and-concrete-code)
 
@@ -4779,6 +4779,8 @@ in `layers/`.
 - [EVFRV-B10 — The culprit list is TRUNCATED at five, and the remainder is counted.](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
 
 - [EVFRV-B11 — In a project whose `dep-declared` confronts tests, a test with a score whose closure reaches no code file, while it imports code of the project, is PENDING, naming those imports: the score was measured against code no change can stale, and "fresh" would say nothing. An import of types only, or of a file the test replaces with a double, binds the proof to nothing it runs and does not count.](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
+
+- [EVFRV-B12 — In the commit hook, a stale test whose own file or culprits have changes outside the index names them, and says that the run measured the working copy while the commit takes the staged version, so running the test again does not help: stage the change or stash it, then run the test. Outside the hook nothing is said of the index. (`unstaged`, `SetUnstagedSource`)](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
 
 - [EVFRV-I01 — Absence of proof and expired proof are NEVER reported as the same finding. They are different debts with different fixes, and merging them is what drowns the list until it stops being read.](layers/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
 
@@ -7520,7 +7522,7 @@ in `layers/`.
 
 - [GTMTG-B11 — The commit dates are read once per HEAD and kept in the repository's common git folder, shared by its worktrees; a new HEAD reads the log again, a shallow clone keeps nothing (its history deepens under the same HEAD), and a handful of HEADs are kept. The whole history's log cost seconds on every check of a long-lived project. (`pruneCommitDates`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
-- [GTMTG-B12 — The worktrees of a repository are listed each at the place the given folder holds in its own tree; outside a repository, or with no git, the folder alone. (`Worktrees`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+- [GTMTG-B12 — A run's changes outside the index are listed by one `git diff` of the tree against the index: a file staged and changed again is in it, a file fully staged is not; outside a repository it cannot be told. (`UnstagedChangesOnce`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-B13 — The folder git shares between a repository's worktrees is the same, absolute, from the main tree and from a worktree; outside a repository there is none. (`CommonDir`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 

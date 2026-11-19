@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DLCTI
-  updated_at: 2026-11-18
+  updated_at: 2026-11-19
   layer: config
 -->
 # Dialect — the lexicon of the project's language, between an agnostic gate and concrete code
@@ -94,7 +94,7 @@ written in the configuration file).
 | `DLCTI-B42` | A field a gate presupposes (`dialect.<field>`) is missing at each dialect that neither declares it nor waives it in its own `opt_out`, named there (`dialects.<name>.<field>`); every dialect waiving it, the gate does not apply. A project field is the project's to declare. (`Premises`) |
 | `DLCTI-B43` | A file's family is the family whose comments' example reads its language (`.go` → `go`); the configuration and scripts every family comments alike tell none. (`FamilyOfFile`) |
 | `DLCTI-B19` | The Go family also sees an error held in a field and a sentinel error: `if result.Error != nil` and `return ErrNotFound` handle a failure, and `return nil, result.Error` and `return ErrNotFound` propagate it, which records it as `fmt.Errorf` does; `return e.Error()`, which turns the error into text, propagates nothing. |
-| `DLCTI-B14` | The Go and TS families' examples say how a test is written, its title in a `title` group — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` —, and a project's own `tests` is read as declared. |
+| `DLCTI-B14` | The Go and TS families' examples say how a test is written, its title in a `title` group — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)`, the table maybe typed (`.each<Kind>(table)`) —, and a project's own `tests` is read as declared. |
 | `DLCTI-B15` | The TS family recognises a `catch` as handling a failure with or without its binding: `catch (e) {` and `catch {`. |
 | `DLCTI-B16` | The Go and TS families' examples say what an assertion is (`tests.assertion`). A project's `tests` is read as declared: one declaring only its assertion has no way to open a test, one with its own script no assertion. |
 | `DLCTI-B17` | The Go, TS and Python families say how code defines a name (`definition`) — Go's functions, methods and types, TS's functions, classes and constants bound to an arrow function, Python's `def` and `class` — and a project's own is read as declared. A capture group named `owner` is the type a member belongs to, not the name: Go's captures a method's receiver type. |

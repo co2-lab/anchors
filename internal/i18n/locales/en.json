@@ -607,6 +607,7 @@
   "gate.evidence_fresh.fail_stale": "the score of this test measured code that already changed — run it again.",
   "gate.evidence_fresh.own_file_changed": "  test file itself changed (measured at %s)\n",
   "gate.evidence_fresh.closure_advanced": "  %d closure dependency(ies) advanced revision:\n",
+  "gate.evidence_fresh.unstaged": "  the run measured the working copy, and the commit takes the staged version of %s: running the test again does not help — stage the change (git add) or stash it, then run the test\n",
   "gate.evidence_fresh.and_others": "    … and %d other(s)\n",
   "gate.evidence_fresh.pending_unbound": "the score was measured, but against no code: the test imports %s and its proof reaches none of it — the imports carry no `@dep`, and no change to the code would stale it (`anchors check --fix` writes the flags)",
   "gate.marker_parity.pending_no_prefix": "gate `marker-parity` without `marker_prefix:` — without prefix nothing to search for. Declare it in gate, along with `marker_scopes:`",

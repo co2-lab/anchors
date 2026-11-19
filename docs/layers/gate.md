@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:0d6e5df4eed82b46 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:6d781dcb74181d3e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 99 units and 1501 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 99 units and 1502 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -1140,6 +1140,8 @@ choice belongs to whoever knows the product.
 - **EVFRV-B10** — The culprit list is TRUNCATED at five, and the remainder is counted.
 
 - **EVFRV-B11** — In a project whose `dep-declared` confronts tests, a test with a score whose closure reaches no code file, while it imports code of the project, is PENDING, naming those imports: the score was measured against code no change can stale, and "fresh" would say nothing. An import of types only, or of a file the test replaces with a double, binds the proof to nothing it runs and does not count.
+
+- **EVFRV-B12** — In the commit hook, a stale test whose own file or culprits have changes outside the index names them, and says that the run measured the working copy while the commit takes the staged version, so running the test again does not help: stage the change or stash it, then run the test. Outside the hook nothing is said of the index. (`unstaged`, `SetUnstagedSource`)
 
 - **EVFRV-I01** — Absence of proof and expired proof are NEVER reported as the same finding. They are different debts with different fixes, and merging them is what drowns the list until it stops being read.
 

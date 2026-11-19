@@ -2,7 +2,7 @@
 # @anchors
 #   code: DLFTA
 #   ref: DLCTI
-#   updated_at: 2026-11-02
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @DLCTI
@@ -110,7 +110,7 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
   Scenario: The Go and TS families say how a test is written
     Given the go and ts families' examples, and a ts project that declares its own tests script
     When they read a test
-    Then go reads t.Run, ts reads it, test and describe with their modifiers, each with its title
+    Then go reads t.Run, ts reads it, test and describe with their modifiers — a typed each table too —, each with its title
     And the project's script is read as declared
 
   @DLCTI-B15 @unit-level

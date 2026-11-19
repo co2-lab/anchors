@@ -341,7 +341,8 @@ func TestFamiliesSayHowATestIsWritten(t *testing.T) {
 	}
 	tsRe := re("ts")
 	for _, call := range []string{`it('x'`, `test("x"`, "describe(`x`", `it.only('x'`, `test.skip('x'`,
-		`it.each([[1, 2], [f(3), {a: [4]}]])('x'`, "it.each(\n  rows,\n)('x'"} {
+		`it.each([[1, 2], [f(3), {a: [4]}]])('x'`, "it.each(\n  rows,\n)('x'",
+		`it.each<Kind>(['record', 'home'])('x'`, `test.each<Array<Row>>(rows)('x'`} {
 		if title(tsRe, call+"x"+string(call[len(call)-1])+", f)") != "x" {
 			t.Errorf("ts must read %q and its title", call)
 		}

@@ -27,7 +27,37 @@ var (
 	fileSource   func(rel string) ([]byte, error)
 	// changedSource says whether a file has changes not yet committed; nil asks the tree.
 	changedSource func(root, rel string) (changed, known bool)
+	// unstagedSource says, in the commit hook, whether a file has changes the index does
+	// not take; nil outside it.
+	unstagedSource func(root, rel string) (changed, known bool)
 )
+
+// SetUnstagedSource makes the gates ask whether a file has changes outside the index
+// through `unstaged` — the commit hook's — and returns what restores the previous one.
+func SetUnstagedSource(unstaged func(root, rel string) (bool, bool)) (restore func()) {
+	fileSourceMu.Lock()
+	prev := unstagedSource
+	unstagedSource = unstaged
+	fileSourceMu.Unlock()
+	return func() {
+		fileSourceMu.Lock()
+		unstagedSource = prev
+		fileSourceMu.Unlock()
+	}
+}
+
+// unstaged says whether the file has changes the commit does not take; false outside the
+// commit hook.
+func unstaged(root, rel string) bool {
+	fileSourceMu.RLock()
+	src := unstagedSource
+	fileSourceMu.RUnlock()
+	if src == nil {
+		return false
+	}
+	changed, _ := src(root, rel)
+	return changed
+}
 
 // SetChangedSource makes the gates ask whether a file changed through `changed` — the
 // staged changes, in the commit hook — and returns what restores the previous one. Nil

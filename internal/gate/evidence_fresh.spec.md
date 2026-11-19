@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EVFRV
-  updated_at: 2026-10-19
+  updated_at: 2026-11-19
   layer: gate
 -->
 # EvidenceFresh — the score of this test holds against TODAY's code
@@ -57,6 +57,7 @@ choice belongs to whoever knows the product.
 | `EVFRV-B09` | A test whose OWN file changed since the run is reported as such, separately from the closure. |
 | `EVFRV-B10` | The culprit list is TRUNCATED at five, and the remainder is counted. |
 | `EVFRV-B11` | In a project whose `dep-declared` confronts tests, a test with a score whose closure reaches no code file, while it imports code of the project, is PENDING, naming those imports: the score was measured against code no change can stale, and "fresh" would say nothing. An import of types only, or of a file the test replaces with a double, binds the proof to nothing it runs and does not count. |
+| `EVFRV-B12` | In the commit hook, a stale test whose own file or culprits have changes outside the index names them, and says that the run measured the working copy while the commit takes the staged version, so running the test again does not help: stage the change or stash it, then run the test. Outside the hook nothing is said of the index. (`unstaged`, `SetUnstagedSource`) |
 
 ## Invariants
 

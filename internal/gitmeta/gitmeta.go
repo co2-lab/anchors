@@ -223,6 +223,37 @@ func StagedChangesOnce() func(root, rel string) (changed, known bool) {
 	}
 }
 
+// UnstagedChangesOnce says, for a whole run, whether a file has changes the index does not:
+// one `git diff` (the tree against the index) lists them. In the commit hook the gates judge
+// the staged version, while a test run measured the tree: a file changed in both disagrees.
+func UnstagedChangesOnce() func(root, rel string) (changed, known bool) {
+	var mu sync.Mutex
+	lists := map[string]map[string]bool{}
+	return func(root, rel string) (bool, bool) {
+		mu.Lock()
+		defer mu.Unlock()
+		changed, ok := lists[root]
+		if !ok {
+			out, err := exec.Command("git", "-C", root, "diff", "--name-only", "--relative", "-z").Output()
+			if err != nil {
+				lists[root] = nil
+				return false, false
+			}
+			changed = map[string]bool{}
+			for _, f := range strings.Split(string(out), "\x00") {
+				if f != "" {
+					changed[f] = true
+				}
+			}
+			lists[root] = changed
+		}
+		if changed == nil {
+			return false, false
+		}
+		return changed[filepath.ToSlash(rel)], true
+	}
+}
+
 // Head devolve o hash curto do HEAD e o assunto do commit. Serve para carimbar um
 // relatório com a versão do código que ele descreve: sem isso, uma leitura salva
 // não diz sobre QUE código ela fala, e envelhece sem avisar.
