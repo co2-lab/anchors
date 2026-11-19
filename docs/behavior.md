@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:c47b1f50fc4554bb — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:952478a920e9ac18 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -3181,6 +3181,8 @@ is what the test proves.
 - [An argument that names no file is refused, naming it](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-E06`
 
 - [Over the index the check reads the index](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B11`
+
+- [--timing reaches the check, so a slow pre-commit is measured as the hook runs it](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B10`
 
 - [A frozen project refuses the command, naming it and the reason](layers/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze) `CLRTC-B01`
 

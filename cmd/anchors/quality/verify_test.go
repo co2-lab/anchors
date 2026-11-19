@@ -223,7 +223,7 @@ func TestSuccessReturnsNoError(t *testing.T) {
 func TestAutomaticPhaseDoesNotDumpTheWholeReport(t *testing.T) {
 	t.Run("VPFVR-B04: An automatic phase asks check for computable gates and issues only", func(t *testing.T) {})
 	for _, phase := range []string{"pre-commit", "pre-push", "ci"} {
-		args := checkArgs(".", phase, "", "", []string{"a.spec.md"}, false, false, true)
+		args := checkArgs(".", phase, "", "", []string{"a.spec.md"}, false, false, true, false)
 		if !slices.Contains(args, "--only-issues") || !slices.Contains(args, "--deterministic") {
 			t.Errorf("phase %q calls check WITHOUT --deterministic --only-issues: the hook dumps the whole gate table\n  args: %v", phase, args)
 		}
@@ -236,7 +236,7 @@ func TestAutomaticPhaseDoesNotDumpTheWholeReport(t *testing.T) {
 func TestManualPhaseShowsTheFullReport(t *testing.T) {
 	t.Run("VPFVR-B05: The manual phase, or no phase, asks check for the full report", func(t *testing.T) {})
 	for _, phase := range []string{"manual", ""} {
-		args := checkArgs(".", phase, "", "", []string{"a.spec.md"}, false, false, true)
+		args := checkArgs(".", phase, "", "", []string{"a.spec.md"}, false, false, true, false)
 		if slices.Contains(args, "--only-issues") {
 			t.Errorf("phase %q omitted the clean gates — the person asked for the picture\n  args: %v", phase, args)
 		}
@@ -251,7 +251,7 @@ func TestManualPhaseShowsTheFullReport(t *testing.T) {
 func TestCheckArgsKeepsTheFacadeFlags(t *testing.T) {
 	t.Run("VPFVR-B09: The facade's flags reach check unchanged", func(t *testing.T) {})
 	t.Run("VPFVR-I01: Verify never asks check for both the full sweep and a file list", func(t *testing.T) {})
-	args := checkArgs("/r", "pre-commit", "/tmp/MSG", "types", []string{"a.md", "b.md"}, false, true, true)
+	args := checkArgs("/r", "pre-commit", "/tmp/MSG", "types", []string{"a.md", "b.md"}, false, true, true, false)
 
 	for _, want := range []string{
 		"check", "--root", "/r",
@@ -271,7 +271,7 @@ func TestCheckArgsKeepsTheFacadeFlags(t *testing.T) {
 	if slices.Contains(args, "--all") {
 		t.Errorf("--changed came together with --all\n  args: %v", args)
 	}
-	all := checkArgs("/r", "", "", "", []string{"a.md"}, true, false, false)
+	all := checkArgs("/r", "", "", "", []string{"a.md"}, true, false, false, false)
 	if !slices.Contains(all, "--all") || slices.Contains(all, "--changed") {
 		t.Errorf("--all must replace the file list\n  args: %v", all)
 	}
@@ -343,7 +343,7 @@ func TestVerifyStagedUnderAProjectBelowTheRepositoryTop(t *testing.T) {
 
 func TestVerify_stagedReadsTheIndex(t *testing.T) {
 	t.Run("VPFVR-B11: Over the index the check reads the index", func(t *testing.T) {})
-	base := checkArgs("/r", "pre-commit", "", "", []string{"a.md"}, false, false, true)
+	base := checkArgs("/r", "pre-commit", "", "", []string{"a.md"}, false, false, true, false)
 	if got := subArgs(append([]string{}, base...), true); got[len(got)-1] != "--index" || len(got) != len(base)+1 {
 		t.Errorf("over the index the check reads the index, got %v", got)
 	}
@@ -373,4 +373,19 @@ func TestVerifyRefusesAnArgumentThatNamesNoFile(t *testing.T) {
 	if f, err := positionalFiles(dir, "verify", []string{"b.go"}); err != nil || len(f) != 1 || f[0] != "b.go" {
 		t.Errorf("a file after the flags is read as a file of the project: %v %v", f, err)
 	}
+}
+
+func TestVerify_timingReachesTheCheck(t *testing.T) {
+	t.Run("VPFVR-B10: --timing reaches the check, so a slow pre-commit is measured as the hook runs it", func(t *testing.T) {
+		args := checkArgs("/r", "pre-commit", "", "", []string{"a.md"}, false, false, true, true)
+		if !slices.Contains(args, "--timing") {
+			t.Errorf("--timing: %v", args)
+		}
+		if slices.Contains(checkArgs("/r", "pre-commit", "", "", []string{"a.md"}, false, false, true, false), "--timing") {
+			t.Errorf("without the flag, no timing")
+		}
+		if f := newVerifyCmd().Flags().Lookup("timing"); f == nil {
+			t.Errorf("verify takes --timing")
+		}
+	})
 }

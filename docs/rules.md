@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:972087e9f29063be — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:be951b84002ddc8f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -3454,7 +3454,7 @@ in `layers/`.
 
 - [VPFVR-B09 — The phase, the commit message file, the category, the skip-slow and the no-record choices reach the check unchanged.](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline)
 
-- [VPFVR-B10 — A project root below the repository's top hands the check only its own staged files, named from the project root.](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline)
+- [VPFVR-B10 — `--timing` reaches the check, which then measures each gate and names the slowest targets: a slow pre-commit is measured as the hook runs it. (`checkArgs`)](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline)
 
 - [VPFVR-B11 — Over the index (`--staged`), the check is asked to read the files as the index has them (`--index`), so an unstaged edit — another session's — cannot bar the commit; over the tree it is not. (`subArgs`)](layers/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline)
 

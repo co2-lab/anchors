@@ -2,7 +2,7 @@
 # @anchors
 #   code: VRFTV
 #   ref: VPFVR
-#   updated_at: 2026-11-16
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @VPFVR
@@ -121,3 +121,9 @@ Feature: VerifyPhaseFacade — one invocation per phase, delegated to the check 
     Given a verify over the staged files and one over named files
     When the check's arguments are built
     Then the first asks for --index and the second does not
+
+  @VPFVR-B10 @unit-level
+  Scenario: --timing reaches the check, so a slow pre-commit is measured as the hook runs it
+    Given verify asked for the pre-commit phase with and without --timing
+    When the check's arguments are built
+    Then --timing is among them only when asked, and verify takes the flag

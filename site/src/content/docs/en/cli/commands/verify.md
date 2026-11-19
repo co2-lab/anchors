@@ -47,6 +47,7 @@ anchors verify [flags]
 | `--root` | `.` | project root |
 | `--skip-slow` |  | skip gates declared `cost: slow` |
 | `--staged` |  | uses the files staged in git (the pre-commit mode) |
+| `--timing` |  | measures how long each gate took, and names the slowest targets (passed to check) |
 
 ## Confronting the project — family
 

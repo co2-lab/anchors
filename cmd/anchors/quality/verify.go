@@ -35,7 +35,7 @@ func newVerifyCmd() *cobra.Command {
 	var root, phase, category string
 	var commitMsg string
 	var changed []string
-	var staged, all, skipSlow, noRecord bool
+	var staged, all, skipSlow, noRecord, timing bool
 
 	cmd := &cobra.Command{
 		Use:   "verify",
@@ -137,7 +137,7 @@ README-only commit does not trigger the monorepo's typecheck.`,
 			// `verify` é uma fachada: delega ao MESMO pipeline do `check`, para não
 			// existirem duas verdades sobre o que é passar. O que ele acrescenta é a
 			// fase (e a coleta do staged), não uma segunda régua.
-			return runSubcommand(subArgs(checkArgs(root, phase, commitMsg, category, changed, all, skipSlow, noRecord), staged))
+			return runSubcommand(subArgs(checkArgs(root, phase, commitMsg, category, changed, all, skipSlow, noRecord, timing), staged))
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
@@ -150,6 +150,7 @@ README-only commit does not trigger the monorepo's typecheck.`,
 	cmd.Flags().BoolVar(&all, "all", false, "scan every node (the full picture; expensive)")
 	cmd.Flags().BoolVar(&skipSlow, "skip-slow", false, "skip gates declared `cost: slow`")
 	cmd.Flags().BoolVar(&noRecord, "no-record", false, "report only: neither stamps the map nor opens issues")
+	cmd.Flags().BoolVar(&timing, "timing", false, "measures how long each gate took, and names the slowest targets (passed to check)")
 	return cmd
 }
 
@@ -186,7 +187,7 @@ func stagedFiles(root string) ([]string, error) {
 // Existe separada do RunE para ser TESTÁVEL: o que decide se um hook é usável
 // não é o veredito (esse o exit code carrega), é o que ele IMPRIME — e provar
 // isso pelo RunE exigiria um projeto em disco e um fork.
-func checkArgs(root, phase, commitMsg, category string, changed []string, all, skipSlow, noRecord bool) []string {
+func checkArgs(root, phase, commitMsg, category string, changed []string, all, skipSlow, noRecord, timing bool) []string {
 	sub := []string{"check", "--root", root}
 	if all {
 		sub = append(sub, "--all")
@@ -212,6 +213,12 @@ func checkArgs(root, phase, commitMsg, category string, changed []string, all, s
 	}
 	if noRecord {
 		sub = append(sub, "--no-record")
+	}
+	// A pre-commit that takes minutes is measured where it runs: the hook's own call, by
+	// hand with --timing (reported from a project: 105 staged files, ten minutes, and no
+	// way to see which gate took them).
+	if timing {
+		sub = append(sub, "--timing")
 	}
 	// A fase automática nunca espera IA: gate de julgamento não pode barrar um
 	// commit nem enfileirar lixo repetido a cada volta.

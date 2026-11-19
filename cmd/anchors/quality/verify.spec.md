@@ -1,6 +1,6 @@
 <!-- @anchors
   code: VPFVR
-  updated_at: 2026-11-16
+  updated_at: 2026-11-19
   layer: comando
 -->
 # VerifyPhaseFacade — one invocation per phase, delegated to the check pipeline
@@ -50,6 +50,7 @@ stays a failure.
 | `VPFVR-B07` | A project that turned pre-commit dating off gets no dating: the staged files keep their dates. |
 | `VPFVR-B08` | A staged file that also has changes outside the index is named as not dated. |
 | `VPFVR-B09` | The phase, the commit message file, the category, the skip-slow and the no-record choices reach the check unchanged. |
+| `VPFVR-B10` | `--timing` reaches the check, which then measures each gate and names the slowest targets: a slow pre-commit is measured as the hook runs it. (`checkArgs`) |
 | `VPFVR-B10` | A project root below the repository's top hands the check only its own staged files, named from the project root. |
 | `VPFVR-B11` | Over the index (`--staged`), the check is asked to read the files as the index has them (`--index`), so an unstaged edit — another session's — cannot bar the commit; over the tree it is not. (`subArgs`) |
 
