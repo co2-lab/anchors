@@ -543,3 +543,80 @@ func TestRenames(t *testing.T) {
 		t.Errorf("the move is read, got %v", got)
 	}
 }
+
+func TestStagedChangesOnce(t *testing.T) {
+	t.Run("GTMTG-B10: A run's staged changes are listed by one git call and answered from the list, in a folder inside the repository too", func(t *testing.T) {
+		dir := t.TempDir()
+		run := func(args ...string) {
+			t.Helper()
+			c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+			c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+			if out, err := c.CombinedOutput(); err != nil {
+				t.Skipf("git: %v %s", err, out)
+			}
+		}
+		write := func(p, s string) {
+			os.MkdirAll(filepath.Dir(filepath.Join(dir, p)), 0o755)
+			if err := os.WriteFile(filepath.Join(dir, p), []byte(s), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		run("init", "-q")
+		write("a.md", "v1\n")
+		write("sub/b.md", "v1\n")
+		run("add", ".")
+		run("commit", "-q", "-m", "one")
+		write("a.md", "v2 not staged\n")
+		write("sub/b.md", "v2\n")
+		write("sub/c.md", "new\n")
+		run("add", "sub/b.md", "sub/c.md")
+		staged := StagedChangesOnce()
+		for f, want := range map[string]bool{"a.md": false, "sub/b.md": true, "sub/c.md": true} {
+			if got, known := staged(dir, f); got != want || !known {
+				t.Errorf("%s: want %v, got %v (known %v)", f, want, got, known)
+			}
+		}
+		inSub := StagedChangesOnce()
+		if got, known := inSub(filepath.Join(dir, "sub"), "b.md"); !got || !known {
+			t.Errorf("a root inside the repository names its files from itself: %v %v", got, known)
+		}
+		run("add", "a.md")
+		if got, _ := staged(dir, "a.md"); got {
+			t.Errorf("the list is the run's: a file staged after the first question is not asked again")
+		}
+		if _, known := StagedChangesOnce()(t.TempDir(), "a.md"); known {
+			t.Error("outside a repository it cannot be told")
+		}
+	})
+}
+
+func TestAllCommitDates_keptPerHead(t *testing.T) {
+	t.Run("GTMTG-B11: The commit dates are read once per HEAD and kept in the common git folder; a new commit reads them again", func(t *testing.T) {
+		d := gitRepo(t)
+		os.WriteFile(filepath.Join(d, "a.txt"), []byte("1"), 0o644)
+		commitOn(t, d, "2026-01-10", "first")
+		if got := AllCommitDates(d); got["a.txt"] != "2026-01-10" {
+			t.Fatalf("first read: %v", got)
+		}
+		head, _ := Commit(d, "HEAD")
+		kept := filepath.Join(d, ".git", "anchors", "commit-dates", head+".json")
+		if _, err := os.Stat(kept); err != nil {
+			t.Fatalf("the answer is kept: %v", err)
+		}
+		os.WriteFile(kept, []byte(`{"a.txt": "1999-01-01"}`), 0o644)
+		if got := AllCommitDates(d); got["a.txt"] != "1999-01-01" {
+			t.Errorf("the same HEAD reads what was kept: %v", got)
+		}
+		os.WriteFile(filepath.Join(d, "a.txt"), []byte("2"), 0o644)
+		commitOn(t, d, "2026-03-05", "second")
+		if got := AllCommitDates(d); got["a.txt"] != "2026-03-05" {
+			t.Errorf("a new HEAD reads the log again: %v", got)
+		}
+		os.MkdirAll(filepath.Join(d, "sub"), 0o755)
+		os.WriteFile(filepath.Join(d, "sub", "b.txt"), []byte("1"), 0o644)
+		commitOn(t, d, "2026-04-01", "third")
+		if got := AllCommitDatesUnder(filepath.Join(d, "sub")); got["b.txt"] != "2026-04-01" {
+			t.Errorf("a folder inside the repository: %v", got)
+		}
+	})
+}

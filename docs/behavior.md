@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:952478a920e9ac18 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:5260d333710487f0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -6833,6 +6833,10 @@ is what the test proves.
 - [The moves since HEAD are read](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B17`
 
 - [A merge dates the files it changed, not the ones it brought unchanged](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B18`
+
+- [A run's staged changes are listed by one git call and answered from the list, in a folder inside the repository too](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B10`
+
+- [The commit dates are read once per HEAD and kept in the common git folder; a new commit reads them again](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B11`
 
 - [Only an administrator whose protection spares administrators can bypass it](layers/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B01`
 

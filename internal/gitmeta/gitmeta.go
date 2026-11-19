@@ -8,9 +8,13 @@
 package gitmeta
 
 import (
+	"encoding/json"
+	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -62,7 +66,68 @@ func AllCommitDatesUnder(root string) map[string]string {
 	return out
 }
 
+// AllCommitDates reads the dates once per HEAD: the answer only changes with a new commit,
+// and the whole history's log cost seconds on every check of a project with a long history
+// (4.7 s of a pre-commit, reported). The answer is kept in the repository's common git
+// folder, so every worktree at the same HEAD reads it; a handful of HEADs are kept.
 func AllCommitDates(root string) map[string]string {
+	head, okHead := Commit(root, "HEAD")
+	common, okCommon := CommonDir(root)
+	// A shallow clone's history deepens under the same HEAD (`git fetch --unshallow`): its
+	// answer is not kept.
+	shallow, _ := exec.Command("git", "-C", root, "rev-parse", "--is-shallow-repository").Output()
+	if !okHead || !okCommon || strings.TrimSpace(string(shallow)) == "true" {
+		return allCommitDates(root)
+	}
+	top := ""
+	if out, err := exec.Command("git", "-C", root, "rev-parse", "--show-toplevel").Output(); err == nil {
+		top = strings.TrimSpace(string(out))
+	}
+	dir := filepath.Join(common, "anchors", "commit-dates")
+	file := filepath.Join(dir, head+".json")
+	if b, err := os.ReadFile(file); err == nil {
+		var dates map[string]string
+		if json.Unmarshal(b, &dates) == nil {
+			return dates
+		}
+	}
+	dates := allCommitDates(top)
+	if top == "" {
+		return dates
+	}
+	if b, err := json.Marshal(dates); err == nil && os.MkdirAll(dir, 0o755) == nil {
+		tmp := file + ".tmp"
+		if os.WriteFile(tmp, b, 0o644) == nil {
+			_ = os.Rename(tmp, file)
+		}
+		pruneCommitDates(dir, 8)
+	}
+	return dates
+}
+
+// pruneCommitDates keeps the newest `keep` answers of the folder.
+func pruneCommitDates(dir string, keep int) {
+	entries, err := os.ReadDir(dir)
+	if err != nil || len(entries) <= keep {
+		return
+	}
+	type aged struct {
+		name string
+		at   time.Time
+	}
+	var all []aged
+	for _, e := range entries {
+		if info, err := e.Info(); err == nil {
+			all = append(all, aged{e.Name(), info.ModTime()})
+		}
+	}
+	sort.Slice(all, func(i, j int) bool { return all[i].at.After(all[j].at) })
+	for _, a := range all[keep:] {
+		_ = os.Remove(filepath.Join(dir, a.name))
+	}
+}
+
+func allCommitDates(root string) map[string]string {
 	// `-c`: a merge lists the files it changed against every parent — a conflict resolved, a
 	// header the hook dated in it — as `git log -- <file>` counts it. Without it a merge lists
 	// nothing, and a file dated in a merge read the date of the commit before (reported from a project).
@@ -125,6 +190,37 @@ func StagedChanges(root, rel string) (changed, known bool) {
 		return false, false
 	}
 	return strings.TrimSpace(string(out)) != "", true
+}
+
+// StagedChangesOnce is StagedChanges for a whole run: one `git diff --cached` lists every
+// staged file, and each question is answered from the list. Asked a file at a time, the commit
+// hook ran one git process per target — 853 of them for a project's commit of 8 files.
+func StagedChangesOnce() func(root, rel string) (changed, known bool) {
+	var mu sync.Mutex
+	lists := map[string]map[string]bool{}
+	return func(root, rel string) (bool, bool) {
+		mu.Lock()
+		defer mu.Unlock()
+		staged, ok := lists[root]
+		if !ok {
+			out, err := exec.Command("git", "-C", root, "diff", "--cached", "--name-only", "--relative", "-z").Output()
+			if err != nil {
+				lists[root] = nil
+				return false, false
+			}
+			staged = map[string]bool{}
+			for _, f := range strings.Split(string(out), "\x00") {
+				if f != "" {
+					staged[f] = true
+				}
+			}
+			lists[root] = staged
+		}
+		if staged == nil {
+			return false, false
+		}
+		return staged[filepath.ToSlash(rel)], true
+	}
 }
 
 // Head devolve o hash curto do HEAD e o assunto do commit. Serve para carimbar um

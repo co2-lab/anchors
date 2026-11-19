@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:be951b84002ddc8f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:aa631c22cfca601f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -7510,9 +7510,9 @@ in `layers/`.
 
 - [GTMTG-B09 — Whether the commit being made changes a file is read from the index: a staged edit or an added file does, an unstaged edit does not; outside a repository it cannot be told. (`StagedChanges`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
-- [GTMTG-B10 — The files with uncommitted changes — modified, staged, added, untracked — are read in a single `git status`, by their path relative to the root, files outside the root left out; outside git the answer is not known. (`DirtyFiles`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+- [GTMTG-B10 — A run's staged changes are listed by one `git diff --cached` and each file answered from that list, from a folder inside the repository too; a file staged after the first question is not asked again. Asked a file at a time, the commit hook ran one git process per target: 853 for a project's commit of 8 files. (`StagedChangesOnce`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
-- [GTMTG-B11 — The bulk date reader under a folder of the repository gives each file under it its most recent commit day, by its path relative to that folder, and leaves out the files outside it; at the repository's root it is the bulk reader itself. (`AllCommitDatesUnder`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
+- [GTMTG-B11 — The commit dates are read once per HEAD and kept in the repository's common git folder, shared by its worktrees; a new HEAD reads the log again, a shallow clone keeps nothing (its history deepens under the same HEAD), and a handful of HEADs are kept. The whole history's log cost seconds on every check of a long-lived project. (`pruneCommitDates`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 
 - [GTMTG-B12 — The worktrees of a repository are listed each at the place the given folder holds in its own tree; outside a repository, or with no git, the folder alone. (`Worktrees`)](layers/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count)
 

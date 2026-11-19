@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTA
 #   ref: GTMTG
-#   updated_at: 2026-11-12
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @GTMTG
@@ -127,3 +127,15 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a branch adding two files on the 11th, merged on the 12th with one of them edited in the merge
     When the bulk reader reads the dates
     Then the edited file has the 12th and the other the 11th
+
+  @GTMTG-B10 @unit-level
+  Scenario: A run's staged changes are listed by one git call and answered from the list, in a folder inside the repository too
+    Given a.md changed and not staged, sub/b.md changed and staged, sub/c.md new and staged
+    When a run asks about each, from the root and from sub, and then a.md is staged
+    Then a.md is not staged, b.md and c.md are, sub names its own files, and a.md stays as the run first listed it
+
+  @GTMTG-B11 @unit-level
+  Scenario: The commit dates are read once per HEAD and kept in the common git folder; a new commit reads them again
+    Given a commit of a.txt on 2026-01-10, its kept answer edited by hand, then a new commit
+    When the dates are read each time
+    Then the first read keeps its answer, the same HEAD reads the edited one, and the new HEAD reads 2026-03-05
