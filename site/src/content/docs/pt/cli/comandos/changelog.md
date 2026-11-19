@@ -29,6 +29,15 @@ By default the latest release is printed. `--from` takes every release after tha
 mode (the default) the releases the file does not hold yet go on its top, and what it holds
 is kept as it is; in `per_version` mode each release gets its own file. The headings follow
 the project's `lang`, and `changelog.template` replaces the built-in template.
+
+With a `versioning:` block, the changelog is a product's (`--product`, needed when there are
+several): its releases lie between its own tags, ordered by its scheme, and each is headed by
+the version the tag records. A branch that releases (`release: true`, or every branch when no
+rule names one) lists its releases; another lists the candidate, what came after the latest
+release, under the version its strategy computes. `--branch` picks the branch, by default the
+first that releases, else the current one. `--write` writes every output of
+`versioning.<product>.changelog.outputs`, or the `changelog:` block when it declares none, and only
+on a branch the changelog is written on (`changelog: true`).
 ```
 
 ## Uso
@@ -42,7 +51,9 @@ anchors changelog [flags]
 | Flag | Padrão | O que faz |
 | --- | --- | --- |
 | `--all` |  | list every release |
+| `--branch` |  | the branch whose changelog is read (default: the first that releases, else the current one) |
 | `--from` |  | list every release after this tag |
+| `--product` |  | the product of `versioning:` (needed when there are several) |
 | `--root` | `.` | project root |
 | `--to` | `HEAD` | the ref the history is read up to |
 | `--unreleased` |  | also list what came after the last tag |

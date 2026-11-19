@@ -331,3 +331,60 @@ func TestVersioning_pick(t *testing.T) {
 		}
 	})
 }
+
+func TestVersioning_changelog(t *testing.T) {
+	t.Run("VRSNN-B11: A product's changelog outputs load, and its branches say which release and which write the changelog", func(t *testing.T) {
+		c, err := loadVersioning(t, `  app:
+    scheme: semver
+    source: [{ file: v.txt, regex: '(.+)' }]
+    branches:
+      production: { release: true, changelog: true }
+      review: { changelog: true }
+    changelog:
+      outputs:
+        - path: CHANGELOG.md
+          format: { heading: "^## {version} — {date}$", max_chars: 500, required_sections: [Features], required: changed }
+        - { path: notes, mode: per_version, template: notes.tmpl, format: { file: "v{version}.txt" } }
+`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		app := c.Versioning["app"]
+		o := app.Changelog.Outputs
+		if len(o) != 2 || o[0].Path != "CHANGELOG.md" || o[0].Format.MaxChars != 500 || o[0].Format.Required != "changed" || o[1].ModeOrDefault() != "per_version" || o[1].Template != "notes.tmpl" || o[1].Format.File != "v{version}.txt" {
+			t.Fatalf("outputs: %+v", o)
+		}
+		if !app.Releases("production") || app.Releases("review") || app.ReleaseBranch() != "production" {
+			t.Errorf("releases")
+		}
+		if !app.WritesChangelog("review") || app.WritesChangelog("develop") {
+			t.Errorf("writes changelog")
+		}
+		bare := &Product{}
+		if !bare.Releases("any") || !bare.WritesChangelog("any") || bare.ReleaseBranch() != "" {
+			t.Errorf("a product that names no branch releases and writes on every one")
+		}
+		re, _ := HeadingRE(o[0].Format.Heading)
+		if m := re.FindStringSubmatch("## 1.2.0 — 2026-11-18"); m == nil || m[1] != "1.2.0" || m[2] != "2026-11-18" {
+			t.Errorf("heading: %v", m)
+		}
+	})
+	t.Run("VRSNN-E08: An output with no path, an unknown mode, or a format that reads nothing refuses the configuration", func(t *testing.T) {
+		for out, says := range map[string]string{
+			"{ mode: incremental }":                                      "path is required",
+			"{ path: c.md, mode: weekly }":                               `mode "weekly"`,
+			"{ path: c.md, format: { heading: '^## x$' } }":              "write {version}",
+			"{ path: c.md, format: { heading: '({version}' } }":          "format.heading",
+			"{ path: c.md, format: { file: '{version}.md' } }":           "for per_version",
+			"{ path: n, mode: per_version, format: { file: notes.md } }": "format.file",
+			"{ path: c.md, format: { required: fresh } }":                `format.required "fresh"`,
+			"{ path: c.md, format: { max_chars: -1 } }":                  "max_chars",
+			"{ path: c.md, source: intents }":                            "source",
+		} {
+			_, err := loadVersioning(t, "  app:\n    scheme: number\n    next: none\n    changelog:\n      outputs: ["+out+"]\n")
+			if err == nil || !strings.Contains(err.Error(), says) {
+				t.Errorf("%s: %v, want %q", out, err, says)
+			}
+		}
+	})
+}

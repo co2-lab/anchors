@@ -40,6 +40,37 @@ type Product struct {
 	Released *Listing `yaml:"released,omitempty"`
 	// Branches are the branches whose rule differs from the default, first match wins.
 	Branches BranchRules `yaml:"branches,omitempty"`
+	// Changelog are the files the product's changelog is written to.
+	Changelog *ProductChangelog `yaml:"changelog,omitempty"`
+}
+
+// ProductChangelog are the outputs a product's changelog is written to. None: the project's
+// `changelog:` block, or its defaults.
+type ProductChangelog struct {
+	Outputs []ChangelogOutput `yaml:"outputs,omitempty"`
+}
+
+// ChangelogOutput is one file (or directory) the changelog is written to: its path, mode and
+// template, as the `changelog:` block has them, and the format `changelog-valid` holds it to.
+type ChangelogOutput struct {
+	Changelog `yaml:",inline"`
+	Format    *ChangelogFormat `yaml:"format,omitempty"`
+}
+
+// ChangelogFormat is what an output must look like, beyond the markers, the order and the
+// agreement with the tags, which hold for every output.
+type ChangelogFormat struct {
+	// Heading is the pattern of a block's first line, a regular expression with {version}
+	// and {date} in it.
+	Heading string `yaml:"heading,omitempty"`
+	// File is the name of a per_version file, with {version}. Empty: {version}.md.
+	File string `yaml:"file,omitempty"`
+	// MaxChars bounds each release block.
+	MaxChars int `yaml:"max_chars,omitempty"`
+	// RequiredSections are the `### ` sections every release block has.
+	RequiredSections []string `yaml:"required_sections,omitempty"`
+	// Required: changed asks the output to have changed since the latest release tag.
+	Required string `yaml:"required,omitempty"`
 }
 
 // Listing selects versions from a file: the keys of a map, kept when their entry matches
@@ -112,6 +143,10 @@ type BranchRule struct {
 	// Range bounds the versions the branch may produce: `1.0.x`, or `from_base`, the
 	// release the branch was cut from at its last part.
 	Range string `yaml:"-"`
+	// Changelog marks a branch the changelog is written on.
+	Changelog bool `yaml:"-"`
+	// Release marks a branch that releases: its changelog lists the releases, one per tag.
+	Release bool `yaml:"-"`
 }
 
 // BranchRules keep the order they are written in: the first pattern a branch matches wins.
@@ -124,17 +159,19 @@ func (b *BranchRules) UnmarshalYAML(node *yaml.Node) error {
 	}
 	for i := 0; i+1 < len(node.Content); i += 2 {
 		k, v := node.Content[i], node.Content[i+1]
-		if err := strictKeys(v, "branches."+k.Value, "next", "range"); err != nil {
+		if err := strictKeys(v, "branches."+k.Value, "next", "range", "changelog", "release"); err != nil {
 			return err
 		}
 		var r struct {
-			Next  *Next  `yaml:"next"`
-			Range string `yaml:"range"`
+			Next      *Next  `yaml:"next"`
+			Range     string `yaml:"range"`
+			Changelog bool   `yaml:"changelog"`
+			Release   bool   `yaml:"release"`
 		}
 		if err := v.Decode(&r); err != nil {
 			return err
 		}
-		*b = append(*b, BranchRule{Pattern: k.Value, Next: r.Next, Range: r.Range})
+		*b = append(*b, BranchRule{Pattern: k.Value, Next: r.Next, Range: r.Range, Changelog: r.Changelog, Release: r.Release})
 	}
 	return nil
 }
@@ -185,6 +222,45 @@ func (p *Product) RangeFor(branch string) (string, string) {
 		return r.Range, r.Pattern
 	}
 	return "", ""
+}
+
+// Releases says whether a branch releases the product: its rule says `release: true`, or no
+// rule of the product names where it releases, and then every branch does.
+func (p *Product) Releases(branch string) bool {
+	named := false
+	for _, r := range p.Branches {
+		named = named || r.Release
+	}
+	if !named {
+		return true
+	}
+	r := p.ruleFor(branch)
+	return r != nil && r.Release
+}
+
+// WritesChangelog says whether the changelog is written on a branch: its rule says
+// `changelog: true`, or no rule names one, and then every branch does.
+func (p *Product) WritesChangelog(branch string) bool {
+	named := false
+	for _, r := range p.Branches {
+		named = named || r.Changelog
+	}
+	if !named {
+		return true
+	}
+	r := p.ruleFor(branch)
+	return r != nil && r.Changelog
+}
+
+// ReleaseBranch is the pattern of the first rule that releases, the branch a changelog reads
+// when none is named; empty when no rule names one.
+func (p *Product) ReleaseBranch() string {
+	for _, r := range p.Branches {
+		if r.Release {
+			return r.Pattern
+		}
+	}
+	return ""
 }
 
 // FromBase is the range that bounds a branch to the release it was cut from.
@@ -372,7 +448,55 @@ func validateProduct(p *Product) error {
 	if p.Released != nil && p.Released.File == "" {
 		return fmt.Errorf("released: file is required")
 	}
+	if p.Changelog != nil {
+		for i, o := range p.Changelog.Outputs {
+			if err := validateOutput(o); err != nil {
+				return fmt.Errorf("changelog.outputs[%d]: %w", i, err)
+			}
+		}
+	}
 	return nil
+}
+
+func validateOutput(o ChangelogOutput) error {
+	if o.Path == "" {
+		return fmt.Errorf("path is required")
+	}
+	if o.Mode != "" && o.Mode != "incremental" && o.Mode != "per_version" {
+		return fmt.Errorf("mode %q: write incremental or per_version", o.Mode)
+	}
+	f := o.Format
+	if f == nil {
+		return nil
+	}
+	if f.Heading != "" {
+		if !strings.Contains(f.Heading, "{version}") {
+			return fmt.Errorf("format.heading %q: write {version} where the version goes", f.Heading)
+		}
+		if _, err := HeadingRE(f.Heading); err != nil {
+			return fmt.Errorf("format.heading %q: %v", f.Heading, err)
+		}
+	}
+	if f.File != "" && !strings.Contains(f.File, "{version}") {
+		return fmt.Errorf("format.file %q: write {version} where the version goes", f.File)
+	}
+	if f.File != "" && o.ModeOrDefault() != "per_version" {
+		return fmt.Errorf("format.file is for per_version, and the mode is %s", o.ModeOrDefault())
+	}
+	if f.Required != "" && f.Required != "changed" {
+		return fmt.Errorf("format.required %q: the one requirement is changed", f.Required)
+	}
+	if f.MaxChars < 0 {
+		return fmt.Errorf("format.max_chars %d: a limit is positive", f.MaxChars)
+	}
+	return nil
+}
+
+// HeadingRE compiles a heading pattern: {version} and {date} become groups.
+func HeadingRE(pattern string) (*regexp.Regexp, error) {
+	p := strings.ReplaceAll(pattern, "{version}", `(?P<version>\S+?)`)
+	p = strings.ReplaceAll(p, "{date}", `(?P<date>\d{4}-\d{2}-\d{2})`)
+	return regexp.Compile(p)
 }
 
 func validateNext(n *Next, s version.Scheme, field string, hasSource bool) error {

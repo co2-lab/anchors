@@ -38,12 +38,16 @@ type Entry struct {
 
 // Release is what the history holds between two tags, or after the last one.
 type Release struct {
-	Version  string // the tag; empty for what is not released yet
-	Date     string // the tag's date, YYYY-MM-DD; empty when unreleased
-	Breaking []Entry
-	Features []Entry
-	Bugs     []Entry
-	Fixes    []Entry
+	Version string // the tag, or the product's version it records; empty for what is not released yet
+	Tag     string // the tag the release is read up to; empty when unreleased
+	Date    string // the tag's date, YYYY-MM-DD; empty when unreleased
+	// Candidate is the version what is not released yet would be released as, when the
+	// branch's strategy computes one.
+	Candidate string
+	Breaking  []Entry
+	Features  []Entry
+	Bugs      []Entry
+	Fixes     []Entry
 }
 
 // Empty says whether the release has nothing a changelog lists.
@@ -225,7 +229,9 @@ func (g Git) Releases(all, tags []string, to string, unreleased bool) ([]Release
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, Classify(t, date, cs))
+		r := Classify(t, date, cs)
+		r.Tag = t
+		out = append(out, r)
 	}
 	if unreleased {
 		last := ""
@@ -247,7 +253,7 @@ func (g Git) Releases(all, tags []string, to string, unreleased bool) ([]Release
 
 // DefaultTemplate renders one release. `t` translates a heading key; the project's own
 // template (`changelog.template`) receives the same data and functions.
-const DefaultTemplate = `## {{if .Version}}{{.Version}}{{if .Date}} — {{.Date}}{{end}}{{else}}{{t "changelog.unreleased"}}{{end}}
+const DefaultTemplate = `## {{if .Version}}{{.Version}}{{if .Date}} — {{.Date}}{{end}}{{else}}{{if .Candidate}}{{.Candidate}} — {{end}}{{t "changelog.unreleased"}}{{end}}
 {{- if .Breaking}}
 
 ### {{t "changelog.breaking"}}

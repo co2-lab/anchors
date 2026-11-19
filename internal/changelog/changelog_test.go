@@ -250,3 +250,20 @@ func TestWritten_crlf(t *testing.T) {
 		t.Errorf("both markers are found, got %v", got)
 	}
 }
+
+func TestRender_candidate(t *testing.T) {
+	t.Run("CHNGL-B14: What is not released yet is headed by the version it would be released as, when one is computed", func(t *testing.T) {
+		tr := func(k string) string {
+			return map[string]string{"changelog.unreleased": "Unreleased", "changelog.features": "Features"}[k]
+		}
+		r := Classify("", "", []Commit{{Hash: "a1", Subject: "feat: x"}})
+		r.Candidate = "1.1.0"
+		if got, err := Render(DefaultTemplate, r, tr); err != nil || !strings.HasPrefix(got, "## 1.1.0 — Unreleased\n") {
+			t.Errorf("%v %q", err, got)
+		}
+		r.Candidate = ""
+		if got, _ := Render(DefaultTemplate, r, tr); !strings.HasPrefix(got, "## Unreleased\n") {
+			t.Errorf("no candidate: %q", got)
+		}
+	})
+}

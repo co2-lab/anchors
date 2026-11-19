@@ -109,3 +109,15 @@ Feature: Versioning — the products a project versions, where each writes its v
     Given a listing whose file is missing, and one whose versions are a list
     When they are listed
     Then each fails naming the file, and the second says no map at versions
+
+  @VRSNN-B11 @unit-level
+  Scenario: A product's changelog outputs load, and its branches say which release and which write the changelog
+    Given app with production releasing and writing the changelog, review writing it, and two outputs with formats
+    When the configuration is loaded and the branches are asked
+    Then the outputs hold their formats, production releases and is the default branch, review writes but does not release, develop neither, and a heading reads the version and date
+
+  @VRSNN-E08 @unit-level
+  Scenario: An output with no path, an unknown mode, or a format that reads nothing refuses the configuration
+    Given outputs with no path, mode weekly, a heading or file without {version}, a heading that does not compile, file on incremental, required fresh, max_chars -1, and a key source
+    When the configuration is loaded
+    Then it does not load, naming the field

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:cc84ab9354408368 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:b4252ce4f34f9043 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2012,11 +2012,19 @@ in `layers/`.
 
 - [CLGCM-B08 — A range with nothing to list prints nothing, and says so on the error stream.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
+- [CLGCM-B09 — With `versioning:`, the releases are those between the product's tags, newest by its scheme first, each headed by the version its tag records; another product's tags do not split them, and `--from` takes a version or a tag. (`productReleases`)](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
+
+- [CLGCM-B10 — A branch that releases lists its releases; another lists only the candidate, headed by the version its strategy computes. With no `--branch`, the first branch that releases is read.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
+
+- [CLGCM-B11 — `--write` writes every output of the product with its path, mode and template, and refuses on a branch the changelog is not written on. (`renderBlocks`)](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
+
 - [CLGCM-E01 — `--from` names no tag reachable from `--to`.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
 - [CLGCM-E02 — `changelog.template` names a file that cannot be read, or a URL that answers nothing (PTRFS-E01).](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
 - [CLGCM-E03 — `anchors.yaml` exists and does not load.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
+
+- [CLGCM-E04 — `--from` names no tag of the product, or an output's template cannot be read.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
 ### [CDCMC — CodeCommand — a new unit gets an identity code that no other unit in the map already owns, and the codes in use are listed from the map](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
@@ -3928,6 +3936,8 @@ in `layers/`.
 
 - [VRSNN-B10 — A product is the one named, or the only one; several and no name is an error that lists them and says where the name is written. (`Pick`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
+- [VRSNN-B11 — A product's changelog outputs load with their format; a branch releases when its rule says `release: true`, and the changelog is written on it when its rule says `changelog: true` — a product whose rules name no such branch releases, and writes, on every branch —; the branch a changelog reads by default is the first rule that releases. A heading pattern reads the version and the date of a line. (`Releases`, `WritesChangelog`, `ReleaseBranch`, `HeadingRE`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
 - [VRSNN-E01 — A product whose scheme does not build (VRSNE-E01), or that is empty.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E02 — A source with no `file`, with both or neither of `path:` and `regex:`, or with a regex that does not compile or does not have exactly one group.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
@@ -3941,6 +3951,8 @@ in `layers/`.
 - [VRSNN-E06 — A range that is neither `from_base` nor numbers and an `x`, or `released:` with no file or with a key it does not know.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E07 — A listing's file missing or unreadable, not JSON nor YAML, or without a map at `keys`.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E08 — An output with no path, a mode other than `incremental` or `per_version`, a key it does not know, a heading or file with no `{version}` or a heading that does not compile, a `file` on an incremental output, a `required` other than `changed`, or a negative `max_chars`.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 ### [GTVCG — GateVocabulary — the list of default gate names, injected into the configuration layer](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
@@ -7237,6 +7249,8 @@ in `layers/`.
 - [CHNGL-B12 — An empty file gets the given title before the releases.](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 
 - [CHNGL-B13 — The markers of a changelog with CRLF line endings are found as in one with LF.](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
+
+- [CHNGL-B14 — What is not released yet is headed by the version it would be released as (its candidate) before the translated "unreleased", when one is computed; a release read up to a tag keeps the tag.](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 
 - [CHNGL-E01 — The template does not parse, or fails while rendering.](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 

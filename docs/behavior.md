@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:cf558e42e3020e35 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:d2e014f73d5b7647 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1830,6 +1830,14 @@ is what the test proves.
 
 - [A broken anchors.yaml](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-E03`
 
+- [With versioning, the releases lie between the product's tags, ordered by its scheme and headed by the version](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B09`
+
+- [A branch that releases lists its releases, another the candidate under the version its strategy computes](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B10`
+
+- [--write writes every output of the product, and only on a branch the changelog is written on](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B11`
+
+- [--from that is no tag of the product, or a template of an output that cannot be read, fails naming it](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-E04`
+
 - [A free canonical code is the suggestion](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B01`
 
 - [A taken canonical is adjusted to a free code naming its owner](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B02`
@@ -3593,6 +3601,10 @@ is what the test proves.
 - [A range that is neither from_base nor parts and an x, or released: with no file, refuses the configuration](layers/config.md#vrsnn-e06--a-range-that-is-neither-from-base-nor-parts-and-an-x-or-released-with-no-file-refuses-the-configuration) `VRSNN-E06`
 
 - [A listing whose file cannot be read, or has no map at its keys, is an error naming it](layers/config.md#vrsnn-e07--a-listing-whose-file-cannot-be-read-or-has-no-map-at-its-keys-is-an-error-naming-it) `VRSNN-E07`
+
+- [A product's changelog outputs load, and its branches say which release and which write the changelog](layers/config.md#vrsnn-b11--a-products-changelog-outputs-load-and-its-branches-say-which-release-and-which-write-the-changelog) `VRSNN-B11`
+
+- [An output with no path, an unknown mode, or a format that reads nothing refuses the configuration](layers/config.md#vrsnn-e08--an-output-with-no-path-an-unknown-mode-or-a-format-that-reads-nothing-refuses-the-configuration) `VRSNN-E08`
 
 - [With no source registered, the default gate names are absent, not a failure](layers/config.md#gtvcg-b01--with-no-source-registered-the-default-gate-names-are-absent-not-a-failure) `GTVCG-B01`
 
@@ -6571,6 +6583,8 @@ is what the test proves.
 - [A git failure names the command](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-E02`
 
 - [The markers of a CRLF changelog are found](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B13`
+
+- [What is not released yet is headed by the version it would be released as, when one is computed](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B14`
 
 - [Each scope is mirrored to its own file](layers/infra.md#chlgc--checklog--the-checks-output-mirrored-to-a-file-so-it-can-be-reread-without-re-running) `CHLGC-B01`
 

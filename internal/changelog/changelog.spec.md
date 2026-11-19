@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CHNGL
-  updated_at: 2026-10-08
+  updated_at: 2026-11-18
   layer: infra
 -->
 # Changelog — the releases of a project, read from its commits
@@ -59,6 +59,7 @@ that keeps what it already holds.
 | `CHNGL-B11` | The unreleased block a previous write left is replaced by the new one, up to the next marker. |
 | `CHNGL-B12` | An empty file gets the given title before the releases. |
 | `CHNGL-B13` | The markers of a changelog with CRLF line endings are found as in one with LF. |
+| `CHNGL-B14` | What is not released yet is headed by the version it would be released as (its candidate) before the translated "unreleased", when one is computed; a release read up to a tag keeps the tag. |
 
 ## Errors
 

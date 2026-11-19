@@ -220,3 +220,81 @@ func TestChangelog_BrokenConfig(t *testing.T) {
 		t.Fatalf("fails naming the file, got %v", err)
 	}
 }
+
+const productChangelog = `version: 8
+versioning:
+  app:
+    scheme: semver
+    source: [{ file: app/version.json, path: version }]
+    tag: "app-v{version}"
+    next: semantic
+    branches:
+      production:
+        release: true
+        changelog: true
+      review:
+        changelog: true
+    changelog:
+      outputs:
+        - path: CHANGELOG.md
+        - path: notes
+          mode: per_version
+          template: notes.tmpl
+`
+
+func TestChangelog_product(t *testing.T) {
+	t.Run("CLGCM-B09: With versioning, the releases lie between the product's tags, ordered by its scheme and headed by the version", func(t *testing.T) {
+		root := historyRepo(t, "file:anchors.yaml="+productChangelog, "file:app/version.json={\"version\": \"1.10.0\"}",
+			"feat: nine", "tag:app-v1.9.0", "feat: other product", "tag:api-v5.0.0", "feat: ten", "tag:app-v1.10.0")
+		out, _, err := changelogRun(t, "--root", root, "--branch", "production", "--all")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.HasPrefix(out, "## 1.10.0 — ") || !strings.Contains(out, "## 1.9.0 — ") || strings.Contains(out, "api-v5") || strings.Contains(out, "app-v") {
+			t.Errorf("headed by the versions, newest by the scheme first, no other product:\n%s", out)
+		}
+		if i, j := strings.Index(out, "## 1.10.0"), strings.Index(out, "- other product"); j < i {
+			t.Errorf("the commits between two tags of the product are its release, whatever other tags sit between:\n%s", out)
+		}
+		if out, _, err := changelogRun(t, "--root", root, "--branch", "production", "--from", "1.9.0"); err != nil || !strings.HasPrefix(out, "## 1.10.0") || strings.Contains(out, "## 1.9.0") {
+			t.Errorf("--from takes a version or a tag: %v\n%s", err, out)
+		}
+	})
+	t.Run("CLGCM-B10: A branch that releases lists its releases, another the candidate under the version its strategy computes", func(t *testing.T) {
+		root := historyRepo(t, "file:anchors.yaml="+productChangelog, "file:app/version.json={\"version\": \"1.1.0\"}",
+			"feat: one", "tag:app-v1.0.0", "feat: two")
+		out, _, err := changelogRun(t, "--root", root, "--branch", "review")
+		if err != nil || !strings.HasPrefix(out, "## 1.1.0 — Unreleased") || strings.Contains(out, "## 1.0.0") || !strings.Contains(out, "- two (") {
+			t.Errorf("review: the candidate alone: %v\n%s", err, out)
+		}
+		out, _, err = changelogRun(t, "--root", root)
+		if err != nil || !strings.HasPrefix(out, "## 1.0.0 — ") {
+			t.Errorf("by default, the first branch that releases: %v\n%s", err, out)
+		}
+	})
+	t.Run("CLGCM-B11: --write writes every output of the product, and only on a branch the changelog is written on", func(t *testing.T) {
+		root := historyRepo(t, "file:anchors.yaml="+productChangelog, "file:app/version.json={\"version\": \"1.0.0\"}",
+			"file:notes.tmpl=Release {{.Version}}\n", "feat: one", "tag:app-v1.0.0")
+		if _, _, err := changelogRun(t, "--root", root, "--branch", "production", "--write"); err != nil {
+			t.Fatal(err)
+		}
+		if got := readFile(t, root, "CHANGELOG.md"); !strings.Contains(got, changelog.Marker("1.0.0")) || !strings.Contains(got, "## 1.0.0 — ") {
+			t.Errorf("CHANGELOG.md:\n%s", got)
+		}
+		if got := readFile(t, root, "notes/1.0.0.md"); got != "Release 1.0.0\n" {
+			t.Errorf("notes: %q", got)
+		}
+		if _, _, err := changelogRun(t, "--root", root, "--branch", "develop", "--write"); err == nil || !strings.Contains(err.Error(), "not written on develop") {
+			t.Errorf("develop: %v", err)
+		}
+	})
+	t.Run("CLGCM-E04: --from that is no tag of the product, or a template of an output that cannot be read, fails naming it", func(t *testing.T) {
+		root := historyRepo(t, "file:anchors.yaml="+productChangelog, "file:app/version.json={\"version\": \"1.0.0\"}", "feat: one", "tag:app-v1.0.0", "tag:v9.0.0")
+		if _, _, err := changelogRun(t, "--root", root, "--branch", "production", "--from", "v9.0.0"); err == nil || !strings.Contains(err.Error(), "no tag of app") {
+			t.Errorf("from: %v", err)
+		}
+		if _, _, err := changelogRun(t, "--root", root, "--branch", "production", "--write"); err == nil || !strings.Contains(err.Error(), "versioning.app.changelog.outputs[1].template") {
+			t.Errorf("template: %v", err)
+		}
+	})
+}

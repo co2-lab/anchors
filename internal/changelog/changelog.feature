@@ -2,7 +2,7 @@
 # @anchors
 #   code: CHFTD
 #   ref: CHNGL
-#   updated_at: 2026-10-03
+#   updated_at: 2026-11-18
 #   layer: feature
 
 @CHNGL
@@ -97,3 +97,9 @@ Feature: Changelog — the releases of a project, read from its commits
     Given a changelog with two release markers and CRLF line endings
     When the versions it holds are listed
     Then both are found
+
+  @CHNGL-B14 @unit-level
+  Scenario: What is not released yet is headed by the version it would be released as, when one is computed
+    Given an unreleased release with a feat and the candidate 1.1.0
+    When it is rendered with and without the candidate
+    Then the heading is 1.1.0 — Unreleased, and Unreleased alone
