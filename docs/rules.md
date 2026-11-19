@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:3543a0bc233dbdcc — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:99695fd9f616dab1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2508,6 +2508,8 @@ in `layers/`.
 
 - [PCSPA-B07 — `record` and `run` of a stage that releases write its release (RLSTA) once the stage passed, before the record; a release that fails is recorded as the stage's failure.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
+- [PCSPA-B08 — A list of requirements holds when every one of them does, saying why each held; the first that does not hold refuses the list, naming it. Inside an `any:`, a refusal names why each path failed.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
 - [PCSPA-E01 — The stage is not declared in `pipeline.stages`.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
 - [PCSPA-E02 — No branch or sha is given, by flag or environment.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
@@ -3936,11 +3938,15 @@ in `layers/`.
 
 - [PCSPP-B03 — A stage names the product whose release it records (`release:`).](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
 
+- [PCSPP-B04 — A list of requirements is read as one path, all of whose requirements must hold, and written back in brackets; inside an `any:` it pairs the requirements of each path.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
+
 - [PCSPP-E01 — A stage has neither `run` nor `verify`; a requirement is an unknown word, an unknown key or empty; `passed:` names no stage; a branch pattern is neither glob nor regular expression.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
 
 - [PCSPP-E02 — `version:` names a product `versioning:` does not declare, names none among several, asks nothing, has a key it does not know, `same_as_passed:` names no stage, or `listed:` names no file while the product declares no `released:`; `contains:` is a pattern.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
 
 - [PCSPP-E03 — `release:` names a product `versioning:` does not declare.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
+
+- [PCSPP-E04 — An empty list of requirements, or a requirement inside a list that would itself refuse the configuration.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
 
 ### [PSRSA — PushReview — the evidence each push carries: a review of its commits and the judgments they reach](layers/config.md#psrsa--pushreview--the-evidence-each-push-carries-a-review-of-its-commits-and-the-judgments-they-reach)
 

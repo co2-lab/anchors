@@ -2,7 +2,7 @@
 # @anchors
 #   code: PCFPA
 #   ref: PCSPA
-#   updated_at: 2026-11-18
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @PCSPA
@@ -67,3 +67,9 @@ Feature: Pipeline — ask whether a stage may run, and record that it passed
     Given production-release releasing app, on a commit at 1.0.1
     When it is recorded, and when its tag is on another commit
     Then the release is written and the stage recorded as passed, and else the stage is recorded as failed
+
+  @PCSPA-B08 @unit-level
+  Scenario: A list inside any: is a path that holds when all of its requirements do, and a refusal names why each path failed
+    Given production-release reached by review with same_as_passed or by a hotfix with fresh, and a hotfix at 1.0.1, then one back at 1.0.0
+    When can-run asks production-release on each merge
+    Then the first may run by the hotfix path naming both reasons, and the second is refused naming why each path failed

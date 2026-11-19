@@ -170,3 +170,35 @@ func TestPipeline_release(t *testing.T) {
 		}
 	})
 }
+
+func TestPipeline_paths(t *testing.T) {
+	t.Run("PCSPP-B04: A list of requirements is one path of an any:, all of which hold", func(t *testing.T) {
+		paths := strings.Replace(versionedPipeline, "        - version: { same_as_passed: review-release }\n", `        - any:
+            - [{ passed: review-release }, { version: { same_as_passed: review-release } }]
+            - [{ from: "hotfix/*" }, { version: { fresh: true } }]
+`, 1)
+		c, err := loadRaw(t, paths)
+		if err != nil {
+			t.Fatal(err)
+		}
+		r := c.Pipeline.Stages["production-release"].Requires[0]
+		if len(r.Any) != 2 || len(r.Any[0].All) != 2 || r.Any[1].All[0].From != "hotfix/*" || !r.Any[1].All[1].Version.Fresh {
+			t.Fatalf("%+v", r)
+		}
+		if got := r.String(); got != "any: [[passed: review-release, version: same_as_passed review-release], [from: hotfix/*, version: fresh]]" {
+			t.Errorf("string: %q", got)
+		}
+	})
+	t.Run("PCSPP-E04: An empty list, or a requirement inside a list that does not hold up, refuses the configuration", func(t *testing.T) {
+		for req, says := range map[string]string{
+			"- any: [[], { from: x }]":                 "empty list of requirements",
+			"- any: [[{ passed: qa }], { from: x }]":   "qa is no stage",
+			"- any: [[{ version: { product: app } }]]": "ask fresh, listed",
+		} {
+			body := strings.Replace(versionedPipeline, "        - version: { same_as_passed: review-release }\n", "        "+req+"\n", 1)
+			if _, err := loadRaw(t, body); err == nil || !strings.Contains(err.Error(), says) {
+				t.Errorf("%s: %v, want %q", req, err, says)
+			}
+		}
+	})
+}

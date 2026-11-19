@@ -431,7 +431,9 @@ A requirement is one of these:
   must be (see [`versioning`](#versioning--how-each-product-moves-its-version)).
 - `contains: <branch>`: the head of that branch on `origin` is in the sha, so the fixes made there
   came back.
-- `any:`: one of several holds.
+- `any:`: one of several holds. An item that is a list is one path: it holds when all of its
+  requirements do, so each path asks its own —
+  `any: [[{ passed: review-release }, { version: { same_as_passed: review-release } }], [{ from: "hotfix/*" }, { version: { fresh: true } }]]`.
 
 A stage needs `verify:`, `run:`, or both. A stage the configuration does not declare does not run.
 

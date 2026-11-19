@@ -2,7 +2,7 @@
 # @anchors
 #   code: PCFPP
 #   ref: PCSPP
-#   updated_at: 2026-11-18
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @PCSPP
@@ -43,3 +43,15 @@ Feature: Pipeline — the stages a workflow asks about, what each requires, and 
     Given production-release with release web, and only app declared
     When the configuration is loaded
     Then it does not load, naming the stage and web
+
+  @PCSPP-B04 @unit-level
+  Scenario: A list of requirements is one path of an any:, all of which hold
+    Given production-release with any of two lists: passed review-release with same_as_passed, and from hotfix/* with fresh
+    When the configuration is loaded
+    Then each path holds its two requirements, written back in brackets
+
+  @PCSPP-E04 @unit-level
+  Scenario: An empty list, or a requirement inside a list that does not hold up, refuses the configuration
+    Given an empty list, a list with passed qa, and a list with a version asking nothing
+    When the configuration is loaded
+    Then it does not load, naming the stage and why

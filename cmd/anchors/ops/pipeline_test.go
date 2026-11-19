@@ -255,3 +255,36 @@ func TestPipeline_recordReleases(t *testing.T) {
 		}
 	})
 }
+
+func TestPipeline_paths(t *testing.T) {
+	t.Run("PCSPA-B08: A list inside any: is a path that holds when all of its requirements do, and a refusal names why each path failed", func(t *testing.T) {
+		root := releasedRepo(t)
+		gitIn(t, root, "checkout", "-q", "production")
+		cfg := strings.Replace(releasedProject, "      requires:\n        - version: { same_as_passed: review-release }\n", `      requires:
+        - any:
+            - [{ passed: review-release }, { version: { same_as_passed: review-release } }]
+            - [{ from: "hotfix/*" }, { version: { fresh: true } }]
+`, 1)
+		commitFiles(t, root, "chore: paths", map[string]string{"anchors.yaml": cfg})
+		gitIn(t, root, "checkout", "-q", "-b", "hotfix/login")
+		hotfix := commitFiles(t, root, "fix: login", appVersion("1.0.1"))
+		gitIn(t, root, "checkout", "-q", "production")
+		gitIn(t, root, "merge", "-q", "--no-ff", "--no-edit", "hotfix/login")
+		prod := headOf(t, root)
+		fakeForge(t, withHead(pr(7, "hotfix/login", "production", prod), hotfix))
+		out, err := runPipeline(t, root, "can-run", "production-release", "--branch", "production", "--sha", prod)
+		if err != nil || !strings.Contains(out, `✓ any: [[passed: review-release, version: same_as_passed review-release], [from: hotfix/*, version: fresh]]: [from: hotfix/*, version: fresh]: from: hotfix/*: #7 comes from hotfix/login; version: fresh: 1.0.1 is above every release`) {
+			t.Errorf("the hotfix path: %v\n%s", err, out)
+		}
+		gitIn(t, root, "checkout", "-q", "hotfix/login")
+		stale := commitFiles(t, root, "fix: back", appVersion("1.0.0"))
+		gitIn(t, root, "checkout", "-q", "production")
+		gitIn(t, root, "merge", "-q", "--no-ff", "--no-edit", "hotfix/login")
+		prod = headOf(t, root)
+		pulls(t, withHead(pr(8, "hotfix/login", "production", prod), stale))
+		out, err = runPipeline(t, root, "can-run", "production-release", "--branch", "production", "--sha", prod)
+		if err == nil || !strings.Contains(out, "none holds") || !strings.Contains(out, "passed: review-release: neither this commit nor the head of #8") || !strings.Contains(out, "version: fresh: 1.0.0 is released") {
+			t.Errorf("no path: %v\n%s", err, out)
+		}
+	})
+}

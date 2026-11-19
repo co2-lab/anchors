@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:87f5e20544d15e8b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:31a8ff512a7853ec — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2278,6 +2278,8 @@ is what the test proves.
 
 - [record of a stage that releases writes its release once the stage passed](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B07`
 
+- [A list inside any: is a path that holds when all of its requirements do, and a refusal names why each path failed](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B08`
+
 - [The root receives the seventeen operation commands](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
 
 - [Each operation command is registered exactly once](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-I01`
@@ -3597,6 +3599,10 @@ is what the test proves.
 - [A stage names the product it releases](layers/config.md#pcspp-b03--a-stage-names-the-product-it-releases) `PCSPP-B03`
 
 - [A stage that releases a product versioning: does not declare refuses the configuration](layers/config.md#pcspp-e03--a-stage-that-releases-a-product-versioning-does-not-declare-refuses-the-configuration) `PCSPP-E03`
+
+- [A list of requirements is one path of an any:, all of which hold](layers/config.md#pcspp-b04--a-list-of-requirements-is-one-path-of-an-any-all-of-which-hold) `PCSPP-B04`
+
+- [An empty list, or a requirement inside a list that does not hold up, refuses the configuration](layers/config.md#pcspp-e04--an-empty-list-or-a-requirement-inside-a-list-that-does-not-hold-up-refuses-the-configuration) `PCSPP-E04`
 
 - [The section declares the review, the judgments, the file and the retention](layers/config.md#psrsa-b01--the-section-declares-the-review-the-judgments-the-file-and-the-retention) `PSRSA-B01`
 

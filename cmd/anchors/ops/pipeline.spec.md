@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PCSPA
-  updated_at: 2026-11-18
+  updated_at: 2026-11-19
   layer: comando
 -->
 # Pipeline — ask whether a stage may run, and record that it passed
@@ -45,6 +45,7 @@ A stage the configuration does not declare does not run.
 | `PCSPA-B05` | `passed:` reads the sha itself before the head it was merged from: a stage recorded on the same sha — the production release before the version pointer flips — satisfies a later stage of that branch. |
 | `PCSPA-B06` | `version:` and `contains:` are answered on the stage's sha, for the branch the stage runs on (VRQRA); `same_as_passed:` against the commit that passed the stage, found as `passed:` finds it. (`passedBy`) |
 | `PCSPA-B07` | `record` and `run` of a stage that releases write its release (RLSTA) once the stage passed, before the record; a release that fails is recorded as the stage's failure. |
+| `PCSPA-B08` | A list of requirements holds when every one of them does, saying why each held; the first that does not hold refuses the list, naming it. Inside an `any:`, a refusal names why each path failed. |
 
 ## Errors
 

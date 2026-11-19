@@ -24,14 +24,17 @@ The stages anchors.yaml declares, asked by the pipeline:
         branches: [production]
         requires:
           - flow
-          - any: [{ passed: review-release }, { from: "hotfix/*" }]
-          - version: { product: app, same_as_passed: review-release }
+          - any:
+              - [{ passed: review-release }, { version: { product: app, same_as_passed: review-release } }]
+              - [{ from: "hotfix/*" }, { version: { product: app, fresh: true } }]
         verify: node scripts/smoke-prod.mjs
 
   anchors pipeline can-run <stage>   the first job: refuses a stage that may not run
   anchors pipeline record <stage>    the last job: runs verify:, records the pass on the sha
                                      (alias done; record reads clean to shellcheck, done does not)
   anchors pipeline run <stage>       can-run, run:, verify: and the record, in one step
+
+A list of requirements is one path of an any:, and holds when all of them do.
 
 version: asks of the version the sha carries (versioning:): fresh, listed, same_as_passed,
 expected; contains: asks that the head of a branch on origin is in the sha. Both read the sha,

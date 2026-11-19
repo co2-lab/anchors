@@ -435,7 +435,9 @@ Um requisito é um destes:
   precisa ser (veja [`versioning`](#versioning--como-cada-produto-avança-a-versão)).
 - `contains: <branch>`: a head daquela branch no `origin` está no sha, então as correções feitas
   lá voltaram.
-- `any:`: vale um de vários.
+- `any:`: vale um de vários. Um item que é uma lista é um caminho: vale quando todos os requisitos
+  dele valem, e assim cada caminho pede os seus —
+  `any: [[{ passed: review-release }, { version: { same_as_passed: review-release } }], [{ from: "hotfix/*" }, { version: { fresh: true } }]]`.
 
 Uma etapa precisa de `verify:`, de `run:`, ou dos dois. Etapa que a configuração não declara não
 roda.

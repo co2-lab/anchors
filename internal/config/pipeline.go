@@ -45,7 +45,8 @@ type Stage struct {
 // Requirement is one condition of a stage: `flow` — the sha came by the branch flow —, a
 // phase whose gates pass (`gates: ci`), a stage the sha passed (`passed: review-release`), the
 // head the sha was merged from (`from: "hotfix/*"`), the version the sha carries (`version:`),
-// a branch whose head the sha contains (`contains: production`), or one of several (`any:`).
+// a branch whose head the sha contains (`contains: production`), one of several (`any:`), or
+// a list of them, all of which hold — one path of an `any:`.
 type Requirement struct {
 	Flow     bool
 	Gates    string
@@ -54,6 +55,7 @@ type Requirement struct {
 	Version  *VersionRequirement
 	Contains string
 	Any      []Requirement
+	All      []Requirement
 }
 
 // VersionRequirement is what a stage asks of the version its sha carries: that no release
@@ -68,10 +70,20 @@ type VersionRequirement struct {
 	Expected     bool
 }
 
-const requirementKinds = "gates:, passed:, from:, version:, contains:, any:"
+const requirementKinds = "gates:, passed:, from:, version:, contains:, any:, or a list of requirements"
 
-// UnmarshalYAML reads a requirement written as the word `flow` or as a one-key map.
+// UnmarshalYAML reads a requirement written as the word `flow`, as a one-key map, or as a
+// list of requirements that all hold.
 func (r *Requirement) UnmarshalYAML(n *yaml.Node) error {
+	if n.Kind == yaml.SequenceNode {
+		if err := n.Decode(&r.All); err != nil {
+			return err
+		}
+		if len(r.All) == 0 {
+			return fmt.Errorf("line %d: an empty list of requirements requires nothing", n.Line)
+		}
+		return nil
+	}
 	if n.Kind == yaml.ScalarNode {
 		if n.Value != "flow" {
 			return fmt.Errorf("line %d: requirement %q: write flow, or one of %s", n.Line, n.Value, requirementKinds)
@@ -145,6 +157,12 @@ func (r Requirement) String() string {
 		return "contains: " + r.Contains
 	case r.Version != nil:
 		return "version: " + r.Version.String()
+	case len(r.All) > 0:
+		parts := make([]string, len(r.All))
+		for i, a := range r.All {
+			parts[i] = a.String()
+		}
+		return "[" + strings.Join(parts, ", ") + "]"
 	}
 	parts := make([]string, len(r.Any))
 	for i, a := range r.Any {
@@ -245,6 +263,10 @@ func validateRequirements(p *Pipeline, v Versioning, stage string, reqs []Requir
 			}
 		case len(r.Any) > 0:
 			if err := validateRequirements(p, v, stage, r.Any); err != nil {
+				return err
+			}
+		case len(r.All) > 0:
+			if err := validateRequirements(p, v, stage, r.All); err != nil {
 				return err
 			}
 		default:
