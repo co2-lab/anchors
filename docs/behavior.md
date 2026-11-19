@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:91eff01ed633affb — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:dc79f0a36181b08b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2396,6 +2396,20 @@ is what the test proves.
 
 - [after_bump runs in the root once every source was written, with the product and the version; when it fails the command says the sources were written](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B13`
 
+- [release_pr pushes anchors/release/<product> with the bump, the release's blocks and the intents consumed, and opens its pull request into the branch](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository) `VAPLA-B01`
+
+- [A rerun updates the open pull request, and once the release is on the branch there is nothing to propose](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository) `VAPLA-B02`
+
+- [Nothing to release opens nothing](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository) `VAPLA-B03`
+
+- [commit confirms the sources hold the version the branch asks for, and refuses otherwise](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository) `VAPLA-B04`
+
+- [build writes the version into the workspace's sources, commits nothing, and prints version and tag, into $GITHUB_OUTPUT too](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository) `VAPLA-B05`
+
+- [A per_version output gets the release's file, named by format.file, in place of the unreleased one, and intents consumed by delete are gone](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository) `VAPLA-B06`
+
+- [release_pr of a product with no source, a branch that never versions, or no gh fails naming why](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository) `VAPLA-E01`
+
 - [fresh holds for a version above every release — the tags and what released: lists — and refuses one released or below](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B01`
 
 - [listed holds when the file at the sha has an entry for the version matching where, and names the listing when it has not](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B02`
@@ -3655,6 +3669,10 @@ is what the test proves.
 - [A label off semver, with a name or a place it may not have or a key it does not know, or a source with two ways refuses the configuration](layers/config.md#vrsnn-e11--a-label-off-semver-with-a-name-or-a-place-it-may-not-have-or-a-key-it-does-not-know-or-a-source-with-two-ways-refuses-the-configuration) `VRSNN-E11`
 
 - [An updater that fails or prints no version is an error naming the file](layers/config.md#vrsnn-e12--an-updater-that-fails-or-prints-no-version-is-an-error-naming-the-file) `VRSNN-E12`
+
+- [apply says how a computed version enters the repository, release_pr by default](layers/config.md#vrsnn-b16--apply-says-how-a-computed-version-enters-the-repository-release-pr-by-default) `VRSNN-B16`
+
+- [An apply other than release_pr, commit or build refuses the configuration](layers/config.md#vrsnn-e13--an-apply-other-than-release-pr-commit-or-build-refuses-the-configuration) `VRSNN-E13`
 
 - [With no source registered, the default gate names are absent, not a failure](layers/config.md#gtvcg-b01--with-no-source-registered-the-default-gate-names-are-absent-not-a-failure) `GTVCG-B01`
 
@@ -6661,6 +6679,8 @@ is what the test proves.
 - [What is not released yet is headed by the version it would be released as, when one is computed](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B14`
 
 - [A written file's blocks are read by their markers, in order, each with the text up to the next](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B15`
+
+- [Replace writes a block in place of its version's and of the unreleased one, keeping the rest](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B16`
 
 - [An intent reads its product, bump and type from the front matter, and its text after it](layers/infra.md#intna--intents--the-change-intents-read-from-their-files-and-rendered-as-a-release) `INTNA-B01`
 

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:a35551301144c079 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:4cf4465f44c411ba — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2644,6 +2644,22 @@ in `layers/`.
 
 - [VRSNI-E04 — `bump` to a version the scheme cannot read, below what the sources hold, not above the latest release, on a product with no source, or on a branch that never versions.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
 
+### [VAPLA — VersionApply — the version the branch asks for, brought into the repository](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository)
+
+- [VAPLA-B01 — `release_pr` commits `chore(release): <product> <version>` on `anchors/release/<product>`, cut from the branch. The commit holds the version in every source, the release's block in every output, rendered from the commits since the latest release or from the product's intents, and the intents consumed. The command pushes the commit, opens its pull request into the branch, titled `release <product> <version>` with the first block as its body, and leaves the checkout on the branch. (`applyReleasePR`, `writeRelease`, `pendingIntentBlock`, `consumeIntents`)](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository)
+
+- [VAPLA-B02 — A rerun rewrites the release over the branch's new head and updates the open pull request. Once the branch carries the release, there is nothing to propose: nothing is pushed or opened.](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository)
+
+- [VAPLA-B03 — With nothing to release since the latest release, nothing is opened.](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository)
+
+- [VAPLA-B04 — `commit` passes when the sources hold the version the branch asks for, and fails naming both and pointing to `anchors version bump`.](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository)
+
+- [VAPLA-B05 — `build` writes the version into the workspace's sources (the labelled one when the label goes into the sources) and commits nothing. It prints `version=` and `tag=` (the labelled tag when the label goes into the tag) and appends them to `$GITHUB_OUTPUT` when set. (`applyBuild`)](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository)
+
+- [VAPLA-B06 — A `per_version` output gets the release's file, named by `format.file`, in place of `unreleased.md`. Intents consumed by `delete` are removed, and by `archive` moved under `released/<version>/`.](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository)
+
+- [VAPLA-E01 — `release_pr` of a product with no source, a branch that never versions, or `gh` that cannot be run.](layers/comando.md#vapla--versionapply--the-version-the-branch-asks-for-brought-into-the-repository)
+
 ### [VRQRA — VersionRequirement — what a stage asks of the version its sha carries, and of the fixes it contains](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
 
 - [VRQRA-B01 — `fresh` holds when the version is above the highest release, among the product's tags and the versions `released:` lists at the sha, and says which release; it fails for a version released — naming the tag or the listing — and for one below, asking for a greater version. (`isFresh`)](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
@@ -3982,6 +3998,8 @@ in `layers/`.
 
 - [VRSNN-B15 — An updater source is read by running `<updater> get <file>` and rewritten by `<updater> set <file> <version>` in the project's root, both over a copy of the file's content, so a file read at a commit is read the same way. (`runUpdater`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
+- [VRSNN-B16 — `apply` says how a computed version enters the repository, `release_pr` when the product writes none (VAPLA). (`ApplyOrDefault`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
 - [VRSNN-E01 — A product whose scheme does not build (VRSNE-E01), or that is empty.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E02 — A source with no `file`, with both or neither of `path:` and `regex:`, or with a regex that does not compile or does not have exactly one group.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
@@ -4005,6 +4023,8 @@ in `layers/`.
 - [VRSNN-E11 — A label on a product that is not semver, with a name of other characters, an `in` other than `tag`, `source` or `both`, or a key it does not know; a source with two of `path:`, `regex:` and `updater:`.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E12 — An updater that fails, or whose `get` prints nothing.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E13 — An `apply` other than `release_pr`, `commit` or `build`.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 ### [GTVCG — GateVocabulary — the list of default gate names, injected into the configuration layer](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
@@ -7331,6 +7351,8 @@ in `layers/`.
 - [CHNGL-B14 — What is not released yet is headed by the version it would be released as (its candidate) before the translated "unreleased", when one is computed; a release read up to a tag keeps the tag.](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 
 - [CHNGL-B15 — The blocks of a written file are read by their markers, in order, each with the text under its marker up to the next, CRLF or not; the text before the first marker belongs to none. (`Blocks`)](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
+
+- [CHNGL-B16 — `Replace` writes a block in place of the block of its version and of the unreleased one, keeping every other block and the title: the release a pull request prepares is rewritten until its tag, never written twice. (`Replace`)](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 
 - [CHNGL-E01 — The template does not parse, or fails while rendering.](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 

@@ -394,3 +394,29 @@ func Blocks(existing string) []WrittenBlock {
 	}
 	return out
 }
+
+// Replace writes a block into an incremental changelog in place of the block its version
+// already has, and of the unreleased one: the release a pull request prepares is rewritten
+// until its tag, so it is never written twice.
+func Replace(existing, title string, b Block) string {
+	key := b.Version
+	if key == "" {
+		key = "unreleased"
+	}
+	for _, drop := range []string{key, "unreleased"} {
+		start := strings.Index(existing, Marker(drop))
+		if drop == "unreleased" {
+			start = strings.Index(existing, Marker(""))
+		}
+		if start < 0 {
+			continue
+		}
+		end := len(existing)
+		after := start + len(Marker(drop))
+		if loc := markerRE.FindStringIndex(existing[after:]); loc != nil {
+			end = after + loc[0]
+		}
+		existing = existing[:start] + existing[end:]
+	}
+	return Prepend(existing, title, []Block{b})
+}

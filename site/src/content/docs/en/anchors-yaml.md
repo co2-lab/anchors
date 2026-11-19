@@ -519,6 +519,31 @@ A stage with `release: <product>` writes, once it passes, the product's tag on i
 version the sha carries, and the tag's GitHub Release with its changelog; the workflow grants
 `contents: write`. A tag already on another sha fails the record: the version was released twice.
 
+The strategies also take `intents` (the largest bump of the change intents waiting),
+`{ strategy: promote, from: <branch> }` (the version that branch carries) and
+`{ strategy: script, run: <command> }` (the command prints the version, reading the product's
+state on its stdin). A branch rule's `label: { name: rc, in: tag | source | both }` makes its
+versions prereleases (`1.1.0-rc.3`). A source a path or a regex does not cover names
+`updater: <command>`, which gets `get <file>` and `set <file> <version>`. `after_bump: <command>`
+runs after a bump. `apply:` says how the version the branch asks for enters the repository, through
+`anchors version apply`: `release_pr` (the default) opens the pull request
+`anchors/release/<product>` with the bump, the changelog and the intents consumed; `commit` confirms
+a bump made by hand; `build` writes it into the CI's workspace for the tag alone to record.
+
+A change intent is a file under `changelog.intents.path` (`.anchors/changes/` by default):
+
+```markdown
+---
+product: app
+bump: minor          # a part of the product's scheme, or none
+type: feat           # one of changelog.intents.types (feat and fix by default)
+---
+Receipts can now be shared from the list.
+```
+
+An output with `source: intents` is written from them; a release consumes them, deleting them or,
+with `consume: archive`, moving them under `released/<version>/`.
+
 `anchors changelog` reads a product's releases between its own tags. The `changelog-valid` gate
 confronts every output: markers that read as versions, newest first, a block for every tag and a
 tag for every block, the block of a release unchanged, and the output's `format:`.

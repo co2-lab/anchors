@@ -280,3 +280,17 @@ func TestBlocks(t *testing.T) {
 		}
 	})
 }
+
+func TestReplace(t *testing.T) {
+	t.Run("CHNGL-B16: Replace writes a block in place of its version's and of the unreleased one, keeping the rest", func(t *testing.T) {
+		file := "# Changelog\n\n" + Marker("") + "\n## Unreleased\n- x\n\n" + Marker("1.1.0") + "\n## 1.1.0\n- old\n\n" + Marker("1.0.0") + "\n## 1.0.0\n- one\n"
+		got := Replace(file, "Changelog", Block{Version: "1.1.0", Text: "## 1.1.0\n- new\n"})
+		want := "# Changelog\n\n" + Marker("1.1.0") + "\n## 1.1.0\n- new\n\n" + Marker("1.0.0") + "\n## 1.0.0\n- one\n"
+		if got != want {
+			t.Errorf("%q\nwant\n%q", got, want)
+		}
+		if got := Replace("", "Changelog", Block{Version: "1.0.0", Text: "## 1.0.0\n"}); got != "# Changelog\n\n"+Marker("1.0.0")+"\n## 1.0.0\n" {
+			t.Errorf("empty: %q", got)
+		}
+	})
+}

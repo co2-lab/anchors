@@ -2,7 +2,7 @@
 # @anchors
 #   code: VRSNF
 #   ref: VRSNN
-#   updated_at: 2026-11-18
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @VRSNN
@@ -169,3 +169,15 @@ Feature: Versioning — the products a project versions, where each writes its v
     Given updaters exit 2 and true
     When the source is read
     Then each fails naming v.cfg and the command
+
+  @VRSNN-B16 @unit-level
+  Scenario: apply says how a computed version enters the repository, release_pr by default
+    Given app with apply build and api with none
+    When the configuration is loaded
+    Then app applies by build and api by release_pr
+
+  @VRSNN-E13 @unit-level
+  Scenario: An apply other than release_pr, commit or build refuses the configuration
+    Given apply push
+    When the configuration is loaded
+    Then it does not load, naming push

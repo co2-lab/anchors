@@ -48,6 +48,11 @@ type Product struct {
 	// AfterBump is a command run in the root after a bump wrote every source, with the
 	// product and the version in $ANCHORS_PRODUCT and $ANCHORS_VERSION.
 	AfterBump string `yaml:"after_bump,omitempty"`
+	// Apply is how a computed version enters the repository: `release_pr` (the default), a
+	// pull request the CI opens with the bump, the changelog and the intents consumed;
+	// `commit`, a bump made by hand that the stage confirms; `build`, the version written into
+	// the CI's workspace and recorded by the tag alone.
+	Apply string `yaml:"apply,omitempty"`
 
 	root string // where the configuration was read: an updater runs there
 }
@@ -300,6 +305,14 @@ func (p *Product) RangeFor(branch string) (string, string) {
 	return "", ""
 }
 
+// ApplyOrDefault is how the product's computed version enters the repository.
+func (p *Product) ApplyOrDefault() string {
+	if p.Apply == "" {
+		return "release_pr"
+	}
+	return p.Apply
+}
+
 // Releases says whether a branch releases the product: its rule says `release: true`, or no
 // rule of the product names where it releases, and then every branch does.
 func (p *Product) Releases(branch string) bool {
@@ -540,6 +553,9 @@ func validateProduct(p *Product) error {
 				return fmt.Errorf("branches.%s: %w", r.Pattern, err)
 			}
 		}
+	}
+	if a := p.ApplyOrDefault(); a != "release_pr" && a != "commit" && a != "build" {
+		return fmt.Errorf("apply %q: write release_pr, commit or build", p.Apply)
 	}
 	if p.Released != nil && p.Released.File == "" {
 		return fmt.Errorf("released: file is required")

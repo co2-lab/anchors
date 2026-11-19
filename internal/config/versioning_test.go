@@ -540,3 +540,17 @@ func TestVersioning_updater(t *testing.T) {
 		}
 	})
 }
+
+func TestVersioning_apply(t *testing.T) {
+	t.Run("VRSNN-B16: apply says how a computed version enters the repository, release_pr by default", func(t *testing.T) {
+		c, err := loadVersioning(t, "  app: { scheme: number, next: none, apply: build }\n  api: { scheme: number, next: none }\n")
+		if err != nil || c.Versioning["app"].ApplyOrDefault() != "build" || c.Versioning["api"].ApplyOrDefault() != "release_pr" {
+			t.Errorf("%v", err)
+		}
+	})
+	t.Run("VRSNN-E13: An apply other than release_pr, commit or build refuses the configuration", func(t *testing.T) {
+		if _, err := loadVersioning(t, "  app: { scheme: number, next: none, apply: push }\n"); err == nil || !strings.Contains(err.Error(), `apply "push"`) {
+			t.Errorf("%v", err)
+		}
+	})
+}

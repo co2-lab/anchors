@@ -43,7 +43,8 @@ A ` + "`Version:`" + ` footer on a commit since the release forces the next vers
 same as data, with the commits since the release already classified: it is the context a
 project's own script receives to decide a version.
 
-` + "`anchors version bump`" + ` writes a version into every source.`,
+` + "`anchors version bump`" + ` writes a version into every source, and ` + "`anchors version apply`" + ` brings
+the version the branch asks for into the repository as the product's ` + "`apply:`" + ` says.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			st, err := versionState(root, product, branch)
@@ -64,7 +65,7 @@ project's own script receives to decide a version.
 	cmd.PersistentFlags().StringVar(&product, "product", "", "the product of `versioning:` (needed when there are several)")
 	cmd.PersistentFlags().StringVar(&branch, "branch", "", "the branch whose strategy decides (default: the current branch)")
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print the state as JSON")
-	cmd.AddCommand(newVersionBumpCmd(&root, &product, &branch))
+	cmd.AddCommand(newVersionBumpCmd(&root, &product, &branch), newVersionApplyCmd(&root, &product, &branch))
 	return cmd
 }
 

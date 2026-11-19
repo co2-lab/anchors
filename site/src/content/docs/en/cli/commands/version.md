@@ -19,7 +19,8 @@ A `Version:` footer on a commit since the release forces the next version. `--js
 same as data, with the commits since the release already classified: it is the context a
 project's own script receives to decide a version.
 
-`anchors version bump` writes a version into every source.
+`anchors version bump` writes a version into every source, and `anchors version apply` brings
+the version the branch asks for into the repository as the product's `apply:` says.
 ```
 
 ## Usage
@@ -39,6 +40,28 @@ anchors version [flags]
 
 ## Subcommands
 
+### `anchors version apply`
+
+Bring the version the branch asks for into the repository, as the product's apply: says.
+
+```text
+apply: release_pr (the default) opens, or updates, the pull request anchors/release/<product> →
+the branch, carrying the version in every source, the release's block in every changelog output
+and the intents it consumed. Merging it is the release.
+
+apply: commit confirms the sources already hold the version the branch asks for: a bump made by
+hand, with anchors version bump.
+
+apply: build writes the version into the sources of the workspace, commits nothing, and prints
+version= and tag= (also into $GITHUB_OUTPUT): the tag alone records it.
+```
+
+#### Usage
+
+```bash
+anchors version apply [flags]
+```
+
 ### `anchors version bump`
 
 Write the next version into every source of the product.
@@ -54,7 +77,7 @@ file.
 #### Usage
 
 ```bash
-anchors version bump [part|version]
+anchors version bump [part|version] [flags]
 ```
 
 ## Versions, changelog, pull requests and pipeline — family
