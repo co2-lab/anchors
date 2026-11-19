@@ -267,3 +267,16 @@ func TestRender_candidate(t *testing.T) {
 		}
 	})
 }
+
+func TestBlocks(t *testing.T) {
+	t.Run("CHNGL-B15: A written file's blocks are read by their markers, in order, each with the text up to the next", func(t *testing.T) {
+		file := "# Changelog\n\n" + Marker("") + "\n## Unreleased\n- x\n\n" + Marker("1.1.0") + "\r\n## 1.1.0\r\n- y\r\n\r\n" + Marker("1.0.0") + "\n## 1.0.0\n"
+		bs := Blocks(file)
+		if len(bs) != 3 || bs[0].Version != "unreleased" || bs[0].Text != "## Unreleased\n- x\n" || bs[1].Version != "1.1.0" || bs[1].Text != "## 1.1.0\r\n- y\n" || bs[2].Text != "## 1.0.0\n" {
+			t.Errorf("%q", bs)
+		}
+		if len(Blocks("# Changelog\n")) != 0 {
+			t.Errorf("a file with no marker holds no block")
+		}
+	})
+}

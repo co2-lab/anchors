@@ -484,6 +484,17 @@ versioning:
         range: from_base                 # only versions of the release it was cut from; or 1.0.x
       "feat/*":
         next: none
+      production:
+        release: true                    # its changelog lists releases; others list the candidate
+        changelog: true                  # where `anchors changelog --write` writes
+    changelog:
+      outputs:                           # each written by --write, confronted by changelog-valid
+        - path: CHANGELOG.md
+          format: { heading: "^## {version} — {date}$", required_sections: [Features] }
+        - path: notes
+          mode: per_version
+          template: notes.tmpl
+          format: { file: "{version}.md", max_chars: 500, required: changed }
 ```
 
 A product with no `source` keeps its version in the tag alone. A commit with a `Version:` footer
@@ -503,6 +514,14 @@ A stage asks the rest of its sha, with `version:` in its `requires`:
 The branch's `range:` bounds the version whatever is asked. The tags must be in the checkout
 (`fetch-depth: 0`). `anchors branch check` asks the same of a pull request's head, for the stages
 of its base, so the refusal shows on the pull request.
+
+A stage with `release: <product>` writes, once it passes, the product's tag on its sha with the
+version the sha carries, and the tag's GitHub Release with its changelog; the workflow grants
+`contents: write`. A tag already on another sha fails the record: the version was released twice.
+
+`anchors changelog` reads a product's releases between its own tags. The `changelog-valid` gate
+confronts every output: markers that read as versions, newest first, a block for every tag and a
+tag for every block, the block of a release unchanged, and the output's `format:`.
 
 ---
 

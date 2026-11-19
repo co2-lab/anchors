@@ -208,6 +208,7 @@ var checkersComGate = map[string]func(g config.Gate, root string, graph *mapx.Gr
 	"pipeline-wired": checkPipelineWired,
 	// A product's version against the one at HEAD: a question of the project's sources.
 	"version-forward": checkVersionForward,
+	"changelog-valid": checkChangelogValid,
 }
 
 // runInternalAggregate executa um checker interno de escopo batch/project.

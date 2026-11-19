@@ -371,3 +371,26 @@ func dropUnreleased(existing string, blocks []Block) string {
 	}
 	return existing[:start] + existing[end:]
 }
+
+// Block of a written file: the version its marker names (`unreleased` for what is not
+// released yet) and the text under the marker, up to the next one.
+type WrittenBlock struct {
+	Version string
+	Text    string
+}
+
+// Blocks reads the blocks a changelog file holds, in the order written. Text before the
+// first marker — the title — belongs to no block.
+func Blocks(existing string) []WrittenBlock {
+	locs := markerRE.FindAllStringSubmatchIndex(existing, -1)
+	out := make([]WrittenBlock, 0, len(locs))
+	for i, l := range locs {
+		end := len(existing)
+		if i+1 < len(locs) {
+			end = locs[i+1][0]
+		}
+		text := strings.TrimLeft(existing[l[1]:end], "\r\n")
+		out = append(out, WrittenBlock{Version: existing[l[2]:l[3]], Text: strings.TrimRight(text, "\r\n") + "\n"})
+	}
+	return out
+}

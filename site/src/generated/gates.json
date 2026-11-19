@@ -296,6 +296,10 @@
         "slug": "docs/gates/version-forward"
       },
       {
+        "label": "changelog-valid",
+        "slug": "docs/gates/changelog-valid"
+      },
+      {
         "label": "obligation-honored",
         "slug": "docs/gates/obligation-honored"
       },

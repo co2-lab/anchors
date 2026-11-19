@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:e40a3e121749f1fe — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:15ffc17b45df48b1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -3706,6 +3706,22 @@ is what the test proves.
 
 - [Without a map the gate is pending](layers/gate.md#byprs--bypassproven--a-path-the-code-skips-while-a-test-runs-is-run-by-a-suite-that-reaches-it) `BYPRS-E01`
 
+- [An output whose blocks read as versions, newest first, one per tag, in its format, passes](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B01`
+
+- [Blocks out of order, twice, an unreleased one below another, or a marker no version, fail](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B02`
+
+- [A tag with no block, a block with no tag, a heading off the format or a date that is not the tag's fail](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B03`
+
+- [A required section missing, a section left empty, or a block above max_chars fails](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B04`
+
+- [The block of a release that changed against HEAD fails; the unreleased one may change](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B05`
+
+- [required: changed fails an output unchanged since the latest release while the sources hold a version not released](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B06`
+
+- [A per_version output has a file per tag named by format.file, plus an unreleased one at most](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B07`
+
+- [No product with an output skips the gate](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B08`
+
 - [An artifact that is not a spec leaves without a verdict](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B01`
 
 - [An exported symbol the spec never names fails, and the verdict names it](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B02`
@@ -6603,6 +6619,8 @@ is what the test proves.
 - [The markers of a CRLF changelog are found](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B13`
 
 - [What is not released yet is headed by the version it would be released as, when one is computed](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B14`
+
+- [A written file's blocks are read by their markers, in order, each with the text up to the next](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B15`
 
 - [Each scope is mirrored to its own file](layers/infra.md#chlgc--checklog--the-checks-output-mirrored-to-a-file-so-it-can-be-reread-without-re-running) `CHLGC-B01`
 

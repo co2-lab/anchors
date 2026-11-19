@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:26e3621613f9b884 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:666c18970b89e86a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -4070,6 +4070,24 @@ in `layers/`.
 
 - [BYPRS-E01 — No map is built.](layers/gate.md#byprs--bypassproven--a-path-the-code-skips-while-a-test-runs-is-run-by-a-suite-that-reaches-it)
 
+### [CHVLA — ChangelogValid — a product's changelog outputs hold what they claim, whoever wrote them](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
+- [CHVLA-B01 — An output whose blocks read as versions, newest first, one per tag of the product, and that meet its `format:` passes. (`checkChangelogValid`, `confrontOutput`)](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
+- [CHVLA-B02 — In an incremental output, a block after an older one, a version with two blocks, an unreleased block below another, or a marker the scheme does not read fails, naming the versions. (`orderOf`)](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
+- [CHVLA-B03 — A tag of the product reachable from HEAD with no block, a block whose version no tag records, a heading that does not match `format.heading` or names another version, a heading's date other than its tag's, or no file while the product has tags fails, naming the block. (`productTags`, `confrontBlock`)](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
+- [CHVLA-B04 — A section of `format.required_sections` missing from a release's block, a `### ` section with nothing under it, or a block above `format.max_chars` fails, naming the block.](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
+- [CHVLA-B05 — The block of a release whose text differs from the one the file holds at HEAD fails; the unreleased block grows until the tag and may change. (`blockAtHead`)](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
+- [CHVLA-B06 — With `format.required: changed`, an output unchanged since the product's latest release tag fails while the sources hold a version not released yet: the notes of the previous release would ship with the next one. A released version, or a product with no source, asks nothing. (`changedSinceRelease`)](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
+- [CHVLA-B07 — A `per_version` output has one file per tag, each named by `format.file`, and `unreleased.md` at most; another name, a tag with no file and a file with no tag fail.](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
+- [CHVLA-B08 — With no product declaring an output, the gate is skipped, saying so.](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
 ### [CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code)
 
 - [CDCTC-B01 — An artifact that is not a spec leaves without a verdict: the ruler starts from the spec that governs the code.](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code)
@@ -7271,6 +7289,8 @@ in `layers/`.
 - [CHNGL-B13 — The markers of a changelog with CRLF line endings are found as in one with LF.](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 
 - [CHNGL-B14 — What is not released yet is headed by the version it would be released as (its candidate) before the translated "unreleased", when one is computed; a release read up to a tag keeps the tag.](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
+
+- [CHNGL-B15 — The blocks of a written file are read by their markers, in order, each with the text under its marker up to the next, CRLF or not; the text before the first marker belongs to none. (`Blocks`)](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 
 - [CHNGL-E01 — The template does not parse, or fails while rendering.](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 

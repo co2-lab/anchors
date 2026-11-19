@@ -103,3 +103,9 @@ Feature: Changelog — the releases of a project, read from its commits
     Given an unreleased release with a feat and the candidate 1.1.0
     When it is rendered with and without the candidate
     Then the heading is 1.1.0 — Unreleased, and Unreleased alone
+
+  @CHNGL-B15 @unit-level
+  Scenario: A written file's blocks are read by their markers, in order, each with the text up to the next
+    Given a file with a title, an unreleased block, 1.1.0 with CRLF endings and 1.0.0
+    When its blocks are read
+    Then they are unreleased, 1.1.0 and 1.0.0 with their texts, and a file with no marker holds none

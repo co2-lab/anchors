@@ -268,7 +268,7 @@ dialect:
   # the test for it. How a test opens and where its block ends came from the Go family's
   # example, written by `anchors migrate` (format 8): nothing is read that is not declared.
   tests:
-    assertion: '\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b|\b(?:wantAll|wantNone|partialEqualsFull|refused|refuses|ascending|fails|holdsSays)\(t\b'
+    assertion: '\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b|\b(?:wantAll|wantNone|partialEqualsFull|refused|refuses|ascending|fails|holdsSays|failsSaying)\(t\b'
     pattern: \bt\.Run\(\s*(?:"(?P<title>(?:[^"\\\n]|\\.)*)"|`(?P<title2>[^`]*)`)
     block_open: '[{(\[]\s*$'
     block_close: ^\s*[}\])]

@@ -93,6 +93,7 @@ Cada gate abaixo é gerado do catálogo no código. O `anchors init` semeia os q
 | [`marker-parity`](/pt/docs/gates/marker-parity/) | — |  |
 | [`pipeline-wired`](/pt/docs/gates/pipeline-wired/) | — |  |
 | [`version-forward`](/pt/docs/gates/version-forward/) | — |  |
+| [`changelog-valid`](/pt/docs/gates/changelog-valid/) | — |  |
 | [`obligation-honored`](/pt/docs/gates/obligation-honored/) | `spec` | The artifact fulfils the cross-cutting obligations it takes on |
 | [`updated-at-atual`](/pt/docs/gates/updated-at-atual/) | `spec` `feature` `code` `test` | The header's `updated_at` is the day of the file's last commit |
 | [`guide-checklist`](/pt/docs/gates/guide-checklist/) | `guide` | The guide has the conformance-points section (CKn) |
