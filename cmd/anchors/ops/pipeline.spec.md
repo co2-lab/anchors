@@ -44,6 +44,7 @@ A stage the configuration does not declare does not run.
 | `PCSPA-B04` | `run` confronts the stage as `can-run` does, runs its `run:`, then its `verify:`, and records the outcome; a `run:` that fails stops before `verify:` and records failure. |
 | `PCSPA-B05` | `passed:` reads the sha itself before the head it was merged from: a stage recorded on the same sha — the production release before the version pointer flips — satisfies a later stage of that branch. |
 | `PCSPA-B06` | `version:` and `contains:` are answered on the stage's sha, for the branch the stage runs on (VRQRA); `same_as_passed:` against the commit that passed the stage, found as `passed:` finds it. (`passedBy`) |
+| `PCSPA-B07` | `record` and `run` of a stage that releases write its release (RLSTA) once the stage passed, before the record; a release that fails is recorded as the stage's failure. |
 
 ## Errors
 

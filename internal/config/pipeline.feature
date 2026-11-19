@@ -31,3 +31,15 @@ Feature: Pipeline — the stages a workflow asks about, what each requires, and 
     Given version of web, version asking nothing, same_as_passed qa, a key latest, a listing key match, contains hotfix/*, listed with no file nor released:, a version with no versioning block, and two products unnamed
     When the configuration is loaded
     Then it does not load, naming the stage and the field
+
+  @PCSPP-B03 @unit-level
+  Scenario: A stage names the product it releases
+    Given production-release with release app
+    When the configuration is loaded
+    Then the stage releases app
+
+  @PCSPP-E03 @unit-level
+  Scenario: A stage that releases a product versioning: does not declare refuses the configuration
+    Given production-release with release web, and only app declared
+    When the configuration is loaded
+    Then it does not load, naming the stage and web

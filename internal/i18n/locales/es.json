@@ -1343,6 +1343,7 @@
   "gate.pipeline_wired.unknown_stage": "%s llama a la etapa %s, que pipeline.stages no declara",
   "gate.pipeline_wired.uncalled_stage": "la etapa %s está declarada y ningún workflow la llama",
   "gate.pipeline_wired.no_record": "la etapa %s se consulta con can-run y nunca se registra (record o run): ninguna etapa posterior ve que pasó",
+  "gate.pipeline_wired.release_no_write": "la etapa %s publica (release:) y %s, que la registra, no concede contents: write: la tag no puede escribirse",
   "gate.pipeline_wired.pass": "%d workflow(s), %d etapa(s): toda llamada nombra una etapa declarada, y toda etapa se llama y se registra",
   "gate.version_forward.no_source": "ningún producto de `versioning:` declara fuente: no hay versión escrita que confrontar",
   "gate.version_forward.unreadable": "%s: %s",

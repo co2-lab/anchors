@@ -37,6 +37,10 @@ version: asks of the version the sha carries (versioning:): fresh, listed, same_
 expected; contains: asks that the head of a branch on origin is in the sha. Both read the sha,
 not the working tree, and the tags must be in the checkout.
 
+A stage with release: <product> writes, when it passes, the product's tag on its sha with the
+version the sha carries, and the tag's GitHub Release with its changelog (contents: write). A tag
+already on the sha is a rerun; on another sha, the version was released twice, and the record fails.
+
 A stage the configuration does not declare does not run. The branch and the sha come from
 --branch and --sha, or $GITHUB_REF_NAME and $GITHUB_SHA. The pass is a commit status
 anchors/pipeline/<stage>, written and read with the gh CLI (GH_TOKEN, statuses: write).

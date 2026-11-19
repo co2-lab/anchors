@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PWSPP
-  updated_at: 2026-11-06
+  updated_at: 2026-11-18
   layer: gate
 -->
 # PipelineWired — the stages the workflows call are the stages the configuration declares
@@ -42,6 +42,7 @@ gates:
 | `PWSPP-B01` | The gate passes when every call names a declared stage, every declared stage is called and recorded — by `record`, `done` or `run` —, and every workflow calls a stage or is under `pipeline.unguarded`, by its path or its file name; it says how many workflows and stages it read. |
 | `PWSPP-B02` | The gate fails naming each gap: a workflow calling a stage `pipeline.stages` does not declare; a declared stage no workflow calls; a stage asked with `can-run` and never recorded, which no later stage could see passed; a workflow calling no stage and not unguarded. |
 | `PWSPP-B03` | With no stage declared, or no workflow matching `pipeline.workflows`, the gate is pending, naming the globs. |
+| `PWSPP-B04` | A stage that releases (`release:`), recorded by a workflow that grants no `contents: write` (nor `write-all`), diverges naming the stage and the workflow: the tag would fail only when the release runs. A failure of B02 comes first. |
 
 ## Errors
 

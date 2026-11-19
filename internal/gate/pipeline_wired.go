@@ -25,6 +25,8 @@ import (
 // runs (requested by a project: "toda etapa que chama o Anchors no pipeline tem de estar
 // configurada").
 
+var contentsWriteRE = regexp.MustCompile(`(?m)^\s*contents:\s*write\b|permissions:\s*write-all`)
+
 var pipelineCallRE = regexp.MustCompile(`anchors\s+pipeline\s+(can-run|record|done|run)\s+([A-Za-z0-9_.-]+)`)
 
 func checkPipelineWired(_ config.Gate, root string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
@@ -42,6 +44,8 @@ func checkPipelineWired(_ config.Gate, root string, _ *mapx.Graph, cfg *config.C
 		return Pending, i18n.T("gate.pipeline_wired.no_workflows", strings.Join(p.WorkflowGlobs(), ", "))
 	}
 	called := map[string]map[string]bool{} // stage → verbs
+	recordedIn := map[string][]string{}    // stage → the workflows that record it
+	writes := map[string]bool{}            // workflow → it grants contents: write
 	var gaps []string
 	for _, f := range files {
 		b, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(f)))
@@ -49,6 +53,7 @@ func checkPipelineWired(_ config.Gate, root string, _ *mapx.Graph, cfg *config.C
 			continue
 		}
 		calls := pipelineCallRE.FindAllStringSubmatch(string(b), -1)
+		writes[f] = contentsWriteRE.Match(b)
 		if len(calls) == 0 {
 			if !unguarded(p, f) {
 				gaps = append(gaps, i18n.T("gate.pipeline_wired.unguarded_workflow", f))
@@ -65,6 +70,9 @@ func checkPipelineWired(_ config.Gate, root string, _ *mapx.Graph, cfg *config.C
 				called[stage] = map[string]bool{}
 			}
 			called[stage][verb] = true
+			if verb != "can-run" && !containsFile(recordedIn[stage], f) {
+				recordedIn[stage] = append(recordedIn[stage], f)
+			}
 		}
 	}
 	for _, s := range p.StageNames() {
@@ -77,6 +85,22 @@ func checkPipelineWired(_ config.Gate, root string, _ *mapx.Graph, cfg *config.C
 	}
 	if len(gaps) > 0 {
 		return Fail, strings.Join(gaps, "; ")
+	}
+	// A stage that releases writes its tag through GitHub's API, which needs the permission
+	// the workflow grants; without it the tag fails only when the release runs.
+	var short []string
+	for _, s := range p.StageNames() {
+		if p.Stages[s].Release == "" {
+			continue
+		}
+		for _, f := range recordedIn[s] {
+			if !writes[f] {
+				short = append(short, i18n.T("gate.pipeline_wired.release_no_write", s, f))
+			}
+		}
+	}
+	if len(short) > 0 {
+		return Diverge, strings.Join(short, "; ")
 	}
 	return Pass, i18n.T("gate.pipeline_wired.pass", len(files), len(p.Stages))
 }

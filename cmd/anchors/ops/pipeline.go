@@ -125,6 +125,10 @@ version: asks of the version the sha carries (versioning:): fresh, listed, same_
 expected; contains: asks that the head of a branch on origin is in the sha. Both read the sha,
 not the working tree, and the tags must be in the checkout.
 
+A stage with release: <product> writes, when it passes, the product's tag on its sha with the
+version the sha carries, and the tag's GitHub Release with its changelog (contents: write). A tag
+already on the sha is a rerun; on another sha, the version was released twice, and the record fails.
+
 A stage the configuration does not declare does not run. The branch and the sha come from
 --branch and --sha, or $GITHUB_REF_NAME and $GITHUB_SHA. The pass is a commit status
 anchors/pipeline/<stage>, written and read with the gh CLI (GH_TOKEN, statuses: write).`,
@@ -222,7 +226,17 @@ func newPipelineRunCmd() *cobra.Command {
 }
 
 // finish records the stage's outcome on its sha: success when step passed, failure otherwise.
+// A stage that releases writes its tag first: a release that could not be recorded is a
+// stage that did not pass.
 func finish(t stageTarget, stepErr error, step string) error {
+	if stepErr == nil && t.stage.Release != "" {
+		msg, err := releaseOf(t)
+		if err != nil {
+			stepErr, step = err, "release"
+		} else {
+			fmt.Println(msg)
+		}
+	}
 	state, desc := "success", "passed"
 	if stepErr != nil {
 		state, desc = "failure", step+" failed"

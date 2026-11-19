@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:80f95e523b59af46 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:3052b3d241aec237 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 98 units and 1488 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 98 units and 1489 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -2651,6 +2651,8 @@ gates:
 - **PWSPP-B02** — The gate fails naming each gap: a workflow calling a stage `pipeline.stages` does not declare; a declared stage no workflow calls; a stage asked with `can-run` and never recorded, which no later stage could see passed; a workflow calling no stage and not unguarded.
 
 - **PWSPP-B03** — With no stage declared, or no workflow matching `pipeline.workflows`, the gate is pending, naming the globs.
+
+- **PWSPP-B04** — A stage that releases (`release:`), recorded by a workflow that grants no `contents: write` (nor `write-all`), diverges naming the stage and the workflow: the tag would fail only when the release runs. A failure of B02 comes first.
 
 
 ## PLCFL — PlaceholderFilled — the skeleton the generator emits must be FILLED IN

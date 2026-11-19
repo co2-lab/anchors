@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:d2e014f73d5b7647 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:e40a3e121749f1fe — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2272,11 +2272,23 @@ is what the test proves.
 
 - [can-run answers version: and contains: on the stage's sha, same_as_passed against the commit that passed the stage](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B06`
 
+- [record of a stage that releases writes its release once the stage passed](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B07`
+
 - [The root receives the seventeen operation commands](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
 
 - [Each operation command is registered exactly once](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-I01`
 
 - [The registration adds commands and nothing else](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-X01`
+
+- [A stage that releases writes, when it passes, its product's tag on the sha and the tag's Release with the changelog since the release before](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes) `RLSTA-B01`
+
+- [A tag already on the sha is a rerun: only a missing Release is written](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes) `RLSTA-B02`
+
+- [A tag on another sha, a version the sha cannot give, or GitHub not answering fails the record, recorded as failure](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes) `RLSTA-E01`
+
+- [A tag or a Release GitHub does not write, a ref it answers unread, a release it does not say, or no gh, fail the record naming the step](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes) `RLSTA-E02`
+
+- [A tag of the product the scheme cannot read stops the release body](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes) `RLSTA-E03`
 
 - [A decision without a date is refused](layers/comando.md#stcms--settingscommand--one-agents-local-decisions-declared-with-a-date-and-kept-out-of-the-projects-configuration) `STCMS-B01`
 
@@ -3547,6 +3559,10 @@ is what the test proves.
 - [A stage asks of the version its sha carries, and of a branch whose head the sha contains](layers/config.md#pcspp-b02--a-stage-asks-of-the-version-its-sha-carries-and-of-a-branch-whose-head-the-sha-contains) `PCSPP-B02`
 
 - [A version asked of no product, with nothing asked, of a stage or a listing that do not exist, or a contains: pattern refuses the configuration](layers/config.md#pcspp-e02--a-version-asked-of-no-product-with-nothing-asked-of-a-stage-or-a-listing-that-do-not-exist-or-a-contains-pattern-refuses-the-configuration) `PCSPP-E02`
+
+- [A stage names the product it releases](layers/config.md#pcspp-b03--a-stage-names-the-product-it-releases) `PCSPP-B03`
+
+- [A stage that releases a product versioning: does not declare refuses the configuration](layers/config.md#pcspp-e03--a-stage-that-releases-a-product-versioning-does-not-declare-refuses-the-configuration) `PCSPP-E03`
 
 - [The section declares the review, the judgments, the file and the retention](layers/config.md#psrsa-b01--the-section-declares-the-review-the-judgments-the-file-and-the-retention) `PSRSA-B01`
 
@@ -5157,6 +5173,8 @@ is what the test proves.
 - [A call to an undeclared stage, a stage no workflow calls, a stage asked and never recorded, and a workflow calling none fail the gate](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares) `PWSPP-B02`
 
 - [With no stage declared, or no workflow found, the gate is pending](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares) `PWSPP-B03`
+
+- [A stage that releases, recorded by a workflow granting no contents: write, diverges naming both](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares) `PWSPP-B04`
 
 - [A raw skeleton fails confrontation](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B01`
 

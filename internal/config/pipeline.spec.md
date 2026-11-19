@@ -53,7 +53,8 @@ sha has the head of that branch in it), or `any:` (one of several).
 `version:` asks one or more of: `fresh` (no release has the version), `listed` (a listing gives it
 an entry, VRSNN-B09), `same_as_passed: <stage>` (the version the commit that passed that stage
 carried) and `expected` (the version the branch's strategy computes). The product may go unnamed
-when `versioning:` declares one. `workflows:`
+when `versioning:` declares one. `release: <product>` makes the stage write that product's tag
+when it passes (RLSTA). `workflows:`
 are the globs `pipeline-wired` reads, GitHub's by default; `unguarded:` names the workflows that call
 no stage, each with its reason.
 
@@ -65,6 +66,7 @@ no stage, each with its reason.
 | a requirement | `flow`, or a map of one key: `gates`, `passed`, `from`, `version`, `contains`, `any` | any other word or key | this unit: refuses the configuration (`PCSPP-E01`) |
 | `version:` | `product`, `fresh`, `listed` (`file`, `keys`, `where`), `same_as_passed`, `expected`, at least one asked | a product not declared, several and none named, nothing asked, another key, a stage or a listing file that do not exist | this unit: refuses the configuration (`PCSPP-E02`) |
 | `contains:` | one branch's name | a pattern | this unit: refuses the configuration (`PCSPP-E02`) |
+| `release:` | a product of `versioning:` | any other name | this unit: refuses the configuration (`PCSPP-E03`) |
 | `passed:` | a declared stage | a name no stage has | this unit: refuses the configuration (`PCSPP-E01`) |
 | a branch pattern | as `branch_flow:` reads it (BFSBR) | neither glob nor regular expression | this unit: refuses the configuration (`PCSPP-E01`) |
 
@@ -74,6 +76,7 @@ no stage, each with its reason.
 | --- | --- |
 | `PCSPP-B01` | A stage declares the branches it runs on, its requirements in order — `flow`, `gates:`, `passed:`, `from:`, `any:`, each written back as declared —, and the commands that run and validate it; the stages are listed sorted, the unguarded workflows keep their reasons, and the workflows default to `.github/workflows/*.yml` and `*.yaml`. (`StageNames`, `WorkflowGlobs`, `Requirement.String`) |
 | `PCSPP-B02` | A stage asks of the version its sha carries — the product, and any of `fresh`, `listed` with its fields, `same_as_passed` and `expected` — and of a branch whose head the sha contains; each is written back as declared, the product left out when it was. (`VersionRequirement.String`) |
+| `PCSPP-B03` | A stage names the product whose release it records (`release:`). |
 
 ## Errors
 
@@ -81,3 +84,4 @@ no stage, each with its reason.
 | --- | --- | --- | --- |
 | `PCSPP-E01` | A stage has neither `run` nor `verify`; a requirement is an unknown word, an unknown key or empty; `passed:` names no stage; a branch pattern is neither glob nor regular expression. | The configuration does not load, naming the stage. | Each would let a stage run unconfronted, or be required by nothing that exists. |
 | `PCSPP-E02` | `version:` names a product `versioning:` does not declare, names none among several, asks nothing, has a key it does not know, `same_as_passed:` names no stage, or `listed:` names no file while the product declares no `released:`; `contains:` is a pattern. | The configuration does not load, naming the stage and the field. | A version asked of nothing, or a branch no one can fetch, would let the stage run unconfronted. |
+| `PCSPP-E03` | `release:` names a product `versioning:` does not declare. | The configuration does not load, naming the stage and the products. | A release of no product would write a tag no one reads. |

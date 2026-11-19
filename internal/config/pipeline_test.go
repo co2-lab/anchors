@@ -155,3 +155,18 @@ func TestPipeline_versionAndContains(t *testing.T) {
 		}
 	})
 }
+
+func TestPipeline_release(t *testing.T) {
+	t.Run("PCSPP-B03: A stage names the product it releases", func(t *testing.T) {
+		c, err := loadRaw(t, strings.Replace(versionedPipeline, "      branches: [production]\n", "      branches: [production]\n      release: app\n", 1))
+		if err != nil || c.Pipeline.Stages["production-release"].Release != "app" {
+			t.Errorf("%v", err)
+		}
+	})
+	t.Run("PCSPP-E03: A stage that releases a product versioning: does not declare refuses the configuration", func(t *testing.T) {
+		_, err := loadRaw(t, strings.Replace(versionedPipeline, "      branches: [production]\n", "      branches: [production]\n      release: web\n", 1))
+		if err == nil || !strings.Contains(err.Error(), "production-release: release:") || !strings.Contains(err.Error(), `no product "web"`) {
+			t.Errorf("%v", err)
+		}
+	})
+}

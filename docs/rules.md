@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:b4252ce4f34f9043 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:26e3621613f9b884 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2502,6 +2502,8 @@ in `layers/`.
 
 - [PCSPA-B06 — `version:` and `contains:` are answered on the stage's sha, for the branch the stage runs on (VRQRA); `same_as_passed:` against the commit that passed the stage, found as `passed:` finds it. (`passedBy`)](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
+- [PCSPA-B07 — `record` and `run` of a stage that releases write its release (RLSTA) once the stage passed, before the record; a release that fails is recorded as the stage's failure.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
 - [PCSPA-E01 — The stage is not declared in `pipeline.stages`.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
 - [PCSPA-E02 — No branch or sha is given, by flag or environment.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
@@ -2515,6 +2517,18 @@ in `layers/`.
 - [OPRGP-I01 — Each operation command is registered exactly once.](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point)
 
 - [OPRGP-X01 — The registration adds commands and nothing else: no flag, no hook, no behaviour of the root.](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point)
+
+### [RLSTA — ReleaseTag — the tag and the GitHub Release a stage that releases writes](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
+
+- [RLSTA-B01 — When the stage passed, the tag is written on its sha, then the Release of the tag, named after it, whose body is the changelog of the commits since the product's highest release reachable from the sha, the one being written aside. (`releaseOf`, `releaseBody`, `previousRelease`)](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
+
+- [RLSTA-B02 — A tag already on the sha is a rerun: nothing is written when its Release exists, and only the Release when it does not.](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
+
+- [RLSTA-E01 — The tag is already on another sha; the sha gives no version; GitHub answers neither the ref nor a 404.](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
+
+- [RLSTA-E02 — GitHub does not write the tag or the Release, answers a ref that cannot be read or neither a release nor a 404, or `gh` is not in the PATH.](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
+
+- [RLSTA-E03 — A tag of the product its scheme cannot read.](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
 
 ### [STCMS — SettingsCommand — one agent's local decisions, declared with a date and kept out of the project's configuration](layers/comando.md#stcms--settingscommand--one-agents-local-decisions-declared-with-a-date-and-kept-out-of-the-projects-configuration)
 
@@ -3884,9 +3898,13 @@ in `layers/`.
 
 - [PCSPP-B02 — A stage asks of the version its sha carries — the product, and any of `fresh`, `listed` with its fields, `same_as_passed` and `expected` — and of a branch whose head the sha contains; each is written back as declared, the product left out when it was. (`VersionRequirement.String`)](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
 
+- [PCSPP-B03 — A stage names the product whose release it records (`release:`).](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
+
 - [PCSPP-E01 — A stage has neither `run` nor `verify`; a requirement is an unknown word, an unknown key or empty; `passed:` names no stage; a branch pattern is neither glob nor regular expression.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
 
 - [PCSPP-E02 — `version:` names a product `versioning:` does not declare, names none among several, asks nothing, has a key it does not know, `same_as_passed:` names no stage, or `listed:` names no file while the product declares no `released:`; `contains:` is a pattern.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
+
+- [PCSPP-E03 — `release:` names a product `versioning:` does not declare.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
 
 ### [PSRSA — PushReview — the evidence each push carries: a review of its commits and the judgments they reach](layers/config.md#psrsa--pushreview--the-evidence-each-push-carries-a-review-of-its-commits-and-the-judgments-they-reach)
 
@@ -5689,6 +5707,8 @@ in `layers/`.
 - [PWSPP-B02 — The gate fails naming each gap: a workflow calling a stage `pipeline.stages` does not declare; a declared stage no workflow calls; a stage asked with `can-run` and never recorded, which no later stage could see passed; a workflow calling no stage and not unguarded.](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares)
 
 - [PWSPP-B03 — With no stage declared, or no workflow matching `pipeline.workflows`, the gate is pending, naming the globs.](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares)
+
+- [PWSPP-B04 — A stage that releases (`release:`), recorded by a workflow that grants no `contents: write` (nor `write-all`), diverges naming the stage and the workflow: the tag would fail only when the release runs. A failure of B02 comes first.](layers/gate.md#pwspp--pipelinewired--the-stages-the-workflows-call-are-the-stages-the-configuration-declares)
 
 ### [PLCFL — PlaceholderFilled — the skeleton the generator emits must be FILLED IN](layers/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in)
 

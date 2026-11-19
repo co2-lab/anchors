@@ -234,3 +234,24 @@ func TestPipeline_versionAndContains(t *testing.T) {
 		}
 	})
 }
+
+func TestPipeline_recordReleases(t *testing.T) {
+	t.Run("PCSPA-B07: record of a stage that releases writes its release once the stage passed, and a release that fails is the stage's failure", func(t *testing.T) {
+		root, sha := releasingRepo(t)
+		f := fakeForge(t)
+		gh := stubReleaseAPI(t)
+		if _, err := runPipeline(t, root, "record", "production-release", "--branch", "production", "--sha", sha); err != nil || len(gh.posts) != 2 || f.statuses[sha+"|anchors/pipeline/production-release"] != "success" {
+			t.Errorf("released: %v %q %v", err, gh.posts, f.statuses)
+		}
+		gh.have["repos/{owner}/{repo}/git/ref/tags/app-v1.0.1"] = `{"object": {"sha": "fedcba9876543210"}}`
+		if _, err := runPipeline(t, root, "record", "production-release", "--branch", "production", "--sha", sha); err == nil || !strings.Contains(err.Error(), "release failed") || f.statuses[sha+"|anchors/pipeline/production-release"] != "failure" {
+			t.Errorf("refused: %v %v", err, f.statuses)
+		}
+		f.failing["x"] = true
+		gh.posts = nil
+		delete(gh.have, "repos/{owner}/{repo}/git/ref/tags/app-v1.0.1")
+		if _, err := runPipeline(t, root, "record", "production-release", "--branch", "production", "--sha", sha); err == nil || len(gh.posts) != 0 {
+			t.Errorf("a stage whose verify failed releases nothing: %v %q", err, gh.posts)
+		}
+	})
+}

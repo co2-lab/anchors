@@ -67,3 +67,24 @@ func TestPipelineWired_nothingToWire(t *testing.T) {
 		t.Errorf("no workflow: pending, naming the globs, got %v %s", v, d)
 	}
 }
+
+func TestPipelineWired_releaseNeedsWrite(t *testing.T) {
+	t.Run("PWSPP-B04: A stage that releases, recorded by a workflow granting no contents: write, diverges naming both", func(t *testing.T) {
+		cfg := wiredCfg()
+		prod := cfg.Pipeline.Stages["production-release"]
+		prod.Release = "app"
+		cfg.Pipeline.Stages["production-release"] = prod
+		files := map[string]string{
+			".github/workflows/review-release.yml": reviewWorkflow,
+			".github/workflows/prod.yml":           prodWorkflow,
+		}
+		v, d := checkPipelineWired(config.Gate{}, arvore(t, files), nil, cfg)
+		if v != Diverge || !strings.Contains(d, "production-release") || !strings.Contains(d, ".github/workflows/prod.yml") || !strings.Contains(d, "contents: write") {
+			t.Errorf("no write: %v %s", v, d)
+		}
+		files[".github/workflows/prod.yml"] = "permissions:\n  contents: write\n  statuses: write\n" + prodWorkflow
+		if v, d := checkPipelineWired(config.Gate{}, arvore(t, files), nil, cfg); v != Pass {
+			t.Errorf("with write: %v %s", v, d)
+		}
+	})
+}

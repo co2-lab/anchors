@@ -61,3 +61,9 @@ Feature: Pipeline — ask whether a stage may run, and record that it passed
     Given review carrying 1.0.1 listed for review and production in it, and production merging it as pull request #9
     When can-run asks review-release on review, and production-release on production before and after the head of #9 passed review-release
     Then review-release may run naming the production head it contains and 1.0.1 above every release, and production-release is refused until the head of #9 passed, then holds naming 1.0.1
+
+  @PCSPA-B07 @unit-level
+  Scenario: record of a stage that releases writes its release once the stage passed
+    Given production-release releasing app, on a commit at 1.0.1
+    When it is recorded, and when its tag is on another commit
+    Then the release is written and the stage recorded as passed, and else the stage is recorded as failed

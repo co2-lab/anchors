@@ -37,6 +37,9 @@ type Stage struct {
 	Run string `yaml:"run,omitempty"`
 	// Verify is the command that validates the stage once it ran (`pipeline record`).
 	Verify string `yaml:"verify,omitempty"`
+	// Release names the product whose tag the stage writes when it passes, on its sha, with
+	// the version the sha carries — and the GitHub Release of that tag, with its changelog.
+	Release string `yaml:"release,omitempty"`
 }
 
 // Requirement is one condition of a stage: `flow` — the sha came by the branch flow —, a
@@ -205,6 +208,12 @@ func validatePipeline(p *Pipeline, v Versioning) error {
 		for _, b := range s.Branches {
 			if err := validBranchPattern(b); err != nil {
 				return fmt.Errorf("pipeline.stages.%s: %w", name, err)
+			}
+		}
+		if s.Release != "" {
+			if _, ok := v[s.Release]; !ok {
+				_, _, err := v.Pick(s.Release, "release:")
+				return fmt.Errorf("pipeline.stages.%s: release: %w", name, err)
 			}
 		}
 		if err := validateRequirements(p, v, name, s.Requires); err != nil {

@@ -2,7 +2,7 @@
 # @anchors
 #   code: PWFPP
 #   ref: PWSPP
-#   updated_at: 2026-11-06
+#   updated_at: 2026-11-18
 #   layer: feature
 
 @PWSPP
@@ -25,3 +25,9 @@ Feature: PipelineWired — the stages the workflows call are the stages the conf
     Given a project with no pipeline, and one with stages and no workflow
     When the gate runs
     Then it is pending, naming the globs
+
+  @PWSPP-B04 @unit-level
+  Scenario: A stage that releases, recorded by a workflow granting no contents: write, diverges naming both
+    Given production-release releasing app, recorded by prod.yml with and without contents: write
+    When the gate runs
+    Then it diverges naming the stage and prod.yml, and passes once the workflow grants it
