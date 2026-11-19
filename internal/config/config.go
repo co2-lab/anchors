@@ -2242,7 +2242,7 @@ func Load(path string) (*Config, error) {
 	if err := validateBranchFlow(c.BranchFlow); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
-	if err := validatePipeline(c.Pipeline); err != nil {
+	if err := validatePipeline(c.Pipeline, c.Versioning); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := validateVersioning(c.Versioning); err != nil {

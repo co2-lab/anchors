@@ -203,3 +203,46 @@ func TestBranchCheck_thePullRequestFoundWhenGitHubDoesNotAssociateIt(t *testing.
 		t.Errorf("an associated merge asks nothing more: %v %v", asked, err)
 	}
 }
+
+func TestBranchCheck_theStagesOfTheBase(t *testing.T) {
+	root := releasedRepo(t)
+	t.Setenv("GITHUB_EVENT_PATH", "")
+	gitIn(t, root, "checkout", "-q", "production")
+	commitFiles(t, root, "fix: a crash on production", nil)
+	gitIn(t, root, "push", "-q", "origin", "production")
+	gitIn(t, root, "checkout", "-q", "-b", "develop", "review")
+	var head string
+	t.Run("BCSBR-B05: A pull request's head meets what the stages of its base ask of the version and of the branches it contains, same_as_passed left to the stage", func(t *testing.T) {
+		head = commitFiles(t, root, "chore: 1.0.1", appVersion("1.0.1"))
+		out, err := runBranch(t, root, "check", "--head", "develop", "--base", "review", "--head-sha", head)
+		if err == nil || !strings.Contains(err.Error(), "review-release: contains: production") || !strings.Contains(err.Error(), "review-release: version: fresh, listed") {
+			t.Errorf("refused: %v", err)
+		}
+		for _, want := range []string{"✓ develop → review", "✗ review-release: contains: production: 1 commit(s)", "✗ review-release: version: fresh, listed: 1.0.1 is not in policy.json"} {
+			if !strings.Contains(out, want) {
+				t.Errorf("missing %q in\n%s", want, out)
+			}
+		}
+		gitIn(t, root, "merge", "-q", "--no-edit", "production")
+		head = commitFiles(t, root, "chore: list 1.0.1", map[string]string{"policy.json": `{"versions": {"1.0.0": {"target": "production"}, "1.0.1": {"target": "review"}}}`})
+		if out, err := runBranch(t, root, "check", "--head", "develop", "--base", "review", "--head-sha", head); err != nil || !strings.Contains(out, "✓ review-release: version: fresh, listed") {
+			t.Errorf("met: %v\n%s", err, out)
+		}
+		if out, err := runBranch(t, root, "check", "--head", "review", "--base", "production"); err != nil || strings.Contains(out, "production-release") {
+			t.Errorf("same_as_passed is the stage's, and no head commit is needed for it: %v\n%s", err, out)
+		}
+	})
+	t.Run("BCSBR-E04: A stage that confronts the head with no head commit given refuses the check", func(t *testing.T) {
+		if _, err := runBranch(t, root, "check", "--head", "develop", "--base", "review"); err == nil || !strings.Contains(err.Error(), "--head-sha") {
+			t.Errorf("a head commit is asked for when a stage confronts it: %v", err)
+		}
+		ev := filepath.Join(t.TempDir(), "event.json")
+		if err := os.WriteFile(ev, []byte(`{"pull_request": {"head": {"sha": "`+head+`"}}}`), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		t.Setenv("GITHUB_EVENT_PATH", ev)
+		if out, err := runBranch(t, root, "check", "--head", "develop", "--base", "review"); err != nil || !strings.Contains(out, "✓ review-release: contains: production") {
+			t.Errorf("the head comes from the event: %v\n%s", err, out)
+		}
+	})
+}

@@ -115,11 +115,17 @@ func readPulls(root, path, sha string) ([]pullRequest, error) {
 }
 
 func newBranchCheckCmd() *cobra.Command {
-	var root, head, base, ref, sha string
+	var root, head, base, ref, sha, headSHA string
 	var push bool
 	cmd := &cobra.Command{
 		Use:   "check",
 		Short: "Refuse a pull request, or a push, the branch flow does not allow",
+		Long: `On a pull request, refuses a head the flow does not take into the base, and a head that
+does not meet what the stages of the base ask of its version and of the branches it contains
+(the version: and contains: requirements of pipeline:). The head commit comes from --head-sha,
+or the event's pull_request.head.sha.
+
+On a push, refuses a push to a guarded branch that is not the merge of an allowed pull request.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
@@ -136,13 +142,17 @@ func newBranchCheckCmd() *cobra.Command {
 			if push {
 				msg, err = checkPush(absRoot, cfg.BranchFlow, or(ref, os.Getenv("GITHUB_REF_NAME")), or(sha, os.Getenv("GITHUB_SHA")))
 			} else {
-				msg, err = checkMerge(cfg.BranchFlow, or(head, os.Getenv("GITHUB_HEAD_REF")), or(base, os.Getenv("GITHUB_BASE_REF")))
+				base = or(base, os.Getenv("GITHUB_BASE_REF"))
+				if msg, err = checkMerge(cfg.BranchFlow, or(head, os.Getenv("GITHUB_HEAD_REF")), base); err == nil {
+					var stages string
+					stages, err = checkStages(absRoot, cfg, base, or(headSHA, eventHeadSHA()))
+					msg += stages
+				}
 			}
-			if err != nil {
-				return err
+			if msg != "" {
+				fmt.Println(msg)
 			}
-			fmt.Println(msg)
-			return nil
+			return err
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
@@ -151,8 +161,84 @@ func newBranchCheckCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&push, "push", false, "confront a push instead of a pull request (default when $GITHUB_EVENT_NAME is push)")
 	cmd.Flags().StringVar(&ref, "ref", "", "the pushed branch (default $GITHUB_REF_NAME)")
 	cmd.Flags().StringVar(&sha, "sha", "", "the pushed commit (default $GITHUB_SHA)")
+	cmd.Flags().StringVar(&headSHA, "head-sha", "", "the pull request's head commit, which the stages of the base confront (default: the event's pull_request.head.sha)")
 	return cmd
 }
+
+// eventHeadSHA is the head commit of the pull request the CI's event names. $GITHUB_SHA is
+// not it: on a pull request it is the merge GitHub tries, which already has the base in it.
+func eventHeadSHA() string {
+	b, err := os.ReadFile(os.Getenv("GITHUB_EVENT_PATH"))
+	if err != nil {
+		return ""
+	}
+	var ev struct {
+		PullRequest struct {
+			Head struct {
+				SHA string `json:"sha"`
+			} `json:"head"`
+		} `json:"pull_request"`
+	}
+	if json.Unmarshal(b, &ev) != nil {
+		return ""
+	}
+	return ev.PullRequest.Head.SHA
+}
+
+// checkStages confronts a pull request's head with what the stages of its base ask of the
+// version and of the branches it contains, so a refusal shows on the pull request and not
+// later in the stage. same_as_passed is left to the stage: nothing has passed on a pull
+// request yet. The other requirements — the flow, the gates, a stage passed, the head it
+// comes from — are about the merge, which has not happened.
+func checkStages(root string, cfg *config.Config, base, sha string) (string, error) {
+	var b strings.Builder
+	var failed []string
+	for _, name := range cfg.Pipeline.StageNames() {
+		st := cfg.Pipeline.Stages[name]
+		on := len(st.Branches) == 0
+		for _, p := range st.Branches {
+			on = on || config.BranchMatches(p, base)
+		}
+		if !on {
+			continue
+		}
+		for _, r := range st.Requires {
+			var ok bool
+			var why string
+			switch {
+			case r.Contains != "":
+				if sha == "" {
+					return b.String(), errHeadSHA
+				}
+				ok, why = containsHolds(root, r.Contains, sha)
+			case r.Version != nil:
+				vr := *r.Version
+				vr.SameAsPassed = ""
+				if !vr.Fresh && vr.Listed == nil && !vr.Expected {
+					continue
+				}
+				if sha == "" {
+					return b.String(), errHeadSHA
+				}
+				ok, why = versionHolds(root, cfg.Versioning, &vr, base, sha, nil)
+			default:
+				continue
+			}
+			mark := "✓"
+			if !ok {
+				mark = "✗"
+				failed = append(failed, name+": "+r.String())
+			}
+			fmt.Fprintf(&b, "\n%s %s: %s: %s", mark, name, r, why)
+		}
+	}
+	if len(failed) > 0 {
+		return b.String(), fmt.Errorf("✗ the head (%s) does not meet what the stages of %s ask: %s", short(sha), base, strings.Join(failed, "; "))
+	}
+	return b.String(), nil
+}
+
+var errHeadSHA = errors.New("name the pull request's head commit with --head-sha: the stages of the base confront it, and $GITHUB_SHA is the trial merge")
 
 func or(v, fallback string) string {
 	if v != "" {

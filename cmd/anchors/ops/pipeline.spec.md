@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PCSPA
-  updated_at: 2026-11-06
+  updated_at: 2026-11-18
   layer: comando
 -->
 # Pipeline — ask whether a stage may run, and record that it passed
@@ -43,6 +43,7 @@ A stage the configuration does not declare does not run.
 | `PCSPA-B03` | `record` — alias `done` — runs the stage's `verify:` and records the outcome on the sha as the commit status `anchors/pipeline/<stage>`: success when it passed; failure, and the command fails, when it did not. (`finish`) |
 | `PCSPA-B04` | `run` confronts the stage as `can-run` does, runs its `run:`, then its `verify:`, and records the outcome; a `run:` that fails stops before `verify:` and records failure. |
 | `PCSPA-B05` | `passed:` reads the sha itself before the head it was merged from: a stage recorded on the same sha — the production release before the version pointer flips — satisfies a later stage of that branch. |
+| `PCSPA-B06` | `version:` and `contains:` are answered on the stage's sha, for the branch the stage runs on (VRQRA); `same_as_passed:` against the commit that passed the stage, found as `passed:` finds it. (`passedBy`) |
 
 ## Errors
 

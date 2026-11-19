@@ -2,7 +2,7 @@
 # @anchors
 #   code: BCFBA
 #   ref: BCSBR
-#   updated_at: 2026-11-16
+#   updated_at: 2026-11-18
 #   layer: feature
 
 @BCSBR
@@ -49,3 +49,15 @@ Feature: Branch — confront merges and commits with the project's branch flow
     Given a pull request review → production merged as 3c1b7fcbe17a, which GitHub associates with no pull request
     When the push to production is checked
     Then the pull request is found among the closed ones by its merge commit, and an associated merge asks nothing more
+
+  @BCSBR-B05 @unit-level
+  Scenario: A pull request's head meets what the stages of its base ask of the version and of the branches it contains, same_as_passed left to the stage
+    Given a review stage requiring contains production and a fresh, listed version, production with a fix develop lacks, and develop at 1.0.1 not listed
+    When develop → review is checked with its head commit, then after taking production and listing 1.0.1, and review → production is checked
+    Then the first fails naming both requirements, the second passes, and review → production asks nothing of its head
+
+  @BCSBR-E04 @unit-level
+  Scenario: A stage that confronts the head with no head commit given refuses the check
+    Given the same review stage, and no --head-sha
+    When develop → review is checked with no event, and with an event naming the head
+    Then the first fails naming --head-sha, and the second reads the head from the event

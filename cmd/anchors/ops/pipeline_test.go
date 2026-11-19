@@ -210,3 +210,27 @@ func TestPipeline_aLaterStageOfTheSameShaReadsItsRecord(t *testing.T) {
 		t.Errorf("the production release recorded on the same sha lets the pointer flip: %v\n%s", err, out)
 	}
 }
+
+func TestPipeline_versionAndContains(t *testing.T) {
+	t.Run("PCSPA-B06: can-run answers version: and contains: on the stage's sha, same_as_passed against the commit that passed the stage", func(t *testing.T) {
+		root := releasedRepo(t)
+		review := commitFiles(t, root, "chore: 1.0.1", map[string]string{"app/version.json": `{"version": "1.0.1"}`,
+			"policy.json": `{"versions": {"1.0.0": {"target": "production"}, "1.0.1": {"target": "review"}}}`})
+		f := fakeForge(t)
+		out, err := runPipeline(t, root, "can-run", "review-release", "--branch", "review", "--sha", review)
+		if err != nil || !strings.Contains(out, "✓ contains: production: origin/production") || !strings.Contains(out, "✓ version: fresh, listed: 1.0.1 is above every release") {
+			t.Errorf("review: %v\n%s", err, out)
+		}
+		gitIn(t, root, "checkout", "-q", "production")
+		gitIn(t, root, "merge", "-q", "--no-ff", "--no-edit", "review")
+		prod := headOf(t, root)
+		pulls(t, withHead(pr(9, "review", "production", prod), review))
+		if out, err := runPipeline(t, root, "can-run", "production-release", "--branch", "production", "--sha", prod); err == nil || !strings.Contains(out, "✗ version: same_as_passed review-release: neither this commit nor the head of #9") {
+			t.Errorf("nothing passed: %v\n%s", err, out)
+		}
+		f.statuses[review+"|anchors/pipeline/review-release"] = "success"
+		if out, err := runPipeline(t, root, "can-run", "production-release", "--branch", "production", "--sha", prod); err != nil || !strings.Contains(out, "✓ version: same_as_passed review-release: 1.0.1, the version the head of #9") {
+			t.Errorf("passed: %v\n%s", err, out)
+		}
+	})
+}

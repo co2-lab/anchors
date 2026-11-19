@@ -12,12 +12,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
 	"github.com/co2-lab/anchors/internal/changelog"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -118,14 +118,16 @@ type versionStateT struct {
 	Next        string          `json:"next"`
 	Reason      string          `json:"reason"`
 	Forced      bool            `json:"forced"`
+	Range       string          `json:"range,omitempty"`
+	RangeRule   string          `json:"range_rule,omitempty"`
 
 	root    string
 	product *config.Product
 	scheme  version.Scheme
 }
 
-// versionState reads a product's state: its sources, its latest release, the commits since
-// it, the branch's strategy and the version it computes.
+// versionState reads a product's state in the working tree: its sources, its latest release,
+// the commits since it, the branch's strategy and the version it computes.
 func versionState(root, name, branch string) (*versionStateT, error) {
 	absRoot, err := config.AbsRoot(root)
 	if err != nil {
@@ -135,10 +137,6 @@ func versionState(root, name, branch string) (*versionStateT, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load %s: %w", config.DefaultFile, err)
 	}
-	name, p, err := pickProduct(cfg.Versioning, name)
-	if err != nil {
-		return nil, err
-	}
 	if branch == "" {
 		out, err := exec.Command("git", "-C", absRoot, "rev-parse", "--abbrev-ref", "HEAD").Output()
 		branch = strings.TrimSpace(string(out))
@@ -146,10 +144,34 @@ func versionState(root, name, branch string) (*versionStateT, error) {
 			return nil, errors.New("no current branch (a detached HEAD, or no repository): name it with --branch")
 		}
 	}
+	return stateAt(absRoot, cfg.Versioning, name, "--product", branch, "")
+}
+
+// readAt reads a file as the commit rev has it, or from the working tree when rev is empty.
+func readAt(root, rev string) func(string) ([]byte, error) {
+	if rev == "" {
+		return func(f string) ([]byte, error) { return os.ReadFile(filepath.Join(root, filepath.FromSlash(f))) }
+	}
+	return func(f string) ([]byte, error) {
+		b, ok := gitmeta.AtCommit(root, rev, f)
+		if !ok {
+			return nil, fmt.Errorf("not in %s", short(rev))
+		}
+		return b, nil
+	}
+}
+
+// stateAt reads a product's state as the commit rev has it — the working tree and HEAD when
+// rev is empty —, for the branch whose strategy decides; `how` says where a product is named.
+func stateAt(absRoot string, v config.Versioning, name, how, branch, rev string) (*versionStateT, error) {
+	name, p, err := v.Pick(name, how)
+	if err != nil {
+		return nil, err
+	}
 	s, _ := p.SchemeOf()
 	st := &versionStateT{Product: name, Scheme: s.Kind, Branch: branch, root: absRoot, product: p, scheme: s,
 		Sources: []versionSource{}, Commits: []versionCommit{}}
-	svs, err := p.ReadSources(func(f string) ([]byte, error) { return os.ReadFile(filepath.Join(absRoot, filepath.FromSlash(f))) })
+	svs, err := p.ReadSources(readAt(absRoot, rev))
 	if err != nil {
 		return nil, err
 	}
@@ -159,11 +181,12 @@ func versionState(root, name, branch string) (*versionStateT, error) {
 	if st.Current, err = config.Agreed(svs); err != nil {
 		return nil, err
 	}
+	to := or(rev, "HEAD")
 	g := changelog.Git{Root: absRoot}
-	if st.Released, st.ReleasedTag, err = latestRelease(g, p, s); err != nil {
+	if st.Released, st.ReleasedTag, err = latestRelease(g, p, s, to); err != nil {
 		return nil, err
 	}
-	commits, err := g.Commits(st.ReleasedTag, "HEAD")
+	commits, err := g.Commits(st.ReleasedTag, to)
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +198,7 @@ func versionState(root, name, branch string) (*versionStateT, error) {
 	if rule == "" {
 		st.Rule = "default"
 	}
+	st.Range, st.RangeRule = p.RangeFor(branch)
 	res, err := version.Next(version.Input{Scheme: s, Strategy: strategy, Current: st.Current, Released: st.Released, Commits: commits, Today: time.Now()})
 	if err != nil {
 		return nil, fmt.Errorf("%s on %s (%s): %w", name, branch, strategy.Name, err)
@@ -183,31 +207,23 @@ func versionState(root, name, branch string) (*versionStateT, error) {
 	return st, nil
 }
 
-// pickProduct is the product asked for, or the only one.
-func pickProduct(v config.Versioning, name string) (string, *config.Product, error) {
-	names := make([]string, 0, len(v))
-	for n := range v {
-		names = append(names, n)
+// inRange confronts a version with the branch's range; true when the branch has none.
+func (st *versionStateT) inRange(raw string) (bool, string, error) {
+	if st.Range == "" {
+		return true, "", nil
 	}
-	sort.Strings(names)
-	switch {
-	case len(v) == 0:
-		return "", nil, errors.New("anchors.yaml declares no `versioning:` block: nothing is versioned")
-	case name != "":
-		if p, ok := v[name]; ok {
-			return name, p, nil
-		}
-		return "", nil, fmt.Errorf("versioning has no product %q (%s)", name, strings.Join(names, ", "))
-	case len(v) > 1:
-		return "", nil, fmt.Errorf("versioning has %d products — name one with --product (%s)", len(v), strings.Join(names, ", "))
+	v, err := st.scheme.Parse(raw)
+	if err != nil {
+		return false, "", err
 	}
-	return names[0], v[names[0]], nil
+	ok, why, err := config.InRange(st.scheme, st.Range, st.Released, v)
+	return ok, why + " (" + st.RangeRule + ")", err
 }
 
-// latestRelease is the highest version among the product's tags reachable from HEAD. A tag
+// latestRelease is the highest version among the product's tags reachable from `to`. A tag
 // of the product the scheme cannot read is an error: skipped, a release would go unseen.
-func latestRelease(g changelog.Git, p *config.Product, s version.Scheme) (string, string, error) {
-	tags, err := g.Tags("HEAD")
+func latestRelease(g changelog.Git, p *config.Product, s version.Scheme, to string) (string, string, error) {
+	tags, err := g.Tags(to)
 	if err != nil {
 		return "", "", err
 	}
@@ -268,6 +284,9 @@ func printVersionState(w io.Writer, st *versionStateT) {
 	}
 	fmt.Fprintf(w, "  released   %-10s %s\n", orDash(st.Released), orDash(st.ReleasedTag))
 	fmt.Fprintf(w, "  branch     %s → %s (%s)\n", st.Branch, st.Strategy, st.Rule)
+	if st.Range != "" {
+		fmt.Fprintf(w, "  range      %-10s %s\n", st.Range, st.RangeRule)
+	}
 	fmt.Fprintf(w, "  next       %-10s %s\n", orDash(st.Next), st.Reason)
 	fmt.Fprintf(w, "  commits    %d since %s\n", len(st.Commits), orDash(st.ReleasedTag))
 }
@@ -317,6 +336,12 @@ func bumpVersion(w io.Writer, st *versionStateT, want string) error {
 		if version.Compare(v, rel) <= 0 {
 			return fmt.Errorf("%s is not above %s, the latest release (%s)", target, st.Released, st.ReleasedTag)
 		}
+	}
+	if ok, why, err := st.inRange(target); err != nil || !ok {
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("%s: the branch %s may not produce it", why, st.Branch)
 	}
 	type write struct {
 		path string

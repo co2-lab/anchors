@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:34d1e78ea0bb7f96 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:cc84ab9354408368 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -1984,11 +1984,15 @@ in `layers/`.
 
 - [BCSBR-B04 — The merged pull request of a commit is the one GitHub associates with it; when none of those was merged as that commit, the recently closed pull requests are read for the one whose merge commit it is — the association is an index GitHub fills apart from the merge, and it can lag or never come. (`pullsOf`)](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
 
+- [BCSBR-B05 — `branch check` on an allowed pull request answers the `version:` and `contains:` requirements of every stage that runs on its base, on the head commit and for the base branch (VRQRA), one line each; a requirement that does not hold fails the check naming the stage. `same_as_passed` is left to the stage, and the other requirements are about the merge, which has not happened. (`checkStages`)](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
+
 - [BCSBR-E01 — A pull request's head or base, or a push's branch or sha, is given neither by flag nor by the CI's environment.](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
 
 - [BCSBR-E02 — A push cannot be confronted: `gh` is not in the PATH, GitHub does not answer, or its answer is not read.](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
 
 - [BCSBR-E03 — The configuration does not load.](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
+
+- [BCSBR-E04 — A stage of the base confronts the head, and no head commit is given by `--head-sha` or the event.](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow)
 
 ### [CLGCM — anchors changelog — the technical changelog, printed or written](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
@@ -2488,6 +2492,8 @@ in `layers/`.
 
 - [PCSPA-B05 — `passed:` reads the sha itself before the head it was merged from: a stage recorded on the same sha — the production release before the version pointer flips — satisfies a later stage of that branch.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
+- [PCSPA-B06 — `version:` and `contains:` are answered on the stage's sha, for the branch the stage runs on (VRQRA); `same_as_passed:` against the commit that passed the stage, found as `passed:` finds it. (`passedBy`)](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
+
 - [PCSPA-E01 — The stage is not declared in `pipeline.stages`.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
 
 - [PCSPA-E02 — No branch or sha is given, by flag or environment.](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed)
@@ -2590,6 +2596,8 @@ in `layers/`.
 
 - [VRSNI-B07 — A project with a single product names none, and the current branch decides when `--branch` is not given.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
 
+- [VRSNI-B08 — A branch with a range (VRSNN-B08) shows it with the rule that set it, and `bump` refuses a version outside it, writing nothing. (`inRange`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
 - [VRSNI-E01 — No `versioning:` block, a `--product` the block does not hold, or several products and no `--product`.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
 
 - [VRSNI-E02 — A detached HEAD, or no repository, and no `--branch`.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
@@ -2597,6 +2605,24 @@ in `layers/`.
 - [VRSNI-E03 — Sources that disagree or cannot be read (VRSNN-E05), a tag of the product its scheme cannot read, or a strategy that cannot decide (VRSNE-E04).](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
 
 - [VRSNI-E04 — `bump` to a version the scheme cannot read, below what the sources hold, not above the latest release, on a product with no source, or on a branch that never versions.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+### [VRQRA — VersionRequirement — what a stage asks of the version its sha carries, and of the fixes it contains](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
+
+- [VRQRA-B01 — `fresh` holds when the version is above the highest release, among the product's tags and the versions `released:` lists at the sha, and says which release; it fails for a version released — naming the tag or the listing — and for one below, asking for a greater version. (`isFresh`)](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
+
+- [VRQRA-B02 — `listed` holds when the listing at the sha — its own file, or `released:`'s file and map — has the version with every field of `where`; it fails naming the version and the listing.](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
+
+- [VRQRA-B03 — `same_as_passed` holds when the version at the sha is the one the sources held at the commit that passed the stage, and fails naming both versions and that commit; when no commit passed the stage it fails with the reason. (`versionAt`)](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
+
+- [VRQRA-B04 — `expected` holds when the version is the one the branch's strategy computes, and fails naming the branch, the strategy, the version asked with its reason and the one the source holds; `manual` holds when `fresh` does, `none` fails saying the branch never versions. (`versionHolds`)](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
+
+- [VRQRA-B05 — A branch with a range fails any `version:` requirement for a version outside it, naming the bound and the rule; `from_base` reads the latest release reachable from the sha.](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
+
+- [VRQRA-B06 — `contains` fetches the branch from `origin` and holds when its head is an ancestor of the sha; it fails naming how many of its commits the sha lacks and the first five. (`containsHolds`)](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
+
+- [VRQRA-B07 — The version, the listings and the release reachable are read at the sha: a working tree that holds another version changes nothing. (`readAt`, `stateAt`)](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
+
+- [VRQRA-E01 — `origin` has no such branch, the sources at the sha hold no version or disagree, a listing or a tag cannot be read.](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
 
 ### [AFTSF — AffectedTests — which tests to run for what changed, by rule and region where the project declares them](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them)
 
@@ -3848,7 +3874,11 @@ in `layers/`.
 
 - [PCSPP-B01 — A stage declares the branches it runs on, its requirements in order — `flow`, `gates:`, `passed:`, `from:`, `any:`, each written back as declared —, and the commands that run and validate it; the stages are listed sorted, the unguarded workflows keep their reasons, and the workflows default to `.github/workflows/*.yml` and `*.yaml`. (`StageNames`, `WorkflowGlobs`, `Requirement.String`)](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
 
+- [PCSPP-B02 — A stage asks of the version its sha carries — the product, and any of `fresh`, `listed` with its fields, `same_as_passed` and `expected` — and of a branch whose head the sha contains; each is written back as declared, the product left out when it was. (`VersionRequirement.String`)](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
+
 - [PCSPP-E01 — A stage has neither `run` nor `verify`; a requirement is an unknown word, an unknown key or empty; `passed:` names no stage; a branch pattern is neither glob nor regular expression.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
+
+- [PCSPP-E02 — `version:` names a product `versioning:` does not declare, names none among several, asks nothing, has a key it does not know, `same_as_passed:` names no stage, or `listed:` names no file while the product declares no `released:`; `contains:` is a pattern.](layers/config.md#pcspp--pipeline--the-stages-a-workflow-asks-about-what-each-requires-and-what-validates-it)
 
 ### [PSRSA — PushReview — the evidence each push carries: a review of its commits and the judgments they reach](layers/config.md#psrsa--pushreview--the-evidence-each-push-carries-a-review-of-its-commits-and-the-judgments-they-reach)
 
@@ -3890,6 +3920,14 @@ in `layers/`.
 
 - [VRSNN-B06 — A source is rewritten with a new version and nothing else of the file changes: the bytes around the version — quotes, spacing, the other keys — are kept as they are. (`Rewrite`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
+- [VRSNN-B07 — `released:` loads its file, map and fields; a branch takes the rule of the first pattern it matches, and that rule's range, or none; a rule that writes no `next:` takes the product's. (`RangeFor`, `NextFor`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-B08 — A version is inside an explicit range when its first parts are the numbers written before the `x`, and inside `from_base` when its parts but the last are those of the release the branch was cut from; with no such release it is outside. The reason names the bound. (`InRange`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-B09 — A listing is the keys of its map whose entries hold every field of `where`, compared as text; a requirement's listing with no file takes the file and the map of `released:`, keeping its own fields. A listing writes itself as `file keys, where field = value`. (`Listing.Versions`, `ListingOf`, `Listing.String`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-B10 — A product is the one named, or the only one; several and no name is an error that lists them and says where the name is written. (`Pick`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
 - [VRSNN-E01 — A product whose scheme does not build (VRSNE-E01), or that is empty.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E02 — A source with no `file`, with both or neither of `path:` and `regex:`, or with a regex that does not compile or does not have exactly one group.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
@@ -3899,6 +3937,10 @@ in `layers/`.
 - [VRSNN-E04 — A strategy that does not exist, a part the scheme lacks, `semantic` off semver, a level of `types:` that is not one, `manual` on a product with no source, an option of another strategy, a key `next:` or a branch rule does not know, a branch pattern that is neither a glob nor `re:`.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E05 — A source file missing or unreadable, not JSON nor YAML for a `path:`, without a scalar at the path, matched by no regex, or holding its version in a form that cannot be rewritten in place.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E06 — A range that is neither `from_base` nor numbers and an `x`, or `released:` with no file or with a key it does not know.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E07 — A listing's file missing or unreadable, not JSON nor YAML, or without a map at `keys`.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 ### [GTVCG — GateVocabulary — the list of default gate names, injected into the configuration layer](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 

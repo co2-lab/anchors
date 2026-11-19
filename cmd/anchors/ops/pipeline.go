@@ -102,19 +102,28 @@ func newPipelineCmd() *cobra.Command {
     stages:
       review-release:
         branches: [review]
-        requires: [flow, { gates: ci }]
+        requires:
+          - flow
+          - { gates: ci }
+          - contains: production
+          - version: { product: app, fresh: true, listed: { where: { target: review } } }
         verify: node scripts/smoke-review.mjs
       production-release:
         branches: [production]
         requires:
           - flow
           - any: [{ passed: review-release }, { from: "hotfix/*" }]
+          - version: { product: app, same_as_passed: review-release }
         verify: node scripts/smoke-prod.mjs
 
   anchors pipeline can-run <stage>   the first job: refuses a stage that may not run
   anchors pipeline record <stage>    the last job: runs verify:, records the pass on the sha
                                      (alias done; record reads clean to shellcheck, done does not)
   anchors pipeline run <stage>       can-run, run:, verify: and the record, in one step
+
+version: asks of the version the sha carries (versioning:): fresh, listed, same_as_passed,
+expected; contains: asks that the head of a branch on origin is in the sha. Both read the sha,
+not the working tree, and the tags must be in the checkout.
 
 A stage the configuration does not declare does not run. The branch and the sha come from
 --branch and --sha, or $GITHUB_REF_NAME and $GITHUB_SHA. The pass is a commit status
@@ -282,6 +291,34 @@ func (e *stageEval) merged() (*pullRequest, error) {
 	return e.pr, e.prError
 }
 
+// passedBy is the commit that passed a stage. The sha itself first — a later stage of the
+// same branch reads the stage before it there (reported from a project: the version pointer
+// flipped only after the production release passed on the same sha, which the head of the
+// review pull request never carries) —, then the head the sha was merged from, the commit a
+// stage of the branch before it passed.
+func (e *stageEval) passedBy(stage string) (sha, of, why string) {
+	t := e.t
+	state, err := statusOf(t.root, t.sha, statusContext(stage))
+	if err != nil {
+		return "", "", err.Error()
+	}
+	if state == "success" {
+		return t.sha, "this commit", ""
+	}
+	pr, perr := e.merged()
+	if perr != nil || pr == nil || pr.Head.SHA == "" {
+		return "", "", fmt.Sprintf("this commit has not passed %s (%s)", stage, or(state, "no record"))
+	}
+	of = fmt.Sprintf("the head of #%d (%s)", pr.Number, short(pr.Head.SHA))
+	if state, err = statusOf(t.root, pr.Head.SHA, statusContext(stage)); err != nil {
+		return "", "", err.Error()
+	}
+	if state != "success" {
+		return "", "", fmt.Sprintf("neither this commit nor %s passed %s (%s)", of, stage, or(state, "no record"))
+	}
+	return pr.Head.SHA, of, ""
+}
+
 func (e *stageEval) holds(r config.Requirement) (bool, string) {
 	t := e.t
 	switch {
@@ -306,30 +343,15 @@ func (e *stageEval) holds(r config.Requirement) (bool, string) {
 		}
 		return true, "the " + r.Gates + " gates pass"
 	case r.Passed != "":
-		// The sha itself first — a later stage of the same branch reads the stage before it
-		// there (reported from a project: the version pointer flipped only after the production
-		// release passed on the same sha, which the head of the review pull request never
-		// carries) —, then the head the sha was merged from, the commit a stage of the branch
-		// before it passed.
-		state, err := statusOf(t.root, t.sha, statusContext(r.Passed))
-		if err != nil {
-			return false, err.Error()
-		}
-		if state == "success" {
-			return true, fmt.Sprintf("this commit passed %s", r.Passed)
-		}
-		pr, perr := e.merged()
-		if perr != nil || pr == nil || pr.Head.SHA == "" {
-			return false, fmt.Sprintf("this commit has not passed %s (%s)", r.Passed, or(state, "no record"))
-		}
-		of := fmt.Sprintf("the head of #%d (%s)", pr.Number, short(pr.Head.SHA))
-		if state, err = statusOf(t.root, pr.Head.SHA, statusContext(r.Passed)); err != nil {
-			return false, err.Error()
-		}
-		if state != "success" {
-			return false, fmt.Sprintf("neither this commit nor %s passed %s (%s)", of, r.Passed, or(state, "no record"))
+		at, of, why := e.passedBy(r.Passed)
+		if at == "" {
+			return false, why
 		}
 		return true, fmt.Sprintf("%s passed %s", of, r.Passed)
+	case r.Version != nil:
+		return versionHolds(t.root, t.cfg.Versioning, r.Version, t.branch, t.sha, e.passedBy)
+	case r.Contains != "":
+		return containsHolds(t.root, r.Contains, t.sha)
 	case r.From != "":
 		pr, err := e.merged()
 		if err != nil {

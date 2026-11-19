@@ -41,27 +41,44 @@ type Stage struct {
 
 // Requirement is one condition of a stage: `flow` — the sha came by the branch flow —, a
 // phase whose gates pass (`gates: ci`), a stage the sha passed (`passed: review-release`), the
-// head the sha was merged from (`from: "hotfix/*"`), or one of several (`any:`).
+// head the sha was merged from (`from: "hotfix/*"`), the version the sha carries (`version:`),
+// a branch whose head the sha contains (`contains: production`), or one of several (`any:`).
 type Requirement struct {
-	Flow   bool
-	Gates  string
-	Passed string
-	From   string
-	Any    []Requirement
+	Flow     bool
+	Gates    string
+	Passed   string
+	From     string
+	Version  *VersionRequirement
+	Contains string
+	Any      []Requirement
 }
+
+// VersionRequirement is what a stage asks of the version its sha carries: that no release
+// has it (`fresh`), that a file gives it a destination (`listed`), that it is the version a
+// stage passed with (`same_as_passed`), and that it is the one the branch's strategy
+// computes (`expected`). The branch's `range:` bounds it whatever is asked.
+type VersionRequirement struct {
+	Product      string
+	Fresh        bool
+	Listed       *Listing
+	SameAsPassed string
+	Expected     bool
+}
+
+const requirementKinds = "gates:, passed:, from:, version:, contains:, any:"
 
 // UnmarshalYAML reads a requirement written as the word `flow` or as a one-key map.
 func (r *Requirement) UnmarshalYAML(n *yaml.Node) error {
 	if n.Kind == yaml.ScalarNode {
 		if n.Value != "flow" {
-			return fmt.Errorf("line %d: requirement %q: write flow, or one of gates:, passed:, from:, any:", n.Line, n.Value)
+			return fmt.Errorf("line %d: requirement %q: write flow, or one of %s", n.Line, n.Value, requirementKinds)
 		}
 		r.Flow = true
 		return nil
 	}
 	var m map[string]yaml.Node
 	if err := n.Decode(&m); err != nil || len(m) != 1 {
-		return fmt.Errorf("line %d: a requirement is flow, or a map of one key: gates:, passed:, from: or any:", n.Line)
+		return fmt.Errorf("line %d: a requirement is flow, or a map of one key: %s", n.Line, requirementKinds)
 	}
 	for k, v := range m {
 		switch k {
@@ -71,10 +88,41 @@ func (r *Requirement) UnmarshalYAML(n *yaml.Node) error {
 			return v.Decode(&r.Passed)
 		case "from":
 			return v.Decode(&r.From)
+		case "contains":
+			return v.Decode(&r.Contains)
+		case "version":
+			return r.decodeVersion(&v)
 		case "any":
 			return v.Decode(&r.Any)
 		}
-		return fmt.Errorf("line %d: requirement %q: write flow, or one of gates:, passed:, from:, any:", n.Line, k)
+		return fmt.Errorf("line %d: requirement %q: write flow, or one of %s", n.Line, k, requirementKinds)
+	}
+	return nil
+}
+
+func (r *Requirement) decodeVersion(n *yaml.Node) error {
+	if err := strictKeys(n, "version", "product", "fresh", "listed", "same_as_passed", "expected"); err != nil {
+		return err
+	}
+	var m struct {
+		Product      string    `yaml:"product"`
+		Fresh        bool      `yaml:"fresh"`
+		Listed       yaml.Node `yaml:"listed"`
+		SameAsPassed string    `yaml:"same_as_passed"`
+		Expected     bool      `yaml:"expected"`
+	}
+	if err := n.Decode(&m); err != nil {
+		return err
+	}
+	r.Version = &VersionRequirement{Product: m.Product, Fresh: m.Fresh, SameAsPassed: m.SameAsPassed, Expected: m.Expected}
+	if m.Listed.Kind != 0 {
+		if err := strictKeys(&m.Listed, "version.listed", "file", "keys", "where"); err != nil {
+			return err
+		}
+		r.Version.Listed = &Listing{}
+		if err := m.Listed.Decode(r.Version.Listed); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -90,12 +138,38 @@ func (r Requirement) String() string {
 		return "passed: " + r.Passed
 	case r.From != "":
 		return "from: " + r.From
+	case r.Contains != "":
+		return "contains: " + r.Contains
+	case r.Version != nil:
+		return "version: " + r.Version.String()
 	}
 	parts := make([]string, len(r.Any))
 	for i, a := range r.Any {
 		parts[i] = a.String()
 	}
 	return "any: [" + strings.Join(parts, ", ") + "]"
+}
+
+// String names the product and what is asked of its version: `app fresh, listed, expected`.
+func (v VersionRequirement) String() string {
+	var asks []string
+	if v.Fresh {
+		asks = append(asks, "fresh")
+	}
+	if v.Listed != nil {
+		asks = append(asks, "listed")
+	}
+	if v.SameAsPassed != "" {
+		asks = append(asks, "same_as_passed "+v.SameAsPassed)
+	}
+	if v.Expected {
+		asks = append(asks, "expected")
+	}
+	s := strings.Join(asks, ", ")
+	if v.Product != "" {
+		s = v.Product + " " + s
+	}
+	return s
 }
 
 // WorkflowGlobs are the globs the pipeline's definitions are read from.
@@ -120,8 +194,9 @@ func (p *Pipeline) StageNames() []string {
 }
 
 // validatePipeline refuses a stage nothing executes or validates, a stage requiring a stage
-// that does not exist, and an empty requirement: each would let a stage run unconfronted.
-func validatePipeline(p *Pipeline) error {
+// that does not exist, a version asked of no product or with nothing asked, and an empty
+// requirement: each would let a stage run unconfronted.
+func validatePipeline(p *Pipeline, v Versioning) error {
 	for _, name := range p.StageNames() {
 		s := p.Stages[name]
 		if strings.TrimSpace(s.Run) == "" && strings.TrimSpace(s.Verify) == "" {
@@ -132,14 +207,14 @@ func validatePipeline(p *Pipeline) error {
 				return fmt.Errorf("pipeline.stages.%s: %w", name, err)
 			}
 		}
-		if err := validateRequirements(p, name, s.Requires); err != nil {
+		if err := validateRequirements(p, v, name, s.Requires); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func validateRequirements(p *Pipeline, stage string, reqs []Requirement) error {
+func validateRequirements(p *Pipeline, v Versioning, stage string, reqs []Requirement) error {
 	for _, r := range reqs {
 		switch {
 		case r.Flow, r.Gates != "":
@@ -151,13 +226,40 @@ func validateRequirements(p *Pipeline, stage string, reqs []Requirement) error {
 			if err := validBranchPattern(r.From); err != nil {
 				return fmt.Errorf("pipeline.stages.%s: %w", stage, err)
 			}
+		case r.Contains != "":
+			if strings.ContainsAny(r.Contains, "*?[") || strings.HasPrefix(r.Contains, "re:") {
+				return fmt.Errorf("pipeline.stages.%s: contains: %s: name one branch, not a pattern", stage, r.Contains)
+			}
+		case r.Version != nil:
+			if err := validateVersionRequirement(p, v, r.Version); err != nil {
+				return fmt.Errorf("pipeline.stages.%s: version: %w", stage, err)
+			}
 		case len(r.Any) > 0:
-			if err := validateRequirements(p, stage, r.Any); err != nil {
+			if err := validateRequirements(p, v, stage, r.Any); err != nil {
 				return err
 			}
 		default:
 			return fmt.Errorf("pipeline.stages.%s: an empty requirement", stage)
 		}
+	}
+	return nil
+}
+
+func validateVersionRequirement(p *Pipeline, v Versioning, r *VersionRequirement) error {
+	name, prod, err := v.Pick(r.Product, "product:")
+	if err != nil {
+		return err
+	}
+	if !r.Fresh && r.Listed == nil && r.SameAsPassed == "" && !r.Expected {
+		return fmt.Errorf("%s: ask fresh, listed, same_as_passed or expected", name)
+	}
+	if r.SameAsPassed != "" {
+		if _, ok := p.Stages[r.SameAsPassed]; !ok {
+			return fmt.Errorf("same_as_passed: %s is no stage of the pipeline", r.SameAsPassed)
+		}
+	}
+	if r.Listed != nil && r.Listed.File == "" && prod.Released == nil {
+		return fmt.Errorf("listed: name the file, or declare versioning.%s.released", name)
 	}
 	return nil
 }

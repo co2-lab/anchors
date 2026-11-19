@@ -212,3 +212,122 @@ func TestVersioning_refused(t *testing.T) {
 		refuses(t, "  app:\n    scheme: number\n    next: none\n    branches:\n      're:(': { next: none }\n", "branches", "re:(")
 	})
 }
+
+func TestVersioning_releasedAndRange(t *testing.T) {
+	t.Run("VRSNN-B07: released: and a branch's range load, and a branch takes the range of the first rule it matches", func(t *testing.T) {
+		c, err := loadVersioning(t, `  app:
+    scheme: semver
+    source: [{ file: v.txt, regex: '(.+)' }]
+    released: { file: policy.json, keys: versions, where: { target: production } }
+    branches:
+      "hotfix/*":
+        range: from_base
+      "maint/*":
+        next: { strategy: increment, part: patch }
+        range: 1.0.x
+`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		app := c.Versioning["app"]
+		if app.Released == nil || app.Released.File != "policy.json" || app.Released.Keys != "versions" || app.Released.Where["target"] != "production" {
+			t.Errorf("released: %+v", app.Released)
+		}
+		if r, pat := app.RangeFor("hotfix/login"); r != FromBase || pat != "hotfix/*" {
+			t.Errorf("hotfix: %q %q", r, pat)
+		}
+		if st, pat := app.NextFor("hotfix/login"); st.Name != "manual" || pat != "" {
+			t.Errorf("a rule that sets no next takes the default: %+v %q", st, pat)
+		}
+		if r, _ := app.RangeFor("develop"); r != "" {
+			t.Errorf("develop has no range: %q", r)
+		}
+	})
+	t.Run("VRSNN-B08: A range keeps the parts written before its x, and from_base those of the base release but the last", func(t *testing.T) {
+		s, _ := (&Product{Scheme: "semver"}).SchemeOf()
+		for _, c := range []struct {
+			rng, base, v string
+			in           bool
+			says         string
+		}{
+			{"1.0.x", "", "1.0.7", true, "inside 1.0.x"},
+			{"1.0.x", "", "1.1.0", false, "1.1.0 is outside 1.0.x"},
+			{"1.x", "", "1.9.0", true, "inside 1.x"},
+			{FromBase, "2.3.1", "2.3.2", true, "inside 2.3.x (from_base: 2.3.1)"},
+			{FromBase, "2.3.1", "2.4.0", false, "2.4.0 is outside 2.3.x (from_base: 2.3.1)"},
+			{FromBase, "", "2.4.0", false, "cut from no release"},
+		} {
+			v, _ := s.Parse(c.v)
+			in, why, err := InRange(s, c.rng, c.base, v)
+			if err != nil || in != c.in || !strings.Contains(why, c.says) {
+				t.Errorf("%s %s %s: %v %q %v", c.rng, c.base, c.v, in, why, err)
+			}
+		}
+	})
+	t.Run("VRSNN-B09: A listing is the keys of a map whose entries hold every field of where", func(t *testing.T) {
+		policy := `{"default": "production", "versions": {"1.0.0": {"target": "production"}, "1.0.1": {"target": "review", "env": {"tier": "b"}}, "1.1.0": {"target": "review"}}}`
+		read := func(string) ([]byte, error) { return []byte(policy), nil }
+		l := Listing{File: "policy.json", Keys: "versions", Where: map[string]string{"target": "review", "env.tier": "b"}}
+		vs, err := l.Versions(read)
+		if err != nil || strings.Join(vs, ",") != "1.0.1" {
+			t.Errorf("where: %v %v", vs, err)
+		}
+		if vs, _ := (Listing{File: "policy.json", Keys: "versions"}).Versions(read); len(vs) != 3 {
+			t.Errorf("no where: %v", vs)
+		}
+		if got := l.String(); got != "policy.json versions, where env.tier = b and target = review" {
+			t.Errorf("string: %q", got)
+		}
+		p := &Product{Released: &Listing{File: "policy.json", Keys: "versions", Where: map[string]string{"target": "production"}}}
+		if got := p.ListingOf(Listing{Where: map[string]string{"target": "review"}}); got.File != "policy.json" || got.Keys != "versions" || got.Where["target"] != "review" {
+			t.Errorf("a listing with no file takes released:'s file and map, and keeps its where: %+v", got)
+		}
+	})
+	t.Run("VRSNN-E07: A listing whose file cannot be read, or has no map at its keys, is an error naming it", func(t *testing.T) {
+		if _, err := (Listing{File: "p.json"}).Versions(func(string) ([]byte, error) { return nil, os.ErrNotExist }); err == nil || !strings.Contains(err.Error(), "p.json") {
+			t.Errorf("unreadable: %v", err)
+		}
+		read := func(string) ([]byte, error) { return []byte(`{"versions": ["1.0.0"]}`), nil }
+		if _, err := (Listing{File: "p.json", Keys: "versions"}).Versions(read); err == nil || !strings.Contains(err.Error(), "no map at versions") {
+			t.Errorf("no map: %v", err)
+		}
+	})
+}
+
+func TestVersioning_releasedAndRangeRefused(t *testing.T) {
+	t.Run("VRSNN-E06: A range that is neither from_base nor parts and an x, or released: with no file, refuses the configuration", func(t *testing.T) {
+		for body, says := range map[string]string{
+			"  app:\n    scheme: number\n    next: none\n    branches:\n      'hotfix/*': { range: '1.0' }\n":  `range "1.0"`,
+			"  app:\n    scheme: number\n    next: none\n    branches:\n      'hotfix/*': { range: 'a.x' }\n":  `"a" is not a number`,
+			"  app:\n    scheme: number\n    next: none\n    branches:\n      'hotfix/*': { range: latest }\n": `range "latest"`,
+			"  app: { scheme: number, next: none, released: { keys: versions } }\n":                            "released: file is required",
+			"  app: { scheme: number, next: none, released: { file: p.json, when: x } }\n":                     "when",
+		} {
+			if _, err := loadVersioning(t, body); err == nil || !strings.Contains(err.Error(), says) {
+				t.Errorf("%s\n→ %v, want %q", body, err, says)
+			}
+		}
+	})
+}
+
+func TestVersioning_pick(t *testing.T) {
+	t.Run("VRSNN-B10: A product is the one named or the only one, and several with no name is an error saying where the name goes", func(t *testing.T) {
+		one := Versioning{"app": {Scheme: "semver"}}
+		if n, p, err := one.Pick("", "--product"); err != nil || n != "app" || p != one["app"] {
+			t.Errorf("only one: %q %v", n, err)
+		}
+		two := Versioning{"app": {Scheme: "semver"}, "api": {Scheme: "number"}}
+		if n, _, err := two.Pick("api", "--product"); err != nil || n != "api" {
+			t.Errorf("named: %q %v", n, err)
+		}
+		if _, _, err := two.Pick("", "product:"); err == nil || !strings.Contains(err.Error(), "name one with product: (api, app)") {
+			t.Errorf("several: %v", err)
+		}
+		if _, _, err := two.Pick("web", "--product"); err == nil || !strings.Contains(err.Error(), `no product "web" (api, app)`) {
+			t.Errorf("unknown: %v", err)
+		}
+		if _, _, err := (Versioning{}).Pick("", "--product"); err == nil || !strings.Contains(err.Error(), "no `versioning:`") {
+			t.Errorf("none: %v", err)
+		}
+	})
+}

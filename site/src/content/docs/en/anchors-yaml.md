@@ -427,6 +427,10 @@ A requirement is one of these:
 - `gates: <phase>`: the phase's gates pass.
 - `passed: <stage>`: the sha, or else the head it was merged from, passed that stage.
 - `from: <branch>`: the sha was merged from that head.
+- `version: { product, fresh, listed, same_as_passed, expected }`: what the version the sha carries
+  must be (see [`versioning`](#versioning--how-each-product-moves-its-version)).
+- `contains: <branch>`: the head of that branch on `origin` is in the sha, so the fixes made there
+  came back.
 - `any:`: one of several holds.
 
 A stage needs `verify:`, `run:`, or both. A stage the configuration does not declare does not run.
@@ -456,6 +460,49 @@ That record is what `passed:` reads. `anchors pipeline run <stage>` does can-run
 `verify:` and the record in one step. The `pipeline-wired` gate reads the workflows. It fails on a
 call to an undeclared stage, a declared stage no workflow calls, a stage never recorded, and a
 workflow that calls no stage and is not unguarded.
+
+---
+
+## `versioning` — how each product moves its version
+
+```yaml
+versioning:
+  app:                                   # one product; a repository with several names each
+    scheme: semver                       # semver | calver (format:) | number | pattern (pattern:)
+    source:                              # the files that hold the version; they must agree
+      - file: app/manifest.json
+        path: version                    # a dot path into JSON or YAML, or regex: with one group
+    tag: "app-v{version}"                # the release record; v{version} when left out
+    released:                            # releases made before the project wrote tags
+      file: release-policy.json
+      keys: versions                     # the map whose keys are versions
+      where: { target: production }      # the entries that count
+    next: semantic                       # manual (default) | increment (part:) | semantic | none
+    branches:                            # only the branches that differ; first match wins
+      "hotfix/*":
+        next: { strategy: increment, part: patch }
+        range: from_base                 # only versions of the release it was cut from; or 1.0.x
+      "feat/*":
+        next: none
+```
+
+A product with no `source` keeps its version in the tag alone. A commit with a `Version:` footer
+forces the next version, which is still confronted. `anchors version` shows where a product stands,
+and `anchors version bump` writes the next version into every source. The `version-forward` gate
+refuses a commit that moves the version back.
+
+A stage asks the rest of its sha, with `version:` in its `requires`:
+
+- `fresh`: no release has the version, neither a tag of the product nor what `released:` lists.
+  A version still in review is not released, so resubmitting it passes.
+- `listed: { where: {...} }`: a file gives the version an entry with those fields. By default
+  it reads the file and the map of `released:`; `file:` and `keys:` name others.
+- `same_as_passed: <stage>`: the version is the one the commit that passed that stage carried.
+- `expected`: the version is the one the branch's strategy computes; `manual` asks it be fresh.
+
+The branch's `range:` bounds the version whatever is asked. The tags must be in the checkout
+(`fetch-depth: 0`). `anchors branch check` asks the same of a pull request's head, for the stages
+of its base, so the refusal shows on the pull request.
 
 ---
 

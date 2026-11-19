@@ -431,6 +431,10 @@ Um requisito é um destes:
 - `gates: <fase>`: os gates da fase passam.
 - `passed: <etapa>`: o sha, ou então a head de onde ele foi mergeado, passou por aquela etapa.
 - `from: <branch>`: o sha foi mergeado daquela head.
+- `version: { product, fresh, listed, same_as_passed, expected }`: o que a versão que o sha carrega
+  precisa ser (veja [`versioning`](#versioning--como-cada-produto-avança-a-versão)).
+- `contains: <branch>`: a head daquela branch no `origin` está no sha, então as correções feitas
+  lá voltaram.
 - `any:`: vale um de vários.
 
 Uma etapa precisa de `verify:`, de `run:`, ou dos dois. Etapa que a configuração não declara não
@@ -461,6 +465,49 @@ registro que o `passed:` lê. `anchors pipeline run <etapa>` faz can-run, `run:`
 registro num passo só. O gate `pipeline-wired` lê os workflows. Ele reprova chamada a etapa não
 declarada, etapa declarada que nenhum workflow chama, etapa nunca registrada, e workflow que não
 chama etapa e não está em `unguarded`.
+
+---
+
+## `versioning` — como cada produto avança a versão
+
+```yaml
+versioning:
+  app:                                   # um produto; um repositório com vários nomeia cada um
+    scheme: semver                       # semver | calver (format:) | number | pattern (pattern:)
+    source:                              # os arquivos que guardam a versão; precisam concordar
+      - file: app/manifest.json
+        path: version                    # caminho em JSON ou YAML, ou regex: com um grupo
+    tag: "app-v{version}"                # o registro do release; v{version} quando omitido
+    released:                            # releases feitos antes de o projeto gravar tags
+      file: release-policy.json
+      keys: versions                     # o mapa cujas chaves são versões
+      where: { target: production }      # as entradas que contam
+    next: semantic                       # manual (padrão) | increment (part:) | semantic | none
+    branches:                            # só as branches que diferem; vale a primeira que casa
+      "hotfix/*":
+        next: { strategy: increment, part: patch }
+        range: from_base                 # só versões do release de onde saiu; ou 1.0.x
+      "feat/*":
+        next: none
+```
+
+Produto sem `source` guarda a versão só na tag. Commit com rodapé `Version:` força a próxima
+versão, que continua sendo conferida. `anchors version` mostra onde o produto está, e
+`anchors version bump` grava a próxima versão em todas as fontes. O gate `version-forward` recusa
+commit que faz a versão voltar.
+
+O resto, a etapa pergunta ao seu sha, com `version:` no `requires`:
+
+- `fresh`: nenhum release tem a versão, nem tag do produto nem o que o `released:` lista. Versão
+  ainda em review não está lançada, então reenviá-la passa.
+- `listed: { where: {...} }`: um arquivo dá à versão uma entrada com esses campos. Por padrão lê o
+  arquivo e o mapa do `released:`; `file:` e `keys:` apontam outros.
+- `same_as_passed: <etapa>`: a versão é a que o commit que passou por aquela etapa carregava.
+- `expected`: a versão é a que a estratégia da branch calcula; `manual` pede que seja nova.
+
+O `range:` da branch limita a versão, seja o que for perguntado. As tags precisam estar no
+checkout (`fetch-depth: 0`). `anchors branch check` pergunta o mesmo à head de um pull request,
+para as etapas da base, e a recusa aparece no pull request.
 
 ---
 

@@ -39,6 +39,15 @@ anchors branch
 
 Refuse a pull request, or a push, the branch flow does not allow.
 
+```text
+On a pull request, refuses a head the flow does not take into the base, and a head that
+does not meet what the stages of the base ask of its version and of the branches it contains
+(the version: and contains: requirements of pipeline:). The head commit comes from --head-sha,
+or the event's pull_request.head.sha.
+
+On a push, refuses a push to a guarded branch that is not the merge of an allowed pull request.
+```
+
 #### Uso
 
 ```bash
@@ -51,6 +60,7 @@ anchors branch check [flags]
 | --- | --- | --- |
 | `--base` |  | the pull request's base branch (default $GITHUB_BASE_REF) |
 | `--head` |  | the pull request's head branch (default $GITHUB_HEAD_REF) |
+| `--head-sha` |  | the pull request's head commit, which the stages of the base confront (default: the event's pull_request.head.sha) |
 | `--push` |  | confront a push instead of a pull request (default when $GITHUB_EVENT_NAME is push) |
 | `--ref` |  | the pushed branch (default $GITHUB_REF_NAME) |
 | `--root` | `.` | project root |

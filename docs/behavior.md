@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:0c55bde5456ee575 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:cf558e42e3020e35 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1804,6 +1804,10 @@ is what the test proves.
 
 - [A merge GitHub does not associate with its commit is found among the closed pull requests](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow) `BCSBR-B04`
 
+- [A pull request's head meets what the stages of its base ask of the version and of the branches it contains, same_as_passed left to the stage](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow) `BCSBR-B05`
+
+- [A stage that confronts the head with no head commit given refuses the check](layers/comando.md#bcsbr--branch--confront-merges-and-commits-with-the-projects-branch-flow) `BCSBR-E04`
+
 - [The latest release by default](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B01`
 
 - [From a tag, or every release](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B02`
@@ -2258,6 +2262,8 @@ is what the test proves.
 
 - [passed: holds when the sha itself carries the stage's success, before asking the head it was merged from](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B05`
 
+- [can-run answers version: and contains: on the stage's sha, same_as_passed against the commit that passed the stage](layers/comando.md#pcspa--pipeline--ask-whether-a-stage-may-run-and-record-that-it-passed) `PCSPA-B06`
+
 - [The root receives the seventeen operation commands](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
 
 - [Each operation command is registered exactly once](layers/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-I01`
@@ -2351,6 +2357,24 @@ is what the test proves.
 - [Sources that disagree or a tag the scheme cannot read stop the command](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-E03`
 
 - [Bump refuses a version that does not move forward, and writes nothing](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-E04`
+
+- [A branch's range shows with its rule, and bump refuses a version outside it](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B08`
+
+- [fresh holds for a version above every release — the tags and what released: lists — and refuses one released or below](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B01`
+
+- [listed holds when the file at the sha has an entry for the version matching where, and names the listing when it has not](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B02`
+
+- [same_as_passed holds when the sha carries the version the commit that passed the stage carried](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B03`
+
+- [expected holds when the version is the one the branch's strategy computes; manual asks it be fresh, none refuses](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B04`
+
+- [A branch's range bounds the version whatever is asked: from_base keeps the release the branch was cut from](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B05`
+
+- [contains holds when the head of the branch on the remote is an ancestor of the sha, and names the commits missing when it is not](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B06`
+
+- [The version is read at the sha, not in the working tree](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B07`
+
+- [A branch the remote does not have, or a version the sha cannot give, fails the requirement naming it](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-E01`
 
 - [A changed rule reaches its tests](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-B01`
 
@@ -3512,6 +3536,10 @@ is what the test proves.
 
 - [A stage with nothing that runs or validates it, a passed: naming no stage, or an unknown requirement refuses the configuration](layers/config.md#pcspp-e01--a-stage-with-nothing-that-runs-or-validates-it-a-passed-naming-no-stage-or-an-unknown-requirement-refuses-the-configuration) `PCSPP-E01`
 
+- [A stage asks of the version its sha carries, and of a branch whose head the sha contains](layers/config.md#pcspp-b02--a-stage-asks-of-the-version-its-sha-carries-and-of-a-branch-whose-head-the-sha-contains) `PCSPP-B02`
+
+- [A version asked of no product, with nothing asked, of a stage or a listing that do not exist, or a contains: pattern refuses the configuration](layers/config.md#pcspp-e02--a-version-asked-of-no-product-with-nothing-asked-of-a-stage-or-a-listing-that-do-not-exist-or-a-contains-pattern-refuses-the-configuration) `PCSPP-E02`
+
 - [The section declares the review, the judgments, the file and the retention](layers/config.md#psrsa-b01--the-section-declares-the-review-the-judgments-the-file-and-the-retention) `PSRSA-B01`
 
 - [A retention or a file that cannot hold refuses the configuration](layers/config.md#psrsa-e01--a-retention-or-a-file-that-cannot-hold-refuses-the-configuration) `PSRSA-E01`
@@ -3553,6 +3581,18 @@ is what the test proves.
 - [A rule that cannot decide refuses the configuration](layers/config.md#vrsnn-e04--a-rule-that-cannot-decide-refuses-the-configuration) `VRSNN-E04`
 
 - [A version not found is an error naming the file](layers/config.md#vrsnn-e05--a-version-not-found-is-an-error-naming-the-file) `VRSNN-E05`
+
+- [released: and a branch's range load, and a branch takes the range of the first rule it matches](layers/config.md#vrsnn-b07--released-and-a-branchs-range-load-and-a-branch-takes-the-range-of-the-first-rule-it-matches) `VRSNN-B07`
+
+- [A range keeps the parts written before its x, and from_base those of the base release but the last](layers/config.md#vrsnn-b08--a-range-keeps-the-parts-written-before-its-x-and-from-base-those-of-the-base-release-but-the-last) `VRSNN-B08`
+
+- [A listing is the keys of a map whose entries hold every field of where](layers/config.md#vrsnn-b09--a-listing-is-the-keys-of-a-map-whose-entries-hold-every-field-of-where) `VRSNN-B09`
+
+- [A product is the one named or the only one, and several with no name is an error saying where the name goes](layers/config.md#vrsnn-b10--a-product-is-the-one-named-or-the-only-one-and-several-with-no-name-is-an-error-saying-where-the-name-goes) `VRSNN-B10`
+
+- [A range that is neither from_base nor parts and an x, or released: with no file, refuses the configuration](layers/config.md#vrsnn-e06--a-range-that-is-neither-from-base-nor-parts-and-an-x-or-released-with-no-file-refuses-the-configuration) `VRSNN-E06`
+
+- [A listing whose file cannot be read, or has no map at its keys, is an error naming it](layers/config.md#vrsnn-e07--a-listing-whose-file-cannot-be-read-or-has-no-map-at-its-keys-is-an-error-naming-it) `VRSNN-E07`
 
 - [With no source registered, the default gate names are absent, not a failure](layers/config.md#gtvcg-b01--with-no-source-registered-the-default-gate-names-are-absent-not-a-failure) `GTVCG-B01`
 

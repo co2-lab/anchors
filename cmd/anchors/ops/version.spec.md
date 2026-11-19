@@ -44,6 +44,7 @@ cli (semver)
 | `VRSNI-B05` | `bump <part>` raises that part of the version the sources hold; `bump <version>` writes that version. |
 | `VRSNI-B06` | `bump` to the version the sources already hold says so and writes nothing. |
 | `VRSNI-B07` | A project with a single product names none, and the current branch decides when `--branch` is not given. |
+| `VRSNI-B08` | A branch with a range (VRSNN-B08) shows it with the rule that set it, and `bump` refuses a version outside it, writing nothing. (`inRange`) |
 
 ## Errors
 

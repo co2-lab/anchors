@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/version"
@@ -34,8 +35,23 @@ type Product struct {
 	Tag string `yaml:"tag,omitempty"`
 	// Next is the default strategy of every branch. Empty: manual.
 	Next *Next `yaml:"next,omitempty"`
+	// Released lists more released versions besides the tags: the releases made before the
+	// project wrote tags.
+	Released *Listing `yaml:"released,omitempty"`
 	// Branches are the branches whose rule differs from the default, first match wins.
 	Branches BranchRules `yaml:"branches,omitempty"`
+}
+
+// Listing selects versions from a file: the keys of a map, kept when their entry matches
+// every field of `where`. It interprets nothing: the file, the map and the fields are the
+// project's.
+type Listing struct {
+	// File is the file the map is read from, JSON or YAML.
+	File string `yaml:"file,omitempty" path:"read"`
+	// Keys is the dot path of the map whose keys are versions; empty: the document itself.
+	Keys string `yaml:"keys,omitempty"`
+	// Where are the fields an entry must hold, by dot path, compared as text.
+	Where map[string]string `yaml:"where,omitempty"`
 }
 
 // VersionSource is one file that holds the version: at a JSON or YAML path, or in the one
@@ -93,6 +109,9 @@ func (n *Next) Resolved() version.Strategy {
 type BranchRule struct {
 	Pattern string `yaml:"-"` // read by BranchRules
 	Next    *Next  `yaml:"-"`
+	// Range bounds the versions the branch may produce: `1.0.x`, or `from_base`, the
+	// release the branch was cut from at its last part.
+	Range string `yaml:"-"`
 }
 
 // BranchRules keep the order they are written in: the first pattern a branch matches wins.
@@ -105,16 +124,17 @@ func (b *BranchRules) UnmarshalYAML(node *yaml.Node) error {
 	}
 	for i := 0; i+1 < len(node.Content); i += 2 {
 		k, v := node.Content[i], node.Content[i+1]
-		if err := strictKeys(v, "branches."+k.Value, "next"); err != nil {
+		if err := strictKeys(v, "branches."+k.Value, "next", "range"); err != nil {
 			return err
 		}
 		var r struct {
-			Next *Next `yaml:"next"`
+			Next  *Next  `yaml:"next"`
+			Range string `yaml:"range"`
 		}
 		if err := v.Decode(&r); err != nil {
 			return err
 		}
-		*b = append(*b, BranchRule{Pattern: k.Value, Next: r.Next})
+		*b = append(*b, BranchRule{Pattern: k.Value, Next: r.Next, Range: r.Range})
 	}
 	return nil
 }
@@ -138,15 +158,94 @@ func strictKeys(node *yaml.Node, field string, known ...string) error {
 	return nil
 }
 
-// NextFor is the strategy a branch resolves to: the first rule whose pattern it matches, or
-// the product's default; and the pattern that decided, empty for the default.
-func (p *Product) NextFor(branch string) (version.Strategy, string) {
-	for _, r := range p.Branches {
-		if BranchMatches(r.Pattern, branch) && r.Next != nil {
-			return r.Next.Resolved(), r.Pattern
+// ruleFor is the first rule whose pattern the branch matches; nil when none does.
+func (p *Product) ruleFor(branch string) *BranchRule {
+	for i, r := range p.Branches {
+		if BranchMatches(r.Pattern, branch) {
+			return &p.Branches[i]
 		}
 	}
+	return nil
+}
+
+// NextFor is the strategy a branch resolves to: the first rule whose pattern it matches, or
+// the product's default when that rule sets none or no rule matches; and the pattern that
+// decided, empty for the default.
+func (p *Product) NextFor(branch string) (version.Strategy, string) {
+	if r := p.ruleFor(branch); r != nil && r.Next != nil {
+		return r.Next.Resolved(), r.Pattern
+	}
 	return p.Next.Resolved(), ""
+}
+
+// RangeFor is the range of the first rule the branch matches, and its pattern; empty when
+// the branch is not bounded.
+func (p *Product) RangeFor(branch string) (string, string) {
+	if r := p.ruleFor(branch); r != nil && r.Range != "" {
+		return r.Range, r.Pattern
+	}
+	return "", ""
+}
+
+// FromBase is the range that bounds a branch to the release it was cut from.
+const FromBase = "from_base"
+
+// InRange says whether a version is inside a range: an explicit one (`1.0.x`) keeps the
+// parts written before the `x`; `from_base` keeps every part of the base release but the
+// last. The reason names the bound when it does not hold.
+func InRange(s version.Scheme, rng, base string, v version.V) (bool, string, error) {
+	var prefix []int
+	bound := rng
+	if rng == FromBase {
+		if base == "" {
+			return false, "the branch was cut from no release (range: from_base)", nil
+		}
+		b, err := s.Parse(base)
+		if err != nil {
+			return false, "", fmt.Errorf("the base release: %w", err)
+		}
+		prefix = b.Nums[:len(b.Nums)-1]
+		bound = rangeOf(prefix) + " (from_base: " + base + ")"
+	} else {
+		var err error
+		if prefix, err = parseRange(rng); err != nil {
+			return false, "", err
+		}
+	}
+	if len(prefix) > len(v.Nums) {
+		return false, v.Raw + " is outside " + bound, nil
+	}
+	for i, n := range prefix {
+		if v.Nums[i] != n {
+			return false, v.Raw + " is outside " + bound, nil
+		}
+	}
+	return true, v.Raw + " is inside " + bound, nil
+}
+
+// parseRange reads `1.0.x`: the numbers before the `x`, at least one.
+func parseRange(rng string) ([]int, error) {
+	parts := strings.Split(rng, ".")
+	if len(parts) < 2 || parts[len(parts)-1] != "x" {
+		return nil, fmt.Errorf("range %q: write the parts kept and an x for the rest (1.0.x), or from_base", rng)
+	}
+	out := make([]int, 0, len(parts)-1)
+	for _, p := range parts[:len(parts)-1] {
+		n, err := strconv.Atoi(p)
+		if err != nil || n < 0 {
+			return nil, fmt.Errorf("range %q: %q is not a number", rng, p)
+		}
+		out = append(out, n)
+	}
+	return out, nil
+}
+
+func rangeOf(prefix []int) string {
+	var b strings.Builder
+	for _, n := range prefix {
+		b.WriteString(strconv.Itoa(n) + ".")
+	}
+	return b.String() + "x"
 }
 
 // TagFor is the tag that records a version of the product.
@@ -169,6 +268,37 @@ func (p *Product) VersionOfTag(tag string) (string, bool) {
 		return "", false
 	}
 	return tag[len(pre) : len(tag)-len(post)], true
+}
+
+// Pick is the product named, or the only one when no name is given; `how` says where a name
+// is written, for the error that asks for one.
+func (v Versioning) Pick(name, how string) (string, *Product, error) {
+	names := make([]string, 0, len(v))
+	for n := range v {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	switch {
+	case len(v) == 0:
+		return "", nil, fmt.Errorf("anchors.yaml declares no `versioning:` block: nothing is versioned")
+	case name != "":
+		if p, ok := v[name]; ok {
+			return name, p, nil
+		}
+		return "", nil, fmt.Errorf("versioning has no product %q (%s)", name, strings.Join(names, ", "))
+	case len(v) > 1:
+		return "", nil, fmt.Errorf("versioning has %d products — name one with %s (%s)", len(v), how, strings.Join(names, ", "))
+	}
+	return names[0], v[names[0]], nil
+}
+
+// ListingOf is a requirement's listing with the file and the map the product's `released:`
+// declares, where the requirement names none.
+func (p *Product) ListingOf(l Listing) Listing {
+	if l.File == "" && p.Released != nil {
+		l.File, l.Keys = p.Released.File, p.Released.Keys
+	}
+	return l
 }
 
 // SchemeOf builds the product's scheme.
@@ -228,9 +358,19 @@ func validateProduct(p *Product) error {
 		if err := validBranchPattern(r.Pattern); err != nil {
 			return fmt.Errorf("branches: %w", err)
 		}
-		if err := validateNext(r.Next, s, "branches."+r.Pattern+".next", len(p.Source) > 0); err != nil {
-			return err
+		if r.Next != nil {
+			if err := validateNext(r.Next, s, "branches."+r.Pattern+".next", len(p.Source) > 0); err != nil {
+				return err
+			}
 		}
+		if r.Range != "" && r.Range != FromBase {
+			if _, err := parseRange(r.Range); err != nil {
+				return fmt.Errorf("branches.%s: %w", r.Pattern, err)
+			}
+		}
+	}
+	if p.Released != nil && p.Released.File == "" {
+		return fmt.Errorf("released: file is required")
 	}
 	return nil
 }
@@ -348,7 +488,31 @@ func locate(src VersionSource, b []byte) (SourceVersion, error) {
 	if n.Kind == yaml.DocumentNode && len(n.Content) > 0 {
 		n = n.Content[0]
 	}
-	for _, key := range strings.Split(src.Path, ".") {
+	if n = walk(n, src.Path); n == nil {
+		return sv, fmt.Errorf("%s: no %s in the document", src.File, src.Path)
+	}
+	if n.Kind != yaml.ScalarNode || n.Value == "" {
+		return sv, fmt.Errorf("%s: %s holds no version", src.File, src.Path)
+	}
+	start := offsetOf(b, n.Line, n.Column)
+	if n.Style == yaml.DoubleQuotedStyle || n.Style == yaml.SingleQuotedStyle {
+		start++
+	}
+	end := start + len(n.Value)
+	if start < 0 || end > len(b) || string(b[start:end]) != n.Value {
+		return sv, fmt.Errorf("%s: %s is written in a form the Anchors cannot rewrite in place; use regex:", src.File, src.Path)
+	}
+	sv.start, sv.end, sv.Version = start, end, n.Value
+	return sv, nil
+}
+
+// walk follows a dot path from a node: a key of a map, a number for a list item; nil when
+// the document has nothing there. An empty path is the node itself.
+func walk(n *yaml.Node, path string) *yaml.Node {
+	if path == "" {
+		return n
+	}
+	for _, key := range strings.Split(path, ".") {
 		next := (*yaml.Node)(nil)
 		switch n.Kind {
 		case yaml.MappingNode:
@@ -364,23 +528,68 @@ func locate(src VersionSource, b []byte) (SourceVersion, error) {
 			}
 		}
 		if next == nil {
-			return sv, fmt.Errorf("%s: no %s in the document", src.File, src.Path)
+			return nil
 		}
 		n = next
 	}
-	if n.Kind != yaml.ScalarNode || n.Value == "" {
-		return sv, fmt.Errorf("%s: %s holds no version", src.File, src.Path)
+	return n
+}
+
+// Versions are the keys of the listing's map whose entry holds every field of `where`. A
+// file that cannot be read, or with no map at the path, is an error: a listing not found is
+// never an empty one.
+func (l Listing) Versions(read func(file string) ([]byte, error)) ([]string, error) {
+	b, err := read(l.File)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", l.File, err)
 	}
-	start := offsetOf(b, n.Line, n.Column)
-	if n.Style == yaml.DoubleQuotedStyle || n.Style == yaml.SingleQuotedStyle {
-		start++
+	var doc yaml.Node
+	if err := yaml.Unmarshal(b, &doc); err != nil {
+		return nil, fmt.Errorf("%s: not JSON nor YAML: %v", l.File, err)
 	}
-	end := start + len(n.Value)
-	if start < 0 || end > len(b) || string(b[start:end]) != n.Value {
-		return sv, fmt.Errorf("%s: %s is written in a form the Anchors cannot rewrite in place; use regex:", src.File, src.Path)
+	n := &doc
+	if n.Kind == yaml.DocumentNode && len(n.Content) > 0 {
+		n = n.Content[0]
 	}
-	sv.start, sv.end, sv.Version = start, end, n.Value
-	return sv, nil
+	if n = walk(n, l.Keys); n == nil || n.Kind != yaml.MappingNode {
+		return nil, fmt.Errorf("%s: no map at %s", l.File, or(l.Keys, "the top of the document"))
+	}
+	var out []string
+	for i := 0; i+1 < len(n.Content); i += 2 {
+		entry, ok := n.Content[i+1], true
+		for field, want := range l.Where {
+			got := walk(entry, field)
+			ok = ok && got != nil && got.Kind == yaml.ScalarNode && got.Value == want
+		}
+		if ok {
+			out = append(out, n.Content[i].Value)
+		}
+	}
+	return out, nil
+}
+
+// String says what the listing selects: `release-policy.json versions, where target = review`.
+func (l Listing) String() string {
+	s := l.File
+	if l.Keys != "" {
+		s += " " + l.Keys
+	}
+	if len(l.Where) > 0 {
+		fields := make([]string, 0, len(l.Where))
+		for f, v := range l.Where {
+			fields = append(fields, f+" = "+v)
+		}
+		sort.Strings(fields)
+		s += ", where " + strings.Join(fields, " and ")
+	}
+	return s
+}
+
+func or(v, fallback string) string {
+	if v != "" {
+		return v
+	}
+	return fallback
 }
 
 // offsetOf is the byte offset of a 1-based line and column.

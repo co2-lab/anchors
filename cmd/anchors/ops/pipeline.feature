@@ -2,7 +2,7 @@
 # @anchors
 #   code: PCFPA
 #   ref: PCSPA
-#   updated_at: 2026-11-06
+#   updated_at: 2026-11-18
 #   layer: feature
 
 @PCSPA
@@ -55,3 +55,9 @@ Feature: Pipeline — ask whether a stage may run, and record that it passed
     Given a production sha merged from review, and a stage requiring passed: production-release
     When can-run asks before and after the production release is recorded on that sha
     Then it is refused before, and may run after, naming this commit
+
+  @PCSPA-B06 @unit-level
+  Scenario: can-run answers version: and contains: on the stage's sha, same_as_passed against the commit that passed the stage
+    Given review carrying 1.0.1 listed for review and production in it, and production merging it as pull request #9
+    When can-run asks review-release on review, and production-release on production before and after the head of #9 passed review-release
+    Then review-release may run naming the production head it contains and 1.0.1 above every release, and production-release is refused until the head of #9 passed, then holds naming 1.0.1

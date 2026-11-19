@@ -73,3 +73,9 @@ Feature: VersionCommand — a product's version, its latest release and the next
     Given the sources at 1.2.0, the latest release app-v1.3.0, feat/* on none, and another product with no source
     When bump 1.1.0, bump 1.2.x and bump 1.2.5 run, bump runs on feat/x, and bump runs on the other product
     Then each fails naming the versions or what is missing, and the sources still hold 1.2.0
+
+  @VRSNI-B08 @unit-level
+  Scenario: A branch's range shows with its rule, and bump refuses a version outside it
+    Given hotfix/* on increment patch with range from_base, and app released as app-v1.2.0
+    When anchors version runs on hotfix/login, then bump minor and bump
+    Then it shows the range from_base by hotfix/*, bump minor fails saying 1.3.0 is outside 1.2.x, and bump writes 1.2.1

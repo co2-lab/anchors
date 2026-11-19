@@ -234,3 +234,20 @@ func TestVersion_refused(t *testing.T) {
 		}
 	})
 }
+
+func TestVersion_range(t *testing.T) {
+	t.Run("VRSNI-B08: A branch's range shows with its rule, and bump refuses a version outside it", func(t *testing.T) {
+		cfg := strings.Replace(appVersioning, "        next: { strategy: increment, part: patch }\n", "        next: { strategy: increment, part: patch }\n        range: from_base\n", 1)
+		root := historyRepo(t, "file:anchors.yaml="+cfg, "file:app/version.json={\"version\": \"1.2.0\"}", "chore: start", "tag:app-v1.2.0", "fix: x")
+		out, err := versionRun(t, "--root", root, "--branch", "hotfix/login")
+		if err != nil || !strings.Contains(out, "range      from_base  hotfix/*") {
+			t.Errorf("%v\n%s", err, out)
+		}
+		if _, err := versionRun(t, "--root", root, "--branch", "hotfix/login", "bump", "minor"); err == nil || !strings.Contains(err.Error(), "1.3.0 is outside 1.2.x (from_base: 1.2.0)") {
+			t.Errorf("minor on a hotfix: %v", err)
+		}
+		if _, err := versionRun(t, "--root", root, "--branch", "hotfix/login", "bump"); err != nil || readFile(t, root, "app/version.json") != `{"version": "1.2.1"}` {
+			t.Errorf("patch: %v %s", err, readFile(t, root, "app/version.json"))
+		}
+	})
+}

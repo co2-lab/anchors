@@ -73,3 +73,39 @@ Feature: Versioning — the products a project versions, where each writes its v
     Given a source file missing, a path no document holds, a regex that matches nothing, and a YAML file that is not one
     When the sources are read
     Then each fails, naming the file
+
+  @VRSNN-B07 @unit-level
+  Scenario: released: and a branch's range load, and a branch takes the range of the first rule it matches
+    Given a product with released: policy.json versions where target is production, hotfix/* with range from_base and no next, and maint/* with increment and range 1.0.x
+    When hotfix/login and develop resolve their range and strategy
+    Then hotfix/login takes from_base naming hotfix/* and the default strategy, and develop has no range
+
+  @VRSNN-B08 @unit-level
+  Scenario: A range keeps the parts written before its x, and from_base those of the base release but the last
+    Given the ranges 1.0.x, 1.x and from_base over the release 2.3.1, and from_base with no release
+    When 1.0.7, 1.1.0, 1.9.0, 2.3.2 and 2.4.0 are confronted
+    Then 1.0.7, 1.9.0 and 2.3.2 are inside, 1.1.0 and 2.4.0 are outside naming the bound, and with no release the branch was cut from nothing
+
+  @VRSNN-B09 @unit-level
+  Scenario: A listing is the keys of a map whose entries hold every field of where
+    Given a policy whose versions are 1.0.0 for production, 1.0.1 for review in tier b, and 1.1.0 for review
+    When it is listed where target is review and env.tier is b, and with no where
+    Then the first lists 1.0.1 alone and the second all three, and a listing with no file takes released:'s file and map
+
+  @VRSNN-B10 @unit-level
+  Scenario: A product is the one named or the only one, and several with no name is an error saying where the name goes
+    Given the products app alone, and app and api
+    When a product is picked with no name, by name, and by a name not declared
+    Then the only one is app, api is found, and the others fail listing api and app and saying where the name goes
+
+  @VRSNN-E06 @unit-level
+  Scenario: A range that is neither from_base nor parts and an x, or released: with no file, refuses the configuration
+    Given the ranges 1.0, a.x and latest, released: with no file, and released: with a key when
+    When the configuration is loaded
+    Then it does not load, naming the range or released
+
+  @VRSNN-E07 @unit-level
+  Scenario: A listing whose file cannot be read, or has no map at its keys, is an error naming it
+    Given a listing whose file is missing, and one whose versions are a list
+    When they are listed
+    Then each fails naming the file, and the second says no map at versions
