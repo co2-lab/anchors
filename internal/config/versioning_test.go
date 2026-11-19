@@ -434,3 +434,39 @@ versioning:
 		}
 	})
 }
+
+func TestVersioning_promoteAndScript(t *testing.T) {
+	t.Run("VRSNN-B13: promote names the branch it takes the version of, and script the command that decides", func(t *testing.T) {
+		c, err := loadVersioning(t, `  app:
+    scheme: semver
+    source: [{ file: v.txt, regex: '(.+)' }]
+    next: { strategy: script, run: ./decide.sh }
+    branches:
+      production: { next: { strategy: promote, from: review } }
+`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		app := c.Versioning["app"]
+		if st := app.Next.Resolved(); st.Name != "script" || st.Run != "./decide.sh" {
+			t.Errorf("script: %+v", st)
+		}
+		if st, _ := app.NextFor("production"); st.Name != "promote" || st.From != "review" {
+			t.Errorf("promote: %+v", st)
+		}
+	})
+	t.Run("VRSNN-E10: promote with no branch or a pattern, script with no command, or their options on another strategy refuse the configuration", func(t *testing.T) {
+		src := "source: [{ file: v.txt, regex: '(.+)' }]"
+		for next, says := range map[string]string{
+			"{ strategy: promote }":                    "write from: <branch>",
+			`{ strategy: promote, from: "release/*" }`: "write from: <branch>",
+			"{ strategy: script }":                     "write run: <command>",
+			"{ strategy: semantic, from: review }":     "from is an option of promote",
+			"{ strategy: manual, run: x }":             "run is an option of script",
+		} {
+			if _, err := loadVersioning(t, "  app: { scheme: semver, "+src+", next: "+next+" }\n"); err == nil || !strings.Contains(err.Error(), says) {
+				t.Errorf("%s: %v, want %q", next, err, says)
+			}
+		}
+	})
+}

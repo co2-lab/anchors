@@ -68,6 +68,7 @@ there would let anything through.
 | `VRSNE-B13` | A `Version:` footer on a commit since the latest release forces the next version, the newest one winning, and the result names the commit. |
 | `VRSNE-B14` | `none` gives no version and says the branch never versions; a footer does not change it. |
 | `VRSNE-B15` | `intents` raises the latest release by the largest bump among the intents waiting — the first of the scheme's parts any of them names —, saying how many intents moved it; with none, or only `none`, there is nothing to release; before the first release, it takes what the sources hold. (`largestBump`) |
+| `VRSNE-B16` | `promote` and `script` take the version decided outside them — the one a branch carries, the one a command printed —, the reason saying by what; with none decided they fail with why, and the version decided is still confronted with the latest release. |
 
 ## Errors
 

@@ -133,6 +133,10 @@ type Next struct {
 	Part     string
 	Initial  bool
 	Types    map[string]string
+	// From is the branch promote takes the version of.
+	From string
+	// Run is the command script decides the version with.
+	Run string
 }
 
 // UnmarshalYAML reads a strategy written as its name (`next: none`) or as a map
@@ -147,14 +151,16 @@ func (n *Next) UnmarshalYAML(node *yaml.Node) error {
 		Part     string            `yaml:"part"`
 		Initial  bool              `yaml:"initial"`
 		Types    map[string]string `yaml:"types"`
+		From     string            `yaml:"from"`
+		Run      string            `yaml:"run"`
 	}
-	if err := strictKeys(node, "next", "strategy", "part", "initial", "types"); err != nil {
+	if err := strictKeys(node, "next", "strategy", "part", "initial", "types", "from", "run"); err != nil {
 		return err
 	}
 	if err := node.Decode(&m); err != nil {
 		return err
 	}
-	*n = Next{Strategy: m.Strategy, Part: m.Part, Initial: m.Initial, Types: m.Types}
+	*n = Next{Strategy: m.Strategy, Part: m.Part, Initial: m.Initial, Types: m.Types, From: m.From, Run: m.Run}
 	return nil
 }
 
@@ -167,7 +173,7 @@ func (n *Next) Resolved() version.Strategy {
 	if name == "" {
 		name = version.Manual
 	}
-	return version.Strategy{Name: name, Part: n.Part, Initial: n.Initial, Types: n.Types}
+	return version.Strategy{Name: name, Part: n.Part, Initial: n.Initial, Types: n.Types, From: n.From, Run: n.Run}
 }
 
 // BranchRule is the rule of the branches a pattern names.
@@ -547,6 +553,14 @@ func validateNext(n *Next, s version.Scheme, field string, hasSource bool) error
 			return fmt.Errorf("%s: manual reads the version from the sources, and the product declares none", field)
 		}
 	case version.None, version.Intents:
+	case version.Promote:
+		if n.From == "" || strings.ContainsAny(n.From, "*?[") || strings.HasPrefix(n.From, "re:") {
+			return fmt.Errorf("%s: promote takes the version of one branch: write from: <branch>", field)
+		}
+	case version.Script:
+		if strings.TrimSpace(n.Run) == "" {
+			return fmt.Errorf("%s: script decides with a command: write run: <command>", field)
+		}
 	case version.Increment:
 		if !s.ValidPart(st.Part) {
 			return fmt.Errorf("%s: %s has no part %q (%s)", field, s.Kind, st.Part, strings.Join(s.Parts(), ", "))
@@ -561,13 +575,19 @@ func validateNext(n *Next, s version.Scheme, field string, hasSource bool) error
 			}
 		}
 	default:
-		return fmt.Errorf("%s: strategy %q: write manual, increment, semantic, intents or none", field, st.Name)
+		return fmt.Errorf("%s: strategy %q: write manual, increment, semantic, intents, promote, script or none", field, st.Name)
 	}
 	if st.Name != version.Increment && st.Part != "" {
 		return fmt.Errorf("%s: part is an option of increment, not of %s", field, st.Name)
 	}
 	if st.Name != version.Semantic && (st.Initial || len(st.Types) > 0) {
 		return fmt.Errorf("%s: initial and types are options of semantic, not of %s", field, st.Name)
+	}
+	if n != nil && st.Name != version.Promote && n.From != "" {
+		return fmt.Errorf("%s: from is an option of promote, not of %s", field, st.Name)
+	}
+	if n != nil && st.Name != version.Script && n.Run != "" {
+		return fmt.Errorf("%s: run is an option of script, not of %s", field, st.Name)
 	}
 	return nil
 }

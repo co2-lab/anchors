@@ -374,6 +374,8 @@ const (
 	Semantic  = "semantic"
 	None      = "none"
 	Intents   = "intents"
+	Promote   = "promote"
+	Script    = "script"
 )
 
 // Strategy is how a branch decides its next version.
@@ -382,6 +384,8 @@ type Strategy struct {
 	Part    string            // increment
 	Initial bool              // semantic: below 1.0.0, a breaking change bumps the minor
 	Types   map[string]string // semantic: commit type → major, minor, patch or none
+	From    string            // promote: the branch whose version is taken
+	Run     string            // script: the command that decides
 }
 
 // Input is what the next version is decided from.
@@ -395,6 +399,9 @@ type Input struct {
 	// Bumps are the bumps of the change intents waiting for the next release: a part of the
 	// scheme, or none.
 	Bumps []string
+	// Decided is the version decided outside — the one promoted, the one a script printed —,
+	// and DecidedBy says by what; empty with the reason it could not be.
+	Decided, DecidedBy string
 }
 
 // Result is the next version and why.
@@ -483,6 +490,11 @@ func compute(in Input, released *V) (Result, error) {
 			return Result{}, err
 		}
 		return Result{Version: next, Reason: fmt.Sprintf("semantic: %s since %s", why, in.Released)}, nil
+	case Promote, Script:
+		if in.Decided == "" {
+			return Result{}, fmt.Errorf("%s: %s", in.Strategy.Name, in.DecidedBy)
+		}
+		return Result{Version: in.Decided, Reason: in.Strategy.Name + ": " + in.DecidedBy}, nil
 	case Intents:
 		if released == nil {
 			return firstRelease(in, "intents")
@@ -497,7 +509,7 @@ func compute(in Input, released *V) (Result, error) {
 		}
 		return Result{Version: next, Reason: fmt.Sprintf("intents: %s, the largest bump of %d intent(s) since %s", or(part, in.Scheme.Kind), n, in.Released)}, nil
 	}
-	return Result{}, fmt.Errorf("strategy %q: write manual, increment, semantic, intents or none", in.Strategy.Name)
+	return Result{}, fmt.Errorf("strategy %q: write manual, increment, semantic, intents, promote, script or none", in.Strategy.Name)
 }
 
 // largestBump is the part that moves the version furthest among the bumps — the first of

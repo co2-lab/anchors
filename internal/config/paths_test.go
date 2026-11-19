@@ -122,6 +122,7 @@ var notAPath = map[string]string{
 	"Requirement.from":    "a branch pattern",
 	"Product.pattern":     "a regular expression over a version",
 	"VersionSource.path":  "a path into a JSON or YAML document, not a file",
+	"Next.from":           "a branch name",
 }
 
 func TestPaths_everyFieldNamedForAPathIsTagged(t *testing.T) {

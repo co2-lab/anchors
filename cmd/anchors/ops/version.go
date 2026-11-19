@@ -5,6 +5,7 @@
 package ops
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,6 +20,7 @@ import (
 	"github.com/co2-lab/anchors/internal/changelog"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/shell"
 	"github.com/co2-lab/anchors/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -211,6 +213,12 @@ func stateAt(absRoot string, cfg *config.Config, name, how, branch, rev string) 
 				in.Bumps = append(in.Bumps, it.Bump)
 			}
 		}
+	}
+	switch strategy.Name {
+	case version.Promote:
+		in.Decided, in.DecidedBy = promoted(absRoot, p, s, strategy.From)
+	case version.Script:
+		in.Decided, in.DecidedBy = scripted(absRoot, st, strategy.Run)
 	}
 	res, err := version.Next(in)
 	if err != nil {
@@ -430,4 +438,57 @@ func intentsAt(absRoot string, cfg *config.Config, rev string) ([]changelog.Inte
 		intents = append(intents, in)
 	}
 	return intents, nil
+}
+
+// promoted is the version the branch `from` carries at its head — on origin when the
+// checkout has it, else the local branch —: what its sources hold, or for a product with no
+// source its latest release there. Empty with the reason when it cannot be read.
+func promoted(absRoot string, p *config.Product, s version.Scheme, from string) (string, string) {
+	ref := ""
+	for _, r := range []string{"refs/remotes/origin/" + from, "refs/heads/" + from} {
+		if _, ok := gitmeta.Commit(absRoot, r); ok {
+			ref = r
+			break
+		}
+	}
+	if ref == "" {
+		return "", "no branch " + from + " here, nor on origin"
+	}
+	head, _ := gitmeta.Commit(absRoot, ref)
+	if len(p.Source) == 0 {
+		v, tag, err := latestRelease(changelog.Git{Root: absRoot}, p, s, ref)
+		if err != nil || v == "" {
+			return "", fmt.Sprintf("%s (%s) has no release to promote", from, short(head))
+		}
+		return v, fmt.Sprintf("the release of %s, %s", from, tag)
+	}
+	v, err := versionAt(absRoot, p, head)
+	if err != nil {
+		return "", fmt.Sprintf("the version of %s (%s): %v", from, short(head), err)
+	}
+	return v, fmt.Sprintf("the version %s carries (%s)", from, short(head))
+}
+
+// scripted is the version the project's command prints, given the product's state as
+// `anchors version --json` prints it, on its stdin. A command that fails or prints nothing
+// decides nothing: falling back to a default would publish a version no one chose.
+func scripted(absRoot string, st *versionStateT, run string) (string, string) {
+	ctx, err := json.Marshal(st)
+	if err != nil {
+		return "", err.Error()
+	}
+	c, err := shell.Command(run)
+	if err != nil {
+		return "", fmt.Sprintf("`%s`: %v", run, err)
+	}
+	var out, errb bytes.Buffer
+	c.Dir, c.Stdin, c.Stdout, c.Stderr = absRoot, bytes.NewReader(ctx), &out, &errb
+	if err := c.Run(); err != nil {
+		return "", fmt.Sprintf("`%s` failed (%v): %s", run, err, strings.TrimSpace(errb.String()))
+	}
+	v := strings.TrimSpace(strings.SplitN(strings.TrimSpace(out.String()), "\n", 2)[0])
+	if v == "" {
+		return "", fmt.Sprintf("`%s` printed no version", run)
+	}
+	return v, "`" + run + "`"
 }

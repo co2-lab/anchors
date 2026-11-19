@@ -121,3 +121,9 @@ Feature: Version — a product's version read, ordered and moved, and the next o
     Given the release 1.2.3 and the intents patch, minor and none; then patch and major; then none alone; a number at 41; and no release with the sources at 0.1.0
     When the intents strategy computes
     Then 1.3.0 by 2 intents, 2.0.0, nothing to release, 42, and 0.1.0 as no release yet
+
+  @VRSNE-B16 @unit-level
+  Scenario: promote and script take the version decided outside, saying by what, and fail with the reason when none was
+    Given promote from review deciding 1.1.0, a script that printed nothing, and a script deciding 1.9.0 below the release 2.0.0
+    When the next version is computed
+    Then it is 1.1.0 by what review carries, and the others fail naming the script and why

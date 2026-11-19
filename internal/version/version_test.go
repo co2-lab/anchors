@@ -274,3 +274,19 @@ func TestIntentsStrategy(t *testing.T) {
 		}
 	})
 }
+
+func TestDecidedStrategies(t *testing.T) {
+	semver, _ := NewScheme(SemVer, "", "")
+	t.Run("VRSNE-B16: promote and script take the version decided outside, saying by what, and fail with the reason when none was", func(t *testing.T) {
+		r := next(t, Input{Scheme: semver, Strategy: Strategy{Name: Promote, From: "review"}, Released: "1.0.0", Decided: "1.1.0", DecidedBy: "the version review carries"})
+		if r.Version != "1.1.0" || r.Reason != "promote: the version review carries" {
+			t.Errorf("promote: %+v", r)
+		}
+		if _, err := Next(Input{Scheme: semver, Strategy: Strategy{Name: Script, Run: "x"}, DecidedBy: "`x` printed no version"}); err == nil || !strings.Contains(err.Error(), "script: `x` printed no version") {
+			t.Errorf("nothing decided: %v", err)
+		}
+		if _, err := Next(Input{Scheme: semver, Strategy: Strategy{Name: Script, Run: "x"}, Released: "2.0.0", Decided: "1.9.0", DecidedBy: "`x`"}); err == nil || !strings.Contains(err.Error(), "script: `x`") || !strings.Contains(err.Error(), "below the latest release") {
+			t.Errorf("below: %v", err)
+		}
+	})
+}

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:dce43e4642118131 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:8ff2d0163ae8f70e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2624,6 +2624,10 @@ in `layers/`.
 
 - [VRSNI-B09 — With the `intents` strategy, the next version reads the product's intents waiting — in the working tree, or at the commit a stage confronts —, and an intent that does not parse stops the command naming the file. (`intentsAt`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
 
+- [VRSNI-B10 — `promote` takes the version the `from:` branch carries at its head — on `origin` when the checkout has it, else the local branch —, and for a product with no source its latest release there; a branch it cannot find fails naming it. (`promoted`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-B11 — `script` runs its command in the root with the product's state, as `--json` prints it, on its stdin, and takes the first line it prints; a command that fails, or prints nothing, fails naming it. (`scripted`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
 - [VRSNI-E01 — No `versioning:` block, a `--product` the block does not hold, or several products and no `--product`.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
 
 - [VRSNI-E02 — A detached HEAD, or no repository, and no `--branch`.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
@@ -3962,6 +3966,8 @@ in `layers/`.
 
 - [VRSNN-B12 — `changelog.intents` loads its directory (`.anchors/changes` by default), its types (`feat` and `fix` by default), its limit and how a release consumes them; an output reads the intents when its `source` says so, and `intents` is a strategy. (`PathOrDefault`, `TypesOrDefault`, `FromIntents`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
+- [VRSNN-B13 — `promote` names the branch whose version it takes (`from:`), and `script` the command that decides (`run:`).](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
 - [VRSNN-E01 — A product whose scheme does not build (VRSNE-E01), or that is empty.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E02 — A source with no `file`, with both or neither of `path:` and `regex:`, or with a regex that does not compile or does not have exactly one group.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
@@ -3979,6 +3985,8 @@ in `layers/`.
 - [VRSNN-E08 — An output with no path, a mode other than `incremental` or `per_version`, a key it does not know, a heading or file with no `{version}` or a heading that does not compile, a `file` on an incremental output, a `required` other than `changed`, or a negative `max_chars`.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E09 — Intents consumed other than by `delete` or `archive`, a negative `max_chars`, or `intents` declared on an output.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E10 — `promote` with no `from:` or with a pattern, `script` with no `run:`, or `from:` or `run:` on another strategy.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 ### [GTVCG — GateVocabulary — the list of default gate names, injected into the configuration layer](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
@@ -8797,6 +8805,8 @@ in `layers/`.
 - [VRSNE-B14 — `none` gives no version and says the branch never versions; a footer does not change it.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
 
 - [VRSNE-B15 — `intents` raises the latest release by the largest bump among the intents waiting — the first of the scheme's parts any of them names —, saying how many intents moved it; with none, or only `none`, there is nothing to release; before the first release, it takes what the sources hold. (`largestBump`)](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
+
+- [VRSNE-B16 — `promote` and `script` take the version decided outside them — the one a branch carries, the one a command printed —, the reason saying by what; with none decided they fail with why, and the version decided is still confronted with the latest release.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
 
 - [VRSNE-E01 — A scheme that is not one of the four, a calver format with an unknown field or a `MICRO` before the end, a pattern that does not compile or has no group.](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided)
 

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:531b96d93bcd4724 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:756ba111e87183e0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2384,6 +2384,10 @@ is what the test proves.
 
 - [With the intents strategy, the next version is the latest release raised by the largest bump of the product's intents](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B09`
 
+- [promote takes the version the branch carries at its head, or its release with no source, and fails naming a branch it cannot read](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B10`
+
+- [script prints the version, reading the product's state on its stdin; a script that fails or prints nothing decides nothing](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B11`
+
 - [fresh holds for a version above every release — the tags and what released: lists — and refuses one released or below](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B01`
 
 - [listed holds when the file at the sha has an entry for the version matching where, and names the listing when it has not](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B02`
@@ -3629,6 +3633,10 @@ is what the test proves.
 - [changelog.intents loads with its defaults, an output reads intents or commits, and intents is a strategy](layers/config.md#vrsnn-b12--changelogintents-loads-with-its-defaults-an-output-reads-intents-or-commits-and-intents-is-a-strategy) `VRSNN-B12`
 
 - [Intents consumed another way, a negative limit, or intents declared on an output refuse the configuration](layers/config.md#vrsnn-e09--intents-consumed-another-way-a-negative-limit-or-intents-declared-on-an-output-refuse-the-configuration) `VRSNN-E09`
+
+- [promote names the branch it takes the version of, and script the command that decides](layers/config.md#vrsnn-b13--promote-names-the-branch-it-takes-the-version-of-and-script-the-command-that-decides) `VRSNN-B13`
+
+- [promote with no branch or a pattern, script with no command, or their options on another strategy refuse the configuration](layers/config.md#vrsnn-e10--promote-with-no-branch-or-a-pattern-script-with-no-command-or-their-options-on-another-strategy-refuse-the-configuration) `VRSNN-E10`
 
 - [With no source registered, the default gate names are absent, not a failure](layers/config.md#gtvcg-b01--with-no-source-registered-the-default-gate-names-are-absent-not-a-failure) `GTVCG-B01`
 
@@ -7987,6 +7995,8 @@ is what the test proves.
 - [A strategy that would have to guess is refused](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-E04`
 
 - [intents raises the latest release by the largest bump of the intents waiting; none or no intent releases nothing](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B15`
+
+- [promote and script take the version decided outside, saying by what, and fail with the reason when none was](layers/infra.md#vrsne--version--a-products-version-read-ordered-and-moved-and-the-next-one-decided) `VRSNE-B16`
 
 ## mapa
 

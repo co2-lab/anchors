@@ -280,3 +280,47 @@ func writeIn(t *testing.T, root, rel, body string) {
 		t.Fatal(err)
 	}
 }
+
+func TestVersion_promoteAndScript(t *testing.T) {
+	t.Run("VRSNI-B10: promote takes the version the branch carries at its head, or its release with no source, and fails naming a branch it cannot read", func(t *testing.T) {
+		cfg := strings.Replace(appVersioning, "next: semantic", "next: { strategy: promote, from: review }", 1)
+		root := historyRepo(t, "file:anchors.yaml="+cfg, "file:app/version.json={\"version\": \"1.0.0\"}", "chore: start", "tag:app-v1.0.0")
+		gitIn(t, root, "add", "-A")
+		gitIn(t, root, "commit", "-q", "-m", "chore: files")
+		gitIn(t, root, "checkout", "-q", "-b", "review")
+		writeIn(t, root, "app/version.json", `{"version": "1.1.0"}`)
+		gitIn(t, root, "commit", "-q", "-am", "chore: 1.1.0")
+		gitIn(t, root, "checkout", "-q", "main")
+		out, err := versionRun(t, "--root", root, "--branch", "main")
+		if err != nil || !strings.Contains(out, "next       1.1.0      promote: the version review carries (") {
+			t.Errorf("%v\n%s", err, out)
+		}
+		tagOnly := strings.Replace(cfg, "    source:\n      - file: app/version.json\n        path: version\n", "", 1)
+		writeIn(t, root, "anchors.yaml", tagOnly)
+		gitIn(t, root, "tag", "app-v1.2.0", "review")
+		if out, err := versionRun(t, "--root", root, "--branch", "main"); err != nil || !strings.Contains(out, "promote: the release of review, app-v1.2.0") {
+			t.Errorf("tag only: %v\n%s", err, out)
+		}
+		writeIn(t, root, "anchors.yaml", strings.Replace(cfg, "from: review", "from: qa", 1))
+		if _, err := versionRun(t, "--root", root, "--branch", "main"); err == nil || !strings.Contains(err.Error(), "promote: no branch qa") {
+			t.Errorf("no branch: %v", err)
+		}
+	})
+	t.Run("VRSNI-B11: script prints the version, reading the product's state on its stdin; a script that fails or prints nothing decides nothing", func(t *testing.T) {
+		script := `next: { strategy: script, run: "cat > ctx.json; echo 3.0.0" }`
+		root := historyRepo(t, "file:anchors.yaml="+strings.Replace(appVersioning, "next: semantic", script, 1), "file:app/version.json={\"version\": \"1.2.0\"}", "chore: start", "tag:app-v1.1.0", "feat: one")
+		out, err := versionRun(t, "--root", root, "--branch", "main")
+		if err != nil || !strings.Contains(out, "next       3.0.0      script: `cat > ctx.json; echo 3.0.0`") {
+			t.Errorf("%v\n%s", err, out)
+		}
+		if ctx := readFile(t, root, "ctx.json"); !strings.Contains(ctx, `"released":"1.1.0"`) || !strings.Contains(ctx, `"subject":"feat: one"`) {
+			t.Errorf("the state on stdin: %s", ctx)
+		}
+		for run, says := range map[string]string{"exit 3": "`exit 3` failed", "true": "`true` printed no version"} {
+			writeIn(t, root, "anchors.yaml", strings.Replace(appVersioning, "next: semantic", `next: { strategy: script, run: "`+run+`" }`, 1))
+			if _, err := versionRun(t, "--root", root, "--branch", "main"); err == nil || !strings.Contains(err.Error(), says) {
+				t.Errorf("%s: %v", run, err)
+			}
+		}
+	})
+}

@@ -85,3 +85,15 @@ Feature: VersionCommand — a product's version, its latest release and the next
     Given app released as app-v1.0.0 on intents, with a patch and a minor intent, and a major one for api
     When anchors version runs, then with an intent that does not parse
     Then the next is 1.1.0 by 2 intents, and then the command fails naming d.md
+
+  @VRSNI-B10 @unit-level
+  Scenario: promote takes the version the branch carries at its head, or its release with no source, and fails naming a branch it cannot read
+    Given main on promote from review, review at 1.1.0, then a product with no source and review tagged app-v1.2.0, then promote from qa
+    When anchors version runs on main
+    Then the next is 1.1.0 as review carries, then the release of review app-v1.2.0, then it fails saying no branch qa
+
+  @VRSNI-B11 @unit-level
+  Scenario: script prints the version, reading the product's state on its stdin; a script that fails or prints nothing decides nothing
+    Given a script that saves its stdin and prints 3.0.0, then one that exits 3, then one that prints nothing
+    When anchors version runs
+    Then the next is 3.0.0 by the script, its stdin held the release and the commits, and the others fail naming the command

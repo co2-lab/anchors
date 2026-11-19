@@ -133,3 +133,15 @@ Feature: Versioning — the products a project versions, where each writes its v
     Given consume keep, max_chars -2, and an output with intents
     When the configuration is loaded
     Then it does not load, naming the field
+
+  @VRSNN-B13 @unit-level
+  Scenario: promote names the branch it takes the version of, and script the command that decides
+    Given app on script with run ./decide.sh, and production on promote from review
+    When the configuration is loaded
+    Then the default runs ./decide.sh and production promotes from review
+
+  @VRSNN-E10 @unit-level
+  Scenario: promote with no branch or a pattern, script with no command, or their options on another strategy refuse the configuration
+    Given promote with no from, promote from release/*, script with no run, from on semantic and run on manual
+    When the configuration is loaded
+    Then it does not load, naming the field

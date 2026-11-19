@@ -46,6 +46,8 @@ cli (semver)
 | `VRSNI-B07` | A project with a single product names none, and the current branch decides when `--branch` is not given. |
 | `VRSNI-B08` | A branch with a range (VRSNN-B08) shows it with the rule that set it, and `bump` refuses a version outside it, writing nothing. (`inRange`) |
 | `VRSNI-B09` | With the `intents` strategy, the next version reads the product's intents waiting — in the working tree, or at the commit a stage confronts —, and an intent that does not parse stops the command naming the file. (`intentsAt`) |
+| `VRSNI-B10` | `promote` takes the version the `from:` branch carries at its head — on `origin` when the checkout has it, else the local branch —, and for a product with no source its latest release there; a branch it cannot find fails naming it. (`promoted`) |
+| `VRSNI-B11` | `script` runs its command in the root with the product's state, as `--json` prints it, on its stdin, and takes the first line it prints; a command that fails, or prints nothing, fails naming it. (`scripted`) |
 
 ## Errors
 
