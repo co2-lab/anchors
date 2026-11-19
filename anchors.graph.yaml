@@ -9280,16 +9280,16 @@ nodes:
       rest_rev: 0682f16d65e3
     - id: cmd/anchors/quality/budget_test.go
       kind: test
-      rev: 8380fc66fa23
+      rev: a4899b648069
       updated_at: "2026-11-19"
       code: BDGRN
       file_code: BDTSB
       layer: teste
       tags:
         - test
-      evidence_rev: 606559fe76f4
-      line_rev: 1e2d5dc0ad4e
-      kept_lines: 4-78,80-95,98-109,111-118,121-144,147-207,209-218,221-316,319-348
+      evidence_rev: bc959bb30b4b
+      line_rev: 54bee4f85e8c
+      kept_lines: 4-78,80-95,98-103,107-115,117-124,127-150,153-213,215-224,227-322,325-354
     - id: cmd/anchors/quality/budget_unix.go
       kind: code
       rev: 20fdfb3b04b4
