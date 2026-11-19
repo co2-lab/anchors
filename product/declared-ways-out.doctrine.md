@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SAIDA
-  updated_at: 2026-10-01
+  updated_at: 2026-11-19
 -->
 # Declared ways out — how a gate goes quiet, and what the silence means
 
@@ -60,6 +60,20 @@ reads will find it.
 A revision explaining the removal of a waiver cites the marker (*"the `@TBD: code` waiver
 is gone"*), and without this distinction the citation **reactivates** the waiver the text
 says has ended. An active marker is never inside backticks.
+
+### SAIDA-R07 — switching the hooks off is not a way out; the CI is the guarantee
+
+A commit made without the hooks — `--no-verify`, `core.hooksPath` pointed elsewhere, a one-off
+`git -c core.hooksPath=/dev/null` — went in unconfronted, and it waived nothing: it declared
+no reason anywhere. The way out of a gate on a commit is the waiver in the commit message
+(`[skip-<gate>@<CODE>: <reason>]`), which stays in the history with its reason.
+
+The hooks are a convenience: they show a failure before the commit, on the machine. What
+guarantees that nothing reaches a protected branch unconfronted is the CI, which runs the
+same gates on every pull request and on every push to a guarded branch. No mark the hook
+writes into a commit proves it ran, since whoever skips the hook can write the mark too; so
+the Anchors promises none. On the machine it only warns when the setting that skips the
+hooks is left in the repository's configuration.
 
 ## Constraints
 

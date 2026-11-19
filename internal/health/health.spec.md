@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCTRO
-  updated_at: 2026-10-16
+  updated_at: 2026-11-19
   layer: infra
 -->
 # Doctor — the global health check that hunts the systemic loose ends of a project
@@ -105,6 +105,7 @@ same diagnosis and sorted into the same report.
 | `DCTRO-B26` | Tests with no result when a JUnit report WAS ingested — the specs hold scenarios it proved — are the warning that the report reached no test file, saying the report names no file the map knows and how to make it; with no report ingested, the warning is the one to run the ingest. |
 | `DCTRO-B27` | A declared gate whose `presupposes` names a field the project neither declares nor waives in `dialect.opt_out` is a warning `premissa-ausente` on the gate, naming the field and how to declare or waive it. |
 | `DCTRO-B28` | A pre-commit Anchors installed with no commit-msg of its own beside it is a warning `hooks-desatualizados`: a waiver in the commit message is never read; the way out is `anchors install-hooks --force`. A repository whose pre-commit is not Anchors', or that has both, or no git, gives nothing. (`checkCommitMsgHook`) |
+| `DCTRO-B29` | A `core.hooksPath` left in the configuration that points to a folder with no Anchors pre-commit, while the repository's own hooks folder holds the ones Anchors installed, is a warning `hooks-desviados` naming where it points: every commit skips the gates on the machine. The ways out are unsetting it or installing the hooks there. Hooks where git runs them, Anchors' hooks installed where it points, no Anchors hook anywhere, or no git give nothing. A one-off `git -c core.hooksPath=…` leaves nothing to read: the CI confronts that commit. (`checkHooksPathAway`) @realizes SAIDA-R07 |
 | `DCTRO-B25` | Code with no mutation signal is an informational `sinal-ausente`; code where only some files have it is an informational `sinal-ausente` on the partial mutation, carrying how many of how many. |
 
 ## Invariants

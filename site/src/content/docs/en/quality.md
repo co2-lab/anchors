@@ -319,6 +319,22 @@ and honest:
   resolved (fix the target or consciously lower the threshold, which is
   updating the gate's anchor).
 
+### Where it runs: the hooks are a convenience, the CI is the guarantee
+
+The same gates run in two places. The git hooks `anchors install-hooks` writes run them on the
+machine, before the commit, so a failure shows up early. The CI runs them again on every pull
+request and on every push to a guarded branch (`anchors check --all`, or a pipeline stage that
+requires `gates: <phase>`). Only the CI is a guarantee: the hooks can always be skipped
+(`--no-verify`, `core.hooksPath` pointed elsewhere, a one-off `git -c core.hooksPath=/dev/null`),
+and no mark a hook writes into a commit would prove it ran, since whoever skips the hook can
+write the mark too.
+
+So a commit that skipped the hooks is not a way out: it is confronted by the CI like any other.
+The way out of a gate on a commit is the waiver in its message, `[skip-<gate>@<CODE>: <reason>]`,
+which stays in the history with its reason. On the machine, `anchors doctor` warns when a
+`core.hooksPath` left in the configuration points away from the hooks Anchors installed
+(`hooks-desviados`). A one-off `-c` leaves nothing to read; the CI is what catches it.
+
 ---
 
 ## 5.1 Closing all the loose ends: nothing without validation

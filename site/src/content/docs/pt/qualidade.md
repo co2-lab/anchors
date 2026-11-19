@@ -291,6 +291,22 @@ Dois pontos herdados do mecanismo comum tornam o pipeline barato e honesto:
   que só sai quando a dessincronia é resolvida (corrige o alvo ou baixa o limiar
   conscientemente, o que é atualizar a âncora do gate).
 
+### Onde ele roda: os hooks são conveniência, o CI é a garantia
+
+Os mesmos gates rodam em dois lugares. Os hooks do git que o `anchors install-hooks` grava os
+rodam na máquina, antes do commit, para a falha aparecer cedo. O CI os roda de novo em todo pull
+request e em todo push numa branch protegida (`anchors check --all`, ou uma etapa do pipeline que
+exige `gates: <fase>`). Só o CI é garantia: os hooks sempre podem ser pulados (`--no-verify`,
+`core.hooksPath` apontado para outro lugar, um `git -c core.hooksPath=/dev/null` avulso), e
+nenhuma marca que o hook gravasse no commit provaria que ele rodou, porque quem pula o hook também
+pode escrever a marca.
+
+Então um commit que pulou os hooks não é uma saída: o CI o confere como qualquer outro. A saída de
+um gate num commit é a dispensa na mensagem, `[skip-<gate>@<CODE>: <motivo>]`, que fica no
+histórico com o motivo. Na máquina, o `anchors doctor` avisa quando um `core.hooksPath` deixado na
+configuração aponta para fora dos hooks que o Anchors instalou (`hooks-desviados`). Um `-c` avulso
+não deixa nada para ler; quem o pega é o CI.
+
 ---
 
 ## 5.1 Fechar todas as pontas: nada sem validação

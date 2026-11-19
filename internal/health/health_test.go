@@ -14,6 +14,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 func hasFinding(r Report, check, subject string) bool {
@@ -728,4 +729,47 @@ func TestCheckCommitMsgHook(t *testing.T) {
 	if f := checkCommitMsgHook(t.TempDir()); len(f) != 0 {
 		t.Errorf("outside git, nothing: %+v", f)
 	}
+}
+
+// Reported from a project: a commit made with the hooks pointed at /dev/null went in unconfronted.
+func TestCheckHooksPathAway(t *testing.T) {
+	t.Run("DCTRO-B29: A core.hooksPath pointing away from the hooks Anchors installed is reported, naming where it points", func(t *testing.T) {
+		if _, err := exec.LookPath("git"); err != nil {
+			t.Skip("git is not installed")
+		}
+		root := t.TempDir()
+		git := func(args ...string) {
+			t.Helper()
+			c := exec.Command("git", append([]string{"-C", root}, args...)...)
+			c.Env = append(shell.WithoutRepoEnv(os.Environ()), "GIT_CONFIG_GLOBAL=/dev/null")
+			if out, err := c.CombinedOutput(); err != nil {
+				t.Fatalf("%v %s", err, out)
+			}
+		}
+		git("init", "-q")
+		hooks := filepath.Join(root, ".git", "hooks")
+		_ = os.MkdirAll(hooks, 0o755)
+		_ = os.WriteFile(filepath.Join(hooks, "pre-commit"), []byte("#!/bin/sh\n# "+managedHook+"\n"), 0o755)
+		if f := checkHooksPathAway(root); len(f) != 0 {
+			t.Errorf("hooks where git runs them: %+v", f)
+		}
+		git("config", "core.hooksPath", "elsewhere")
+		f := checkHooksPathAway(root)
+		if len(f) != 1 || f[0].Check != "hooks-desviados" || f[0].Severity != Warn || !strings.Contains(f[0].Detail, "elsewhere") || !strings.Contains(f[0].Detail, "core.hooksPath") {
+			t.Errorf("pointed away: %+v", f)
+		}
+		_ = os.MkdirAll(filepath.Join(root, "elsewhere"), 0o755)
+		_ = os.WriteFile(filepath.Join(root, "elsewhere", "pre-commit"), []byte("#!/bin/sh\n# "+managedHook+"\n"), 0o755)
+		if f := checkHooksPathAway(root); len(f) != 0 {
+			t.Errorf("Anchors' hooks installed where it points: %+v", f)
+		}
+		_ = os.Remove(filepath.Join(hooks, "pre-commit"))
+		_ = os.Remove(filepath.Join(root, "elsewhere", "pre-commit"))
+		if f := checkHooksPathAway(root); len(f) != 0 {
+			t.Errorf("no Anchors hook anywhere is not this finding: %+v", f)
+		}
+		if f := checkHooksPathAway(t.TempDir()); len(f) != 0 {
+			t.Errorf("outside git: %+v", f)
+		}
+	})
 }

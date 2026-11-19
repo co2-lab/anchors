@@ -2,7 +2,7 @@
 # @anchors
 #   code: HLFTH
 #   ref: DCTRO
-#   updated_at: 2026-10-16
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @DCTRO
@@ -189,3 +189,9 @@ Feature: Doctor — the global health check that hunts the systemic loose ends o
     Given a repository whose pre-commit Anchors installed, with no commit-msg
     When the doctor runs, then after a commit-msg of Anchors is installed, and in a folder with no git
     Then the missing commit-msg is reported, then nothing, and nothing outside git
+
+  @DCTRO-B29 @unit-level
+  Scenario: A core.hooksPath pointing away from the hooks Anchors installed is reported, naming where it points
+    Given a repository with the Anchors pre-commit in .git/hooks, then core.hooksPath set to elsewhere, then Anchors' hooks installed there, then no Anchors hook anywhere
+    When the doctor checks the hooks
+    Then nothing, then a warning hooks-desviados naming elsewhere and core.hooksPath, then nothing, then nothing

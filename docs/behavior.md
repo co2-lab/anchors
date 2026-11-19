@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:4ca1ed0b79a6d0fe — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:87f5e20544d15e8b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -6961,6 +6961,8 @@ is what the test proves.
 - [A gate declared over a field the project neither declares nor waives is named](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B27`
 
 - [A pre-commit with no commit-msg beside it is reported](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B28`
+
+- [A core.hooksPath pointing away from the hooks Anchors installed is reported, naming where it points](layers/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B29`
 
 - [A spec with two open decisions gives one warning carrying the count](layers/infra.md#pndcp--pendingdecisions--the-doctor-lists-the-specs-that-still-hold-open-decisions-the-heaviest-first) `PNDCP-B01`
 

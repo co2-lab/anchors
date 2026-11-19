@@ -471,6 +471,7 @@
   "health.missing_identity": "spec sin código de escenario (huérfano invisible)",
   "health.duplicate_identity": "código usado por distintas unidades: %s",
   "health.empty_layer": "capa declarada en la Estructura pero sin ningún archivo",
+  "health.hooks_path_away": "core.hooksPath apunta a %s, donde no hay hook de Anchors: todo commit omite los gates en esta máquina (el CI aún confronta el pull request) — ejecute `git config --unset core.hooksPath`, o `anchors install-hooks` para instalarlos allí",
   "health.commit_msg_missing": "el pre-commit que instaló Anchors no tiene un commit-msg al lado: un fallo se bloquea en el acto, y una dispensa en el mensaje del commit ([skip-<gate>@<CODE>: motivo]) nunca se lee — ejecute `anchors install-hooks --force`",
   "health.ungoverned_guide": "guide no rige a nadie — declare una regla `governs` o reclasifique como doc",
   "health.kind_without_gate": "ningún gate declarado confronta este kind (brecha de cobertura)",

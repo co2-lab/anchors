@@ -69,6 +69,7 @@ func Diagnose(g *mapx.Graph, cfg *config.Config, root string) Report {
 	r.Findings = append(r.Findings, checkDuplicateCodes(g, cfg)...)
 	r.Findings = append(r.Findings, checkLooseLayers(g, cfg)...)
 	r.Findings = append(r.Findings, checkCommitMsgHook(root)...)
+	r.Findings = append(r.Findings, checkHooksPathAway(root)...)
 	r.Findings = append(r.Findings, checkGateCoverage(g, cfg)...)
 	r.Findings = append(r.Findings, checkSkipOnValid(cfg)...)
 	r.Findings = append(r.Findings, checkMissingTools(cfg)...)
@@ -252,6 +253,31 @@ func checkCommitMsgHook(root string) []Finding {
 		return nil
 	}
 	return []Finding{{"hooks-desatualizados", Warn, filepath.ToSlash(filepath.Join(dir, "commit-msg")), i18n.T("health.commit_msg_missing")}}
+}
+
+// checkHooksPathAway reports a core.hooksPath that points away from the hooks Anchors
+// installed: the hooks are in the repository's own hooks folder, and git runs another, so
+// every commit skips the gates on the machine (reported from a project: a commit made with
+// the hooks pointed at /dev/null went in unconfronted). It catches the setting left in the
+// configuration, never a one-off `git -c core.hooksPath=…`: that leaves nothing behind, and
+// the gates the CI runs on the pull request are what confront such a commit.
+func checkHooksPathAway(root string) []Finding {
+	dir, ok := gitmeta.HooksDir(root)
+	if !ok {
+		return nil
+	}
+	if pre, err := os.ReadFile(filepath.Join(dir, "pre-commit")); err == nil && strings.Contains(string(pre), managedHook) {
+		return nil
+	}
+	common, ok := gitmeta.CommonDir(root)
+	if !ok || filepath.Clean(filepath.Join(common, "hooks")) == filepath.Clean(dir) {
+		return nil
+	}
+	pre, err := os.ReadFile(filepath.Join(common, "hooks", "pre-commit"))
+	if err != nil || !strings.Contains(string(pre), managedHook) {
+		return nil
+	}
+	return []Finding{{"hooks-desviados", Warn, filepath.ToSlash(dir), i18n.T("health.hooks_path_away", filepath.ToSlash(dir))}}
 }
 
 // --- pilares frouxos: camada declarada sem arquivos; guide que não rege nada ---
