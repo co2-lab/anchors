@@ -181,3 +181,9 @@ Feature: Versioning — the products a project versions, where each writes its v
     Given apply push
     When the configuration is loaded
     Then it does not load, naming push
+
+  @VRSNN-B17 @unit-level
+  Scenario: A listing's skip names keys of the map that are not versions, and a requirement's listing on released:'s file takes them
+    Given a policy whose versoes hold default and 1.0.0 for production and 1.0.1 for review, and released: skipping default
+    When released is listed, without skip, and as a requirement's listing with no file
+    Then released lists 1.0.0 alone, without skip all three keys come, and the requirement's listing skips default too

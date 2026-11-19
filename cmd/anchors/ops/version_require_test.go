@@ -254,3 +254,18 @@ func TestVersionRequirement_label(t *testing.T) {
 		holdsSays(t, "another version", ok, why, false, "semantic asks for 1.1.0")
 	})
 }
+
+func TestVersionRequirement_listingSkip(t *testing.T) {
+	t.Run("VRQRA-B09: A key of released: that is not a version stops fresh pointing to skip:, and skipped it is no release", func(t *testing.T) {
+		root := releasedRepo(t)
+		policy := `{"versions": {"default": {"target": "production"}, "1.0.0": {"target": "production"}, "1.0.1": {"target": "review"}}}`
+		sha := commitFiles(t, root, "chore: 1.0.1", map[string]string{"app/version.json": `{"version": "1.0.1"}`, "policy.json": policy})
+		req := &config.VersionRequirement{Fresh: true, Listed: &config.Listing{Where: map[string]string{"target": "review"}}}
+		ok, why := versionHolds(root, configOf(t, root), req, "review", sha, nil)
+		holdsSays(t, "default read as a version", ok, why, false, `a release, default`, "goes in its skip:")
+		cfg := strings.Replace(releasedProject, "where: { target: production } }", "where: { target: production }, skip: [default] }", 1)
+		sha = commitFiles(t, root, "chore: skip default", map[string]string{"anchors.yaml": cfg})
+		ok, why = versionHolds(root, configOf(t, root), req, "review", sha, nil)
+		holdsSays(t, "skipped", ok, why, true, "1.0.1 is above every release", "1.0.1 is in policy.json versions, where target = review")
+	})
+}

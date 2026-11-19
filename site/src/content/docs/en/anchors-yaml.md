@@ -477,6 +477,7 @@ versioning:
       file: release-policy.json
       keys: versions                     # the map whose keys are versions
       where: { target: production }      # the entries that count
+      skip: [default]                    # keys of the map that are not versions
     next: semantic                       # manual (default) | increment (part:) | semantic | none
     branches:                            # only the branches that differ; first match wins
       "hotfix/*":

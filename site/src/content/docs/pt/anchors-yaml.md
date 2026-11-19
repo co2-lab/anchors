@@ -482,6 +482,7 @@ versioning:
       file: release-policy.json
       keys: versions                     # o mapa cujas chaves são versões
       where: { target: production }      # as entradas que contam
+      skip: [default]                    # chaves do mapa que não são versões
     next: semantic                       # manual (padrão) | increment (part:) | semantic | none
     branches:                            # só as branches que diferem; vale a primeira que casa
       "hotfix/*":

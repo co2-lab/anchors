@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:554efba6a212991f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:4ca1ed0b79a6d0fe — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2428,6 +2428,8 @@ is what the test proves.
 
 - [expected takes a prerelease of the computed version on a branch whose label goes into the sources](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B08`
 
+- [A key of released: that is not a version stops fresh pointing to skip:, and skipped it is no release](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B09`
+
 - [A changed rule reaches its tests](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-B01`
 
 - [A changed region reaches its tests, and a change outside reaches the closure](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-B02`
@@ -3673,6 +3675,8 @@ is what the test proves.
 - [apply says how a computed version enters the repository, release_pr by default](layers/config.md#vrsnn-b16--apply-says-how-a-computed-version-enters-the-repository-release-pr-by-default) `VRSNN-B16`
 
 - [An apply other than release_pr, commit or build refuses the configuration](layers/config.md#vrsnn-e13--an-apply-other-than-release-pr-commit-or-build-refuses-the-configuration) `VRSNN-E13`
+
+- [A listing's skip names keys of the map that are not versions, and a requirement's listing on released:'s file takes them](layers/config.md#vrsnn-b17--a-listings-skip-names-keys-of-the-map-that-are-not-versions-and-a-requirements-listing-on-releaseds-file-takes-them) `VRSNN-B17`
 
 - [With no source registered, the default gate names are absent, not a failure](layers/config.md#gtvcg-b01--with-no-source-registered-the-default-gate-names-are-absent-not-a-failure) `GTVCG-B01`
 

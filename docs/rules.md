@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:2765fc08a1cef279 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:1b5de71770dafc23 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2678,6 +2678,8 @@ in `layers/`.
 
 - [VRQRA-B08 — On a branch whose label goes into the sources, `expected` holds for a prerelease of the version the strategy computes.](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
 
+- [VRQRA-B09 — A key of `released:` the scheme cannot read stops `fresh` naming it and pointing to the listing's `skip:`; skipped, it is no release, and the listing still finds the version.](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
+
 - [VRQRA-E01 — `origin` has no such branch, the sources at the sha hold no version or disagree, a listing or a tag cannot be read.](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
 
 ### [AFTSF — AffectedTests — which tests to run for what changed, by rule and region where the project declares them](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them)
@@ -3999,6 +4001,8 @@ in `layers/`.
 - [VRSNN-B15 — An updater source is read by running `<updater> get <file>` and rewritten by `<updater> set <file> <version>` in the project's root, both over a copy of the file's content, so a file read at a commit is read the same way. (`runUpdater`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-B16 — `apply` says how a computed version enters the repository, `release_pr` when the product writes none (VAPLA). (`ApplyOrDefault`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-B17 — A listing's `skip` names keys of its map that are not versions — a `default` entry the project's code falls back to — and they are left out; a requirement's listing read from `released:`'s file takes its `skip` too. Keys are skipped only by name: a key the scheme cannot read is otherwise an error, since a version mistyped would be skipped unseen.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E01 — A product whose scheme does not build (VRSNE-E01), or that is empty.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 

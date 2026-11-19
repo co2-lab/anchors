@@ -59,7 +59,7 @@ the project's. A project with no `versioning:` block sees no change.
 | `changelog.intents` (the project's `changelog:` block) | `path`, `types`, `max_chars`, `consume` (`delete`, `archive`) | another consume, a negative limit | `VRSNN-E09` |
 | an output's `source` | `commits`, `intents` | anything else | this unit (`VRSNN-E08`) |
 | `range` | `from_base`, or numbers and an `x` (`1.0.x`, `2.x`) | anything else | this unit (`VRSNN-E06`) |
-| a listing | `file` (JSON or YAML), `keys` (a dot path to a map; empty: the document), `where` (dot path → text) | `released:` with no file, any other key | this unit (`VRSNN-E06`) |
+| a listing | `file` (JSON or YAML), `keys` (a dot path to a map; empty: the document), `where` (dot path → text), `skip` (keys that are not versions) | `released:` with no file, any other key | this unit (`VRSNN-E06`) |
 | a listing's file | a document with a map at `keys` | a file missing, unreadable, or without a map there | this unit (`VRSNN-E07`) |
 | a source file | a JSON, YAML or any text file | a file missing, unreadable, or without the version where the source says | this unit (`VRSNN-E05`) |
 
@@ -83,6 +83,7 @@ the project's. A project with no `versioning:` block sees no change.
 | `VRSNN-B14` | A branch rule's `label` makes its versions prereleases, the labelled version going into the tag alone unless `in` says `source` or `both`; a source may name an `updater`, and the product an `after_bump`. (`LabelFor`, `InOrDefault`) |
 | `VRSNN-B15` | An updater source is read by running `<updater> get <file>` and rewritten by `<updater> set <file> <version>` in the project's root, both over a copy of the file's content, so a file read at a commit is read the same way. (`runUpdater`) |
 | `VRSNN-B16` | `apply` says how a computed version enters the repository, `release_pr` when the product writes none (VAPLA). (`ApplyOrDefault`) |
+| `VRSNN-B17` | A listing's `skip` names keys of its map that are not versions — a `default` entry the project's code falls back to — and they are left out; a requirement's listing read from `released:`'s file takes its `skip` too. Keys are skipped only by name: a key the scheme cannot read is otherwise an error, since a version mistyped would be skipped unseen. |
 
 ## Errors
 

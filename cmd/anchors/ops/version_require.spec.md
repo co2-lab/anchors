@@ -1,6 +1,6 @@
 <!-- @anchors
   code: VRQRA
-  updated_at: 2026-11-18
+  updated_at: 2026-11-19
   layer: comando
 -->
 # VersionRequirement — what a stage asks of the version its sha carries, and of the fixes it contains
@@ -51,6 +51,7 @@ pull request's head, for the stages of its base.
 | `VRQRA-B06` | `contains` fetches the branch from `origin` and holds when its head is an ancestor of the sha; it fails naming how many of its commits the sha lacks and the first five. (`containsHolds`) |
 | `VRQRA-B07` | The version, the listings and the release reachable are read at the sha: a working tree that holds another version changes nothing. (`readAt`, `stateAt`) |
 | `VRQRA-B08` | On a branch whose label goes into the sources, `expected` holds for a prerelease of the version the strategy computes. |
+| `VRQRA-B09` | A key of `released:` the scheme cannot read stops `fresh` naming it and pointing to the listing's `skip:`; skipped, it is no release, and the listing still finds the version. |
 
 ## Errors
 

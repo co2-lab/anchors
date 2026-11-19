@@ -119,7 +119,7 @@ func (r *Requirement) decodeVersion(n *yaml.Node) error {
 	}
 	r.Version = &VersionRequirement{Product: m.Product, Fresh: m.Fresh, SameAsPassed: m.SameAsPassed, Expected: m.Expected}
 	if m.Listed.Kind != 0 {
-		if err := strictKeys(&m.Listed, "version.listed", "file", "keys", "where"); err != nil {
+		if err := strictKeys(&m.Listed, "version.listed", "file", "keys", "where", "skip"); err != nil {
 			return err
 		}
 		r.Version.Listed = &Listing{}

@@ -131,7 +131,11 @@ func isFresh(root string, st *versionStateT, cur, sha string) (bool, string) {
 	for i, r := range rels {
 		rv, err := st.scheme.Parse(r.raw)
 		if err != nil {
-			return false, fmt.Sprintf("a release, %s (%s): %v", r.raw, r.where, err)
+			why := fmt.Sprintf("a release, %s (%s): %v", r.raw, r.where, err)
+			if !strings.HasPrefix(r.where, "tag ") {
+				why += " — a key of the listing that is not a version goes in its skip:"
+			}
+			return false, why
 		}
 		if top == nil || version.Compare(rv, topV) > 0 {
 			top, topV = &rels[i], rv

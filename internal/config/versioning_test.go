@@ -554,3 +554,25 @@ func TestVersioning_apply(t *testing.T) {
 		}
 	})
 }
+
+func TestVersioning_listingSkip(t *testing.T) {
+	t.Run("VRSNN-B17: A listing's skip names keys of the map that are not versions, and a requirement's listing on released:'s file takes them", func(t *testing.T) {
+		policy := `{"versoes": {"default": {"ambiente": "production"}, "1.0.0": {"ambiente": "production"}, "1.0.1": {"ambiente": "review"}}}`
+		read := func(string) ([]byte, error) { return []byte(policy), nil }
+		released := Listing{File: "p.json", Keys: "versoes", Where: map[string]string{"ambiente": "production"}, Skip: []string{"default"}}
+		if vs, err := released.Versions(read); err != nil || strings.Join(vs, ",") != "1.0.0" {
+			t.Errorf("released: %v %v", vs, err)
+		}
+		if vs, _ := (Listing{File: "p.json", Keys: "versoes"}).Versions(read); len(vs) != 3 {
+			t.Errorf("without skip every key is read: %v", vs)
+		}
+		p := &Product{Released: &released}
+		if got := p.ListingOf(Listing{Where: map[string]string{"ambiente": "review"}}); strings.Join(got.Skip, ",") != "default" {
+			t.Errorf("listed inherits skip: %+v", got)
+		}
+		c, err := loadVersioning(t, "  app:\n    scheme: semver\n    source: [{ file: v.txt, regex: '(.+)' }]\n    released: { file: p.json, keys: versoes, where: { ambiente: production }, skip: [default] }\n")
+		if err != nil || strings.Join(c.Versioning["app"].Released.Skip, ",") != "default" {
+			t.Errorf("load: %v", err)
+		}
+	})
+}

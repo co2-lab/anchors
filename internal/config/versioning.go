@@ -130,6 +130,9 @@ type Listing struct {
 	Keys string `yaml:"keys,omitempty"`
 	// Where are the fields an entry must hold, by dot path, compared as text.
 	Where map[string]string `yaml:"where,omitempty"`
+	// Skip are keys of the map that are not versions — a default entry the project's code
+	// falls back to. Named, never guessed: a version mistyped would be skipped unseen.
+	Skip []string `yaml:"skip,omitempty"`
 }
 
 // VersionSource is one file that holds the version: at a JSON or YAML path, or in the one
@@ -471,6 +474,9 @@ func (v Versioning) Pick(name, how string) (string, *Product, error) {
 func (p *Product) ListingOf(l Listing) Listing {
 	if l.File == "" && p.Released != nil {
 		l.File, l.Keys = p.Released.File, p.Released.Keys
+		if len(l.Skip) == 0 {
+			l.Skip = p.Released.Skip
+		}
 	}
 	return l
 }
@@ -611,6 +617,15 @@ func validateOutput(o ChangelogOutput) error {
 }
 
 var labelNameRE = regexp.MustCompile(`^[0-9A-Za-z-]+$`)
+
+func containsString(list []string, s string) bool {
+	for _, x := range list {
+		if x == s {
+			return true
+		}
+	}
+	return false
+}
 
 func btoi(b bool) int {
 	if b {
@@ -870,6 +885,9 @@ func (l Listing) Versions(read func(file string) ([]byte, error)) ([]string, err
 	}
 	var out []string
 	for i := 0; i+1 < len(n.Content); i += 2 {
+		if containsString(l.Skip, n.Content[i].Value) {
+			continue
+		}
 		entry, ok := n.Content[i+1], true
 		for field, want := range l.Where {
 			got := walk(entry, field)

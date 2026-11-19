@@ -2,7 +2,7 @@
 # @anchors
 #   code: VRQRB
 #   ref: VRQRA
-#   updated_at: 2026-11-18
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @VRQRA
@@ -61,3 +61,9 @@ Feature: VersionRequirement — what a stage asks of the version its sha carries
     Given review labelled rc in both, a feat since app-v1.0.0, and the source at 1.1.0-rc.1, then 1.2.0-rc.1
     When expected is asked on review
     Then 1.1.0-rc.1 holds, and 1.2.0-rc.1 fails as semantic asks for 1.1.0
+
+  @VRQRA-B09 @unit-level
+  Scenario: A key of released: that is not a version stops fresh pointing to skip:, and skipped it is no release
+    Given a policy with a default entry for production beside 1.0.0, and 1.0.1 listed for review
+    When fresh and listed are asked of 1.0.1, then with released: skipping default
+    Then the first fails naming default and skip:, and the second holds
