@@ -61,7 +61,7 @@ that keeps what it already holds.
 | `CHNGL-B13` | The markers of a changelog with CRLF line endings are found as in one with LF. |
 | `CHNGL-B14` | What is not released yet is headed by the version it would be released as (its candidate) before the translated "unreleased", when one is computed; a release read up to a tag keeps the tag. |
 | `CHNGL-B15` | The blocks of a written file are read by their markers, in order, each with the text under its marker up to the next, CRLF or not; the text before the first marker belongs to none. (`Blocks`) |
-| `CHNGL-B16` | `Replace` writes a block in place of the block of its version and of the unreleased one, keeping every other block and the title: the release a pull request prepares is rewritten until its tag, never written twice. (`Replace`) |
+| `CHNGL-B16` | `Replace` writes a block in place of the block of its version and of the unreleased one, keeping every other block and the title: the release a pull request prepares is rewritten until its tag, never written twice. The file is read with LF line endings, as git stores it, so a CRLF checkout of the same release writes the same file. (`Replace`) |
 
 ## Errors
 

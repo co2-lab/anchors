@@ -399,6 +399,9 @@ func Blocks(existing string) []WrittenBlock {
 // already has, and of the unreleased one: the release a pull request prepares is rewritten
 // until its tag, so it is never written twice.
 func Replace(existing, title string, b Block) string {
+	// Read as git stores it: a CRLF checkout (Windows) of the same release is the same file,
+	// and a line ending left behind would be a change to propose.
+	existing = strings.ReplaceAll(existing, "\r\n", "\n")
 	key := b.Version
 	if key == "" {
 		key = "unreleased"

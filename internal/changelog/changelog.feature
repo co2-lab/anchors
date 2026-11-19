@@ -112,6 +112,6 @@ Feature: Changelog — the releases of a project, read from its commits
 
   @CHNGL-B16 @unit-level
   Scenario: Replace writes a block in place of its version's and of the unreleased one, keeping the rest
-    Given a file with an unreleased block, 1.1.0 and 1.0.0, and an empty file
-    When 1.1.0 is replaced, and 1.0.0 written into the empty one
-    Then the unreleased block and the old 1.1.0 are gone with 1.0.0 kept, and the empty one gets the title
+    Given a file with an unreleased block, 1.1.0 and 1.0.0, an empty file, and a CRLF checkout of a file holding 1.1.0
+    When 1.1.0 is replaced, 1.0.0 written into the empty one, and 1.1.0 written again into the CRLF one
+    Then the unreleased block and the old 1.1.0 are gone with 1.0.0 kept, the empty one gets the title, and the CRLF one is the same file with LF

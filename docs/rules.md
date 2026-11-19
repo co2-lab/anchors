@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:4cf4465f44c411ba — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:2765fc08a1cef279 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -7352,7 +7352,7 @@ in `layers/`.
 
 - [CHNGL-B15 — The blocks of a written file are read by their markers, in order, each with the text under its marker up to the next, CRLF or not; the text before the first marker belongs to none. (`Blocks`)](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 
-- [CHNGL-B16 — `Replace` writes a block in place of the block of its version and of the unreleased one, keeping every other block and the title: the release a pull request prepares is rewritten until its tag, never written twice. (`Replace`)](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
+- [CHNGL-B16 — `Replace` writes a block in place of the block of its version and of the unreleased one, keeping every other block and the title: the release a pull request prepares is rewritten until its tag, never written twice. The file is read with LF line endings, as git stores it, so a CRLF checkout of the same release writes the same file. (`Replace`)](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 
 - [CHNGL-E01 — The template does not parse, or fails while rendering.](layers/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 

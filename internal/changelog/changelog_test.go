@@ -292,5 +292,9 @@ func TestReplace(t *testing.T) {
 		if got := Replace("", "Changelog", Block{Version: "1.0.0", Text: "## 1.0.0\n"}); got != "# Changelog\n\n"+Marker("1.0.0")+"\n## 1.0.0\n" {
 			t.Errorf("empty: %q", got)
 		}
+		lf := "# Changelog\n\n" + Marker("1.1.0") + "\n## 1.1.0\n- new\n"
+		if got := Replace(strings.ReplaceAll(lf, "\n", "\r\n"), "Changelog", Block{Version: "1.1.0", Text: "## 1.1.0\n- new\n"}); got != lf {
+			t.Errorf("a CRLF checkout of the same release is the same file: %q", got)
+		}
 	})
 }
