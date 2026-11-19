@@ -64,6 +64,7 @@ gates:
 | `CHVLA-B08` | With no product declaring an output, the gate is skipped, saying so. |
 | `CHVLA-B09` | An intent that does not parse, names a product `versioning:` does not declare, a bump that is neither a part of its scheme nor `none`, or a type not declared, says nothing, exceeds `changelog.intents.max_chars`, or was added in a commit its product's latest release already holds — a release that forgot to consume it — fails, naming the file. Intents declared and none written pass. (`confrontIntents`, `addedBefore`) |
 | `CHVLA-B10` | The block of the version the sources hold, while no tag records it, needs no tag; the block of a release is the one that must not change. (`sourcesVersion`) |
+| `CHVLA-B11` | A prerelease tag owes no block: the release it tries does. |
 
 ## Errors
 

@@ -208,3 +208,13 @@ func TestChangelogValid_intents(t *testing.T) {
 		failsSaying(t, "not pending", v, msg, "CHANGELOG.md 1.2.0: no tag")
 	})
 }
+
+func TestChangelogValid_prereleases(t *testing.T) {
+	t.Run("CHVLA-B11: A prerelease tag owes no block", func(t *testing.T) {
+		root := changelogRepo(t, map[string]string{"CHANGELOG.md": goodFile()})
+		exec.Command("git", "-C", root, "tag", "app-v1.2.0-rc.1").Run()
+		if v, msg := checkChangelogValid(config.Gate{}, root, nil, appWithOutput(incremental(nil))); v != Pass {
+			t.Errorf("%s %s", v, msg)
+		}
+	})
+}

@@ -145,3 +145,27 @@ Feature: Versioning — the products a project versions, where each writes its v
     Given promote with no from, promote from release/*, script with no run, from on semantic and run on manual
     When the configuration is loaded
     Then it does not load, naming the field
+
+  @VRSNN-B14 @unit-level
+  Scenario: A branch labels its versions as prereleases, in the tag by default; a source may be written by an updater, and a bump may run after_bump
+    Given review labelled rc, beta labelled beta in both, a source written by ./plist.sh and after_bump ./notify.sh
+    When the configuration is loaded
+    Then review's label goes into the tag, beta's into both, main has none, and the updater and after_bump are kept
+
+  @VRSNN-B15 @unit-level
+  Scenario: An updater reads the version with get and rewrites it with set, over a copy of the file, in the project's root
+    Given an updater script in the root that reads and writes a "ver" line
+    When the source is read and rewritten to 1.3.0
+    Then it reads 1.2.0 and returns ver 1.3.0
+
+  @VRSNN-E11 @unit-level
+  Scenario: A label off semver, with a name or a place it may not have or a key it does not know, or a source with two ways refuses the configuration
+    Given a label on a number product, a name with a space, in notes, a key at, and a source with path and updater
+    When the configuration is loaded
+    Then it does not load, naming the field
+
+  @VRSNN-E12 @unit-level
+  Scenario: An updater that fails or prints no version is an error naming the file
+    Given updaters exit 2 and true
+    When the source is read
+    Then each fails naming v.cfg and the command

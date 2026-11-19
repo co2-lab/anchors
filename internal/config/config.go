@@ -2248,6 +2248,9 @@ func Load(path string) (*Config, error) {
 	if err := validateVersioning(c.Versioning); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
+	for _, p := range c.Versioning {
+		p.root = filepath.Dir(path)
+	}
 	if err := c.validarDialetos(); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}

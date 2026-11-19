@@ -89,7 +89,7 @@ func versionHolds(root string, cfg *config.Config, r *config.VersionRequirement,
 			return false, fmt.Sprintf("%s never versions (%s: next: none)", branch, st.Rule)
 		case version.Manual:
 		default:
-			if st.Next != cur {
+			if st.Next != cur && !(st.Label != "" && st.LabelIn != "tag" && strings.HasPrefix(cur, st.Next+"-")) {
 				return false, fmt.Sprintf("%s: %s asks for %s (%s), the source says %s", branch, st.Strategy, st.Next, st.Reason, cur)
 			}
 			says = append(says, fmt.Sprintf("%s, as %s asks (%s)", cur, st.Strategy, st.Reason))

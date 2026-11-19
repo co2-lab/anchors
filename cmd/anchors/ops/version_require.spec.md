@@ -50,6 +50,7 @@ pull request's head, for the stages of its base.
 | `VRQRA-B05` | A branch with a range fails any `version:` requirement for a version outside it, naming the bound and the rule; `from_base` reads the latest release reachable from the sha. |
 | `VRQRA-B06` | `contains` fetches the branch from `origin` and holds when its head is an ancestor of the sha; it fails naming how many of its commits the sha lacks and the first five. (`containsHolds`) |
 | `VRQRA-B07` | The version, the listings and the release reachable are read at the sha: a working tree that holds another version changes nothing. (`readAt`, `stateAt`) |
+| `VRQRA-B08` | On a branch whose label goes into the sources, `expected` holds for a prerelease of the version the strategy computes. |
 
 ## Errors
 

@@ -103,3 +103,9 @@ Feature: anchors changelog — the technical changelog, printed or written
     Given app on intents released as app-v1.0.0, an intent archived for 1.0.0 and a fix waiting
     When every release and the unreleased one are written on production
     Then NOTES.md holds 1.0.1 unreleased with the fix and 1.0.0 with the archived feature, and CHANGELOG.md holds no intent
+
+  @CLGCM-B13 @unit-level
+  Scenario: A prerelease tag splits no release: the release lists what came since the release before
+    Given app-v1.0.0, a feat, app-v1.1.0-rc.1, a feat and app-v1.1.0
+    When the changelog is printed on production
+    Then 1.1.0 lists both feats and no rc shows

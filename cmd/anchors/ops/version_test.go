@@ -324,3 +324,47 @@ func TestVersion_promoteAndScript(t *testing.T) {
 		}
 	})
 }
+
+const labelledProduct = `version: 8
+versioning:
+  app:
+    scheme: semver
+    source:
+      - file: app/version.json
+        path: version
+    tag: "app-v{version}"
+    next: semantic
+    after_bump: 'printf "%s %s\n" "$ANCHORS_PRODUCT" "$ANCHORS_VERSION" > bumped.txt'
+    branches:
+      review:
+        label: { name: rc, in: source }
+      qa:
+        label: { name: rc }
+`
+
+func TestVersion_label(t *testing.T) {
+	t.Run("VRSNI-B12: A labelled branch shows its next prerelease, one above the tags; bump writes it where the label goes; a prerelease is not the latest release", func(t *testing.T) {
+		root := historyRepo(t, "file:anchors.yaml="+labelledProduct, "file:app/version.json={\"version\": \"1.0.0\"}", "chore: start", "tag:app-v1.0.0", "feat: one", "tag:app-v1.1.0-rc.1")
+		out, err := versionRun(t, "--root", root, "--branch", "review")
+		if err != nil || !strings.Contains(out, "released   1.0.0") || !strings.Contains(out, "label      1.1.0-rc.2 in source") || !strings.Contains(out, "next       1.1.0") {
+			t.Errorf("%v\n%s", err, out)
+		}
+		if _, err := versionRun(t, "--root", root, "--branch", "review", "bump"); err != nil || readFile(t, root, "app/version.json") != `{"version": "1.1.0-rc.2"}` {
+			t.Errorf("in source: %v %s", err, readFile(t, root, "app/version.json"))
+		}
+		writeIn(t, root, "app/version.json", `{"version": "1.0.0"}`)
+		if _, err := versionRun(t, "--root", root, "--branch", "qa", "bump"); err != nil || readFile(t, root, "app/version.json") != `{"version": "1.1.0"}` {
+			t.Errorf("in tag: %v %s", err, readFile(t, root, "app/version.json"))
+		}
+	})
+	t.Run("VRSNI-B13: after_bump runs in the root once every source was written, with the product and the version; when it fails the command says the sources were written", func(t *testing.T) {
+		root := historyRepo(t, "file:anchors.yaml="+labelledProduct, "file:app/version.json={\"version\": \"1.0.0\"}", "chore: start", "tag:app-v1.0.0", "fix: one")
+		if _, err := versionRun(t, "--root", root, "--branch", "main", "bump"); err != nil || readFile(t, root, "bumped.txt") != "app 1.0.1\n" {
+			t.Errorf("%v", err)
+		}
+		writeIn(t, root, "anchors.yaml", strings.Replace(labelledProduct, `after_bump: 'printf "%s %s\n" "$ANCHORS_PRODUCT" "$ANCHORS_VERSION" > bumped.txt'`, "after_bump: exit 4", 1))
+		if _, err := versionRun(t, "--root", root, "--branch", "main", "bump", "1.0.2"); err == nil || !strings.Contains(err.Error(), "after_bump `exit 4` failed") || !strings.Contains(err.Error(), "already hold 1.0.2") {
+			t.Errorf("%v", err)
+		}
+	})
+}

@@ -7,11 +7,14 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/shell"
 	"github.com/co2-lab/anchors/internal/version"
 	"gopkg.in/yaml.v3"
 )
@@ -42,6 +45,11 @@ type Product struct {
 	Branches BranchRules `yaml:"branches,omitempty"`
 	// Changelog are the files the product's changelog is written to.
 	Changelog *ProductChangelog `yaml:"changelog,omitempty"`
+	// AfterBump is a command run in the root after a bump wrote every source, with the
+	// product and the version in $ANCHORS_PRODUCT and $ANCHORS_VERSION.
+	AfterBump string `yaml:"after_bump,omitempty"`
+
+	root string // where the configuration was read: an updater runs there
 }
 
 // ProductChangelog are the outputs a product's changelog is written to. None: the project's
@@ -125,6 +133,9 @@ type VersionSource struct {
 	File  string `yaml:"file" path:"write"`
 	Path  string `yaml:"path,omitempty"`
 	Regex string `yaml:"regex,omitempty"`
+	// Updater is the project's command for a file a path or a regex does not cover: it gets
+	// `get <file>` and prints the version, or `set <file> <version>` and writes it.
+	Updater string `yaml:"updater,omitempty"`
 }
 
 // Next is how a branch decides its next version: the strategy and its options.
@@ -187,6 +198,23 @@ type BranchRule struct {
 	Changelog bool `yaml:"-"`
 	// Release marks a branch that releases: its changelog lists the releases, one per tag.
 	Release bool `yaml:"-"`
+	// Label makes the branch's versions prereleases: `1.1.0-rc.3`.
+	Label *Label `yaml:"-"`
+}
+
+// Label is a branch's prerelease label: its name, and where the labelled version goes —
+// the tag alone (the default), the sources too, or both.
+type Label struct {
+	Name string `yaml:"name"`
+	In   string `yaml:"in,omitempty"`
+}
+
+// InOrDefault is where the labelled version goes.
+func (l *Label) InOrDefault() string {
+	if l.In == "" {
+		return "tag"
+	}
+	return l.In
 }
 
 // BranchRules keep the order they are written in: the first pattern a branch matches wins.
@@ -199,19 +227,27 @@ func (b *BranchRules) UnmarshalYAML(node *yaml.Node) error {
 	}
 	for i := 0; i+1 < len(node.Content); i += 2 {
 		k, v := node.Content[i], node.Content[i+1]
-		if err := strictKeys(v, "branches."+k.Value, "next", "range", "changelog", "release"); err != nil {
+		if err := strictKeys(v, "branches."+k.Value, "next", "range", "changelog", "release", "label"); err != nil {
 			return err
+		}
+		for j := 0; j+1 < len(v.Content); j += 2 {
+			if v.Content[j].Value == "label" {
+				if err := strictKeys(v.Content[j+1], "branches."+k.Value+".label", "name", "in"); err != nil {
+					return err
+				}
+			}
 		}
 		var r struct {
 			Next      *Next  `yaml:"next"`
 			Range     string `yaml:"range"`
 			Changelog bool   `yaml:"changelog"`
 			Release   bool   `yaml:"release"`
+			Label     *Label `yaml:"label"`
 		}
 		if err := v.Decode(&r); err != nil {
 			return err
 		}
-		*b = append(*b, BranchRule{Pattern: k.Value, Next: r.Next, Range: r.Range, Changelog: r.Changelog, Release: r.Release})
+		*b = append(*b, BranchRule{Pattern: k.Value, Next: r.Next, Range: r.Range, Changelog: r.Changelog, Release: r.Release, Label: r.Label})
 	}
 	return nil
 }
@@ -301,6 +337,15 @@ func (p *Product) ReleaseBranch() string {
 		}
 	}
 	return ""
+}
+
+// LabelFor is the label of the first rule the branch matches; nil when its versions are not
+// prereleases.
+func (p *Product) LabelFor(branch string) *Label {
+	if r := p.ruleFor(branch); r != nil {
+		return r.Label
+	}
+	return nil
 }
 
 // FromBase is the range that bounds a branch to the release it was cut from.
@@ -451,8 +496,8 @@ func validateProduct(p *Product) error {
 		if src.File == "" {
 			return fmt.Errorf("source[%d]: file is required", i)
 		}
-		if (src.Path == "") == (src.Regex == "") {
-			return fmt.Errorf("source[%d] (%s): write path: or regex:, one of them", i, src.File)
+		if n := btoi(src.Path != "") + btoi(src.Regex != "") + btoi(src.Updater != ""); n != 1 {
+			return fmt.Errorf("source[%d] (%s): write path:, regex: or updater:, one of them", i, src.File)
 		}
 		if src.Regex != "" {
 			re, err := regexp.Compile(src.Regex)
@@ -477,6 +522,17 @@ func validateProduct(p *Product) error {
 		if r.Next != nil {
 			if err := validateNext(r.Next, s, "branches."+r.Pattern+".next", len(p.Source) > 0); err != nil {
 				return err
+			}
+		}
+		if l := r.Label; l != nil {
+			if s.Kind != version.SemVer {
+				return fmt.Errorf("branches.%s.label: a prerelease label needs scheme semver, not %s", r.Pattern, s.Kind)
+			}
+			if !labelNameRE.MatchString(l.Name) {
+				return fmt.Errorf("branches.%s.label: name %q: letters, digits and hyphens", r.Pattern, l.Name)
+			}
+			if in := l.InOrDefault(); in != "tag" && in != "source" && in != "both" {
+				return fmt.Errorf("branches.%s.label: in %q: write tag, source or both", r.Pattern, l.In)
 			}
 		}
 		if r.Range != "" && r.Range != FromBase {
@@ -536,6 +592,15 @@ func validateOutput(o ChangelogOutput) error {
 		return fmt.Errorf("format.max_chars %d: a limit is positive", f.MaxChars)
 	}
 	return nil
+}
+
+var labelNameRE = regexp.MustCompile(`^[0-9A-Za-z-]+$`)
+
+func btoi(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }
 
 // HeadingRE compiles a heading pattern: {version} and {date} become groups.
@@ -608,6 +673,14 @@ func (p *Product) ReadSources(read func(file string) ([]byte, error)) ([]SourceV
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", src.File, err)
 		}
+		if src.Updater != "" {
+			v, _, err := p.runUpdater(src, b, "get", "")
+			if err != nil {
+				return nil, err
+			}
+			out = append(out, SourceVersion{File: src.File, Version: v, start: -1, end: -1})
+			continue
+		}
 		sv, err := locate(src, b)
 		if err != nil {
 			return nil, err
@@ -615,6 +688,43 @@ func (p *Product) ReadSources(read func(file string) ([]byte, error)) ([]SourceV
 		out = append(out, sv)
 	}
 	return out, nil
+}
+
+// runUpdater runs a source's updater over a copy of its content, in the project's root:
+// `get <file>` prints the version, `set <file> <version>` rewrites the copy, which comes
+// back as the file's new content. A copy, so a file read at a commit is read the same way.
+func (p *Product) runUpdater(src VersionSource, content []byte, op, v string) (string, []byte, error) {
+	dir, err := os.MkdirTemp("", "anchors-updater-")
+	if err != nil {
+		return "", nil, err
+	}
+	defer os.RemoveAll(dir)
+	tmp := filepath.Join(dir, filepath.Base(src.File))
+	if err := os.WriteFile(tmp, content, 0o644); err != nil {
+		return "", nil, err
+	}
+	args := []string{"anchors-updater", op, tmp}
+	if op == "set" {
+		args = append(args, v)
+	}
+	c, err := shell.Command(src.Updater+` "$@"`, args...)
+	if err != nil {
+		return "", nil, fmt.Errorf("%s: updater: %w", src.File, err)
+	}
+	var out, errb bytes.Buffer
+	c.Dir, c.Stdout, c.Stderr = p.root, &out, &errb
+	if err := c.Run(); err != nil {
+		return "", nil, fmt.Errorf("%s: updater `%s %s` failed (%v): %s", src.File, src.Updater, op, err, strings.TrimSpace(errb.String()))
+	}
+	if op == "get" {
+		got := strings.TrimSpace(out.String())
+		if got == "" {
+			return "", nil, fmt.Errorf("%s: updater `%s get` printed no version", src.File, src.Updater)
+		}
+		return got, nil, nil
+	}
+	b, err := os.ReadFile(tmp)
+	return "", b, err
 }
 
 // Agreed is the one version the sources hold, or an error naming each when they differ.
@@ -640,6 +750,10 @@ func (p *Product) Rewrite(file string, content []byte, v string) ([]byte, error)
 	for _, src := range p.Source {
 		if src.File != file {
 			continue
+		}
+		if src.Updater != "" {
+			_, b, err := p.runUpdater(src, content, "set", v)
+			return b, err
 		}
 		sv, err := locate(src, content)
 		if err != nil {

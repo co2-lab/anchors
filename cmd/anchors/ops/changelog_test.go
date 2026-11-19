@@ -322,3 +322,14 @@ func TestChangelog_intents(t *testing.T) {
 		}
 	})
 }
+
+func TestChangelog_prereleases(t *testing.T) {
+	t.Run("CLGCM-B13: A prerelease tag splits no release: the release lists what came since the release before", func(t *testing.T) {
+		root := historyRepo(t, "file:anchors.yaml="+productChangelog, "file:app/version.json={\"version\": \"1.1.0\"}",
+			"feat: one", "tag:app-v1.0.0", "feat: two", "tag:app-v1.1.0-rc.1", "feat: three", "tag:app-v1.1.0")
+		out, _, err := changelogRun(t, "--root", root, "--branch", "production")
+		if err != nil || !strings.HasPrefix(out, "## 1.1.0 — ") || !strings.Contains(out, "- two (") || !strings.Contains(out, "- three (") || strings.Contains(out, "rc.1") {
+			t.Errorf("%v\n%s", err, out)
+		}
+	})
+}

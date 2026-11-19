@@ -162,3 +162,26 @@ func TestRelease_GitHubFails(t *testing.T) {
 
 // stubbed is the releaseAPI the package was built with.
 var stubbed = releaseAPI
+
+func TestRelease_label(t *testing.T) {
+	t.Run("RLSTA-B03: A stage on a branch that labels its tag releases the next prerelease GitHub does not hold, and a rerun the one already on its sha", func(t *testing.T) {
+		root, sha := releasingRepo(t)
+		cfg := readFile(t, root, "anchors.yaml")
+		cfg = strings.Replace(cfg, "      \"maint/*\":\n        next: manual\n", "      \"maint/*\":\n        next: manual\n      production:\n        label: { name: rc }\n", 1)
+		commitFiles(t, root, "chore: label", map[string]string{"anchors.yaml": cfg})
+		sha = headOf(t, root)
+		fakeForge(t)
+		gh := stubReleaseAPI(t)
+		gh.have["repos/{owner}/{repo}/git/matching-refs/tags/app-v1.0.1-rc."] = `[{"ref": "refs/tags/app-v1.0.1-rc.1", "object": {"sha": "0000000"}}]`
+		if out, err := runPipeline(t, root, "record", "production-release", "--branch", "production", "--sha", sha); err != nil || !strings.Contains(out, "released as app-v1.0.1-rc.2") || !strings.Contains(gh.posts[0], "ref=refs/tags/app-v1.0.1-rc.2") {
+			t.Errorf("%v %q\n%s", err, gh.posts, out)
+		}
+		gh.posts = nil
+		gh.have["repos/{owner}/{repo}/git/matching-refs/tags/app-v1.0.1-rc."] = `[{"ref": "refs/tags/app-v1.0.1-rc.1", "object": {"sha": "0000000"}}, {"ref": "refs/tags/app-v1.0.1-rc.2", "object": {"sha": "` + sha + `"}}]`
+		gh.have["repos/{owner}/{repo}/git/ref/tags/app-v1.0.1-rc.2"] = `{"object": {"sha": "` + sha + `"}}`
+		gh.have["repos/{owner}/{repo}/releases/tags/app-v1.0.1-rc.2"] = `{}`
+		if out, err := runPipeline(t, root, "record", "production-release", "--branch", "production", "--sha", sha); err != nil || len(gh.posts) != 0 || !strings.Contains(out, "is released as app-v1.0.1-rc.2") {
+			t.Errorf("rerun: %v %q\n%s", err, gh.posts, out)
+		}
+	})
+}

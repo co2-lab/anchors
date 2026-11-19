@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:756ba111e87183e0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:91eff01ed633affb — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1840,6 +1840,8 @@ is what the test proves.
 
 - [An output whose source is intents renders the intents waiting as the candidate, and a release from those archived under released/<version>/](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B12`
 
+- [A prerelease tag splits no release: the release lists what came since the release before](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B13`
+
 - [A free canonical code is the suggestion](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B01`
 
 - [A taken canonical is adjusted to a free code naming its owner](layers/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B02`
@@ -2292,6 +2294,8 @@ is what the test proves.
 
 - [A tag of the product the scheme cannot read stops the release body](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes) `RLSTA-E03`
 
+- [A stage on a branch that labels its tag releases the next prerelease GitHub does not hold, and a rerun the one already on its sha](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes) `RLSTA-B03`
+
 - [A decision without a date is refused](layers/comando.md#stcms--settingscommand--one-agents-local-decisions-declared-with-a-date-and-kept-out-of-the-projects-configuration) `STCMS-B01`
 
 - [An unknown role or answer is refused naming it](layers/comando.md#stcms--settingscommand--one-agents-local-decisions-declared-with-a-date-and-kept-out-of-the-projects-configuration) `STCMS-B02`
@@ -2388,6 +2392,10 @@ is what the test proves.
 
 - [script prints the version, reading the product's state on its stdin; a script that fails or prints nothing decides nothing](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B11`
 
+- [A labelled branch shows its next prerelease, one above the tags; bump writes it where the label goes; a prerelease is not the latest release](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B12`
+
+- [after_bump runs in the root once every source was written, with the product and the version; when it fails the command says the sources were written](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for) `VRSNI-B13`
+
 - [fresh holds for a version above every release — the tags and what released: lists — and refuses one released or below](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B01`
 
 - [listed holds when the file at the sha has an entry for the version matching where, and names the listing when it has not](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B02`
@@ -2403,6 +2411,8 @@ is what the test proves.
 - [The version is read at the sha, not in the working tree](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B07`
 
 - [A branch the remote does not have, or a version the sha cannot give, fails the requirement naming it](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-E01`
+
+- [expected takes a prerelease of the computed version on a branch whose label goes into the sources](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains) `VRQRA-B08`
 
 - [A changed rule reaches its tests](layers/comando.md#aftsf--affectedtests--which-tests-to-run-for-what-changed-by-rule-and-region-where-the-project-declares-them) `AFTSF-B01`
 
@@ -3638,6 +3648,14 @@ is what the test proves.
 
 - [promote with no branch or a pattern, script with no command, or their options on another strategy refuse the configuration](layers/config.md#vrsnn-e10--promote-with-no-branch-or-a-pattern-script-with-no-command-or-their-options-on-another-strategy-refuse-the-configuration) `VRSNN-E10`
 
+- [A branch labels its versions as prereleases, in the tag by default; a source may be written by an updater, and a bump may run after_bump](layers/config.md#vrsnn-b14--a-branch-labels-its-versions-as-prereleases-in-the-tag-by-default-a-source-may-be-written-by-an-updater-and-a-bump-may-run-after-bump) `VRSNN-B14`
+
+- [An updater reads the version with get and rewrites it with set, over a copy of the file, in the project's root](layers/config.md#vrsnn-b15--an-updater-reads-the-version-with-get-and-rewrites-it-with-set-over-a-copy-of-the-file-in-the-projects-root) `VRSNN-B15`
+
+- [A label off semver, with a name or a place it may not have or a key it does not know, or a source with two ways refuses the configuration](layers/config.md#vrsnn-e11--a-label-off-semver-with-a-name-or-a-place-it-may-not-have-or-a-key-it-does-not-know-or-a-source-with-two-ways-refuses-the-configuration) `VRSNN-E11`
+
+- [An updater that fails or prints no version is an error naming the file](layers/config.md#vrsnn-e12--an-updater-that-fails-or-prints-no-version-is-an-error-naming-the-file) `VRSNN-E12`
+
 - [With no source registered, the default gate names are absent, not a failure](layers/config.md#gtvcg-b01--with-no-source-registered-the-default-gate-names-are-absent-not-a-failure) `GTVCG-B01`
 
 - [With a source registered, the default gate names are the ones it gives](layers/config.md#gtvcg-b02--with-a-source-registered-the-default-gate-names-are-the-ones-it-gives) `GTVCG-B02`
@@ -3741,6 +3759,8 @@ is what the test proves.
 - [An intent naming no declared product, a bump or type it may not, saying nothing, too long, or added before its product's latest release fails](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B09`
 
 - [The block of the version the sources hold, not released yet, needs no tag](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B10`
+
+- [A prerelease tag owes no block](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them) `CHVLA-B11`
 
 - [An artifact that is not a spec leaves without a verdict](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B01`
 

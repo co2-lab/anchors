@@ -152,6 +152,9 @@ func productTags(root string, p *config.Product) (*releases, error) {
 		if err != nil {
 			return nil, err
 		}
+		if len(v.Pre) > 0 {
+			continue // a prerelease owes no block: the release it tries does
+		}
 		r.reachable[raw] = t
 		if best == nil || version.Compare(v, *best) > 0 {
 			best, r.latest = &v, t

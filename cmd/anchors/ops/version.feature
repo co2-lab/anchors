@@ -97,3 +97,15 @@ Feature: VersionCommand — a product's version, its latest release and the next
     Given a script that saves its stdin and prints 3.0.0, then one that exits 3, then one that prints nothing
     When anchors version runs
     Then the next is 3.0.0 by the script, its stdin held the release and the commits, and the others fail naming the command
+
+  @VRSNI-B12 @unit-level
+  Scenario: A labelled branch shows its next prerelease, one above the tags; bump writes it where the label goes; a prerelease is not the latest release
+    Given app released as app-v1.0.0, a feat, app-v1.1.0-rc.1, review labelled rc in source and qa labelled rc in the tag
+    When anchors version runs on review, then bump on review and on qa
+    Then the release is 1.0.0, the label 1.1.0-rc.2 in source, review writes 1.1.0-rc.2 and qa 1.1.0
+
+  @VRSNI-B13 @unit-level
+  Scenario: after_bump runs in the root once every source was written, with the product and the version; when it fails the command says the sources were written
+    Given after_bump writing the product and the version, then after_bump exit 4
+    When bump runs
+    Then bumped.txt says app 1.0.1, and then the command fails saying the sources already hold 1.0.2

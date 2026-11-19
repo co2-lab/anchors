@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -54,6 +55,11 @@ func releaseOf(t stageTarget) (string, error) {
 	ver := or(st.Current, st.Next)
 	if ver == "" {
 		return "", fmt.Errorf("%s has no version to release on %s: %s", name, short(t.sha), st.Reason)
+	}
+	if st.Label != "" && st.LabelIn == "tag" {
+		if ver, err = labelledOnRemote(t, st.product, ver, st.product.LabelFor(t.branch).Name); err != nil {
+			return "", err
+		}
 	}
 	tag := st.product.TagFor(ver)
 	out, err := releaseAPI(t.root, "repos/{owner}/{repo}/git/ref/tags/"+tag)
@@ -141,4 +147,32 @@ func previousRelease(g changelog.Git, p *config.Product, s version.Scheme, to, v
 		}
 	}
 	return bestTag, nil
+}
+
+// labelledOnRemote is the prerelease a stage that labels only its tag releases: the one a tag
+// already records on this sha — a rerun —, else one above the highest GitHub holds.
+func labelledOnRemote(t stageTarget, p *config.Product, v, name string) (string, error) {
+	pre, _, _ := strings.Cut(p.TagTemplate(), "{version}")
+	out, err := releaseAPI(t.root, "repos/{owner}/{repo}/git/matching-refs/tags/"+pre+v+"-"+name+".")
+	if err != nil {
+		return "", fmt.Errorf("read the prereleases of %s: %w", v, err)
+	}
+	var refs []struct {
+		Ref    string `json:"ref"`
+		Object struct {
+			SHA string `json:"sha"`
+		} `json:"object"`
+	}
+	if err := json.Unmarshal(out, &refs); err != nil {
+		return "", fmt.Errorf("read the prereleases of %s: %w", v, err)
+	}
+	var tags []string
+	for _, r := range refs {
+		tag := strings.TrimPrefix(r.Ref, "refs/tags/")
+		if raw, ok := p.VersionOfTag(tag); ok && r.Object.SHA == t.sha && strings.HasPrefix(raw, v+"-"+name+".") {
+			return raw, nil
+		}
+		tags = append(tags, tag)
+	}
+	return v + "-" + name + "." + strconv.Itoa(nextLabelNumber(p, tags, v, name)), nil
 }

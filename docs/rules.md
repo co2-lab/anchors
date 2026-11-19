@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:8ff2d0163ae8f70e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:a35551301144c079 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2020,6 +2020,8 @@ in `layers/`.
 
 - [CLGCM-B12 — An output whose `source` is `intents` renders what is not released yet from the intents waiting, under the candidate, and a release from the intents archived under `released/<version>/`; a release whose intents were deleted renders nothing, its block being the one the file holds. The commits' outputs read no intent. (`renderIntentBlocks`, `typeHeading`)](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
+- [CLGCM-B13 — A prerelease tag splits no release: the release lists everything since the release before it.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
+
 - [CLGCM-E01 — `--from` names no tag reachable from `--to`.](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
 - [CLGCM-E02 — `changelog.template` names a file that cannot be read, or a URL that answers nothing (PTRFS-E01).](layers/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
@@ -2526,6 +2528,8 @@ in `layers/`.
 
 - [RLSTA-B02 — A tag already on the sha is a rerun: nothing is written when its Release exists, and only the Release when it does not.](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
 
+- [RLSTA-B03 — On a branch whose label goes into the tag alone, the release is the next prerelease of the version above those GitHub holds, and a rerun releases the one a tag already records on its sha. (`labelledOnRemote`)](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
+
 - [RLSTA-E01 — The tag is already on another sha; the sha gives no version; GitHub answers neither the ref nor a 404.](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
 
 - [RLSTA-E02 — GitHub does not write the tag or the Release, answers a ref that cannot be read or neither a release nor a 404, or `gh` is not in the PATH.](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
@@ -2628,6 +2632,10 @@ in `layers/`.
 
 - [VRSNI-B11 — `script` runs its command in the root with the product's state, as `--json` prints it, on its stdin, and takes the first line it prints; a command that fails, or prints nothing, fails naming it. (`scripted`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
 
+- [VRSNI-B12 — On a labelled branch the next prerelease shows with where it goes, its number one above the highest the product's tags record; `bump` writes it when the label goes into the sources, and the plain version when it goes into the tag alone. A prerelease tag is never the latest release. (`labelled`, `nextLabelNumber`)](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
+- [VRSNI-B13 — `after_bump` runs in the root once every source was written, with `$ANCHORS_PRODUCT` and `$ANCHORS_VERSION`; when it fails, the command fails saying the sources already hold the version.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
+
 - [VRSNI-E01 — No `versioning:` block, a `--product` the block does not hold, or several products and no `--product`.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
 
 - [VRSNI-E02 — A detached HEAD, or no repository, and no `--branch`.](layers/comando.md#vrsni--versioncommand--a-products-version-its-latest-release-and-the-next-version-its-branch-asks-for)
@@ -2651,6 +2659,8 @@ in `layers/`.
 - [VRQRA-B06 — `contains` fetches the branch from `origin` and holds when its head is an ancestor of the sha; it fails naming how many of its commits the sha lacks and the first five. (`containsHolds`)](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
 
 - [VRQRA-B07 — The version, the listings and the release reachable are read at the sha: a working tree that holds another version changes nothing. (`readAt`, `stateAt`)](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
+
+- [VRQRA-B08 — On a branch whose label goes into the sources, `expected` holds for a prerelease of the version the strategy computes.](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
 
 - [VRQRA-E01 — `origin` has no such branch, the sources at the sha hold no version or disagree, a listing or a tag cannot be read.](layers/comando.md#vrqra--versionrequirement--what-a-stage-asks-of-the-version-its-sha-carries-and-of-the-fixes-it-contains)
 
@@ -3968,6 +3978,10 @@ in `layers/`.
 
 - [VRSNN-B13 — `promote` names the branch whose version it takes (`from:`), and `script` the command that decides (`run:`).](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
+- [VRSNN-B14 — A branch rule's `label` makes its versions prereleases, the labelled version going into the tag alone unless `in` says `source` or `both`; a source may name an `updater`, and the product an `after_bump`. (`LabelFor`, `InOrDefault`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-B15 — An updater source is read by running `<updater> get <file>` and rewritten by `<updater> set <file> <version>` in the project's root, both over a copy of the file's content, so a file read at a commit is read the same way. (`runUpdater`)](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
 - [VRSNN-E01 — A product whose scheme does not build (VRSNE-E01), or that is empty.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E02 — A source with no `file`, with both or neither of `path:` and `regex:`, or with a regex that does not compile or does not have exactly one group.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
@@ -3987,6 +4001,10 @@ in `layers/`.
 - [VRSNN-E09 — Intents consumed other than by `delete` or `archive`, a negative `max_chars`, or `intents` declared on an output.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 - [VRSNN-E10 — `promote` with no `from:` or with a pattern, `script` with no `run:`, or `from:` or `run:` on another strategy.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E11 — A label on a product that is not semver, with a name of other characters, an `in` other than `tag`, `source` or `both`, or a key it does not know; a source with two of `path:`, `regex:` and `updater:`.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
+
+- [VRSNN-E12 — An updater that fails, or whose `get` prints nothing.](layers/config.md#vrsnn--versioning--the-products-a-project-versions-where-each-writes-its-version-and-how-each-branch-moves-it)
 
 ### [GTVCG — GateVocabulary — the list of default gate names, injected into the configuration layer](layers/config.md#gtvcg--gatevocabulary--the-list-of-default-gate-names-injected-into-the-configuration-layer)
 
@@ -4107,6 +4125,8 @@ in `layers/`.
 - [CHVLA-B09 — An intent that does not parse, names a product `versioning:` does not declare, a bump that is neither a part of its scheme nor `none`, or a type not declared, says nothing, exceeds `changelog.intents.max_chars`, or was added in a commit its product's latest release already holds — a release that forgot to consume it — fails, naming the file. Intents declared and none written pass. (`confrontIntents`, `addedBefore`)](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
 
 - [CHVLA-B10 — The block of the version the sources hold, while no tag records it, needs no tag; the block of a release is the one that must not change. (`sourcesVersion`)](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
+
+- [CHVLA-B11 — A prerelease tag owes no block: the release it tries does.](layers/gate.md#chvla--changelogvalid--a-products-changelog-outputs-hold-what-they-claim-whoever-wrote-them)
 
 ### [CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code](layers/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code)
 

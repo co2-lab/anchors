@@ -55,3 +55,9 @@ Feature: VersionRequirement — what a stage asks of the version its sha carries
     Given no branch nope on origin, and a commit whose app/version.json has no version
     When contains nope and fresh are asked
     Then the first fails naming origin/nope, and the second naming app/version.json
+
+  @VRQRA-B08 @unit-level
+  Scenario: expected takes a prerelease of the computed version on a branch whose label goes into the sources
+    Given review labelled rc in both, a feat since app-v1.0.0, and the source at 1.1.0-rc.1, then 1.2.0-rc.1
+    When expected is asked on review
+    Then 1.1.0-rc.1 holds, and 1.2.0-rc.1 fails as semantic asks for 1.1.0

@@ -67,3 +67,9 @@ Feature: ChangelogValid — a product's changelog outputs hold what they claim, 
     Given a block 1.2.0 on top while the sources hold 1.2.0, then 1.1.0
     When the gate runs
     Then it passes, and then fails saying 1.2.0 has no tag
+
+  @CHVLA-B11 @unit-level
+  Scenario: A prerelease tag owes no block
+    Given a complete changelog and the tag app-v1.2.0-rc.1
+    When the gate runs
+    Then it passes

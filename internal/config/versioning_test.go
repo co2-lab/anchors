@@ -470,3 +470,73 @@ func TestVersioning_promoteAndScript(t *testing.T) {
 		}
 	})
 }
+
+func TestVersioning_labelUpdaterAfterBump(t *testing.T) {
+	t.Run("VRSNN-B14: A branch labels its versions as prereleases, in the tag by default; a source may be written by an updater, and a bump may run after_bump", func(t *testing.T) {
+		c, err := loadVersioning(t, `  app:
+    scheme: semver
+    source:
+      - { file: app.plist, updater: ./plist.sh }
+    after_bump: ./notify.sh
+    branches:
+      review: { label: { name: rc } }
+      beta: { label: { name: beta, in: both } }
+`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		app := c.Versioning["app"]
+		if l := app.LabelFor("review"); l == nil || l.Name != "rc" || l.InOrDefault() != "tag" {
+			t.Errorf("review: %+v", l)
+		}
+		if l := app.LabelFor("beta"); l == nil || l.InOrDefault() != "both" {
+			t.Errorf("beta: %+v", l)
+		}
+		if app.LabelFor("main") != nil || app.Source[0].Updater != "./plist.sh" || app.AfterBump != "./notify.sh" {
+			t.Errorf("app: %+v", app)
+		}
+	})
+	t.Run("VRSNN-E11: A label off semver, with a name or a place it may not have or a key it does not know, or a source with two ways refuses the configuration", func(t *testing.T) {
+		for body, says := range map[string]string{
+			"  app:\n    scheme: number\n    next: none\n    branches:\n      review: { label: { name: rc } }\n":            "needs scheme semver",
+			"  app:\n    scheme: semver\n    next: none\n    branches:\n      review: { label: { name: 'r c' } }\n":         `name "r c"`,
+			"  app:\n    scheme: semver\n    next: none\n    branches:\n      review: { label: { name: rc, in: notes } }\n": `in "notes"`,
+			"  app:\n    scheme: semver\n    next: none\n    branches:\n      review: { label: { name: rc, at: 1 } }\n":     "at",
+			"  app: { scheme: semver, source: [{ file: a.json, path: v, updater: x }] }\n":                                  "one of them",
+		} {
+			if _, err := loadVersioning(t, body); err == nil || !strings.Contains(err.Error(), says) {
+				t.Errorf("%s: %v, want %q", body, err, says)
+			}
+		}
+	})
+}
+
+func TestVersioning_updater(t *testing.T) {
+	t.Run("VRSNN-B15: An updater reads the version with get and rewrites it with set, over a copy of the file, in the project's root", func(t *testing.T) {
+		root := t.TempDir()
+		os.WriteFile(filepath.Join(root, "up.sh"), []byte("if [ \"$1\" = get ]; then sed -n 's/^ver //p' \"$2\"; else printf 'ver %s\\n' \"$3\" > \"$2\"; fi\n"), 0o755)
+		p := filepath.Join(root, "anchors.yaml")
+		os.WriteFile(p, []byte("version: 8\nversioning:\n  app: { scheme: semver, source: [{ file: v.cfg, updater: sh up.sh }] }\n"), 0o644)
+		c, err := Load(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		app := c.Versioning["app"]
+		svs, err := app.ReadSources(func(string) ([]byte, error) { return []byte("name x\nver 1.2.0\n"), nil })
+		if err != nil || len(svs) != 1 || svs[0].Version != "1.2.0" {
+			t.Fatalf("get: %+v %v", svs, err)
+		}
+		out, err := app.Rewrite("v.cfg", []byte("ver 1.2.0\n"), "1.3.0")
+		if err != nil || string(out) != "ver 1.3.0\n" {
+			t.Errorf("set: %q %v", out, err)
+		}
+	})
+	t.Run("VRSNN-E12: An updater that fails or prints no version is an error naming the file", func(t *testing.T) {
+		for cmd, says := range map[string]string{"exit 2": "updater `exit 2 get` failed", "true": "printed no version"} {
+			p := &Product{Scheme: "semver", Source: []VersionSource{{File: "v.cfg", Updater: cmd}}}
+			if _, err := p.ReadSources(func(string) ([]byte, error) { return []byte("x"), nil }); err == nil || !strings.Contains(err.Error(), "v.cfg") || !strings.Contains(err.Error(), says) {
+				t.Errorf("%s: %v", cmd, err)
+			}
+		}
+	})
+}

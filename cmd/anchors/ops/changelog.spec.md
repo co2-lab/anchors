@@ -52,6 +52,7 @@ product declares none; only on a branch the changelog is written on.
 | `CLGCM-B10` | A branch that releases lists its releases; another lists only the candidate, headed by the version its strategy computes. With no `--branch`, the first branch that releases is read. |
 | `CLGCM-B11` | `--write` writes every output of the product with its path, mode and template, and refuses on a branch the changelog is not written on. (`renderBlocks`) |
 | `CLGCM-B12` | An output whose `source` is `intents` renders what is not released yet from the intents waiting, under the candidate, and a release from the intents archived under `released/<version>/`; a release whose intents were deleted renders nothing, its block being the one the file holds. The commits' outputs read no intent. (`renderIntentBlocks`, `typeHeading`) |
+| `CLGCM-B13` | A prerelease tag splits no release: the release lists everything since the release before it. |
 
 ## Errors
 

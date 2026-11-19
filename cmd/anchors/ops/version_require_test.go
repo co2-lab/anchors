@@ -240,3 +240,17 @@ func TestContainsRequirement(t *testing.T) {
 		holdsSays(t, "no version", ok, why, false, "app/version.json")
 	})
 }
+
+func TestVersionRequirement_label(t *testing.T) {
+	t.Run("VRQRA-B08: expected takes a prerelease of the computed version on a branch whose label goes into the sources", func(t *testing.T) {
+		root := releasedRepo(t)
+		cfg := strings.Replace(releasedProject, "      \"maint/*\":\n        next: manual\n", "      \"maint/*\":\n        next: manual\n      review:\n        label: { name: rc, in: both }\n", 1)
+		commitFiles(t, root, "feat: a screen", map[string]string{"anchors.yaml": cfg})
+		sha := commitFiles(t, root, "chore: rc", appVersion("1.1.0-rc.1"))
+		ok, why := versionHolds(root, configOf(t, root), &config.VersionRequirement{Expected: true}, "review", sha, nil)
+		holdsSays(t, "labelled", ok, why, true, "1.1.0-rc.1")
+		sha = commitFiles(t, root, "chore: other", appVersion("1.2.0-rc.1"))
+		ok, why = versionHolds(root, configOf(t, root), &config.VersionRequirement{Expected: true}, "review", sha, nil)
+		holdsSays(t, "another version", ok, why, false, "semantic asks for 1.1.0")
+	})
+}

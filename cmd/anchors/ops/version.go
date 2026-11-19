@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -123,6 +124,8 @@ type versionStateT struct {
 	Forced      bool            `json:"forced"`
 	Range       string          `json:"range,omitempty"`
 	RangeRule   string          `json:"range_rule,omitempty"`
+	Label       string          `json:"label,omitempty"`
+	LabelIn     string          `json:"label_in,omitempty"`
 
 	root    string
 	product *config.Product
@@ -225,7 +228,32 @@ func stateAt(absRoot string, cfg *config.Config, name, how, branch, rev string) 
 		return nil, fmt.Errorf("%s on %s (%s): %w", name, branch, strategy.Name, err)
 	}
 	st.Next, st.Reason, st.Forced = res.Version, res.Reason, res.Forced
+	if l := p.LabelFor(branch); l != nil && st.Next != "" && st.Next != st.Released {
+		st.Label, st.LabelIn = labelled(absRoot, p, st.Next, l.Name), l.InOrDefault()
+	}
 	return st, nil
+}
+
+// labelled is the next prerelease of a version: `1.1.0-rc.<n>`, n one above the highest the
+// product's tags record.
+func labelled(absRoot string, p *config.Product, v, name string) string {
+	out, _ := exec.Command("git", "-C", absRoot, "tag", "--list").Output()
+	return v + "-" + name + "." + strconv.Itoa(nextLabelNumber(p, strings.Fields(string(out)), v, name))
+}
+
+// nextLabelNumber is one above the highest n among the tags recording `<v>-<name>.<n>`.
+func nextLabelNumber(p *config.Product, tags []string, v, name string) int {
+	n := 0
+	for _, t := range tags {
+		raw, ok := p.VersionOfTag(t)
+		if !ok || !strings.HasPrefix(raw, v+"-"+name+".") {
+			continue
+		}
+		if k, err := strconv.Atoi(strings.TrimPrefix(raw, v+"-"+name+".")); err == nil && k > n {
+			n = k
+		}
+	}
+	return n + 1
 }
 
 // inRange confronts a version with the branch's range; true when the branch has none.
@@ -258,6 +286,9 @@ func latestRelease(g changelog.Git, p *config.Product, s version.Scheme, to stri
 		v, err := s.Parse(raw)
 		if err != nil {
 			return "", "", fmt.Errorf("tag %s: %w", t, err)
+		}
+		if len(v.Pre) > 0 {
+			continue // a prerelease is not the release the next version moves from
 		}
 		if best == nil || version.Compare(v, *best) > 0 {
 			best, bestTag = &v, t
@@ -308,6 +339,9 @@ func printVersionState(w io.Writer, st *versionStateT) {
 	if st.Range != "" {
 		fmt.Fprintf(w, "  range      %-10s %s\n", st.Range, st.RangeRule)
 	}
+	if st.Label != "" {
+		fmt.Fprintf(w, "  label      %-10s in %s\n", st.Label, st.LabelIn)
+	}
 	fmt.Fprintf(w, "  next       %-10s %s\n", orDash(st.Next), st.Reason)
 	fmt.Fprintf(w, "  commits    %d since %s\n", len(st.Commits), orDash(st.ReleasedTag))
 }
@@ -324,6 +358,9 @@ func bumpVersion(w io.Writer, st *versionStateT, want string) error {
 	case want == "":
 		if target == "" {
 			return fmt.Errorf("%s: %s", st.Branch, st.Reason)
+		}
+		if st.Label != "" && st.LabelIn != "tag" {
+			target, why = st.Label, st.Reason+", labelled"
 		}
 	case s.ValidPart(want) && want != "":
 		cur, err := s.Parse(st.Current)
@@ -393,6 +430,17 @@ func bumpVersion(w io.Writer, st *versionStateT, want string) error {
 	fmt.Fprintf(w, "%s %s → %s (%s)\n", st.Product, st.Current, target, why)
 	for _, src := range st.Sources {
 		fmt.Fprintf(w, "  %s\n", src.File)
+	}
+	if p.AfterBump != "" {
+		c, err := shell.Command(p.AfterBump)
+		if err != nil {
+			return err
+		}
+		c.Dir, c.Stdout, c.Stderr = st.root, w, w
+		c.Env = append(os.Environ(), "ANCHORS_PRODUCT="+st.Product, "ANCHORS_VERSION="+target)
+		if err := c.Run(); err != nil {
+			return fmt.Errorf("after_bump `%s` failed (%v): the sources already hold %s", p.AfterBump, err, target)
+		}
 	}
 	return nil
 }

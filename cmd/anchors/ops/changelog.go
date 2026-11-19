@@ -260,6 +260,9 @@ func productReleases(absRoot string, cfg *config.Config, name, branch, from, to 
 		if err != nil {
 			return nil, fmt.Errorf("tag %s: %w", t, err)
 		}
+		if len(pv.Pre) > 0 {
+			continue // a prerelease goes out to try the release, and the release lists it
+		}
 		ts = append(ts, tagged{t, pv})
 	}
 	sort.SliceStable(ts, func(i, j int) bool { return version.Compare(ts[i].v, ts[j].v) < 0 })

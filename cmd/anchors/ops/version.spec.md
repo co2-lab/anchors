@@ -30,7 +30,7 @@ cli (semver)
 | --- | --- | --- | --- |
 | `--product` | a product of `versioning:`; none when there is one | a name the block does not hold | this unit (`VRSNI-E01`) |
 | `--branch` | any branch name; none: the current branch | a detached HEAD with no `--branch` | this unit (`VRSNI-E02`) |
-| the tags | every tag reachable from HEAD; those of the product are read by its scheme | — | this unit |
+| the tags | every tag reachable from HEAD; those of the product are read by its scheme, a prerelease never being the latest release | — | this unit |
 | `bump`'s argument | none, a part of the scheme, or a version | — | this unit: the version is confronted (`VRSNI-E04`) |
 
 ## Effects
@@ -48,6 +48,8 @@ cli (semver)
 | `VRSNI-B09` | With the `intents` strategy, the next version reads the product's intents waiting — in the working tree, or at the commit a stage confronts —, and an intent that does not parse stops the command naming the file. (`intentsAt`) |
 | `VRSNI-B10` | `promote` takes the version the `from:` branch carries at its head — on `origin` when the checkout has it, else the local branch —, and for a product with no source its latest release there; a branch it cannot find fails naming it. (`promoted`) |
 | `VRSNI-B11` | `script` runs its command in the root with the product's state, as `--json` prints it, on its stdin, and takes the first line it prints; a command that fails, or prints nothing, fails naming it. (`scripted`) |
+| `VRSNI-B12` | On a labelled branch the next prerelease shows with where it goes, its number one above the highest the product's tags record; `bump` writes it when the label goes into the sources, and the plain version when it goes into the tag alone. A prerelease tag is never the latest release. (`labelled`, `nextLabelNumber`) |
+| `VRSNI-B13` | `after_bump` runs in the root once every source was written, with `$ANCHORS_PRODUCT` and `$ANCHORS_VERSION`; when it fails, the command fails saying the sources already hold the version. |
 
 ## Errors
 

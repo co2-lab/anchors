@@ -47,7 +47,9 @@ the project's. A project with no `versioning:` block sees no change.
 | Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
 | a product | `scheme` (with `format` or `pattern` as the scheme asks), `source`, `tag`, `next`, `released`, `branches` | any other key | the strict load: the configuration does not load |
-| `source` | a list of `file` with `path:` (a dot path into JSON or YAML, a number for a list item) or `regex:` (one group) | both, neither, no file, a regex with another number of groups | this unit (`VRSNN-E02`) |
+| `source` | a list of `file` with `path:` (a dot path into JSON or YAML, a number for a list item), `regex:` (one group) or `updater:` (a command) | two of them, none, no file, a regex with another number of groups | this unit (`VRSNN-E02`) |
+| a branch rule's `label` | `name` (letters, digits, hyphens), `in` (`tag`, `source`, `both`), on a semver product | anything else | this unit (`VRSNN-E11`) |
+| `after_bump` | a shell command | — | the project |
 | `tag` | a name with `{version}` once | none, or twice | this unit (`VRSNN-E03`) |
 | `next` | a strategy's name, or a map of `strategy`, `part`, `initial`, `types`, `from` (promote), `run` (script) | any other key, a strategy that does not fit | this unit (`VRSNN-E04`) |
 | `branches` | a map of branch pattern (BFSBR-B03) → `next:`, `range:` | any other key, a pattern that is neither a glob nor `re:` | this unit (`VRSNN-E04`) |
@@ -77,6 +79,8 @@ the project's. A project with no `versioning:` block sees no change.
 | `VRSNN-B11` | A product's changelog outputs load with their format; a branch releases when its rule says `release: true`, and the changelog is written on it when its rule says `changelog: true` — a product whose rules name no such branch releases, and writes, on every branch —; the branch a changelog reads by default is the first rule that releases. A heading pattern reads the version and the date of a line. (`Releases`, `WritesChangelog`, `ReleaseBranch`, `HeadingRE`) |
 | `VRSNN-B12` | `changelog.intents` loads its directory (`.anchors/changes` by default), its types (`feat` and `fix` by default), its limit and how a release consumes them; an output reads the intents when its `source` says so, and `intents` is a strategy. (`PathOrDefault`, `TypesOrDefault`, `FromIntents`) |
 | `VRSNN-B13` | `promote` names the branch whose version it takes (`from:`), and `script` the command that decides (`run:`). |
+| `VRSNN-B14` | A branch rule's `label` makes its versions prereleases, the labelled version going into the tag alone unless `in` says `source` or `both`; a source may name an `updater`, and the product an `after_bump`. (`LabelFor`, `InOrDefault`) |
+| `VRSNN-B15` | An updater source is read by running `<updater> get <file>` and rewritten by `<updater> set <file> <version>` in the project's root, both over a copy of the file's content, so a file read at a commit is read the same way. (`runUpdater`) |
 
 ## Errors
 
@@ -92,3 +96,5 @@ the project's. A project with no `versioning:` block sees no change.
 | `VRSNN-E08` | An output with no path, a mode other than `incremental` or `per_version`, a key it does not know, a heading or file with no `{version}` or a heading that does not compile, a `file` on an incremental output, a `required` other than `changed`, or a negative `max_chars`. | The configuration does not load, naming the output and the field. | A format that reads nothing would hold the changelog to nothing. |
 | `VRSNN-E09` | Intents consumed other than by `delete` or `archive`, a negative `max_chars`, or `intents` declared on an output. | The configuration does not load, naming the field. | Intents an output owns would be read by one output and consumed by none. |
 | `VRSNN-E10` | `promote` with no `from:` or with a pattern, `script` with no `run:`, or `from:` or `run:` on another strategy. | The configuration does not load, naming the field. | A promotion from many branches, or a script with nothing to run, decides nothing. |
+| `VRSNN-E11` | A label on a product that is not semver, with a name of other characters, an `in` other than `tag`, `source` or `both`, or a key it does not know; a source with two of `path:`, `regex:` and `updater:`. | The configuration does not load, naming the branch or the source. | A prerelease the scheme does not order, or a version read two ways, would be guessed. |
+| `VRSNN-E12` | An updater that fails, or whose `get` prints nothing. | An error naming the file and the command. | A version not found is not "no version". |

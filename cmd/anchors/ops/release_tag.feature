@@ -37,3 +37,9 @@ Feature: ReleaseTag — the tag and the GitHub Release a stage that releases wri
     Given the tag app-vnext beside the releases of app
     When the stage is recorded
     Then it fails naming app-vnext
+
+  @RLSTA-B03 @unit-level
+  Scenario: A stage on a branch that labels its tag releases the next prerelease GitHub does not hold, and a rerun the one already on its sha
+    Given production labelled rc in the tag, at 1.0.1, and GitHub holding app-v1.0.1-rc.1 on another commit
+    When the stage is recorded, then again with app-v1.0.1-rc.2 on its commit
+    Then app-v1.0.1-rc.2 is written, and the rerun writes nothing
