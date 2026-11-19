@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:aa631c22cfca601f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:781905c375a42d5f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -1685,6 +1685,8 @@ in `layers/`.
 - [NGSTI-B24 — A manual ingestion places its run — `--ran-at` (a time, or the commit it measured), else the report's timestamp, else the report file's modification time — and stamps each file its proofs stand on as that run found it: a file not modified since is the same; another is confronted, by the map's evidence, with its content at the last commit at or before the run. The same evidence keeps the proof fresh; another, or a file that commit lacks, stales it. A run `anchors test` just made is ingested as it ended. (`IngestArtifactsLate`, `unchangedSince`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B25 — `--alias OLD=NEW` (repeatable) and `--alias-file` read the report and each file's content at the run's commit with a code renamed since — a unit's, and each of its scenarios, or one scenario's —, in one pass, a whole code at a time: a file whose only change is the rename keeps its proof fresh, and the signal records the aliases. (`remap`, `readReport`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+
+- [NGSTI-B26 — A partial run's coverage is taken for the files its runner was handed — the impact path `anchors test --changed` gives `{{files}}` — and every other file in its report is left as it was, the count said. The tests related to a file are every test that can reach it, so its measurement is whole; another file was measured by a few of its tests, or reported at 0% unloaded (jest's `collectCoverageFrom`). A partial ingestion by hand, with no targets, takes the whole report. (`CoverageTargets`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B19 — A JUnit case with no `file` finds its test file from its class and name: the class names a test folder of the map by path suffix (segments split by `/`, or by `.` when it has none, dropped from the front until one exists; the root's folder when none does), and the case's file is the one test file there whose dialect `definition` defines the case's top-level test, the name before `/`; no folder, no file, or two files give the case no file. (`caseFileResolver`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 

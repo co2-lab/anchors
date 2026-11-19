@@ -764,3 +764,38 @@ func TestIngest_lateRefusals(t *testing.T) {
 		t.Errorf("an alias on the run just made is refused: %v", err)
 	}
 }
+
+// A partial run's lcov speaks only for the files it handed its runner (reported from a
+// project: jest's --findRelatedTests with --coverage reports every collected file, at 0% those
+// the related tests never loaded).
+func TestIngest_aPartialRunsCoverageSpeaksForItsTargets(t *testing.T) {
+	t.Run("NGSTI-B26: A partial run's coverage is taken for the files of its impact path only, the others left as they were", func(t *testing.T) {
+		root := fixtureProject(t)
+		writeProjectFile(t, root, "src/other.ts", "export const other = () => 1\n")
+		runCmd(t, newMapCmd(), "build", "--root", root)
+		lcov := filepath.Join(root, "reports/lcov.info")
+		writeProjectFile(t, root, "reports/lcov.info", "TN:\nSF:src/login.ts\nDA:1,1\nDA:2,1\nLF:2\nLH:2\nend_of_record\nSF:src/other.ts\nDA:1,1\nDA:2,1\nLF:2\nLH:2\nend_of_record\n")
+		if err := IngestArtifacts(root, "", "", lcov, "", "unit", "", "", false); err != nil {
+			t.Fatal(err)
+		}
+		writeProjectFile(t, root, "reports/lcov.info", "TN:\nSF:src/login.ts\nDA:1,1\nDA:2,0\nLF:2\nLH:1\nend_of_record\nSF:src/other.ts\nDA:1,0\nDA:2,0\nLF:2\nLH:0\nend_of_record\n")
+		CoverageTargets = []string{filepath.Join(root, "src/login.ts"), filepath.Join(root, "src/login.test.ts")}
+		out := runCmd(t, newIngestCmd(), "--root", root, "--lcov", lcov, "--layer", "unit", "--partial")
+		CoverageTargets = nil
+		if s := node(t, root, "src/login.ts").Signal; s == nil || s.CoveredLines != 1 || s.TotalLines != 2 {
+			t.Errorf("the target takes the partial run's coverage: %+v", s)
+		}
+		if s := node(t, root, "src/other.ts").Signal; s == nil || s.CoveredLines != 2 {
+			t.Errorf("a file outside the impact path keeps its whole measurement: %+v", s)
+		}
+		if !strings.Contains(out, "1 file(s) outside the run's impact path left as they were") {
+			t.Errorf("the run says what it left: %s", out)
+		}
+		if err := IngestArtifacts(root, "", "", lcov, "", "unit", "", "", true); err != nil {
+			t.Fatal(err)
+		}
+		if s := node(t, root, "src/other.ts").Signal; s == nil || s.CoveredLines != 0 {
+			t.Errorf("a partial ingestion by hand, with no targets, takes the whole report: %+v", s)
+		}
+	})
+}

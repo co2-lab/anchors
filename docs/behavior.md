@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:5260d333710487f0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:b94dec4a32b4d47c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1551,6 +1551,8 @@ is what the test proves.
 - [A code renamed since the run is read through an alias](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B25`
 
 - [A late run that cannot be placed or read is refused](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-E07`
+
+- [A partial run's coverage is taken for the files of its impact path only, the others left as they were](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B26`
 
 - [The legacy spelling of the waiver is a waiver all the way to the stamp](layers/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B01`
 

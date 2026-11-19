@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTN
 #   ref: NGSTI
-#   updated_at: 2026-10-20
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @NGSTI
@@ -213,3 +213,9 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     Given a malformed alias, a code renamed twice, and a ran-at that names nothing
     When each is given to an ingestion
     Then each is refused naming the cause
+
+  @NGSTI-B26 @unit-level
+  Scenario: A partial run's coverage is taken for the files of its impact path only, the others left as they were
+    Given login.ts and other.ts both measured whole, then a partial run handed login.ts whose report has login.ts at half and other.ts at 0%
+    When the partial report is ingested with its targets, and again by hand with none
+    Then login.ts takes half, other.ts keeps its whole measurement and the run says it left one file, and by hand other.ts takes 0%

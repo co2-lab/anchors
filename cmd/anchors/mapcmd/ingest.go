@@ -44,6 +44,13 @@ var ViaAnchorsTest bool
 // the report omits may simply be out of the tool's reach.
 var MutationTargets []string
 
+// CoverageTargets are the files a partial run (`anchors test --changed`) handed to its runner.
+// Their coverage is whole: the tests related to a file are every test that can reach it. Any
+// other file in the report was measured by a few of its tests only, or not loaded at all and
+// reported at 0% (jest with `collectCoverageFrom`): taken, it would replace a whole
+// measurement with a part of one. Nil takes every file of the report.
+var CoverageTargets []string
+
 func newIngestCmd() *cobra.Command {
 	var root, mapPath, lcov, mutation, layer, scope, suite string
 	var junits []string
@@ -304,6 +311,26 @@ func IngestArtifactsLate(absRoot, mapPath, junit, lcov, mutation, layer, scope, 
 					byFile[fc.File] = mapx.FileCov{Covered: fc.CoveredLines, Total: fc.TotalLines, Lines: fc.Lines, Branches: fc.Branches}
 				}
 				byFile = resolveByFile(g, mapx.KindCode, byFile, absRoot, lcov)
+				if partial && CoverageTargets != nil {
+					keep := map[string]bool{}
+					for _, t := range CoverageTargets {
+						rel := filepath.ToSlash(t)
+						if r, err := filepath.Rel(absRoot, t); err == nil && filepath.IsAbs(t) {
+							rel = filepath.ToSlash(r)
+						}
+						keep[rel] = true
+					}
+					left := 0
+					for f := range byFile {
+						if !keep[f] {
+							delete(byFile, f)
+							left++
+						}
+					}
+					if left > 0 {
+						fmt.Printf("coverage: %d file(s) outside the run's impact path left as they were — a partial run measures them only in part\n", left)
+					}
+				}
 				markPredating(byFile, absRoot, lcov)
 				// The suite is the REPORT, as for JUnit: unit and integration each speak
 				// for the lines they measured, and neither erases the other.
