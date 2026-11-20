@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:4b5fa0833630e876 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:aa91dfb27c552198 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -1534,7 +1534,7 @@ in `layers/`.
 
 - [CLMNC-B01 — A failing command prints its error once on standard error, prefixed with the localized word for error, and the process exits 1.](layers/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read)
 
-- [CLMNC-B02 — A command that signals a file the project does not govern exits with the not-governed code, 3.](layers/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read)
+- [CLMNC-B02 — A command that signals a file the project does not govern exits with the not-governed code, 3, and says so as a note prefixed with `·`, never with the word for error: the commit it lets through must not read as barred.](layers/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read)
 
 - [CLMNC-B03 — The build version reaches the version the CLI reports and the generator the map records; a build without link-time values reports the development identity.](layers/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read)
 

@@ -84,7 +84,7 @@ Feature: VerifyPhaseFacade — one invocation per phase, delegated to the check 
   Scenario: The child's not-governed exit stays not-governed
     Given a child check that exits with code 3
     When verify runs over package.json
-    Then verify returns the not-governed error
+    Then verify ends with code 3, without repeating the child's note
 
   @VPFVR-E02 @unit-level
   Scenario: Any other failing exit of the child stays a failure

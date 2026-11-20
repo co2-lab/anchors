@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CLMNC
-  updated_at: 2026-10-09
+  updated_at: 2026-11-19
   layer: comando
 -->
 # CliMain — the entry point that stamps the build identity, prints a failure once and turns it into the exit code the hooks read
@@ -19,8 +19,9 @@ binary.
 
 When the command fails, the entry point prints the error once, prefixed with the localized
 word for error, and chooses the exit code. A file the project does not govern is not a
-failure: it exits with its own code, which the hooks read to let a commit of configuration
-files through, while any other failure exits 1.
+failure: it is said as a note, prefixed with `·` and not with the word for error, and exits
+with its own code, which the hooks read to let a commit of configuration files through, while
+any other failure exits 1.
 
 ## Domain
 
@@ -34,7 +35,7 @@ files through, while any other failure exits 1.
 | Effect | Description |
 | --- | --- |
 | `CLMNC-B01` | A failing command prints its error once on standard error, prefixed with the localized word for error, and the process exits 1. |
-| `CLMNC-B02` | A command that signals a file the project does not govern exits with the not-governed code, 3. |
+| `CLMNC-B02` | A command that signals a file the project does not govern exits with the not-governed code, 3, and says so as a note prefixed with `·`, never with the word for error: the commit it lets through must not read as barred. |
 | `CLMNC-B03` | The build version reaches the version the CLI reports and the generator the map records; a build without link-time values reports the development identity. |
 | `CLMNC-B04` | An unknown key that the migration renames, in a configuration of an older format, is reported as renamed, with the advice to run `anchors migrate`. |
 | `CLMNC-B05` | A command that ends with an exit code exits with it, printing nothing more; the exit code — 0, the command's own, 3 for a file not governed, 1 otherwise — is the one the record of a long command's run is closed with. (`exitCodeOf`) |

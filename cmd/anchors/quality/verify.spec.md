@@ -70,7 +70,7 @@ stays a failure.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `VPFVR-E01` | The child check exits with the not-governed code. | Verify returns the not-governed error, which the program turns back into the same exit code. | A generic failure there made the pre-commit bar a configuration-only commit, the very case the code exists to let through. |
+| `VPFVR-E01` | The child check exits with the not-governed code. | Verify ends with the same exit code and prints nothing more: the child already said which file is not governed. | A generic failure there made the pre-commit bar a configuration-only commit, the very case the code exists to let through. |
 | `VPFVR-E02` | The child check fails with any other code. | Verify fails. | Only not-governed has its own handling; any other code swallowed would hide a real failure. |
 | `VPFVR-E03` | Neither the staged scope, nor a file, nor the full sweep is given. | Error asking for one of the three. | A verify with no scope would pass having confronted nothing. |
 | `VPFVR-E04` | The staged scope is asked for outside a git repository. | Error explaining which of git or the repository is missing. | There is no index to list, and the raw git error does not say why. |

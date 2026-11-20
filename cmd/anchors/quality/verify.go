@@ -270,9 +270,12 @@ func translateChildOutput(err error) error {
 	// saía com 3 ("não tenho jurisdição"), o `verify` traduzia para 1, e o
 	// pre-commit barrava um commit só de configuração (package.json, yarn.lock),
 	// que é exatamente o caso que o código 3 existe para permitir.
+	//
+	// The child already said which file is not governed; the code alone goes up, so the
+	// note is not printed a second time.
 	var ee *exec.ExitError
 	if errors.As(err, &ee) && ee.ExitCode() == common.ExitNotGoverned {
-		return errNotGoverned{target: i18n.T("verify.staged_files")}
+		return common.ExitCode{Code: common.ExitNotGoverned}
 	}
 	return err
 }

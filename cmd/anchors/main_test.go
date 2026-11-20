@@ -87,6 +87,10 @@ func TestMainExitsThreeForANotGovernedFile(t *testing.T) {
 	if !strings.Contains(stderr, "is not governed") {
 		t.Errorf("stderr does not say why:\n%s", stderr)
 	}
+	// Not a failure, so not labelled one: the commit it lets through must not read as barred.
+	if strings.Contains(stderr, "error:") || !strings.Contains(stderr, "· \"package.json\" is not governed") {
+		t.Errorf("the not-governed note is labelled an error:\n%s", stderr)
+	}
 }
 
 // The build identity reaches every place that records it: the version the CLI reports and

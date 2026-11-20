@@ -57,8 +57,15 @@ func main() {
 		return
 	}
 	// A command that ends with an exit code already said what it had to.
+	// A file not governed is a note, not a failure: a commit of configuration files passes,
+	// and an "error:" there read as if it had been barred.
 	var ec common.ExitCode
-	if !errors.As(err, &ec) {
+	var nr common.ErrNotGoverned
+	switch {
+	case errors.As(err, &ec):
+	case errors.As(err, &nr):
+		fmt.Fprintln(os.Stderr, "·", err)
+	default:
 		fmt.Fprintln(os.Stderr, i18n.T("error")+":", err)
 	}
 	common.FlushTelemetry()

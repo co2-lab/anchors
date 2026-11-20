@@ -15,6 +15,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/shell"
@@ -114,9 +115,9 @@ func TestVerifyTranslatesTheChildsNotGoverned(t *testing.T) {
 	t.Run("VPFVR-E01: The child's not-governed exit stays not-governed", func(t *testing.T) {})
 	fakeChild(t, 3)
 	_, err := runQ(t, newVerifyCmd(), "--root", t.TempDir(), "--changed", "package.json")
-	var ng errNotGoverned
-	if !errors.As(err, &ng) {
-		t.Errorf("exit 3 of the child must become errNotGoverned, got %v (%T)", err, err)
+	var ec common.ExitCode
+	if !errors.As(err, &ec) || ec.Code != common.ExitNotGoverned {
+		t.Errorf("exit 3 of the child must end verify with code 3, got %v (%T)", err, err)
 	}
 }
 
@@ -187,9 +188,14 @@ func TestExitNotGovernedCrossesTheSubprocess(t *testing.T) {
 	// `sh -c 'exit 3'` reproduces the child's code.
 	err := translateChildOutput(shellRun(t, "exit 3"))
 
-	var nr errNotGoverned
-	if !errors.As(err, &nr) {
-		t.Fatalf("exit 3 of the child did not become errNotGoverned: %v (%T)", err, err)
+	var ec common.ExitCode
+	if !errors.As(err, &ec) || ec.Code != common.ExitNotGoverned {
+		t.Fatalf("exit 3 of the child did not end verify with code 3: %v (%T)", err, err)
+	}
+	// The child said which file; a not-governed error here would be printed a second time.
+	var nr common.ErrNotGoverned
+	if errors.As(err, &nr) {
+		t.Errorf("verify repeats the child's not-governed note: %v", err)
 	}
 }
 

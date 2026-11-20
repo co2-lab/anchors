@@ -511,7 +511,6 @@
   "health.opportunity.tests_junit": "the project has tests but no JUnit report path declared in `tests:` in anchors.yaml — without it Anchors cannot ingest test suite results",
   "verify.nothing_staged": "nothing staged — nothing to verify.",
   "verify.flags_required": "specify --staged, --changed <file> or --all",
-  "verify.staged_files": "staged files",
   "stale.expired_test_evidence": "%d EXPIRED test evidence(s) — test passed against code that already changed:",
   "stale.test_file_changed": "the test file itself changed",
   "stale.dependencies_changed": "%d dependencie(s) changed, e.g.: %s",

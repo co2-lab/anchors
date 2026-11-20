@@ -2,7 +2,7 @@
 # @anchors
 #   code: MNFTM
 #   ref: CLMNC
-#   updated_at: 2026-10-09
+#   updated_at: 2026-11-19
 #   layer: feature
 
 @CLMNC
@@ -20,7 +20,7 @@ Feature: CliMain — the entry point that stamps the build identity, prints a fa
     Given a governed project with a map and a package.json no layer matches
     When anchors check --changed package.json --no-record runs
     Then it exits 3
-    And stderr says the file is not governed
+    And stderr says the file is not governed, as a note starting with "· " and not with "error:"
 
   @CLMNC-B03 @unit-level
   Scenario: The build version reaches the reported version and the map's generator
