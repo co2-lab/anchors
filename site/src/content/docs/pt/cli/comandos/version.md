@@ -59,7 +59,7 @@ version= and tag= (also into $GITHUB_OUTPUT): the tag alone records it.
 #### Uso
 
 ```bash
-anchors version apply [flags]
+anchors version apply
 ```
 
 ### `anchors version bump`
@@ -77,7 +77,7 @@ file.
 #### Uso
 
 ```bash
-anchors version bump [part|version] [flags]
+anchors version bump [part|version]
 ```
 
 ## Versões, changelog, pull requests e pipeline — família

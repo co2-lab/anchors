@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:b3522be3287db7f7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:cc28172820a508a8 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -1543,6 +1543,8 @@ is what the test proves.
 - [With no layer named, a report a suite declares takes the suite's layer](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B22`
 
 - [Each of several JUnit reports is ingested as a suite of its own](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B23`
+
+- [Reports from another working copy are kept apart by their path in it](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B24`
 
 - [One suite name for several reports is refused](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-E06`
 

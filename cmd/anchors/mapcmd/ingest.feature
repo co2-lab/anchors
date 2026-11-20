@@ -2,7 +2,7 @@
 # @anchors
 #   code: INFTN
 #   ref: NGSTI
-#   updated_at: 2026-11-19
+#   updated_at: 2026-11-20
 #   layer: feature
 
 @NGSTI
@@ -189,6 +189,12 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     Given two JUnit reports that prove the same scenario
     When both are given to one ingestion, each with --junit
     Then both are ingested, and the scenario is proven by two suites
+
+  @NGSTI-B24 @unit-level
+  Scenario: Reports from another working copy are kept apart by their path in it
+    Given a worktree outside the repository, with junit.xml in two workspaces, only the first proving LOGIN-B01
+    When each is ingested in turn
+    Then LOGIN-B01 stays proven, kept under external/ws-a/out/junit.xml
 
   @NGSTI-E06 @unit-level
   Scenario: One suite name for several reports is refused

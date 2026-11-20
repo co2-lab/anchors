@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:aa91dfb27c552198 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:b624dcf46f54ee72 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -1652,7 +1652,7 @@ in `layers/`.
 
 - [NGSTI-B06 — A project with no test or mutation suite declared, or with no configuration at all, is not asked to use the test commands.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
-- [NGSTI-B07 — The suite key is the report's path from the project root; a report outside the repository is keyed by the external prefix and its file name, the same on every machine.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+- [NGSTI-B07 — The suite key is the report's path from the project root; a report outside the repository is keyed by the external prefix and its file name, the same on every machine — or, inside another working copy, by its path in that copy (`NGSTI-B24`).](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B08 — A full run of a suite inside the repository drops, from the suites ingested from outside it, what it measured again — the scenarios its report names, or the files its coverage covers in its own test layer — and says so.](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
@@ -1682,7 +1682,7 @@ in `layers/`.
 
 - [NGSTI-B23 — `--junit` may be repeated: each report is ingested in turn as a suite of its own, the coverage and mutation reports with the first. (`newIngestCmd`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
-- [NGSTI-B24 — A manual ingestion places its run — `--ran-at` (a time, or the commit it measured), else the report's timestamp, else the report file's modification time — and stamps each file its proofs stand on as that run found it: a file not modified since is the same; another is confronted, by the map's evidence, with its content at the last commit at or before the run. The same evidence keeps the proof fresh; another, or a file that commit lacks, stales it. A run `anchors test` just made is ingested as it ended. (`IngestArtifactsLate`, `unchangedSince`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
+- [NGSTI-B24 — A report outside the repository but inside another working copy — a worktree or a clone, the nearest folder above it holding a `.git` — is keyed by the external prefix and its path in that copy: two workspaces' reports of one run with the same file name keep each other's proof. (`relToWorkingCopy`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 
 - [NGSTI-B25 — `--alias OLD=NEW` (repeatable) and `--alias-file` read the report and each file's content at the run's commit with a code renamed since — a unit's, and each of its scenarios, or one scenario's —, in one pass, a whole code at a time: a file whose only change is the rename keeps its proof fresh, and the signal records the aliases. (`remap`, `readReport`)](layers/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map)
 

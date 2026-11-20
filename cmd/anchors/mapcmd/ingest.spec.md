@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NGSTI
-  updated_at: 2026-11-19
+  updated_at: 2026-11-20
   layer: comando
 -->
 # Ingest — binds the test and log signals the project produced to the nodes of the map
@@ -40,7 +40,7 @@ spec declares is reported, never bound to an invented owner.
 | `NGSTI-B04` | An ingestion not run by the test commands warns on the error stream and proceeds, by default. |
 | `NGSTI-B05` | An ingestion run by the test commands never complains, even when the project refuses manual ingestion. |
 | `NGSTI-B06` | A project with no test or mutation suite declared, or with no configuration at all, is not asked to use the test commands. |
-| `NGSTI-B07` | The suite key is the report's path from the project root; a report outside the repository is keyed by the external prefix and its file name, the same on every machine. |
+| `NGSTI-B07` | The suite key is the report's path from the project root; a report outside the repository is keyed by the external prefix and its file name, the same on every machine — or, inside another working copy, by its path in that copy (`NGSTI-B24`). |
 | `NGSTI-B08` | A full run of a suite inside the repository drops, from the suites ingested from outside it, what it measured again — the scenarios its report names, or the files its coverage covers in its own test layer — and says so. |
 | `NGSTI-B09` | A partial run, or another report from outside the repository, drops no external suite. |
 | `NGSTI-B10` | When two paths of one report name the same node, the path equal to the node id wins, whatever order the report lists them in. |
@@ -55,6 +55,7 @@ spec declares is reported, never bound to an invented owner.
 | `NGSTI-B21` | A scenario a full in-repository run does not name keeps the proof a report from outside the repository gave it — another layer's run, such as a visual suite, is not replaced by it. |
 | `NGSTI-B22` | With no layer named, a report a suite of `tests:` declares (its `junit` or `lcov`) is ingested under that suite's layer; a report no suite declares is read as `unit`. (`layerOfReports`) |
 | `NGSTI-B23` | `--junit` may be repeated: each report is ingested in turn as a suite of its own, the coverage and mutation reports with the first. (`newIngestCmd`) |
+| `NGSTI-B24` | A report outside the repository but inside another working copy — a worktree or a clone, the nearest folder above it holding a `.git` — is keyed by the external prefix and its path in that copy: two workspaces' reports of one run with the same file name keep each other's proof. (`relToWorkingCopy`) |
 | `NGSTI-B24` | A manual ingestion places its run — `--ran-at` (a time, or the commit it measured), else the report's timestamp, else the report file's modification time — and stamps each file its proofs stand on as that run found it: a file not modified since is the same; another is confronted, by the map's evidence, with its content at the last commit at or before the run. The same evidence keeps the proof fresh; another, or a file that commit lacks, stales it. A run `anchors test` just made is ingested as it ended. (`IngestArtifactsLate`, `unchangedSince`) |
 | `NGSTI-B25` | `--alias OLD=NEW` (repeatable) and `--alias-file` read the report and each file's content at the run's commit with a code renamed since — a unit's, and each of its scenarios, or one scenario's —, in one pass, a whole code at a time: a file whose only change is the rename keeps its proof fresh, and the signal records the aliases. (`remap`, `readReport`) |
 | `NGSTI-B26` | A partial run's coverage is taken for the files its runner was handed — the impact path `anchors test --changed` gives `{{files}}` — and every other file in its report is left as it was, the count said. The tests related to a file are every test that can reach it, so its measurement is whole; another file was measured by a few of its tests, or reported at 0% unloaded (jest's `collectCoverageFrom`). The budget, selection and retry runs hand their batches the same way. A partial ingestion by hand, with no targets, takes the whole report. (`CoverageTargets`) |

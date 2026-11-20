@@ -542,6 +542,30 @@ func TestIngest_aNewSpecKeepsItsFirstProof(t *testing.T) {
 	node(t, root, "src/pay.test.ts")
 }
 
+// A report in another working copy — a worktree of the project, outside the repository — is
+// keyed by its path in that copy: two workspaces' reports of one run share a file name, and
+// keyed by it the second erased the first's proof.
+func TestIngest_reportsOfAnotherWorkingCopyKeepEachOthersProof(t *testing.T) {
+	t.Run("NGSTI-B24: Reports from another working copy are kept apart by their path in it", func(t *testing.T) {})
+	root := fixtureProject(t)
+	worktree := t.TempDir()
+	writeProjectFile(t, worktree, ".git", "gitdir: /elsewhere/.git/worktrees/wt\n")
+	writeProjectFile(t, worktree, "ws-a/out/junit.xml", junitReport)
+	writeProjectFile(t, worktree, "ws-b/out/junit.xml", `<?xml version="1.0"?>
+<testsuites><testsuite name="x" file="src/other.test.ts">
+  <testcase name="OTHER-B01: x" file="src/other.test.ts"/>
+</testsuite></testsuites>`)
+	runCmd(t, newIngestCmd(), "--root", root, "--junit", filepath.Join(worktree, "ws-a/out/junit.xml"))
+	runCmd(t, newIngestCmd(), "--root", root, "--junit", filepath.Join(worktree, "ws-b/out/junit.xml"))
+	spec := node(t, root, "src/login.spec.md").Signal
+	if spec == nil || !slices.Contains(spec.ProvenCodes, "LOGIN-B01") {
+		t.Fatalf("the second workspace's report erased the first's proof: %+v", spec)
+	}
+	if _, ok := spec.ProvenBySuite[mapx.ExternalSuitePrefix+"ws-a/out/junit.xml"]; !ok {
+		t.Errorf("the report is keyed by its path in its working copy, the suites are %v", spec.ProvenBySuite)
+	}
+}
+
 // A report on another drive has no path relative to the root: it is external, keyed by its
 // name, the same on every machine.
 func TestSuiteKey_anotherDrive(t *testing.T) {

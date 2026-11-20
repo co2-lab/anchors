@@ -558,8 +558,12 @@ func resolveByFile[T any](g *mapx.Graph, kind mapx.Kind, byFile map[string]T, ab
 // A report INSIDE the repository is keyed by its path from the root. A report OUTSIDE it
 // (CI writing to `/tmp/junit.xml`) would become `../../../../tmp/junit.xml`, with a depth
 // that depends on where the runner checked the repository out. It is keyed by its file
-// name instead; two external reports with the same name then share an entry, which is the
-// behaviour before suites existed — and `--suite` names it explicitly when that matters.
+// name instead — or, when it lies in another working copy (a worktree, a clone), by its
+// path inside that copy: a project's worktrees live outside the repository, each
+// workspace writing `test-output/junit/<run>.xml`, and keyed by name alone the backend's
+// and the mobile's reports of one run shared an entry, the second erasing the first's
+// proof (reported from a project). Two reports outside any working copy with the same name
+// still share one — `--suite` names it explicitly when that matters.
 // SuiteKey is the key a report's signals are kept under in the map: the report's path
 // relative to the root. `--budget` reads the recorded run times under the same key.
 func SuiteKey(absRoot, report string) string { return suiteKey(absRoot, report) }
@@ -570,9 +574,33 @@ func suiteKey(absRoot, report string) string {
 	// Windows: it is outside the repository too, and keying it by its full path would
 	// give the same suite a different key on every machine.
 	if rel == ".." || strings.HasPrefix(rel, "../") || filepath.IsAbs(filepath.FromSlash(rel)) || path.IsAbs(rel) {
+		if inCopy := relToWorkingCopy(report); inCopy != "" {
+			return mapx.ExternalSuitePrefix + inCopy
+		}
 		return mapx.ExternalSuitePrefix + filepath.Base(report)
 	}
 	return rel
+}
+
+// relToWorkingCopy is the report's path inside the working copy that holds it — the
+// nearest folder above it with a `.git`, a directory or a worktree's file — or "" when no
+// folder above it has one.
+func relToWorkingCopy(report string) string {
+	abs, err := filepath.Abs(report)
+	if err != nil {
+		return ""
+	}
+	for dir := filepath.Dir(abs); ; dir = filepath.Dir(dir) {
+		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
+			if rel, err := filepath.Rel(dir, abs); err == nil {
+				return filepath.ToSlash(rel)
+			}
+			return ""
+		}
+		if filepath.Dir(dir) == dir {
+			return ""
+		}
+	}
 }
 
 // dropExternal removes, after a FULL run of a suite inside the repository, what reports
