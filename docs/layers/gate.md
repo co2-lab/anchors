@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:ffdd7a1ee19aa26d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/layers/gate.md.tmpl — inputs:820e0d3d8a9a75e2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Layer: gate
 
 
 
-> This layer has 99 units and 1503 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
+> This layer has 99 units and 1504 rules — above the cut of 20 units / 2000 lines, so this page brings the SUMMARY of each unit. The full text is in the spec.
 
 
 ## APISP — APISpec — the coherence of an API spec, and its error codes in the code
@@ -4749,6 +4749,8 @@ belongs to a project-scope gate.
 - **TICTS-B26** — A handle the code builds on its caller's head — a `suffix` the project's `exposed` patterns capture, `${testID}-option-${v}` — is the derived handle `*-option-*`: the spec declares it as written, a consumer queries it by naming its segment after a head (`:pay-option-a`), and the caller's own handle counts as queried through a segment some unit of the project derives. A handle whose segment names nothing — `${prefix}${key}`, `${prefix}-${i}` — cannot be measured: the gate is pending, naming the file and line, never passing — unless the file gives a head of its own (B29). (`unmeasurableHandles`, `queriedThroughDerived`, `projectDerivedSegments`)
 
 - **TICTS-B27** — A consumer surface the gate could not read — a linked test, a flow, a neighbour test — holds queries nobody saw: the gate is pending, naming the files — neither failing a handle as unqueried nor passing it as having no consumer. The surfaces are read through the run's reader, the git index under `--index`.
+
+- **TICTS-B31** — A file the run's reader does not hold — listed in a consumer folder on disk but not in the git index under `--index`, as an untracked file beside the commit's — is no consumer, not an unreadable one: it is left out, and nothing is pending on it. Only a file the reader holds and fails to read leaves the gate pending (B27).
 
 - **TICTS-B28** — A derived handle whose segment ends it — `${testId}-spin` — is `*-spin`: a consumer queries it with the segment after a head and, after it, the id's end or a hyphen (`b-spin`, `b-spin-overlay`, never `b-spinner`); a caller's own handle is queried through it the same way (`:row-transfer-badge`). One a value follows — `${id}-row-${i}` — stays open, `*-row-*`.
 

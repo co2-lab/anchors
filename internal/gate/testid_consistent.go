@@ -207,7 +207,7 @@ func consumingSurfaces(root, specID string, g *mapx.Graph, cfg *config.Config) (
 			if fe.Type == mapx.EdgeTestedBy {
 				if b, err := readFile(root, fe.To); err == nil {
 					cs = append(cs, string(b))
-				} else {
+				} else if !absent(err) {
 					unread = append(unread, fe.To)
 				}
 			}

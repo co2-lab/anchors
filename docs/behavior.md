@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:cc28172820a508a8 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:4b624fd61335b2bd — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -6393,6 +6393,8 @@ is what the test proves.
 - [A handle derived from the caller's head is declared, queried and counted](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B26`
 
 - [A consumer that cannot be read leaves the gate pending, not failing](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B27`
+
+- [A file the run's reader does not hold is no consumer, not an unreadable one](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B31`
 
 - [A derived handle whose segment ends it is queried with the id's end or a hyphen after](layers/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B28`
 

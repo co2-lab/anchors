@@ -2,7 +2,7 @@
 # @anchors
 #   code: TCFTS
 #   ref: TICTS
-#   updated_at: 2026-11-02
+#   updated_at: 2026-11-22
 #   layer: feature
 
 @TICTS
@@ -191,6 +191,12 @@ Feature: TestIDContract — a test handle is one contract with four ends: the co
     Given a spec declaring a handle the code exposes, and its linked test unreadable
     When testid-consistent confronts the spec
     Then it is pending, naming the test file
+
+  @TICTS-B31 @unit-level
+  Scenario: A file the run's reader does not hold is no consumer, not an unreadable one
+    Given a spec whose test queries its handle, an untracked visual baseline the layers count as a test beside it, and an untracked flow
+    When testid-consistent confronts the spec through the git index
+    Then it passes, and names neither file as unreadable
 
   @TICTS-B28 @unit-level
   Scenario: A derived handle whose segment ends it is queried with the id's end or a hyphen after

@@ -882,3 +882,26 @@ func TestTestHandles_everyDialects(t *testing.T) {
 		t.Error("no dialect declares any: none")
 	}
 }
+
+// Reported from a project: new visual baselines, untracked and outside the commit, sat beside
+// the screens, where the layers count them as tests. The folder is listed on disk and read
+// through the index, which does not hold them, and every spec of the folder was pending on
+// files that could not be read.
+func TestTestIDContract_fileTheReaderDoesNotHoldIsNoConsumer(t *testing.T) {
+	t.Run("TICTS-B31: A file the run's reader does not hold is no consumer, not an unreadable one", func(t *testing.T) {})
+	spec, g, root := consumerFixture(t, "getByTestId(':abcd-screen')\n")
+	writeFile(t, root, "x.ABCDX-VR-S01.png", "\x89PNG")
+	writeFile(t, root, "e2e/new.yaml", "- tapOn: ':abcd-other'\n")
+	untracked := map[string]bool{"x.ABCDX-VR-S01.png": true, "e2e/new.yaml": true}
+	defer SetFileSource(func(rel string) ([]byte, error) {
+		if untracked[filepath.ToSlash(rel)] {
+			return nil, &os.PathError{Op: "read", Path: rel, Err: os.ErrNotExist}
+		}
+		return os.ReadFile(filepath.Join(root, rel))
+	})()
+	cfg := e2eConfig()
+	cfg.Layers = map[string]config.Layer{"visual": {Pattern: "**/*.png", Kind: "test"}}
+	if v, msg := checkTestIDCoherent(sectionOK, spec, root, g, cfg); v != Pass {
+		t.Errorf("files the commit does not hold are no consumers: got %v (%s)", v, msg)
+	}
+}

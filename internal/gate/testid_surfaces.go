@@ -13,6 +13,8 @@
 package gate
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -158,7 +160,7 @@ func readE2ESurface(root string, cfg *config.Config) ([]string, []string) {
 		rel = filepath.ToSlash(rel)
 		if b, e := readFile(root, rel); e == nil {
 			out = append(out, string(b))
-		} else {
+		} else if !absent(e) {
 			unread = append(unread, rel)
 		}
 		return nil
@@ -205,13 +207,19 @@ func readNeighborTests(root, specID string, cfg *config.Config) ([]string, []str
 			}
 			if b, err := readFile(root, filepath.ToSlash(rel)); err == nil {
 				out = append(out, string(b))
-			} else {
+			} else if !absent(err) {
 				unread = append(unread, filepath.ToSlash(rel))
 			}
 		}
 	}
 	return out, unread
 }
+
+// absent says that a file the folder lists is not in what the run reads: under `--index`, an
+// untracked file beside the commit's. It is no consumer of the commit, not an unreadable one:
+// new visual baselines, untracked and outside the commit, held every spec of their folder
+// pending on files that "could not be read".
+func absent(err error) bool { return errors.Is(err, fs.ErrNotExist) }
 
 // firstStaticSegment corta o template no primeiro placeholder (`{{module}}`, `{unit}`)
 // ou curinga de glob (`*`, `?`, `[`), devolvendo o DIRETÓRIO fixo antes dele — a raiz
