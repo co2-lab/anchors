@@ -2,7 +2,7 @@
 # @anchors
 #   code: RLSTB
 #   ref: RLSTA
-#   updated_at: 2026-11-18
+#   updated_at: 2026-11-23
 #   layer: feature
 
 @RLSTA
@@ -43,3 +43,9 @@ Feature: ReleaseTag — the tag and the GitHub Release a stage that releases wri
     Given production labelled rc in the tag, at 1.0.1, and GitHub holding app-v1.0.1-rc.1 on another commit
     When the stage is recorded, then again with app-v1.0.1-rc.2 on its commit
     Then app-v1.0.1-rc.2 is written, and the rerun writes nothing
+
+  @RLSTA-B04 @unit-level
+  Scenario: A changelog longer than GitHub keeps is cut at the last whole line that fits, saying how many lines were left out
+    Given a release whose changelog is longer than the body GitHub keeps
+    When the stage is recorded
+    Then the Release is written with the changelog's first whole lines within the limit, and a last line saying how many were left out

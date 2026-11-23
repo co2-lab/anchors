@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:4b624fd61335b2bd — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:87754a32d38e3146 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2303,6 +2303,8 @@ is what the test proves.
 - [A tag of the product the scheme cannot read stops the release body](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes) `RLSTA-E03`
 
 - [A stage on a branch that labels its tag releases the next prerelease GitHub does not hold, and a rerun the one already on its sha](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes) `RLSTA-B03`
+
+- [A changelog longer than GitHub keeps is cut at the last whole line that fits, saying how many lines were left out](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes) `RLSTA-B04`
 
 - [A decision without a date is refused](layers/comando.md#stcms--settingscommand--one-agents-local-decisions-declared-with-a-date-and-kept-out-of-the-projects-configuration) `STCMS-B01`
 

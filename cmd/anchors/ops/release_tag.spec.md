@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RLSTA
-  updated_at: 2026-11-18
+  updated_at: 2026-11-23
   layer: comando
 -->
 # ReleaseTag — the tag and the GitHub Release a stage that releases writes
@@ -34,6 +34,7 @@ The tag and the Release go through GitHub's API (`gh api`), so the workflow gran
 | `RLSTA-B01` | When the stage passed, the tag is written on its sha, then the Release of the tag, named after it, whose body is the changelog of the commits since the product's highest release reachable from the sha, the one being written aside. (`releaseOf`, `releaseBody`, `previousRelease`) |
 | `RLSTA-B02` | A tag already on the sha is a rerun: nothing is written when its Release exists, and only the Release when it does not. |
 | `RLSTA-B03` | On a branch whose label goes into the tag alone, the release is the next prerelease of the version above those GitHub holds, and a rerun releases the one a tag already records on its sha. (`labelledOnRemote`) |
+| `RLSTA-B04` | A changelog longer than the body GitHub keeps on a Release, 125000 characters, is cut at the last whole line that fits, and a last line says how many lines were left out: a project's first tagged release, which follows no tag, has the whole history for a changelog. (`fitRelease`) |
 
 ## Errors
 

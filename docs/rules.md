@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:465f96cf0f2e4e84 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:41030c07ad21720a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -2537,6 +2537,8 @@ in `layers/`.
 - [RLSTA-B02 — A tag already on the sha is a rerun: nothing is written when its Release exists, and only the Release when it does not.](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
 
 - [RLSTA-B03 — On a branch whose label goes into the tag alone, the release is the next prerelease of the version above those GitHub holds, and a rerun releases the one a tag already records on its sha. (`labelledOnRemote`)](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
+
+- [RLSTA-B04 — A changelog longer than the body GitHub keeps on a Release, 125000 characters, is cut at the last whole line that fits, and a last line says how many lines were left out: a project's first tagged release, which follows no tag, has the whole history for a changelog. (`fitRelease`)](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
 
 - [RLSTA-E01 — The tag is already on another sha; the sha gives no version; GitHub answers neither the ref nor a 404.](layers/comando.md#rlsta--releasetag--the-tag-and-the-github-release-a-stage-that-releases-writes)
 

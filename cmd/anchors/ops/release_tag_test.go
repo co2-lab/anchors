@@ -6,8 +6,10 @@ package ops
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 // fakeGitHub answers the release's API calls: a GET of a known path returns its body, of an
@@ -182,6 +184,44 @@ func TestRelease_label(t *testing.T) {
 		gh.have["repos/{owner}/{repo}/releases/tags/app-v1.0.1-rc.2"] = `{}`
 		if out, err := runPipeline(t, root, "record", "production-release", "--branch", "production", "--sha", sha); err != nil || len(gh.posts) != 0 || !strings.Contains(out, "is released as app-v1.0.1-rc.2") {
 			t.Errorf("rerun: %v %q\n%s", err, gh.posts, out)
+		}
+	})
+}
+
+// Reported from a project: its first tagged release followed no tag, the changelog was the
+// whole history, and GitHub refused a body past 125000 characters.
+func TestRelease_bodyPastGitHubsLimit(t *testing.T) {
+	t.Run("RLSTA-B04: A changelog longer than GitHub keeps is cut at the last whole line that fits, saying how many lines were left out", func(t *testing.T) {
+		root, _ := releasingRepo(t)
+		for i := 0; i < 30; i++ {
+			commitFiles(t, root, "fix: crash number "+strconv.Itoa(i), nil)
+		}
+		sha := commitFiles(t, root, "chore: 1.0.2", appVersion("1.0.2"))
+		fakeForge(t)
+		gh := stubReleaseAPI(t)
+		old := releaseBodyLimit
+		releaseBodyLimit = 600
+		t.Cleanup(func() { releaseBodyLimit = old })
+		if out, err := runPipeline(t, root, "record", "production-release", "--branch", "production", "--sha", sha); err != nil || len(gh.posts) != 2 {
+			t.Fatalf("%v %q\n%s", err, gh.posts, out)
+		}
+		_, body, _ := strings.Cut(gh.posts[1], "-f body=")
+		if utf8.RuneCountInString(body) > releaseBodyLimit || !strings.HasPrefix(body, "## 1.0.2") || !strings.Contains(body, "crash number") || !strings.Contains(body, "more lines of the changelog left out") {
+			t.Errorf("cut to the limit, saying so (%d characters):\n%s", utf8.RuneCountInString(body), body)
+		}
+	})
+	t.Run("RLSTA-B04: A body within the limit is kept whole", func(t *testing.T) {
+		if got := fitRelease("## 1\n- a\n", 100); got != "## 1\n- a\n" {
+			t.Errorf("%q", got)
+		}
+		body := "## 1\n" + strings.Repeat("- a commit\n", 30)
+		got := fitRelease(body, 200)
+		if utf8.RuneCountInString(got) > 200 || !strings.HasPrefix(got, "## 1\n- a commit\n") {
+			t.Fatalf("whole lines, within the limit: %q", got)
+		}
+		kept := strings.Count(got, "- a commit\n")
+		if !strings.Contains(got, "… "+strconv.Itoa(30-kept)+" more lines") {
+			t.Errorf("the lines left out are counted (%d kept): %q", kept, got)
 		}
 	})
 }

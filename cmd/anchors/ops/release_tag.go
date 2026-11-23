@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/co2-lab/anchors/internal/changelog"
 	"github.com/co2-lab/anchors/internal/config"
@@ -121,7 +122,37 @@ func releaseBody(t stageTarget, st *versionStateT, ver string) (string, error) {
 	if err != nil || len(blocks) == 0 {
 		return "", err
 	}
-	return strings.TrimRight(blocks[0].Text, "\n") + "\n", nil
+	return fitRelease(strings.TrimRight(blocks[0].Text, "\n")+"\n", releaseBodyLimit), nil
+}
+
+// releaseBodyLimit is the longest body GitHub keeps on a Release, in characters.
+var releaseBodyLimit = 125000
+
+// fitRelease cuts a body longer than the limit at the last whole line that fits, and says how
+// many lines were left out. A project's first tagged release follows no tag: its changelog was
+// the whole history, some 2900 commits, GitHub refused the Release, and the stage was recorded
+// as failed with its tag already written.
+func fitRelease(body string, limit int) string {
+	if utf8.RuneCountInString(body) <= limit {
+		return body
+	}
+	note := func(left int) string {
+		return fmt.Sprintf("\n… %d more lines of the changelog left out: GitHub keeps a release's body to %d characters.\n", left, limit)
+	}
+	lines := strings.SplitAfter(body, "\n")
+	room := limit - utf8.RuneCountInString(note(len(lines)))
+	kept, n := 0, 0
+	for kept < len(lines) && n+utf8.RuneCountInString(lines[kept]) <= room {
+		n += utf8.RuneCountInString(lines[kept])
+		kept++
+	}
+	left := 0
+	for _, l := range lines[kept:] {
+		if strings.TrimSpace(l) != "" {
+			left++
+		}
+	}
+	return strings.Join(lines[:kept], "") + note(left)
 }
 
 // previousRelease is the tag of the highest version of the product reachable from `to`
