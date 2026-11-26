@@ -3126,3 +3126,18 @@ func TestCheckShowsAwaitedDecisionsApart(t *testing.T) {
 		t.Errorf("and still lists it, and says so under the verdict:\n%s", out)
 	}
 }
+
+func TestCheckSaysTheWaiversThatSparedNothing(t *testing.T) {
+	t.Run("CGPCH-B102: The check says each waiver restricted to a target that spared nothing, naming what passed without it, or that it names no target confronted", func(t *testing.T) {})
+	disp, _ := gate.ParseWaiver("evidence-fresh@AAAAA=heavy suite later,evidence-fresh@BBBBB=heavy suite later,evidence-fresh@CCCCC=heavy suite later")
+	results := []gate.Result{
+		{Gate: "evidence-fresh", Target: "a.test.ts", Verdict: gate.Skip, WaivedBy: "evidence-fresh@AAAAA", Spared: true},
+		{Gate: "evidence-fresh", Target: "b.test.ts", Verdict: gate.Pass, WaivedBy: "evidence-fresh@BBBBB"},
+	}
+	out := captureStdout(t, func() {
+		printIdleWaivers(disp, results, []config.Gate{{Name: "evidence-fresh"}})
+	})
+	if strings.Contains(out, "@AAAAA") || !strings.Contains(out, "[skip-evidence-fresh@BBBBB]") || !strings.Contains(out, "b.test.ts") || !strings.Contains(out, "[skip-evidence-fresh@CCCCC]") {
+		t.Errorf("the waiver that spared is not said; the other two are:\n%s", out)
+	}
+}

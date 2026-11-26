@@ -64,6 +64,10 @@ type Result struct {
 	// `Blocking` alone.
 	Action string
 	Detail string // mensagem (por que falhou, etc.)
+	// WaivedBy is the waiver that matched this target, as `rule@CODE`; empty when none did.
+	// Spared says the gate's own verdict was not a pass, so the waiver spared something.
+	WaivedBy string
+	Spared   bool
 	// Divida marca o Pending que é DÍVIDA ASSUMIDA — um dever conhecido, ainda válido,
 	// com um momento declarado para ser pago (`obligation_pending: <nome> — <quando>`).
 	//
@@ -374,21 +378,37 @@ func runGate(g config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, c
 			// do relatório, que é a diferença entre dispensar e esconder.
 			// The target may be named by the unit's code or by the file's own: a feature's
 			// author reads its `code:` in its header, and refusing it cost a project a retry.
-			motivo, ok := disp.WaivedTarget(RuleID(idDoGate(g)), n.Code)
+			code := n.Code
+			motivo, ok := disp.WaivedTarget(RuleID(idDoGate(g)), code)
 			if !ok && n.FileCode != "" && n.FileCode != n.Code {
-				motivo, ok = disp.WaivedTarget(RuleID(idDoGate(g)), n.FileCode)
-			}
-			if ok {
-				results = append(results, Result{
-					Gate: g.Name, Regra: idDoGate(g), Target: n.ID,
-					Verdict: Skip, Blocking: g.IsBlocking(),
-					Detail: i18n.T("gate.waived", motivo),
-				})
-				continue
+				code = n.FileCode
+				motivo, ok = disp.WaivedTarget(RuleID(idDoGate(g)), code)
 			}
 			inicio := time.Now()
 			um := runOne(g, n, root, graph, cfg)
 			um.Duracao = time.Since(inicio)
+			if ok {
+				// The gate runs on a waived target too, so the report says what the waiver
+				// spared. Reported from a project: a commit wrapper wrote a waiver for every
+				// failing test, with a reason that fitted few of them, and a broken unit test
+				// went in with the rest — the report said only "waived".
+				um.WaivedBy = idDoGate(g) + "@" + code
+				if um.Verdict != Pass && um.Verdict != Skip {
+					spared := firstLine(um.Detail)
+					if spared == "" {
+						spared = string(um.Verdict)
+					}
+					regra := um.Regra
+					if regra == "" {
+						regra = idDoGate(g)
+					}
+					um = Result{
+						Gate: g.Name, Regra: regra, Target: n.ID, Verdict: Skip, Blocking: g.IsBlocking(),
+						Detail: i18n.T("gate.waived_spared", motivo, spared), WaivedBy: um.WaivedBy, Spared: true,
+						Duracao: um.Duracao,
+					}
+				}
+			}
 			results = append(results, um)
 		}
 	}

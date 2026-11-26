@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/behavior.md.tmpl — inputs:87754a32d38e3146 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/behavior.md.tmpl — inputs:b4e82027b3a827bc — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Behavior
@@ -2704,6 +2704,8 @@ is what the test proves.
 
 - [The files after the flags join --changed](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) ``
 
+- [The check says the waivers that spared nothing](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) ``
+
 - [The scenarios of one spec are listed as proven or not](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 
 - [A code another unit owns, cited in prose, is not a declared scenario](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B02`
@@ -4717,6 +4719,10 @@ is what the test proves.
 - [An awaited decision has its own level, bars where the gate bars, and counts apart](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B38`
 
 - [A tool over the whole project or a batch holds a lease of the load queue while it runs, at the gate task's level, and none with no load:](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B39`
+
+- [A waived target is still confronted, and the report says what the waiver spared](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B40`
+
+- [A waiver restricted to a target that spared nothing is listed](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B41`
 
 - [The guidance points to the agreement](layers/gate.md#gdgtg--guidance-gates--the-working-agreement-is-one-file-and-the-others-point-to-it) `GDGTG-B01`
 

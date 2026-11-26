@@ -270,6 +270,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			results := gate.RunWithWaiver(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
 			profile := gate.Aggregate(results)
 			printProfile(profile, onlyIssues, showDrift, showSkips)
+			printIdleWaivers(dispensa, results, cfg.Gates)
 			reportTiming(showTiming, profile)
 			warnGatesWithoutTarget(cfg.Gates, profile, g, all)
 			printReviewsDue(cfg, g, absRoot, nodes)
@@ -1039,6 +1040,23 @@ func impactOf(g *mapx.Graph, cfg *config.Config, changed, root string) ([]string
 		out = append(out, id)
 	}
 	return out, nil
+}
+
+// printIdleWaivers says each waiver restricted to a target that spared nothing: the target
+// passed without it, or the check confronted no target of that code. The ones that spared are
+// in the report, with what they spared.
+func printIdleWaivers(d gate.Waiver, results []gate.Result, gates []config.Gate) {
+	ran := map[string]bool{}
+	for _, g := range gates {
+		ran[gateCmdID(g)] = true
+	}
+	for _, w := range d.Idle(results, ran) {
+		if len(w.Passed) == 0 {
+			fmt.Println(i18n.T("check.waiver_no_target", w.Rule, w.Code))
+			continue
+		}
+		fmt.Println(i18n.T("check.waiver_spared_nothing", w.Rule, w.Code, strings.Join(w.Passed, ", ")))
+	}
 }
 
 // nameWidth é a coluna do nome do gate: o maior nome presente, com um piso.

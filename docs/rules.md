@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/rules.md.tmpl — inputs:41030c07ad21720a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/rules.md.tmpl — inputs:01ea876e0ed63b37 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Rules
@@ -5157,6 +5157,10 @@ in `layers/`.
 - [GTENG-B38 — A verdict `awaiting` — a choice registered on purpose, waiting for a person's decision — takes the gate's `awaiting` state: it bars where that state is `block`, unless the finding is declared (`[declared]`), and is counted apart from the divergences, each awaited decision listed in the profile; an open decision still becomes a decision issue. (`Awaiting`, `Profile.Awaiting`)](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B39 — A tool over the whole project or a batch waits for the load queue (LDQUS) and holds a lease, at the level of the `gate` task, while it runs; with no `load:`, in the commit hook, or with a queue that cannot be read, it runs at once. (`admitTool`)](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
+- [GTENG-B40 — A target a waiver names is still confronted. When the gate does not pass it, the result is a skip whose detail gives the waiver's reason and what it spared; when the gate passes it, the pass stands. Either way the result records which waiver matched it.](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
+- [GTENG-B41 — Of the gates that ran, a waiver restricted to a target that spared nothing is listed, with the targets that passed without it, or none when it matched no target confronted. (`Waiver.Idle`)](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 
 - [GTENG-B06 — An UNREADABLE target does not apply: better to stop charging than to charge blind.](layers/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
 

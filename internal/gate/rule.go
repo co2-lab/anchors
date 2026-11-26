@@ -6,6 +6,7 @@ package gate
 
 import (
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/i18n"
@@ -279,4 +280,46 @@ func (d Waiver) Merge(outra Waiver) Waiver {
 		d.MotivoPorAlvo[k] = v
 	}
 	return d
+}
+
+// IdleWaiver is a waiver restricted to a target that spared nothing in a run: the targets it
+// matched passed without it (Passed), or it matched none the run confronted (Passed empty).
+type IdleWaiver struct {
+	Rule, Code string
+	Passed     []string
+}
+
+// Idle are the waivers restricted to targets, of the gates that ran, that spared nothing in
+// these results. A waiver written for every failing test, with a reason that fits few of them,
+// shows its idle entries every time — and the ones that do spare are said in the report.
+func (d Waiver) Idle(results []Result, ran map[string]bool) []IdleWaiver {
+	var out []IdleWaiver
+	rules := make([]string, 0, len(d.Alvos))
+	for r := range d.Alvos {
+		rules = append(rules, r)
+	}
+	sort.Strings(rules)
+	for _, rule := range rules {
+		if !ran[rule] {
+			continue
+		}
+		for _, code := range d.Alvos[rule] {
+			key := rule + "@" + code
+			spared, passed := false, []string{}
+			for _, r := range results {
+				if r.WaivedBy != key {
+					continue
+				}
+				if r.Spared {
+					spared = true
+					break
+				}
+				passed = append(passed, r.Target)
+			}
+			if !spared {
+				out = append(out, IdleWaiver{Rule: rule, Code: code, Passed: passed})
+			}
+		}
+	}
+	return out
 }

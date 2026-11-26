@@ -2,7 +2,7 @@
 # @anchors
 #   code: GTFTG
 #   ref: GTENG
-#   updated_at: 2026-11-19
+#   updated_at: 2026-11-26
 #   layer: feature
 
 @GTENG
@@ -314,3 +314,15 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a typecheck over the whole project that prints the leases file, and the gate task declared heavy
     When the gate runs with load: and without it
     Then the tool sees its own lease, released after, and without load: there is none
+
+  @GTENG-B40 @unit-level
+  Scenario: A waived target is still confronted, and the report says what the waiver spared
+    Given a waiver naming one empty spec and one complete spec
+    When the gate runs over both
+    Then the empty one is skipped with the reason and what was spared, and the complete one passes
+
+  @GTENG-B41 @unit-level
+  Scenario: A waiver restricted to a target that spared nothing is listed
+    Given waivers naming a spec that passes and a code no node carries
+    When the results are read
+    Then both waivers are listed, the first with the spec that passed and the second with none

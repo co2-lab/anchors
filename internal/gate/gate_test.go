@@ -1720,3 +1720,42 @@ func TestRun_aToolWaitsForTheLoadQueue(t *testing.T) {
 		}
 	})
 }
+
+// Reported from a project: a commit wrapper wrote a waiver for every failing test, with a
+// reason that fitted few of them, and a broken unit test went in with the rest. The report
+// said only "waived".
+func TestWaiverSaysWhatItSpared(t *testing.T) {
+	t.Run("GTENG-B40: A waived target is still confronted: the report says what the waiver spared, and a target that passes keeps its pass", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "empty.md"), []byte("   \n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "full.md"), []byte("# A spec\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	disp, _ := ParseWaiver("non-empty@EMPTY=draft,non-empty@FULLX=copied along,non-empty@GONEX=another commit's")
+	g := config.Gate{Name: "non-empty", ID: "non-empty", On: []string{"spec"}, Check: "non-empty"}
+	res := RunWithWaiver([]config.Gate{g}, []mapx.Node{
+		{ID: "empty.md", Kind: mapx.KindSpec, Code: "EMPTY"},
+		{ID: "full.md", Kind: mapx.KindSpec, Code: "FULLX"},
+	}, root, nil, nil, false, disp)
+	by := map[string]Result{}
+	for _, r := range res {
+		by[r.Target] = r
+	}
+	if r := by["empty.md"]; r.Verdict != Skip || !r.Spared || r.WaivedBy != "non-empty@EMPTY" || !strings.Contains(r.Detail, "draft") || !strings.Contains(r.Detail, "—") {
+		t.Errorf("the failing target is spared, saying what: %+v", r)
+	}
+	if r := by["full.md"]; r.Verdict != Pass || r.Spared || r.WaivedBy != "non-empty@FULLX" {
+		t.Errorf("the passing target keeps its pass: %+v", r)
+	}
+
+	t.Run("GTENG-B41: A waiver restricted to a target that spared nothing is said: the targets that passed without it, or none confronted", func(t *testing.T) {})
+	idle := disp.Idle(res, map[string]bool{"non-empty": true})
+	if len(idle) != 2 || idle[0].Code != "FULLX" || len(idle[0].Passed) != 1 || idle[0].Passed[0] != "full.md" || idle[1].Code != "GONEX" || len(idle[1].Passed) != 0 {
+		t.Errorf("FULLX passed without it, GONEX matched nothing: %+v", idle)
+	}
+	if got := disp.Idle(res, map[string]bool{}); len(got) != 0 {
+		t.Errorf("a gate that did not run says nothing of its waivers: %+v", got)
+	}
+}

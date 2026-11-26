@@ -2,7 +2,7 @@
 # @anchors
 #   code: CHFTA
 #   ref: CGPCH
-#   updated_at: 2026-11-16
+#   updated_at: 2026-11-26
 #   layer: feature
 
 @CGPCH
@@ -695,3 +695,9 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a project with a.go and b.go
     When the check runs with "--changed a.go b.go"
     Then it judges the two files
+
+  @CGPCH-B102 @unit-level
+  Scenario: The check says the waivers that spared nothing
+    Given three waivers: one sparing a stale test, one naming a test that passes, one naming a code not confronted
+    When the check reports
+    Then the last two are said, with the test that passed, and the first is not

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CGPCH
-  updated_at: 2026-11-18
+  updated_at: 2026-11-26
   layer: comando
 -->
 # CheckGatePipeline — confronts the map's nodes against the declared gates, records the verdicts and reports the profile
@@ -79,6 +79,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-B99` | The pieces of a changed file's unit are named by its unit's layer — the one a spec's header declares —, so a `derived.overrides` of that layer brings the pieces it puts elsewhere; `deliver` and `watch` look for a unit's pieces by the same layer. |
 | `CGPCH-B100` | Awaited decisions show apart from the divergences: a ⏸ column in the table of gates, a line in the legend, a list after the findings — each with what it does, the gate, the target and its detail, where who decides is named —, and a line under the verdict counting them. (`printAwaiting`) |
 | `CGPCH-B101` | The arguments after the flags are files, and join `--changed` as the comma would: `--changed a b c` judges the three. (`positionalFiles`) |
+| `CGPCH-B102` | After the report, the check says each waiver restricted to a target that spared nothing: the targets that passed without it, or that it names no target this check confronts. It informs and blocks nothing. (`printIdleWaivers`) |
 | `CGPCH-B92` | A gate the project declares counts as declared in the catalog line and the governance tips even when this run leaves it out — `when: [manual]`, `skip_on`, another phase. |
 | `CGPCH-B08` | A gate that declares no perspective to skip runs both on the full sweep and on changed files. |
 | `CGPCH-B09` | A gate that declares it skips the change perspective is not charged on changed files and is charged on the full sweep. |
